@@ -44,6 +44,10 @@ internal class PartEntry(var part: Part, var version: Long) {
     var tailRow: BlockRow? = null
     var rowsGeneration: Int = 0
 
+    /** The prompt row of a user text part, kept while the part's version holds (no text copy per publish). */
+    var promptRow: PromptRow? = null
+    var promptVersion: Long = -1
+
     /**
      * `<messageId>/<partId>`. Plan 09 §3.7 says `b:<partId>:<offset>`, but OC2 part ids are per-message ordinals
      * (`text-0`, `reasoning-0`; 04 §7.6), so the part id alone repeats in every step and turn.
@@ -88,6 +92,14 @@ internal class TranscriptModel(private val sessionId: String, private val counte
     private var prefixList: PersistentList<TranscriptRow> = persistentListOf()
     private var prefixPositions: PersistentMap<String, Int> = persistentMapOf()
     private val rowCache = HashMap<String, TranscriptRow>()
+
+    // STREAM-FIX newest-turn cache: the published list is prefix + newest rows; a publish rewrites only the suffix of
+    // the newest turn that changed (by identity), never all of its rows.
+    private var newestBase: PersistentList<TranscriptRow>? = null
+    private var newestTurnId: String? = null
+    private var newestRows: List<TranscriptRow> = emptyList()
+    private var fullList: PersistentList<TranscriptRow> = persistentListOf()
+    private var fullPositions: PersistentMap<String, Int> = persistentMapOf()
 
     /** Applies one event; false when it cannot change what this transcript draws (no publish). */
     fun apply(event: GatewayEvent): Boolean {
@@ -283,12 +295,50 @@ internal class TranscriptModel(private val sessionId: String, private val counte
         prefixPositions = positions
         if (newestIndex >= 0) {
             val (turnId, members) = turns[newestIndex]
-            val newest = buildTurn(turnId, members, finished = !run.busy)
-            val (l, p) = appendRows(list, positions, newest.rows)
-            list = l
-            positions = p
+            val rows = buildTurn(turnId, members, finished = !run.busy).rows
+            if (newestBase === list && newestTurnId == turnId) {
+                replaceNewest(list.size, rows)
+            } else {
+                val (l, p) = appendRows(list, positions, rows)
+                counters.rowWrites += rows.size
+                fullList = l
+                fullPositions = p
+            }
+            newestBase = list
+            newestTurnId = turnId
+            newestRows = rows
+            list = fullList
+            positions = fullPositions
+        } else {
+            newestBase = null
+            newestTurnId = null
+            newestRows = emptyList()
         }
         return TranscriptState(revision, NewestFirst(list), positions, run)
+    }
+
+    /**
+     * The newest turn's rows changed from [newestRows] to [rows] over the same prefix of [base] rows: keep the common
+     * leading rows (same instances) and rewrite only the rest, so a streaming publish writes O(changed rows).
+     */
+    private fun replaceNewest(base: Int, rows: List<TranscriptRow>) {
+        val old = newestRows
+        var keep = 0
+        while (keep < old.size && keep < rows.size && old[keep] === rows[keep]) keep++
+        if (keep == old.size && keep == rows.size) return
+        val list = fullList.builder()
+        val pos = fullPositions.builder()
+        for (i in old.lastIndex downTo keep) {
+            list.removeAt(base + i)
+            pos.remove(old[i].key)
+        }
+        for (i in keep until rows.size) {
+            list.add(rows[i])
+            pos[rows[i].key] = base + i
+        }
+        counters.rowWrites += (old.size - keep) + (rows.size - keep)
+        fullList = list.build()
+        fullPositions = pos.build()
     }
 
     private fun appendRows(
@@ -340,7 +390,7 @@ internal class TranscriptModel(private val sessionId: String, private val counte
                 when (p.type) {
                     PartType.Text ->
                         if (m.info.role == Role.User) {
-                            rows += reuse(PromptRow("prompt:${m.info.id}", turnId, pe.blocks?.text?.toString() ?: p.text))
+                            rows += promptRowOf(pe, m.info.id, turnId)
                         } else {
                             addBlocks(rows, turnId, pe, live = !p.ended && !finished)
                         }
@@ -378,6 +428,15 @@ internal class TranscriptModel(private val sessionId: String, private val counte
         return TurnEntry(turnId, members, LongArray(members.size) { members[it].version }, rows)
     }
 
+    private fun promptRowOf(pe: PartEntry, messageId: String, turnId: String): PromptRow {
+        val cached = pe.promptRow
+        if (cached != null && pe.promptVersion == pe.version && cached.turnId == turnId) return cached
+        val row = reuse(PromptRow("prompt:$messageId", turnId, pe.blocks?.text?.toString() ?: pe.part.text))
+        pe.promptRow = row
+        pe.promptVersion = pe.version
+        return row
+    }
+
     private fun noticeKindOf(p: Part): NoticeKind = NoticeKind.entries.firstOrNull { it.name == p.text } ?: NoticeKind.Other
 
     private fun addBlocks(rows: MutableList<TranscriptRow>, turnId: String, pe: PartEntry, live: Boolean) {
@@ -391,21 +450,30 @@ internal class TranscriptModel(private val sessionId: String, private val counte
         val settled = blocks.settledBlocks
         for (i in pe.settledRows.size until settled.size) {
             val b = settled[i]
-            pe.settledRows += BlockRow("b:${pe.blockKeyBase}:${b.start}", turnId, b.kind, pe.part.id, b.start, b.text, false, false, origin)
+            pe.settledRows +=
+                BlockRow(
+                    "b:${pe.blockKeyBase}:${b.start}", turnId, b.kind, pe.part.id, b.start, b.text, false, false, origin,
+                    b.continued, b.continues,
+                )
         }
         rows.addAll(pe.settledRows)
         val before = blocks.tailReparses
+        val charsBefore = blocks.tailChars
         val tail = blocks.tail()
         counters.tailReparses += blocks.tailReparses - before
+        counters.tailChars += blocks.tailChars - charsBefore
         if (tail == null) return
         val prev = pe.tailRow
         val row =
             if (prev != null && prev.start == tail.start && prev.text == tail.text && prev.live == live &&
-                prev.kind == tail.kind && prev.open == tail.open
+                prev.kind == tail.kind && prev.open == tail.open && prev.continued == tail.continued
             ) {
                 prev
             } else {
-                BlockRow("b:${pe.blockKeyBase}:${tail.start}", turnId, tail.kind, pe.part.id, tail.start, tail.text, live, tail.open, origin)
+                BlockRow(
+                    "b:${pe.blockKeyBase}:${tail.start}", turnId, tail.kind, pe.part.id, tail.start, tail.text, live, tail.open,
+                    origin, tail.continued,
+                )
             }
         pe.tailRow = row
         rows += row

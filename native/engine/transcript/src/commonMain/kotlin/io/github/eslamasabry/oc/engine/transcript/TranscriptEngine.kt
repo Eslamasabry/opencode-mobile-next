@@ -70,6 +70,14 @@ public class TranscriptCounters {
         internal set
     public var skippedWhileHidden: Int = 0
         internal set
+
+    /** Characters copied into tail block rows (STREAM-FIX: one chunk per publish at most, whatever the reply length). */
+    public var tailChars: Long = 0
+        internal set
+
+    /** Rows written into the published list: removed plus added (STREAM-FIX: the changed suffix of the newest turn). */
+    public var rowWrites: Long = 0
+        internal set
 }
 
 public class TranscriptHandle internal constructor(

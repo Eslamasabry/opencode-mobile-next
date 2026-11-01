@@ -43,6 +43,13 @@ public data class BlockRow(
     /** A code fence that has not closed yet. */
     val open: Boolean,
     val origin: Origin,
+    /**
+     * STREAM-FIX: a long block (a fence or paragraph over 16 lines) is published as chunks of 16 lines, each its own
+     * row, so a tail update re-lays out one chunk, never the whole block. [continued]: a chunk after the first;
+     * [continues]: more chunks of the same block follow. The renderer joins them without a seam.
+     */
+    val continued: Boolean = false,
+    val continues: Boolean = false,
 ) : TranscriptRow
 
 public data class ThoughtRow(override val key: String, override val turnId: String, val firstLine: String) :
