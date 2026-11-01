@@ -50,15 +50,15 @@ class EditorViewModelTest {
         runTest {
             val port = FakeServersPort()
             val vm = editor(port)
-            typed(vm, "http://192.168.1.20:4096")
+            typed(vm, "http://desk.local:4096")
             assertTrue(port.probes.isEmpty())
             val ask = assertNotNull(vm.state.value.consent)
-            assertEquals(ServerOrigin("http", "192.168.1.20", 4096), ask.origin)
+            assertEquals(ServerOrigin("http", "desk.local", 4096), ask.origin)
             assertFalse(ask.public)
 
             vm.allowHttp()
             runCurrent()
-            assertEquals(ServerOrigin("http", "192.168.1.20", 4096), port.probes.single().consentedOrigin)
+            assertEquals(ServerOrigin("http", "desk.local", 4096), port.probes.single().consentedOrigin)
             assertIs<EditorVerdict.Answered>(vm.state.value.verdict)
         }
 
@@ -83,10 +83,10 @@ class EditorViewModelTest {
             val vm = editor(port)
             typed(vm, "http://127.0.0.1:4096")
             assertNull(vm.state.value.consent)
-            typed(vm, "192.168.1.20:4096")
+            typed(vm, "desk.local:4096")
             assertNull(vm.state.value.consent)
             assertEquals(
-                listOf(ServerOrigin("http", "127.0.0.1", 4096), ServerOrigin("https", "192.168.1.20", 4096)),
+                listOf(ServerOrigin("http", "127.0.0.1", 4096), ServerOrigin("https", "desk.local", 4096)),
                 port.probes.map { it.origin },
             )
         }
@@ -207,14 +207,14 @@ class EditorViewModelTest {
             val port = FakeServersPort()
             val vm = editor(port)
             vm.useEntry(EntryKind.PairingCode)
-            vm.setCode("""{"urls":["http://192.168.1.20:4097"],"password":"x"}""")
+            vm.setCode("""{"urls":["http://desk.local:4097"],"password":"x"}""")
             vm.test()
             runCurrent()
             assertTrue(port.probes.isEmpty())
-            assertEquals(ServerOrigin("http", "192.168.1.20", 4097), assertNotNull(vm.state.value.consent).origin)
+            assertEquals(ServerOrigin("http", "desk.local", 4097), assertNotNull(vm.state.value.consent).origin)
             vm.allowHttp()
             runCurrent()
-            assertEquals(listOf(ServerOrigin("http", "192.168.1.20", 4097)), port.probes.map { it.origin })
+            assertEquals(listOf(ServerOrigin("http", "desk.local", 4097)), port.probes.map { it.origin })
         }
 
     @Test

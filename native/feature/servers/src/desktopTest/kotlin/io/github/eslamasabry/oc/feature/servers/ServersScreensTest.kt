@@ -78,7 +78,7 @@ class ServersScreensTest {
             val vm = editor(port, RecordingServersNavigator())
             vm.useEntry(EntryKind.Address)
             setContent { ServersHost { val s by vm.state.collectAsState(); EditorScreen(s, vm) } }
-            onNodeWithTag("Server address").performTextInput("http://192.168.1.20:4096")
+            onNodeWithTag("Server address").performTextInput("http://desk.local:4096")
             onNodeWithText("Test connection").performClick()
             waitForIdle()
             onNodeWithText("Use unencrypted HTTP?").assertIsDisplayed()
@@ -86,7 +86,7 @@ class ServersScreensTest {
             assertTrue(port.probes.isEmpty())
             onNodeWithText("Allow HTTP for this server").performClick()
             waitForIdle()
-            assertEquals(listOf(ServerOrigin("http", "192.168.1.20", 4096)), port.probes.map { it.origin })
+            assertEquals(listOf(ServerOrigin("http", "desk.local", 4096)), port.probes.map { it.origin })
             onNodeWithText("Connection verified. Save and connect to continue.").assertIsDisplayed()
         }
 

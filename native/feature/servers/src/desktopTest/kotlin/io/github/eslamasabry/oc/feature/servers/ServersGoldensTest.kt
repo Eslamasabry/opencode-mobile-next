@@ -75,7 +75,7 @@ class ServersGoldensTest {
                     RulesAddressPolicy,
                 ),
             ),
-            ServerRowUi(ProfileId("at"), "Attic", "http://192.168.1.20:4096", ServerStatus.NotConnected, false, false, null),
+            ServerRowUi(ProfileId("at"), "Attic", "http://desk.local:4096", ServerStatus.NotConnected, false, false, null),
         )
 
     @Test
@@ -118,13 +118,13 @@ class ServersGoldensTest {
             EditorScreen(
                 EditorUi(
                     entry = EntryKind.Address,
-                    address = "http://100.101.102.103:4096",
+                    address = "http://laptop.tail1234.ts.net:4096",
                     cleartextAllowed = true,
                     verdict =
                         EditorVerdict.Failed(
                             ConnectionDiagnosis.diagnose(
                                 Net.Unreachable(Net.Unreachable.Why.Timeout),
-                                ServerOrigin("http", "100.101.102.103", 4096),
+                                ServerOrigin("http", "laptop.tail1234.ts.net", 4096),
                                 DiagnosisContext(BackendKind.OpenCode2, supportsTermux = true, attempts = 3),
                                 RulesAddressPolicy,
                             ),

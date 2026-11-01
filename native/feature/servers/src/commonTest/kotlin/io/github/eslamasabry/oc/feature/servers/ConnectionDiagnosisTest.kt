@@ -164,7 +164,7 @@ class ConnectionDiagnosisTest {
 
     @Test
     fun `B-NAV-008 a Tailscale address that did not answer says to check Tailscale first`() {
-        val f = d(refused, origin = ServerOrigin("http", "100.101.102.103", 4096))
+        val f = d(refused, origin = ServerOrigin("http", "laptop.tail1234.ts.net", 4096))
         assertTrue(f.tailnet)
         assertEquals(FailureCheck.TailscaleOn, f.checks.first())
         // A refused sign-in means Tailscale did its part.
@@ -175,7 +175,7 @@ class ConnectionDiagnosisTest {
 
     @Test
     fun `B-NAV-008 an unconfirmed plain-HTTP address asks to review the HTTP warning, never to retry`() {
-        val f = d(Net.TrustRefused(Net.TrustRefused.Why.CleartextNotConfirmed), origin = ServerOrigin("http", "192.168.1.20", 4096))
+        val f = d(Net.TrustRefused(Net.TrustRefused.Why.CleartextNotConfirmed), origin = ServerOrigin("http", "desk.local", 4096))
         assertEquals(FailureKind.HttpUnconfirmed, f.kind)
         assertEquals(FailureAction.EditServer, f.primary)
     }

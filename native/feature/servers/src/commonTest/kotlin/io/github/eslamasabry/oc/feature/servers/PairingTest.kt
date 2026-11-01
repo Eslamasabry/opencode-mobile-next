@@ -209,28 +209,28 @@ class PairingTest {
         runTest {
             val probed = mutableListOf<ServerOrigin>()
             val probe: suspend (ProbeTarget) -> Outcome<ProbeAnswer> = { probed += it.origin; v2Ok }
-            val p = parsed(pairJson(listOf("http://192.168.1.20:4097")))
+            val p = parsed(pairJson(listOf("http://desk.local:4097")))
             val held = dialer(probe).select(p)
             assertTrue(probed.isEmpty())
             assertFalse(held.ok)
             val outcome = held.outcomes.single()
             assertEquals(AddressVerdict.NeedsCleartextConsent, outcome.verdict)
             assertFalse(outcome.probed)
-            assertEquals("http://192.168.1.20:4097", outcome.display)
-            assertEquals(listOf(ServerOrigin("http", "192.168.1.20", 4097)), held.heldForConsent)
+            assertEquals("http://desk.local:4097", outcome.display)
+            assertEquals(listOf(ServerOrigin("http", "desk.local", 4097)), held.heldForConsent)
 
-            val confirmed = dialer(probe, confirmed = setOf(ServerOrigin("http", "192.168.1.20", 4097))).select(p)
-            assertEquals(listOf(ServerOrigin("http", "192.168.1.20", 4097)), probed)
-            assertEquals(ServerOrigin("http", "192.168.1.20", 4097), confirmed.chosen)
-            assertEquals(ServerOrigin("http", "192.168.1.20", 4097), confirmed.chosenTarget?.consentedOrigin)
+            val confirmed = dialer(probe, confirmed = setOf(ServerOrigin("http", "desk.local", 4097))).select(p)
+            assertEquals(listOf(ServerOrigin("http", "desk.local", 4097)), probed)
+            assertEquals(ServerOrigin("http", "desk.local", 4097), confirmed.chosen)
+            assertEquals(ServerOrigin("http", "desk.local", 4097), confirmed.chosenTarget?.consentedOrigin)
         }
 
     @Test
     fun `B-SEC-124 a different private origin is not covered by the confirmation`() =
         runTest {
-            val p = parsed(pairJson(listOf("http://192.168.1.21:4097")))
+            val p = parsed(pairJson(listOf("http://attic.local:4097")))
             val selection =
-                dialer({ fail("must not be dialed: ${it.origin}") }, confirmed = setOf(ServerOrigin("http", "192.168.1.20", 4097)))
+                dialer({ fail("must not be dialed: ${it.origin}") }, confirmed = setOf(ServerOrigin("http", "desk.local", 4097)))
                     .select(p)
             assertEquals(AddressVerdict.NeedsCleartextConsent, selection.outcomes.single().verdict)
         }

@@ -27,7 +27,7 @@ class ServersViewModelsTest {
     private val phone = profile("ph", "This phone", ServerOrigin("http", "127.0.0.1", 4097), onPhone = true)
     private val laptop = profile("lp", "Laptop", ServerOrigin("https", "desk.example", 4096))
     private val laptop2 = profile("l2", "Laptop beta", ServerOrigin("https", "desk.example", 4097), pin = FakeServersPort.SHA)
-    private val lan = profile("ln", "Attic", ServerOrigin("http", "192.168.1.20", 4096), consentAtMs = 5)
+    private val lan = profile("ln", "Attic", ServerOrigin("http", "desk.local", 4096), consentAtMs = 5)
 
     private fun saved(vararg p: io.github.eslamasabry.oc.core.model.ServerProfile, active: String? = null) =
         p.map { SavedServer(it, if (it.id.raw == active) ServerStatus.Connected else ServerStatus.NotConnected, it.id.raw == active) }
