@@ -1,0 +1,13 @@
+{
+  "_comment": "The one list of fixture ports (plan 14 §4.4). Everything binds 127.0.0.1; the emulator reaches it as 10.0.2.2. ctl = control API used by the runner and flows/_fx/*.js.",
+  "FX-OC2": {"front": 4097, "upstream": 14097, "model": 4299, "ctl": 4296},
+  "FX-OC2-B": {"front": 4098, "upstream": 14098, "model": 4298, "ctl": 4295},
+  "FX-TLS": {"selfsigned": 8443, "expired": 8444, "trusted": 8445, "redirect": 8446, "plain_private": 8447, "plain_public": 8448, "mismatch": 8449, "ctl": 8440},
+  "FX-PASEO": {"daemon": 4310, "ctl": 4311},
+  "FX-CODEX": {"ws": 4126, "ctl": 4127},
+  "FX-GH": {"http": 8701, "ctl": 8711},
+  "FX-GIT": {"daemon": 9418, "http": 8702, "ctl": 8712},
+  "FX-LINUXDL": {"http": 8700, "ctl": 8710},
+  "FX-USAGE": {"http": 8703, "ctl": 8713},
+  "FX-AUTH": {"http": 8704, "ctl": 8714}
+}
