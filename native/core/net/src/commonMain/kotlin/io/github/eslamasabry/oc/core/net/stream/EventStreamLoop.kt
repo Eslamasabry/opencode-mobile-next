@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.core.net.stream
 
+import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.net.gate.NetworkGate
 import io.github.eslamasabry.oc.core.net.sse.SseFrame
 import io.github.eslamasabry.oc.core.net.sse.SseParser
@@ -29,13 +30,13 @@ import kotlin.time.Clock
  * - a failed or dropped try waits [BackoffPolicy.delayMs] (OpenCode 2: 1, 2, 4, 8, then every 16 s, N4-D6);
  *   30 s connected resets the count; from the 6th failure the status says Disconnected but tries go on;
  * - no byte for [BackoffPolicy.stallTimeoutMs] (45 s) is a drop (N4-D7, B-PROTO-132);
- * - a non-loopback host with no network waits in [StreamState.WaitingForNetwork] without spending tries and connects
+ * - a non-loopback host with no network waits in [StreamStatus.WaitingForNetwork] without spending tries and connects
  *   at once when the network returns, with the count reset; a new default network does the same, also for a live
  *   stream (N4-D8, B-PROTO-133); loopback is never gated;
  * - out of sight ([hidden]) the policy's hidden pace applies (PB-51); coming back fires a waiting try at once;
- * - 401/403 stop the loop ([StreamState.Stopped]) until [retryNow].
+ * - 401/403 stop the loop ([StreamStatus.Stopped]) until [retryNow].
  *
- * Every connect after the first is announced as [StreamState.Connected] with a higher generation **before** any of
+ * Every connect after the first is announced as [StreamStatus.Connected] with a higher generation **before** any of
  * its frames, so the owner refetches (reconcile by refetch, never replay; N4-D10, ADR §9.5).
  *
  * Memory (audit codex-04 MAJOR 10): there is no frame queue. The flow is rendezvous-buffered and frames are handed
@@ -81,7 +82,7 @@ public class EventStreamLoop(
         var lastEventId: String? = null
         while (true) {
             if (!gate.isUsable(hostClass)) {
-                send(StreamSignal.Status(StreamState.WaitingForNetwork))
+                send(StreamSignal.Status(StreamStatus.WaitingForNetwork))
                 gate.awaitUsable(hostClass)
                 attempt = 0
                 nextAt = null
@@ -95,12 +96,12 @@ public class EventStreamLoop(
                 val gen = generation
                 connectedAt = now()
                 nextAt = null
-                send(StreamSignal.Status(StreamState.Connected(gen)))
+                send(StreamSignal.Status(StreamStatus.Connected))
                 end = readUntilEnd(body, gen, networkAtStart) { id -> lastEventId = id }
             }
             if (result is SseConnectResult.Failed && result.stop) {
                 retry.tryReceive() // conflated: drops a stale request so it cannot undo the stop
-                send(StreamSignal.Status(StreamState.Stopped(result.failure)))
+                send(StreamSignal.Status(StreamStatus.Stopped(result.failure)))
                 retry.receive()
                 attempt = 0
                 nextAt = null
@@ -130,14 +131,14 @@ public class EventStreamLoop(
         }
     }
 
-    private fun inFlight(attempt: Int, nextAt: Long?): StreamState =
-        if (attempt == 0) StreamState.Connecting else waiting(attempt, nextAt)
+    private fun inFlight(attempt: Int, nextAt: Long?): StreamStatus =
+        if (attempt == 0) StreamStatus.Connecting else waiting(attempt, nextAt)
 
-    private fun waiting(attempt: Int, nextAt: Long?): StreamState =
+    private fun waiting(attempt: Int, nextAt: Long?): StreamStatus =
         if (attempt >= policy.disconnectedLabelAfter) {
-            StreamState.Disconnected(attempt, nextAt)
+            StreamStatus.Disconnected(attempt, nextAt)
         } else {
-            StreamState.Reconnecting(attempt, nextAt)
+            StreamStatus.Reconnecting(attempt, nextAt)
         }
 
     /** Reads the body until it ends, fails, stalls, or is interrupted by [retryNow] or a new default network. */

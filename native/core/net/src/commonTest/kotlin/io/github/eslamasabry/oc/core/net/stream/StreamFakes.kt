@@ -3,9 +3,10 @@
 package io.github.eslamasabry.oc.core.net.stream
 
 import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.net.gate.NetworkState
-import io.github.eslamasabry.oc.core.net.gate.NetworkStatus
-import io.github.eslamasabry.oc.core.net.gate.Online
+import io.github.eslamasabry.oc.core.common.NetworkWhy
+import io.github.eslamasabry.oc.core.model.NetworkState
+import io.github.eslamasabry.oc.core.model.NetworkStatus
+import io.github.eslamasabry.oc.core.model.NetworkState.Online
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -33,7 +34,7 @@ internal class FakeNetworkStatus(online: Online = Online.Yes, id: Long = 1) : Ne
 /** What one connection attempt does. */
 internal sealed interface Script {
     /** The request fails before a body (refused, 5xx, timeout). */
-    data class Fail(val failure: Failure = Failure.Network(null), val stop: Boolean = false) : Script
+    data class Fail(val failure: Failure = Failure.Network(NetworkWhy.Refused), val stop: Boolean = false) : Script
 
     /** A 200 stream: each step is a chunk after a delay; then [end]. */
     data class Body(val steps: List<Pair<Long, String>>, val end: End) : Script

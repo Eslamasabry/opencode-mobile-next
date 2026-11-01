@@ -1,8 +1,11 @@
 package io.github.eslamasabry.oc.core.net
 
+import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
+import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.model.ServerOrigin
@@ -66,18 +69,27 @@ public enum class CallKind {
     }
 }
 
-/** Status codes → plain failures (plan 04 §3.8). Server text never goes into details: status only. */
+/**
+ * Status codes → plain failures (plan 04 §3.8, onto core's flat Failure). Server text never goes into details: status
+ * only. The server's symbolic tag (`_tag`/`code`) refines Busy, NotFound, Conflict and Rejected in the protocol
+ * module, which reads the body; this mapping sees the status alone.
+ */
 public object StatusMapping {
-    public fun failureFor(status: Int): Failure {
+    /** [credentialsSent]: a 401 without a credential means "password missing", with one "password rejected". */
+    public fun failureFor(status: Int, credentialsSent: Boolean = true): Failure {
         val details = Redacted.shape(null, status)
         return when {
-            status == 401 || status == 403 -> Failure.SignIn(details)
-            status == 404 || status == 410 -> Failure.NotFound(details)
+            status == 401 -> Failure.SignIn(if (credentialsSent) SignInWhy.PasswordRejected else SignInWhy.PasswordMissing, details)
+            // 403 is words only: it never sets passwordRejected (plan 04 §3.8).
+            status == 403 -> Failure.SignIn(SignInWhy.Forbidden, details)
+            status == 404 || status == 410 -> Failure.NotFound(details = details)
             status == 408 -> Failure.TimedOut(details)
-            status == 409 -> Failure.Conflict(details)
-            status == 429 || status == 503 -> Failure.Busy(details)
-            status >= 500 -> Failure.Server(status, details)
-            else -> Failure.Rejected(status, details) // 3xx too: redirects are never followed (B-PROTO-129)
+            status == 409 -> Failure.Conflict(details = details)
+            status == 429 -> Failure.Busy(BusyKind.RateLimited, details = details)
+            // 503 without a tag; the protocol refines Starting/Stopping/Failed from `service_*` tags.
+            status == 503 -> Failure.Busy(BusyKind.Overloaded, details = details)
+            status >= 500 -> Failure.Server(status, details = details)
+            else -> Failure.Rejected(status, details = details) // 3xx too: redirects are never followed (B-PROTO-129)
         }
     }
 }
@@ -87,10 +99,11 @@ public object TransportFailures {
     public fun of(kind: CallKind, error: TransportError, cause: Throwable?): Failure {
         val details = Redacted.shape(cause)
         return when {
-            error == TransportError.ConnectFailed -> Failure.Network(details)
+            // Nothing reached the server, so even a mutation is safe to call failed (DNS, refused, no route, gate).
+            error == TransportError.ConnectFailed -> Failure.Network(NetworkWhy.Refused, details)
             kind == CallKind.Mutation -> Failure.Refused(RefusalReason.DispatchUncertain, details)
             error == TransportError.Timeout -> Failure.TimedOut(details)
-            else -> Failure.Network(details)
+            else -> Failure.Network(NetworkWhy.Reset, details)
         }
     }
 }

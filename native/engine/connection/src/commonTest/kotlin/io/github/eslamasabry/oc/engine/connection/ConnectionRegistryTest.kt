@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.engine.connection
 
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.IncompatibleKind
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.GatewayPair
@@ -52,7 +54,8 @@ class ConnectionRegistryTest {
         val first = assertIs<Outcome.Ok<ConnectionGraph>>(registry.open(profile)).value
         val second = assertIs<Outcome.Ok<ConnectionGraph>>(registry.open(profile)).value
         assertSame(first, second)
-        assertEquals(1, fake.connected.size)
+        assertEquals(1, fake.opened.size)
+        assertSame(first.scope, fake.opened.single().scope)
         assertEquals(StreamStatus.Connected, first.session.status.value)
 
         registry.close(profile.id)
@@ -71,5 +74,23 @@ class ConnectionRegistryTest {
                 TestDispatchers(StandardTestDispatcher(testScheduler)),
             )
         assertIs<Outcome.Failed>(registry.open(profile))
+    }
+
+    @Test
+    fun `a failed connect cancels its scope and leaves nothing live`() = runTest {
+        val fake = FakeGatewayFactory(failNextConnect = Failure.Incompatible(IncompatibleKind.ProtocolMismatch))
+        val registry =
+            ConnectionRegistry(
+                setOf(fake),
+                { p, pair, scope -> HandGraph(p, pair, scope) },
+                AppCoroutineScope(backgroundScope.coroutineContext),
+                TestDispatchers(StandardTestDispatcher(testScheduler)),
+            )
+        val failed = assertIs<Outcome.Failed>(registry.open(profile))
+        assertIs<Failure.Incompatible>(failed.failure)
+        assertTrue(registry.live.value.isEmpty())
+        assertTrue(fake.opened.isEmpty())
+        // The next try connects normally.
+        assertIs<Outcome.Ok<ConnectionGraph>>(registry.open(profile))
     }
 }

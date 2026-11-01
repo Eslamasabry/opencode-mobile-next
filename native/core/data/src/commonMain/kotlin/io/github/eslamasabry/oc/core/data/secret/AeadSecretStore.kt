@@ -134,6 +134,6 @@ public class AeadSecretStore(
         public const val FILE_NAME: String = "oc_secrets_v1"
         public const val KEY_ALIAS: String = "oc.secrets.aesgcm.v1"
 
-        private fun secretFailure(e: Throwable): Failure = Failure.Storage(Redacted.shape(e))
+        private fun secretFailure(e: Throwable): Failure = Failure.SecretUnavailable(Redacted.shape(e))
     }
 }
