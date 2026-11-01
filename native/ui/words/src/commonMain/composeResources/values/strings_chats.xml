@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- :feature:chats copy (one file per feature, ADR §4 row 22). P1 placeholder text; P6 converts the ARB files. -->
+<resources>
+    <string name="chats_title">Conversations</string>
+    <string name="chats_placeholder">The native app is being built. Nothing is connected yet.</string>
+    <string name="chats_open_all">Show all conversations</string>
+    <string name="chats_all_title">All conversations</string>
+    <string name="chats_all_filter">Filter: %1$s</string>
+    <string name="chats_all_none">No filter</string>
+    <string name="chats_back">Back</string>
+</resources>
