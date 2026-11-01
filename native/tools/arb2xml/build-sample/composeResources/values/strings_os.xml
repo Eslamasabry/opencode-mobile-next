@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_en.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="appExitForceStopped">OpenCode Mobile was closed %1$s</string>
+    <string name="appExitLowMemory">Android closed OpenCode Mobile %1$s to free memory</string>
+    <string name="appExitCrashed">OpenCode Mobile stopped unexpectedly %1$s</string>
+    <string name="appExitKilled">Android stopped OpenCode Mobile %1$s</string>
+    <string name="appExitServerStopped">%1$s. Your phone\u0027s OpenCode stopped with it; it\u0027s starting again.</string>
+    <string name="appExitServerAndTeamStopped">%1$s. Your phone\u0027s OpenCode and the AI Team stopped with it; they\u0027re starting again.</string>
+    <string name="appExitServerStoppedManual">%1$s. Your phone\u0027s OpenCode stopped with it. Start it again when you\u0027re ready.</string>
+    <string name="appExitServerAndTeamStoppedManual">%1$s. Your phone\u0027s OpenCode and the AI Team stopped with it. Start them again when you\u0027re ready.</string>
+    <string name="appExitServerBack">%1$s. Your phone\u0027s OpenCode stopped with it and is running again.</string>
+    <string name="appExitServerBackTeam">%1$s. Your phone\u0027s OpenCode and the AI Team stopped with it; OpenCode is running again.</string>
+    <string name="appExitAtTime">at %1$s</string>
+    <string name="appExitOnDay">on %1$s at %2$s</string>
+    <string name="appExitSwitchToPhone">Switch to this phone</string>
+    <string name="appExitKeepRunning">Keep it running</string>
+    <string name="appExitQuietRestarted">Restarted after the app closed</string>
+    <string name="appExitQuietRestarting">Restarting after the app closed</string>
+    <string name="backgroundPauseTimeLimit">Background connection paused %1$s to save battery.</string>
+    <string name="backgroundPauseRestricted">Background connection paused: battery use is restricted.</string>
+    <string name="backgroundPauseUserStopped">Background connection stopped when the app closed %1$s.</string>
+    <string name="backgroundPauseAppUpdated">Background connection stopped when the app was updated %1$s.</string>
+    <string name="backgroundPauseInterrupted">Background connection stopped for an unknown reason.</string>
+    <string name="backgroundPauseDeviceRestarted">Background connection stopped when the phone restarted.</string>
+    <string name="backgroundPauseResume">Resume background connection</string>
+    <string name="backgroundPauseResumeShort">Resume</string>
+    <string name="backgroundPauseResuming">Resuming background connection…</string>
+    <string name="backgroundPauseResumeFailed">Couldn\u0027t resume. Open Keep running settings.</string>
+    <string name="backgroundPauseOpenKeepRunning">Open Keep running settings</string>
+    <string name="backgroundPauseResumed">Background connection resumed.</string>
+    <plurals name="notifStatusNeedsYou">
+        <item quantity="one">1 needs you</item>
+        <item quantity="other">%1$d need you</item>
+    </plurals>
+    <string name="notifStatusNeedsYou__eq1">1 needs you</string>
+    <string name="notifStatusNeedsYou__eq2">%1$d need you</string>
+    <string name="notifStatusStillWorking">%1$d still working</string>
+    <string name="notifStatusChatsWorking">%1$d conversations working</string>
+    <string name="notifStatusMore">+%1$d more</string>
+    <string name="notifStatusWaitingCount">%1$d waiting</string>
+    <string name="notifStatusTasksProgress">%1$d of %2$d tasks</string>
+    <string name="notifStatusMinutes">%1$d min</string>
+    <string name="notifStatusHours">%1$d h</string>
+    <string name="notifStatusWaitingProvider">Waiting · %1$s limit</string>
+    <string name="notifStatusWaitingGeneric">Waiting · the provider is busy</string>
+    <string name="notifStatusTriesAgainAt">Tries again at %1$s</string>
+    <string name="notifStatusTriesAgainSoon">Tries again soon</string>
+    <string name="notifStatusPausedAndroidTitle">Paused · Android\u0027s background limit</string>
+    <string name="notifStatusPausedAndroidBody">Android stops background work after 6 hours a day. Open OpenCode to keep going.</string>
+    <string name="notifStatusPausedHotTitle">Paused · phone is hot</string>
+    <string name="notifStatusPausedHotBody">Resumes when it cools down</string>
+    <string name="notifStatusPausedIdleTitle">Paused · nothing was running</string>
+    <string name="notifStatusPausedIdleBody">Tap to start OpenCode again</string>
+    <string name="notifStatusReconnectingTitle">Reconnecting to %1$s</string>
+    <string name="notifStatusReconnectingGeneric">Reconnecting</string>
+    <string name="notifStatusReconnectingBody">Waiting for the connection</string>
+    <string name="notifStatusReadyTitle">Ready · nothing running</string>
+    <string name="notifStatusReadyBody">Ready when you are</string>
+    <string name="notifStatusLastReply">Last reply %1$s ago</string>
+    <string name="notifStatusLastReplyNow">Last reply just now</string>
+    <string name="notifStatusSetupTitle">Setup · %1$d of %2$d</string>
+    <string name="notifStatusOnServer">on %1$s</string>
+    <string name="notifStatusOnThisPhone">on this phone</string>
+    <string name="notifStatusPublicWorking">%1$d working</string>
+    <string name="notifStatusPublicWaiting">Waiting</string>
+    <string name="notifStatusPublicPaused">Paused</string>
+    <string name="notifStatusPublicReconnecting">Reconnecting</string>
+    <string name="notifStatusPublicReady">Ready</string>
+    <string name="notifStatusPublicSetup">Setting up</string>
+</resources>

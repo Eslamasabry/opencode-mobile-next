@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_zh.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="usageWidgetIntro">在桌面“用量”小组件中显示套餐剩余量。应用运行时更新。</string>
+    <string name="usageEmptyTitle">尚无订阅</string>
+    <string name="usageOnConnection">在%1$s上</string>
+    <string name="usageWidgetSettingsShow">显示这些套餐</string>
+    <string name="usageWidgetSettingsWindows">显示 5 小时、每周或两者</string>
+    <string name="usageWidgetWindowBoth">两者</string>
+    <string name="usageWidgetWindowFiveHour">5 小时</string>
+    <string name="usageWidgetWindowWeekly">每周</string>
+    <string name="usageWidgetSettingsSetup">显示需要设置的行</string>
+    <string name="usageWidgetSettingsSetupHelp">登录、添加密钥并设置行</string>
+    <string name="widgetV2ConfigureTitle">小组件样式</string>
+    <string name="widgetV2AccentWallpaper">壁纸</string>
+    <string name="widgetV2AccentApp">应用主题</string>
+    <string name="widgetV2AccentGreen">绿色</string>
+    <string name="widgetV2AccentTeal">青色</string>
+    <string name="widgetV2AccentBlue">蓝色</string>
+    <string name="widgetV2AccentAmber">琥珀色</string>
+    <string name="widgetV2SaveStyle">保存样式</string>
+    <string name="widgetV2SteerTitle">添加到本轮</string>
+    <string name="widgetV2AfterReplyTitle">在本次回复后发送</string>
+    <string name="widgetV2VoiceTitle">新消息</string>
+    <string name="widgetV2MessageHint">输入消息</string>
+    <string name="widgetV2Send">发送</string>
+    <string name="widgetV2StaleRequest">对话已更改。你的消息仍在这里。</string>
+    <string name="widgetV2Unavailable">后台连接不可用。你的消息仍在这里。</string>
+    <string name="widgetV2Unsupported">此连接不支持该操作。</string>
+    <string name="widgetV2Uncertain">无法确认是否已发送。再次发送前请先查看对话。</string>
+    <string name="widgetV2InvalidRequest">发送前请先输入消息。</string>
+    <string name="widgetV2UnknownBehavior">正在等待对话详情…</string>
+    <string name="widgetV2StyleStale">此小组件已更改。请关闭后重试。</string>
+    <string name="widgetV2StyleUnavailable">无法保存样式。请重试。</string>
+    <string name="widgetV2DictationUnavailable">听写暂时不可用。你可以改为输入。</string>
+    <string name="widgetV2RestartUnavailable">此对话只能在应用内更改。</string>
+</resources>

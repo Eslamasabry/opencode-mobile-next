@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_pt.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="agentsChooseTitle">Escolher um agente</string>
+    <string name="agentsStateReady">Pronto</string>
+    <string name="agentsStateNotInstalled">Não instalado · %1$s</string>
+    <string name="agentsStateNotInstalledNoSize">Não instalado</string>
+    <string name="agentsStateSignInNeeded">Login necessário</string>
+    <string name="agentsStateChecking">Verificando o login…</string>
+    <string name="agentsStateStopped">Parou em segundo plano</string>
+    <string name="agentsStateLimit">Limite do plano atingido</string>
+    <string name="agentsStateUnavailable">Ainda não disponível neste celular</string>
+    <string name="agentsSetupTitle">Configurar o %1$s · %2$s</string>
+    <string name="agentsSetupTitleNoSize">Configurar o %1$s</string>
+    <string name="agentsSetupBody">O %1$s roda neste celular. A instalação baixa o agente e tudo o que ele precisa.</string>
+    <string name="agentsInstallAction">Instalar o %1$s</string>
+    <string name="agentsCancelSetup">Cancelar a configuração</string>
+    <string name="agentsInstalling">Instalando o %1$s…</string>
+    <string name="agentsStepInstall">Instalado</string>
+    <string name="agentsStepVersion">Versão</string>
+    <string name="agentsStepConnection">Conexão</string>
+    <string name="agentsStepReady">Pronto</string>
+    <string name="agentsSignInTitle">Entrar com o %1$s</string>
+    <string name="agentsSignInAgain">Entrar novamente</string>
+    <string name="agentsSignedIn">Login feito</string>
+    <string name="agentsSignedInAs">Login feito como %1$s</string>
+    <string name="agentsRemoveAction">Remover o %1$s</string>
+    <string name="agentsRemoving">Removendo o %1$s…</string>
+    <string name="agentsDone">Concluir</string>
+    <string name="agentsModelTitle">Escolher um modelo</string>
+    <string name="agentsModelDefault">Modelo padrão</string>
+    <string name="agentsModelLoading">Lendo os modelos…</string>
+    <string name="agentsLimitUnknown">O limite do plano do %1$s foi atingido · tente mais tarde</string>
+    <string name="agentsSignInAction">Entrar no %1$s</string>
+    <string name="agentsStoppedLine">O %1$s parou em segundo plano</string>
+    <string name="agentsResumeAction">Retomar o %1$s</string>
+    <string name="agentsChecking">Procurando agentes neste celular…</string>
+    <string name="agentsStateNeedsArm">Requer um celular de 64 bits</string>
+    <string name="agentsInstallHint">Instalar</string>
+    <string name="agentsChipSignIn">Entrar</string>
+    <string name="agentsChipResume">Retomar</string>
+    <string name="agentsChipCheck">Verificar</string>
+</resources>

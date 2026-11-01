@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_zh.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="aboutBuildVersion">OpenCode Mobile %1$s+%2$s</string>
+    <string name="aboutSigningCertificate">签名证书 SHA-256</string>
+    <string name="connectionHelpGuideTip">请勿让服务器暴露在公网。请通过 Tailscale 的私有 HTTPS 访问它，或以运行本应用的设备为终点的加密隧道。你电脑上的 localhost 并不是你手机上的 localhost。</string>
+    <string name="iosRemoteSummary">这是你所选 OpenCode 服务器的远程客户端。此 iOS 版本不提供设备端服务器托管和后台监控。</string>
+    <string name="iosKeychainGuide">服务器密码使用此设备的钥匙串保存，不会以明文形式写入应用偏好设置。</string>
+    <string name="platformSecureStorageGuide">服务器密码使用此平台的安全凭据存储，不会以明文形式写入应用偏好设置。</string>
+    <string name="e7SharedThreeStepsToYourFirstSession">三步开始你的第一次对话</string>
+    <string name="e7SharedOpenCodeRunsOnYourComputerThisApp">OpenCode 在你的电脑上运行，本应用是远程端。配对只需一条命令即可连接两者 — 无需输入地址或密码。</string>
+    <string name="e7SharedOnYourComputerRunOneCommand">在你的电脑上运行一条命令</string>
+    <string name="e7SharedInATerminalOnTheComputerWhere">在已安装 OpenCode 的那台电脑上打开终端：</string>
+    <string name="e7SharedItStartsTheServerAndPrintsA">它会启动服务器并打印配对码 — 以及一个可扫描的二维码。</string>
+    <string name="e7SharedScanTheQROrPasteTheCode">扫描二维码，或在本应用里粘贴配对码</string>
+    <string name="e7SharedPasteTheCodeInThisApp">在本应用里粘贴配对码</string>
+    <string name="e7SharedStartTalking">开始对话</string>
+    <string name="e7SharedPickAProjectAndSendYourFirst">选择一个项目并发送第一条消息。工作在电脑上完成，本应用负责展示并让你随时干预。</string>
+    <string name="e7SharedAdvanced">高级</string>
+    <string name="e7SharedHTTPSSSHTunnelsOlderServersTermuxInternals">HTTPS、SSH 隧道、旧版服务器、Termux 内部细节</string>
+    <string name="e7SharedHTTPSSSHTunnelsOlderServers">HTTPS、SSH 隧道、旧版服务器</string>
+    <string name="e7SharedReachAServerOverHTTPSOrA">通过 HTTPS 或隧道连接服务器</string>
+    <string name="e7SharedPairingWorksWhenTheAddressTheServer">配对的前提是本设备能访问服务器地址。使用远程 HTTP 地址时，应用会在发送密码前征求你的同意。建议优先使用 HTTPS 或 Tailscale 私有连接。</string>
+    <string name="e7SharedOlderServersWithoutPairing">不支持配对的旧版服务器</string>
+    <string name="e7SharedOnDeviceViaTermuxAutomated">通过 Termux 在设备上运行（自动）</string>
+    <string name="e7SharedUseTheOnDeviceTermuxCardOn">使用“服务器”页面上的“本机（Termux）”卡片。应用会安装 Termux、解锁桥接、配置 opencode、启动服务器并连接 — 全程有引导。</string>
+    <string name="e7SharedOnlyTwoTapsNeedYouPersonallyDownloading">只有两步需要你亲自操作：下载 Termux APK，以及在 Termux 中粘贴一次解锁命令 — 这两步是 Android 安全模型的要求，而非本应用的要求。</string>
+    <string name="e7SharedPreferManualInsideTermuxRun">想手动操作？在 Termux 中运行：</string>
+    <string name="e7SharedTheChrootSharesTheNetworkStackSo">chroot 与主机共用网络栈，因此本应用可以访问 http://127.0.0.1:4096。运行 `termux-wake-lock` 可保持其存活。</string>
+    <string name="e7SharedSecurityNotes">安全须知</string>
+    <string name="e7SharedAlwaysSetOPENCODESERVERPASSWORDWhenBinding">在 localhost 之外绑定端口时，务必设置 OPENCODE_SERVER_PASSWORD。</string>
+    <string name="e7SharedPasswordsAreStoredInTheAndroidKeystore">密码仅保存在本设备的 Android 密钥库中。</string>
+    <string name="e7SharedTheServerCanExecuteCommandsOnIts">服务器可在其主机上执行命令 — 请像对待 SSH 访问一样对待它的访问权限。</string>
+    <string name="e7SharedDetail307">第 %1$d 步，共 3 步</string>
+    <string name="e7SettingsDetailUi19">关于此版本</string>
+    <string name="e7SettingsDetailUi22">OpenCode 服务器的移动客户端。下载可选模型后，语音识别在本机运行。</string>
+    <string name="e7SettingsDetailUi23">OpenCode 服务器的桌面客户端。</string>
+    <string name="e7SettingsAlphaBody">Android 是受支持的平台；桌面版仍为实验性。</string>
+    <string name="e7SettingsNonAffiliation">OpenCode Mobile 是独立的社区项目，并非由 OpenCode 官方团队开发、维护、认可或与之关联。</string>
+    <string name="e7SettingsDiagnosticOccurrences">出现 %1$d 次</string>
+    <string name="perfTraceTitle">性能</string>
+    <string name="perfTraceBody">应用打开期间每个步骤的耗时：连接、加载、每次向服务器发出的请求。仅保存在内存中，应用关闭时清除。报告包含名称和耗时，绝不含消息或密码。</string>
+    <string name="perfTraceCopy">复制耗时报告</string>
+    <string name="perfTraceCopied">性能报告已复制</string>
+    <string name="perfTraceEmpty">尚未测量任何内容。</string>
+    <string name="perfTraceSlowest">最慢的步骤</string>
+    <string name="perfTraceRecent">最新步骤</string>
+    <string name="perfTraceStatLine">%1$d× · 典型 %2$s · 较慢 %3$s · 最长 %4$s</string>
+    <plurals name="perfTraceFailed">
+        <item quantity="other">%1$d 次失败</item>
+    </plurals>
+    <string name="perfTraceFailed__eq1">1 次失败</string>
+    <string name="perfTraceAt">于 %1$s</string>
+    <string name="perfTraceWithin">在 %1$s 内</string>
+    <string name="guideStepTwoScan">点击“添加服务器”，再点“扫描二维码”，把摄像头对准二维码；或选择“粘贴代码”。</string>
+    <string name="guideStepTwoPaste">复制打印出的代码，然后点击“添加服务器”并选择“粘贴代码”。</string>
+    <string name="guidePhonePathTitle">改用此手机</string>
+    <string name="guidePhonePathBody">在此手机上安装 OpenCode 并直接使用，无需电脑</string>
+    <string name="perfTraceClearTimings">清除计时</string>
+    <plurals name="appDiagnosticsClearTitle">
+        <item quantity="other">清除 %1$d 条错误？</item>
+    </plurals>
+    <string name="appDiagnosticsClearTitle__eq1">清除 1 条错误？</string>
+    <plurals name="appDiagnosticsClearBody">
+        <item quantity="other">保留在此手机上的 %1$d 条错误会被移除，已保存的报告中也一并移除。此操作无法撤销。</item>
+    </plurals>
+    <string name="appDiagnosticsClearBody__eq1">保留在此手机上的这条错误会被移除，已保存的报告中也一并移除。此操作无法撤销。</string>
+    <plurals name="appDiagnosticsClearConfirm">
+        <item quantity="other">清除 %1$d 条错误</item>
+    </plurals>
+    <string name="appDiagnosticsClearConfirm__eq1">清除 1 条错误</string>
+    <string name="aboutCopyVersion">复制版本号</string>
+    <string name="aboutAllLicences">所有软件包许可</string>
+    <string name="aboutAllLicencesDetail">此构建版本中打包的每个库的许可文本</string>
+    <string name="aboutPackageId">包名</string>
+    <string name="shorebirdUpdateReadyBody">完全关闭并重新打开应用后生效。</string>
+    <string name="desktopReleaseAvailable">有可用更新 %1$s</string>
+    <string name="desktopReleaseWhatChanged">发布页面列出了变更内容并提供下载。</string>
+    <string name="desktopReleaseOpenPage">打开发布页面</string>
+    <string name="perfTraceActions">耗时报告操作</string>
+    <string name="reportProblemDescribeLabel">发生了什么？</string>
+    <string name="reportProblemDescribeHint">你做了什么、期望什么、实际得到了什么</string>
+    <string name="reportProblemDescribeFirst">请先说明发生了什么</string>
+    <plurals name="reportProblemErrorsLabel">
+        <item quantity="other">%1$d 条最近的错误</item>
+    </plurals>
+    <string name="reportProblemErrorsLabel__eq1">1 条最近的错误</string>
+    <string name="reportProblemClearFailed">无法清除已保存的报告。请重试。</string>
+    <string name="reportProblemLinkCopiesDiagnostics">诊断信息过长，无法放进链接。打开表单时会复制它们，请粘贴到其中的“诊断”字段。</string>
+    <string name="reportProblemLinkCopiesWhole">报告过长，无法放进链接。打开表单时会复制它，请粘贴到表单中。</string>
+    <string name="reportProblemCopied">报告已复制</string>
+    <string name="reportProblemDiagnosticsCopied">诊断信息已复制：请粘贴到表单中</string>
+    <string name="aboutHelpSection">提示与快捷方式</string>
+    <string name="aboutBundledComponents">内置组件</string>
+    <string name="aboutBundledComponentsDetail">此应用内置的图标、字体及其他组成部分</string>
+    <string name="crashReportsLabel">崩溃报告</string>
+    <string name="crashReportsSwitch">在此手机上保存崩溃报告</string>
+    <string name="crashReportsSwitchBody">保存在此手机上，绝不会自动发送。</string>
+    <string name="crashReportsUnavailable">崩溃报告目前不可用。请重启应用后重试。</string>
+    <string name="crashReportsFailed">无法更新崩溃报告。请重启应用后重试。</string>
+    <string name="crashReportsNone">还没有崩溃报告</string>
+    <string name="crashReportsNoneBody">如果应用关闭或停止响应，这里会出现一条。</string>
+    <string name="crashKindError">应用遇到意外错误</string>
+    <string name="crashKindScreen">某个界面无法显示</string>
+    <string name="crashReportPreviewBody">仅保存在此手机上。只有你自行将已保存的错误包含在问题报告中时，它才会被发送。</string>
+    <string name="crashReportDetailSource">来源</string>
+    <string name="crashReportDetailCategory">类别</string>
+    <plurals name="crashReportsDelete">
+        <item quantity="other">删除 %1$d 份已保存的崩溃报告</item>
+    </plurals>
+    <string name="crashReportsDelete__eq1">删除 1 份已保存的崩溃报告</string>
+    <string name="crashReportsDelete__eq2">删除 %1$d 份已保存的崩溃报告</string>
+    <string name="crashReportsDeleteTitle">删除已保存的崩溃报告？</string>
+    <string name="crashReportsDeleteBody">删除已保存的崩溃报告。崩溃报告保存功能保持开启。</string>
+    <string name="crashReportsDeleteConfirm">删除崩溃报告</string>
+    <string name="crashReportsNote">只保存问题的类型和发生时间，不含错误消息、对话或密码。最多保留最近 20 份报告。</string>
+    <plurals name="crashReportsOnClears">
+        <item quantity="other">开启后将清除上方的 %1$d 条已保存错误。</item>
+    </plurals>
+    <string name="crashReportsOnClears__eq1">开启后将清除上方的已保存错误。</string>
+    <string name="crashReportsOnClears__eq2">开启后将清除上方的 %1$d 条已保存错误。</string>
+    <string name="crashReportsOffDeletes">关闭后将删除已保存的崩溃报告。</string>
+    <plurals name="crashReportsOffDeletesAndClears">
+        <item quantity="other">关闭后将删除已保存的崩溃报告，并清除上方的 %1$d 条已保存错误。</item>
+    </plurals>
+    <string name="crashReportsOffDeletesAndClears__eq1">关闭后将删除已保存的崩溃报告，并清除上方的已保存错误。</string>
+    <string name="crashReportsOffDeletesAndClears__eq2">关闭后将删除已保存的崩溃报告，并清除上方的 %1$d 条已保存错误。</string>
+    <plurals name="crashReportsOffClears">
+        <item quantity="other">关闭后将清除上方的 %1$d 条已保存错误。</item>
+    </plurals>
+    <string name="crashReportsOffClears__eq1">关闭后将清除上方的已保存错误。</string>
+    <string name="crashReportsOffClears__eq2">关闭后将清除上方的 %1$d 条已保存错误。</string>
+    <plurals name="crashReportsDeleteBodyWithErrors">
+        <item quantity="other">删除崩溃报告并清除上方的 %1$d 条已保存错误。崩溃报告保存功能保持开启。</item>
+    </plurals>
+    <string name="crashReportsDeleteBodyWithErrors__eq1">删除崩溃报告并清除上方的已保存错误。崩溃报告保存功能保持开启。</string>
+    <string name="crashReportsDeleteBodyWithErrors__eq2">删除崩溃报告并清除上方的 %1$d 条已保存错误。崩溃报告保存功能保持开启。</string>
+    <string name="crashReportsClearedToo">已保存的崩溃报告也会一并删除。</string>
+    <string name="diagnosticsExitHistoryTitle">最近的应用退出记录</string>
+    <string name="diagnosticsExitHistoryNote">Android 会记录应用每次关闭。此处内容不会自动发送。</string>
+    <string name="diagnosticsExitHistoryUnsupported">此手机不支持</string>
+    <string name="diagnosticsExitHistoryUnsupportedBody">Android 11 及更高版本会保留此记录。</string>
+    <string name="diagnosticsExitHistoryFailed">无法读取最近的应用退出记录。请重试，或重新打开应用。</string>
+    <string name="diagnosticsExitNormal">应用已关闭</string>
+    <string name="diagnosticsExitUpdate">应用已更新</string>
+    <string name="diagnosticsExitForceStop">应用被停止</string>
+    <string name="diagnosticsExitLowMemory">手机内存不足</string>
+    <string name="diagnosticsExitCrash">应用意外停止</string>
+    <string name="diagnosticsExitKilled">Android 结束了该应用</string>
+    <string name="diagnosticsExitReasonCode">原因代码</string>
+    <string name="diagnosticsExitImportance">重要性</string>
+    <string name="diagnosticsExitSummary">摘要</string>
+    <string name="diagnosticsReportOpen">分享已保存的崩溃报告</string>
+    <string name="diagnosticsReportTitle">预览崩溃报告</string>
+    <string name="diagnosticsReportPrivacy">只包含错误类别和时间，不含消息或对话。在你点击“分享报告”之前，不会有任何内容离开此手机。</string>
+    <plurals name="diagnosticsReportSize">
+        <item quantity="other">%1$d 份报告 · %2$s</item>
+    </plurals>
+    <string name="diagnosticsReportSize__eq1">1 份报告 · %2$s</string>
+    <string name="diagnosticsReportSize__eq2">%1$d 份报告 · %2$s</string>
+    <string name="diagnosticsReportShare">分享报告</string>
+    <string name="diagnosticsReportStale">已保存的详情已变更。分享前请检查新报告。</string>
+    <string name="diagnosticsReportShareFailed">无法打开分享。请重试。</string>
+    <string name="diagnosticsReportCaptureOff">崩溃报告保存已关闭。请开启以保存以后的应用错误。</string>
+    <string name="diagnosticsReportEmpty">没有可分享的已保存崩溃报告。</string>
+    <string name="diagnosticsUnavailable">这些详情不可用。请重新打开应用后重试。</string>
+    <string name="diagnosticsExitNoProblems">最近没有异常关闭。</string>
+    <plurals name="diagnosticsExitRoutine">
+        <item quantity="other">%1$d 次常规关闭（更新、你主动关闭）</item>
+    </plurals>
+    <string name="diagnosticsExitRoutine__eq1">1 次常规关闭（更新、你主动关闭）</string>
+    <string name="diagnosticsExitRoutine__eq2">%1$d 次常规关闭（更新、你主动关闭）</string>
+    <plurals name="diagnosticsExitShowAll">
+        <item quantity="other">显示全部 %1$d 项</item>
+    </plurals>
+    <string name="diagnosticsExitShowAll__eq1">显示全部 1 项</string>
+    <string name="diagnosticsExitUnknown">关闭原因未知</string>
+    <string name="diagnosticsExitToday">今天 %1$s</string>
+    <string name="diagnosticsExitYesterday">昨天 %1$s</string>
+</resources>

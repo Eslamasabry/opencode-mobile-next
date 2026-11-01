@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_pt.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="e7WorkspaceBackExit">Toque em voltar novamente para sair</string>
+    <string name="serverSwitcherOpen">Trocar de servidor</string>
+    <string name="chatsNewAgentNeedsProjectsFolder">O %1$s só trabalha nos projetos deste celular. Escolha um deles.</string>
+    <string name="chatsHomeTitle">Conversas</string>
+    <string name="chatsHomeRunning">Em andamento</string>
+    <string name="chatsHomeDone">Concluída</string>
+    <string name="chatsHomeFailed">Falhou</string>
+    <string name="chatsHomeToday">Hoje</string>
+    <string name="chatsHomeEarlier">Anteriores</string>
+    <string name="chatsHomeIncomplete">Algumas conversas não puderam ser carregadas</string>
+    <string name="chatsHomeOpening">Abrindo…</string>
+    <string name="chatsHomeUnreachable">%1$s não está respondendo. As conversas dele não são exibidas.</string>
+    <string name="chatsSourcesUnreachable">Não está respondendo</string>
+    <string name="chatsSourcesAll">Todas as conexões</string>
+    <string name="chatsSourcesSome">%1$d de %2$d conexões</string>
+    <string name="chatsSourcesSheetTitle">Conexões nesta lista</string>
+    <string name="chatsSourcesMain">As novas conversas começam aqui</string>
+    <string name="chatsSourcesOnPhone">Neste celular</string>
+    <string name="chatsSourcesElsewhere">Em outro computador</string>
+    <string name="chatsSourcesAgents">Agentes neste celular</string>
+    <string name="chatsSourcesAlways">Sempre exibida</string>
+    <string name="chatsHomeStillLoading">Carregando as conversas de %1$s…</string>
+    <string name="chatsHomeEmptyTitle">Ainda não há conversas</string>
+    <string name="chatsHomeNoMatchTitle">Nenhuma conversa corresponde</string>
+    <string name="chatsHomeNoMatchBody">Nada corresponde aos filtros escolhidos.</string>
+    <string name="chatsHomeClearFilters">Limpar filtros</string>
+    <string name="chatsHomeProjectEmptyTitle">Não há conversas em %1$s</string>
+    <string name="chatsHomeStartChatIn">Iniciar uma conversa em %1$s</string>
+    <string name="chatsHomeNewChat">Nova conversa</string>
+    <string name="chatsHomeOpenFailed">Não foi possível abrir esta conversa. Puxe para baixo para atualizar a lista.</string>
+    <string name="chatsFilterSheetTitle">Mostrar conversas de</string>
+    <plurals name="chatsFilterChatCount">
+        <item quantity="one">%1$d conversas</item>
+        <item quantity="many">%1$d conversas</item>
+        <item quantity="other">%1$d conversas</item>
+    </plurals>
+    <string name="chatsFilterChatCount__eq1">1 conversa</string>
+    <string name="chatsFilterRunningCount">%1$d em andamento</string>
+    <string name="chatsFilterNeedsYouWord">precisa de você</string>
+    <string name="chatsFilterOpenProject">Abrir um projeto…</string>
+    <string name="chatsNewChooseProject">Escolher um projeto</string>
+    <string name="chatsNewNeedProject">Escolha um projeto para iniciar uma conversa.</string>
+    <string name="chatsNewFailed">A conversa não foi iniciada. Sua mensagem ainda está aqui.</string>
+    <string name="agentsResumeNoticeTitle">Iniciar uma nova conversa?</string>
+    <string name="agentsResumeNoticeBody">Inicia uma nova conversa. O %1$s não consegue reabrir esta, e ela continua como está.</string>
+    <string name="agentsStartNew">Iniciar nova conversa</string>
+    <string name="agentsCancel">Cancelar</string>
+    <string name="chatsHomeOtherFolders">Outras pastas</string>
+    <string name="shellServerSwitching">Trocando…</string>
+</resources>

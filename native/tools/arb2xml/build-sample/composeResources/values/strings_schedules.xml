@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_en.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="scheduleEdit">Edit schedule</string>
+    <string name="schedulePrompt">Prompt</string>
+    <string name="scheduleTarget">Conversation</string>
+    <string name="scheduleThisConversation">This conversation</string>
+    <string name="scheduleNewConversation">New conversation each run</string>
+    <string name="scheduleOnce">Once</string>
+    <string name="scheduleRepeat">When</string>
+    <string name="scheduleTime">Time</string>
+    <string name="scheduleDelete">Delete schedule</string>
+    <string name="schedulePaused">Paused</string>
+    <string name="scheduleFinished">No more runs</string>
+    <string name="scheduleDigest">Morning summary</string>
+    <string name="scheduleEmpty">No scheduled prompts yet</string>
+    <string name="scheduleUnsupported">Scheduled prompts are unavailable for this connection.</string>
+    <string name="scheduleSaveFailed">Could not save this change. Try again.</string>
+    <string name="scheduleNeedsYou">Open the conversation to answer a request.</string>
+    <string name="scheduleBusy">The conversation was already working.</string>
+    <string name="scheduleUnavailable">The server could not be reached. Check that it is running and this phone can reach it.</string>
+    <string name="scheduleSignInAgain">The server needs its password again. Open the server and sign in before the next run.</string>
+    <string name="scheduleAllowHttp">This server uses plain HTTP and is not allowed yet. Open the server and allow HTTP before the next run.</string>
+    <string name="scheduleAgentFailed">The agent stopped with an error. Open the conversation to see what happened.</string>
+    <string name="scheduleCertificateChanged">The server's certificate changed. Open the server to check it before the next run.</string>
+    <string name="scheduleCertificateInvalid">The server's certificate is expired or not yet valid. Open the server to check it before the next run.</string>
+    <string name="scheduleTargetChanged">The saved connection or target changed. Edit this schedule.</string>
+    <string name="scheduleInterrupted">The run was interrupted. It was not sent again.</string>
+    <string name="scheduleTimeout">The run reached its time limit. Check the conversation.</string>
+    <string name="scheduleUncertain">Delivery could not be confirmed. Check the conversation before sending again.</string>
+    <string name="scheduleMissed">Skipped according to your missed-run choice.</string>
+    <string name="scheduleDeleteBody">Future runs and this schedule’s history will be removed. Prompts already sent stay in their conversations.</string>
+    <string name="scheduleToday">Today, %1$s</string>
+    <string name="scheduleTomorrow">Tomorrow, %1$s</string>
+    <string name="scheduleInMinutes">in %1$s min</string>
+    <string name="scheduleDeleteNamedTitle">Delete “%1$s”?</string>
+    <string name="scheduleNew">New scheduled prompt</string>
+    <string name="scheduleAsk">What should it do?</string>
+    <string name="scheduleAskHint">Run the tests and sum up what failed</string>
+    <string name="scheduleEveryDay">Every day</string>
+    <string name="scheduleWeekdaysShort">Weekdays</string>
+    <string name="scheduleCustom">Custom</string>
+    <string name="scheduleRuleDaily">Every day at %1$s</string>
+    <string name="scheduleRuleWeekdays">Every weekday at %1$s</string>
+    <plurals name="scheduleRuleHours">
+        <item quantity="one">Every hour</item>
+        <item quantity="other">Every %1$s hours</item>
+    </plurals>
+    <string name="scheduleRuleHours__eq1">Every hour</string>
+    <string name="scheduleRuleHours__eq2">Every %1$s hours</string>
+    <string name="scheduleForTime">Schedule for %1$s</string>
+    <string name="scheduleForWhen">Schedule for %1$s</string>
+    <plurals name="scheduleForHours">
+        <item quantity="one">Schedule every hour</item>
+        <item quantity="other">Schedule every %1$s hours</item>
+    </plurals>
+    <string name="scheduleForHours__eq1">Schedule every hour</string>
+    <string name="scheduleForHours__eq2">Schedule every %1$s hours</string>
+    <string name="scheduleForToday">Schedule for today, %1$s</string>
+    <string name="scheduleForTomorrow">Schedule for tomorrow, %1$s</string>
+    <string name="scheduleDayAt">%1$s, %2$s</string>
+    <string name="scheduleSent">Sent %1$s</string>
+    <string name="scheduleNotSent">Didn't go out %1$s</string>
+    <string name="scheduleSkippedWhen">Skipped %1$s</string>
+    <string name="scheduleSendingNow">Sending now</string>
+    <string name="scheduleDayToday">today</string>
+    <string name="scheduleDayYesterday">yesterday</string>
+    <string name="scheduleWheelToday">Today</string>
+    <string name="scheduleWheelTomorrow">Tomorrow</string>
+    <string name="scheduleWheelDay">Day</string>
+    <string name="scheduleWheelHowOften">How often</string>
+    <string name="scheduleClosedNote">Runs even with the app closed, sometimes a little late.</string>
+    <string name="scheduleNeedPrompt">Write what it should do first.</string>
+    <string name="scheduleNeedFuture">Pick a time later than now.</string>
+    <string name="scheduleInThisConversation">In this conversation</string>
+    <string name="scheduleOpenRun">Open the conversation</string>
+    <string name="scheduleDigestShort">A note each morning about what ran</string>
+    <string name="scheduleExactNote">Runs may start a little late.</string>
+    <string name="scheduleExactAllow">Allow exact timing</string>
+    <string name="scheduleNotifyOff">Notifications are off, so a run won't tell you it went out.</string>
+    <string name="scheduleEmptyBody">Pick a time, and this phone sends the prompt for you.</string>
+    <string name="scheduleRunNow">Run now</string>
+    <string name="scheduleRunNowNote">Starts one run right away. The next scheduled time stays the same.</string>
+</resources>

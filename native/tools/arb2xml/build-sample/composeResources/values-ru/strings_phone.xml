@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ru.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="phoneSetupLinuxWhy">Всё остальное работает внутри неё.</string>
+    <string name="phoneSetupEssentialsTitle">Git, SSH и сертификаты</string>
+    <string name="phoneSetupEssentialsShort">Git и SSH</string>
+    <string name="phoneSetupEssentialsWhy">Агенты используют Git и SSH для работы над вашими проектами.</string>
+    <string name="phoneSetupNodeWhy">OpenCode работает на Node.js.</string>
+    <string name="phoneSetupOpenCodeWhy">Сам агент для программирования.</string>
+    <string name="phoneSetupStartWhy">Настройка завершается запуском OpenCode.</string>
+    <string name="aiteamComponentTitle">AI Team</string>
+    <string name="aiteamComponentStageDownloading">Загрузка AI Team · %1$s из %2$s</string>
+    <string name="aiteamComponentStagePreparing">Подготовка AI Team</string>
+    <string name="voiceComponentTitle">Голосовой ввод</string>
+    <string name="voiceComponentSummary">Говорите вместо набора текста, даже без сети</string>
+    <string name="phoneSetupTermuxOtherRuntime">В Termux уже работает другой OpenCode. Переключите его в разделе «На этом телефоне» и продолжите настройку.</string>
+    <string name="freeModelNotice">Используется бесплатная модель OpenCode — она медленнее. Добавьте API-ключ своего провайдера, чтобы использовать свою модель.</string>
+</resources>
