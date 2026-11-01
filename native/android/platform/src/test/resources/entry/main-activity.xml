@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- S2-PLATFORM proposal for the coordinator (plan 11 §3 row `.MainActivity`, 07 §7.13, 16 §1.8.1): the entry part of
+     MainActivity's manifest element in :androidApp. Library manifests may not declare components (plan 11 §2.3), so
+     this is a test fixture; StaticShortcutsTest checks it (B-ANDR-072, B-ANDR-029). Paste the filters and the
+     meta-data into native/androidApp/src/main/AndroidManifest.xml and set the manifest placeholder
+     appShortcuts = StaticShortcuts.resourceFor(applicationId) ("@xml/shortcuts" stable, "@xml/shortcuts_native" preview). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Share target: text from any app becomes an unsent draft in a new conversation (07 §7.7). -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <!-- Session and team links (07 §7.6): ids only, network-silent, navigation only. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="opencode-mobile" android:host="session" />
+                <data android:scheme="opencode-mobile" android:host="team" />
+            </intent-filter>
+            <!-- Quick Settings tile long-press (07 §7.11, added): both tiles, told apart by EXTRA_COMPONENT_NAME. -->
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="${appShortcuts}" />
+        </activity>
+    </application>
+</manifest>

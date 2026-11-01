@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static shortcut labels (names and English text copied verbatim from the Flutter app at bd0a13d6). They move into
+     the generated strings_os of :androidApp (plan 11 §2.3, CR11-8); until then the app inherits them from here. -->
+<resources>
+    <string name="shortcut_connect_short">Connect</string>
+    <string name="shortcut_connect_long">Choose a server to connect</string>
+    <string name="shortcut_new_task_short">New conversation</string>
+    <string name="shortcut_new_task_long">Start a new conversation on the current server</string>
+</resources>

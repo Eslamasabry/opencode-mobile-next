@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The network monitor reads the default network (ConnectivityManager). No probes, no network names. -->
+<!-- Library manifests declare only <uses-permission> and <queries> (plan 11 §2.3). Components, intent filters and the
+     android.app.shortcuts meta-data live in :androidApp. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The network monitor reads the default network (ConnectivityManager). No probes, no network names. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <queries>
+        <!-- Tailscale handoff (plan 11 §14.6, 16 §1.8.2): the one package AndroidTailscaleApp may look up and open. -->
+        <package android:name="com.tailscale.ipn" />
+    </queries>
 </manifest>

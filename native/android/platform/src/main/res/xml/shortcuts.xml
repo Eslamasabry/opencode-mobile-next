@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static launcher shortcuts (long-press the app icon; plan 11 §14.4, 07 §7.4), stable. Copied from the
+     Flutter app at bd0a13d6. Each one is an explicit MAIN intent for MainActivity carrying the `oc.shortcut`
+     extra; EntryIntentReader whitelists the value, strips it and submits an untrusted Launch request to
+     EntryRouter. Nothing here connects, creates a session or sends a prompt on its own (Astra M2).
+     The manifest picks this file through the ${appShortcuts} placeholder (StaticShortcuts.kt). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="connect"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_connect"
+        android:shortcutShortLabel="@string/shortcut_connect_short"
+        android:shortcutLongLabel="@string/shortcut_connect_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="io.github.eslamasabry.opencode_mobile"
+            android:targetClass="io.github.eslamasabry.opencode_mobile.MainActivity">
+            <extra android:name="oc.shortcut" android:value="connect" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="new_task"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_new_task"
+        android:shortcutShortLabel="@string/shortcut_new_task_short"
+        android:shortcutLongLabel="@string/shortcut_new_task_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="io.github.eslamasabry.opencode_mobile"
+            android:targetClass="io.github.eslamasabry.opencode_mobile.MainActivity">
+            <extra android:name="oc.shortcut" android:value="new_task" />
+        </intent>
+    </shortcut>
+</shortcuts>
