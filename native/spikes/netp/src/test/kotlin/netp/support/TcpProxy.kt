@@ -13,6 +13,7 @@ import kotlin.concurrent.thread
  * - [pauseAll]: stop moving bytes on every open connection without closing it (a stalled path; no FIN, no RST).
  * - [freezeExisting]: the "old network" disappears: open connections go silent forever, new ones work
  *   (what a Wi-Fi to mobile switch looks like to a socket that is not told).
+ * - [holdResponsesOfNewConnections]: requests reach the server, replies never come back.
  * - [killAll]: close every connection (RST/FIN).
  */
 class TcpProxy(private val targetPort: Int) : AutoCloseable {
@@ -25,19 +26,20 @@ class TcpProxy(private val targetPort: Int) : AutoCloseable {
     private inner class Link(val client: Socket, val upstream: Socket) {
         @Volatile var frozen = false
         @Volatile var paused = false
+        @Volatile var downstreamHeld = false
 
         fun start() {
-            pump(client.getInputStream(), upstream.getOutputStream())
-            pump(upstream.getInputStream(), client.getOutputStream())
+            pump(client.getInputStream(), upstream.getOutputStream(), downstream = false)
+            pump(upstream.getInputStream(), client.getOutputStream(), downstream = true)
         }
 
-        private fun pump(input: InputStream, output: OutputStream) = thread(isDaemon = true) {
+        private fun pump(input: InputStream, output: OutputStream, downstream: Boolean) = thread(isDaemon = true) {
             val buf = ByteArray(16 * 1024)
             try {
                 while (true) {
                     val n = input.read(buf)
                     if (n < 0) break
-                    while (paused || frozen) Thread.sleep(5)
+                    while (paused || frozen || (downstream && downstreamHeld)) Thread.sleep(5)
                     output.write(buf, 0, n)
                     output.flush()
                 }
@@ -59,12 +61,15 @@ class TcpProxy(private val targetPort: Int) : AutoCloseable {
                 val c = runCatching { server.accept() }.getOrNull() ?: break
                 acceptedConnections++
                 val up = Socket(InetAddress.getLoopbackAddress(), targetPort)
-                val link = Link(c, up)
+                val link = Link(c, up).also { it.downstreamHeld = holdResponsesOfNewConnections }
                 links += link
                 link.start()
             }
         }
     }
+
+    /** New connections deliver requests upstream but hold every response byte (a reply lost in flight). */
+    @Volatile var holdResponsesOfNewConnections = false
 
     fun pauseAll() = links.forEach { it.paused = true }
     fun resumeAll() = links.forEach { it.paused = false }

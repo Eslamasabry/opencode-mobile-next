@@ -11,6 +11,7 @@ import java.security.MessageDigest
 import java.util.Base64
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.concurrent.thread
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,7 +30,7 @@ class RawWsServer(
     private val server = ServerSocket(0, 50, InetAddress.getLoopbackAddress())
     val port: Int get() = server.localPort
     val requests = CopyOnWriteArrayList<Map<String, String>>()
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, _ -> })
 
     init {
         thread(isDaemon = true) {
