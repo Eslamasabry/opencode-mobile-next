@@ -16,9 +16,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.LayoutDirection
-import io.github.eslamasabry.oc.ui.design.color.Graphite
+import io.github.eslamasabry.oc.ui.design.color.PackId
+import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionSignals
@@ -36,15 +38,18 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
+import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kit.theme.MaterialBridge
 import io.github.eslamasabry.oc.ui.kit.theme.rememberKitFonts
 import io.github.eslamasabry.oc.ui.kit.theme.toKitColors
 
 /**
- * The theme root (plan 06 §5.1). It resolves motion from the system signals, picks the roles (Graphite; the 31 packs
- * join in WP K1), builds colours, Geist typography and tokens, sets the layout direction from [localeTag], applies the
- * root text density (in-app Text size × system, cap 2.5×), and wraps the M3 parts the kit uses in the bridged
- * `MaterialTheme`. Nothing else in the app does any of this.
+ * The theme root (plan 06 §5.1). It resolves motion from the system signals, resolves the roles (the pack — Material
+ * You from the platform's tones — then the Accent swatch as partner, then Saver), builds colours, Geist typography and
+ * tokens, sets the layout direction from [localeTag], applies the root text density (in-app Text size × system, cap
+ * 2.5×), measures the window, sets the system bars, and wraps the M3 parts the kit uses in the bridged `MaterialTheme`.
+ * Nothing else in the app does any of this.
  *
  * Slice 0 keeps it in the `…ui.kit` package (the shell imports it there); plan 06's `…ui.kit.theme` move rides with the
  * contract freeze.
@@ -65,7 +70,12 @@ public fun KitTheme(
             AppearanceMode.Light -> false
             AppearanceMode.Dark, AppearanceMode.Saver -> true
         }
-    val roles = remember(dark, appearance.saver) { Graphite.of(dark).let { if (appearance.saver) it.saver else it } }
+    // Called once per composition of the theme, and only for Material You (plan 06 §5.5).
+    val dynamic = if (appearance.pack == PackId.Dynamic) remember(platform, dark) { platform.dynamicSource() } else null
+    val roles =
+        remember(appearance.pack, appearance.accent, dark, appearance.saver, dynamic) {
+            ThemeResolver.roles(appearance.pack, appearance.accent, dark, appearance.saver, dynamic)
+        }
     val colors = remember(roles) { roles.toKitColors() }
     val arabic = isArabic(localeTag)
     val fonts = rememberKitFonts(arabic)
@@ -84,6 +94,13 @@ public fun KitTheme(
     val selection = remember(colors) { TextSelectionColors(colors.accent, colors.accent.copy(alpha = 0.30f)) }
     val scheme = remember(roles) { MaterialBridge.scheme(roles) }
     val appDensity = rememberAppTextDensity(appearance.textSize)
+    val container = LocalWindowInfo.current.containerSize
+    val window =
+        remember(container, appDensity.density, signals.finePointer) {
+            if (container.width == 0) KitWindowInfo.Phone.copy(finePointer = signals.finePointer)
+            else KitWindowInfo(container.width / appDensity.density, container.height / appDensity.density, signals.finePointer)
+        }
+    platform.SystemBars(darkContent = !roles.dark, ground = colors.ground)
     CompositionLocalProvider(
         LocalKitPlatform provides platform,
         LocalKitAppearance provides appearance,
@@ -91,6 +108,7 @@ public fun KitTheme(
         LocalKitTypography provides typography,
         LocalKitTokens provides tokens,
         LocalKitMotion provides motion,
+        LocalKitWindow provides window,
         LocalLayoutDirection provides direction,
         LocalDensity provides appDensity,
         LocalKitAppDensity provides appDensity,

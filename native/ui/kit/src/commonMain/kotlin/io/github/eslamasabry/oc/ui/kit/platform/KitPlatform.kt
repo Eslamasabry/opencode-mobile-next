@@ -1,12 +1,14 @@
 package io.github.eslamasabry.oc.ui.kit.platform
 
 import androidx.compose.foundation.Indication
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.unit.Density
+import io.github.eslamasabry.oc.ui.design.color.DynamicSource
 import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.kit.foundation.scaledFontDensity
@@ -48,6 +50,19 @@ public interface KitPlatform {
 
     /** A blur + saturation effect for frost, or null to draw the surface solid (below API 31, desktop). */
     public fun frostEffect(spec: FrostSpec, density: Float): RenderEffect?
+
+    /**
+     * Material You tones (plan 06 §4.2, §5.5): Android API 31+ builds them from the system's dynamic schemes; null below
+     * API 31, on desktop and in tests that do not set one, where Graphite stands in.
+     */
+    public fun dynamicSource(): DynamicSource? = null
+
+    /**
+     * System bars (plan 06 §5.6; Dart `KitSystemBars`): a transparent status bar whose icons contrast with [ground]
+     * ([darkContent] = dark icons), and no navigation-bar contrast scrim. `KitTheme` calls it once; desktop does nothing.
+     */
+    @Composable
+    public fun SystemBars(darkContent: Boolean, ground: Color) {}
 
     /** The density frame text renders with: [base]'s font scale capped at [cap], on the platform's own curve. */
     public fun frameDensity(base: Density, cap: Float): Density = scaledFontDensity(base, 1f, cap)
