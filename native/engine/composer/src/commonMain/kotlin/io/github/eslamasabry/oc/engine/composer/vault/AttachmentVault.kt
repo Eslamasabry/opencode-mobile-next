@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.engine.composer.vault
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.model.PromptAttachment
@@ -29,7 +28,7 @@ public data class AttachmentRecovery(val attachments: List<PromptAttachment>, va
     }
 }
 
-/** Why the vault refused (mapped to [Failure.Storage] at the command boundary). */
+/** Why the vault refused (mapped to [Failure.StorageRefused] at the command boundary). */
 public enum class VaultProblem { TooMany, CannotSurviveRestart, DraftLimit, RootLimit, Quota, Unavailable }
 
 /**
@@ -53,14 +52,9 @@ public class AttachmentVault(private val storage: PayloadStore) {
         /** The payload identity of a data URL. */
         public fun blobId(dataUrl: String): String = Sha256.hex(dataUrl)
 
-        public fun problemFailure(problem: VaultProblem): Failure =
-            Failure.Storage(
-                when (problem) {
-                    VaultProblem.DraftLimit, VaultProblem.RootLimit, VaultProblem.Quota -> StorageProblem.Full
-                    VaultProblem.TooMany, VaultProblem.CannotSurviveRestart -> StorageProblem.InvalidValue
-                    VaultProblem.Unavailable -> StorageProblem.WriteRefused
-                },
-            )
+        /** Every vault refusal is the flat list's [Failure.StorageRefused] (plan 03 §10.1; INTEGRATE-W1 D3). */
+        @Suppress("UNUSED_PARAMETER")
+        public fun problemFailure(problem: VaultProblem): Failure = Failure.StorageRefused()
     }
 
     /** Stores [attachments] for [owner]; nothing in metadata changes on a refusal. */

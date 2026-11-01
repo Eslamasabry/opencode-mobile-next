@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.engine.composer
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.getOrNull
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.composer.drafts.Drafts
@@ -56,7 +55,7 @@ class StashTest {
     fun `B-CHAT-088 50 saved prompts never evict one and history is bounded separately`() = runTest {
         val shelf = shelf()
         repeat(PromptShelf.CAPACITY) { assertIs<Outcome.Ok<Unit>>(shelf.stash("a", prompt("$it", createdAt = it.toLong()))) }
-        assertEquals(Failure.Storage(StorageProblem.Full), (shelf.stash("a", prompt("extra")) as Outcome.Failed).failure)
+        assertEquals(Failure.StorageRefused(), (shelf.stash("a", prompt("extra")) as Outcome.Failed).failure)
         assertEquals(PromptShelf.CAPACITY, list(shelf, "a").size)
         repeat(60) { shelf.recordSent("a", "sent $it") }
         assertEquals(50, shelf.history("a").size)
@@ -105,7 +104,7 @@ class StashTest {
         shelf.stash("a", prompt("1").copy(attachments = listOf(dataAttachment("x.txt", "x"))))
         assertEquals(1, payloads.size)
         prefs.rawPut(PromptShelf.stashKey("a", "bad"), "{not json")
-        assertEquals(Failure.Storage(StorageProblem.Unreadable), (shelf.stashes("a") as Outcome.Failed).failure)
+        assertEquals(Failure.StorageRefused(), (shelf.stashes("a") as Outcome.Failed).failure)
         assertIs<Outcome.Failed>(shelf.stash("a", prompt("2")))
         assertIs<Outcome.Failed>(shelf.remove("a", "1"))
         assertEquals(1, payloads.size, "corrupt metadata is no permission to discard payloads")

@@ -6,7 +6,7 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.os.Handler
 import android.os.Looper
-import io.github.eslamasabry.oc.core.domain.platform.NetworkStatus
+import io.github.eslamasabry.oc.core.model.NetworkStatus
 import io.github.eslamasabry.oc.core.model.NetworkState
 import io.github.eslamasabry.oc.core.model.NetworkState.Online
 import io.github.eslamasabry.oc.core.model.NetworkState.Transport
@@ -97,7 +97,7 @@ public class DefaultNetworkTracker<N : Any>(private val idOf: (N) -> Long?) {
         mutable.value = NetworkState.Unknown
     }
 
-    private fun connectedUnknown(network: N) = NetworkState(Online.Unknown, Transport.Unknown, null, idOf(network))
+    private fun connectedUnknown(network: N) = NetworkState(Online.Unknown, Transport.Unknown, metered = null, defaultNetworkId = idOf(network))
 }
 
 /**

@@ -9,6 +9,7 @@ android {
 
 dependencies {
     api(project(":core:domain"))
+    implementation(project(":engine:entry")) // EntryIntentReader (S2-ENTRY) hands intents to the common parser
     implementation(libs.androidx.core.ktx)
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.junit4)

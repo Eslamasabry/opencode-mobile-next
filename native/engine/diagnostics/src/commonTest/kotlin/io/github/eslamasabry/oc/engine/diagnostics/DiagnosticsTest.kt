@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.engine.diagnostics
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.core.testing.TestClock
@@ -107,11 +108,11 @@ class DiagnosticsTest {
     fun `B-SEC-008 a shown failure reports its category to the port and keeps only its kind in the ring`() {
         val signals = RecordingSignals()
         val diagnostics = Diagnostics(Redactor(), clock, signals)
-        val failure = Failure.Net.Unreachable(Failure.Net.Unreachable.Why.Timeout, Redactor().details("synthetic-provider-secret"))
+        val failure = Failure.Network(NetworkWhy.Reset, Redactor().details("synthetic-provider-secret"))
         diagnostics.failureShown(failure)
         diagnostics.failureShown(Failure.Refused(RefusalReason.ConsentMissing))
         assertEquals(listOf<Failure>(failure, Failure.Refused(RefusalReason.ConsentMissing)), signals.errors)
-        assertEquals(listOf("Net.Unreachable Timeout", "Refused ConsentMissing"), diagnostics.errors.value.map { it.message })
+        assertEquals(listOf("Network Reset", "Refused ConsentMissing"), diagnostics.errors.value.map { it.message })
         assertFalse("synthetic-provider-secret" in diagnostics.reportText())
     }
 

@@ -84,7 +84,7 @@ public enum class CrashFile { Consent, Records, Pending, NativeLastCrash }
 public interface CrashStore {
     /**
      * The file's text; Ok(null) when absent. A file larger than [maxBytes] is not read and answers
-     * `Failure.Storage(InvalidValue)`; any other read problem is another `Failure.Storage`.
+     * `Failure.UnreadableReply` (the flat list's "over-cap body"); any other read problem is `Failure.StorageRefused`.
      */
     public suspend fun read(file: CrashFile, maxBytes: Int): Outcome<String?>
 

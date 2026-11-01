@@ -68,7 +68,8 @@ class SignInResetTest {
 
     private fun Outcome<Unit>.refusedSafely(vararg secretValues: String) {
         val failure = assertIs<Outcome.Failed>(this).failure
-        assertIs<Failure.Storage>(failure)
+        // The old `Failure.Storage` family: a refused write or an unavailable secret store (flat list, INTEGRATE-W1).
+        assertTrue(failure is Failure.StorageRefused || failure is Failure.SecretUnavailable, failure.toString())
         assertNull(failure.details)
         for (v in secretValues) assertFalse(v in failure.toString())
     }

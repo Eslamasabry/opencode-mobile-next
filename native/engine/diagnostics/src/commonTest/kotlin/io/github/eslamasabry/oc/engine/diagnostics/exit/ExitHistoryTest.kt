@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.engine.diagnostics.exit
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -75,7 +74,7 @@ class ExitHistoryTest {
     fun `B-ANDR-003 read errors are typed without native text`() =
         runTest {
             val source = FakeLifecycle()
-            source.exitsFail = { Outcome.Failed(Failure.Storage(StorageProblem.Unreadable)) }
+            source.exitsFail = { Outcome.Failed(Failure.StorageRefused()) }
             val failed = PolicyExitHistory(source).history()
             assertTrue(failed.supported)
             assertEquals(ExitHistoryError.Unavailable, failed.error)

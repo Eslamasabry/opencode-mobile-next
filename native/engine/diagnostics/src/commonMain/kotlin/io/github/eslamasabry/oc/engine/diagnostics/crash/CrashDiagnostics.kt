@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.engine.diagnostics.crash
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitReason
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitRecord
@@ -313,6 +312,6 @@ public class CrashDiagnostics private constructor(
             return controller
         }
 
-        private fun Failure.isOversize(): Boolean = this is Failure.Storage && problem == StorageProblem.InvalidValue
+        private fun Failure.isOversize(): Boolean = this is Failure.UnreadableReply
     }
 }

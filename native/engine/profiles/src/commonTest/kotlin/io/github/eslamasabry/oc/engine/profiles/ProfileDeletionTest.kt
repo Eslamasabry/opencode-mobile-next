@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.engine.profiles
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
@@ -185,7 +184,7 @@ class ProfileDeletionTest {
         assertFalse(result.removedProfile)
         // The sweep is one commit: a refused key keeps every scoped key (no half-swept server).
         assertEquals("build", h.string("oc.agent.doomed"))
-        assertTrue(result.failures.all { it.failure is Failure.Storage })
+        assertTrue(result.failures.all { it.failure is Failure.StorageRefused })
     }
 
     @Test
@@ -197,7 +196,7 @@ class ProfileDeletionTest {
         val result = h.deletion(cleaners = h.embeddedCleaners()).delete(doomed).ok()
 
         assertFalse(result.removedProfile)
-        assertEquals(Failure.Storage(StorageProblem.Unreadable), result.failures.single().failure)
+        assertEquals(Failure.StorageRefused(), result.failures.single().failure)
     }
 
     @Test

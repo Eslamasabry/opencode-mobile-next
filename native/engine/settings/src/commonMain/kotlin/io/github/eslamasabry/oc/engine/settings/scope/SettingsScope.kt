@@ -4,7 +4,8 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
+import io.github.eslamasabry.oc.core.common.NetworkWhy
+import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.WireTag
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import kotlinx.collections.immutable.ImmutableMap
@@ -137,44 +138,52 @@ public interface SettingsAccess {
     public suspend fun write(edit: SettingsEditToken, value: SettingValue?): Outcome<EffectiveSetting>
 }
 
-/** The tag a revision conflict carries in [Failure.Net.Conflict] (logic only, never shown). */
+/** The tag a revision conflict carries in [Failure.Conflict] (logic only, never shown). */
 public val SETTINGS_REVISION_CONFLICT: WireTag = WireTag("settings-revision")
+
+/**
+ * The tag an invalid settings value carries in [Failure.Rejected] (logic only, never shown). The flat core list has no
+ * "invalid value" subtype; a status-less [Failure.Rejected] is "this value was turned down", and the tag keeps it
+ * apart from a refused save ([Failure.StorageRefused]).
+ */
+public val SETTINGS_INVALID_VALUE: WireTag = WireTag("settings-invalid-value")
 
 /** The feature name a settings `Unsupported` carries in [Failure.Unavailable]. */
 public val SETTINGS_FEATURE: FeatureId = FeatureId("settings")
 
 /**
- * `:core:common`'s closed [Failure] has no settings leaf, so each reason maps to exactly one existing leaf, and
- * [settingsReason] maps it back (request to the core owner in the S1-ENG report).
+ * `:core:common`'s closed [Failure] has no settings leaf, so each reason maps to exactly one existing leaf of the flat
+ * list (plan 03 §10.1, plan 04 §3.8: delivery unknown is `Refused(DispatchUncertain)`), and [settingsReason] maps it
+ * back.
  */
 public fun SettingsFailureReason.asFailure(): Failure = when (this) {
     SettingsFailureReason.Unsupported -> Failure.Unavailable(SETTINGS_FEATURE)
-    SettingsFailureReason.InvalidValue -> Failure.Storage(StorageProblem.InvalidValue)
+    SettingsFailureReason.InvalidValue -> Failure.Rejected(status = null, tag = SETTINGS_INVALID_VALUE)
     SettingsFailureReason.StaleTarget -> Failure.Refused(RefusalReason.StaleScope)
-    SettingsFailureReason.Conflict -> Failure.Net.Conflict(tag = SETTINGS_REVISION_CONFLICT)
-    SettingsFailureReason.StorageFailed -> Failure.Storage(StorageProblem.WriteRefused)
+    SettingsFailureReason.Conflict -> Failure.Conflict(tag = SETTINGS_REVISION_CONFLICT)
+    SettingsFailureReason.StorageFailed -> Failure.StorageRefused()
     SettingsFailureReason.Disposed -> Failure.Unexpected()
-    SettingsFailureReason.Offline -> Failure.Net.Offline()
-    SettingsFailureReason.NeedsSignIn -> Failure.Net.SignInNeeded(Failure.Net.SignInNeeded.Why.TokenMissing)
+    SettingsFailureReason.Offline -> Failure.Network(NetworkWhy.Offline)
+    SettingsFailureReason.NeedsSignIn -> Failure.SignIn(SignInWhy.TokenMissing)
     SettingsFailureReason.Managed -> Failure.Refused(RefusalReason.NotOnThisPhone)
-    SettingsFailureReason.OutcomeUnknown -> Failure.Net.DeliveryUnknown()
+    SettingsFailureReason.OutcomeUnknown -> Failure.Refused(RefusalReason.DispatchUncertain)
 }
 
 /** The settings reason a facade failure stands for; null for a failure no settings facade returns. */
 public fun Failure.settingsReason(): SettingsFailureReason? = when (this) {
     is Failure.Unavailable -> SettingsFailureReason.Unsupported
-    is Failure.Storage ->
-        if (problem == StorageProblem.InvalidValue) SettingsFailureReason.InvalidValue else SettingsFailureReason.StorageFailed
+    is Failure.Rejected -> if (tag == SETTINGS_INVALID_VALUE) SettingsFailureReason.InvalidValue else null
+    is Failure.StorageRefused, is Failure.SecretUnavailable -> SettingsFailureReason.StorageFailed
     is Failure.Refused -> when (reason) {
         RefusalReason.StaleScope, RefusalReason.ProfileClosing, RefusalReason.ProfileDeleted -> SettingsFailureReason.StaleTarget
         RefusalReason.NotOnThisPhone -> SettingsFailureReason.Managed
+        RefusalReason.DispatchUncertain -> SettingsFailureReason.OutcomeUnknown
         else -> null
     }
-    is Failure.Net.Conflict -> SettingsFailureReason.Conflict
+    is Failure.Conflict -> SettingsFailureReason.Conflict
     is Failure.Unexpected -> SettingsFailureReason.Disposed
-    is Failure.Net.Offline -> SettingsFailureReason.Offline
-    is Failure.Net.SignInNeeded -> SettingsFailureReason.NeedsSignIn
-    is Failure.Net.DeliveryUnknown -> SettingsFailureReason.OutcomeUnknown
+    is Failure.Network -> if (why == NetworkWhy.Offline) SettingsFailureReason.Offline else null
+    is Failure.SignIn -> SettingsFailureReason.NeedsSignIn
     else -> null
 }
 

@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.engine.composer.drafts
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.model.PromptAttachment
@@ -130,8 +129,8 @@ public class Drafts(
      * keeps the saved files; a list replaces them. Arguments are snapshotted before the lane, so a caller that keeps
      * editing its list cannot change an in-flight save (B-STATE-101).
      *
-     * Failures: [Failure.Storage] `WriteRefused` (unreadable index or refused commit), `Full` (50 drafts, or a vault
-     * limit), `InvalidValue` (a file that cannot survive a restart); [Failure.Refused] `ProfileDeleted`.
+     * Failures: [Failure.StorageRefused] (unreadable index, refused commit, 50 drafts or a vault limit, a file that
+     * cannot survive a restart); [Failure.Refused] `ProfileDeleted`.
      */
     public suspend fun save(
         profileId: String,
@@ -152,7 +151,7 @@ public class Drafts(
         location: DraftLocation?,
     ): Outcome<Unit> {
         val current = load()
-        if (!current.readable) return Failure.Storage(StorageProblem.WriteRefused).failed()
+        if (!current.readable) return Failure.StorageRefused().failed()
         if (owner in closing.load() || (owner.isNotEmpty() && !profiles.exists(owner))) {
             if (text.isBlank() && files.isNullOrEmpty()) return Unit.ok()
             return Failure.Refused(RefusalReason.ProfileDeleted).failed()
@@ -170,7 +169,7 @@ public class Drafts(
             if (files.any { schemeOf(it.url) == "data" } && prefs.bool(VAULT_FLAG) != true) {
                 // The deletion sweep collects draft payloads only after this marker exists: set it before any payload.
                 if (!prefs.commit { putBool(VAULT_FLAG, true) }) {
-                    return Failure.Storage(StorageProblem.WriteRefused).failed()
+                    return Failure.StorageRefused().failed()
                 }
             }
             when (val stored = vault.store(owner, files)) {
@@ -200,11 +199,11 @@ public class Drafts(
         }
         if (next.size > MAX_DRAFTS) {
             collectLocked()
-            return Failure.Storage(StorageProblem.Full).failed()
+            return Failure.StorageRefused().failed()
         }
         if (!writeIndex(next)) {
             collectLocked()
-            return Failure.Storage(StorageProblem.WriteRefused).failed()
+            return Failure.StorageRefused().failed()
         }
         collectLocked()
         return Unit.ok()

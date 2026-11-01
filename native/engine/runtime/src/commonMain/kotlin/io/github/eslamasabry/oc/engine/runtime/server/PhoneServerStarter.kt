@@ -2,8 +2,9 @@ package io.github.eslamasabry.oc.engine.runtime.server
 
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.engine.runtime.host.RuntimeCall
-import io.github.eslamasabry.oc.engine.runtime.host.RuntimeProblem
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
+import io.github.eslamasabry.oc.engine.runtime.host.runtimeProblem
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import kotlinx.coroutines.delay
 import kotlin.time.Clock
@@ -45,18 +46,18 @@ public sealed interface LaunchMode {
  */
 public interface PhoneServerPort {
     /** The OpenCode 1 history move admission check (only for a profile that still needs the move). */
-    public suspend fun checkHistoryMove(): RuntimeCall<Unit>
+    public suspend fun checkHistoryMove(): Outcome<Unit>
 
     /** `umask 077`, write `server.password.tmp`, `mv` to `/root/.oc-builtin/server.password` (60 s). */
-    public suspend fun writePassword(password: String): RuntimeCall<Unit>
+    public suspend fun writePassword(password: String): Outcome<Unit>
 
-    public suspend fun launch(profile: ProfileId, mode: LaunchMode): RuntimeCall<Unit>
+    public suspend fun launch(profile: ProfileId, mode: LaunchMode): Outcome<Unit>
 
     public suspend fun probe(password: String): ProbeAnswer
 
-    public suspend fun refreshStatus(): RuntimeCall<RuntimeStatus>
+    public suspend fun refreshStatus(): Outcome<RuntimeStatus>
 
-    public suspend fun confirmRecovery(expectedGeneration: Long): RuntimeCall<Unit>
+    public suspend fun confirmRecovery(expectedGeneration: Long): Outcome<Unit>
 }
 
 /** The profile facts a start needs. [password] is empty when the Keystore lost it. */
@@ -162,18 +163,18 @@ public class PhoneServerStarter(
         }
         if (password.isEmpty()) return StartFailure(StartProblem.PasswordMissing, StartStep.Password)
 
-        if (target.requiresOpenCode2Migration && port.checkHistoryMove() !is RuntimeCall.Done) {
+        if (target.requiresOpenCode2Migration && port.checkHistoryMove() !is Outcome.Ok) {
             return StartFailure.interrupted(InterruptReason.HistoryMoveRefused)
         }
         when (val written = port.writePassword(password)) {
-            is RuntimeCall.Refused ->
-                return if (!stillWanted()) cancelled else StartFailure(StartProblem.PasswordNotSaved, StartStep.Password, details = written.details)
-            is RuntimeCall.Done -> Unit
+            is Outcome.Failed ->
+                return if (!stillWanted()) cancelled else StartFailure(StartProblem.PasswordNotSaved, StartStep.Password, details = written.failure.details)
+            is Outcome.Ok -> Unit
         }
         if (!stillWanted()) return cancelled
         when (val launched = port.launch(target.profile, mode)) {
-            is RuntimeCall.Refused -> return if (!stillWanted()) cancelled else refusal(launched, StartStep.Start)
-            is RuntimeCall.Done -> Unit
+            is Outcome.Failed -> return if (!stillWanted()) cancelled else refusal(launched, StartStep.Start)
+            is Outcome.Ok -> Unit
         }
         val deadline = clock.now() + readyTimeout
         while (stillWanted()) {
@@ -183,14 +184,14 @@ public class PhoneServerStarter(
                 if (mode is LaunchMode.Recovery) {
                     val confirmed = port.confirmRecovery(mode.expectedGeneration)
                     if (!stillWanted()) return cancelled
-                    if (confirmed is RuntimeCall.Refused) return refusal(confirmed, StartStep.Confirm)
+                    if (confirmed is Outcome.Failed) return refusal(confirmed, StartStep.Confirm)
                 }
                 deliberateStop?.clear(target.profile)
                 return null
             }
             when (val status = port.refreshStatus()) {
-                is RuntimeCall.Refused -> return if (!stillWanted()) cancelled else refusal(status, StartStep.Status)
-                is RuntimeCall.Done -> if (!status.value.serverRunning) return StartFailure(StartProblem.Exited, StartStep.Status)
+                is Outcome.Failed -> return if (!stillWanted()) cancelled else refusal(status, StartStep.Status)
+                is Outcome.Ok -> if (!status.value.serverRunning) return StartFailure(StartProblem.Exited, StartStep.Status)
             }
             if (clock.now() >= deadline) return StartFailure(StartProblem.TimedOut, StartStep.Probe, timeout = readyTimeout)
             delay(pollInterval)
@@ -198,10 +199,10 @@ public class PhoneServerStarter(
         return cancelled
     }
 
-    private fun refusal(call: RuntimeCall.Refused, step: StartStep): StartFailure =
+    private fun refusal(call: Outcome.Failed, step: StartStep): StartFailure =
         StartFailure(
-            problem = if (call.problem == RuntimeProblem.OwnershipUnknown) StartProblem.ComponentRecovery else StartProblem.Refused,
+            problem = if (call.runtimeProblem == RuntimeProblem.OwnershipUnknown) StartProblem.ComponentRecovery else StartProblem.Refused,
             step = step,
-            details = call.details,
+            details = call.failure.details,
         )
 }

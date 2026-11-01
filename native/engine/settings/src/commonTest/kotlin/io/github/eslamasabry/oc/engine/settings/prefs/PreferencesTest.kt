@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.engine.settings.prefs
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.kv.bool
 import io.github.eslamasabry.oc.core.data.kv.string
@@ -151,7 +150,7 @@ class PreferencesTest {
         val owner = Preferences(store, app, backgroundScope)
         disk.refuse = { _, _ -> true }
         val refused = owner.set(PreferenceChange.Appearance(AppearanceChoice.Light))
-        assertEquals(StorageProblem.WriteRefused, assertIs<Failure.Storage>(assertIs<Outcome.Failed>(refused).failure).problem)
+        assertIs<Failure.StorageRefused>(assertIs<Outcome.Failed>(refused).failure)
         assertEquals(AppearanceChoice.Dark, owner.value.value.appearance)
         assertEquals("dark", store.string("oc.appearance"))
         assertEquals(0L, owner.revision.value)
@@ -168,7 +167,7 @@ class PreferencesTest {
         val owner = Preferences(store, app, backgroundScope)
         disk.refuse = { key, _ -> key == "oc.effectsActivityGlow" }
         val refused = owner.set(PreferenceChange.SetEffects(Effects(motion = MotionLevel.Off, activityGlow = false)))
-        assertIs<Failure.Storage>(assertIs<Outcome.Failed>(refused).failure)
+        assertIs<Failure.StorageRefused>(assertIs<Outcome.Failed>(refused).failure)
         assertEquals(Effects.Defaults, owner.value.value.effects)
         assertEquals("full", store.string("oc.effectsMotion"))
         assertEquals("full", (disk.persisted()["flutter.oc.effectsMotion"] as? io.github.eslamasabry.oc.core.data.kv.RawPref.Str)?.value)

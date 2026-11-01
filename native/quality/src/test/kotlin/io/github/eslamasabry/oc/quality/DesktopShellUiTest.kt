@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.quality
 
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
@@ -27,7 +28,7 @@ class DesktopShellUiTest {
         onNodeWithText("Show all conversations").performClick()
         onNodeWithText("All conversations").assertExists()
         onNodeWithText("Filter: No filter").assertExists()
-        onNodeWithText("Back").performClick()
+        onNodeWithContentDescription("Back").performClick()
         onNodeWithText("Conversations").assertExists()
     }
 }

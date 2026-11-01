@@ -27,6 +27,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
@@ -74,7 +75,8 @@ public object StateViewRules {
 
     /** A network failure: the fix is to try again or switch server, not to report a problem. */
     public fun isNetwork(f: Failure?): Boolean =
-        f is Failure.Network || f is Failure.Busy || f is Failure.Unknown
+        f is Failure.Network || f is Failure.TimedOut || f is Failure.Busy || f is Failure.Unknown ||
+            (f is Failure.Refused && f.reason == RefusalReason.DispatchUncertain)
 
     /**
      * The error defaults (Dart `KitStateView.error`): network failures offer Try again and Switch server; others Try

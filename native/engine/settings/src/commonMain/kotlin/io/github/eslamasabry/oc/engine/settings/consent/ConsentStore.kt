@@ -3,9 +3,8 @@ package io.github.eslamasabry.oc.engine.settings.consent
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.core.data.dart.DartJson
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefType
 import io.github.eslamasabry.oc.core.data.kv.string
@@ -87,7 +86,7 @@ public interface ConsentStore {
 
     /**
      * Profile deletion: closes, drains pending writes, removes the profile's records. Idempotent. A refused removal
-     * returns `Failure.Storage` and the profile stays closed (nothing reads as granted).
+     * returns `Failure.StorageRefused` and the profile stays closed (nothing reads as granted).
      */
     public suspend fun forgetProfile(profileId: ProfileId): Outcome<Unit>
 }
@@ -146,9 +145,9 @@ internal fun ProfileId.isOpaque(): Boolean =
 
 internal fun closing(): Failure = Failure.Refused(RefusalReason.ProfileClosing)
 
-internal fun unreadable(): Failure = Failure.Storage(StorageProblem.Unreadable)
+internal fun unreadable(): Failure = Failure.StorageRefused()
 
-internal fun refusedWrite(): Failure = Failure.Storage(StorageProblem.WriteRefused)
+internal fun refusedWrite(): Failure = Failure.StorageRefused()
 
 /** Dart `jsonDecode(x)['version'] == 1`: an int 1 (or a double 1.0, which Dart also calls equal). */
 internal fun isVersionOne(value: Any?): Boolean = value == 1L || value == 1.0

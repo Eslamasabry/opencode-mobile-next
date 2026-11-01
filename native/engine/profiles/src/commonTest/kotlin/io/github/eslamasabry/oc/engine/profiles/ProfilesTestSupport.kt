@@ -2,11 +2,10 @@ package io.github.eslamasabry.oc.engine.profiles
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
-import io.github.eslamasabry.oc.core.data.dart.DartJson
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.FlutterPrefsCodec
 import io.github.eslamasabry.oc.core.data.kv.InMemoryPrefsBackend
 import io.github.eslamasabry.oc.core.data.kv.JavaListDecoder
@@ -47,7 +46,7 @@ internal class FakeSecrets(initial: Map<String, String> = emptyMap()) : SecretSt
     var failEnumerationAt: Int? = null
     private var enumerations = 0
 
-    private fun refused(): Outcome<Nothing> = Failure.Storage(StorageProblem.KeystoreUnavailable).failed()
+    private fun refused(): Outcome<Nothing> = Failure.SecretUnavailable().failed()
 
     override suspend fun read(name: String): Outcome<String?> =
         if (failAllReads || name in failReads) refused() else values[name].ok()
@@ -149,7 +148,7 @@ internal class MapCopy(
     override suspend fun read(): Outcome<Map<String, PrefValue>?> = entries.ok()
 
     override suspend fun rewrite(entries: Map<String, PrefValue>): Outcome<Unit> {
-        if (refuse) return Failure.Storage(StorageProblem.WriteRefused).failed()
+        if (refuse) return Failure.StorageRefused().failed()
         this.entries = LinkedHashMap(entries)
         rewrites++
         return Unit.ok()

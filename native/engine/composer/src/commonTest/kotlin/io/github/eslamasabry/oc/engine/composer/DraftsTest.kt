@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.engine.composer
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.engine.composer.drafts.DraftAutosave
 import io.github.eslamasabry.oc.engine.composer.drafts.DraftLocation
@@ -101,7 +100,7 @@ class DraftsTest {
         val drafts = drafts()
         drafts.save("alpha", "s1", "first")
         prefs.refuse = true
-        assertEquals(Failure.Storage(StorageProblem.WriteRefused), (drafts.save("alpha", "s1", "second") as Outcome.Failed).failure)
+        assertEquals(Failure.StorageRefused(), (drafts.save("alpha", "s1", "second") as Outcome.Failed).failure)
         assertEquals("first", drafts().draft("alpha", "s1")?.text)
         prefs.refuse = false
         drafts.save("alpha", "s1", "second")
@@ -153,7 +152,7 @@ class DraftsTest {
             clock.millis += 1
             assertIs<Outcome.Ok<Unit>>(drafts.save("alpha", "s$it", "draft $it"))
         }
-        assertEquals(Failure.Storage(StorageProblem.Full), (drafts.save("alpha", "new", "one more") as Outcome.Failed).failure)
+        assertEquals(Failure.StorageRefused(), (drafts.save("alpha", "new", "one more") as Outcome.Failed).failure)
         assertEquals(Drafts.MAX_DRAFTS, drafts().all().size)
         assertEquals("draft 0", drafts().draft("alpha", "s0")?.text)
         // Changing an existing draft still works.
@@ -168,7 +167,7 @@ class DraftsTest {
         autosave.changed("unsaved words")
         assertFalse(autosave.settled.value)
         assertIs<Outcome.Failed>(autosave.flush())
-        assertEquals(Failure.Storage(StorageProblem.WriteRefused), autosave.failure.value)
+        assertEquals(Failure.StorageRefused(), autosave.failure.value)
         assertFalse(autosave.settled.value)
         prefs.refuse = false
         assertIs<Outcome.Ok<Unit>>(autosave.flush())

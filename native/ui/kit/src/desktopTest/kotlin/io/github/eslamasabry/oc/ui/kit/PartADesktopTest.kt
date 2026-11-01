@@ -33,8 +33,11 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
+import io.github.eslamasabry.oc.core.common.CertificateWhy
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.NetworkWhy
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.ui.design.color.DynamicSource
 import io.github.eslamasabry.oc.ui.design.color.DynamicTones
 import io.github.eslamasabry.oc.ui.design.color.Graphite
@@ -463,20 +466,21 @@ class PartADesktopTest {
 
     @Test
     fun `B-KIT-024 timeouts and transport failures are network and the rest are other`() {
-        assertEquals(KitErrorKind.Network, KitErrorKind.of(Failure.Net.Offline()))
-        assertEquals(KitErrorKind.Network, KitErrorKind.of(Failure.Net.Unreachable(Failure.Net.Unreachable.Why.Timeout)))
-        assertEquals(KitErrorKind.Network, KitErrorKind.of(Failure.Net.TrustRefused(Failure.Net.TrustRefused.Why.CertificateUntrusted)))
-        assertEquals(KitErrorKind.Network, KitErrorKind.of(Failure.Net.DeliveryUnknown()))
+        assertEquals(KitErrorKind.Network, KitErrorKind.of(Failure.Network(NetworkWhy.Offline)))
+        assertEquals(KitErrorKind.Network, KitErrorKind.of(Failure.TimedOut()))
+        assertEquals(KitErrorKind.Network, KitErrorKind.of(Failure.Certificate(CertificateWhy.Untrusted)))
+        assertEquals(KitErrorKind.Network, KitErrorKind.of(Failure.Refused(RefusalReason.DispatchUncertain)))
         assertEquals(KitErrorKind.Network, KitErrorKind.of(Failure.ComputerDidNotAnswer()))
-        assertEquals(KitErrorKind.Other, KitErrorKind.of(Failure.Net.ServerFailed(500)))
-        assertEquals(KitErrorKind.Other, KitErrorKind.of(Failure.Net.NotSupported(FeatureId("pty"))))
+        assertEquals(KitErrorKind.Other, KitErrorKind.of(Failure.Server(500)))
+        assertEquals(KitErrorKind.Other, KitErrorKind.of(Failure.Unavailable(FeatureId("pty"))))
+        assertEquals(KitErrorKind.Other, KitErrorKind.of(Failure.Refused(RefusalReason.ConsentMissing)))
         assertEquals(KitErrorKind.Other, KitErrorKind.of(Failure.Unexpected()))
         assertEquals(KitErrorKind.Other, KitErrorKind.of(null))
     }
 
     @Test
     fun `B-KIT-024 a network error offers Switch server and another error offers Report a problem`() = runComposeUiTest {
-        var failure by mutableStateOf<Failure>(Failure.Net.Offline())
+        var failure by mutableStateOf<Failure>(Failure.Network(NetworkWhy.Offline))
         setContent {
             Themed {
                 KitErrorNotice(

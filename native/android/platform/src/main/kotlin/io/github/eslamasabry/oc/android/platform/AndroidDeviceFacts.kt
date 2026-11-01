@@ -14,7 +14,7 @@ import android.os.Looper
 import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import io.github.eslamasabry.oc.core.domain.platform.DeviceFacts
-import io.github.eslamasabry.oc.core.domain.platform.NetworkStatus
+import io.github.eslamasabry.oc.core.model.NetworkStatus
 import io.github.eslamasabry.oc.core.domain.platform.ThermalLevel
 import io.github.eslamasabry.oc.core.model.NetworkState
 import kotlinx.coroutines.flow.MutableStateFlow

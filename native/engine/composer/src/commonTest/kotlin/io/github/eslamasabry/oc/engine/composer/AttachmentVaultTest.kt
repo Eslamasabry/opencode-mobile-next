@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.engine.composer
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.engine.composer.vault.AttachmentRef
 import io.github.eslamasabry.oc.engine.composer.vault.AttachmentVault
@@ -51,7 +50,7 @@ class AttachmentVaultTest {
         assertEquals(listOf(null, null), refs.map { it.blob })
         assertEquals(0, store.size)
         val refused = vault.store("alpha", listOf(PromptAttachment("image/png", "c.png", "content://media/1")))
-        assertEquals(Failure.Storage(StorageProblem.InvalidValue), (refused as Outcome.Failed).failure)
+        assertEquals(Failure.StorageRefused(), (refused as Outcome.Failed).failure)
         // A file URL is restored only at the same location.
         val moved = vault.restore("alpha", refs, sameLocation = false)
         assertEquals(listOf("a.dart"), moved.unavailable)
@@ -84,10 +83,10 @@ class AttachmentVaultTest {
         assertIs<Outcome.Failed>(vault.store("alpha", six))
         val big = PromptAttachment("text/plain", "big", "data:text/plain;base64," + "A".repeat(17 * 1024 * 1024))
         val twice = vault.store("alpha", listOf(big, big.copy(filename = "big2", url = big.url + "B")))
-        assertEquals(Failure.Storage(StorageProblem.Full), (twice as Outcome.Failed).failure)
+        assertEquals(Failure.StorageRefused(), (twice as Outcome.Failed).failure)
         store.failWrites = io.github.eslamasabry.oc.engine.composer.vault.PayloadFailure.Quota
         val quota = vault.store("alpha", listOf(dataAttachment("q.txt", "q")))
-        assertEquals(Failure.Storage(StorageProblem.Full), (quota as Outcome.Failed).failure)
+        assertEquals(Failure.StorageRefused(), (quota as Outcome.Failed).failure)
     }
 
     @Test

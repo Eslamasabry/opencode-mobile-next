@@ -21,7 +21,7 @@ public enum class SecureStorageProblem {
     public companion object {
         /** Null when [failure] is not a secret-storage failure. */
         public fun of(failure: Failure, platform: SecretPlatform): SecureStorageProblem? =
-            if (failure !is Failure.Storage) {
+            if (failure !is Failure.SecretUnavailable) {
                 null
             } else if (platform == SecretPlatform.LinuxDesktop) {
                 LinuxKeyringMissing

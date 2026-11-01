@@ -5,7 +5,7 @@ package io.github.eslamasabry.oc.engine.runtime.server
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.runtime.FakeLinuxHost
-import io.github.eslamasabry.oc.engine.runtime.host.RuntimeProblem
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test

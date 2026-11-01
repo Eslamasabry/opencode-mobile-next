@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.engine.settings.defaults
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.lane.DefaultWriterLanes
@@ -82,9 +81,9 @@ class DefaultNoticesTest {
         val store = storeOver(disk, StandardTestDispatcher(testScheduler)).withProfiles()
         val notices = DefaultNotices(store, DefaultWriterLanes())
         disk.refuse = { _, _ -> true }
-        assertIs<Failure.Storage>(notices.rememberProject(a, "project").refusal())
+        assertIs<Failure.StorageRefused>(notices.rememberProject(a, "project").refusal())
         assertNull(notices.lastProjectId(a))
-        assertIs<Failure.Storage>(notices.takeAnnouncement(a, DefaultKind.Delivery, InteractionDefaults.delivery()).refusal())
+        assertIs<Failure.StorageRefused>(notices.takeAnnouncement(a, DefaultKind.Delivery, InteractionDefaults.delivery()).refusal())
         disk.refuse = null
         notices.rememberProject(a, "project").value()
         assertEquals("project", notices.lastProjectId(a))
@@ -100,7 +99,7 @@ class DefaultNoticesTest {
         }
         val store = storeOver(TestDisk(), StandardTestDispatcher(testScheduler)).withProfiles()
         val notices = DefaultNotices(store, DefaultWriterLanes(), filter)
-        assertEquals(StorageProblem.InvalidValue, assertIs<Failure.Storage>(notices.rememberProject(safe, secret).refusal()).problem)
+        assertIs<Failure.StorageRefused>(notices.rememberProject(safe, secret).refusal())
         notices.rememberProject(safe, "safe-project").value()
         val choice = InteractionDefaults.picker(listOf(secret), { it })
         assertEquals("•••", notices.takeAnnouncement(safe, DefaultKind.Project, choice).value())
@@ -109,7 +108,7 @@ class DefaultNoticesTest {
             assertFalse(secret in store.get(key).let { (it as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)?.value.orEmpty() })
             assertFalse(store.get(key).let { (it as? io.github.eslamasabry.oc.core.data.kv.PrefValue.StrList)?.value.orEmpty().any { v -> secret in v } })
         }
-        assertIs<Failure.Storage>(notices.rememberProject(ProfileId(secret), "p").refusal())
+        assertIs<Failure.StorageRefused>(notices.rememberProject(ProfileId(secret), "p").refusal())
         assertEquals("safe-project", notices.lastProjectId(safe))
     }
 

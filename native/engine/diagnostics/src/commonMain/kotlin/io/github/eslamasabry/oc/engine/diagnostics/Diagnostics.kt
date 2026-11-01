@@ -154,23 +154,23 @@ public class Diagnostics(
         private val REPORT_JSON = Json { prettyPrint = true }
         private val log = AppLog.tagged("diagnostics")
 
-        /** The failure's kind, e.g. `Net.Unreachable Timeout`; never its details. */
+        /** The failure's kind, e.g. `Network Reset`; never its details. */
         internal fun failureLabel(failure: Failure): String {
-            val kind = failure::class.simpleName ?: "Failure"
-            val name = if (failure is Failure.Net) "Net.$kind" else kind
+            val name = failure::class.simpleName ?: "Failure"
             val why =
                 when (failure) {
                     is Failure.Refused -> failure.reason.name
-                    is Failure.Storage -> failure.problem.name
                     is Failure.Folder -> failure.problem.name
                     is Failure.Unavailable -> failure.feature.name
-                    is Failure.Net.Unreachable -> failure.why.name
-                    is Failure.Net.TrustRefused -> failure.why.name
-                    is Failure.Net.SignInNeeded -> failure.why.name
-                    is Failure.Net.ServerBusy -> failure.kind.name
-                    is Failure.Net.Incompatible -> failure.kind.name
-                    is Failure.Net.Rejected -> "HTTP ${failure.status}"
-                    is Failure.Net.ServerFailed -> "HTTP ${failure.status}"
+                    is Failure.Network -> failure.why.name
+                    is Failure.Certificate -> failure.why.name
+                    is Failure.SignIn -> failure.why.name
+                    is Failure.Busy -> failure.kind.name
+                    is Failure.Incompatible -> failure.kind.name
+                    is Failure.Media -> failure.problem.name
+                    is Failure.Runtime -> failure.problem.name
+                    is Failure.Rejected -> failure.status?.let { "HTTP $it" }
+                    is Failure.Server -> failure.status?.let { "HTTP $it" }
                     else -> null
                 }
             return if (why == null) name else "$name $why"
