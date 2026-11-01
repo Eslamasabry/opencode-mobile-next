@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.ui.kit.row
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -11,6 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -31,6 +35,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
 /** The supporting lines a row allows (Dart A11Y-8): 1 at normal size, 2 from 1.3×, 3 from 2.0×. */
 public fun kitRowSupportingLines(textScale: Float, asked: Int = 1): Int =
@@ -110,7 +115,6 @@ public fun KitRow(
     val action = (trailing as? KitRowTrailing.Action)?.action?.let {
         if (enabled) it else it.copy(enabled = false, disabledReason = disabledReason, onClick = {})
     }
-    val valueBelow = value != null && large
     val actionBelow = action != null && large
     val tappable = onClick != null || onLongClick != null
     val base =
@@ -144,31 +148,54 @@ public fun KitRow(
             .testTag("kit-row")
     Row(base, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
         leading?.let { RowLeadingTile(it, dim = !enabled) }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            KitText(
-                if (titleIsFileName) kitBreakableFileName(title) else title,
-                Modifier.testTag("kit-row-title"),
-                role = TypeRole.RowTitle,
-                tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
-                maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale),
-            )
-            supportLine?.let {
-                KitText(
-                    it,
-                    Modifier.testTag("kit-row-supporting"),
-                    role = TypeRole.Secondary,
-                    tone = TextTone.Secondary,
-                    maxLines = if (!enabled) Int.MAX_VALUE else kitRowSupportingLines(scale, supportingMaxLines),
-                )
+        BoxWithConstraints(Modifier.weight(1f)) {
+            val measurer = rememberTextMeasurer()
+            val typography = LocalKitTypography.current
+            val density = LocalDensity.current
+            // Budget the actual title, value, gap and chevron after the leading tile has been measured.
+            val valueBelow = value != null && (large || run {
+                val titleWidth = measurer.measure(
+                    title, style = typography.style(TypeRole.RowTitle).copy(textDirection = TextDirection.Content),
+                    softWrap = false, maxLines = 1,
+                ).size.width
+                val valueWidth = measurer.measure(
+                    value.text, style = typography.style(TypeRole.Secondary).copy(textDirection = TextDirection.Content),
+                    softWrap = false, maxLines = 1,
+                ).size.width
+                val chevron = if (value.chevron) {
+                    (Space.S1 + tokens.smallIcon * minOf(scale, TextScalePolicy.FRAME_CAP)).dp
+                } else 0.dp
+                val gapsAndChevron = with(density) { (Space.S3.dp + chevron).roundToPx() }
+                titleWidth.toLong() + valueWidth + gapsAndChevron > constraints.maxWidth
+            })
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    KitText(
+                        if (titleIsFileName) kitBreakableFileName(title) else title,
+                        Modifier.testTag("kit-row-title"),
+                        role = TypeRole.RowTitle,
+                        tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
+                        maxLines = if (titleIsFileName && large) Int.MAX_VALUE else kitRowTitleLines(scale),
+                    )
+                    supportLine?.let {
+                        KitText(
+                            it,
+                            Modifier.testTag("kit-row-supporting"),
+                            role = TypeRole.Secondary,
+                            tone = TextTone.Secondary,
+                            maxLines = if (!enabled) Int.MAX_VALUE else kitRowSupportingLines(scale, supportingMaxLines),
+                        )
+                    }
+                    if (valueBelow) RowValue(value)
+                    if (actionBelow) KitInlineAction(action)
+                }
+                when {
+                    value != null && !valueBelow -> RowValue(value)
+                    action != null && !actionBelow -> KitInlineAction(action)
+                    trailing == KitRowTrailing.Chevron -> RowChevron()
+                    else -> Unit
+                }
             }
-            if (valueBelow) RowValue(value!!)
-            if (actionBelow) KitInlineAction(action!!)
-        }
-        when {
-            value != null && !valueBelow -> RowValue(value)
-            action != null && !actionBelow -> KitInlineAction(action)
-            trailing == KitRowTrailing.Chevron -> RowChevron()
-            else -> Unit
         }
     }
 }
