@@ -17,3 +17,10 @@
 :androidApp	S	coordinator	slice-0
 :desktopApp	S	kit-owner	slice-0
 :quality	S	coordinator	slice-0
+:core:data	S	core-owner	slice-1
+:core:net	S	backend-owner	slice-1
+:protocol:oc2	F	backend-owner (S1-OC2)	slice-1
+:engine:analytics	S	diagnostics-owner	slice-1
+:android:linux	S	runtime-owner	slice-1
+:tools:strings	S	l10n-owner	slice-1
+:tools:flutter-migration-readers	S	migration-owner	slice-0
