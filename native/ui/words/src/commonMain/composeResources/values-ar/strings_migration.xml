@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The update gate (plan 05 §8.2, 01 §9.7, 02 §3.7 item 4). Written for the native app; not from the ARB. -->
+<resources>
+    <string name="migration_opening">جارٍ الفتح…</string>
+    <string name="migration_updating">جارٍ تحديث التطبيق…</string>
+    <string name="migration_still_updating">ما زال التحديث جاريًا. قد يستغرق أول تشغيل بعد التحديث وقتًا أطول قليلًا.</string>
+    <string name="migration_try_again">حاول نقل بياناتك مرة أخرى</string>
+    <string name="migration_reenter_title">بعض عمليات تسجيل الدخول تحتاج إليك مجددًا</string>
+    <string name="migration_reenter_body">تعذّر على التحديث قراءة عمليات تسجيل الدخول المحفوظة هذه. انتقل كل شيء آخر.</string>
+    <string name="migration_reenter_row_password">%1$s · أدخل كلمة المرور</string>
+    <string name="migration_reenter_row_token">%1$s · أدخل الرمز</string>
+    <string name="migration_reenter_row_github">%1$s · سجّل الدخول إلى GitHub مجددًا</string>
+    <string name="migration_reenter_row_byo">%1$s · أعِد الإعداد</string>
+    <string name="migration_reenter_later">سجّل الدخول إلى هذه لاحقًا</string>
+    <string name="migration_failed_title">تعذّر على التحديث إكمال نقل بياناتك</string>
+    <string name="migration_failed_body">لم يُحذف شيء. بياناتك من قبل التحديث محفوظة بأمان على هذا الهاتف.</string>
+    <string name="migration_restore_row">استعادة البيانات من قبل التحديث</string>
+    <string name="migration_restore_confirm">يعيد هذا إعداداتك وخوادمك كما كانت قبل التحديث. تُحفظ التغييرات التي حدثت بعده في نسخة.</string>
+    <string name="migration_restore_confirm_title">استعادة البيانات الأقدم؟</string>
+    <string name="migration_restore_confirm_action">استعادة البيانات من قبل التحديث</string>
+    <string name="migration_start_fresh_row">البدء من جديد (مع الاحتفاظ بنسخة من بياناتك القديمة)</string>
+    <string name="migration_start_fresh_confirm">ستبدأ بلا خوادم محفوظة وبالإعدادات الافتراضية. تبقى نسخة من بياناتك القديمة على هذا الهاتف.</string>
+    <string name="migration_start_fresh_confirm_title">البدء من جديد؟</string>
+    <string name="migration_start_fresh_confirm_action">البدء من جديد مع الاحتفاظ بنسخة</string>
+    <string name="migration_report_row">الإبلاغ عن مشكلة</string>
+    <string name="migration_details">التفاصيل · %1$s</string>
+    <string name="migration_space_title">مساحة هاتفك توشك أن تنفد</string>
+    <string name="migration_space_body">يحتاج التحديث إلى %1$s من المساحة الفارغة ليحتفظ بنسخة أمان من بياناتك. أفرِغ بعض المساحة ثم حاول مرة أخرى.</string>
+    <string name="migration_save_failed_title">تعذّر الحفظ على هذا الهاتف</string>
+    <string name="migration_open_storage_row">فتح إعدادات التخزين</string>
+    <string name="migration_close">إغلاق</string>
+    <string name="migration_deferred_notice">«فريق الذكاء الاصطناعي» و«الذاكرة» غير متوفرين في هذا الإصدار بعد. تبقى مشاريعك وملاحظاتك على هذا الهاتف.</string>
+</resources>
