@@ -350,7 +350,10 @@ class TwoWidgetsRenderTest {
         }
     }
 
-    private fun context(): Context = RuntimeEnvironment.getApplication()
+    private fun context(): Context =
+        RuntimeEnvironment.getApplication().also {
+            io.github.eslamasabry.oc.android.widgets.bindWidgetTestPersistence(it)
+        }
 
     private fun conversations(snapshot: JSONObject, w: Int, h: Int, name: String?): View =
         lay(

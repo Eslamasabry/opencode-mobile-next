@@ -7,18 +7,28 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import androidx.annotation.RequiresApi
 import android.util.SizeF
 import android.widget.RemoteViews
+import androidx.annotation.RequiresApi
 import org.json.JSONObject
 
 /** Event-driven, privacy-safe snapshot renderer. Never opens a network connection. */
 open class SessionsWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
-        ids.forEach { manager.updateAppWidget(it, buildViews(context, it, manager.getAppWidgetOptions(it), javaClass)) }
+        ids.forEach {
+            manager.updateAppWidget(
+                it,
+                buildViews(context, it, manager.getAppWidgetOptions(it), javaClass),
+            )
+        }
     }
 
-    override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, options: Bundle) {
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        manager: AppWidgetManager,
+        id: Int,
+        options: Bundle,
+    ) {
         manager.updateAppWidget(id, buildViews(context, id, options, javaClass))
     }
 
@@ -40,18 +50,28 @@ open class SessionsWidgetProvider : AppWidgetProvider() {
             // redraw all of them, and the Status widget, which counts the same running turns.
             WidgetProviders.sessions.forEach { provider ->
                 manager.getAppWidgetIds(ComponentName(context, provider)).forEach {
-                    manager.updateAppWidget(it, buildViews(context, it, manager.getAppWidgetOptions(it), provider))
+                    manager.updateAppWidget(
+                        it,
+                        buildViews(context, it, manager.getAppWidgetOptions(it), provider),
+                    )
                 }
             }
             StatusWidgetProvider.refreshAll(context)
         }
 
-        private fun readSnapshot(context: Context): JSONObject = try {
-            JSONObject(context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-                .getString("flutter.oc.widgetSessions", "{}") ?: "{}")
-        } catch (_: Exception) { JSONObject() }
+        private fun readSnapshot(context: Context): JSONObject =
+            try {
+                WidgetV2Bridge.snapshot(context) ?: JSONObject()
+            } catch (_: Exception) {
+                JSONObject()
+            }
 
-        private fun buildViews(context: Context, id: Int, options: Bundle, provider: Class<*>): RemoteViews {
+        private fun buildViews(
+            context: Context,
+            id: Int,
+            options: Bundle,
+            provider: Class<*>,
+        ): RemoteViews {
             val renderer = SessionWidgetRenderer(context, id, readSnapshot(context))
             if (provider == SessionsWideWidgetProvider::class.java) {
                 // The Conversations widget: one render for the size it has now, else its 4x2.
@@ -65,18 +85,21 @@ open class SessionsWidgetProvider : AppWidgetProvider() {
                     options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, NARROW),
                     WidgetSizePolicy.legacyHeight(
                         options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, TWO_ROWS)
-                    )
+                    ),
                 )
             }
         }
 
         /** The size the widget has now (see [WidgetSizePolicy.currentSize]), or null. */
         internal fun currentSize(context: Context, options: Bundle): Pair<Int, Int>? {
-            val launcher = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                @Suppress("DEPRECATION")
-                options.getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES)
-                    .orEmpty().map { it.width to it.height }
-            } else emptyList()
+            val launcher =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    @Suppress("DEPRECATION")
+                    options
+                        .getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES)
+                        .orEmpty()
+                        .map { it.width to it.height }
+                } else emptyList()
             return WidgetSizePolicy.currentSize(
                 WidgetSizePolicy.launcherSizes(launcher),
                 context.resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE,
@@ -84,13 +107,17 @@ open class SessionsWidgetProvider : AppWidgetProvider() {
                     options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0),
                     options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0),
                     options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0),
-                    options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
-                )
+                    options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0),
+                ),
             )
         }
 
         @RequiresApi(Build.VERSION_CODES.S)
-        private fun buildResponsive(context: Context, renderer: SessionWidgetRenderer, options: Bundle): RemoteViews {
+        private fun buildResponsive(
+            context: Context,
+            renderer: SessionWidgetRenderer,
+            options: Bundle,
+        ): RemoteViews {
             val now = currentSize(context, options)
             // One render for the size it has now: a size map is resolved by the host, and
             // some hosts pick the landscape entry (a strip inside a 4x2 box). The launcher
@@ -104,7 +131,7 @@ open class SessionsWidgetProvider : AppWidgetProvider() {
                     variant(WIDE, ONE_ROW),
                     variant(NARROW, TWO_ROWS),
                     variant(WIDE, TWO_ROWS),
-                    variant(WIDE, FOUR_ROWS)
+                    variant(WIDE, FOUR_ROWS),
                 )
             )
         }

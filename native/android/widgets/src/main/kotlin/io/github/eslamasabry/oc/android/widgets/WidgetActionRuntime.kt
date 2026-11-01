@@ -83,3 +83,37 @@ internal class WidgetActionRuntime(
     }
 }
 
+/**
+ * Cancellation and the monotonic coroutine timeout both close the runner, including inline startup.
+ */
+internal suspend fun awaitWidgetRun(
+    context: Context,
+    payload: Map<String, Any?>,
+    snapshot: JSONObject,
+    storage: WidgetPersistence,
+    budgetMs: Long,
+    operation: String = "execute",
+): Map<*, *>? {
+    var runtime: WidgetActionRuntime? = null
+    return try {
+        kotlinx.coroutines.withTimeoutOrNull(budgetMs) {
+            kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+                val started =
+                    WidgetActionRuntime(
+                        context,
+                        payload,
+                        snapshot,
+                        storage.clock.now().toEpochMilliseconds() + budgetMs,
+                        operation,
+                    ) {
+                        continuation.resumeWith(Result.success(it))
+                    }
+                runtime = started
+                continuation.invokeOnCancellation { started.destroy() }
+                started.start()
+            }
+        }
+    } finally {
+        runtime?.destroy()
+    }
+}

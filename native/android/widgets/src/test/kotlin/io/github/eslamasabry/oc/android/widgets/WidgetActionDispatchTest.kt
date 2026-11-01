@@ -53,6 +53,7 @@ class WidgetActionDispatchTest {
     fun setUp() {
         prefs.edit().clear().putString("flutter.oc.widgetSessions", snapshot.toString()).commit()
         WidgetFeed.reset()
+        bindWidgetTestPersistence(context)
         WidgetFeed.onConnection(context, true)
         WidgetFeed.liveDispatcher = WidgetLiveDispatcher { payload, complete ->
             dispatched.add(payload)
@@ -145,6 +146,7 @@ class WidgetActionDispatchTest {
             )
             .commit()
 
+        bindWidgetTestPersistence(context)
         val result = submit(payload("stop"))
 
         assertEquals("staleRequest", result?.get("error"))

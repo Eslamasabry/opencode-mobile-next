@@ -1,19 +1,19 @@
-// WIDGETS seam: a copy of the Flutter app's NativeStrings.kt (twin in native/TWINS.md) with only the package line
-// changed, so it cannot clash with :android:linux's copy in the app's dex. TODO(S11-8): replace with the Words resolver.
+// WIDGETS seam: a copy of the Flutter app's NativeStrings.kt (twin in native/TWINS.md) with only
+// the package line
+// changed, so it cannot clash with :android:linux's copy in the app's dex. TODO(S11-8): replace
+// with the Words resolver.
 package io.github.eslamasabry.oc.android.widgets
 
 import android.content.Context
 import android.content.res.Configuration
 import java.util.Locale
 
-/** Resource copy for detached services as well as activities.
- * Reads the acknowledged legacy Flutter preference each time, so a changed
- * choice or a restarted process needs no channel handshake. Never mutates
- * the application's configuration or reads any other saved preference.
+/**
+ * Resource copy for detached services as well as activities. Reads the acknowledged legacy Flutter
+ * preference each time, so a changed choice or a restarted process needs no channel handshake.
+ * Never mutates the application's configuration or reads any other saved preference.
  */
 object NativeStrings {
-    private const val PREFERENCES = "FlutterSharedPreferences"
-    private const val LANGUAGE_KEY = "flutter.oc.appLocale"
     private val supported = setOf("en", "ar")
     // Keep in step with AppLocaleStore: untranslated app choices fall back to
     // English rather than accidentally reverting to a different system language.
@@ -28,26 +28,30 @@ object NativeStrings {
     internal fun matches(context: Context, id: Int, value: CharSequence?): Boolean =
         supported.any { language ->
             val configuration = Configuration(context.resources.configuration)
-            configuration.setLocale(Locale.forLanguageTag(language.takeIf { it in supported } ?: "en"))
+            configuration.setLocale(
+                Locale.forLanguageTag(language.takeIf { it in supported } ?: "en")
+            )
             context.createConfigurationContext(configuration).getString(id) == value?.toString()
         }
 
     private fun localized(context: Context): Context {
-        val choice = try {
-            context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
-                .getString(LANGUAGE_KEY, null)
-        } catch (_: Exception) {
-            null
-        }
+        val choice =
+            try {
+                WidgetFeed.persistence?.string("oc.appLocale")
+            } catch (_: Exception) {
+                null
+            }
         val configuration = Configuration(context.resources.configuration)
-        val systemLanguage = (0 until configuration.locales.size())
-            .map { configuration.locales[it].language }
-            .firstOrNull { it in appLanguages }
-        val language = when {
-            choice in appLanguages -> choice!!
-            systemLanguage != null -> systemLanguage
-            else -> "en"
-        }
+        val systemLanguage =
+            (0 until configuration.locales.size())
+                .map { configuration.locales[it].language }
+                .firstOrNull { it in appLanguages }
+        val language =
+            when {
+                choice in appLanguages -> choice!!
+                systemLanguage != null -> systemLanguage
+                else -> "en"
+            }
         configuration.setLocale(Locale.forLanguageTag(language.takeIf { it in supported } ?: "en"))
         return context.createConfigurationContext(configuration)
     }
