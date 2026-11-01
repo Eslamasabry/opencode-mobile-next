@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chats_title">المحادثات</string>
+    <string name="chats_placeholder">يجري بناء التطبيق الأصلي. لا يوجد اتصال بعد.</string>
+    <string name="chats_open_all">عرض كل المحادثات</string>
+    <string name="chats_all_title">كل المحادثات</string>
+    <string name="chats_all_filter">التصفية: %1$s</string>
+    <string name="chats_all_none">بلا تصفية</string>
+    <string name="chats_back">رجوع</string>
+</resources>
