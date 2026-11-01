@@ -1,0 +1,536 @@
+## test/team_models_test.dart
+36	group	state enums are total
+37	test	every enum has an unknown member
+44	test	fromProvider never throws and maps garbage to unknown
+74	test	product names round-trip through fromProvider
+97	test	Gas City bead status strings map per the work table
+109	test	Gas City agent and session states map per the agent table
+118	test	run states and kinds map from provider strings
+128	test	gate kinds map from provider interaction kinds
+140	test	WorkState.derive follows the state-table precedence
+177	group	models retain raw and rawState
+184	test	WorkItem
+199	test	OrchestrationRun
+212	test	OrchestrationAgent
+224	test	OrchestrationGate
+237	test	OrchestrationProject, ActivityEvent and OrchestrationUsage
+250	group	events
+252	test	every subclass carries seq, raw and a type
+283	test	sealed switch is exhaustive over the union
+306	test	EventCursor resume helpers
+324	group	capabilities constants are consistent
+326	test	none is all false, fixture is all true
+361	test	asMap covers every field named in the architecture plan
+405	test	gascityFront is gascityRead plus exactly the control switches and 
+436	test	read path covers what the PC spike proved
+449	test	plan-named aliases point at the same constants
+463	group	NullOrchestrationGateway
+466	test	exposes no capabilities and no host
+472	test	reads are empty and never throw
+487	test	event stream is empty and closes at once
+495	test	controls answer with a rejected receipt carrying the request id
+523	test	close is a no-op
+529	group	MutationReceipt and host identity
+531	test	status enum covers the four outcomes
+539	test	host identity is a value
+563	group	source hygiene
+565	test	no TEAM-101 file imports lib/api or lib/api2
+584	test	new files are plain Dart (no Flutter imports)
+592	group	agent output (TEAM-111)
+594	test	mergeAgentOutput folds cumulative, overlapping and new chunks
+613	test	parseAgentTranscript reads markers, repeats and prose
+## test/team_now_line_test.dart
+117	test	31 minute planning has an honest reason and a non-resending way out
+174	test	run facts, stalls and unavailable connections determine next and recovery
+208	test	starting estimates stay optional and a question takes priority
+253	test	terminal outcomes stay distinct and do not offer cancel or timing
+## test/team_now_test.dart
+285	group	asleep is not paused
+326	group	a waiting task says when a worker starts
+407	group	the agent screen
+471	group	live output never spins forever
+516	test	the in-app team checks every minute (its own tuning)
+## test/team_overview_test.dart
+35	test	session evidence wins while waiting and blocked remain explicit
+55	test	idle is not paused; missing, stale and unknown evidence stay unknown
+80	test	heat reason requires matching profile, phone host and city
+## test/team_page_test.dart
+247	group	one page, on or off
+430	group	a pause for heat is not the person\'s pause (row 20)
+542	group	what the team spent today
+601	group	how it runs
+621	test	not answering says what to check where the team runs
+## test/team_plugins_screen_test.dart
+262	group	team discovery and row subtitles
+303	test	a first unreachable answer reads as Checking, not as a failure
+337	test	the simulator Try the demo attaches reads Demo, never On
+351	test	read-only and unreachable states
+409	group	manual add
+551	group	host kind
+633	group	how it runs, per host kind, on the team page
+667	group	turn off
+730	group	discovery helpers
+732	test	teamDiscoveryUrlFor follows the tailnet rule
+748	test	dismissal expires after 30 days
+769	test	TeamDiscovery exposes the found host to siblings
+## test/team_policy_test.dart
+425	group	model
+427	test	decodes the front document leniently
+444	test	unknown or missing supervision is balanced; odd entries are 
+477	group	GasCityControl route
+483	test	GET /front/policy with and without ?rig=; 404 and 422 answer 
+523	group	controller
+525	test	caches the policy with the projects scope, refreshes it, drops 
+549	test	a failing policy read keeps the previous document and marks the 
+567	test	null without a policy side on the gateway
+575	group	Task details
+697	group	Start-a-run sheet
+## test/team_project_controller_test.dart
+46	test	typed engine refusals survive a thrown gateway failure
+65	test	untyped or malformed failures stay generic without retaining secrets
+88	test	accepted command stays accepted when its refresh fails
+103	test	refresh failure preserves the command refusal code
+114	test	late poll cannot replace a newer command refresh
+126	test	late explicit read cannot replace a newer stream snapshot
+138	test	editor draft JSON stays parseable and secrets never reach disk or restore
+172	test	dispose cancels queued draft saves before profile deletion
+193	test	draft targets and profiles are isolated
+## test/team_project_editor_fixes_test.dart
+191	group	roles
+284	test	B-13: models read by family, newest version first
+## test/team_project_fixture_test.dart
+112	test	automatic checks leave minor-only findings for the person
+138	test	every-step merge requires confirmation and risky phase review guards main
+185	test	started interrupted work cannot move without a shared remote
+207	test	malformed plan can retry or become one reviewed task
+230	test	manual commits survive while conflicts stop only their queue item
+284	test	agent conflict resolution is a checked task on the original branch
+320	test	budget warning is reported once per day before the cap
+342	test	confirmed placement starts over instead of inventing a handoff
+369	test	late reads after close cannot seed deleted profile storage
+374	test	explicit mode and budget are required before creating work
+386	test	full lifecycle checks fixes rechecks merges and confirms exact commits
+454	test	restart preserves approved spec and receipts and interrupts live work
+476	test	persist before publishing and reject stale or reused commands
+517	test	lane and dependency caps hold and a cycle is rejected
+546	test	delete drains an in-flight write and prevents resurrection
+575	test	read-only projection never seeds or reconciles persisted work
+603	test	budget gate survives a cap with no running tasks
+631	test	replan cannot inject completed runtime state and resume cannot skip a plan
+664	test	quick task honors plan-first and selected role/server
+687	test	persisted and published user content is redacted
+## test/team_project_integration_test.dart
+39	test	built-in demo loads without filesystem recordings or a server
+98	test	concurrent stop and remove wait for gateway closure
+127	test	stop during initial loading never starts a late simulator
+150	test	stop drains a gateway factory that completes after shutdown
+181	test	profile deletion closes the simulator before sweeping its records
+## test/team_project_planning_state_test.dart
+5	test	server diagnostic reason is additive and does not change online
+18	test	legacy project snapshots remain readable without planner metadata
+32	test	typed planner gate and durable timeline survive domain round trip
+72	test	planner checkpoint updates preserve project workflow and revision
+## test/team_refusal_test.dart
+89	test	the table: known codes read plainly, unknown ones name the action
+## test/team_runtime_test.dart
+24	group	TeamRuntimeStatus
+25	test	parses the download failure detail
+44	test	parses every phase and the failed reason
+97	test	killedByAndroid and readiness
+114	group	TermuxTeamRuntime
+116	test	supportsAiTeam: a 64-bit phone and the pinned upstream builds for 
+156	test	a verb dispatches, polls status until idle and answers the last
+217	test	a refused dispatch is a bridge error, and statusStream ends on idle
+248	test	logTail, managedProjects and createManagedProject (TEAM-302)
+312	test	the download size is the pinned archives plus the packages
+331	test	the phone config is Gas City on loopback with this phone as host
+358	group	GasCityGateway on the phone
+360	test	loopback + phone host turns controls on without a front and 
+434	test	gascityLoopback is gascityRead plus the control switches, 
+## test/team_session_state_test.dart
+25	test	mapAgent carries the joined session state and running flag
+41	test	mapSession (a pool instance with no agent entry) carries them
+47	test	an agent with no session has neither
+## test/team_status_words_test.dart
+16	test	a spec that takes minutes shows how long, then says still working
+31	test	finished tasks never read as "0 working"
+## test/team_storage_redaction_test.dart
+14	test	saved dispatch redacts content and receipts without changing send data
+47	test	cached usage keeps numeric facts while masking nested credentials
+## test/team_task_header_test.dart
+29	group	teamTaskHeaderLine
+30	test	working: who on which step, since when, and what next
+41	test	the step that is the task itself is not said; under a minute no 
+52	test	reviewing says "Next: merge" only where a merge gate follows
+69	test	the merge gate waits: where the task is, no time (the card says 
+81	test	finished says how long ago
+90	test	a question, or a problem with its own line, keeps the host words
+110	test	a wait past its usual time leaves the header to the line under it
+130	group	TeamNowLineView.calmInHeader
+## test/team_usage_evidence_test.dart
+7	test	today retains partial and unpriced estimate evidence
+41	test	unavailable and absent usage never manufacture a zero cost
+67	test	recent sessions remain separate window snapshots, not task totals
+115	test	invalid figures remain unknown and future sources stay estimates
+## test/team_usage_test.dart
+177	group	teamUsageLabel
+179	test	is null when the host reported neither cost nor tokens
+187	test	writes tokens compactly
+202	test	every cost carries "est." (05-beads TEAM-113)
+233	test	joins cost and tokens, either alone
+245	test	Arabic keeps Latin figures and the suffix after the amount
+259	group	capabilities
+261	test	Gas City read path includes usage; the front keeps it
+268	group	surfaces
+417	group	Task details: a task\'s cost is unreported
+491	group	agent page
+## test/team_work_graph_test.dart
+119	group	the Graph view geometry
+120	test	lays the six-node graph out the same way twice
+165	test	names the critical path and draws its edges thicker
+179	test	the blocked chain is the stuck item, its open need, its waiters
+204	test	unknown ids, self links, duplicates and cycles do not break it
+232	test	a larger chip size moves every rect and grows the canvas
+241	group	the Graph view
+## test/team_work_tab_test.dart
+326	test	turning the plugin off sweeps the remembered view with the rest
+423	test	the chain the graph picks out, from the task\'s steps
+## test/team_worker_start_test.dart
+20	test	the stage comes from the session the host reports
+40	test	only a plausible start is a measurement
+62	test	the last start is kept per profile
+## test/terminal_close_gone_test.dart
+11	test	OpenCode 2: closing a terminal that is already gone succeeds
+30	test	OpenCode 2: any other failure to close still says so
+## test/terminal_input_queue_test.dart
+64	test	queued keystrokes leave as one ordered write, none repeated
+83	test	a channel that goes away drops what was never sent
+## test/terminal_key_bar_test.dart
+11	group	modified text
+12	test	Ctrl turns letters into control bytes
+19	test	Ctrl on the symbols that have a control form
+27	test	text without a control form passes unchanged
+33	test	Alt puts Esc first; only the first character is modified
+41	group	sticky modifiers
+43	test	Ctrl applies to the next text once, then releases
+51	test	a second tap releases the latch
+59	group	keys sent to the terminal
+68	test	arrows follow the cursor-key mode programs ask for
+76	test	Esc, Tab, symbols and page keys
+85	test	Ctrl with an arrow sends the modified sequence
+91	group	the bar
+## test/terminal_lifecycle_test.dart
+50	group	OpenCode 2
+52	test	reruns reported command in a new scoped PTY
+112	test	failed response is sanitized and never retried
+151	test	missing facet and missing wire timing stay unavailable
+186	test	v2 rejects stale project location without dispatching a request
+## test/terminal_source_labels_test.dart
+11	test	the built-in shell and a server called "This phone" read apart
+18	test	a server with another name keeps it
+23	test	a nameless server is the OpenCode server
+28	test	a collision gets the runtime added, never two equal labels
+## test/termux_aiteam_script_test.dart
+551	test	what Termux runs: the upstream pins, the in-app team\'s scripts on 
+631	test	the script, its Ubuntu parts and every dispatch parse
+669	group	aiteam.sh in Termux\'s Ubuntu
+1239	group	TermuxTeamRuntime over the oc/termux channel
+1248	test	Set up takes the team from idle to running and gives the Termux 
+## test/termux_aiteam_upstream_test.dart
+11	test	Set up dispatches the upstream builds, never aiteam-assets-1
+## test/termux_bridge_platform_test.dart
+20	group	on a platform with no Termux bridge
+28	test	capabilities() reports unavailable instead of throwing
+38	test	the boolean entry points answer false, never throw
+44	test	run() fails as a bridge error the UI already handles
+57	test	every derived command reports the same unsupported error
+78	test	supported is false
+83	group	on Android
+85	test	supported is true and the channel is used
+103	test	a missing handler is a bare device, not a crash
+113	test	a missing handler makes run() a bridge error, not a raw throw
+124	test	an execution killed by the Termux service shutdown is retried once
+166	test	a second service-shutdown kill is reported, not retried again
+202	test	a PlatformException still surfaces its own message
+## test/termux_clarity_test.dart
+152	group	one typed cause
+154	test	capabilities name the cause before any command
+189	test	bridge failures map to their cause
+203	test	the observation carries the cause
+234	test	every cause has plain words and one named fix; retry only where 
+270	group	the permission request
+272	test	asks Android directly and remembers a permanent no
+400	group	the first screen after a storage reset
+486	group	This phone while Termux cannot be reached
+## test/termux_default_runtime_test.dart
+35	test	fresh Termux install selects pinned OC2 and stores an OC2 profile
+47	test	legacy installation automatically uses the safe OC2 move
+68	test	legacy selection without recoverable credentials never installs OC1
+78	test	saved legacy phone retains identity and credentials while moving
+98	test	an independently ready OC2 history cannot adopt the legacy profile
+133	test	OC2 alias cannot replace the original migration profile (pending=$pending)
+206	test	unreadable inventory cannot be treated as a fresh install
+## test/termux_folders_test.dart
+81	test	lists child folders with git marks; names are data, never code
+111	test	listing a folder with an awkward name goes into it exactly
+120	test	a path with a newline or .. is refused before anything runs
+144	test	the script itself refuses a newline path, whatever it is sent
+156	test	a link, a missing folder and / answer as the sheet expects
+186	test	makes a folder with an awkward name, and finds it the second time
+199	test	parsing ignores noise and refuses unsafe names
+231	test	no answer, a timeout inside Termux, and a missing projects folder
+261	test	the outer script embeds only base64, never the path
+## test/termux_healing_arm_test.dart
+7	test	first recovery arm admits only a confirmed crash with no live owner
+## test/termux_migration_archive_test.dart
+34	test	only verified private config yields offline provider labels
+70	test	imports projects privately, preserves executability and resumes commit
+121	test	a changed imported file is preserved and fails closed on rerun
+150	test	checksum mismatch never commits
+172	test	rejects traversal, links, duplicate names and invalid header checksum
+220	test	linked destination parent never reads or changes link target
+250	test	stale staging is replaced; cancellation cleans only partial files
+292	test	credentialed config remains private export with no payload in manifest/errors
+## test/termux_migration_controller_test.dart
+22	test	profile deletion during a journal write cannot recreate scoped state
+45	test	discard failed pack is repeatable and a fresh copy can start
+75	test	discard preserves committed files and retains journal on cleanup failure
+105	test	completion query survives restart and user edits without contacting source
+145	test	review reports capacity before pack and uses start budget for selection
+171	test	stop settles only after copy and stop command, then notifies idle
+223	test	resume owns settlement before its first journal read
+247	test	provider query is offline and ignores unexported or failed config
+272	test	journal removal is scoped and idempotent even after profile deletion
+291	test	verified import switches profile once and completed retry is local
+334	test	missing built-in and low or unknown space stop before packing
+371	test	Termux loss during copy retains resumable metadata without switching
+393	test	new controller resumes committed import after lost completion
+419	test	checksum mismatch never imports or switches
+436	test	cancel interrupts admission after current copy and preserves source
+466	test	raw credential-bearing exceptions never enter output, state or journal
+517	test	resume refuses changed source archive instead of replacing prior bytes
+## test/termux_migration_profile_test.dart
+90	test	switch and repeat retain source and only map verified project location
+125	test	path matching respects boundaries and rejects destination traversal
+141	test	failed connect restores source selection and retains destination for retry
+155	test	cancellation before start leaves profiles unchanged
+165	test	cancellation during start never selects destination
+175	test	sensitive underlying exception is replaced by a fixed failure code
+193	test	a user selection during start wins over migration
+203	test	remote source is rejected before creating a destination
+## test/termux_migration_provider_names_test.dart
+10	test	JSONC returns only fixed labels, ignoring secrets and custom names
+37	test	invalid, over-limit and non-provider documents disclose nothing
+57	test	escaped strings and comment markers cannot introduce provider IDs
+74	test	model-only config exposes fixed provider labels, never model text
+108	group	private export reader
+123	test	reads only fixed OC1/OC2 config paths and deduplicates labels
+147	test	rejects oversized files and symlinked files or parents
+167	test	rejects export-root symlinks and contains read failures
+182	test	permits a platform alias above the verified export root
+## test/termux_migration_space_test.dart
+17	test	selected subset uses the conservative retained-copy budget
+36	test	capacity is the smaller reading and equality fits
+59	test	unknown readings remain unknown and retain the measured side
+78	test	empty selection requires zero and does not count refused items
+92	test	refused selection fails with its fixed code, unselected refusal is ignored
+115	test	missing or malformed measurements cannot produce a budget
+132	test	archive and entry limits include boundaries and apply per selected item
+## test/termux_migration_transport_test.dart
+24	test	inventory reports only bounded metadata and unknown versions
+43	test	unsupported unselected categories do not hide valid projects
+58	test	raw bridge credentials are discarded on failure
+75	test	source rejects links even after prior metadata output
+86	test	pack has strict IDs, USTAR, own lock, bounded size and digest
+124	test	authenticated stream resumes flushed chunks after bridge loss
+221	test	real host shell packs managed projects and transfers verified USTAR
+308	group	link2symlink links
+380	test	are archived as their target contents, not as links
+396	test	inspect counts the target bytes and accepts the project
+407	test	an unreadable target is named, not migrated half-broken
+426	test	an ordinary ${absolute ? 
+445	test	copy refuses a staging link $suffix without changing its target
+478	test	cancel before transfer dispatches nothing
+## test/termux_migration_ui_test.dart
+384	group	discarding a saved copy
+482	group	the backend says whether the move finished
+510	group	free space in the review
+616	group	providers to sign in to again
+725	group	entry points
+883	test	the owner keeps no key of its own; the offer key is still swept
+## test/termux_processes_test.dart
+100	group	tools.sh procs-scan
+101	test	groups by ancestry and flags orphans with a reason
+172	test	an MCP whose live parent is opencode serve is never an orphan
+183	test	reads the listing without procps by walking /proc
+194	group	tools.sh procs-stop
+196	test	refuses protected processes, the server group and unknown pids
+208	test	TERM ends a cooperative process; KILL follows after the grace
+248	test	a group stop skips its protected members and reports them
+270	test	a list of pids (one kind, confirmed together) stops exactly those, 
+308	group	what runs
+310	test	each process has one of the six kinds; the Termux app itself is 
+352	test	busy is measured between two readings, never from the lifetime 
+398	group	parsing
+400	test	an empty listing is an empty report; results parse
+415	group	TermuxProcessesScreen
+## test/termux_recovery_scripts_test.dart
+7	test	storage accepts checked counts and rejects malformed or impossible responses
+31	test	recovery scripts validate syntax and shell identities
+68	test	executed preflight refuses changed operation, revoked permit, live PID and occupied port
+122	test	executed disarm revokes before cancelling its owned startup and retries incomplete cancellation
+## test/termux_running_server_test.dart
+132	test	ready status requires live loopback response, not just saved manager state
+152	test	permission denied sends no command; one look at the app-authored loopback says whether OpenCode answers
+167	test	missing Termux and a stopped or switching runtime are not running
+189	test	unknown port is never scanned
+195	test	authentication challenge is observed without claiming authenticated health
+209	test	web, iOS and desktop never touch the native bridge
+723	group	in-place controls
+736	test	a stopped, set-up server is observed as stopped, not absent
+## test/termux_runtime_switch_test.dart
+96	test	switch dispatch acknowledges while its detached manager is still running
+159	test	switch rotates prior output under ownership and preserves bounded history on reopen
+205	test	a switch without lock ownership does not rotate another operation output
+225	test	explicit switch installs beta and preserves original binary/data/credential
+246	test	return to OC1 is refused and the migrated runtime stays intact
+266	test	$failure leaves durable history and permits retrying the OC2 move
+291	test	interruption between password and marker writes never overwrites saved old credential
+308	test	pre-existing first-run OC2 cannot launch OC1 against its default data
+322	test	unknown data mode refuses switch before touching the managed server
+335	test	return refuses changed saved credentials before stopping target server
+353	test	a move with both OpenCode databases refuses before stopping and keeps both
+376	test	persisted ready commits only the matching switch operation
+397	test	pending journal suppresses automatic recovery and restores return metadata
+416	test	switch requires explicit target credential and validates operation identity
+## test/termux_script_hashes_test.dart
+96	test	every embedded script matches its reviewed byte snapshot
+## test/termux_scripts_test.dart
+31	test	setup clock tolerates legacy and malformed timestamps
+59	test	install dispatch starts its clock only after accepting the launch
+75	test	manager clock survives phase writes and a fresh status process
+96	test	legacy manager state stays without an invented clock
+108	test	restart renews the clock only after launch rejection gates
+138	test	generated termux scripts pass bash syntax validation
+172	test	setup status parses persisted manager state
+193	test	restart is treated as a running managed operation
+207	test	restart validates ownership and reuses the installed server
+247	test	restart operation IDs cannot inject shell syntax
+258	test	setup snapshot keeps terminal output separate from status
+281	test	Android RESULT_OK and shell exit zero indicate success
+293	test	manager is installed before the single-flight lock is acquired
+314	test	default setup installs the pinned OpenCode release
+347	test	manager setup defaults only fresh state to OC2
+364	test	direct Ubuntu setup only selects OC2 and refuses legacy requests
+381	test	Ubuntu bootstrap disables io_uring before Node and npm run
+394	test	Ubuntu bootstrap trims recommendations but retains coding tools
+427	test	OpenCode 2 readiness accepts the stable route and the beta one
+440	test	Ubuntu npm install requires its matching pinned binary and cleans cache
+542	test	runtime selection survives phase writes and a fresh status process
+566	test	runtime version uses the recorded command and normalizes its prefix
+593	test	fresh OC2 default cannot silently migrate an installation
+641	test	runtime inventory preserves legacy default and explicit beta choice
+677	test	installation inventory accepts only a single sanitized version
+703	test	installation inventory distinguishes absence from a failed probe
+751	test	legacy setup requests fail before generating any install script
+763	test	the npm dist-tag is reachable only by asking for it
+778	test	managed server URL detection is narrow
+785	test	live snapshot converts manager errors into a failed status
+793	test	manager claims the dispatcher lock before package work
+802	test	server owns the setup wake lock until it stops or exits
+825	test	wake lock refresh script is safe to invoke repeatedly
+833	test	setup reserves disk space and only cleans app-owned partial data
+847	test	unhealthy setup repairs packages without allowing removals
+880	test	healthy custom repository skips apt and drains long named-container help
+957	test	unexpected manager errors persist the active setup stage
+975	test	install and server logs are bounded and rotated by executable code
+1014	test	server runs through the bounded logger and stop validates its runner
+1031	test	manager stops its verified process group but refuses a decoy
+1097	test	the managed server never runs from the container home folder
+1117	test	project folders are created only as one safe name under projects
+1136	test	Ubuntu setup bypasses registries and verifies Canonical archives
+1158	test	OpenCode Ubuntu is isolated in its own v4 or v5 container
+1169	test	npm setup prefers IPv4 and retries transient downloads
+1179	test	only app-owned partial Ubuntu installs can be removed
+1199	test	only explicit manager launch markers are accepted
+1212	test	manager-missing stop validates the lock owner before clearing
+## test/termux_setup_bridge_test.dart
+28	test	setup sends redacted metadata and substitutes pinned native base
+58	test	unsupported and credential parameters never dispatch
+87	test	step acknowledgement sends no arbitrary error text
+## test/termux_setup_finish_test.dart
+100	test	a fresh install gets a profile with a new password, which the 
+117	test	an existing install keeps the password Termux already holds
+137	test	a server already running the right OpenCode, with the app connected 
+164	test	a new OpenCode restarts even a connected server
+180	test	Termux serving the other OpenCode is a switch, not a setup step
+193	test	a restart that fails, or a connection that fails, is the reason on 
+207	test	an in-app job never touches Termux
+221	test	the staging script refuses the other runtime and a pending switch, 
+## test/termux_setup_native_test.dart
+49	test	Termux durable shell: $scenario
+## test/termux_storage_test.dart
+125	group	tools.sh storage-scan
+126	test	measures every category with the right paths and flags
+208	test	accepts the older installed-rootfs layout
+228	test	a cancel file stops the scan before it measures anything
+246	test	storage-summary answers with the last total
+263	group	tools.sh storage-clean
+265	test	removes only the listed paths of one category
+311	test	protected inventory categories refuse even direct calls
+340	test	refuses caches while a build is running
+357	test	failed process discovery preserves caches and the current report
+399	test	incomplete lock stays busy while fresh and recovers after aging (empty PID: $emptyPid)
+429	test	plain Termux without Ubuntu only cleans its npm content cache
+444	test	active operation blocks cleanup and scanning
+458	test	wrong-owner cache refuses instead of removing it
+476	test	legacy reports require a fresh scan
+497	test	forged cache entries cannot remove broad or project paths
+525	test	replaced cache ancestor symlink is refused and retained
+543	test	freed bytes use current measurements and invalidate persisted report
+569	test	partial removal counts observed shrinkage and preserves refused entry
+607	test	never offers OpenCode itself or project sources
+626	test	refuses when no scan has listed anything
+637	group	bridge wrappers
+639	test	tools script installs beside manager.sh and dispatches a scan
+662	test	byte and path formatting
+693	test	status parsing tolerates an idle phone and a bare log
+706	test	the scan stage is the last heading the script printed
+727	test	every scan stage heading is a log line of the bundled script
+743	group	TermuxStorageScreen
+## test/text_scale_overflow_test.dart
+600	group	G6 kit overflow matrix
+602	test	every exported kit part has a scene, and every scene a part
+654	test	non-widget utilities require their expected superclass
+688	test	the manifest fails loudly on what it cannot read
+807	test	the overflow baseline exists and stays under the ceiling
+841	test	the matrix shards cover every scene exactly once
+## test/text_size_test.dart
+75	group	stored
+77	test	Default until chosen; a choice survives a restart
+93	group	at the app root
+128	group	Settings › Appearance › Text size
+173	group	main screens at Smallest
+## test/theme_packs_test.dart
+23	test	the default pack is Graphite, the visual language palette
+42	test	every static pack has complete, distinct dark and light palettes
+60	test	every theme keeps text and controls readable in both modes
+135	test	a stored theme from before the new ones still loads
+143	test	theme pack persistence round-trips through the store
+282	group	screen-settings-1: appearance
+## test/theme_roles_test.dart
+75	test	Graphite is the default and keeps the spec palette
+103	test	Graphite meets every contrast floor in both modes
+110	test	every theme pack supplies the whole role set, readable
+124	test	a custom accent and ground derive a readable role set
+175	test	withAccent swaps only the accent and keeps it readable
+186	test	packs change colours only: shape, space and type are fixed
+207	test	type sizes are whole pixels and the faces are Geist
+231	test	the ΔE2000 used for LOOK-39 matches the published reference
+244	test	Graphite offers green, blue, teal and violet; teal replaced orange
+287	test	every Graphite accent keeps clear of attention (LOOK-39)
+309	test	a disabled button reads in every pack: text3 on surface3 (R9)
+352	test	accentKeepsMeaning is the one LOOK-39 check (R9)
+389	test	a floating surface has its own shadow role in every theme
+428	test	every Material type slot is one role, with no other size
+478	test	a row value is the secondary role and a typed name is mono 13

@@ -1,0 +1,541 @@
+## test/git/github_device_flow_test.dart
+92	test	success: code, pending, slow_down, token, login
+142	test	slow_down without an interval adds five seconds
+153	test	expired_token ends the wait
+170	test	the code running out locally ends the wait too
+188	test	access_denied is typed
+204	test	device flow switched off on the app is typed
+218	test	a network blip while polling is retried; three in a row end it
+249	test	cancelling stops before the next poll
+268	test	a rejected token on GET /user is typed
+283	test	expiring tokens: refresh rotates the pair and keeps the login
+## test/git_link_repair_test.dart
+150	test	a project whose folder moved is repaired from its own files
+171	test	objects in Termux are fetched, checked by name and put back
+194	test	a progress callback that can\'t cross isolates is fine
+208	test	every object from Termux puts the project right
+219	test	Termux not allowed yet: says so and changes nothing it needs
+233	test	Termux gone: the missing files are named, plainly
+244	test	a healthy project needs nothing
+252	test	only the projects folder is reached
+268	test	a Termux path outside a proot-distro store is never asked for
+282	test	the Termux script uploads nothing outside a store
+303	test	pack files are checked by their trailing checksum
+## test/golden_harness_test.dart
+520	group	G23 golden-name rule (TEST-20)
+521	test	accepts the documented shapes
+533	test	rejects the rest
+548	test	reads the regenerate header only at the top of the file
+561	group	G23 scanner
+563	test	strips line and block comments, not strings
+590	test	baseline growth honours ratchet-tighten only for its check
+612	test	G23 font loaders register every family AppTheme and pubspec name 
+687	test	G23 baseline only shrinks and never holds kit gallery entries
+710	test	G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, 
+## test/golden_tolerance_test.dart
+32	test	the test config installs the tolerant comparator
+## test/goldens/kit/kit_gallery_g5_test.dart
+120	group	textContrast on a shaded ground
+321	group	baseline
+323	test	the committed baseline is within the ceiling
+380	group	both themes
+## test/home_navigation_test.dart
+583	group	cold start opens on Chats
+720	group	everything that opened the Inbox opens Chats with its filter
+822	group	the Files tab is the files of one project
+899	test	which folders are temporary
+## test/host_agent_providers_test.dart
+43	test	captured fx provider error reaches final signed-out phone row
+70	test	captured helper loading and final snapshots preserve readiness states
+92	test	captured CLI account states remain final while helper models load
+133	test	all catalog phone agents reach final rows for explicit probe outcomes
+177	test	missing restoration does not block a host-ready provider
+202	test	missing sign-in still blocks without restoration proof
+213	test	hidden and checking agents remain unavailable despite known login
+245	test	catalog and model lists cannot be changed by caller mutation
+266	test	sign-in details use only fixed app commands
+282	test	permission choices expose fixed once-only labels and copied lists
+## test/host_management_screen_test.dart
+74	test	the ubuntu host script passes bash syntax validation
+## test/host_script_install_test.dart
+137	group	ubuntu-opencode.sh
+142	test	a download that does not match the checksum installs nothing
+166	test	a matching download is installed and becomes the service
+193	test	install refuses an existing unsupported server without changing it
+206	test	install leaves an OpenCode that is already there alone
+220	test	update moves an older OpenCode 2 to the pinned release
+243	test	update does not migrate an existing Older OpenCode
+253	test	update never downgrades a newer OpenCode
+267	test	update refuses a mismatched download and keeps the old one
+## test/host_script_pin_test.dart
+42	test	the pin is a full commit hash, never a branch or a tag
+57	test	$name: the checkout holds the pinned bytes
+67	test	$name: the checksum matches the pinned commit\'s bytes
+85	test	$name: the command checks the download before it is named
+100	test	install uses the official pinned OpenCode 2 package directly
+111	test	the front command checks, then runs the checked copy
+118	test	the guides show the same pinned, checked commands
+129	test	the repository script installs a pinned, checked OpenCode
+157	test	nothing the app or its guides show pipes a download into a shell
+## test/in_app_auto_update_test.dart
+63	group	shouldAutoUpdateInApp
+65	test	up to date does nothing, with or without a leading v
+69	test	an unknown version does nothing
+72	test	behind and idle updates
+75	test	waits while work is running
+78	test	does nothing while a job runs
+81	test	does nothing on a half-finished switch
+84	test	does nothing after a failed install
+87	test	tries once per run
+91	group	InAppAutoUpdater
+118	test	asks the engine for the current runtime when behind and idle
+132	test	waits while busy, then runs once when work ends
+147	test	does not run when already on the pinned version
+154	test	does not retry after a failed attempt
+## test/in_app_quota_gateway_test.dart
+55	test	In-app Ubuntu reads loopback 4195 with the Bearer token only
+76	test	a remote server keeps its origin and Basic sign-in
+86	test	In-app Ubuntu without a token says unsupported and sends nothing
+110	test	only the app\'s own server gets a token reader
+## test/in_flow_consent_test.dart
+20	test	first phone start claims once, remembers denial and isolates servers
+77	test	preset survives restart; interrupted asks explain themselves; Settings revises
+116	test	profile deletion removes consent and leaves another server intact
+133	test	bad storage and failed writes never offer consent or record a grant
+## test/installer_admission_native_test.dart
+118	test	native installer admission: $scenario
+## test/installer_monitor_native_test.dart
+93	test	native installer monitor: $scenario
+## test/integration_auth_recovery_test.dart
+185	test	uncertain $kind requires explicit dismissal before another start
+## test/interaction_defaults_test.dart
+63	test	pickers skip single options and project defaults respect available IDs
+107	test	signed-in model uses server IDs and friendly name without overriding a choice
+146	test	voice pack uses physical RAM thresholds, supported packs and explicit choice
+174	test	voice matches full locale before language and retains explicit choice
+207	test	Queue is default and review picks confirmed changes, preserving overrides
+251	test	project and once-only notices survive restart, stay isolated and delete with profile
+315	test	refused storage does not remember a project or consume a notice
+344	test	sensitive values are never persisted or announced, invalid write does not poison queue
+## test/ios_remote_platform_gating_test.dart
+247	test	iOS stale keep-live preference cannot prevent suspension ${restore ? 
+306	test	iOS native backstops stay unavailable without outgoing oc calls
+## test/ios_runner_contract_test.dart
+9	test	iOS runner has the generated lifecycle and explicit unsigned-build path
+35	test	iOS configuration does not claim unsupported native capabilities
+57	test	iOS CI watches bundled policy and license assets
+75	test	all declared iOS app icons exist at exact size without an alpha channel
+## test/isolated_task_launch_test.dart
+71	test	ready event received before the create response is retained
+94	test	events for another project or directory are ignored
+114	test	failure event keeps the created worktree and reports the message
+133	test	after a failed setup only an explicit Start anyway opens the copy
+155	test	a failed create has no copy to start in
+166	test	create failure surfaces the error with no worktree
+182	test	timeout becomes unconfirmed; open needs explicit acceptance
+214	test	open anyway from unconfirmed records the choice
+227	test	a failed open keeps the launch openable
+248	test	cancel before the response keeps whatever the server made
+269	test	cancel while preparing stops waiting without deleting
+286	test	start is idempotent and cancel is inert once terminal
+## test/kit/kit_action_test.dart
+116	group	a primary waking up eases its fill
+168	group	KitAction
+170	test	enabled is true for a callback or a copy action, false otherwise
+179	group	disabledReason (STATE-8, P7.6)
+271	group	destructive stacking (§2.7, LAY-14)
+370	group	overflow ("More", §2.7)
+438	group	KitAction.copy (KIT-23)
+513	group	working (STATE-7, C21 f)
+533	group	shortcut (visual language §5)
+584	group	KIT-43 compatibility
+636	group	disabled look (LOOK-14, test 2)
+696	group	overflow items (More)
+794	group	tertiary colours (R5)
+824	group	KitAction.copy keys and redaction
+915	group	working semantics (STATE-7)
+979	group	keyboard focus ring (LOOK-21, LAY-10)
+1026	group	shortcut window rule (test 8)
+1055	group	G6: no overflow (test 11)
+1159	group	G8: settles after one pump under reduced motion (test 12)
+1365	group	under a style
+## test/kit/kit_ask_line_test.dart
+67	group	KitAskLine
+68	test	reads no colorScheme, textTheme, accent or partial-alpha text 
+310	group	KitSkeletonTranscript
+312	test	reads no colorScheme, textTheme, accent or alpha (LOOK-2)
+## test/kit/kit_bidi_test.dart
+8	test	ltr wraps in LRI … PDI
+11	test	auto wraps in FSI … PDI
+15	test	never wraps twice and leaves empty text alone
+23	test	a path inside an Arabic sentence stays one isolated run
+## test/kit/kit_capability_explainer_r10_test.dart
+63	group	terminal-only entry
+65	test	flag:terminal matches its capabilities.json row, explains only
+122	group	tool inventory entry
+124	test	flag:toolInventory matches its capabilities.json row
+158	group	extra tools why
+## test/kit/kit_capability_explainer_test.dart
+132	group	registry parity with capabilities.json
+134	test	every enable flow has an entry with a flow id; 21, distinct
+157	test	every matrix capability has equal supported and partly sets
+176	group	registration
+178	test	canEnable follows registerFlow; unregisteredFlows shrinks
+223	test	enable with no handler is a no-op returning false
+236	group	the 21 enable flows
+302	group	enable
+381	group	why wording
+436	test	no kitCap/kitHost copy mentions the setup assistant (AUTO-20)
+452	group	.offer
+547	group	asserts
+601	group	keyboard
+## test/kit/kit_capacity_test.dart
+112	test	the G6 manifest reads the kit
+117	test	every exported kit part declares its capacity, and only those do
+135	test	every role and cap names a known width
+151	test	every text rule in the contract is one the probe can report
+167	test	every list-like field of a part declares what happens beyond what 
+206	test	every many-item run fills a declared slot to its limit
+229	test	list slots with no rule or no run are allowlisted, and the 
+261	test	the shards pump every case exactly once
+279	test	the stress fixtures are as extreme as they claim
+299	group	probes
+479	test	slotKey folds numbers and long words
+## test/kit/kit_chart_test.dart
+60	test	the summary names kind, series, points and the highest value
+72	test	a single series leaves the series name out of "highest"
+## test/kit/kit_choice_list_test.dart
+210	group	single: one tap, one callback (G9)
+346	group	disabled choice
+348	test	asserts without a reason
+405	group	haptics
+470	group	other
+528	group	loading and empty
+571	group	KitPickerRow
+624	test	disabled without a reason asserts
+## test/kit/kit_code_block_breaks_test.dart
+107	group	kitCodeBreakable
+108	test	adds break chances after punctuation, never inside a word
+116	test	runs and closers stay whole; plain words are untouched
+## test/kit/kit_code_block_prompt_test.dart
+40	group	kitCommandLineStarts
+41	test	separate commands each start a line
+48	test	a heredoc body and its terminator continue the command
+59	test	<<- strips tabs; <<< is a here-string, not a heredoc
+69	test	a trailing backslash, pipe or && continues the command
+75	test	an open quote or bracket continues the command
+86	test	the body of a for or if block continues it
+101	test	a # comment or a quoted < does not open anything
+## test/kit/kit_code_block_test.dart
+144	group	1-2. copy
+334	test	6a. KitCodeHighlight: keyword colour, unknown language, oversize
+454	group	9. .fill
+553	group	13. overflow (G6)
+## test/kit/kit_confirm_sheet_look_test.dart
+88	group	rows 1-2: the mark is the header tile (LOOK-5, LOOK-6)
+168	group	row 3: consequences through KitConsequences (D22)
+244	test	passing both consequences and consequenceItems asserts
+277	group	row 4: details through the public KitDetailsFold
+338	group	row 5: the typed name (COPY-30)
+357	test	no literal isolate in kit_confirm_sheet.dart
+366	group	row 6 and 200 % text (A11Y-8)
+456	group	reduced motion settles in one pump (G8)
+## test/kit/kit_context_ring_test.dart
+68	group	levels and maths
+70	test	thresholds: under 70 calm, 70 to 94 warning, 95 and over full
+78	test	the percent is whole, floored, and held to 0 to 100
+143	group	the halo
+198	group	compacting
+224	group	the list ring
+## test/kit/kit_contrast_floors_test.dart
+51	test	the waiting hero\'s words read at 4.5:1 on its mint, and the mint 
+## test/kit/kit_dialog_test.dart
+209	group	5. unchanged text closes with null
+367	group	10. showKitAlert
+454	group	11. keyboard
+537	group	13. overflow
+577	test	14. both functions return Futures and take keys
+## test/kit/kit_diff_view_test.dart
+131	group	1. parser
+133	test	fromPatch: counts, numbers and hunk lines
+152	test	fromTexts folds unchanged runs with 3 context lines
+175	test	fromTexts(after:) alone is an added file
+183	test	fromTexts finds separate changes, not one block
+226	group	3. mode follows the diff box
+267	group	4. files
+480	group	7-8. selection
+682	group	9. states
+876	group	16. overflow (G6)
+## test/kit/kit_draft_manifest_test.dart
+471	group	G10 manifest on lib/
+473	test	every sheet with a multiline field keeps a draft 
+511	test	the scan finds the drafts lib/ makes
+515	test	every draft target starts with a fixed namespace and its 
+524	test	every app-wide draft is built with KitDraft.appWide, and no 
+554	group	the profile deletion sweep removes every draft target
+579	test	$target ($where)
+599	group	G10 manifest on fixtures (proves the checks)
+605	test	a sheet with a multiline field and no draft fails
+620	test	the same sheet with draft: passes; a one-line field passes
+633	test	one file, two sheets: the draft of one does not keep the other 
+649	test	a field built in another file is followed
+683	test	a class that makes its own KitDraft keeps the sheet
+705	test	a field that forwards widget.draft needs the caller to pass one
+735	test	draft targets are traced through helpers, variables and 
+765	test	a target of runtime text only, or a literal profile, fails
+779	test	a profile that falls back to a literal fails; KitDraft.appWide 
+794	test	a key without the profile id is not swept with the profile
+## test/kit/kit_draft_test.dart
+49	test	the key is oc.draft.<target>.<profileId>
+## test/kit/kit_fact_row_test.dart
+59	group	the provenance line carries the word, the source and the date
+215	group	bidi-safe values
+217	test	only a right-to-left layout gets the marks
+225	test	an address is one left-to-right run
+## test/kit/kit_fine_tune_panel_test.dart
+106	group	read
+108	test	a style\'s own knobs, and the choices laid over them
+121	test	a choice equal to the style\'s own does not differ
+131	test	flat Soft holds its edges; high contrast holds depth and edges
+## test/kit/kit_frost_test.dart
+75	group	strengths
+77	test	each strength follows the study: blur, saturation, tint
+91	test	the saturation matrix keeps grey grey and 1 is identity
+105	test	the choice picks the strength
+114	test	Saver, reduced motion and high contrast keep it solid
+133	test	only Solid (and Signal) let the two places turn to glass
+144	group	strengthOf
+200	group	surface
+270	group	composer layer
+371	group	Glass choice
+383	test	reads a stored choice once
+## test/kit/kit_icon_button_test.dart
+174	test	an empty tooltip and no label asserts (KIT-22)
+521	group	the copy contract (G9)
+674	group	a toggled glyph cross-fades
+745	group	reduced motion settles after one pump (G8x)
+1015	group	the turn motion (the Settings gear)
+1145	group	round (the shell bar\'s search and gear)
+## test/kit/kit_level_meter_test.dart
+155	group	litFor (bar i lit when level >= (i + 1) / 12)
+157	test	thresholds
+## test/kit/kit_live_background_test.dart
+195	test	the default look is aurora, an unknown id falls back to it
+## test/kit/kit_log_panel_test.dart
+407	test	8 KitLogBuffer splits chunks, keeps a partial line, drops and counts
+## test/kit/kit_manifest_test.dart
+96	test	G4: every deferral names who closes it
+106	test	G4: the manifest reads the kit library and every kit file
+135	test	G4: every kit part and opener meets the manifest 
+## test/kit/kit_markdown_image_test.dart
+35	group	scanner
+36	test	a picture is a picture, a link is still a link
+49	test	a stored attachment id is never shown as a name
+60	test	a ! before something that is not a picture stays text
+83	test	brackets inside the description do not end it early
+93	test	several pictures on a line, with the words between them
+108	test	the description: trimmed, empty, and the bare word Image
+117	test	a path on the server, a web address, or neither
+160	test	a picture inside a link opens the link, never the file twice
+175	test	inline code is code, not a picture
+182	test	only: a line that holds nothing but pictures
+193	test	speech, measuring and copy read the description, not the target
+220	test	a picture still being written is held back
+252	group	tiles
+## test/kit/kit_markdown_test.dart
+111	group	streaming caret
+624	test	proseForSpeech drops fences, tables and link targets
+## test/kit/kit_menu_test.dart
+195	group	kitMenuLayout (ordering, structural)
+204	test	keeps order within a group and groups in first-item order
+219	test	moves destructive items last, after one divider, even when 
+237	test	a named group leads with its heading (slice-P10.1-2)
+259	test	no leading divider when every item is destructive
+334	group	1. dismissing runs nothing and resolves null
+446	group	3. checked
+731	group	7. keyboard, with desktop capabilities
+919	group	opening motion
+988	group	8. anchoring
+## test/kit/kit_message_test.dart
+155	group	1. prompt bubble
+225	test	display text drops marks and counts path chips
+248	group	2. prompt menu
+396	group	5. thought
+473	group	6. notice
+555	group	7. marker
+789	group	12. a note under the prompt
+872	test	the prompt bubble is visible on the page in light and dark
+## test/kit/kit_motion_parts_test.dart
+188	group	first build is final (no mount animation)
+247	group	reduced motion settles after one pump() (G8, MOT-7)
+357	group	KitSwap
+511	group	KitSwap.count
+595	group	KitSpin
+685	group	KitAnimatedBox
+809	group	KitDim
+857	group	KitAnimatedValue
+912	group	leaving parts start at once (KitMotion.exit in a reverse slot)
+975	test	no Duration( literal and no Curves. in kit_motion_parts.dart (MOT-1)
+## test/kit/kit_notice_test.dart
+112	group	cost
+144	group	offer
+244	group	error
+378	group	Copy details
+440	group	KitErrorKind.of
+442	test	timeouts and IO types by name are network
+448	test	anything else, and null, is other
+456	group	KitReportHook
+464	test	redact is the kit redactor
+470	group	tones
+513	group	plain notice
+## test/kit/kit_page_route_test.dart
+129	test	transitionDuration and reverseTransitionDuration are KitMotion.standard
+## test/kit/kit_pre_wave_tokens_test.dart
+41	test	KitTokens pre-wave constants
+162	test	KitLayout pre-wave widths and shares
+182	test	KitMotion pre-wave waits
+190	test	KitShape and KitSurfaceLevel resolve to the kit radii and roles
+218	test	wrap glyph is the Phosphor text-align-justify codepoint
+## test/kit/kit_progress_test.dart
+73	group	KitProgress.staged line
+117	test	value is (step - 1 + stepValue) / of, or (step - 1) / of
+134	test	asserts step within 1..of and of at least 1
+149	test	asserts stepValue within 0..1
+171	group	KitProgress.known value
+173	test	asserts value within 0..1
+180	group	KitProgressView never goes backwards within a job (debug)
+244	group	KitProgress.known line and eta rounding
+304	group	KitProgressView semantics
+461	group	KitProgressView motion (MOT-5, G8)
+521	group	KitProgress existing API keeps compiling (KIT-43)
+552	group	KitProgressView tone (LOOK-5 interim)
+## test/kit/kit_qr_test.dart
+280	test	7. empty: KitQr(data: \'\') asserts
+## test/kit/kit_rails_test.dart
+79	group	the spacing scale
+80	test	every spacing, height and slot token is on the 4 dp scale
+109	group	one text rail (56 dp on a page)
+163	group	one right rail (the gutter) for trailing ink
+253	group	same-role rows keep one height whatever trails them
+293	group	chip lines
+364	group	the server pill
+## test/kit/kit_redact_test.dart
+13	group	known secrets
+15	test	masks exact occurrences anywhere, including inside ordinary words
+27	test	ignores values shorter than six characters
+35	test	matches metacharacters literally
+40	test	masks longest overlapping values first regardless of registration order
+56	test	runs before provider patterns and still applies other patterns
+64	test	clearing removes all registered values
+75	test	duplicate registration and repeated redaction are idempotent
+84	group	masks
+206	test	serialized password retains valid JSON
+213	test	serialized password with an embedded escaped quote stays valid
+220	test	is idempotent
+228	group	leaves alone
+## test/kit/kit_row_parts_test.dart
+53	group	KitRowMenu
+111	group	KitSwitchRow
+131	group	under a style
+285	group	risk
+434	test	locked with value false asserts
+447	group	KitExpandRow
+494	test	expanded with initiallyExpanded asserts
+## test/kit/kit_row_test.dart
+96	group	KitRow
+548	group	KitRow supporting line at large text (polish2)
+600	group	KitRow file-name title
+679	test	kitBreakableFileName keeps every character in order
+686	group	KitSwipeAction
+897	group	chip
+959	group	roomy index rows (Settings hub, vision 2026-10-20)
+## test/kit/kit_scenes_test.dart
+289	group	1. Mapping (KitPalette.fromRoles)
+309	test	KitPalette.of equals fromRoles(ThemeRoles.resolve(theme))
+323	group	2. No red, no amber (LOOK-4, LOOK-5)
+325	test	the allowlist starts empty
+334	test	$name, $packName
+355	group	3. Flat, light fills (LOOK-36)
+357	test	the hue check sees a painted role (not vacuous)
+386	test	$name, $packName
+434	test	4. Theme only: no Color(0x, no Colors., no colorScheme 
+462	group	5. Mirror (LAY-8)
+504	group	6. Still (reduced motion, G8)
+## test/kit/kit_screen_test.dart
+136	group	status slot
+253	group	bottom block
+302	group	width
+346	group	twoPane
+510	group	threePane
+549	group	one of each (debug)
+732	test	G15: kit_screen.dart compares no width to a literal
+## test/kit/kit_search_field_test.dart
+431	test	10. worthShowing is above 8
+## test/kit/kit_segmented_test.dart
+248	group	construction (G37)
+250	test	fewer than 2 segments asserts
+261	test	more than 4 segments asserts
+282	test	a disabled segment without disabledReason asserts
+289	test	onChanged null without a group disabledReason asserts
+302	group	tapping (KIT-24, STATE-9)
+354	group	the check and semantics (A11Y-1)
+457	group	disabled reasons (STATE-8)
+509	group	keyboard (LAY-10, LAY-11, G14)
+679	group	fine pointer (D11)
+728	group	reduced motion (G8)
+747	group	stacking (KIT-24)
+941	group	keyboard
+1047	group	sizing and overflow (LAY-9, G6)
+1108	group	tall
+## test/kit/kit_sheet_test.dart
+44	group	the header icon tile (§5 Sheets)
+161	group	unsaved input without a draft
+295	group	adapts to the window (§8.2)
+377	test	window classes (§8.1)
+479	group	stacked actions (§5 Sheets)
+508	group	routes: closes itself when its request is answered elsewhere
+560	group	showKitFramedSheet: a body that draws its own frame (P9.10)
+## test/kit/kit_signal_home_test.dart
+84	group	the slip under its row
+115	group	the running row
+139	group	the home around the list
+229	group	the chat while it works
+271	test	the controller knows the command a conversation runs
+## test/kit/kit_since_test.dart
+403	test	durations read in hours and days, never thousands of minutes
+## test/kit/kit_state_view_test.dart
+71	group	escalation (fake clock)
+151	group	.error
+210	group	no handler
+302	group	.missing
+351	test	a prerequisite without enable asserts (G37)
+430	group	calm (vision 2026-10-20)
+## test/kit/kit_status_line_test.dart
+68	group	escalation (fake clock)
+173	group	the Now line
+222	group	KitStatus
+230	test	highest follows KitStatusKind; ties keep the first; nulls are 
+254	test	a risky switch line is never dismissible
+332	group	v1 constructor (unchanged)
+455	group	tone (LOOK-4, LOOK-5)
+513	group	status slot
+596	group	countdown (vision 2026-10-20)
+## test/kit/kit_status_slot_test.dart
+176	test	KitStatus.compact keeps identity and folds the action first
+## test/kit/kit_step_light_test.dart
+73	group	one lap of 2 s
+140	group	the split
+142	test	the halves mirror each other and meet at the bottom centre
+172	group	states
+## test/kit/kit_step_timeline_test.dart
+156	group	the line
+237	group	the rail
+347	group	KitToolRow on the rail
+568	group	KitMessage.thought on the rail
+603	group	KitStepPreview
+605	test	a new file: every line added, numbered from 1, capped at six
+613	test	a file that fits has no more to show
+619	test	a patch starts at its first change with one line of context
+647	test	a before and after pair has signs and no numbers
+659	test	an empty patch has nothing to show
+665	group	large text and long work

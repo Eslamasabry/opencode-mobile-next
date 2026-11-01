@@ -1,0 +1,534 @@
+## test/phone_team_setup_test.dart
+267	test	eligibility does not allocate a flow or a private starter
+331	test	phone-team capability is opt-in and survives managed-host overlay
+343	test	setup accepts inactive OC2 and prefers the active supported phone
+401	test	setup does not borrow remote capabilities while phone migration is pending ($historyPending)
+449	test	real setup ports stop the attempted profile after selection changes
+504	group	the flow
+506	test	a running reply is waited for, never cut short
+518	test	a reply whose grace ends without an event does not hold the 
+532	test	a passed check before OpenCode restarts is not a failure 
+543	test	nothing running: no stop question, steps skipped, then ready
+561	test	a running server asks first; no stops before a yes
+584	test	the stop step times the work, not the wait for the yes
+604	test	saying no changes nothing and ends in plain words
+618	test	an engine that finds an old server asks, once, then retries
+637	test	a failed proof stays off, keeps reasons for Details
+651	test	B-3: a failure after the stop puts OpenCode back, once, and says so
+681	test	B-3: a failure that never stopped OpenCode restores nothing
+693	test	OpenCode that does not come back is its own failure
+702	test	an engine that still cannot run work after the probe is not ready
+714	test	unsupported OC1 readiness releases the engine before an OC2 retry
+746	test	failure waits for engine cleanup before restoring or accepting retry
+772	test	cleanup failure retains the refusal and only a safe cleanup code
+795	test	declining a restart discovered after launch releases that engine
+812	test	no OpenCode on this phone says so, changes nothing
+820	test	after an update, a team that was on is checked again alone
+852	group	the page
+1009	group	execution gating
+## test/phone_team_stuck_resume_test.dart
+153	group	a check that never answers ends in a failure with a reason
+155	test	a hung engine start
+164	test	a reply that never ends does not hold the check forever
+173	group	the AI Team page while the check runs
+200	group	Resume on interrupted work
+## test/phone_team_truth_test.dart
+39	test	B-6: a prompt just sent counts as a reply before any busy status, 
+61	test	the reply wait counts only the person\'s own sessions, never the 
+90	test	B-18: a phone team that never proved itself reads Off, not On
+112	test	B-20: this phone by its loopback address is never a computer
+## test/phrase_chips_settings_test.dart
+133	test	the launcher finds the setting
+## test/phrase_chips_test.dart
+37	group	normalization
+39	test	case, spacing and trailing punctuation are one phrase
+44	test	the latest spelling is shown
+51	group	what is recorded
+53	test	rejects long, multi-line, command, shell and mention text
+72	test	rejects a message that carried files
+84	test	never records or shows anything that looks like a secret
+100	group	becoming a chip
+102	test	a phrase needs two sends
+108	test	chips are chosen for the moment
+117	test	a phrase sent in two moments counts for both
+125	group	ranking
+127	test	more sends rank first, at most four are shown
+135	test	recency decays a stale favourite below a fresh one
+142	test	without decay time the bigger count wins
+150	group	starters
+152	test	the moment\'s starter leads what was learned
+161	test	show alone when nothing is learned
+170	test	a learned phrase is not repeated as its starter
+179	test	exclude drops a chip (the transcript shows Continue)
+192	group	hide
+194	test	a hidden phrase and its starter are never suggested
+207	test	Show hidden phrases brings them back
+216	group	bounds
+218	test	keeps the 50 most recent phrases
+228	test	hidden phrases are bounded too
+236	group	persistence and deletion
+238	test	survives a restart, and keeps profiles apart
+248	test	a corrupt blob reads as nothing learned
+255	test	the profile sweep removes it, and a late write cannot undo it
+274	test	the switch is device-wide and defaults on
+286	test	redo phrases are never offered while the agent works
+## test/phrase_moment_test.dart
+54	test	an empty new chat has no moment
+58	test	busy is working, even with no history
+66	test	a finished turn with no edits is idle
+76	test	a finished turn that edited files is finishedWithChanges
+89	test	only the last turn counts, and a failed edit is not a change
+108	test	cut off by length is stoppedPartway; its Continue button shows
+129	test	finish length with no error is stoppedPartway with no button
+135	test	stopped by the person, an error, and an interruption
+161	test	an error notice hides the row; a stop or a length cut does not
+192	test	a just-started reply that is not busy yet is not interrupted
+## test/pinned_session_shortcuts_test.dart
+31	test	publishes at most four pinned sessions, titles and ids only
+66	test	long titles are cut before they leave the app
+80	test	unchanged payloads are not republished
+104	test	no pins publishes an empty set and forgets the record
+121	test	clear withdraws everything on disconnect
+136	group	clearForProfile
+144	test	withdraws the deleted profile\'s shortcuts
+156	test	leaves another profile\'s shortcuts alone
+168	test	reports nothing to clear when nothing was published
+177	test	an unreadable record is withdrawn rather than kept
+189	test	off Android the record is still removed without a publish
+203	test	non-Android platforms publish nothing
+## test/platform_capabilities_test.dart
+16	test	Android has every platform feature this app ships
+33	test	Linux desktop has none of the Android-only features
+52	test	iOS leaves every unsupported platform feature off
+68	test	the ambient iOS target matches the explicit capability seam
+83	test	every capability is claimed by exactly one update channel
+97	test	macOS is desktop but has no release artifact to check
+105	test	web is neither Android nor desktop
+116	test	the ambient value defaults to Android under flutter_test
+122	test	the ambient value is overridable and restorable
+## test/plugin_display_name_test.dart
+8	test	a plugin id reads as a plain name
+18	test	an id with nothing readable left is shown as it is
+## test/plugin_inventory_test.dart
+42	test	plugin metadata keeps declared source and never exposes raw diagnostics
+81	test	plugin GET pins location and preserves failure/unknown metadata
+136	test	invalid inventories and server failures never become empty success or raw errors
+185	test	plugin events only forward an inventory refresh hint
+## test/private_network_cleartext_test.dart
+39	group	isPrivateNetworkHost
+41	test	private IPv4 ranges are in, their neighbours are out
+71	test	IPv6 unique-local and link-local are in, the rest is out
+96	test	only .local names count as private names
+118	group	validateServerProfileUrl
+120	test	plain http to a private address is accepted, with credentials
+139	test	public addresses and other names need explicit HTTP consent
+161	test	loopback and https never need the confirmation
+173	test	a bare private address still gains https, not http
+181	test	the confirmation is recorded against one exact origin
+193	test	connection advice distinguishes private, Tailscale and public HTTP
+218	group	Codex and Paseo stay HTTPS-only off this device
+220	test	a private address is refused over ws://
+230	group	pairing
+235	test	a private http address is held, never probed, until confirmed
+271	test	a different private origin is not covered by the confirmation
+284	test	public HTTP pairing waits for explicit origin consent
+297	group	stored confirmation
+306	test	an unconfirmed private http profile is blocked
+320	test	confirming survives a rebuilt profile and a reload
+340	test	moving the profile to another address drops the confirmation
+355	test	the deletion sweep finds and removes the key
+369	test	connect refuses an unconfirmed profile in plain words
+379	group	add server
+## test/problem_report_test.dart
+52	group	what a report carries
+54	test	title, description, the attached error, environment and 
+100	test	the connection goes in the environment, scrubbed; with nothing 
+139	test	a failed job report carries no OCTRACE timings: its log ends 
+188	test	without an error, the first line of the description is the title; 
+206	test	keeps a bounded number of errors, timings and stack lines
+232	test	the platform label and the version fallback
+254	group	never a credential or a server address
+256	test	fake provider keys, a bearer token, a password, a registered 
+299	test	the persisted store and the in-memory list feed the same events, 
+313	group	the GitHub link
+326	test	a short report is prefilled whole and passes openExternalLink\'s 
+348	test	long diagnostics go to the clipboard and the form says to paste 
+360	test	a very long description copies the whole report
+## test/product_error_text_test.dart
+20	group	productErrorText
+21	test	passes a ProductException message through unchanged
+27	test	a 502 is said in words; the raw text is only the details
+44	test	never passes an ApiException message through
+79	test	$protocol $status keeps server prose out of the body
+101	test	keeps the app\'s own staged-revert sentence
+114	test	a staged-revert tag never permits arbitrary protocol prose
+131	test	says OpenCode 2 failures in words too
+144	test	a plain string is words; a raw failure string is classified
+170	test	says a StateError plainly, without blaming the network
+181	test	collapses a SocketException to the generic connectivity line
+190	test	a timeout and a storage failure have their own words
+201	test	names the missing keyring instead of blaming the server
+225	test	a PlatformException is a device failure; its native text is only 
+246	test	native and Termux output is said in words; app sentences stay
+285	test	details are redacted
+298	test	a transport failure offers the network fix
+309	test	says an unknown error plainly, without blaming the network
+317	group	the shared error parts show words, not the raw failure
+## test/product_repository_mcp_test.dart
+5	test	MCP drafts fail closed on unsafe transport data
+## test/product_repository_projects_test.dart
+5	test	configured providers retain OpenCode model variant metadata
+29	test	provider list keeps only connected providers in connection order
+76	test	explicit empty connected list does not expose catalog-only models
+95	test	project reference uses the upstream directory file-part contract
+110	test	project reference preserves a remote Windows server path
+120	test	binary file content preserves metadata and decodes bytes
+134	test	session parsing retains project and workspace ownership
+151	test	current OpenCode diff shape preserves patch and server counts
+## test/product_repository_server_test.dart
+5	test	server upgrade accepts only exact semantic versions
+## test/profile_deletion_test.dart
+237	test	profileScopedPreferenceKeys finds every shape and nothing else
+266	test	deleting a profile leaves nothing keyed to it behind
+356	test	deletion forgets the shared phone owner and sweeps its recovery budget
+371	test	nothing deleted comes back after a restart
+396	test	deleting the other profile leaves the first one whole
+424	test	the AI Team plugin data of the deleted profile is swept
+473	group	queued prompts awaiting delivery review
+515	test	are swept with the profile and counted in the disclosure
+541	test	stay on the device, marker intact, when the sweep is refused
+580	test	a widget snapshot with no owner is cleared rather than left
+608	group	a store that refuses writes
+616	test	keeps the server when its queued prompts cannot be deleted
+650	test	keeps the server when a draft write is refused
+666	test	keeps the server when a scoped setting will not go
+682	test	keeps the server when the widget snapshot will not clear
+695	test	keeps the server when the launcher shortcut record or the tile count 
+717	test	reports every refusal, not just the first
+734	test	a clean run still reports a complete deletion
+747	test	drafts record the profile that owns them
+## test/profile_monitor_attention_test.dart
+37	test	existing policy off forbids transport despite enabled monitor rule
+96	test	$interruption interrupts an in-flight read permanently
+150	test	failed and partial reads keep evidence stale; location change clears it
+224	test	age expiry and paused runtime retain rows without claiming current
+259	test	two phone defaults are not consent and cannot create transports
+291	test	session recovery does not erase team evidence; team recovery does
+352	test	policy revoked during Wi-Fi check forbids the following transport
+## test/profile_monitor_check_in_test.dart
+137	test	the rule is off by default and round-trips through JSON
+159	test	a busy session is tracked as an observed interval and reminds once
+212	test	observed idle ends the interval and retires its reminder; a later 
+252	test	a failed poll neither ends nor extends the interval; absence ends it
+283	test	a gap longer than the observation limit restarts the interval instead 
+309	test	intervals and posted reminders survive a restart without reminding 
+335	test	no reminder in the foreground, during quiet hours, or when off
+373	test	turning the rule off retires only check-in reminders
+408	test	disabling monitoring forgets the intervals
+425	test	claim is durable before native dispatch and a refused alert is not retried after restart
+457	test	foreground return during the ${claim ? 
+511	test	clearing notification keys by toggling the rule does not repeat its interval
+533	test	refused durable claim keeps due row but sends no native alert
+556	test	failed dispatch claims do not starve later sessions past the batch limit
+578	test	profile deletion sweeps interval, rules and route data
+593	test	same session in a different workspace starts a new observation
+## test/profile_monitor_navigation_test.dart
+26	test	a source edit during request preflight cannot switch active transport
+65	test	monitored ${kind.name} alert carries an opaque profile route with no reply actions
+## test/profile_monitor_phone_servers_test.dart
+72	test	with two agents on this phone each is watched unless turned off; 
+96	test	Claude Code through Paseo is read; Codex still is not
+106	test	Wi-Fi only does not hold back a server reached without a 
+## test/profile_monitor_test.dart
+27	test	enabled legacy Codex rules remain unavailable without factory or alert work
+69	test	off by default; explicit opt-in persists and zero is a known observation
+105	test	Wi-Fi false and thrown network policy both pause without opening transport
+143	test	failure is unknown with backoff; expired success and changed location are unknown
+191	test	background requires an existing active service and never enables keep-live
+225	test	same session IDs get distinct profile alerts and durable opaque routes
+295	test	quiet hours wrap midnight and later requests beyond first eight eventually alert
+336	test	consent changes during a failed alert stop retries before the next post
+370	test	quiet hours changing during a failed alert stop retries before the next post
+411	test	a failed alert dismissal keeps its key for a later successful retry
+454	test	a timed-out poll cannot publish its late attention result
+483	test	deletion cancels admission and sweeps settings, alert routing, and late results
+519	test	same-ID source edits invalidate rows, backoff and old alert routes
+568	test	clock rollback makes snapshots unknown and refuses future routes
+## test/profile_secure_storage_test.dart
+147	test	a Linux keyring failure surfaces as SecureStorageUnavailable
+171	test	elsewhere the same failure gets the generic device sentence
+187	test	the keyring probe reports only a Linux desktop without one
+205	test	Codex token is isolated from password storage and JSON
+235	test	missing Codex token requests reentry without exposing metadata
+257	test	Codex save rolls metadata back when its token cannot be stored
+279	test	Codex deletion removes only its token
+298	test	Codex deletion rolls metadata back when its token cannot be deleted
+## test/profile_sign_in_reset_test.dart
+137	test	bootstrap reset removes only owned sign-ins and is idempotent
+160	test	reset does not parse or erase unreadable profile metadata
+173	test	cached profile references lose secrets and retain metadata
+190	test	failed enumeration never broadens reset or reports success
+207	test	refused active-selection removal retains durable sign-ins
+218	test	partial secure deletion clears cached secrets and safely retries
+243	test	unconfirmed secure deletion is a failure until verification succeeds
+256	test	failed post-deletion enumeration is not successful reset
+265	test	sign-in reset owns the BYO envelope while retaining its journal
+## test/profile_store_test.dart
+73	test	keeps profile metadata when its secure password is unreadable
+104	test	persists and clears a thinking variant per profile
+115	test	persists an exact location independently for each server
+139	test	ignores malformed and empty saved locations
+150	test	persists app-wide transcript display preferences
+175	test	persists app-wide appearance with a migration-safe dark default
+204	test	normalizes and validates Codex origins without changing HTTP rules
+230	test	persists the AI Team plugin config with the profile
+292	test	validates Codex directory and token bounds without echoing input
+307	test	profile deletion sweeps BYO vault and metadata only for that profile
+325	test	a private transport lease cannot persist its address or credential
+## test/project_dev_server_test.dart
+33	test	nothing known: no line
+39	test	a look that finds one says so once, and a failed look keeps it
+68	test	a program listening inside the project is its dev server
+78	test	programs listening outside the project are not this project\'s
+## test/project_hub_test.dart
+147	group	rows follow the connected server
+212	test	the listed tools and their order
+355	group	each tool opens the existing screen
+## test/prompt_file_mention_wire_test.dart
+8	test	a mentioned file retains its exact reference and range
+25	test	a mention the person deleted before Send sends no file part
+32	test	a path that only starts like the mention does not count
+43	test	other attachments pass through and an unranged file has no source
+## test/prompt_photos_test.dart
+115	test	a photo is scaled down by the picker before it is read
+126	test	the gallery picks several photos at once, up to the room left
+157	test	one slot left uses the single picker, which accepts a limit of one
+175	test	cancelling a multi-pick leaves nothing pending
+188	test	origin precedes picker launch; selected bytes survive source deletion
+220	test	cancel clears request without manufacturing an attachment
+225	test	startup without a pending request does not call the native picker
+233	test	permission denial does not leave a nonexistent photo blocking retry
+245	test	refused request persistence never launches camera
+267	test	lost native result retains original destination at restart
+283	test	late picker result cannot resurrect a removed profile photo
+296	test	a pending photo prevents another picker overwriting it
+304	test	image validation rejects fake extensions and oversized input
+## test/prompt_shelf_test.dart
+174	test	late successful sends do not recreate a deleted profile history
+192	test	stash survives reload with full attachments/references, separate from drafts and other profiles
+219	test	50 stash entries never evict a saved prompt; history is bounded separately
+240	test	failed save retains acknowledged state and later writes recover
+260	test	history boundary filtering preserves selection, multiline movement and composing text
+## test/provider_device_code_signin_test.dart
+242	test	a device code is taken from the instructions, prose is not
+## test/provider_logo_store_test.dart
+46	group	slug
+48	test	accepts provider ids and lower-cases them
+54	test	rejects anything that could change the URL path or host
+72	test	URL is the fixed models.dev logo path
+80	test	fetches once, then serves memory and disk without the network
+93	test	concurrent callers share one fetch
+100	test	refreshes after a week
+110	test	offline keeps the stale cached logo, and nothing means initials
+121	test	a failed fetch is not retried straight away
+129	test	rejects oversize, wrong type, non-200 and active content
+150	test	models.dev default sparkle means no logo and is remembered
+169	test	an unsafe id never reaches the network
+174	test	a bundled mark is answered without any request
+193	test	a provider with no bundled mark falls back to the download
+207	test	an unreadable bundled mark falls back to the download
+221	test	every listed mark is a bundled single-colour SVG, and none is spare
+241	test	provider ids resolve to a bundled mark, unknown ones to none
+269	test	every catalog agent with a logo has a bundled mark
+## test/provider_logo_test.dart
+21	group	provider logo domains
+23	test	known ids map to the provider website
+32	test	unknown ids fall back to <id>.com
+37	test	monogram takes initials of the presented name
+## test/provider_quota_client_test.dart
+73	test	GLM uses its fixed collector route with unknown window duration
+95	test	MiniMax reads its fixed collector route and rejects a different provider
+124	test	Claude collection is unavailable before any authenticated request
+144	test	one fixed same-origin GET, header-only Basic, dedicated options
+182	test	snapshots profile values rather than following mutable credentials/URL
+203	test	rejects unsafe origins before the adapter is called
+240	test	rejects raw empty userinfo even when Uri removes it
+263	test	no empty-password, unreadable-keyring, or ambiguous Basic fallback
+286	test	approved loopback forms still send authentication and only the fixed path
+311	test	empty user is preserved, not silently substituted with another principal
+329	test	HTTP failures are status-only, never follow redirects or probe fallbacks
+375	test	unexpected redirect metadata is also refused
+392	test	JSON, UTF-8, schema and account mismatch errors become safe failures
+417	test	accepts exactly 64 KiB while a single oversized chunk is refused
+439	test	caps streaming before Dio buffering and stops an oversized source early
+476	test	transport exceptions never expose raw errors, URL, or credentials
+517	test	stream errors are sanitized too
+532	test	close is idempotent and a closed gateway never calls an adapter
+549	test	close settles a read whose headers have not arrived
+570	test	close cancels a partially received body, not just the request future
+## test/provider_quota_monitor_test.dart
+132	test	no reads before independent enrollment and future evidence is refused
+160	test	background polling needs active runtime and unknown Wi-Fi fails closed
+186	test	once migrated, the shared rules decide Wi-Fi, quiet hours and alerts
+226	test	native opt-in and quiet hours are separate from fresh reads
+258	test	unknown resets dedupe across restart and account rotation cannot publish or route
+283	test	password and re-entry changes retire old observations and preserve markers
+331	test	three-source cycles rotate fairly without relabelling the active server
+348	test	alert sink failures roll back the claim for a later truthful retry
+377	test	rotating credentials retires providers independently through disable and reenroll
+433	test	aborted deletion retains rotated credential retirement until explicit reenrollment
+489	test	background cancellation and deletion reject late provider completions
+513	test	failed disable pauses reads until cleanup can be retried
+524	test	recovery dismisses old alerts and changing threshold rearms its own marker
+582	test	valid historical route survives unavailable refresh but disable rejects pending route
+645	test	quota native routes require opaque scope and cannot carry quick actions
+## test/provider_quota_test.dart
+44	test	MiniMax preserves source-bound percentages and rejects invented eligibility
+62	test	Claude source-bound snapshots do not claim independently matched account identity
+77	test	provider/source mismatches and invented Claude eligibility are rejected
+102	test	the route is explicitly separate from upstream OpenCode APIs
+106	test	parses reported and missing windows without invented allowances
+127	test	optional ordinary usage remains unknown, and false stays false
+137	test	zero and fully used are real values, not missing windows
+147	test	expiry is inclusive; a passed reset never replenishes a window
+163	test	snapshot is detached from mutable input and its windows are immutable
+178	test	accepts each declared no-measurement status without making up quotas
+204	test	no error status or unverified/mismatched account may carry measurements
+240	test	all known plan labels are accepted; arbitrary plan copy is discarded
+272	test	rejects wrong version/provider/source, missing keys, and non-objects
+319	test	timestamp bounds and ordering are strict, including window resets
+355	test	account references must be opaque lower-case hex; matched needs one
+384	test	rejects non-finite/out-of-range percentages and status contradictions
+419	test	duration and window identifiers are bounded and unique
+474	test	diagnostic strings and parse failures do not echo input or account refs
+## test/provider_reload_running_reply_test.dart
+207	group	Provider runtime recovery
+307	group	picker copy
+310	test	says not loaded yet only before a reload was tried
+327	test	names the running replies a reload waits for
+## test/provider_runtime_heal_test.dart
+198	test	unloadedProviders compares the connected list with the runtime
+## test/queued_prompt_removal_test.dart
+61	test	count, keep, restart, source sweep and explicit draft deletion
+107	test	move requires explicit sessions and preserves other queued work
+147	test	stale confirmation, corrupt queue and unsafe moves fail closed
+185	test	refused, corrupt and full draft storage never consume the queue
+## test/queued_prompt_removal_wiring_test.dart
+143	test	kept queued prompts move to Saved prompts and survive a restart, 
+192	test	deleting them too leaves nothing of them behind
+206	test	a queue that changed after the confirmation stops the removal and 
+244	test	Saved prompts that cannot take them keep the server and its queue
+281	test	aborted removal after $failure preserves history, Undo and the 
+401	test	unreadable ${source is String ? 
+452	test	preservation without a confirmed plan retains readable queued work
+471	test	a deletion refusal at $refusedKey retains history and usable owners 
+557	test	queue admission stays closed after source cleanup until deletion 
+617	test	refused policy cleanup reports an incomplete committed removal and 
+649	test	repairing an unreadable source permits a confirmed preservation retry 
+## test/quota_answers_test.dart
+27	test	weekly 60 percent used means 40 percent remaining
+47	test	offline reads keep observation time and increase age
+69	test	a window expires at its reset while an unknown reset stays unknown
+96	test	snapshot copies its windows and does not allow mutation
+108	test	Spent preserves Sep 2–6 bounds when thirty-day response is narrower
+132	test	Spent reports matching submitted interval without extending it
+149	test	Spent notices a changed lower bound even with matching upper bound
+167	test	all-time accepts first available record but still checks upper bound
+## test/quota_budgets_retired_test.dart
+20	test	load drops every stored quota budget and nothing else
+45	test	profile deletion still sweeps the key
+## test/quota_collector_host_test.dart
+158	group	set-up order
+160	test	checks Node, copies, locks, finds sign-ins, then starts
+179	test	running it again keeps the token and the unchanged files
+191	test	a changed collector is copied again
+203	test	Node 19 and a missing Node stop before anything is copied
+231	test	Ubuntu not ready is its own failure
+245	test	a helper that never answers fails with the log in Details
+258	group	secrets
+260	test	the token is long, random, in secure storage, 0600-staged
+275	test	no command or service script holds the token or a key
+295	test	OpenCode 2 looks in its own data folder first
+303	test	the secure slot and the switch are swept with the profile
+319	group	running and turning off
+321	test	a set-up helper that is not running comes back
+328	test	a helper that runs is left alone
+335	test	nothing starts when it was never set up or was turned off
+344	test	turning off stops it and removes files, token and switch
+354	group	the sign-in helper inside Ubuntu (real Node)
+390	test	writes 0600 key files, prints counts only, prefers OpenCode
+432	test	uses an agent Codex sign-in only when OpenCode has none
+450	test	a key that was removed in OpenCode is removed here
+## test/read_aloud_test.dart
+160	test	construction and disposal without playback never access the engine
+170	test	unsupported platforms cannot query voices or send reply text
+189	test	backgrounding cancels the active operation and prevents new speech
+218	test	disposing pending playback stops it and late acceptance stays cancelled
+243	test	a native terminal failure during pending acceptance reaches the caller
+## test/read_state_consent_test.dart
+69	test	missing legacy default migrates only the initial saved population
+98	test	malformed legacy ${malformed.runtimeType} cannot grant sharing
+114	test	migration preserves explicit destination choices
+129	test	refused migration completion stays private and retry can finish
+153	test	interrupted durable cohort does not absorb later profiles after restart
+182	test	migration cannot expose an optimistic true before disk acknowledgment
+202	test	failed opt-out stays private and explicit retry persists it
+228	test	deletion drains a pending grant, prunes its journal and sweeps both keys
+278	test	failed journal pruning is retryable and never restores consent
+## test/reader_preferences_test.dart
+161	test	saved choices restore per profile and deletion removes their key
+189	test	storage refusal keeps prior display choices
+200	test	profile deletion drains an accepted save before sweeping preferences
+## test/recent_errors_plain_test.dart
+191	test	titles by source and kind
+## test/reconnect_hardening_test.dart
+162	group	mid-stream drop
+229	group	long sleep and resume
+253	group	network switch
+255	test	a Wi-Fi to LTE flap with a prompt on the wire sends nothing 
+276	test	the queue flushes once after the network returns, in order
+298	test	a prompt whose send was cut by the switch is held for review, 
+## test/redaction_test.dart
+419	test	the fakes are ones the redactor must mask (the gate is not 
+852	group	redact: false is only for the person\'s own content (SEC-13)
+854	test	every verbatim copy in lib/ is reviewed; the lists only shrink
+885	test	every reviewed entry gives a real reason
+909	test	the scan finds redact: false in code, not in comments
+## test/release_blockers_test.dart
+214	test	release URL policy requires explicit consent for remote HTTP
+238	test	IPv6 loopback is loopback everywhere
+254	test	bare IPv6 addresses normalize into usable URLs
+276	test	Android cleartext and launch resources are release-safe
+299	test	secure storage biometric lint exception stays narrow and truthful
+317	test	Android launcher supports adaptive, round, and themed icons
+334	test	Android background coding alerts are private and actionable
+381	test	Shorebird updates have one app-controlled owner
+393	test	privacy policy is bundled and names sensitive product surfaces
+405	test	Android release builds require the production signing lineage
+448	test	Android exposes build identity and authenticates shell approval
+## test/release_metadata_test.dart
+22	test	current pubspec, top changelog entry and release header agree
+34	group	release metadata discrepancies
+36	test	accepts matching metadata and old releases below the first
+42	test	allows an Unreleased section before the current release
+53	test	reports a build-number-only mismatch in the changelog
+60	test	requires the first entry rather than a matching older entry
+67	test	rejects a version prefix match
+74	test	reports a missing or unversioned first changelog heading
+84	test	reports the expected path when release notes are missing
+91	test	reports a build-number-only mismatch in the release header
+98	test	requires the exact first-line release header
+110	test	reports malformed or missing pubspec release identity
+124	test	supports CRLF metadata and a trailing pubspec comment
+## test/release_script_contract_test.dart
+20	test	release script enforces the fail-closed publish contract
+31	test	GitHub publication verifies source, quality and signed draft assets
+## test/repeated_permission_consent_test.dart
+48	test	third distinct ask offers once, survives restart and explains decline
+78	test	capability and exact scope gate offers across sessions without storing secrets
+132	test	corrupt storage and refused writes suppress offers
+## test/reply_watch_test.dart
+94	test	times prompt → first output → end, by the app and the server
+141	test	a reply that fails before any output says so
+160	test	a reply on another server is timed but is not the in-app one
+180	test	a user message seen again after the reply does not time a new one

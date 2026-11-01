@@ -1,0 +1,543 @@
+## test/builtin_team_section_test.dart
+281	test	the job records each stage and keeps the failed one
+314	test	turn-on waits for the store prepare is making, never a second one 
+## test/builtin_team_startup_test.dart
+61	test	healthy running city reuses its registration and service
+78	test	healthy background recovery does not reinstall or register
+95	test	unhealthy city is registered and only live health marks ready
+118	test	hanging store health expires background recovery honestly
+147	test	$operation cancels pending observation and ignores late health
+## test/builtin_team_test.dart
+68	group	scripts
+75	test	every team script parses
+95	test	the supervisor listens on loopback only, on its own port
+107	test	a project is added once, with the lean team
+123	test	installed means the component check passes, every line
+163	test	the status script reads the store in a real shell
+194	group	phone tuning
+251	test	the orders that made the peaks are off, the rest run in turn
+289	test	phone upkeep runs its sweeps one after another, one run at a time
+336	test	an older team gets the tuning once, the rest of it kept
+401	test	project names become safe team names
+407	test	the plugin config is the phone team on loopback
+424	group	turn on
+452	test	store, project, supervisor as a service, register, health
+496	test	a failing step says which, with its output
+512	test	a supervisor that dies while starting is reported
+538	test	ensureRunning starts only a stopped team
+## test/builtin_work_leases_test.dart
+28	test	agent chat lease carries the separate profile and opaque name
+48	test	agent off preserves its profile even after helper loss
+63	test	agent profile and opaque name are validated before native handoff
+89	test	agent malformed receipt and unsupported platform deny admission
+116	test	named chat acquisition uses the frozen channel contract
+130	test	named chat release retains its ID and requested duration
+147	test	native exhausted lease reports capped without reporting held
+159	test	other work holding the lock does not claim this chat lease
+168	test	absent and malformed replies never fabricate admission
+193	test	invalid opaque IDs are refused before native handoff
+217	test	maximum length opaque ID reaches native unchanged
+225	test	unsupported platforms return no admission without native handoff
+238	test	legacy timed hold keeps its bool return and original arguments
+## test/byo_host/bundle_pins_test.dart
+8	test	compiled artifacts match the exact app-version review ledger
+## test/byo_host/controller_test.dart
+183	test	key-only enrollment survives restart and pairs the reserved phone
+214	test	default off and unknown host never mutates remote
+236	test	durable adoption returns only authenticated ephemeral gateway profile
+263	test	OC2 bundle selects OC2 while retaining per-phone proxy credentials
+288	test	killed installation retries exact device tuple after fresh admin login
+325	test	changed SSH identity rejects before forwarding or mutations
+342	test	changed supervisor identity closes replacement tunnel
+358	test	local removal never revokes or stops host
+367	test	failed revocation retains connection and all durable credentials
+385	test	confirmed revoke survives local deletion failure without duplicate revocation
+402	test	invalid targets and mismatched fingerprints reject input
+426	test	shared-data refusal preserves a discoverable revocation cleanup journal
+459	test	shared-data removal runs before vault envelope is discarded
+## test/byo_host/profile_signer_deletion_test.dart
+51	test	profile sweep deletes native identity, preserving other phone keys
+72	test	native deletion refusal retains journal and envelope with safe error
+96	test	reset sign-ins removes orphan native identities and owned envelopes
+## test/byo_host/service_test.dart
+16	test	gate is default off; missing artifact never reports available
+35	test	machines retain independent controllers and releasing one keeps shared runner
+## test/byo_host/setup_tailnet_test.dart
+16	test	numeric tailnet ranges preserve user/port and skip DNS
+38	test	refuses public, ordinary private, loopback and near-tailnet literals
+63	test	refuses reserved Tailscale service endpoints
+80	test	resolves hostname once and returns stable numeric target
+99	test	suffix and mixed DNS do not authorize public SSH
+116	test	DNS exceptions are replaced with safe fixed failures
+134	test	owner steps contain exact manual setup and honest read-only checks
+## test/byo_host/signer_test.dart
+29	test	identity contains only profile alias and public key
+36	test	agent lifecycle passes no private key or signing payload
+55	test	reset covers orphan aliases without sending key material
+60	test	unsafe aliases users and socket paths never reach native
+83	test	platform errors never expose native detail
+95	test	unexpected identity alias is rejected
+## test/byo_host/ssh_runner_test.dart
+189	test	scans only a public key and computes SHA256 from SSH wire encoding
+218	test	key generation never returns secrets through native command/output
+260	test	installation uses private stdin, strict host pin, and bundled digest before execution
+311	test	failed install hides remote output, consumes login and deletes private files
+336	test	changed host key is rejected before bootstrap success
+358	test	unavailable runner consumes initial credentials without shell activity
+378	test	ambiguous password plus passphrase authentication is refused
+405	test	imported key/passphrase is refused without writing anything: ${login.privateKey != null ? 
+426	test	non-tailnet SSH is refused before scan login or signer activity
+483	test	tunnel uses public key plus native agent and never writes a private key
+555	test	startup recovers only this profile orphan, preserving live and foreign data
+589	test	fresh runner cleanup erases orphan without reconnect or credential creation
+624	test	explicit cleanup preserves active keys until tunnel closed
+660	test	cleanup unavailable fails closed instead of claiming erased secrets
+688	test	installer ${entry.key} becomes fixed typed failure without stderr
+713	test	target validation refuses shell/SSH option injection
+725	test	symlink shared-files boundary is rejected before any key write
+744	test	descriptor and revoke use authenticated loopback without redirects
+795	test	redirect cannot exfiltrate Basic credentials and failed revoke returns false
+## test/byo_host/store_test.dart
+160	test	legacy exportable identities are refused without returning private data
+177	test	round trips after reopening with secrets only in the vault
+204	test	removal is idempotent and leaves another profile untouched
+221	test	enumerates immutable records sorted by profile without opening vault
+239	test	enumeration fails closed instead of hiding corrupted profiles
+259	test	rejects invalid profile ids before either store is touched
+277	test	rejects corrupt and cross-profile metadata with safe failures
+299	test	vault read and write errors reveal no plugin details
+312	test	preferences errors are safe and failed writes restore cache
+327	test	vault deletion error preserves metadata for a later retry
+339	test	unconfirmed vault deletion keeps the cleanup record
+347	test	metadata deletion refusal retries after secrets already removed
+## test/capability_flows_test.dart
+31	test	every capabilities.json enable flow resolves on Android
+53	test	a computer registers only the flows it can run
+## test/chat_attachment_reader_test.dart
+65	group	prompt attachment MIME
+67	test	normalizes Markdown and HTML to text/plain
+86	test	keeps Unicode source and configuration attachments readable
+104	test	detects generic textual bytes and rejects unknown binary bytes
+147	test	preserves supported images and PDFs
+181	test	reads a streamed attachment at the exact byte limit
+196	test	stops a growing stream after the overflow detection byte
+218	test	does not trust stale metadata when reading a file path
+232	test	rejects oversized in-memory picker data without copying it
+## test/chat_background_result_test.dart
+57	test	canonical mapper preserves only result identity/status metadata
+69	test	quoted and multiline task names preserve exact result boundaries
+78	test	unknown/mismatched/malformed envelopes never become a result
+## test/chat_feed_finished_unseen_test.dart
+56	test	finished after it was last opened is finished-unseen
+65	test	opened after it finished is not finished-unseen
+71	test	a running session is never finished-unseen
+79	test	a stop pressed here is remembered per session until the next prompt
+92	test	opening the conversation drops the stop memory
+99	test	a normal finish the person stopped is Stopped in the work-row facts
+## test/chat_feed_test.dart
+255	group	temporary folders
+257	test	are never projects
+622	group	feed revision
+## test/chat_free_model_note_test.dart
+266	test	dismissals are per server, bounded, and swept with the server
+## test/chat_oc2_step_gap_test.dart
+228	test	a finished step is not a finished OpenCode 2 run; the execution 
+## test/chat_server_state_ui_test.dart
+191	group	retry banner
+193	test	a retry is only called a rate limit when it is one
+227	test	headline names the attempt and counts down to next
+312	group	a prompt that got no answer
+529	group	assistant error cards
+## test/chat_start_diagnostics_test.dart
+13	test	a failed start is recorded in the app diagnostics
+## test/chat_start_rules_test.dart
+11	group	starters
+12	test	an empty folder gets ways to make something
+30	test	a folder with files gets ways to work on them
+37	test	"what changed recently" needs Git history
+67	test	an unknown listing is treated as a folder with files
+76	test	nothing is offered while the folder is being looked at
+83	test	no project and the projects root are not asked about
+103	test	an unfinished sentence goes in with a space, not an ellipsis
+111	test	Arabic starters are Arabic
+132	group	project name
+134	test	trailing slashes and Windows separators still yield the name
+146	group	facts line
+148	test	an empty Git folder
+156	test	files, Git and changes
+181	test	a clean tree and a folder without Git say less
+201	test	nothing known is nothing said; pending says it is looking
+212	test	Arabic counts use Arabic plurals
+## test/claude_install_script_test.dart
+15	test	both ABIs request the exact pinned glibc payload
+41	test	bad checksum never executes payload or replaces previous install
+71	test	unsupported architecture fails before downloading
+## test/claude_phone_auth_test.dart
+12	test	every app launch of Claude shares the Terminal sign-in folder
+37	test	the native sign-in check accepts every tested Claude build
+## test/codex_account_session_test.dart
+51	test	pinned account read never refreshes provider tokens; start/cancel owns only returned handle
+71	test	unsupported runtime does not dispatch account operations
+80	test	second start cannot replace outstanding login
+88	test	malformed account cannot be treated as a signed-out preflight
+111	test	missing-method error stays fixed and never exposes remote detail
+135	test	wrong version handshake disables account API without affecting connection
+161	test	old epoch cancel cannot reopen transport or mutate replacement
+171	test	foreign completion ignored; matching completion accepted once
+194	test	early owned completion settles flow before late start response can show code
+222	test	late start after ${close ? 
+254	test	scope loss during held start cannot cancel a different scope
+276	test	account update during preflight stops login dispatch
+289	test	unconfirmed cancellation retains ownership for explicit retry
+310	test	lost start receipt cannot become confirmed cancellation or replay
+334	test	lookalike URL is never exposed and owned login is canceled
+352	test	reported null stays unavailable and reported zero stays zero
+## test/codex_agent_handoff_test.dart
+208	test	full persisted Codex thread is read once without resuming it
+237	test	fully hydrated paginated Codex threads are accepted
+253	test	full snapshot still obeys the common history message budget
+274	test	Codex record uses shared redaction and leaves server data intact
+308	test	Codex record drops oldest whole turns and preserves newest turn
+359	test	Codex handoff fails closed for ${malformed.key}
+369	test	project changes away and back invalidate an in-flight read
+385	test	caller selection changes invalidate an in-flight read
+406	test	disconnect invalidates an in-flight snapshot without resuming
+424	test	Codex source prepares a reviewable Claude draft without mutations
+469	test	Codex destination stays unavailable without a qualified file writer
+## test/codex_connection_probe_test.dart
+52	test	successful probe checks health and scope then closes the gateway
+77	test	a failed scoped read is not reported as verified
+94	test	unhealthy probe is not reported as verified
+108	test	failed gateway probe still closes the gateway
+129	test	invalid input returns before calling the gateway factory
+146	test	unexpected failures use fixed sanitized copy
+## test/codex_gateway_test.dart
+302	test	Codex capabilities hide unsupported product operations
+321	test	endpoint policy rejects remote cleartext and URL credentials
+335	test	bearer upgrade refuses redirects without forwarding credentials
+376	test	real local upgrade sends one frame and receives a bound reply
+408	test	lost mutation response is uncertain and never retried
+441	test	server errors never expose a remote body
+475	test	foreign project threads cannot enter a scoped list or send path
+504	test	resume preserves item IDs, timestamps and cancelled outcome
+513	test	approval requires matching scope and permits only one-shot decisions
+555	test	location changes invalidate a previously displayed approval
+587	test	socket loss invalidates a previously displayed approval
+621	test	streamed assistant item uses the same IDs as authoritative history
+662	test	partial reconnect remains degraded when a tracked thread cannot resume
+693	test	generic $method failure keeps reconnect degraded
+732	test	read to resume never crosses a location generation
+868	test	read to delete never crosses a location generation
+875	test	read to rename never crosses a location generation
+882	test	read to abort never crosses a location generation
+890	test	reconnect authentication failure reaches the event error channel
+921	test	uncertain first turn on a new thread requires history recovery without resend
+## test/codex_handoff_record_test.dart
+53	test	preserves full prompts and final text, excluding reasoning/commentary
+90	test	retains command cwd and exit outcome, masking before shortening
+118	test	exports successful paths and step outcomes without patch bodies
+154	test	summarizes known tools using allowlisted fields and text results
+243	test	bounds concatenated text tool results without silently clipping
+273	test	discloses plan, compaction, attachments and unsupported items
+308	test	records empty failed/interrupted turns without remote error bodies
+328	test	keeps newest turns full and refuses an oversized newest turn
+355	test	malformed identities, arrays, states and fields fail without content
+415	test	bounds mapped messages, total persisted items and text size
+## test/codex_journey_test.dart
+137	test	connects, sends existing and new prompts, streams, approves, aborts, and recovers authoritatively
+## test/codex_project_navigation_test.dart
+63	test	Codex offers no Project tab tools
+## test/codex_steering_test.dart
+138	test	explicit steer targets authoritative active turn without resuming
+184	test	default send while busy steers, while idle starts a new turn
+203	test	explicit queue and unsupported attachments never dispatch input
+236	test	missing or ambiguous running turn cannot become a new turn
+257	test	changed running turn rejects stale input instead of steering its replacement
+277	test	turn completed during preflight cannot receive stale steering
+305	test	foreign project and malformed active IDs fail before steering
+333	test	scope changes, including away and back, fence read and steer acknowledgement
+371	test	disconnect during active-turn read cannot reconnect and mutate
+391	test	remote rejection stays sanitized and never falls back to start
+426	test	missing or mismatched acknowledgement blocks resend until reconciliation
+451	test	lost steer acknowledgement blocks resend without reconnecting
+482	test	completion before steer acknowledgement remains idle
+## test/codex_transport_test.dart
+39	test	socket loss fails all pending work and never replays a mutation
+109	test	old epoch cannot answer an approval or event after socket loss
+154	test	request waits for replacement initialization before sending its frame
+## test/command_receipt_transport_test.dart
+144	group	correlated gateway receipt lookup
+152	test	dispatch supplies the caller ID to the existing prompt transport
+160	test	finds the exact user ID on an older page
+174	test	does not confirm matching text with wrong $mismatch
+188	test	repeated continuation stops without claiming admission
+194	test	ever-changing continuations are bounded
+201	test	capability false refuses dispatch and performs no lookup
+215	test	closed connection cannot confirm receipt
+222	group	v2 receipt transport
+238	test	prompt posts the client ID and validates its admission receipt
+252	test	pending inbox admission confirms without reading a message
+264	test	promoted user message confirms after leaving inbox
+273	test	wrong inbox session and assistant message do not confirm
+281	test	wrong inbox type and message ID do not confirm
+289	test	mismatched POST receipt remains unconfirmed
+302	test	staged revert refuses prompting without committing revert
+315	test	location change during preflight prevents the POST
+334	test	policy fence after preflight prevents the POST
+353	test	session creation posts the supplied client ID on the wire
+## test/command_receipts_queue_test.dart
+132	test	lost response then receipt retry confirms without another send
+160	test	restart with pending command reconciles on flush without send
+180	test	absent receipt and capability loss never authorize resend
+194	test	unsupported gateway keeps normal queue dispatch and no journal
+208	test	late receipt lookup keeps a replacement unmarked draft
+226	test	profile preference sweep deletes and closes journal
+## test/command_receipts_test.dart
+33	test	lost response then Retry looks up admission without another send
+73	test	restart reconciles ${pendingState.name} receipt and preserves tab
+108	test	simultaneous sends with the same command dispatch only once
+131	test	missing lookup and lookup failure both stay uncertain
+149	test	journal must be durably claimed before any dispatch
+164	test	same command cannot be borrowed by another tab or scope
+188	test	failed receipt is a tombstone and cannot dispatch or query again
+## test/common_file_preview_test.dart
+74	test	eligible byte-only text decodes strictly and export keeps original bytes
+102	test	invalid UTF-8 data URL keeps Save bytes without replacement text
+## test/computer_usage_source_test.dart
+88	group	reading the answer
+89	test	only the exact marker line counts, through echo and ANSI codes
+105	test	a line split across chunks is read once it is whole
+111	test	the error codes and a bad provider are fixed outcomes
+138	test	why Node did not run is chosen from words, never stored
+158	group	one check
+160	test	runs node first, reads the line, and removes the terminal
+176	test	a silent reader times out and the terminal is still removed
+193	test	the login shell runs when node itself fails before output
+212	test	the login shell also runs when the server refuses the command
+226	test	no Node anywhere is "needs Node.js 20"
+238	test	the reader saying Node is too old is kept as that reason
+253	test	a server without the terminal API says so and does not retry
+265	test	an unreachable server does not retry either
+275	test	the terminal is removed even when removing it throws
+285	test	a socket that never closes does not keep the terminal alive
+297	group	opt-in and the sweep
+299	test	nothing runs until it is turned on for that server
+312	test	turning on stores a per-profile key and reads at once
+333	test	turning off removes the key and forgets the answer
+347	test	the profile sweep finds the key
+359	test	applies to saved OpenCode servers, not In-app Ubuntu or Paseo
+384	test	a server asking for its password again is skipped
+407	group	cadence
+409	test	background reads wait 15 minutes, a forced read never waits
+440	test	opening Usage in the foreground reads at most once a minute
+468	group	what the app learns
+470	test	Codex, GLM and MiniMax become readings with the plan ref
+508	test	an OpenAI API key is a pay-as-you-go sign-in with no reading
+529	test	a MiniMax pay-as-you-go key is the same, a plan key is not
+547	test	an expired sign-in, a rate limit and a broken answer are states
+575	test	signed out now, but read here before, is "not signed in"
+597	test	an unreachable server marks the connection offline
+606	test	a broken reader fails the plans signed in there, no others
+624	test	nothing the person owns is kept in memory beyond the numbers
+## test/computer_usage_wire_test.dart
+44	group	OpenCode 2
+61	test	creates a PTY with the command and arguments apart
+91	test	leaves the usage check out of the terminal list
+110	test	failures map to fixed reasons without server text
+142	test	no answer at all is "unreachable"
+173	test	a gateway without the facet is "too old", not a crash
+## test/connect_method_order_test.dart
+21	test	headless comes first, browser last, key in between
+30	test	hints say where each flow finishes
+## test/connection_attention_feed_test.dart
+54	test	one feed combines selected transport and opted-in other server once
+89	test	reconnect does not refresh cached requests; successful reads do
+105	test	confirmed failure has no raw error and newer work retires it; removal excludes rows
+## test/connection_failure_test.dart
+20	test	loopback offers retry without assuming Termux hosts the endpoint
+28	test	loopback without Termux support retains generic retry
+34	test	a bare "Health check failed" on loopback still gets the loopback advice
+42	test	401 asks for the password, not a retry
+48	test	a missing Codex token asks for the token without a connection guess
+59	test	a rejected Codex token has a token recovery action
+70	test	Codex local refusal points at its listener or tunnel
+83	test	remote Codex refusal recommends a wss endpoint
+94	test	unknown Codex loopback errors stay an honest generic failure
+101	test	a changed certificate blocks and asks for explicit review
+112	test	certificate problems name the certificate
+121	test	remote host refusing is "not reachable" with network checks
+133	test	timeouts blame the network in between
+138	test	unhealthy server is a server problem
+146	test	three attempts adds the "retrying will not start a server" line
+155	test	the raw error is kept verbatim for the details expander
+160	test	the app-managed phone server that does not answer is stopped, and 
+184	test	OpenCode inside the app: starting it is the fix, and nothing is 
+229	test	a Tailscale address that did not answer says to check Tailscale
+## test/connection_interaction_test.dart
+202	group	form state
+204	test	form.v2.created adds the form; replied/cancelled settle it
+231	test	refreshPendingForms hydrates the pending list
+246	test	replyForm posts the answer and settles the form
+260	test	an already-settled reply resolves locally and rethrows
+278	test	a 400 invalid answer keeps the form pending and rethrows
+296	test	cancelForm posts the cancel and settles the form
+307	test	deleting a session drops its forms and inbox items
+326	group	inbox state
+328	test	enqueued/delivery.changed/delivered project the pending sends
+373	test	refreshInbox reconciles a session from REST
+394	test	cancelInboxItem returns the text for the composer
+406	test	a 409 already-delivered cancel drops the item and rethrows
+427	test	setInboxDelivery flips the mode on the wire and locally
+457	group	notification Reply on v2 permissions
+518	test	Reply maps to reject-with-message on the exact request
+540	test	a stale requestID refreshes the alert instead of resolving
+560	test	an empty reply is not delivered
+## test/connection_location_restore_test.dart
+248	test	directory paths compare without their trailing separators
+## test/connection_sse_wake_test.dart
+122	test	installation events retain exact available and installed versions
+## test/connection_transport_factory_guard_test.dart
+23	test	the location rescope path uses the shared transport builder
+## test/connection_v2_requests_test.dart
+60	test	request replies cannot cross $replacement while waking
+127	test	question answer and reject share a write slot before transport wake
+156	test	late question failure after remote resolution does not surface an error
+192	test	V2-only hydration routes mutations and blocks stale resurrection
+235	test	permission and question replies wait for wake transport
+292	test	partial V2 hydration failure preserves V2 reply provenance
+333	test	QuestionNotFoundError resolves V2 and legacy requests locally
+525	test	connected stream reconciles a missed idle event
+553	test	a run missing from one status read, between two steps, stays 
+## test/connector_search_step_test.dart
+60	test	catalogue_off is a status of its own
+## test/context_usage_test.dart
+57	group	contextFraction
+58	test	tokens over the window; null when either is unknown
+64	group	contextReadingFor
+66	test	reads the newest reply against its own model
+80	test	a reply with no tokens is not a bar
+88	test	marks the reply after a compaction, the drop in the chart
+103	test	a compaction before any reply marks nothing
+111	test	unknown when there is no catalog, no reply, or no window
+124	test	an unknown model on the newest reply hides the ring, as before
+135	group	paseoContextUse
+137	test	used over max tokens from an agent usage report
+147	test	absent, partial or unusable usage is unknown
+167	test	the session carries it
+181	group	ContextUsageMemory
+188	test	remembers a value per session under oc.contextUsage.<profile>
+209	test	null forgets, nonsense is not kept
+218	test	keeps the newest 200 sessions
+229	test	the profile sweep finds the key, and a late write cannot undo it
+## test/continue_with_sheet_test.dart
+267	test	the conversation menu offers Continue with…
+326	test	link lines name the agent on the source and the title on the new one
+## test/conversations_elsewhere_test.dart
+51	test	conversations elsewhere: other projects only, running first, then 
+## test/coverage/diag_actions_coverage_test.dart
+116	test	every mutating call and control has a decision
+136	test	a proof names a test that still exists
+154	test	every reachable control without a proof has a tap path here
+## test/coverage/diag_privacy_test.dart
+84	test	the diagnostics copy (report text and json) holds no secret
+99	test	the saved problem report holds no secret, in memory or on disk
+124	test	the Report a problem text, link and clipboard hold no secret and 
+161	test	the crash report holds only fixed categories and times
+210	test	a failed job report holds no secret
+230	test	the timing report and the device log hold no secret
+## test/coverage/files_actions_coverage_test.dart
+64	test	every change in this area has a ledger decision
+87	group	what each gateway sends
+114	test	OpenCode 2
+145	test	every reachable control is proven both ways
+## test/coverage/lists_actions_coverage_test.dart
+71	test	every change in this area has a ledger decision
+94	group	the controls
+218	group	what each gateway sends
+245	test	OpenCode 2
+312	test	every reachable control is proven both ways
+## test/coverage/models_actions_coverage_test.dart
+65	test	every change in this area has a ledger decision
+88	group	what each gateway sends
+115	test	OpenCode 2
+139	test	every reachable control is proven both ways
+## test/coverage/phone_actions_coverage_test.dart
+135	test	every mutating call and control has a decision
+155	test	a proof names a test that still exists
+173	test	every reachable control without a proof has a tap path here
+## test/coverage/phone_agent_catalog_coverage_test.dart
+83	test	the inventory file is the live catalog
+91	group	ledger · catalog
+92	group	ledger · certification
+## test/coverage/servers_actions_coverage_test.dart
+194	test	every mutating call and control has a decision
+213	test	a proof names a test that still exists
+231	test	every reachable control without a proof has a tap path here
+## test/coverage/servers_capabilities_coverage_test.dart
+109	test	every switch has a ledger decision
+135	test	"shown" switches move a row, and only they do
+## test/coverage/settings_actions_coverage_test.dart
+57	test	every change in settings has a ledger decision
+80	group	what each gateway sends
+107	test	OpenCode 2
+142	test	every reachable control is proven both ways
+## test/coverage/settings_preferences_coverage_test.dart
+43	test	every stored key in the app is classified, none is stale
+66	test	the sweep takes every per-server key shape of the ledger
+86	group	every setting reads back after a restart
+88	test	app-wide display settings
+106	test	the shared notification choices
+117	test	per-server choices read back and leave with the server
+## test/coverage/settings_secrets_coverage_test.dart
+19	test	a server configuration shows none of its secrets
+57	test	a changed secret is masked by the name it sits under
+## test/coverage/team_actions_coverage_test.dart
+69	test	every change in the AI Team has a ledger decision
+92	group	what the gateway sends
+130	test	through the host front
+273	group	what the engine gateway sends
+308	test	every command a control sends
+337	test	every reachable control is proven both ways
+## test/coverage/team_engine_coverage_test.dart
+118	test	every field the engine can report has a decision and a value
+## test/coverage/team_engine_status_coverage_test.dart
+33	test	every field the engine reports has a decision
+68	test	each decision is a reason or a test that exists
+## test/coverage/terminal_actions_coverage_test.dart
+132	test	every mutating call and control has a decision
+153	test	a proof names a test that still exists
+171	test	every reachable control without a proof has a tap path here
+## test/coverage/tools_actions_coverage_test.dart
+117	test	every mutating call and control has a decision
+137	test	a proof names a test that still exists
+155	test	every reachable control without a proof has a tap path here
+## test/coverage/tools_context_coverage_test.dart
+129	test	every "shown" field is on screen in at least one case
+## test/crash_diagnostics_startup_test.dart
+69	test	slow opening outlives the launch budget and resolves readiness later
+119	test	reply beyond the elapsed launch budget becomes available later
+144	test	never-answering channel bounds launch while readiness stays pending
+181	test	actual late opening failure resolves readiness to null
+203	test	late opening preserves explicit persisted consent
+227	test	reset drops an old reply after the new controller has attached
+266	test	late restored records replay exactly once after real readiness
+317	test	reset after readiness cancels queued restored notifications
+345	test	reset during replay prevents further stale notifications
+373	test	timely native reply makes explicitly opted-in capture available
+394	test	background startup imports only private categories into diagnostics
+441	test	clear before import notification cannot restore erased entries
+## test/crash_diagnostics_test.dart
+41	test	capture defaults off and discards a legacy native record
+54	test	provider keys and arbitrary exception and stack values never reach disk
+74	test	capture does not invoke hostile error.toString
+83	test	saved error survives reopen and imports into App diagnostics
+99	test	records lists saved categories newest first without values
+121	test	reapplying enabled consent preserves saved evidence
+130	test	disable erases Flutter and native evidence and consent across reopen
+151	test	App diagnostics clear removes native and saved crash evidence
+166	test	ANR and native import accept only timestamps since consent and deduplicate
+198	test	ring and snapshot byte budget remain bounded
+219	test	corrupt restored categories fail closed without entering diagnostics
+237	test	storage failure never throws into error handling
+249	test	pending snapshot symlink cannot redirect private evidence
+264	test	global Flutter and platform hooks delegate only categories, never keys

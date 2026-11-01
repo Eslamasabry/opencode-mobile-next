@@ -1,0 +1,527 @@
+## test/share_intent_test.dart
+18	test	drains the share that launched the app
+31	test	accepts a live share while running
+47	test	ignores empty shares and missing implementations
+60	test	is inert off Android
+74	test	a newer live share wins over a pending cold-start consume
+99	test	a warm share taken before cold-start completion stays consumed
+133	test	dispose while cold-start consume is pending ignores its completion
+162	test	disposing a never-started receiver preserves an active receiver
+187	test	dispose unregisters the channel and blocks notifier callbacks
+211	test	ShareOut sends the text and subject and reports whether the share 
+226	test	ShareOut answers false when the platform side is missing or fails
+## test/shared_project_roots_test.dart
+13	test	opened folders persist per profile, push the union, and are swept
+## test/shared_storage_path_test.dart
+8	test	shared storage paths are recognised by every name Android gives
+25	test	the app project space and other servers are not shared storage
+45	test	the storage permission is declared and bound only outside the 
+113	group	shared project roots and binds
+114	test	every spelling of an opened folder becomes one canonical root
+130	test	a whole volume, app space and Termux are never a root
+143	test	before AI Team the whole shared storage is visible
+150	test	with AI Team only the opened folders are bound, with alias
+## test/shell_output_test.dart
+8	test	a malformed reset page leaves already loaded output intact
+35	test	uses server byte cursors and never duplicates an unchanged page
+74	test	restarts a reset capture from zero instead of duplicating stale output
+92	test	bounded output preserves complete surrogate pairs and strips terminal escapes
+114	test	a missing shell after reconnect is not called a restart without evidence
+136	test	a retired repository response cannot replace the new connection state
+158	test	concurrent refreshes coalesce and closing a viewer discards late results
+182	test	errors preserve visible output and a retry clears the error
+## test/shipped_download_urls_test.dart
+58	test	the private-host check catches the address that shipped in #87
+72	test	no URL in assets/ points at a private address
+88	test	every download manifest in assets/ is https and public
+## test/sign_in_foreground_causes_test.dart
+95	test	a service Android did not start is named, not called lost
+110	test	a durable pause does not stop a sign-in the person asked for
+130	test	a running sign-in says what stopped its service
+## test/slice_close_servers_profile_editor_test.dart
+236	test	the Codex start command is one line
+## test/slice_close_team_test.dart
+339	group	start-run-sheet: the planner is off, no direct path
+474	group	team-run: stage words are outcomes
+515	group	team-agent: a dependency counts only while open
+591	test	teamOpenDependencies counts only listed open steps
+## test/slice_fix_stop_offer_test.dart
+71	test	a Stop ($label) is never "Failed" and never needs you
+85	test	a real failure is still "Failed" and needs you
+## test/slice_team_g17_test.dart
+31	group	the marks: needs you, or not amber at all
+32	test	only the states that wait on the person take the needs-you mark
+61	test	no team state is drawn in the attention tone
+73	test	held up and degraded states are neutral; a failure keeps its 
+92	test	a high context reads in primary text, never amber or red
+99	group	rows
+## test/staged_revert_message_count_test.dart
+83	test	counts all kinds across opaque pages and excludes the hidden prompt
+110	test	a verified last prompt legitimately has zero following messages
+119	test	unknown coverage never becomes zero or a partial count
+155	test	synthetic rows projected as user are not accepted as the prompt
+168	test	scope change or a changed remote boundary discards the count
+189	test	unsupported and closed connections do no history reads; errors are safe
+210	test	infeasible session actions stay unavailable for every capability set
+## test/staged_revert_workflow_test.dart
+133	test	offline replay keeps queued prompt when a missed remote stage exists
+159	test	full hydration and partial updates preserve typed stage and absent preview
+179	test	stage keeps metadata, returns preview immediately, and resets history
+202	test	remote stage invalidates an already reviewed commit without clobbering metadata
+218	test	fresh server boundary blocks commit even when its event was missed
+233	test	connection replacement during preflight cannot dispatch to either server
+250	test	rejects concurrent mutations and never overwrites a newer remote stage with HTTP
+275	test	ambiguous commit failure reconciles before retry becomes available
+293	test	clear and commit remove stage and invalidate structural history
+314	test	unsaved prompts and busy sessions cannot stage
+## test/stash_attachments_test.dart
+145	test	file backend keeps payloads out of preferences and preserves restart metadata
+183	test	explicit legacy writer preserves inline compatibility
+190	test	legacy-only consumer refuses file-backed records instead of dropping attachments
+208	test	migration replaces only acknowledged metadata and is idempotent
+233	test	metadata ${throws ? 
+263	test	file failure never removes legacy input or acknowledges a new stash
+280	test	failed pre-save reconciliation rejects publication and retry survives restart
+327	test	uncertain preference cache suppresses GC until a successful reload
+353	test	partial file publication collects only orphans and preserves acknowledged owners
+388	test	stash and ordinary draft garbage collectors cannot delete each other payloads
+437	test	missing files and wrong-location references are named without consuming source
+462	test	metadata removal failure retains files and a cleanup failure stays retryable
+508	test	corrupt bytes remain unavailable until an explicit save repairs the shared blob
+537	test	oversized legacy attachment counts defer without truncation or eviction
+560	test	input is snapshotted before queued file writes and clear drains prior saves
+582	test	unknown metadata versions cannot turn retained payloads into garbage
+609	test	a corrupt blob reference suspends collection until explicit profile cleanup
+644	test	unused shelves never ask the vault to store or collect
+664	test	owner marker ${throws ? 
+696	test	owner marker is durable before the first payload can be published
+716	test	pre-marker file references cannot be deleted when ownership admission fails
+754	test	failed marker retirement stays discoverable and is retried after restart
+775	test	an optimistic unacknowledged owner marker never permits new file publication
+## test/stash_lifecycle_test.dart
+298	test	live controller enables file-backed save, restart, recovery and owner deletion
+336	test	empty and text-only shelves do no file I/O, including profile deletion
+361	test	preparation migrates legacy data once and returns deferred IDs without truncation
+405	test	refused stash metadata has no phantom save and failed reload can recover
+437	test	recovery checks actual directory and workspace and never consumes its source
+495	test	$damage stash bytes are reported without consuming saved work
+520	test	invalid initial scope rejects every shelf action without file I/O
+566	test	a pending save rejects stale $change before metadata publication
+589	test	a pending recovery rejects stale $change without consuming the stash
+614	test	a save already committing on a stale location stays recoverable only by its owner
+645	test	stale queued removal cannot delete a stash when an older recovery releases
+670	test	a queued recovery cannot substitute a new stash that reused the source ID
+709	test	profile deletion closes admission and drains pending $action before secret deletion
+793	test	failed stash cleanup retains its marker and profile, then restart retries orphan deletion
+840	test	failed removal cleanup notifies the actual shelf and keeps retry ownership
+870	test	pre-marker references survive failed admission and cannot lose their profile or secret
+900	test	partial metadata cleanup reloads the surviving shelf and history without phantom entries
+925	test	failed marker retirement and a later settings refusal never delete the secret early
+954	test	disposal during authorized deletion permits cleanup without post-disposal notifications
+## test/static_svg_test.dart
+5	test	local shapes, text and gradient paints retain their exact source
+26	test	unsupported or externally active SVG keeps Source fallback: $content
+36	test	declarations, malformed XML and resource bounds are rejected
+55	test	dash expansion is rejected before the SVG compiler is invoked
+## test/sv3_mcp_test.dart
+20	test	runtime disconnect sends the exact name only when supported
+41	test	runtime disconnect rejects unsafe names and returns safe errors
+80	test	MCP setup capabilities do not enable unsupported recovery actions
+95	test	unavailable MCP setup keeps all stronger actions unavailable
+## test/sv3_skill_conversation_test.dart
+104	test	captures creation selection and refuses a stale connection
+128	test	creates then stages the protocol skill ID without running agent
+145	test	unsupported or missing ID never creates a conversation
+173	test	connection change during create preserves session without activation
+187	test	ambiguous activation keeps session and never retries
+197	test	creation failure prevents both dispatch and duplicate creation
+213	test	authoring sends a redacted draft request and reports uncertain sends
+## test/tailscale_profile_test.dart
+9	test	Tailscale guidance and HTTPS profile survive reload and profile deletion removes guidance
+## test/tailscale_setup_test.dart
+67	test	review accepts HTTPS origins and bare MagicDNS without loosening policy
+98	test	native bridge maps only explicit package evidence and fails closed
+## test/teaching_test.dart
+66	group	TipController
+77	test	shows a tip at most twice, a quiet gap apart
+90	test	one tip at a time; a higher priority takes the place
+99	test	never again once used
+106	test	never while a question waits, the keyboard covers the anchor or 
+119	test	one new tip per screen visit
+129	test	is stored app-wide as oc.tips and read back
+142	test	a replay counts nothing; Show tips again resets all
+157	group	registry
+162	test	ids are unique, tutorials have 2–4 steps
+175	test	every tip and tutorial has its copy in en and ar
+220	group	Help › Tips
+296	group	Make it yours
+## test/team_activity_test.dart
+538	group	gate sheet
+779	group	failure classification
+781	test	reads the family from the words
+815	test	the more specific family wins
+823	test	recoverable and action follow the class
+835	test	destructive confirmations are read from the flag or the words
+886	group	layout
+## test/team_agent_sessions_test.dart
+59	group	pickTeamAgentSession
+61	test	matches the session in the agent work folder
+75	test	matches a session in a folder inside the work folder
+85	test	trailing slash, dot and dot-dot forms are the same folder
+108	test	the project folder the team works on is not the agent folder
+121	test	falls back to the project folder when the session names none
+133	test	child sessions (sub-agents) are ignored
+146	test	the newest wins; ties by creation then id
+184	test	a session older than the Gas City session is a previous task
+211	test	no work folder or no match is null
+223	group	findTeamAgentSession
+225	test	pages until the agent session is found
+251	test	stops once a page reaches back before the session start
+277	test	at most the given number of pages
+292	test	a server that fails is null, not an error
+297	test	no work folder asks nothing
+## test/team_board_test.dart
+62	group	grouping
+70	test	the host\'s bookkeeping is never on the board
+86	test	columns come from status, who has it and its session
+132	test	an open bead with a live session is Working even while it says 
+163	test	another project\'s task is only on its own board
+179	group	board screen
+## test/team_control_mutations_test.dart
+235	group	MutationStore
+237	test	records round-trip and prune keeps unsettled ones
+274	test	requests of every kind round-trip
+334	group	front receipts (receiptFromFront)
+336	test	accepted receipt with a correlation id
+361	test	rejected receipt carries the supervisor problem
+387	test	front problems: 502 pending+retryable, 409 and 403 rejected
+408	test	a bare supervisor answer maps too
+434	test	respondAction and receipts serialise
+464	group	merge mutations (TEAM-205)
+466	test	approve and merge go through mutate with a persisted key
+501	test	a 202 approval is confirmed by the request bead changing
+518	test	a host refusal on a boundary settles the record as rejected
+541	test	without merge roles on the adapter the write is rejected locally
+555	test	without the capability the write is rejected locally
+575	test	readiness is cached per run, shared while loading, refetched on 
+602	test	a failing readiness read is kept as the error, never thrown
+612	test	GasCityControl routes: readiness GET, approve and merge POST 
+678	group	probe and discovery
+680	test	finds a front and yields gascityFront
+705	test	a front that does not allow this device is read-only
+716	test	no well-known document: the bare supervisor probe decides
+731	test	the gateway factory builds a front gateway from a found front
+761	test	discovery tries the front port before the supervisor port
+## test/team_control_test.dart
+28	group	receipt lifecycle
+30	test	the key is persisted before the gateway is called
+54	test	accepted, then confirmed by the matching request.result
+97	test	request.failed rejects with the host error
+123	test	a rejected receipt settles the record
+135	test	502 upstream-unavailable is unconfirmed and retryable
+156	test	409 idempotency-mismatch is rejected
+172	test	no result inside the window: unconfirmed, then a late result 
+199	test	a result that arrives before the receipt still confirms
+221	test	a synchronous 200 answer is confirmed at once
+236	test	a gate answer is confirmed by the gate resolving
+254	test	the same gate is not answered twice while sent
+269	test	cancel, agent and assign confirm on their effect events
+293	test	giveTask (TEAM-306): creates, then slings the created id; a 201 
+341	test	giveTask: a refused create slings nothing; a create without an 
+378	test	createWork is refused by the controller when the host lacks 
+390	test	a stop and a batch close confirm on bead.closed of the session 
+442	test	controls the host does not allow are rejected locally
+453	group	restart and retry
+455	test	a sent record survives a restart as unconfirmed and is never 
+490	test	retryMutation sends again under a new key
+514	test	every mutation key lives under the profile prefix
+## test/team_controller_test.dart
+338	group	OrchestrationConfig on the profile
+340	test	round-trips through profile JSON
+359	test	a profile stored before the plugin has it off
+372	test	missing fields take their defaults
+388	test	hostKind round-trips and defaults from hostMode when absent
+442	test	hostKind never contradicts hostMode
+488	group	lifecycle
+615	group	stale detection
+652	group	dirty scopes and debounce
+771	group	attention and timeline
+837	group	ConnectionController
+869	test	a profile with config null gets no controller and no keys
+883	test	a configured profile gets a sibling that follows the config
+## test/team_controls_start_run_test.dart
+35	group	start a run
+387	group	P6.3 dispatch stages
+793	test	the planning message round-trips through its record
+## test/team_conversation_lead_test.dart
+86	group	teamLeadLines
+87	test	a two-step task tells its story in time order
+142	test	a worker session made for a routed step says a worker started
+171	test	a line the host gave no time keeps its place
+191	test	an open gate says the team needs the person
+214	test	a failed and a cancelled step
+237	test	how the task ended
+273	group	teamNow
+288	test	finished
+298	test	a gate comes first
+316	test	no work yet: waiting for a worker since the task started
+322	test	routed and waiting for the next check
+336	test	a running session on the item is starting before the cycle knows
+362	test	starting once the agent woke
+380	test	working, on the least advanced step
+405	test	a step queued behind the one in flight does not speak
+439	test	a running session overrides "the host has not started an agent"
+470	test	review once handed over
+488	test	stalled says why and since when
+504	test	every step done but the task open: review
+518	group	teamSessionState
+520	test	the session wins over a lagging agents list
+550	test	waiting and blocked stay (they are the host facts on sessions)
+566	test	teamAgentShortName
+575	group	teamConversationAgents
+590	test	the workers on the task, working first
+599	test	the project refinery joins once a step is handed to review
+## test/team_cycle_test.dart
+419	group	derivation
+421	test	the recorded normal run yields the five timestamps in order
+474	test	the recorded run, cut after routing, waits for an agent
+520	test	a routed-only item with no events is agent starting
+532	test	nothing known: routed pending, nothing reached
+543	test	hostNotStarted: routed over three minutes, no agent
+562	test	agentCannotStart: woke and stopped twice within a minute
+625	test	providerLimit: the transcript names a usage limit
+686	test	the provider-limit words: usage limit, quota, rate limit
+702	test	workingLong: over thirty minutes with nothing pushed
+736	test	mergeWaiting: handed to the refinery over fifteen minutes ago
+764	test	handed to the refinery 20 h ago, no events: times are the 
+789	test	no timestamps at all: reached steps carry no time, and nothing 
+838	test	an event times a step the item left untimed; later untimed 
+856	test	merged: closed bead, completed item or completed run end it
+900	group	controller
+960	group	now line
+1095	group	placement
+## test/team_digest_failure_test.dart
+68	group	plain words for engine codes
+70	test	sessionFailed and modelNotConfigured read as sentences
+83	test	an unknown code never reaches the person
+95	group	digest keeps only what is still true
+97	test	a later success replaces the earlier stop for the same item
+119	test	items stay separate, and what was read is dropped
+## test/team_directories_test.dart
+14	group	isAiTeamDirectory
+15	test	the in-app team home and everything in it is the team\'s
+29	test	a Gas City work folder is the team\'s wherever the city lives
+42	test	the person\'s own folders are not, the team\'s rig included
+60	test	the built-in team home and the rule are one constant
+66	group	isAiTeamConversation
+73	test	judged by the conversation\'s own folder
+86	test	the project folder decides only when the conversation has none
+## test/team_dispatch_test.dart
+110	test	gates both capabilities and validates before any create
+136	test	one create and immediate assign; only matching running session counts
+212	test	refusal or missing created ID never claims dispatch or retries
+236	test	uncertain assignment stays unconfirmed and preserves sent task text
+255	test	dispose during submission detaches and suppresses late notification
+276	test	each stage appears once the host confirmed the step before it, 
+313	test	a refused assignment keeps the created task: no re-create, no 
+326	test	an accepted task on a team that cannot be seen is unknown, even 
+358	test	after a restart nothing is sent again: a fresh attempt starts idle 
+383	test	the attempts holder keeps only the latest attempt; dismissing 
+## test/team_f3_ui_fixes_test.dart
+225	test	B-16: a work tick writes no generic row, and Parallel starts above one
+## test/team_finished_runs_test.dart
+19	group	mapping (recorded JSON)
+20	test	a closed convoy from GET /convoy/{id} is a finished, merged run
+34	test	a closed convoy whose work reports no merge is done, not merged
+50	test	a cancelled close is finished, cancelled and never merged
+65	test	an open convoy with work in progress has no finish time and is 
+89	test	convoyClosedTimes reads subject and ts of convoy.closed
+102	group	selectFinishedConvoys
+115	test	keeps a convoy closed within the window
+126	test	drops one closed before the window, by close time
+139	test	drops one that is open again, and non-convoys
+159	test	newest first, at most limit, created_at when no close event
+177	group	gateway against the recorded city
+201	test	the merged task stays listed as a finished run after its convoy 
+220	test	a finished run keeps its work: the merged task is listed under it 
+232	test	history reads are bounded: newest 20, one week of close events, 
+247	test	a run that finished before the window is not listed or fetched
+258	test	a host without the history routes still lists the open runs
+268	test	an unreadable detail falls back to the list bead: still done
+## test/team_fixture_gateway_test.dart
+31	test	rejects a path that is not a directory
+38	test	capabilities and host identity
+48	test	reads answer from the recordings
+76	test	the run bead follows the replay head
+93	test	emit replays the recorded run to listeners
+113	test	activity grows with the head and stays oldest first
+126	test	events with a cursor replay what was missed, then go live
+140	test	controls are accepted and recorded
+167	test	createWork (TEAM-306) answers the new bead so createdId is set
+192	test	close ends the stream and further events are dropped
+## test/team_follows_runtime_test.dart
+40	test	the team and its engine credential move to the new server
+53	test	a target with its own team keeps it; a remote server is untouched
+## test/team_gascity_gateway_test.dart
+202	group	transport rule
+204	test	isTailnetHost: CGNAT range, MagicDNS, loopback
+220	test	isOrchestrationUrlAllowed: https anywhere, http only near
+239	test	GasCityGateway refuses a plain-HTTP URL off the tailnet
+246	test	backoff grows exponentially with jitter and caps at 30 s
+259	group	probe
+261	test	plainHttpRefused is decided before any network call
+272	test	unreachable on a closed port
+283	test	notGasCity on an HTML answer, and no credential header sent
+318	test	notGasCity on JSON that is not the health shape
+333	test	cityNotRunning when /v0/cities lists the city stopped
+364	test	found against the fixture: version, city, read-only, identity
+387	test	found with no city asked uses the one /health reports
+395	test	cityNotRunning for a city the fixture does not serve
+409	group	http client
+411	test	problem+json becomes OrchestrationHttpException with request id
+437	test	a caller-supplied Authorization header is stripped from reads
+468	test	POST carries X-GC-Request and a JSON body; GET never does
+507	group	createWork (TEAM-306)
+552	test	posts the proof body to /beads with X-GC-Request and no 
+583	test	description and rig are omitted when empty; an empty title is 
+598	test	a supervisor problem is a rejected receipt with its message
+618	test	createdId reads a front receipt\'s inner body too
+637	test	without a front or loopback control the gateway rejects it
+651	group	reads against normal
+675	test	capabilities, connect and host identity
+686	test	projects come from /status rigs
+694	test	runs merge /runs and /convoys and surface the partial flag
+711	test	work: oc-loy on branch polecat/oc-loy after the run, ready set
+737	test	agents join /agents with /sessions
+757	test	gates are empty and usage is an estimate
+767	test	activity is oldest first and honours afterSeq
+778	test	controls are rejected with "front required"
+797	test	no credential header is ever sent on reads or the stream
+826	group	scenarios
+828	test	blocked yields one gate of kind choice
+849	test	failed yields one run in failed with last_error
+876	test	stream-drop: reconnects with Last-Event-ID, no gaps, no duplicates
+930	group	head-only replay
+942	test	a cursor far ahead resumes from the head and signals dirty-all
+971	test	a cursor behind the retained window signals too
+989	test	an honoured cursor raises no signal
+1003	group	sse client
+1005	test	reconnects after a refused connection with backoff, then closes
+1038	test	mapStreamFrame turns fixture frames into product events
+1054	group	agent output (TEAM-111)
+1056	test	turn frames of a session stream arrive as text captures
+1088	test	a session the host does not serve ends the stream (404)
+1103	group	front (TEAM-202)
+1105	test	the probe finds the front first and yields gascityFront
+1123	test	a message carries the Idempotency-Key and parses the receipt; 
+1159	test	rejected, 502 and 409 answers map to receipts
+1190	test	every verb reaches its route
+1318	test	receipt lifecycle: message → accepted → request.result → 
+1342	test	stream drop: unconfirmed after the window, confirmed once the 
+## test/team_gascity_mappers_test.dart
+205	group	recordings round-trip
+207	test	fixture directory has recordings
+211	test	every recording has a mapping path (none skipped)
+221	test	$name decodes and maps without throwing
+236	group	event logs round-trip
+239	test	fixture directory has event logs
+246	test	$name: every line decodes and maps
+281	test	city events map to the documented product events
+311	test	heartbeat frames become StreamHeartbeat with a timestamp
+330	group	tolerance
+332	test	every decoder survives garbage under every known key
+345	test	mappers survive garbage DTOs
+373	test	unknown enum strings map to unknown and keep the raw string
+423	test	unknown fields are ignored and kept in raw
+434	test	problem+json decodes and is recognised
+445	group	recorded shapes
+447	test	bead oc-loy handed to the refinery
+475	test	bead after sling keeps routing in assignee
+482	test	runs.json with partial: true yields an empty list and the flag
+495	test	convoys track beads and become batch runs
+525	test	beads.json: internal beads are filtered unless asked for
+544	test	beads_graph root is a closed order bead
+552	test	status maps to host identity, counts and rigs
+585	test	usage is labelled estimated
+603	test	events page is newest first and maps to activity
+616	test	event payloads carry ids the product events need
+699	test	session stream turn frames decode the transcript
+725	test	sling request and response
+748	test	readiness keyed items decode
+760	test	no adapter file imports the OpenCode API layers
+## test/team_gascity_state_table_test.dart
+10	group	state table (04 §4)
+17	test	work: queued
+21	test	work: ready when in the ready set
+29	test	work: working
+35	test	work: waiting when its session is parked in /waits
+54	test	work: blocked via is_blocked
+61	test	work: needs input when its session has a pending interaction
+80	test	work: review via needs-review label
+90	test	work: failed via last_error (metadata and run step)
+118	test	work: completed
+128	test	work: cancelled via closed_reason
+160	test	run: planning
+165	test	run: working
+166	test	run: waiting
+167	test	run: blocked (convoy with a blocked item)
+186	test	run: failed
+194	test	run: completed
+198	test	run: cancelled (canceled, canceling, skipped)
+203	test	run: convoy derives from tracked work
+275	test	run: batch state table (TEAM-115)
+430	test	run: batch title is the work\'s title (TEAM-115)
+487	test	run: upkeep detection (TEAM-115)
+583	test	agent: working
+599	test	agent: idle
+605	test	agent: waiting when its session has a pending interaction
+630	test	agent: blocked when its session is parked in /waits
+654	test	agent: stopped (stopped, suspended, not running)
+673	test	agent: a running session outranks a stopped agent word
+702	test	agent: the session is the live truth; the agent list is the 
+743	test	agent: crashed
+762	test	agent: session name, last activity and pool template
+786	test	agents join sessions and unclaimed sessions become agents
+815	test	agents: only the live ones from agents.json (TEAM-115)
+836	test	agents: the live city shape keeps suspended, drops slots
+927	test	gate: choice
+947	test	gate: confirmation
+957	test	gate: free text
+966	test	gate: gate bead
+987	test	gate: run failed
+997	test	gate: review ready
+1007	test	mapGates collects every source
+## test/team_gate_rows_notifications_test.dart
+156	group	rows
+213	group	capabilities
+266	group	notifications
+272	test	tracker: baseline, one alert per id, kinds, settled
+399	test	one alert per gate, ids and fixed copy only, dismissed on settle
+458	test	in the foreground nothing is posted
+478	test	TeamLink: ids only, both shapes, strict parse
+514	test	SessionLinkIntent accepts a team link beside session links
+652	group	layout
+## test/team_glance_test.dart
+15	test	counts working and needs-you; needs-you first, at most three
+32	test	nothing open is idle
+## test/team_host_guide_sheet_test.dart
+144	test	the address hint names the port the guide starts the front on
+## test/team_last_known_test.dart
+31	test	keeps the person\'s tasks and the agents, not the host upkeep
+36	test	saves under oc.orchestration.<profile>. and reads back; the sweep 
+57	test	anything unreadable is no record
+## test/team_merge_test.dart
+411	group	presence
+477	group	the merge gate
+638	group	approve
+675	group	merge
+805	group	receipt states
+892	group	review changes
+915	group	nothing destructive exists on the phone
+917	test	no verb, kind, key or copy for force, reset or delete
+977	group	model
+979	test	MergeReadiness decodes the front document and stays lenient
+1032	test	merge mutation requests round-trip and confirm on their events
+1048	group	layout
+## test/team_models_setup_test.dart
+354	test	a wrong folder and a rejected sign-in read in plain words

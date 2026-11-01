@@ -1,0 +1,518 @@
+## test/offline_queue_concurrency_test.dart
+43	group	unconfirmed sends under concurrency
+45	test	removing another server while the marker write is pending keeps 
+101	test	the sending guard holds until the accepted removal is persisted
+132	test	the sending guard holds until a post-dispatch failure is 
+161	test	an entry on the wire cannot be removed or resent
+296	group	queue limits
+313	test	entries past the TTL are dropped with a notice
+325	test	an unreadable timestamp is kept rather than deleted
+338	test	the entry cap evicts the oldest first
+350	test	the byte quota evicts the oldest until it fits
+366	test	a single oversized entry is never evicted into nothing
+381	test	queuing past the entry cap evicts and reports it
+421	test	a stale queue is trimmed and rewritten on first read
+468	test	bulk clears drop everything and report the sizes
+## test/offline_queue_test.dart
+56	test	queued prompts persist and reload with attachments intact
+86	test	corrupt persisted queue fails closed until explicitly cleared
+111	test	wrongly typed persisted queue fails closed until explicitly cleared
+128	test	queue save snapshots caller attachments and mentions
+169	test	queue remove follows an in-flight stale save
+194	test	oversized drafts are rejected instead of queued
+216	test	failed queue writes preserve the existing queued prompts
+238	test	a queued send rechecks its location after transport preparation
+255	test	a draft discarded while transport wakes is never sent
+269	test	policy gates queue dispatch and logs only confirmed delivery
+305	test	policy disabled during queue transport wait sends nothing
+323	test	explicit resend works with policy off and is not an automatic act
+345	test	unconfirmed queue delivery has no automatic act
+354	test	flush sends queued prompts oldest first
+387	test	failures after dispatch park the entry for review — a declared 
+430	test	a flush cycle reports how many drafts it sent
+448	test	drafts for other profiles stay queued and are counted
+628	test	active online markers cannot be discarded, resent, or cleared
+656	test	profile deletion fences online sends and late cleanup cannot restore them
+694	test	accepted online send with failed cleanup cannot be resent
+## test/offline_queue_unconfirmed_test.dart
+36	group	unconfirmed sends
+38	test	the dispatch marker survives snapshots, errors, and disk
+72	test	the marker reaches disk before the prompt leaves, and the 
+100	test	storage refusing the dispatch marker keeps the prompt unsent
+135	test	an accepted send whose removal is refused stays marked, stops the 
+213	test	a process death between acceptance and the queue commit leaves an 
+263	test	transport uncertainty after dispatch keeps the marker and is 
+306	test	a status-bearing uncertain failure lets the batch continue
+326	test	a failure before dispatch leaves the entry unmarked and 
+364	test	a resend whose marker clear is refused sends nothing
+## test/open_folder_pending_failures_test.dart
+84	test	worktree copy does not name OpenCode on every server
+## test/opencode_history_copy_test.dart
+21	group	the switch carries OpenCode 1 chats into OpenCode 2
+22	test	the in-app OpenCode 2 start copies before the first start
+40	test	the Termux runner copies inside Ubuntu before starting
+60	test	copy failures cannot be swallowed by either launcher
+73	test	Termux refuses conflicting history before stopping the old server
+100	test	the guard never overwrites and copies all three files
+116	group	the snippet itself, run in a scratch home
+141	test	copies db, wal and shm; OpenCode 1 stays whole
+160	test	a database alone is enough (no wal or shm yet)
+167	test	never overwrites an OpenCode 2 database that exists
+177	test	explicit move refuses two histories without changing either
+202	test	completed copy can resume even after OC2 converted its target
+211	test	changed original cannot reuse a prior copy receipt
+222	test	interrupted verified sidecar placement safely resumes
+232	test	explicit move permits a fresh target without modifying source
+239	test	explicit move refuses a symlinked source database
+248	test	ordinary OC2 start stays available with both histories
+256	test	copy failure stops startup and preserves the source
+270	test	failed WAL placement never publishes the database or starts
+286	test	orphaned target WAL refuses a fresh copy
+298	test	no OpenCode 1 database is a quiet no-op
+305	group	migration status
+307	test	maps the four answers
+332	test	accepts the data envelope and rejects unknown shapes
+344	test	the page line is plain words; the server text stays out of it
+386	test	the gateway reads GET /experimental/migration/v1
+## test/opencode_native_install_test.dart
+186	group	the pinned native install
+188	test	the production script picks the pinned archive for each CPU, 
+239	test	the in-app components use it; Termux keeps its shared text
+268	test	npm installs that remain allow exactly their own package\'s 
+281	test	ARM64 gets the arm64 archive: installed, proven, linked; the old 
+330	test	x86_64 gets the x64 archive; OpenCode 2 unpacks the npm 
+356	test	a checksum mismatch stops before anything is unpacked
+383	test	post-activation failure restores the previous native program and link
+420	test	an archive without the program, a program that does not run and 
+471	test	real pinned OpenCode on this PC (smoke)
+## test/pairing_payload_test.dart
+62	group	parsePairingPayload — the real payload
+63	test	parses the exact shape opencode2 pair emits
+72	test	keeps several addresses in the order the server reported them
+82	test	trims and de-duplicates addresses
+99	test	surrounding whitespace from a clipboard round-trip is tolerated
+105	test	a payload without username still means opencode
+112	test	a blank username falls back rather than authenticating as ""
+117	test	a non-default username is carried through, not assumed away
+123	group	parsePairingPayload — every failure is honest, none crash
+132	test	empty and whitespace-only input
+137	test	malformed JSON
+144	test	JSON that is not an object
+152	test	missing or wrongly-typed urls
+175	test	an empty urls array — a shape the server really can emit
+185	test	a urls array of nothing but blanks reads as empty
+191	test	too many addresses
+199	test	missing or wrongly-typed password
+218	test	wrongly-typed username
+226	test	enormous input is refused without being parsed
+237	test	a single enormous address inside an otherwise valid payload
+245	test	deeply nested JSON does not blow the stack
+251	test	no failure message ever echoes the input back
+269	group	PairingPayload holds the credential carefully
+271	test	toString redacts the password
+281	test	consume drops the reference and toString says so
+294	test	toString strips credentials and query secrets from URLs
+312	test	toString does not echo an untrusted non-default username
+323	test	urls cannot be mutated by a caller
+329	group	looksLikePairingPayload
+331	test	recognises a real payload
+335	test	recognises a malformed payload so we can explain it
+340	test	ignores what people actually type into these fields
+349	test	ignores anything over the size cap
+357	group	selectPairingUrl — which address this device should dial
+360	test	a phone prefers a routable address over the server loopback
+386	test	a desktop prefers loopback — the server is this machine
+403	test	the platform seam picks the default preference
+423	test	falls through to the next address when the first is refused
+451	test	a cleartext LAN address is refused before any request is made
+476	test	a malformed address in the payload is reported, not dialed
+496	test	when nothing answers, the reason is given per address
+520	test	failure detail strips URL secrets and arbitrary probe text
+559	test	failure detail keeps a safe bracketed IPv6 origin readable
+575	test	a thrown probe is isolated and the next address is tried
+608	test	an address that answers 401 is still the right host
+629	test	a working address beats one that merely answers
+645	test	the payload credentials reach the probe unchanged
+664	test	a bare host from the payload is normalized before use
+676	test	every address rejected up front still yields per-address reasons
+700	group	orderPairingCandidates
+702	test	splits loopback from routable and honours the preference
+722	test	is stable within each group
+727	test	an unparseable address is treated as routable, not dropped
+## test/pairing_scanner_test.dart
+75	group	permission denial
+164	group	hardware
+195	group	the scan affordance is gated by platform
+235	group	the camera seam refuses to invent answers
+284	group	a scanned payload takes the same path as a pasted one
+286	test	a QR carrying a pairing code parses identically
+294	test	a QR that is not a pairing code is rejected with a reason
+## test/paseo_acp_pilot_test.dart
+288	test	discovery gates are additive and ready agents are selectable
+302	test	ready agents can start new chats without inventing restoration proof
+342	test	newly visible ACP rows use catalog names rather than host labels
+359	test	undeclared capability fields cannot fabricate runtime resume proof
+390	test	known host auth failure has safe sign-in state without exposing raw error
+411	test	disabled and loading providers cannot enter the picker
+432	test	explicit refresh rechecks host snapshot and invalidates native picker cache
+453	test	a catalog response for a retired project never fills the next project cache
+477	test	permission choices expose only offered one-call actions
+492	test	allow once echoes its exact offered ID and writes no standing approval
+516	test	default denial selects the offered reject-once ID
+525	test	without reject once denial interrupts instead of falling back to always
+538	test	idle cancel acknowledgement cannot hide an unanswered permission
+556	test	old cancel acknowledgement cannot retire a new project card
+580	test	existing Copilot route remains in the normal picker
+585	test	custom override cannot reuse an existing picker identity
+596	test	contradictory action behavior cannot grant an ACP permission
+622	test	an ACP request cannot claim a native provider to bypass action mapping
+659	test	ACP card keeps structured task preview without raw host copy
+688	test	unoffered or standing action IDs can never grant permission
+711	test	an unknown ACP option kind cannot become an allow action
+722	test	disconnected permissions cannot be replied through a replacement connection
+740	test	restart state is scoped domain data and never promises restoration
+759	test	missing native handle has honest restart wording
+767	test	reopened ACP chat requires warning before starting a new chat
+780	test	missing ACP persistence cannot silently start a replacement conversation
+794	test	missing native handle also requires explicit new-chat action
+820	test	new chat after resume warning requires explicit acknowledgement and a different ID
+873	test	direct admission still refuses disabled, missing, signed-out or loading provider: ${unavailable[
+899	test	disconnect retires live ACP admission and requires a visible new-chat action
+932	test	future custom host agent is selectable and callable with no resume proof
+949	test	raw agent errors and diagnostic text never reach events or history
+997	test	encrypted public endpoints are rejected while private endpoints remain usable
+## test/paseo_agent_features_test.dart
+74	test	the switches the agent lists are read from the agent
+83	test	turning one on asks the server and shows its answer
+92	test	a change the server did not apply is not shown as applied
+98	test	a refusal throws and leaves the agent as it was
+110	test	a value of the wrong kind is never sent
+122	test	a choice switch keeps only options it names
+152	group	before the conversation starts
+154	test	the daemon lists what the chosen agent would offer
+178	test	a choice made first is sent when the conversation starts
+221	test	a running agent\'s long model id is shown as the list\'s own id
+## test/paseo_agent_handoff_test.dart
+157	test	handoff first prompt preserves live and durable navigation identities
+194	test	the continued conversation opens on another gateway of the same daemon
+261	test	handoff dispatch fence can refuse creation after provider preflight
+291	test	writes and verifies ignore before record in exclusively created folder
+311	test	file mutation holds the host lease and denied host cannot write
+326	test	existing transfer folder is never overwritten or reused
+336	test	existing shared ignore file remains untouched
+343	test	parent symlink is refused before record or ignore creation
+351	test	missing negotiated feature and disconnect disable writes
+361	test	invalid scope, path identifiers and byte limits do not dispatch
+385	test	ignore conflict or readback mismatch never writes conversation content
+## test/paseo_always_allow_offer_test.dart
+159	test	OpenCode requests keep Always allow when the field is absent
+## test/paseo_archive_copies_test.dart
+102	test	an idle older copy is archived, the newer one is not
+118	test	a busy older copy is left alone
+129	test	the title survives the archive and an app restart
+149	test	a failed archive does not break the list
+## test/paseo_background_decode_test.dart
+120	group	long timeline mapping
+121	test	maps to the same messages and tool calls as inline
+143	test	a payload that does not map fails as it does inline
+166	group	long frames
+181	test	answer with the same payload and keep arrival order
+210	test	malformed JSON drops the connection as a short frame does
+217	test	messages wait while a long reply is processed
+235	test	a long history opens with the same messages through the gateway
+## test/paseo_background_tasks_test.dart
+147	test	a finished turn with a command still running reads as Running, 
+174	test	the agent seen without its process ends what ran before
+196	test	a turn that ended on an API error reads as Failed, not Running, 
+235	test	a record read before the history counts nothing as running
+## test/paseo_browser_launch_test.dart
+165	test	ordinary first prompt retains the original create path
+177	test	browser first prompt creates cold, maps, reserves then sends once
+218	test	failed browser reserve sends nothing until explicitly turned off
+239	test	reserve precedes direct modes models and scoped command discovery
+290	test	abort and delete revoke before daemon mutation
+309	test	reopening retires the old generation, keeps the agent id (loaded in 
+331	test	explicit new chat replacement revokes old authority
+351	test	late reservation after session deletion is revoked and never sends
+371	test	profile revoke fences in-flight reservation without blocking cleanup
+393	test	close retires authority before closing the transport
+404	test	cleanup quarantine preserves intent and refuses an ordinary fallback
+428	test	cancel or delete while cold creation is pending never resurrects a turn
+460	test	enabling browser while provider discovery waits prevents ordinary create
+494	test	shared request suppresses draft commands before local inventory loads
+518	test	trusted folder rebinding uses new source and retains old source intent
+## test/paseo_chat_feed_source_test.dart
+69	test	scoped feed preserves provider identity without a selected model
+92	test	agent filtering and clearing retain the original filter contract
+112	test	bounded pagination reports partial rows without inventing global inventory
+127	test	repeated cursors stop the bounded read
+135	test	a failed refresh retains rows and exposes only partial truth
+147	test	coalesced refresh and disposal fence a late response
+165	test	changing gateway scope hides held rows and prevents retargeting
+179	test	timeout keeps bounded partial state and rejects late completion
+202	test	unknown agents and other projects are refused before a draft is made
+244	test	pending permission outranks a running row without exposing details
+269	test	selected runtime survives an empty initial draft until first prompt
+319	test	phone Claude always asks for the asking mode: listed $modes
+363	test	remember callback is optional and scope-fenced
+## test/paseo_compaction_test.dart
+6	test	a compaction is a notice in the transcript, not a reply
+18	test	an expired sign-in is a sign-in error, its text kept for Details
+43	test	an agent asking to sign in is a sign-in error
+55	test	a sign-in error keeps its kind on the live path
+70	test	the helper's own error report is an error row, not reply text
+87	test	a busy refresh elsewhere is not a sign-in failure
+## test/paseo_correlated_prompt_test.dart
+60	test	correlated prompt forwards exact caller ID after final fence
+82	test	caller refusal prevents dispatch and releases awaiting turn
+107	test	correlated draft is rejected before any server mutation
+121	test	photo answer accepts the daemon ID of a locally created chat
+167	test	daemon ID idle check preserves the ${running ? 
+197	test	transport fence runs after async connection and propagates refusal
+## test/paseo_files_test.dart
+42	test	Paseo turns Files on
+46	test	listing a folder asks the daemon for it and puts folders first
+78	test	the project root and absolute paths become relative ones
+100	test	reading a text file returns its text, with a size limit sent
+132	test	a picture comes back as base64 and a binary has no text
+169	test	a picture the agent saved outside the project is read from the root
+216	test	a refused read says it plainly, never the daemon text
+240	test	finding by name lists files only
+261	test	a folder change while a listing runs drops the answer
+287	group	Changes
+324	test	Paseo turns Changes on
+328	test	the working tree diff becomes a unified patch per file
+343	test	the branch view compares with the base branch
+354	test	file marks come from the same diff
+365	test	a binary file says it differs, without hunks
+381	test	an agent shows what changed in the folder it runs in
+398	test	a worktree is read in its own folder
+408	test	a diff the daemon refuses is an error, not an empty list
+423	test	branch and checkout health come from the checkout status
+445	test	a folder that is not a repository reads as no git
+464	group	Worktrees
+466	test	Paseo turns New worktree on and keeps Reset off
+470	test	the list reads the project\'s worktrees
+511	test	creating one sends the name and comes back ready
+528	test	a nameless worktree sends no slug
+543	test	a refused creation is a plain failure
+554	test	removing one archives the worktree and its folder
+569	test	a removal the daemon did not do is a failure
+584	group	Terminal
+592	test	Paseo turns the Terminal page on, but not shell commands in chat
+600	test	the list shows this folder\'s terminals by title or name
+614	test	a new terminal opens in the folder under the given name
+626	test	renaming and closing send the terminal id
+639	test	closing a terminal that already ended is not a failure
+649	test	closing a terminal that is still there but would not close fails
+670	test	opening one subscribes, replays the screen, then streams output
+694	test	a character split across two frames arrives whole
+711	test	typing and resizing go to the terminal
+734	test	a shell that exits ends the stream
+746	test	a terminal the daemon cannot open is a plain failure
+758	group	failure words
+760	test	a daemon that did not answer is about the computer, not a clash
+772	test	a reply the app cannot read says it answered, and which reply
+785	test	a Git failure in the project says the history cannot be read
+806	test	a wrapped start whose cause is Git keeps the Git failure
+830	test	an unrelated daemon reason keeps the computer words
+838	test	a real clash still says it changed meanwhile
+845	test	the daemon\'s own sentence stays under Details
+851	test	the daemon\'s reason for a refusal is kept under Details only
+## test/paseo_first_message_failure_test.dart
+84	test	a host that refuses new work names its reason under Details
+117	test	a daemon that refuses the agent names its sentence under Details
+## test/paseo_gateway_test.dart
+240	group	endpoint policy
+242	test	cleartext is limited to this device and Tailscale
+268	test	profile validators agree and an empty password is allowed
+281	test	a paseo profile round-trips without its password
+300	test	a rejected password is an authentication failure
+324	test	hello claims only what the client implements
+338	test	the agent\'s own commands are listed without its plumbing
+354	test	an update keeps the conversation\'s model and mode
+371	test	sessions are this folder\'s unarchived agents
+379	test	ready runtimes become providers; modes become agents
+393	test	a daemon still listing its models is waited for, not believed
+427	group	a new conversation
+452	test	stays local until its first prompt names the runtime
+470	test	keeps its app id while the daemon uses its own
+510	test	replays events that raced ahead of the create answer
+547	test	a spawn-time idle snapshot does not end the run
+577	group	streaming
+583	test	a finished turn finishes its replies
+615	test	assistant text is announced once, then streamed as deltas
+642	test	a replayed sequence number is ignored
+654	test	reasoning deltas share one message until another item
+696	test	a tool call is one message updated by snapshots
+730	test	a failed turn surfaces safe fixed copy
+752	test	a failed turn whose reply already said why adds no second error
+796	test	events for another folder\'s agent are dropped
+806	group	permissions
+817	test	a write request becomes an edit card with its file
+831	test	once allows; always also applies the provider\'s rule
+855	test	reject denies with the reason; cancel also interrupts
+877	test	a call rejected with a typed reason reads as declined
+906	test	an answered request does not return from a stale snapshot
+931	test	a request answered elsewhere is retired by the next snapshot
+946	test	history maps the merged timeline and primes the live stream
+1050	test	delete archives, and an archive elsewhere removes the session
+1064	test	archiveSession sends the archive request (menu: Archive)
+1075	test	a refused request is a fixed failure, never the daemon\'s text
+1096	test	a dropped socket reconnects and re-reads the agent list
+1137	group	sub-agents
+1169	test	a sub-agent is its conversation\'s child, and its card opens it
+1196	test	its steps stream into its own conversation
+1224	test	its history is read from the helper; it takes no replies
+1267	test	an old conversation\'s cards link to the sub-agents the helper 
+1308	group	probe
+1310	test	bad input never opens a socket
+1325	test	a verified daemon names its ready runtimes
+1342	test	permission mapping covers shell and unknown tools
+## test/paseo_genui_recovery_snapshot_test.dart
+49	test	card recovery snapshot reads cached prompt without network IO
+65	test	never prompted card recovery falls back to creation stamp
+79	test	card recovery sees a changed prompt but ignores updatedAt
+92	test	running initializing and active turns are not idle coverage
+104	test	closed and failed agents without a turn can be covered
+112	test	a live turn overrides an idle cached agent snapshot
+128	test	daemon and draft aliases share prompt and pending turn metadata
+## test/paseo_hello_rejection_test.dart
+28	group	hello.rejected
+29	test	a missing or wrong password reads as an authentication failure
+43	test	an incompatible protocol is named plainly
+50	test	an unknown reason is a plain disconnect
+55	test	the close code alone still maps when no frame arrived
+76	group	handshake
+78	test	advertises hello_rejection and the in-protocol password
+93	test	no password means no auth field
+104	test	frames this client does not know are ignored, not errors
+127	group	tested versions
+129	test	the old and the new daemon are both accepted
+136	test	Claude Code: the previous and the current pin are accepted
+## test/paseo_host_update_test.dart
+31	test	progress phases arrive in order and do not end the request
+69	test	the same version before and after is "already up to date"
+82	test	a failed update is a result with the reason, not a throw
+98	test	the connection returns by itself after the helper restarts
+## test/paseo_idle_busy_test.dart
+47	test	complete all-helper idle inventory establishes known idle
+60	test	live work outside the selected directory blocks helper idle
+85	test	a partial inventory cannot authorize idle
+105	test	initializing and permissions elsewhere keep the helper busy
+127	test	subagent work elsewhere survives an idle parent snapshot
+152	test	malformed inventory is unknown while known work takes precedence
+184	test	disconnect and closure revoke known idle without reading a clock
+197	test	cold idle parent cannot conceal a running subagent
+218	test	a saved agent the helper has not loaded is never loaded to ask 
+236	test	a saved agent stored as running after a reboot does not keep the 
+252	test	unsupported subagent inventory cannot prove idle
+259	test	a new idle agent needs cold child coverage before known idle
+272	test	empty complete helper inventory proves idle
+279	test	new parent during child inventory cannot restore known idle
+307	test	running push during fetch outranks stale idle inventory
+324	test	closed parent status does not prove independent children idle
+353	test	malformed completion ordering cannot erase an active turn
+371	test	stale archived snapshot cannot erase active turn or child
+415	test	unseen completed parent needs child inventory before idle
+431	test	unseen permission parent needs child inventory after resolution
+447	test	unseen subagent parent needs inventory after child completion
+## test/paseo_idle_wake_test.dart
+76	group	waking
+78	test	a listed idle agent may not be loaded by a background read
+87	test	opening the chat, a running turn or a send wakes it
+93	test	a running agent and a watched turn count as awake
+104	group	list time
+106	test	a rise with no prompt and no turn keeps the earlier time
+112	test	a new prompt moves the time
+119	test	a long turn that ends hours later still counts as recent
+143	test	a chat the daemon only loaded keeps its time and is not run
+156	test	a turn after a load still moves the time
+167	test	a first sight keeps the time the list showed last run
+174	test	a prompt sent after the saved time moves it
+182	test	a first sight is trusted and an earlier time never rewinds
+## test/paseo_images_test.dart
+9	test	pictures go to the agent as base64 with their type
+21	test	other files are refused in words
+40	test	agents on this phone take pictures, not other files
+49	test	the type sent is the one the bytes are, not the file name
+62	test	a picture type Claude does not take is refused in words
+## test/paseo_midturn_send_test.dart
+494	test	the late interrupt report keeps the step it belongs to
+505	test	read back from the history, the stopped step stays where it ran, 
+## test/paseo_model_catalog_test.dart
+79	test	Paseo thinking options survive provider catalog mapping
+90	test	Paseo snapshot restores the current thinking choice
+100	test	existing session applies thinking after model and restores it
+127	test	default thinking resets an existing choice with null
+139	test	a provider-bound draft rejects another provider model
+152	test	draft thinking survives model selection
+163	test	controller catalog isolates each provider without changing the full catalog
+204	test	a saved draft thinking level reaches the create request
+229	test	follow-up thinking reaches the runtime before the message
+249	test	thinking rejection does not send the follow-up prompt
+261	test	a location change after model update prevents thinking on the new scope
+## test/paseo_native_permissions_test.dart
+60	test	same-ID command and suggested rule replace the pending permission
+85	test	native permission snapshots detach data and preserve equivalent revisions
+118	test	hidden suggested rule changes invalidate a captured approval
+145	test	changed hidden input invalidates an otherwise identical display
+171	test	malformed replacement retires the prior actionable permission
+194	test	resolve and disconnect retire revisions without resending
+227	test	location change and session deletion notify and retire permissions
+253	test	feed permission attention updates without a refresh or timeline subscription
+## test/paseo_native_questions_test.dart
+68	test	Claude native questions become typed questions, never permissions
+92	test	Claude answers use exact question keys and string multi/custom values
+118	test	$provider uses header keys and preserves optional comment with empty answer
+147	test	plan displays full plan and approval never restores bypass mode
+173	test	keep planning denies without interrupt or persistent permission
+185	test	question reject sends deny; legacy permission replies cannot approve it
+199	test	wrong session, duplicate, invalid values and disconnected answers never send
+229	test	snapshots recover pending questions and retire resolved ones
+245	test	malformed question is not turned into a generic approval
+260	test	feed reports live questions as needs-you and clears after reply
+278	test	unknown or mismatched provider questions never become approvals
+287	test	Claude duplicate headers keep distinct full-question answer keys
+304	test	options-free native input permits custom text and optional empty string
+331	test	required answer cannot be empty and closed choices cannot be invented
+355	test	resolved and scope-changed question replies never send
+377	test	isOther alias permits custom text and malformed flags never approve
+399	test	changed question revision replaces the visible prompt, rejects old closed choice
+427	test	malformed same-session replacement invalidates the previous question
+445	test	a colliding request in another session cannot invalidate a question
+## test/paseo_payload_use_test.dart
+99	test	denied acquisition prevents draft create and does not release
+121	test	acquires before first create await and holds until RPC acknowledgement
+147	test	held acquisition blocks all draft RPC work until admitted
+162	test	reopening acquires before fetching and releases after the load
+176	test	correlated existing-session prompt also leases actual send
+191	test	denied existing send and resume dispatch no RPC and never release
+211	test	RPC failure releases without replacing its fixed error
+227	test	scope changed during admission releases and dispatches no RPC
+245	test	gateway closed during admission releases and dispatches no RPC
+262	test	default callbacks keep ordinary create resume and send paths working
+## test/paseo_phone_install_test.dart
+171	test	shipped lock freezes every HTTPS tarball with SRI
+199	test	CLI pins match the independently verified registry artifact
+224	test	modified lock is rejected before constructing executable script
+231	test	lock transport stays below Linux per-argument limit
+238	test	all install and check scripts parse as POSIX shell
+251	test	fake installer completes under oc and replaces the launcher
+270	test	changed $failure fails before execution or replacing good tree
+290	test	launch command failure names its step and hides private output
+311	test	version failure names its step before replacing the tree
+322	test	installed marker cannot hide modified CLI implementation
+335	test	installed marker cannot hide a changed outer launcher
+349	test	failed npm retains previous install and hides npm output
+411	test	root is refused before installing
+422	test	Node downloads exactly the pinned artifact for each ABI
+## test/paseo_provider_import_test.dart
+45	test	lists this project\'s Claude Code conversations, newest first
+76	test	importing sends the agent, its handle and folder, then reads it
+101	test	a refusal is a failure, not a conversation
+## test/paseo_provider_sign_in_test.dart
+13	group	issue #95: an agent that is not signed in says so
+14	test	fx 0.0.12 asking for Vercel AI Gateway access reads as signed 
+26	test	the usual agent CLI phrasings read as signed out
+43	test	other failures are not mistaken for sign-in

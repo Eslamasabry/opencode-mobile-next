@@ -1,0 +1,533 @@
+## test/app_exit_recovery_test.dart
+133	group	exit classification
+135	test	the owner's FORCE STOP by the system is a force stop
+144	test	every Android reason lands on one kind
+161	test	a normal exit and an update say nothing
+173	test	a record without a time is no record
+179	group	oc/lifecycle bridge
+185	test	reads the exit and what was running
+198	test	a missing or failing channel answers safely
+223	group	recovery on start
+333	test	delegates to the shared healing owner without duplicate starts or acts
+360	test	after a force stop with the team running: one notice, and the 
+382	test	disabled restart policy keeps recovery idle and files no act
+396	test	revoking policy during status probe prevents restart
+412	test	failed recovery files no restart act
+419	test	an already running server is not a confirmed restart
+427	test	confirmed recovery files the exit episode only once
+444	test	a stop of an idle app is not a problem; a crash or a stop that 
+459	test	nothing was running: no notice and nothing started
+465	test	an update or a normal exit says nothing but still brings the 
+480	test	opened on the phone server, the shell starts it: the recovery 
+492	test	runs once per process
+504	group	keep-alive advice per maker
+506	test	Build.MANUFACTURER and BRAND map to a maker
+521	test	battery first everywhere; a lock where swiping force-stops
+545	test	each maker gets its own words
+576	group	the notice
+649	test	never says "starting again" when automatic restart is off
+677	test	F10: a force stop is not blamed on Android, and once the 
+837	group	the guidance screen
+983	group	the restart line once the server is back
+## test/app_iconography_mirroring_test.dart
+9	test	exactly the reading-direction glyphs mirror
+## test/app_lifecycle_test.dart
+214	test	opted-in background mode keeps the shared transport active
+## test/app_locale_test.dart
+45	test	saved language refreshes native notifications after acknowledged write
+75	test	Arabic override survives new controller and system removes override
+96	test	refused write and remove keep acknowledged locale and cache
+114	test	queued rapid choices wait for storage and newest choice wins
+129	test	unsupported stored value follows system; unsupported saves rejected
+142	test	profile deletion key sweep excludes global language choice
+## test/app_preferences_store_test.dart
+72	test	consent revocation immediately reaches device preference observers
+96	test	one preferences instance shares the owner and consent authority
+117	test	legacy values preserve defaults and fold separate celebrations
+146	test	writes serialize and listeners see only acknowledged values
+164	test	the live background held off by a style persists
+182	test	all device choices persist under existing keys
+210	test	refused write never publishes optimistic cache and next write works
+228	test	effects rollback restores earlier keys after a later refusal
+245	test	failed rollback reports failure and publishes reloaded partial truth
+265	test	failed reload cannot leak optimistic values into a later save
+288	test	Full removes legacy celebrations and preserves other effect choices
+308	test	the reply glow is one choice and each style keeps its depth and 
+## test/app_theme_test.dart
+7	test	dark theme keeps the app coherent, legible, and touch friendly
+30	test	light theme keeps the same deliberate contrast and touch targets
+58	test	supporting text remains readable on every default surface tier
+83	test	every role carries Geist; the one shadow is the elevation shadow
+101	test	no theme elevation lifts content (LOOK-20)
+115	test	the top bar title is the headline role (LOOK-17)
+127	test	a switch that cannot act looks unavailable, on or off (N1)
+142	group	corners come from the kit tokens (style audit 2026-10-21, R8)
+155	test	the built theme takes its own tokens: tooltips are popovers
+173	test	shaped under Corners › Sharp: tooltips, buttons, fields and chips 
+## test/appearance_effects_test.dart
+92	group	stored
+94	test	everything is on until the person chooses
+100	test	a choice survives a restart and is app-wide
+126	test	the background is the plain page colour until a look is chosen; 
+151	test	older installs map onto the one Motion choice
+197	test	choosing Full again clears the old celebrations switch
+209	test	an unknown stored motion reads as Full
+218	group	the Motion section
+299	group	the app obeys the stored choice
+342	group	Glowing border while replying
+343	test	is on by default: classic, one colour, normal speed
+353	test	migration: no stored choice reads on, a stored off stays off
+383	test	on, off and the style persist device-wide and restart
+## test/appearance_final_test.dart
+69	group	Saver
+71	test	is stored as the light-or-dark choice and survives a restart
+85	test	turns motion, the live background and the style off, never the 
+104	test	is a true black ground with every text role still reading
+175	group	Accent
+177	test	is stored app-wide, survives a restart, and Match theme clears 
+196	test	every theme has a partner that reads, carries its words and keeps 
+223	test	every swatch, in every theme, is guarded to AA and keeps away from 
+258	test	the theme is built with the chosen swatch; the main colour stays
+294	group	Surfaces
+351	group	header
+392	group	the page wears the choices
+## test/appearance_picker_test.dart
+105	test	refused display preference restores the cache (throws=$throws)
+## test/architecture_boundaries_test.dart
+608	group	G24 scanner
+609	test	strips comments but keeps strings
+620	test	resolves relative and package imports
+642	test	counts flavour gating
+654	test	counts Dart 3.10 flavour branches (dot shorthand, name, case)
+677	test	names the declaration that encloses each use
+739	test	ARCH-10 counts every form of the channel and methods
+765	group	G24 architecture boundaries
+857	test	ARCH-1: lib/ui never imports lib/api/ or lib/api2/
+862	test	ARCH-2: lib/ui never gates on ServerFlavor
+866	test	ARCH-2: allowlisted profile-editor uses only shrink
+870	test	ARCH-2: every allowlisted member exists and gives a reason
+909	test	ARCH-10: the oc/background wire names stay with their owners
+913	test	ARCH-10: notifications have one posting path
+## test/attention_feed_test.dart
+69	test	all servers share urgency order with stable ties and server routing
+107	test	pending requests join supplemental rows, check-ins never count
+144	test	dedupe uses server, location, kind and request identity
+183	test	failed and partial polls cannot claim current empty coverage
+207	test	old, disconnected and unrefreshed observations stay static
+248	test	new server poll does not freshen an old or future row
+271	test	saved server list owns membership and mismatched snapshots fail closed
+299	test	titles redact secrets without changing opaque deep-link targets
+## test/attention_tile_snapshot_test.dart
+31	test	writes the count, its owner and a timestamp — nothing else
+41	test	redraws the home widget after a write and after a clear
+52	test	rewrites only when the count or owner changes
+67	test	a negative count is stored as zero
+73	test	clear drops the cache so the tile shows no count
+83	group	clearForProfile
+90	test	drops the deleted profile\'s count
+101	test	keeps another profile\'s count
+112	test	reports nothing to clear when nothing is cached
+120	test	runs off Android too: the cached value is the artifact
+133	test	non-Android platforms write nothing
+## test/audit2_builtin_owner_deletion_test.dart
+81	test	${throws ? 
+108	test	unreadable cache after a failed claim blocks clears until reconciled
+144	test	refused owner clear aborts real deletion and can be retried
+215	test	real profile deletion drains a delayed manual-start owner claim
+## test/audit2_managed_recovery_deletion_test.dart
+56	test	deletion drains ${createOwner ? 
+101	test	deleting ${loadedAlias ? 
+141	test	aborted deletion keeps policy and reopens the retained recovery owner
+171	test	deletion drains an admitted ${aliasWrite ? 
+## test/audit2_mobile_consent_deletion_test.dart
+27	test	controller reopens mobile consent after a refused removal
+59	test	only a completed abort reopens a retained profile with a fresh owner
+89	test	a new consent facade cannot resurrect a removed profile key
+112	test	deletion closes new facade admission before draining a probe
+148	test	absent profiles cannot load or write through an old direct owner
+## test/audit2_product_error_mapping_test.dart
+70	test	OpenCode 2 operations keep server prose only in redacted Details
+## test/automatic_activity_test.dart
+80	test	profiles and locations are isolated and profile deletion finds key
+102	test	duplicate occurrence preserves original report but new occurrence appears
+116	test	history survives reload ordered by occurrence time and is immutable
+137	test	persisted reports redact copy and never store raw location or event identity
+162	test	acknowledging a captured snapshot leaves later arrivals unread
+182	test	refused and thrown writes preserve published and restored state then retry
+207	test	malformed persisted histories are safe empty and visibly marked corrupt
+220	test	history retains the newest 200 occurrences even with late older arrivals
+249	test	concurrent Undo invokes its callback once and survives restart as unavailable
+281	test	Undo false and exceptions are distinguished and never retried or leaked
+315	test	Undo requires durable attempt marker before invoking callback
+337	test	an unpersisted Undo outcome stays uncertain and cannot repeat
+367	test	queued acknowledgement captures IDs before the caller changes them
+393	test	invalid observations are refused without saving empty history
+410	test	restart retains reports but does not revive process-local Undo callbacks
+431	test	deleted profiles refuse records and Undo without invoking callbacks
+450	test	reversible deletion preparation preserves shared owner history and Undo
+500	test	deletion preparation drains admitted records and retains their Undo
+537	test	deletion preparation persists confirmed in-flight Undo before cancellation
+571	test	deletion preparation drains Undo admitted behind a pending record
+603	test	deletion waits for pending write and permanently prevents resurrection
+623	test	deletion drains an in-flight Undo before erasing its durable history
+653	test	failed deletion reports failure and retry erases the retained history
+669	test	dispose stops writes and notifications without deleting history
+686	test	profile IDs must be opaque and cannot persist registered credentials in keys
+## test/automation_policy_test.dart
+49	test	fresh profile defaults follow consent boundaries without writing
+74	test	every choice can be disabled and survives restart per server
+117	test	concurrent edits compose and notify only after durable success
+145	test	reversible deletion pause drains admitted edits and resumes the same owner
+183	test	refused and throwing writes preserve truth and permit retry
+209	test	malformed, future and partial storage never grant consent
+230	test	quiesce before profile sweep prevents late resurrection
+261	test	redaction boundary rejects protected payloads and secret IDs
+## test/automation_settings_test.dart
+225	test	deleting a server closes its policy and sweeps the record
+## test/background_action_test.dart
+147	test	notification Allow and in-app Deny share the in-flight request
+174	test	notification Allow once resolves the exact pending permission
+202	test	notification Deny rejects without a durable grant option
+221	test	notification quick reply answers a single custom question
+253	test	choice-only questions never advertise quick reply
+279	test	a failed reply reports unhandled and keeps the request
+302	test	an empty quick reply is refused before any network call
+321	test	a stale request ID never resolves a different pending request
+## test/background_coding_alert_test.dart
+59	test	background permission and question requests share one session alert
+147	test	a request already visible is alerted when the app backgrounds
+179	test	assistant completion survives message-done ordering and deduplicates
+246	test	background session errors replace completion and child alerts stay quiet
+303	test	foreground resume dismisses outstanding coding alerts
+## test/background_live_test.dart
+31	test	background live mode persists only after Android enables it
+62	test	denied notification permission leaves background mode disabled
+86	test	restores an enabled preference through the native service
+127	test	unsupported $caps ignores saved $saved without changing it
+187	test	unsupported $operation clears a previously active Android state
+264	test	late native enable ${failure ? 
+315	test	an unavailable Android channel still rejects enable and reports it
+341	test	malformed Android status fields do not grant background capabilities
+369	test	coding alerts use the exact privacy-safe native contract
+416	test	disabled live mode never posts a coding alert
+440	test	a test notification ignores the live-mode gate but not the platform 
+471	test	openNotificationSettings calls the platform once and swallows a 
+488	test	consumes a typed notification destination once Android provides it
+515	test	a widget-tap destination keeps its profile discriminator
+526	test	a widget Reply opens the chat ready to type; Open does not
+543	test	an Android foreground-service timeout turns live mode off
+590	test	turning live mode back on clears the timeout notice
+611	test	the timeout method name matches the native contract
+## test/background_pause_native_test.dart
+41	test	native background receipt: $scenario
+## test/background_pause_notice_test.dart
+103	group	the pause notice in the app status line
+289	test	once the phone server is back, the pause goes before the app-exit 
+315	group	BackgroundPauseNotice
+323	test	a dismissed pause stays hidden after a restart; a new pause shows 
+357	test	a failed resume is remembered only for that pause
+## test/background_pause_test.dart
+58	test	cold restore keeps $reason paused despite an old enabled preference
+81	test	an unreadable receipt cannot silently restore the old opt-in
+101	test	Resume clears a pause only after native foreground activation
+127	test	an accepted but inactive start keeps the pause and returns resumeFailed
+153	test	Resume $code preserves the pause without native error text
+177	test	a second Resume cannot request another service while one is pending
+196	test	a late receipt read cannot overwrite a newer successful Resume
+217	test	a timeout during Resume wins over the older successful start reply
+246	test	notification Pause keeps its intentional semantics
+255	test	an older enable reply cannot roll back an explicit notification Pause
+280	test	a late Resume error respects a platform that became unsupported
+305	test	intentional opt-out clears a previously durable pause
+317	test	unsupported platforms do not start, read or change the Android opt-in
+340	test	native pause parsing rejects malformed and secret-bearing categories
+## test/background_shell_result_test.dart
+14	test	reads the command, the output and how it ended
+28	test	a non-zero exit failed; a signal is someone stopping it
+37	test	escaped quotes in the command are read back
+45	test	anything else is not a shell result
+## test/background_signin_foreground_test.dart
+115	test	sign-in lease acknowledges foreground without changing user preference
+140	test	concurrent reservations join one native enable and last release stops it
+161	test	borrows existing active service without enabling or disabling it
+180	test	unknown pause status never starts foreground work
+193	test	a durable pause lets the sign-in the person asked for start the service
+211	test	notification denial and inactive acknowledgement fail with typed reasons
+244	test	a refused sign-in admission names its fixed step, never platform text
+282	test	cancellation before pause receipt completes readiness promptly and sends no enable
+301	test	cancellation during native start ignores and cleans late successful acknowledgement
+323	test	explicit user enable during lease preserves service after release
+341	test	explicit user enable while acknowledgement is pending joins activation
+362	test	explicit disable loses lease immediately and prevents restart
+380	test	native timeout loses all leases without automatically restarting
+400	test	inactive native status invalidates an active lease
+412	test	dispose cancels admission and cleans late native acknowledgement
+433	test	active disposal waits for terminal cleanup to release service
+451	test	failed owned stop reports typed failure and stays eligible for retry
+473	test	user disable wins busy native enable and cleans its late receipt
+500	test	platform support lost while reading pause fails pending admission
+522	test	active disable receipt reports typed failure and retries owned stop
+## test/background_tasks_test.dart
+80	group	Paseo mapper
+81	test	a shell step that went to the background is marked with its id
+92	test	the step's description, when Paseo passes it, names the task
+111	test	an ordinary shell step carries no marker
+116	test	the notice keeps which call and task it ended
+130	group	Claude Code's API failure line
+138	test	is a failed turn, never prose
+154	test	words that only mention it stay a reply
+162	test	the book holds the turn failed until the next prompt
+197	group	runningBackgroundTasks
+200	test	a background command runs until its notice names it
+211	test	a notice that names only the task id ends it too
+218	test	another task's notice leaves it running
+228	test	several tasks, oldest first
+242	test	older than six hours it stops showing
+257	test	the agent process seen down after it started ends it
+280	test	a shell loop names what it waits on
+299	test	a step still running is the live turn, not background work
+307	group	backgroundTaskName
+309	test	the program or script, never its folder
+327	group	backgroundTaskWaitsOn
+329	test	the program a loop at the end of a command waits on
+365	test	a command that does not end in a loop waits on nothing
+375	group	BackgroundTaskBook
+377	test	a full read, a streamed notice and a process gap
+## test/background_work_test.dart
+39	test	only supported foreground work is eligible
+72	test	native v2 foreground progress is eligible without treating progress as detachment
+125	test	v2 204 acknowledges a request without claiming promotion
+## test/bb8_main_callback_native_test.dart
+39	test	native BB8 main callback: $scenario
+## test/browser_claude_launch_test.dart
+79	test	shared requested choice follows draft aliases and session lifecycle
+157	test	requested choice is bounded and bulk cleanup releases admission
+229	test	default port grants nothing and lifecycle cleanup succeeds
+237	test	scope validation follows byte limits and exact trusted mapping
+261	test	invalid scopes never reach the native port
+268	test	transport retirement revokes grants while preserving browser choice
+311	test	generation fence rejects revoked, replaced and closed grants
+340	test	concurrent gateways and later turns reuse the same generation
+360	test	replacement retires exact old generation before reserving new
+381	test	late ACK after deletion is revoked without disturbing replacement
+407	test	close fences pending ACKs and new calls
+420	test	mismatched ACK is retired and never used
+432	test	bulk source and profile revocation preserve unrelated scopes
+456	test	failed cleanup quarantines enrollment and close retries cleanup
+502	test	eight timed-out native requests retain slots until late settlement
+532	test	revoke timeout is bounded and keeps registry quarantined
+549	test	native failures are sanitized and reused native IDs quarantine
+## test/bug_report_test.dart
+10	test	labels every platform the seam can report
+## test/builtin/add_tools_run_test.dart
+66	test	Add tools $id starts even when the previous job ($before) is read 
+72	test	a start that breaks is a failed job with its text kept, not a throw 
+89	test	Continue after the start step broke starts it again and ends done, 
+130	test	a job ending tells the pages that list tools, once, without a 
+## test/builtin/setup_finisher_lifetime_test.dart
+93	test	legacy setup keeps profile identity and requires history proof ($admissionExit)
+## test/builtin_folders_test.dart
+68	test	lists folders with their git mark, sorted, without hidden, files 
+81	test	goes into a folder and back up to /
+96	test	a fresh install without the projects folder lists nothing
+111	test	never follows a link or climbs out with ..
+139	test	lists with the server stopped and never runs Ubuntu
+147	group	retained project binding
+163	test	same browser follows migration and preserved projects after removal
+202	test	root navigation includes projects without a mountpoint or runtime
+221	test	external projects override the legacy path, with no duplicate row
+252	test	external storage never follows links or traversal paths
+293	test	missing nested folders and removed storage stay missing
+320	test	without Ubuntu\'s files, only the projects folder is listed, through 
+339	test	Ubuntu\'s place on the phone matches the Android side
+## test/builtin_idle_policy_test.dart
+44	test	idle policy carries authored booleans and minute bounds
+62	test	resume and completion retain the exact owner generation and have no start fallback
+88	test	unsafe owners and nonpositive generations never reach the native channel
+120	test	supporting status requires every correctly typed admission field
+177	test	unknown or malformed native replies expose only the fixed recovery error
+210	test	tri-state work heartbeat carries no work text and validates the readable alias
+230	test	an old channel can refuse a heartbeat without authorizing or exposing output
+242	test	unsupported platforms never dispatch idle start or heartbeat methods
+## test/builtin_linux_test.dart
+33	group	bridge
+35	test	status reads asked at the same time share one call; a read after 
+54	test	status reads the contract map
+75	test	an unknown phase and missing fields read as idle
+86	test	restoration status exposes fixed state and timeout reason
+96	test	unknown restoration status stays unavailable without raw copy
+105	test	authored start passes only canonical restoration metadata
+125	test	restoration start failures expose safe copy and way forward
+153	test	a start failure keeps the phone\'s details
+171	test	run sends the script and timeout and reads the result
+187	test	every other method speaks the contract
+208	test	a platform error becomes the human message
+226	test	recovery map errors expose only safe copy and code
+260	test	recovery receipt list errors expose only safe copy and code
+297	test	a build without the channel says so
+313	group	server address
+315	test	is its own port, never the Termux-managed one
+326	group	scripts
+328	test	fresh script defaults install and start OC2 at its pin
+342	test	the install uses the shared setup text at the pinned version
+378	test	the server binds 127.0.0.1 only and reads its password file
+412	test	the password is quoted and never in the server script
+420	test	versions are read the way the Termux manager trims them
+428	test	every script parses as shell
+457	test	project folders: create makes a git project once, list and 
+503	test	create refuses a relative path
+510	test	legacy identity is detection only; it cannot install or start
+525	group	shared OpenCode setup script
+541	test	the Termux manager script changes only on purpose
+565	test	the Termux manager embeds the shared text in its heredoc
+## test/builtin_password_self_heal_test.dart
+72	test	a password the Keystore lost is replaced and the start goes on
+## test/builtin_performance_diagnostics_test.dart
+15	test	performance reads each service lifetime through the channel
+74	test	older APKs and absent channel results have no service records
+92	test	malformed service containers and entries are ignored
+116	test	malformed numeric fields never fabricate an exit or uptime
+158	test	an unknown reason stays unknown even with exit 137
+170	test	zero durations are observations rather than missing values
+183	test	unsupported platforms return an empty snapshot without a call
+## test/builtin_phone_engine_test.dart
+38	test	native status exposes each recognized boundary tier
+52	test	old native status keeps flags without inferring a tier
+63	test	native status rejects unknown or malformed boundary tiers safely
+83	test	native lifecycle keeps the server restart prerequisite visible
+103	test	only an engine setup stop requests native server rollback
+112	test	unconfined child prerequisite survives stopped daemon status
+140	test	credentials have a separate handoff and a redacted representation
+151	test	credential handoff refuses non-loopback and malformed auth
+172	test	missing native boundary evidence parses as unavailable
+183	test	native attestation generation and persistent confinement remain visible
+## test/builtin_project_lifecycle_guard_test.dart
+24	test	every proot command prepares and binds persistent projects
+44	test	installation preserves projects before replacing a rootfs
+66	test	native removal independently enforces preservation and confirmation
+93	test	setup and terminal admission use the runtime lock first
+110	test	reinstall recreates proc bindings instead of reusing deleted files
+121	test	runtime status and installation dispatch never wait on the UI thread
+134	test	notification stop waits for runtime storage off the UI thread
+## test/builtin_project_removal_test.dart
+29	group	project-preserving removal
+31	test	remove keeps projects unless explicitly requested otherwise
+40	test	legacy uninstall also keeps projects
+47	test	delete everything sends the exact typed confirmation
+70	test	invalid confirmation ${name ?? "(missing)"} never deletes
+85	test	an older APK never receives its destructive uninstall
+102	test	keep projects does not forward an unrelated typed value
+109	group	measured project storage
+111	test	each removal choice has its own measured freed-byte total
+127	test	retained projects remain visible with no runtime installed
+144	test	an empty installation measures zero without inventing data
+167	test	$field rejects ${invalid.runtimeType} invalid data
+184	test	a ${invalid.runtimeType} response cannot imply free space
+197	group	removal and measurement failure safety
+207	test	${operation.key} hides native error message and details
+227	test	${operation.key} fails when the native channel is absent
+## test/builtin_project_storage_native_test.dart
+68	test	native project storage: $scenario
+## test/builtin_recovery_bridge_test.dart
+23	test	missing native intent fails closed even when an old server ran
+34	test	native intent remains readable after process death
+45	test	automatic launch and confirmation carry the same admission token
+67	test	recovery errors never expose native exception details
+## test/builtin_server_recovery_native_test.dart
+360	test	spent legacy budget migrates once with marker before activation
+389	test	healthy foreground check rebinds the saved profile after a private QA owner switch
+421	test	failed native staging keeps legacy spent attempts across retry
+457	test	retrying staged migration never overwrites native spent attempts
+473	test	valid v2 marker with missing native budget admits no restart
+488	test	corrupt migration marker admits no native binding or restart
+501	test	malformed native snapshot fails closed
+509	test	direct and background reservations share three attempts across owners
+540	test	an open app with a healthy restored server starts the count again
+561	test	the reset happens once per visit
+586	test	a short visit after a restore is enough: confirm, then reset
+613	test	a refused presence leaves the count as it was
+628	test	only confirmed manual Start resets native attempts
+653	test	healthy manual Start resets budget with automatic restart disabled
+689	test	Stop background and scheduled native recovery never dispatch from Dart
+708	test	legacy pending confirmation survives migration and records after Stop
+742	test	native background pending attempt is confirmed without another dispatch
+764	test	historical confirmed receipt survives later crash and records once
+796	test	profile deletion drains the active check and native erase before sweep
+## test/builtin_server_recovery_test.dart
+157	test	confirmed crash recovery records one act and retains consumed budget
+172	test	idle and malformed supporting receipts cannot dispatch or change budget
+230	test	explicit stop and background never dispatch a restart
+241	test	shared restart and poll policy each prevent healing
+254	test	three failures exhaust across resume and owner recreation
+277	test	manual confirmed Start resets exhausted budget
+295	test	policy revoked during password write prevents native dispatch
+313	test	explicit stop during password write wins native generation race
+329	test	background during health confirmation cannot record success
+340	test	unhealthy live process is never overlapped with another attempt
+355	test	late healthy answer confirms same attempt without another restart
+383	test	bound phone owner rejects another profile at the same address
+400	test	manual owner persistence failure prevents native launch
+409	test	confirmed receipt logs after recreation even when the server stopped
+435	test	failed healing still exposes installed server and safe failure for cards
+447	test	malformed durable budget fails closed
+454	test	profile deletion during start drains before scoped preference sweep
+## test/builtin_server_test.dart
+78	group	recognising the in-app server
+80	test	needs the address and Ubuntu installed here
+94	group	startBuiltinServer
+96	test	writes the password, starts the profile runtime, waits
+115	test	legacy metadata never starts a server before safe history move
+131	test	cancelled confirmation never reports successful startup
+147	test	cancelled owner never starts the server
+158	test	a server that exits is reported as such
+168	test	unknown ownership requires app recovery and keeps details
+191	test	stable ownership code requires recovery without native details
+209	test	a refused start without details reads as one sentence
+224	group	BuiltinServerStarter
+233	test	starts a stopped server once, then not again
+251	test	a failed start is kept for the card and not retried
+261	test	leaves a running server alone
+268	test	does nothing when Ubuntu is not installed
+275	test	names the server it brings up while starting and for a short 
+298	group	BuiltinProjectFolders
+300	test	create reports whether the folder is new
+326	test	exists reads test -d, and a bridge failure is not "missing"
+## test/builtin_team_bring_in_test.dart
+133	group	the origin hook
+135	test	parses in dash and bash
+150	test	a merge fast-forwards a clean project, bookkeeping aside
+171	test	a project with changes of its own is left alone
+200	test	a project with commits of its own is never rewritten
+212	test	a push to another branch does nothing
+226	group	rigScript
+237	test	makes the origin with the hook, and puts it back when re-run
+272	test	leaves an origin of the project\'s own alone
+287	test	the status script reports the newest outcome per project
+313	test	the Plugins section says where the team\'s work is
+## test/builtin_team_hot_test.dart
+64	group	start times
+66	test	a new team gives an agent minutes to start, not 30 s
+75	test	a team tuned by the previous version gets them on its next 
+129	group	the agents' opencode
+174	test	launches OpenCode 2 without fetching models or rewriting packages
+200	test	a project\'s own .opencode with a package.json is not touched
+219	test	every team start brings an older wrapper up to date
+251	group	agent starts
+265	test	are read from the supervisor log, oldest first
+302	test	Go durations
+## test/builtin_team_removal_test.dart
+73	test	turn off survives a new team instance and keeps installed tools
+87	test	temporary stop still permits automatic recovery
+96	test	remove stops and invokes the existing setup remove script
+106	test	stop failure leaves files installed and recovery disabled
+116	test	failed persistence prevents stop and removal
+126	test	failed marker read never restarts a stopped team
+134	test	failed remove is reported and does not re-enable recovery
+144	test	an explicit start enables a previously turned-off team
+156	test	remove waits for preparation from another instance
+171	test	queued recovery after removal stays off
+182	test	native stop diagnostics redact fake credentials
+198	test	reading unknown enabled state reports an error
+212	test	failed enable does not start the service
+225	test	management scripts parse with the system shell
+237	test	thrown marker read error exposes no native details

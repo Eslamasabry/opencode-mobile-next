@@ -1,0 +1,533 @@
+## test/about_alpha_notice_test.dart
+207	test	the notice retains provenance and desktop limits without a channel claim
+218	test	the open source notices leave out the maintainer intro and 
+## test/acp_client_test.dart
+97	test	fragmented UTF8 handshake preserves unknown additions and safe capabilities
+125	test	rejects unsupported negotiated version and closes
+140	test	session requires initialization and absolute host cwd
+157	test	correlates concurrent replies arriving out of order
+177	test	prompt streams text, diffs, terminal refs and unknown updates
+233	test	permission selection validates offered option: $choice
+255	test	cancel denies pending permission and ignores late grant
+285	test	permission callback exceptions deny without exposing error
+302	test	unsupported fs terminal and future requests return method not found
+325	test	RPC exception excludes remote message and data
+347	test	EOF completes every pending request
+364	test	timeout closes and never replays a prompt
+382	test	oversized unterminated input rejects the pending request
+392	test	oversized outgoing prompt is not written
+411	test	malformed wire frame fails safely: ${bytes.length} bytes
+421	test	malformed matched result does not strand the pending waiter
+432	test	write failure is sanitized and terminates pending request
+442	test	dispose abandons pending call and closes update stream
+456	test	authentication uses only explicitly selected advertised method
+484	test	terminal and future authentication cannot be invoked by this client
+510	test	unsupported request flood closes instead of growing write queue
+## test/active_context_test.dart
+197	test	context GET uses session identity and authentication, retaining more than 5000 messages
+228	test	malformed and duplicate snapshots fail visibly without disabling context
+273	test	missing session and auth remain recoverable; missing route is capability failure
+310	test	explicit inspector retains instruction text and files without binary bodies or metadata
+334	test	tool content preserves all text results and distinguishes pruned and truncated output
+401	test	search preview centers a distant literal match without slicing emoji pairs
+## test/agent_account_controller_test.dart
+19	test	refresh never starts sign-in and reported zero is preserved
+37	test	independent unavailable usage leaves fresh account and limits
+65	test	unsupported runtime and API-key auth do not probe subscription metrics
+85	test	owned completion before start response never restores the code
+106	test	cancel while starting suppresses the late code until owned receipt settles
+129	test	failed cancellation stays uncertain and allows only explicit retry
+148	test	account change clears stale metrics before delayed read completes
+177	test	account change while waiting clears code and cancels only this session
+196	test	disconnect invalidates in-flight login and reads with no replay
+219	test	disposing during login never publishes a late code
+## test/agent_auth_probe_test.dart
+10	test	captured installed agents have final explicit account states
+29	test	malformed and contradictory account replies remain errors
+45	group	bounded private status scripts
+92	test	Claude explicit signed-out status overrides successful exit
+103	test	Claude status exposes only its dedicated account field
+113	test	CLI failures never become a signed-out account
+121	test	fx explicit source is independent of provider error text
+132	test	fx expired and future unknown credential sources are errors
+146	test	unsupported agents reach a typed final error without launching
+158	test	Codex login status on stderr decides the account state
+181	test	Kilo reads only whether its credential store has one
+200	test	Cline reads its chosen provider\'s key or sign-in
+220	test	missing installation is distinct from signed out
+224	test	a CLI that hangs reaches timedOut within ten seconds
+231	test	successful logout exit requires a signed-out probe
+242	test	logout runs the agent command and confirms credentials are gone
+## test/agent_card_view_test.dart
+103	group	choice
+196	group	form
+291	group	undo gives back what the person had
+394	group	held answer words
+424	group	confirm
+482	group	photo
+548	group	states
+677	group	list slot
+713	group	settings row
+806	test	names agree with their verb and read as a list, in both 
+859	group	layout
+## test/agent_catalog_test.dart
+40	test	runtime capabilities fail closed even when installation is pinned
+53	test	unknown recipe stays hidden with a reason and unknown sizes stay null
+75	test	artifact rejects unpinned, credential-bearing, or escaping inputs
+126	test	recipes and catalogs defend against input mutation
+144	test	a future agent is one data entry with no provider dispatch changes
+158	test	seed recipes are pinned for both architectures without runtime claims
+196	test	Kilo and Cline are pinned ACP agents with exact launch args
+246	test	catalog installs only supported OpenCode 2
+261	test	unproven resume and visible limits require plain explanations
+## test/agent_certification_test.dart
+44	test	bundled snapshot preserves the reviewed FQ1 JSON verbatim
+54	test	bundled Claude evidence qualifies arm64 and x64 with exact helper
+76	test	evidence carries across the tested Paseo and Claude Code versions
+96	test	bundled other agents remain unverified on arm64 and x64
+111	test	each exact pass cell grants only its corresponding capability
+131	test	omitted architecture qualifies protocol capabilities across CPUs
+147	test	present architecture scopes evidence to that CPU
+159	test	photos require their own passing images cell
+183	test	missing or mismatched pins and unknown architecture invalidate proof
+228	test	only exact pass with safe repository evidence grants a capability
+287	test	duplicate IDs invalidate all records
+303	test	malformed and unrecognized records never grant capabilities
+348	test	projection freezes input and retains unverified resume copy
+369	group	certified for chat (the agent picker\'s gate)
+390	test	the bundled matrix certifies Claude Code and nothing else yet
+408	test	needs the pinned version with install and smoke passed
+## test/agent_error_text_test.dart
+12	test	runtime errors are recognised by cause
+48	test	a recognised cause is said in plain words, with what happens next
+57	test	unknown failures keep technical text out of the headline
+72	test	exhausted credit takes precedence over an HTTP 429
+79	test	missing and rejected provider keys have a sign-in recovery
+93	test	terminal errors do not promise an automatic retry
+107	test	every cause has Arabic wording too
+## test/agent_features_sheet_test.dart
+385	test	a conversation opened again has its switches before they are read
+## test/agent_handoff_controller_test.dart
+262	test	edited prompt masks credentials while preserving the exact UUID path
+277	test	preparation never exposes raw server errors
+289	test	prepare exposes editable prompt and record without mutations
+305	test	send writes record then creates and sends edited prompt before linking canonical IDs
+345	test	default UUID record path survives prompt redaction and sends unchanged
+369	test	server to phone-agent links persist under durable parent with both origins
+408	test	same runtime model choice routes to native switch without file support
+438	test	matching folder names without filesystem evidence cannot hand off
+452	test	unavailable target model fails before history or remote mutations
+466	test	send revalidates model availability after review
+478	test	a changed source snapshot is rejected before a draft is offered
+493	test	new source activity during review requires a fresh handoff
+505	test	closing the sheet after review prevents all remote mutations
+520	test	a closed agent connection is named in the details
+535	test	${deletion ? 
+561	test	${duringCreation ? 
+594	test	failed record write never creates a target conversation
+607	test	invalid edited prompts remain reviewable and cause no mutations
+628	test	link retry saves metadata only after acknowledged delivery
+## test/agent_handoff_history_test.dart
+89	test	complete snapshots preserve order and apply the common message budget
+113	test	complete snapshots reject duplicate or foreign message identities
+132	test	prepends older pages, retaining newest copy of overlapping messages
+155	test	snapshots part lists before fetching older pages
+172	test	accepts complete empty history
+180	test	rejects empty session, unsupported reader and invalid budget
+211	test	never returns partial history when the page budget expires
+229	test	rejects missing/empty older cursor ${cursor == null ? 
+242	test	rejects cursor cycles
+260	test	rejects invalid message identity ${invalid.info.id}/${invalid.info.sessionID}
+273	test	rejects stale scope before reading
+284	test	rejects $change change while a page is in flight
+314	test	transport errors become content-free failures
+## test/agent_handoff_links_test.dart
+80	test	one durable record supplies both conversation directions after restart
+108	test	redacts display metadata and rejects secret-bearing identifiers
+125	test	same-profile handoff has one link and saves are idempotent
+139	test	runtime origins distinguish identical session IDs under one parent
+196	test	cross-origin links use the durable parent without a transient profile row
+233	test	concurrent saves keep each conversation link
+245	test	deleting target removes references from surviving source profiles
+265	test	profile-scoped cleanup removes inbound references too
+274	test	deleting source removes its canonical key
+283	test	refused persistence reports failure and hides optimistic cache
+302	test	refused cross-profile removal remains retryable and is reported
+321	test	deletion drains in-flight saves and rejects queued stale writes
+347	test	corrupt stored links fail closed instead of replacing history
+## test/agent_handoff_record_test.dart
+41	test	the record stays the same when the writers mask it again
+68	test	retains exact user text and assistant text in source order
+90	test	copies tool commands, paths and outcomes but no arbitrary fields
+140	test	records current task and file evidence without source or patch
+173	test	drops whole older turns and counts UTF-8 bytes, keeping newest full
+194	test	never silently truncates an oversized newest turn
+208	test	exact byte boundary fits and one byte less cannot lose newest turn
+226	test	masks every exported untrusted field, including user prompts
+275	test	redacts before compacting long tool output
+303	test	uses newest completed task snapshot with allowlisted redacted fields
+366	test	empty latest task snapshot clears older tasks
+388	test	retains observed write paths from omitted turns without claiming ownership of diffs
+428	test	bounds observed path metadata and masks credentials in paths
+470	test	compaction notice does not split the newest actual user turn
+## test/agent_helper_diagnostics_test.dart
+20	test	helper metadata survives restart and has cautious plain notice
+47	test	malformed and old metadata cannot invent a dated kill
+79	test	recent exits names only observed unexpected helper exits without profile data
+## test/agent_install_guard_test.dart
+7	test	normal and negative QA floor preserve every pinned estimate
+28	test	raised QA floor applies to six targets and excludes real Claude
+44	test	small QA floor never reduces catalog requirement and odd floor rounds up
+65	test	maximum QA floor saturates native admission rather than wrapping
+## test/agent_persona_test.dart
+13	test	every catalog agent id and the OpenCode id map to a persona
+21	test	the named agents and their aliases
+37	test	unknown ids are other, with a neutral mark
+44	test	agents with a bundled mark but no persona keep their mark
+50	test	every persona has a bundled mark and words in both languages
+## test/agent_removal_scripts_test.dart
+156	test	all six authored recipes are valid shell; Claude and OpenCode are excluded
+190	test	removes payload and partial staging, preserves accounts and shared tools
+215	test	absent payload is idempotent and leaves shared directories alone
+226	test	existing install lock is busy and never removed
+234	test	absent payload never clears a foreign install lock
+243	test	empty abandoned install lock is removed with partial staging
+265	test	absent empty abandoned lock returns its allocated bytes and not absent
+282	test	live authored bash installer preserves empty lock and target
+294	test	unsafe lock links and non-directories refuse before deleting target
+307	test	allocated bytes deduplicate payload hardlinks and exclude retained inode
+339	test	nonce receipt is private, numeric only, and reader deletes it
+362	test	existing nonce file prevents removal rather than overwriting a receipt
+372	test	reader rejects and cleans malformed bounded private receipts silently
+397	test	reader never follows receipt links or deletes their retained target
+412	test	reader requires root view and bounded signed integer projection
+430	test	unsafe nonce values are rejected before becoming authored shell
+445	test	prior pinned-version authored launcher is removed within the same target
+462	test	absent payload with a surviving target PID remains busy
+474	test	unrelated executable link refuses before any mutation
+486	test	regular executable refuses before any mutation
+494	test	staging symlink is unlinked without following its account target
+508	test	payload links are removed without following internal or external targets
+527	test	symlinked target root refuses before any mutation
+535	test	symlinked bin ancestor refuses before any mutation
+542	test	foreign staging launcher refuses all cleanup
+551	test	non-PID staging launcher refuses all cleanup
+558	test	exact target PID is busy without signalling or deleting anything
+575	test	host-rootfs executable identity also blocks removal
+585	test	other agent processes never block or get removed
+595	test	wrong UID or HOME refuses before any mutation
+601	test	unsafe catalog version and executable mapping cannot become shell input
+## test/agent_run_failure_test.dart
+40	group	sorting a refusal
+97	test	"$reason" is ${kind.name}
+101	test	the error code the reason names is kept
+117	group	a Paseo send
+198	test	to a Kilo agent the helper holds reaches the helper, and its 
+219	test	a model the helper refuses is "model unavailable"
+229	test	an agent whose sign-in the helper lists as missing says so before 
+239	test	a saved Kilo record the helper does not hold still asks for a new 
+256	test	a saved Kilo record opens in place: reading its timeline loads it 
+## test/agent_sign_in_foreground_test.dart
+48	test	a refused service keeps its code through the owner binding
+74	test	a running service that stops says what stopped it
+93	test	successive replacement cannot skip the oldest pending drain
+115	test	replacement waits for old terminal drain and foreground release
+146	test	old unbind cannot clear a replacement binding
+161	test	cancelling a reservation before the drain gate never starts a service
+189	test	failed cleanup blocks admission and remains retryable
+## test/agent_sign_in_output_test.dart
+14	group	readAgentSignInOutput
+15	test	fx: the Vercel device page and its code, through colours
+27	test	Codex device sign-in: the code on the line after "code"
+44	test	Claude: its page, and no code to copy
+58	test	a page a program broke at the edge is put back together
+75	test	rows the terminal wrapped are one line
+87	test	the next sentence is not read as the rest of a page
+94	test	takes the newest page
+104	test	never a plain http or this phone\'s own page
+120	test	drops sentence punctuation after a page and reads OSC links
+128	test	a code is only one the output calls a code
+134	test	merge keeps what scrolled away; a new page brings its code
+## test/agent_sign_in_test.dart
+82	test	browser code flow awaits host status and redacts ephemeral values
+114	test	status inspection creates no login and explicit start reuses its run
+131	test	codes are single use and reject keys, terminal escapes and malformed input
+154	test	authorization challenges accept only the pinned vendor authorization route
+178	test	API key instructions never dispatch a credential operation
+189	test	cancellation suppresses late challenges and drains the exact old run
+212	test	unconfirmed cancellation blocks replacement until successful drain
+233	test	rate limits retain only host supplied reset time
+247	group	private native auth channel
+261	test	only declared fields and same run become a challenge
+290	test	code uses the dedicated transient sink and cancel needs confirmed drain
+314	test	platform failures redact raw diagnostics and reset text is rejected
+## test/agent_tool_adapter_test.dart
+7	test	connector search identities are exact and separate from cards
+25	group	every adapter keeps the registry contract
+26	test	ids and Paseo providers are unique
+34	test	an agent with tools names them and stores them, run by the user 
+51	test	only an agent with tools can be qualified or pre-allow cards
+59	test	a plan or question tool only exists with native answers
+68	test	each naming scheme gives the name captured from its runtime
+75	test	OpenCode adapter names the supported runtime
+79	test	a Paseo provider finds its agent; anything else finds none
+91	test	tools are registered only for agents that support them; only 
+99	test	ids stay the former enum names (they name helper folders)
+## test/agents_ui_test.dart
+77	group	the agent chip
+176	group	the agent model chip
+236	test	a default is named plainly, never by a raw id
+258	group	the agent sheet
+576	group	the agent sheet as a shortcut to install
+728	group	the sign-in terminal
+926	group	Conversations
+1178	group	Settings › This phone › Agents
+## test/aiteam_component_test.dart
+27	group	opt-in and install only
+29	test	the default selection and screen A totals leave AI Team out
+40	test	AI Team is an optional install that needs OpenCode
+57	test	the engine runs AI Team after OpenCode and before the start
+69	test	Customize with AI Team switched on counts its download
+78	group	pinned downloads
+81	test	three programs per CPU, each with a checksum and a size
+95	test	the emulator gets x86_64, everything else arm64
+100	test	the install script carries every URL and checksum
+119	test	a local mirror replaces the host, never the checksum
+137	test	the check asks each program for its pinned version
+146	group	adding tools
+148	test	the job remembers what it adds, and the title names it
+158	test	a continued add job keeps its label
+171	test	progress read back from setup.json carries the label
+188	group	named services on the Linux channel
+215	test	start, stop and log speak the contract
+244	test	status lists the running services
+253	test	discovery leaves the in-app server alone, not Termux or a PC
+## test/analyzer_suppressions_test.dart
+412	test	G26: no new analyzer suppression comments (PROC-3)
+444	test	G26: no new analysis options suppression (PROC-3)
+## test/android_focus_highlight_contract_test.dart
+16	test	$file turns the platform focus highlight off
+## test/android_group_names_native_test.dart
+12	test	the guest names the Android groups once, idempotently
+## test/api2_client_test.dart
+64	test	walks session pages by passing cursors back verbatim
+116	test	walks message pages and parses the union
+156	test	prompt sends v2 wire shape and returns the inbox receipt
+230	test	session mutations hit the v2 endpoints with 204 responses
+290	test	location-scoped reads carry the deep-object location params
+320	test	permission and form replies post the documented bodies
+365	test	fs read returns raw bytes without a JSON envelope
+385	test	active sessions map to their status types
+427	test	active snapshot rejects malformed data $invalid
+444	test	surfaces typed errors from tagged envelopes
+## test/api2_dialect_test.dart
+20	test	requests that did not change pass through untouched
+39	test	2.1 added fields and routes, and moved none
+68	test	server facts, forms and the current project moved
+75	test	experimental routes keep their method and body
+95	test	actions that became a method on the parent resource
+124	test	worktrees carry the project in the request, not the path
+158	test	renamed request fields
+205	test	what the stable line removed fails clearly instead of 404ing
+215	test	responses are reshaped into what the beta call sites read
+249	test	plugin rows are read in both shapes
+## test/api2_events_test.dart
+21	test	replays a captured prompt round-trip into typed events
+131	test	unknown event types fall back to UnknownApi2Event without throwing
+160	test	parses the log.synced boundary marker (bare, no envelope)
+177	test	parses permission, form, status, mcp, and vcs events
+## test/api2_gateway_events_test.dart
+22	test	adapts the captured prompt round-trip into v1 envelopes
+176	test	session.status idle maps to the v1 session.idle event
+199	test	execution failure surfaces as session.error
+248	test	an interrupted run carries the server\'s reason to its idle event
+272	test	a failed step with a blank message still has words for Details
+303	test	a stored message whose error words are blank still has some
+329	test	permission.asked maps to the v2-shaped v1 envelope
+361	test	tool input deltas append through the v1 delta contract
+387	test	session renames and refresh hints map to their v1 names
+443	group	a tool whose result the stream lost
+486	test	is settled when its step ends, and the chat rereads
+500	test	a result for a call it never saw makes the chat reread
+516	test	a result for a call it saw does not reread
+533	test	is settled when the next step starts, even with its end lost
+544	test	is settled as failed when the run is interrupted
+554	test	a result that arrived leaves nothing to settle
+574	test	another conversation\'s tools are left alone
+## test/api2_gateway_mappers_test.dart
+19	group	capabilities
+21	test	capability truth per the port matrix
+55	group	sessions
+57	test	maps the captured session page onto the v1 Session shape
+71	test	the server\'s "default" variant reads as the app\'s no-variant
+104	group	messages → parts round-trip
+113	test	user message carries text and file attachment parts
+126	test	assistant "pong" capture maps reasoning/text/tool content
+152	test	single assistant fixture parses tokens and cost
+162	test	paginated fixture pages map without loss of order
+179	test	shell message maps to a v1 tool part
+200	test	failed shell maps to a tool error state
+215	test	shell metadata preserves the raw v2 status and shellID
+244	test	switch markers become tagged v2:switch parts
+281	test	synthetic/system/skill become tagged v2:notice parts
+318	test	unknown message variants degrade to a generic notice
+330	test	compaction statuses become tagged v2:compaction parts
+366	test	live-captured variant fixture maps every v2-only shape
+412	test	a live 2.1.1 page maps with native data and no compaction recent
+435	test	tool error state carries the structured message
+446	test	tool file results surface as v1 output files
+468	test	tool content interleaving survives as ordered segments
+500	test	streaming tool input maps to the v1 pending preview
+511	group	permissions
+513	test	maps the v2 request onto the v1 shape
+533	test	reply strings map onto the v2 wire enum
+547	group	providers & catalog
+549	test	a model and its modes are separate models, told apart by name
+603	test	builds the v1 ProvidersResponse from the captured catalogs
+638	test	maps catalog models with variant options
+656	test	maps agents from the captured agent list
+666	group	files & vcs
+668	test	maps fs entries with trailing-slash directories
+679	test	maps vcs diff and status rows
+701	group	errors & health
+703	test	maps the v2 error hierarchy to ApiException
+715	test	maps health
+## test/api2_global_pagination_test.dart
+9	test	global finder requests newest first and preserves cursor after filtering
+## test/api2_health_identity_test.dart
+36	test	unsupported health shape triggers connection redetection: $response
+## test/api2_integration_form_test.dart
+13	test	hidden OpenCode 2 form fields become preset answers, others prompts
+## test/api2_interaction_gateway_test.dart
+104	test	view receipt posts the observed idle timestamp in the active location
+127	test	ordinary v2 prompt command and shell preserve server selection
+181	test	staged revert blocks prompt and commands before implicit server commit
+217	test	v2 explicit selection writes replace the model ref and creation uses defaults
+262	group	FormGateway (v2)
+264	test	lists a session\'s pending forms from the captured payload
+293	test	reads form state and replies through the session-scoped routes
+334	test	surfaces 400 FormInvalidAnswerError as a tagged ApiException
+361	test	surfaces 409 FormAlreadySettledError with its tag
+385	group	InboxGateway (v2)
+387	test	lists pending inbox items from the captured payload
+406	test	steer, queue, and cancel address the item routes
+428	test	surfaces 409 ConflictError when an item was already delivered
+455	group	prompt delivery + permission message (v2)
+457	test	promptAsync carries the queue delivery to the wire
+481	test	promptAsync omits delivery when unspecified (server default steer)
+505	test	respondPermissionV2 forwards the reject message
+526	test	respondPermissionV2 omits an absent message
+536	group	event adaptation
+538	test	inbox events pass through under their v2 types
+587	test	non-user inbox items pass through without a message echo
+603	test	form events surface as form.v2.* envelopes
+## test/api2_mcp_scope_test.dart
+38	test	v2 rejects persistent scope and existing names without PUT
+70	test	MCP uniqueness read and add keep the same location across awaits
+## test/api2_models_test.dart
+12	test	parses the captured session list page with cursors
+38	test	parses the captured session create response
+47	test	parses the captured message list into the typed union
+90	test	parses a single captured assistant message
+102	test	parses the captured prompt inbox receipt
+115	test	parses captured model, provider, agent, and catalog listings
+163	test	parses captured location and fs listings
+180	test	unknown message types and enum values never throw
+222	test	parses permission requests and replies use wire names
+242	test	parses forms with the six field types and when conditions
+319	test	parses the captured error envelope shape
+## test/api2_permission_dispatch_test.dart
+31	test	${send.key}: permission preparation ${failure ?? 
+123	group	automatic approval
+191	test	a message restores the server rules before it is sent
+208	test	switching it off mid-reply turns requests back on
+220	test	a message right after the server boots the project waits for the 
+282	test	stable Auto-approve and Allow once send decision once
+## test/api2_phone_chat_dispatch_test.dart
+19	test	${send.key} waits for admission before any request
+44	test	${send.key} settles accepted dispatch exactly once
+83	test	${send.key} settles uncertainty without replaying dispatch
+## test/api2_provider_workflows_test.dart
+32	test	catalog handles a later failure while the first request waits ($liveGateway)
+50	test	OAuth and MCP actions preserve scope and confirm completed code sign-in
+## test/api2_revert_test.dart
+70	test	reverting a session asks the server to restore the files
+89	test	reverting does not commit, so it stays undoable
+101	test	restoring a session clears the staged revert
+110	test	stage returns its fixed preview and encodes history-only preference
+126	test	commit and clear use distinct bodyless endpoints
+## test/api2_session_permission_policy_test.dart
+30	test	fresh session omissions use the server resolved default first
+63	test	an automatic session keeps its own rules, denials included
+78	test	readback metadata key order does not affect confirmation
+96	test	oversized composed policy fails before writing
+105	test	default agent allowance becomes a request including shell and edit
+115	test	agent denial and ordered readonly exceptions retain their meaning
+133	test	original session rules keep their order and deny exceptions
+151	test	changing agent uses original session rules, not prior agent allowances
+183	test	external session edits replace the saved original policy
+204	test	malformed rules fail closed: $invalid
+213	test	malformed provenance and wrong agent fail closed
+## test/api2_sse_test.dart
+100	test	parses bare data frames and keepalive comments
+112	test	preserves the event: field the v1 consumer discarded
+124	test	joins multi-line data with newlines per the SSE spec
+134	test	handles CRLF line endings and chunk boundaries mid-line
+148	test	dispatches a trailing frame without terminator only on flush
+154	test	drops oversized frames without corrupting the following ones
+162	test	event stream delivers typed envelopes and reconnects
+225	test	session log stream tracks durable seq and surfaces log.synced
+291	test	a frame cut mid-write by a drop is discarded, not delivered half
+## test/api2_stable_flags_gateway_test.dart
+64	test	the three 2.0.29 features are advertised
+70	group	gitInit
+72	test	posts /vcs/init for git in the active location
+90	test	an already-initialized folder (409) counts as done
+96	test	other failures surface
+106	group	worktreeCreate
+108	test	posts {projectID, name} to /worktree and reads {directory}
+135	group	shellSettings
+164	test	lists shells and reads the highest-priority choice
+176	test	patches only an acceptable shell
+185	test	refuses unlisted or unusable shells without writing
+197	test	an empty choice clears the shell with null
+## test/api2_terminal_auth_test.dart
+95	test	OC2 terminal keeps its default Basic header and single-use ticket
+102	test	BYO terminal forwards the per-phone Basic header through the proxy
+109	test	BYO revocation after ticket issuance still rejects the websocket
+## test/api2_transport_test.dart
+12	test	normalizes server roots with trailing slashes and /api suffixes
+31	test	builds Basic auth from the opencode username and password
+45	test	the transport offers no way to put credentials in a URL
+61	test	401 maps to Api2AuthRequired even with an empty body
+85	test	tagged error envelopes surface tag, status, and extras
+120	test	503 boot bodies map to Api2Unavailable
+146	test	connection refusal maps to Api2NetworkError
+163	test	connecting to OpenCode 2.0.4+ settles the stable generation and 
+214	test	a beta server is settled by its health answer with no extra request
+248	test	health sends Basic auth and parses the payload
+## test/api2_transport_trust_test.dart
+26	test	HTTPS starts TLS and never writes a plaintext Basic request
+60	test	remote HTTP fails before a request without exact-origin consent
+90	test	absolute URL cannot move the Basic credentials to another origin
+124	test	redirects stay blocked even if a caller enables followRedirects
+171	test	inspect sends no HTTP; only a matching pin releases Basic auth
+240	test	matching expired certificate blocks credentials with a distinct error
+284	test	untrusted TLS failures retain a safe certificate marker
+319	test	a replacement trusted by normal PKI still cannot bypass the existing pin
+## test/app_diagnostics_test.dart
+15	test	diagnostics redact secrets, URLs, and long token-like values
+41	test	diagnostics keep long code names but redact long tokens
+53	test	diagnostics coalesce bursts and keep a bounded ring
+## test/app_exit_history_test.dart
+27	group	exit history bridge
+45	test	invalid limits make no native request
+54	test	supported empty, unsupported and absent channel are distinct
+72	test	read errors expose a typed failure without native text
+88	test	history is newest first, capped, immutable and UTC
+109	test	default and boundary limits are forwarded unchanged
+120	test	classification reuses recovery including update subreasons
+180	test	malformed metadata cannot become a successful empty history
+225	test	history reads leave the startup recovery operation independent
+255	test	domain history snapshots its input and normalizes entry time
+270	group	native exit history policy

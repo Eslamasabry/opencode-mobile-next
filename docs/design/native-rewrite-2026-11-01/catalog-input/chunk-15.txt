@@ -1,0 +1,526 @@
+## test/thermal_guard_test.dart
+90	group	ThermalPolicy
+92	test	pauses at SEVERE, stops at CRITICAL and above
+119	test	an early forecast (headroom >= 0.95) pauses before SEVERE
+139	test	a paused team escalates to a stop at CRITICAL
+147	test	resumes only after two cool minutes; heat restarts the wait
+182	test	turned off: starts nothing, but still gives back what it holds
+202	group	ThermalGuard
+227	test	SEVERE pauses the phone\'s team once, keeps it, tells once
+254	test	CRITICAL stops it (paused first); one notification per episode
+282	test	every confirmed pause, stop and resume is reported once per team 
+313	test	an unreachable team is not reported as resumed
+334	test	recovery off still protects the phone, but never resumes or 
+372	test	no notification while the app is on screen
+381	test	acts only when a team works on this phone
+392	test	switched off: no action at all
+402	test	an unreachable team is tried again after another cool wait
+422	test	a pause survives the app dying: the next process resumes it
+443	group	GasCityThermalTeams (the supervisor API)
+470	test	only loopback teams count as on this phone
+479	test	pause suspends the city and the running sessions only; resume 
+530	test	unconfirmed wake $failedStatus retains recovery across restart 
+623	test	confirmed missing session needs no wake
+648	test	a failed wake needs a separate confirmation that session is gone
+689	test	a city the person suspended is left alone
+703	test	recovery policy prevents automatic supervisor work
+723	test	disabling recovery while reading health prevents the resume
+750	test	an unconfirmed session wake is not a confirmed recovery
+769	test	a team the person turned off meanwhile is not started again
+794	group	oc/thermal (the Kotlin half, faked)
+804	test	ThermalMonitor.kt words map onto the statuses
+841	test	events arrive as readings; a missing channel is safe
+861	test	notify passes the words only
+872	group	the shell line and the setting
+## test/this_phone_plain_failures_test.dart
+142	group	the manager\'s failure, classified
+144	test	a crash or a server that never answered is a start
+165	test	anything else the manager failed at is an install
+## test/this_phone_screen_test.dart
+487	test	no screen pushes the retired Termux wizard route (P1.3)
+521	group	a server that stopped by itself
+## test/tool_card_test.dart
+514	test	formatToolDuration uses tenths under a minute and m/ss past it
+906	test	taskChildSessionId reads the server key and legacy spellings
+## test/tool_label_surfaces_test.dart
+188	group	transcript
+204	test	the running work line words "$id"
+226	group	timeline sheet
+270	group	Copy transcript
+273	test	a "$id" step is headed in words
+278	group	team agent
+281	test	a last step with "$id" is in words
+292	group	permission requests
+295	test	a request for "$id" is titled in words
+300	group	live notification
+303	test	the running sentence for "$id" is in words
+## test/tool_state_test.dart
+5	test	completed string output preserves leading and trailing whitespace
+15	test	completed JSON object output remains pretty printed
+36	test	structured OpenCode input and metadata remain available to renderers
+58	test	ordinary URLs and path-like prose are not invented as files
+70	test	explicit filePath output remains a downloadable artifact
+80	test	read attachments inherit the requested file name
+94	test	pending state exposes raw input unchanged
+107	test	error text preserves leading and trailing whitespace
+## test/tools_screen_test.dart
+181	test	a tool summary is the first sentence of its description
+## test/transcript_search_test.dart
+184	test	literal occurrence counts preserve offsets and include reasoning/tool/file data
+223	test	streaming, older-page prepend and deletion update cached matches
+## test/transcript_settle_test.dart
+54	group	compaction line
+61	test	ends once the compaction notice and later work arrive
+79	test	stays while it is the newest thing and the agent is busy
+87	test	ends when the turn has ended
+96	group	tool spinners
+98	test	a tool under later words of its turn is finished
+107	test	a tool of the newest step with no words after it keeps running
+118	test	a tool is finished when the turn has ended
+129	test	words of an earlier turn do not finish a later turn tool
+142	test	a background process keeps running
+156	test	a late running report does not revive a finished call
+## test/turn_stall_test.dart
+7	test	changed liveness evidence rechecks without resetting silence
+34	test	BA7 classifies healthy silence as model slow, stopped helper and connection loss
+107	test	BA7 throwing probe returns only safe unknown evidence
+117	test	BA7 silence is per turn and progress invalidates an in-flight probe
+150	test	BA7 waiting for user suppresses stalls and restarts silence when answered
+168	test	BA7 completed, replaced and reset connections discard old probes
+183	test	BA7 repeated busy statuses do not keep resetting silence
+192	test	BA7 tracker memory is bounded and blank session ids are ignored
+## test/ui_glossary_test.dart
+133	test	the label rule separates labels from sentences
+149	test	action labels use the glossary word, not a banned synonym
+169	test	every allow-listed key still needs its exemption
+182	test	the noun rule matches standalone words only
+193	test	labels say conversation, not session or chat
+214	test	the engine-word rule catches Gas City terms, not plain words
+228	test	AI Team rows and cards use the person\'s words, not the engine\'s
+251	test	every allow-listed engine key is still there and still needs it
+264	test	every allow-listed noun key still needs its exemption
+1448	group	G11
+1450	test	ICU messages expand to their plain wordings
+1460	test	confirm titles and labels are checked through wrappers
+1569	test	confirmation titles ask and labels name the act (COPY-9)
+1578	test	the contradiction rule finds both halves of a pair
+1589	test	the contradiction scan skips text that is never rendered
+1602	group	working and stopped
+1625	test	no text says two contradicting states at once (COPY-17)
+1648	test	every allow-listed contradiction key still needs it
+1659	test	the technical-word rule finds engine words, ports, paths and 
+1701	test	technical words only in keys described as Technical: or Field 
+1713	group	G28
+1715	test	the glossary extension finds each pattern
+1772	test	every allow-listed product key still needs it
+1785	test	labels and copy follow the glossary (COPY-6–8, COPY-10, COPY-12, 
+## test/ui_ledger_coverage_test.dart
+16	test	ledger pages and nonpage helpers still exist
+29	test	every screen file has a home in the ledger
+61	test	ledger ids are unique and every edge lands on a page
+## test/undo_from_here_flow_test.dart
+242	test	edited paths come from completed edit tools, first seen, once
+252	group	a server that undoes at once
+368	group	a server with staged undo
+## test/update_channel_platform_test.dart
+41	test	the unavailable service never claims an update
+## test/usage_budgets_test.dart
+70	test	restart keeps measured USD and token budgets in their exact scopes
+98	test	failed write preserves durable previous budget and deletion sweeps it
+120	test	mismatched persisted scope cannot masquerade as the current budget
+139	test	one malformed persisted rule does not discard valid budgets
+160	test	replacement screens serialize writes and merge separate units
+180	test	deletion during a pending write cannot resurrect the budget
+192	test	explicit clearing recovers full capacity without silently evicting rules
+## test/usage_signin_destination_test.dart
+29	group	mapping a widget row to a screen
+31	test	OpenCode providers open that server\'s provider sign-in
+49	test	Claude on this phone opens the agent sign-in
+59	test	a deleted server, an unknown provider or another kind of server 
+85	test	a set_up row opens "Read usage from" for that server only
+105	test	GLM and MiniMax take a key, the rest sign in
+113	group	the tap travels as a strict wire value
+115	test	round trips and rejects anything malformed
+136	test	the channel hands the target over once
+166	group	Claude through Paseo
+169	test	a signed-out provider becomes a reading with no numbers
+202	test	the widget stores it as a row and numbers replace it
+## test/usage_statistics_test.dart
+146	test	provider rollups use returned IDs, retain variants and do not count variants as new models
+171	test	provider cost overflow stays unavailable and empty statistics have no invented providers
+212	test	temporary missing repository keeps usage refresh recoverable
+230	test	response preserves tokens, models and reliability without fake empty values
+273	test	calendar ranges include today and omit from for all time
+309	test	wire request is global unless an explicit project ID is selected
+347	test	authorization errors stay distinct; absent endpoint disables capability
+377	test	native timezone is sent and unreadable timezone never silently becomes UTC
+399	test	current project resolves its ID; missing project cannot become all projects
+416	test	out-of-order responses cannot relabel old totals with new filters
+435	test	location changes during wake detach the page without dispatching
+451	test	failed refresh retains only the previous result for unchanged filters
+## test/usage_subscription_alerts_test.dart
+136	test	a Paseo plan past its level alerts once, with the plan\'s token
+159	test	a computer plan alerts the same way, and again after its reset
+179	test	below the level nothing is shown and a stale alert is dismissed
+190	test	the plan\'s own level decides, not the default
+201	test	quiet hours hold it back and it is announced afterwards
+217	test	with the app open, or alerts off, nothing is shown
+230	test	Wi-Fi only waits for Wi-Fi without losing the crossing
+242	test	a notification the system refused is tried again, not lost
+253	test	the crossing stays alerted across an app restart
+263	test	numbers older than the limit never alert
+270	test	a plan the quota monitor already alerts for is not alerted twice
+281	group	the reset message
+300	test	says the plan is back, once, when asked to
+312	test	is not sent when the switch is off
+317	test	is sent for a plan the monitor alerts for, without a second level alert
+326	test	is not sent after a long silence
+341	test	records of a removed server go with it
+## test/usage_subscription_sources_test.dart
+79	group	Codex account
+89	test	reads the 5-hour and weekly account limits and hashes the email
+121	test	an API key account is an apiKey sign-in, never a plan reading
+140	test	signed out is listed only when it needs a sign-in or was used
+159	test	a failing session is a broken reader and closes; a dropped link is offline
+179	test	with no open Codex connection it reads nothing
+188	group	OpenCode sign-ins
+196	test	maps connected providers, ignores non-subscriptions, and is authoritative
+218	test	a server that does not answer is unreached and not authoritative
+233	test	a server that needs its password again is skipped, never contacted
+252	group	Paseo
+300	test	opted-in servers and the phone host feed readings; others are not read
+331	test	U17: with automatic reading no switch is needed
+356	test	a signed-out Claude Code becomes a not-signed-in reading
+367	test	a stopped phone host is unreached, never started
+## test/usage_subscriptions_controller_test.dart
+131	test	one refresh gathers every source into a single list
+156	test	a source that throws is ignored and the others still show
+166	test	numbers survive a restart and show before the first refresh
+185	test	an unreachable connection keeps its numbers as offlineStale, then recovers
+220	test	rate limited keeps the last numbers; a broken reader says so
+246	test	an older reading never replaces a newer one
+265	test	sign-ins with no reader show cantReadYet; a signed-out cached plan flips
+295	test	a plan that was read and then disappears from the server stays as not signed in
+311	test	a removed profile loses its cache, its overrides and its widget rows
+340	test	the profile deletion sweep finds the cached numbers by their key
+358	group	alerts
+360	test	every readable subscription is watched at 80 with no enrolment step
+385	test	a per-subscription override changes only that watch and persists
+417	test	bad levels are refused and change nothing
+428	test	the default level moves every subscription without an override
+447	test	"tell me when it resets" is off by default and per subscription
+465	test	migration keeps a chosen threshold from the old per-source rules, once
+536	group	widget feed
+543	test	one entry per subscription in page order, each with both windows
+565	test	rows that need setup show by default and can be hidden
+600	test	hidden subscriptions and the window choice apply
+622	test	sign-in rows carry the key or sign-in action and the fixing connection
+645	test	an offline plan is labelled stale in the feed
+658	group	the collector source and the alert bridge
+730	test	In-app Ubuntu is read for every provider; a remote one only when consented
+756	test	a remote collector that cannot be reached marks the connection offline
+772	test	an expired collector sign-in is authRequired; signed out is kept only if used before
+796	test	rate limited by the provider is a problem, not an error state
+821	test	alerts: In-app readings are enrolled at the effective level without a step
+845	test	alerts off: nothing is enrolled, remote collectors are never auto-enrolled
+## test/usage_subscriptions_test.dart
+86	test	row 1: nothing signed in shows the add list and no cards
+92	test	row 2: In-app Ubuntu Codex is one readable card
+104	test	row 3: signed in on a PC no reader reaches is cantReadYet with Set up
+128	test	row 4: once the PC is read the same sign-in shows numbers
+140	test	row 5: offline keeps the numbers, marks them stale, flags a reset since
+173	test	row 5: stale numbers without a passed reset do not claim one
+189	test	row 6: the same account on two connections is one card, freshest wins
+220	test	row 6: freshest wins whichever connection holds it
+238	test	row 7: two accounts stay two cards and ask for the connection name
+262	test	row 7: a lone card does not ask for the connection name
+270	test	row 9: a removed connection takes only its own plans along
+283	test	row 11: signed out where it was used stays listed with a fix
+296	test	row 11: a cached provider the server no longer lists is signed out
+309	test	row 11: but only when the server actually answered
+317	test	row 12: a never-used provider is only in the add list
+323	test	row 13: an expired sign-in turns the card red with Sign in again
+342	test	row 13: another connection with the same account takes over reading
+374	test	rows 14 and 15: an API key is not a plan card
+402	test	rows 14 and 15: a key plus a plan reading is still a plan
+418	test	rows 16 and 17: Claude via the phone host or a PC is one card each
+436	test	row 18: Claude Code signed out offers Sign in on the phone
+453	test	rows 19 to 21: ok, near the alert level, and exhausted
+487	test	row 20: a per-plan override moves the alert level for that plan only
+522	test	row 22: GLM keeps all three windows, with 5 hours and the week first
+548	test	row 23: a working reader with no limits is noLimits
+555	test	row 24: a rate-limited provider keeps the last numbers without an error
+574	test	row 25: a broken reader keeps the numbers and offers Try again
+584	test	row 25: a reader that never worked shows broken without numbers
+597	test	row 26: after hours away a passed reset is flagged on cached numbers
+620	test	row 27: Paseo-reported providers become cards with the same rules
+640	test	rows 28 and 29: server names only matter with several connections
+648	test	provider ids from OpenCode, Paseo and the collector all map
+657	test	readings survive a JSON round trip without account text
+669	test	U22: not-signed-in leftovers fold into the signed-in card
+696	test	U22: several not-signed-in records are one card
+708	test	U22: two different accounts stay two cards
+719	test	U19: Claude on an OpenCode server is a Details row, not a card
+737	test	U19: a Paseo sign-in-needed status is still a Claude card
+754	test	U20: providers the reader cannot read are not plan cards
+775	test	U20: Copilot from a Paseo reading is still a card
+783	test	U8: an unreachable connection is offline, never "not signed in"
+801	test	U8: only a connection that answered can be "not signed in"
+811	test	U10: a record with no reading carries no read time
+## test/usage_widget_claude_home_test.dart
+10	test	every agent launch that sets CLAUDE_CONFIG_DIR sets CLAUDE_HOME to 
+## test/usage_widget_screen_test.dart
+172	test	rows from the phone source are labelled for This phone
+## test/usage_widget_snapshot_test.dart
+72	test	writes remaining percent, window length, reset and fetch time
+107	test	keeps several providers of one server in one entry
+122	test	stores no account, plan, address, credential or error text
+136	test	Claude and unusable snapshots never appear
+157	test	auth-needed keeps the numbers and flags the row
+181	test	removing the last provider removes the entry
+191	test	is inert off Android
+201	test	the profile deletion sweep and clearForProfile remove it
+225	test	not-signed-in writes a row with the way in and no numbers
+258	test	not-signed-in keeps the numbers of a row that has them
+274	test	an expired sign-in with no row yet still gets a tap target
+286	group	through the quota monitor
+319	test	a fresh read is written, never the password or address
+329	test	a collector sign-in failure flags the row
+339	test	signed out where it is read: the row offers the way in
+376	test	disabling monitoring and removing the server clear it
+## test/v2_feature_gating_test.dart
+243	group	the accessor reports transport truth
+245	test	an unattached controller uses conservative supported defaults
+264	test	an attached v2 gateway narrows the flags
+274	group	catalog navigation preserves the explained Tools gate
+362	group	hidden: More tile whose screen has no backend (§7 row 1)
+421	group	hidden: health sections + disabled git init (§7 rows 17-19)
+472	group	settings rows the server cannot serve (§7 rows 22, 23, 24)
+570	group	hidden: v2-only features on a v1 server (§7 rule 5)
+## test/v2_transcript_rows_test.dart
+68	group	v2VariantPart
+70	test	finds the tagged part and ignores v1 messages
+84	group	TranscriptMarker switches
+186	group	TranscriptNotice variants
+297	group	compaction rows
+426	group	interleaved tool content
+494	group	apply-bar scope labels
+## test/vision_chat_approval_test.dart
+129	group	the ask, from the request alone
+130	test	a short shell command: its words and the project
+138	test	a long command reads by the family its pattern saves
+160	test	a long command with no family: "a command"
+175	test	OpenCode 2 apply_patch: every path, no size it does not send
+199	test	OpenCode 1 edit: the file's name and its diff's size
+219	test	a path the agent names absolutely reads from the project
+234	test	Delete only when the request says every file is deleted
+265	group	in the chat
+## test/voice_audio_test.dart
+7	test	PCM16 little-endian samples normalize correctly across split chunks
+22	test	one chunk holds 30 seconds and says where the next one starts
+38	test	an odd byte at a chunk edge carries into the next chunk
+## test/voice_auto_send_test.dart
+33	group	SilenceDetector
+34	test	quiet before any speech never ends the recording
+40	test	1.5 s of quiet after speech ends it, and not a moment sooner
+52	test	speaking again restarts the quiet
+66	test	a click is not speech
+75	group	what may be sent by itself
+77	test	nothing, a stray sound and the model\'s notes are not sent
+93	test	real words are sent, in any script
+105	test	a spoken slash or bang is never run as a command
+111	group	the controller
+113	test	auto-send is off by default
+120	test	stops by itself after the pause and says why
+152	test	without the opt-in a long pause never stops it
+175	group	the countdown in the pill
+## test/voice_automatic_setup_platform_test.dart
+25	test	reports native ${state.name} network
+33	test	missing, malformed or failed network probes never allow free data
+49	test	permission reports actual grant without calling a connection service
+67	test	permission failure and missing bridge report false
+102	test	posts all phases with numeric progress and no arbitrary text
+127	test	clamps invalid and overrun progress to a safe native range
+149	test	notification denial and malformed native responses remain false
+166	test	notification mutations serialize across API instances
+205	test	notification errors do not poison later updates or dismissal
+232	test	unsupported voice platform never calls the native bridge
+## test/voice_automatic_setup_sheet_test.dart
+282	group	the reading voice by locale
+289	test	language and region first, then language, else none
+## test/voice_automatic_setup_test.dart
+234	test	creation and confirmation without a mic tap perform no work
+253	test	total RAM ${entry.$1} selects ${entry.$2} before consent
+268	test	a large Java heap class cannot qualify a low RAM device
+278	test	unknown or nonpositive total RAM $memory blocks automatic setup
+298	test	unavailable capture never starts setup or downloads
+312	test	unsupported hardware or storage exposes no eligible pack
+320	test	low storage blocks the shared RAM choice instead of downsizing
+338	test	an installed selected eligible pack starts even while offline
+356	test	an uninstalled preference does not override the shared RAM choice
+369	test	an installed unselected pack does not override the shared RAM choice
+382	test	installed selected pack above physical RAM does not start
+394	test	offline first use blocks and can retry after reconnecting
+412	test	$network requires explicit data consent before downloading
+428	test	Wi-Fi changing to mobile data before consent requires data approval
+441	test	going offline before consent blocks even with mobile approval
+454	test	progress and verification precede ready notification and listening
+503	test	notification permission denial still permits foreground setup
+518	test	notification ${throws ? 
+532	test	network changing during the notification permission prompt needs data approval
+555	test	${dispose ? 
+577	test	cancelling a pending microphone start prevents late listening
+595	test	verification failure prevents listening and retry asks for consent
+619	test	microphone failure is recoverable without downloading again
+631	test	automatic selection survives restart and deleting it requires consent again
+656	test	duplicate mic taps and download confirmations do not duplicate work
+679	test	an existing manager download remains owned by its caller
+696	test	external download preflight stays owned by its caller
+717	test	cancelled consent cannot authorize a download
+726	test	cancellation during device probing prevents a late consent state
+743	test	${dispose ? 
+772	test	a download that finishes in the background waits at ready, and 
+793	test	a handed-off recording survives the setup controller
+806	test	without the hand-off, cancelling stops the recording it started
+## test/voice_controller_test.dart
+166	test	selected model pack and language persist across manager instances
+189	test	cancel kills active recognition and stale result cannot become a draft
+221	test	audio interruption cancels listening and discards captured audio
+244	test	recognizer cancellation during startup returns to idle without an error
+265	test	unexpected recorder stream completion leaves listening with a recovery error
+287	test	a canceled recorder stream cannot reset a newer listening generation
+310	test	simultaneous starts and cancellation during startup are guarded
+338	test	recorder state stream errors terminate an active recording
+357	test	device preflight disables High accuracy but keeps Balanced available
+412	test	draft merge preserves existing text around the current selection
+## test/voice_downloader_test.dart
+171	test	valid download is checksum verified before atomic install marker
+204	test	safe partial response resumes only with matching Content-Range
+235	test	corrupt payload and cancellation never create an install marker
+278	test	real filesystem install verifies streamed SHA-256 exactly
+301	test	cancellation aborts a stalled response body promptly
+337	test	cancellation aborts a stalled native TLS handshake promptly
+366	test	stalled response body fails on the idle timeout
+403	test	failed atomic re-download retains the verified old model
+440	test	publication failure rolls back every verified old file
+478	test	same-pack installs are serialized across downloader instances
+531	test	delete waits for an in-flight install and removes every owned path
+593	test	cleanup failure releases the pack lock for a later operation
+629	test	response body sink and progress callback failures complete the download
+668	test	cancellation during finalization cleans a truncated partial
+## test/voice_language_locale_test.dart
+17	group	resolveVoiceLanguage
+18	test	Same as the app follows every language the app is translated to
+28	test	a language the model lacks falls back to listening for it
+43	test	older and regional codes are folded in
+50	test	a named language is used whatever the app speaks
+61	test	more than English and Arabic are offered, with unique codes
+67	test	the old stored choices keep their meaning
+76	group	the recognizer is told the right language
+97	test	Same as the app in an Arabic app listens for Arabic
+101	test	Same as the app in a Japanese app listens for Japanese
+105	test	Detect from speech ignores the app language
+109	test	a named language wins over the app language
+117	test	every language has a name to show
+124	group	voiceLanguageNote
+129	test	says plainly when the app language is not known offline
+140	test	says nothing when the language works
+152	test	warns that the Compact model is rough outside English
+## test/voice_model_localization_test.dart
+46	test	manifest presentation and categorized failures translate without changing data
+## test/voice_model_manager_test.dart
+138	test	deletion invalidates an in-flight initialize readiness result
+159	test	a new selection invalidates old initialize verification
+178	test	initialize cannot publish readiness from a superseded download
+202	test	dispose during device preflight prevents download work
+218	test	superseded initialize does not publish its probed device info
+245	test	cancel during device preflight prevents work and stale device info
+## test/voice_model_manifest_test.dart
+8	test	voice dependencies and Android permission are pinned
+45	test	all immutable model values and totals are exact
+97	test	voice runtime and model notices are complete and bundled
+## test/voice_platform_support_test.dart
+18	group	on a platform with no voice capture
+24	test	the device probe reports capture unsupported, not a microphone
+38	test	microphone permission is refused, never silently granted
+45	test	opening app settings is a no-op rather than a throw
+50	group	on Android
+52	test	the device probe uses the channel
+72	test	a granted permission still comes back granted
+80	test	a missing handler leaves the probe merely unknown
+## test/voice_recognizer_config_test.dart
+8	test	Whisper worker config maps local paths, language, task, and CPU policy
+34	test	auto language maps to sherpa Whisper auto detection
+## test/vps_build_apk_plugins_test.dart
+37	test	an APK with the plugin registrant passes
+44	test	a registrant in a later dex file still counts
+54	test	an APK without the registrant fails and says why
+66	test	a missing APK is a usage error, not a pass
+70	test	vps_build_apk builds in its own server folder and checks the APK
+## test/web_search_test.dart
+191	test	explicit search uses scoped Basic transport and no history mutation or cursor
+240	test	$path rejects another response location
+273	test	503 discards remote error copy and marks search unavailable
+299	test	malformed provider catalog and wrong provider response fail closed
+334	test	empty and excessive queries never reach the server
+458	test	discovery never searches; results require review and explicit confirmation
+476	test	source staging exposes immutable snapshots and rejects unsafe overflow
+519	test	multiple providers require choice; refresh never submits a query
+541	test	scope switch discards pending search results and local review
+562	test	provider invalidation supersedes an in-flight search without another query
+586	test	websearch.updated becomes a payload-free domain freshness event
+## test/while_away_test.dart
+53	test	finished work contains only unread idle unblocked root sessions
+81	test	unknown read state retains actions without consulting unread state
+103	test	all finished work is retained with deterministic newest-first order
+127	test	acknowledgement hides only the exact finished run and recorded act
+154	test	every automatic category remains an action even for a blocked session
+174	test	snapshots sort actions and retain immutable copies of input lists
+186	test	copyWith records undo state without changing action identity or facts
+208	test	empty and acknowledged-only feeds report empty without inventing work
+## test/widget_action_runner_http_test.dart
+18	test	cold $protocol $kind reconciles real status route after reply
+## test/widget_action_runner_test.dart
+193	test	$kind cold tap confirms exact pending request and closes transport
+221	test	$kind reconciles server $statuses before closing
+243	test	$kind retains $status as disconnected when settlement ends
+267	test	$kind status failure keeps acknowledged command accepted without replay
+288	test	profile switch during settlement cannot publish old profile snapshot
+303	test	transport stays open until post-reject status read resolves
+317	test	hung status read times out with acknowledged command accepted
+344	test	near native deadline skips status and returns accepted detached
+370	test	cold approval waits for health before reading or answering
+383	test	unhealthy cold transport never reads or answers permissions
+394	test	failed health is sanitized and never answers permissions
+406	test	cancel during cold health closes without answering permissions
+422	test	deadline during cold health never reads or answers permissions
+440	test	profile switch during cold health prevents permission dispatch
+456	test	cold dispatch uses private target without exposing it in its result
+478	test	missing or stale private target never constructs a transport
+498	test	private target reader rejects mismatched identity and deleted target
+522	test	duplicate tap is dispatched once
+531	test	expired tap never constructs or dispatches transport
+537	test	deadline reached during pending read never dispatches afterwards
+553	test	cancel while read is in flight prevents late dispatch and closes
+567	test	profile deletion during read prevents mutation
+578	test	different pending request owner is never answered
+593	test	stop checks server user-message identity and busy status
+605	test	old run cannot stop a replacement run
+613	test	idle run cannot be stopped
+621	test	mutation error is uncertain, sanitized, closed, and never retried
+635	test	unsupported row action is rejected before opening connection
+647	test	durable ownership guard respects profile switch and deletion without opt-in writes
+692	test	suspension preserves target proofs and does not resurrect deletion
+730	test	cold Team $kind uses reviewed revision and closes
+785	test	Team transport uncertainty cannot become retryable rejection
+828	test	same-scope durable replacement during read blocks old stop
+861	test	target-only load reads target secrets without migrations or writes
+## test/widget_overlay_test.dart
+84	group	launch arguments
+85	test	unknown values fall back, routing data is never read
+98	group	project window (the Conversations widget\'s Edit)
+100	test	reads the projects and the current one
+137	group	style window
+199	group	steer box
+355	group	voice box
+374	test	WidgetOverlayPort refuses a colour that is not a choice

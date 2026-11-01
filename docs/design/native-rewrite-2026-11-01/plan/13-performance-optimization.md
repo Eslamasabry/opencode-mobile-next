@@ -1,0 +1,1651 @@
+# 13. Performance and optimization: budgets, measurement and gates
+
+## For the owner, in plain words
+
+1. The new app gets hard number targets: it opens in about 0.3 s, misses at most 1 frame in 100 while a reply streams, downloads at under 22 MB (we aim for 20), and uses almost nothing while hidden.
+2. Every number is measured the same way each time, on the PC's emulator for comparisons and on your phone only when you say yes, and a build that gets more than 10 % worse is stopped before it reaches you.
+3. The heavy parts stay where they work best: voice stays inside the app (about 10 MB), the phone's Linux downloads itself as today, and the AI Team engine adds nothing until AI Team comes back.
+4. The lessons from your hot phone are built in from day one: agents slow down before the phone gets hot, nothing wakes the phone every few seconds when the app is hidden, and the app stops dialling out when there is no network.
+5. Four small choices need you now (§19: 32-bit phones, where the AI Team engine lives later, an optional performance recorder on your phone, two measuring sessions on your phone); work goes ahead on the recommended answers.
+
+---
+
+Written 2026-11-01. This section builds on `01-architecture-decision.md` (the ADR, binding) and on `02-principles-scope.md`
+§4, whose numbers S-5 to S-21 are the switch gate. 02 §4 says: "section 13 owns the full budget tables … and may only
+tighten it." Every number here is equal to or stricter than 02 §4. Where this file and the ADR differ, the ADR wins.
+
+Tags: **[V]** checked today against a primary source; **[R]** read in the repo, a map, a research file, a sibling plan
+section or a memory file; **[E]** my estimate, replaced by the first measured value plus a margin and never loosened
+after that (02 §4.2 rule 3); **[U]** unverified, settled by the proof named next to it.
+
+---
+
+## 0. How to use this section
+
+| Reader | Read |
+|---|---|
+| Perf lead (the T4 lane holder, 02 §8) | everything; you own §3, §15 and the files in §0.2 |
+| Feature and kit agents | §2 (your area's rows), §5, §6, §11 (if your code has a timer), §18 (brief lines) |
+| Backend agents (Codex) | §2.6, §11, §12, §14 |
+| Runtime agents (`:engine:runtime`, `:android:linux`) | §2.7, §11, §13 |
+| Coordinator | §15 (gates), §17 (work packages), §19 (decisions and amendments) |
+
+### 0.1 Budget ids and test names
+
+- Every budget has an id **`PB-NN`** (performance budget). The id never changes and is never reused.
+- A budget that equals a 02 §4 number names it (`= S-9`); a budget that tightens one says `tightens S-x`.
+- A test that proves a budget starts its name with the id, the same way catalog tests start with `B-…`:
+  ``fun `PB-42 no hidden-idle timer fires faster than 60 s`() = runTest { … }``.
+  Instrumented and Macrobenchmark tests use underscores (`PB_11_streaming_frames`) for the DEX reason in 02 §6.1.
+- When a catalog row covers the same behaviour, the test name lists both (`` `B-CHAT-096 PB-18 linear merge`() ``).
+- `PB-…` tests are **new** budget tests written from §2's tables. They are not ports of Flutter widget tests: the owner
+  said the widget tests come later ("7400 for widgets can come later"), and nothing in this section schedules that
+  work. Where a Flutter test held the same number (for example `perf_catalog_budget_test.dart`), it is cited only as
+  the source of the number.
+- Coordinator amendment **A1** (§19.2): Konsist rule 12 (ADR §6.3) accepts `PB-\d{2}` as well as catalog ids.
+- Journeys have ids **`PJ-NN`** (§3.4) and scripted runs **`PR-NN`** (§3.5). Sections 08 and 09 numbered their
+  journeys J1–J8 independently; §3.4 maps both onto one registry, which this section owns (08 §11 unit M6 names §13
+  as owner of `:android:benchmark`).
+
+### 0.2 Files this section's owner holds (single owner: the perf lead, recorded in `MODULE_OWNERS`)
+
+| Path (under `native/`) | What |
+|---|---|
+| `android/benchmark/**` | the `:android:benchmark` `com.android.test` module: journeys, profile generator, seed helpers |
+| `perf/budgets.json` | machine-readable copy of §2 (ids, targets, device, gate tier); the scripts read it |
+| `perf/size-budget.json` | §8.2 component sub-budgets |
+| `perf/sensitive-paths.txt` | §15.3: paths whose change requires a T4 subset before merge |
+| `perf/last-green.json` | pointer to the last green T4 result per device (coordinator updates it at merge) |
+| `perf/results/<yyyy-mm-dd>-<sha>/` | raw JSON + `summary.md` of every T4 and PR run |
+| `tool/perf/*` | `t4.sh` helpers: `oc.pbtxt`, `analyze.py`, `compare.py`, `check_apk_size.py`, `check_compose_reports.py`, `check_startup_dex.py`, `hidden_run.sh`, `phone_session.sh`, `batterystats.py`, `sql/*.sql` |
+| `config/compose-unstable-allowlist.txt` | §6.3 shrink-only list |
+| `config/ambient-loops.txt` | §5.6 allowlist of files that may start an infinite transition |
+| `androidApp/src/main/generated/baselineProfiles/{baseline-prof.txt,startup-prof.txt}` | §10; regenerated only by the perf lead (two files inside the coordinator-owned `:androidApp`, delegated in `MODULE_OWNERS`) |
+
+The perf lead is a Sonnet agent for scripts and measurement. Fixes found by measurement go to the owner of the module
+that is slow (a perf lead never edits another owner's module; ADR §10.3, memory `same-agent-analyzes-and-builds`).
+Hot-path rework in `:engine:transcript`, `:ui:kit-chat` and `:core:markdown` goes to Opus (ADR §10.3).
+
+---
+
+## 1. Inputs and the constraints that shape every budget
+
+| Input | What it fixes here |
+|---|---|
+| ADR §9.3 | 50 ms transcript publish, first delta at once; one `LazyColumn(reverseLayout = true)` of block items; draw-phase word fade; `preferredFrameRate(High)` only while a block reveals; `compose-stability.conf` |
+| ADR §9.5 | serial dispatcher per engine; short `dataSync` reply watch; phone server `specialUse`; nothing assumes unbounded lifetime; the isolated PDF service is the only extra process |
+| ADR §9.7 | `OcApplication.onCreate` ≤ 50 ms on the fast path; the 7 steps; step 0 is the only synchronous migration work |
+| ADR §9.8 | the Room trigger (P5): prefs 100 KB vs 10 MB cold-start gap > 50 ms, or a background start spending > 100 ms on prefs, moves Room into the switch release |
+| ADR §9.9 | ABI splits arm64-v8a, x86_64, universal with **one** versionCode; R8 `optimization {}` DSL; `analyzeReleaseR8Config` at every T2; `useLegacyPackaging`, 16 KB alignment, the size gate on the arm64 APK |
+| ADR §10.3, 02 §8 | tiers T0–T4 and their scripts; T4 = `native/tool/t4.sh` on the PC emulator; the phone only with the owner's OK |
+| ADR §8 | pins: androidx.benchmark 1.5.0, baseline-profile plugin 1.5.0, profileinstaller 1.4.1, androidx.tracing 2.0.5, Perfetto v59.1, UIAutomator 2.4.0 |
+| 02 §4 | S-5 to S-21: the switch gate; 02 §4.1: Flutter baseline first; 02 §4.2: misses block the switch; only the owner relaxes a number |
+| 08 §8 | 120 Hz per-interaction UI-thread targets, frame-rate votes, adaptive refresh rule "never below 60" |
+| 09 §14 | streaming counter tests, transcript memory bounds (§14.4), hidden rules (§14.5), stream fixtures `perf:stream-6000`, `perf:history-5000`, `perf:tools-200` |
+| 10 §2.5, M2, M4, M9 | media size table (≤ 13 MB), warm recognizer released 20 s after recording, verified stamp instead of start-up re-hash, one Coil loader without disk cache |
+| 11 CR11-5, §9 | `DeviceFacts.thermalHeadroom` (polled ≤ every 30 s, only while collected), `battery`, `appVisible`; `ProcessHost.setAgentPriority`; FGS table |
+| Perf audit 2026-11-01 (`Storage2/wt/perf-audit-2026-11-01/REPORT.md`) | the Flutter lessons in §16 |
+| The demo (`/home/eslam/Storage/Code/kmp-demo`) | release APK 2,459,429 bytes [R `androidApp-release.apk`]; cold start ≈ 0.25 s in the owner's side-by-side (02 S-5 baseline) with **only library-shipped profiles** (merged ART profile 10,101 lines from Compose and friends; no app-generated profile) [R `build/intermediates/combined_art_profile`] |
+
+Machines (memory `build-vps`, `pc-capacity-ceiling`, `quiet-hours-vps-only`, `shared-emulator-contention`) [R]:
+
+- **VPS** 169.58.71.211: 8 vCPU, 23 GB, **no KVM**, so no emulator. Runs builds, JVM tests, R8, size gates and JVM
+  microbenchmarks.
+- **PC**: 8 CPU, 16 GB, one emulator `OC_API37` (android-37.0 google_apis x86_64). Runs T3 and T4 only, one lock
+  holder at a time, no local Gradle build during T4, no emulator 00:00–02:00.
+- **NX721J** (owner's phone, Android 16, 16 GB, 120 Hz panel per 02 §4): absolute numbers, only with the owner's OK.
+  Never a screen capture (`no-owner-phone-screenshots`); app logcat is silenced (`phone-logcat-silenced`), so field
+  numbers come from the in-app recorder (§3.6).
+
+---
+
+## 2. Budget tables
+
+### 2.1 How to read the tables
+
+- **Device.** "Phone" = NX721J, absolute. "Emu" = `OC_API37`, relative: compared with the same-day Flutter reference
+  (R, 02 §6.2) and with `perf/last-green.json`. "JVM" = a `commonTest` on the VPS (deterministic counts, never wall
+  clock). "VPS-bench" = a JVM microbenchmark (§3.9), indicative only.
+- **Build.** Every device number comes from the minified, non-debuggable, profileable `benchmark` build (§3.2), which
+  equals `stable` release except for the `.bench` suffix and debug signing. A debug build proves nothing (02 §4).
+- **Gate.** The tier where a miss fails (§15). "Switch" means it is also part of the switch decision (02 §4.2).
+- **Regression rule (emulator).** A metric regresses when its median is more than 10 % worse than last green **and**
+  the new p25 is worse than the last-green median (§3.7). After the switch, the same 10 % rule applies release to
+  release on the phone (02 §4.2 rule 4).
+
+### 2.2 Start-up
+
+| Id | What | Target | Device | Method (§3) | Gate |
+|---|---|---|---|---|---|
+| PB-01 | Cold start, time to initial display (TTID) | median **≤ 300 ms**, p90 **≤ 400 ms** (= S-5, adds p90) | Phone | PJ-01, `StartupTimingMetric`, COLD, `Partial(Require)`, 10 iterations | T4 phone session; switch |
+| PB-01e | same | median **≤ 0.75×** Flutter R same day (= S-5) and ≤ +10 % vs last green | Emu | PJ-01 | T4 every slice end |
+| PB-02 | Cold start, time to full display (Chats first page drawn from cache, `reportFullyDrawn`) | median **≤ 500 ms** (= S-6), p90 ≤ 650 ms [E] | Phone | PJ-01 `timeToFullDisplayMs` | T4; switch |
+| PB-03 | `OcApplication.onCreate`, fast path (migration done) | **≤ 50 ms** (= S-7) phone; ≤ 80 ms emu [E] | Phone, Emu | trace section `app.onCreate`, `TraceSectionMetric(Mode.First)` in PJ-01 | T4 |
+| PB-03b | Order before the first frame | no network request and no prefs read on the main thread before `app.first_frame`; only the ADR §9.7 steps run before `setContent` | Emu | PJ-01 trace order check in `analyze.py` (§3.4.3) + StrictMode in `qa` (PB-70) | T4, T3 |
+| PB-04 | Warm start TTID (process alive, activity re-created) | median **≤ 150 ms** [E] | Phone | PJ-02 `StartupMode.WARM` | T4 phone session |
+| PB-05 | Hot start TTID (activity stopped, then resumed) | median **≤ 60 ms** [E] | Phone | PJ-02 `StartupMode.HOT` | T4 phone session |
+| PB-06 | Cold entry into a chat (notification, widget, shortcut, `opencode-mobile://session`) through `EntryRouter` | TTID ≤ 350 ms; first transcript from cache ≤ 800 ms; from the phone's own server ≤ 1.2 s [E] | Phone | PJ-03, trace `chat.openToFirstTranscript` | T4; switch |
+| PB-07 | Cold start to first connected server (`app.first_connected`) | ≤ 800 ms to a LAN/Tailscale server, ≤ 500 ms to the phone server when it is already running [E] | Emu (fixture on `10.0.2.2`) | PJ-01 extra section | T4 |
+| PB-08 | First native launch (the migration) | "Updating your app…" on the first frame; migration ≤ 3 s at the owner's real data size; step 0 ≤ 1 s per 100 MB (= S-8) | Emu | upgrade journey trace sections (05 §7) | T3; switch |
+| PB-09 | Background start (receiver, worker, widget provider, tile) to its first useful line | ≤ 150 ms excluding network and excluding the migration gate's first open; no Compose, font, Coil or UI-graph code loaded | Emu | trace section `bg.<component>.ready`; `ArtMetric` class-load list for PR-08 | T4 |
+| PB-10 | Profile effect | cold TTID with `Partial(BaselineProfileMode.Require)` at least **15 % faster** than `CompilationMode.None()` | Emu | PJ-01 both modes | T4 (a miss means the profile is broken) |
+| PB-35 | Startup classes in `classes.dex` | ≥ **95 %** of the startup-profile classes live in `classes.dex` | VPS | `check_startup_dex.py` (§10.5) | T2 |
+
+### 2.3 Smoothness
+
+Frame terms: `frameDurationCpuMs` = UI thread + RenderThread CPU time of a frame; `frameOverrunMs` = how late the
+frame was against its deadline (negative is early), so it is refresh-rate independent. A "janky frame" (PB-12) is a
+SurfaceFlinger FrameTimeline frame of the app's layer whose `jank_type` contains `App Deadline Missed`; other jank
+types (display HAL, SurfaceFlinger) are reported but are not ours.
+
+| Id | What | Target | Device | Method | Gate |
+|---|---|---|---|---|---|
+| PB-11 | Streaming a reply (`perf:stream-6000`, 6,000 words, 3 code fences, glow running) at the live edge | `frameOverrunMs` p50 ≤ −3 ms, p90 ≤ −1 ms, **p95 ≤ 0, p99 ≤ 4 ms** (= S-9, adds p50/p90). `frameDurationCpuMs` p50 ≤ 4.0 ms, p90 ≤ 6.5 ms, p99 ≤ 10 ms at 120 Hz [E] | Phone | PJ-05 `FrameTimingMetric` | T4 phone; switch |
+| PB-11e | same | ≤ +10 % vs last green on every percentile above | Emu | PJ-05 | T4 slice ends 2, 3, 6 and perf-sensitive merges |
+| PB-12 | Jank while streaming | **≤ 1 %** janky app-layer frames (= S-12); emulator ≤ +0.5 points vs last green | Phone, Emu | PJ-05 under Perfetto `oc.pbtxt`, `sql/jank_by_layer.sql` | T4; switch |
+| PB-13 | Fling a 5,000-part transcript (`perf:history-5000`) | as PB-11 and PB-12 (= S-10) | Phone, Emu | PJ-06 | T4; switch |
+| PB-14 | Open a 300-turn chat (warm) | first transcript **≤ 300 ms** (= S-11); no frame overruns by more than one deadline during the open | Phone, Emu | PJ-04 `TraceSectionMetric("chat.openToFirstTranscript")` + `FrameTimingMetric` | T4; switch |
+| PB-15 | Transitions: row → chat transform, predictive back (commit and cancel, both edges), sheet, keyboard, pull to refresh | `frameOverrunMs` p95 ≤ 0; p90 frame duration < 8.3 ms (= S-13); the first frame of row → chat may overrun once (08 §8.1) | Phone, Emu | PJ-07 to PJ-11 | T4; switch |
+| PB-16 | List flings: Conversations (500 rows), Settings hub, Files browser (2,000 entries) | as PB-13 | Emu (phone at the switch session) | PJ-13, PJ-14 | T4 |
+| PB-17 | Recomposition budget | per 50 ms publish while streaming: recomposed kit scopes ≤ 3 (the live block, its turn's live line, the list item wrapper), settled turns **0**; one Conversations row change recomposes **1** row; a status-line change recomposes only the status slot | JVM (Compose host test) + Emu (composition tracing) | `RecompositionBudgetTest` (08 §9.3), `TranscriptRecompositionTest` (09 §14.2), PJ-05 with `runtime-tracing` (§6.4) | T2 (JVM); T4 |
+| PB-18 | Hot-path sections (§5.3 table) | each section's p95 within its row of §5.3 | Phone, Emu | `TraceSectionMetric(Mode.Sum/Count)` + `sql/sections.sql` | T4 |
+| PB-19 | Nothing moves when nothing happens | on Conversations with nothing running and no waiting state, ≤ 2 frames produced in 10 s (no ambient loop runs outside a waiting state, 08 M8-6) | Emu | PJ-16 FrameTimeline frame count | T4 |
+| PB-20 | Input to first visible response | ripple's first frame ≤ 1 frame after the touch-down frame; Send tap → the prompt visible in the transcript ≤ 100 ms; a keystroke in the composer drawn in the next frame | Emu | PJ-10 + Perfetto input slices [U P13-3: which input table trace_processor v59.1 offers] | T4 |
+
+### 2.4 Memory
+
+| Id | What | Target | Device | Method | Gate |
+|---|---|---|---|---|---|
+| PB-21 | PSS on the streaming journey with the 5,000-part transcript open | **≤ 0.6×** Flutter R's PSS on the same AVD (= S-20); phone ≤ 250 MB [E] | Emu, Phone | `dumpsys meminfo <pkg>` TOTAL PSS, median of 3, at the end of PJ-15; `MemoryUsageMetric(Max)` | T4; switch |
+| PB-22 | PSS on Conversations after 5 min idle, foreground | ≤ 160 MB; Java heap (Dalvik) ≤ 64 MB [E] | Phone | PR-09 | T4 phone |
+| PB-23 | PSS hidden, 60 s after `onTrimMemory(UI_HIDDEN)` with no turn running | ≤ 110 MB [E] | Emu | PR-01 sample | T4 |
+| PB-24 | No leak | 20 × (open chat, back) + 20 × (open Settings › Appearance, back): Java heap after a forced GC grows ≤ 2 MB and PSS ≤ 8 MB between cycle 5 and cycle 20 | Emu | PR-09 (`am dumpheap` only on failure) | T4 |
+| PB-25 | Image memory | decoded bitmaps never larger than their box × density (zoom viewer: long edge ≤ 4,096 px or sub-sampled); Coil memory cache `maxSizePercent(0.15)` (09 §14.4) and ≤ 48 MB; hardware bitmaps except where pixels are read | JVM + Emu | `ImageSizingTest` (kit-content, §7.4) + PR-10 Perfetto `android.gpu.memory` [U] | T2, T4 |
+| PB-26 | Voice memory lifecycle | recognizer warm only while recording; freed ≤ 20 s after the recording ends (10 M2); 60 s later the app's native heap is within 20 MB of its pre-dictation value | Emu | PR-11 | T4 (slice 5 on) |
+| PB-27 | Threads | app-process thread count ≤ 100 with 3 live connections and a streaming turn [E] | Emu | `/proc/<pid>/status` `Threads:` at the end of PJ-05 | T4 |
+
+### 2.5 Size (arm64 unless stated; compressed bytes in the signed APK)
+
+| Id | What | Target | Gate |
+|---|---|---|---|
+| PB-30 | arm64-v8a APK | gate **≤ 22 MB** (= S-14); working target **≤ 20 MB** [E] | T2 size gate |
+| PB-31 | Universal APK (arm64 + x86_64 only, §8.3) | gate **≤ 45 MB** (= S-14); working target **≤ 32 MB** [E] | T2 |
+| PB-32 | Growth | ≤ 1 MiB per release unless the release notes say why (= S-14); ≤ 256 KiB per merge unless the slice brief names the growth (tightens S-14) | T2 (merge), release script (release) |
+| PB-33 | Component sub-budgets | every row of §8.2 within its cap | T2 |
+| PB-34 | Installed footprint (APK + extracted native libraries, no user data) | ≤ 55 MB [E] | T3 (`dumpsys package` code size, `du` of `nativeLibraryDir`) |
+
+### 2.6 Background CPU, timers, wake-ups, network and radio
+
+"Hidden" means `DeviceFacts.appVisible == false`. Link demand (04 §6.4): **Foreground**; **BackgroundWatching** (the
+reply-watch FGS runs, or Stay connected is on); **BackgroundIdle** (neither; every stream is cancelled and reports
+`Suspended`).
+
+| Id | What | Target | Device | Method | Gate |
+|---|---|---|---|---|---|
+| PB-40 | Hidden and idle (no turn, no phone server, no agents, live mode off) | app CPU **≤ 1 s per hour**; **0** app wake-up alarms except schedules the person set, over 30 min screen off (= S-15) | Emu | PR-01 | T4; switch |
+| PB-41 | Hidden while a phone agent streams (20 helper frames per second) | app process **≤ 5 %** of one core (= S-16) | Emu | PR-02 | T4 slice 3 end; switch |
+| PB-42 | Hidden timers | no repeating timer fires more often than every **60 s** while hidden and idle (= S-17); every timer is declared in a `*Timers.kt` table (§11.2) | JVM + Emu | `TimerTableTest` (JVM) + PR-01 section counts | T2 + T4 |
+| PB-43 | Wake-up alarms | only: user schedules (exact alarms the person allowed), the idle-stop check of the phone server (request code 4095, only while that policy is armed and the app is hidden), and the schedule fallback worker | Emu | `dumpsys alarm` after PR-01 and PR-03 | T4 |
+| PB-44 | Wake locks | 0 ms held while hidden and idle; while working, only inside a lease (≤ 15 min hold, renewed every 5 min, ≤ 6 h aggregate, builtin-linux 31) | Emu | `dumpsys batterystats` wakelock lines after PR-01/PR-03 | T4 |
+| PB-45 | Reply-watch FGS | starts only with a running turn when the app goes to the background; stops **≤ 5 s** after the turn settles; never runs with no running turn unless Stay connected is on | Emu | PR-02 + `dumpsys activity services <pkg>` | T3 |
+| PB-46 | Periodic jobs | no periodic WorkManager request at all; widgets keep `updatePeriodMillis = 0` (as today [R]) | VPS | `ManifestPerfTest` (merged manifest + widget XML) + Konsist K-P12 (no `PeriodicWorkRequest`) | T2 |
+| PB-47 | Foreground idle CPU (Conversations, connected, nothing running, screen on) | ≤ 1 % of one core averaged over 60 s [E] | Emu | PR-09 `/proc/<pid>/stat` | T4 |
+| PB-48 | Foreground streaming CPU, app process only | ≤ 25 % of one core averaged over PJ-05 [E] | Phone | PJ-05 + `/proc/<pid>/stat` | T4 phone |
+| PB-50 | One event stream per live OpenCode 2 connection | exactly **1** open `/api/event` request per connection (04 N4-D9, row B-PROTO-134) | JVM + Emu | contract test + fixture-server request log in PJ-05 | T2, T4 |
+| PB-51 | Reconnect while hidden (BackgroundWatching) | retries after 1 s, 2 s, then every **60–120 s, jittered**; ≤ 1 attempt per connection per 60 s after the second (= S-18); on return to the foreground a waiting retry fires at once | JVM + Emu | `BackoffPolicyTest` + PR-04 | T2, T3; switch |
+| PB-52 | Offline | **0** connection attempts to non-loopback hosts while Android reports no default network (= S-18) | JVM + Emu | `NetworkGateTest` + PR-04 airplane mode | T2, T3; switch |
+| PB-53 | BackgroundIdle | **0** open streams and **0** requests (except the update check of PB-55 and the person's schedules) | Emu | PR-01 fixture-server log | T4 |
+| PB-54 | Request counts in the foreground (20 min of chat with 6 returns from the background and 3 chat opens) | provider catalogue reads ≤ 2; provider sign-in reads 0; integration reads 0; permission list reads ≤ 7; question list reads ≤ 7 (numbers from the Flutter budget test `perf_catalog_budget_test.dart:212`) | JVM | `RequestBudgetTest` in `:engine:connection` (virtual time, fake gateway counting calls) | T2 |
+| PB-55 | App update check | ≤ 1 per 24 h; only while the app is in the foreground (or at launch); never schedules a wake-up | JVM | `UpdateCheckCadenceTest` (`:engine:diagnostics`) | T2 |
+| PB-56 | Phone server model list | the phone's own OpenCode 2 server does not fetch the model list at start; it is refreshed when the model picker opens (audit #8, owner decision 5 "yes") | Emu | `OPENCODE_DISABLE_MODELS_FETCH=1` in the server start script [U P13-5: 2.1.1 honours it] + fixture egress log | T3 |
+| PB-57 | Mobile radio, hidden idle, 8 h overnight | app-attributed mobile radio active time ≤ 60 s [E] | Phone (passive read) | `dumpsys batterystats --charged <pkg>` after a normal night, with the owner's OK | phone session |
+
+### 2.7 Battery and heat
+
+| Id | What | Target | Device | Method | Gate |
+|---|---|---|---|---|---|
+| PB-60 | Hidden idle overnight drain | app's estimated power ≤ 10 mAh per 8 h with no phone server and no agents [E] | Phone (passive) | `dumpsys batterystats --charged <pkg>` "Estimated power use" | phone session |
+| PB-61 | Phone server running, idle, app hidden | app uid CPU (app + proot + server) ≤ 30 s per hour [E]; the server's proot tracer 0 ticks in a 15 s idle window (audit measured 0 [R]) | Emu | PR-03 | T4 slice 3 end |
+| PB-62 | Heat tier response | tier recomputed within 10 s of a thermal, headroom, battery, power-save or visibility change; leaves a tier only after 2 calm minutes (`calmFor`) | JVM + Emu | `HeatTierPolicyTest` + PR-05 | T2, T4 |
+| PB-63 | Agent background class | at tier Slow or Hold, ≥ 95 % of the threads of every Paseo helper tree are at nice ≥ 10 (Slow) or 19 (Hold) within 10 s of the change and within 10 s of a new process appearing | Emu | PR-05: `ps -T -o TID,NI,NAME` over the tree | T4 |
+| PB-64 | App smoothness while agents work hard | with the standard agent load (§3.8) at tier Slow: PB-12 jank ≤ 2 % while the transcript streams | Emu | PR-05 + PJ-05 under load | T4 slice 3 end |
+| PB-65 | Orphans | 0 processes of the app's uid with ppid 1 and a proot loader `exe` alive more than 90 s after their proot died | Emu | PR-06 (kill a proot with SIGKILL, watch `ps`) | T3 slice 3 end |
+| PB-66 | Status notification updates | re-posted only when the words change, ≤ 1 per 5 s, ≤ 60 per hour with 3 agents running tools (= S-19) | Emu | PR-07: `PerfTrace` `notify.post` count + `dumpsys notification` | T3; switch |
+| PB-67 | Widget updates | ≤ 1 per 2 s per widget id and only when the rendered model's hash changes; 0 while nothing changes | JVM + Emu | `WidgetUpdateGateTest` + PR-07 | T2, T3 |
+
+### 2.8 Storage I/O
+
+| Id | What | Target | Device | Method | Gate |
+|---|---|---|---|---|---|
+| PB-70 | Main-thread disk and network | **0** StrictMode violations outside the allowlist (ADR §9.7 step 0, crash-loop file ≤ 4 KB) in the `qa` build over all T3 flows (tightens S-21) | Emu | StrictMode `penaltyLog` + a test-only listener counting violations into the problem report | T3 |
+| PB-71 | Writes while streaming | ≤ 1 prefs `commit()` per 2 s per writer lane; app `write_bytes` over a 10 min stream ≤ 5 MB [E] | Emu | `/proc/<pid>/io` before and after PJ-05 ×N | T4 |
+| PB-72 | Voice packs at start-up | 0 full SHA-256 re-hash of installed packs on a normal start (verified stamp, 10 M4) | JVM | `VerifiedStampTest` (`:engine:media`) | T2 |
+
+---
+
+## 3. Measurement: builds, tools and procedures
+
+### 3.1 What each machine may prove
+
+| Claim | VPS | PC emulator | NX721J |
+|---|---|---|---|
+| counts (publishes, recompositions, requests, timers, retries) | **yes** (JVM) | yes | — |
+| size, R8, DEX layout, manifest | **yes** | — | — |
+| relative frame timing, start-up, memory, background behaviour | — | **yes** | — |
+| absolute frame timing, start-up, battery, heat | — | no | **yes, with the owner's OK** |
+
+### 3.2 Build types and what is in each
+
+| Build | App id | Signing | Minified | Profileable | Extras | Used by |
+|---|---|---|---|---|---|---|
+| `stableRelease` | `io.github.eslamasabry.opencode_mobile` | release key per lineage (ADR D2) | yes (R8 full) | **yes**, `<profileable android:shell="true"/>` (§19 P13-D3, security review in section 16) | none | the product; phone field data |
+| `previewRelease` | `….native` | local key | yes | yes | none | the owner's side-by-side preview |
+| `stableBenchmark` (03 §21: `initWith(release)`) | `….bench` | debug | yes | yes | `src/benchmark/`: `BenchSeedReceiver`, `testTagsAsResourceId = true` at the root, `runtime-tracing` | T4, Macrobenchmark, Perfetto |
+| `nonMinified…` (generated by the baseline-profile plugin) | `….bench` [U P13-1] | debug | **no** | yes | as benchmark | profile generation only |
+| `qa` (03) | as 03 defines it; never installed over the owner's data | debug | yes | yes | StrictMode (§14.1), migration step hooks (testing-perf §6.6) | T3 functional runs, PR-03 |
+
+Rules:
+
+1. Never run Macrobenchmark or Perfetto against the `stable` package on the emulator or the phone. It holds the
+   built-in Linux and the person's data; `am start -S` (force stop) kills the phone server and agents and cancels
+   alarms until the next launch. Benchmarks always target `….bench`.
+2. The benchmark build differs from release only by the source set `src/benchmark/` and the suffix. A Konsist rule
+   (K-P10, §18) fails if `src/benchmark/` code is referenced from `src/main/`.
+3. `BenchSeedReceiver` is exported only in the benchmark build and protected by `android:permission=
+   "android.permission.DUMP"` (adb shell holds it; apps do not). It seeds one profile that points at the fixture server
+   on `10.0.2.2` (emulator) or the PC's Tailscale address (phone session), with the fixed fixture password `bench`
+   (not a secret: the fixture server serves only recorded data). It never touches another profile.
+4. **P13-1 [U]:** the baseline-profile plugin 1.5.0 creates `benchmark<BuildType>` and `nonMinified<BuildType>` build
+   types for every app build type. 03 §21 also declares a manual `benchmark` type. Slice 0 (WP-13.0) settles it:
+   default keep 03's manual type for measurement and use the plugin's `nonMinifiedRelease` for generation; disable
+   the plugin's own benchmark types if they duplicate (`baselineProfile { … }` variant filters). Record the final task
+   names in `native/tool/t4.sh`.
+
+### 3.3 The `:android:benchmark` module
+
+```kotlin
+// native/android/benchmark/build.gradle.kts
+plugins {
+    id("com.android.test")
+    id("androidx.baselineprofile")            // 1.5.0; no newDsl=false needed on AGP 9 [V testing-perf §1]
+}
+android {
+    namespace = "io.github.eslamasabry.oc.android.benchmark"
+    compileSdk = 37
+    defaultConfig {
+        minSdk = 28                            // [E] the module only ever runs on API 33+ devices here (OC_API37, NX721J;
+                                               // root-free profile generation needs 33+); the app itself stays minSdk 26
+        targetSdk = 36
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        missingDimensionStrategy("channel", "stable")
+    }
+    targetProjectPath = ":androidApp"
+    experimentalProperties["android.experimental.self-instrumenting"] = true
+    buildTypes {
+        create("benchmark") {
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
+    }
+}
+baselineProfile { useConnectedDevices = true }          // the PC's OC_API37 (API 33+ needs no root) [V testing-perf §9.3]
+dependencies {
+    implementation(libs.androidx.benchmark.macro.junit4)  // 1.5.0
+    implementation(libs.androidx.test.uiautomator)        // 2.4.0
+    implementation(libs.androidx.test.ext.junit)
+}
+```
+
+Source layout (`io.github.eslamasabry.oc.benchmark`):
+
+```
+BenchTarget.kt            const PACKAGE = "io.github.eslamasabry.opencode_mobile.bench"; seed(); fixture names
+startup/StartupBenchmark.kt           PJ-01, PJ-02
+startup/EntryBenchmark.kt             PJ-03
+chat/OpenChatBenchmark.kt             PJ-04
+chat/StreamingBenchmark.kt            PJ-05   (08 J2, 09 J2)
+chat/TranscriptFlingBenchmark.kt      PJ-06   (08 J3, 09 J3)
+motion/RowToChatBenchmark.kt          PJ-07   (08 J4)
+motion/PredictiveBackBenchmark.kt     PJ-08   (08 J5)
+motion/SheetBenchmark.kt              PJ-09   (08 J6 + the sheets of 09 J4)
+motion/ImeBenchmark.kt                PJ-10   (08 J7 + the keyboard of 09 J4)
+motion/RefreshBenchmark.kt            PJ-11   (08 J8)
+chat/WorkLineBenchmark.kt             PJ-12   (09 J5)
+lists/ListFlingBenchmark.kt           PJ-13, PJ-14
+memory/MemoryJourneyBenchmark.kt      PJ-15
+idle/IdleFramesBenchmark.kt           PJ-16
+profile/BaselineProfileGenerator.kt   §10
+```
+
+Section 08's files under `motion/` are written by the 08 M6 unit (Sonnet) inside this module; the perf lead owns the
+module and reviews them.
+
+### 3.4 The journey registry
+
+All journeys: `StartupMode` as listed, `CompilationMode.Partial(BaselineProfileMode.Require)` unless stated,
+iterations 10 (startup) or 5 (journeys of 20 s or more), gesture navigation on (08 §9.5), animations **on** (frame
+journeys measure motion), the fixture server FX-OC2 on the PC (09 §14.3; owner: the flows lane, section 14).
+
+| Id | Class | Steps | Metrics | Budgets |
+|---|---|---|---|---|
+| PJ-01 | `StartupBenchmark.cold` | `pressHome()`; `startActivityAndWait()`; wait for the first Conversations row | `StartupTimingMetric`, `TraceSectionMetric("app.onCreate")`, `("app.first_connected")`, `ArtMetric` | PB-01..03, 03b, 07, 10 |
+| PJ-02 | `StartupBenchmark.warm/hot` | as PJ-01 in WARM and HOT | `StartupTimingMetric` | PB-04, 05 |
+| PJ-03 | `EntryBenchmark` | kill; `startActivityAndWait(Intent(ACTION_VIEW, "opencode-mobile://session?…fixture"))` | `StartupTimingMetric`, `TraceSectionMetric("chat.openToFirstTranscript")` | PB-06 |
+| PJ-04 | `OpenChatBenchmark` | warm; tap the 300-turn conversation | `TraceSectionMetric("chat.openToFirstTranscript")`, `FrameTimingMetric` | PB-14 |
+| PJ-05 | `StreamingBenchmark` | open an empty chat; type `perf:stream-6000` into `chat-composer-field`; tap `chat-send-button`; wait for idle | `FrameTimingMetric`, `TraceSectionMetric` for §5.3 sections; Perfetto in the PR-10 variant | PB-11, 12, 17, 18, 48, 50, 71 |
+| PJ-06 | `TranscriptFlingBenchmark` | open `perf:history-5000`; fling up 10×, down 10× (09's count; 08 said 5, 09 wins as the chat owner) | `FrameTimingMetric` | PB-13 |
+| PJ-07 | `RowToChatBenchmark` | 08 §9.5 J4 | `FrameTimingMetric`, `TraceSectionMetric("shell.rowTransform")` | PB-15 |
+| PJ-08 | `PredictiveBackBenchmark` | 08 §9.5 J5 (commit and cancel, both edges) | `FrameTimingMetric` | PB-15 |
+| PJ-09 | `SheetBenchmark` | 08 J6, then 09 J4's + sheet and request-details sheet | `FrameTimingMetric` | PB-15 |
+| PJ-10 | `ImeBenchmark` | 08 J7 | `FrameTimingMetric` | PB-15, PB-20 |
+| PJ-11 | `RefreshBenchmark` | 08 J8 | `FrameTimingMetric` | PB-15 |
+| PJ-12 | `WorkLineBenchmark` | 09 J5 (`perf:tools-200`: open the work line, fold, jump from find) | `FrameTimingMetric` | PB-15 |
+| PJ-13 | `ListFlingBenchmark.conversations` | seed 500 conversations (fixture); fling 10× each way | `FrameTimingMetric` | PB-16 |
+| PJ-14 | `ListFlingBenchmark.settingsFiles` | Settings hub fling; Files browser over a 2,000-entry fixture folder | `FrameTimingMetric` | PB-16 |
+| PJ-15 | `MemoryJourneyBenchmark` | PJ-05 then PJ-06 in one iteration | `@OptIn(ExperimentalMetricApi::class) MemoryUsageMetric(MemoryUsageMetric.Mode.Max)` (heap size, RSS anon, RSS file, GPU [V reference docs]) + `dumpsys meminfo` | PB-21 |
+| PJ-16 | `IdleFramesBenchmark` | open Conversations; wait 2 s; measure 10 s doing nothing | Perfetto FrameTimeline frame count | PB-19 |
+
+#### 3.4.1 Sketch: streaming journey
+
+```kotlin
+// android/benchmark/src/main/kotlin/io/github/eslamasabry/oc/benchmark/chat/StreamingBenchmark.kt
+@RunWith(AndroidJUnit4::class)
+class StreamingBenchmark {
+    @get:Rule val rule = MacrobenchmarkRule()
+
+    @Test fun PB_11_streaming_frames() = rule.measureRepeated(
+        packageName = BenchTarget.PACKAGE,
+        metrics = listOf(
+            FrameTimingMetric(),
+            TraceSectionMetric("chat.applyBatch", TraceSectionMetric.Mode.Sum),
+            TraceSectionMetric("chat.publish", TraceSectionMetric.Mode.Sum),
+            TraceSectionMetric("md.parseTail", TraceSectionMetric.Mode.Sum),
+            TraceSectionMetric("kit.reveal.fade", TraceSectionMetric.Mode.Sum),
+        ),
+        compilationMode = CompilationMode.Partial(BaselineProfileMode.Require),
+        startupMode = StartupMode.WARM,
+        iterations = 5,
+        setupBlock = {
+            BenchTarget.seed(this)   // device.executeShellCommand("am broadcast … BenchSeedReceiver"): runs as shell, which holds DUMP
+            uiAutomator { startApp(BenchTarget.PACKAGE); onElement { textAsString() == "Fixture: empty" }.click() }
+        },
+    ) {
+        uiAutomator {
+            onElement { viewIdResourceName == "chat-composer-field" }.setText("perf:stream-6000")
+            onElement { viewIdResourceName == "chat-send-button" }.click()
+            onElement(120_000) { textAsString() == "END-OF-FIXTURE" }   // the fixture's last line; 120 s wait
+        }
+    }
+}
+```
+
+`TraceSectionMetric.Mode` values other than `First` and `Sum` (e.g. `Count`) are used only after P13-2 confirms them
+on 1.5.0 [U]. The exact members of the UIAutomator 2.4 scope inside `MacrobenchmarkScope` (it extends
+`UiAutomatorTestScope` since benchmark 1.5.0 [V testing-perf §7]) are fixed by the first compile in WP-13.0 (P13-2).
+
+#### 3.4.2 Sketch: cold start with both compilation modes
+
+```kotlin
+@RunWith(AndroidJUnit4::class)
+class StartupBenchmark {
+    @get:Rule val rule = MacrobenchmarkRule()
+    @Test fun PB_01_cold_profiled() = cold(CompilationMode.Partial(BaselineProfileMode.Require))
+    @Test fun PB_10_cold_unprofiled() = cold(CompilationMode.None())
+
+    private fun cold(mode: CompilationMode) = rule.measureRepeated(
+        packageName = BenchTarget.PACKAGE,
+        metrics = listOf(StartupTimingMetric(), TraceSectionMetric("app.onCreate"), ArtMetric()),
+        compilationMode = mode, startupMode = StartupMode.COLD, iterations = 10,
+        setupBlock = { pressHome() },
+    ) {
+        startActivityAndWait()
+        uiAutomator { onElement { textAsString() == "Fixture: empty" } }   // a cached row: TTFD reported by the app
+    }
+}
+```
+
+#### 3.4.3 Trace sections every build carries
+
+Names never contain message text, paths, ids or host names (B-SEC-117). Recorded through the `Trace` facade
+(`:core:common`, 03 §18.5) → `androidx.tracing` 2.0.5 on Android.
+
+| Section | Where | Budget |
+|---|---|---|
+| `app.onCreate`, `app.crashLoopGuard`, `app.migrationStep0`, `app.graph` | `OcApplication` | PB-03, PB-08 |
+| `main.onCreate`, `shell.firstComposition` | `MainActivity`, `:ui:shell` | PB-01 |
+| marks `app.main`, `app.first_frame`, `app.first_connected` (Flutter names kept, 03 §18.5) | `PerfTrace` | PB-03b, PB-07 |
+| `bg.<component>.ready` (`bg.widget.status`, `bg.worker.schedule`, `bg.receiver.restore`, …) | `:android:*` bodies | PB-09 |
+| `sse.read`, `sse.parse`, `wire.decode` | `:core:net`, `:protocol:oc2` | PB-18 |
+| `chat.applyBatch`, `chat.publish`, `chat.derive`, `chat.openToFirstTranscript` | `:engine:transcript`, `:feature:chat` | PB-14, PB-18 |
+| `md.parseTail`, `code.tokenize` | `:core:markdown`, `:ui:kit-content` | PB-18 |
+| `kit.reveal.word`, `kit.reveal.fade`, `kit.glow.draw`, `shell.rowTransform`, `shell.predictive`, `kit.sheet.settle` | 08 §9.5 | PB-15, PB-18 |
+| `heat.tier`, `agents.priority` | `:engine:runtime`, `:android:linux` | PB-62, PB-63 |
+| `notify.post`, `widget.update` | `:android:background`, `:android:widgets` | PB-66, PB-67 |
+
+`analyze.py` checks PB-03b by order: no `http` span (`PerfTrace` HTTP spans, 03 §18.5) and no `prefs.load` section on
+the main thread starts before the `app.first_frame` mark.
+
+### 3.5 Scripted runs (not Macrobenchmark)
+
+All run from `native/tool/perf/` on the PC with the emulator lock held; all write `perf/results/<date>-<sha>/PR-NN.json`.
+
+| Id | Script | What it does | Budgets |
+|---|---|---|---|
+| PR-01 | `hidden_run.sh --scenario idle --minutes 30` | seed; open; connect; Home; screen off; 30 min; then 30 min more with `dumpsys deviceidle force-idle` | PB-23, 40, 42, 43, 44, 53 |
+| PR-02 | `hidden_run.sh --scenario watching --minutes 10` | start `perf:stream-6000` (slowed fixture: 10 min); Home; screen off; sample; also a fake phone-agent feed at 20 frames/s (S-16 setup) | PB-41, 45 |
+| PR-03 | `hidden_run.sh --scenario phone-server --minutes 30` | the `stable`-equivalent `qa` build with the built-in Linux installed from the emulator snapshot `linux-ready` [U: snapshot made in WP-13.6]; server running, no agents; hidden 30 min | PB-43, 44, 61 |
+| PR-04 | `offline_run.sh` | `cmd connectivity airplane-mode enable` for 10 min while BackgroundWatching, then disable; also hidden with the fixture server stopped for 10 min | PB-51, 52 |
+| PR-05 | `heat_run.sh` | standard agent load (§3.8); `cmd thermalservice override-status 2` (moderate) then 0; `dumpsys battery unplug; dumpsys battery set level 15`; `cmd power set-mode 1` (battery saver); hidden/visible toggles; sample nice values every 5 s | PB-62, 63, 64 |
+| PR-06 | `orphan_run.sh` | start an agent tool loop under proot; on the rootable `google_apis` emulator `adb root`, then `kill -9 <proot pid>` (exact PID from `ps`, never by pattern); watch for orphans every 5 s for 3 min | PB-65 |
+| PR-07 | `notify_run.sh` | 3 fake agents running tools for 60 min (fixture Paseo); count `notify.post` and widget updates | PB-66, 67 |
+| PR-08 | `bg_start_run.sh` | `am broadcast` a widget update, a schedule alarm and a restore event to the cold process; read `bg.*.ready` | PB-09 |
+| PR-09 | `fg_idle_run.sh` | 5 min on Conversations; CPU, PSS; then the 20+20 open/close cycles of PB-24 | PB-22, 24, 47 |
+| PR-10 | `trace_run.sh <journey>` | wraps any PJ in Perfetto with `oc.pbtxt`; runs `sql/*.sql` | PB-12, 18, 19, 20 |
+| PR-11 | `voice_run.sh` | 3 × (hold to talk 20 s, release, wait 60 s) with the `tiny` pack; native heap via `dumpsys meminfo` | PB-26 |
+| PR-12 | `flutter_vs_native.sh <journey>` | the same Maestro flow on Flutter R and on native `.bench`, each under Perfetto; jank by layer for both (testing-perf §9.2) | PB-01e, 12 (baseline) |
+
+Restoring after every run (the script's `trap`): `dumpsys battery reset`, `cmd thermalservice reset`, `cmd power
+set-mode 0`, `cmd connectivity airplane-mode disable`, `dumpsys deviceidle unforce`, animator scales back to 1, screen
+on. A run that cannot restore exits 2 (02 §8 script contract).
+
+### 3.6 Field numbers from the app itself (the owner's phone without adb)
+
+The app records its own performance locally. Nothing leaves the phone (ADR §9.6); the person sees it in **This phone ›
+Details › Performance** (existing page, no new level) and can attach it to "Report a problem".
+
+| Signal | API | Where | Shown as |
+|---|---|---|---|
+| Real cold, warm and hot starts with first-frame and fully-drawn times | `ApplicationStartInfo` (API 35+): `ActivityManager.addApplicationStartInfoCompletionListener(executor, listener)`, `getStartupTimestamps()[START_TIMESTAMP_FIRST_FRAME]`, `startType` (`START_TYPE_COLD/WARM/HOT`) [V reference; listener name U, checked at compile] | `:android:platform` `StartupHistory` → `:engine:diagnostics` | "Opens in 0.3 s (typical this week)" |
+| Smoothness in the last hour | JankStats 1.0.0 (`metrics-performance`) [V Maven]: `JankStats.createAndTrack(window) { fd -> … }`; UI state tags `screen`, `streaming` through `PerformanceMetricsState` | `:android:platform` `FieldFrameStats`, started by `MainActivity` only while resumed; aggregated per minute in memory | "Smooth: 99 of 100 frames on time in the last hour" |
+| Whether the speed-up profile is compiled | `ProfileVerifier.getCompilationStatusAsync()` (profileinstaller 1.4.1): `isCompiledWithProfile`, `profileInstallResultCode`, `hasProfileEnqueuedForCompilation` | `:android:platform` | "Speed-up: ready / waits for the phone to rest" |
+| Why the app last stopped | `ApplicationExitInfo` (exists today: `AppLifecycle`, 11) incl. `MemoryLimiter:AnonSwap` (ADR) | `:engine:diagnostics` | existing rows |
+| A system trace when the app starts slowly or stops responding | `ProfilingManager` (API 35) with `ProfilingTrigger.TRIGGER_TYPE_APP_FULLY_DRAWN` and `TRIGGER_TYPE_ANR` (API 36) [V reference], `setRateLimitingPeriodHours(24)`; the file path comes from `ProfilingResult.getResultFilePath()` (under `files/profiling/`) [V] | `:android:platform` `TraceRecorder` | Off by default; one switch row "Record a performance trace when the app starts slowly" (§19 P13-D3) |
+| Heat and battery while agents run | `DeviceFacts.thermal`, `thermalHeadroom`, `battery` (11 CR11-5) | `:engine:runtime` | existing heat line |
+
+Costs: JankStats adds a per-frame `FrameMetrics` listener; budget ≤ 0.1 ms per frame on the UI thread [E], measured
+once in PJ-05 with and without it (WP-13.4). All of it is off while the app is hidden.
+
+### 3.7 Noise control and the comparison rule
+
+1. **Quiet PC.** `t4.sh` refuses to start unless: the 1-minute load average < 2.0, no Gradle daemon is running
+   (`./gradlew --status` shows none, or `pgrep` by exact PID file), free RAM ≥ 4 GB, and `hog_watch` reports nothing
+   (memory `hog-watch-monitor`). It holds the emulator lock for the whole run.
+2. **Same emulator state.** `OC_API37`, cold-booted from the snapshot `perf-base` (no other apps' updates, Play
+   services idle), `-gpu host` [U P13-4: if host GPU fails on this PC, all runs use the same software mode and the
+   result JSON says so]. Animator scales 1.0, gesture navigation on, font scale 1.0, dark theme off, screen timeout 30
+   min, stay awake on.
+3. **Iterations.** Start-up 10; frame journeys 5; scripted runs once (they are long).
+4. **The rule** (`compare.py`): a metric **regresses** when `median_new > median_green × 1.10` **and**
+   `p25_new > median_green`. On regression the journey reruns once; two failing runs make the result red. One
+   improvement does not move `last-green.json`; the coordinator moves it when a merge's T4 is green.
+5. **Same-day reference.** Every slice-end T4 also measures Flutter R on PJ-01 and PR-12 (it is already installed
+   under the main package on the emulator), so a slow PC day shows up in both numbers.
+6. **Refresh rate.** The result JSON records `dumpsys display` refresh rate during the run. Budgets use
+   `frameOverrunMs`, which does not depend on it.
+
+Result JSON (`perf/results/<date>-<sha>/<id>.json`):
+
+```json
+{
+  "schema": 1, "id": "PJ-05", "sha": "…", "versionCode": 10012, "build": "stableBenchmark",
+  "device": "OC_API37", "refreshHz": 60, "gpu": "host", "date": "2026-11-20",
+  "metrics": { "frameOverrunMs": { "p50": -9.1, "p90": -4.2, "p95": -1.0, "p99": 2.8, "n": 3104 },
+               "frameDurationCpuMs": { "p50": 3.1, "p90": 5.9, "p99": 9.4 } },
+  "budgets": { "PB-11e": "pass", "PB-12": "pass" },
+  "lastGreen": "perf/results/2026-11-18-ab12cd3/PJ-05.json"
+}
+```
+
+### 3.8 Fixtures and the standard loads
+
+| Fixture | Owner | Content |
+|---|---|---|
+| FX-OC2 | flows lane (section 14) | OpenCode 2.1.1 on the PC with the deterministic model `tool/qa/issue87/mock_llm.py` [R], plus 09's prompts `perf:stream-6000`, `perf:history-5000`, `perf:tools-200` |
+| Replay server | section 14 | recorded fixtures with `: t=+40ms` pacing (testing-perf §8.2); used for PR-02's slowed stream and PR-04 |
+| `Fixture: empty`, 300-turn chat, 500 conversations | perf lead (seed) | seeded by `BenchSeedReceiver` against FX-OC2 |
+| 2,000-entry folder | perf lead | created in FX-OC2's project dir by `t4.sh` |
+| **Standard agent load** | perf lead | inside the emulator's built-in Linux: two `sh -c 'while :; do :; done'` loops started by a fake Paseo helper tree whose argv contains `paseo daemon run --home /home/oc/.oc-profiles/` (so `AgentPriority` finds it [R `AgentPriority.kt`]) |
+
+The fixture server never uses the per-run OpenCode password in a log or a command line (AGENTS.md); `bench` is the
+replay server's fixed fixture password.
+
+### 3.9 JVM microbenchmarks on the VPS (indicative)
+
+- Tool: kotlinx-benchmark **0.5.0** (2026-09-01) [V Maven] (JMH) in a new JVM module `:tools:bench` that depends on the
+  desktop variants of `:core:net`, `:core:markdown`, `:engine:transcript` and `:protocol:oc2` (coordinator amendment
+  A7: `:tools:*` may depend on these; nothing depends on `:tools:bench`).
+- Benchmarks: `SseParserBench` (16 MiB of recorded frames, MB/s), `WireDecodeBench` (`messages_2_1_1.json` page),
+  `TranscriptApplyBench` (5,000 deltas into a 5,000-part transcript), `StreamingMarkdownBench` (2 KB appends to a
+  20 KB message), `CodeTokenizerBench` (SyntaxMP vs Highlights 1.1.0 on a 2,000-line Kotlin file; the rendering-chat
+  swap rule).
+- Run nightly on the VPS outside 00:00–02:00 only if no T2 runs; the VPS is shared, so the gate is a **25 %**
+  regression against the 7-day median, reported, not blocking. A blocking number always comes from the emulator or
+  from a JVM count test.
+
+---
+
+## 4. Start-up plan
+
+### 4.1 What runs before the first frame (and nothing else)
+
+`OcApplication.onCreate` follows ADR §9.7 / 05 §7.1 exactly: (1) crash handler, (2) `Redactor`, (3) crash-loop guard,
+(4) step 0 (first native launch only), (5) build `AndroidAppGraph`, (6) start `MigrationRunner` on IO, (7) warm the
+prefs file on IO. `MainActivity.onCreate`: `enableEdgeToEdge()`, `super.onCreate`, `setContent { App(…) }`.
+
+Start-up rules (SR), each with its check:
+
+| Rule | Check |
+|---|---|
+| SR1 Only the steps above run on the main thread before `setContent`. | trace order (PB-03b); StrictMode in `qa` (PB-70) |
+| SR2 Building `AndroidAppGraph` does no I/O and creates no store eagerly: every heavy binding is `Lazy<T>` or `Provider<T>` (Metro). Budget for `app.graph`: ≤ 5 ms [E]. | `app.graph` section; Metro graph smoke test lists eager bindings (allowlist in `:quality`) |
+| SR3 The only `androidx.startup` initializers are `ProfileInstallerInitializer` (it defers its work past the first frame), `ProcessLifecycleInitializer` (needed for `appVisible`) and `EmojiCompatInitializer` (pulled in by Compose; loads its font off the main thread) [U WP-13.3: the list is read from the first merged manifest and frozen in the test]. WorkManager uses on-demand initialization (05 §7.1). Every other `ContentProvider` in the merged manifest is a `FileProvider`. | `ManifestPerfTest` (`:quality`, reads `processStableReleaseMainManifest` output) |
+| SR4 No `getSharedPreferences` on the main thread: step 7 warms the file on IO; UI reads wait for the store's in-memory snapshot (03 §10.4). | StrictMode; `prefs.load` section must be off main |
+| SR5 Network starts after the first frame: `ConnectionRegistry` starts streams from the bootstrap in `:engine:entry`, which waits for `app.first_frame`. | trace order (PB-03b) |
+| SR6 No splash hold: `windowSplashScreenBackground` (API 31+) and `windowBackground` (26–30) from the theme; never `setKeepOnScreenCondition`; no `core-splashscreen` dependency. | review; `BannedDependenciesTest` |
+| SR7 Fonts: Geist variable TTFs are kit compose resources (06 K7). The first composition uses one sans weight. P13-6 [U] measures `font.load` on the emulator; if the first use of the variable font costs > 10 ms, the kit's `androidMain` loads the same TTFs from Android `res/font` (platform-cached typefaces) behind the same `KitFonts` API, recorded in `JETPACK_AHEAD.md`. | `font.load` section |
+| SR8 Strings: the first screen's CMP string file is read once on IO during step 7 (`Words.preload(Feature.Chats)`) so the first composition does not wait on it [U P13-6: measure `words.load`]. | `words.load` section |
+| SR9 Background components (receivers, workers, widget providers, tiles, services) never touch Compose, fonts, Coil, CMP resources (they use `strings_os` Android res, ADR §7.5) or `:ui:*`. | `ArtMetric` class-load list in PR-08 contains no `androidx.compose.*` class; Konsist: `:android:*` cannot depend on `:ui:kit*` (ADR §6.1 already) |
+| SR10 `isMainProcess()` uses `Application.getProcessName()` (API 28+) or `/proc/self/cmdline` (26–27), never `ActivityManager.getRunningAppProcesses()` (a binder call). | review |
+
+### 4.2 Fully drawn
+
+`:ui:shell` `androidMain` wraps the root content:
+
+```kotlin
+// ui/shell/src/androidMain/kotlin/io/github/eslamasabry/oc/ui/shell/StartupReporting.android.kt
+@Composable
+internal fun ReportStartup(state: ShellStartupState) {
+    // TTFD: the first page of Conversations rows drawn from the cached snapshot, or the "Opening…" state
+    // when there is no cache. Never waits for the network (PB-02).
+    ReportDrawnWhen { state.firstPageDrawn || state.showsOpeningState }
+}
+```
+
+`ReportDrawnWhen` is `androidx.activity.compose` (activity 1.13.0, ADR §8). `ShellStartupState` comes from
+`ConversationsViewModel`'s `XUi` (`firstPageDrawn`). The same moment is the `TRIGGER_TYPE_APP_FULLY_DRAWN` trigger of
+§3.6.
+
+### 4.3 The Room trigger (ADR §9.8, P5) is a performance measurement
+
+The perf lead runs P5's numbers in slice 0 with PJ-01 on two seeded prefs files (100 KB and max(10 MB, the owner's
+real size)) and PR-08 for the background starts. The result goes to the coordinator with the rule exactly as the ADR
+states it. Section 13 adds one more observation to the same record: the time of one `commit()` of the large file on
+the emulator (SharedPreferences rewrites the whole XML on every commit), because PB-71 depends on it.
+
+---
+
+## 5. Rendering and streaming smoothness
+
+### 5.1 The streaming path and who owns each step
+
+```
+socket ─► sse.read (IO, 16 KiB buffer) ─► sse.parse ─► Channel(4096) ─► wire.decode (Default)
+      ─► chat.applyBatch (transcript serial dispatcher) ─► chat.publish ≤ every 50 ms (first delta at once)
+      ─► ViewModel combine ─► Compose: live block item only ─► md.parseTail ─► layout of one block ─► draw (fade mask)
+```
+
+Owners: `:core:net` (04 §6.6), `:protocol:oc2`, `:engine:transcript` and `:core:markdown` (09), `:ui:kit-chat` (08 §5.1).
+This section sets the budgets and the measurement; it changes none of their designs.
+
+### 5.2 Frame budget arithmetic at 120 Hz (8.33 ms per frame)
+
+| Phase on the UI thread | p90 budget [E] | Why it holds |
+|---|---|---|
+| Composition | ≤ 1.5 ms | only the live block item and its live line recompose (PB-17) |
+| Measure and layout | ≤ 2.0 ms | one block re-measures per tail update (09 `BlockRelayoutCounterTest`); `LineBreak.Simple` |
+| Draw (recording) | ≤ 1.0 ms | glow, fade, caret, rings are draw-phase only (08 §8.2) |
+| Slack for input, IME, GC | ≥ 3.8 ms | |
+| RenderThread | ≤ 4.0 ms p90 | one offscreen layer for the live block; no blur except D10 frost |
+
+### 5.3 Hot-path section budgets (PB-18)
+
+| Section | Thread | p95 budget per call [E] | Notes |
+|---|---|---|---|
+| `sse.parse` | IO | ≤ 0.2 ms per frame ≤ 4 KB | B-PROTO-033 vectors prove correctness; this proves speed |
+| `wire.decode` | Default | ≤ 0.5 ms per event ≤ 4 KB; frames > 50 KB never on the main thread (B-AGENT-150) | `WireJson`, no reflection |
+| `chat.applyBatch` | transcript dispatcher | ≤ 2 ms per 50 ms batch on a 5,000-part transcript | `PersistentList`; linear merge (B-CHAT-096) |
+| `chat.publish` | transcript dispatcher | ≤ 0.5 ms | immutable `TranscriptState` |
+| `chat.derive` | Default | ≤ 2 ms | 09; skipped with no subscriber (09 §14.5) |
+| `md.parseTail` | Default | ≤ 1 ms per append to a 20 KB message | `StreamingMarkdownFile` re-parses the unstable tail only |
+| `code.tokenize` | Default | ≤ 8 ms per 400-line fence, once per settled fence; sources > 20,000 chars stay plain | 48-entry cache (09 §14.4) |
+| `kit.reveal.fade` | UI (draw) | ≤ 1 ms (08 S8-2) | |
+| `kit.glow.draw` | UI (draw) | ≤ 0.5 ms (08 §8.1) | |
+
+### 5.4 Rules that keep frames on time (each has a check)
+
+| # | Rule | Check |
+|---|---|---|
+| R-F1 | State read in the latest phase possible: scroll offsets and animated values are read inside `Modifier.offset { }`, `graphicsLayer { }`, `drawBehind { }`, `drawWithCache { }` or layout lambdas, never in composition. | 08 R3; Compose host test of each kit loop part (no recomposition during 1 s of animation) |
+| R-F2 | Every `LazyColumn`/`LazyRow` `items(…)` call passes `key =` and `contentType =`. | Konsist K-P6 (text check in `:ui:kit*` and `:feature:*`) |
+| R-F3 | No `animateItem()` with a non-null `placementSpec` on transcript items (demo lesson: growing rows animated their neighbours). | Konsist K-P7 |
+| R-F4 | No per-frame `AnnotatedString` changes; the word fade is a draw-phase mask (ADR §9.3). | 09 `RevealDrawOnlyTest` |
+| R-F5 | `preferredFrameRate(High)` only through `KitPlatform.highFrameRate(active)`, only while a reveal, transform or predictive preview runs, only under motion level Full (08 M8-16). | Konsist K-P9 |
+| R-F6 | Infinite transitions only in the files listed in `config/ambient-loops.txt` (composer glow, `KitSpin`, live-line sweep, step light, Stop ring, caret, refresh breath), each started only when `KitMotion.state` allows its loop class (08 §3). A hand loop `while (…) { delay() }` in UI code is banned (it also keeps test schedulers busy, testing-perf §4.2). | Konsist K-P1, K-P8 |
+| R-F7 | `remember` derived values; `derivedStateOf` for values computed from scroll state; no allocation of lambdas or lists inside `items { }` content beyond what strong skipping handles. | compiler reports (§6.3); review |
+| R-F8 | Images in lists decode at the item's size (Coil `AsyncImage` with constrained size); GIFs animate only while visible. | §7.4 tests |
+| R-F9 | Text: `LineBreak.Simple`, `Hyphens.None` in the transcript; no `onTextLayout` work on every frame. | review; 09 |
+| R-F10 | Heavy UI work never runs on the main thread: no JSON, no regex over a whole message, no file reads in composition or in click handlers; ViewModels hand them to engines. | StrictMode (PB-70); Konsist bans `java.io` in features (ADR §6.3 rule 1 already) |
+
+### 5.5 Frame-rate and adaptive refresh
+
+- Follow 08 §8.3: on adaptive-refresh devices views default to "Normal" (≈ 60 Hz); the live block votes High while
+  it reveals; nothing ever asks for less than 60.
+- The glow and other ambient loops do not vote High. The audit's 60 fps cap question (#10) stays as the owner
+  answered it: **not now** [R audit decisions]. Section 13 adds only a number: PR-10 records `kit.glow.draw` time and
+  the display rate while only the glow runs, on the emulator and in the phone session, so the question can return
+  with data.
+
+### 5.6 The demo's streaming mistakes, as tests
+
+| Demo behaviour [R rendering-chat §1] | Native guard |
+|---|---|
+| `remember(text) { parseMarkdown(text) }` re-parsed the whole reply every frame | 09 `TailUpdateTest`: 10 tail re-parses, 0 full parses |
+| `fadeTail` built new `SpanStyle`s every frame, re-measuring the paragraph | 09 `RevealDrawOnlyTest` |
+| `animateItem(placementSpec = …)` on every row animated rows above the growing reply | K-P7 |
+| `reduceMotion` read once at start | Compose `MotionDurationScale` follows the live setting; `KitPlatform.signals.animatorScale` is a live flow (06/08) |
+
+---
+
+## 6. Compose stability configuration and recomposition budgets
+
+### 6.1 The configuration file
+
+`native/config/compose-stability.conf`, applied by `oc.kmp.compose` to every Compose module (03 §19.2). The content
+in 03 §19.2 stands. Two additions, each confirmed by P4 before it is merged [U P4]:
+
+```
+// Actions interfaces are implemented by ViewModels and only hold methods. Screens take (XUi, XActions) (ADR §9.1).
+io.github.eslamasabry.oc.feature.**.presentation.actions.*
+// kotlin.time types carried by XUi (kotlinx-datetime 0.8 moved Instant into the stdlib).
+kotlin.time.Instant
+```
+
+So the first rule matches, each feature keeps its `XActions` interface in a `presentation.actions` package
+(coordinator amendment A8 to the 03 package table). Strong skipping is on by default (Kotlin 2.x); nothing turns it
+off.
+
+### 6.2 What a UI state type may hold (Konsist K-P3)
+
+Classes named `*Ui` in `presentation` packages, and every type reachable from their properties inside our packages,
+may hold only: primitives, `String`, enums, our `:core:model`/`:core:domain`/`:core:common` types,
+`kotlinx.collections.immutable` types (`ImmutableList`, `PersistentList`, `ImmutableMap`, `ImmutableSet`), and other
+such classes. Banned in them: `List`, `Map`, `Set`, `MutableList`, arrays, `Flow`, `StateFlow`, `MutableState`,
+`Any`, lambdas. The rule runs over the Kotlin sources, so it fails the T1 that introduces the type.
+
+### 6.3 Compiler reports as a gate
+
+- A T2 step builds `-Poc.composeReports=true` for the `:ui:kit*` modules only (03 §19.2 already wires the reports
+  directory) and runs `tool/perf/check_compose_reports.py`.
+- It reads every `*-composables.txt` and fails when a **public** composable in `:ui:kit`, `:ui:kit-chat` or
+  `:ui:kit-content` has a parameter marked `unstable`, or is `restartable` but not `skippable`, unless the
+  function is listed in `config/compose-unstable-allowlist.txt` with a reason. The allowlist only shrinks (a ratchet,
+  like the Flutter G16 kit count).
+- Feature modules get the same report as information in the T2 summary (count of unstable parameters per module),
+  not a gate.
+
+```python
+# tool/perf/check_compose_reports.py (core of the check)
+pattern = re.compile(r'^(?P<flags>(restartable )?(skippable )?(readonly )?(inline )?)'
+                     r'(scheme\("[^"]*"\) )?fun (?P<name>\w+)\((?P<params>.*)$')
+# a parameter line inside the block starts with "  stable", "  unstable", "  runtime" or "  @static"
+```
+
+[U P13-7: the exact report line format of the Kotlin 2.4.21 Compose compiler; the script's unit test pins it with a
+sample report from slice 0.]
+
+### 6.4 Recomposition budgets (PB-17)
+
+1. **JVM (T2):** 08's `RecompositionBudgetTest` and 09's `TranscriptRecompositionTest` and
+   `OtherConversationQuietTest`. They count with a test-only probe: `:ui:testing` provides `RecompositionProbe`
+   through `LocalRecompositionProbe` (a `staticCompositionLocalOf` whose default is a no-op object). Six kit parts call
+   `probe.hit(tag)` in a `SideEffect`: `KitRow`, `KitTurn`, `KitMarkdownBlock`, `KitWorkLine`, `KitComposer`,
+   `KitStatusLine`. The release cost is one static local read per part [E: unmeasurable; checked once in PJ-05].
+2. **Device (T4):** the `stableBenchmark` build adds `androidx.compose.runtime:runtime-tracing` (1.13.x, needed for
+   recomposition tracing; benchmark build only, so the D12 "no pre-release in release" rule holds). PR-10 with
+   `androidx.benchmark.fullTracing.enable=true` counts slices named after the kit parts during 10 s of streaming with
+   `sql/recompositions.sql`. Budget: settled-turn composables 0, live block ≤ 1 per publish.
+
+---
+
+## 7. Memory and image memory
+
+### 7.1 Who holds memory, and the bounds
+
+| Holder | Bound | Owner |
+|---|---|---|
+| Open transcript handles | LRU of 3 warm per connection; closed 60 s after the last holder (09 §14.4) | `:engine:transcript` |
+| Finished-reply block cache | 512 parts per handle (09 §14.4) | `:engine:transcript` |
+| Deferred parts and deltas | 256 keys and 1 MiB per handle (09 §3.2) | `:engine:transcript` |
+| Code token cache | 48 entries (09) | `:ui:kit-content` |
+| Coil memory cache | `maxSizePercent(context, 0.15)` and ≤ 48 MB | `:ui:kit-content` (`ImageLoading`, 10 M9) |
+| Log ring / error list / `PerfTrace` | 128 entries + 256 KiB / 20 / 2,000 marks (03 §18.3) | `:engine:diagnostics` |
+| `FieldFrameStats` | 60 one-minute buckets (≈ 10 KB) | `:android:platform` |
+| Per live connection (session list, caches, OkHttp pool) | ≤ 8 MB when idle [E] | `:engine:connection` |
+| Voice recognizer | only while recording + 20 s (10 M2) | `:android:media` |
+| Draft attachments | bytes + `Uri`, encoded to base64 only at send (media-voice map §8: a 20 MiB `data:` string was ≈ 27 MB per draft in Flutter) | `:engine:composer` |
+
+### 7.2 Memory pressure
+
+- `:android:platform` registers one `ComponentCallbacks2` and publishes `MemoryPressure` (`Normal`, `UiHidden`,
+  `Moderate`, `Critical`) through `DeviceFacts` (an addition to 11 CR11-5; coordinator amendment A9).
+- On `UiHidden`: transcript handles with no subscriber drop their derived blocks (they keep the engine state); the
+  markdown and code caches drop to a quarter; Coil trims its memory cache (Coil registers its own callbacks).
+- On `Moderate`/`Critical`: the warm recognizer is freed at once (10 M2); handles beyond the selected conversation
+  close; the 512-part caches drop to 64.
+- Nothing is ever dropped that would cost a network refetch of durable data while the app is hidden (PB-53).
+
+### 7.3 Never judge native capacity by the Java heap
+
+`ActivityManager.memoryClass` sizes Java-heap caches only (it is what Coil's `maxSizePercent` uses). Decisions about
+native work (voice packs, the phone's Linux, agents) use **total RAM** (`MemoryInfo.totalMem`) and live
+`MemAvailable`, never `memoryClass` (memory `voice-model-memory-gate`; 10 keeps the gate: Whisper small 3,400 MB,
+base 1,536, tiny 1,024, Kokoro 2,000).
+
+### 7.4 Image rules (PB-25)
+
+1. All images go through `KitImage`/`KitZoomableImage`/`KitSvgImage` (kit only; 10 M9). Screens never call
+   `AsyncImage`.
+2. The kit passes the slot's size to Coil (`size(Size(widthPx, heightPx))` from the constraints); no
+   `Size.ORIGINAL` outside the zoom viewer.
+3. The zoom viewer decodes at most 4,096 px on the long edge; larger sources use Telephoto's sub-sampling in the
+   kit's `androidMain` (media research §2.6) [U: needed only if a 12 MP screenshot stutters in PJ-14's viewer step].
+4. Hardware bitmaps (Coil's Android default); `allowHardware(false)` only where pixels are read (copy image, QR
+   decode from a picture).
+5. Attachment thumbnails in the composer chips decode once at chip size and are cached by `ImageRef`.
+6. PDF pages: one request at a time, visible pages only, ≤ 1,536 px long edge, ≤ 2 MP (10 M12, the isolated service).
+7. Widgets carry no bitmaps (RemoteViews bitmap cap, android-surfaces §2.2).
+8. The disk-cache question is a conflict between 09 §14.4 ("disk cache only for `file:`/`data:` decodes, 64 MiB") and
+   10 M9 ("no disk cache"). Section 13 needs neither for its budgets; the coordinator resolves it (amendment A10).
+
+`ImageSizingTest` (`:ui:kit-content` host test): a 4,000 × 3,000 source in a 96 dp chip at density 2.75 decodes to
+≤ 264 × 264 px; in the viewer to ≤ 4,096 px long edge.
+
+### 7.5 The phone's Linux is outside the app's PSS but inside its limits
+
+- Android 12+ stops an app's child processes above 32 (builtin-linux 12, memory `phantom-process-limit`); the process
+  budget (switch scope, 02 §3.5) holds new heavy work near the limit.
+- Android 17's memory limiter puts the app's children in its cgroup: about 5 GiB "not visible" on a 16 GB phone
+  (android-surfaces §5) [U, proved in slice 0 on an API 37 emulator]. The process budget reads the app uid's summed
+  RSS (`/proc/*/status VmRSS` of same-uid processes, already sampled by `NativeProcScan`) and holds new heavy work at
+  80 % of that tier [E] once the hypothesis is proved. Owner of the rule: `:engine:runtime` (`ProcessBudget`).
+- These are runtime behaviours, not app PSS budgets; section 13 measures them in PR-03 and PR-05 and reports them.
+
+---
+
+## 8. APK size and how the heavy parts are delivered
+
+### 8.1 The packaging configuration (`:androidApp`)
+
+```kotlin
+// androidApp/build.gradle.kts (extends 03 §21; the ADR §9.9 splits)
+android {
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "x86_64")
+            isUniversalApk = true
+        }
+    }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true      // proot & co. must be extracted to nativeLibraryDir (ADR §9.9)
+            // The universal APK otherwise carries every ABI found in dependencies (sherpa-onnx and zxing-cpp
+            // ship 4 ABIs each). ndk.abiFilters cannot be combined with splits.abi, so exclude by path.
+            excludes += setOf(
+                "lib/armeabi-v7a/**", "lib/x86/**", "lib/armeabi/**", "lib/mips/**", "lib/mips64/**",
+                "**/libsherpa-onnx-c-api.so", "**/libsherpa-onnx-cxx-api.so",   // Kotlin uses only the JNI lib [R media §8]
+            )
+        }
+        resources {
+            excludes += setOf("META-INF/*.version", "kotlin/**/*.kotlin_builtins", "DebugProbesKt.bin",
+                              "kotlin-tooling-metadata.json")
+        }
+    }
+}
+```
+
+Each resource exclusion is checked against `apkanalyzer files list` of the first slice-0 APK (WP-13.0); a line that
+AGP already drops, or that removes something a library reads at runtime, is deleted from the list [U].
+
+Checks at T2 (`check_apk_size.py`, below): the universal APK's `lib/` holds only `arm64-v8a/` and `x86_64/`; no
+`libsherpa-onnx-c-api.so`; every `.so` has ELF `p_align` 0x4000 (`tool/native/check_so_alignment.py`, 10 §2.4). With
+legacy packaging the libraries are deflated in the APK and extracted at install, so zip-level 16 KB alignment does not
+apply; the ELF alignment does [R packages-build §05].
+
+`DebugProbesKt.bin` is the coroutines debug agent resource and is safe to drop in release [U: confirm R8 does not
+need it; it is only read by `kotlinx-coroutines-debug`].
+
+### 8.2 Component sub-budgets (arm64, compressed, PB-33)
+
+| Component | Cap [E] | Basis |
+|---|---|---|
+| sherpa-onnx (onnxruntime 7.9 + JNI 1.9) | ≤ 9.9 MB | 10 §2.5 |
+| zxing-cpp | ≤ 0.8 MB | 10 §2.5 |
+| CameraX (dex after R8) | ≤ 1.2 MB | 10 §2.5 |
+| Coil 3 + svg + gif (dex after R8) | ≤ 1.0 MB | 10 §2.5 |
+| qrose + licence texts | ≤ 0.2 MB | 10 §2.5 |
+| **Media total** | **≤ 13.0 MB** | 10 §2.5 |
+| All other dex (app code, Compose, Material 3 in the kit, Ktor, OkHttp, kotlinx, Metro, Nav3, Termux terminal) | ≤ 4.0 MB | demo 2.46 MB total APK for 3,170 lines with Compose + M3 + Ktor [R]; Flutter's Kotlin dex 2.0 MB compressed [R] |
+| CMP resources (`composeResources/`: 7 languages × one string file per feature, Geist 4 TTFs, brand marks) | ≤ 1.5 MB | ARB en 1.76 MB raw incl. metadata [R]; Flutter fonts 0.74 MB raw [R] |
+| Android `res/` + `resources.arsc` (strings_os, widget layouts, preview PNGs, launcher icons) | ≤ 0.6 MB | Flutter 1.4 MB incl. Flutter's own [R] |
+| Built-in Linux `jniLibs` (proot, loader, talloc, shmem) + `libtermux.so` | ≤ 0.5 MB | 0.38 MB raw today [R packages-build §05] |
+| AI Team engine (`libaiteam_*`) | **0** at the switch (D6) | §8.5 |
+| `assets/dexopt/baseline.prof`, `META-INF`, manifest | ≤ 0.4 MB | binary profile must stay < 1.5 MB to be packaged [V Startup Profiles docs] |
+| **Total** | **≤ 20.0 MB** working target (gate 22 MB) | |
+
+`check_apk_size.py` sums `ZipInfo.compress_size` by path prefix (Python `zipfile`, no external tool), compares each
+row with `perf/size-budget.json` and with the last green APK, and prints a table into the T2 summary. It also writes
+`apkanalyzer apk compare` output when the cmdline-tools are present (testing-perf §10.1).
+
+### 8.3 ABIs
+
+| ABI | Shipped | Why |
+|---|---|---|
+| arm64-v8a | split APK + inside universal | the product |
+| x86_64 | split APK + inside universal | the emulator (T3, T4) |
+| armeabi-v7a | **no** (ADR §9.9) | today's Flutter release publishes a v7a APK (`android-release.yml:284`) for remote-client use; owner decision P13-D1 (§19) |
+| x86 | no | — |
+
+One versionCode for every output (ADR §9.9). The VPS-build → PC re-sign path signs every split and checks the signer
+digest on each (testing-perf §10.1).
+
+### 8.4 The voice engine
+
+- Ships **inside** the APK (owner decision 2026-10-31 [R media-voice map]; 10 §2): `libonnxruntime.so` +
+  `libsherpa-onnx-jni.so` ≈ 9.8 MB per ABI compressed, 27 MB raw extracted.
+- Never downloaded: Android 10+ forbids executing code from the writable app home, and Google says to load only code
+  embedded in the APK [V media research §7].
+- Models stay downloads (Whisper tiny/base/small 103–375 MB, Kokoro 148 MB) into `files/voice_models/` with SHA-256
+  pins, resumable, unchanged paths (10).
+- Later saving (not before the switch): a reduced-operator ONNX Runtime build for exactly the Whisper and Kokoro
+  graphs. Expected saving 4–6 MB compressed [E]; experiment E6 (§20).
+
+### 8.5 The AI Team engine (when D6 brings AI Team back)
+
+- At the switch: **not in the APK** (`libaiteam_*` absent; the hash-check tasks and `keepDebugSymbols` exclusions
+  return with it, ADR §9.9).
+- When it returns, default (P13-D2 option a): `jniLibs` as today (+≈ 3.1 MB arm64 compressed: engine 2.44, probe 0.53,
+  sandbox ≈ 0.15 [R packages-build §07]), executed from `nativeLibraryDir`, attested by
+  `aiteam-engine-manifest.json`. The size gate rises by exactly the measured amount in that release, named in its notes.
+- Alternative (option b): a pinned download into the Linux rootfs, run under proot like the Gas City binaries
+  (`aiteam-assets-N`). No APK cost; costs ptrace overhead on a server process (the audit saw tracer kernel time
+  dominate [R]) and changes the attestation model.
+
+### 8.6 The built-in Linux
+
+| Part | Delivery | Size |
+|---|---|---|
+| proot, loader, talloc, android-shmem | `jniLibs`, arm64 + x86_64, executed from `nativeLibraryDir` | ≈ 0.37 MB raw [R] |
+| Ubuntu Base 24.04.5 | download from `cdimage.ubuntu.com`, SHA-256 pinned per ABI, resumable `Range` (builtin-linux 02) | not in the APK |
+| Node 24.21.0, OpenCode 2.1.1, Paseo, Claude Code, Python | the setup engine's component scripts, pinned and verified (builtin-linux 34) | not in the APK |
+| The rootfs on disk | `files/linux/**`, never moved or touched by the migration (ADR §9.7) | several GB |
+
+Download performance rules (shared downloader, ADR `:core:net`): progress published to the UI at most 4 times per
+second and to the notification in 1 % steps (media-voice map §8); large downloads on mobile data ask first
+(B-STATE-030); installs are "heavy work" for the process budget and the heat tier Hold (§13).
+
+### 8.7 Dependencies that never enter the release classpath (size)
+
+Added to `BannedDependenciesTest` (S-23) with a size reason: `androidx.compose.material:material-icons-extended`
+(the kit generates Phosphor vectors, 06 K6), `org.jetbrains.kotlin:kotlin-reflect`, `com.google.guava:guava` (the
+`ListenableFuture` from profileinstaller needs only `androidx.concurrent:concurrent-futures`), Jackson, Gson,
+`io.ktor:ktor-client-content-negotiation` (ADR §8: no ContentNegotiation), `androidx.pdf:*` (10 M12),
+`androidx.core:core-splashscreen` (SR6), Media3 (media research §8: no use).
+
+### 8.8 The generated glyphs
+
+06 §4.11 generates Phosphor glyphs as `val Back: ImageVector by lazy { … }`. One file of `by lazy` properties creates
+every `Lazy` object (and its lambda) when the file's class initializes, the first time any glyph is touched.
+Recommended pattern (the one Compose's own icon artifacts use): a nullable backing field and a getter per glyph, and
+generate only the glyphs the kit and features reference.
+
+```kotlin
+// ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/glyphs/Back.kt (generated, one file per glyph)
+public val KitGlyphs.Back: ImageVector
+    get() {
+        _back?.let { return it }
+        return ImageVector.Builder(name = "Back", defaultWidth = 24.dp, defaultHeight = 24.dp,
+                                   viewportWidth = 256f, viewportHeight = 256f, autoMirror = true)
+            .apply { path(fill = SolidColor(Color.Black)) { /* generated */ } }
+            .build().also { _back = it }
+    }
+private var _back: ImageVector? = null
+```
+
+Coordinator amendment A3 to 06 (the kit owner decides). R8 removes unreferenced glyph getters either way; the change
+avoids the start-up cost, which `app.graph`/`shell.firstComposition` would show.
+
+---
+
+## 9. R8 full mode, keep rules, DEX layout
+
+### 9.1 Configuration
+
+```kotlin
+// androidApp/build.gradle.kts (AGP 9.3.3)
+android {
+    buildTypes {
+        getByName("release") {
+            optimization { enable = true }      // R8 full mode (default since AGP 8.0) + resource shrinking [V testing-perf §9.4]
+        }
+    }
+}
+// Keep files: androidApp/src/main/keepRules/*.keep  (AGP 9.3 layout). KMP modules publish consumer rules through
+// the convention plugin (ADR §9.9).
+```
+
+### 9.2 The only keep files
+
+| File | Content | Why |
+|---|---|---|
+| `attributes.keep` | `-keepattributes SourceFile,LineNumberTable` and `-renamesourcefileattribute SourceFile` | readable frames after retrace (the problem report carries ≤ 12 frames, 03 §18.1) |
+| `sherpa.keep` | `-keep class com.k2fsa.sherpa.onnx.** { *; }` | the AAR ships no rules and JNI reads config fields by name [R media §3] |
+| `workers.keep` | `-keep class io.github.eslamasabry.opencode_mobile.ScheduledPromptWorker { public <init>(android.content.Context, androidx.work.WorkerParameters); }`, same for `WidgetStatusWorker`, and `-keep class androidx.work.impl.WorkDatabase_Impl { public <init>(); }` | the Flutter-era start-up crash (APK 900055, fix `c664ca2ae`) [R packages-build §06]; WorkManager's own rules should cover it, this stays as belt and braces |
+| `logging.keep` | `-assumenosideeffects class io.github.eslamasabry.oc.core.common.Log { public void d(kotlin.jvm.functions.Function0); }` | removes debug log calls and their lambdas from release (Kermit's release minimum is Info anyway, 03 §18.2) [U P13-8: exact JVM signature after compilation] |
+| `missing.keep` | only lines copied from AGP's `build/outputs/mapping/<variant>/missing_rules.txt`, one by one | the demo's blanket `-dontwarn io.ktor.**` is not repeated |
+
+### 9.3 Banned in any keep file (`KeepRulesLintTest`, `:quality`, T2)
+
+`-dontoptimize`, `-dontshrink`, `-dontobfuscate`, `-keep class io.github.eslamasabry.** { *; }` and any `{ *; }` on
+our own packages, `-keepnames class **`, `-dontwarn **`, `-ignorewarnings`. Global options in KMP consumer rules are
+filtered by AGP 9 anyway [V testing-perf §9.4]; the lint catches them in the app's own files.
+
+### 9.4 Proof that R8 did no harm
+
+1. `:androidApp:analyzeStableReleaseR8Config` at every T2 (ADR §9.9). Its shrink, optimize and obfuscate scores go
+   into the T2 summary; a score that drops fails T2 unless the merge brief names the reason (a ratchet) [U P13-9:
+   whether the HTML report has a machine-readable score; else parse the HTML].
+2. The DEX guards keep working on the real APK: `verify_scheduled_prompt_apk.py` and `verify_widget_release_rules.py`
+   ported to `native/tool/qa/` (packages-build §06).
+3. T3 runs every flow on the minified build (testing-perf §9.4); the benchmark build is minified too.
+4. Mapping files per build: `native/build/vps-apk/mapping-<versionCode>-<sha>.txt`, kept 400 days like the Dart
+   symbols today [R packages-build §07]; `retrace` reads them for problem reports.
+
+### 9.5 DEX layout
+
+- The Startup Profile drives R8's DEX layout: startup classes go first into `classes.dex` (on by default since AGP 8.3;
+  needs R8) [V developer.android.com, updated 2026-10-23].
+- "Startup code should fit into `classes.dex`"; keep the startup journeys short (§10.2) [V same page].
+- PB-35 checks it (§10.5).
+
+---
+
+## 10. Baseline and Startup Profiles
+
+### 10.1 Configuration
+
+```kotlin
+// androidApp/build.gradle.kts
+plugins { id("androidx.baselineprofile") }                 // 1.5.0
+dependencies {
+    implementation(libs.androidx.profileinstaller)          // 1.4.1
+    baselineProfile(project(":android:benchmark"))
+}
+baselineProfile {
+    automaticGenerationDuringBuild = false                   // generated on the PC only, committed by the perf lead
+    saveInSrc = true
+    mergeIntoMain = true                                     // one profile for stable and preview flavours
+}
+```
+
+Output: `androidApp/src/main/generated/baselineProfiles/baseline-prof.txt` and `startup-prof.txt` [U P13-1: the
+aggregate task name with `mergeIntoMain` (`:androidApp:generateBaselineProfile`) vs 03 §8.3's
+`generateStableReleaseBaselineProfile`; `t4.sh` hides whichever P1 confirms].
+
+### 10.2 The generator journeys
+
+```kotlin
+// android/benchmark/src/main/kotlin/io/github/eslamasabry/oc/benchmark/profile/BaselineProfileGenerator.kt
+@RunWith(AndroidJUnit4::class)
+class BaselineProfileGenerator {
+    @get:Rule val rule = BaselineProfileRule()
+
+    @Test fun startup() = rule.collect(packageName = BenchTarget.PACKAGE, includeInStartupProfile = true) {
+        BenchTarget.seed(this)
+        pressHome(); startActivityAndWait()
+        uiAutomator { onElement { textAsString() == "Fixture: empty" } }        // Conversations drawn from cache
+    }
+
+    @Test fun dailyPath() = rule.collect(packageName = BenchTarget.PACKAGE, includeInStartupProfile = false) {
+        startActivityAndWait()
+        uiAutomator {
+            onElement { textAsString() == "Fixture: 300 turns" }.click()          // open chat (PJ-04)
+            activeWindow().waitForStable()
+            onElement { viewIdResourceName == "chat-composer-field" }.setText("perf:stream-short")
+            onElement { viewIdResourceName == "chat-send-button" }.click()       // stream (short fixture, 15 s)
+            onElement(30_000) { textAsString() == "END-OF-FIXTURE" }
+        }
+        device.pressBack()                                                        // keyboard down
+        device.pressBack()                                                        // back to Conversations
+        uiAutomator { onElement { contentDescription == "Settings" }.click() }   // Settings + two pages
+        uiAutomator { onElement { textAsString() == "Appearance" }.click() }; device.pressBack()
+        uiAutomator { onElement { textAsString() == "This phone" }.click() }; device.pressBack()
+        device.pressBack()
+    }
+}
+```
+
+- Only `startup()` feeds the Startup Profile (`includeInStartupProfile = true` only for journeys essential to the
+  initial display [V docs]).
+- `perf:stream-short` is a 15 s cut of `perf:stream-6000` (fixture owner: section 14).
+- New screens join `dailyPath` when their slice lands (Files viewer slice 5, voice slice 5). Keep the whole run under
+  5 minutes.
+
+### 10.3 When profiles are regenerated
+
+- At every slice end (T4), after any Kotlin/Compose/AGP/R8 version bump, and when a merge touches
+  `perf/sensitive-paths.txt` paths listed as `profile` (start-up path, `:ui:shell`, `:feature:chats`, `:feature:chat`).
+- Only the perf lead commits the two files, in a commit of their own:
+  `perf(profiles): regenerate baseline and startup profiles at <sha> [skip ci]`.
+- Gate: PB-10 (`Partial(Require)` at least 15 % faster cold start than `None()`), and the size of
+  `assets/dexopt/baseline.prof` < 1.5 MB [V docs] (`check_apk_size.py`).
+
+### 10.4 Sideloaded reality
+
+- Outside Play, the Baseline Profile is compiled when background dexopt runs, "likely overnight" (idle and
+  charging); Cloud Profiles are Play-only [V testing-perf §9.3]. ProfileInstaller writes the reference profile at
+  first launch.
+- The Startup Profile's DEX layout is baked into the APK and helps from the very first launch; that is why it is
+  generated even though Play is not used.
+- The demo reached ≈ 0.25 s with library profiles only [R], so the app profile is a margin, not the main lever.
+- `ProfileVerifier` status is shown in This phone › Details › Performance and in the problem report (§3.6).
+- Experiment E1 (§20): a `base.dm` (DexMetadata) written next to the APK in the in-app updater's `PackageInstaller`
+  session, so updated users get compiled code on the first launch after each update. Unknown on Android 12–17 (the
+  manual docs show Android 9–11 only) [U testing-perf §13.7].
+
+### 10.5 `check_startup_dex.py` (PB-35)
+
+1. Read `startup-prof.txt`; collect class descriptors (`Lcom/…;`) from its rules.
+2. Map them through the release mapping file to obfuscated names.
+3. List classes per DEX file in the arm64 APK with `apkanalyzer dex packages --defined-only --files classes.dex <apk>`
+   (and `classes2.dex`, …) [U P13-10: flags of the installed cmdline-tools version].
+4. Pass when ≥ 95 % of the startup classes are in `classes.dex`.
+
+---
+
+## 11. Background CPU, timers, wake-ups, foreground services and jobs
+
+### 11.1 Visibility and link demand
+
+- `DeviceFacts.appVisible` (11 CR11-5) comes from `ProcessLifecycleOwner` in `:android:platform`.
+- `LinkDemand` (04 §6.4) is computed in `:engine:connection` from `appVisible` plus "the reply watch runs" plus "Stay
+  connected is on".
+- One shared value for all timers: `Visibility` in `:core:common` = `Foreground | HiddenWatching | HiddenIdle`, a
+  `StateFlow` bound at graph level from `LinkDemand`. Engines below `:engine:connection` in the ADR §6.2 order receive
+  the same `StateFlow` through DI, which breaks no module rule.
+
+### 11.2 One way to repeat work: `Pacer` and the timer tables
+
+```kotlin
+// core/common/src/commonMain/kotlin/io/github/eslamasabry/oc/core/common/pace/Pacer.kt
+public enum class Visibility { Foreground, HiddenWatching, HiddenIdle }
+
+/** How often a repeating job runs in each visibility. null = it does not run (no timer is armed). */
+public data class Cadence(
+    val foreground: Duration?,
+    val hiddenWatching: Duration?,
+    val hiddenIdle: Duration?,
+    val jitter: Double = 0.0,                 // ±fraction of the period, 0.0–0.5
+) {
+    init { require(hiddenIdle == null || hiddenIdle >= 60.seconds) { "PB-42: hidden-idle timers ≥ 60 s" } }
+}
+
+/** A declared repeating job. Every instance lives in a file named `*Timers.kt` (Konsist K-P2). */
+public data class TimerSpec(
+    val name: String,                         // trace-safe, e.g. "runtime.recoveryCheck"
+    val cadence: Cadence,
+    val reason: String,                       // one line: what breaks if it stops
+    val rows: List<String> = emptyList(),     // catalog rows / PB ids it serves
+)
+
+public interface Pacer {
+    /** Ticks on [spec]'s cadence for the current visibility. Suspends with no timer armed while the cadence is null.
+     *  The first tick after a change to Foreground comes at once (a returning person sees fresh state). */
+    public fun ticks(spec: TimerSpec): Flow<Unit>
+}
+```
+
+`DefaultPacer(visibility: StateFlow<Visibility>, clock: Clock, dispatchers: AppDispatchers)` is the only
+implementation; tests use `TestPacer` from `:core:testing`, driven by virtual time.
+
+Rules:
+
+1. No `while (true)`, `while (isActive)` or recursive `delay` loop outside `:core:common` `pace/`; no
+   `kotlinx.coroutines.channels.ticker`. Konsist K-P1 (text check: a function body containing both a `while` and a
+   `delay(` in `:engine:*`, `:feature:*`, `:protocol:*`, `:core:*` except `pace/`). One-shot `delay` (debounce, a
+   deadline) is fine.
+2. Every `Pacer.ticks(…)` argument is a `TimerSpec` constant declared in a `*Timers.kt` file of the same module
+   (Konsist K-P2).
+3. Each module's `*Timers.kt` ends with `internal val ALL_TIMERS: List<TimerSpec> = listOf(…)` naming every spec in
+   the file, and the module's `commonTest` has `` `PB-42 timer table`() `` asserting: `hiddenIdle == null ||
+   hiddenIdle >= 60.seconds` (also enforced by `Cadence`'s `init`); `hiddenWatching` ≥ 5 s unless the spec names a
+   catalog row that needs faster; every spec has a non-empty `reason`; every top-level `TimerSpec` in the file is in
+   `ALL_TIMERS`. Konsist K-P2 also fails a module that has a `*Timers.kt` file and no such test (`TimerTableTest` in
+   §15.1 is this set of per-module tests). No reflection is used.
+4. Android-side repeating work (`:android:*`, in Kotlin threads or `Handler`s today) follows the same table through
+   `ProcessTimers.kt` in `:android:linux`, checked by a host test.
+
+### 11.3 The timer table at the switch
+
+Values are Flutter's (parity) except where a cell says "native change". "—" means the job does not run.
+
+| Spec (module) | Foreground | Hidden, watching | Hidden, idle | Source |
+|---|---|---|---|---|
+| `connection.busyPoll` (`:engine:connection`) | 5 s while a turn runs | 5 s while a turn runs | — | 04 §12.4 |
+| `requests.waitingReread` (`:engine:requests`) | 15 s while a turn waits | 15 s while a turn waits | — | 04 §12.4; 09 §14.5 |
+| `transcript.stallTick` (`:engine:transcript`) | 5 s while a turn is open and held | 5 s, same | — | 09 §14.5 |
+| `agents.backendWatch` (`:engine:agents`) | 10 s | 60 s | — | freeze tip `afd0c6bf3`, `f9598e8ad` [R] |
+| `runtime.recoveryCheck` (`:engine:runtime`) | 5 s during a restart, else 45 s | — | — | builtin-linux 21; Flutter perf test "healthy server checked every 45 s in the foreground, none away" [R] |
+| `runtime.setupFollow` (`:engine:runtime`) | 500 ms while a job runs; once a minute while a finished job's page is open | 500 ms while a job runs (SetupService FGS) | — | Flutter `perf_builtin_pollers_test` [R] |
+| `runtime.processSample` (Running on this phone) | 2 readings 1 s apart, every 10 s while the page is open | — | — | builtin-linux 11 |
+| `runtime.heatInputs` (`:engine:runtime`) | thermal status by listener; headroom ≤ every 30 s while collected (11 CR11-5) | same while agents run | — | §13 |
+| `attention.monitor` (`:engine:attention`) | as Flutter's status refresh (10 s) | 10 s (only under the reply watch) | — | perf audit #11 [R] |
+| `diagnostics.updateCheck` | once at launch if > 24 h since the last | — | — | PB-55 |
+| `linux.orphanReaper` (`:android:linux`) | 60 s while any proot runs; on `soon()` after a proot start/end | same | same, **only while a proot runs** (a proot running means "not idle" for PB-40) | builtin-linux 10 |
+| `linux.leasePulse` (`:android:linux`) | today: 1 s while a lease is held [R `NativeWorkLeaseHost.kt:265`] | — | — | **native change** (WP-13.7, after the move-only split of 11 §5): one `Handler.postAtTime` for the next lease expiry instead of a 1 s pulse; `WorkLeasesTest` unchanged |
+| `linux.idleCheck` alarm (request code 4095) | — | armed only while the idle-stop policy is on and the phone server runs | same | builtin-linux 25 |
+
+A job that is not in this table does not run. A new job needs a row, a `TimerSpec`, and the coordinator's OK in the
+brief.
+
+### 11.4 Wake-ups, wake locks, FGS and jobs
+
+| Mechanism | Allowed use | Budget |
+|---|---|---|
+| Exact alarms | scheduled prompts the person made (`ScheduledPromptReceiver`) | PB-43 |
+| Alarm (same type as today's `NativeIdleTimer`) | phone-server idle check (request code 4095), armed only while the idle-stop policy is on and the server runs | PB-43 |
+| WorkManager | schedule fallback worker (≤ 8 min, ADR §9.5); migration follow-up (05 §7.1); widget status worker | no periodic request (PB-46) |
+| Partial wake lock `OpenCode:work` | inside `WorkLeases` only (≤ 15 min, renew 5 min, ≤ 6 h) | PB-44 |
+| `dataSync` FGS | reply watch (S11-4) and Stay connected; 6 h per 24 h budget | PB-45 |
+| `shortService` FGS | widget actions (≤ 30 s) | 11 §9 |
+| `specialUse` FGS | phone server, setup | runs only while the person's server or install runs |
+| `JobScheduler` direct | none | — |
+| `setAlarmClock`, `setExactAndAllowWhileIdle` beyond schedules | none | — |
+| Doze exemptions | the battery-optimization exemption is asked only at the first phone-server start (B-ANDR-025) | — |
+
+### 11.5 The "agent wakes the whole app" lesson (PB-41)
+
+The freeze tip fixed a Flutter bug where a streaming phone agent woke the whole app on every frame (56 % → 7 % of a
+core on the emulator, commit `4ae686c5b` [R]). Native rules that keep it fixed:
+
+- Paseo feed frames go to the agent's own `ConnectionGraph` (`:protocol:paseo` → `:engine:transcript` handle); a
+  handle with no subscriber applies events but skips derivation (09 §14.5).
+- The attention feed and the status-line combiner subscribe to **coalesced** summaries (`StateFlow` with
+  `distinctUntilChanged`), never to the raw event stream.
+- `PR-02` measures it with a fake agent at 20 frames per second.
+
+---
+
+## 12. Network and radio
+
+### 12.1 The reconnect schedule (PB-51, PB-52)
+
+04 N4-D6 keeps Flutter's foreground schedule (1, 2, 4, 8, then 16 s, no jitter, reset after 30 s stable). The freeze
+tip added the hidden schedule (commit `1da77af8f`: "out of sight the OpenCode 2 event stream retries after 1 s, 2 s,
+then every 60–120 s (jittered), skips a try when Android has no network, and tries at once on return" [R]). S-18 makes
+that a switch gate, so `BackoffPolicy` (`:core:net`, 04 §2) gets the visibility input. Coordinator amendment A2 to 04
+N4-D6.
+
+```kotlin
+// core/net/src/commonMain/kotlin/io/github/eslamasabry/oc/core/net/stream/BackoffPolicy.kt
+public class BackoffPolicy(private val random: Random) {
+    /** [attempt] counts failed tries since the last stable connection, starting at 1. */
+    public fun delayFor(attempt: Int, visibility: Visibility): Duration? = when (visibility) {
+        Visibility.Foreground -> when (attempt) { 1 -> 1.seconds; 2 -> 2.seconds; 3 -> 4.seconds; 4 -> 8.seconds; else -> 16.seconds }
+        Visibility.HiddenWatching -> when (attempt) { 1 -> 1.seconds; 2 -> 2.seconds; else -> (60 + random.nextInt(61)).seconds }
+        Visibility.HiddenIdle -> null      // the stream is cancelled (Suspended, 04 §6.4); nothing is dialled
+    }
+    public companion object { public val STABLE_RESET: Duration = 30.seconds }
+}
+```
+
+`EventStreamLoop` (04 §6.2) also:
+
+- calls `NetworkGate.awaitUsable(hostClass)` before every non-loopback try, so no attempt is spent offline (04 N4-D8);
+- on a change to `Foreground` cancels a pending long wait and tries at once (`retryNow()`), counting it as attempt 1;
+- never shortens a hidden wait because of a network change unless the default network id changed (then attempt 0,
+  04 N4-D8).
+
+Tests (`:core:net` `commonTest`, `TestPacer`/virtual time): `PB-51 hidden retries 1 s 2 s then 60–120 s`,
+`PB-51 return to foreground retries at once`, `PB-52 no dial while offline`, `PB-50 one request serves both
+channels` (with B-PROTO-134), the stall rule `B-PROTO-132` (45 s read stall).
+
+### 12.2 Radio behaviour, in plain terms
+
+- An open SSE stream with the server's 15 s heartbeat keeps the cellular radio awake for as long as it is open. That
+  is the price of live updates, and it is paid only in the **Foreground** and **HiddenWatching** states. The reply
+  watch ends ≤ 5 s after the turn settles (PB-45), so hidden radio time is bounded by the person's own running work.
+- "Stay connected" (live mode) is the one path that can keep the radio awake for hours. Its row says so in plain
+  words (11 §9): "Keeps a connection open while the app is closed. Uses more battery on mobile data."
+- In **HiddenIdle** the app makes no request at all except the person's schedules (PB-53).
+- The model list of the phone's own server is not fetched at server start (PB-56; owner decision 5 of the audit, "yes").
+- The update check runs at most once a day, at launch (PB-55). Its HTTP request is the only GitHub call outside a
+  download the person started.
+- Downloads over 50 MB on mobile data ask first (B-STATE-030 thresholds unchanged).
+
+### 12.3 Measuring the radio (audit decision 6: "measure for a day before changing it")
+
+- Emulator: the fixture server's request log and connect-attempt counts (PR-01, PR-04) prove the rules.
+- Phone (passive, owner OK, read-only adb): after a normal day, `dumpsys batterystats --charged
+  io.github.eslamasabry.opencode_mobile` → "Mobile radio active" time and the per-uid network bytes. The first reading
+  is taken on the Flutter app before the switch (the baseline the audit asked for: radio was 28 % of the app's drain
+  [R]) and again after the switch.
+- If a Basic analytics sender ships (open question Q1, §19.3), its sends are batched, made only while the app is in
+  the foreground, at most once per foreground session, and never schedule a wake-up. Until Q1 is settled no sender is
+  linked (02 S-23).
+
+---
+
+## 13. Battery and heat
+
+### 13.1 The heat tier (port of the freeze-tip `HeatTierPolicy`, switch scope 02 §3.5)
+
+```kotlin
+// engine/runtime/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/runtime/heat/HeatTierPolicy.kt
+public enum class HeatTier { Normal, Slow, Hold }          // Slow: agents at lower priority; Hold: + new heavy work waits
+
+public data class HeatInputs(
+    val status: ThermalLevel,          // :core:domain, from the thermal listener; declared in order
+                                       // None < Light < Moderate < Severe < Critical < Emergency < Shutdown,
+                                       // and an unknown reading maps to None here (so `>=` compares severity)
+    val headroom: Float?,              // getThermalHeadroom(30), ≤ every 30 s while collected (11 CR11-5)
+    val batteryPercent: Int?, val charging: Boolean?,
+    val powerSave: Boolean, val hidden: Boolean, val fullSpeed: Boolean,
+)
+
+public object HeatTierPolicy {
+    public const val SLOW_HEADROOM: Float = 0.7f
+    public const val HOLD_HEADROOM: Float = 0.9f
+    public const val SLOW_BATTERY: Int = 20
+    public const val HOLD_BATTERY: Int = 10
+    public val CALM_FOR: Duration = 2.minutes
+
+    public fun decide(i: HeatInputs): HeatTier {
+        if (i.fullSpeed) return HeatTier.Normal
+        val unplugged = i.charging == false
+        val level = i.batteryPercent
+        val headroom = i.headroom ?: 0f
+        if (i.status >= ThermalLevel.Moderate || headroom >= HOLD_HEADROOM ||
+            (unplugged && level != null && level <= HOLD_BATTERY)) return HeatTier.Hold
+        if (i.status >= ThermalLevel.Light || headroom >= SLOW_HEADROOM ||
+            (unplugged && level != null && level <= SLOW_BATTERY) || i.powerSave || i.hidden) return HeatTier.Slow
+        return HeatTier.Normal
+    }
+}
+```
+
+The numbers are the freeze tip's [R `lib/builtin/heat_tier.dart` on `perf/native-2026-11-01`, merged into
+`int/freeze-2026-11-01`]. The owner answered the audit's decisions 1–4 with the recommended answers (slow before
+pausing; slower with the screen off with an "Always full speed" switch; 20 %; the phone note), which the freeze tip
+implements.
+
+Effects of a tier (owners in brackets):
+
+| Tier | Agents' processes | New heavy work (installs, agent tool starts the process budget gates) | Motion | Notification |
+|---|---|---|---|---|
+| Normal | default priority | runs | per the person's choice | — |
+| Slow | Paseo helper trees in Android's background class, nice 10 (`ProcessHost.setAgentPriority(Slow)`, `:android:linux` `AgentPriority`) | runs | unchanged | — |
+| Hold | nice 19 (`Hold`) | waits (`ProcessBudget` asks `holdsNewWork`) | Calm under SEVERE heat (06 MOT-13) | heat line in the one status line (no new level); one notification per episode only while hidden (B-ANDR-086 rule, today's `ThermalMonitor.notify`) |
+| (SEVERE/critical) | AI Team pause/stop rules return with AI Team (B-ANDR-083..092, D6) | | | |
+
+Rules:
+
+- Nothing is ever killed or signalled by the heat tier; a running turn keeps streaming (audit slice 1 non-goal).
+- "Always full speed" (Settings › Keep running): the row reads "Run phone agents at full speed" with the supporting
+  line "Even when the phone is warm or the battery is low. Uses more battery." It also removes the phone note's
+  thread caps (§13.3). Key `flutter.oc.fullSpeed` in the adopted prefs (not per profile [R `phone_budget.dart`]).
+- The agent-priority sweep runs when the tier changes and on every proot start (`soon()` path of the reaper), so new
+  processes inherit or get the class within 10 s (PB-63).
+- The app's own UI thread is never lowered; the app runs as top-app while visible.
+
+### 13.2 Candidate input: battery temperature (experiment E4, P13-D5)
+
+On the owner's phone the thermal status read **0 at 74–90 °C CPU and 42 °C battery** [R audit]. Headroom may react
+earlier than status; battery temperature (`ACTION_BATTERY_CHANGED` `EXTRA_TEMPERATURE`, tenths of °C, no permission)
+certainly reacts. E4 logs headroom and battery temperature side by side for one evening of the owner's normal agent
+use (passive `dumpsys thermalservice` and `dumpsys battery` every 30 s, read-only, with the owner's OK). If headroom
+stays below 0.7 while the battery is above 41 °C for more than 5 minutes, `HeatInputs` gains `batteryTempC` with
+Slow at ≥ 41.0 °C and Hold at ≥ 43.0 °C [E]; otherwise nothing changes. The change, if any, is an owner decision
+(new behaviour beyond parity).
+
+### 13.3 Telling agents the phone's budget (switch scope)
+
+`AgentPhoneNote` (`:engine:agents`, 11 §7) ports `PhoneBudgetFiles` exactly [R `phone_budget.dart`]:
+
+- a marked block (`<!-- oc-phone-budget:begin -->` … `end`) in the agent's own `CLAUDE.md` with the short note ("This
+  is a phone … run tests one or two at a time … never leave watch modes running … if the person asks for something
+  heavier, do it");
+- `env` defaults in the agent's `settings.json` only where the person set none: `MAKEFLAGS=-j2`,
+  `CMAKE_BUILD_PARALLEL_LEVEL=2`, `CARGO_BUILD_JOBS=2`, `GOMAXPROCS=2`, `OMP_NUM_THREADS=2`, `UV_THREADPOOL_SIZE=2`,
+  `GRADLE_OPTS=-Dorg.gradle.workers.max=2 -Dorg.gradle.parallel=false`;
+- removed again (only the values still equal to ours) by "Always full speed".
+
+### 13.4 Orphans and the process budget
+
+- `stopTree` and the orphan reaper port unchanged (builtin-linux 09, 10; 11 §5 "copy"): SIGTERM → 1.5 s → SIGKILL on
+  same-uid, ppid 1, untraced processes whose `exe` is the proot loader; never the app, Android or the Rust engine.
+- PB-65 measures it (PR-06). The 10-27 hot-phone incident (six orphans at 100 % each for 19 minutes [R memory
+  `proot-orphans-heat`]) is the scenario.
+- The process budget (32 children, Android 12+) and its kill line are switch scope (02 §3.5); section 13 adds only
+  PR-03/PR-05 measurements of the app uid's process count and RSS sum.
+
+### 13.5 Measuring heat and battery
+
+| Where | How | When |
+|---|---|---|
+| Emulator | PR-05 drives tiers with `cmd thermalservice override-status`, `dumpsys battery set level/ac`, `cmd power set-mode`; asserts tier timing and nice values (PB-62, PB-63) and jank under load (PB-64) | slice 3 end; every change to `:engine:runtime` heat or `:android:linux` priority code |
+| Phone, passive | `dumpsys thermalservice`, `dumpsys battery`, `dumpsys batterystats --charged <pkg>`, `ps -A -o PID,PPID,NI,%CPU,RSS,NAME` for the app uid; read-only; every 30 s for one evening | once on Flutter before the switch (baseline), once on the switch candidate; owner OK each time |
+| Phone, comparison | peak battery temperature and the app's mAh over the same 10-minute standard agent task, Flutter vs native | switch session; target: native peak ≤ Flutter peak − 2 °C, mAh ≤ Flutter [E] |
+
+Never `dumpsys battery unplug` or `set` on the owner's phone (it changes what the phone reports); emulator only.
+
+---
+
+## 14. Storage I/O
+
+### 14.1 StrictMode in the `qa` build (PB-70)
+
+```kotlin
+// androidApp/src/qa/kotlin/io/github/eslamasabry/opencode_mobile/QaStrictMode.kt (called first in OcApplication.onCreate)
+internal fun installQaStrictMode(sink: (String) -> Unit) {
+    StrictMode.setThreadPolicy(
+        StrictMode.ThreadPolicy.Builder()
+            .detectDiskReads().detectDiskWrites().detectNetwork().detectCustomSlowCalls()
+            .penaltyListener(Executors.newSingleThreadExecutor()) { v -> sink(violationKey(v)) }   // API 28+
+            .build()
+    )
+    StrictMode.setVmPolicy(
+        StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().detectActivityLeaks()
+            .penaltyListener(Executors.newSingleThreadExecutor()) { v -> sink(violationKey(v)) }.build()
+    )
+}
+// violationKey = class + top app frame only (never the message), counted in PerfTrace as "strict.<key>".
+```
+
+`t3.sh` reads the counts from the qa build's exported Performance report after all flows. Allowlist (in
+`native/perf/strict-allowlist.txt`): ADR §9.7 step 0 file copy; `files/native/crashloop.json` read (≤ 4 KB).
+
+### 14.2 Writes
+
+- Every write goes through a `WriterLane` with `commit()` (ADR §9.5). SharedPreferences rewrites the **whole** XML on
+  each commit, so write frequency matters more than value size.
+- Hot keys and their pace: draft autosave debounced 1 s after the last keystroke (09/03), read state at most once per
+  conversation open and once per settle, offline-queue writes only on enqueue/dispatch/settle. Nothing writes per
+  delta while streaming. `WriteRateTest` (`:core:data`, fake lane counting commits under a 10-minute virtual stream)
+  asserts ≤ 1 commit per 2 s per lane (PB-71).
+- PB-71's byte number comes from `/proc/<pid>/io` `write_bytes` across PJ-05 on the emulator.
+- First-paint caches belong in Room at switch+1 (ADR §9.8), never in the prefs XML.
+
+### 14.3 Voice packs
+
+10 M4: the verified stamp `.native-verified.json` (length + mtime per file) replaces the start-up re-hash of up to
+≈ 540 MB that Flutter ran in isolates each time the model manager was created [R media-voice map §8]. PB-72.
+
+---
+
+## 15. Gates: what runs where, and what happens on a miss
+
+### 15.1 Per tier
+
+| Tier | Machine | Perf steps (scripts from 02 §8) | Budgets gated |
+|---|---|---|---|
+| T0 | PC or VPS | the agent's own `PB-…` JVM test | — |
+| T1 | VPS | touched modules' `PB-…` JVM tests; Konsist K-P1..K-P12 | PB-17 (JVM), 42, 50–52, 54, 55, 62, 67, 71, 72 |
+| T2 | VPS | all of T1; `check_apk_size.py`; `check_so_alignment.py`; `check_startup_dex.py`; `check_compose_reports.py`; `analyzeStableReleaseR8Config` ratchet; `KeepRulesLintTest`; `ManifestPerfTest`; `BannedDependenciesTest` (size list); `TimerTableTest` (the per-module `PB-42` tests) | PB-30..35, 42, 46, R8 ratchet, compose allowlist ratchet |
+| T3 | PC emulator | StrictMode counts over all flows; PR-04, PR-06 (slice 3 on), PR-07; FGS stop timing; installed footprint | PB-45, 51, 52, 56, 65, 66, 67, 70, 34 |
+| T4 | PC emulator | PJ-01..PJ-16; PR-01..PR-03, PR-05, PR-08..PR-12; profile regeneration | all device budgets |
+| Phone session | NX721J, owner present | §15.4 | PB-01, 02, 04, 05, 06, 11, 12, 13, 14, 15, 21, 22, 48, 57, 60 |
+| GitHub release workflow | GitHub Actions | size gate + signer check on the tag build only (CI budget is limited; every commit carries `[skip ci]`) | PB-30, 31, 32 |
+
+### 15.2 When T4 must run
+
+- At every slice end (02 §8), on every switch or preview candidate, and before any APK goes to the owner after a
+  merge that touched a perf-sensitive path.
+- Not between 00:00 and 02:00 (quiet hours).
+- Partial T4 (named journeys) is allowed for a branch; a slice-end T4 runs everything for one unchanged candidate.
+  A run counts only for the tree it ran on (02 §8).
+
+### 15.3 `perf/sensitive-paths.txt` (merge rule)
+
+```
+# path glob                                   journeys required before merge into native/main
+engine/transcript/**                          PJ-05 PJ-06 PJ-04
+core/markdown/**                              PJ-05
+core/net/**/stream/**                         PJ-05 PR-04
+ui/kit-chat/**                                PJ-05 PJ-06 PJ-12 PJ-16
+ui/kit/**/motion/** ui/kit/**/KitTappable*    PJ-07 PJ-08 PJ-09 PJ-16
+ui/shell/**                                   PJ-01 PJ-07 PJ-08 profile
+feature/chats/** feature/chat/**              PJ-01 PJ-04 PJ-05 profile
+androidApp/src/main/**                        PJ-01 PJ-03 PR-08 profile
+android/background/** android/widgets/**      PR-01 PR-02 PR-07
+android/linux/** engine/runtime/**            PR-03 PR-05 PR-06
+config/compose-stability.conf                 PJ-05 PJ-06 PJ-13
+gradle/libs.versions.toml (compose, kotlin, agp, r8, coil, ktor lines)   all PJ, profile
+androidApp/src/main/keepRules/**              PJ-01 PJ-05 + T3 full
+```
+
+The coordinator's merge checklist (02 §9.2) gains one line: "touched a sensitive path → the named journeys are green
+against last green on this exact merge candidate".
+
+### 15.4 The phone session (P13-D4)
+
+Two sessions: end of slice 2 (daily chat path) and the switch candidate. About 30 minutes each, the owner present and
+not using the phone, after the APK passed T3 and T4 on the emulator.
+
+`native/tool/perf/phone_session.sh` (refuses `screencap`, `screenrecord`, `pm clear`, `am force-stop` and
+`uninstall` of any package other than `….bench` and the test APK; prints each command before it runs):
+
+1. Read-only first: `dumpsys batterystats --charged <main pkg>`, `dumpsys thermalservice`, `dumpsys display`
+   (refresh), the app's own Performance page export (field numbers, §3.6) if the owner shares it.
+2. With the owner's OK: install `….bench` and the benchmark test APK; reach the PC's fixture server over Tailscale
+   (`BenchSeedReceiver` gets the PC's address); run PJ-01, PJ-02, PJ-03, PJ-04, PJ-05, PJ-06 and PJ-07..PJ-11 with
+   `CompilationMode.Partial(Require)`; `dumpsys meminfo` at the end of PJ-15.
+3. Uninstall exactly `io.github.eslamasabry.opencode_mobile.bench` and the test package; confirm the main package and
+   its data are untouched (`dumpsys package <main> | grep versionCode`, `firstInstallTime` unchanged).
+4. Results to `docs/qa/native/perf-phone-<date>/README.md` (audit-trail rule) with the JSON beside it.
+
+### 15.5 When a budget is missed
+
+1. T1/T2 misses fail the run; the branch does not merge.
+2. A T4 emulator regression (§3.7 rule) blocks the merge of the branch that caused it; the perf lead names the
+   first bad commit by bisecting merges on the branch, not the repository.
+3. A phone-session miss of a switch number follows 02 §4.2: the coordinator fixes the cause or asks the owner to
+   relax the number; only the owner can.
+4. An `[E]` number is replaced by the first measured value plus a margin of 10 % (frame and time budgets) or 5 %
+   (size), written into §2 and `perf/budgets.json` with the date, and never loosened after (02 §4.2 rule 3).
+
+---
+
+## 16. Lessons from the Flutter perf audit, the memory files and the demo
+
+| # | Source | What happened | Native rule | Budget / test | Owner, slice |
+|---|---|---|---|---|---|
+| 1 | Audit #1 | The thermal guard paused only the AI Team; phone agents (Claude Code and its tests), the real heat source, were never touched | heat tier covers the Paseo helper trees (§13.1) | PB-62, 63 | `:engine:runtime`, `:android:linux`, 3 |
+| 2 | Audit #2 | The guard acted only at SEVERE; at 74–90 °C the status still read 0 | headroom, battery level, power save and hidden are inputs; battery temperature is experiment E4 | PB-62; E4 | `:engine:runtime`, 3 |
+| 3 | Audit #3 | Agent tree and proot tracer at nice 0; only the AI Team supervisor at 19 | `AgentPriority` to the background class (Slow) or 19 (Hold) | PB-63 | `:android:linux`, 3 |
+| 4 | Audit #4 | Nothing told agents how small the phone is | `AgentPhoneNote` (§13.3) | B-row from the catalog top-up | `:engine:agents`, 3 |
+| 5 | Audit #5 | Mobile radio was 28 % of the app's drain, source unknown | measure first (owner decision 6); hidden rules §12 | PB-51..53, 57 | `:core:net`, `:engine:connection`, 2 |
+| 6 | Audit #6 | Reconnect 0.5 s → 16 s, no jitter, no network wait: a radio wake every 16 s offline or hidden | hidden 1 s, 2 s, then 60–120 s jittered; no dial offline; at once on return | PB-51, 52 | `:core:net`, 1 |
+| 7 | Audit #7 | Swap pressure high; claude and opencode2 are native binaries, Node flags barely matter | process budget + memory limiter class (§7.5) | PR-03 report | `:engine:runtime`, 3 |
+| 8 | Audit #8 | The chat server fetched the model list at start (the team server did not) | `OPENCODE_DISABLE_MODELS_FETCH=1` once 2.1.1 is proven to honour it; refresh on picker open | PB-56 | `:engine:runtime` scripts, 3 |
+| 9 | Audit #9 | `notifyListeners()` fired at once, no per-frame coalescing | 50 ms publish (ADR §9.3); `StateFlow` conflation; 09 counter tests | PB-17, 18 | `:engine:transcript`, 2 |
+| 10 | Audit #10 | 13 repeating animations at 120 Hz | ambient-loop allowlist, draw-phase only, one ambient loop per screen and only while waiting, no High vote for loops; the cap stays "not now" | PB-19; K-P8 | kit, 1–2 |
+| 11 | Audit #11 | Dart timers kept running hidden (10, 10, 5, 5, 15 s) plus a native 1 s lease pulse and a 60 s orphan scan | `Pacer` + timer table; deadline-based lease expiry; reaper only while a proot runs | PB-40, 42 | all engines, 1–4 |
+| 12 | Audit #12 | proot `-L`, link2symlink and 13 binds add work to every trapped syscall | experiment E5: A/B after the switch, adopted only with ≥ 10 % gain and green runtime parity tests | E5 | `:android:linux`, after switch |
+| 13 | Audit 41 % jank (p90 61 ms, p99 200 ms) with GPU p90 9 ms | CPU contention, not raster cost | the app's UI outranks agents (tier Slow when hidden or warm), app work off the main thread, PB-64 under load | PB-12, 64 | 3 |
+| 14 | android-platform T12 | 3,015 status updates in 1 h 50 min, 755 refused; every FGS start re-posted the row | `ServiceNoticeGate` port; re-post only on changed words; ≤ 1 per 5 s | PB-66 | `:android:background`, 4 |
+| 15 | Freeze tip `4ae686c5b` | a streaming phone agent woke the whole app every frame (56 % → 7 %) | §11.5 | PB-41 | `:engine:transcript`, `:engine:attention`, 3 |
+| 16 | Memory `proot-orphans-heat` | orphaned tool shells spun at 100 % for 19 min after proot died | reaper + `stopTree` ported unchanged | PB-65 | `:android:linux`, 3 |
+| 17 | Memory 10-27 (idle agents loaded) | listing agents spawned one `kilo acp` process each without opening them | B-AGENT-169: a listed idle agent is not woken by background reads | B-AGENT-169 | `:engine:agents`, 3 |
+| 18 | Memory `voice-model-memory-gate` | packs gated on `memoryClass` dimmed High accuracy on 16 GB phones | total-RAM gate (§7.3) | 10 | `:engine:media`, 5 |
+| 19 | media-voice map §8 | model reloaded every 30 s chunk; 540 MB re-hashed at manager creation; attachments as base64 strings | warm recognizer (10 M2); verified stamp (10 M4); bytes + Uri | PB-26, 72 | `:android:media`, `:engine:media`, `:engine:composer`, 3–5 |
+| 20 | Demo | whole-reply re-parse and span fade every frame; `animateItem` on growing rows; reduce-motion read once | §5.6 | 09 tests, K-P7 | kit-chat, 2 |
+| 21 | Demo | finished-reply notification needed a short FGS | reply watch, bounded (PB-45) | PB-45 | `:android:background`, 4 |
+| 22 | Demo | 2.5 MB, ≈ 0.25 s cold start, library profiles only | the start-up rules keep the product close to the demo; the app profile is margin | PB-01, 10 | 1–2 |
+| 23 | packages-build §06 | R8 removed `WorkDatabase_Impl`: crash before any activity in APK 900055 | `workers.keep` + DEX guard scripts + T3 on minified builds | §9 | `:androidApp`, 0 |
+
+---
+
+## 17. Work packages
+
+Each is one agent, one worktree, one branch (02 §7.1). Read/write sets list only what the package edits.
+"Accept" is the finish line; "Non-goal" is what it must not touch.
+
+| WP | Slice | Agent | Write set | Accept | Non-goal |
+|---|---|---|---|---|---|
+| WP-13.0 Harness | 0 | Sonnet (perf lead) | `android/benchmark/**` (skeleton, PJ-01 only), `tool/perf/{t4 helpers,compare.py,check_apk_size.py,oc.pbtxt,analyze.py}`, `perf/*.json` | `t4.sh --journeys PJ-01` produces a result JSON on `OC_API37` for the slice-0 skeleton; P13-1 settled (build types, task names); size gate runs at T2 | journeys beyond PJ-01 |
+| WP-13.1 Flutter baseline | 0 | Sonnet (perf lead) | `docs/qa/native/baseline-flutter-<date>/` | 02 §4.1 list measured on Flutter R: PJ-01-equivalent (`am start -W` on the emulator), PR-12 streaming and fling FrameTimeline, PSS, PR-01 hidden run, APK sizes; `baseline.json` committed | phone measurements without OK |
+| WP-13.2 P3/P5 support | 0 | Sonnet with the P3 Opus agent | PJ-05/PJ-06 draft on the spike branch; P5 Room-trigger runs | P3's "no frame over budget" measured; P5 numbers recorded with the ADR §9.8 rule | changing the spikes' code |
+| WP-13.3 Start-up gates | 1 | Sonnet | `ManifestPerfTest`, trace sections in `OcApplication`/`MainActivity` (with the `:androidApp` owner), `ReportStartup` (with the shell owner), StrictMode `qa` | PB-03, 03b, 70 measured; SR1–SR10 checks green | migration logic |
+| WP-13.4 Field recorder | 2 | Sonnet | `:android:platform` `StartupHistory`, `FieldFrameStats`, `ProfileStatus`, `TraceRecorder` (off); This phone › Details › Performance rows (with the feature owner, kit parts only) | rows show on the emulator; JankStats cost measured (≤ 0.1 ms/frame); all off while hidden | analytics, any network |
+| WP-13.5 `Pacer` + timer tables | 1 | Codex (backend) | `:core:common` `pace/`, `:core:testing` `TestPacer`, `TimerTableTest`, Konsist K-P1/K-P2 | every existing engine timer migrated to a `TimerSpec`; PB-42 green | changing any cadence value except the table's "native change" rows |
+| WP-13.6 Hidden behaviour | 2 | Codex | `:core:net` `BackoffPolicy` (with the backend owner, amendment A2), PR-01, PR-04 scripts, `linux-ready` emulator snapshot | PB-40, 51, 52, 53 green on the emulator | foreground schedule (stays 04 N4-D6) |
+| WP-13.7 Runtime heat and leases | 3 | Codex (logic) + Sonnet (scripts) | `:engine:runtime` `HeatTierPolicy` port + tests; lease expiry change in `:android:linux` after the move-only split; PR-03, PR-05, PR-06 | PB-61..65 green; `WorkLeasesTest`, `NativeOrphanReaperTest` unchanged and green | AI Team guard (D6) |
+| WP-13.8 Streaming journeys | 2 | Sonnet (perf lead) + Opus (fixes in the owners' modules) | PJ-04..PJ-06, PJ-12, PJ-16, PR-10 SQL; 08's PJ-07..PJ-11 reviewed | PB-11e, 12, 13, 14, 17 (device), 18, 19 recorded; regressions assigned | changing chat code (fixes go to the chat owners) |
+| WP-13.9 Profiles | 2 | Sonnet (perf lead) | `BaselineProfileGenerator`, `check_startup_dex.py`, committed profiles | PB-10, PB-35 green | — |
+| WP-13.10 Notifications and widgets | 4 | Sonnet | PR-07; `WidgetUpdateGateTest` (with the widgets owner) | PB-66, 67 green | widget visuals |
+| WP-13.11 Media memory and size | 5 | Sonnet | PR-11, `ImageSizingTest` (with kit-content), size sub-budgets for media | PB-25, 26, 33 (media rows) green | voice features |
+| WP-13.12 Switch performance record | 6 | Sonnet (perf lead) | full T4 on the candidate; phone session 2; `docs/qa/native/perf-switch-<date>/README.md` | every switch number of 02 §4 recorded with method and device; [E] numbers replaced | relaxing any number (owner only) |
+
+---
+
+## 18. Agent brief lines (performance)
+
+Add to every brief that touches code (02 §7.13):
+
+1. Benchmarks and traces run only against the `….bench` package and the minified `stableBenchmark` build. Never
+   `am force-stop`, `pm clear` or uninstall the main package anywhere.
+2. Repeating work only through `Pacer` with a `TimerSpec` in a `*Timers.kt` file; no `while`+`delay` loops.
+3. UI state types hold immutable collections only (K-P3); screens read scroll and animation values in layout or draw
+   lambdas.
+4. Every lazy `items(…)` call has `key` and `contentType`; no `animateItem(placementSpec = …)` in the transcript.
+5. Infinite transitions only in files listed in `config/ambient-loops.txt`.
+6. Never put message text, paths, ids or host names in trace section names, log lines or result JSON.
+7. If your change touches a path in `perf/sensitive-paths.txt`, say so in your report; the coordinator runs the
+   named journeys before merging.
+8. A new dependency names its compressed size in the brief; `BannedDependenciesTest` lists what never enters release.
+9. Do not judge smoothness on a debug build or on the emulator's absolute numbers.
+
+Konsist perf rules (`:quality`, added to ADR §6.3's list by amendment A1):
+
+| Id | Rule |
+|---|---|
+| K-P1 | no function body with both a `while` loop and `delay(` outside `:core:common` `pace/`; no `ticker(` |
+| K-P2 | every `Pacer.ticks(` argument is a `TimerSpec` declared in a `*Timers.kt` file of the same module |
+| K-P3 | `*Ui` types hold only the allowed types (§6.2) |
+| K-P4 | no `GlobalScope`, no `runBlocking` in main source sets |
+| K-P5 | no `SharedPreferences.Editor.apply()` (ADR: `commit()` only) |
+| K-P6 | lazy `items(`/`itemsIndexed(` calls in `:ui:*` and `:feature:*` pass `key =` and `contentType =` |
+| K-P7 | no `animateItem(` with a `placementSpec` argument other than `null` in `:ui:kit-chat` transcript files |
+| K-P8 | `rememberInfiniteTransition(` only in files listed in `config/ambient-loops.txt` |
+| K-P9 | `preferredFrameRate(` only in `AndroidKitPlatform` |
+| K-P10 | no reference from `src/main` to `src/benchmark` or `src/qa` classes |
+| K-P11 | no `DexClassLoader`/`PathClassLoader`/`System.load(` with a computed path; `System.loadLibrary` only in `:android:media`, `:android:terminal` and `:android:linux` |
+| K-P12 | no `PeriodicWorkRequest` anywhere (PB-46) |
+
+---
+
+## 19. Decisions
+
+### 19.1 Owner decisions (work proceeds on the recommended default until answered)
+
+| # | Decision | Options | Recommended default |
+|---|---|---|---|
+| P13-D1 | **32-bit phones (armeabi-v7a).** The Flutter release publishes a v7a APK today; the ADR's splits do not. Without it, a 32-bit phone cannot install the native app (no matching native libraries) and stays on the last Flutter build. | (a) follow the ADR: no v7a; the bridge release (D4) tells v7a users in plain words. (b) add a v7a split (no built-in Linux, voice and QR included; ≈ +9 MB for that APK only). | (a), after the coordinator reads the download count of the 2.1.0+57 v7a asset (`gh release view v2.1.0+57 --json assets`); if it shows real downloads, recommend (b) |
+| P13-D2 | **Where the AI Team engine lives when AI Team returns (D6).** | (a) inside the APK as today (+≈ 3.1 MB). (b) a pinned download run inside the phone's Linux. | (a): it keeps today's proofs and works offline |
+| P13-D3 | **A performance recorder on your phone.** (1) Release builds are "profileable" so a trace can be taken over USB with your OK (cannot read the app's data; section 16 reviews it). (2) An off-by-default switch in This phone › Details: "Record a performance trace when the app starts slowly or stops responding"; traces stay on the phone until you attach one to Report a problem. | yes / only (1) / no | yes to both |
+| P13-D4 | **Two measuring sessions on your phone** (end of slice 2 and the switch candidate), about 30 minutes each, while you are not using it. A separate test copy of the app is installed and removed afterwards; your app and its data are not touched. | yes / emulator only | yes |
+| P13-D5 | **Battery temperature as a heat input** if experiment E4 shows Android's heat signal reacts too late on your phone | adopt / keep today's inputs | decide after E4 |
+
+The audit's decision 7 (cap the glow at 60 fps) stays "not now"; §5.5 only records the numbers.
+
+### 19.2 Coordinator amendments (sibling sections; not owner decisions)
+
+| # | Section | Amendment |
+|---|---|---|
+| A1 | ADR §6.3 rule 12 / 03 Konsist | tests may also be named after `PB-\d{2}` budgets; add K-P1..K-P12 |
+| A2 | 04 N4-D6, §6 | `BackoffPolicy` takes `Visibility`; hidden schedule 1 s, 2 s, then 60–120 s jittered; immediate retry on return (freeze-tip `1da77af8f`; required by S-18) |
+| A3 | 06 §4.11 | generated glyphs use the nullable-backing-field getter pattern; generate only referenced glyphs |
+| A4 | 03 §21 | settle the manual `benchmark` build type vs the baseline-profile plugin's generated types (P13-1); add `src/benchmark/` (`BenchSeedReceiver`) |
+| A5 | 02 G7, rule 17, NG15, S-23 | conflict with memory `freeze-owner-decisions-2026-11-01` item 6 (the owner reversed "no tracking" for the native app: a Basic analytics tier always on, Detailed opt-in) — §19.3 Q1 |
+| A6 | 11 §5 | after the move-only `BuiltinLinux` split, one logic change: deadline-based lease expiry instead of the 1 s pulse (WP-13.7) |
+| A7 | ADR §6.1 | `:tools:bench` (JVM, kotlinx-benchmark 0.5.0) may depend on the desktop variants of `:core:net`, `:core:markdown`, `:engine:transcript`, `:protocol:oc2` |
+| A8 | 03 package table | each feature's `XActions` interface lives in `…presentation.actions` (stability config, §6.1) |
+| A9 | 11 CR11-5 | `DeviceFacts.memoryPressure: StateFlow<MemoryPressure>` from one `ComponentCallbacks2` |
+| A10 | 09 §14.4 vs 10 M9 | Coil disk cache: 09 allows 64 MiB for `file:`/`data:` decodes, 10 says none |
+
+### 19.3 Open questions for the coordinator
+
+- **Q1 (analytics).** If the owner's Basic analytics tier ships, its sender must follow §12.2's last bullet; the perf
+  field summary of §3.6 (cold-start median, jank %, ANR count) is a natural Basic candidate. Until 02 is amended, no
+  sender is linked and §3.6 stays local.
+- **Q2.** Whether `profileable` in `stableRelease` is acceptable to section 16 (P13-D3 part 1).
+
+---
+
+## 20. Unknowns, proofs and experiments
+
+| # | Unknown | Settled by | Fallback |
+|---|---|---|---|
+| P13-1 | Baseline-profile plugin 1.5.0 build-type generation vs 03's manual `benchmark` type; aggregate task names with `mergeIntoMain` | WP-13.0 on the slice-0 skeleton | per-variant tasks; copy profiles to `src/main` by script |
+| P13-2 | `TraceSectionMetric.Mode` values on 1.5.0 beyond `First`/`Sum` | WP-13.0 compile | `Sum` + Perfetto SQL counts |
+| P13-3 | Which input-latency table trace_processor v59.1 exposes for PB-20 | WP-13.8 | measure tap → first changed frame with FrameTimeline only |
+| P13-4 | Host GPU mode works for `OC_API37` on the PC | WP-13.0 | software rendering for all runs, labelled |
+| P13-5 | OpenCode 2.1.1 honours `OPENCODE_DISABLE_MODELS_FETCH` | slice 3 runtime agent: start with the variable, watch FX egress | leave the fetch; PB-56 dropped with an owner note |
+| P13-6 | First-use cost of CMP font and string resources on Android | WP-13.3 (`font.load`, `words.load`) | Android `res/font` behind `KitFonts`; preload strings on IO |
+| P13-7 | Compose compiler report line format (Kotlin 2.4.21) | WP-13.3, pinned sample | gate on `*-composables.csv` instead |
+| P13-8 | JVM signature of `Log.d(() -> String)` for `-assumenosideeffects` | WP-13.3, `analyzeStableReleaseR8Config` + DEX check that no `Log.d` call remains | drop the rule (Kermit's minimum severity still skips the work) |
+| P13-9 | Machine-readable R8 analyzer scores | first T2 | HTML parse |
+| P13-10 | `apkanalyzer dex packages --files` on the installed cmdline-tools | WP-13.9 | `dexdump` per DEX |
+| E1 | `base.dm` through the in-app `PackageInstaller` session compiles at install on Android 12–17 | WP-13.9 spike on `OC_API37` (`dumpsys package dexopt` shows `install-dm`?) | none needed; background dexopt as today |
+| E2 | Android 17 memory limiter puts proot children in the app's cgroup | slice 0 (android-surfaces §5 action 3) | no memory budget in `ProcessBudget` |
+| E3 | Glow cost and display rate on the NX721J | phone session 1 | — (owner's "not now" stands) |
+| E4 | Battery temperature vs headroom on the NX721J | one passive evening, owner OK | P13-D5 |
+| E5 | proot flag A/B (`-L`, link2symlink, binds) | after the switch | none |
+| E6 | Reduced-operator ONNX Runtime for Whisper + Kokoro | after the switch, `:android:media` owner | keep the stock AAR |
+
+---
+
+## 21. Sources
+
+- Plan: `01-architecture-decision.md` (§1, §5.2 `:android:benchmark`, §6.3, §7.6, §8, §9.3, §9.5, §9.7–§9.9, §10.3,
+  §11 P3–P5, P8), `02-principles-scope.md` (§1 G1/G6, §3.5, §4, §4.1, §4.2, §6.1, §8), `03-architecture-modules.md`
+  (§8.3, §18, §19.2, §21), `04-protocols-networking.md` (N4-D1..D9, §6.2–§6.6, §12.4), `05-data-migration.md` (§7.1),
+  `06-ui-kit-design-system.md` (K6, K7, §4.11, MOT-13, `KitPlatform`), `08-motion-animation.md` (M8-6, M8-16, §8,
+  §9.5, §11 M6), `09-chat-streaming-genui.md` (§14.2–§14.5), `10-media-voice.md` (M2, M4, M9, M12, §2.4, §2.5),
+  `11-android-platform-native.md` (CR11-5, S11-4, §5, §7, §9).
+- Research: `testing-perf.md` (§0, §1, §2.2, §6.4, §9.1–§9.6, §10, §11, §13), `rendering-chat.md` (§0, §1),
+  `motion-native.md` (§9), `media.md` (§0, §2, §7), `android-surfaces.md` (§2.2, §3, §5), `kmp-cmp-status.md`,
+  `network-data.md`.
+- Maps: `packages-build.md` (§05–§07, §19), `builtin-linux.md` (02, 09–12, 21, 25, 31, 32, 34), `android-platform.md`
+  (15, T12, 63), `media-voice.md` (§8), `chat-genui.md` (PERF-2), `ui-kit.md` (PERF-1, PERF-4, MOT-13).
+- Catalog rows cited: B-CHAT-006, B-CHAT-096, B-STATE-030, B-STATE-054, B-AGENT-150, B-AGENT-169, B-ANDR-025,
+  B-ANDR-083..093, B-PROTO-033, B-PROTO-132, B-PROTO-134, B-SEC-117, B-BUILD-025..027, B-LINUX-049..052.
+- Flutter reference (read-only): `/home/eslam/Storage/Code/wt/oc_app-batch1` — `test/perf_*_test.dart`
+  (`perf_catalog_budget_test.dart:212`, `perf_builtin_pollers_test.dart`), `tool/release/{check_apk_size,cold_start,
+  split_apk_by_abi}.py`, `android/app/src/main/res/xml/widget_*_info.xml` (`updatePeriodMillis="0"`),
+  `.github/workflows/android-release.yml:284`.
+- Freeze tip (`int/freeze-2026-11-01`, read with `git show`): `lib/builtin/heat_tier.dart`,
+  `lib/builtin/agents/phone_budget.dart`, `AgentPriority.kt`, `NativeWorkLeaseHost.kt:265`, commits `1da77af8f`,
+  `4ae686c5b`, `afd0c6bf3`, `f9598e8ad`, `522df47a2`, `5e5c8ab42`.
+- Perf audit: `/home/eslam/Storage2/wt/perf-audit-2026-11-01/REPORT.md`.
+- Demo: `/home/eslam/Storage/Code/kmp-demo` (`androidApp/build.gradle.kts`, release APK 2,459,429 bytes, merged ART
+  profile 10,101 lines).
+- Owner memory: `dev-freeze-native-rewrite-2026-11-01`, `freeze-owner-decisions-2026-11-01`, `proot-orphans-heat`,
+  `phantom-process-limit`, `voice-model-memory-gate`, `android-native-feel`, `micro-animations-wanted`,
+  `no-owner-phone-screenshots`, `phone-logcat-silenced`, `owner-phone-debug-allowed`, `test-on-emulator-not-phone`,
+  `quiet-hours-vps-only`, `pc-capacity-ceiling`, `shared-emulator-contention`, `hog-watch-monitor`, `build-vps`,
+  `app-updates-two-layers`, `audit-trail-rule`.
+- Checked today [V], 2026-11-01:
+  - Maven Central / Google Maven metadata: kotlinx-benchmark-runtime 0.5.0 (lastUpdated 2026-09-01);
+    androidx.metrics:metrics-performance 1.0.0; profileinstaller 1.4.1; benchmark-macro-junit4 1.6.0-alpha01 latest
+    (1.5.0 pinned by the ADR); compose runtime-tracing 1.13.0-beta02.
+  - Startup Profiles / DEX layout (updated 2026-10-23): https://developer.android.com/topic/performance/baselineprofiles/dex-layout-optimizations
+  - Baseline vs Startup Profiles: https://developer.android.com/topic/performance/baselineprofiles/difference-baseline-startup
+  - ProfilingManager trigger-based capture: https://developer.android.com/topic/performance/tracing/profiling-manager/trigger-based-capture
+  - ProfilingTrigger (API 36 constants): https://developer.android.com/reference/android/os/ProfilingTrigger
+  - ApplicationStartInfo: https://developer.android.com/reference/android/app/ApplicationStartInfo
+  - MemoryUsageMetric (experimental; modes Last/Max): https://developer.android.com/reference/kotlin/androidx/benchmark/macro/MemoryUsageMetric
+  - Thermal API (headroom rate limit, NaN): https://developer.android.com/games/optimize/adpf/thermal

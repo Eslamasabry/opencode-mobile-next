@@ -1,0 +1,93 @@
+## test/widget_snapshot_test.dart
+20	group	widgetAskFor
+22	test	an outside write names the file and its folder
+40	test	a command is text: never split into a folder and a file
+55	test	a shell ask without a seen call uses its pattern as the command
+66	test	only a folder pattern gives a folder, never an invented file
+79	test	preview excludes inline reasoning and retains the following reply
+102	test	preview hides unclosed reasoning and orphan closing prefixes
+115	test	preview shows plain words, never raw Markdown
+133	test	project line is a real folder name or nothing
+139	test	preview leaves unrelated markup and code alone
+150	test	bounded assistant reads use the same inline reasoning boundary
+164	test	bounded read preview uses assistant prose only
+198	test	the Status widget gets each server as a name, a state and since when
+231	test	a permission ask carries only its question, kind, file and folder
+273	test	project and assistant excerpt are redacted bounded display fields
+325	test	snapshot keeps routing private and profile deletion removes target
+363	test	suspension migrates legacy raw routing out of the snapshot
+394	test	writes at most twelve sessions with busy flags and title fallback
+447	test	the untitled fallback is the caller\'s words, English if none
+467	test	publishes presented titles instead of server placeholders
+487	test	presented widget titles use app language and remain redacted
+518	test	unchanged payloads neither rewrite nor redraw
+551	test	non-Android platforms write nothing
+562	group	clearForProfile native answer
+573	test	a host with nothing to say still clears the stored copy
+586	test	an explicit native refusal is a failure
+593	test	conversations of other projects join the rows, plain and ordered 
+646	test	rows name their server and mark what waits on the person
+## test/widget_status_runner_http_test.dart
+15	test	scheduled ${oc1 ? 
+## test/widget_status_runner_test.dart
+57	test	run identity excludes OC2 timeline records while retaining real prompts
+123	test	one read reports $status and closes without mutations
+132	test	idle result includes sanitized assistant reply from existing reads
+145	test	changed server turn rejects old result before status read
+153	test	new turn during read cannot be marked idle
+160	test	new permission during read never gets cleared
+170	test	cancellation while status read is pending closes transport and rejects patch
+183	test	read deadline closes an unresponsive transport
+194	test	profile scope changes during read discard idle
+206	test	stale ticket never opens transport
+239	test	durable identity permits busy with no buttons but rejects deletion or replacement
+256	test	profile metadata edits invalidate stored check
+## test/widget_v2_contract_test.dart
+138	test	assistant reply events publish a preview without app navigation
+224	test	tool updates publish generic widget step without tool inputs
+253	test	the conversations widget names the model, never its raw id
+279	test	a request that names only its call learns the tool and file
+311	test	malformed actions cannot enter background dispatch
+324	test	snapshot uses opaque project scope and bounded redacted titles
+351	test	stale profile and scope never stop a conversation
+362	test	old run start never stops a replacement run
+373	test	same action is dispatched once and its result is in snapshot
+395	test	supported steering selects steer delivery
+406	test	OC1-style unsupported steering remains ordinary after-reply send
+419	test	uncertain send is not replayed and never exposes remote text
+434	test	missing exact permission cannot approve another request
+445	test	location switch revokes existing launcher actions
+457	test	needs-you and running rows survive the four-row cap
+480	test	profile deletion drains queued widget writes before clearing
+514	test	unknown mixed-runtime behavior never sends a prompt
+524	test	snapshot details cannot replace identity or introduce raw fields
+559	test	native deletion refusal preserves snapshot and reports failure
+583	test	native profile style clear is called even without cached snapshot
+613	test	allow once confirms only the exact pending permission
+## test/wifi_file_share_test.dart
+16	test	no Wi-Fi refuses to start
+30	test	serves the one file by token, counts downloads, 404s the rest
+62	test	stop closes the server and clears the state
+77	test	only private LAN addresses count as Wi-Fi
+## test/workspace_paths_test.dart
+5	group	isProtectedWorkspaceDirectory
+6	test	rejects roots, home folders and the server default
+27	test	accepts project folders, including ones inside a home
+43	group	workspaceDirectoryProblem
+45	test	explains empty, relative and protected paths
+52	test	accepts real folders
+59	group	projectFolderNameProblem
+61	test	accepts one safe segment
+66	test	rejects paths, hidden names and odd characters
+## test/worktree_inspection_test.dart
+62	test	reads exact copy changes; an error remains unknown, not clean
+89	test	conversation membership uses exact project, path and workspace
+131	test	empty matching page retains continuation and failures propagate
+157	test	unsupported and invalid scopes cannot dispatch requests
+## test/xterm_sgr_test.dart
+19	test	plain 4 underlines and 24 ends it
+24	test	4:0 ends an underline and is not a black background
+31	test	4:3 is an underline, not a yellow background
+38	test	underline colour is consumed and does not leak into other styles
+49	test	colon true colour and 256 colour set the colour
+59	test	a terminal reset (RIS) ends an underline left on

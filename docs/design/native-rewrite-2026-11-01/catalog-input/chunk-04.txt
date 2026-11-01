@@ -1,0 +1,528 @@
+## test/factsbook/http_factsbook_gateway_test.dart
+62	group	reads
+64	test	send the bearer token in a header, never in the address
+73	test	lists follow next_cursor to the end and pass the kind
+89	test	a thing id is path-safe
+100	test	search sends the words and says locked notes were not searched
+113	group	errors in plain words
+115	test	501 not_enabled keeps its code and request id
+132	test	a status with no body is named from the status
+155	test	no answer at all is node_unreachable
+169	test	an answer the app cannot read is a plain failure, not a crash
+199	group	mutations carry an Idempotency-Key
+201	test	capture: the given key, the body of the contract
+221	test	a fact added to a thing and a fact changed: the contract bodies
+269	test	retry, discard and the outbox batch
+308	test	every other write has a fresh key
+335	group	reminders
+337	test	the schedule goes as structured JSON with the title in its own field
+379	test	repeating schedules use the node\'s own forms
+421	test	a schedule read back keeps its form; one the app does not build stays raw
+464	test	an edit keeps the schedule id
+483	test	an edit may confirm a floating zone
+510	test	create sends the preview exactly as received with its digest
+542	test	pause is a patch with the revision it was based on
+557	group	the owner proof
+559	test	a review decision is signed and bound to its digest and preconditions
+595	test	an edit sends the edited proposal
+615	test	without an owner key the call never leaves the phone
+650	test	area sharing reads the policy revision and signs the area
+677	test	a stale approval is named as stale
+699	group	pairing
+709	test	a code becomes a token, sent without an Authorization header
+731	test	a refused code is a plain failure
+757	test	info needs no credential
+## test/failed_job_report_test.dart
+80	test	v2 failed row carries the same job log and component reason
+92	test	OCTRACE timing lines never land in a failed job\'s log excerpt
+111	test	successful, active and interrupted setup do not claim failure
+120	test	redacts full multiline input before line or character truncation
+142	test	excerpt keeps a bounded tail, including a single huge line
+153	test	team work and gate attach only the linked session excerpt
+195	test	gate rejects unrelated work and never copies raw provider payload
+247	test	built-in team failed job carries redacted exception log until cleared
+273	test	dev report requires exact owned run and an observed failure
+## test/failed_job_report_ui_test.dart
+203	group	the report text
+205	test	a job log leads the diagnostics, scrubbed, even with recent 
+225	test	a job that kept no log says so; a plain error adds nothing
+242	test	a failed job becomes the page\'s attachment with its log
+268	group	Report a problem with a job attached
+310	group	Run failed gate
+539	group	a failed dev service
+## test/file_size_ratchet_test.dart
+49	test	no lib file grows past its line budget
+96	test	the baseline only lists files over the limit
+## test/final_pass_lock_test.dart
+7	test	FQ3 refuses missing, standard-stream and unrelated lock descriptors
+## test/first_reply_notify_offer_test.dart
+79	test	asked once a reply has completed, never before
+98	test	not asked of a person who is $name
+104	test	not asked when the background connection is already on, and that 
+116	test	not asked where the device cannot notify; still owed
+123	test	a refusal at Android\'s prompt is an answer, with a reason
+## test/first_run_computer_path_test.dart
+74	test	password commands prompt privately and pass SEC-4 unchanged
+## test/first_run_landing_test.dart
+156	test	only a device that started on the welcome is new
+## test/first_run_welcome_test.dart
+100	test	bare pasted addresses gain the right scheme
+## test/forget_in_app_server_test.dart
+31	test	the active in-app profile is forgotten and nothing is left
+## test/form_request_test.dart
+74	test	captured schema detaches and recursively freezes nested values
+107	test	schema revision includes every constraint and nested metadata
+144	test	schema revision ignores map insertion order but preserves value types
+167	test	identity key fences every scope component without delimiter collisions
+## test/fq3_device_identity_test.dart
+5	test	owned process identity uses kernel start time with spaces in comm
+14	test	shell quoting keeps metacharacters literal through nested sh commands
+## test/fq3_diagnostics_test.dart
+20	test	app-managed OC2 type/content reply is completed, role/parts is not
+38	test	admission, user echo, incomplete and failed replies cannot qualify
+66	test	foreign replies and synthetic echoes cannot qualify own output
+## test/fq3_evidence_test.dart
+63	test	actual model receipt binds selection and preserves requested baseline
+87	test	current phase requires build 2203 and rejects archived 2196
+94	test	accepts pinned live metadata without changing evidence
+106	test	requires all metadata including explicit nullable cleanup status
+126	test	rejects stale run, revision, attempt, engine and case metadata
+151	test	UID and build must be live integer values
+162	test	each engine needs both pinned CLI and HTTP versions
+173	test	non-null cleanup status prevents completed evidence acceptance
+180	test	phase provenance is required and limited to fixed runtime kinds
+192	test	base model scope is public, bounded and matches the CLI expectation
+245	test	late cleanup failure replaces every pass before matrix qualification
+299	test	one UID is retained across engines and conflicts cannot merge
+325	test	untrusted metadata never reaches failure code or error text
+349	test	invalid caller expectations cannot validate self-matching evidence
+## test/fq3_history_manifest_test.dart
+78	test	manifest is stable across map insertion order and excludes bodies
+94	test	same session counts with changed IDs invalidate prior history
+106	test	phase order, session order and every selected field affect binding
+136	test	manifest refuses invalid or unbounded session identifiers
+165	test	history binding changes when only the tested base model changes
+182	test	history metadata must match the candidate and integer runtime values
+224	test	cleanup failures cannot be admitted as history evidence
+257	test	pass requires exact positive integer counts for both engines
+282	test	ordinary history failure remains explicit without pretending to pass
+296	test	malformed results and untrusted errors produce fixed failures
+## test/fq3_history_test.dart
+20	test	$protocol same IDs with altered text differ
+27	test	$protocol same IDs with altered role differ
+34	test	$protocol ordered IDs and content order are retained
+42	test	$protocol altered message ID differs
+51	test	$protocol changed durable tool $field differs
+67	test	$protocol altered tool call ID differs
+74	test	$protocol tagged card receipt is durable transcript data
+92	test	$protocol known timestamps are excluded without mutating input
+103	test	$protocol time inside tool input remains durable
+110	test	$protocol JSON object key order does not alter fingerprint
+119	test	$protocol malformed identity fails with fixed safe error
+## test/fq3_oc2_observation_test.dart
+31	test	only fresh events from the owned session and location are counted
+71	test	owned global terminals count without accepting foreign scope
+96	test	failure kinds are fixed counters and never raw provider errors
+133	test	card diagnostics distinguish nested ask and helper rejection
+188	test	retained card input counts identify malformed model arguments
+238	test	retry counts accept structured statuses and exact internal status lines only
+268	test	counter whitelist never exports raw event content or qualification facts
+315	test	large event bursts saturate each counter independently
+335	test	each snapshot honors its boundary without retaining earlier counts
+362	test	invalid stages and model references refuse with fixed errors
+388	test	bounded public references remain valid without normalization or fallback
+400	test	malformed caller scope fails without reflecting caller text
+## test/fq3_oc2_permission_contract_test.dart
+22	test	stable Allow proves shell ask, owned reply and command output
+59	test	stable plain Reject proves aborted call and interrupted idle
+95	test	${allow ? 
+121	test	Allow rejects ${fault.name}
+137	test	Deny rejects ${fault.name}
+## test/fq3_oc2_test.dart
+27	test	model catalog waits for initial empty plugin snapshot to settle
+42	test	a requested model must become enabled before polling succeeds
+58	test	empty catalog after bounded settlement is a failed prerequisite
+81	test	missing requested model stays failed despite other enabled models
+104	test	stream requires completed inference and a fresh owned delta
+112	test	rolling event cache retains fresh diagnostic observations
+121	test	explicit enabled UI model overrides a retrying backend default
+145	test	enabled backend default retrying HTTP 503 remains unqualified
+165	test	explicit working model admission still requires actual inference
+178	test	model switch records the retrying alternative without qualifying or falling back
+213	test	nonvision selected model uses the retrying vision model and remains failed
+238	test	retained model without an owned selection event fails at selection observation
+271	test	owned session titles preserve phase title and add unique ordinals
+291	test	session ledger failure retains owned ID and fails before prompt
+311	test	prompt admission and delta cannot substitute for assistant inference
+319	test	foreign or stale delta cannot certify current stream
+324	test	selected alternative must actually produce the answer
+334	test	abort requires a running session and a usable subsequent turn
+344	test	idle interrupt false is never an abort pass
+349	test	execution start without an owned delta is not a mid-stream abort
+359	test	switch prefers selected provider and image prefers selected model
+371	test	image fallback prefers selected provider before other providers
+383	test	reconnect refetches owned state without replay parameters
+405	test	allow and deny use real own-session requests and distinct outcomes
+416	test	stable MCP inventory must belong to the requested location
+431	test	foreign permission cannot receive approval
+438	test	stable Ask rules are scoped to disposable permission sessions
+465	test	beta permission probes do not send stable-only session rules
+477	test	image submission without semantic answer fails
+482	test	image answer checks unlabeled pixel fixture colors
+489	test	retained card without fresh matching tool success cannot pass
+501	test	completed local MCP card with provider executed false passes
+532	test	unavailable MCP helper fails before a card prompt or receipt
+550	test	card success must be fresh and match session location message and call
+578	test	pending errored or malformed retained card calls stay failed
+599	test	card answer is retained with actual tool call ID and acknowledged
+619	test	unretained answer receipt cannot pass cards
+## test/fq3_session_ownership_test.dart
+51	test	new and archived build ledgers remain recoverable without rewriting
+74	test	intent and each ID survive reopening before phase results return
+100	test	recovery recognizes only exact phase title grammar and directory
+126	test	archived cleanup requires explicit IDs, exact directory and legacy title
+166	test	conflicting intent cannot replace an earlier attempt ledger
+177	test	symlink target, parent and pending file never receive writes
+202	test	unbounded or malformed evidence is refused with fixed errors
+233	test	retired protocol cleanup preserves its ledger without a request
+248	test	cleanup discovers interrupted IDs, accepts 404 and preserves user rows
+302	test	cleanup retains durable ID when exact session scope disagrees
+## test/fq3_wire_test.dart
+9	test	credentials only reach Authorization; stable OC2 maps actual routes
+60	test	failed HTTP bodies never enter thrown errors or result evidence
+91	test	external URLs and credential-bearing URLs are refused before requests
+108	test	redirects never send auth to another endpoint
+140	test	stable detection requires shaped info and never follows unauthorized health
+167	test	SSE reconnect has no volatile replay cursor and filters bounded payloads
+## test/fq3d_proof_test.dart
+36	test	owned execution permits omitted location but rejects foreign scope
+77	test	generated password requires the exact complete server line
+103	test	catalog mode identity is independent of the shared API model ID
+127	test	model comparison uses values and normalizes only default variants
+184	test	successful inference requires a fresh completed retained assistant of the exact model
+238	test	catalog admission or an execution-success event cannot certify an unfinished answer
+258	test	only normalized stop certifies final success and raw finish cannot override it
+293	test	retained PNG proves exactly one file and exact stored bytes
+340	test	image answer requires exact panel colors in JSON or one whole JSON fence
+370	test	provider authentication failure uses only the exact structured discriminator
+## test/free_model_test.dart
+47	test	nobody signed in and OpenCode free model in use: yes
+55	test	a composite catalog key still matches
+67	test	another provider signed in: the free model was a choice
+78	test	a paid, unpriced, unknown or other provider model: no
+## test/gen_ui_codec_test.dart
+69	test	shared corpus: Dart and standalone JS agree on acceptance and normalization
+165	test	rejects cyclic, non-JSON, nonfinite and unpaired surrogate data safely
+192	test	input preview, missing identity, synthetic and nonexecuted parts are not admitted
+236	test	revision is normalized and independent of wire key order; scope and call remain separate
+268	test	state requires matching current call and revision in a complete authoritative tail
+296	test	only newest eligible ask wins; reports do not supersede asks
+320	test	only first later authoritative user can settle; synthetic and assistant receipts do not
+368	test	answer encoder and decoder preserve typed values and validate exact envelope
+399	test	choice answers require known distinct IDs, cardinality and bounded clean summaries
+435	test	form answers enforce required false, real dates, ranges, and absence rather than null
+498	test	photo receipt records submitted count without asserting retained attachments
+## test/gen_ui_connector_test.dart
+62	test	connector suggestion preserves identity and normalizes plain reason
+85	test	connector keeps executed tool provenance requirements
+91	test	Dart and helper reject malformed or actionable connector payloads
+179	test	MCP helper advertises connector suggestions and accepts their calls
+## test/gen_ui_controller_test.dart
+159	test	runtime switch rechecks cards for the shared owner
+195	test	All projects rechecks Cards after a runtime switch
+223	test	retirement preserves a queued Cards disable setting
+238	test	retired runtime cannot publish its pending cards qualification
+275	test	effective capability defaults false despite gateway capability
+291	test	fallback names only phone agents and connected ${flavor.name}
+313	test	partial registration keeps OpenCode 2 unavailable alongside Claude
+332	test	applicable failures keep their reason and name current agents
+349	test	generic setup problems survive connection projection
+369	test	restart status names only agents belonging to this connection
+384	test	unmanaged profiles reject setup and never call installer
+401	test	explicit setup runs once and enables only the qualified runtime
+425	test	controller stages all managed agents while installer gates readiness
+440	test	review 3 pure deltas do not invalidate cards or notify the app
+476	test	review 6 profile deletion continues after registration cleanup ${throwsError ? "throws" : "fails"}
+497	test	automatic setup is coalesced across transcript observations
+509	test	pending enable cannot reactivate after a newer disable request
+537	test	disable blocks card actions before removal completes
+560	test	waiting cards project into feed and typed reply clears attention
+590	test	profile deletion removes owned card keys and retains other owner
+614	test	remote main routes card state and Undo to built-in side owner
+716	test	failed setup keeps desired setting separate from effective capability
+## test/gen_ui_history_test.dart
+36	test	HTTP rejects oversized body and hides server error content
+55	test	OC2 requests descending page and returns oldest-first
+77	test	OC2 handoff reads a conversation whose screenshots exceed the card budget
+117	test	OC2 idle verifies existence and validates active map before absence
+151	test	Paseo idle admits only a fresh idle snapshot in the same directory
+184	test	invalid limits never send a wire request
+196	test	Paseo private history rejects missing or unqualified handshake versions
+216	test	Paseo loses qualified version on disconnect and invalid handshake
+252	test	Paseo finite tail uses private connection and before cursor
+280	test	Paseo rejects oversized frame without disturbing live transport
+## test/gen_ui_install_test.dart
+64	test	stages all tools and only verifies evidence-backed transports
+86	test	review 1 failed verifier reports verification failure not restart
+106	test	review 1 missing verifier reports unqualified not restart
+117	test	registration never claims a ready runtime
+128	test	OpenCode collision reports partial while Claude remains ready
+149	test	OpenCode 2 registration cannot become ready through a permissive verifier
+175	test	builtin verifier only invokes qualified Claude runtime
+189	test	verified Claude registration becomes ready
+199	test	verified Claude remains ready when OpenCode runtime is missing
+221	test	missing installation disables successfully without verification
+241	test	reject invalid profile before invoking setup
+252	test	serialize across installer instances
+269	group	isolated persistent ownership transaction
+384	test	OpenCode 2 preserves user JSONC by refusing registration
+394	test	OpenCode uses existing root-owned pinned Node without a system alias
+407	test	OpenCode retains and removes a legacy system Node registration after runtime removal
+425	test	OpenCode unsafe preferred runtime never falls back to another candidate
+440	test	OpenCode refuses writable or foreign-owned helper ancestors
+457	test	OpenCode 2 persists direct tools in isolated mcp servers config
+486	test	two owners install idempotently and last disable removes only own entry
+522	test	Claude CLI uses profile environment and user scope for add/remove
+536	test	Claude show preallow is exact, idempotent and removed on disable
+574	test	Claude show preallow preserves user-owned exact permission
+591	test	Claude show preallow verifies and repairs missing permission
+608	test	Claude show preallow rejects malformed or symlinked settings
+625	test	Claude show preallow rolls back its rule on self-check failure
+641	test	Claude show preallow migrates an existing owned registration
+673	test	Claude show preallow resets ownership after disable
+688	test	Claude readiness checks pinned CLI and discovery in owned profile
+707	test	disable absent runtime does not create directories or invoke runtime
+723	test	review 5 unchanged enable keeps marker throughout verification
+749	test	review 6 repairs owned helper and marker corruption
+766	test	review 6 modified owned helper cannot block disable
+776	test	review 6 recovers exact helper orphan from interrupted first install
+791	test	review 6 unknown orphan remains an unowned collision
+800	test	unowned entry collision preserves existing config
+811	test	symlinked managed directory refuses writes
+818	test	edited owned entry is never removed
+833	test	failed self-check rolls back only newly managed writes
+## test/gen_ui_recovery_coverage_test.dart
+84	test	idle coverage skips repeated recovery and survives controller restart
+104	test	background recovery never reads a session that is asleep
+120	test	running recovery never covers the later idle completion
+130	test	a source registered again settles without another refresh
+141	test	a read that failed is tried again without another event
+151	test	failed and incomplete history stay eligible
+167	test	prompt changing during history is not recorded as covered
+178	test	endpoint change does not reuse coverage
+184	test	explicit recovery still reads a covered conversation
+189	test	OpenCode recovery is unchanged even with snapshot metadata
+200	test	a turn starting during history is not covered
+213	test	journaled card overrides an earlier covered prompt
+221	test	waiting cards do not depend on successful coverage persistence
+230	test	coverage retains only the 200 most recently covered sessions
+243	test	corrupt coverage falls back to history recovery
+250	test	closing a profile fences an in-flight coverage write
+## test/gen_ui_runtime_fixture_test.dart
+24	test	captured Paseo Claude tool becomes a scoped confirm card
+66	test	running form of captured tool stays an ordinary tool part
+## test/gen_ui_search_publish_test.dart
+37	test	publishes private descriptor only in existing app-owned rootfs
+60	test	refuses invalid input, missing rootfs, symlinks and public directory
+## test/gen_ui_search_roundtrip_test.dart
+11	test	generated helper searches loaded catalogue through the real app bridge
+## test/gen_ui_server_test.dart
+30	test	initializes, handles notifications and advertises scoped card tools
+69	test	negotiates unknown version and requires initialization
+82	test	valid call returns immediately without claiming delivery
+94	test	invalid, disabled and unknown calls share safe generic error
+121	test	every call rereads marker and refuses symlinks or bad contents
+139	test	bounds raw frame bytes before parsing and recovers next frame
+153	test	split frames, invalid UTF-8 and malformed JSON stay protocol-only
+176	test	marker path rejects relative or embedded control paths
+185	test	connector search without a bridge returns a safe actionable result
+202	test	connector search reads current bridge and sends bounded authorized query
+248	test	invalid connector queries and bridge paths never reach the bridge
+316	test	search trims before Unicode bounds and maps rejected bridge input safely
+357	test	connector bridge responses are bounded and strictly validated
+## test/gen_ui_show_permission_test.dart
+146	test	qualified exact show is allowed once without an approval card
+169	test	hydrated show for a non-open session is allowed once
+177	test	disable is checked again for every request
+186	test	qualification sweeps an already pending show request
+197	test	known Claude agent qualifies when request omits provider
+204	test	revoked qualification before queued reply leaves request visible
+218	test	location change retires a queued show approval
+229	test	qualification failure keeps the ordinary permission request
+237	test	failed show approval is not retried when a listener rebinds qualification
+268	test	unqualified gateway never auto-allows
+276	test	unqualified daemon version never auto-allows
+284	test	exact raw name and tool kind are required, not normalized names
+312	test	foreign, unknown and non-Claude sessions never auto-allow
+## test/gen_ui_state_test.dart
+143	test	late admission blocks held answer without an uncertain send marker
+191	test	source replacement during final admission never sends old answer
+229	test	qualified authoritative parts only; source and revision isolation
+247	test	a finished card call reads as a read-only card while unconfirmed
+274	test	unknown session deltas do not notify card listeners
+283	test	repeated stale deltas notify only on coverage transition
+293	test	profile close before wire clears only the unsent dispatch marker
+320	test	unsent cleanup preserves other uncertain dispatches after close
+350	test	unsent cleanup cannot resurrect a deleted profile journal
+366	test	unsent cleanup preserves a replacement dispatch token
+389	test	Undo drops held answer from both surfaces
+400	test	duplicate taps send once and only authoritative echo produces receipt
+416	test	fresh busy admission refuses a send without a dispatch marker
+434	test	uncertain send persists without values and blocks resend after restart
+459	test	deletion cancels hold and prevents late read resurrection
+473	test	typed reply passes over card; stale coverage never offers controls
+491	test	recovery is capped at twenty sessions and two pages
+501	test	corrupt persisted state fails closed and cannot authorize resend
+515	test	attachments cannot be smuggled into a non-photo answer
+529	test	session deletion fences a late history read and candidate write
+545	test	a stale recovery cannot replace a newer authoritative transcript
+565	test	earlier envelope cannot supply the later answer receipt summary
+587	test	unknown coverage is not cleared by an unrelated small pass
+596	test	disconnect fences a first read with no cached view
+620	test	photo receipt ${receipt.label} in an incomplete busy tail
+698	test	incomplete photo receipt rejects $mismatch
+760	test	photo answers validate matching attachments before dispatch
+787	group	live card receipt
+822	test	ack alone remains unconfirmed until the exact live echo
+834	test	survives stale lagging history and duplicate echo without clearing journal
+871	test	$change restored later cannot revive old live proof
+897	test	authoritative passed-over result wins over live receipt
+921	test	restart retains dispatch protection but not volatile receipt content
+945	test	unreserved optimistic-looking row cannot settle a card
+966	test	rejects $mismatch mismatch
+1044	test	$action clears the live receipt and rejects its late echo
+## test/gen_ui_types_test.dart
+5	test	frontend can construct every public card variant
+## test/gesture_audit_test.dart
+42	test	every ledger gesture has an audit row
+58	test	every audit row names a ledger gesture, once
+72	test	every audit row has a visible equivalent and evidence
+## test/git/api2_shell_runner_test.dart
+105	test	starts, polls, pages the output and drops it
+130	test	no endpoint (404) is "unsupported", without server text
+145	test	OpenCode 2 reports the capability and implements the gateway
+152	test	the server shell wraps the script in sh -c, quoted
+## test/git/builtin_git_secret_drop_test.dart
+22	test	the token file is 0600 in a 0700 folder, and removed after
+39	test	each command gets a new random name
+48	test	when the file cannot be made private, nothing is left behind
+64	test	no Ubuntu installed: refuses
+72	test	the shell returns the run output and maps bridge failures
+## test/git/git_clone_remote_test.dart
+43	group	remote addresses
+44	test	the list keeps each address without user info
+56	group	names and addresses are checked before any shell runs
+58	test	remote names
+66	test	addresses
+88	test	clone folder names come from the address
+103	test	a bad address never reaches the shell
+126	group	classification
+128	test	existing remote and existing folder
+141	group	with real git
+187	test	add a remote, see it with its address, refuse a duplicate
+200	test	clone lands beside the project; a taken folder is refused
+## test/git/git_page_controller_test.dart
+73	test	first read: loading, then ready; busy is visible meanwhile
+87	test	not a repository and failures are views, not exceptions
+104	test	a failed refresh keeps the last snapshot and reports it
+112	test	unavailable workspaces never run anything
+125	test	a write records its result, then reads again
+141	group	save and send in one tap
+143	test	saves, then sends, then reads once; busy names each half
+170	test	a failed save stops there: nothing is sent
+185	test	a failed send keeps the save and says so
+208	test	one action at a time
+222	test	phone Linux: push hands the signed-in token to the drop
+241	test	a rejected token signs the account out
+259	test	Termux and servers: no sign-in offered, the token stays home
+280	test	abilities follow the snapshot
+306	group	workspace resolution
+315	test	a server with remoteShell gets a server shell, no token
+334	test	a server without it is unavailable, whatever its flavor
+345	test	no connection or no project
+## test/git/git_parsers_test.dart
+9	group	status
+10	test	rename to a unicode name with spaces, binary, edit, untracked
+33	test	a merge conflict is a typed state with ahead count
+43	test	detached HEAD has no branch name and no upstream
+50	test	a branch without upstream is a typed state
+57	test	an unborn branch has no commit; a path with a space survives
+65	test	each conflict code maps to its kind
+86	group	numstat
+88	test	binary files and renames in -z form
+99	test	counts join the status rows they belong to
+114	test	log: commits, parents, decorations and a unicode subject
+130	test	branches: local with tracking, remote, current
+146	test	branches: origin/HEAD is skipped, gone and behind are read
+159	test	operation markers
+166	test	remotes keep only the name and the kind of host
+179	group	error classification from real stderr
+181	test	typed states, not errors
+188	test	pull and push
+196	test	sign-in: who rejected what
+210	test	commit identity
+214	test	scrubbing masks the token and URL user info
+## test/git/git_real_git_test.dart
+128	test	snapshot: rename to unicode with spaces, untracked, no upstream
+150	test	not a repository is a state
+165	test	commit only the chosen paths with a hostile message
+194	test	push, then pull up to date, branches and discard
+233	test	pull that cannot fast-forward, push that is rejected
+251	test	token push: file removed by the script and the app
+272	test	the credential helper answers GitHub only, from the file
+## test/git/git_repository_test.dart
+18	group	snapshot
+19	test	one round trip reads everything and parses it
+57	test	"not a repository" is a state, not an error
+64	test	an unborn branch reads with an empty history
+83	test	half-done merge and conflicts are typed
+101	test	bridge and envelope failures map to problems
+132	group	commit
+134	test	stages and commits exactly the chosen paths, quoted
+164	test	nothing chosen and an empty message never run a command
+178	test	missing identity is typed; Git text kept for Details
+189	test	"nothing to commit" on stdout is read too
+203	group	pull
+205	test	ff-only; no upstream and detached are typed
+222	test	cannot fast-forward is a typed result
+238	test	already up to date
+250	group	push
+252	test	first push sets the upstream on origin
+270	test	no remote at all is typed
+282	test	rejected push says pull first
+297	group	GitHub token hand-off
+318	test	the token is only in the 0600 file, never in a script
+346	test	the file is removed when the push fails
+353	test	the file is removed when the bridge throws
+372	test	a file that cannot be made private means no push
+382	test	no drop (Termux, servers): the token is never used
+397	test	the helper names only the variable
+403	group	branches and discard
+405	test	invalid branch names never reach a shell
+431	test	switch and create run git switch
+454	test	discard picks the command by the kind of change
+507	test	a conflicted file is never discarded
+## test/git/git_script_test.dart
+8	group	shQuote
+9	test	single quotes stop every expansion
+19	test	a NUL byte is refused, and the value is not echoed
+32	test	shCommand quotes every word
+40	test	the rendered script, whole
+76	test	step names and variable names are checked
+96	group	envelope
+98	test	decodes steps and ignores noise lines
+111	test	a cut-off answer is reported, not misread
+121	test	folder and git checks
+## test/git/git_sheet_test.dart
+831	group	the header chip
+867	test	the holder reads the branch once and rebinds on a new project
+903	test	a chat opened again names the branch from its first frame
+## test/git/github_account_test.dart
+103	test	sign-in walks the states and stores the token under the key
+135	test	a failed attempt says why and stores nothing
+149	test	cancel while waiting ignores a late token
+163	test	sign-out and a rejected token both forget it
+188	test	an expired token is refreshed first and the new pair stored
+206	group	deletion sweep
+213	test	removing the profile deletes its GitHub sign-in
+229	test	the saved sign-ins reset deletes every GitHub sign-in

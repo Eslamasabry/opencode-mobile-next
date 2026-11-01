@@ -1,0 +1,529 @@
+## test/local_agent_runtime_test.dart
+285	group	the embedded script: structure
+287	test	the script and every dispatch pass bash -n
+305	test	shellcheck passes when it is installed
+324	test	pins are well-formed and point at nodejs.org over https
+339	test	the daemon runs as an ordinary user, never with the root guard off
+372	test	the daemon does not download speech models on a phone
+381	test	the daemon is loopback-only, relay off, and never widened
+399	test	the password is never an argument and nothing is traced
+411	test	Node is verified before it is unpacked, and never piped to a 
+423	test	packages go to the app prefix with Paseo pinned exactly
+432	test	remove keeps ~/.claude unless --forget-signin
+443	test	the dispatch rewrites script and pins, and detaches long verbs
+469	group	the embedded script: behaviour against fixtures
+474	test	without Ubuntu: status says so and install refuses
+484	test	install: verified Node, both packages, versions recorded, and a 
+507	test	a checksum mismatch stops before anything is unpacked
+522	test	a failed download, a plain http pin and a full phone each have 
+545	test	a native build failure is reported, not worked around
+557	test	start: health-confirmed ready, the password only in the 
+626	test	a port held by something else is port_in_use
+639	test	a daemon that never answers times out and is taken down
+649	test	start before install is not_installed
+655	test	sign-in status names nothing, and remove keeps the sign-in
+695	test	projects: the first one is created with git init
+724	test	the bridge dispatch writes this build\'s script and pins; a queued 
+757	group	LocalAgentStatus
+759	test	parses every phase
+780	test	parses a full answer
+800	test	maps every failure kind the script writes
+841	group	LocalAgentRuntime
+862	test	a verb dispatches, polls until idle and answers the last
+888	test	a failed verb throws its typed failure
+905	test	a bridge error and a refused dispatch are bridge failures
+933	test	remove passes --forget-signin only when asked
+948	test	password accepts only the script\'s own format
+956	test	sign-in opens a visible terminal on the script and nothing 
+971	test	projects reads paths as Ubuntu sees them
+## test/local_pdf_test.dart
+66	test	channel input/output budgets reject invalid transport results
+## test/local_terminal_signin_foreground_test.dart
+56	test	missing foreground binding refuses sign-in before native PTY start
+76	test	reserves synchronously and waits for active foreground before PTY start
+105	test	ending pending native start drains its late exact ID before releasing foreground
+136	test	disposing a pending sign-in drains late native ID without reopening URL
+164	test	cancel during foreground admission ends promptly without issuing native start
+192	test	admission refusal uses fixed words and releases without native launch
+223	test	inactive admission cannot launch a PTY
+243	test	native sign-in errors never expose platform or CLI text
+263	test	exit holds foreground through authentication checking until explicit end
+292	test	foreground loss drains only its sign-in and leaves normal shells alone
+328	test	URL handoff rechecks protection before a queued loss event arrives
+353	test	duplicate ends share a drain and hold protection until native removal completes
+380	test	failed drain retains protection and allows an exact-ID retry
+407	test	owner unbind drains registered pending PTY before releasing its delegate
+## test/local_terminal_test.dart
+33	group	a new shell
+35	test	starts at the terminal size, then runs
+45	test	a failed start says why
+53	test	shells are numbered in the order they were opened
+62	group	output
+64	test	is drawn and every chunk is answered
+72	test	a character split across two chunks arrives whole
+83	test	a wide character at the last column wraps whole
+96	test	after clear, a selection copies the words it covers
+113	test	output for a shell this side does not know is still answered
+124	test	an exit ends the shell with its code
+135	group	input
+137	test	typed text reaches the shell as UTF-8
+144	test	a sticky Ctrl turns the next typed letter into its control byte
+161	test	nothing is sent before the shell runs or after it ended
+173	group	size
+175	test	a resize reaches the shell once the view settles
+186	group	shells outlive the screen
+188	test	load adopts shells Android runs, with their recent output
+203	test	load runs once
+209	test	restart replaces an ended shell
+221	test	stop leaves the shell listed as ended
+232	group	channel
+235	test	events are parsed from the Android shapes
+## test/locale_format_test.dart
+10	test	English output is unchanged
+18	test	Arabic follows the locale: symbol after the amount
+30	test	model price label follows the app locale
+## test/manage_space/manage_space_manifest_test.dart
+14	test	the application declares the manage-space activity
+29	test	the activity runs the manage-space entrypoint, not the app
+38	test	both halves of oc/project_export agree on the channel
+## test/manage_space/project_export_test.dart
+42	test	a plain export leaves every credential out
+61	test	a private export adds credentials and OpenCode data, not logs
+79	test	measures each project, the server and saved private counts
+94	test	nothing installed measures as nothing, never an error
+104	test	projects not yet moved out of Ubuntu are exported too
+125	test	a repository made in Ubuntu exports with its Git objects
+162	test	the plan file frames one entry per line and skips unframeable
+173	test	the suggested file name says when it is private
+185	test	the policy knows credential names wherever they are
+## test/managed_move_test.dart
+16	group	the move page, shown the way the app shows it on first launch
+74	group	ManagedMoveRunner waits and retries before failing
+90	test	a phone that becomes ready later succeeds with no failure
+105	test	gives up after the last backoff with the last reason
+125	test	a separate history is final: no retry
+140	test	waits a bounded time for the phone to be ready
+151	test	a phone that never answers is tried anyway after the bound
+168	test	a thrown error becomes a failure, not a crash
+## test/managed_runtime_switch_preflight_test.dart
+184	test	idle local clears selection and preserves profile and credentials
+199	test	disables all local aliases and leaves remote work connected
+229	test	does not disconnect unmanaged endpoint $url
+237	test	in-app managed server also blocks a move while work is running
+251	test	does not treat another backend at local URL as managed OpenCode
+263	test	known local running work blocks before recovery or disconnect
+279	test	pending local permission blocks without needing busy status
+293	test	admitted local inbox send blocks before server reports busy
+317	test	retains saved local queue during switch (dispatched=$dispatched)
+329	test	unreadable saved queue is untouched during switch
+336	test	background monitor local running work blocks with remote active
+353	test	recovery persistence failure is actionable and never disconnects
+377	test	new work during recovery persistence blocks final disconnect
+396	test	in-flight local send blocks without closing its transport
+417	test	selection persistence failure prevents switch completion
+437	test	managed legacy reply requires safe migration without retry
+470	test	persisted legacy metadata blocks transport creation before moving
+## test/managed_shell_gateway_test.dart
+22	test	v2 shell reads, byte cursors, timeout and delete retain workspace scope
+97	test	shell discovery handles HTTP $status without advertising false support
+125	test	shell lifecycle and session shell changes survive event projection without fake messages
+## test/markdown_path_link_test.dart
+9	group	looksLikeFilePath
+10	test	accepts anchored and extensioned paths
+27	test	rejects non-paths
+40	test	stripPathLineSuffix trims only trailing line numbers
+## test/mcp_chat_capabilities_test.dart
+7	test	unqualified gateways do not promise chat connector actions
+14	test	a qualified synthetic backend can connect and refresh chat connectors with OAuth
+26	test	OpenCode 2 supports runtime chat connectors without chat OAuth
+35	test	managed Agent cards preserve connector capability decisions
+## test/mcp_chat_card_authority_test.dart
+81	test	retained payload is available during suspension but cannot authorize new requests
+96	test	replaced or deleted payload cannot reuse prior consent
+107	test	incomplete recovery is different from a complete removed card
+## test/mcp_chat_connection_test.dart
+361	test	Claude search uses cached catalogue without borrowing OpenCode inventory
+381	test	agent search never applies another project inventory
+394	test	agent search reports missing cache without inventory request
+405	test	catalogue off: fixed message and no registry request
+422	test	opted in with a stale list refreshes it first and merges the 
+460	test	a fresh list is not refreshed, only the query is asked
+469	test	registry failure falls back to the saved list
+484	test	opted in with nothing saved and no network says not loaded
+497	test	a slow registry cannot hold the search past its budget
+512	test	turning the catalogue on saves consent and loads the list
+524	test	agent search rejects source changes during registry read
+537	test	old search endpoint cannot serve after cards are disabled
+546	test	search observes cache changes without a helper restart
+556	test	failed descriptor publishing can retry after cooldown
+573	test	authoritative connector admission coalesces the same card
+584	test	unobserved and mismatched catalog suggestions cannot be admitted
+617	test	changed authoritative transcript rejects the earlier card controller
+636	test	changed project invalidates an admitted connector before dispatch
+652	test	changed active profile invalidates an admitted connector
+664	test	same-profile replacement retains the card and uses its fresh repository
+691	test	disabling Agent cards invalidates retained connector actions
+706	test	disposed card controllers do not exhaust the pending card budget
+721	test	source change during history recovery never calls the stale repository
+## test/mcp_chat_controller_test.dart
+122	test	runtime add followed by authoritative status makes next-turn tools ready
+133	test	double tap coalesces and successful connect never adds again
+147	test	unrelated existing same name is never reused or overwritten
+157	test	unsupported runtime makes no calls
+164	test	wrong requested server cannot mutate
+169	test	required configuration stays in Tools
+176	test	no refresh contract never claims ready
+182	test	source changes during add cannot publish success
+192	test	gateway errors never escape or expose raw credential text
+201	test	authentication is explicit and uses validated code
+215	test	valid manual callback completes and rechecks inventory
+226	test	OAuth off and unsafe launch fail closed
+246	test	dispose never revokes server credentials
+253	test	cancel only acts on owned pending authentication
+264	test	client registration failure requires setup instead of OAuth
+271	test	cancel during delayed OAuth start does not expose late launch
+292	test	owned callback validates state and discovers without exposing code
+349	test	busy callback port explicitly requires manual return URL
+367	test	explicit invalidation cannot be undone by returning to source
+## test/mcp_connector_search_bridge_test.dart
+54	test	binds loopback with an ephemeral port and independent bearer
+77	test	returns only the supplied search response for an authorized map
+88	test	rejects missing or incorrect bearer without calling search
+99	test	accepts only POST on the fixed path
+104	test	rejects malformed JSON and non-map JSON
+110	test	enforces request limit in UTF8 bytes
+115	test	rejects a stale source before invoking search
+126	test	rejects a source that changes during asynchronous search
+142	test	limits concurrent search calls to four
+159	test	returns a generic error without leaking search failures
+166	test	rejects a response exceeding 16384 UTF8 bytes
+176	test	times out search after five seconds without releasing its slot
+194	test	close is idempotent and stops accepting connections
+## test/mcp_connector_search_test.dart
+45	test	unloaded catalogue is distinct from a loaded catalogue with no match
+69	test	matches all case-insensitive tokens and returns canonical sorted IDs
+101	test	projects existing catalogue runtimes and never infers OAuth from keys
+138	test	default and requested limits apply after matching and deduplication
+168	test	search inspects at most 100 records including nonmatching entries
+187	test	prose is single-line, bounded by scalars, redacted and URL-free
+212	test	invalid requests fail with fixed copy and never echo input
+246	test	100 Unicode scalars are accepted regardless of UTF-16 length
+257	test	search covers description text beyond the returned prose limit
+## test/mcp_oauth_test.dart
+10	test	discovers only explicit HTTP loopback OAuth redirects
+38	test	manual callback parsing validates state before exposing the code
+65	test	loopback listener rejects a mismatched state then captures one code
+## test/mcp_setup_screen_test.dart
+538	group	P0.1: header values are secrets
+668	test	diagnostics also redact an Authorization=Bearer header value (P0.1)
+## test/merged_chat_feed_test.dart
+114	test	attention then running then recent rows sort across named sources
+138	test	equal session IDs remain distinct and route only to original source
+156	test	agent identity changes invalidate stale navigation routes
+163	test	agent and project filters preserve additive attention chips
+195	test	partial and project scope flags survive per source and aggregate
+217	test	a refresh never turns a filter with no matches into loading
+236	test	coalesced refresh isolates a failed child and recovers on next read
+257	test	start requires an explicit source for multiple backends and preserves agent
+283	test	one source keeps original startChatIn behavior
+294	test	disposed projection rejects late reads and never disposes shared child
+314	test	child notifications reach owner and stop after disposal
+327	test	duplicate names and missing defaults are refused
+343	test	a failed start keeps its cause for Details
+371	test	a project whose Git cannot be read keeps that failure
+## test/message_delete_transport_test.dart
+5	test	a repository without message deletion stays a bounded error
+## test/message_page_transport_test.dart
+9	test	scoped v2 inventory opens newest first and retains cursor-only continuation
+57	test	v2 opens beyond old history cap with one newest-first page
+## test/mobile_download_consent_test.dart
+53	test	threshold is strict and only an explicit mobile route asks
+79	test	unknown, VPN, offline and failed probes never run or claim
+111	test	size provenance fails closed; sufficient lower bound can offer
+153	test	concurrent claims persist once; denial and interruption survive reload
+209	test	accepted retry refreshes route; queued revocation precedes next start
+234	test	close and profile sweep reject stale owners without waiting on transfer
+271	test	closing during a probe cannot prompt or start later
+290	test	corrupt and refused persistence never authorize or return prompts
+312	test	payload sources distinguish pinned bytes from setup display estimates
+## test/mobile_task_view_test.dart
+51	test	only bundled schema and bounded known statuses render
+93	test	priority is optional, reviewed values only, never coerced
+125	test	progress counts completed out of tracked, ignoring cancelled
+137	test	toPlainText is deterministic, ordered and preserves task text
+157	test	fallback preserves unknown status and priority as bounded text
+## test/model_library_test.dart
+71	test	recents normalize, deduplicate and retain the eight newest choices
+93	test	favorites preserve backend identity and toggle normalized refs
+102	test	corrupt entries are ignored and oversized history is bounded on read
+121	test	persistence is isolated by profile and safely reads malformed JSON
+142	test	pruning removes unavailable models from both lists
+153	test	cycling skips unavailable models and wraps in both directions
+174	test	repeated cycles visit every recent model without changing other chats
+203	test	favoriting never selects a model and unavailable choices are rejected
+## test/model_name_from_id_test.dart
+26	group	modelNameFromId
+45	test	$id reads "$name"
+48	group	a new conversation\'s model chip label
+54	test	names the model from its id while the catalog loads
+74	test	a name seen before wins over the derived one
+88	test	the catalog name replaces it once the models are read
+## test/model_picker_test.dart
+291	test	model presentation leads with current model and provider family
+398	test	a provider-bound unresolved session does not inherit the global provider
+634	test	unloaded-provider notice reads naturally for one or many providers
+## test/model_picker_title_test.dart
+11	test	a named server reads "New conversations on <name>"
+18	test	this phone does not read "on On this phone"
+28	test	this phone: heading and notes do not double "on"
+## test/model_presentation_new_test.dart
+23	test	a model out in the last 30 days is new
+37	test	effort levels read as words
+## test/model_recommendations_test.dart
+37	group	recommendModels
+38	test	the server default, a recent choice and the cheapest, in order
+56	test	no speed is ever claimed: there is no fastest reason
+63	test	a model without a price is never the cheapest
+78	test	equal prices name no cheapest (all free); rows say Free
+96	test	no prices at all (a phone agent): no price row
+109	test	one model is one row: the default that is also the cheapest
+119	test	a cheapest tie prefers the model in use, then a recent one
+136	test	the model in use always shows, and the recent row gives way
+155	test	unavailable models and unknown refs are skipped, never padded
+165	test	the first default the list has wins (most authoritative first)
+## test/model_ref_normalization_test.dart
+6	test	bareModelID strips only this provider\'s prefix
+13	test	ModelRef.normalized returns itself when already bare
+24	test	a v2 model with a composite id and no modelID gets a bare modelID
+55	test	a v2 model ref with a composite id is sent bare
+64	test	error headline drops the class name and the stack trace
+## test/monitor_attention_reader_test.dart
+112	test	phone monitor authenticates the selected profile and reads project attention
+204	test	phone monitor treats wrong identity and missing credentials as unknown
+241	test	phone project inventory cap keeps coverage partial
+291	test	project demo monitor reads saved decisions without mutating recovery
+325	test	capped team inventory stays partial
+349	test	the shared deadline stops later reads and closes a late factory
+377	test	confirmed current failure is reported; busy clears it without history
+413	test	bounded rotation and truncated history retain uncertain coverage
+453	test	revoked ownership rejects late history and performs no later calls
+481	test	team links use work session; missing session preserves gate fallback
+535	test	partial team reads keep confirmed gates and close the owned gateway
+569	test	team projection deduplicates failed work and run and preserves stale state
+## test/native_crash_test.dart
+59	test	reads the latest JVM crash independently of exit history
+73	test	invalid native input fails closed without paths or sign-in data
+104	test	bounded metadata never converts unknown objects to text
+119	test	wrapped service crash retains the bounded safe permission cause
+170	test	oc/lifecycle launch report accepts the native crash contract
+186	test	startup emits one crash.last and persists its full bounded stack
+## test/native_locale_refresh_test.dart
+58	test	native locale refresh: $scenario
+## test/native_notification_copy_test.dart
+34	test	notification resources cover both languages and compatible slots
+83	test	widget authored fallback and time labels use localized resources
+111	test	agent titles are localized templates without English prefix inference
+## test/native_strings_test.dart
+68	test	native resource locale: $scenario
+## test/natural_voice_test.dart
+6	test	natural voice packs are pinned like the speech models
+20	test	a reply\'s language follows its script, then the app
+29	test	text is cut into sentences a model reads in one go
+## test/network_test.dart
+53	test	distinguishes no network from unvalidated Wi-Fi and unknown
+69	test	reads typed mobile and metered state from Android
+85	test	desktop and web return unknown without channel calls
+109	test	channel failures return unknown without exposing native errors
+122	test	event errors publish unknown and later events recover
+149	test	start is idempotent and newer events beat pending snapshots
+164	test	refresh, event failures, duplicates, and dispose are safe
+## test/no_bottom_nav_test.dart
+125	group	phone
+266	group	changed files of a turn
+283	test	sums the counts the tools reported, per file, in order
+297	test	a change without numbers leaves the file without numbers
+## test/no_raw_error_text_test.dart
+171	test	the scan finds the leaks it guards against
+191	test	the domain mapper never promotes protocol text to authored copy
+211	test	the product error mapper depends on domain categories only
+219	test	lib/ui never shows raw exception text as the words
+230	test	every allowlist entry still names a line (the list only shrinks)
+## test/no_red_scan_test.dart
+40	test	no red anywhere in lib/ui
+60	test	every allowlisted file still needs its entry
+66	test	theme roles have no red role
+## test/notification_moments_test.dart
+168	group	what the shade shows, never the lock screen
+170	test	a permission alert asks to run the command it shows
+183	test	a secret in the command never leaves the app
+202	test	a file permission asks to edit the file by name
+223	group	questions
+225	test	three or fewer short options are listed under the question
+238	test	four options are not listed: the alert just opens the app
+246	test	an option button answers the question with its own label
+266	test	free text is still refused for a choice-only question
+282	group	quiet hours
+284	test	a request still posts, silently
+293	test	outside quiet hours a request is not silenced
+301	test	a failure still posts, silently, with a plain reason
+326	test	a finished reply waits for the morning instead
+336	group	finished and stopped
+338	test	a finished reply names its chat
+348	test	opening the chat clears its finished alert
+364	group	Stop the reply
+366	test	stops exactly the chat the status named, while it runs
+377	test	a chat that is no longer running is left alone
+388	test	any other action is not handled here
+## test/notification_preferences_test.dart
+34	group	mergeLegacyNotifyRules: quiet hours
+35	test	only the saved-server pair: the pair is kept
+45	test	only the quota toggle on: 22:00 to 08:00
+53	test	both: the saved-server pair wins
+68	test	neither: quiet hours are off
+79	test	half a pair is not a pair
+87	group	mergeLegacyNotifyRules: the other shared values
+89	test	Wi-Fi only is on when either legacy toggle was on
+111	test	check-ins take the first duration; quota alerts any source
+128	group	NotificationPreferences
+134	test	nothing is shared until the migration has run
+146	test	reads both legacy stores, in the order given
+168	test	only the quota toggle: 22:00 to 08:00 and Wi-Fi only
+179	test	runs once: a second pass never overwrites an edit
+196	test	a corrupt legacy record migrates as off
+206	test	the two "what notifies me" choices default to on
+## test/notification_status_controller_test.dart
+51	test	one busy chat with tasks reads as working, 5 of 6
+83	test	a plan that arrives before the polled busy state is kept
+116	test	todo.updated moves the count while the chat runs
+132	test	subagent sessions are not chats
+142	test	a chat waiting on the person is counted as needing, not working
+159	test	retry is waiting, never plain busy
+194	test	a finished reply becomes "Last reply" on the idle status
+218	test	reconnecting says so, with what it was doing
+229	test	the heat guard folds into the status, no second notification
+245	test	Android's background limit is its own status
+255	test	the status follows the app language
+## test/notification_status_test.dart
+37	group	one chat working
+38	test	names what it does, with the tasks and a real progress bar
+52	test	without tasks there is no bar, never an endless spinner
+65	test	a chat with no live line still says it is working
+70	test	a long run is told in hours
+80	group	several chats working
+82	test	two chats are two lines
+96	test	three chats show two lines and "+1 more"
+108	test	five chats say "+3 more"
+118	group	needs you
+120	test	one request says whose it is and offers Open
+133	test	two requests use the plural
+138	test	beats working and adds how many are still working
+157	test	never repeats the request itself
+168	test	beats every pause and the reconnecting state
+180	group	waiting
+182	test	names the provider and the time of the next try
+205	test	without a provider or a time it still says so plainly
+215	test	a time already past reads "soon"
+226	test	shows the retry that comes first
+247	test	a working chat wins and notes that another one waits
+259	group	paused
+261	test	Android background limit
+272	test	the limit beats a chat that was working
+282	test	phone is hot
+292	test	hot does not hide chats that still work
+302	test	paused while idle offers Start
+313	group	reconnecting
+315	test	one server is not named
+327	test	several servers name the one that dropped
+339	test	beats working: the chats may not still be running
+347	group	idle
+349	test	ready, with the last reply and New chat
+362	test	the phone server adds Stop OpenCode and says where it runs
+377	test	no reply yet
+382	test	hours
+392	group	setup
+394	test	step and percent, no actions beyond Open
+411	test	a working chat beats setup, setup beats ready
+426	group	several servers
+428	test	add "on <server>" beside the app name
+438	test	one server never names itself
+446	group	lock screen
+448	test	shows only counts, never titles, lines or the live line
+483	group	payload and language
+485	test	the payload carries exactly what Android reads
+503	test	equal inputs give equal statuses
+513	test	Arabic copy is used when the language is Arabic
+## test/notification_text_test.dart
+31	group	redactForNotification
+32	test	keeps an ordinary command whole
+39	test	masks bearer tokens and authorization values
+47	test	masks provider keys, tokens and passwords
+62	test	masks credentials inside a URL but keeps the host
+70	test	masks a long unbroken token-looking run
+75	test	keeps the name of a masked key so the line still reads
+79	test	is one line, cut with an ellipsis
+87	group	firstReplyLine
+89	test	takes the first line of the newest assistant reply
+99	test	a line that introduces a list is joined with the first item
+126	test	skips user and synthetic text, and is empty with nothing
+135	test	never carries a secret from the reply
+145	group	stoppedReasonToken
+147	test	turns error names into plain tokens, never raw text
+156	group	notificationOptionsOf
+158	test	three or fewer short single-choice options become buttons
+166	test	too many, too long, multiple-choice or repeated give none
+181	group	permissionAskOf
+194	test	a command asks to run its program and sub-command
+207	test	a secret never reaches the title
+212	test	a file asks by its name, in the right verb
+227	test	an ask with nothing to show has no target
+232	test	the subtitle is server · project, either part optional
+## test/nudge_registry_test.dart
+57	group	registry
+59	test	a nudge fires once only
+68	test	what was shown survives a reload
+87	test	a shown but never dismissed nudge still does not return
+102	test	dismissed stays dismissed
+112	test	never two at once, and the refused one is not consumed
+125	test	nothing is offered before the first reply
+134	test	reset lets every nudge fire again
+151	test	a nudge only renders at the place it was offered
+161	test	unreadable stored state means nothing was shown
+168	test	the second project is counted without storing its path
+187	group	conversation triggers
+190	test	the first reply is recorded, and its own moment stays quiet
+217	test	approvals: third request of one kind, once it is answered
+246	test	approvals: not where approvals are already automatic
+268	test	review: a run that changed files finishes
+291	test	review: not without changes, not without a review
+311	test	leave: a minute of waiting with notifications ready
+343	test	leave: never when a notification could not reach them
+359	test	leave: a run that ends early cancels the wait
+381	test	compact: from 80 percent, where compacting exists
+408	test	another card above the composer keeps every tip back
+426	test	closing the conversation frees the slot
+447	test	a run changed files when a writing tool completed in it
+## test/oc1_profile_upgrade_test.dart
+46	test	old managed metadata retains migration requirement through saves
+58	test	completed migration and supported profiles remain completed
+71	test	agent profiles never acquire an OpenCode migration requirement
+79	test	fresh profiles default to the supported protocol
+89	test	copied history remains pending after process restart
+105	test	history confirmation $phase only unlocks completed history
+130	test	unfinished managed upgrade gates setup pending=$pendingImport live=$connected
+## test/od_team_gateway_test.dart
+12	test	project controls: suspend, resume and delete routes
+44	test	force stop sends the session kill, not the stop
+60	test	a bare supervisor refuses project controls
+## test/od_team_jobs_test.dart
+49	group	plain schedule wording
+51	test	cron, in English
+65	test	intervals and the other triggers
+82	test	Arabic says it too, with no cron text
+89	group	the project page
+209	group	what the gateway sends
+211	test	reads /orders and switches by the scoped name
+## test/office_text_test.dart
+14	test	a workbook becomes CSV, sheet by sheet ($name)
+30	test	a Word document becomes its paragraphs
+36	test	a file that only has the name is refused, not half-read
+51	test	which files are read this way

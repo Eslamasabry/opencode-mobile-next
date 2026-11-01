@@ -1,0 +1,525 @@
+## test/session_handoff_domain_test.dart
+5	group	SessionResumeCommand
+6	test	OpenCode 2 resumes with cd and --session
+20	test	directories with spaces and shell metacharacters are quoted
+32	test	a single quote inside the directory becomes '\\''
+44	test	a worktree session resumes inside the worktree directory
+57	test	a managed workspace session is unavailable, not guessed
+69	test	a missing or blank directory is unavailable
+85	test	control characters in the directory are refused
+94	test	session ids that could read as flags or shell text are refused
+110	group	SessionLink
+112	test	round-trips profile and session ids only
+124	test	refuses ids that are not plain identifiers
+133	test	parses only the exact link shape
+150	test	malformed links are ignored safely
+183	test	a very long link is ignored
+## test/session_import_test.dart
+138	test	streamed export envelope and bare payload preserve Unicode and all records
+170	test	review snapshot isolates nested input and request mutations
+212	test	unknown message types and nested protocol fields survive review
+243	test	blank, control, and malformed references and destinations are rejected
+313	test	identifies redaction and parent without discarding the source
+322	test	malformed identifying data and duplicate messages are rejected
+352	test	import wire body retains source IDs and explicit destination with no query
+395	test	import $status keeps capability and never retries or mutates IDs
+## test/session_inventory_cache_test.dart
+54	test	bounded restart preview is exact-profile/location and read-only
+106	test	refresh persists labels and deletion sweeps them without resurrection
+132	test	corrupt/foreign previews fail closed and revoked writes are skipped
+## test/session_inventory_paging_test.dart
+82	test	detail hydration does not suppress a concurrent busy snapshot
+241	test	partial refresh preserves cached older metadata and resets continuation
+258	test	pending page cannot resurrect deletes or overwrite newer live metadata
+300	test	new head refresh invalidates an older request without clearing new state
+326	test	expired cursor reloads and transient failure retries the same token
+350	test	direct reads coalesce and keep out-of-location metadata out of inventory
+377	test	direct lookup protects newer details from a pending inventory page
+394	test	confirmed local deletion and authoritative 404 clear cached entities
+## test/session_link_bindings_test.dart
+81	test	shared owner persists only the canonical verified binding
+108	test	different origin or installation cannot overwrite a binding
+124	test	absent profile cannot load or save through a stale owner
+140	test	close invalidates synchronously and drains a real pending disk write
+185	test	aborted deletion reopens only a fresh owner after durable membership
+213	test	${throws ? 
+235	test	failed write and failed reload never publish optimistic cache
+256	test	unreadable storage is fail closed before any write
+280	test	corrupt or unknown persisted shape is unavailable (${raw.length})
+294	test	credentials and recognized secrets never enter binding storage
+## test/session_link_native_contract_test.dart
+25	test	the manifest declares exactly one VIEW filter for the link
+55	test	the Activity wires link capture, delivery, and cleanup
+65	test	the native scheme and host match the Dart link shape
+85	test	the intent is consumed before the link is parked
+106	test	consumeSessionLink acknowledges readiness and drains once
+122	test	the bridge never forwards anything but the URI text
+## test/session_link_test.dart
+25	test	drains the link that launched the app, once
+49	test	accepts a live link while running
+64	test	malformed links never become pending
+91	test	a missing channel implementation leaves nothing pending
+98	test	is inert off Android
+## test/session_model_scope_test.dart
+37	test	per-session choice does not move the default or other sessions
+62	test	changing the default later does not override a session choice
+80	test	a variant the catalog does not offer is rejected
+118	test	store round-trips and prunes per-session choices
+152	test	malformed stored choices are dropped, not thrown
+## test/session_note_test.dart
+95	test	wire operations isolate the mobile-owned key, auth and location
+147	test	8192 encoded bytes includes quotes, escapes and Unicode
+169	test	$method preserves authorization errors without disabling capability
+193	test	unsupported endpoint hides capability, missing session does not
+226	test	server 413 retains its byte limit and unsupported value stays untouched
+271	test	save re-reads before mutation and rejects another client change
+286	test	wake and fresh-read scope changes never write into a new location
+316	test	duplicate decisions serialize and only successful writes create receipts
+349	test	live and reloaded transcript notices redact instruction keys and values
+## test/session_pins_test.dart
+62	test	pins survive reload and serialize writes without crossing profile or location
+88	test	failed storage is not shown as saved and later writes recover
+113	test	pins sort first with recency retained and unpin restores the ordinary order
+145	test	pinned history outside the head page is hydrated once and stays reachable
+166	test	failed pinned reads remain retryable and do not drop the preference
+## test/session_read_state_test.dart
+154	test	a deferred rendered receipt retains its completion and location
+209	test	v2 mapping and viewed events retain the exact idle watermark
+230	test	a false read-state write is retried at the same watermark
+255	test	refresh and remote viewed events synchronize without sending receipts
+280	test	a receipt acknowledges only the observed run when a newer one finishes
+302	test	$change during wake prevents a server receipt
+327	test	private read state persists locally and ignores another client receipts
+357	test	a newly opened viewer can finish after a covered viewer cancels
+380	test	failed server sync keeps local read state and retries only on explicit observation
+## test/session_selection_sync_test.dart
+158	test	cold start model fallback is per conversation and survives restart
+256	test	offline v2 metadata remains server-owned and writes require a connection
+272	test	a queued prompt cancelled during selection is never delivered
+307	test	selection wait rejects a retired dispatch transport
+327	test	v2 reads retain variants and distinguish inherited from unknown
+349	test	live selection replaces variant and patches only the matching session
+389	test	a model event cannot establish an unhydrated agent or clear with malformed data
+409	test	cold start phone selection stays unknown before its gateway exists
+427	test	cold start ${v2 ? "v2" : "v1"} status does not discard selection hydration
+453	test	pending metadata cannot overwrite a newer remote selection
+468	test	intentional writes serialize and confirmation adopts server state
+498	test	failed writes retain confirmed selection and allow retry
+515	test	new sessions receive defaults and offline replay applies its saved snapshot
+## test/session_skill_test.dart
+141	test	catalog identity and activation body retain scope and explicit resume
+186	test	known missing skill does not disable activation; server failures are uncertain
+222	test	location change during wake or session read prevents dispatch
+260	test	fresh staged revert and concurrent activation are guarded
+280	test	skill events request a refresh without exposing skill instruction text
+## test/session_tail_cache_test.dart
+61	test	bounded redacted tail survives restart and preserves scope
+103	test	shared live tail persists preview and hides staged history
+129	test	a changed staged boundary rejects an in-flight tail
+151	test	prefetch joins hydration and late deleted-profile result is rejected
+## test/session_title_test.dart
+6	test	the server placeholder loses its ISO timestamp
+20	test	real titles pass through untouched
+35	test	missing or blank titles fall back per surface
+## test/session_title_text_test.dart
+16	group	displaySessionTitleText
+17	test	cuts the leaked tool call off the refinery title
+20	test	cuts at every kind of model markup
+38	test	drops a marker the server cut in half, with its ellipsis
+53	test	ellipsis after cut markup goes too
+60	test	ordinary titles are left as they are
+75	test	nothing readable left is empty
+82	group	presentedSessionTitle
+84	test	every session list shows the cleaned title
+87	test	markup-only titles fall back to the untitled wording
+97	test	the stored title is not changed
+## test/settings_access_test.dart
+77	test	device preferences update across facades and preserve effects fields
+106	test	local model snapshots are read-only and malformed stored values unknown
+145	test	active connection changes do not retarget a captured consent save
+161	test	cross-facade competing writes conflict and fabricated tokens fail
+194	test	transport replacement invalidates tokens and existing watch context
+227	test	closed owners reject writes; dispose closes streams and retains shared owner
+267	test	selection reads and streams publish only acknowledged shared writes
+323	test	a second ProfileStore observes replacement and closed target identity
+355	test	late transport change cannot grant consent to the replacement
+389	test	refused save is failure, and opt-out is private before acknowledgment
+## test/settings_rebuild_test.dart
+142	group	with one server
+233	group	with several servers
+457	group	rows line up
+485	group	overrides and the way back
+544	group	Use my default resets every difference the page shows
+609	group	Use my default for read sharing
+672	group	a server page keeps to its server
+736	group	model names read alike connected or not
+738	test	ids are tidied to a short name and its provider
+786	group	Agents is one group of three rows that state their state
+805	group	search deep links
+927	group	round 2
+1058	group	Arabic and tablet
+## test/settings_scope_controller_test.dart
+134	test	live controllers share acknowledged display preferences across stores
+168	test	disposing a secondary controller leaves shared preferences usable
+185	test	fresh profiles are private and consent changes only the named profile
+206	test	revoking sharing in another controller prevents a waiting receipt
+234	test	a transmitted receipt cannot acknowledge state after shared revocation
+255	test	delayed opt-in followed by opt-out never publishes sharing on
+288	test	failed opt-out stays private in every controller and advances shared epoch
+313	test	load migrates existing profiles once from legacy consent $legacy
+## test/settings_scope_domain_test.dart
+25	test	target identities separate owners, connections, projects and chats
+47	test	all 67 settings doors have immutable ownership without navigation
+78	test	absent scenes are unsupported; metadata does not grant writes
+102	test	captured edits write only their owner and return committed state
+123	test	forged, foreign and replayed tokens cannot write
+148	test	new observations and competing saves conflict; deletion stays stale
+190	test	watches replay latest per subscriber then changes and stale states
+244	test	malformed values cannot publish a success or mutate snapshots
+## test/settings_search_domain_test.dart
+17	test	acceptance words and bilingual aliases reach specific rows
+40	test	typos, adjacent swaps, prefixes and mixed-language words work
+60	test	unavailable rows stay absent and crash still opens diagnostics
+79	test	upgrade retains legacy bilingual aliases and corrects broad doors
+111	test	literal matches outrank fuzzy matches and ties retain input order
+## test/settings_search_rows_test.dart
+112	group	the rows a person names
+114	test	motion, heat, crash and battery lead to their rows
+149	test	one typo and a word begun still find the row
+165	test	bilingual aliases are kept, whichever language is shown
+186	test	rows the phone does not have stay absent
+206	test	the dead aliases lead nowhere
+229	group	arrival
+## test/settings_session_agent_test.dart
+93	test	choosing an OC1 chat agent leaves other chats and profile default alone
+111	test	saved chat agent restores in a new controller and stays profile-specific
+131	test	a chat choice is not published before storage acknowledges it
+148	test	refused chat-agent persistence throws and keeps the acknowledged choice
+170	test	deleting a chat removes only its stored agent override
+189	test	profile deletion drains a pending chat-agent write without resurrection
+## test/setup_apt_repair_test.dart
+98	test	$shell reinstalls an interrupted unpack before Python installation
+126	test	$shell reinstalls at the offered version when the recorded one 
+148	test	$shell refuses installation after an unsuccessful $mode
+165	test	$shell refuses untrusted repair targets: $mode
+179	test	$shell repairs dependency interruption before installing
+192	test	$shell refuses failed repair and gives dpkg audit details
+203	test	$shell catches audit findings even when audit exits zero
+213	test	$shell verifies dpkg status after apt claims success: $mode
+## test/setup_audit_store_test.dart
+66	test	two controllers share one audit writer without losing records
+89	test	audit history is bounded and legacy metadata remains readable
+118	test	absent profiles and invalid metadata cannot create audit keys
+140	test	receipt acceptance and historical Undo IDs remain distinct metadata
+152	test	corrupt or untrusted stored metadata refuses overwrite
+191	test	refused storage does not fabricate a durable audit record
+209	test	profile deletion drains audit then rejects old and new handles
+248	test	close stops admission synchronously even while writes are draining
+## test/setup_component_removal_test.dart
+149	test	Python removal executes its registered removeScript
+167	test	AI Team removal uses its lifecycle API
+181	test	AI Team refuses a substituted unrecognized removeScript
+193	test	Registered presence scripts parse as POSIX shell
+203	test	Node removal reports OpenCode and transitive AI Team dependents
+227	test	Inventory uses presence probes rather than pinned version checks
+240	test	A required component cannot be removed without dependents
+249	test	A component without removeScript is unavailable for removal
+257	test	An absent component cannot run its removeScript
+273	test	Presence exit $code is unknown and fails closed
+287	test	A missing presence probe does not treat a healthy version as proof
+303	test	A failed native inventory never runs a removeScript
+314	test	A failed presence probe never runs a removeScript
+324	test	An unknown dependent blocks removal with its identity
+339	test	Removal refreshes dependencies after the confirmation inventory
+359	test	A running setup blocks component removal
+372	test	Unavailable setup status fails closed
+384	test	Unrecognized setup record $record fails closed
+394	test	An absent native runtime marks components absent without scripts
+415	test	An unknown component id cannot become a shell command
+428	test	Concurrent removal is blocked and busy resets after completion
+462	test	A nonzero removeScript result is failure and resets busy
+475	test	Thrown script errors expose only a stable failure reason
+499	test	A successful script with surviving files is still failure
+510	test	Partial removal invalidates inventory after releasing busy
+539	group	P1.4: sizes and other hosts
+551	test	freedBytes: a number is bytes; nothing or zero is no figure
+571	test	Registered size scripts parse as POSIX shell
+580	test	a host with its own team remover uses it, not BuiltinTeam
+597	test	without a team remover AI Team is not offered
+607	test	Termux: the manager removes the team, then the component script 
+621	test	Termux: a failed manager step stops before any file goes, and 
+## test/setup_component_update_test.dart
+19	test	fresh process restores uncommitted activation and replay is safe
+36	test	commit retains only the immediately preceding good generation
+54	test	first-install recovery removes incomplete activation
+64	test	recovery restores launch links without following their targets
+81	test	corrupt receipt fails closed and exposes only fixed guidance
+100	test	interruption before old move or after restore is replayable
+## test/setup_config_adapter_test.dart
+47	group	OpenCode 2 ${dialect.name} setup
+72	test	reads config in selected location using existing auth
+99	test	write refusal performs no transport request
+134	test	inspection keeps its captured location after client switches
+156	test	loaded provider credentials are registered before returning config
+175	test	inventory preserves statuses without raw server errors
+208	test	HTTP $status failure never exposes response details
+234	test	network failure maps to offline with safe copy
+250	test	malformed config cannot masquerade as empty config
+264	test	malformed inventory cannot masquerade as no servers
+## test/setup_controller_test.dart
+148	test	redacted read strips arbitrary environment credentials and server errors
+167	test	propose requires review and apply verifies outcome then undo restores
+196	test	unsupported production writes never call transport
+219	test	changed server configuration prevents apply and undo overwrites
+253	test	offline cannot dispatch writes; proposals remain reviewable
+264	test	secret inputs and overlapping patches fail validation
+300	test	transaction facet makes disabled MCP additions and removals reviewable
+322	test	unknown write outcome records uncertainty and prevents blind retry
+347	test	profile deletion sweep includes audit and preserves another profile
+363	test	controller serializes concurrent actions and exposes loading stream
+389	test	offline transition during refresh cannot publish ready state
+400	test	layered source config cannot masquerade as an effective diff
+417	test	basic shape validation rejects malformed scalar and MCP inputs
+444	test	audit storage refusal prevents mutation
+464	test	dispose drains in-flight refresh and clears profile snapshot
+480	test	setup mutation capabilities default off for unknown servers
+## test/setup_engine_test.dart
+217	test	startSetup receives retained download plus known extracted payload peak
+245	group	native ownership recovery
+254	test	$stage preserves the recovery code without native details
+270	test	unknown ownership during an agent check cannot trigger install
+296	test	legacy native ownership cause becomes the stable recovery code
+312	test	start step ${throwsFailure ? 
+332	test	restored job-level recovery code survives without a failed row
+351	group	saved runtime admission
+353	test	confirmed absent Ubuntu with no saved job defaults to OC2
+365	test	pre-job installed Ubuntu installs OC2 without a legacy install path
+380	test	explicit OC2 selection wins on pre-job installed Ubuntu
+393	test	unreadable Ubuntu presence does not become a fresh installation
+415	test	$fault status cannot turn an existing OC1 job into a fresh install
+455	group	resume rule
+457	test	components whose checks pass are skipped with their version, 
+511	test	nothing is checked inside Ubuntu before it is installed; the 
+529	test	the running state and the job list are published before run 
+545	test	an interrupted job continues with its own params unless new ones 
+590	test	a first setup says so in its params, and the flag survives a 
+618	test	the first-setup flag is laid over a stopped job\'s params, never 
+640	test	jobs from the This phone card are not first setups
+652	test	Continue after a failed OpenCode install (build 2062: npm\'s 
+711	test	Add tools keeps OC2 despite a $previousState OC1 job and resumes 
+762	test	a finished job preserves its runtime in the next run
+782	test	a $state legacy job resumes on OC2
+806	test	a job already running is watched, not started again
+823	group	the start step
+825	test	runs the finisher once and reports it done
+848	test	a failed start fails the job in plain words
+860	test	the job keeps polling without listeners while it runs, and stops 
+874	test	polling survives a status read that fails or never answers 
+896	group	cancel
+898	test	stops the native job; finished components stay
+909	test	while still checking, nothing is handed to the native side
+925	test	a finished job held in memory goes when Linux and its job are gone 
+940	test	restore reads an interrupted job after a restart
+963	test	installedOptional runs only the optional checks
+972	group	selection
+987	test	required and selected components, their dependencies, in 
+1009	test	a dependency cycle is an error, not a hang
+1019	test	the real registry: every dependency exists and comes first
+1036	group	weights and ETA
+1047	test	done counts whole, bytes and percent count real, a bare stage 
+1091	test	a new stage never moves the bar backwards
+1115	test	no ETA before 10 s of real progress; then the remaining estimates 
+1155	group	setup.json
+1157	test	the recorded interrupted job parses completely
+1181	test	keys keep the written order without "order"; unknown fields and 
+1212	group	errors in plain words
+1214	test	unexpected setup start diagnostics redact credentials
+1240	test	pre-output failure Details redact credentials
+1256	test	package repair failure keeps its reason in Details without output
+1289	test	native storage admission explains how to resume
+1303	test	SIGTERM and SIGKILL mean interrupted without guessing the cause
+1320	test	old signal output does not mislabel a later failure
+1333	test	a download without internet names the part and the cause
+1356	test	checksum, full storage and anything else
+1388	test	a failed job maps to failed progress with both errors
+1417	test	OCTRACE timing lines never reach the job log people see; the log 
+1462	group	combined checks
+1464	test	parse passing, failing and missing checks with versions
+1475	group	trace
+1478	test	each finished component is a span timed by the runner\'s own 
+1497	test	the checks are one span
+## test/setup_finish_host_test.dart
+53	test	ownership failure keeps its stable recovery code through setup finish
+91	test	built-in finisher refuses Termux before accessing profiles or native
+141	test	switching the app\'s server to OpenCode 2 takes the AI Team along
+184	test	legacy source survives an earlier OC2 alias with active=$active
+## test/setup_inventory_test.dart
+97	test	concurrent inventory consumers share one Linux check
+111	test	a later inventory read checks the phone again
+118	test	a busy Linux probe is unknown, not an empty inventory
+131	test	a failed refresh cannot report prior tools as removed
+151	test	an incomplete check (${result.exitCode}) is unknown, not absence
+164	test	a missing Linux rootfs is an authoritative empty inventory
+170	test	a tools change discards an earlier in-flight inventory
+185	test	removal notification refreshes every inventory consumer
+200	test	a runtime switch job does not erase Python or AI Team
+## test/setup_persistence_failure_test.dart
+10	test	native persistence failure maps to typed failure and plain words
+## test/setup_planner_test.dart
+13	test	guided mode requests structured values and never interprets question
+28	test	model and default agent become proposals without applying
+45	test	continuation collects inputs and makes remote MCP disabled
+63	test	local command is copied and disabled; removal is typed
+82	test	permission allows only explicit tools and explicit effects
+104	test	credential-shaped URLs and cleartext external URLs never propose
+126	test	secret or unknown inputs are rejected and never retained
+149	test	split secret CLI arguments and invalid command shapes are rejected
+171	test	unsupported sensitive or unimplemented workflows state the gap
+184	test	closed, disposed and evicted sessions cannot resume
+## test/setup_preflight_test.dart
+28	group	requiredSetupFreeBytes
+29	test	is twice the download size once that clears the floor
+33	test	never drops below the floor for a tiny or zero download
+38	test	known extracted payload counts with retained download and scratch
+53	test	unknown and nonpositive extracted sizes retain legacy admission
+70	test	known peak and doubled download saturate without integer overflow
+93	test	known extracted peak forwards through storage and full preflight
+137	test	component clones preserve known extracted payload and other metadata
+189	test	repeatable storage check respects fresh readings and exact threshold
+213	group	checkSetupPreflight
+215	test	passes a supported, roomy, well-remembered phone
+220	test	blocks a 32-bit-only ABI, reporting the CPU it found
+229	test	an x86_64 device passes: the rootfs ships for it too
+237	test	an unknown (empty) ABI list never blocks
+245	test	blocks under the memory floor, naming both numbers
+258	test	1,700 MB is under the floor: refused
+268	test	a nominal 2 GB phone (1,972 MB) may set up, with the slow note
+278	test	exactly at the memory floor passes, with the slow note
+288	test	a nominal 3 GB phone (2,900 MB) still gets the slow note
+298	test	4,096 MB passes with no note
+308	test	3 GB (3,072 MB) and over carries no note
+316	test	low space on a slow phone still blocks: space is checked first
+325	test	an unknown (null) memory reading never blocks
+334	test	blocks low space, naming exactly how many bytes to free
+344	test	exactly the required space passes
+352	test	an unknown (null) storage reading never blocks
+360	test	ABI is checked before memory or space: nothing else matters 
+## test/setup_registry_test.dart
+114	test	opt-out is persisted after a refresh write already in flight
+132	test	clear waits for a pending refresh write then removes it
+148	test	awaiting dispose drains writes before profile deletion
+168	test	default load, refresh and offline mode never access the internet
+182	test	explicit refresh uses fixed unauthenticated origin and caches safely
+219	test	restart preserves consent and cache; opt-out and offline do not fetch
+241	test	profile cache is isolated and existing deletion sweep removes it
+263	test	clear forgets consent and cache without changing other preferences
+277	test	offline transition cancels an in-flight refresh and keeps cached state
+295	test	opt-out during refresh cannot resurrect entries or consent
+309	test	deletion during refresh cannot recreate a profile preference
+324	test	redirects, oversized data and invalid JSON fail with safe copy
+346	test	failed refresh keeps cached entries and hides raw exceptions
+361	test	metadata redaction drops credentials, unsafe URLs, and executable arguments
+432	test	package-only listings explain the unsupported installation path
+448	test	deleted listings are excluded and server response count is bounded
+470	test	a search is sent as the registry search parameter, never saved
+493	test	a search term that looks like a credential is not sent
+501	test	declared header and variable names are kept, never their values
+## test/setup_runner_native_test.dart
+104	test	native setup persistence: $scenario
+## test/setup_scripts_test.dart
+106	group	oc_download
+146	test	$shell: reports real byte progress about twice a second and 
+170	test	resumes a partial file with a Range request (curl -C -)
+184	test	retries a truncated response from the newest byte offset
+205	test	transient HTTP errors retry without discarding the partial file
+222	test	a refused Range keeps existing bytes for the next retry
+234	test	an intact file from an earlier run is not downloaded again
+249	test	a checksum mismatch fails and deletes the file
+261	test	a whole-length file with the wrong bytes starts over
+272	test	a failed download keeps the partial file for next time
+282	group	oc_apt_install
+340	test	apt status becomes stages and percents; lists refresh only when 
+378	test	an install that fails on stale lists refreshes them once and 
+396	test	apt failing fails the script with apt\'s code
+406	group	checks
+408	test	the combined check script runs each check alone and reads back 
+425	test	the OpenCode check fails on another version or runtime
+476	test	every script parses in dash and bash
+## test/setup_termux_existing_install_test.dart
+72	test	the Termux host accepts the Node an older build installed from 
+90	test	an existing Termux install is recognised as done: every component 
+120	test	voice typing is installed by the app and reported to the Termux 
+## test/setup_termux_host_test.dart
+28	test	Termux checks use its installed base and preserve check exit status
+60	test	permission failures stay actionable and cannot expose credentials
+89	test	Termux refuses hostless and other-host jobs before starting anything
+123	test	unsafe or unknown raw setup params are rejected by the validator
+150	test	legacy runtime and version requests normalize to supported OC2
+157	test	unsafe effective setup params never generate install scripts
+201	test	inaccessible or corrupt durable state never becomes a fresh job
+229	test	lost start reply observes the durable running job without restarting
+285	test	queued cancellation survives lost start and status replies
+373	test	a phone without Termux is asked once per watch, not every minute
+## test/setup_termux_resume_test.dart
+45	test	a fresh engine restores the live Termux job without restarting it
+69	test	resume retains selected tools and runtime and skips healthy components
+101	test	restored start stays running until connection succeeds
+127	test	a failed connection leaves a resumable failed Termux job
+138	test	cancel records stopped progress without completing the start step
+## test/setup_transaction_test.dart
+186	test	exact raw snapshots detach and recursively freeze maps and lists
+212	test	$root scalar or null ancestor cannot be silently replaced by nested edits
+240	test	absent permission ancestor can be created and exactly removed by Undo
+257	test	$action audit refusal after dispatch produces uncertainty without Undo or replay
+294	test	legacy PATCH capability cannot enable Apply without atomic source transaction
+317	test	unreviewable executable and provider edits remain unavailable even on atomic hosts
+346	test	enabled MCP removal stays unavailable without runtime restoration
+364	test	atomic CAS rejects concurrent change after controller preflight
+380	test	revision-only change with equal config blocks Apply before dispatch
+393	test	disabled MCP add Undo restores absent key and exact unrelated nulls
+425	test	MCP removal Undo restores exact object through host handle without resending credentials
+461	test	Undo preserves a present null instead of deleting its source key
+477	test	Undo revision conflict prevents restore even with unchanged values
+493	test	$mode uncertainty disables retry and Undo
+517	test	scope change while reading preflight sends no mutation
+529	test	offline after dispatch reconciles original scope without ready publication
+554	test	scope change after dispatch reconciles but never publishes ready to another scope
+571	test	operation phases expose applying verifying ready and undoing
+## test/setup_ui_messages_test.dart
+10	test	English error presentation preserves actionable validation detail
+26	test	Arabic localizes parser and manager facts while preserving status values
+## test/setup_voice_component_test.dart
+26	group	the voice model component
+52	test	offers the pack first-mic setup would use: High accuracy on a phone 
+65	test	gates on total RAM, never the Java heap class
+82	test	capture and known physical RAM are required for an automatic offer
+92	test	low free space still offers it: setup\'s pre-flight says how 
+98	test	an uninstalled preference cannot override the RAM choice
+108	test	retains a supported installed selection
+120	test	an installed selection above RAM is not reported ready
+134	test	install downloads and verifies through the voice manager, reports 
+152	test	install is idempotent: an installed model downloads nothing
+166	test	a stopped install keeps its partial download and the next one 
+195	test	failures come back as kinds, never exception text
+222	test	too little space fails the install as no space
+236	test	remove deletes every pack, partial downloads included, and 
+249	test	remove refuses while a download runs
+268	test	a manager that cannot start (no platform) is simply not 
+277	test	the registry declares it optional, off by default, app-side, 
+295	group	app-side components in the engine
+332	test	left out, it changes nothing: not checked, not in the job
+339	test	chosen, it is checked by the app (not in Linux) and runs after 
+358	test	already installed, it is skipped
+364	test	it is checked even before Linux is there
+372	test	when the job reaches it, the app installs it once, its bytes show 
+400	test	a failed download fails its row in plain words; Continue tries 
+422	test	cancel stops the download and reports nothing
+437	test	the app killed mid-download: a new engine finds the job waiting 
+456	test	an interrupted job continues through it (built-in runner)
+466	test	installedOptional counts it even when Linux cannot answer
+473	test	the removal service removes it through the app, not a script
+495	test	app-side failure reasons map to the setup failure words
+## test/share_intent_native_contract_test.dart
+6	test	the Activity wires share capture, delivery, and cleanup
+19	test	native share delivery waits for Dart readiness acknowledgment
+50	test	native share-out opens the chooser without this app as a target

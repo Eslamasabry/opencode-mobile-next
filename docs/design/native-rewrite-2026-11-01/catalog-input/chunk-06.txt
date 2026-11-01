@@ -1,0 +1,523 @@
+## test/kit/kit_style_hooks_s9_test.dart
+131	group	needs you (KitStyleTokens.needsYou)
+133	test	by default it follows the glow, as every style had it
+158	test	ring, tint and edge are decided apart from the glow
+256	group	dividers between groups and within one
+287	test	the real specs answer both alike (their default), but Brutal
+307	group	KitTextHalo
+338	group	the prompt bubble decoration
+362	group	row groups set on the page
+395	group	the section rule
+430	group	press passed down
+496	group	link underline (KitStyleTokens.linkUnderline)
+534	group	filled controls and disabled controls
+536	test	a highlight on an own fill keeps the part\'s layer by default
+556	test	a spec answers it apart from its face\'s highlight
+599	group	fields
+601	test	the field halo follows the glow unless a style says
+## test/kit/kit_style_signal_test.dart
+94	group	tokens and enamel
+95	test	Signal is a registered style on a track
+111	test	cream enamel by day, a night signal box by dark, words at AA
+131	test	an action with its own fill is a raised key; the rest are flat 
+156	group	parts on the track
+## test/kit/kit_style_test.dart
+103	group	the style set
+104	test	five styles: Glass and Crystal retired, Clay dropped, Signal 
+114	test	each style has its contract defaults
+138	group	Solid stays what it was
+140	test	at its defaults every role is the part\'s own decoration
+158	test	tokens are the theme\'s own object at Round and Comfortable
+204	test	Solid honours its knobs once they move
+229	group	knobs
+231	test	null choices take the style\'s defaults
+244	test	Soft without depth keeps an edge
+252	test	high contrast: Soft goes Solid; Brutal, Paper and Signal stay
+266	test	changing the style resets Fine-tune; Saver resets it too
+279	test	corners: Soft takes about 60 %, Sharp the style\'s sharp radius
+287	test	compact density never takes a row below the touch target
+310	group	invariants for every style × brightness × knobs
+315	test	${style.name} $mode
+384	group	Brutal and Paper placeholders
+386	test	Brutal: a 2 dp ink edge and a hard shadow that sits down when 
+421	test	Paper: no shadows, ink boxes on what you act on
+490	group	storage
+492	test	Fine-tune round-trips and a new style clears it
+536	group	hooks (each a no-op for Solid)
+718	test	H4: pills follow Corners › Sharp; stadiums otherwise
+734	test	H5: the static shape tokens follow Corners and Density
+749	test	H6: a style may move the ground; Solid keeps the theme itself
+771	test	H7: live background policy and choosing Paper
+797	test	H8: Brutal draws a hard ring, Paper a rule, Solid its own glow
+900	group	S0: the parts\' own roles and the shared rules
+923	test	the page is its fill alone and never casts, in every style, 
+959	test	a field\'s boundary, and an off switch\'s, reads at 3:1 at rest 
+1006	test	code stays opaque in every style, brightness and knob
+1027	test	a highlight is never a part\'s own fill and never casts
+## test/kit/kit_surface_look_test.dart
+43	group	solid
+45	test	is the part\'s own decoration, untouched
+98	group	soft
+100	test	the ground\'s colour, raised at rest
+114	test	selected and pressed sit pressed in; a track is a well
+129	test	dark depth reads: a lit rim and a lifted top start
+141	test	words keep AA in ${roles.brightness.name}
+153	group	KitSurfaceDecoration
+155	test	lerps with a plain decoration instead of snapping
+165	test	reads a ShapeDecoration\'s shape and edge
+178	group	kitSurfaceBox
+240	group	choose: the live background
+243	test	Soft with live on, then Paper (off), then Soft (on again)
+256	test	live off (the default), then Paper, then Soft (still off)
+265	test	turned off by hand while on Paper stays off when leaving
+279	test	on by hand under Paper stays on when leaving
+286	test	choosing Paper again keeps the hold
+## test/kit/kit_swatch_test.dart
+158	group	press (test 1)
+203	group	selected (test 2)
+236	group	disabled with reason (test 3)
+238	test	disabledReason is required when onPressed is null
+280	group	miniature colours (test 4)
+309	group	accent swatch (test 5)
+375	group	grid columns (test 6)
+415	group	keyboard (test 7)
+490	group	preview (test 8)
+525	group	overflow and motion (test 9)
+591	group	semantics
+628	group	keyboard skips disabled swatches
+691	group	focus ring and hover
+798	group	accent layout (LAY-9)
+833	group	preview parts
+## test/kit/kit_tab_switcher_test.dart
+110	group	strip
+134	group	studio additions
+209	group	counts
+247	group	needs you
+301	group	overflow
+372	group	keyboard
+449	group	body
+601	test	.tabs with mismatched lengths asserts
+614	group	reduced motion
+## test/kit/kit_tappable_test.dart
+189	test	disabled requires disabledReason (STATE-8, debug assert)
+204	test	onLongPress cannot combine with a non-empty menu
+323	group	4. menu: right-click, long-press, Shift+F10, onLongPress hook
+486	group	5. screen reader: the menu as semantic actions
+583	group	7. hover and pressed fills come from surface steps
+829	group	13. a tap shows on the very next frame (KitPressTracker)
+## test/kit/kit_terminal_links_test.dart
+37	group	OSC 52 parse
+39	test	a set-clipboard write decodes
+42	test	a query is never answered
+46	test	an oversize payload is ignored
+55	test	garbage and empty payloads are ignored
+62	group	wrapped link detection
+70	test	a soft-wrapped link is one link from any of its rows
+78	test	a link the program wrapped itself with newlines is joined
+87	test	trailing punctuation is not part of the link
+97	group	in the live view
+## test/kit/kit_terminal_view_test.dart
+217	group	the key bar
+320	test	3. Ctrl-C and Ctrl-D reach the terminal as 0x03 and 0x04
+414	group	the live view
+655	test	selectedText returns only the selection
+667	group	9. the palette
+673	test	themeOf($name) uses the roles
+738	group	the output form
+870	test	11. a value coloured apart from its name is still masked
+896	test	12. tints: errors text1 semibold, warnings not amber, ANSI red
+922	test	the command: program, folder, flags, strings, operators
+999	group	15. overflow (G6)
+1088	group	calm (the Terminal screen)
+1167	test	the calm theme lets the ground show through
+## test/kit/kit_text_test.dart
+231	test	1. styleFor(role) equals LOOK-12 exactly for all ten roles
+257	test	1b. a Style with type of its own keeps the firm weights
+331	test	3. every tone colour is opaque in graphiteDark, graphiteLight and a 
+353	group	4. KitText.mono direction under TextDirection.rtl
+391	group	5. KitMonoCut
+456	group	6. KitText.selectable
+516	group	7. KitSelectable(mode: finePointer)
+684	group	A11Y-8: the middle cut at 200 % text
+744	group	app-wide helpers (slice-P9.10)
+746	test	appScaler passes a scale through below the cap and caps above it
+763	test	sentenceCase capitalises the first letter only
+## test/kit/kit_time_test.dart
+57	test	without a tree, the English defaults stand in
+## test/kit/kit_tokens_test.dart
+62	test	without an extension the tokens follow the theme
+## test/kit/kit_viewer_r1_test.dart
+50	group	KitViewer.folderOf
+51	test	the parent folder only, with its slash
+56	test	a root file has none, so the name never shows twice
+60	test	what follows the name stays ("· Line 12")
+67	test	a caption that is not the file path shows as it is
+71	group	header
+## test/kit/kit_work_graph_test.dart
+259	group	KitWorkGraphGeometry
+261	test	layers is deterministic and matches the retired layout
+284	test	rows: one id per row in the layers order, every edge under the lane cap
+325	test	one item has no gutter; empty has no rows
+341	group	KitWorkGraph auto
+380	group	KitWorkGraph open
+452	group	KitWorkGraph rows
+488	group	KitWorkGraph keyboard (desktop capabilities)
+589	group	KitWorkGraph fit
+629	group	KitWorkGraph semantics
+699	group	KitWorkGraph tones
+740	group	KitWorkGraph overflow and motion
+## test/kit/kit_work_line_test.dart
+177	group	summaryOf (1)
+216	test	isEmpty
+222	group	states (2, 3)
+342	group	toggling (4)
+541	group	motion (7, G8x)
+621	group	semantics (8)
+714	group	200 % text at 320 dp (10, G6)
+## test/kit/style/brutal_test.dart
+65	group	tokens
+66	test	defaults: Soft corners, raised, comfortable, the ink edge on
+87	group	the ground (hook H6)
+89	test	light: cream paper ground, warm paper surfaces, words unchanged
+105	test	dark: the near-black ground stays; cards take the second step
+112	test	every theme keeps its words at AA on every adjusted step
+153	group	surfaces
+155	test	the page at the ground step is the paper itself: no edge, no 
+169	test	the ink edge and the hard shadow, per role
+192	test	a part\'s own roles: fields, switches and code keep the ink box; 
+214	test	the shadow: ink in light, an ink-grey in dark that still shows
+226	test	a bottom sheet sits on the scrim; a dialog or menu casts
+239	test	controls rest on paper; chosen they sit down on the tile step
+276	test	pressed: the face sinks into its shadow (hook H2)
+297	group	polish
+299	test	dark: a chosen card or tile trades its ink edge for the accent, 
+359	test	needs you: an amber pill, no wash, ring or start edge
+383	test	dividers: ink between groups, space within one
+396	test	a focused field rings its ink box in 3 dp of accent
+417	test	the main action: bright mint with ink words in light, the 
+464	test	every theme: the words on the main action keep AA
+487	test	a disabled control lies flat in a muted edge, never a secondary
+516	test	a held primary keeps its colour: no layer raised, a faint ink 
+543	group	knobs
+545	test	Depth › Flat: no shadow, no sinking; the press shows as a fill
+561	test	Edges › Off: content keeps only its shadow; controls and tracks 
+582	test	Density › Compact: every shadow a step tighter
+600	test	high contrast keeps Brutal, flat with its edges
+620	group	direction
+688	group	fades
+690	test	lerp to and from Solid lands on each end
+718	test	rest to pressed fades the shadow out as the face sinks in
+## test/kit/style/paper_test.dart
+52	group	tokens
+54	test	Sharp at 0, flat, ruled; keeps itself under high contrast
+73	group	newsprint roles
+75	test	only the ground, surface1, surface3 and the hairline move
+87	test	light paper is warm and a shade under white; dark is near black
+96	test	every word reads on the paper and on the pressed step (AA)
+112	group	resolve at the defaults
+114	test	no shadow of any kind on any role, chosen or not
+127	test	a panel is set on the page: no fill, no box
+135	test	a raised step on the page (the prompt) is a box on the paper
+147	test	controls, tracks and floating pieces are ink boxes (3:1)
+171	test	the accent keeps its own fill and needs no box
+183	test	square corners; circles stay circles
+195	group	chosen and pressed
+197	test	a chosen control inverts: an ink fill, paper words at AA
+224	test	a pressed row takes the pressed step, still without a box
+232	test	a chosen card is boxed, so the choice shows without colour
+237	test	only a chosen control inverts its words
+262	test	hover and press differ visibly; press keeps every word at AA
+287	group	rules, needs you and the switch
+289	test	the section rule is ink, apart from the row divider
+315	test	code is a printed listing in the ink box
+327	test	a field is a ruled box on the page under it
+348	test	needs you: no tint, no ring, the start rule alone
+357	test	the switch thumb and the mint main action are square; stop and the 
+420	group	knobs
+422	test	Edges › Off: sheets lose the box; controls and the message box 
+450	test	Depth › Raised: only the floating layer takes the one drop
+465	test	Corners › Round and Soft keep the part\'s own corners
+476	test	high contrast keeps Paper with edges on and depth flat
+490	group	direction and motion
+492	test	nothing directional: the same rule at the start and the end
+536	test	lerps to and from Solid
+## test/kit/style/soft_test.dart
+72	group	tokens
+74	test	raised, no edges; the calm needs-you card; the ask field glows
+89	group	chosen controls (guide F5, gate G5)
+91	test	an accent thumb or tab stands raised out of its pressed-in 
+121	test	a face with its own colour (a status tag) takes no white wash in 
+132	test	a chosen control without a fill is pressed in with accent words 
+173	test	a control that cannot be used is flat: no shadows, no inset
+190	group	the prompt bubble (S9-4)
+192	test	your prompt has its own tint, raised, words at AA
+213	group	the code well
+215	test	every code colour reads at AA on the well, in every theme
+## test/kit_live_styles_industrial_test.dart
+123	test	the ten styles are registered after the existing ones, by id
+## test/kit_map_gate_test.dart
+15	test	the kit map gate passes on the committed map
+32	test	the kit map gate self-test passes
+## test/kit_motion_app_test.dart
+97	group	page transitions
+98	test	Android moves the Android way; the rest but iOS use the kit 
+169	group	tab switch
+246	group	parts arrive and leave
+341	group	state view
+418	group	rows
+491	group	working button
+571	group	expand row
+601	group	pull to refresh
+646	group	haptics
+## test/kit_motion_test.dart
+680	group	manifest
+698	test	the G4 manifest is read (the parser still works)
+727	test	every kit.dart part has reduced-motion samples (G8x)
+747	test	this file registers only the parts that predate G8x
+761	test	the ratchet only shrinks and names real samples
+787	test	registrations name parts kit.dart exports
+830	group	G8x leftovers
+## test/kit_ratchet_test.dart
+1780	test	${kitOnlyTitles[gate]} (absolute)
+1785	test	G1/G15/G16 have no baseline: the committed file holds none of them
+1829	test	G17/G21 inside the kit: only deferred files keep a baseline, and 
+1858	test	allowlists never grow (KIT-5)
+1888	test	allowlist keys name a file or folder that exists
+1899	test	the glass allowlist names only files that still build glass
+1916	test	allowlist keys are exact paths or folders under lib/
+1925	test	every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
+1952	test	every allowlist entry gives a real reason
+1958	test	the Flutter widget catalogue exists and is non-trivial
+1996	group	counters on fixture strings (proves the regexes, not just files)
+1998	test	G1 matches showDialog<T>( but not showKitDialog( or a comment
+2008	test	SnackBar( does not count showSnackBar( or KitSnackBar(
+2017	test	G16 counts real widget constructions, not static members or app classes
+2047	test	KIT-7: MaterialPageRoute( and PageRouteBuilder( fail G16, in lib/ui 
+2102	test	G1/G15/G16 failures name the kit part and the way forward
+2128	test	G17 is absolute: every colour row fails on any hit, with a fix 
+2159	test	Scrollbar has no home outside the kit any more (KIT-6)
+2169	test	G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
+2183	group	G2/G7/G15x/G17/G21/G48 rows on fixture strings
+2192	test	G2 counts uses of an old API, not its declaration
+2222	test	G2 counts motion literals and seams, not KitMotion names
+2237	test	SEC-1: launchUrl in the kit is absolute with no allowlist
+2255	test	G7 counts left/right layout, not the directional forms
+2280	test	G7 is absolute in the kit, forced-LTR parts may align left
+2300	test	G15x counts breakpoints and layout widths, not guards or gaps
+2313	test	G17 counts literal colours and theme reads, not transparent
+2330	test	G21 counts look literals the way the rulebook writes them
+2351	test	G21 LOOK-21 in the kit: every stroke width comes from KitTokens
+2394	test	G21 metal/chrome reads identifiers and file names
+2403	test	G48 flags a sheet with a multiline field and no draft
+2424	test	G17 and G21 also scan Flutter UI code outside lib/ui/
+2445	test	theme files, allowlist keys and scopes resolve as documented
+2481	test	KIT-5: an allowlist key the committed set lacks fails
+## test/kit_states_scenes_test.dart
+61	group	goldens (finished frame)
+140	test	the terminal cursor blinks while it arrives and ends lit
+159	test	a scene with data repaints when it changes
+## test/l10n_coverage_test.dart
+88	test	hardcoded string detector
+110	test	no file gained hardcoded UI strings
+## test/l10n_new_locales_test.dart
+21	group	the app ships the languages
+23	test	supportedLocales, the saved-choice set and the picker agree
+30	test	each ARB names its own locale and and matches its file name
+37	group	the device language decides
+40	test	Flutter alone would hand an unshipped language to Arabic
+50	test	a language the app does not ship reads English
+56	test	each shipped language is found by its code, region or script
+88	test	the next language in the device list is tried before English
+120	group	the catalogues
+123	test	a translated message reads in the language
+140	test	a message the language does not carry reads English, not Arabic
+150	test	plural forms follow the language
+185	test	every core key is a message the language translates
+## test/launch_session_shortcut_test.dart
+35	test	drains the pinned-session tap that launched the app, once
+65	test	a static action and a session tap are drained independently
+83	test	accepts a live pinned-session tap while running
+102	test	ignores payloads without both IDs, and non-map payloads
+128	test	an invalid live payload does not clear a valid pending tap
+138	test	a newer live tap wins over a stale cold-start consume
+156	test	is inert off Android
+170	test	dispose blocks later session notifications
+## test/launch_shortcut_native_contract_test.dart
+30	test	the manifest publishes the static shortcuts resource
+46	test	the preview shortcuts differ only in the package they open
+62	test	every declared shortcut targets MainActivity with a whitelisted id
+84	test	the native whitelist matches the declared shortcut ids
+114	test	the extra is removed before the whitelist decides
+130	test	consumeLaunchAction acknowledges readiness and drains once
+141	test	a live tap is pushed only once Dart is listening
+164	test	engine teardown forgets the channel and its readiness
+## test/launch_shortcut_test.dart
+25	test	drains the shortcut that launched the app, once
+46	test	maps the connect shortcut id from a cold start
+57	test	background settings supports cold and live widget taps
+73	test	accepts a live shortcut tap while running
+87	test	ignores unknown actions, null and non-string payloads
+109	test	an unknown live action does not clear a valid pending one
+119	test	tolerates a missing native implementation
+126	test	tolerates a native capture failure
+136	test	is inert off Android
+151	test	a newer live tap wins over a stale cold-start consume
+169	test	a live tap taken before cold-start completion stays taken
+192	test	dispose while the cold-start consume is pending ignores it
+217	test	disposing a never-started receiver preserves an active one
+231	test	dispose unregisters the channel and blocks notifier callbacks
+## test/launch_surfaces_controller_test.dart
+151	test	pinned sessions become launcher shortcuts, capped at four
+189	test	unchanged pins do not republish on every notification
+204	test	the tile cache carries the Activity count and nothing else
+240	test	nothing is published while not connected
+254	test	an explicit disconnect withdraws both surfaces
+273	test	lifecycle suspension keeps the last published state
+292	test	off Android neither surface is written
+## test/launch_surfaces_native_contract_test.dart
+30	group	pinned-session shortcuts
+32	test	the channel exposes the session drain and the publisher
+45	test	a tap carries the two IDs only and both extras are consumed
+69	test	consumeSessionLaunch drains once
+78	test	a live tap is pushed only once Dart is listening
+104	test	the publisher targets MainActivity with the same extras
+122	test	stale entries are disabled before the new set is published
+136	test	the shortcut icon exists and the compat library is declared
+145	group	Quick Settings tile
+147	test	is registered with the binding permission and QS action
+166	test	reads the key the Dart writer uses, from the Flutter prefs file
+179	test	a tap sends the whitelisted Activity action and nothing more
+201	test	degrades to the bare label and has localized copy
+## test/leftover_process_notice_test.dart
+50	group	the leftover-process line (item 7)
+52	test	names a project by its folder, and never shows a path
+133	test	OpenCode is named only when OpenCode itself is the one busy, and 
+159	test	the line offers See what\'s running when it can open the list
+## test/library_integrations_test.dart
+183	test	key page links are official https pages for key-only providers
+250	test	authorization URL policy accepts only credential-free HTTPS hosts
+272	test	provider OAuth completion accepts a code or callback URL
+## test/lifecycle_report_test.dart
+100	test	exit time is available but recovery waits for authenticated health
+118	test	a process without an answering server never counts as recovered
+128	test	missing credentials do not probe or claim recovery
+141	test	a crash is attributed to the app rather than a phone setting
+157	test	stopped and uninstalled servers are distinct and never probed
+170	test	remote, deleted and Termux profiles do not reach native or HTTP
+195	test	team recovery needs its process, supervisor and city health
+220	test	a removed team configuration is not silently recovered
+231	test	unknown historical services prevent an everything-back claim
+244	test	normal launch, update and no previously running services show no notice
+272	test	invalidation removes success and rejects an in-flight health result
+290	test	switching profiles supersedes an older refresh
+302	test	dismissal survives refresh without writing preferences
+311	test	native failures remain unknown and a later refresh can recover
+328	test	disposal prevents notification or publication from an in-flight check
+## test/linux_manager_parse_test.dart
+80	group	processes
+83	test	leaves out Android, proot, the scan itself and zombies
+87	test	sorts what a process is by its command
+97	test	names the program a person would recognise
+104	test	reads memory, age and the identity from the stat line
+114	test	age ignores /proc/uptime, which can run on another clock
+124	test	a process older than the scan by 72 minutes reads 1 h 12 min
+142	test	without the scan\'s own row, age falls back to uptime
+159	group	groups
+165	test	Paseo supervisor, daemon and their node children are one row
+183	test	a dev server and its shell are one row; a bash that started it is not
+199	test	measures processor use between two readings
+227	test	a stop includes what the process started, children first
+232	test	a stop never includes the OpenCode server
+236	test	the stop script accepts only process identities
+244	test	parses what a stop did
+255	test	scan and stop scripts work on a real process
+280	test	a changed start time leaves the process alone
+296	group	ports
+299	test	finds the ports a command names
+310	test	lists a port only when a connection to it worked
+315	test	matches an owner from the commands, and the server by its port
+330	test	reads interface reach from the kernel table when it is readable
+340	test	a server on a port no list holds is found by what its command names
+379	test	the probe script holds only numbers it was given
+387	group	storage and cleanup
+389	test	parses du lines and adds categories
+401	test	freed space is the drop between two readings, never negative
+410	test	safe paths: caches yes, projects and credentials never
+453	test	every cleanup names only safe paths and its script stays inside
+484	test	scripts parse as shell
+507	test	the temp cleanup keeps a file in use today
+514	test	old agent versions are only removed when the current one is known
+526	test	old agent versions: keeps the linked one, removes the rest
+559	group	packages
+561	test	validates names
+586	test	lists installed packages and marks the ones Linux needs
+602	test	reads candidates and removal plans
+616	test	scripts refuse text that is not a package name
+630	test	a job stops itself within its time budget
+638	group	job script
+666	test	reports what it is and how it ended
+674	test	a failing apt ends as failed with its code
+683	group	job log
+685	test	running with progress
+696	test	done, failed, timed out, busy and interrupted
+## test/linux_manager_retry_test.dart
+43	test	a passing ownership failure is retried and the list comes
+50	test	one that stays is "busy", not "not set up"
+66	test	Linux that is not there is said at once, without retries
+## test/linux_reset_copy_test.dart
+5	test	the reset leftover sentence does not double the phone
+## test/linux_reset_flow_test.dart
+87	test	the marker is saved before anything is erased, and goes once 
+98	test	the old Reply speed reading goes with the erased Linux
+104	test	a setup that could not start keeps the marker for the next start
+113	test	killed while erasing: the next start erases and sets up
+121	test	killed after erasing: the next start only sets up
+130	test	a Linux installed again since then ends the reset quietly
+138	test	no marker, nothing to do
+## test/listening_ports_test.dart
+53	group	parsing
+54	test	a LISTEN row gives the port, inode and whether it is loopback
+62	test	an established connection and a header are not listeners
+68	test	processes come with ports, folder and log file
+81	test	the in-app server and its own port are never listed
+90	test	a probed port with no process is listed once, without a pid
+99	test	hidden socket tables leave only what the probe found
+104	test	without tables, a probed port goes to the process that named it
+120	test	garbage and an empty answer give an empty list
+126	group	scripts
+128	test	the listing script reads the tables and probes the common ports
+137	test	tail refuses anything that is not a plain file path
+147	test	a quote in a path cannot end the quoting
+152	test	stop signals one pid only while its command is unchanged
+161	test	ports are read from local links in a server\'s own output
+173	group	live run without the socket tables (Android 10+)
+212	test	finds python -m http.server on an arbitrary port, with its process
+235	test	a port named only by PORT is found, and its log file is offered
+282	group	names
+284	test	a short name from a command line
+298	group	ansi
+300	test	colour, cursor and title codes go; text and lines stay
+## test/live_status_test.dart
+66	group	LiveStatus
+68	test	serialises exactly the four fields Android reads
+88	test	compares by value
+104	group	publishLiveStatus
+106	test	is a no-op while live mode is off or the service is down
+118	test	sends the first status at once and skips unchanged ones
+135	test	coalesces a burst into one trailing push with the newest
+159	test	a burst that returns to the shown status sends nothing
+171	test	swallows a missing platform channel
+185	test	a pause from the notification is not an Android timeout
+206	group	ConnectionController.liveStatus
+236	test	counts runs and requests and names the freshest busy session
+253	test	publishes through notifyListeners and tool part events
+300	test	the running sentence follows the app language
+334	test	tool sentences never repeat the tool input
+## test/live_update_chip_manifest_test.dart
+10	test	a notification that asks to be promoted has the permission
+## test/local_agent_profile_match_test.dart
+16	test	every loopback name of the daemon endpoint is the same server
+25	test	another port, scheme, host or backend is a different server
+37	test	the name never decides, the endpoint does
+46	test	with two saved for the endpoint, the connected one is the row
+56	test	only one profile per endpoint folds into the phone row

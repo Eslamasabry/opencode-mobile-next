@@ -1,0 +1,502 @@
+## test/crash_report_test.dart
+73	test	capture stays off and a broad diagnostics entry is not evidence
+87	test	enabled capture without a saved record returns noCapture
+96	test	preview contains validated evidence only and never writes or shares
+133	test	safe snapshot is immutable and remains a point-in-time record
+150	test	report remains within 20 records and its UTF-8 byte budget
+177	test	explicit share opens with the exact preview and writes nothing
+191	test	new objects and another builder cannot authorize a preview
+215	test	changed evidence requires another preview before sharing
+231	test	$change invalidates an issued preview
+250	test	controller replacement invalidates even identical restored records
+267	test	storage failure is typed and makes old preview stale
+278	test	capture cleared during the awaited loader is not shared
+298	test	unavailable loader exposes a fixed outcome and no report
+319	test	share rejection and private exceptions return shareUnavailable
+339	test	overlapping shares return busy without opening twice
+360	test	production sharing uses oc/share with exact text only
+377	test	production sharing is unavailable on an unsupported platform
+## test/credential_ingress_redaction_test.dart
+69	test	loaded credential is masked in persisted diagnostics and report
+100	test	updated credential is registered before secure storage can fail
+157	test	new authenticated transports register passwords before requests
+166	test	submitted provider credential registers before transport
+## test/default_notice_deletion_test.dart
+51	test	default notices use one owner per preference store and profile
+65	test	default writes reject absent profiles
+72	test	profile deletion stops admission and drains a pending notice before sweeping
+## test/delimited_text_test.dart
+5	test	CSV preserves quoted separators, quotes, multiline fields and trailing cells
+21	test	TSV retains ragged rows and treats formulas and markup as literal data
+36	test	blank input and trailing record terminator do not invent rows
+47	test	malformed quotes fall back without fabricated cells
+54	test	bounds distinguish row prefix from unavailable table
+79	test	explicit incompatible MIME cannot become a table from its filename
+## test/demo_isolation_test.dart
+456	test	demo preferences are independent maps with defensive list copies
+## test/design_standard_test.dart
+527	test	G3x: migrated screens hold every forbidden pattern at zero 
+536	test	G3x: migrated classes in mixed files use the kit
+556	test	G3x: the baseline only shrinks and names only migrated entries
+593	test	G3x: a screen migrated on or after $_g3xSince has an _ar_dark 
+617	test	raw parts a migrated screen gave up do not come back
+629	test	every allowlist entry names a migrated file and gives a reason
+639	test	each migrated screen has dark and light goldens at 412x915
+656	test	scenes take their time only from KitIllustration (§10)
+676	test	the kit is the one place raw progress and filled buttons live
+689	group	G3x counters on fixture strings (proves the patterns)
+695	test	every G1, G2, G7, G17 and G21 pattern is forbidden
+711	test	a screen that breaks one rule of each gate fails each
+764	test	scopes: the kit and the theme files are judged by their own rules
+782	test	directional and themed forms pass
+796	test	bidi literals count outside the kit, as characters or escapes
+804	test	an argument list is read to its closing parenthesis
+## test/desktop_packaging_contract_test.dart
+28	group	release tag and version conventions
+29	test	the pubspec version carries a build number the checker can read
+37	test	a release tag for this version parses back to this build
+56	test	the packaging script labels artifacts with the pubspec version
+70	test	the packaging script refuses a bundle from another version
+79	test	the release API target matches the repository CI publishes to
+106	group	Linux desktop integration
+108	test	the desktop entry, icons and WM_CLASS all use the app id
+136	test	packaging never claims the OpenCode server command
+149	test	public package metadata points at this repository
+157	test	every icon size the packaging script requires is committed
+180	test	CI pins the same Flutter line the release script does
+## test/desktop_platform_gating_test.dart
+132	group	the first-run welcome
+168	group	the servers quick-add list
+205	group	the setup guide
+255	group	the Termux setup screen
+294	group	the composer prompt tools
+342	group	the settings hub
+414	group	Ubuntu host management
+446	group	the background live controller
+476	test	talks to the service on Android
+485	test	never reaches the channel on desktop
+513	group	the home-screen widget snapshot
+527	test	writes and redraws on Android
+538	test	writes nothing on desktop, where there is no widget
+553	group	the launch surfaces
+555	test	publish and cache on Android
+576	test	are silent on desktop, where there is no launcher menu or tile
+## test/desktop_release_check_test.dart
+97	group	tag parsing and comparison
+98	test	extracts build numbers from release tags
+104	test	newer means a strictly larger build number
+117	test	checker requests the releases API and skips drafts
+145	test	checker chooses the highest valid build from unordered entries
+168	test	unversioned and malformed entries do not hide a valid update
+185	test	checker network wait is bounded even when the adapter hangs
+194	test	a release URL that is not GitHub over https falls back
+## test/desktop_window_icon_test.dart
+12	test	the declared window icon exists on disk
+16	test	the window icon is bundled, and the master is not
+34	test	the icon master is kept beside the bundled variant
+## test/desktop_window_state_test.dart
+16	group	DesktopWindowState serialization
+17	test	round-trips through the encoded string
+24	test	rejects nothing, empty, and non-JSON
+31	test	rejects partial, non-finite and non-positive records
+59	test	treats a missing maximized flag as not maximized
+69	group	displayForBounds
+71	test	returns null when the platform reported no displays
+77	test	picks the display holding most of the window
+86	test	falls back to the primary display when nothing overlaps
+91	test	handles displays at negative coordinates
+100	group	fitBoundsToDisplay
+102	test	leaves a window that already fits alone
+113	test	pulls a window that hangs off the right/bottom back inside
+125	test	never places the window above the work area top bar
+135	test	shrinks a window that is larger than the display
+145	test	enforces the minimum size
+154	test	a display smaller than the minimum still yields a legal rect
+165	group	resolveStartupGeometry
+167	test	centers the default size when nothing was remembered
+176	test	centers when the platform reports no displays
+188	test	restores an exact rectangle that still fits
+201	test	restores onto the secondary monitor it was saved on
+213	test	re-homes to the primary display when the monitor is unplugged
+232	test	re-homes a window saved at negative coordinates
+244	test	a maximized window restores maximized, not tiny
+258	test	a saved rectangle smaller than the floor grows to the floor
+270	test	a saved rectangle wider than the new resolution shrinks
+284	test	the minimum size fits inside the default size
+## test/detected_dev_servers_test.dart
+72	test	a program listening on the phone is listed with port and logs
+90	test	a server shell is listed with the ports its own output printed
+108	test	a program that is already a listed shell is not listed twice
+126	test	a shell a saved command owns is not listed but its ports are known
+137	test	servers in the project folder come first
+146	test	a shell that ended is not listed
+153	test	a failed phone script keeps shells and records the failure
+167	test	a look that fails while its own stop runs keeps the list and 
+200	test	a stale answer after invalidate is dropped
+209	test	a shell\'s log is its output tail with colour codes removed
+218	test	a program\'s log is read from its output file
+227	test	a program with no log file cannot be read
+236	test	stopping a shell asks the server and drops the row
+245	test	stopping a program runs the guarded kill for that pid only
+256	test	a stop that did not work says so and keeps the row
+267	group	who can be scanned
+271	test	only the phone itself, where the in-app Linux exists
+## test/dev_preview_test.dart
+5	group	DevPreviewLink.parse
+6	test	takes localhost, 127.0.0.1, 0.0.0.0 and ::1 with a port
+21	test	keeps the path and query, and https
+29	test	leaves every other link alone
+50	group	scanning conversation text
+52	test	finds links in prose and drops trailing punctuation
+62	test	recent: newest first, one per port, capped
+79	group	DevPreviewTarget.resolve
+82	test	the phone is the server: loopback, 0.0.0.0 written as 127.0.0.1
+100	test	a remote server: its host, the link port, with the 0.0.0.0 note
+114	test	the link scheme is kept, not the server scheme
+122	test	an agent on this phone (a lease to loopback) opens on the phone
+134	test	no server, a private lease, or no host: blocked with a reason
+154	group	devPreviewMayLoad
+157	test	same host and port only
+183	test	never a scheme that is not http(s), nor embedded credentials
+## test/development_service_gateway_test.dart
+9	test	v2 creates a location-scoped owned shell and retains only ownership metadata
+## test/development_services_failed_report_test.dart
+60	test	failed service exposes preview after owned log read without persisting it
+83	test	scope change and lost ownership cannot attach a cached log
+99	test	invalidation discards a pending read and its report
+111	test	failed log refresh cannot reuse a previous excerpt
+120	test	a replaced receipt cannot reuse the prior run log after refresh
+## test/development_services_test.dart
+46	test	registration survives restart and never starts a command
+56	test	start logs stop restart control only receipts from this feature
+86	test	lost create response stays unknown and recovers only its ownership nonce
+108	test	same ID with foreign ownership cannot authorize stop or logs
+133	test	failed refresh does not leave running status claimed
+145	test	scope change during resolution prevents POST and pending receipt
+159	test	scope change during stop revalidation prevents DELETE
+172	test	a late create response is saved for recovery after route disposal
+187	test	profile deletion blocks late receipt without recreating preferences
+202	test	log reading requests only a bounded byte tail and strips control sequences
+216	test	unsupported transport saves configuration without shell calls
+229	test	unknown runs need explicit local forgetting; removal never kills
+244	test	standard profile deletion sweep includes services but preserves peers
+266	test	corrupt saved configuration is not silently overwritten
+## test/device_diagnostics_gateway_test.dart
+98	test	BD13 device diagnostics separates helper deaths from Android app exits
+128	test	gateway history is repeatable and never consumes launch recovery
+145	test	gateway preview stays off until consent and shares exact safe text
+176	test	clearing captured evidence invalidates a gateway preview
+187	test	gateway notifies listeners of the existing background owner pause
+## test/draft_attachments_test.dart
+21	test	restart restores exact Unicode content without payload in metadata
+49	test	shared bytes remain until last reference and owners clean independently
+78	test	corrupt bytes are reported and a subsequent save repairs them
+102	test	project file references require matching location and are never read locally
+128	test	invalid identities and temporary references cannot escape the vault
+## test/e7_workspace_localized_helpers_test.dart
+24	test	session placeholders localize while real titles remain intact
+46	test	relative time follows supplied locale
+## test/elsewhere_attention_test.dart
+11	test	projects are tallied; readers leave out the one they are in
+52	test	an answer, or the end of the run, clears what was waiting
+74	test	switching into a project hands it back to the app
+86	test	observations preserve typed card targets and receipt time
+157	test	replies and session settlement do not remove another folder card
+194	test	duplicate requests refresh one observation, malformed requests omit
+223	test	observed failure survives idle and clears only for new work or removal
+290	test	unknown status and request events do not invent busy or failure
+317	test	stream replacement keeps old rows stale until each is observed again
+## test/environment_projects_test.dart
+33	test	orders by update time, keeps ties stable and unknown dates last
+63	test	unavailable project ordering does not contact the server
+75	test	empty response stays empty and request failures remain failures
+96	test	missing environment and project operations remain unavailable
+## test/exit_list_focus_test.dart
+214	test	time labels: today, yesterday, then the date
+225	test	which exits are problems
+## test/external_agent_client_test.dart
+35	test	official fixture discovery, send, same-task reply, query and cancel use pinned binding
+90	test	unsupported $mismatch card stays unavailable
+128	test	redirect does not forward credentials or follow another origin
+152	test	public discovery and unauthenticated operation omit bearer
+176	test	mismatched receipt is uncertain and never exposes remote error text
+200	test	oversized card fails closed
+210	test	terminal task cannot be continued and output is bounded
+233	test	unsafe addresses fail before network
+## test/external_agent_state_test.dart
+149	test	delivery marker is durable before send; continuation keeps task/context
+163	test	lost submit response survives restart and is never resent
+182	test	restart opens known task by query and terminal task never sends
+203	test	uncertain reply remains blocked while same input request is reported
+218	test	cancel checks fresh state; completion wins without cancel request
+228	test	active cancellation result is never reported as canceled
+242	test	credential change during preflight prevents a pending cancel
+257	test	agent deletion removes credential and records; late response cannot recreate them
+273	test	forget during request prevents late record resurrection
+283	test	failed credential deletion leaves unavailable tombstone and retries cleanly
+299	test	background pauses actions and late status cannot enable reply
+315	test	two stale controllers cannot both claim the same send
+332	test	mismatched context does not replace saved task
+343	test	no bearer appears in persisted registry or task snapshots
+352	test	full edited unsent draft survives store reconstruction and local deletion
+373	test	draft writes cannot replace dispatched tasks or revive deleted tasks
+389	test	oversized draft refuses persistence and leaves the previous draft intact
+400	test	oversized local records are rejected without making existing data unreadable
+## test/external_link_test.dart
+8	group	safeExternalLinkUri
+10	test	accepts https and normalizes the scheme case
+21	test	accepts http so the caller can warn, not so it opens silently
+25	test	refuses every scheme a link label cannot describe
+43	test	refuses embedded credentials in any form
+50	test	refuses hostless, empty, and unparseable values
+60	test	refuses an overlong URL rather than passing it to the platform
+70	group	externalLinkHost
+72	test	names the port only when the URL does
+83	group	openAgentSignInPage
+125	group	openExternalLink
+## test/factsbook/ed25519_test.dart
+13	group	Ed25519 (RFC 8032 section 7.1)
+14	test	test 1: empty message
+27	test	test 2: one byte
+41	test	a seed of the wrong length is refused
+46	group	JCS (RFC 8785)
+48	test	sorts keys by code unit, drops whitespace, keeps integers
+58	test	escapes only what JSON requires
+62	test	refuses a non-integer number
+66	test	the bytes are UTF-8
+71	group	OwnerSigner
+76	test	the proof carries signer, nonce, time and a 128-hex signature
+107	test	the signature covers the canonical envelope, and nothing else
+140	test	a nonce is fresh every time
+## test/factsbook/factsbook_address_test.dart
+7	test	private addresses parse, with the default port
+29	test	anything public, odd or carrying credentials is refused
+## test/factsbook/factsbook_contract_test.dart
+25	test	every fixture the node ships has a parser here
+77	test	Thing and its facts
+97	test	the list envelopes carry items and next_cursor
+118	test	SearchHit
+128	test	Status: canonical states, key, index, no claim of a backup
+148	test	Reminder and its schedule
+164	test	Review item
+179	test	Area: sharing, storage and review rules
+200	test	CouldntSave: the node holds the item, not the text
+212	test	every reason code of the contract parses
+227	test	CaptureResult
+241	test	a capture request is what POST /v1/inbox takes
+263	test	outbox receipts
+278	test	the error envelope: code, message, hint, request id
+295	test	settings and policy fixtures keep the shapes the owner calls rely on
+308	group	cautious reading of words a newer node may send
+310	test	provenance: unknown reads as guessed, external is kept apart
+315	test	review state: unknown reads as waiting; module state as failed
+323	test	unknown keys are ignored
+329	test	the 30-day question: the node flags it, the phone counts it
+355	group	the B2 additions
+357	test	the capability matrix the app ships is the node\'s
+374	test	the English and Arabic inbox examples parse; Arabic stays Arabic
+384	test	the refusal fixtures: an outbox refusal and an index that is not ready
+403	test	clients and the control chain parse
+416	test	the settings fixture: lock timeout, brief cap, and a change keeps the rest
+433	group	the fixed signature vector, byte for byte
+437	test	our canonical JSON of the envelope is the vector\'s bytes
+447	test	the signature verifies against the vector\'s public key
+458	test	every refusal the vector lists is a change that breaks the signature
+503	test	the vector\'s root key hashes to its fingerprint
+511	group	the control chain against the pinned fingerprint
+519	test	the node\'s chain is trusted: fingerprint, pin, signatures, links
+532	test	the vectors embed the same chain
+538	test	a replacement fingerprint offered by the node is not accepted
+550	test	a changed record, a changed order or a fork is not trusted
+## test/factsbook/factsbook_events_test.dart
+33	test	a note is posted as an event, not to the inbox, with no signature
+49	test	shared text is posted once, as an event, signed as ordinary text
+75	test	a matching rule makes a firing the next read shows
+86	test	a selected chat message is a chat event
+99	test	Arabic text is posted as an Arabic event
+110	test	without asking rules to look it goes to the inbox as before
+118	test	an import is never an event
+127	test	a phone that cannot sign saves shared text to the inbox instead
+144	test	without the trigger capability nothing is posted
+164	test	an event the node does not take falls back to the inbox: nothing is lost
+185	test	a cancelled device prompt keeps the text safe in the inbox
+195	test	a share the owner did not sign is kept encrypted and no rule fires
+215	test	a capture kept on the phone is not posted
+245	group	over HTTP
+247	test	POST /v1/events carries the key and the kind; signed only when asked
+## test/factsbook/factsbook_f3_test.dart
+104	group	settings, export and the control chain
+106	test	settings are read with the admin call and parse
+112	test	a brief cap change is signed against the revision the person saw
+151	test	an unsaved capture is exported as the encrypted object the node hands back
+171	test	the control chain is asked for from the start
+179	group	device authentication before an owner signature
+186	test	authenticated_at is the time the person authenticated, and the prompt uses our words
+204	test	a refused prompt means nothing is signed and nothing is sent
+244	group	the local_auth wrapper
+255	test	success returns the time and passes the reason
+264	test	no screen lock or biometric set up is "unavailable"
+306	test	a platform without the plugin is "unavailable" too
+320	test	backing out, timing out and a system interruption are "cancelled"
+358	test	too many tries is "locked"; anything else is "failed"
+392	group	every refusal in plain words
+396	test	each code the node or the app can raise has its own sentence
+442	test	a wait the node asked for is said in seconds
+452	test	the code and request id are only under Details
+466	test	device authentication words say what to do
+478	group	the outbox and the node\'s refusals
+480	test	a refusal for an event whose key was unusable is matched by position
+499	test	a node whose own queue is full still gets the note kept on the phone
+541	group	the node takes one request at a time
+542	test	a 429 is asked again, a few times, then shown
+583	test	requests never overlap, even when several are asked at once
+636	group	what the real node needs
+649	test	a write with nothing to send still says it is JSON
+663	test	a read and a delete send no body
+680	test	only proposals still waiting are the person\'s to decide
+700	test	keys are letters only, so the node\'s classifier never reads a card number in one
+719	test	a source that is a hash is worded, never shown
+## test/factsbook/factsbook_f7_test.dart
+44	group	Thing page actions
+158	group	Add something
+240	group	every action names its target
+257	group	Status
+278	group	a reminder is a one-off unless the words say it repeats
+281	test	plain words are a one-off
+291	test	words that say it repeats say how
+329	group	the reminder sheet
+## test/factsbook/factsbook_node_host_test.dart
+76	test	a new vault keeps its passphrase in secure storage, not on disk
+87	test	the passphrase made once is the one used again
+94	test	a file left by an earlier version moves to secure storage and is deleted
+105	test	starting hands the node the passphrase and removes the file itself
+117	test	removing the memory deletes the passphrase too
+## test/factsbook/factsbook_phone_node_test.dart
+132	group	states
+134	test	a runner without the built-in Linux is unsupported
+139	test	the Linux not set up, no build, ready to install
+151	test	a vault that exists is stopped; a running service is running
+171	group	run memory on this phone
+173	test	installs, makes the vault, starts, then pairs with the owner key
+198	test	the program already installed is not installed again
+210	test	no build is said as no build, not as a failure
+218	test	a build that will not run fails as install, with the reason apart
+235	test	a node that never answers fails as start with its log
+251	test	a pairing that fails never keeps the code, and Start tries only pairing
+267	test	a second run while one is going does nothing
+277	group	stop, restart, remove
+287	test	stop leaves the data and the node stopped
+296	test	restart stops, starts and keeps the pairing
+304	test	remove deletes the data and returns to ready to install
+315	group	what the node printed
+317	test	the pairing line is found among other output
+326	test	the inspect line
+338	group	when the app opens
+377	test	right after an update the Linux is still starting: the app waits 
+397	test	a first look that fails while the Linux starts is retried, then 
+416	test	a start that trips over a busy Linux is tried again
+434	test	the memory counts as starting for the whole of ensureRunning, 
+461	test	a stopped, paired memory is started by the app
+468	test	a memory the person stopped stays stopped
+478	test	Stop is remembered and Start forgets it
+491	test	a memory this app is not paired with is left alone
+498	group	the Memory row on the Chats home
+792	group	the page
+## test/factsbook/factsbook_session_test.dart
+52	group	pairing
+54	test	a code becomes a token in secure storage and a record in preferences
+86	test	without an owner device id only read and write are asked for
+103	test	a public address is refused before anything is sent
+119	test	a refused code stores nothing
+138	test	a new session finds the pairing again
+147	test	a record without its token reads as unpaired
+156	test	disconnect forgets the token, the key and the record, and keeps the outbox
+180	group	the owner key
+182	test	is made once, kept in secure storage, and only its public half is shown
+196	group	the outbox
+198	test	keeps notes between runs, in order, in secure storage
+220	test	is bounded to 100 notes: the newest is refused, the oldest stays
+243	test	is bounded to 5 MB too
+254	test	flush sends oldest first and drops only what the node took
+273	test	a flush that cannot reach the node leaves everything in place
+290	test	a refused note is marked, kept, and never retried by itself
+311	group	the controller keeps what it could not send
+322	test	a capture while unreachable is kept on the phone and counted once
+344	test	it goes to the node by itself once the node is back, with the same key
+372	test	a full outbox refuses the newest and keeps the oldest
+391	test	the node holding a note in its own queue is not a loss either
+409	test	discard removes a phone note locally and a node note at the node
+432	group	profile deletion sweeps FactsBook
+454	test	names the keys by the profile id so the sweep finds them
+463	test	deleting the server deletes its pairing, token, key and outbox, and only its own
+## test/factsbook/factsbook_state_test.dart
+15	group	the developer flag
+16	test	is off by default and app-wide, not per profile
+22	test	turns on from the preference and off again
+31	test	a provider scope with no connection reads as off
+39	group	FactsBookController
+48	test	refresh reads status, review, the node queue and the newest things
+62	test	needs you is derived: review and not saved, counted once
+74	test	the 30-day list holds only the items that are due
+99	test	a decision refetches; a stale one says so and shows the fresh list
+124	test	a read that fails keeps the last copy and notes the failure
+136	test	a first read that fails is a failed page
+142	test	an unpaired session answers every call with unauthorized
+151	test	notifies its listeners when it refreshes
+## test/factsbook/factsbook_triggers_test.dart
+28	group	the node\'s fixtures
+29	test	a rule
+48	test	a rule goes back to the node as the node wrote it
+53	test	a rule test, an event, a firing
+75	test	a reminder proposal, an offer, a start receipt
+99	test	an unknown word reads as the cautious one
+107	test	the capability matrix lists triggers and the templates
+129	group	the rule editor\'s checks
+153	test	a good rule has no problem
+157	test	name, words, outcomes, template and the daily limit
+179	test	typed words are split, trimmed and not repeated
+189	group	the HTTP gateway
+218	test	lists hide deleted rules and read every page
+240	test	creating a rule is a signed POST with base_rev 0
+256	test	pausing replaces at the revision seen, with enabled false
+269	test	a rule write without an owner key is owner_required
+288	test	delete is a signed DELETE; test sends only the sample
+318	test	accepting an offer binds revision, digest and the stable key
+341	test	a reminder proposal decision is signed and digest-bound
+355	test	503 busy is asked again with the same key
+376	group	the B5 contract
+408	test	a rule is written with template version 2 and an optional sender claim
+430	test	a draft is tested without saving or signing
+441	test	the node\'s own capabilities replace the shipped ones
+450	test	a share is posted signed as ordinary text, bound to this request
+473	test	an edited reminder proposal is signed with the new preview
+494	test	the first message is reported as started only when it was sent
+521	group	the fake node
+525	test	a rule is replaced only at the revision seen
+538	test	a rule the contract refuses is refused
+547	test	a test reads the one-line grammar and saves nothing
+607	test	an offer is accepted once per receipt key
+621	test	editing a proposal keeps it proposed under a new revision
+635	test	a sender claim must match, and a draft is tested unsaved
+656	test	a pending offer reports started only with the first message
+673	test	an expired offer cannot be accepted
+684	test	a node without triggers says not found
+695	group	the offer seed
+697	test	is the lead-in and the summary, nothing else
+## test/factsbook/fake_factsbook_gateway_test.dart
+15	test	search matches words; every hit has source date and provenance
+35	test	every thing and fact has the fields the contract requires
+53	test	every call fails like a lost connection when unreachable
+76	group	capture
+78	test	is saved once per idempotency key
+92	test	a locked-folder area is held by the node, with an entry
+109	test	retry saves what can be saved; a locked one stays and counts
+132	test	an outbox batch: accepted, duplicate, refused
+150	group	review
+152	test	lists only what waits; approve, reject and skip behave
+162	test	an item that changed fails as stale and shows as stale
+175	group	reminders
+177	test	a preview is confirmable only with its own digest
+203	test	pause and edit are based on the revision the person saw
+232	test	areas: built in, sharing can change
+250	test	status uses the canonical words and makes no claim of a backup

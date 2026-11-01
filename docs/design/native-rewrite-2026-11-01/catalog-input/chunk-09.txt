@@ -1,0 +1,523 @@
+## test/paseo_stale_working_test.dart
+57	test	a saved record still saying running two days later is not Working 
+76	test	a loaded agent running a long turn stays Working
+92	test	a turn this gateway watched start stays Working over a stale 
+118	test	a recent record says Working only until its bound, then reads 
+156	group	paseoSessionStatus
+165	test	a record is believed running only within the bound
+189	test	a loaded agent is live whatever its age
+203	test	a record without a readable time is not running
+## test/paseo_title_agree_test.dart
+78	test	the header of a resumed copy says what its row says
+98	test	a lone record without a title takes the one saved for it
+114	test	without a saved title the stand-in stays
+121	test	a model reported as provider/model is the list model
+## test/paseo_title_clip_test.dart
+16	test	a first prompt cut at 60 characters ends with an ellipsis
+22	test	a finished sentence and a short title stay as they are
+## test/paseo_tool_names_test.dart
+5	test	Claude\'s sub-agent tool is the app\'s sub-agent card
+9	test	other tools keep their names
+## test/paseo_tool_output_test.dart
+25	test	an MCP tool answering JSON keeps it as a value
+42	test	an MCP tool answering text shows the text
+51	test	ToolSearch answering a list shows it
+64	test	grep, glob, fetch and skills show what they found
+99	test	shell and read keep working
+118	test	a failed tool still says so in the app\'s words
+139	group	a call the person declined at its permission card
+160	test	reads as declined, not failed: $error
+164	test	a real failure stays a failure
+172	test	a background-task notice carries how it ended, its sentence once
+207	test	a notice's raw envelope gives only a finished agent's result
+## test/paseo_uncertain_start_test.dart
+147	test	the agent the daemon did start becomes the chat, and the first 
+163	test	when the daemon started nothing, the chat may send again
+172	test	a send before any reload settles it too
+## test/paseo_usage_test.dart
+129	group	parser
+131	test	keeps numbers, prefers 5-hour then weekly, drops free text
+162	test	ignores unknown statuses and fields
+176	test	malformed payloads fail without text
+194	test	a future fetch time is clamped to now
+202	group	gateway
+204	test	asks for provider.usage.list and closes
+217	test	an error reply, a timeout and a dropped link are unavailable
+246	test	a reply that is not a provider list is invalid
+265	group	monitor and widget snapshot
+313	test	is off by default and reads nothing
+322	test	only Paseo servers can be switched on
+328	test	switching on reads, writes the widget rows and keeps no free text
+362	test	says when it last read and how many providers had numbers
+377	test	a failed read keeps the last numbers and says unavailable
+389	test	providers the daemon stops reporting disappear
+399	test	switching off, runtime gating and deletion clear or stop it
+417	test	profile deletion sweeps the opt-in and the snapshot
+## test/pending_command_journal_test.dart
+93	test	writes metadata only and retains the command through restart
+116	test	shared writer grants one of simultaneous duplicate claims
+130	test	concurrent distinct claims survive each durable reload
+142	test	duplicate claim cannot change tab or overwrite state
+155	test	uncertain and terminal receipts cannot become sent again
+178	test	unknown profile and malformed profile registry block admission
+199	test	reload checks durable membership rather than optimistic cache
+210	test	profiles keep independent journals even for matching command IDs
+245	test	malformed journal fails closed: ${raw.runtimeType} #${raw.hashCode}
+256	test	capacity keeps tombstones and refuses another new command
+269	test	byte limit refuses a new claim without removing old tombstones
+308	test	oversized and over-capacity journals cannot be read or replaced
+330	test	unverified $failure write never grants admission or reopens
+355	test	reload failure fails closed before a platform write
+366	test	deletion closes immediately and drains in-flight and queued claims
+399	test	close before owner creation prevents all later admission
+## test/perf_memory_test.dart
+118	test	log chunk boundaries preserve CRLF, blank lines and eviction counts
+160	test	historical batch preserves sequential eviction and durable redaction
+## test/perf_session_inventory_test.dart
+63	test	5000 sessions across 20 unrelated reads
+## test/perf_trace_test.dart
+58	group	spans
+60	test	nest through zones: a child records the open parent
+80	test	work that outlives its parent is not attributed to it
+95	test	an error passes through untouched and marks the span
+110	test	the ring buffer keeps only the newest spans
+119	test	markOnce fires once per process
+128	test	log lines have the fixed tag and shape; fast spans under their 
+140	test	recordSince and recordDuration time work across callbacks
+156	test	stats group by name with nearest-rank percentiles
+177	group	no secrets
+179	test	secret-named attributes and token-like values are redacted
+200	test	path templates drop ids and every query value
+217	test	the password script is only ever labelled generically
+231	group	http
+233	test	every request is a span: method, path template, status, bytes
+265	test	a failed request is recorded as an error with its status
+279	test	attaching twice adds one interceptor
+287	group	prompt timeline
+289	test	sent → accepted → first token → turn done
+326	test	a refused prompt is an error and ends the tracking
+340	group	diagnostics section
+## test/perf_transport_decode_test.dart
+13	test	native transport reuses its socket after a short reading pause
+66	test	existing large JSON decoder preserves data with and without length
+## test/perf_work_lists_test.dart
+31	test	scope memo preserves JSON encoding and separates every location
+47	test	cached pin sets are immutable snapshots across writes and forget
+87	test	pending and refused writes retain old visible pin snapshot
+## test/permission_card_words_test.dart
+23	test	every kind the card renders asks its own plain question
+34	test	outside the project: the question names what the call does
+63	test	the Arabic asks say the same, with no leftover English
+## test/permission_edge_cases_test.dart
+154	group	notification tap racing an in-app tap
+156	test	the in-app tap lands first: the later notification Allow sends 
+171	test	the notification tap lands first: the later in-app tap sends 
+186	test	both taps on the wire together: one reply, the first decision 
+203	group	attention count after a remote withdrawal
+220	test	a reply made on another device drops the request from the count 
+250	test	a refetch that no longer lists the request clears it, and a 
+265	group	a request the server timed out
+267	test	answering it dismisses the card with no error and no throw
+282	test	a notification Allow on a timed-out request is handled, not 
+298	test	a different 404 is a real failure and keeps the request
+## test/permission_migration_test.dart
+62	test	permission request parses the current contract
+83	test	tool states expose pending raw input and error text
+99	test	controller tracks concurrent requests and current session statuses
+172	test	controller accepts legacy permission events without losing identity
+267	test	answering an externally resolved permission is idempotent
+## test/permission_presentation_test.dart
+74	test	COPY-15: the generic title reads "Permission needed" in English
+79	group	COPY-15 ($locale)
+80	test	each known id is titled with its own plain-action getter
+101	test	an empty id is titled "Permission needed"
+114	test	COPY-15: English titles are the plain actions the rule names
+127	test	COPY-15 ratchet: unknown ids titled "Permission needed" 
+## test/phone_agent_auth_native_test.dart
+179	test	native private agent auth: $scenario
+## test/phone_agent_auth_other_owners_test.dart
+33	test	native other-agent ownership: $scenario
+## test/phone_agent_context_test.dart
+25	test	writes the phone context into both OpenCode generations\' global 
+38	test	replaces its own block on every start and keeps the person\'s 
+56	test	text the person adds after the block survives the next start
+69	test	both phone servers write it before OpenCode starts, and a failure 
+## test/phone_agent_host_native_test.dart
+65	test	native phone host: $scenario
+## test/phone_agent_owner_test.dart
+69	test	new protocol profile reuses checked home through restart and back
+92	test	legacy profiles prefer checked existing owner without copying secrets
+117	test	already mapped homes adopt every legacy check once without reviving retries
+156	test	gate adoption excludes remote and Termux homes
+177	test	malformed migration receipt refuses to revive old proof
+198	test	malformed donor does not suppress another checked home
+215	test	refused $refused write preserves migration for a persisted retry
+247	test	deleting owner alias preserves agents until last protocol is removed
+## test/phone_agent_paths_native_test.dart
+82	test	native agent launch directory: $scenario
+## test/phone_agent_run_native_test.dart
+119	test	native agent setup run: $scenario
+## test/phone_agent_scripts_test.dart
+94	test	the Terminal can run the agent by name, as the agent user
+113	test	interrupted agent download survives extraction cleanup and resumes
+145	test	check rejects changed executable even when its version and marker match
+163	test	rollback checks retained official payload and rebuilds its launcher
+220	test	agent cache and rollback refuse symlinked parent directories
+252	test	Claude check restores interrupted code before probing its link
+269	test	Claude check refuses another installer lock without changing code
+289	test	failed Claude active probe restores the prior pinned executable
+311	test	every catalog recipe generates valid shell without executing downloads
+332	test	oc bootstrap accepts PRoot identity mapping without requiring real chown
+348	test	a checksum mismatch never executes the candidate or activates it
+360	test	version mismatch never activates and suppresses raw CLI output
+380	test	valid executable installs atomically, checks, and repeats idempotently
+407	test	root execution and unknown architecture fail before download
+429	test	concurrent installer lock does not damage held installation files
+458	test	tar path traversal and archive links are refused before extraction execution
+491	test	bundled archive retains sibling files and validates entry version
+514	test	npm bundle wrapper keeps siblings under the pinned private Node
+542	test	check refuses an altered pin marker before executing the CLI
+559	test	shell metacharacters in recipe version or archive member fail generation
+579	test	zip symlink payload is refused
+## test/phone_agent_service_native_test.dart
+62	test	native agent service callback: $scenario
+## test/phone_agent_setup_engine_test.dart
+48	test	ARM64 OpenCode 1 host hands off pinned Node after root user bootstrap
+## test/phone_agent_sign_in_native_test.dart
+21	test	every phone agent can open its sign-in terminal
+48	test	Codex\'s folder exists before any agent process starts
+## test/phone_agents_controller_test.dart
+821	test	BD13 helper evidence is read-only and rejects late disposed results
+942	test	BA9 uses host owner scope and revokes before native host stop
+987	test	BA4 gives arm64 Claude the connected helper certification
+1008	test	qualified cards skip asks in feed and active chat, disable revokes
+1759	test	BA3 terminal completion requires signed-in probe and BA8 verifies logout
+1797	test	a check that could not run keeps a signed-in agent signed in
+1829	test	BA3 a late older probe cannot complete a newer signed-out attempt
+1863	test	BA1 missing multi-agent bridge preserves direct Claude status only
+1879	group	issue #95: a sign-in check always ends
+2112	test	BA5 protocol switch keeps host account and conversation rows
+2152	test	deletion closes auth, setup, host and feeds before ProfileStore
+2180	test	clearing saved sign-ins closes clients and asks for a restart
+## test/phone_agents_host_test.dart
+214	test	a refused helper start names the phone\'s code under Details, 
+244	test	BD13 helper status reads only persisted narrow native facts
+259	test	BA16 failed version retains only strict native payload inventory
+274	test	an older Claude Code that runs is installed, not "Not installed"
+289	test	BA1 probe uses the stable private home and returns only narrow account facts
+328	test	status checks asked at once take turns and never meet Android refusing a second
+352	test	BA1 missing private bridge stays unavailable and never uses setup output
+365	test	shared engine installs as oc with Python and conditional host Node
+408	test	the native host launches Paseo 0.11.2 without removed launch flags
+435	test	old Paseo hello explains helper update instead of agent silence
+452	test	signed-out Claude asks for sign in and retains installation proof
+464	test	auth timeout is distinct from missing sign in
+471	test	unchanged installed pair keeps proof and changed pin explains check
+489	test	busy helper refuses installation before replacing shared payloads
+520	test	idle parent with running provider child prevents helper update
+560	test	verified retained rollback is guarded and survives later checks
+577	test	changed retained rollback payload invalidates persisted proof
+591	test	absent previous version never changes the active installation
+601	test	ARM64 gate requires install version daemon and exact Paseo hello
+615	test	x64 pass cannot qualify ARM64 and changed architecture invalidates gate
+626	test	legacy fx check still qualifies after owner migration and never after failed retry
+673	test	failed retry clears prior proof and never starts daemon after wrong version
+686	test	stopped self-test cannot start a daemon after a late version check
+702	test	restore and cancel cannot operate another profile setup job
+710	test	cancel after handoff still stops an exactly owned setup job
+715	test	cancel during local checks never hands an install to native
+747	test	cancel retires an install awaiting architecture
+772	test	cancel retires an install awaiting preparation
+803	test	Paseo config launches Kilo and Cline as custom ACP providers
+826	test	native storage guard includes ${sample.id} catalog install peak
+895	test	running installation requires continue instead of a second install
+917	test	background loss exposes resume and reuses the Keystore slot
+926	test	restore resumes same persisted component selection with safe progress
+946	test	profile removal drains native account home before deleting password
+966	test	failed native drain preserves profile and secure slot for retry
+988	test	saved-sign-in reset includes orphan agent slots and preserves unrelated secrets
+## test/phone_agents_idle_host_test.dart
+93	test	idle host projects strict native receipt for a cold process
+101	test	idle host restores with original secret guarded wire and owned hello
+116	test	idle host never creates a missing secret
+131	test	idle host rejects corrupt or unreadable secrets without writes
+163	test	idle host malformed and old receipts cannot authorize restoration
+186	test	idle host previously stopped helper stays stopped
+193	test	idle host owner changes during secret read prevent dispatch
+203	test	idle host coalesces same token and refuses a different token
+224	test	idle host native token changed during secure read cannot dispatch
+237	test	idle host native token changed during hello refuses readiness
+245	test	ordinary host start foreground loss during secret read prevents dispatch
+267	test	idle host stop fences a pending secure read
+280	test	idle host dispose fences a pending secure read
+293	test	idle host requires actual pinned hello and closes rejected probe
+310	test	idle host reconnect cannot create a secret after guarded resume
+328	test	idle host automatic start allows only complete foreground legacy or idle facts
+## test/phone_agents_legacy_auth_test.dart
+162	test	legacy host without sign-in truth still reads native status
+174	test	auth-capable host refreshes despite an inspected signed-in phase
+## test/phone_agents_removal_host_test.dart
+116	test	removal uses fixed agent view and preserves account and gate metadata
+137	test	removal reads a private numeric measurement receipt after deletion
+151	test	absent removal reports zero measured bytes
+157	test	disposed host never reports a late removal result
+176	test	unconfirmed measurement never becomes a successful removal result
+207	test	Claude removal is never dispatched
+214	test	running foreign native setup prevents removal
+233	test	unknown native setup prevents removal
+241	test	live target refusal is busy without leaking child output
+254	test	removal serializes installs and releases exclusion after completion
+280	test	QA requirement reaches the native target only
+303	test	normal build dispatch has no QA declaration
+307	test	removing fx retains unrelated Claude auth probes
+326	test	existing gateway draft cannot dispatch while payload is removed
+355	test	pending installation preparation excludes removal
+373	test	only the exact storage failure becomes a safe progress reason
+## test/phone_agents_test.dart
+50	test	uninstalled Claude remains in setup with Install despite unknown resume
+64	test	unknown or mismatched host facts cannot borrow another agent proof
+82	test	default runtime is unqualified and defaults every capability off
+94	test	BA16 partial files permit recovery without installation or capability proof
+132	test	a fresh install with no host yet goes to the phone check
+148	test	unverified restoration is shown and selectable by default
+159	test	legacy hide argument cannot reintroduce the replaced owner rule
+171	test	runtime proof enables selection without inferring it from recipe or ID
+183	test	matching server gates narrow images and request-scoped permissions
+204	test	sign-in and background stop override stale capability proofs
+219	test	usage limit retains only host reset time and never estimates one
+235	test	unavailable recipes cannot become selectable from fabricated host proof
+260	test	server types are not phone agents and are never listed
+278	test	a processor with no download says so, not "not available yet"
+## test/phone_crash_native_test.dart
+34	test	native channel/crash: $scenario
+## test/phone_engine_completion_presentation_test.dart
+61	test	fully checked and receipted promotion presents done while preserving native evidence
+76	test	unknown unapproved or unfinished task evidence never presents done
+103	test	merge queue must cover every task with passed checks and matching repository
+136	test	current equal refs require a matching authoritative real promotion receipt
+175	test	each task repository needs its own current promotion proof
+213	test	explicit pause stop or failure survives complete promotion evidence
+## test/phone_engine_connection_review_test.dart
+142	test	connection deletion sweeps an ordinary builtin profile before first activation
+154	test	connection deletion fences first attach before any token is persisted
+194	test	selected profile capabilities use only its matching live gateway
+238	test	OC2 phone installs admission fence and rejects retired dispatch
+270	test	OC2 admission refuses dispatch if the previous phone engine cannot stop
+## test/phone_engine_ready_reconnect_test.dart
+210	test	ready attach reconnects the retained failed phone API without forging chat idle
+235	test	repeated ready attaches share the existing reconnect operation
+247	test	store-only attach and ready health polling never request reconnect
+269	test	already connected isolated suspended and remote owners do not auto-reconnect
+293	test	profile switch while attachment is pending cannot reconnect the new owner
+314	test	disposed owner rejects a pending attachment before readiness can reconnect
+## test/phone_engine_status_presentation_test.dart
+57	test	completed native planner exposes reviewed plan without changing command truth
+92	test	unconfirmed quick task needs plan approval without a planner checkpoint
+111	test	planning checkpoint presentation stays separate from raw engine stage
+142	test	advertised terminal planner retry exposes the plan failure editor
+195	test	unadvertised planner retry keeps ordinary failed presentation
+223	test	planner retry presentation preserves deliberate stop pause and session reconciliation
+298	test	planner retry is execution gated before any POST
+344	test	retry preserves typed model refusal and omits unknown secret diagnostics
+380	test	terminal checkpoint shows only an allowlisted static reason without retrying
+424	test	reconciliation checkpoint offers Resume while person pause and stop stay intact
+445	test	interrupted approved work exposes the existing Resume controls
+490	test	a finished checker whose answer was unreadable can be resumed and says so
+524	test	Resume presentation respects the native command advertisement
+586	test	reviewable interruption never suggests a safe prompt resend
+620	test	refetch failure remains reviewable when the native parent still runs
+664	test	an interrupted lane does not hide another active parallel lane
+695	test	scheduler admission codes remain visible in interrupted checkpoints
+749	test	checkpoint diagnostics reject unknown budget codes and secret text
+783	test	mixed safe and review-only checkpoints do not offer project Resume
+813	test	existing session refetch is running without a new prompt or receipt
+832	test	reconciliation presentation never overrides an explicit stop or pause
+856	test	checker and merge stages use existing domain vocabulary without inventing receipts
+890	test	legacy needsFix presents review and open findings without checker-authored closure
+## test/phone_host_runtime_test.dart
+24	test	history admission refuses every failure and identifies separate history
+56	test	in-app host preserves legacy installation: $installed
+73	test	Termux host preserves legacy installation: $installed
+91	test	saved Termux runtime wins over a fresh-install default
+## test/phone_own_server_icon_test.dart
+37	test	only the phone\'s own servers count as this phone
+## test/phone_process_watch_test.dart
+17	group	groups
+19	test	each process sits under what started it, as a tree
+52	test	server roots and the app are never stoppable; the rest are
+67	test	a parent loop in a bad reading still shows every process
+76	group	heavy
+78	test	one busy reading is never heavy, however long it ran
+87	test	heavy after two minutes over 80% across readings
+102	test	a quiet reading or a gap between readings starts over
+120	test	a reused process id is a new process
+137	group	stuck
+139	test	left behind is stuck at once
+154	test	about 100% for over 10 minutes with no conversation above it
+202	test	Android counts all but the app; the warning starts at 28
+215	group	words
+217	test	a plain name, never the command line
+247	test	processor use in a word and a %
+254	test	This phone's line: left behind, then heavy, then the limit
+## test/phone_processes_test.dart
+28	test	a native reading becomes typed rows and reaper counts
+71	test	stop sends each pid once and reads stopped and refused
+93	test	off Android nothing is asked
+## test/phone_project_engine_controller_test.dart
+164	test	native start codes survive controller without native payloads
+229	test	native snapshots the app-owned server password after preparation
+277	test	OC2 secure password is prepared before native engine launch
+329	test	start preserves typed bridge failure and safely maps unknown failure
+348	test	fresh start closes prior gateway before rotating native credentials
+365	test	setup rollback stops native engine and closes clients without deleting data
+387	test	rollback queues behind an unfinished start and then releases its engine
+408	test	rollback surfaces a safe error if native ownership cannot be released
+423	test	human dispatch cannot bypass the old generation while fresh start stops it
+450	test	legacy provider parsing stays compatible; new provider round trips
+477	test	attach persists only nonsecret config and restores auth from Keystore
+512	test	inactive profile deletion uses durable HTTP then native and erases auth
+536	test	ordinary phone profile edits retain Keystore engine auth
+569	test	closed probe and caller clients leave controller ownership
+602	test	failed native deletion stays blocked, reports safe code, permits deletion retry
+634	test	attach running during deletion cannot resurrect profile config or auth
+651	test	idle, busy and unknown renew every ten seconds; shutdown sends unknown
+715	test	expired queued observation cannot renew an old idle lease
+750	test	pre-dispatch lease is delivered despite newer coalesced observations
+792	test	stale idle before dispatch or before settlement never clears turn latch
+813	test	concurrent dispatch remains busy until every request settles and fresh idle
+833	test	failed heartbeat safely stops only engine; failed stop remains retryable
+880	test	another phone alias cannot dispatch until previous engine stop is confirmed
+902	test	deletion drains heartbeat and cancels renewal before durable native erase
+958	test	older busy while overlapping dispatch is pending cannot prove its start
+975	test	unsent later prompt cannot clear an older uncertain turn latch
+987	test	the orchestration probe carries the proven boundary tier from the 
+## test/phone_project_engine_gateway_test.dart
+78	test	one-shot guard runs after health read and can prevent command POST
+106	test	successful boundary attestation is not a protocol readiness failure
+136	test	OC2 identity needs its own verified protocol and execution proof
+156	test	malformed OC2 verification is refused rather than coerced
+167	test	contradictory protocol proofs cannot enable execution
+180	test	OC2 execution command reaches daemon only after protocol proof
+211	test	signed proot and landlock tiers preserve executable health flags
+223	test	unverified none tier keeps execution unavailable
+231	test	legacy health keeps its flags when the optional tier is absent
+241	test	one reported tier is enough during an additive gateway transition
+253	test	health refuses unknown malformed and conflicting boundary tiers
+277	test	expired activity cursor remains an explicit reset requirement
+296	test	refuses remote hosts, userinfo and credential newlines before network
+318	test	every endpoint authenticated with redirect following disabled
+351	test	health rejects different profile and unknown schema without raw details
+369	test	unproven health permits workspace but rejects execution and unsupported commands
+406	test	non-success command responses preserve symbolic daemon refusal codes
+446	test	partial HTTP refusal receipts still preserve their safe typed code
+467	test	health refusal remains typed before a command can be sent
+485	test	complete HTTP refusal receipts retain revision project and replay metadata
+517	test	malformed refusal codes never retain raw text or known credentials
+564	test	redirect command refusal ignores the response body
+586	test	accepted create stays accepted after a failed refresh without another POST
+626	test	redacts commands before transmission and never retries ambiguous mutation
+659	test	redirect response never exposes response body or follows location
+671	test	deletion drains already-sent commands and permanently closes client
+717	test	poll error reports stale read while preserving last snapshot
+746	test	chat heartbeat carries authentication and bounded observation-only body
+795	test	heartbeat HTTP success without affirmative accepted body is not an ACK
+## test/phone_project_scan_test.dart
+33	test	finds a folder by its marker and says what kind it is
+58	test	every listed marker makes a project
+84	test	a repository with a code marker keeps its kind and has git
+92	test	never goes into a project
+99	test	skips Android, node_modules, hidden and build folders
+119	test	does not follow links
+127	test	looks five levels down and no further
+135	test	the root itself is not a project
+141	test	the time cap stops it and says so
+148	test	the visit cap stops it as limited
+158	test	the result cap keeps the first results
+169	test	cancel stops it
+179	test	an unreadable root ends quietly
+185	group	project space
+187	test	every folder straight in it is a project, with or without markers
+208	test	markers still find projects deeper down
+219	test	in sequence: the first scan\'s results come first
+238	test	a list becomes a scan
+253	test	cancel stops the whole sequence
+## test/phone_server_card_test.dart
+418	group	state
+518	group	row variant for the Servers list (slice-R14)
+620	group	start and stop
+715	group	menu
+893	group	layout
+930	test	the in-app server is named This phone everywhere
+938	test	two saved servers that read the same are told apart by port
+961	test	the same host over HTTP and HTTPS is told apart by port and secure
+989	group	OpenCode 2 on this phone
+1000	group	hosts
+## test/phone_server_healing_test.dart
+422	test	foreground idle resume awaits helper and preserves exhausted budget
+459	test	idle prior helper absent never calls BA and retains generation
+478	test	completed idle generation cannot refill budget through stale launch
+507	test	legacy launch cannot retry or connect after $interruption during its own claim
+545	test	malformed native idle receipt cannot reach launch fallback
+556	test	failed helper restore keeps idle generation and forbids manual fallback
+583	test	idle server completion cannot restore helper after $interruption
+623	test	local agent truth owns a separate lease across background and unknown
+661	test	agent lease closes when its runtime profile becomes unreadable
+678	test	missing or throwing local agent inventory never creates a CPU lease
+690	test	app-lifetime owner heals only in foreground and reconnects once
+716	test	persisted runtime owner wins over another selected local profile
+736	test	a restart confirmed after its initial timeout still reconnects
+756	test	explicit Start waits for native owner binding before its launch
+783	test	late native binding cannot launch after ${transfer ? 
+811	test	ambiguous legacy profiles wait for an explicit Start to claim ownership
+833	test	the shared restart policy and explicit Stop each prevent healing
+850	test	explicit connect works with automatic reconnect off and shares deduplication
+872	test	profile deletion admission cannot be reopened by a store notification
+894	test	opening the app after updates exhausted the native budget starts 
+928	test	opening cannot supersede a scheduled native retry
+946	group	the launch start (QA B1)
+957	test	starts a stopped server past an exhausted crash budget, 
+970	test	waits for the first resume before it does anything
+984	test	leaves an explicitly stopped server stopped
+992	test	leaves it stopped when restarting the phone server is off
+1003	test	only connects to a server that already runs
+1011	test	tries once more after a fast failure, then leaves the reason
+1027	test	a timeout is not tried again on its own
+1036	test	a failed crash restart counts as the first try
+1044	group	a running server that does not answer (QA-03)
+1055	test	one that rejects our password is replaced at launch
+1066	test	one older than the stale age that stays silent is replaced
+1080	test	a young one that is still booting is waited for, not killed
+1103	test	a young one that never answers is replaced once it is stale
+1117	test	a healthy server whose connect failed is connected again by the 
+1136	test	the back-off holds automatic reconnects; Try again does not wait
+1153	group	streamed updates do not re-run the health pipeline
+1160	test	a notify storm costs no native call
+1174	test	work observation follows a busy change only
+1190	test	going down checks the server once and restarts a dead one
+## test/phone_setup_notification_route_test.dart
+54	group	the shortcut channel carries the notification taps
+65	test	a tap that started the app (cold start) is drained
+76	test	a tap while the app runs arrives live
+92	group	where a tap lands
+227	group	the native half
+233	test	both notifications open MainActivity with a whitelisted action
+253	test	the result notification says whether the job finished
+263	test	every action the notifications send is one Dart understands
+## test/phone_setup_progress_screen_test.dart
+182	test	ownership recovery ignores running jobs and untrusted log lines
+243	group	the ring shows only real figures
+362	group	cost line
+447	group	failure
+581	group	screen
+742	group	the steps under Details (SetupProgressView)
+796	test	byte formatting rounds done down and keeps the unit
+860	group	layout
+## test/phone_storage_folders_test.dart
+6	test	/sdcard reads as the internal storage; nothing outside it does
+18	test	the parent stops at the internal storage
+26	test	a path outside is invalid, a missing folder is said so
+## test/phone_storage_test.dart
+17	test	free-space warning includes zero and boundary; unknown stays unknown
+56	test	independent failures preserve the other source and never stale data
+110	test	unsupported platform performs no probes
+130	test	default adapters use existing read-only native methods
