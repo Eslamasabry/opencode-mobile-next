@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_zh.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="scheduleEdit">编辑计划</string>
+    <string name="schedulePrompt">提示词</string>
+    <string name="scheduleTarget">对话</string>
+    <string name="scheduleThisConversation">此对话</string>
+    <string name="scheduleNewConversation">每次运行新建对话</string>
+    <string name="scheduleOnce">一次</string>
+    <string name="scheduleRepeat">时间</string>
+    <string name="scheduleTime">时间</string>
+    <string name="scheduleDelete">删除计划</string>
+    <string name="schedulePaused">已暂停</string>
+    <string name="scheduleFinished">没有更多运行</string>
+    <string name="scheduleDigest">晨间摘要</string>
+    <string name="scheduleEmpty">还没有定时提示词</string>
+    <string name="scheduleUnsupported">此连接不支持定时提示词。</string>
+    <string name="scheduleSaveFailed">无法保存此更改。请重试。</string>
+    <string name="scheduleNeedsYou">打开对话以回应请求。</string>
+    <string name="scheduleBusy">对话已在处理中。</string>
+    <string name="scheduleUnavailable">无法连接到服务器。请确认它正在运行，并且这部手机可以访问它。</string>
+    <string name="scheduleSignInAgain">服务器需要重新输入密码。请在下次运行前打开服务器并登录。</string>
+    <string name="scheduleAllowHttp">此服务器使用未加密的 HTTP，且尚未获准。请在下次运行前打开服务器并允许 HTTP。</string>
+    <string name="scheduleAgentFailed">智能体因错误而停止。打开对话查看发生了什么。</string>
+    <string name="scheduleCertificateChanged">服务器的证书已更改。请在下次运行前打开服务器进行检查。</string>
+    <string name="scheduleCertificateInvalid">服务器的证书已过期或尚未生效。请在下次运行前打开服务器进行检查。</string>
+    <string name="scheduleTargetChanged">已保存的连接或目标已更改。请编辑此计划。</string>
+    <string name="scheduleInterrupted">运行被中断，未重新发送。</string>
+    <string name="scheduleTimeout">运行已达到时间上限。请查看对话。</string>
+    <string name="scheduleUncertain">无法确认是否已送达。再次发送前请先查看对话。</string>
+    <string name="scheduleMissed">已按你对错过运行的设置跳过。</string>
+    <string name="scheduleDeleteBody">将移除后续运行和此计划的历史记录。已发送的提示词仍保留在各自的对话中。</string>
+    <string name="scheduleToday">今天 %1$s</string>
+    <string name="scheduleTomorrow">明天 %1$s</string>
+    <string name="scheduleInMinutes">%1$s 分钟后</string>
+    <string name="scheduleDeleteNamedTitle">要删除“%1$s”吗？</string>
+</resources>

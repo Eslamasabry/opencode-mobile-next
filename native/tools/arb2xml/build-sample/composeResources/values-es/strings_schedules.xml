@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_es.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="scheduleEdit">Editar programación</string>
+    <string name="schedulePrompt">Mensaje</string>
+    <string name="scheduleTarget">Conversación</string>
+    <string name="scheduleThisConversation">Esta conversación</string>
+    <string name="scheduleNewConversation">Conversación nueva en cada ejecución</string>
+    <string name="scheduleOnce">Una vez</string>
+    <string name="scheduleRepeat">Cuándo</string>
+    <string name="scheduleTime">Hora</string>
+    <string name="scheduleDelete">Eliminar programación</string>
+    <string name="schedulePaused">En pausa</string>
+    <string name="scheduleFinished">Sin más ejecuciones</string>
+    <string name="scheduleDigest">Resumen matutino</string>
+    <string name="scheduleEmpty">Aún no hay mensajes programados</string>
+    <string name="scheduleUnsupported">Los mensajes programados no están disponibles para esta conexión.</string>
+    <string name="scheduleSaveFailed">No se pudo guardar este cambio. Inténtalo de nuevo.</string>
+    <string name="scheduleNeedsYou">Abre la conversación para responder a una solicitud.</string>
+    <string name="scheduleBusy">La conversación ya estaba trabajando.</string>
+    <string name="scheduleUnavailable">No se pudo contactar con el servidor. Comprueba que esté en marcha y que este teléfono pueda llegar a él.</string>
+    <string name="scheduleSignInAgain">El servidor necesita de nuevo su contraseña. Abre el servidor e inicia sesión antes de la próxima ejecución.</string>
+    <string name="scheduleAllowHttp">Este servidor usa HTTP sin cifrar y aún no está permitido. Abre el servidor y permite HTTP antes de la próxima ejecución.</string>
+    <string name="scheduleAgentFailed">El agente se detuvo con un error. Abre la conversación para ver qué pasó.</string>
+    <string name="scheduleCertificateChanged">El certificado del servidor cambió. Abre el servidor para comprobarlo antes de la próxima ejecución.</string>
+    <string name="scheduleCertificateInvalid">El certificado del servidor está caducado o aún no es válido. Abre el servidor para comprobarlo antes de la próxima ejecución.</string>
+    <string name="scheduleTargetChanged">La conexión o el destino guardados cambiaron. Edita esta programación.</string>
+    <string name="scheduleInterrupted">La ejecución se interrumpió. No se volvió a enviar.</string>
+    <string name="scheduleTimeout">La ejecución alcanzó su límite de tiempo. Revisa la conversación.</string>
+    <string name="scheduleUncertain">No se pudo confirmar la entrega. Revisa la conversación antes de enviar de nuevo.</string>
+    <string name="scheduleMissed">Omitida según tu elección para ejecuciones perdidas.</string>
+    <string name="scheduleDeleteBody">Se quitarán las ejecuciones futuras y el historial de esta programación. Los mensajes ya enviados permanecen en sus conversaciones.</string>
+    <string name="scheduleToday">Hoy, %1$s</string>
+    <string name="scheduleTomorrow">Mañana, %1$s</string>
+    <string name="scheduleInMinutes">en %1$s min</string>
+    <string name="scheduleDeleteNamedTitle">¿Eliminar “%1$s”?</string>
+</resources>

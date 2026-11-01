@@ -1,0 +1,7 @@
+{
+  "@@locale": "ja",
+  "chatUiDraftsQueued": "{count, plural, other{再接続時に送信される下書きが {count} 件、待機中です。}}",
+  "chatUiQuestionsSummary": "{question} · {count, plural, other{{count}件の質問}}",
+  "chatUiRateLimitCountdown": "レート制限中です。{time} 後に再試行{attempt}",
+  "kitNeedsYouWaitingSpoken": "{minutes, plural, =0{待機時間は1分未満} =1{1分待機中} other{{minutes}分待機中}}"
+}

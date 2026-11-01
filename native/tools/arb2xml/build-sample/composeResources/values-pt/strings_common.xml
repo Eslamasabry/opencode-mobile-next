@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_pt.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="libraryTerminalTitle">Terminal</string>
+    <string name="librarySettingsTitle">Configurações</string>
+    <string name="modelChooseTitle">Escolher um modelo</string>
+    <string name="modelServerDefault">Padrão do servidor</string>
+    <string name="refreshRetry">Tentar novamente</string>
+    <string name="commonRetry">Tentar novamente</string>
+    <string name="termuxPermissionDenied">O Android não permitiu que este app execute comandos no Termux.</string>
+    <string name="workspaceDismissNotice">Fechar</string>
+    <string name="onboardingSetupGuide">Guia de configuração</string>
+    <string name="onboardingTermuxSetup">Neste celular</string>
+    <string name="e7LocaleUiLanguage">Idioma</string>
+    <string name="readerUiFiles">Arquivos</string>
+    <string name="readerUiChanges">Alterações</string>
+    <string name="e7WorkspaceConnected">Conectado</string>
+    <string name="e7WorkspaceConnecting">Conectando</string>
+    <string name="e7WorkspaceOffline">Offline</string>
+    <string name="chatUiAlwaysAllow">Sempre permitir</string>
+    <string name="chatUiDelegateThisPrompt">Delegar esta mensagem</string>
+    <string name="chatUiOpenProviders">Abrir provedores</string>
+    <string name="e7LibraryReportABug">Relatar um problema</string>
+    <string name="e7SetupTermuxNoAnswer">O Termux não respondeu. Toque em “Copiar e abrir o Termux”, cole a linha no Termux, pressione Enter e volte aqui.</string>
+    <string name="e7SetupAddServer">Adicionar servidor</string>
+    <string name="e7SetupTermuxOutdated">Esta versão do Termux é antiga demais para o app. Instale a atual e toque em “Continuar a configuração”.</string>
+    <string name="e7SetupAboutNotices">Sobre e avisos de código aberto</string>
+    <string name="phoneSetupProgressTitle">Configurando o OpenCode neste celular</string>
+    <string name="builtinServerStopped">Não está em execução.</string>
+    <string name="phoneSetupLinuxTitle">Base Linux</string>
+    <string name="phoneSetupStartTitle">Iniciar o OpenCode</string>
+    <string name="phoneSetupStartMegabytes">%1$s MB</string>
+    <string name="phoneSetupStartGigabytes">%1$s GB</string>
+    <string name="phoneSetupStartListPair">%1$s e %2$s</string>
+    <string name="phoneSetupStartListSeparator">, </string>
+    <string name="phoneSetupStartOtherWays">Outras formas</string>
+    <string name="phoneSetupStartChecking">Verificando o que está instalado…</string>
+    <string name="chatLoadFailedTitle">Não foi possível abrir esta conversa</string>
+    <string name="connectStartingPhone">Iniciando o OpenCode neste celular…</string>
+    <string name="serverRowConnected">Conectado</string>
+    <string name="kitConfirmCancel">Cancelar</string>
+    <string name="kitTryAgain">Tentar novamente</string>
+    <string name="kitDetails">Detalhes</string>
+    <string name="kitChipRemove">Remover %1$s</string>
+    <string name="kitWorking">Trabalhando</string>
+    <string name="kitCopyDetails">Copiar detalhes</string>
+    <string name="kitMarkWaiting">Aguardando</string>
+    <string name="kitMarkWorking">Trabalhando</string>
+    <string name="kitMarkDone">Concluído</string>
+    <string name="kitMarkFailed">Falhou</string>
+    <string name="kitUndoAction">Desfazer</string>
+    <string name="kitModelSignIn">Entre para usar modelos</string>
+    <string name="kitAttachmentOpen">Visualizar %1$s</string>
+    <string name="kitAttachmentImage">Imagem, %1$s</string>
+    <string name="kitSuggestionsShowAll">Mostrar tudo</string>
+    <plurals name="kitNeedsYouSpan">
+        <item quantity="one">%1$s precisam de você · </item>
+        <item quantity="many">%1$s precisam de você · </item>
+        <item quantity="other">%1$s precisam de você · </item>
+    </plurals>
+    <string name="kitNeedsYouSpan__eq1">Precisa de você · </string>
+    <string name="kitTopBarBack">Voltar</string>
+    <string name="kitTopBarSearch">Pesquisar</string>
+    <string name="kitRequestAllowOnce">Permitir uma vez</string>
+    <string name="kitRequestReject">Recusar</string>
+    <string name="composerToolCommandsTitle">Comandos e agentes</string>
+    <string name="chatRequestIfIgnored">O agente espera até você responder. Nada se perde.</string>
+    <plurals name="chatRequestMoreWaiting">
+        <item quantity="one">Há mais 1 solicitação aguardando.</item>
+        <item quantity="many">Há mais %1$d solicitações aguardando.</item>
+        <item quantity="other">Há mais %1$d solicitações aguardando.</item>
+    </plurals>
+    <string name="chatRequestAlwaysScope">A partir de agora, %1$s será executado sem perguntar, %2$s. Você pode desfazer isso nas Configurações.</string>
+    <string name="chatRequestAlwaysInProject">neste projeto</string>
+    <plurals name="serverRowQueuedWaiting">
+        <item quantity="one">%1$d mensagens aguardando envio</item>
+        <item quantity="many">%1$d mensagens aguardando envio</item>
+        <item quantity="other">%1$d mensagens aguardando envio</item>
+    </plurals>
+    <string name="serverRowQueuedWaiting__eq1">1 mensagem aguardando envio</string>
+    <string name="termuxInAppInstead">Configurar o servidor integrado ao app</string>
+    <string name="termuxInAppInsteadDetail">Um novo começo que roda dentro deste app. Não precisa do Termux.</string>
+    <string name="freeModelSignIn">Adicionar uma chave de API</string>
+    <string name="kitTurnLiveSeconds">%1$d s</string>
+    <string name="kitComposerRailRetry">Tentar novamente</string>
+    <string name="chatsHomeAllProjects">Todos os projetos</string>
+    <string name="chatsHomeNeedsYou">Precisa de você</string>
+    <string name="shellTabChats">Conversas</string>
+    <string name="shellTabFiles">Arquivos</string>
+    <string name="agentsStateCantReopen">Não consegue reabrir conversas antigas</string>
+    <string name="agentsSignInStart">Entrar com o %1$s</string>
+    <string name="agentsSectionTitle">Agentes</string>
+    <string name="chatRequestAnswerAllowed">Permitido</string>
+</resources>

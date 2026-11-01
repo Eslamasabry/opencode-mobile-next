@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_en.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="servicesIntro">Keep your project's development commands and preview links together. Saving a service does not start it.</string>
+    <string name="paseoPasswordHelp">Set one with "paseo daemon set-password". Stored in this device's secure storage.</string>
+</resources>

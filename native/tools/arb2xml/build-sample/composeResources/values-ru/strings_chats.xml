@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ru.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="e7WorkspaceBackExit">Нажмите «Назад» ещё раз, чтобы выйти</string>
+    <string name="serverSwitcherOpen">Сменить сервер</string>
+    <string name="chatsNewAgentNeedsProjectsFolder">%1$s работает только с проектами на этом телефоне. Выберите один из них.</string>
+    <string name="chatsHomeTitle">Чаты</string>
+    <string name="chatsHomeRunning">В работе</string>
+    <string name="chatsHomeDone">Готово</string>
+    <string name="chatsHomeFailed">Ошибка</string>
+    <string name="chatsHomeToday">Сегодня</string>
+    <string name="chatsHomeEarlier">Ранее</string>
+    <string name="chatsHomeIncomplete">Некоторые чаты не удалось загрузить</string>
+    <string name="chatsHomeOpening">Открытие…</string>
+    <string name="chatsHomeUnreachable">%1$s не отвечает. Его чаты не показаны.</string>
+    <string name="chatsSourcesUnreachable">Не отвечает</string>
+    <string name="chatsSourcesAll">Все подключения</string>
+    <string name="chatsSourcesSome">%1$d из %2$d подключений</string>
+    <string name="chatsSourcesSheetTitle">Подключения в этом списке</string>
+    <string name="chatsSourcesMain">Новые чаты начинаются здесь</string>
+    <string name="chatsSourcesOnPhone">На этом телефоне</string>
+    <string name="chatsSourcesElsewhere">На другом компьютере</string>
+    <string name="chatsSourcesAgents">Агенты на этом телефоне</string>
+    <string name="chatsSourcesAlways">Всегда показано</string>
+    <string name="chatsHomeStillLoading">Загрузка чатов %1$s…</string>
+    <string name="chatsHomeEmptyTitle">Пока нет чатов</string>
+    <string name="chatsHomeNoMatchTitle">Нет подходящих чатов</string>
+    <string name="chatsHomeNoMatchBody">Ничего не подходит под выбранные фильтры.</string>
+    <string name="chatsHomeClearFilters">Сбросить фильтры</string>
+    <string name="chatsHomeProjectEmptyTitle">В проекте %1$s нет чатов</string>
+    <string name="chatsHomeStartChatIn">Начать чат в проекте %1$s</string>
+    <string name="chatsHomeNewChat">Новый чат</string>
+    <string name="chatsHomeOpenFailed">Не удалось открыть этот чат. Потяните вниз, чтобы обновить список.</string>
+    <string name="chatsFilterSheetTitle">Показывать чаты из</string>
+    <plurals name="chatsFilterChatCount">
+        <item quantity="one">%1$d чат</item>
+        <item quantity="few">%1$d чата</item>
+        <item quantity="many">%1$d чатов</item>
+        <item quantity="other">%1$d чата</item>
+    </plurals>
+    <string name="chatsFilterChatCount__eq1">%1$d чат</string>
+    <string name="chatsFilterRunningCount">%1$d в работе</string>
+    <string name="chatsFilterNeedsYouWord">ждёт вас</string>
+    <string name="chatsFilterOpenProject">Открыть проект…</string>
+    <string name="chatsNewChooseProject">Выбрать проект</string>
+    <string name="chatsNewNeedProject">Выберите проект, чтобы начать чат.</string>
+    <string name="chatsNewFailed">Чат не начался. Ваше сообщение осталось здесь.</string>
+    <string name="agentsResumeNoticeTitle">Начать новый чат?</string>
+    <string name="agentsResumeNoticeBody">Начнётся новый чат. %1$s не может открыть этот снова, он останется как есть.</string>
+    <string name="agentsStartNew">Начать новый чат</string>
+    <string name="agentsCancel">Отмена</string>
+    <string name="chatsHomeOtherFolders">Другие папки</string>
+    <string name="shellServerSwitching">Переключение…</string>
+</resources>

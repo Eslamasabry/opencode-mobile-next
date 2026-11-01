@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ru.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="e7LocaleUiClose">Закрыть</string>
+    <string name="kitComposerStop">Остановить ответ</string>
+    <string name="chatsNewPrompt">Над чем поработаем?</string>
+</resources>

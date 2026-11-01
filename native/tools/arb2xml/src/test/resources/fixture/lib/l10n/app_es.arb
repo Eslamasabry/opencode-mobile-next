@@ -1,0 +1,12 @@
+{
+  "@@locale": "es",
+  "chatUiDraftsQueued": "{count, plural, one{1 borrador en cola; se enviará al reconectar.} other{{count} borradores en cola; se enviarán al reconectar.}}",
+  "chatUiQuestionsSummary": "{question} · {count, plural, one{1 pregunta} other{{count} preguntas}}",
+  "chatUiRateLimitCountdown": "Límite de velocidad alcanzado. Reintentando{attempt} en {time}",
+  "kitNeedsYouWaitingSpoken": "{minutes, plural, =0{esperando menos de un minuto} =1{esperando 1 minuto} other{esperando {minutes} minutos}}",
+  "appExitServerStopped": "{what}. El OpenCode de tu teléfono se detuvo con ella; está iniciando de nuevo.",
+  "chatUiReferenceAlreadyAdded": "@{name} ya está en el mensaje",
+  "e7SettingsStorageSummary": "{total} de trabajo sin enviar: {queued, plural, =1{1 mensaje en cola} other{{queued} mensajes en cola}} ({queueBytes}) y {drafts, plural, =1{1 borrador} other{{drafts} borradores}} ({draftBytes}). Los mensajes en cola se descartan tras {days} días.",
+  "paseoPasswordHelp": "Defínela con \"paseo daemon set-password\". Se guarda en el almacenamiento seguro de este dispositivo.",
+  "terminalShowEarlier": "{count, plural, =1{Mostrar 1 línea anterior} other{Mostrar {count} líneas anteriores}}"
+}

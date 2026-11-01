@@ -1,0 +1,177 @@
+{
+  "@@locale": "en",
+  "servicesTitle": "Development services",
+  "servicesIntro": "Keep your project's development commands and preview links together. Saving a service does not start it.",
+  "libraryModelsAgentsTitle": "Models & agents",
+  "@libraryModelsAgentsTitle": {
+    "description": "More hub card: model and agent catalog"
+  },
+  "monitorRequestSummary": "{profile} · {kind}\n{lastChecked}: {time}",
+  "@monitorRequestSummary": {
+    "description": "Saved-server request row summary",
+    "placeholders": {
+      "profile": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      },
+      "lastChecked": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "paseoPasswordHelp": "Set one with \"paseo daemon set-password\". Stored in this device's secure storage.",
+  "agentAccountPercentUsed": "{percent}% used",
+  "@agentAccountPercentUsed": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "e7SettingsStorageSummary": "{total} of unsent work — {queued, plural, =1{1 queued prompt} other{{queued} queued prompts}} ({queueBytes}) and {drafts, plural, =1{1 draft} other{{drafts} drafts}} ({draftBytes}). Queued prompts are discarded after {days} days.",
+  "@e7SettingsStorageSummary": {
+    "description": "Settings and appearance user interface.",
+    "placeholders": {
+      "total": {
+        "type": "String"
+      },
+      "queued": {
+        "type": "int"
+      },
+      "queueBytes": {
+        "type": "String"
+      },
+      "drafts": {
+        "type": "int"
+      },
+      "draftBytes": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "chatUiReferenceAlreadyAdded": "@{name} is already in the prompt",
+  "@chatUiReferenceAlreadyAdded": {
+    "description": "Chat journey: @{name} is already in the prompt",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatUiDraftsQueued": "{count, plural, one{1 draft queued to send on reconnect.} other{{count} drafts queued to send on reconnect.}}",
+  "@chatUiDraftsQueued": {
+    "description": "Chat journey: {count, plural, one{1 draft queued to send on reconnect.} other{{count} drafts queued to send on reconnect.}}",
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "chatUiQuestionsSummary": "{question} · {count, plural, one{1 question} other{{count} questions}}",
+  "@chatUiQuestionsSummary": {
+    "description": "Chat journey: {question} · {count, plural, one{1 question} other{{count} questions}}",
+    "placeholders": {
+      "question": {
+        "type": "Object"
+      },
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "chatUiRateLimitCountdown": "Rate limited. Retrying{attempt} in {time}",
+  "@chatUiRateLimitCountdown": {
+    "description": "Chat journey: Rate limited. Retrying{attempt} in {time}",
+    "placeholders": {
+      "attempt": {
+        "type": "Object"
+      },
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "teamUiGateAnswerRunRetry": "Send {work} to {agent} again",
+  "@teamUiGateAnswerRunRetry": {
+    "description": "Gate sheet (failed task): sends the stuck work to its agent again; names the work and the agent",
+    "placeholders": {
+      "work": {
+        "type": "String"
+      },
+      "agent": {
+        "type": "String"
+      }
+    }
+  },
+  "terminalShowEarlier": "{count, plural, =1{Show 1 earlier line} other{Show {count} earlier lines}}",
+  "@terminalShowEarlier": {
+    "description": "Button above the end of a command output, revealing the lines before it",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "aiteamBringInDone": "{project} has the team's latest work ({commit}).",
+  "@aiteamBringInDone": {
+    "description": "The team's merged work is in the project folder",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      },
+      "commit": {
+        "type": "String"
+      }
+    }
+  },
+  "appExitServerStopped": "{what}. Your phone's OpenCode stopped with it; it's starting again.",
+  "@appExitServerStopped": {
+    "description": "The notice when only the phone's OpenCode server was running; what is one of the appExit first halves",
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "kitNeedsYouWaitingSpoken": "{minutes, plural, =0{waiting less than a minute} =1{waiting 1 minute} other{waiting {minutes} minutes}}",
+  "@kitNeedsYouWaitingSpoken": {
+    "description": "KitNeedsYou.row: the row's age for a screen reader, unabbreviated and mid-sentence (\"waiting 4 minutes\"); the visible line uses kitNeedsYouWaiting",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "chatTurnAllFilesMore": "All files · {count} more changed",
+  "@chatTurnAllFilesMore": {
+    "description": "Under the first five files a finished reply changed, when it changed more: opens the project's file browser; {count} is how many changed files are not listed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "runningPhoneCpu": "{level, select, idle{Idle} light{Light} busy{Busy} other{Very busy}} · {percent}%",
+  "@runningPhoneCpu": {
+    "description": "How hard a process uses the processor, in a word and the share of one core.",
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String",
+        "example": "45"
+      }
+    }
+  }
+}

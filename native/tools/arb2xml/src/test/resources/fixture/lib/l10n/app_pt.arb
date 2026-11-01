@@ -1,0 +1,7 @@
+{
+  "@@locale": "pt",
+  "chatUiDraftsQueued": "{count, plural, one{1 rascunho na fila; será enviado ao reconectar.} other{{count} rascunhos na fila; serão enviados ao reconectar.}}",
+  "chatUiQuestionsSummary": "{question} · {count, plural, one{1 pergunta} other{{count} perguntas}}",
+  "chatUiRateLimitCountdown": "Limite de taxa atingido. Tentando novamente{attempt} em {time}",
+  "kitNeedsYouWaitingSpoken": "{minutes, plural, =0{aguardando há menos de um minuto} =1{aguardando há 1 minuto} other{aguardando há {minutes} minutos}}"
+}
