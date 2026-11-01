@@ -1,4 +1,4 @@
-package io.github.eslamasabry.oc.feature.chats
+package io.github.eslamasabry.oc.engine.agents.feed
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -6,11 +6,6 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionTime
-import io.github.eslamasabry.oc.feature.chats.presentation.BriefBlocker
-import io.github.eslamasabry.oc.feature.chats.presentation.BriefPreferences
-import io.github.eslamasabry.oc.feature.chats.presentation.ReturnBrief
-import io.github.eslamasabry.oc.feature.chats.presentation.ReturnBriefAck
-import io.github.eslamasabry.oc.feature.chats.presentation.ReturnBriefStore
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest

@@ -15,7 +15,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
-internal val profile = ProfileId("p1")
+internal val feedProfile = ProfileId("p1")
 
 internal fun session(
     id: String,
@@ -53,7 +53,7 @@ class ChatFeedTest {
             OpenCodeListing(
                 sessions = listOf(session("t", "/tmp/scratch", 9), session("h", "/root", 8), session("r", "/work/app", 7)),
             )
-        val source = OpenCodeChatFeedSource(profile, "Laptop", MutableStateFlow(listing))
+        val source = OpenCodeChatFeedSource(feedProfile, "Laptop", MutableStateFlow(listing))
         val items = source.current().items
         // Listed, but their folder is never offered as a project.
         assertEquals(listOf("t", "h", "r"), items.map { it.sessionId.raw })
@@ -70,7 +70,7 @@ class ChatFeedTest {
         runTest(UnconfinedTestDispatcher()) {
             val listing =
                 MutableStateFlow(OpenCodeListing(sessions = listOf(session("a", "/work/app", 1), session("b", "/work/app", 2))))
-            val feed = ChatFeed(listOf(OpenCodeChatFeedSource(profile, null, listing)), backgroundScope)
+            val feed = ChatFeed(listOf(OpenCodeChatFeedSource(feedProfile, null, listing)), backgroundScope)
             assertEquals(listOf("b", "a"), feed.snapshot.value.items.map { it.sessionId.raw })
             val revision = feed.snapshot.value.revision
 
@@ -103,7 +103,7 @@ class ChatFeedTest {
                         session("old", "/work/app", 5, archived = true),
                     ),
             )
-        val items = OpenCodeChatFeedSource(profile, null, MutableStateFlow(listing)).current().items
+        val items = OpenCodeChatFeedSource(feedProfile, null, MutableStateFlow(listing)).current().items
         assertEquals(listOf("child", "root"), items.map { it.sessionId.raw })
         assertEquals(listOf("root"), ChatFeedFilter().apply(items).map { it.sessionId.raw })
         assertEquals(2, ChatFeedFilter(includeSubagents = true).apply(items).size)

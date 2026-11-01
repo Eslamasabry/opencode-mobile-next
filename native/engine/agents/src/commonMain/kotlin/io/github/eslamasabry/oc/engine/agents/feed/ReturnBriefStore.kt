@@ -1,4 +1,4 @@
-package io.github.eslamasabry.oc.feature.chats.presentation
+package io.github.eslamasabry.oc.engine.agents.feed
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -68,13 +68,13 @@ public class ReturnBriefStore(private val prefs: BriefPreferences) {
 
     private fun decode(raw: String?): Map<String, ReturnBriefAck> {
         if (raw == null) return emptyMap()
-        val obj = runCatchingJson(raw) as? JsonObject ?: return emptyMap()
+        val obj = parseOrNull(raw) as? JsonObject ?: return emptyMap()
         return obj.entries.take(MAX_LOCATIONS)
             .mapNotNull { (location, value) -> ReturnBriefAck.fromJson(value)?.let { location to it } }
             .toMap()
     }
 
-    private fun runCatchingJson(raw: String) =
+    private fun parseOrNull(raw: String) =
         try {
             Json.parseToJsonElement(raw)
         } catch (_: IllegalArgumentException) {

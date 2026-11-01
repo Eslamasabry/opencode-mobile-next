@@ -35,12 +35,12 @@ class MergedChatFeedTest {
             val two = MutableStateFlow(OpenCodeListing(sessions = listOf(session("same", "/work/b", 20))))
             val feed =
                 ChatFeed(
-                    listOf(OpenCodeChatFeedSource(profile, "Laptop", one), OpenCodeChatFeedSource(other, "Server", two)),
+                    listOf(OpenCodeChatFeedSource(feedProfile, "Laptop", one), OpenCodeChatFeedSource(other, "Server", two)),
                     backgroundScope,
                 )
             val items = feed.snapshot.value.items
             assertEquals(listOf("ask", "run", "same", "same"), items.map { it.sessionId.raw })
-            assertEquals(listOf(other, profile), items.filter { it.sessionId.raw == "same" }.map { it.ref.profileId })
+            assertEquals(listOf(other, feedProfile), items.filter { it.sessionId.raw == "same" }.map { it.ref.profileId })
             assertEquals(4, items.map { it.identity }.toSet().size, "list keys are identities, never session ids")
             assertEquals("Server", items[2].sourceLabel)
         }
@@ -52,7 +52,7 @@ class MergedChatFeedTest {
             val two = MutableStateFlow(OpenCodeListing(sessions = listOf(session("b", "/work/b", 2))))
             val feed =
                 ChatFeed(
-                    listOf(OpenCodeChatFeedSource(profile, "Laptop", one), OpenCodeChatFeedSource(other, "Server", two)),
+                    listOf(OpenCodeChatFeedSource(feedProfile, "Laptop", one), OpenCodeChatFeedSource(other, "Server", two)),
                     backgroundScope,
                 )
             two.value = two.value.copy(failed = true)
@@ -72,7 +72,7 @@ class MergedChatFeedTest {
         runTest(UnconfinedTestDispatcher()) {
             val listing = MutableStateFlow(OpenCodeListing(sessions = listOf(session("a", "/work/a", 1))))
             var refreshed = 0
-            val shared = OpenCodeChatFeedSource(profile, null, listing, refresh = { refreshed++; Unit.ok() })
+            val shared = OpenCodeChatFeedSource(feedProfile, null, listing, refresh = { refreshed++; Unit.ok() })
             val feed = ChatFeed(listOf(shared), backgroundScope)
 
             // Child changes notify the owner until it closes.
@@ -105,7 +105,7 @@ class MergedChatFeedTest {
                     ),
                 statuses = mapOf(SessionId("a") to SessionStatus.Busy),
             )
-        val items = OpenCodeChatFeedSource(profile, null, MutableStateFlow(listing)).current().items
+        val items = OpenCodeChatFeedSource(feedProfile, null, MutableStateFlow(listing)).current().items
         val projects = ChatFeedRules.projects(items)
         assertEquals(listOf("/work/api", "/work/web"), projects.map { it.directory })
         assertEquals(listOf("api", "web"), projects.map { it.name })

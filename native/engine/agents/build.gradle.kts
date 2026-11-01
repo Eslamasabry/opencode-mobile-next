@@ -6,5 +6,6 @@ kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":core:common"))
         implementation(project(":core:model"))
+        implementation(libs.kotlinx.datetime) // FeedDay: the Today / Earlier boundary on the person's clock
     }
 }

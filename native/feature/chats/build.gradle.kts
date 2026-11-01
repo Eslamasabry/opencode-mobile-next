@@ -2,6 +2,6 @@ plugins { id("oc.kmp.feature") }
 
 kotlin {
     sourceSets.commonMain.dependencies {
-        implementation(project(":engine:connection")) // ← engines this feature reads (public API only)
+        implementation(project(":engine:agents")) // ChatFeed and the return brief (17 §1.6, 07 §5 B15; S2-CHATS)
     }
 }
