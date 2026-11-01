@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.PromptAdmission
 import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import io.github.eslamasabry.oc.core.model.PromptAttachment
+import io.github.eslamasabry.oc.core.model.StopResult
 import io.github.eslamasabry.oc.engine.delivery.port.ConversationFacts
 import io.github.eslamasabry.oc.engine.delivery.port.DeliveryConnection
 import io.github.eslamasabry.oc.engine.delivery.port.SendLink
@@ -92,6 +93,8 @@ public data class PendingSend(
     val dispatchedMessageId: MessageId? = null,
     /** The durable marker's queue entry id (`online-<µs>`), when one was written. */
     val reviewId: String? = null,
+    /** Chips and Continue never become draft text when Stop calls them off. */
+    val restoreDraftOnCancel: Boolean = true,
 ) {
     val requestComplete: Boolean get() = phase == SendPhase.Accepted
 
@@ -198,7 +201,7 @@ public class PromptDelivery(
     private val jobs = HashMap<LocalSendId, Job>()
     /** A review outlives its optimistic bubble and the composer outcome acknowledgement (B-STATE-043/044). */
     private val reviewIds = LinkedHashMap<LocalSendId, String>()
-    private val stopAfterDispatch = HashSet<ConversationRef>()
+    private val stopAfterDispatch = HashSet<LocalSendId>()
     private val lastSendAtMs = HashMap<ConversationRef, Long>()
     private var counter = 0L
 
@@ -257,7 +260,12 @@ public class PromptDelivery(
             if (ready is Outcome.Failed) return ready
             if (!sameTarget(link, origin)) return Failure.Refused(RefusalReason.StaleScope).failed()
             stopMemory.noteStopFromThisApp(ref)
-            link.stop(ref.sessionId)
+            when (val stopped = link.stop(ref.sessionId)) {
+                is Outcome.Failed -> return stopped
+                is Outcome.Ok -> if (stopped.value == StopResult.Uncertain) {
+                    return Failure.Refused(RefusalReason.DispatchUncertain).failed()
+                }
+            }
             if (!sameTarget(link, origin)) return Failure.Refused(RefusalReason.StaleScope).failed()
         }
         val now = clock.now().toEpochMilliseconds()
@@ -272,7 +280,7 @@ public class PromptDelivery(
             forgetResolvedReviews()
             reviewIds[localId] = id
         }
-        val bubble = PendingSend(localId, ref, route, request.text, request.attachments, now, SendPhase.Waiting, reviewId = reviewId)
+        val bubble = PendingSend(localId, ref, route, request.text, request.attachments, now, SendPhase.Waiting, reviewId = reviewId, restoreDraftOnCancel = putBack)
         lastSendAtMs[ref] = now
         if (SteerPolicy.bubbleFirst(route)) {
             // 6. Bubble first; the composer clears its field when this returns.
@@ -352,7 +360,7 @@ public class PromptDelivery(
             setLocalTurn(ref, LocalTurn(bubble.createdAtMs, sending = false, acceptedAtMs = clock.now().toEpochMilliseconds()))
             emit { SendOutcome.Accepted(it, ref, bubble.localId, request.typedText, phraseCandidate = putBack, route = bubble.route) }
             jobs -= bubble.localId
-            if (stopAfterDispatch.remove(ref)) stopNow(ref) // Stop pressed while on the wire: stop again now
+            if (stopAfterDispatch.remove(bubble.localId) && sameTarget(link, origin)) stopNow(ref) // Stop pressed while on the wire: stop again now
         } else {
             // 10. Failed. A refusal the port promises sent nothing; anything else may have been delivered.
             val left = failure?.nothingSent != true
@@ -365,7 +373,7 @@ public class PromptDelivery(
         removeBubble(bubble.localId)
         clearLocalTurn(ref)
         jobs -= bubble.localId
-        stopAfterDispatch -= ref
+        stopAfterDispatch -= bubble.localId
         if (left) {
             // Keep the marker; never auto-resend; Check again looks the receipt up.
             bubble.reviewId?.let { queue.finishOnline(it, dispatched = true, accepted = false, error = failure?.let(QueueErrors::of) ?: QueueErrors.UNCONFIRMED) }
@@ -434,13 +442,14 @@ public class PromptDelivery(
         val calledOff = wire.withLock {
             val waiting = mutablePending.value.filter { it.ref == ref && it.phase == SendPhase.Waiting }
             waiting.forEach { removeBubble(it.localId) }
-            if (mutablePending.value.any { it.ref == ref && it.phase == SendPhase.OnWire }) stopAfterDispatch += ref
+            stopAfterDispatch += mutablePending.value.filter { it.ref == ref && it.phase == SendPhase.OnWire }.map { it.localId }
             waiting
         }
         for (bubble in calledOff) {
             jobs.remove(bubble.localId)?.cancel()
             bubble.reviewId?.let { queue.finishOnline(it, dispatched = false, accepted = false, error = null) }
-            emit { SendOutcome.PutBack(it, ref, bubble.text, bubble.attachments, Failure.Refused(RefusalReason.StaleScope)) }
+            forgetResolvedReviews()
+            if (bubble.restoreDraftOnCancel) emit { SendOutcome.PutBack(it, ref, bubble.text, bubble.attachments, Failure.Refused(RefusalReason.StaleScope)) }
         }
         return stopNow(ref)
     }
