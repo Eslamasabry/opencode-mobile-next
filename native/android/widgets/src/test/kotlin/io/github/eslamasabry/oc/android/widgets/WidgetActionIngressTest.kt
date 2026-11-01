@@ -13,7 +13,10 @@ import io.github.eslamasabry.opencode_mobile.WidgetActionPolicy
 import io.github.eslamasabry.opencode_mobile.WidgetV2Bridge
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.json.JSONArray
 import org.json.JSONObject
@@ -137,6 +140,92 @@ class WidgetActionIngressTest {
         assertNull(WidgetFeed.persistence!!.string("oc.widgetActions.p"))
         assertTrue(order.isEmpty())
     }
+
+    @Test
+    fun `widgets-MAJOR-6 existing live foreground ownership is never promoted or ended`() =
+        runTest {
+            val request = request()
+            foreground.active.value = persistentSetOf(ForegroundKind.LiveMode)
+            WidgetFeed.backgroundRunner =
+                object : WidgetBackgroundRunner {
+                    override fun start(
+                        context: Context,
+                        payload: Map<String, Any?>,
+                        snapshotJson: String,
+                        deadlineEpochMs: Long,
+                        operation: String,
+                        complete: (Map<*, *>?) -> Unit,
+                    ): WidgetBackgroundRunner.Handle {
+                        order.add("runner")
+                        complete(
+                            mapOf(
+                                "id" to payload["id"],
+                                "action" to payload["action"],
+                                "status" to "accepted",
+                            )
+                        )
+                        return WidgetBackgroundRunner.Handle { order.add("cancel") }
+                    }
+                }
+            assertEquals(
+                Outcome.Ok(WidgetActionResult(WidgetActionStatus.Accepted)),
+                WidgetActionAdmission(context, foreground).run(request),
+            )
+            assertEquals(listOf("runner", "cancel"), order)
+            assertEquals(persistentSetOf(ForegroundKind.LiveMode), foreground.active.value)
+        }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    @Test
+    fun `widgets-MAJOR-6 lease expires once and keeps uncertain claims without extending on another tap`() =
+        runTest {
+            val request = request()
+            WidgetFeed.backgroundRunner =
+                object : WidgetBackgroundRunner {
+                    override fun start(
+                        context: Context,
+                        payload: Map<String, Any?>,
+                        snapshotJson: String,
+                        deadlineEpochMs: Long,
+                        operation: String,
+                        complete: (Map<*, *>?) -> Unit,
+                    ): WidgetBackgroundRunner.Handle {
+                        order.add("runner")
+                        return WidgetBackgroundRunner.Handle { order.add("cancel") }
+                    }
+                }
+            val ingress = WidgetActionAdmission(context, foreground)
+            val pending = async { ingress.run(request) }
+            runCurrent()
+            assertTrue(WidgetFeed.widgetActionPending)
+            assertEquals(
+                Outcome.Ok(WidgetActionResult(WidgetActionStatus.Rejected, WidgetActionError.Busy)),
+                ingress.run(request),
+            )
+            advanceTimeBy(30_001)
+            runCurrent()
+            assertEquals(
+                Outcome.Ok(
+                    WidgetActionResult(
+                        WidgetActionStatus.Uncertain,
+                        WidgetActionError.UncertainDelivery,
+                    )
+                ),
+                pending.await(),
+            )
+            assertEquals(listOf("begin", "runner", "cancel", "end"), order)
+            assertFalse(WidgetFeed.widgetActionPending)
+            assertEquals(
+                Outcome.Ok(
+                    WidgetActionResult(
+                        WidgetActionStatus.Uncertain,
+                        WidgetActionError.UncertainDelivery,
+                    )
+                ),
+                ingress.run(request),
+            )
+            assertEquals(1, order.count { it == "runner" })
+        }
 
     @Test
     fun `widgets-MAJOR-6 wrong intent action never enters typed ingress`() {
