@@ -193,11 +193,20 @@ public fun KitPaneScreen(
     BoxWithConstraints(modifier.fillMaxSize()) {
         val window = LocalKitWindow.current
         val body = maxWidth.value
-        Panes(
-            list, detail, emptyDetail, side, topBar, status, search, loading, loadingLabel, bottom,
-            showsDetail = Layout.showsDetail(window.cls, window.short, body),
-            showsSide = side != null && Layout.showsSide(window.cls, window.short, body),
-        )
+        val showsDetail = Layout.showsDetail(window.cls, window.short, body)
+        val panes: @Composable (KitStatus?, Boolean) -> Unit = { line, ownsLine ->
+            Panes(
+                list, detail, emptyDetail, side, topBar, status, search, loading, loadingLabel, bottom,
+                showsDetail = showsDetail,
+                showsSide = side != null && Layout.showsSide(window.cls, window.short, body),
+                line = line, ownsLine = ownsLine,
+            )
+        }
+        if (showsDetail && !kitStatusSlotAbove()) {
+            KitStatusSlot(status) { panes(it, true) }
+        } else {
+            panes(null, false)
+        }
     }
 }
 
@@ -215,12 +224,15 @@ private fun Panes(
     bottom: (@Composable () -> Unit)?,
     showsDetail: Boolean,
     showsSide: Boolean,
+    line: KitStatus?,
+    ownsLine: Boolean,
 ) {
     val modifier = Modifier
     val hairline = LocalKitColors.current.hairline
     val listPane: @Composable () -> Unit = {
         KitScreen(
-            topBar = topBar, status = status, search = search, loading = loading, loadingLabel = loadingLabel,
+            topBar = if (ownsLine) ({ Column { topBar?.invoke(); KitStatusLineFold(line) } }) else topBar,
+            status = status, search = search, loading = loading, loadingLabel = loadingLabel,
             bottom = bottom, page = showsDetail && topBar == null, body = list,
         )
     }
