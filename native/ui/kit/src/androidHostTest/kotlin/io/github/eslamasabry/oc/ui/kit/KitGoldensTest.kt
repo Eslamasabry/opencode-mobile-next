@@ -36,12 +36,13 @@ class KitGoldensTest(private val variant: Variant) {
 
     private val words = SceneWords.of(variant.localeTag)
 
-    private fun show(content: @Composable () -> Unit) {
+    /** Motion Off for still captures; frost needs Full, because reduced motion holds it solid (Dart `heldBy`). */
+    private fun show(motion: MotionLevel = MotionLevel.Off, content: @Composable () -> Unit) {
         compose.setContent {
             KitTheme(
                 appearance = KitAppearance(
                     mode = if (variant.dark) AppearanceMode.Dark else AppearanceMode.Light,
-                    motion = MotionLevel.Off,
+                    motion = motion,
                 ),
                 platform = KitRobolectric.platform(),
                 localeTag = variant.localeTag,
@@ -72,7 +73,7 @@ class KitGoldensTest(private val variant: Variant) {
 
     @Test
     fun kitFrost() {
-        show { Box(Modifier.fillMaxSize()) { FrostScene(words) } }
+        show(MotionLevel.Full) { Box(Modifier.fillMaxSize()) { FrostScene(words) } }
         compose.onNodeWithTag("header").captureRoboImage("src/screenshots/KitFrost/header-api${KitRobolectric.SDK}-${variant.name}.png")
     }
 
