@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- :android:notifications copy, written for the native app (NOTIFY); the Flutter app had no native
+     strings in this language. To be absorbed by :ui:words strings_os (see docs/native/units/NOTIFY.md). -->
+<resources>
+    <string name="notify_live_channel">ライブ接続</string>
+    <string name="notify_live_description">OpenCode がバックグラウンドでサーバーのセッションを維持している間に表示されます</string>
+    <string name="notify_coding_requests_channel">コーディングのリクエスト</string>
+    <string name="notify_coding_requests_description">OpenCode が許可や入力を必要とするときに通知します</string>
+    <string name="notify_coding_requests_quiet_channel">コーディングのリクエスト(おやすみ時間)</string>
+    <string name="notify_coding_requests_quiet_description">おやすみ時間に届くリクエスト(音なし)</string>
+    <string name="notify_coding_status_channel">セッションの更新</string>
+    <string name="notify_coding_status_description">バックグラウンドの OpenCode セッションが終わったときに通知します</string>
+    <string name="notify_team_progress_channel">AI チームの進捗</string>
+    <string name="notify_team_progress_description">AI チームの作業中に表示される控えめな行</string>
+    <string name="notify_setup_channel">セットアップ</string>
+    <string name="notify_phone_server_channel">このスマートフォンの OpenCode</string>
+    <string name="notify_phone_server_description">スマートフォンのサーバーまたはプロジェクトエンジンの実行中に表示されます</string>
+    <string name="notify_schedule_channel">予約したプロンプト</string>
+    <string name="notify_voice_setup">音声のセットアップ</string>
+    <string name="notify_alert_permission_title">%1$s に続行を許可しますか?</string>
+    <string name="notify_alert_question_title">%1$s から質問があります</string>
+    <string name="notify_alert_complete_title">完了: %1$s</string>
+    <string name="notify_alert_error_title">停止: %1$s</string>
+    <string name="notify_alert_stopped_any">会話が停止しました</string>
+    <string name="notify_ask_run">%1$s を実行しますか?</string>
+    <string name="notify_ask_edit">%1$s を編集しますか?</string>
+    <string name="notify_ask_read">%1$s を読みますか?</string>
+    <string name="notify_ask_folder">%1$s で作業しますか?</string>
+    <string name="notify_public_needs_you">対応が必要なリクエストがあります</string>
+    <string name="notify_public_finished">会話が完了しました</string>
+    <string name="notify_status_public_stopped">OpenCode · チャットが停止しました</string>
+    <string name="notify_test_title">通知はオンです</string>
+    <string name="notify_test_body">質問や完了した作業はこのように届きます。</string>
+    <string name="notify_alert_quota_title">プロバイダの使用量がしきい値に達しました</string>
+    <string name="notify_alert_quota_body">開いて現在の使用量を確認してください。</string>
+    <string name="notify_alert_quota_reset_title">%1$s が再び使えます</string>
+    <string name="notify_alert_quota_reset_generic_title">使用量の上限がリセットされました</string>
+    <string name="notify_alert_quota_reset_body">開いて残りを確認してください。</string>
+    <string name="notify_alert_checkin_title">%1$s はまだ作業中です</string>
+    <string name="notify_alert_checkin_body">会話を開いて様子を確認してください。</string>
+    <string name="notify_alert_reason_auth">プロバイダがキーを拒否しました。続けるにはもう一度サインインしてください。</string>
+    <string name="notify_alert_reason_context">会話がモデルにとって長すぎます。</string>
+    <string name="notify_alert_reason_length">返信が長さの上限に達しました。</string>
+    <string name="notify_alert_reason_filter">プロバイダが返信をブロックしました。</string>
+    <string name="notify_alert_reason_model">そのモデルは利用できません。続けるには別のモデルを選んでください。</string>
+    <string name="notify_alert_reason_other">問題が発生しました。</string>
+    <string name="notify_allow_once">今回のみ許可</string>
+    <string name="notify_reject">拒否</string>
+    <string name="notify_open">開く</string>
+    <string name="notify_status_action_open">開く</string>
+    <string name="notify_status_action_stop_reply">返信を停止</string>
+    <string name="notify_status_action_start">開始</string>
+    <string name="notify_status_action_new_chat">新しいチャット</string>
+    <string name="notify_status_action_stop_opencode">OpenCode を停止</string>
+    <string name="notify_status_public_ready">OpenCode · 準備完了</string>
+    <string name="notify_status_public_paused">OpenCode · 一時停止中</string>
+    <string name="notify_answer_in_app">OpenCode を開いて回答してください</string>
+    <string name="notify_reply_watch_title">返信をまだ作成中です</string>
+    <string name="notify_status_public_working">OpenCode · 作業中</string>
+    <plurals name="notify_chip_running">
+        <item quantity="other">%1$d 件実行中</item>
+    </plurals>
+    <plurals name="notify_chip_pending">
+        <item quantity="other">%1$d 件要対応</item>
+    </plurals>
+    <plurals name="notify_group_need_you">
+        <item quantity="other">%d 件の対応待ち</item>
+    </plurals>
+    <plurals name="notify_group_finished">
+        <item quantity="other">%d 件の会話が完了</item>
+    </plurals>
+</resources>

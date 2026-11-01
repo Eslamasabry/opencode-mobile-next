@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- :android:notifications copy, written for the native app (NOTIFY); the Flutter app had no native
+     strings in this language. To be absorbed by :ui:words strings_os (see docs/native/units/NOTIFY.md). -->
+<resources>
+    <string name="notify_live_channel">Подключение в реальном времени</string>
+    <string name="notify_live_description">Показывается, пока OpenCode поддерживает сеанс сервера в фоне</string>
+    <string name="notify_coding_requests_channel">Запросы при работе с кодом</string>
+    <string name="notify_coding_requests_description">Уведомления, когда OpenCode нужно разрешение или ответ</string>
+    <string name="notify_coding_requests_quiet_channel">Запросы при работе с кодом (тихие часы)</string>
+    <string name="notify_coding_requests_quiet_description">Запросы в тихие часы, без звука</string>
+    <string name="notify_coding_status_channel">Новости сеансов</string>
+    <string name="notify_coding_status_description">Уведомления, когда фоновый сеанс OpenCode завершается</string>
+    <string name="notify_team_progress_channel">Ход работы ИИ-команды</string>
+    <string name="notify_team_progress_description">Тихая строка, пока работает ИИ-команда</string>
+    <string name="notify_setup_channel">Настройка</string>
+    <string name="notify_phone_server_channel">OpenCode на этом телефоне</string>
+    <string name="notify_phone_server_description">Показывается, пока работает сервер телефона или движок проекта</string>
+    <string name="notify_schedule_channel">Запланированные запросы</string>
+    <string name="notify_voice_setup">Настройка голоса</string>
+    <string name="notify_alert_permission_title">Разрешить %1$s продолжить?</string>
+    <string name="notify_alert_question_title">У %1$s есть вопрос к вам</string>
+    <string name="notify_alert_complete_title">Готово: %1$s</string>
+    <string name="notify_alert_error_title">Остановлено: %1$s</string>
+    <string name="notify_alert_stopped_any">Разговор остановлен</string>
+    <string name="notify_ask_run">Выполнить %1$s?</string>
+    <string name="notify_ask_edit">Изменить %1$s?</string>
+    <string name="notify_ask_read">Прочитать %1$s?</string>
+    <string name="notify_ask_folder">Работать в %1$s?</string>
+    <string name="notify_public_needs_you">Запрос ждёт вас</string>
+    <string name="notify_public_finished">Разговор завершён</string>
+    <string name="notify_status_public_stopped">OpenCode · чат остановлен</string>
+    <string name="notify_test_title">Уведомления включены</string>
+    <string name="notify_test_body">Вопросы и готовая работа будут приходить так.</string>
+    <string name="notify_alert_quota_title">Расход у провайдера достиг вашего порога</string>
+    <string name="notify_alert_quota_body">Откройте, чтобы посмотреть расход.</string>
+    <string name="notify_alert_quota_reset_title">%1$s снова доступен</string>
+    <string name="notify_alert_quota_reset_generic_title">Лимит использования сброшен</string>
+    <string name="notify_alert_quota_reset_body">Откройте, чтобы посмотреть остаток.</string>
+    <string name="notify_alert_checkin_title">%1$s всё ещё работает</string>
+    <string name="notify_alert_checkin_body">Откройте разговор, чтобы проверить.</string>
+    <string name="notify_alert_reason_auth">Провайдер отклонил ключ. Войдите снова, чтобы продолжить.</string>
+    <string name="notify_alert_reason_context">Разговор слишком длинный для модели.</string>
+    <string name="notify_alert_reason_length">Ответ достиг предела длины.</string>
+    <string name="notify_alert_reason_filter">Провайдер заблокировал ответ.</string>
+    <string name="notify_alert_reason_model">Эта модель недоступна. Выберите другую, чтобы продолжить.</string>
+    <string name="notify_alert_reason_other">Что-то пошло не так.</string>
+    <string name="notify_allow_once">Разрешить один раз</string>
+    <string name="notify_reject">Отклонить</string>
+    <string name="notify_open">Открыть</string>
+    <string name="notify_status_action_open">Открыть</string>
+    <string name="notify_status_action_stop_reply">Остановить ответ</string>
+    <string name="notify_status_action_start">Запустить</string>
+    <string name="notify_status_action_new_chat">Новый чат</string>
+    <string name="notify_status_action_stop_opencode">Остановить OpenCode</string>
+    <string name="notify_status_public_ready">OpenCode · готов</string>
+    <string name="notify_status_public_paused">OpenCode · на паузе</string>
+    <string name="notify_answer_in_app">Откройте OpenCode, чтобы ответить</string>
+    <string name="notify_reply_watch_title">Ответ всё ещё готовится</string>
+    <string name="notify_status_public_working">OpenCode · работает</string>
+    <plurals name="notify_chip_running">
+        <item quantity="one">%1$d в работе</item>
+        <item quantity="few">%1$d в работе</item>
+        <item quantity="many">%1$d в работе</item>
+        <item quantity="other">%1$d в работе</item>
+    </plurals>
+    <plurals name="notify_chip_pending">
+        <item quantity="one">%1$d ждёт вас</item>
+        <item quantity="few">%1$d ждут вас</item>
+        <item quantity="many">%1$d ждут вас</item>
+        <item quantity="other">%1$d ждут вас</item>
+    </plurals>
+    <plurals name="notify_group_need_you">
+        <item quantity="one">%d запрос ждёт вас</item>
+        <item quantity="few">%d запроса ждут вас</item>
+        <item quantity="many">%d запросов ждут вас</item>
+        <item quantity="other">%d запроса ждут вас</item>
+    </plurals>
+    <plurals name="notify_group_finished">
+        <item quantity="one">%d разговор завершён</item>
+        <item quantity="few">%d разговора завершены</item>
+        <item quantity="many">%d разговоров завершены</item>
+        <item quantity="other">%d разговора завершены</item>
+    </plurals>
+</resources>

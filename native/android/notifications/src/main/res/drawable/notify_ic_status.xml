@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome small icon for rows this module posts (plan 11 §2.3: icons used in code live with the code).
+     A plain rounded square with a cursor bar; replaced by the app's ic_status when the design authority supplies it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M6,3h12a3,3 0,0 1,3 3v12a3,3 0,0 1,-3 3H6a3,3 0,0 1,-3 -3V6a3,3 0,0 1,3 -3zM7,8v8h2V8H7zM11,14v2h6v-2h-6z" />
+</vector>
