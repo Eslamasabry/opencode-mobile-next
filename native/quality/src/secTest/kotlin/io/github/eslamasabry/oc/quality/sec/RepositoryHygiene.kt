@@ -54,7 +54,7 @@ object RepositoryHygiene {
 
 /**
  * The leak gate (plan 16 §2.3; owner memories public-commit-email, push-freely-snapshot-recipe): added lines of the
- * commits being pushed carry no personal mail address, no tailnet (100.64.0.0/10) address outside the documentation
+ * commits being pushed carry no personal mail address, no tailnet (100.64/10) address outside the documentation
  * address, and no term of the git-ignored deny-list; every author and committer is the public noreply address.
  */
 object LeakGate {
@@ -84,7 +84,7 @@ object LeakGate {
         added.filterNot { a -> exemptPrefixes.any { a.file.startsWith(it) } }.flatMap { a ->
             buildList {
                 personalMail.findAll(a.line).forEach { _ -> add(Finding("LEAK-MAIL", "${a.file}: a personal mail address in an added line")) }
-                tailnet.findAll(a.line).filter { it.value != DOC_TAILNET }.forEach { _ -> add(Finding("LEAK-TAILNET", "${a.file}: a 100.64.0.0/10 address in an added line")) }
+                tailnet.findAll(a.line).filter { it.value != DOC_TAILNET }.forEach { _ -> add(Finding("LEAK-TAILNET", "${a.file}: a 100.64/10 address in an added line")) }
                 denylist.filter { it.isNotBlank() && a.line.contains(it, ignoreCase = true) }.forEach { _ -> add(Finding("LEAK-DENYLIST", "${a.file}: a deny-listed name in an added line")) }
             }
         }
