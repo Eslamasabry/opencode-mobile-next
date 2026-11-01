@@ -5,10 +5,10 @@ import android.app.Service
 import android.content.Context
 import android.content.pm.ServiceInfo
 import androidx.core.app.ServiceCompat
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -91,6 +91,9 @@ public object ReplyWatchPolicy {
         }
 }
 
+/** Stable moment identity, retained by the source until handled; separate turns may share an alert key. */
+public data class ReplyAlert(val id: String, val alert: CodingAlert)
+
 /**
  * What reply watch reads from the engines (`:engine:connection` run state, `:engine:attention` copy and policy).
  * Bound in the app graph; this module never reaches into a connection itself.
@@ -105,8 +108,14 @@ public interface ReplyRunSource {
     /** The row's words while watching (the "working" content of live mode); null = the module's fallback words. */
     public val status: StateFlow<StatusContent?>
 
-    /** Finished, stopped and needs-you alerts as runs settle or ask. */
-    public val alerts: Flow<CodingAlert>
+    /**
+     * Unhandled finished, stopped and needs-you moments, including those produced before service startup.
+     * A transient event flow is insufficient: keep each stable id until acknowledged, across watch restarts.
+     */
+    public val pendingAlerts: StateFlow<List<ReplyAlert>>
+
+    /** Atomically removes only this id; newer moments sharing the same chat key stay pending. */
+    public fun acknowledgeAlert(id: String)
 
     public val appVisible: StateFlow<Boolean>
 
@@ -210,9 +219,17 @@ public class ReplyWatchServiceBody(
         _ended.value = null
         throttle.reset()
         val startedAt = elapsedMs()
-        job =
-            scope.launch {
-                launch { source.alerts.collect { announce(it) } }
+        val watchJob = Job(scope.coroutineContext[Job])
+        job = watchJob
+        scope.launch(watchJob, start = CoroutineStart.UNDISPATCHED) {
+                // Reconcile retained moments before returning watch readiness, then stay subscribed.
+                launch(start = CoroutineStart.UNDISPATCHED) {
+                    source.pendingAlerts.collect { pending ->
+                        pending.forEach { moment ->
+                            if (announce(moment.alert)) source.acknowledgeAlert(moment.id)
+                        }
+                    }
+                }
                 var idleSince: Long? = null
                 while (true) {
                     val now = elapsedMs()
@@ -240,9 +257,10 @@ public class ReplyWatchServiceBody(
             }
     }
 
-    private fun announce(alert: CodingAlert) {
+    private fun announce(alert: CodingAlert): Boolean {
         val route = AlertPolicy.route(alert, source.alertFacts(alert).copy(replyWatchActive = true))
-        if (route is AlertRoute.Post) shade.show(alert, route)
+        // Quiet-hours skips are consumed now, never queued to ring later. A blocked post stays unhandled.
+        return route is AlertRoute.Skip || (route is AlertRoute.Post && shade.show(alert, route) == AlertShown.Shown)
     }
 
     private fun refreshRow(now: Long) {

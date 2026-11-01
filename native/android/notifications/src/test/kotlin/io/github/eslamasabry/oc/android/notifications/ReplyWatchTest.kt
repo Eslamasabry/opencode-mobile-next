@@ -18,7 +18,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -102,7 +101,16 @@ class ReplyWatchServiceTest {
         override val runs = MutableStateFlow(setOf(run()))
         override val progressing = MutableStateFlow(true)
         override val status = MutableStateFlow<StatusContent?>(content(run()))
-        override val alerts = MutableSharedFlow<CodingAlert>(extraBufferCapacity = 8)
+        override val pendingAlerts = MutableStateFlow<List<ReplyAlert>>(emptyList())
+        private var nextMoment = 0
+
+        fun emit(alert: CodingAlert) {
+            pendingAlerts.value = pendingAlerts.value + ReplyAlert("moment_${nextMoment++}", alert)
+        }
+
+        override fun acknowledgeAlert(id: String) {
+            pendingAlerts.value = pendingAlerts.value.filterNot { it.id == id }
+        }
         override val appVisible = MutableStateFlow(false)
         override val serverHoldsRow = MutableStateFlow(false)
         var quiet = false
@@ -127,6 +135,20 @@ class ReplyWatchServiceTest {
 
     private val finished =
         CodingAlert(AlertKind.Complete, "ses_1", AlertKeys.status("p1", "ses_1"), profileId = "p1", chatTitle = "Fix login", detail = "Login works again.")
+
+    @Test
+    fun `B-ANDR-040 notify finding 6 pending moments reconcile on startup and acknowledged moments never replay`() = runTest {
+        val source = Source()
+        source.emit(finished)
+        val (body, _) = start(source)
+        assertNotNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
+        assertTrue(source.pendingAlerts.value.isEmpty())
+        body.onDestroy()
+        manager.cancel(NotificationIds.alert(finished.key))
+        start(source)
+        runCurrent()
+        assertNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
+    }
 
     @Test
     fun `S11-9 notify finding 4 dismissal names a turn and preserves other runs and owners`() = runTest {
@@ -206,7 +228,16 @@ class ReplyWatchServiceTest {
         runCurrent()
         body.onRowDismissed(run(session = "ses_9"))
         assertTrue(body.active)
-        source.alerts.tryEmit(finished)
+        source.emit(finished)
+        runCurrent()
+        assertNotNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
+    }
+
+    @Test
+    fun `B-ANDR-040 notify finding 6 an immediate finished notice survives watch startup`() = runTest {
+        val source = Source()
+        start(source)
+        source.emit(finished)
         runCurrent()
         assertNotNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
     }
@@ -231,7 +262,7 @@ class ReplyWatchServiceTest {
             source.status.value = StatusContent(StatusKind.Working, "Working on Fix login", conversation = ConversationRef(ProfileId("p1"), SessionId("ses_1")), turnId = "turn_1")
             advanceTimeBy(3_000)
             source.progressing.value = false
-            source.alerts.tryEmit(finished)
+            source.emit(finished)
             runCurrent()
             val alert = shadowOf(manager).getNotification(NotificationIds.alert(finished.key))
             assertNotNull(alert)
@@ -252,7 +283,7 @@ class ReplyWatchServiceTest {
             val (body, _) = start(source)
             runCurrent()
             // The engine marks a run waiting on a shown needs-you alert as not progressing.
-            source.alerts.tryEmit(CodingAlert(AlertKind.Permission, "ses_1", AlertKeys.input("p1", "ses_1"), requestId = "per_1", profileId = "p1"))
+            source.emit(CodingAlert(AlertKind.Permission, "ses_1", AlertKeys.input("p1", "ses_1"), requestId = "per_1", profileId = "p1"))
             source.progressing.value = false
             advanceTimeBy(11_500)
             assertEquals(ReplyWatchEnd.NoProgress, body.ended.value)
@@ -265,7 +296,7 @@ class ReplyWatchServiceTest {
             val source = Source().apply { quiet = true }
             start(source)
             runCurrent()
-            source.alerts.tryEmit(finished)
+            source.emit(finished)
             runCurrent()
             assertNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
         }
@@ -329,7 +360,7 @@ class ReplyWatchServiceTest {
             owners.begin(StatusOwner.Server, StatusContent(StatusKind.Idle, "Server ready"))
             body.joinServerRow()
             runCurrent()
-            source.alerts.tryEmit(finished)
+            source.emit(finished)
             runCurrent()
             assertNotNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
             assertNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
