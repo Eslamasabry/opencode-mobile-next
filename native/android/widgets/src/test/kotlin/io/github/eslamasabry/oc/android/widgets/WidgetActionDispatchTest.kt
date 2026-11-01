@@ -79,12 +79,15 @@ class WidgetActionDispatchTest {
         val tap = payload("allowOnce")
 
         val first = submit(tap)
+        assertEquals("uncertain", first?.get("status"))
+        assertEquals("uncertain", stored().getJSONObject("actionResult").getString("status"))
+
         val second = submit(tap)
 
         assertEquals(1, dispatched.size)
-        assertEquals("uncertain", first?.get("status"))
         assertEquals("busy", second?.get("error"))
-        assertEquals("uncertain", stored().getJSONObject("actionResult").getString("status"))
+        // The latest outcome is the one the widget shows.
+        assertEquals("busy", stored().getJSONObject("actionResult").getString("error"))
     }
 
     @Test fun `B-ANDR-121 an accepted action leaves no banner`() {

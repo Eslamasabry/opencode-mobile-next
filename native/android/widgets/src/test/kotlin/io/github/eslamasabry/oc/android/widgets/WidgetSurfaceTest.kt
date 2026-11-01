@@ -24,6 +24,12 @@ class WidgetSurfaceTest {
     private val target = """{"profileID":"p1","fingerprint":"f1"}"""
 
     @Before fun clean() {
+        // WidgetStatusScheduler cancels the profile's follow-up checks through WorkManager.
+        runCatching {
+            androidx.work.WorkManager.initialize(
+                context, androidx.work.Configuration.Builder().setExecutor { it.run() }.build(),
+            )
+        }
         prefs.edit().clear().commit()
         WidgetFeed.reset()
     }

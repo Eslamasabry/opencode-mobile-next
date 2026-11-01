@@ -4,7 +4,8 @@
      activities (WidgetConfigureActivity, WidgetRouteActivity, WidgetOverlayActivity) and WIDGET_OVERLAY_READY are
      :androidApp shells (plan 11 §3) and are not declared here. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application>
+    <!-- supportsRtl as in the Flutter app's <application>: the widget layouts mirror for Arabic (plan 11 §11.5). -->
+    <application android:supportsRtl="true">
         <receiver android:name="io.github.eslamasabry.opencode_mobile.WidgetActionReceiver" android:exported="false" />
         <receiver
             android:name="io.github.eslamasabry.opencode_mobile.SessionsWidgetProvider"
