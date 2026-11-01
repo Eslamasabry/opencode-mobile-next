@@ -5,5 +5,6 @@ kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:transcript")) // ← the engine this feature reads (public API only)
         implementation(project(":ui:kit-chat"))
+        implementation(project(":engine:requests")) // S2-REQ: the request slot (permissions, one-question asks)
     }
 }
