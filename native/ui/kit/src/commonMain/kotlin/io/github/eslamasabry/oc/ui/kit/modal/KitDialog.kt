@@ -113,7 +113,13 @@ internal fun DialogLayer(state: KitSheetHostState) {
     val specs = KitMotion.specs
     val still = ModalMotion(KitMotion.state.reduced)
     val dismiss = { if (entry.dismissible) entry.onDismissRequest() }
-    val back = KitPredictiveBack(enabled = state.dialogShown.targetState && entry.dismissible) { dismiss() }
+    // Keep ownership through exit, including a nondismissible operation, so Back never reaches the page behind it.
+    val back = KitPredictiveBack(enabled = state.isDialogShowing) {
+        if (state.dialogShown.targetState) dismiss()
+    }
+    if (state.dialogShown.isIdle && !state.isDialogShowing) {
+        SideEffect { state.releaseDialog(entry) }
+    }
     AnimatedVisibility(state.dialogShown, enter = still.enter { fadeIn(specs.enter()) }, exit = still.exit { fadeOut(specs.exit()) }) {
         Box(
             Modifier.fillMaxSize().background(colors.scrim).testTag("kit-dialog-scrim").pointerInput(entry) { detectTapGestures { dismiss() } },
