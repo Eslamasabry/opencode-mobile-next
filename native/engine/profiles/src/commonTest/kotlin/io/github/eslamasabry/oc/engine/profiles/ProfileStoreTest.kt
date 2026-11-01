@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.engine.profiles
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.model.BackendKind
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -108,7 +107,7 @@ class ProfileStoreTest {
             SecretEdit.Set("new-secret-2"),
         ).failure()
 
-        assertEquals(Failure.Storage(StorageProblem.KeystoreUnavailable), failure)
+        assertEquals(Failure.SecretUnavailable(), failure)
         assertEquals("Original", h.store.profiles.value.single().profile.name)
         val stored = assertNotNull(h.string("oc.profiles"))
         assertTrue("Original" in stored && "Changed" !in stored)
@@ -159,7 +158,7 @@ class ProfileStoreTest {
         val h = harness(FakeSecrets().apply { failWrites = true })
         val codex = StoredProfile(id("codex-3"), "Codex", "wss://codex.example:4141", BackendKind.Codex, codexDirectory = "/work/acme")
 
-        assertIs<Failure.Storage>(h.store.upsert(codex, SecretEdit.Set("codex-secret")).failure())
+        assertIs<Failure.SecretUnavailable>(h.store.upsert(codex, SecretEdit.Set("codex-secret")).failure())
 
         assertTrue(h.store.profiles.value.isEmpty())
         assertNull(h.string("oc.profiles"))
@@ -277,7 +276,7 @@ class ProfileStoreTest {
 
         val failure = h.store.upsert(lease, SecretEdit.Set("must-stay-in-byo-vault")).failure()
 
-        assertIs<Failure.Storage>(failure)
+        assertIs<Failure.StorageRefused>(failure)
         assertNull(h.string("oc.profiles"))
         assertTrue(h.secrets.values.isEmpty())
         assertTrue(h.store.profiles.value.isEmpty())

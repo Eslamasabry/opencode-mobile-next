@@ -4,11 +4,10 @@ import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
-import io.github.eslamasabry.oc.core.data.dart.DartJson
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefEdit
 import io.github.eslamasabry.oc.core.data.kv.bool
@@ -134,7 +133,7 @@ public class ProfileStore(
     ): Outcome<LoadedProfile> = mutex.withLock {
         if (profile.id.raw in deleting.value) return Failure.Refused(RefusalReason.ProfileClosing).failed()
         trust.pin?.let { if (!TrustCodec.validPin(it.leafSha256)) return Failure.Refused(RefusalReason.InvalidAddress).failed() }
-        if (profile.transientTransport) return Failure.Storage(StorageProblem.WriteRefused).failed()
+        if (profile.transientTransport) return Failure.StorageRefused().failed()
         if (secret is SecretEdit.Set) redactor.registerSecret(secret.value)
 
         val id = profile.id
@@ -161,7 +160,7 @@ public class ProfileStore(
         if (secretResult is Outcome.Failed) {
             restore(previous, id)
             log.w { "profile save refused by secure storage; metadata restored" }
-            return Failure.Storage(StorageProblem.KeystoreUnavailable).failed()
+            return Failure.SecretUnavailable().failed()
         }
         if (secret is SecretEdit.Set) clearReentryFlag(id, if (profile.usesAgentSocket) "codexToken" else "pw")
 
@@ -274,7 +273,7 @@ public class ProfileStore(
                 if (previousActive == id.raw) putString(ProfileKeys.ACTIVE, previousActive)
             }
             if (restored is Outcome.Failed) log.e { "profile row could not be restored after a refused secret delete" }
-            return Failure.Storage(StorageProblem.KeystoreUnavailable).failed()
+            return Failure.SecretUnavailable().failed()
         }
         mutableProfiles.update { list -> list.filterNot { it.id == id }.toPersistentList() }
         if (mutableActive.value == id) mutableActive.value = null
@@ -355,7 +354,7 @@ public class ProfileStore(
         for (name in names) {
             when (val left = secrets.names(name)) {
                 is Outcome.Failed -> return left
-                is Outcome.Ok -> if (name in left.value) return Failure.Storage(StorageProblem.KeystoreUnavailable).failed()
+                is Outcome.Ok -> if (name in left.value) return Failure.SecretUnavailable().failed()
             }
         }
         return Unit.ok()

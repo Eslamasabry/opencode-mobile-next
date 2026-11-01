@@ -4,8 +4,7 @@ import app.cash.turbine.test
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
-import io.github.eslamasabry.oc.core.data.dart.DartJson
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.RawPref
 import io.github.eslamasabry.oc.engine.settings.scope.SettingOriginKind
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -101,7 +100,7 @@ class ReadStateConsentStoreTest {
             key == "oc.readStateConsentMigration.v1" && (value as? RawPref.Str)?.value?.contains("\"complete\":true") == true
         }
         val failed = consent.migrateExistingProfiles(listOf(old))
-        assertEquals(StorageProblem.WriteRefused, assertIs<Failure.Storage>(failed.failure()).problem)
+        assertIs<Failure.StorageRefused>(failed.failure())
         // The copy reached disk, but an unfinished migration grants nothing new in this process.
         assertEquals(true, kv.bool("oc.shareSessionViews.old"))
         assertFalse(consent.enabled(old))
@@ -155,7 +154,7 @@ class ReadStateConsentStoreTest {
         val before = consent.revision.value
         kv.disk.refuse = { key, _ -> key == "oc.shareSessionViews.old" }
         val save = consent.setEnabled(old, false)
-        assertEquals(StorageProblem.WriteRefused, assertIs<Failure.Storage>(save.failure()).problem)
+        assertIs<Failure.StorageRefused>(save.failure())
         assertFalse(consent.enabled(old))
         assertFalse(consent.saving(old))
         assertTrue(consent.revision.value > before)
@@ -206,7 +205,7 @@ class ReadStateConsentStoreTest {
         )
         val consent = store(kv)
         kv.disk.refuse = { key, _ -> key == "oc.readStateConsentMigration.v1" }
-        assertIs<Failure.Storage>(consent.forgetProfile(old).failure())
+        assertIs<Failure.StorageRefused>(consent.forgetProfile(old).failure())
         assertFalse(consent.enabled(old))
         consent.reopenProfile(old)
         assertFalse(consent.enabled(old))
@@ -296,7 +295,7 @@ class ReadStateConsentStoreTest {
         val before = consent.revision.value
         val receipt = assertNotNull(consent.ticket(laptop))
         kv.disk.refuse = { key, _ -> key == "oc.shareSessionViews.laptop" }
-        assertIs<Failure.Storage>(consent.setEnabled(laptop, false).failure())
+        assertIs<Failure.StorageRefused>(consent.setEnabled(laptop, false).failure())
         assertFalse(consent.enabled(laptop))
         assertEquals(ConsentRead.Refused, consent.read(laptop, sharing))
         assertTrue(consent.revision.value > before)

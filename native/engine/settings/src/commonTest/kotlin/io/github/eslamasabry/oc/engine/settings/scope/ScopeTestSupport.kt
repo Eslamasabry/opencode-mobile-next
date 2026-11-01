@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.engine.settings.scope
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.lane.WriterLane
@@ -95,7 +94,7 @@ internal class FakeReadStateConsent : ReadStateConsentPort {
         try {
             entered?.complete(Unit)
             gate?.await()
-            if (refuse) return Outcome.Failed(Failure.Storage(StorageProblem.WriteRefused))
+            if (refuse) return Outcome.Failed(Failure.StorageRefused())
             saved[profileId] = value
             if (profileId in closed || !isCurrent()) {
                 saved[profileId] = false // erase the authorisation before a restart

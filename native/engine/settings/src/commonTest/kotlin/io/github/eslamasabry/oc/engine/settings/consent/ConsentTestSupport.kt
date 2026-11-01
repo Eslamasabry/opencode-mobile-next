@@ -2,7 +2,7 @@ package io.github.eslamasabry.oc.engine.settings.consent
 
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.core.data.dart.DartJson
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.FlutterPrefsCodec
 import io.github.eslamasabry.oc.core.data.kv.InMemoryPrefsBackend
 import io.github.eslamasabry.oc.core.data.kv.JavaListDecoder

@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.engine.diagnostics.crash
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.StorageProblem
 
 /** An in-memory crash directory; [refuseWrites] makes every write fail like a full disk. */
 internal class FakeCrashStore(vararg initial: Pair<CrashFile, String>) : CrashStore {
@@ -13,13 +12,13 @@ internal class FakeCrashStore(vararg initial: Pair<CrashFile, String>) : CrashSt
     override suspend fun read(file: CrashFile, maxBytes: Int): Outcome<String?> {
         touched++
         val text = files[file] ?: return Outcome.Ok(null)
-        if (text.encodeToByteArray().size > maxBytes) return Outcome.Failed(Failure.Storage(StorageProblem.InvalidValue))
+        if (text.encodeToByteArray().size > maxBytes) return Outcome.Failed(Failure.UnreadableReply())
         return Outcome.Ok(text)
     }
 
     override suspend fun write(file: CrashFile, text: String): Outcome<Unit> {
         touched++
-        if (refuseWrites) return Outcome.Failed(Failure.Storage(StorageProblem.Full))
+        if (refuseWrites) return Outcome.Failed(Failure.StorageRefused())
         files[file] = text
         return Outcome.Ok(Unit)
     }

@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.engine.settings.prefs
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.data.lane.WriterLane
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -23,7 +22,7 @@ class DisplayPreferenceRollbackTest {
 
                 for (change in listOf(PreferenceChange.Appearance(AppearanceChoice.Dark), PreferenceChange.Theme(ThemePack.Solarized))) {
                     val failed = assertIs<Outcome.Failed>(owner.set(change), "throws=$throws")
-                    assertEquals(StorageProblem.WriteRefused, assertIs<Failure.Storage>(failed.failure).problem)
+                    assertIs<Failure.StorageRefused>(failed.failure)
                 }
                 assertEquals(AppearanceChoice.System, owner.value.value.appearance, "throws=$throws")
                 assertEquals(AppearanceChoice.System, owner.appearance.value, "throws=$throws")

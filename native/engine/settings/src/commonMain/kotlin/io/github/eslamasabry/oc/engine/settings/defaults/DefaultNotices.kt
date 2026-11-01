@@ -3,9 +3,8 @@ package io.github.eslamasabry.oc.engine.settings.defaults
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.core.data.dart.DartJson
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefType
 import io.github.eslamasabry.oc.core.data.kv.string
@@ -117,7 +116,7 @@ public class DefaultNotices(
     }
 
     private fun admission(profileId: ProfileId): Failure? = when {
-        profileId.raw.isEmpty() || secrets.containsSecret(profileId.raw) -> Failure.Storage(StorageProblem.InvalidValue)
+        profileId.raw.isEmpty() || secrets.containsSecret(profileId.raw) -> Failure.StorageRefused()
         !lanes.forProfile(profileId).isAdmitting -> Failure.Refused(RefusalReason.ProfileClosing)
         !profileExists(profileId) -> Failure.Refused(RefusalReason.ProfileDeleted)
         else -> null
@@ -145,7 +144,7 @@ public class DefaultNotices(
 
         public fun noticesKey(profileId: ProfileId): String = NOTICES_PREFIX + profileId.raw
 
-        private fun <T> invalid(): Outcome<T> = Outcome.Failed(Failure.Storage(StorageProblem.InvalidValue))
+        private fun <T> invalid(): Outcome<T> = Outcome.Failed(Failure.StorageRefused())
 
         private fun savedProfileIds(store: KeyValueStore): Set<String> {
             val rows = store.string(DefaultProfileScope.PROFILES_KEY)?.let(DartJson::decodeOrNull) as? List<*> ?: return emptySet()

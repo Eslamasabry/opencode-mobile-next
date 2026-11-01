@@ -4,7 +4,6 @@ import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
@@ -87,6 +86,6 @@ public class SignInReset(
 
     private fun refused(): Outcome<Nothing> {
         log.w { "saved sign-in reset did not finish; it can be retried" }
-        return Failure.Storage(StorageProblem.KeystoreUnavailable).failed()
+        return Failure.SecretUnavailable().failed()
     }
 }

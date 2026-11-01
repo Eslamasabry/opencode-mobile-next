@@ -2,7 +2,7 @@ package io.github.eslamasabry.oc.engine.settings.teaching
 
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.data.dart.DartJson
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.bool
 import io.github.eslamasabry.oc.core.data.kv.string

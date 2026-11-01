@@ -91,7 +91,7 @@ public class Preferences(
     public fun hasStored(key: String): Boolean = key in snapshot.load().stored
 
     /**
-     * Saves [change] and returns the acknowledged snapshot. A refused save returns the store's `Failure.Storage` and
+     * Saves [change] and returns the acknowledged snapshot. A refused save returns the store's `Failure.StorageRefused` and
      * leaves [value] as it was.
      */
     public suspend fun set(change: PreferenceChange): Outcome<DevicePreferences> = writeLock.withLock { setLocked(change) }

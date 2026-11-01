@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.engine.settings.consent
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.ok
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -184,7 +183,7 @@ class MobileDownloadConsentStoreTest {
         assertFalse(refusing.storageAvailable(phone))
         assertEquals(ConsentChoice.Unseen, refusing.choice(phone))
         val failure = (refusing.changeFromSettings(phone, allow = true) as Outcome.Failed).failure
-        assertEquals(StorageProblem.WriteRefused, assertIs<Failure.Storage>(failure).problem)
+        assertIs<Failure.StorageRefused>(failure)
     }
 
     @Test
@@ -195,7 +194,7 @@ class MobileDownloadConsentStoreTest {
         consent.changeFromSettings(retained, allow = false)
         kv.disk.refuse = { key, value -> key == "oc.mobileDownloadConsent.retained" && value == null }
         val removal = consent.forgetProfile(retained)
-        assertIs<Failure.Storage>((removal as Outcome.Failed).failure)
+        assertIs<Failure.StorageRefused>((removal as Outcome.Failed).failure)
         assertNull(consent.choice(retained), "closed while the deletion is undecided")
         // The deletion aborted with the profile kept: :engine:profiles reopens it.
         assertTrue(consent.reopenProfile(retained))
