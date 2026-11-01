@@ -55,6 +55,12 @@ class ModuleRulesTest {
         denied(":engine:connection", ":ui:kit"); denied(":engine:connection", ":protocol:oc2")
     }
 
+    /** ADR §6.2: analytics is second, so every engine below it may emit and it uses no engine but settings. */
+    @Test fun `analytics sits right after settings`() {
+        allowed(":engine:diagnostics", ":engine:analytics"); allowed(":engine:connection", ":engine:analytics")
+        allowed(":engine:analytics", ":engine:settings"); denied(":engine:analytics", ":engine:diagnostics")
+    }
+
     @Test fun `ui design`() {
         allowed(":ui:design", ":core:common"); denied(":ui:design", ":core:model")
     }

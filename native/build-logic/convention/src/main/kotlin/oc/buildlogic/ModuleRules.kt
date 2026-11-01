@@ -6,14 +6,15 @@ package oc.buildlogic
  * Audit BLOCKER 3 (signatures needing forbidden edges) is resolved here, not by the signatures:
  * - `:core:security` may use `:core:model` (AddressRules.normalize returns ServerOrigin; model depends only on common).
  * - `:ui:kit-content` may use `:core:security` (WebPreview takes an ApprovedLink).
- * - `:core:net` still may not use `:core:data`; it reads credentials through an injected interface it declares
- *   (TransportCredentials, slice 1), whose SecretStore adapter is bound above both modules.
+ * - `:core:net` still may not use `:core:data`; credentials arrive already resolved in `GatewaySpec.credentials`
+ *   (`ConnectionCredentials`, :core:domain), built by :engine:connection's ProfileSource (plan 03 §10.7; no reader seam).
+ * - Plan 03 §0.3 wants ServerOrigin/ApprovedLink in :core:common and the two edges above deleted (open, INTEGRATE-W1).
  */
 internal object ModuleRules {
     /** ADR §6.2. An engine may use only engines listed above it. */
     val engineOrder =
         listOf(
-            "settings", "diagnostics", "profiles", "connection", "transcript", "requests", "delivery", "composer",
+            "settings", "analytics", "diagnostics", "profiles", "connection", "transcript", "requests", "delivery", "composer",
             "runtime", "agents", "attention", "schedule", "media", "project", "integrations", "entry", "team",
         )
 
