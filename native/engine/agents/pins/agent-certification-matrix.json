@@ -1,0 +1,1194 @@
+{
+ "updated": "2026-10-07 (late)",
+ "device": "emulator-5554 (OC_API35), not the owner phone",
+ "columns": [
+  {
+   "id": "install",
+   "means": "Installs from the pinned download, checksum verified"
+  },
+  {
+   "id": "version",
+   "means": "Reports the pinned version on the phone"
+  },
+  {
+   "id": "signedOut",
+   "means": "Signed-out state detected and named (no endless \"Checking\")"
+  },
+  {
+   "id": "signIn",
+   "means": "Sign-in completes on the phone and the probe confirms it"
+  },
+  {
+   "id": "models",
+   "means": "Model list loads and a model can be picked"
+  },
+  {
+   "id": "smoke",
+   "means": "A plain prompt gets a streamed reply"
+  },
+  {
+   "id": "tools",
+   "means": "A tool call runs and shows as a tool row"
+  },
+  {
+   "id": "permission",
+   "means": "An approval request shows, Allow and Deny both work"
+  },
+  {
+   "id": "images",
+   "means": "A photo sent to the agent (composer or photo card) reaches it and it answers about it"
+  },
+  {
+   "id": "abort",
+   "means": "Stop ends the turn and the agent stays usable"
+  },
+  {
+   "id": "resume",
+   "means": "After killing the app/helper the old chat reopens and continues"
+  },
+  {
+   "id": "network",
+   "means": "Turning the network off then on recovers the turn or says why"
+  },
+  {
+   "id": "cards",
+   "means": "Agent cards (oc-ui show) answered from chat and from the list"
+  }
+ ],
+ "rule": "An agent is certified only when every cell is pass (or n/a with a reason). Capabilities (resume, models, permissions, images, cancel) are granted from pass cells only (BA4).",
+ "agents": [
+  {
+   "id": "claude",
+   "name": "Claude Code",
+   "route": "Paseo native",
+   "cells": {
+    "install": {
+     "state": "pass",
+     "evidence": "docs/verification/agents-on-phone-2026-10-03.md"
+    },
+    "version": {
+     "state": "pass",
+     "evidence": "docs/verification/agents-on-phone-2026-10-03.md"
+    },
+    "signedOut": {
+     "state": "untested",
+     "evidence": null
+    },
+    "signIn": {
+     "state": "untested",
+     "evidence": null
+    },
+    "models": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ2-2026-10-07/README.md"
+    },
+    "smoke": {
+     "state": "pass",
+     "evidence": "docs/qa/agent-tools-2026-10-07/README.md"
+    },
+    "tools": {
+     "state": "pass",
+     "evidence": "docs/qa/agent-tools-2026-10-07/README.md"
+    },
+    "permission": {
+     "state": "pass",
+     "evidence": "docs/qa/agent-tools-2026-10-07/README.md #2"
+    },
+    "abort": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ2-2026-10-07/README.md"
+    },
+    "resume": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ2-2026-10-07/README.md"
+    },
+    "network": {
+     "state": "untested",
+     "evidence": null
+    },
+    "cards": {
+     "state": "pass",
+     "evidence": "docs/qa/agent-tools-2026-10-07/README.md #5"
+    },
+    "images": {
+     "state": "pass",
+     "evidence": "docs/qa/agent-tools-2026-10-07/README.md#5"
+    }
+   },
+   "agentVersion": "2.1.283",
+   "helperVersion": "0.9.2"
+  },
+  {
+   "id": "opencode2",
+   "name": "OpenCode 2",
+   "route": "OpenCode 2 server",
+   "cells": {
+    "install": {
+     "state": "untested",
+     "evidence": null
+    },
+    "version": {
+     "state": "untested",
+     "evidence": null
+    },
+    "signedOut": {
+     "state": "untested",
+     "evidence": null
+    },
+    "signIn": {
+     "state": "untested",
+     "evidence": null
+    },
+    "models": {
+     "state": "untested",
+     "evidence": null
+    },
+    "smoke": {
+     "state": "untested",
+     "evidence": null
+    },
+    "tools": {
+     "state": "untested",
+     "evidence": null
+    },
+    "permission": {
+     "state": "pass",
+     "evidence": "docs/verification/oc2-forms-device-2026-10-07.md (forms)"
+    },
+    "abort": {
+     "state": "untested",
+     "evidence": null
+    },
+    "resume": {
+     "state": "untested",
+     "evidence": null
+    },
+    "network": {
+     "state": "untested",
+     "evidence": null
+    },
+    "cards": {
+     "state": "off",
+     "evidence": "BA6"
+    },
+    "images": {
+     "state": "untested",
+     "evidence": null
+    }
+   },
+   "protocolCertification": {
+    "scope": "in-app Ubuntu protocol; no UI/restart/install qualification",
+    "expectedVersion": "2.0.10",
+    "observedVersion": "2.0.10",
+    "deviceBuild": 2203,
+    "runID": "fq3-final-513c3a2da207",
+    "evidence": "docs/qa/FQ3e-2026-10-09/fq3-final-513c3a2da207.json",
+    "capabilities": {
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "healthy": true,
+       "asserted": true
+      }
+     },
+     "create": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "created": true,
+       "asserted": true
+      }
+     },
+     "models": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "enabledModels": 11,
+       "selectedModelAvailable": true,
+       "asserted": true
+      }
+     },
+     "stream": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "streamedDelta": true,
+       "completedReply": true,
+       "asserted": true
+      }
+     },
+     "reconnect": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "refetched": true,
+       "retainedMessages": 3,
+       "asserted": true
+      }
+     },
+     "modelSwitch": {
+      "state": "fail",
+      "code": "inference_execution_failed",
+      "facts": {}
+     },
+     "abort": {
+      "state": "fail",
+      "code": "timeout",
+      "facts": {}
+     },
+     "permissionAllow": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "requestObserved": true,
+       "replyObserved": true,
+       "toolOutcomeVerified": true,
+       "asserted": true
+      }
+     },
+     "permissionDeny": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "requestObserved": true,
+       "replyObserved": true,
+       "toolOutcomeVerified": true,
+       "asserted": true
+      }
+     },
+     "image": {
+      "state": "fail",
+      "code": "inference_execution_failed",
+      "facts": {}
+     },
+     "cards": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "cardsToolCall": true,
+       "answerReceipt": true,
+       "asserted": true
+      }
+     },
+     "protocolSwitch": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "bothHistoriesPreserved": true,
+       "freshClients": true,
+       "oc1Sessions": 16,
+       "oc2Sessions": 16
+      }
+     }
+    },
+    "modelSelection": {
+     "source": "explicit",
+     "requested": "opencode/big-pickle"
+    }
+   }
+  },
+  {
+   "id": "fx",
+   "name": "fx",
+   "route": "ACP via Paseo",
+   "cells": {
+    "install": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx"
+    },
+    "version": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx"
+    },
+    "signedOut": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx"
+    },
+    "signIn": {
+     "state": "partial",
+     "evidence": "reaches the Vercel device page; account needed (OW1)"
+    },
+    "models": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "smoke": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "tools": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "permission": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "abort": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "resume": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "network": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "cards": {
+     "state": "n/a",
+     "evidence": "no cards adapter yet"
+    },
+    "images": {
+     "state": "blocked:OW1",
+     "evidence": null
+    }
+   },
+   "agentVersion": "0.0.12",
+   "helperVersion": "0.9.2",
+   "architecture": "x64",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-fx-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "0.0.12",
+    "observedVersion": "0.0.12",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#fx",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "namedSignedOut": true
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 11952128,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "codex",
+   "name": "Codex",
+   "route": "Paseo native",
+   "cells": {
+    "install": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#codex"
+    },
+    "version": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#codex"
+    },
+    "signedOut": {
+     "state": "fail",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#codex"
+    },
+    "signIn": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "models": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "smoke": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "tools": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "permission": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "abort": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "resume": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "network": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "cards": {
+     "state": "n/a",
+     "evidence": "no cards adapter yet"
+    },
+    "images": {
+     "state": "blocked:OW1",
+     "evidence": null
+    }
+   },
+   "agentVersion": "0.160.0",
+   "architecture": "x64",
+   "helperVersion": "0.9.2",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-codex-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "0.160.0",
+    "observedVersion": "0.160.0",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#codex",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "fail",
+      "code": "probe_unsupported",
+      "facts": {
+       "asserted": false,
+       "namedSignedOut": false
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 289132544,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "gemini",
+   "name": "Gemini CLI",
+   "route": "ACP via Paseo",
+   "cells": {
+    "install": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#gemini"
+    },
+    "version": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#gemini"
+    },
+    "signedOut": {
+     "state": "fail",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#gemini"
+    },
+    "signIn": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "models": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "smoke": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "tools": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "permission": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "abort": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "resume": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "network": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "cards": {
+     "state": "n/a",
+     "evidence": "no cards adapter yet"
+    },
+    "images": {
+     "state": "blocked:OW1",
+     "evidence": null
+    }
+   },
+   "agentVersion": "0.62.0",
+   "architecture": "x64",
+   "helperVersion": "0.9.2",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-gemini-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "0.62.0",
+    "observedVersion": "0.62.0",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#gemini",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "fail",
+      "code": "probe_unsupported",
+      "facts": {
+       "asserted": false,
+       "namedSignedOut": false
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 99860480,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "qwen",
+   "name": "Qwen Code",
+   "route": "ACP via Paseo",
+   "cells": {
+    "install": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#qwen"
+    },
+    "version": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#qwen"
+    },
+    "signedOut": {
+     "state": "fail",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#qwen"
+    },
+    "signIn": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "models": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "smoke": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "tools": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "permission": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "abort": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "resume": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "network": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "cards": {
+     "state": "n/a",
+     "evidence": "no cards adapter yet"
+    },
+    "images": {
+     "state": "blocked:OW1",
+     "evidence": null
+    }
+   },
+   "agentVersion": "0.24.7",
+   "architecture": "x64",
+   "helperVersion": "0.9.2",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-qwen-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "0.24.7",
+    "observedVersion": "0.24.7",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#qwen",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "fail",
+      "code": "probe_unsupported",
+      "facts": {
+       "asserted": false,
+       "namedSignedOut": false
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 112664576,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "goose",
+   "name": "Goose",
+   "route": "ACP via Paseo",
+   "cells": {
+    "install": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#goose"
+    },
+    "version": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#goose"
+    },
+    "signedOut": {
+     "state": "fail",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#goose"
+    },
+    "signIn": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "models": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "smoke": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "tools": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "permission": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "abort": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "resume": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "network": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "cards": {
+     "state": "n/a",
+     "evidence": "no cards adapter yet"
+    },
+    "images": {
+     "state": "blocked:OW1",
+     "evidence": null
+    }
+   },
+   "agentVersion": "1.53.0",
+   "architecture": "x64",
+   "helperVersion": "0.9.2",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-goose-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "1.53.0",
+    "observedVersion": "1.53.0",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#goose",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "fail",
+      "code": "probe_unsupported",
+      "facts": {
+       "asserted": false,
+       "namedSignedOut": false
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 298692608,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "omp-acp",
+   "name": "Oh My Pi",
+   "route": "ACP via Paseo",
+   "cells": {
+    "install": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#omp-acp"
+    },
+    "version": {
+     "state": "pass",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#omp-acp"
+    },
+    "signedOut": {
+     "state": "fail",
+     "evidence": "docs/qa/FQ-install-2026-10-08/README.md#omp-acp"
+    },
+    "signIn": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "models": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "smoke": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "tools": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "permission": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "abort": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "resume": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "network": {
+     "state": "blocked:OW1",
+     "evidence": null
+    },
+    "cards": {
+     "state": "n/a",
+     "evidence": "no cards adapter yet"
+    },
+    "images": {
+     "state": "blocked:OW1",
+     "evidence": null
+    }
+   },
+   "agentVersion": "18.5.1",
+   "architecture": "x64",
+   "helperVersion": "0.9.2",
+   "installCertification": {
+    "scope": "App installation on x64 emulator; signed-out, no account qualification",
+    "runID": "fq-install-omp-acp-2196-20261008",
+    "device": "emulator-5554",
+    "appBuild": 2196,
+    "sourceRevision": "d777082c37d41a16d92634c2f8f2360475247249",
+    "architecture": "x64",
+    "expectedVersion": "18.5.1",
+    "observedVersion": "18.5.1",
+    "helperVersion": "0.9.2",
+    "evidence": "docs/qa/FQ-install-2026-10-08/README.md#omp-acp",
+    "results": {
+     "install": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "installedViaApp": true,
+       "checksumVerified": true
+      }
+     },
+     "version": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true
+      }
+     },
+     "signedOut": {
+      "state": "fail",
+      "code": "probe_unsupported",
+      "facts": {
+       "asserted": false,
+       "namedSignedOut": false
+      }
+     },
+     "phoneCheck": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "completed": true
+      }
+     },
+     "launchNoAccount": {
+      "state": "partial",
+      "code": "cli_only_app_route_unavailable",
+      "facts": {
+       "asserted": false,
+       "noHang": true,
+       "emptyHome": true,
+       "sentLogin": false,
+       "sentPrompt": false,
+       "noOrphans": true
+      }
+     },
+     "cancelRetry": {
+      "state": "pass",
+      "code": "verified",
+      "facts": {
+       "asserted": true,
+       "cancelObserved": true,
+       "retryCompleted": true
+      }
+     },
+     "lowStorage": {
+      "state": "partial",
+      "code": "policy_harness_only",
+      "facts": {
+       "asserted": false,
+       "guardPolicyVerified": true,
+       "appThresholdOverride": false,
+       "deviceFilled": false
+      }
+     },
+     "uninstall": {
+      "state": "partial",
+      "code": "no_app_removal_path",
+      "facts": {
+       "asserted": false,
+       "removedViaApp": false,
+       "bytesFreed": 280174592,
+       "leftoversRemoved": true,
+       "noOrphans": true
+      }
+     }
+    }
+   }
+  }
+ ],
+ "metadata": "agentVersion = the catalog pin the evidence ran on; helperVersion = the Paseo helper it ran through; architecture omitted = holds on every CPU (coordinator decision, protocol-level evidence)."
+}
