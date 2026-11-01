@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ar.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <plurals name="terminalShowEarlier">
+        <item quantity="zero">عرض %1$s سطرًا سابقًا</item>
+        <item quantity="one">عرض سطر سابق</item>
+        <item quantity="two">عرض %1$s سطرًا سابقًا</item>
+        <item quantity="few">عرض %1$s سطرًا سابقًا</item>
+        <item quantity="many">عرض %1$s سطرًا سابقًا</item>
+        <item quantity="other">عرض %1$s سطرًا سابقًا</item>
+    </plurals>
+    <string name="terminalShowEarlier__eq1">عرض سطر سابق</string>
+    <string name="aiteamBringInDone">أصبح أحدث عمل للفريق (%2$s) في %1$s.</string>
+</resources>

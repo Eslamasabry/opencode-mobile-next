@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_zh.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <plurals name="terminalShowEarlier">
+        <item quantity="other">显示前 %1$s 行</item>
+    </plurals>
+    <string name="terminalShowEarlier__eq1">显示前 1 行</string>
+    <string name="aiteamBringInDone">%1$s 已包含团队的最新工作（%2$s）。</string>
+</resources>

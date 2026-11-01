@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_es.arb by native/tools/strings (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="chatUiReferenceAlreadyAdded">@%1$s ya está en el mensaje</string>
+    <plurals name="chatUiDraftsQueued">
+        <item quantity="one">1 borrador en cola; se enviará al reconectar.</item>
+        <item quantity="many">%1$s borradores en cola; se enviarán al reconectar.</item>
+        <item quantity="other">%1$s borradores en cola; se enviarán al reconectar.</item>
+    </plurals>
+    <plurals name="chatUiQuestionsSummary">
+        <item quantity="one">%1$s · 1 pregunta</item>
+        <item quantity="many">%1$s · %2$s preguntas</item>
+        <item quantity="other">%1$s · %2$s preguntas</item>
+    </plurals>
+    <string name="chatUiRateLimitCountdown">Límite de velocidad alcanzado. Reintentando%1$s en %2$s</string>
+    <plurals name="kitNeedsYouWaitingSpoken">
+        <item quantity="one">esperando 1 minuto</item>
+        <item quantity="many">esperando %1$s minutos</item>
+        <item quantity="other">esperando %1$s minutos</item>
+    </plurals>
+    <string name="kitNeedsYouWaitingSpoken__eq0">esperando menos de un minuto</string>
+    <string name="kitNeedsYouWaitingSpoken__eq1">esperando 1 minuto</string>
+</resources>
