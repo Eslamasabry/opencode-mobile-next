@@ -1,0 +1,99 @@
+package io.github.eslamasabry.oc.ui.kit.row
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.layout.CapRole
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+
+/**
+ * Rows that belong together (Dart `KitRowGroup`). In Solid, lists are flat (`StyleTokens.flatLists`): full width on the
+ * ground, rows separated by one-pixel hairlines inset to the text rail (16 dp, or past the lead tile when the rows lead
+ * with one: [leadingTiles]). [label] heads it (`KitSectionLabel`), [note] follows it (`KitGroupNote`). Rows that delete
+ * or end something go in [destructive]: always last, after a full-width hairline (§4.2). Other styles' panels (18 dp
+ * corners) join in S4.
+ *
+ * States: default, with label, with note, destructive
+ * Text: none (its rows bring their own)
+ * Cap: List
+ * Motion: none
+ * Hidden: none
+ * Replaces: KitRowGroup (lib/ui/kit/kit_row_group_seam.dart)
+ */
+@Composable
+public fun KitRowGroup(
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    note: String? = null,
+    leadingTiles: Boolean = false,
+    destructive: (@Composable () -> Unit)? = null,
+    rows: @Composable () -> Unit,
+) {
+    val tokens = LocalKitTokens.current
+    val hairline = LocalKitColors.current.hairline
+    val inset = (tokens.gutter + if (leadingTiles) tokens.iconTile + Space.S3 else 0).dp
+    Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth().testTag("kit-row-group")) {
+        label?.let { KitSectionLabel(it) }
+        HairlineColumn(inset, hairline, rows)
+        destructive?.let { HairlineColumn(0.dp, hairline, it, ruleAbove = true) }
+        note?.let { KitGroupNote(it) }
+    }
+}
+
+/** Where the separators go, written by the measure pass and read by the draw pass of the same node. */
+private class Seams {
+    var ys: IntArray = IntArray(0)
+}
+
+/** Stacks [content] and draws one physical-pixel hairline between consecutive children, inset at the start. */
+@Composable
+private fun HairlineColumn(inset: Dp, hairline: Color, content: @Composable () -> Unit, ruleAbove: Boolean = false) {
+    val seams = remember { Seams() }
+    Layout(
+        content = content,
+        modifier =
+            Modifier.fillMaxWidth().drawWithContent {
+                drawContent()
+                val start = inset.toPx()
+                val rtl = layoutDirection == LayoutDirection.Rtl
+                val (x0, x1) = if (rtl) 0f to size.width - start else start to size.width
+                val ys = if (ruleAbove) intArrayOf(0) + seams.ys else seams.ys
+                ys.forEachIndexed { i, y ->
+                    val full = ruleAbove && i == 0
+                    val a = if (full) 0f else x0
+                    val b = if (full) size.width else x1
+                    drawLine(hairline, Offset(a, y + 0.5f), Offset(b, y + 0.5f), 1f)
+                }
+            },
+    ) { measurables, constraints ->
+        val placeables = measurables.map { it.measure(constraints.copy(minHeight = 0)) }
+        val height = placeables.sumOf { it.height }
+        val ys = IntArray(maxOf(0, placeables.size - 1))
+        var y = 0
+        placeables.forEachIndexed { i, p ->
+            y += p.height
+            if (i < ys.size) ys[i] = y
+        }
+        seams.ys = ys
+        layout(constraints.maxWidth, height) {
+            var top = 0
+            placeables.forEach {
+                it.placeRelative(0, top)
+                top += it.height
+            }
+        }
+    }
+}
