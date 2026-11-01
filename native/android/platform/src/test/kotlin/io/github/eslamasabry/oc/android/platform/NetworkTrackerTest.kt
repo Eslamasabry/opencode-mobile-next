@@ -18,16 +18,16 @@ class NetworkTrackerTest {
     fun `B-ANDR-037 no network, unvalidated Wi-Fi and unknown are three different readings`() {
         assertEquals(NetworkState.Unknown, tracker.state.value, "unknown before anything is known")
         tracker.seed(null, null, stillDefault = true)
-        assertEquals(NetworkState(Online.No, Transport.Unknown, null, null), tracker.state.value)
+        assertEquals(NetworkState(Online.No, Transport.Unknown, metered = null, defaultNetworkId = null), tracker.state.value)
         tracker.seed(Net(7), wifi.copy(validated = false), stillDefault = true)
-        assertEquals(NetworkState(Online.Unknown, Transport.Wifi, false, 7), tracker.state.value,
+        assertEquals(NetworkState(Online.Unknown, Transport.Wifi, metered = false, defaultNetworkId = 7), tracker.state.value,
             "connected but unvalidated is never No, so a LAN server is not gated")
     }
 
     @Test
     fun `B-ANDR-037 typed mobile and metered state`() {
-        assertEquals(NetworkState(Online.Yes, Transport.Mobile, true, 3), networkReading(mobile, 3))
-        assertEquals(NetworkState(Online.Yes, Transport.Wifi, false, 3), networkReading(wifi, 3))
+        assertEquals(NetworkState(Online.Yes, Transport.Mobile, metered = true, defaultNetworkId = 3), networkReading(mobile, 3))
+        assertEquals(NetworkState(Online.Yes, Transport.Wifi, metered = false, defaultNetworkId = 3), networkReading(wifi, 3))
         assertEquals(Transport.Unknown, networkReading(wifi.copy(vpn = true), 3).transport, "Tailscale reads Unknown")
         assertEquals(Transport.Unknown, networkReading(wifi.copy(cellular = true), 3).transport)
         assertEquals(Transport.Other, networkReading(wifi.copy(wifi = false), 3).transport)
@@ -39,19 +39,19 @@ class NetworkTrackerTest {
         tracker.seed(Net(1), wifi, stillDefault = false)
         assertEquals(NetworkState.Unknown, tracker.state.value)
         tracker.seed(Net(1), null, stillDefault = true)
-        assertEquals(NetworkState(Online.Unknown, Transport.Unknown, null, 1), tracker.state.value)
+        assertEquals(NetworkState(Online.Unknown, Transport.Unknown, metered = null, defaultNetworkId = 1), tracker.state.value)
     }
 
     @Test
     fun `B-ANDR-037 newer callbacks beat the seed and a late lost for the old default is ignored`() {
         tracker.seed(Net(1), wifi, stillDefault = true)
         tracker.onAvailable(Net(2))
-        assertEquals(NetworkState(Online.Unknown, Transport.Unknown, null, 2), tracker.state.value)
+        assertEquals(NetworkState(Online.Unknown, Transport.Unknown, metered = null, defaultNetworkId = 2), tracker.state.value)
         tracker.onCapabilitiesChanged(Net(1), wifi.copy(validated = false))
         assertEquals(2, tracker.state.value.defaultNetworkId, "capabilities of the old default are ignored")
         tracker.onCapabilitiesChanged(Net(2), mobile)
         tracker.onLost(Net(1))
-        assertEquals(NetworkState(Online.Yes, Transport.Mobile, true, 2), tracker.state.value)
+        assertEquals(NetworkState(Online.Yes, Transport.Mobile, metered = true, defaultNetworkId = 2), tracker.state.value)
         tracker.onLost(Net(2))
         assertEquals(Online.No, tracker.state.value.online)
     }

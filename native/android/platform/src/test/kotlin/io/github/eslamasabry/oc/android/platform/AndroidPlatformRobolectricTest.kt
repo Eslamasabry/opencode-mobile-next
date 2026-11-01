@@ -8,7 +8,7 @@ import android.net.NetworkCapabilities
 import android.os.Looper
 import android.os.PowerManager
 import io.github.eslamasabry.oc.core.domain.platform.ThermalLevel
-import io.github.eslamasabry.oc.core.domain.platform.UnknownNetworkStatus
+import io.github.eslamasabry.oc.core.model.UnknownNetworkStatus
 import io.github.eslamasabry.oc.core.model.NetworkState
 import io.github.eslamasabry.oc.core.model.NetworkState.Online
 import io.github.eslamasabry.oc.core.model.NetworkState.Transport
