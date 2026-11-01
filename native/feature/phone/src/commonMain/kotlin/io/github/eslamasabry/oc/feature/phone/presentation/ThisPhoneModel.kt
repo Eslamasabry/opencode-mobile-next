@@ -4,18 +4,17 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudget
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import io.github.eslamasabry.oc.core.common.pace.Pacer
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 /**
@@ -29,6 +28,7 @@ public class ThisPhoneModel(
     private val nav: PhoneNavigator,
     private val scope: CoroutineScope,
     private val clock: Clock,
+    private val pacer: Pacer,
 ) : ThisPhoneActions {
     private data class Local(
         val working: PhoneOp? = null,
@@ -38,7 +38,7 @@ public class ThisPhoneModel(
     )
 
     private val local = MutableStateFlow(Local(now = clock.now()))
-    private var ticker: Job? = null
+    private val visible = MutableStateFlow(false)
 
     public val state: StateFlow<ThisPhoneUi> =
         combine(source.facts, local, ::build).stateIn(scope, SharingStarted.Eagerly, build(source.facts.value, local.value))
@@ -132,18 +132,20 @@ public class ThisPhoneModel(
 
     override fun back(): Unit = nav.back()
 
-    override fun shown(visible: Boolean) {
-        ticker?.cancel()
-        ticker = null
-        if (!visible) return
-        ticker =
-            scope.launch {
+    init {
+        // While shown: read the status once, then move the countdown each second (no timer while hidden).
+        scope.launch {
+            visible.collectLatest { shown ->
+                if (!shown) return@collectLatest
                 source.refresh()
-                while (true) {
-                    local.update { it.copy(now = clock.now()) }
-                    delay(1.seconds)
-                }
+                local.update { it.copy(now = clock.now()) }
+                pacer.ticks(PhoneTimers.answerCountdown).collect { local.update { it.copy(now = clock.now()) } }
             }
+        }
+    }
+
+    override fun shown(visible: Boolean) {
+        this.visible.value = visible
     }
 
     private fun run(op: PhoneOp, command: suspend () -> Outcome<Unit>) {

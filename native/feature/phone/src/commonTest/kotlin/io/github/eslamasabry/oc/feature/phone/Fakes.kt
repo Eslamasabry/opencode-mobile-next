@@ -18,6 +18,9 @@ import io.github.eslamasabry.oc.feature.phone.presentation.PhoneProcessSource
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessReading
+import io.github.eslamasabry.oc.core.common.pace.DefaultPacer
+import io.github.eslamasabry.oc.core.common.pace.Pacer
+import io.github.eslamasabry.oc.core.common.pace.Visibility
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -28,6 +31,9 @@ internal fun TestScope.testClock(): Clock =
     object : Clock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(testScheduler.currentTime)
     }
+
+/** The real pacer on virtual time, always in front. */
+internal fun foregroundPacer(): Pacer = DefaultPacer(MutableStateFlow(Visibility.Foreground))
 
 internal val refused: Outcome<Unit> = Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
 

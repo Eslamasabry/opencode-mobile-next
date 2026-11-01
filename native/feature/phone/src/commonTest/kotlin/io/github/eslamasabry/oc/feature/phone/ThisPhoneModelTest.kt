@@ -45,7 +45,7 @@ class ThisPhoneModelTest {
         val server = FakeServer(facts)
         val settings = FakeSettings()
         val nav = RecordingNav()
-        val model = ThisPhoneModel(server, settings, nav, scope.backgroundScope, scope.testClock())
+        val model = ThisPhoneModel(server, settings, nav, scope.backgroundScope, scope.testClock(), foregroundPacer())
     }
 
     private fun TestScope.rig(facts: PhoneServerFacts): Rig = Rig(this, facts).also { runCurrent() }

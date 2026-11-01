@@ -5,18 +5,16 @@ import io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudget
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import io.github.eslamasabry.oc.core.common.pace.Pacer
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.time.Clock
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 /** One process row. [protectedAs] says why it has no Stop (B-LINUX-143); the words point to This phone. */
@@ -67,7 +65,7 @@ public interface RunningActions {
 }
 
 /**
- * Running on this phone (plan 07 F08): reads every [refreshEvery] only while shown, stops one process with a confirm
+ * Running on this phone (plan 07 F08): reads every 10 s ([PhoneTimers.runningRefresh]) only while shown, stops one process with a confirm
  * and never offers a protected one, warns from 28 programs, and carries the child-process-limit card (plan 11 §7.2).
  */
 public class RunningModel(
@@ -76,28 +74,29 @@ public class RunningModel(
     private val nav: PhoneNavigator,
     private val scope: CoroutineScope,
     private val clock: Clock,
-    private val refreshEvery: Duration = 10.seconds,
+    private val pacer: Pacer,
 ) : RunningActions {
     private val ui = MutableStateFlow(RunningUi())
     public val state: StateFlow<RunningUi> = ui.asStateFlow()
 
-    private var refresher: Job? = null
+    private val visible = MutableStateFlow(false)
     private var limitStatus: ChildLimitStatus = ChildLimitStatus()
     private var hiddenAt: Instant? = null
     private var lastKill: Instant? = null
 
-    override fun shown(visible: Boolean) {
-        refresher?.cancel()
-        refresher = null
-        if (!visible) return
-        refresher =
-            scope.launch {
+    init {
+        scope.launch {
+            visible.collectLatest { shown ->
+                if (!shown) return@collectLatest
                 readCard()
-                while (true) {
-                    load()
-                    delay(refreshEvery)
-                }
+                load()
+                pacer.ticks(PhoneTimers.runningRefresh).collect { load() }
             }
+        }
+    }
+
+    override fun shown(visible: Boolean) {
+        this.visible.value = visible
     }
 
     override fun retry() {

@@ -43,7 +43,7 @@ class RunningModelTest {
         val source = FakeProcesses(reading)
         val limit = limit
         val nav = RecordingNav()
-        val model = RunningModel(source, limit, nav, scope.backgroundScope, scope.testClock())
+        val model = RunningModel(source, limit, nav, scope.backgroundScope, scope.testClock(), foregroundPacer())
     }
 
     private fun TestScope.rig(limit: FakeChildLimit = FakeChildLimit()): Rig =
