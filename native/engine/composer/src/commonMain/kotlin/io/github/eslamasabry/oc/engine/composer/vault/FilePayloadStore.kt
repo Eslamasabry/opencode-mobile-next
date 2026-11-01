@@ -84,6 +84,9 @@ public class FilePayloadStore(
             val path = file(ownerKey, id)
             try {
                 fs.delete(path, mustExist = false)
+                // Also a partial publication (Flutter only ever deleted the .blob, so dead .tmp files counted
+                // against the 256 MiB budget forever).
+                fs.delete(Path(Path(root, ownerKey), "$id.tmp"), mustExist = false)
             } catch (e: IOException) {
                 throw PayloadStoreException(classify(e))
             }
