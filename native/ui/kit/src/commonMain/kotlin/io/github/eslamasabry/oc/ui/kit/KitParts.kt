@@ -1,47 +1,43 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.Spacing
-import io.github.eslamasabry.oc.ui.kit.platform.KitHaptic
-import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
-/** Slice-0 placeholder kit parts. Their real signatures freeze in contracts/slice-1.md (docs/ux-system/kit-api). */
-public enum class KitTextRole { Title, Body, Supporting }
+/** Plan 06 §8 reading width; the full capacity table lands with `Layout`/`CapRole` (WP K1). */
+private const val SCREEN_MAX_WIDTH_DP = 840
 
-@Composable
-public fun KitText(text: String, role: KitTextRole = KitTextRole.Body, modifier: Modifier = Modifier) {
-    val style =
-        when (role) {
-            KitTextRole.Title -> MaterialTheme.typography.headlineSmall
-            KitTextRole.Body -> MaterialTheme.typography.bodyLarge
-            KitTextRole.Supporting -> MaterialTheme.typography.bodyMedium
-        }
-    val color =
-        if (role == KitTextRole.Supporting) MaterialTheme.colorScheme.onSurfaceVariant
-        else MaterialTheme.colorScheme.onBackground
-    Text(text = text, style = style, color = color, modifier = modifier)
-}
-
-/** A screen frame: title row (with an optional back action), then content. No bottom bar (owner, 2026-10-20). */
+/**
+ * A screen frame (slice-0 shape): the ground, a title row with an optional back action, then content. It hosts the
+ * screen's [KitSheetHost]. No bottom bar (owner, 2026-10-20). The frozen `KitScreen` slots arrive with WP K1.
+ *
+ * Text: frame (title row).
+ */
 @Composable
 public fun KitScreen(
     title: String,
@@ -49,33 +45,72 @@ public fun KitScreen(
     onBack: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    KitSheetHost(Modifier.fillMaxSize().background(colors.ground)) {
         Column(
-            modifier = Modifier.safeDrawingPadding().padding(Spacing.M.dp).widthIn(max = 840.dp),
-            verticalArrangement = Arrangement.spacedBy(Spacing.M.dp),
+            modifier = Modifier.safeDrawingPadding().padding(horizontal = tokens.gutter.dp).widthIn(max = SCREEN_MAX_WIDTH_DP.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = tokens.rowHeightOne.dp),
+            ) {
                 if (onBack != null && backLabel != null) {
-                    TextButton(onClick = onBack) { Text(backLabel) }
+                    KitTappable(onClick = onBack, shape = KitShapeId.Pill) {
+                        KitText(
+                            backLabel,
+                            Modifier.padding(horizontal = Space.S2.dp),
+                            role = TypeRole.Label,
+                            tone = TextTone.Accent,
+                            kind = KitTextKind.Frame,
+                        )
+                    }
                 }
-                KitText(title, KitTextRole.Title, Modifier.semantics { heading() })
+                KitText(title, Modifier.semantics { heading() }, role = TypeRole.Title, kind = KitTextKind.Frame)
             }
             content()
         }
     }
 }
 
-/** The kit's primary action. Press feedback is the platform ripple; the haptic goes through KitPlatform. */
+/**
+ * The primary action (Dart `KitButton` primary): accent face, `onAccent` words; disabled = `surface3` with `text3`
+ * words and a stated reason. Press feedback through `KitTappable`. Plain presses are silent; pass [haptic] only when the
+ * action's meaning calls for one (plan 06 §4.9).
+ *
+ * Text: frame.
+ */
 @Composable
-public fun KitButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val platform = LocalKitPlatform.current
-    Button(
-        onClick = {
-            platform.haptic(KitHaptic.Commit)
-            onClick()
-        },
-        modifier = modifier,
+public fun KitButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    disabledReason: String? = null,
+    haptic: KitHaptic? = null,
+) {
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    Box(
+        modifier =
+            modifier
+                .heightIn(min = tokens.buttonHeight.dp)
+                .kitTappable(
+                    onClick = onClick, enabled = enabled, disabledReason = disabledReason, haptic = haptic,
+                    shape = KitShapeId.Button, ink = TextTone.OnAccent,
+                )
+                .background(if (enabled) colors.accent else colors.surface3)
+                .padding(horizontal = Space.S6.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Text(label)
+        KitText(
+            label,
+            role = TypeRole.Button,
+            tone = if (enabled) TextTone.OnAccent else TextTone.Tertiary,
+            kind = KitTextKind.Frame,
+            maxLines = 2,
+        )
     }
 }

@@ -1,32 +1,133 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.RippleConfiguration
+import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import io.github.eslamasabry.oc.ui.design.ColorRoles
-import io.github.eslamasabry.oc.ui.design.PlaceholderPalette
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.unit.LayoutDirection
+import io.github.eslamasabry.oc.ui.design.color.Graphite
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.motion.MotionSignals
+import io.github.eslamasabry.oc.ui.design.motion.resolveMotion
+import io.github.eslamasabry.oc.ui.design.tokens.Alphas
+import io.github.eslamasabry.oc.ui.design.tokens.Tokens
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberAppTextDensity
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
+import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.theme.KitTypography
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
+import io.github.eslamasabry.oc.ui.kit.theme.MaterialBridge
+import io.github.eslamasabry.oc.ui.kit.theme.rememberKitFonts
+import io.github.eslamasabry.oc.ui.kit.theme.toKitColors
 
-/** Theme root (slice-0 placeholder palette; the Style resolver arrives with :ui:design in slice 1). */
+/**
+ * The theme root (plan 06 §5.1). It resolves motion from the system signals, picks the roles (Graphite; the 31 packs
+ * join in WP K1), builds colours, Geist typography and tokens, sets the layout direction from [localeTag], applies the
+ * root text density (in-app Text size × system, cap 2.5×), and wraps the M3 parts the kit uses in the bridged
+ * `MaterialTheme`. Nothing else in the app does any of this.
+ *
+ * Slice 0 keeps it in the `…ui.kit` package (the shell imports it there); plan 06's `…ui.kit.theme` move rides with the
+ * contract freeze.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-public fun KitTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val roles = if (dark) PlaceholderPalette.dark else PlaceholderPalette.light
-    MaterialTheme(colorScheme = roles.toScheme(dark), content = content)
+public fun KitTheme(
+    appearance: KitAppearance = KitAppearance.Default,
+    platform: KitPlatform = LocalKitPlatform.current,
+    localeTag: String = defaultLocaleTag(),
+    stillFrame: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    val signals by platform.signals.collectAsState()
+    val dark =
+        when (appearance.mode) {
+            AppearanceMode.System -> isSystemInDarkTheme()
+            AppearanceMode.Light -> false
+            AppearanceMode.Dark, AppearanceMode.Saver -> true
+        }
+    val roles = remember(dark, appearance.saver) { Graphite.of(dark).let { if (appearance.saver) it.saver else it } }
+    val colors = remember(roles) { roles.toKitColors() }
+    val arabic = isArabic(localeTag)
+    val fonts = rememberKitFonts(arabic)
+    val typography = remember(fonts, arabic) { KitTypography(fonts, arabic) }
+    // Saver makes the effective knobs none (Dart KitEffects.underSaver).
+    val tokens = if (appearance.saver) Tokens.Comfortable else Tokens.of(appearance.density)
+    val level =
+        resolveMotion(
+            MotionSignals(signals.animatorScale, signals.powerSave, signals.severeHeat),
+            appearance.motion,
+            appearance.saver,
+        )
+    val motion = remember(level, stillFrame) { KitMotionState(level, stillFrame) }
+    val direction = if (isRtl(localeTag)) LayoutDirection.Rtl else LayoutDirection.Ltr
+    val ripple = remember { kitRippleConfiguration() }
+    val selection = remember(colors) { TextSelectionColors(colors.accent, colors.accent.copy(alpha = 0.30f)) }
+    val scheme = remember(roles) { MaterialBridge.scheme(roles) }
+    val appDensity = rememberAppTextDensity(appearance.textSize)
+    CompositionLocalProvider(
+        LocalKitPlatform provides platform,
+        LocalKitAppearance provides appearance,
+        LocalKitColors provides colors,
+        LocalKitTypography provides typography,
+        LocalKitTokens provides tokens,
+        LocalKitMotion provides motion,
+        LocalLayoutDirection provides direction,
+        LocalDensity provides appDensity,
+        LocalKitAppDensity provides appDensity,
+        LocalIndication provides platform.pressIndication(colors.text1),
+        LocalRippleConfiguration provides ripple,
+        LocalTextSelectionColors provides selection,
+    ) {
+        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes, content = content)
+    }
 }
 
-private fun ColorRoles.toScheme(dark: Boolean) =
-    if (dark) {
-        darkColorScheme(
-            background = Color(background), onBackground = Color(onBackground), surface = Color(surface),
-            onSurface = Color(onSurface), primary = Color(primary), onPrimary = Color(onPrimary),
-            onSurfaceVariant = Color(muted),
-        )
-    } else {
-        lightColorScheme(
-            background = Color(background), onBackground = Color(onBackground), surface = Color(surface),
-            onSurface = Color(onSurface), primary = Color(primary), onPrimary = Color(onPrimary),
-            onSurfaceVariant = Color(muted),
-        )
-    }
+/**
+ * Dart `KitInk.alpha`: the ripple is the part's ink at 12 % (M3's own default is 10 %). M3 1.5 deprecates the per-state
+ * alphas with no replacement that sets them, so the deprecated constructor is kept on purpose (P7 report, D-list).
+ */
+@Suppress("DEPRECATION")
+@OptIn(ExperimentalMaterial3Api::class)
+private fun kitRippleConfiguration(): RippleConfiguration =
+    RippleConfiguration(
+        rippleAlpha = RippleAlpha(
+            draggedAlpha = 0.16f, focusedAlpha = Alphas.FOCUSED, hoveredAlpha = Alphas.HOVERED,
+            pressedAlpha = Alphas.PRESSED,
+        ),
+    )
+
+/**
+ * The default when the caller passes no tag: the platform locale. CMP has no snapshot-backed common replacement for
+ * `Locale.current`; `:ui:shell` passes the resolved app locale (`oc.appLocale`, P6) instead of relying on this.
+ */
+@Suppress("DEPRECATION")
+private fun defaultLocaleTag(): String = Locale.current.toLanguageTag()
+
+private val rtlLanguages = setOf("ar", "fa", "he", "iw", "ur", "ps", "ckb", "yi")
+
+internal fun languageOf(tag: String): String = tag.substringBefore('-').substringBefore('_').lowercase()
+
+internal fun isRtl(tag: String): Boolean = languageOf(tag) in rtlLanguages
+
+internal fun isArabic(tag: String): Boolean = languageOf(tag) == "ar"
+
