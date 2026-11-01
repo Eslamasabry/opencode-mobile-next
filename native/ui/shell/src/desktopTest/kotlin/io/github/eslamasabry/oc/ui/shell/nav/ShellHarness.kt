@@ -23,7 +23,9 @@ import io.github.eslamasabry.oc.ui.kit.KitScreen
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
-import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
@@ -49,11 +51,8 @@ class FakeSystemMotion(scale: Float = 1f) : SystemMotion {
     override val animatorScale: MutableStateFlow<Float> = MutableStateFlow(scale)
 }
 
-private object TestPlatform : KitPlatform {
-    override val name: String = "test"
-
-    override fun haptic(kind: KitHaptic) = Unit
-}
+/** The kit's own desktop platform (no haptics, fill indication), so the harness tracks the KitPlatform contract. */
+private val TestPlatform: KitPlatform = DesktopKitPlatform()
 
 fun ref(i: Int) = ConversationRef(ProfileId("t"), SessionId("s$i"))
 
@@ -103,7 +102,7 @@ class Harness(scale: Float = 1f) {
             LocalNavigationEventDispatcherOwner provides owner,
             LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
         ) {
-            KitTheme(dark = false) { NavShell(start = ChatsRoute.Home, deps = deps, gate = gate) }
+            KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = TestPlatform, localeTag = "en") { NavShell(start = ChatsRoute.Home, deps = deps, gate = gate) }
         }
     }
 }

@@ -50,7 +50,7 @@ import kotlin.test.assertTrue
  * Graph smoke (plan 03 §13.8), desktop half. The Android graph is checked by Metro at compile time in
  * :androidApp:assembleDebug; its Robolectric runtime half is an open item (P1 report).
  */
-private val fake = FakeGatewayFactory(BackendKind.OpenCode2, FakeServerGateway(listOf(Session(SessionId("s1"), "One", 1L))))
+private val fake = FakeGatewayFactory(BackendKind.OpenCode2, FakeServerGateway(listOf(Session(SessionId("s1"), "One"))))
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GraphSmokeTest {
