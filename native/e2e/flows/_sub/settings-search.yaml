@@ -1,0 +1,6 @@
+# Settings open: search for QUERY (raw text). env: QUERY
+appId: ${APP_ID}
+---
+- tapOn: ${output.s.settingsHubSearch}
+- inputText: ${QUERY}
+- hideKeyboard

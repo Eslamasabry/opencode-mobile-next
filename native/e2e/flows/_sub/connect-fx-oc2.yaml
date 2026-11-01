@@ -1,0 +1,9 @@
+# Clean install, then connect FX-OC2 (10.0.2.2:4097, per-run password from the runner).
+appId: ${APP_ID}
+---
+- runFlow: start-clean.yaml
+- runFlow:
+    file: connect-server.yaml
+    env:
+      ADDRESS: ${output.fx.serverAddress}
+      PASSWORD: ${SERVER_PASSWORD}

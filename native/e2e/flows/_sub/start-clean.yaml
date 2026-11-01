@@ -1,0 +1,10 @@
+# Clean install state: clears ONLY the app under test, then waits for the welcome screen.
+# Never use from a flow whose snapshot holds built-in Linux.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- extendedWaitUntil:
+    visible: ${output.s.welcomeComputerConnect}
+    timeout: 30000

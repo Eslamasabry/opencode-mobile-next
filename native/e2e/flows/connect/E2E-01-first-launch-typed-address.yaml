@@ -1,0 +1,85 @@
+# E2E-01 First launch, welcome screen and first server by typed address
+# slice: 2   avd: A, 26   fixtures: FX-OC2   snapshot: base
+# rows: B-NAV-017, B-NAV-018, B-NAV-024, B-NAV-037
+# KNOWN-FLUTTER-GAPS: none known (not yet run on Flutter R)
+appId: ${APP_ID}
+tags: [parity, slice-2, g2, smoke, phone-smoke]
+---
+- runScript: ../../runner/out/strings.js
+
+# S1 [adb] clear app data; launch the app.
+# S2 see the welcome screen. Only a device that started on this welcome counts as new: first run ends on the
+#    Conversations list after the first connect (S6) and opens no empty conversation. [B-NAV-017]
+# S1 [B-NAV-017]
+- launchApp:
+    clearState: true
+    stopApp: true
+    label: "S1 clean install launch [B-NAV-017]"
+# S2 [B-NAV-017]
+- extendedWaitUntil:
+    visible: ${output.s.welcomePhoneSetUp}
+    timeout: 30000
+    label: "S2 welcome shows both ways in [B-NAV-017]"
+- assertVisible: ${output.s.welcomeComputerConnect}
+- assertVisible: ${output.s.welcomeComputerLine}
+
+# S3 tap "Connect to my computer": paste, scan and the typed-address field are on one screen.
+# S3 [B-NAV-018]
+- tapOn:
+    text: ${output.s.welcomeComputerConnect}
+    label: "S3 open connect screen [B-NAV-018]"
+- assertVisible: ${output.s.e7SetupPastePairing}
+- assertVisible: ${output.s.e7SetupScanPairing}
+- assertVisible: ${output.s.e7SetupServerUrl}
+
+# S4 [adb] put the bare address 10.0.2.2:4097 (no scheme) on the clipboard and paste it into the address field;
+#    it gains the right scheme (http:// for a private address) before testing.
+# S4 [B-NAV-018]
+- setClipboard:
+    text: ${output.fx.serverAddress}
+    label: "S4 bare address on the clipboard [B-NAV-018]"
+- longPressOn: ${output.s.e7SetupServerUrl}
+- pasteText
+- hideKeyboard
+
+# S5 type the fixture password; Test connection; see the connected verdict; Connect.
+# S5 [B-NAV-018]
+- tapOn:
+    text: ${output.s.e7SetupServerPassword}
+    label: "S5 type the password and test [B-NAV-018]"
+- inputText: ${SERVER_PASSWORD}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupProbeV2}
+    timeout: 30000
+# The scheme was added: the normalised private address reads http://10.0.2.2:4097.
+- assertVisible: ${'(?s).*' + output.fx.serverUrl.replace(/\./g, '\\.') + '.*'}  # literal-ok: built from fixture data
+- tapOn: ${output.s.e7SetupConnect}
+
+# S6 the Conversations list is the first screen after connecting; no empty conversation was opened. [B-NAV-024]
+# S6 [B-NAV-024, B-NAV-017]
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 60000
+    label: "S6 lands on Conversations [B-NAV-024, B-NAV-017]"
+- assertNotVisible: ${output.s.kitComposerField}
+
+# S7 no bottom navigation bar on a phone-size screen (no tab strip). [B-NAV-037]
+# Flutter R's old tab labels must be absent; Files and Terminal are reached from inside a project.
+# S7 [B-NAV-037]
+- assertNotVisible:
+    text: ${output.s.shellTabChats}
+    below: ${output.s.chatsHomeTitle}
+    label: "S7 no bottom tab strip [B-NAV-037]"
+- assertNotVisible: ${output.s.libraryTerminalTitle}
+
+# S8 [adb] force-stop and relaunch: the Conversations list again, not the welcome screen, still connected.
+# S8 [B-NAV-024]
+- stopApp:
+    label: "S8 relaunch keeps the server [B-NAV-024]"
+- launchApp
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
+- assertNotVisible: ${output.s.welcomeComputerConnect}

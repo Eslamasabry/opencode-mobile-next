@@ -1,0 +1,24 @@
+# From Conversations: Settings > Servers > Add server, connect FX-OC2-B (10.0.2.2:4098), back to Conversations.
+# The path through Settings is the first-run guess; confirm on the first Flutter run.
+appId: ${APP_ID}
+---
+- runFlow: open-settings.yaml
+- scrollUntilVisible:
+    element: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupServers}
+- tapOn: ${output.s.e7SetupAddServer}
+- tapOn: ${output.s.e7SetupServerUrl}
+- inputText: ${output.fx.serverBAddress}
+- tapOn: ${output.s.e7SetupServerPassword}
+- inputText: ${SERVER_B_PASSWORD}
+- hideKeyboard
+- tapOn: ${output.s.e7SetupTestConnection}
+- extendedWaitUntil:
+    visible: ${output.rc.e7SetupProbeV2}
+    timeout: 30000
+- tapOn: ${output.s.e7SetupConnect}
+- back
+- back
+- extendedWaitUntil:
+    visible: ${output.s.chatsHomeTitle}
+    timeout: 30000
