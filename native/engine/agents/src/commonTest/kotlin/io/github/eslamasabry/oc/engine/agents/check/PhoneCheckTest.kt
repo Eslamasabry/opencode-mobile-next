@@ -188,4 +188,23 @@ class PhoneCheckTest {
         assertFalse(moved.architectureQualified)
         assertEquals(CheckRequiredReason.AgentVersion, moved.checkRequiredReason)
     }
+
+    @Test
+    fun `B-LINUX-140 a passed check plus a signed-in read makes a ready row, and a stopped helper offers Resume`() = runTest {
+        val rig = Rig(Abi.Arm64V8a)
+        rig.installed(codex, "0.166.0")
+        assertTrue(rig.check.run(owner, codex).passed)
+        val server = io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities()
+        val descriptor = catalog.byId(codex)!!
+        val signedIn = io.github.eslamasabry.oc.engine.agents.readiness.AgentSignInPhase.SignedIn
+        val running = (GateInspector(rig.prefs, rig.host).inspect(owner, codex) as Outcome.Ok).value
+        val ready = io.github.eslamasabry.oc.engine.agents.readiness.AgentReadiness.row(descriptor, AgentArchitecture.Arm64, server, running.toRuntime(signedIn))
+        assertEquals(io.github.eslamasabry.oc.engine.agents.readiness.PhoneAgentStatus.Ready, ready.status)
+        assertTrue(ready.chatSelectable)
+        rig.host.statusFlow.value = rig.host.statusFlow.value.copy(running = false)
+        val stopped = (GateInspector(rig.prefs, rig.host).inspect(owner, codex) as Outcome.Ok).value
+        val row = io.github.eslamasabry.oc.engine.agents.readiness.AgentReadiness.row(descriptor, AgentArchitecture.Arm64, server, stopped.toRuntime(signedIn))
+        assertEquals(io.github.eslamasabry.oc.engine.agents.readiness.AgentFixAction.Resume, row.fixAction)
+        assertFalse(row.chatSelectable)
+    }
 }

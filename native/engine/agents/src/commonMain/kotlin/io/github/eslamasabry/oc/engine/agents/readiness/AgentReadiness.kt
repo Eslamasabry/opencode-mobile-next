@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentCapabilities
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentUnavailableReason
+import io.github.eslamasabry.oc.engine.agents.gate.CheckRequiredReason
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -97,8 +98,6 @@ public enum class AgentStatusKey {
     AgentReady,
 }
 
-/** Closed reason a phone check is required (`checkRequiredReason`). */
-public enum class CheckRequiredReason { FirstCheck, AgentVersion, HelperVersion, InstallationChanged }
 
 /**
  * Sanitized host facts for one agent. An installed artifact or an agent name cannot supply capability proof. The host

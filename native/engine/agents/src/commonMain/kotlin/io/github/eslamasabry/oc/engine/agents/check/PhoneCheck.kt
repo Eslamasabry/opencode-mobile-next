@@ -220,3 +220,27 @@ public class GateInspector(
         ).ok()
     }
 }
+
+/**
+ * The readiness input for one agent: this inspection plus the sign-in phase ([signInPhase] null = not inspected) and
+ * the runtime capability proof the verified host load supplied (never inferred from the agent's name).
+ */
+public fun GateInspection.toRuntime(
+    signInPhase: io.github.eslamasabry.oc.engine.agents.readiness.AgentSignInPhase?,
+    capabilities: io.github.eslamasabry.oc.engine.agents.catalog.AgentCapabilities =
+        io.github.eslamasabry.oc.engine.agents.catalog.AgentCapabilities.None,
+    resetAtEpochMillis: Long? = null,
+): io.github.eslamasabry.oc.engine.agents.readiness.PhoneAgentRuntime =
+    io.github.eslamasabry.oc.engine.agents.readiness.PhoneAgentRuntime(
+        agentId = agentId,
+        installed = installed,
+        payloadPresent = payloadPresent,
+        hostAvailable = hostAvailable,
+        architectureQualified = architectureQualified,
+        capabilities = capabilities,
+        signInPhase = signInPhase,
+        stoppedInBackground = stoppedInBackground,
+        resetAtEpochMillis = resetAtEpochMillis,
+        checkRequiredReason = checkRequiredReason,
+        behindPin = behindPin,
+    )
