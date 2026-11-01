@@ -330,6 +330,10 @@ class FxHandler(BaseHTTPRequestHandler):
     def _dispatch(self) -> None:
         split = urlsplit(self.path)
         path, query = split.path, {k: v[0] for k, v in parse_qs(split.query).items()}
+        # The handler object lives for the whole keep-alive connection: reset
+        # per-request state so a POST after a GET does not see the GET's body.
+        self.__dict__.pop("_body", None)
+        self._extra = {}
         self._status = None
         started = time.monotonic()
         self.cut_after_ms: int | None = None
