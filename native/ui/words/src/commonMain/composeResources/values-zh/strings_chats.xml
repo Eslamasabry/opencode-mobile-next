@@ -290,4 +290,6 @@
     <string name="gitRepairStillBrokenBody">Git 仍无法读取它。请从托管处重新克隆该项目，或恢复一份副本。</string>
     <string name="gitRepairNotRepositoryTitle">无法修复此文件夹</string>
     <string name="gitRepairClose">关闭</string>
+    <string name="chatsReturnBriefUnknown">无法确定此服务器上有哪些新内容</string>
+    <string name="chatsReturnBriefMore">以及另外%1$d个</string>
 </resources>

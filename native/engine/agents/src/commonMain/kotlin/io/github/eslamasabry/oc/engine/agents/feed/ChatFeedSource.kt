@@ -14,7 +14,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
-/** What one source holds right now. Sources keep partial failures: a failed read keeps the last rows (17 §1.6). */
+/**
+ * What one source holds right now. Sources keep partial failures: a failed read keeps the last rows
+ * (17 §1.6).
+ */
 public data class FeedSourceState(
     val items: ImmutableList<ChatFeedItem> = persistentListOf(),
     val loading: Boolean = false,
@@ -24,8 +27,8 @@ public data class FeedSourceState(
 )
 
 /**
- * One feed source (`opencode`, later `paseo:<directory>` and side connections, 17 §1.6). A source may be shared by
- * several feeds; a feed never closes it (B-STATE-029).
+ * One feed source (`opencode`, later `paseo:<directory>` and side connections, 17 §1.6). A source
+ * may be shared by several feeds; a feed never closes it (B-STATE-029).
  */
 public interface ChatFeedSource {
     /** Stable id; part of every row's identity. */
@@ -44,15 +47,18 @@ public interface ChatFeedSource {
 }
 
 /**
- * What the connection engine knows about one OpenCode server's sessions (read-only port; bound by the connection
- * owner over its session map, status map and pending requests). Times and ids only; never prompt text.
+ * What the connection engine knows about one OpenCode server's sessions (read-only port; bound by
+ * the connection owner over its session map, status map and pending requests). Times and ids only;
+ * never prompt text.
  */
 public data class OpenCodeListing(
     val sessions: List<Session> = emptyList(),
     val statuses: Map<SessionId, SessionStatus> = emptyMap(),
     /** Sessions blocked on a permission, question or form. */
     val needsYou: Set<SessionId> = emptySet(),
-    /** Sessions whose last run finished after the person last opened them (device read watermarks). */
+    /**
+     * Sessions whose last run finished after the person last opened them (device read watermarks).
+     */
     val finishedUnseen: Set<SessionId> = emptySet(),
     val loading: Boolean = false,
     val complete: Boolean = true,
@@ -61,11 +67,14 @@ public data class OpenCodeListing(
     val acrossProjects: Boolean = true,
 )
 
-/** The OpenCode source (Dart `ConnectionController` as `ChatFeedSource`), one per connected server. */
+/**
+ * The OpenCode source (Dart `ConnectionController` as `ChatFeedSource`), one per connected server.
+ */
 public class OpenCodeChatFeedSource(
     private val profileId: ProfileId,
     override val label: String?,
     private val listing: StateFlow<OpenCodeListing>,
+    private val locationKey: String? = null,
     private val refresh: suspend () -> Outcome<Unit> = { Unit.ok() },
 ) : ChatFeedSource {
     override val id: String = "opencode:${profileId.raw}"
@@ -102,6 +111,7 @@ public class OpenCodeChatFeedSource(
         val directory = session.directory
         return ChatFeedItem(
             sourceId = id,
+            locationKey = locationKey,
             profileId = profileId,
             sessionId = session.id,
             title = session.title,

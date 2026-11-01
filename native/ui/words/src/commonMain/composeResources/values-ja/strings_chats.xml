@@ -49,4 +49,6 @@
     <string name="agentsCancel">キャンセル</string>
     <string name="chatsHomeOtherFolders">その他のフォルダ</string>
     <string name="shellServerSwitching">切り替え中…</string>
+    <string name="chatsReturnBriefUnknown">このサーバーの新しい情報を確認できません</string>
+    <string name="chatsReturnBriefMore">ほか%1$d件</string>
 </resources>

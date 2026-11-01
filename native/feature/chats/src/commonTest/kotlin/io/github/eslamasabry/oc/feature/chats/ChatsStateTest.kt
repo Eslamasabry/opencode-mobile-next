@@ -11,12 +11,12 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsState
 import io.github.eslamasabry.oc.feature.chats.presentation.RowStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 class ChatsStateTest {
     private val today = 10_000L
@@ -26,7 +26,14 @@ class ChatsStateTest {
         filters: ChatsFilters = ChatsFilters(),
         loading: Boolean = false,
         brief: ReturnBrief = ReturnBrief.None,
-    ) = ChatsState.build(ChatFeedSnapshot(items.toList().toImmutableList(), loading = loading), brief, filters, today, settingsAvailable = true)
+    ) =
+        ChatsState.build(
+            ChatFeedSnapshot(items.toList().toImmutableList(), loading = loading),
+            brief,
+            filters,
+            today,
+            settingsAvailable = true,
+        )
 
     @Test
     fun `SCREENS-NAV-27 one list by urgency in Today and Earlier sections only`() {
@@ -34,7 +41,12 @@ class ChatsStateTest {
             build(
                 item("ask", at = 2_000, status = ChatStatus.NeedsYou),
                 item("run", at = 12_000, status = ChatStatus.Running),
-                item("new", at = 11_000, title = "New session - 2026-09-02T14:47:06Z", unseen = true),
+                item(
+                    "new",
+                    at = 11_000,
+                    title = "New session - 2026-09-02T14:47:06Z",
+                    unseen = true,
+                ),
                 item("old", at = 3_000),
                 item("child", at = 20_000, parent = "run"),
             )
@@ -53,12 +65,20 @@ class ChatsStateTest {
     fun `SCREENS-NAV-27 opening shows skeletons, an empty server the calm empty state, filters with no rows no-match`() {
         assertEquals(ChatsPhase.Opening, build(loading = true).phase)
         assertEquals(ChatsPhase.Empty, build().phase)
-        assertEquals(ChatsPhase.NoMatch, build(item("a"), filters = ChatsFilters(running = true)).phase)
+        assertEquals(
+            ChatsPhase.NoMatch,
+            build(item("a"), filters = ChatsFilters(running = true)).phase,
+        )
     }
 
     @Test
     fun `B-CHAT-013 recent projects are real folders newest first and the chosen one filters the list`() {
-        val rows = arrayOf(item("a", "/work/api", at = 1), item("b", "/work/web", at = 5), item("t", "/tmp/x", at = 9))
+        val rows =
+            arrayOf(
+                item("a", "/work/api", at = 1),
+                item("b", "/work/web", at = 5),
+                item("t", "/tmp/x", at = 9),
+            )
         val ui = build(*rows)
         assertEquals(listOf("web", "api"), ui.projects.map { it.name })
         val filtered = build(*rows, filters = ChatsFilters(projectDirectory = "/work/api"))
@@ -68,28 +88,135 @@ class ChatsStateTest {
 
     @Test
     fun `SCREENS-NAV-27 search matches the cleaned title or the project`() {
-        val rows = arrayOf(item("a", "/work/api", title = "Fix login<tool_call>x"), item("b", "/work/web", title = "Theme"))
-        assertEquals(listOf("a"), build(*rows, filters = ChatsFilters(query = "login")).earlier.map { it.ref.sessionId.raw })
-        assertEquals(listOf("b"), build(*rows, filters = ChatsFilters(query = "WEB")).earlier.map { it.ref.sessionId.raw })
-        assertEquals(ChatsPhase.NoMatch, build(*rows, filters = ChatsFilters(query = "tool_call")).phase)
+        val rows =
+            arrayOf(
+                item("a", "/work/api", title = "Fix login<tool_call>x"),
+                item("b", "/work/web", title = "Theme"),
+            )
+        assertEquals(
+            listOf("a"),
+            build(*rows, filters = ChatsFilters(query = "login")).earlier.map {
+                it.ref.sessionId.raw
+            },
+        )
+        assertEquals(
+            listOf("b"),
+            build(*rows, filters = ChatsFilters(query = "WEB")).earlier.map {
+                it.ref.sessionId.raw
+            },
+        )
+        assertEquals(
+            ChatsPhase.NoMatch,
+            build(*rows, filters = ChatsFilters(query = "tool_call")).phase,
+        )
     }
 
     @Test
     fun `B-CHAT-093 the brief block lists the feed rows of the unreviewed sessions and says how many more`() {
-        val sessions = (1..4).map { Session(SessionId("s$it"), time = SessionTime(idleMs = it * 10L)) }
-        val brief = ReturnBrief.build(sessions, true, false, { true }, { false }, { null })
+        val sessions =
+            (1..4).map {
+                Session(
+                    SessionId("s$it"),
+                    directory = "/work/api",
+                    time = SessionTime(idleMs = it * 10L),
+                )
+            }
+        val brief =
+            ReturnBrief.build(
+                sessions,
+                true,
+                false,
+                { true },
+                { false },
+                { null },
+                scope = BRIEF_SCOPE,
+            )
         val ui = build(*(1..4).map { item("s$it") }.toTypedArray(), brief = brief)
         assertEquals(listOf("s4", "s3", "s2"), ui.brief!!.rows.map { it.ref.sessionId.raw })
         assertEquals(1, ui.brief!!.more)
         assertTrue(ui.brief!!.rows.all { it.status == RowStatus.Done })
         assertNull(build(item("a")).brief)
-        val unknown = ReturnBrief.build(sessions, readStateKnown = false, inventoryPartial = false, { true }, { false }, { null })
+        val unknown =
+            ReturnBrief.build(
+                sessions,
+                readStateKnown = false,
+                inventoryPartial = false,
+                { true },
+                { false },
+                { null },
+            )
         assertTrue(build(item("a"), brief = unknown).brief!!.unknown)
     }
 
     @Test
+    fun `B-NAV-030 finding 1 brief joins the complete profile source and folder identity`() {
+        val session =
+            Session(SessionId("same"), directory = "/work/api", time = SessionTime(idleMs = 10))
+        val brief =
+            ReturnBrief.build(
+                listOf(session),
+                true,
+                false,
+                { true },
+                { false },
+                { null },
+                scope = BRIEF_SCOPE,
+            )
+        val right = item("same")
+        val otherProfile =
+            right.copy(
+                sourceId = "opencode:p2",
+                profileId = io.github.eslamasabry.oc.core.common.ids.ProfileId("p2"),
+            )
+        val otherFolder = right.copy(directory = "/work/other")
+        val otherSource = right.copy(sourceId = "side:p1")
+        val otherLocation = right.copy(locationKey = "other-location")
+        val unknownLocation = right.copy(locationKey = null)
+        val ui =
+            build(
+                right,
+                otherProfile,
+                otherFolder,
+                otherSource,
+                otherLocation,
+                unknownLocation,
+                brief = brief,
+            )
+        assertEquals(listOf(right.ref), ui.brief!!.rows.map { it.ref })
+        assertEquals(listOf(right.identity), ui.brief!!.rows.map { it.key })
+        assertTrue(
+            build(
+                    otherProfile,
+                    otherFolder,
+                    otherSource,
+                    otherLocation,
+                    unknownLocation,
+                    brief = brief,
+                )
+                .brief!!
+                .rows
+                .isEmpty()
+        )
+        assertTrue(
+            build(right, brief = brief.copy(scope = null)).brief!!.rows.isEmpty(),
+            "unscoped briefs fail closed",
+        )
+    }
+
+    @Test
     fun `B-NAV-031 sources that did not load are named`() {
-        val ui = ChatsState.build(ChatFeedSnapshot(persistentListOf(item("a")), complete = false, incompleteSources = persistentListOf("Laptop")), ReturnBrief.None, ChatsFilters(), today, false)
+        val ui =
+            ChatsState.build(
+                ChatFeedSnapshot(
+                    persistentListOf(item("a")),
+                    complete = false,
+                    incompleteSources = persistentListOf("Laptop"),
+                ),
+                ReturnBrief.None,
+                ChatsFilters(),
+                today,
+                false,
+            )
         assertEquals(listOf("Laptop"), ui.incomplete)
     }
 }
