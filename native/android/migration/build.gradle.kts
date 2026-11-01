@@ -5,6 +5,9 @@
 plugins { id("oc.android.library") }
 
 android {
+    // AGP 9 creates host tests for the tested build type only: run them on `qa`, the variant that holds the real
+    // StepInterrupter, so `testQaUnitTest` covers main + qa sources (debug and release compile the no-op).
+    testBuildType = "qa"
     buildTypes {
         // The `qa` build type is the only one that compiles the real StepInterrupter (`qa-kill-after`,
         // `qa-delay-ms`, `qa-free-bytes`; plan 05 §7.4 S0 step 3, §10.5 J2). debug and release get the no-op.
