@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.engine.transcript
 import io.github.eslamasabry.oc.engine.transcript.Ev.S
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -21,6 +22,7 @@ import kotlin.test.assertTrue
  * `stream_flushes ≤ tokens`; its flush algorithm (`chat_stream.dart` `_scheduleStreamFlush`) gives exactly 10 and 1,
  * and [FlutterFlushModel] computes the same numbers from the same schedule. The engine must match them exactly.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class PublishCountTest {
     /** Not backgroundScope: TestScope.advanceUntilIdle ignores background tasks, and the lane's work must run. */
     private fun TestScope.handleParent(): CoroutineScope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())

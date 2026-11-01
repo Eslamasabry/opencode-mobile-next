@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.WorkLineRow
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.engine.transcript.state.sessionIdOrNull
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -28,6 +29,7 @@ import kotlin.time.Duration.Companion.minutes
  * counts compared against the Flutter flush algorithm, and the engine's derive cost measured. Numbers are written to
  * build/p3/engine.json (synthetic sizes and timings only, never transcript content).
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class RecordedStreamTest {
     private val session: String get() = Oc2Sse.adapt(RecordedStream.recordingBody()).firstNotNullOf { it.event.sessionIdOrNull }
 

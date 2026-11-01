@@ -300,7 +300,7 @@ internal class TranscriptModel(private val sessionId: String, private val counte
         val base = list.size
         val pos = positions.builder()
         rows.forEachIndexed { i, r -> pos[r.key] = base + i }
-        return list.addAll(rows) to pos.build()
+        return list.addingAll(rows) to pos.build()
     }
 
     /** Turns by prompt (never by `role != assistant`, §3.6): a user message that is not a notice starts a turn. */
