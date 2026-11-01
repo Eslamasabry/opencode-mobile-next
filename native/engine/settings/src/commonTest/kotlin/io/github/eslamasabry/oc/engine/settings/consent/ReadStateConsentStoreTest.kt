@@ -5,16 +5,10 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.dart.DartJson
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.RawPref
 import io.github.eslamasabry.oc.engine.settings.scope.SettingOriginKind
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.test.runTest
+import io.github.eslamasabry.oc.engine.settings.scope.SettingsOwners
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -22,6 +16,15 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ReadStateConsentStoreTest {
@@ -32,12 +35,74 @@ class ReadStateConsentStoreTest {
 
     private fun TestScope.kv(initial: Map<String, Any> = emptyMap()) = TestKv(initial, UnconfinedTestDispatcher(testScheduler))
 
-    private fun store(kv: TestKv) = ReadStateConsentStore(kv, kv.lanes)
+    private fun store(kv: TestKv, owner: (ProfileId) -> String? = { it.raw }) = ReadStateConsentStore(kv, kv.lanes, object : SettingsOwners {
+        override fun fingerprint(profileId: ProfileId): String? = owner(profileId)
+        override val revision = MutableStateFlow(0L)
+    })
 
     private fun journal(ids: List<String>, complete: Boolean = false, legacy: Boolean = true) =
         DartJson.encode(linkedMapOf("version" to 1L, "complete" to complete, "ids" to ids, "legacy" to legacy))
 
     private fun Outcome<*>.failure(): Failure = (this as Outcome.Failed).failure
+
+    @Test
+    fun `B-SEC-142 eng-6 cancelled migration stays private after reconstruction`() = runTest {
+        val kv = kv()
+        val consent = store(kv)
+        // Start the durable journal first so the hold below stops only completion.
+        kv.commit(kv.lanes.app) {
+            putString("oc.readStateConsentMigration.v1", journal(listOf("old")))
+        }
+        val hold = kv.hold("oc.readStateConsentMigration.v1")
+        val migration = async { consent.migrateExistingProfiles(listOf(old)) }
+        hold.entered.await()
+        assertEquals(true, kv.bool("oc.shareSessionViews.old"))
+        migration.cancel()
+        migration.join()
+        assertFalse(consent.enabled(old))
+        val restarted = store(kv.restart(UnconfinedTestDispatcher(testScheduler)))
+        assertFalse(restarted.enabled(old))
+        assertIs<Outcome.Ok<Unit>>(restarted.migrateExistingProfiles(listOf(old)))
+        assertTrue(restarted.enabled(old))
+    }
+
+    @Test
+    fun `B-SEC-142 eng-6 refused completion stays private after reconstruction`() = runTest {
+        val kv = kv()
+        kv.disk.refuse = { key, value ->
+            key == "oc.readStateConsentMigration.v1" && (value as? RawPref.Str)?.value?.contains("\"complete\":true") == true
+        }
+        assertIs<Outcome.Failed>(store(kv).migrateExistingProfiles(listOf(old)))
+        assertFalse(store(kv.restart(UnconfinedTestDispatcher(testScheduler))).enabled(old))
+    }
+
+    @Test
+    fun `B-STATE-124 eng-7 stale grant with refused compensation stays private after restart`() = runTest {
+        val kv = kv()
+        val consent = store(kv)
+        var current = true
+        val hold = kv.hold("oc.shareSessionViews.old")
+        val grant = async { consent.setEnabledIfCurrent(old, true) { current } }
+        hold.entered.await()
+        current = false
+        kv.disk.refuse = { key, value -> key == "oc.shareSessionViews.old" && value == RawPref.Bool(false) }
+        hold.release.complete(Unit)
+        assertIs<Outcome.Failed>(grant.await())
+        assertFalse(consent.enabled(old))
+        assertFalse(store(kv.restart(UnconfinedTestDispatcher(testScheduler))).enabled(old))
+    }
+
+    @Test
+    fun `B-STATE-124 eng-7 a durable grant belongs only to its captured owner`() = runTest {
+        val kv = kv()
+        var identity = "original-owner"
+        val consent = store(kv) { identity }
+        assertIs<Outcome.Ok<Unit>>(consent.setEnabled(old, true))
+        assertTrue(consent.enabled(old))
+        identity = "replacement-owner"
+        assertFalse(consent.enabled(old))
+        assertFalse(store(kv.restart(UnconfinedTestDispatcher(testScheduler))) { identity }.enabled(old))
+    }
 
     // ---- B-SEC-142: the L3 migration
 

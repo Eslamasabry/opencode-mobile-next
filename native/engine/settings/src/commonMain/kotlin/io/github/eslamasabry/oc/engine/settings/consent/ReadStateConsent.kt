@@ -4,13 +4,15 @@ import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.dart.DartJson
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.kv.bool
 import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
+import io.github.eslamasabry.oc.engine.settings.scope.SettingsOwners
+import kotlin.concurrent.atomics.AtomicReference
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentHashMapOf
@@ -18,7 +20,6 @@ import kotlinx.collections.immutable.persistentHashSetOf
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.concurrent.atomics.AtomicReference
 
 /** Where a profile's sharing answer came from (Flutter `SettingOriginKind`). */
 public enum class ConsentOrigin { Default, Explicit, Migrated }
@@ -38,6 +39,7 @@ public class SharingTicket internal constructor(public val profileId: ProfileId,
 public class ReadStateConsentStore(
     private val store: KeyValueStore,
     private val lanes: WriterLanes,
+    private val owners: SettingsOwners,
 ) : ConsentStore {
 
     private data class State(
@@ -70,6 +72,11 @@ public class ReadStateConsentStore(
         val s = state.load()
         val id = profileId.raw
         if (id.isEmpty() || id in s.closed || id in s.private || id in s.blocked || (s.pending[id] ?: 0) > 0) return false
+        val origin = store.string(ConsentKeys.shareViewsOrigin(profileId))
+        if (origin == PENDING) return false
+        if (origin == MIGRATED && store.get(ConsentKeys.READ_STATE_MIGRATION)?.let(::parseJournal)?.complete != true) return false
+        val boundOwner = store.string(ConsentKeys.shareViewsOwner(profileId))
+        if (boundOwner != null && boundOwner != owner(profileId)) return false
         return store.bool(ConsentKeys.shareViews(profileId)) == true
     }
 
@@ -144,21 +151,34 @@ public class ReadStateConsentStore(
         try {
             return writes.withLock {
                 if (isClosed(profileId) || !isCurrent()) return@withLock Outcome.Failed(stale())
+                val capturedOwner = owner(profileId) ?: return@withLock Outcome.Failed(stale())
                 val keepDefault = store.get(ConsentKeys.shareViewsDefault(profileId)) == null
                 val default = defaultFor(profileId)
                 val written = store.commit(lanes.forProfile(profileId)) {
                     if (keepDefault) putBool(ConsentKeys.shareViewsDefault(profileId), default)
-                    putString(ConsentKeys.shareViewsOrigin(profileId), EXPLICIT)
+                    putString(ConsentKeys.shareViewsOrigin(profileId), if (value) PENDING else EXPLICIT)
+                    putString(ConsentKeys.shareViewsOwner(profileId), capturedOwner)
                     putBool(ConsentKeys.shareViews(profileId), value)
                 }
                 if (written is Outcome.Failed) {
                     val failure = written.failure
                     return@withLock Outcome.Failed(if (failure is Failure.Refused) stale() else failure)
                 }
-                if (isClosed(profileId) || !isCurrent()) {
+                if (isClosed(profileId) || !isCurrent() || owner(profileId) != capturedOwner) {
                     // The write reached disk; erase its authorisation before a restart could read it.
                     if (value) store.commit(lanes.app) { putBool(ConsentKeys.shareViews(profileId), false) }
                     return@withLock Outcome.Failed(stale())
+                }
+                if (value) {
+                    // B-STATE-124: a durable pending grant never authorises if compensation or finalisation fails.
+                    val confirmed = store.commit(lanes.forProfile(profileId)) {
+                        putString(ConsentKeys.shareViewsOrigin(profileId), EXPLICIT)
+                    }
+                    if (confirmed is Outcome.Failed) return@withLock confirmed
+                    if (isClosed(profileId) || !isCurrent() || owner(profileId) != capturedOwner) {
+                        store.commit(lanes.app) { putBool(ConsentKeys.shareViews(profileId), false) }
+                        return@withLock Outcome.Failed(stale())
+                    }
                 }
                 mutate { s -> if (s.generations[id] == generation) s.copy(private = s.private.removing(id)) else s }
                 Outcome.Ok(Unit)
@@ -198,6 +218,7 @@ public class ReadStateConsentStore(
                         ConsentKeys.shareViews(profileId),
                         ConsentKeys.shareViewsOrigin(profileId),
                         ConsentKeys.shareViewsDefault(profileId),
+                        ConsentKeys.shareViewsOwner(profileId),
                     ).filter { store.get(it) != null }
                     if (keys.isEmpty()) Outcome.Ok(Unit) else store.commit(lanes.app) { keys.forEach(::remove) }
                 }
@@ -266,6 +287,8 @@ public class ReadStateConsentStore(
     private fun encode(journal: Journal): String =
         DartJson.encode(linkedMapOf("version" to 1L, "complete" to journal.complete, "ids" to journal.ids, "legacy" to journal.legacy))
 
+    private fun owner(profileId: ProfileId): String? = owners.fingerprint(profileId)?.let { DartJson.sha256Hex(it.encodeToByteArray()) }
+
     private fun stale(): Failure = Failure.Refused(RefusalReason.StaleScope)
 
     private inline fun mutate(change: (State) -> State) {
@@ -276,5 +299,6 @@ public class ReadStateConsentStore(
     private companion object {
         const val MIGRATED = "migrated"
         const val EXPLICIT = "explicit"
+        const val PENDING = "explicit-pending"
     }
 }
