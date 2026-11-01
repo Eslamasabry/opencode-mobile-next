@@ -241,7 +241,7 @@ void main() {
       expect(pageIsSecureContext(Uri.parse('file:///index.html')), isTrue);
       // A Tailscale address over plain http is not a secure context.
       expect(
-        pageIsSecureContext(Uri.parse('http://100.126.15.6:8789/')),
+        pageIsSecureContext(Uri.parse('http://100.64.0.10:8789/')),
         isFalse,
       );
       expect(pageIsSecureContext(Uri.parse('http://box.lan/')), isFalse);
@@ -281,7 +281,7 @@ void main() {
         expect(isPrivateNetworkHost(host), isTrue, reason: host);
       }
       for (final host in [
-        '100.126.15.6',
+        '100.64.0.10',
         '8.8.8.8',
         '::ffff:8.8.8.8',
         '2001:db8::1',
