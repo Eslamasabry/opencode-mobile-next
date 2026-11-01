@@ -1,9 +1,11 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
@@ -16,6 +18,13 @@ import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.engine.transcript.state.WorkLineRow
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
+import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
+import io.github.eslamasabry.oc.feature.chat.world.PendingSend
+import io.github.eslamasabry.oc.feature.chat.world.PendingState
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitBlockKind
@@ -24,10 +33,12 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
- * The words the transcript shows that are not server text. P3 takes them as a parameter; S2-CHAT reads them from
- * `:ui:words` (no copy in this module).
+ * The words the transcript shows that are not server text. The P3 overload of [ChatTranscript] takes them as a
+ * parameter (`:quality`'s P3 stream test drives it); the chat screen passes [rememberChatWords]' resources.
  */
 @Immutable
 public interface ChatTranscriptWords {
@@ -42,10 +53,26 @@ public interface ChatTranscriptWords {
     public fun thought(firstLine: String): String
 }
 
-/**
- * The transcript (plan 09 §7.1): one reverse LazyColumn over the engine's newest-first rows, with String keys and
- * the RowKind as contentType, arranged from kit-chat parts only (K1). The live line and pending bubbles join in S2-CHAT.
- */
+/** The words of the slice-2 items the P3 interface does not cover (resolved once per composition of the screen). */
+@Immutable
+internal class ChatListWords(
+    val messageActions: String,
+    val working: String,
+    val stopping: String,
+    val sending: String,
+    val notSent: String,
+    val unconfirmed: String,
+    val tryAgain: String,
+)
+
+/** Keys of the two item kinds the feature adds above the engine rows (plan 09 §7.2). */
+internal object ListKeys {
+    const val LIVE: String = "live"
+
+    fun pending(localId: Long): String = "pending:$localId"
+}
+
+/** The P3 transcript: the engine's rows only (kept for `:quality`'s P3 stream test). */
 @Composable
 public fun ChatTranscript(
     state: TranscriptState,
@@ -55,19 +82,92 @@ public fun ChatTranscript(
     motion: KitMotionLevel,
     modifier: Modifier = Modifier,
 ) {
+    ChatTranscriptList(
+        rows = state.rows,
+        live = null,
+        pending = persistentListOf(),
+        words = words,
+        listWords = null,
+        list = list,
+        reveal = reveal,
+        motion = motion,
+        onOpenMenu = null,
+        onRetrySend = {},
+        modifier = modifier,
+    )
+}
+
+/**
+ * The transcript (plan 09 §7.1): one reverse LazyColumn, newest first. Bottom to top: the live line (only while a
+ * turn runs) → optimistic prompt bubbles → the engine's rows. String keys, the RowKind as contentType, kit parts only.
+ * The list follows when the newest key changes and the person has not scrolled away (§7.3, in the kit).
+ */
+@Composable
+internal fun ChatTranscriptList(
+    rows: ImmutableList<TranscriptRow>,
+    live: LiveTurnUi?,
+    pending: ImmutableList<PendingSend>,
+    words: ChatTranscriptWords,
+    listWords: ChatListWords?,
+    list: TranscriptListState,
+    reveal: RevealRegistry,
+    motion: KitMotionLevel,
+    onOpenMenu: ((String) -> Unit)?,
+    onRetrySend: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val newestKey =
+        when {
+            live != null -> ListKeys.LIVE
+            pending.isNotEmpty() -> ListKeys.pending(pending.first().localId)
+            else -> rows.firstOrNull()?.key
+        }
     KitTranscriptList(
         state = list,
-        newestKey = state.newestKey,
+        newestKey = newestKey,
         jumpLabel = words.jumpToLatest,
         motion = motion,
         modifier = modifier,
     ) {
-        items(state.rows, key = { it.key }, contentType = { it.kind }) { row -> ChatRow(row, words, reveal, motion) }
+        if (live != null && listWords != null) {
+            item(key = ListKeys.LIVE, contentType = "live") {
+                // No Stop here (plan 09 §4.4): Stop sits in the composer's row.
+                KitQuietLine(if (live.stopping) listWords.stopping else listWords.working, Modifier.testTag("chat-live-line"))
+            }
+        }
+        if (listWords != null) {
+            items(pending, key = { ListKeys.pending(it.localId) }, contentType = { RowKind.Prompt }) { p ->
+                PendingBubble(p, listWords, onRetry = { onRetrySend(p.localId) })
+            }
+        }
+        items(rows, key = { it.key }, contentType = { it.kind }) { row -> ChatRow(row, words, listWords, reveal, motion, onOpenMenu) }
     }
 }
 
 @Composable
-private fun ChatRow(row: TranscriptRow, words: ChatTranscriptWords, reveal: RevealRegistry, motion: KitMotionLevel) {
+private fun PendingBubble(p: PendingSend, words: ChatListWords, onRetry: () -> Unit) {
+    Column {
+        KitPromptBubble(p.text)
+        when (p.state) {
+            PendingState.Sending -> KitQuietLine(words.sending)
+            PendingState.Unconfirmed -> KitQuietLine(words.unconfirmed)
+            PendingState.Failed -> {
+                KitQuietLine(words.notSent)
+                KitButton(words.tryAgain, onRetry, role = KitButtonRole.Tertiary, modifier = Modifier.testTag("chat-send-error-try-again"))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChatRow(
+    row: TranscriptRow,
+    words: ChatTranscriptWords,
+    listWords: ChatListWords?,
+    reveal: RevealRegistry,
+    motion: KitMotionLevel,
+    onOpenMenu: ((String) -> Unit)?,
+) {
     when (row) {
         is BlockRow ->
             KitReplyBlock(
@@ -80,11 +180,33 @@ private fun ChatRow(row: TranscriptRow, words: ChatTranscriptWords, reveal: Reve
                 registry = reveal,
                 motion = motion,
             )
-        is PromptRow -> KitPromptBubble(row.text)
+        is PromptRow ->
+            if (onOpenMenu != null && listWords != null) {
+                // Tap is the visible way to the message's actions; long-press is the familiar hidden twin (06 §11.1).
+                KitTappable(
+                    onClick = { onOpenMenu(row.key) },
+                    onClickLabel = listWords.messageActions,
+                    onLongClick = { onOpenMenu(row.key) },
+                    onLongClickLabel = listWords.messageActions,
+                    role = KitTappableRole.Row,
+                ) { KitPromptBubble(row.text) }
+            } else {
+                KitPromptBubble(row.text)
+            }
         is ThoughtRow -> KitQuietLine(words.thought(row.firstLine))
-        is WorkLineRow -> KitQuietLine(words.workLine(row.calls, row.failed, row.state))
+        is WorkLineRow -> KitQuietLine(if (listWords != null) workLineWords(row.calls, row.state) else words.workLine(row.calls, row.failed, row.state))
         is NoticeRow -> KitQuietLine(words.notice(row.notice))
-        is FooterRow -> KitQuietLine(words.footer(row.failed))
+        is FooterRow ->
+            if (onOpenMenu != null && listWords != null) {
+                KitTappable(
+                    onClick = { onOpenMenu(row.key) },
+                    onClickLabel = listWords.messageActions,
+                    role = KitTappableRole.Row,
+                    modifier = Modifier.testTag("chat-turn-footer"),
+                ) { KitQuietLine(words.footer(row.failed)) }
+            } else {
+                KitQuietLine(words.footer(row.failed))
+            }
     }
 }
 
