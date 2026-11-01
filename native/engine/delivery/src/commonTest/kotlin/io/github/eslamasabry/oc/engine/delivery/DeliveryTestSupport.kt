@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.PromptAdmission
 import io.github.eslamasabry.oc.core.model.StopResult
 import io.github.eslamasabry.oc.core.testing.TestClock
+import io.github.eslamasabry.oc.core.testing.TestDispatchers
 import io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy
 import io.github.eslamasabry.oc.engine.delivery.port.DeliveryConnection
 import io.github.eslamasabry.oc.engine.delivery.port.SendLink
@@ -152,12 +153,13 @@ internal class FakeLink(
         return delivered.any { it.session == session && it.prompt.clientMessageId == messageId }.ok()
     }
 
+    var stopAnswer: suspend () -> Outcome<StopResult> = { StopResult.Stopped.ok() }
     var stopLog: MutableList<String>? = null
 
     override suspend fun stop(session: SessionId): Outcome<StopResult> {
         stops += session
         stopLog?.add("link.stop")
-        return StopResult.Stopped.ok()
+        return stopAnswer()
     }
 
     override fun midTurnPrompt(session: SessionId): MidTurnPrompt? = midTurn
@@ -202,7 +204,7 @@ internal class World(
     val store = OfflineQueueStore(kv, lanes.app)
     val journals = PendingCommandJournals(kv, lanes, ProfileDirectory { it in knownProfiles })
     val connection = FakeConnection(link)
-    val queue = OfflineQueue(store, journals, connection, policy, clock, engineScope)
+    val queue = OfflineQueue(store, journals, connection, policy, clock, engineScope, TestDispatchers(StandardTestDispatcher(test.testScheduler)))
 
     fun restart(): World = World(disk, test, link, clock, policy, knownProfiles, test.backgroundScope)
 }

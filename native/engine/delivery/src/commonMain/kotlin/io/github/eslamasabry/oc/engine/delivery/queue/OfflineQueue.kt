@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.delivery.queue
 
+import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -34,6 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
 /**
@@ -98,7 +100,10 @@ public class OfflineQueue(
     private val clock: Clock,
     /** The connection scope: an explicit resend starts its flush here, so leaving a screen never cancels it. */
     private val scope: CoroutineScope,
+    dispatchers: AppDispatchers,
 ) {
+    /** Shared with the online pipeline: every suspending command and completion returns to this engine lane. */
+    internal val lane = dispatchers.serial("delivery")
     private val changes = Mutex()
     private var cache: List<QueuedPrompt>? = null
     private var lastReadable = true
@@ -129,7 +134,7 @@ public class OfflineQueue(
         cache = limited.kept
         if (limited.removed > 0) {
             eviction = limited
-            scope.launch { changes.withLock { store.save(limited.kept) } }
+            scope.launch(lane) { changes.withLock { store.save(queue()) } }
         }
         publish()
         return limited.kept
@@ -164,7 +169,9 @@ public class OfflineQueue(
      * Adds a drafted prompt (B-STATE-036, 046). `Ok(null)` = queued; `Ok(refusal)` = not queued, the composer keeps the
      * words; `Failed(StorageRefused)` = the write was refused, nothing changed.
      */
-    public suspend fun queuePrompt(prompt: QueuedPrompt): Outcome<QueueRefusal?> =
+    public suspend fun queuePrompt(prompt: QueuedPrompt): Outcome<QueueRefusal?> = withContext(lane) { queuePromptOnLane(prompt) }
+
+    private suspend fun queuePromptOnLane(prompt: QueuedPrompt): Outcome<QueueRefusal?> =
         changes.withLock {
             if (prompt.profileId in closedProfiles) return@withLock QueueRefusal.Closed.ok()
             if (prompt.payloadBytes > QueueLimits.MAX_ENTRY_BYTES) return@withLock QueueRefusal.TooLarge.ok()
@@ -187,7 +194,9 @@ public class OfflineQueue(
      * Removes an entry. `Ok(false)` when it is on the wire right now (the decision was made against a bubble that said
      * "queued"). B-STATE-035, 045.
      */
-    public suspend fun remove(id: String): Outcome<Boolean> =
+    public suspend fun remove(id: String): Outcome<Boolean> = withContext(lane) { removeOnLane(id) }
+
+    private suspend fun removeOnLane(id: String): Outcome<Boolean> =
         changes.withLock {
             if (sending(id)) return@withLock false.ok()
             val kept = queue().filter { it.id != id }
@@ -200,10 +209,12 @@ public class OfflineQueue(
             true.ok()
         }
 
-    /** The person's clear of every queued prompt. Refused while an online send is in flight. */
-    public suspend fun clearAll(): Boolean =
+    /** The person's clear of every queued prompt. Refused while any send is in flight. */
+    public suspend fun clearAll(): Boolean = withContext(lane) { clearAllOnLane() }
+
+    private suspend fun clearAllOnLane(): Boolean =
         changes.withLock {
-            if (onlineInFlight.isNotEmpty()) return@withLock false
+            if (inFlight != null || onlineInFlight.isNotEmpty()) return@withLock false
             if (queue().isEmpty() && store.readable) return@withLock true
             if (!store.save(emptyList())) return@withLock false
             cache = emptyList()
@@ -218,7 +229,9 @@ public class OfflineQueue(
      * receipt-bearing command is bound to its first dispatch: resend only looks it up (B-STATE-008). `Ok(false)` when the
      * entry is not in review any more; `Failed(StorageRefused)` leaves it in review and sends nothing.
      */
-    public suspend fun resend(id: String): Outcome<Boolean> {
+    public suspend fun resend(id: String): Outcome<Boolean> = withContext(lane) { resendOnLane(id) }
+
+    private suspend fun resendOnLane(id: String): Outcome<Boolean> {
         val profile = queue().firstOrNull { it.id == id }?.profileId ?: return false.ok()
         val journal = (journals.forProfile(profile) as? Outcome.Ok)?.value
         val receipts = journal?.read()
@@ -238,7 +251,7 @@ public class OfflineQueue(
             publish()
             true.ok()
         }
-        if (cleared is Outcome.Ok && cleared.value) scope.launch { flush() }
+        if (cleared is Outcome.Ok && cleared.value) scope.launch(lane) { flush() }
         return cleared
     }
 
@@ -246,7 +259,9 @@ public class OfflineQueue(
      * The person's Retry on an entry whose send failed before it left the device: it goes out in a flush that starts
      * now, even with automatic sending off. False when it is gone, on its way, or left the device once.
      */
-    public suspend fun retry(id: String): Boolean {
+    public suspend fun retry(id: String): Boolean = withContext(lane) { retryOnLane(id) }
+
+    private suspend fun retryOnLane(id: String): Boolean {
         if (sending(id)) return false
         val entry = queue().firstOrNull { it.id == id } ?: return false
         if (entry.dispatched) return false
@@ -259,7 +274,9 @@ public class OfflineQueue(
     // ---------------------------------------------------------------- online sends (plan 04 §13.5)
 
     /** Persists (or refreshes) an online send's marked entry before the composer clears (B-STATE-041, 042). */
-    public suspend fun holdOnline(prompt: QueuedPrompt): Boolean =
+    public suspend fun holdOnline(prompt: QueuedPrompt): Boolean = withContext(lane) { holdOnlineOnLane(prompt) }
+
+    private suspend fun holdOnlineOnLane(prompt: QueuedPrompt): Boolean =
         changes.withLock {
             if (!prompt.dispatched || prompt.profileId in closedProfiles ||
                 prompt.payloadBytes > QueueLimits.MAX_ENTRY_BYTES
@@ -292,7 +309,9 @@ public class OfflineQueue(
      * Finishes an online send: confirmed acceptance and pre-flight refusals remove the marker; an unknown outcome
      * stays for explicit review with its reason (B-STATE-041, 043).
      */
-    public suspend fun finishOnline(id: String, dispatched: Boolean, accepted: Boolean, error: String?) {
+    public suspend fun finishOnline(id: String, dispatched: Boolean, accepted: Boolean, error: String?): Unit = withContext(lane) { finishOnlineOnLane(id, dispatched, accepted, error) }
+
+    private suspend fun finishOnlineOnLane(id: String, dispatched: Boolean, accepted: Boolean, error: String?) {
         changes.withLock {
             try {
                 if (id !in onlineInFlight) return@withLock
@@ -317,7 +336,9 @@ public class OfflineQueue(
     // ---------------------------------------------------------------- profile removal (B-STATE-062, 066 partly)
 
     /** Closes queue admission for [profile] at once (online holds, new queue entries, dispatch of its online sends). */
-    public suspend fun closeProfile(profile: ProfileId) {
+    public suspend fun closeProfile(profile: ProfileId): Unit = withContext(lane) { closeProfileOnLane(profile) }
+
+    private suspend fun closeProfileOnLane(profile: ProfileId) {
         closedProfiles += profile
         journals.closeProfile(profile)
         changes.withLock { }
@@ -330,7 +351,9 @@ public class OfflineQueue(
      * Sweeps [profile]'s entries, markers included. Refused (nothing removed, markers intact) when the queue is
      * unreadable, a send of that profile is on the wire, or storage refuses (B-STATE-062, 066).
      */
-    public suspend fun sweepProfile(profile: ProfileId): Outcome<Int> =
+    public suspend fun sweepProfile(profile: ProfileId): Outcome<Int> = withContext(lane) { sweepProfileOnLane(profile) }
+
+    private suspend fun sweepProfileOnLane(profile: ProfileId): Outcome<Int> =
         changes.withLock {
             if (!store.readable) return@withLock Failure.StorageRefused().failed()
             val q = queue()
@@ -350,7 +373,9 @@ public class OfflineQueue(
      * "Check again": looks the original receipt up; never sends. Removes the entry only when the server shows the
      * admission, and only the exact entry the receipt was made for (a late lookup keeps a replacement draft).
      */
-    public suspend fun checkReceipt(id: String): Boolean {
+    public suspend fun checkReceipt(id: String): Boolean = withContext(lane) { checkReceiptOnLane(id) }
+
+    private suspend fun checkReceiptOnLane(id: String): Boolean {
         val link = connection.link.value ?: return false
         if (!link.connected || inFlight == id || !receiptsSupported(link)) return false
         val origin = link.scope
@@ -400,7 +425,9 @@ public class OfflineQueue(
      * server is still unreachable); one with a status keeps that entry with its reason and continues. Entries whose
      * marker is set are never sent here. Requests during a flush coalesce into one more pass.
      */
-    public suspend fun flush() {
+    public suspend fun flush(): Unit = withContext(lane) { flushOnLane() }
+
+    private suspend fun flushOnLane() {
         val link = connection.link.value ?: return
         if (!link.capabilities.offlinePromptQueue) return
         if (flushing) {
@@ -443,7 +470,7 @@ public class OfflineQueue(
             publish()
             if (flushAgain) {
                 flushAgain = false
-                scope.launch { flush() }
+                scope.launch(lane) { flush() }
             }
         }
     }
@@ -473,9 +500,16 @@ public class OfflineQueue(
             if (queue().none { it.id == entry.id }) return Step.Next // discarded meanwhile: never sent (B-STATE-037)
         }
         // 3. The durable dispatch marker. Removal and resend refuse this id from the moment this write begins.
-        val marked = replace(entry.id) {
+        val marked = changes.withLock {
+            val q = queue()
+            val index = q.indexOfFirst { it === entry && !it.dispatched }
+            if (index < 0 || !allowed()) return@withLock null
             inFlight = entry.id
-            it.withDispatchedAt(clock.now().toEpochMilliseconds())
+            val next = q.toMutableList().also { it[index] = entry.withDispatchedAt(clock.now().toEpochMilliseconds()) }
+            if (!store.save(next)) return@withLock false
+            cache = next
+            publish()
+            true
         }
         when (marked) {
             null -> return Step.Next
