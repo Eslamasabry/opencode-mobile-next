@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceipt
 import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptController
 import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptState
 import io.github.eslamasabry.oc.engine.delivery.receipts.DispatchProof
+import io.github.eslamasabry.oc.engine.delivery.receipts.DispatchScope
 import io.github.eslamasabry.oc.engine.delivery.receipts.PendingCommandJournals
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
@@ -42,6 +43,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.jvm.JvmInline
 import kotlin.time.Clock
@@ -214,10 +216,10 @@ public class PromptDelivery(
         )
     }
 
-    public suspend fun send(request: SendRequest): Outcome<LocalSendId> = perform(request, putBack = true)
+    public suspend fun send(request: SendRequest): Outcome<LocalSendId> = withContext(queue.lane) { perform(request, putBack = true) }
 
     /** Chips, Continue, Send again: the same pipeline, but a failure never leaves its words in the box. */
-    public suspend fun sendInsteadOfDraft(request: SendRequest): Outcome<LocalSendId> = perform(request, putBack = false)
+    public suspend fun sendInsteadOfDraft(request: SendRequest): Outcome<LocalSendId> = withContext(queue.lane) { perform(request, putBack = false) }
 
     /** Texts of dispatched, not-confirmed sends: the draft never restores one (09 §10.8). */
     public fun unconfirmedTexts(ref: ConversationRef): Set<String> = queue.unconfirmedTexts(ref)
@@ -237,7 +239,8 @@ public class PromptDelivery(
                 connection.link.first { it != null && it.connected && it.scope.profileId == ref.profileId }
             } ?: return offline(request, kind, connection.link.value?.takeIf { it.scope.profileId == ref.profileId })
         }
-        if (kind !is TypedKind.Prompt) return sendCommand(link, request, kind)
+        val origin = link.scope
+        if (kind !is TypedKind.Prompt) return sendCommand(link, origin, request, kind)
         val route = SteerPolicy.route(
             online = true,
             running = running(ref),
@@ -248,8 +251,12 @@ public class PromptDelivery(
         if (route == SendRoute.Blocked) return Failure.Unavailable(FeatureId("midTurnPrompt")).failed()
         // 3. "Stop and send" agents: stop first.
         if (route == SendRoute.RestartTurn) {
+            val ready = link.awaitActionTransport()
+            if (ready is Outcome.Failed) return ready
+            if (!sameTarget(link, origin)) return Failure.Refused(RefusalReason.StaleScope).failed()
             stopMemory.noteStopFromThisApp(ref)
             link.stop(ref.sessionId)
+            if (!sameTarget(link, origin)) return Failure.Refused(RefusalReason.StaleScope).failed()
         }
         val now = clock.now().toEpochMilliseconds()
         val localId = LocalSendId("local-$now-${nextCounter()}")
@@ -266,27 +273,27 @@ public class PromptDelivery(
         if (SteerPolicy.bubbleFirst(route)) {
             // 6. Bubble first; the composer clears its field when this returns.
             showBubble(bubble)
-            jobs[localId] = scope.launch { dispatch(link, bubble, request, putBack) }
+            jobs[localId] = scope.launch(queue.lane) { dispatch(link, origin, bubble, request, putBack) }
         } else {
             // Steers stay transport-first: they need the exact message id.
             val ready = link.awaitActionTransport()
-            if (ready is Outcome.Failed || connection.link.value !== link) {
+            if (ready is Outcome.Failed || !sameTarget(link, origin)) {
                 return (ready as? Outcome.Failed)?.failure?.failed() ?: Failure.Refused(RefusalReason.StaleScope).failed()
             }
             showBubble(bubble)
-            jobs[localId] = scope.launch { dispatch(link, bubble, request, putBack) }
+            jobs[localId] = scope.launch(queue.lane) { dispatch(link, origin, bubble, request, putBack) }
         }
         return localId.ok()
     }
 
-    private suspend fun dispatch(link: SendLink, bubble: PendingSend, request: SendRequest, putBack: Boolean) {
+    private suspend fun dispatch(link: SendLink, origin: DispatchScope, bubble: PendingSend, request: SendRequest, putBack: Boolean) {
         val ref = bubble.ref
         // 7. Transport, then the epoch: a changed connection dispatches to neither server.
         val ready = link.awaitActionTransport()
         val clientId = if (link.correlated && link.capabilities.clientPromptMessageID) link.newClientMessageId() else null
         val proceed = wire.withLock {
             val current = mutablePending.value.firstOrNull { it.localId == bubble.localId } ?: return@withLock null
-            val stale = ready is Outcome.Failed || connection.link.value !== link ||
+            val stale = ready is Outcome.Failed || !sameTarget(link, origin) ||
                 (bubble.reviewId != null && !queue.canDispatchOnline(bubble.reviewId))
             if (stale) return@withLock false
             update(current.copy(phase = SendPhase.OnWire, dispatchedMessageId = clientId))
@@ -307,7 +314,7 @@ public class PromptDelivery(
             delivery = bubble.route.wireDelivery,
             clientMessageId = clientId,
         )
-        fun fence(): Boolean = connection.link.value === link && (bubble.reviewId == null || queue.canDispatchOnline(bubble.reviewId))
+        fun fence(): Boolean = sameTarget(link, origin) && (bubble.reviewId == null || queue.canDispatchOnline(bubble.reviewId))
         var failure: Failure? = null
         val accepted: Boolean
         val journal = (journals.forProfile(ref.profileId) as? Outcome.Ok)?.value
@@ -317,7 +324,7 @@ public class PromptDelivery(
                 receiptId = clientId.raw,
                 sessionId = ref.sessionId.raw,
                 tabId = ref.sessionId.raw,
-                scope = link.scope.receiptScope,
+                scope = origin.receiptScope,
                 createdAt = bubble.createdAtMs,
                 state = CommandReceiptState.Sent,
             )
@@ -385,10 +392,11 @@ public class PromptDelivery(
         }
     }
 
-    private suspend fun sendCommand(link: SendLink, request: SendRequest, kind: TypedKind): Outcome<LocalSendId> {
+    private suspend fun sendCommand(link: SendLink, origin: DispatchScope, request: SendRequest, kind: TypedKind): Outcome<LocalSendId> {
         val ref = request.ref
         val ready = link.awaitActionTransport()
         if (ready is Outcome.Failed) return ready
+        if (!sameTarget(link, origin)) return Failure.Refused(RefusalReason.StaleScope).failed()
         val result = when (kind) {
             is TypedKind.Command -> link.slashCommand(ref.sessionId, kind.name, kind.args)
             is TypedKind.Shell -> link.shell(ref.sessionId, kind.command)
@@ -411,7 +419,9 @@ public class PromptDelivery(
      * still waiting is called off and its words come back; one on the wire is stopped now and again once the server
      * took it. Records `stoppedByPerson` so a stop by the person is never "Failed" (B-AGENT-243).
      */
-    public suspend fun stop(ref: ConversationRef, mode: StopMode = StopMode.Now): Outcome<Unit> {
+    public suspend fun stop(ref: ConversationRef, mode: StopMode = StopMode.Now): Outcome<Unit> = withContext(queue.lane) { stopOnLane(ref, mode) }
+
+    private suspend fun stopOnLane(ref: ConversationRef, mode: StopMode = StopMode.Now): Outcome<Unit> {
         if (mode == StopMode.AfterThisStep) return Failure.Unavailable(FeatureId("stopAfterStep")).failed()
         val now = clock.now().toEpochMilliseconds()
         lastSendAtMs[ref]?.let { if (now - it < STOP_IGNORE_AFTER_SEND.inWholeMilliseconds) return Unit.ok() }
@@ -432,7 +442,9 @@ public class PromptDelivery(
     private suspend fun stopNow(ref: ConversationRef): Outcome<Unit> {
         clearLocalTurn(ref)
         val link = currentLink(ref) ?: return Failure.Network(NetworkWhy.Offline).failed()
+        val origin = link.scope
         withTimeoutOrNull(STOP_TRANSPORT_WAIT) { link.awaitActionTransport() }
+        if (!sameTarget(link, origin)) return Failure.Refused(RefusalReason.StaleScope).failed()
         stopMemory.noteStopFromThisApp(ref) // before the call: the server's interrupt must not read as another device
         stopMemory.markStoppedByPerson(ref)
         return when (val r = link.stop(ref.sessionId)) {
@@ -444,11 +456,15 @@ public class PromptDelivery(
     // ------------------------------------------------------------------------------------------------ review
 
     /** Looks the receipt up; never sends (B-STATE-008). */
-    public suspend fun checkAgain(id: LocalSendId): Outcome<ReceiptLook> =
+    public suspend fun checkAgain(id: LocalSendId): Outcome<ReceiptLook> = withContext(queue.lane) { checkAgainOnLane(id) }
+
+    private suspend fun checkAgainOnLane(id: LocalSendId): Outcome<ReceiptLook> =
         (if (queue.checkReceipt(reviewIdOf(id))) ReceiptLook.Confirmed else ReceiptLook.StillUnknown).ok()
 
     /** Sends again only on the person's explicit confirmation; a receipt-bearing command only looks (B-STATE-008, 044). */
-    public suspend fun resend(id: LocalSendId, confirmedByPerson: Boolean): Outcome<Boolean> {
+    public suspend fun resend(id: LocalSendId, confirmedByPerson: Boolean): Outcome<Boolean> = withContext(queue.lane) { resendOnLane(id, confirmedByPerson) }
+
+    private suspend fun resendOnLane(id: LocalSendId, confirmedByPerson: Boolean): Outcome<Boolean> {
         if (!confirmedByPerson) return Failure.Refused(RefusalReason.DispatchUncertain).failed()
         return queue.resend(reviewIdOf(id))
     }
@@ -458,6 +474,9 @@ public class PromptDelivery(
     // ------------------------------------------------------------------------------------------------ state
 
     private fun running(ref: ConversationRef): Boolean = facts.running(ref) || mutableLocalTurns.value[ref] != null
+
+    private fun sameTarget(link: SendLink, origin: DispatchScope): Boolean =
+        connection.link.value === link && link.scope == origin && connection.activeProfile.value == origin.profileId
 
     private fun currentLink(ref: ConversationRef): SendLink? = connection.link.value?.takeIf { it.scope.profileId == ref.profileId }
 
