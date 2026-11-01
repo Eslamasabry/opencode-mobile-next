@@ -17,6 +17,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 /** A backend that can refuse (return false) or throw on the next commits, and records every commit it saw. */
 internal class FakeBackend(initial: Map<String, RawPref> = emptyMap()) : InMemoryPrefsBackend(initial) {
     var refuseNext = 0
+
+    /** Runs inside the platform commit, before it returns (a caller cancelled mid-commit, a racing writer, …). */
+    var onCommit: (() -> Unit)? = null
     var throwNext = 0
     val commits = mutableListOf<Map<String, RawPref?>>()
 
@@ -25,6 +28,7 @@ internal class FakeBackend(initial: Map<String, RawPref> = emptyMap()) : InMemor
 
     override fun commit(changes: Map<String, RawPref?>): Boolean {
         commits += LinkedHashMap(changes)
+        onCommit?.invoke()
         for ((k, v) in changes) if (v == null) memory.remove(k) else memory[k] = v
         if (throwNext > 0) {
             throwNext--
@@ -85,7 +89,47 @@ internal open class MapSecretEntries : SecretEntries {
         return true
     }
 
-    override fun remove(name: String): Boolean = map.remove(name) != null
+    override fun remove(name: String): Boolean {
+        map.remove(name)
+        return true
+    }
+}
+
+/**
+ * Android's `SharedPreferencesImpl` for the secret file: [put]/[remove] change [memory] first, then write the WHOLE
+ * memory map to [disk] unless the next commit is refused. [restarted] is a new process reading the disk.
+ */
+internal class SplitSecretEntries(private val disk: LinkedHashMap<String, String> = LinkedHashMap()) : SecretEntries {
+    private val memory = LinkedHashMap(disk)
+    var refuseNext = 0
+
+    val onDisk: Map<String, String> get() = disk
+
+    fun restarted(): SplitSecretEntries = SplitSecretEntries(LinkedHashMap(disk))
+
+    override fun get(name: String): String? = memory[name]
+
+    override fun names(): Set<String> = memory.keys.toSet()
+
+    override fun put(name: String, value: String): Boolean {
+        memory[name] = value
+        return writeDisk()
+    }
+
+    override fun remove(name: String): Boolean {
+        memory.remove(name)
+        return writeDisk()
+    }
+
+    private fun writeDisk(): Boolean {
+        if (refuseNext > 0) {
+            refuseNext--
+            return false
+        }
+        disk.clear()
+        disk.putAll(memory)
+        return true
+    }
 }
 
 internal class MapSecretStore(initial: Map<String, String> = emptyMap()) : SecretStore {
