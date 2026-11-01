@@ -30,6 +30,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -213,7 +214,9 @@ public object InputDialogRules {
 
 /**
  * One value in a dialog (Dart `showKitInputDialog`; plan 06 §7.4): the field opens focused with its words selected;
- * the keyboard's action submits; the text survives rotation. [onResult] is called once: with the new text, or with null
+ * the keyboard's action submits; nonsecret text survives rotation within [operationKey]. Closing removes the input
+ * state; changing [operationKey] starts a new operation even when two targets have the same initial text.
+ * [onResult] is called once: with the new text, or with null
  * when the person cancels or submits it unchanged (B-KIT-016). [validate] returns the error line, or null.
  *
  * States: closed, open, invalid
@@ -231,17 +234,35 @@ public fun KitInputDialog(
     initial: String = "",
     kind: KitFieldKind = KitFieldKind.Text,
     validate: (String) -> String? = { null },
+    operationKey: Any? = initial,
+    onResult: (String?) -> Unit,
+) {
+    if (!visible) return
+    key(operationKey, kind) {
+        InputDialogContent(title, fieldLabel, confirmLabel, initial, kind, validate, onResult)
+    }
+}
+
+@Composable
+private fun InputDialogContent(
+    title: String,
+    fieldLabel: String,
+    confirmLabel: String,
+    initial: String,
+    kind: KitFieldKind,
+    validate: (String) -> String?,
     onResult: (String?) -> Unit,
 ) {
     val state: TextFieldState = rememberTextFieldState(initial)
     val focus = remember { FocusRequester() }
-    var opened by remember { mutableStateOf(false) }
-    if (!visible && opened) opened = false
     val cancel = stringResource(Res.string.kitConfirmCancel)
     val typed = state.text.toString()
-    val error = if (typed.isEmpty()) null else validate(typed)
-    val submit = { if (error == null) onResult(InputDialogRules.result(initial, typed, submitted = true)) }
-    KitDialogFrame(visible, title, onDismissRequest = { onResult(null) }) {
+    val error = validate(typed)
+    val submit = {
+        val current = state.text.toString()
+        if (validate(current) == null) onResult(InputDialogRules.result(initial, current, submitted = true))
+    }
+    KitDialogFrame(true, title, onDismissRequest = { onResult(null) }) {
         KitText(title, role = TypeRole.Title, kind = KitTextKind.Frame)
         KitField(
             state = state,
@@ -261,12 +282,9 @@ public fun KitInputDialog(
                 ),
             tertiary = listOf(KitAction(cancel, onClick = { onResult(null) })),
         )
-        LaunchedEffect(visible) {
-            if (visible && !opened) {
-                opened = true
-                state.edit { selectAll() }
-                runCatchingFocus { focus.requestFocus() }
-            }
+        LaunchedEffect(Unit) {
+            state.edit { selectAll() }
+            runCatchingFocus { focus.requestFocus() }
         }
     }
 }
