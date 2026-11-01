@@ -57,11 +57,11 @@ public class NotificationActionBody(
             val outcome = withTimeoutOrNull(answerDeadline) { answerer.answer(answer) }
             return when {
                 outcome is Outcome.Ok -> {
-                    shade.dismiss(tap.key)
+                    shade.dismissIfCurrent(tap)
                     ShadeOutcome.Answered
                 }
                 outcome is Outcome.Failed && outcome.failure.meansGone() -> {
-                    shade.dismiss(tap.key)
+                    shade.dismissIfCurrent(tap)
                     ShadeOutcome.DismissedGone
                 }
                 else -> repost(tap)
@@ -100,7 +100,7 @@ public class NotificationActionBody(
         }
 
     private fun repost(tap: ShadeTap): ShadeOutcome {
-        shade.showOpenOnly(tap)
+        shade.showOpenOnlyIfCurrent(tap)
         return ShadeOutcome.RepostedOpen
     }
 

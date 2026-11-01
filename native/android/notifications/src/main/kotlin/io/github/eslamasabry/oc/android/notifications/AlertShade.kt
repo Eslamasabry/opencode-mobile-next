@@ -31,6 +31,11 @@ public interface AlertShade {
     /** Dismisses one alert and refreshes both group summaries. */
     public fun dismiss(key: String)
 
+    /** Compare and mutate atomically; an older request must never change its replacement. */
+    public fun dismissIfCurrent(tap: ShadeTap): Boolean
+
+    public fun showOpenOnlyIfCurrent(tap: ShadeTap): AlertShown
+
     public fun isShowing(key: String): Boolean
 }
 
@@ -47,6 +52,7 @@ public class AndroidAlertShade(
     private val manager: NotificationManager = context.getSystemService(NotificationManager::class.java)
 
     override fun show(alert: CodingAlert, route: AlertRoute.Post): AlertShown {
+        synchronized(shadeLock) {
         if (!alert.isValid) return AlertShown.Invalid
         blocked(route.channel)?.let { return it }
         val id = NotificationIds.alert(alert.key)
@@ -64,12 +70,21 @@ public class AndroidAlertShade(
         if (text.isNotEmpty()) builder.setStyle(NotificationCompat.BigTextStyle().bigText(text))
         builder.extras.putString(FrozenExtras.EXTRA_SUMMARY_LINE, AlertCopy.summaryLine(alert, title))
         AlertButtons.plan(alert).forEachIndexed { index, button -> builder.addAction(action(alert, button, id, index)) }
+        builder.extras.apply {
+            putString(FrozenExtras.EXTRA_CODING_ALERT_KIND, alert.kind.wire)
+            putString(FrozenExtras.EXTRA_CODING_ALERT_KEY, alert.key)
+            putString(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID, alert.profileId)
+            putString(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID, alert.sessionId)
+            putString(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID, alert.requestId)
+        }
         if (!post(id, builder.build())) return AlertShown.Blocked(BlockedWhy.Permission)
         route.group?.let { refreshSummary(it) }
         return AlertShown.Shown
+            }
     }
 
     override fun showOpenOnly(tap: ShadeTap): AlertShown {
+        synchronized(shadeLock) {
         if (tap.key.isBlank()) return AlertShown.Invalid
         val channel = NotifyChannel.CodingAction
         blocked(channel)?.let { return it }
@@ -84,16 +99,49 @@ public class AndroidAlertShade(
                 .setPublicVersion(publicVersion(channel, title))
         AlertPolicy.groupOf(tap.kind)?.let { builder.setGroup(it) }
         builder.extras.putString(FrozenExtras.EXTRA_SUMMARY_LINE, title)
+        builder.extras.apply {
+            putString(FrozenExtras.EXTRA_CODING_ALERT_KIND, tap.kind.wire)
+            putString(FrozenExtras.EXTRA_CODING_ALERT_KEY, tap.key)
+            putString(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID, tap.profileId)
+            putString(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID, tap.sessionId)
+            putString(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID, tap.requestId)
+        }
         if (!post(id, builder.build())) return AlertShown.Blocked(BlockedWhy.Permission)
         return AlertShown.Shown
+            }
     }
 
     override fun dismiss(key: String) {
+        synchronized(shadeLock) {
         if (key.isBlank()) return
         manager.cancel(NotificationIds.alert(key))
         // The last alert of a group takes its summary with it.
         refreshSummary(AlertGroups.NEEDS_YOU)
         refreshSummary(AlertGroups.FINISHED)
+            }
+    }
+
+    override fun dismissIfCurrent(tap: ShadeTap): Boolean = synchronized(shadeLock) {
+        if (!isCurrent(tap)) return false
+        dismiss(tap.key)
+        true
+    }
+
+    override fun showOpenOnlyIfCurrent(tap: ShadeTap): AlertShown = synchronized(shadeLock) {
+        if (!isCurrent(tap)) return AlertShown.Invalid
+        showOpenOnly(tap)
+    }
+
+    private fun isCurrent(tap: ShadeTap): Boolean {
+        val row = manager.activeNotifications.firstOrNull {
+            it.id == NotificationIds.alert(tap.key) && it.packageName == context.packageName
+        }?.notification ?: return false
+        val extras = row.extras
+        return extras.getString(FrozenExtras.EXTRA_CODING_ALERT_KIND) == tap.kind.wire &&
+            extras.getString(FrozenExtras.EXTRA_CODING_ALERT_KEY) == tap.key &&
+            extras.getString(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID) == tap.profileId &&
+            extras.getString(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID) == tap.sessionId &&
+            extras.getString(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID) == tap.requestId
     }
 
     override fun isShowing(key: String): Boolean {
@@ -305,6 +353,7 @@ public class AndroidAlertShade(
     }
 
     internal companion object {
+        private val shadeLock = Any()
         const val FINISHED_TIMEOUT_MS = 60 * 60 * 1000L
         const val MAX_SUBTEXT = 120
         const val MAX_SUMMARY_LINES = 5

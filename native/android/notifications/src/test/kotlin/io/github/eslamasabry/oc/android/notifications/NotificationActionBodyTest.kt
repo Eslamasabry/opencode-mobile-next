@@ -48,6 +48,10 @@ class NotificationActionBodyTest {
             dismissed += key
         }
 
+        override fun dismissIfCurrent(tap: ShadeTap): Boolean { dismiss(tap.key); return true }
+
+        override fun showOpenOnlyIfCurrent(tap: ShadeTap): AlertShown = showOpenOnly(tap)
+
         override fun isShowing(key: String): Boolean = false
     }
 
@@ -237,6 +241,29 @@ class NotificationActionBodyTest {
             assertEquals(listOf("ses_7"), dismissedRows)
             assertTrue(stops.isEmpty())
         }
+
+    @Test
+    fun `B-CHAT-074 notify finding 2 old answer completion preserves the replacement request`() = runTest {
+        val manager = app.getSystemService(android.app.NotificationManager::class.java)
+        val words = NotifyWords(app) { "en" }
+        val realShade = AndroidAlertShade(app, words, ChannelRegistry(manager, words).also { it.ensure() })
+        val route = AlertRoute.Post(NotifyChannel.CodingAction, AlertGroups.NEEDS_YOU)
+        val a = CodingAlert(AlertKind.Permission, "ses_1", "input:p1:ses_1", requestId = "per_1", profileId = "p1", detail = "npm test", ask = PermissionAsk(AskAction.Run, "npm test"))
+        for (result in listOf(Unit.ok(), Failed(Failure.NotFound()), Failed(Failure.Network()))) {
+            realShade.show(a, route)
+            val gate = CompletableDeferred<Outcome<Unit>>()
+            val body = NotificationActionBody(realShade, { gate.await() }, { Unit.ok() }, lock)
+            val answering = async { body.onCodingAction(tapIntent("deny")) }
+            runCurrent()
+            realShade.show(a.copy(requestId = "per_2"), route)
+            gate.complete(result)
+            answering.await()
+            val row = manager.activeNotifications.single { it.id == NotificationIds.alert(a.key) }.notification
+            val open = shadowOf(row.contentIntent).savedIntent
+            assertEquals("per_2", open.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID))
+            assertEquals(2, row.actions.size)
+        }
+    }
 
     private fun Failed(failure: Failure): Outcome<Unit> = Outcome.Failed(failure)
 }
