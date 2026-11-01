@@ -1,0 +1,3 @@
+# K-SEC-10: hosts allowed in production URL literals until KnownHosts (:core:security, WP-16.1) lists them.
+# Shrink-only: remove a line when KnownHosts names the host.
+cdimage.ubuntu.com   # android/linux BuiltinLinux.kt rootfs download (16 §2.5 EG-5)
