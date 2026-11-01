@@ -143,6 +143,17 @@ public class RevealRegistry internal constructor() {
 
     public val totalFrames: Int get() = states.values.sumOf { it.frames }
     public val totalLandings: Int get() = states.values.sumOf { it.landings }
+
+    /** Text layouts of the transcript's reply blocks, and the characters they laid out (STREAM-FIX gate, PB-17). */
+    public var layouts: Int = 0
+        private set
+    public var layoutChars: Long = 0
+        private set
+
+    internal fun laidOut(chars: Int) {
+        layouts++
+        layoutChars += chars
+    }
 }
 
 @Composable
