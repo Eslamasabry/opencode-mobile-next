@@ -4,6 +4,13 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ok
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.fail
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -12,13 +19,6 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertIs
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.test.fail
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MobileDownloadConsentStoreTest {
@@ -33,6 +33,24 @@ class MobileDownloadConsentStoreTest {
         TestKv(mapOf("oc.profiles" to profilesJson(*ids)) + extra, UnconfinedTestDispatcher(testScheduler))
 
     private fun store(kv: TestKv) = MobileDownloadConsentStore(kv, kv.lanes)
+
+    @Test
+    fun `B-SEC-013 eng-5 revocation withdraws the grant before a refused save`() = runTest {
+        val kv = kv()
+        val gate = store(kv)
+        gate.changeFromSettings(phone, allow = true)
+        val before = gate.revision.value
+        val hold = kv.hold("oc.mobileDownloadConsent.phone")
+        kv.disk.refuse = { key, _ -> key == "oc.mobileDownloadConsent.phone" }
+        val revoke = async { gate.changeFromSettings(phone, allow = false) }
+        hold.entered.await()
+        assertFalse(gate.read(phone, ConsentTopic.MobileDownload).granted)
+        assertTrue(gate.revision.value > before)
+        hold.release.complete(Unit)
+        assertIs<Outcome.Failed>(revoke.await())
+        assertFalse(gate.read(phone, ConsentTopic.MobileDownload).granted)
+        assertFalse(gate.storageAvailable(phone))
+    }
 
     @Test
     fun `B-STATE-030 the threshold is strict and only an explicit mobile route asks`() = runTest {
