@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_en.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <plurals name="terminalShowEarlier">
+        <item quantity="one">Show 1 earlier line</item>
+        <item quantity="other">Show %1$s earlier lines</item>
+    </plurals>
+    <string name="terminalShowEarlier__eq1">Show 1 earlier line</string>
+    <string name="aiteamBringInDone">%1$s has the team's latest work (%2$s).</string>
+</resources>

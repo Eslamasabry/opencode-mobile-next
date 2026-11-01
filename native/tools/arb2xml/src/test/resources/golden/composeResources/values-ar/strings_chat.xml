@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ar.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="monitorRequestSummary">%1$s · %2$s\n%3$s: %4$s</string>
+    <string name="chatUiReferenceAlreadyAdded">\u200E@%1$s موجود بالفعل في الطلب</string>
+    <plurals name="chatUiDraftsQueued">
+        <item quantity="zero">لا مسودات في قائمة الانتظار.</item>
+        <item quantity="one">مسودة واحدة في قائمة الانتظار للإرسال عند إعادة الاتصال.</item>
+        <item quantity="two">مسودتان في قائمة الانتظار للإرسال عند إعادة الاتصال.</item>
+        <item quantity="few">%1$s مسودات في قائمة الانتظار للإرسال عند إعادة الاتصال.</item>
+        <item quantity="many">%1$s مسودة في قائمة الانتظار للإرسال عند إعادة الاتصال.</item>
+        <item quantity="other">%1$s مسودة في قائمة الانتظار للإرسال عند إعادة الاتصال.</item>
+    </plurals>
+    <plurals name="chatUiQuestionsSummary">
+        <item quantity="zero">%1$s · لا أسئلة</item>
+        <item quantity="one">%1$s · سؤال واحد</item>
+        <item quantity="two">%1$s · سؤالان</item>
+        <item quantity="few">%1$s · %2$s أسئلة</item>
+        <item quantity="many">%1$s · %2$s سؤالًا</item>
+        <item quantity="other">%1$s · %2$s سؤال</item>
+    </plurals>
+    <string name="chatUiRateLimitCountdown">تم تجاوز حد المعدل. إعادة المحاولة%1$s بعد %2$s</string>
+    <plurals name="kitNeedsYouWaitingSpoken">
+        <item quantity="zero">ينتظر منذ أقل من دقيقة</item>
+        <item quantity="one">ينتظر منذ دقيقة واحدة</item>
+        <item quantity="two">ينتظر منذ %1$s من الدقائق</item>
+        <item quantity="few">ينتظر منذ %1$s من الدقائق</item>
+        <item quantity="many">ينتظر منذ %1$s من الدقائق</item>
+        <item quantity="other">ينتظر منذ %1$s من الدقائق</item>
+    </plurals>
+    <string name="kitNeedsYouWaitingSpoken__eq0">ينتظر منذ أقل من دقيقة</string>
+    <string name="kitNeedsYouWaitingSpoken__eq1">ينتظر منذ دقيقة واحدة</string>
+    <plurals name="chatTurnAllFilesMore">
+        <item quantity="zero">كل الملفات · %1$d ملف آخر تغيّر</item>
+        <item quantity="one">كل الملفات · ملف آخر تغيّر</item>
+        <item quantity="two">كل الملفات · ملفان آخران تغيّرا</item>
+        <item quantity="few">كل الملفات · %1$d ملفات أخرى تغيّرت</item>
+        <item quantity="many">كل الملفات · %1$d ملفًا آخر تغيّر</item>
+        <item quantity="other">كل الملفات · %1$d ملف آخر تغيّر</item>
+    </plurals>
+    <string name="chatTurnAllFilesMore__eq1">كل الملفات · ملف آخر تغيّر</string>
+</resources>

@@ -1,0 +1,19 @@
+{
+  "@@locale": "zh",
+  "chatUiDraftsQueued": "{count, plural, other{有 {count} 份草稿在排队，重新连接后发送。}}",
+  "chatUiQuestionsSummary": "{question} · {count, plural, other{{count} 个问题}}",
+  "chatUiRateLimitCountdown": "已触发速率限制。{time} 后重试{attempt}",
+  "kitNeedsYouWaitingSpoken": "{minutes, plural, =0{已等待不到一分钟} =1{已等待 1 分钟} other{已等待 {minutes} 分钟}}",
+  "appExitServerStopped": "{what}。手机上的 OpenCode 随之停止，正在重新启动。",
+  "chatUiReferenceAlreadyAdded": "@{name} 已在提示词中",
+  "e7SettingsStorageSummary": "未发送内容共 {total}：{queued, plural, =1{1 条排队的提示词} other{{queued} 条排队的提示词}}（{queueBytes}）和 {drafts, plural, =1{1 份草稿} other{{drafts} 份草稿}}（{draftBytes}）。排队的提示词在 {days} 天后会被丢弃。",
+  "paseoPasswordHelp": "用 \"paseo daemon set-password\" 设置。保存在本设备的安全存储中。",
+  "terminalShowEarlier": "{count, plural, =1{显示前 1 行} other{显示前 {count} 行}}",
+  "teamUiGateAnswerRunRetry": "再次将{work}发送给{agent}",
+  "agentAccountPercentUsed": "已用 {percent}%",
+  "servicesTitle": "开发服务",
+  "servicesIntro": "把项目的开发命令和预览链接集中管理。保存服务不会启动它。",
+  "aiteamBringInDone": "{project} 已包含团队的最新工作（{commit}）。",
+  "monitorRequestSummary": "{profile} · {kind}\n{lastChecked}：{time}",
+  "libraryModelsAgentsTitle": "模型与智能体"
+}

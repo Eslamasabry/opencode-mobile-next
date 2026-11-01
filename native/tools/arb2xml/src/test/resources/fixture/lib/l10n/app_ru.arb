@@ -1,0 +1,7 @@
+{
+  "@@locale": "ru",
+  "chatUiDraftsQueued": "{count, plural, one{{count} черновик в очереди, отправится после переподключения.} few{{count} черновика в очереди, отправятся после переподключения.} many{{count} черновиков в очереди, отправятся после переподключения.} other{{count} черновика в очереди, отправятся после переподключения.}}",
+  "chatUiQuestionsSummary": "{question} · {count, plural, one{{count} вопрос} few{{count} вопроса} many{{count} вопросов} other{{count} вопроса}}",
+  "chatUiRateLimitCountdown": "Превышен лимит запросов. Повтор{attempt} через {time}",
+  "kitNeedsYouWaitingSpoken": "{minutes, plural, =0{ждёт меньше минуты} one{ждёт {minutes} минуту} few{ждёт {minutes} минуты} many{ждёт {minutes} минут} other{ждёт {minutes} минуты}}"
+}

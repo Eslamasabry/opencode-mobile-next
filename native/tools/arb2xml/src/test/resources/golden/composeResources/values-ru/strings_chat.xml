@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ru.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <plurals name="chatUiDraftsQueued">
+        <item quantity="one">%1$s черновик в очереди, отправится после переподключения.</item>
+        <item quantity="few">%1$s черновика в очереди, отправятся после переподключения.</item>
+        <item quantity="many">%1$s черновиков в очереди, отправятся после переподключения.</item>
+        <item quantity="other">%1$s черновика в очереди, отправятся после переподключения.</item>
+    </plurals>
+    <plurals name="chatUiQuestionsSummary">
+        <item quantity="one">%1$s · %2$s вопрос</item>
+        <item quantity="few">%1$s · %2$s вопроса</item>
+        <item quantity="many">%1$s · %2$s вопросов</item>
+        <item quantity="other">%1$s · %2$s вопроса</item>
+    </plurals>
+    <string name="chatUiRateLimitCountdown">Превышен лимит запросов. Повтор%1$s через %2$s</string>
+    <plurals name="kitNeedsYouWaitingSpoken">
+        <item quantity="one">ждёт %1$s минуту</item>
+        <item quantity="few">ждёт %1$s минуты</item>
+        <item quantity="many">ждёт %1$s минут</item>
+        <item quantity="other">ждёт %1$s минуты</item>
+    </plurals>
+    <string name="kitNeedsYouWaitingSpoken__eq0">ждёт меньше минуты</string>
+    <string name="kitNeedsYouWaitingSpoken__eq1">ждёт %1$s минуту</string>
+</resources>

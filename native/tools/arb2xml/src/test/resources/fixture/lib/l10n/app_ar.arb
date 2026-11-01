@@ -1,0 +1,22 @@
+{
+  "@@locale": "ar",
+  "setupCancelConnection": "إلغاء الاتصال",
+  "servicesTitle": "خدمات التطوير",
+  "servicesIntro": "اجمع أوامر تطوير مشروعك وروابط معاينته في مكان واحد. حفظ الخدمة لا يشغّلها.",
+  "libraryModelsAgentsTitle": "النماذج والوكلاء",
+  "monitorRequestSummary": "{profile} · {kind}\n{lastChecked}: {time}",
+  "paseoPasswordHelp": "عيّنها بالأمر \"paseo daemon set-password\". تُحفظ في التخزين الآمن لهذا الجهاز.",
+  "agentAccountPercentUsed": "تم استخدام {percent}%",
+  "e7SettingsStorageSummary": "{total} من العمل غير المرسل — {queued, plural, =0{لا طلبات في قائمة الانتظار} =1{طلب واحد في قائمة الانتظار} =2{طلبان في قائمة الانتظار} few{{queued} طلبات في قائمة الانتظار} many{{queued} طلبًا في قائمة الانتظار} other{{queued} طلب في قائمة الانتظار}} ({queueBytes}) و{drafts, plural, =0{لا مسودات} =1{مسودة واحدة} =2{مسودتان} few{{drafts} مسودات} many{{drafts} مسودة} other{{drafts} مسودة}} ({draftBytes}). تُحذف الطلبات في قائمة الانتظار بعد {days} يومًا.",
+  "chatUiReferenceAlreadyAdded": "‎@{name} موجود بالفعل في الطلب",
+  "chatUiDraftsQueued": "{count, plural, zero{لا مسودات في قائمة الانتظار.} one{مسودة واحدة في قائمة الانتظار للإرسال عند إعادة الاتصال.} two{مسودتان في قائمة الانتظار للإرسال عند إعادة الاتصال.} few{{count} مسودات في قائمة الانتظار للإرسال عند إعادة الاتصال.} many{{count} مسودة في قائمة الانتظار للإرسال عند إعادة الاتصال.} other{{count} مسودة في قائمة الانتظار للإرسال عند إعادة الاتصال.}}",
+  "chatUiQuestionsSummary": "{question} · {count, plural, zero{لا أسئلة} one{سؤال واحد} two{سؤالان} few{{count} أسئلة} many{{count} سؤالًا} other{{count} سؤال}}",
+  "chatUiRateLimitCountdown": "تم تجاوز حد المعدل. إعادة المحاولة{attempt} بعد {time}",
+  "teamUiGateAnswerRunRetry": "إعادة المحاولة",
+  "terminalShowEarlier": "{count, plural, =1{عرض سطر سابق} other{عرض {count} سطرًا سابقًا}}",
+  "aiteamBringInDone": "أصبح أحدث عمل للفريق ({commit}) في {project}.",
+  "appExitServerStopped": "{what}. توقّف OpenCode على هاتفك معه، وهو يبدأ من جديد.",
+  "kitNeedsYouWaitingSpoken": "{minutes, plural, =0{ينتظر منذ أقل من دقيقة} =1{ينتظر منذ دقيقة واحدة} other{ينتظر منذ {minutes} من الدقائق}}",
+  "chatTurnAllFilesMore": "كل الملفات · {count, plural, =1{ملف آخر تغيّر} two{ملفان آخران تغيّرا} few{{count} ملفات أخرى تغيّرت} many{{count} ملفًا آخر تغيّر} other{{count} ملف آخر تغيّر}}",
+  "runningPhoneCpu": "{level, select, idle{خامل} light{خفيف} busy{مشغول} other{مشغول جدًا}} · {percent}%"
+}

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_zh.arb by native/tools/arb2xml (plan 06 §13.3).
+     The ARB files are frozen with Flutter: edit this file, not the ARB. -->
+<resources>
+    <string name="servicesIntro">把项目的开发命令和预览链接集中管理。保存服务不会启动它。</string>
+    <string name="paseoPasswordHelp">用 "paseo daemon set-password" 设置。保存在本设备的安全存储中。</string>
+</resources>
