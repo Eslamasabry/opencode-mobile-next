@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P6 proof: copied verbatim from native/tools/arb2xml/build-sample. -->
+<resources>
+    <plurals name="e7WorkspaceFileCount">
+        <item quantity="one">1 file</item>
+        <item quantity="other">%1$d files</item>
+    </plurals>
+</resources>

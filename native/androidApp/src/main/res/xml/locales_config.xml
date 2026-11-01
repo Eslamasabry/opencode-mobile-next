@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Per-app language (Android 13+, ADR §4 row 6). Languages with a values-<lang> folder. -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="ar" />
+</locale-config>

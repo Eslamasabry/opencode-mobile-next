@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P6 proof: copied verbatim from native/tools/arb2xml/build-sample. -->
+<resources>
+    <plurals name="e7WorkspaceFileCount">
+        <item quantity="zero">لا توجد ملفات</item>
+        <item quantity="one">ملف واحد</item>
+        <item quantity="two">ملفان</item>
+        <item quantity="few">%1$d ملفات</item>
+        <item quantity="many">%1$d ملفًا</item>
+        <item quantity="other">%1$d ملف</item>
+    </plurals>
+</resources>
