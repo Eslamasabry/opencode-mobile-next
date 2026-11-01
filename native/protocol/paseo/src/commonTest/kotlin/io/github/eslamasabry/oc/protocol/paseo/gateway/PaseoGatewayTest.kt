@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.protocol.paseo.FakeDaemon
 import io.github.eslamasabry.oc.protocol.paseo.FakeSockets
 import io.github.eslamasabry.oc.protocol.paseo.jsonOf
 import io.github.eslamasabry.oc.protocol.paseo.str
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
@@ -557,8 +558,3 @@ class PaseoGatewayTest {
 
 private fun <T> kotlinx.coroutines.CoroutineScope.launchCollect(flow: kotlinx.coroutines.flow.Flow<T>, block: (T) -> Unit) =
     launch(kotlinx.coroutines.test.UnconfinedTestDispatcher()) { flow.collect { block(it) } }
-
-private fun kotlinx.coroutines.CoroutineScope.launch(
-    context: kotlin.coroutines.CoroutineContext,
-    block: suspend kotlinx.coroutines.CoroutineScope.() -> Unit,
-) = kotlinx.coroutines.launch(this, context, block = block)
