@@ -25,18 +25,17 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
-/** Plan 06 §8 reading width; the full capacity table lands with `Layout`/`CapRole` (WP K1). */
-private const val SCREEN_MAX_WIDTH_DP = 840
-
 /**
- * A screen frame (slice-0 shape): the ground, a title row with an optional back action, then content. It hosts the
- * screen's [KitSheetHost]. No bottom bar (owner, 2026-10-20). The frozen `KitScreen` slots arrive with WP K1.
+ * The slice-0 screen shape (title, optional Back, a column of content), kept so `:feature:chats` and the shell compile
+ * unchanged. It is now the frame part: `frame.KitScreen` with a `KitTopBar`, reading width from medium up.
  *
- * Text: frame (title row).
+ * Text: frame (the bar).
  */
 @Composable
 public fun KitScreen(
@@ -45,33 +44,23 @@ public fun KitScreen(
     onBack: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    KitSheetHost(Modifier.fillMaxSize().background(colors.ground)) {
+    io.github.eslamasabry.oc.ui.kit.frame.KitScreen(
+        topBar = {
+            KitTopBar(
+                title = title,
+                exit = if (onBack != null && backLabel != null) KitTopBarExit.Back else KitTopBarExit.None,
+                exitLabel = backLabel,
+                onExit = onBack,
+            )
+        },
+        width = KitScreenWidth.Reading,
+    ) {
         Column(
-            modifier = Modifier.safeDrawingPadding().padding(horizontal = tokens.gutter.dp).widthIn(max = SCREEN_MAX_WIDTH_DP.dp),
+            modifier = Modifier.padding(horizontal = tokens.gutter.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-                modifier = Modifier.fillMaxWidth().heightIn(min = tokens.rowHeightOne.dp),
-            ) {
-                if (onBack != null && backLabel != null) {
-                    KitTappable(onClick = onBack, shape = KitShapeId.Pill) {
-                        KitText(
-                            backLabel,
-                            Modifier.padding(horizontal = Space.S2.dp),
-                            role = TypeRole.Label,
-                            tone = TextTone.Accent,
-                            kind = KitTextKind.Frame,
-                        )
-                    }
-                }
-                KitText(title, Modifier.semantics { heading() }, role = TypeRole.Title, kind = KitTextKind.Frame)
-            }
-            content()
-        }
+            content = content,
+        )
     }
 }
 
