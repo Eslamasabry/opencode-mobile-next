@@ -1,0 +1,27 @@
+Verdict: **REQUEST CHANGES** — static, read-only review of `ba8f649e..7ba297a1`; no builds or test processes run.
+
+- **MAJOR — Deferred Stop actions are not cancelled or revalidated.** [KitComposerStop.kt:117](/home/eslam/Storage/Code/wt/native-reviews/src-compmotion/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitComposerStop.kt:117)  
+  Each click launches work that waits for another frame, then checks only `guard.allows(now)`. Pending work survives changes to `armKey` and Working state, and invokes the latest `onStop` through `rememberUpdatedState`. Multiple pending clicks can therefore dispatch multiple stops even when the first requests Working; a changed callback can also retarget pending input. The guard judges frame time rather than click time, so a delayed frame can admit a click made inside the protected window. This breaks plan 08 §5.2’s ignored-tap and Working guarantees.  
+  **Fix:** make acceptance an immediate decision using an injected monotonic timestamp and stable target/send generation. Bind accepted input to that target, latch dispatch, and invalidate pending work on generation or Working changes. Add tests for delayed frames, two pending clicks, and target changes before dispatch.
+
+- **MINOR — Loop execution has no visibility or lifecycle gate.** [MovingPart.kt:166](/home/eslam/Storage/Code/wt/native-reviews/src-compmotion/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/MovingPart.kt:166)  
+  The effect depends on motion inputs only and continuously requests frames while `running`. A covered pane that remains composed in a STARTED window keeps running its glow or sweep. A window frame clock cannot distinguish that pane from visible content. Plan 08 §3.5 explicitly requires both lifecycle and pane visibility gating; the report acknowledges neither is implemented.  
+  **Fix:** include lifecycle ≥ STARTED and effective pane visibility in the loop condition. Verify that covering a still-composed pane stops frame requests and revealing it resumes them.
+
+- **MINOR — Removing the final Stop can resurrect previously removed chips.** [ComposerStripReveal.kt:68](/home/eslam/Storage/Code/wt/native-reviews/src-compmotion/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/ComposerStripReveal.kt:68)  
+  `heldChips` retains the last non-null chips indefinitely. Reproduce with `(chips=A, stop=present) → (chips=null, stop=present) → (chips=null, stop=null)`: A disappears in the second state, then `takeIf { stop == null }` restores A during the final fold. This displays stale controls and retains their callbacks, rather than preserving only the content actually leaving.  
+  **Fix:** capture the current outgoing content when the strip starts exiting, then clear it when exit completes. Add this three-state transition to the strip tests.
+
+- **MINOR — “Stop and send” bypasses the frame-text scaling contract.** [KitStopAndSendPill.kt:60](/home/eslam/Storage/Code/wt/native-reviews/src-compmotion/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitStopAndSendPill.kt:60)  
+  The label uses `BasicText` directly, so it follows the app density up to 2.5× instead of the required 1.3× frame cap. Other composer controls use the capped kit path. At large text settings this changes the pill’s dimensions and increases clipping pressure on its single-line action label. The report explicitly acknowledges the omission.  
+  **Fix:** provide an on-attention text tone or color override in the kit and render this label through the existing frame-text scaling implementation. Cover large text in both LTR and RTL.
+
+- **MINOR — Several motion tests do not prove their named behavior.**  
+  **Evidence:**
+  - [LiveSweepTest.kt:58](/home/eslam/Storage/Code/wt/native-reviews/src-compmotion/native/ui/kit-chat/src/desktopTest/kotlin/io/github/eslamasabry/oc/ui/kitchat/turn/LiveSweepTest.kt:58) constructs its own speed and loop instead of exercising `KitLiveSweep`. Hard-coding full speed inside the actual component would leave this timing test passing.
+  - [ComposerKeysUiTest.kt:84](/home/eslam/Storage/Code/wt/native-reviews/src-compmotion/native/ui/kit-chat/src/desktopTest/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/ComposerKeysUiTest.kt:84) checks height and final position, but never opacity. Replacing the Stop fade with an immediate appearance would satisfy these assertions.
+  - [ComposerGlowUiTest.kt:154](/home/eslam/Storage/Code/wt/native-reviews/src-compmotion/native/ui/kit-chat/src/desktopTest/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/ComposerGlowUiTest.kt:154) checks only that draw counts settle. An initially invisible glow also satisfies “lit from the first frame.”
+  
+  **Fix:** test actual sweep output over time, assert intermediate opacity, and assert nonzero first-frame glow output.
+
+Test sensitivity checked statically: the pure StopGuard boundary test would reject a 799 ms window; the partner-color test would reject changing dark interpolation from 0.55 to 0.30; the strip midpoint test would reject replacing its height transition with a snap. These mutations were not executed.

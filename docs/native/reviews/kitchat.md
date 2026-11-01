@@ -1,0 +1,28 @@
+REQUEST CHANGES — static review of `bad3a328..96b8f66f`. No builds or tests executed.
+
+1. **MAJOR — Multiline private keys leak through diffs.**  
+   [KitDiffView.kt:107](/home/eslam/Storage/Code/wt/native-reviews/src-kitchat/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/diff/KitDiffView.kt:107) redacts each line independently. Core `Redactor` masks PEM keys using their complete BEGIN…END block; neither that pattern nor a registered multiline secret matches individual lines. Adding a private-key file therefore exposes its payload in text and semantics, violating plan 09 §9.2/R18. **Fix:** redact logical old/new text before splitting, folding or capping, preserving masking across rows. Add a multiline PEM regression.
+
+2. **MAJOR — Cached redaction ignores newly registered secrets.**  
+   [KitCodeBlock.kt:123](/home/eslam/Storage/Code/wt/native-reviews/src-kitchat/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/code/KitCodeBlock.kt:123) and [KitMonoText.kt:23](/home/eslam/Storage/Code/wt/native-reviews/src-kitchat/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/tool/KitMonoText.kt:23) key their cache by source and redactor identity. Core `registerSecret` mutates that same redactor. Registering a previously displayed opaque credential leaves the cached text—and code-block Copy payload—unmasked even after recomposition. **Fix:** expose an observable redaction revision, invalidate cached displays on registration/forgetting, and sanitize again when copying.
+
+3. **MAJOR — Lazy-item cancellation can leave subsequent prose permanently hidden.**  
+   [KitMarkdown.kt:409](/home/eslam/Storage/Code/wt/native-reviews/src-kitchat/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/markdown/KitMarkdown.kt:409) drives reveal only while its composable exists. Evict an unfinished block from the lazy viewport, then compose its successor: the predecessor retains `shown < targetLength`, but its coroutine was cancelled. The successor’s driver waits on `predecessorDone` indefinitely. **Fix:** own progression outside lazy items or explicitly retire disposed predecessors. Test eviction and return during Full/Calm streaming; the added lazy-list test uses motion Off.
+
+4. **MAJOR — Long single-line command output becomes inaccessible.**  
+   [KitCommandBox.kt:86](/home/eslam/Storage/Code/wt/native-reviews/src-kitchat/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/tool/KitCommandBox.kt:86) forces every output line to one visual line with ellipsis. “Show all” at line 92 depends solely on newline count exceeding twelve. A long JSON response or diagnostic line is clipped without wrapping, horizontal scrolling or an opening action. This contradicts plan 09 §9.2/§9.5. **Fix:** wrap compact output or provide scrolling; expose full output whenever visual truncation occurs.
+
+5. **MAJOR — Selection Copy includes synthetic code characters.**  
+   [KitCodeBlock.kt:210](/home/eslam/Storage/Code/wt/native-reviews/src-kitchat/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/code/KitCodeBlock.kt:210) inserts U+200B into wrapping text. `KitMarkdownSelection` uses ordinary selection Copy; `stripCodeBreaks` has no production caller. Selecting wrapping output such as `intent.getStringExtra(...)` therefore copies invisible characters into source identifiers. **Fix:** map selected display text back to source text and test the actual clipboard operation.
+
+6. **MINOR — Text content can incorrectly classify an entire patch as binary.**  
+   [DiffModel.kt:386](/home/eslam/Storage/Code/wt/native-reviews/src-kitchat/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/diff/DiffModel.kt:386) searches anywhere for `"GIT binary patch"`. A normal hunk adding `println("GIT binary patch")` becomes an empty binary `DiffFile`, losing its changes and counts. **Fix:** recognize binary markers only as exact preamble lines outside hunks; test this negative case.
+
+7. **MINOR — Unquoted here-strings consume subsequent commands as heredoc content.**  
+   [CodeText.kt:119](/home/eslam/Storage/Code/wt/native-reviews/src-kitchat/native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/code/CodeText.kt:119) skips heredoc detection at the first character of `<<<EOF`, then matches `<<EOF` starting at its second character. `cat <<<EOF\necho next` consequently suppresses the second command’s prompt. **Fix:** consume `<<<` as one operator before detecting heredocs.
+
+8. **MINOR — Several tests do not establish their claimed UI behavior.**  
+   [CodeTextTest.kt:78](/home/eslam/Storage/Code/wt/native-reviews/src-kitchat/native/ui/kit-chat/src/desktopTest/kotlin/io/github/eslamasabry/oc/ui/kitchat/code/CodeTextTest.kt:78) invokes the unused normalization helper directly. [KitMarkdownTest.kt:77](/home/eslam/Storage/Code/wt/native-reviews/src-kitchat/native/ui/kit-chat/src/desktopTest/kotlin/io/github/eslamasabry/oc/ui/kitchat/markdown/KitMarkdownTest.kt:77) never renders the allegedly muted, unstruck checklist. Its caret test at line 61 counts a tag and would pass with caret drawing removed. **Fix:** exercise selection Copy, inspect rendered checklist styling, and verify caret pixels/position.
+
+Three other tests were checked statically for sensitivity: changing the Copy payload contradicts `KitCodeBlockTest`’s source equality assertion; removing its line cap exposes line 13; allowing disabled permission callbacks contradicts `KitPermissionCardTest`’s zero-call assertion. These were not executed.
+
