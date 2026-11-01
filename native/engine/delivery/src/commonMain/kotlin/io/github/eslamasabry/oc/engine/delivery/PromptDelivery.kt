@@ -196,6 +196,8 @@ public class PromptDelivery(
     /** Guards the Waiting → OnWire step against Stop (a send is either called off or on the wire, never both). */
     private val wire = Mutex()
     private val jobs = HashMap<LocalSendId, Job>()
+    /** A review outlives its optimistic bubble and the composer outcome acknowledgement (B-STATE-043/044). */
+    private val reviewIds = LinkedHashMap<LocalSendId, String>()
     private val stopAfterDispatch = HashSet<ConversationRef>()
     private val lastSendAtMs = HashMap<ConversationRef, Long>()
     private var counter = 0L
@@ -267,6 +269,8 @@ public class PromptDelivery(
             val held = queue.holdOnline(entryFor(id, request, now, dispatchedAt = now))
             if (!held) return Failure.StorageRefused().failed() // the prompt stays unsent and the words stay
             reviewId = id
+            forgetResolvedReviews()
+            reviewIds[localId] = id
         }
         val bubble = PendingSend(localId, ref, route, request.text, request.attachments, now, SendPhase.Waiting, reviewId = reviewId)
         lastSendAtMs[ref] = now
@@ -342,6 +346,7 @@ public class PromptDelivery(
         if (accepted) {
             // 9. Accepted.
             bubble.reviewId?.let { queue.finishOnline(it, dispatched = true, accepted = true, error = null) }
+            forgetResolvedReviews()
             stopMemory.clearStoppedByPerson(ref)
             mutablePending.value.firstOrNull { it.localId == bubble.localId }?.let { update(it.copy(phase = SendPhase.Accepted)) }
             setLocalTurn(ref, LocalTurn(bubble.createdAtMs, sending = false, acceptedAtMs = clock.now().toEpochMilliseconds()))
@@ -367,6 +372,7 @@ public class PromptDelivery(
             emit { SendOutcome.Unconfirmed(it, ref, bubble.reviewId, failure) }
         } else {
             bubble.reviewId?.let { queue.finishOnline(it, dispatched = false, accepted = false, error = null) }
+            forgetResolvedReviews()
             val reason = failure ?: Failure.Unknown()
             if (putBack) emit { SendOutcome.PutBack(it, ref, request.text, request.attachments, reason) }
         }
@@ -458,18 +464,28 @@ public class PromptDelivery(
     /** Looks the receipt up; never sends (B-STATE-008). */
     public suspend fun checkAgain(id: LocalSendId): Outcome<ReceiptLook> = withContext(queue.lane) { checkAgainOnLane(id) }
 
-    private suspend fun checkAgainOnLane(id: LocalSendId): Outcome<ReceiptLook> =
-        (if (queue.checkReceipt(reviewIdOf(id))) ReceiptLook.Confirmed else ReceiptLook.StillUnknown).ok()
+    private suspend fun checkAgainOnLane(id: LocalSendId): Outcome<ReceiptLook> {
+        val confirmed = queue.checkReceipt(reviewIdOf(id))
+        forgetResolvedReviews()
+        return (if (confirmed) ReceiptLook.Confirmed else ReceiptLook.StillUnknown).ok()
+    }
 
     /** Sends again only on the person's explicit confirmation; a receipt-bearing command only looks (B-STATE-008, 044). */
     public suspend fun resend(id: LocalSendId, confirmedByPerson: Boolean): Outcome<Boolean> = withContext(queue.lane) { resendOnLane(id, confirmedByPerson) }
 
     private suspend fun resendOnLane(id: LocalSendId, confirmedByPerson: Boolean): Outcome<Boolean> {
         if (!confirmedByPerson) return Failure.Refused(RefusalReason.DispatchUncertain).failed()
-        return queue.resend(reviewIdOf(id))
+        val result = queue.resend(reviewIdOf(id))
+        forgetResolvedReviews()
+        return result
     }
 
-    private fun reviewIdOf(id: LocalSendId): String = mutablePending.value.firstOrNull { it.localId == id }?.reviewId ?: id.raw
+    private fun reviewIdOf(id: LocalSendId): String = reviewIds[id] ?: mutablePending.value.firstOrNull { it.localId == id }?.reviewId ?: id.raw
+
+    private fun forgetResolvedReviews() {
+        val retained = queue.entries().mapTo(HashSet()) { it.id }
+        reviewIds.keys.retainAll(reviewIds.filterValues { it in retained }.keys)
+    }
 
     // ------------------------------------------------------------------------------------------------ state
 

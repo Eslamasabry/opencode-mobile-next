@@ -71,9 +71,9 @@ class PromptDeliveryTest {
         assertEquals(setOf("hello"), d.unconfirmedTexts(REF), "the draft never restores it")
         assertNull(d.localTurns.value[REF])
 
-        val review = assertNotNull(unconfirmed.reviewId)
+        assertNotNull(unconfirmed.reviewId)
         assertEquals(1, w.queue.reviewCount(P1))
-        assertEquals(Outcome.Ok(ReceiptLook.Confirmed), d.checkAgain(LocalSendId(review)), "the lookup finds the admission")
+        assertEquals(Outcome.Ok(ReceiptLook.Confirmed), d.checkAgain(id), "the lookup finds the admission")
         assertEquals(1, w.link.attempts.size, "Check again only looks")
         assertTrue(w.queue.entries().isEmpty())
         w.queue.flush()
