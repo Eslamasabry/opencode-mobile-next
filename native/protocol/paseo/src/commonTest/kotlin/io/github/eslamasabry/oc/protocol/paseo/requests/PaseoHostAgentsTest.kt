@@ -383,7 +383,7 @@ class PaseoHostAgentsTest {
     @Test
     fun `B-SEC-110 encrypted public endpoints are rejected while private endpoints stay usable`() {
         assertFailsWith<PaseoException> { PaseoEndpoint.parse("wss://public.example/ws") }
-        assertEquals("100.64.0.20", PaseoEndpoint.parse("wss://100.64.0.20:6767").host)
+        assertEquals("laptop.tail1234.ts.net", PaseoEndpoint.parse("wss://laptop.tail1234.ts.net:6767").host)
         assertEquals("wss://host.tail1234.ts.net:6767/ws", PaseoEndpoint.parse("wss://host.tail1234.ts.net:6767").url)
         assertEquals("127.0.0.1", PaseoEndpoint.parse("ws://127.0.0.1:6767").host)
     }
