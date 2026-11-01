@@ -53,7 +53,7 @@ object Drift {
         val words: Path,
         /** The unused keys' XML (outside composeResources), or null. */
         val unused: Path?,
-        /** `:ui:words` `src/androidMain/res` (the generated strings_os copies), or null. */
+        /** `:ui:words` `android-res/` (the generated strings_os copies), or null. */
         val androidResOut: Path?,
         val template: String = "en",
     ) {
@@ -250,6 +250,6 @@ object Paths {
     const val UNUSED = "$TOOL/unused"
     const val REPORT = "$TOOL/report"
     const val WORDS = "native/ui/words/src/commonMain/composeResources"
-    const val WORDS_ANDROID_RES = "native/ui/words/src/androidMain/res"
+    const val WORDS_ANDROID_RES = "native/ui/words/android-res"
     const val HAND_WORDS_KT = "native/ui/words/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/words/HandWords.kt"
 }

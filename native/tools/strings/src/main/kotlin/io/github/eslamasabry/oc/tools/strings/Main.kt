@@ -20,7 +20,7 @@ check: the drift check (ARB and Android strings vs :ui:words XML, plus the XML's
 Every location defaults from --repo and can be overridden:
   --arb lib/l10n  --dart-lib lib  --android-res android/app/src/main/res (--android-res none to skip)
   --routes, --hand: native/tools/strings/{feature-routes.tsv,hand-recipes.tsv}
-  --out native/ui/words/src/commonMain/composeResources  --android-res-out native/ui/words/src/androidMain/res
+  --out native/ui/words/src/commonMain/composeResources  --android-res-out native/ui/words/android-res
   --kotlin-out native/ui/words/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/words/HandWords.kt
   --unused-out native/tools/strings/unused  --report native/tools/strings/report  --template en"""
 

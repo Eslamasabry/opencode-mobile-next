@@ -383,7 +383,7 @@ Arguments: `teamProjectPlanSummary`(%1=phases__plural, %2=tasks__plural, %3=repo
 From `android/app/src/main/res/values*/` (strings.xml, widget_v2_strings.xml, widget_v2_bridge_strings.xml,
 scheduled_prompts.xml, bb_idle_strings.xml). Names kept, because pinned shortcuts and widgets reference them. Read
 with aapt2's rules; `%%` became `%` and a non-positional `%d`/`%s` became `%1$d`/`%1$s` (same output). The
-Android res copy in `:ui:words` `src/androidMain/res` writes them back for aapt2.
+Android res copy in `:ui:words` `android-res/` writes them back for aapt2.
 
 | lang | strings | plurals |
 |---|---:|---:|

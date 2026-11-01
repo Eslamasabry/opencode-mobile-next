@@ -216,7 +216,7 @@ object ReportWriter {
         appendLine("From `android/app/src/main/res/values*/` (strings.xml, widget_v2_strings.xml, widget_v2_bridge_strings.xml,")
         appendLine("scheduled_prompts.xml, bb_idle_strings.xml). Names kept, because pinned shortcuts and widgets reference them. Read")
         appendLine("with aapt2's rules; `%%` became `%` and a non-positional `%d`/`%s` became `%1\$d`/`%1\$s` (same output). The")
-        appendLine("Android res copy in `:ui:words` `src/androidMain/res` writes them back for aapt2.")
+        appendLine("Android res copy in `:ui:words` `android-res/` writes them back for aapt2.")
         appendLine()
         appendLine("| lang | strings | plurals |")
         appendLine("|---|---:|---:|")
