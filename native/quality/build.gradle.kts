@@ -1,6 +1,7 @@
 plugins {
     id("oc.jvm.library")
     alias(libs.plugins.metro) // the graph smoke test builds one test graph (plan 03 §13.8)
+    alias(libs.plugins.compose.compiler) // DesktopShellUiTest calls composables
 }
 
 dependencies {
@@ -8,11 +9,14 @@ dependencies {
     testImplementation(project(":desktopApp")) // desktop graph smoke
     listOf(
         ":core:common", ":core:security", ":core:model", ":core:domain", ":core:testing",
-        ":engine:connection", ":engine:transcript", ":ui:routes", ":ui:shell", ":feature:chats",
+        ":engine:connection", ":engine:transcript", ":ui:routes", ":ui:kit", ":ui:shell", ":feature:chats",
     ).forEach { testImplementation(project(it)) }
     testImplementation(libs.metrox.viewmodel)
     testImplementation(libs.lifecycle.viewmodel)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.compose.ui.test) // headless desktop UI test of the shared shell
+    testImplementation(libs.compose.ui)
+    testImplementation(libs.kotlinx.coroutines.swing)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
