@@ -23,7 +23,7 @@ class HelperEndpointMatchTest {
     fun `B-AGENT-119 another port, scheme, host or backend is a different server`() {
         assertFalse(match.matches(paseo("a", "ws://localhost:4100")))
         assertFalse(match.matches(paseo("a", "wss://localhost:4099")))
-        assertFalse(match.matches(paseo("a", "ws://100.64.0.2:4099")))
+        assertFalse(match.matches(paseo("a", "ws://203.0.113.2:4099")))
         assertFalse(match.matches(paseo("a", "ws://localhost")), "no port is port 80")
         assertFalse(match.matches(paseo("a", "ws://user@localhost:4099")))
         assertFalse(match.matches(EndpointCandidate(ProfileId("a"), isPaseo = false, baseUrl = "ws://localhost:4099")))
@@ -32,7 +32,7 @@ class HelperEndpointMatchTest {
     @Test
     fun `B-AGENT-119 the name never decides, the endpoint does`() {
         // EndpointCandidate has no name at all: a server called "Claude Code on this phone" elsewhere is not it.
-        assertFalse(match.matches(paseo("claude-code-on-this-phone", "ws://100.64.0.2:4099")))
+        assertFalse(match.matches(paseo("claude-code-on-this-phone", "ws://203.0.113.2:4099")))
     }
 
     @Test

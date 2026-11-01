@@ -91,7 +91,7 @@ class AgentHelperTest {
         assertTrue(secrets.values.isEmpty())
         assertFalse(UnavailableAgentHost().available)
         assertEquals("•••", Secret("x").toString())
-        assertEquals("•••", TransientLabel("me@example").toString())
+        assertEquals("•••", TransientLabel("Personal account").toString())
     }
 
     @Test
