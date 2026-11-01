@@ -264,24 +264,15 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
             Oc2NoticeKind.ShellChanged -> NoticeKind.ShellChanged
         }
 
-    /** The wire family core's open [HintKind] keeps (`agent`, `config`, `mcp`, `vcs`, `filesystem`, …). */
+    /** The wire family core's open [HintKind] keeps (N4-D22's six: agent, config, catalog, integration, plugin, websearch). */
     private fun Oc2HintKind.wireFamily(): String =
         when (this) {
             Oc2HintKind.Agents -> "agent"
-            Oc2HintKind.Commands -> "command"
             Oc2HintKind.Config -> "config"
-            Oc2HintKind.Skills -> "skill"
             Oc2HintKind.Catalog -> "catalog"
             Oc2HintKind.Integrations -> "integration"
             Oc2HintKind.Plugins -> "plugin"
-            Oc2HintKind.References -> "reference"
             Oc2HintKind.WebSearch -> "websearch"
-            Oc2HintKind.Projects -> "project"
-            Oc2HintKind.Worktrees -> "worktree"
-            Oc2HintKind.Lsp -> "lsp"
-            Oc2HintKind.Mcp -> "mcp"
-            Oc2HintKind.Vcs -> "vcs"
-            Oc2HintKind.Files -> "filesystem"
         }
 
     private fun Oc2ModelRef.toCore(): ModelRef = ModelRef(providerId = providerID, modelId = id)

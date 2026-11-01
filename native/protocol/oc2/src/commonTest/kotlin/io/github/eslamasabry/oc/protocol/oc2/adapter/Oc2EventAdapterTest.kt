@@ -203,6 +203,44 @@ class Oc2EventAdapterTest {
     }
 
     @Test
+    fun `B-PROTO-141 only Flutter's refresh set becomes a hint, every other family is counted and dropped`() {
+        val forwarded = mapOf(
+            "agent.updated" to Oc2HintKind.Agents,
+            "config.updated" to Oc2HintKind.Config,
+            "catalog.updated" to Oc2HintKind.Catalog,
+            "models-dev.refreshed" to Oc2HintKind.Catalog,
+            "integration.updated" to Oc2HintKind.Integrations,
+            "credential.updated" to Oc2HintKind.Integrations,
+            "plugin.added" to Oc2HintKind.Plugins,
+            "plugin.updated" to Oc2HintKind.Plugins,
+            "websearch.updated" to Oc2HintKind.WebSearch,
+        )
+        for ((type, kind) in forwarded) {
+            assertEquals(listOf<Oc2Adapted>(Oc2Adapted.RefreshHint(kind)), adapter().feed("""{"type":"$type","data":{}}"""), type)
+        }
+        // Review w1-data-oc2 MAJOR 6 / N4-D22: `filesystem.changed` fires on every tool write; none of these may start
+        // a reload.
+        val excluded = listOf(
+            """{"type":"command.updated","data":{}}""",
+            """{"type":"skill.updated","data":{}}""",
+            """{"type":"reference.updated","data":{}}""",
+            """{"type":"project.updated","data":{}}""",
+            """{"type":"worktree.updated","data":{}}""",
+            """{"type":"lsp.updated","data":{}}""",
+            """{"type":"mcp.status.changed","data":{"server":"github"}}""",
+            """{"type":"mcp.tools.changed","data":{"server":"github"}}""",
+            """{"type":"vcs.branch.updated","data":{"branch":"main"}}""",
+            """{"type":"filesystem.changed","data":{"file":"a.txt","change":"modified"}}""",
+            """{"type":"filesystem.changed","data":{"file":"b.txt","change":"modified"}}""",
+        )
+        val a = adapter()
+        for (json in excluded) assertEquals(emptyList(), a.feed(json), json)
+        assertEquals(2, a.dropped["filesystem.changed"])
+        assertEquals(1, a.dropped["lsp.updated"])
+        assertEquals(excluded.size, a.dropped.values.sum())
+    }
+
+    @Test
     fun `B-PROTO-047 installation events keep the exact available and installed versions`() {
         assertEquals(
             listOf(Oc2Adapted.Installation(Oc2InstallationKind.Available, "2.2.5-rc.1+build.7")),

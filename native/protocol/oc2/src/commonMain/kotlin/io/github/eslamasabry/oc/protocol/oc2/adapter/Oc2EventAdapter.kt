@@ -99,11 +99,11 @@ internal enum class Oc2RevertKind { Staged, Cleared, Committed }
 
 internal enum class Oc2InboxChange { Enqueued, Delivered, Cancelled, DeliveryChanged }
 
-/** Refresh bursts share one reload downstream. */
-internal enum class Oc2HintKind {
-    Agents, Commands, Config, Skills, Catalog, Integrations, Plugins, References, WebSearch, Projects, Worktrees, Lsp,
-    Mcp, Vcs, Files,
-}
+/**
+ * N4-D22 (plan 04 §7.6, row B-PROTO-141): exactly Flutter's forwarded refresh set [V `gateway_events.dart:619-656`].
+ * Bursts share one reload downstream. Every other refresh-like event is counted and dropped ([Oc2EventAdapter.dropped]).
+ */
+internal enum class Oc2HintKind { Agents, Config, Catalog, Integrations, Plugins, WebSearch }
 
 internal enum class Oc2InstallationKind { Available, Installed }
 
@@ -238,6 +238,19 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
 
     private class StepModel(val agent: String?, val model: Oc2ModelRef?)
 
+    private val droppedCounts = LinkedHashMap<String, Int>()
+
+    /**
+     * Refresh-like events dropped at the switch, by wire type (N4-D22: `filesystem.changed` fires on every tool write;
+     * forwarding these needs a per-kind reload rule and debounce first). For diagnostics; never a payload.
+     */
+    public val dropped: Map<String, Int> get() = droppedCounts
+
+    private fun drop(type: String): List<Oc2Adapted> {
+        droppedCounts[type] = (droppedCounts[type] ?: 0) + 1
+        return emptyList()
+    }
+
     private val toolCalls = LinkedHashMap<String, ToolCall>()
     private val stepCreated = LinkedHashMap<String, Long>()
     private val stepModels = LinkedHashMap<String, StepModel>()
@@ -322,10 +335,10 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
             is Oc2Event.FormReplied -> listOf(Oc2Adapted.FormSettled(e.sessionID, e.id, answered = true))
             is Oc2Event.FormCancelled -> listOf(Oc2Adapted.FormSettled(e.sessionID, e.id, answered = false))
             is Oc2Event.RefreshHint -> refresh(e.topic, envelope.data)
-            // Plan 04 §7.6 widens Flutter here: these pings refresh their lists too (Flutter dropped them).
-            is Oc2Event.McpChanged -> listOf(Oc2Adapted.RefreshHint(Oc2HintKind.Mcp))
-            is Oc2Event.VcsBranchUpdated -> listOf(Oc2Adapted.RefreshHint(Oc2HintKind.Vcs))
-            is Oc2Event.FilesystemChanged -> listOf(Oc2Adapted.RefreshHint(Oc2HintKind.Files))
+            // N4-D22: counted and dropped, as Flutter (`default: []`); review w1-data-oc2 MAJOR 6.
+            is Oc2Event.McpChanged -> drop(envelope.type)
+            is Oc2Event.VcsBranchUpdated -> drop(envelope.type)
+            is Oc2Event.FilesystemChanged -> drop(envelope.type)
             is Oc2Event.PassThrough -> passThrough(e)
             // TODO(adapter review): plan 04 §7.6 wants `session.compaction.*` → a compaction notice part, but gives no
             // part shape; Flutter's adapter emits nothing and the refetch mapper shows the compaction message. Kept as
@@ -522,18 +535,13 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
         val kind =
             when (topic) {
                 "agent.updated" -> Oc2HintKind.Agents
-                "command.updated" -> Oc2HintKind.Commands
                 "config.updated" -> Oc2HintKind.Config
-                "skill.updated" -> Oc2HintKind.Skills
                 "catalog.updated", "models-dev.refreshed" -> Oc2HintKind.Catalog
                 "integration.updated", "credential.updated", "credential.switched" -> Oc2HintKind.Integrations
                 "plugin.added", "plugin.updated" -> Oc2HintKind.Plugins
-                "reference.updated" -> Oc2HintKind.References
                 "websearch.updated" -> Oc2HintKind.WebSearch
-                "project.updated" -> Oc2HintKind.Projects
-                "worktree.updated" -> Oc2HintKind.Worktrees
-                "lsp.updated" -> Oc2HintKind.Lsp
-                else -> return emptyList()
+                // command, skill, reference, project, worktree, lsp: not in Flutter's set (N4-D22).
+                else -> return drop(topic)
             }
         if (topic != "credential.switched") return listOf(Oc2Adapted.RefreshHint(kind))
         // Only an explicitly present null means "no active credential". Never forward credential payloads, and never
