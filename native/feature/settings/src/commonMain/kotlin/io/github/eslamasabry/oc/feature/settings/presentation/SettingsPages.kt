@@ -1,0 +1,50 @@
+package io.github.eslamasabry.oc.feature.settings.presentation
+
+/**
+ * The five groups of the Settings hub (plan 07 §4.2, target-ia §1.3): hub → page → sheet at most. The order is the
+ * order on screen. Each has one word (or two, "This app") in `:ui:words`.
+ */
+public enum class SettingsGroupId { Server, Agent, Conversations, ThisApp, Help }
+
+/**
+ * The pages this module draws. A feature-local stand-in for plan 07's `SettingsRoute` keys (`:ui:routes` has no
+ * settings routes yet; the routes owner adds them, then [SettingsPage] maps one to one onto them).
+ */
+public sealed interface SettingsPage {
+    public data object Hub : SettingsPage
+
+    public data class Group(val id: SettingsGroupId) : SettingsPage
+
+    public data object Appearance : SettingsPage
+
+    public data object Voice : SettingsPage
+
+    public data object Notifications : SettingsPage
+
+    public data object Updates : SettingsPage
+
+    public data object About : SettingsPage
+
+    public data object Privacy : SettingsPage
+
+    /** Settings › This app › Privacy › What we collect (plan 18 §6): one page, no new level. */
+    public data object WhatWeCollect : SettingsPage
+}
+
+/**
+ * Places a Settings row opens that other features own (servers, providers, tools, the language sheet, …). The host
+ * maps each to its route or sheet; this module never builds them.
+ */
+public enum class SettingsOutside {
+    Servers, ThisPhone, ModelAndMode, Providers, Usage, Tools, Agents,
+    DefaultShell, Permissions,
+    KeepRunning, Language,
+    Guide, Tips, ReportProblem, WhatsNew, Notices, PrivacyPolicy, StarOnGitHub, ShareApp,
+    VoiceSetup, VoiceNotices,
+    AndroidNotificationSettings, UsageAlerts, QuietHours, ReleaseNotes,
+}
+
+/** Opens a place another feature owns. */
+public fun interface SettingsOpeners {
+    public fun open(place: SettingsOutside)
+}
