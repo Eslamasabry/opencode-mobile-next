@@ -9,17 +9,33 @@ import io.github.eslamasabry.oc.core.model.ServerOrigin
 import io.github.eslamasabry.oc.core.model.ServerProfile
 
 /**
- * The transport credential seam (audit 03 BLOCKER 3, third item): protocol and net code read the password through
- * this interface at request time; the SecretStore adapter is bound above both modules. Every value read is
- * registered with the Redactor by the adapter before it is returned (ADR §9.7).
+ * Credentials already resolved for one connection (plan 03 §10.7, plan 04 §4.8). Built by `:engine:connection` through
+ * the matching ProfileSource, which reads SecretStore and registers every value with the Redactor BEFORE handing it
+ * over. The transport never reads SecretStore; a changed password reaches it by reconnecting with new credentials.
+ *
+ * [username]: the Basic user (OpenCode 2) when the profile has one. [secret]: the password, token or device token;
+ * null = none stored. `toString()` never prints the secret.
  */
-public fun interface CredentialReader {
-    /** The stored password for the profile, or null when none is stored. Storage failures are Failure.Storage. */
-    public suspend fun password(): Outcome<String?>
+public class ConnectionCredentials(public val username: String?, public val secret: String?) {
+    override fun equals(other: Any?): Boolean =
+        other is ConnectionCredentials && other.username == username && other.secret == secret
+
+    override fun hashCode(): Int = 31 * (username?.hashCode() ?: 0) + (secret?.hashCode() ?: 0)
+
+    override fun toString(): String = "ConnectionCredentials(username=${username != null}, secret=${secret != null})"
+
+    public companion object {
+        /** Nothing stored (a loopback server without a password, a demo graph, slice-0 graphs). */
+        public val None: ConnectionCredentials = ConnectionCredentials(null, null)
+    }
 }
 
 /** What to probe: an address the person typed or a saved profile (plan 04 §7.7). */
-public data class ProbeTarget(val origin: ServerOrigin, val username: String?, val credentials: CredentialReader)
+public data class ProbeTarget(
+    val origin: ServerOrigin,
+    /** Null until the origin is trusted: a probe never sends a credential to an untrusted origin (B-SEC-124). */
+    val credentials: ConnectionCredentials?,
+)
 
 /** What a probe proved about the server. */
 public data class ProbeResult(
@@ -29,24 +45,35 @@ public data class ProbeResult(
     val capabilities: ServerCapabilities,
 )
 
-/** Everything a factory needs to open a gateway pair. */
+/**
+ * Everything a factory needs to open a gateway pair (plan 04 §11.1). Fields the plan adds with their owning units —
+ * `permit: TransportPermit` (S1-SECNET), `reconnectAllowed`, `serverRunsTools`, `options` (the connection engine) —
+ * are appended here, with defaults, when those types exist.
+ */
 public data class GatewaySpec(
     val profile: ServerProfile,
-    val credentials: CredentialReader,
+    val credentials: ConnectionCredentials,
+    /** The graph's scope: every coroutine the pair starts is a child of it; closing it stops them. */
+    val scope: ConnectionCoroutineScope,
+    /** The restored location (plan 04 §12.2 step 4). */
     val location: ServerLocation = ServerLocation.Default,
     /** The probe of this connect, when one ran; lets the gateway skip a second version read. */
     val probe: ProbeResult? = null,
 )
 
-/** Backends plug in here (plan 03 S3): a Metro Set multibinding, one factory per [BackendKind]. */
+/** Backends plug in here (plan 03 S3): a Metro Set multibinding, one factory per [BackendKind] (plan 04 §11.1). */
 public interface GatewayFactory {
-    public val kind: BackendKind
+    public val backend: BackendKind
 
     /** Reads health/version only; never sends a credential to an origin that is not trusted yet (B-SEC-124). */
     public suspend fun probe(target: ProbeTarget): Outcome<ProbeResult>
 
-    /** No I/O until first use. Every coroutine the pair starts is a child of [scope]; closing the scope stops them. */
-    public fun open(spec: GatewaySpec, scope: ConnectionCoroutineScope): GatewayPair
+    /**
+     * OpenCode 2: no network I/O until first use. Paseo/Codex: opens the socket and runs hello/initialize, so this can
+     * fail with a typed Failure. Each protocol builds its own transport from the spec; nothing above `:protocol:*`
+     * sees one.
+     */
+    public suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair>
 }
 
 public data class GatewayPair(val live: ServerGateway, val operations: ServerOperationsGateway)

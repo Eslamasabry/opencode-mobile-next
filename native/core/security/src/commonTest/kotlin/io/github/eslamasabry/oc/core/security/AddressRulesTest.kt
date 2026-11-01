@@ -76,7 +76,7 @@ class AddressRulesTest {
     fun `B-SEC-153 credentials, query, fragment and non-HTTP addresses are refused`() {
         val refused =
             mapOf(
-                "https://user:password@example.com" to RefusalReason.CredentialsInAddress,
+                "https://user:password@example.com" to RefusalReason.CredentialsInUrl,
                 "https://example.com?token=secret" to RefusalReason.InvalidAddress,
                 "https://example.com#secret" to RefusalReason.InvalidAddress,
                 "file:///tmp/socket" to RefusalReason.InvalidAddress,

@@ -1,7 +1,7 @@
 package io.github.eslamasabry.oc.core.testing
 
-import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.RequestId
@@ -129,7 +129,7 @@ public class FakeServerGateway(sessions: List<Session> = emptyList()) : ServerGa
             failNext = null
             return it.failed()
         }
-        return sessionList.firstOrNull { it.id == id }?.ok() ?: Failure.Net.NotFound().failed()
+        return sessionList.firstOrNull { it.id == id }?.ok() ?: Failure.NotFound().failed()
     }
 
     override suspend fun renameSession(id: SessionId, title: String): Outcome<Unit> = answer("renameSession ${id.raw}") {}
@@ -191,21 +191,27 @@ public open class FakeOperationsGateway : ServerOperationsGateway
 
 /** One fake backend. [probeResult] null = the probe fails as unreachable. */
 public class FakeGatewayFactory(
-    override val kind: BackendKind = BackendKind.OpenCode2,
+    override val backend: BackendKind = BackendKind.OpenCode2,
     public val gateway: FakeServerGateway = FakeServerGateway(),
     public val operations: ServerOperationsGateway = FakeOperationsGateway(),
-    public var probeResult: ProbeResult? = ProbeResult(kind, "fake", ServerCapabilities.Unknown),
+    public var probeResult: ProbeResult? = ProbeResult(backend, "fake", ServerCapabilities.Unknown),
+    /** Non-null: the next connect fails with it (a Paseo/Codex hello refusal), then is cleared. */
+    public var failNextConnect: Failure? = null,
 ) : GatewayFactory {
     public val opened: MutableList<GatewaySpec> = mutableListOf()
     public val probed: MutableList<ProbeTarget> = mutableListOf()
 
     override suspend fun probe(target: ProbeTarget): Outcome<ProbeResult> {
         probed += target
-        return probeResult?.ok() ?: Failure.Net.Unreachable(Failure.Net.Unreachable.Why.Refused).failed()
+        return probeResult?.ok() ?: Failure.Network(NetworkWhy.Refused).failed()
     }
 
-    override fun open(spec: GatewaySpec, scope: ConnectionCoroutineScope): GatewayPair {
+    override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> {
+        failNextConnect?.let {
+            failNextConnect = null
+            return it.failed()
+        }
         opened += spec
-        return GatewayPair(gateway, operations)
+        return GatewayPair(gateway, operations).ok()
     }
 }

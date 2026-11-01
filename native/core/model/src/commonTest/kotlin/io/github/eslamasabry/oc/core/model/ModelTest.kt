@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.core.model
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.IncompatibleKind
 import io.github.eslamasabry.oc.core.common.WireJson
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.model.transcript.Part
@@ -35,7 +36,7 @@ class ModelTest {
             listOf(
                 StreamStatus.Connecting, StreamStatus.Connected, StreamStatus.Reconnecting(2, 5_000L),
                 StreamStatus.Disconnected(7, null), StreamStatus.WaitingForNetwork, StreamStatus.Suspended,
-                StreamStatus.Stopped(Failure.Net.Incompatible(Failure.Net.Incompatible.Kind.LegacyOpenCode1)),
+                StreamStatus.Stopped(Failure.Incompatible(IncompatibleKind.LegacyOpenCode1)),
             )
         val names =
             all.map {

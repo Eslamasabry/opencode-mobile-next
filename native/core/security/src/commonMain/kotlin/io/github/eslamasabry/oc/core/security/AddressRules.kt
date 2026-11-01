@@ -68,7 +68,7 @@ public object AddressRules {
     public fun origin(url: String): Outcome<ServerOrigin> {
         val parts = UrlParts.parse(url) ?: return invalid()
         if (parts.scheme != "http" && parts.scheme != "https") return invalid()
-        if (!parts.userInfo.isNullOrEmpty()) return Failure.Refused(RefusalReason.CredentialsInAddress).failed()
+        if (!parts.userInfo.isNullOrEmpty()) return Failure.Refused(RefusalReason.CredentialsInUrl).failed()
         if (parts.query != null || parts.fragment != null) return invalid()
         if (classify(parts.host) == HostClass.Invalid) return invalid()
         return ServerOrigin(parts.scheme, parts.host, parts.effectivePort() ?: return invalid()).ok()
