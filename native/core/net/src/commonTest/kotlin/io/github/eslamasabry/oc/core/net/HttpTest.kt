@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.core.net
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.net.stream.BackoffPolicy
 import io.github.eslamasabry.oc.core.net.stream.KtorSseConnector
 import io.github.eslamasabry.oc.core.net.stream.SseConnectResult
@@ -108,15 +109,19 @@ class HttpTest {
     }
 
     @Test
-    fun `N4-D6 401 stops the stream, 503 and wrong content type retry`() = runTest {
+    fun `N4-D6 OpenCode 2 401 and 403 keep the backoff, 503 and wrong content type retry (plan 04 section 4_8)`() = runTest {
         var status = HttpStatusCode.Unauthorized
         var type = "text/event-stream"
         val engine = MockEngine { respond("", status, headersOf(HttpHeaders.ContentType, type)) }
         val connector = KtorSseConnector(sseClient(engine)) { url("http://127.0.0.1/api/event") }
         val noSession: suspend (io.github.eslamasabry.oc.core.net.stream.SseBody) -> Unit = { error("not opened") }
         val signIn = assertIs<SseConnectResult.Failed>(connector.connect(null, noSession))
-        assertTrue(signIn.stop)
-        assertIs<Failure.SignIn>(signIn.failure)
+        assertTrue(!signIn.stop, "an OpenCode 2 401 must not stop the stream (review w1-core-net MAJOR 8)")
+        assertEquals(SignInWhy.PasswordRejected, assertIs<Failure.SignIn>(signIn.failure).why)
+        status = HttpStatusCode.Forbidden
+        val forbidden = assertIs<SseConnectResult.Failed>(connector.connect(null, noSession))
+        assertTrue(!forbidden.stop)
+        assertEquals(SignInWhy.Forbidden, assertIs<Failure.SignIn>(forbidden.failure).why) // never PasswordRejected
         status = HttpStatusCode.ServiceUnavailable
         val busy = assertIs<SseConnectResult.Failed>(connector.connect(null, noSession))
         assertTrue(!busy.stop)
@@ -125,5 +130,13 @@ class HttpTest {
         val html = assertIs<SseConnectResult.Failed>(connector.connect(null, noSession))
         assertIs<Failure.UnreadableReply>(html.failure)
         assertTrue(!html.stop)
+    }
+
+    @Test
+    fun `N4-D6 a backend whose sign-in failure is terminal stops on 401`() = runTest {
+        val engine = MockEngine { respond("", HttpStatusCode.Unauthorized, headersOf(HttpHeaders.ContentType, "text/event-stream")) }
+        val connector = KtorSseConnector(sseClient(engine), stopOnAuthFailure = true) { url("http://127.0.0.1/api/event") }
+        val failed = assertIs<SseConnectResult.Failed>(connector.connect(null) { error("not opened") })
+        assertTrue(failed.stop)
     }
 }

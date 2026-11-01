@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.core.net.stream
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.net.gate.NetworkGate
 import io.github.eslamasabry.oc.core.net.sse.SseFrame
@@ -34,7 +35,14 @@ import kotlin.time.Clock
  *   at once when the network returns, with the count reset; a new default network does the same, also for a live
  *   stream (N4-D8, B-PROTO-133); loopback is never gated;
  * - out of sight ([hidden]) the policy's hidden pace applies (PB-51); coming back fires a waiting try at once;
- * - 401/403 stop the loop ([StreamStatus.Stopped]) until [retryNow].
+ * - a failed try's failure is published in [lastFailure] (401 → `SignIn(PasswordRejected)`, so the graph can set
+ *   `passwordRejected`) and cleared by the next `Connected`. An OpenCode 2 401/403 keeps the normal backoff (plan 04
+ *   §4.8); only a connector result with `stop = true` (a backend whose sign-in failure is terminal) parks the loop in
+ *   [StreamStatus.Stopped] until [retryNow]. A [retryNow] made while that refused request was in flight is kept, so a
+ *   password saved meanwhile is tried at once (review w1-core-net MAJOR 8);
+ * - [reconnectAllowed] false (N4-D21, plan 04 §6.2): a live stream stays up; after a drop or a failed try no try is
+ *   scheduled, the status is `Disconnected(attempt, nextAttemptAtMs = null)`, a network change dials nothing, and only
+ *   [retryNow] (one attempt) or the flag turning true dials again (review w1-core-net MAJOR 7).
  *
  * Every connect after the first is announced as [StreamStatus.Connected] with a higher generation **before** any of
  * its frames, so the owner refetches (reconcile by refetch, never replay; N4-D10, ADR §9.5).
@@ -44,6 +52,8 @@ import kotlin.time.Clock
  * read buffer (16 KiB) of frames plus one 16 MiB frame are held.
  *
  * A body that ends cleanly flushes its trailing frame; a body that fails or stalls discards the partial frame.
+ * The resume cursor ([ResumeMode.LastEventId]) moves only after the collector has taken the frame: a frame whose
+ * hand-over was cancelled (network change, [retryNow]) is asked for again on the next try (review w1-core-net MAJOR 9).
  * One collector at a time.
  */
 public class EventStreamLoop(
@@ -56,8 +66,15 @@ public class EventStreamLoop(
     private val hidden: StateFlow<Boolean> = MutableStateFlow(false),
     private val resume: ResumeMode = ResumeMode.None,
     private val readBufferBytes: Int = 16 * 1024,
+    /** N4-D21, from `GatewaySpec.reconnectAllowed`: whether the loop may dial again on its own. */
+    private val reconnectAllowed: StateFlow<Boolean> = MutableStateFlow(true),
 ) {
     private val retry = Channel<Unit>(Channel.CONFLATED)
+
+    private val mutableLastFailure = MutableStateFlow<Failure?>(null)
+
+    /** Why the last try failed (401 → `SignIn`); null once a try connects (plan 04 §6.2). */
+    public val lastFailure: StateFlow<Failure?> = mutableLastFailure
 
     /** Try now with the count reset: after a password update, a manual "Try again", or a network change. */
     public fun retryNow() {
@@ -69,7 +86,9 @@ public class EventStreamLoop(
 
     private enum class End { Clean, Failed, Stalled, RetryNow, NetworkChanged }
 
-    private enum class Wake { Timer, RetryNow, NetworkChanged, Visible }
+    private enum class Wake { Timer, RetryNow, NetworkChanged, Visible, Disallowed }
+
+    private enum class Resume { RetryNow, Allowed }
 
     private val gated: Boolean get() = hostClass != HostClass.Loopback
 
@@ -87,6 +106,7 @@ public class EventStreamLoop(
                 attempt = 0
                 nextAt = null
             }
+            retry.tryReceive() // a request made before this try is answered by it (it reads the newest credentials)
             send(StreamSignal.Status(inFlight(attempt, nextAt)))
             val networkAtStart = gate.currentNetworkId()
             var connectedAt: Long? = null
@@ -96,12 +116,15 @@ public class EventStreamLoop(
                 val gen = generation
                 connectedAt = now()
                 nextAt = null
+                mutableLastFailure.value = null
                 send(StreamSignal.Status(StreamStatus.Connected))
                 end = readUntilEnd(body, gen, networkAtStart) { id -> lastEventId = id }
             }
+            if (result is SseConnectResult.Failed) mutableLastFailure.value = result.failure
             if (result is SseConnectResult.Failed && result.stop) {
-                retry.tryReceive() // conflated: drops a stale request so it cannot undo the stop
                 send(StreamSignal.Status(StreamStatus.Stopped(result.failure)))
+                // Not drained first: a retryNow sent while the refused request was in flight (a password saved
+                // meanwhile) dials at once. Older requests were consumed when this try started.
                 retry.receive()
                 attempt = 0
                 nextAt = null
@@ -115,6 +138,11 @@ public class EventStreamLoop(
             val upSince = connectedAt
             if (upSince != null && now() - upSince >= policy.resetAfterStableMs) attempt = 0
             attempt += 1
+            if (!reconnectAllowed.value) {
+                attempt = waitWhileDisallowed(attempt)
+                nextAt = null
+                continue
+            }
             val wasHidden = hidden.value
             val wait = policy.delayMs(attempt, wasHidden, random)
             val at = now() + wait
@@ -127,7 +155,39 @@ public class EventStreamLoop(
                     attempt = 0
                     nextAt = null
                 }
+                Wake.Disallowed -> {
+                    attempt = waitWhileDisallowed(attempt)
+                    nextAt = null
+                }
             }
+        }
+    }
+
+    /** N4-D21: no scheduled try. Returns the attempt count for the next try: one by [retryNow], or all when allowed. */
+    private suspend fun ProducerScope<StreamSignal>.waitWhileDisallowed(attempt: Int): Int {
+        send(StreamSignal.Status(StreamStatus.Disconnected(attempt, null)))
+        val resume = coroutineScope {
+            val wakes = listOf(
+                async { retry.receive(); Resume.RetryNow },
+                async { reconnectAllowed.first { it }; Resume.Allowed },
+            )
+            val first = select { wakes.forEach { d -> d.onAwait { it } } }
+            wakes.forEach { it.cancel() }
+            first
+        }
+        return when (resume) {
+            Resume.RetryNow -> attempt // one try; if it fails, the loop comes back here
+            Resume.Allowed -> 0
+        }
+    }
+
+    /** A new default network interrupts a live stream only while reconnecting is allowed (plan 04 §6.4). */
+    private suspend fun awaitAllowedNetworkChange(from: Long?) {
+        var since = from
+        while (true) {
+            gate.awaitNetworkChangeFrom(since)
+            if (reconnectAllowed.value) return
+            since = gate.currentNetworkId()
         }
     }
 
@@ -151,7 +211,7 @@ public class EventStreamLoop(
         val reader = async { pump(body, generation, onId) }
         val interrupts = buildList {
             add(async { retry.receive(); End.RetryNow })
-            if (gated) add(async { gate.awaitNetworkChangeFrom(networkAtStart); End.NetworkChanged })
+            if (gated) add(async { awaitAllowedNetworkChange(networkAtStart); End.NetworkChanged })
         }
         val all = interrupts + reader
         val end = select { all.forEach { d -> d.onAwait { it } } }
@@ -196,8 +256,8 @@ public class EventStreamLoop(
         val frames = pending.toList()
         pending.clear()
         for (frame in frames) {
-            frame.id?.let(onId)
             send(StreamSignal.Frame(frame, generation))
+            frame.id?.let(onId) // only after the hand-over: a cancelled send leaves the cursor on the last frame taken
         }
     }
 
@@ -207,6 +267,7 @@ public class EventStreamLoop(
             add(async { retry.receive(); Wake.RetryNow })
             if (wasHidden) add(async { hidden.first { !it }; Wake.Visible })
             if (gated) add(async { gate.awaitNetworkChangeFrom(networkId); Wake.NetworkChanged })
+            add(async { reconnectAllowed.first { !it }; Wake.Disallowed })
         }
         val wake = select { wakes.forEach { d -> d.onAwait { it } } }
         wakes.forEach { it.cancel() }

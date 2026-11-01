@@ -33,8 +33,12 @@ internal class FakeNetworkStatus(online: Online = Online.Yes, id: Long = 1) : Ne
 
 /** What one connection attempt does. */
 internal sealed interface Script {
-    /** The request fails before a body (refused, 5xx, timeout). */
-    data class Fail(val failure: Failure = Failure.Network(NetworkWhy.Refused), val stop: Boolean = false) : Script
+    /** The request fails before a body (refused, 5xx, timeout), after [afterMs] of virtual time in flight. */
+    data class Fail(
+        val failure: Failure = Failure.Network(NetworkWhy.Refused),
+        val stop: Boolean = false,
+        val afterMs: Long = 0,
+    ) : Script
 
     /** A 200 stream: each step is a chunk after a delay; then [end]. */
     data class Body(val steps: List<Pair<Long, String>>, val end: End) : Script
@@ -57,7 +61,10 @@ internal class FakeConnector(private val scope: TestScope, scripts: List<Script>
         opens += scope.testScheduler.currentTime
         lastEventIds += lastEventId
         return when (val script = queue.removeFirstOrNull() ?: fallback) {
-            is Script.Fail -> SseConnectResult.Failed(script.failure, script.stop)
+            is Script.Fail -> {
+                if (script.afterMs > 0) delay(script.afterMs)
+                SseConnectResult.Failed(script.failure, script.stop)
+            }
             is Script.Body -> {
                 session(ScriptedBody(script))
                 SseConnectResult.Ended
