@@ -1,6 +1,6 @@
 package io.github.eslamasabry.oc.engine.runtime.server
 
-import io.github.eslamasabry.oc.engine.runtime.host.RuntimeCall
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import kotlinx.coroutines.delay
 import kotlin.time.Clock
@@ -174,5 +174,5 @@ public class AppOpenStart(
         return status.serverRecoveryGeneration
     }
 
-    private suspend fun status(): RuntimeStatus? = (port.refreshStatus() as? RuntimeCall.Done)?.value
+    private suspend fun status(): RuntimeStatus? = (port.refreshStatus() as? Outcome.Ok)?.value
 }

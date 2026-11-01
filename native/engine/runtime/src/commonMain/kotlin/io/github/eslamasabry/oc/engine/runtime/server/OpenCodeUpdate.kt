@@ -1,6 +1,6 @@
 package io.github.eslamasabry.oc.engine.runtime.server
 
-import io.github.eslamasabry.oc.engine.runtime.host.RuntimeCall
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import kotlinx.coroutines.sync.Mutex
 
@@ -97,10 +97,10 @@ public class OpenCodeAutoUpdater(
 /** The OpenCode component journal inside Ubuntu (setup's activation step). */
 public interface ComponentJournal {
     /** Commits the staged `*.oc-pending` binary (the previous one stays as `*.oc-good`); answers the new version. */
-    public suspend fun activate(): RuntimeCall<String>
+    public suspend fun activate(): Outcome<String>
 
     /** Puts `*.oc-good` back as the committed binary. */
-    public suspend fun rollBack(): RuntimeCall<Unit>
+    public suspend fun rollBack(): Outcome<Unit>
 }
 
 /** How the restart after an OpenCode update ended. The caller words it (one "Updated OpenCode to …" line). */
@@ -138,8 +138,8 @@ public class OpenCodeUpdateRestart(
         val before = status()
         val version =
             when (val activated = journal.activate()) {
-                is RuntimeCall.Refused -> return UpdateRestartResult.NotActivated
-                is RuntimeCall.Done -> activated.value
+                is Outcome.Failed -> return UpdateRestartResult.NotActivated
+                is Outcome.Ok -> activated.value
             }
         val generation = before?.serverRecoveryGeneration
         if (before == null || !before.serverRunning || !before.serverRestartWanted || generation == null) {
@@ -159,5 +159,5 @@ public class OpenCodeUpdateRestart(
         return UpdateRestartResult.RolledBack(version, oldBack, failure)
     }
 
-    private suspend fun status(): RuntimeStatus? = (port.refreshStatus() as? RuntimeCall.Done)?.value
+    private suspend fun status(): RuntimeStatus? = (port.refreshStatus() as? Outcome.Ok)?.value
 }

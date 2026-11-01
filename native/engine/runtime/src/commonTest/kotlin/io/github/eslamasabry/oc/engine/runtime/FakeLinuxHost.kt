@@ -4,10 +4,10 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.runtime.budget.BudgetReadings
 import io.github.eslamasabry.oc.engine.runtime.heat.BatteryReading
 import io.github.eslamasabry.oc.engine.runtime.heat.ThermalReading
-import io.github.eslamasabry.oc.engine.runtime.host.RuntimeCall
-import io.github.eslamasabry.oc.engine.runtime.host.RuntimeProblem
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
-import io.github.eslamasabry.oc.engine.runtime.host.done
+import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.engine.runtime.host.refused
 import io.github.eslamasabry.oc.engine.runtime.server.LaunchMode
 import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerPort
@@ -92,19 +92,19 @@ class FakeLinuxHost : BudgetReadings, PhoneServerPort {
         running = false
     }
 
-    override suspend fun checkHistoryMove(): RuntimeCall<Unit> {
+    override suspend fun checkHistoryMove(): Outcome<Unit> {
         calls += "historyCheck"
-        return if (historyMoveRefused) RuntimeProblem.Generic.refused() else Unit.done()
+        return if (historyMoveRefused) RuntimeProblem.Generic.refused() else Unit.ok()
     }
 
-    override suspend fun writePassword(password: String): RuntimeCall<Unit> {
+    override suspend fun writePassword(password: String): Outcome<Unit> {
         calls += "password"
         passwords += password
         duringPasswordWrite?.invoke()
-        return if (passwordRefused) RuntimeProblem.Generic.refused() else Unit.done()
+        return if (passwordRefused) RuntimeProblem.Generic.refused() else Unit.ok()
     }
 
-    override suspend fun launch(profile: ProfileId, mode: LaunchMode): RuntimeCall<Unit> {
+    override suspend fun launch(profile: ProfileId, mode: LaunchMode): Outcome<Unit> {
         calls += "launch"
         launches += mode
         launchRefusal?.let { return it.refused() }
@@ -125,7 +125,7 @@ class FakeLinuxHost : BudgetReadings, PhoneServerPort {
         rejectsPassword = false
         silent = false
         uptime = Duration.ZERO
-        return Unit.done()
+        return Unit.ok()
     }
 
     override suspend fun probe(password: String): ProbeAnswer {
@@ -140,13 +140,13 @@ class FakeLinuxHost : BudgetReadings, PhoneServerPort {
         }
     }
 
-    override suspend fun refreshStatus(): RuntimeCall<RuntimeStatus> = status.done()
+    override suspend fun refreshStatus(): Outcome<RuntimeStatus> = status.ok()
 
     val confirmed = mutableListOf<Long>()
 
-    override suspend fun confirmRecovery(expectedGeneration: Long): RuntimeCall<Unit> {
+    override suspend fun confirmRecovery(expectedGeneration: Long): Outcome<Unit> {
         confirmed += expectedGeneration
-        return Unit.done()
+        return Unit.ok()
     }
 
     val launchCount: Int get() = launches.size
@@ -164,18 +164,18 @@ class FakeLinuxHost : BudgetReadings, PhoneServerPort {
 }
 
 class FakeJournal(private val host: FakeLinuxHost) : io.github.eslamasabry.oc.engine.runtime.server.ComponentJournal {
-    override suspend fun activate(): RuntimeCall<String> {
+    override suspend fun activate(): Outcome<String> {
         host.journal += "activate"
         val version = host.pendingVersion ?: return RuntimeProblem.Generic.refused()
         if (host.activationRefused) return RuntimeProblem.Generic.refused()
         host.binary = "new"
         host.pendingVersion = null
-        return version.done()
+        return version.ok()
     }
 
-    override suspend fun rollBack(): RuntimeCall<Unit> {
+    override suspend fun rollBack(): Outcome<Unit> {
         host.journal += "rollBack"
         host.binary = "old"
-        return Unit.done()
+        return Unit.ok()
     }
 }
