@@ -58,6 +58,11 @@ public class ModelPacks(
 
     private class Running(val pack: PackId, val deferred: Deferred<Outcome<InstalledPack>>)
 
+    public val speechPacks: List<ModelPackSpec> get() = catalog.filter { it.kind == PackKind.Speech }
+
+    /** Bytes already in the pack's kept `.part` files. */
+    public suspend fun partialBytes(pack: PackId): Long = specOf(pack)?.let { installer.partialBytes(it) } ?: 0L
+
     public val selectedSpeech: ModelPackSpec
         get() {
             val speech = catalog.filter { it.kind == PackKind.Speech }
