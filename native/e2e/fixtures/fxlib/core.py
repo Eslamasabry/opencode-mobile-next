@@ -495,6 +495,12 @@ class Fixture:
         self._write_children()
         return proc
 
+    def adopt(self, proc: subprocess.Popen[Any]) -> subprocess.Popen[Any]:
+        """Track a child started elsewhere (e.g. on a PTY) by its exact PID."""
+        self.children.append(proc)
+        self._write_children()
+        return proc
+
     def _write_children(self) -> None:
         rows = [{"pid": p.pid, "argv0": Path(str(p.args[0])).name if isinstance(p.args, list) else str(p.args)}
                 for p in self.children if p.poll() is None]
