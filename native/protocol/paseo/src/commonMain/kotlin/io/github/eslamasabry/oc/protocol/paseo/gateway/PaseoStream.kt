@@ -78,8 +78,8 @@ internal fun PaseoGateway.onStream(id: String, event: JsonObject, payload: JsonO
             state.turnErrorShown = false
             emit(GatewayEvent.RunEnded(session, if (shown) RunOutcome.Succeeded else RunOutcome.Failed(null, PaseoTurnFailedTag, null)))
         }
-        "permission_requested" -> event.obj("request")?.let { requests?.onPermissionRequest(id, it) }
-        "permission_resolved" -> event.str("requestId")?.let { requests?.onPermissionResolved(it) }
+        "permission_requested" -> event.obj("request")?.let { requests.onPermissionRequest(id, it) }
+        "permission_resolved" -> event.str("requestId")?.let { requests.onPermissionResolved(it) }
         "timeline" -> {
             val item = event.obj("item") ?: return
             onTimelineItem(id, state, item, paseoText(event["provider"], max = 128), seq, paseoMillis(payload["timestamp"]))
@@ -108,7 +108,7 @@ private fun PaseoGateway.onTimelineItem(id: String, state: PaseoLive, raw: JsonO
     if (type == "tool_call") {
         item = paseoMergeToolCall(state.tools.remove(messageId), item)
         // The person rejected this call's card: its error is their own reason (B-AGENT-186).
-        if (item.str("status") == "failed" && messageId in rejectedCalls) item = item.with("declinedByPerson", JsonPrimitive(true))
+        if (item.str("status") == "failed" && requests.wasRejected(messageId)) item = item.with("declinedByPerson", JsonPrimitive(true))
         state.tools[messageId] = item
         while (state.tools.size > 2048) state.tools.remove(state.tools.keys.first())
     }

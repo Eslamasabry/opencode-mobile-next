@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.domain.events.GatewayEnvelope
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvents
+import io.github.eslamasabry.oc.core.domain.events.HintKind
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.domain.unavailable
 import io.github.eslamasabry.oc.core.model.AgentInfo
@@ -68,6 +69,19 @@ import io.github.eslamasabry.oc.protocol.paseo.paseoList
 import io.github.eslamasabry.oc.protocol.paseo.paseoObject
 import io.github.eslamasabry.oc.protocol.paseo.paseoReply
 import io.github.eslamasabry.oc.protocol.paseo.paseoString
+import io.github.eslamasabry.oc.protocol.paseo.requests.HostAgentCatalog
+import io.github.eslamasabry.oc.protocol.paseo.requests.HostAgentContinuation
+import io.github.eslamasabry.oc.protocol.paseo.requests.HostAgentPermissionRequest
+import io.github.eslamasabry.oc.protocol.paseo.requests.PaseoPermissionAnswer
+import io.github.eslamasabry.oc.protocol.paseo.requests.PaseoQuestionSignal
+import io.github.eslamasabry.oc.protocol.paseo.requests.PaseoRequestBook
+import io.github.eslamasabry.oc.protocol.paseo.requests.PaseoRequestHost
+import io.github.eslamasabry.oc.protocol.paseo.requests.isPaseoProviderId
+import io.github.eslamasabry.oc.protocol.paseo.requests.paseoHostAgentCatalog
+import io.github.eslamasabry.oc.protocol.paseo.requests.paseoHostAgentContinuation
+import io.github.eslamasabry.oc.protocol.paseo.requests.paseoHostAgentName
+import io.github.eslamasabry.oc.protocol.paseo.requests.paseoProviderCanStart
+import io.github.eslamasabry.oc.protocol.paseo.requests.toPaseo
 import io.github.eslamasabry.oc.protocol.paseo.str
 import io.github.eslamasabry.oc.protocol.paseo.stringOrNull
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoPush
@@ -161,8 +175,6 @@ public class PaseoGateway(
     internal val appIds = HashMap<String, String>()
     internal val titleHints = HashMap<String, String>()
 
-    /** Tool calls whose permission card the person rejected: their failure reads as declined (B-AGENT-186). */
-    internal val rejectedCalls = LinkedHashSet<String>()
     internal var creating = 0
     internal val heldEvents = ArrayList<PaseoPush>()
     internal var providerEntries: List<JsonObject>? = null
@@ -284,6 +296,7 @@ public class PaseoGateway(
         heldEvents.clear()
         providerEntries = null
         recoveryDegraded = false
+        requests.clear()
         hooks.forEach { it.onLocationChanged() }
     }
 
@@ -927,25 +940,80 @@ public class PaseoGateway(
     private fun defaultModeFor(provider: String): String? =
         providerEntries?.firstOrNull { it.str("provider") == provider }?.str("defaultModeId")?.takeIf { it.isNotEmpty() }
 
-    // ---- permissions and questions (delegated to the requests book once installed; slice C)
+    // ---- permissions, questions and ACP host agents (requests/PaseoRequestBook, slice C)
 
-    override suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>> =
-        call { requests?.pendingPermissionsNow() ?: persistentListOf() }
+    /** The permissions and questions of this gateway's folder (lane-confined; read through the calls below). */
+    public val requests: PaseoRequestBook = PaseoRequestBook(
+        object : PaseoRequestHost {
+            override val epoch: Int get() = transport.epoch
+            override val connected: Boolean get() = transport.connected
+            override val scope: String? get() = directoryValue
+            override val locationEpoch: Int get() = this@PaseoGateway.locationEpoch
+
+            override fun realId(appId: String): String = real(appId)
+
+            override fun providerOf(appId: String): String? = agents[appId]?.str("provider") ?: draftProviders[appId]
+
+            override suspend fun request(type: String, body: JsonObject, mutation: Boolean, expectedEpoch: Int): JsonObject =
+                transport.request(type, body, mutation = mutation, expectedEpoch = expectedEpoch)
+
+            override suspend fun send(type: String, body: JsonObject, expectedEpoch: Int) {
+                transport.send(type, body, expectedEpoch)
+            }
+
+            override fun emit(event: GatewayEvent) = this@PaseoGateway.emit(event)
+
+            // TODO(contract): GatewayEvent.QuestionAsked/QuestionSettled (plan 04 §8); a refresh hint until then.
+            override fun questionChanged(signal: PaseoQuestionSignal) = this@PaseoGateway.emit(GatewayEvent.RefreshHint(QUESTION_HINT))
+        },
+    )
+
+    override suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>> = call { requests.pendingPermissions() }
 
     override suspend fun replyPermission(session: SessionId, request: RequestId, reply: PermissionReply, message: String?): Outcome<Unit> =
-        call { (requests ?: paseoFail(PaseoFailureKind.StaleRequest)).reply(session, request, reply, message) }
+        call { requests.replyPermission(request.raw, reply.toPaseo(), session.raw, message) }
 
-    override suspend fun pendingQuestions(): Outcome<ImmutableList<PendingQuestion>> =
-        call { requests?.pendingQuestionsNow() ?: persistentListOf() }
+    /** Deny and interrupt the turn (Paseo "Cancel"; core PermissionReply has no such value yet). */
+    public suspend fun cancelPermission(session: SessionId, request: RequestId): Outcome<Unit> =
+        call { requests.replyPermission(request.raw, PaseoPermissionAnswer.Cancel, session.raw, null) }
+
+    override suspend fun pendingQuestions(): Outcome<ImmutableList<PendingQuestion>> = call { requests.pendingQuestions() }
 
     override suspend fun answerQuestion(session: SessionId, request: RequestId, answers: ImmutableList<ImmutableList<String>>): Outcome<Unit> =
-        call { (requests ?: paseoFail(PaseoFailureKind.StaleRequest)).answer(session, request, answers) }
+        call { requests.answerQuestion(session.raw, request.raw, answers) }
 
     override suspend fun rejectQuestion(session: SessionId, request: RequestId): Outcome<Unit> =
-        call { (requests ?: paseoFail(PaseoFailureKind.StaleRequest)).rejectQuestion(session, request) }
+        call { requests.rejectQuestion(session.raw, request.raw) }
 
-    /** The permissions/questions owner (S3-PASEO integration installs it). */
-    internal var requests: PaseoRequestsPort? = null
+    /** ACP agents the host offers (B-AGENT-142, 143). [refresh] asks the host to recheck before reading. */
+    public suspend fun hostAgentProviders(refresh: Boolean = false): Outcome<HostAgentCatalog> = call {
+        if (refresh) {
+            providerEntries = null
+            providerRevision++
+            val scope = scopeDir
+            val epoch = locationEpoch
+            transport.request("refresh_providers_snapshot_request", jsonOf("cwd" to scope))
+            checkLocation(scope, epoch)
+        }
+        paseoHostAgentCatalog(providerSnapshot())
+    }
+
+    /** Whether reopening [session] continues a live agent or needs an explicit new chat (B-AGENT-144). */
+    public suspend fun hostAgentContinuation(session: SessionId): Outcome<HostAgentContinuation> = call {
+        val scope = scopeDir
+        val epoch = locationEpoch
+        if (session.raw !in agents) fetchAgent(session.raw)
+        checkLocation(scope, epoch)
+        val agent = agents[session.raw] ?: paseoFail(PaseoFailureKind.Unavailable)
+        paseoHostAgentContinuation(session.raw, agent, live = session.raw in liveAgentSessions || daemonHolds(agent))
+    }
+
+    public suspend fun pendingHostPermissions(): Outcome<ImmutableList<HostAgentPermissionRequest>> =
+        call { requests.pendingHostPermissions() }
+
+    /** Exactly the action the agent offered (B-SEC-109); null denies (reject-once or cancel). */
+    public suspend fun replyHostPermission(request: RequestId, selectedActionId: String?): Outcome<Unit> =
+        call { requests.replyHostPermission(request.raw, selectedActionId) }
 
     // ---- files (P1 extras, S5-PASEOP1)
 
@@ -1003,6 +1071,7 @@ public class PaseoGateway(
         }
         drafts.remove(id)
         draftProviders.remove(id)
+        requests.syncSnapshot(id, agent["pendingPermissions"])
         hooks.forEach { it.onAgentRecorded(id, agent) }
         while (sessions.size > MAX_SESSIONS) forget(sessions.keys.first())
         return session
@@ -1035,6 +1104,7 @@ public class PaseoGateway(
         awaitingTurn.remove(id)
         turnActive.remove(id)
         live.remove(id)
+        requests.retireSession(id)
         hooks.forEach { it.onSessionForgotten(id) }
         realIds.remove(id)?.let(appIds::remove)
     }
@@ -1091,9 +1161,9 @@ public class PaseoGateway(
                 }
                 "agent_permission_request" -> {
                     val request = p.obj("request")
-                    if (agentId != null && agentId in sessions && request != null) requests?.onPermissionRequest(agentId, request)
+                    if (agentId != null && agentId in sessions && request != null) requests.onPermissionRequest(agentId, request)
                 }
-                "agent_permission_resolved" -> p.str("requestId")?.let { requests?.onPermissionResolved(it) }
+                "agent_permission_resolved" -> p.str("requestId")?.let { requests.onPermissionResolved(it) }
                 "agent_deleted", "agent_archived" -> removed(agentId)
                 "providers_snapshot_update" -> {
                     providerRevision++
@@ -1148,6 +1218,7 @@ public class PaseoGateway(
         liveAgentSessions.clear()
         providerEntries = null
         providerRevision++
+        requests.disconnect()
         hooks.forEach { it.onDisconnect() }
         refreshCapabilities()
         recoveryDegraded = true
@@ -1268,6 +1339,7 @@ public class PaseoGateway(
             realIds.clear()
             appIds.clear()
             heldEvents.clear()
+            requests.disconnect()
             hooks.forEach { it.onClosed() }
             removeListener()
             transport.close()
@@ -1295,6 +1367,9 @@ public class PaseoGateway(
         private const val MAX_SESSIONS = 1024
         private val STEERING_PROVIDERS = setOf("claude", "codex", "opencode", "pi")
         private val DETAILS = Redactor()
+
+        /** Questions changed (until core has QuestionAsked/QuestionSettled). */
+        public val QUESTION_HINT: HintKind = HintKind("question")
     }
 }
 
@@ -1341,23 +1416,6 @@ internal interface PaseoGatewayHooks {
     fun onClosed() {}
 }
 
-/** What the gateway needs from the permissions/questions owner (slice C wires its book behind this). */
-internal interface PaseoRequestsPort {
-    fun onPermissionRequest(appSessionId: String, request: JsonObject)
-
-    fun onPermissionResolved(requestId: String)
-
-    fun pendingPermissionsNow(): ImmutableList<PermissionRequest>
-
-    suspend fun reply(session: SessionId, request: RequestId, reply: PermissionReply, message: String?)
-
-    fun pendingQuestionsNow(): ImmutableList<PendingQuestion>
-
-    suspend fun answer(session: SessionId, request: RequestId, answers: ImmutableList<ImmutableList<String>>)
-
-    suspend fun rejectQuestion(session: SessionId, request: RequestId)
-}
-
 // ---- small helpers
 
 internal fun JsonObject.with(key: String, value: JsonElement): JsonObject = JsonObject(LinkedHashMap(this).apply { put(key, value) })
@@ -1372,33 +1430,3 @@ internal fun paseoUuid(random: Random): String {
     val h = b.joinToString("") { (it.toInt() and 0xFF).toString(16).padStart(2, '0') }
     return "${h.substring(0, 8)}-${h.substring(8, 12)}-${h.substring(12, 16)}-${h.substring(16, 20)}-${h.substring(20)}"
 }
-
-/** Dart `isPaseoProviderId`. */
-public fun isPaseoProviderId(id: String?): Boolean = id != null && PROVIDER_ID.matches(id)
-
-private val PROVIDER_ID = Regex("^[a-z][a-z0-9_-]{0,63}$")
-
-/** Runtimes that existed before ACP hosting (a custom override cannot reuse their identity). */
-public fun isExistingPaseoProvider(id: String?): Boolean = id in setOf("claude", "codex", "pi", "opencode", "copilot")
-
-/**
- * Dart `paseoProviderCanStart`: ready, enabled, no error, not a custom override of an existing runtime, not signed out.
- * TODO(S3-PASEO integration): use slice C's sign-in classifier once merged.
- */
-public fun paseoProviderCanStart(entry: JsonObject): Boolean =
-    isPaseoProviderId(entry.str("provider")) &&
-        entry["enabled"].boolOrNull() != false &&
-        entry.str("status") == "ready" &&
-        (entry["error"] == null || entry["error"] is JsonNull || entry.str("error") == "") &&
-        !(entry.str("source") == "custom" && isExistingPaseoProvider(entry.str("provider")))
-
-/** What the app calls an agent the computer runs (its product names). TODO(S3-PASEO integration): catalog names. */
-public fun paseoHostAgentName(id: String): String =
-    when (id) {
-        "claude" -> "Claude Code"
-        "pi" -> "Pi"
-        "codex" -> "Codex"
-        "opencode" -> "OpenCode"
-        "copilot" -> "GitHub Copilot"
-        else -> id
-    }
