@@ -1,0 +1,10 @@
+# T2 steps (plan 02 §8): one Gradle invocation per line, "<step name><TAB><gradle args>". t2.sh runs them in order and
+# records every step; a task Gradle cannot find is reported as MISSING, which is a failure, never a skip.
+# The coordinator adds a line when the gate it names exists (size gate, R8 config analysis, catalog report ...).
+build-logic	-p build-logic test
+tests	--continue -Poc.werror=true desktopTest testAndroidHostTest test
+goldens	--continue verifyRoborazziAndroidHostTest
+lint	:androidApp:lintStableRelease
+assemble	-Poc.debugSignRelease=true :androidApp:assembleStableRelease :androidApp:assemblePreviewRelease
+r8-config	:androidApp:analyzeStableReleaseR8Config
+catalog-report	:quality:catalogReport
