@@ -10,6 +10,7 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +19,8 @@ import kotlinx.coroutines.flow.asStateFlow
 @AssistedInject
 public class ChatPreviewViewModel(@Assisted route: ChatRoute, private val nav: AppNavigator) :
     ViewModel(), ChatPreviewActions {
-    public val state: StateFlow<ChatPreviewUi> = MutableStateFlow(ConversationFixture.preview(route.ref)).asStateFlow()
+    public val state: StateFlow<ChatPreviewUi> =
+        MutableStateFlow(ChatPreviewUi(route.ref, route.ref.sessionId.raw, persistentListOf())).asStateFlow()
 
     override fun back(): Unit = nav.back()
 
