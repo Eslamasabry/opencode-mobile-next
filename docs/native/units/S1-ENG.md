@@ -293,6 +293,11 @@ No library requests.
    write is briefly visible.
 6. Crash-loop guard: a launch that is killed without a crash before 10 s leaves the streak unchanged, and safe mode
    resets it to 0. The plan 07 A02 owner should confirm both.
-7. Not built (out of scope or later units): `ReportStore`/`ProblemReportBuilder`, the updater (S4-UPDATER),
+7. `StoredProfileJson.plainServerName` ports Dart's display-name fallback and returns English text ("This phone",
+   "Computer at <address>") from an engine, against the no-copy rule. It should return a kind plus the address and
+   let `:ui:words` word it.
+8. Test fixtures use only loopback, reserved documentation addresses (`203.0.113.x`) and `*.example` hosts. The
+   private and CGNAT addresses the first draft used were replaced before push.
+9. Not built (out of scope or later units): `ReportStore`/`ProblemReportBuilder`, the updater (S4-UPDATER),
    `LocaleHost`, `FirstRun`, `SearchMatcher` (slice 4), `KitTip`/Help › Tips (S2-TEACH, S4), and the HTTP perf
    interceptor.

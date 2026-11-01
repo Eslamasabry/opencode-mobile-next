@@ -53,12 +53,12 @@ class ProfileStoreTest {
         val h = harness()
         val team = assertNotNull(
             OpaqueJson.parse(
-                """{"provider":"gascity","url":"http://100.64.0.9:8080","city":"bright-lights","hostMode":"phone",""" +
+                """{"provider":"gascity","url":"http://team-host.example:8080","city":"bright-lights","hostMode":"phone",""" +
                     """"hostKind":"phone","front":false,"enabledAt":"2026-09-11T09:00:00.000Z"}""",
             ),
         )
         val laptop = assertNotNull(
-            OpaqueJson.parse("""{"provider":"gascity","url":"http://100.64.0.10:8372","city":"","hostMode":"computer","hostKind":"laptop","front":false}"""),
+            OpaqueJson.parse("""{"provider":"gascity","url":"http://team-laptop.example:8372","city":"","hostMode":"computer","hostKind":"laptop","front":false}"""),
         )
         h.store.upsert(StoredProfile(id("team"), "Team host", "https://server.example:4096", orchestration = team)).ok()
         h.store.upsert(StoredProfile(id("laptop"), "Laptop", "https://l:4096", orchestration = laptop)).ok()
@@ -286,19 +286,19 @@ class ProfileStoreTest {
     @Test
     fun `B-SEC-121 cleartext consent applies to one exact origin and an address edit drops it in the same commit`() = runTest {
         val h = harness()
-        val lan = StoredProfile(id("lan"), "LAN", "http://192.168.1.20:4096")
+        val lan = StoredProfile(id("lan"), "LAN", "http://203.0.113.20:4096")
         assertTrue(h.store.upsert(lan).ok().cleartextUnconfirmed)
 
-        val confirmed = h.store.upsert(lan, trust = TrustInput(cleartextOrigin = "http://192.168.1.20:4096")).ok()
+        val confirmed = h.store.upsert(lan, trust = TrustInput(cleartextOrigin = "http://203.0.113.20:4096")).ok()
         assertFalse(confirmed.cleartextUnconfirmed)
-        assertEquals("http://192.168.1.20:4096", h.string("oc.cleartextOk.lan"))
+        assertEquals("http://203.0.113.20:4096", h.string("oc.cleartextOk.lan"))
         // A rebuilt profile (no trust given) keeps it; a reload keeps it.
         h.store.upsert(lan.copy(name = "Renamed")).ok()
         val reloaded = Harness(StandardTestDispatcher(testScheduler), h.secrets, h.backend).store.load().ok().single()
         assertFalse(reloaded.cleartextUnconfirmed)
 
         // Another address (another port) is not covered: the consent is gone with the edit.
-        val moved = h.store.upsert(lan.copy(baseUrl = "http://192.168.1.20:4097")).ok()
+        val moved = h.store.upsert(lan.copy(baseUrl = "http://203.0.113.20:4097")).ok()
         assertTrue(moved.cleartextUnconfirmed)
         assertNull(h.string("oc.cleartextOk.lan"))
         // Loopback never needs it.
@@ -354,7 +354,7 @@ class ProfileStoreTest {
     fun `B-STATE-065 a plain address as a name reads as This phone or Computer at`() {
         assertEquals("This phone", StoredProfileJson.plainServerName("127.0.0.1"))
         assertEquals("This phone", StoredProfileJson.plainServerName("[::1]"))
-        assertEquals("Computer at 192.168.1.4", StoredProfileJson.plainServerName("192.168.1.4"))
+        assertEquals("Computer at 203.0.113.4", StoredProfileJson.plainServerName("203.0.113.4"))
         assertEquals("Workstation", StoredProfileJson.plainServerName("Workstation"))
     }
 }
