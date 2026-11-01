@@ -187,9 +187,12 @@ public class PrefsKeyValueStore(
     }
 
     private companion object {
-        fun storageFailure(e: Throwable): Failure = Failure.Storage(Redacted.shape(e))
+        fun storageFailure(e: Throwable): Failure = Failure.StorageRefused(Redacted.shape(e))
 
-        /** TODO(move-to-core): plan 05 names this Failure.InvalidValue; :core:common has no such variant yet. */
-        fun clash(): Failure = Failure.Storage(Redacted.shape(PrefixClash()))
+        /**
+         * Plan 05 §2.4 calls this `InvalidValue`; plan 03 §10.1's closed list has no such subtype, so a value the store
+         * must not write is a refused write (INTEGRATE-W1). Details name the class only.
+         */
+        fun clash(): Failure = Failure.StorageRefused(Redacted.shape(PrefixClash()))
     }
 }

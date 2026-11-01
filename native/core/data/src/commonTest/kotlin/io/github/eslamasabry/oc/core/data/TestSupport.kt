@@ -1,7 +1,7 @@
 package io.github.eslamasabry.oc.core.data
 
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.data.dart.Sha256
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.FlutterPrefsCodec
 import io.github.eslamasabry.oc.core.data.kv.InMemoryPrefsBackend
 import io.github.eslamasabry.oc.core.data.kv.JavaListDecoder
@@ -68,7 +68,7 @@ internal class FakeAead : Aead {
     }
 
     private fun tag(aad: ByteArray, plain: ByteArray): ByteArray =
-        Sha256.hex(aad + byteArrayOf(0) + plain).chunked(2).take(16).map { it.toInt(16).toByte() }.toByteArray()
+        DartJson.sha256Hex(aad + byteArrayOf(0) + plain).chunked(2).take(16).map { it.toInt(16).toByte() }.toByteArray()
 }
 
 internal open class MapSecretEntries : SecretEntries {

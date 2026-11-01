@@ -28,7 +28,7 @@ public interface KeyValueStore {
     /**
      * One atomic platform commit (`Editor.commit()`, never `apply()`), run in [lane] after the migration gate opens.
      * On refusal the touched keys are written back to their previous values, readers and [changes] never see the
-     * refused values, and `Failure.Storage` is returned. A string value starting with a Flutter prefix is refused before
+     * refused values, and `Failure.StorageRefused` is returned. A string value starting with a Flutter prefix is refused before
      * anything is written, as the plugin does. A closed lane returns `Failure.Refused(ProfileClosing)`.
      */
     public suspend fun commit(lane: WriterLane, edit: PrefEdit.() -> Unit): Outcome<Unit>

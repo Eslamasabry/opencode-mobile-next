@@ -3,7 +3,7 @@ package io.github.eslamasabry.oc.core.data.scope
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.map
-import io.github.eslamasabry.oc.core.data.dart.DartJson
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.lane.WriterLane

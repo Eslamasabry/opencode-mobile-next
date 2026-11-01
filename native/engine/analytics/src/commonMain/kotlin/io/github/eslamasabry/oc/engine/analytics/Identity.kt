@@ -7,7 +7,7 @@ import kotlin.uuid.Uuid
 /**
  * Source of random ids: 32 lowercase hex characters (128 bits). K-SEC-12 bans `kotlin.random` here; the default uses
  * `Uuid.random()`, which draws from the platform's secure random generator.
- * TODO(move-to-core): use `secureRandomBytes` from `:core:security` once it exists.
+ * TODO(core-bytes): use `secureRandomBytes` from `:core:common` (plan 03 §10.1 byte primitives, not built yet).
  */
 public fun interface IdSource {
     public fun newId(): String

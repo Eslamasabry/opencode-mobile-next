@@ -1,6 +1,6 @@
 package io.github.eslamasabry.oc.core.data
 
-import io.github.eslamasabry.oc.core.data.dart.DartJson
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.scope.ProfileKeyRule
 import kotlin.test.Test
 import kotlin.test.assertEquals

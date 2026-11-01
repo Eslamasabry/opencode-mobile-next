@@ -68,15 +68,49 @@ class CommonTest {
     }
 
     @Test
-    fun `network failures are one closed family under Failure`() {
-        val failures: List<Failure> =
+    fun `Failure is one flat closed list with one name per subtype (plan 03 S10_1)`() {
+        // An exhaustive `when` with no else: a nested family or a new subtype fails compilation here.
+        fun name(f: Failure): String =
+            when (f) {
+                is Failure.Refused -> "Refused"
+                is Failure.Unavailable -> "Unavailable"
+                is Failure.Network -> "Network"
+                is Failure.TimedOut -> "TimedOut"
+                is Failure.Certificate -> "Certificate"
+                is Failure.SignIn -> "SignIn"
+                is Failure.NotFound -> "NotFound"
+                is Failure.Conflict -> "Conflict"
+                is Failure.Busy -> "Busy"
+                is Failure.Server -> "Server"
+                is Failure.Rejected -> "Rejected"
+                is Failure.Incompatible -> "Incompatible"
+                is Failure.ComputerDidNotAnswer -> "ComputerDidNotAnswer"
+                is Failure.UnreadableReply -> "UnreadableReply"
+                is Failure.StorageRefused -> "StorageRefused"
+                is Failure.SecretUnavailable -> "SecretUnavailable"
+                is Failure.Media -> "Media"
+                is Failure.Runtime -> "Runtime"
+                is Failure.Device -> "Device"
+                is Failure.Folder -> "Folder"
+                is Failure.ProjectGit -> "ProjectGit"
+                is Failure.StagedRevert -> "StagedRevert"
+                is Failure.Termux -> "Termux"
+                is Failure.Unexpected -> "Unexpected"
+                is Failure.Unknown -> "Unknown"
+            }
+        val samples: List<Failure> =
             listOf(
-                Failure.Net.Offline(),
-                Failure.Net.Unreachable(Failure.Net.Unreachable.Why.Dns, null),
-                Failure.Net.NotSupported(FeatureId("sessionNotes")),
-                Failure.Net.Rejected(422, WireTag("ValidationError"), WireExtras.None, null),
+                Failure.Network(NetworkWhy.Offline),
+                Failure.Network(NetworkWhy.Dns),
+                Failure.Unavailable(FeatureId("sessionNotes")),
+                Failure.Rejected(422, WireTag("ValidationError")),
+                Failure.Busy(BusyKind.SessionBusy, WireTag("SessionBusyError")),
+                Failure.Incompatible(IncompatibleKind.LegacyOpenCode1),
+                Failure.StorageRefused(),
             )
-        assertTrue(failures.all { it is Failure.Net })
-        assertEquals(null, Failure.Net.Offline().details)
+        assertEquals(listOf("Network", "Network", "Unavailable", "Rejected", "Busy", "Incompatible", "StorageRefused"), samples.map(::name))
+        assertEquals(NetworkWhy.Unknown, Failure.Network().why)
+        assertEquals(BusyKind.Overloaded, Failure.Busy().kind)
+        assertTrue(samples.all { it.details == null })
     }
 }

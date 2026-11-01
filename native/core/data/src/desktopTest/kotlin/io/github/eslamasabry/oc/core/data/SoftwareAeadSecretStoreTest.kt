@@ -47,7 +47,7 @@ class SoftwareAeadSecretStoreTest {
 
         entries.map["pw.1"] = entries.map.getValue("oc.quotaToken.1")
         val swapped = reader.read("pw.1") as Outcome.Failed
-        assertIs<Failure.Storage>(swapped.failure)
+        assertIs<Failure.SecretUnavailable>(swapped.failure)
         assertEquals("AEADBadTagException", swapped.failure.details?.text)
 
         val bytes = Base64.Default.decode(entries.map.getValue("oc.quotaToken.1"))

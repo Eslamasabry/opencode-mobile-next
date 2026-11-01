@@ -115,7 +115,7 @@ public interface FormGateway {
 
     public suspend fun formState(session: SessionId, form: FormId): Outcome<FormState> = unavailable("forms")
 
-    /** 400 invalid answer and 409 already settled arrive as Failure.Net.Rejected / Conflict with their tag. */
+    /** 400 invalid answer and 409 already settled arrive as Failure.Rejected / Failure.Conflict with their tag. */
     public suspend fun replyForm(session: SessionId, form: FormId, answer: FormAnswer): Outcome<Unit> = unavailable("forms")
 
     public suspend fun cancelForm(session: SessionId, form: FormId): Outcome<Unit> = unavailable("forms")

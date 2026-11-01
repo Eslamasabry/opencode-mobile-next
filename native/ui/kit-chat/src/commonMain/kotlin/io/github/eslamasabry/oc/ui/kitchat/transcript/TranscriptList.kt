@@ -36,7 +36,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.MotionTokens
+import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import kotlinx.coroutines.launch
@@ -131,8 +131,8 @@ private fun KitJumpToLatest(state: TranscriptListState, label: String, motion: K
     val full = motion == KitMotionLevel.Full
     AnimatedVisibility(
         visible = state.awayFromLatest,
-        enter = fadeIn(tween(MotionTokens.LONG_MS)) + (if (full) slideInVertically(tween(MotionTokens.LONG_MS)) { it / 4 } else fadeIn()),
-        exit = fadeOut(tween(MotionTokens.SHORT_MS)) + (if (full) slideOutVertically(tween(MotionTokens.SHORT_MS)) { it / 4 } else fadeOut()),
+        enter = fadeIn(tween(MotionTokens.STANDARD)) + (if (full) slideInVertically(tween(MotionTokens.STANDARD)) { it / 4 } else fadeIn()),
+        exit = fadeOut(tween(MotionTokens.QUICK)) + (if (full) slideOutVertically(tween(MotionTokens.QUICK)) { it / 4 } else fadeOut()),
         modifier = modifier,
     ) {
         Surface(

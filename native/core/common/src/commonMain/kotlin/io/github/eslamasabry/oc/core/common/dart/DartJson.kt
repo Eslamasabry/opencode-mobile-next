@@ -1,12 +1,11 @@
-package io.github.eslamasabry.oc.core.data.dart
+package io.github.eslamasabry.oc.core.common.dart
 
 /**
  * Byte-exact ports of the Dart encodings that stored keys and digests depend on (plan 05 §2.5).
  *
- * TODO(move-to-core): plan 05 §2.5 places `DartJson` in `:core:common` (`io.github.eslamasabry.oc.core.common.dart`),
- * owned by S0-CORE. This local copy exists so `:core:data` can encode string lists today; move it unchanged and delete
- * this file when the core owner lands theirs. The Dart golden vectors (`tools/flutter-fixtures/dart_vectors.dart`) are
- * not generated yet; the tests pin the vectors derived from dart:convert / dart:core source by hand.
+ * Lives in `:core:common` (plan 05 §2.5; moved unchanged from `:core:data` by INTEGRATE-W1). The Dart golden vectors
+ * (`tools/flutter-fixtures/dart_vectors.dart`) are not generated yet; the tests pin the vectors derived from
+ * dart:convert / dart:core source by hand.
  *
  * Decoding is a lenient `jsonDecode`: `null`, [Boolean], [Long] (integers that fit), [Double], [String], [List],
  * [LinkedHashMap] (insertion order kept). Copied from `flutter-migration-readers` `MiniJson` (P5).
@@ -75,6 +74,9 @@ public object DartJson {
 
     /** Lowercase hex SHA-256 of the UTF-8 bytes (Dart `sha256.convert(utf8.encode(s)).toString()`). */
     public fun sha256Hex(text: String): String = Sha256.hex(utf8(text))
+
+    /** Lowercase hex SHA-256 of [bytes]. Pure Kotlin until plan 03 §10.1's `expect class Sha256` lands. */
+    public fun sha256Hex(bytes: ByteArray): String = Sha256.hex(bytes)
 
     /** Dart `utf8.encode`: an unpaired surrogate becomes U+FFFD (`EF BF BD`), unlike the JVM's `?`. */
     public fun utf8(text: String): ByteArray {

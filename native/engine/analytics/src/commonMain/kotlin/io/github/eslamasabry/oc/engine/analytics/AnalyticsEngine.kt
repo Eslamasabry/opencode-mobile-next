@@ -63,7 +63,7 @@ public data class AnalyticsConfig(
  * Lifecycle: [start] after the first frame; [openGate] once the migration gate opens (events before it are dropped,
  * plan 16 §5.6 rule 1); [updateConditions] whenever connectivity or foreground state changes (moving to the
  * background triggers an upload); a foreground timer uploads every 30 minutes.
- * TODO(move-to-core): Metro binding (`@SingleIn(AppScope::class)`) and the `AppBuildInfo` → [SystemProps] mapping
+ * TODO(app-wiring): Metro binding (`@SingleIn(AppScope::class)`) and the `AppBuildInfo` → [SystemProps] mapping
  * are wired by `:androidApp` / `:desktopApp`.
  */
 public class AnalyticsEngine(

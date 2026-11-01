@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.core.model
 
 import io.github.eslamasabry.oc.core.common.Failure
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Status of one live event stream (plan 04 §6.3). Lives in :core:model, not :core:net, so :core:domain can expose
@@ -28,13 +31,19 @@ public sealed interface StreamStatus {
     public data class Stopped(val failure: Failure) : StreamStatus
 }
 
-/** Network facts (plan 04 §6.4). Values here; the NetworkStatus service interface is in :core:domain. */
+/**
+ * Network facts (plan 04 §6.4). The one network reading in the app: :core:net (the gate), :protocol:*, engines and
+ * :android:platform all see :core:model. INTEGRATE-W1 moved [NetworkStatus] here from :core:domain, because :core:net
+ * may not depend on :core:domain (ADR §6.1) and plan 04 §6.4 homes it in :core:model.
+ */
 public data class NetworkState(
     val online: Online,
-    val transport: Transport,
-    val metered: Boolean?,
+    val transport: Transport = Transport.Unknown,
+    /** The active network carries Wi-Fi, VPN included (Tailscale over Wi-Fi = true); Flutter's monitorNetworkPolicy. */
+    val onWifi: Boolean? = null,
+    val metered: Boolean? = null,
     /** Changes when the default network changes (Wi-Fi ↔ mobile, Tailscale VPN up/down). */
-    val defaultNetworkId: Long?,
+    val defaultNetworkId: Long? = null,
 ) {
     /** Yes = INTERNET ∧ VALIDATED; No = no default network. */
     public enum class Online { Yes, No, Unknown }
@@ -44,8 +53,18 @@ public data class NetworkState(
 
     public companion object {
         /** Desktop and "not known yet": never gates. */
-        public val Unknown: NetworkState = NetworkState(Online.Unknown, Transport.Unknown, null, null)
+        public val Unknown: NetworkState = NetworkState(Online.Unknown)
     }
 }
 
 public enum class NetworkChange { DefaultChanged, Lost, Regained }
+
+/** Plan 04 §6.4. Android: :android:platform ports NetworkMonitor.kt (B-ANDR-037); desktop binds [UnknownNetworkStatus]. */
+public interface NetworkStatus {
+    public val state: StateFlow<NetworkState>
+}
+
+/** Desktop (and iOS until NWPathMonitor): always Unknown, never gates. */
+public object UnknownNetworkStatus : NetworkStatus {
+    override val state: StateFlow<NetworkState> = MutableStateFlow(NetworkState.Unknown).asStateFlow()
+}

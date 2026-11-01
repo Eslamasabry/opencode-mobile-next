@@ -6,8 +6,8 @@ import io.github.eslamasabry.oc.core.common.Outcome
  * Passwords and tokens (plan 05 §4, ADR §9.8). Names keep today's shapes (`pw.<id>`, `oc.codexToken.<id>`, …); names
  * are ids, not secrets. Values never reach logs, `Failure.details` or `toString()`.
  *
- * Failures are `Failure.Storage` (plan 05 calls it SecretUnavailable; `:core:common` has no such variant yet). Never a
- * plaintext fallback, and never "" for a failure.
+ * Failures are `Failure.SecretUnavailable` (plan 05 §4.2: "enter the password again"). Never a plaintext fallback,
+ * and never "" for a failure.
  */
 public interface SecretStore {
     public suspend fun read(name: String): Outcome<String?>

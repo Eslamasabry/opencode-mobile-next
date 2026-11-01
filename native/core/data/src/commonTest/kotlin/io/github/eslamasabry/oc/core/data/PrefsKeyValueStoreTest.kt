@@ -38,7 +38,7 @@ class PrefsKeyValueStoreTest {
         store.changes.test {
             backend.refuseNext = 1
             val refused = store.commit(lane) { putString("oc.appearance", "light") }
-            assertIs<Failure.Storage>((refused as Outcome.Failed).failure)
+            assertIs<Failure.StorageRefused>((refused as Outcome.Failed).failure)
             assertEquals("dark", store.string("oc.appearance"))
             assertEquals(RawPref.Str("dark"), backend.memory["flutter.oc.appearance"], "platform memory restored")
             expectNoEvents()
@@ -78,7 +78,7 @@ class PrefsKeyValueStoreTest {
         backend.throwNext = 1
         val result = store.commit(lane) { putDouble("oc.textScale", 1.3) }
         val failure = (result as Outcome.Failed).failure
-        assertIs<Failure.Storage>(failure)
+        assertIs<Failure.StorageRefused>(failure)
         assertFalse(failure.details!!.text.contains("secret-value-must-not-leak"), "only the error's class name")
         assertEquals(1.0, store.double("oc.textScale"))
         assertEquals(RawPref.Str(FlutterPrefsCodec.DOUBLE_PREFIX + "1.0"), backend.memory["flutter.oc.textScale"])
@@ -115,7 +115,7 @@ class PrefsKeyValueStoreTest {
             putString("oc.ok", "fine")
             putString("oc.draft.x.1", FlutterPrefsCodec.LIST_PREFIX + "typed by a person")
         }
-        assertIs<Failure.Storage>((result as Outcome.Failed).failure)
+        assertIs<Failure.StorageRefused>((result as Outcome.Failed).failure)
         assertTrue(backend.commits.isEmpty())
         assertNull(store.get("oc.ok"))
         assertIs<Outcome.Failed>(store.compareAndSet(lane, "oc.x", null, FlutterPrefsCodec.DOUBLE_PREFIX + "1"))

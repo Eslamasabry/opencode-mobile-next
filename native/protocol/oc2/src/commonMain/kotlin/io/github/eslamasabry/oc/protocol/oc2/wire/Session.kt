@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.protocol.oc2.wire
 
+import io.github.eslamasabry.oc.core.common.json.SurrogateSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -89,7 +90,7 @@ public data class Oc2FileAttachment(
         val description: String? = null,
     )
 
-    internal object Serializer : SurrogateSerializer<Oc2FileAttachment, Wire>("FileAttachment", Wire.serializer()) {
+    internal object Serializer : SurrogateSerializer<Oc2FileAttachment, Wire>("oc2.FileAttachment", Wire.serializer()) {
         override fun toValue(wire: Wire): Oc2FileAttachment =
             Oc2FileAttachment(wire.data, wire.mime, wire.source?.type, wire.source?.uri, wire.name, wire.description)
 

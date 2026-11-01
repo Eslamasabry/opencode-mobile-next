@@ -18,7 +18,7 @@ public class ConnectionSession(
     public val profile: ServerProfile,
     private val gateway: ServerGateway,
 ) {
-    private val mutableStatus = MutableStateFlow(StreamStatus.Connecting)
+    private val mutableStatus = MutableStateFlow<StreamStatus>(StreamStatus.Connecting)
     public val status: StateFlow<StreamStatus> = mutableStatus.asStateFlow()
     public val capabilities: StateFlow<ServerCapabilities> get() = gateway.capabilities
 
@@ -27,7 +27,7 @@ public class ConnectionSession(
     }
 
     internal suspend fun close() {
-        mutableStatus.value = StreamStatus.Disconnected
+        mutableStatus.value = StreamStatus.Disconnected(attempt = 0, nextAttemptAtMs = null)
         gateway.close()
     }
 }

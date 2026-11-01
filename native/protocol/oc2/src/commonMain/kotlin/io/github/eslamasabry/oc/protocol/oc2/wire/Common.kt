@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.protocol.oc2.wire
 
+import io.github.eslamasabry.oc.core.common.json.RawObjectSerializer
+import io.github.eslamasabry.oc.core.common.json.SurrogateSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -41,7 +43,7 @@ public data class Oc2Location(
         val project: Oc2Project? = null,
     )
 
-    internal object Serializer : SurrogateSerializer<Oc2Location, Wire>("Location", Wire.serializer()) {
+    internal object Serializer : SurrogateSerializer<Oc2Location, Wire>("oc2.Location", Wire.serializer()) {
         override fun toValue(wire: Wire): Oc2Location =
             Oc2Location(wire.directory, wire.workspaceID ?: wire.workspace, wire.project)
 
@@ -77,7 +79,7 @@ public data class Oc2Tokens(
         val cache: Cache = Cache(),
     )
 
-    internal object Serializer : SurrogateSerializer<Oc2Tokens, Wire>("Tokens", Wire.serializer()) {
+    internal object Serializer : SurrogateSerializer<Oc2Tokens, Wire>("oc2.Tokens", Wire.serializer()) {
         override fun toValue(wire: Wire): Oc2Tokens =
             Oc2Tokens(wire.input, wire.output, wire.reasoning, wire.cache.read, wire.cache.write)
 
@@ -107,7 +109,7 @@ public data class Oc2ModelRef(
     @Serializable
     internal data class Wire(val id: String, val providerID: String, val variant: String? = null)
 
-    internal object Serializer : SurrogateSerializer<Oc2ModelRef, Wire>("ModelRef", Wire.serializer()) {
+    internal object Serializer : SurrogateSerializer<Oc2ModelRef, Wire>("oc2.ModelRef", Wire.serializer()) {
         override fun toValue(wire: Wire): Oc2ModelRef {
             val prefix = "${wire.providerID}/"
             val bare = if (wire.id.startsWith(prefix) && wire.id.length > prefix.length) wire.id.removePrefix(prefix) else wire.id
@@ -134,7 +136,7 @@ public data class Oc2StructuredError(
     public val status: Int? = null,
     public val raw: JsonObject = EmptyObject,
 ) {
-    internal object Serializer : RawObjectSerializer<Oc2StructuredError>("StructuredError") {
+    internal object Serializer : RawObjectSerializer<Oc2StructuredError>("oc2.StructuredError") {
         override fun read(obj: JsonObject): Oc2StructuredError =
             Oc2StructuredError(obj.nonBlank("type") ?: obj.nonBlank("name"), obj.nonBlank("message"), obj.int("status"), obj)
 

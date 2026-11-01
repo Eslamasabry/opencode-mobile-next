@@ -22,9 +22,11 @@ class KonsistRulesTest {
     /** Konsist resolves directories against the Gradle root it detects (the folder holding gradlew). */
     private fun projectRootForKonsist(): File = root
 
-    private val production get() = scope("core", "engine", "ui", "feature", "androidApp", "desktopApp")
+    // protocol (S1-OC2 request) and src/jvmShared (S1-NET request) added by INTEGRATE-W1; android/ (copied Flutter
+    // Kotlin, TWINS.md) is not scanned until its slice rewrites it.
+    private val production get() = scope("core", "protocol", "engine", "ui", "feature", "androidApp", "desktopApp")
         .slice { "/src/commonMain/" in it.path || "/src/main/" in it.path || "/src/androidMain/" in it.path ||
-            "/src/desktopMain/" in it.path || "/src/iosMain/" in it.path }
+            "/src/desktopMain/" in it.path || "/src/iosMain/" in it.path || "/src/jvmShared/" in it.path }
 
     @Test
     fun `K1 features arrange kit parts only`() {

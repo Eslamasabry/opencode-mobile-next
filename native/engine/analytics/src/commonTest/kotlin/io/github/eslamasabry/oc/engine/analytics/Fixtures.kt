@@ -48,7 +48,7 @@ internal class RecordingRemoteSink(override val host: String? = "collector.examp
 
     override suspend fun send(batch: WireBatch): Outcome<Delivery> {
         calls++
-        if (fail) return Outcome.Failed(Failure.Network(null))
+        if (fail) return Outcome.Failed(Failure.Network())
         batches += batch
         return Outcome.Ok(Delivery(WireCodec.encode(batch)))
     }

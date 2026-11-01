@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.common.ids.FormId
 import io.github.eslamasabry.oc.core.common.ids.InboxItemId
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.PartId
+import io.github.eslamasabry.oc.core.common.ids.ProjectId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.EventLocation
@@ -37,13 +38,19 @@ public sealed interface GatewayEvent {
     // ---- sessions
     public data class SessionUpserted(val session: Session) : GatewayEvent
 
-    /** A move replaces both directory and workspace ([replacesLocation]); a rename changes [title] only. */
+    /**
+     * A move replaces both directory and workspace ([replacesLocation]); a rename changes [title] only. OC2 moves may
+     * also change the project and the subpath (INTEGRATE-W1 additions, defaulted; Dart Api2EventAdapter).
+     */
     public data class SessionChanged(
         val sessionId: SessionId,
         val title: String?,
         val directory: String?,
         val workspaceId: String?,
         val replacesLocation: Boolean,
+        val projectId: ProjectId? = null,
+        val subpath: String? = null,
+        val replacesSubpath: Boolean = false,
     ) : GatewayEvent
 
     public data class SessionDeleted(val sessionId: SessionId) : GatewayEvent
@@ -56,6 +63,9 @@ public sealed interface GatewayEvent {
 
     /** Read watermark. */
     public data class SessionViewed(val sessionId: SessionId, val idleMs: Long) : GatewayEvent
+
+    /** Refresh the row and reload the open chat (plan 04 §11.2; added by INTEGRATE-W1). */
+    public data class SessionCompacted(val sessionId: SessionId) : GatewayEvent
 
     // ---- runs
     public data class RunStarted(val sessionId: SessionId) : GatewayEvent
@@ -88,8 +98,11 @@ public sealed interface GatewayEvent {
     /** "Re-read the real result" (a result for a call never seen, open calls settled at run end). */
     public data class TranscriptStale(val sessionId: SessionId) : GatewayEvent
 
-    /** Server instruction/skill/shell text is never shown; only the kind. */
-    public data class Notice(val sessionId: SessionId, val messageId: MessageId, val kind: NoticeKind) : GatewayEvent
+    /**
+     * Server instruction/skill/shell text is never shown; only the kind. [messageId] is null for session-level notices
+     * (OC2 `session.shell`, `session.skill.activated` carry no message; INTEGRATE-W1 relaxed plan 04's non-null).
+     */
+    public data class Notice(val sessionId: SessionId, val messageId: MessageId?, val kind: NoticeKind) : GatewayEvent
 
     /** Resets history cursors downstream. */
     public data class RevertChanged(val sessionId: SessionId, val kind: RevertKind) : GatewayEvent
@@ -116,15 +129,20 @@ public sealed interface GatewayEvent {
     /** Exact versions kept (B-PROTO-047). */
     public data class Installation(val kind: InstallationKind, val version: String) : GatewayEvent
 
-    public data class TerminalChanged(val ptyId: String, val kind: TerminalChange) : GatewayEvent
+    /** [ptyId] null = the event named no terminal: reconcile the whole list (OC2 wire; INTEGRATE-W1). */
+    public data class TerminalChanged(val ptyId: String?, val kind: TerminalChange) : GatewayEvent
 
-    public data class ShellChanged(val shellId: String) : GatewayEvent
+    /** [shellId] null = reconcile every managed shell from the scoped shell API (OC2 wire; INTEGRATE-W1). */
+    public data class ShellChanged(val shellId: String?) : GatewayEvent
 
     public data class WorktreeOutcome(val ready: Boolean) : GatewayEvent
 }
 
 public sealed interface RunOutcome {
     public data object Succeeded : RunOutcome
+
+    /** The server went idle (plan 04 §11.2/§7.6). Never replaces an earlier Failed or Interrupted for the same run. */
+    public data object Idle : RunOutcome
 
     public data class Interrupted(val reason: InterruptReason) : RunOutcome
 

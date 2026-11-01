@@ -1,11 +1,12 @@
 package io.github.eslamasabry.oc.protocol.oc2.wire
 
+import io.github.eslamasabry.oc.core.common.json.TolerantJson
+import kotlin.math.abs
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.math.abs
 
 /**
  * `GET /api/experimental/session/stats` (`data`). Unlike the other DTOs this one is strict, as Flutter's
@@ -123,19 +124,19 @@ public data class Oc2UsageStatistics(
             (value as? JsonArray ?: throw Invalid()).map { parse(map(it)) }
 
         private fun count(value: JsonElement?): Long {
-            val n = Tolerance.number(value) ?: throw Invalid()
+            val n = TolerantJson.number(value) ?: throw Invalid()
             if (!n.isFinite() || n < 0 || n != kotlin.math.truncate(n)) throw Invalid()
             return n.toLong()
         }
 
         private fun cost(value: JsonElement?): Double {
-            val n = Tolerance.number(value) ?: throw Invalid()
+            val n = TolerantJson.number(value) ?: throw Invalid()
             if (!n.isFinite() || n < 0) throw Invalid()
             return n
         }
 
         private fun timestamp(value: JsonElement?): Long {
-            val n = Tolerance.number(value) ?: throw Invalid()
+            val n = TolerantJson.number(value) ?: throw Invalid()
             if (!n.isFinite() || n != kotlin.math.truncate(n) || abs(n) > MAX_TIMESTAMP) throw Invalid()
             return n.toLong()
         }

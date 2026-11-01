@@ -14,7 +14,9 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.supervisedContext
+import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
+import io.github.eslamasabry.oc.core.domain.GatewaySpec
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.PersistentMap
@@ -54,20 +56,29 @@ public class ConnectionRegistry(
     // Whole open/close operations are serialised (audit MAJOR 6: a serial dispatcher alone is not a mutex).
     private val admission = Mutex()
 
-    /** Idempotent: returns the live graph when one exists. Opens gateways, then creates the extension. */
+    /**
+     * Idempotent: returns the live graph when one exists. Creates the graph's scope, connects the gateways in it (plan
+     * 04 §11.1: `GatewayFactory.connect(spec)`), then creates the extension. A failed connect cancels the scope, so
+     * nothing it started outlives the failure.
+     */
     public suspend fun open(profile: ServerProfile): Outcome<ConnectionGraph> =
         admission.withLock {
             live.value[profile.id]?.let { return@withLock Outcome.Ok(it) }
             val factory =
                 factories.firstOrNull { it.backend == profile.backend }
                     ?: return@withLock Outcome.Failed(Failure.Unavailable(FeatureId("backend.${profile.backend}")))
-            when (val pair = factory.connect(profile)) {
-                is Outcome.Failed -> pair
+            val scope =
+                ConnectionCoroutineScope(
+                    supervisedContext(appScope.coroutineContext.job, dispatchers.default, "conn-${profile.id.raw}"),
+                )
+            // The ProfileSource seam (plan 04 §12.1) resolves and registers credentials; until it lands, none are sent.
+            val spec = GatewaySpec(profile = profile, credentials = ConnectionCredentials.None, scope = scope)
+            when (val pair = factory.connect(spec)) {
+                is Outcome.Failed -> {
+                    (scope.coroutineContext[Job])?.cancelAndJoin()
+                    pair
+                }
                 is Outcome.Ok -> {
-                    val scope =
-                        ConnectionCoroutineScope(
-                            supervisedContext(appScope.coroutineContext.job, dispatchers.default, "conn-${profile.id.raw}"),
-                        )
                     val graph = graphFactory.create(profile, pair.value, scope)
                     graph.session.markConnected()
                     mutableLive.update { it.putting(profile.id, graph) }

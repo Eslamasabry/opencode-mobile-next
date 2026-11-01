@@ -1,8 +1,10 @@
 package io.github.eslamasabry.oc.core.net.stream
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.net.gate.NetworkGate
-import io.github.eslamasabry.oc.core.net.gate.Online
+import io.github.eslamasabry.oc.core.model.NetworkState.Online
+import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.security.HostClass
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +32,7 @@ class EventStreamLoopTest {
         val hidden: MutableStateFlow<Boolean>,
     ) {
         val signals = mutableListOf<Pair<Long, StreamSignal>>()
-        val statuses get() = signals.mapNotNull { (at, s) -> (s as? StreamSignal.Status)?.let { at to it.state } }
+        val statuses get() = signals.mapNotNull { (at, s) -> (s as? StreamSignal.Status)?.let { at to it.status } }
         val frames get() = signals.mapNotNull { (_, s) -> (s as? StreamSignal.Frame)?.let { it.frame.data } }
 
         fun start() {
@@ -72,8 +74,8 @@ class EventStreamLoopTest {
         assertEquals(listOf(0L, 1_000, 3_000, 7_000, 15_000, 31_000, 47_000, 63_000, 79_000, 95_000), h.connector.opens)
         val waits = h.statuses.mapNotNull { (at, s) ->
             when (s) {
-                is StreamState.Reconnecting -> Triple(at, s.attempt, s.nextAttemptAtMs) to "reconnecting"
-                is StreamState.Disconnected -> Triple(at, s.attempt, s.nextAttemptAtMs) to "disconnected"
+                is StreamStatus.Reconnecting -> Triple(at, s.attempt, s.nextAttemptAtMs) to "reconnecting"
+                is StreamStatus.Disconnected -> Triple(at, s.attempt, s.nextAttemptAtMs) to "disconnected"
                 else -> null
             }
         }
@@ -85,7 +87,7 @@ class EventStreamLoopTest {
         )
         assertEquals(listOf("reconnecting", "reconnecting", "reconnecting", "reconnecting", "reconnecting", "disconnected"),
             scheduled.take(6).map { it.second })
-        assertEquals(StreamState.Connecting, h.statuses.first().second)
+        assertEquals(StreamStatus.Connecting, h.statuses.first().second)
     }
 
     @Test
@@ -116,9 +118,10 @@ class EventStreamLoopTest {
         backgroundScope.launch {
             h.loop.signals().collect { signal ->
                 when (signal) {
-                    is StreamSignal.Status -> (signal.state as? StreamState.Connected)?.let {
-                        generation = it.generation
-                        if (it.isReconnect) refetchedBefore += "refetch@${it.generation}"
+                    is StreamSignal.Status -> if (signal.status == StreamStatus.Connected) {
+                        // The generation is the count of Connected signals (plan 04 §6.2).
+                        generation += 1
+                        if (generation > 1) refetchedBefore += "refetch@$generation"
                     }
                     is StreamSignal.Frame -> {
                         assertEquals(generation, signal.generation)
@@ -161,7 +164,7 @@ class EventStreamLoopTest {
         h.start()
         advanceTimeBy(600_000)
         assertEquals(listOf(0L), h.connector.opens)
-        assertTrue(h.statuses.last().second is StreamState.Connected)
+        assertTrue(h.statuses.last().second is StreamStatus.Connected)
     }
 
     @Test
@@ -171,11 +174,11 @@ class EventStreamLoopTest {
             h.start()
             advanceTimeBy(600_000)
             assertEquals(emptyList(), h.connector.opens) // PB-52: zero attempts while offline
-            assertEquals(StreamState.WaitingForNetwork, h.statuses.last().second)
+            assertEquals(StreamStatus.WaitingForNetwork, h.statuses.last().second)
             h.network.set(Online.Yes, id = 2)
             runCurrent()
             assertEquals(listOf(600_000L), h.connector.opens)
-            assertTrue(h.statuses.last().second is StreamState.Connected)
+            assertTrue(h.statuses.last().second is StreamStatus.Connected)
         }
 
     @Test
@@ -187,7 +190,7 @@ class EventStreamLoopTest {
             h.network.set(Online.No, id = null)
             advanceTimeBy(300_000)
             assertEquals(listOf(0L, 1_000, 3_000), h.connector.opens)
-            assertEquals(StreamState.WaitingForNetwork, h.statuses.last().second)
+            assertEquals(StreamStatus.WaitingForNetwork, h.statuses.last().second)
             h.network.set(Online.Yes, id = 3)
             runCurrent()
             advanceTimeBy(1_500)
@@ -201,7 +204,7 @@ class EventStreamLoopTest {
         h.start()
         advanceTimeBy(3_500)
         assertEquals(listOf(0L, 1_000, 3_000), h.connector.opens)
-        assertTrue(h.statuses.none { it.second == StreamState.WaitingForNetwork })
+        assertTrue(h.statuses.none { it.second == StreamStatus.WaitingForNetwork })
     }
 
     @Test
@@ -223,12 +226,12 @@ class EventStreamLoopTest {
     @Test
     fun `N4-D6 401 stops the stream until retryNow`() = runTest {
         val h = harness(
-            scripts = listOf(Script.Fail(Failure.SignIn(null), stop = true), Script.Body(emptyList(), Script.End.Hang)),
+            scripts = listOf(Script.Fail(Failure.SignIn(SignInWhy.PasswordRejected), stop = true), Script.Body(emptyList(), Script.End.Hang)),
         )
         h.start()
         advanceTimeBy(600_000)
         assertEquals(listOf(0L), h.connector.opens)
-        assertTrue(h.statuses.last().second is StreamState.Stopped)
+        assertTrue(h.statuses.last().second is StreamStatus.Stopped)
         h.loop.retryNow()
         runCurrent()
         assertEquals(listOf(0L, 600_000), h.connector.opens)

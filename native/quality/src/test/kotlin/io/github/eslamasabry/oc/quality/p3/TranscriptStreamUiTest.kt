@@ -27,7 +27,10 @@ import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscript
 import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscriptWords
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
@@ -89,7 +92,11 @@ class TranscriptStreamUiTest {
             lateinit var list: TranscriptListState
             lateinit var reveal: RevealRegistry
             setContent {
-                KitTheme(dark = false) {
+                KitTheme(
+                    appearance = KitAppearance(mode = AppearanceMode.Light),
+                    platform = DesktopKitPlatform(),
+                    localeTag = "en",
+                ) {
                     list = rememberTranscriptListState()
                     reveal = rememberRevealRegistry()
                     Box(Modifier.size(412.dp, 860.dp)) {

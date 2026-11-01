@@ -13,7 +13,7 @@ public enum class StartKind { Cold, Warm }
 /** Backend kinds as counted in BASIC. Mirrors `:core:model` BackendKind without depending on it. */
 public enum class ServerKind { OpenCode2, Paseo, Codex }
 
-/** Agent kinds as counted in BASIC. TODO(move-to-core): align with the agents engine's own enum when it lands. */
+/** Agent kinds as counted in BASIC. TODO(engine-agents): align with the agents engine's own enum when it lands. */
 public enum class AgentKind { OpenCode, ClaudeCode, Codex, Gemini, Acp, Other }
 
 /** Where a server is, as a class of address (plan 16 §5.3). Never the address itself. */
@@ -33,17 +33,16 @@ public enum class FreezeKind { MainThreadStall, NotResponding }
 
 /** Error categories: the [Failure] subtype name, never its text (owner rule "error categories never text"). */
 public enum class ErrorCategory {
-    Refused, Unavailable, StagedRevert, Folder, Network, TimedOut, Certificate, SignIn, NotFound, Conflict, Busy,
-    Server, Rejected, ComputerDidNotAnswer, UnreadableReply, Device, Storage, ProjectGit, Termux, Unexpected, Unknown;
+    Refused, Unavailable, Network, TimedOut, Certificate, SignIn, NotFound, Conflict, Busy, Server, Rejected, Incompatible,
+    ComputerDidNotAnswer, UnreadableReply, StorageRefused, KeystoreUnavailable, Media, Runtime, Device, Folder, ProjectGit,
+    StagedRevert, Termux, Unexpected, Unknown;
 
     public companion object {
-        /** Exhaustive over the frozen Failure hierarchy, so a new subtype fails compilation here. */
+        /** Exhaustive over core's flat Failure (plan 03 §10.1), so a new subtype fails compilation here. */
         public fun of(failure: Failure): ErrorCategory =
             when (failure) {
                 is Failure.Refused -> Refused
                 is Failure.Unavailable -> Unavailable
-                is Failure.StagedRevert -> StagedRevert
-                is Failure.Folder -> Folder
                 is Failure.Network -> Network
                 is Failure.TimedOut -> TimedOut
                 is Failure.Certificate -> Certificate
@@ -53,11 +52,17 @@ public enum class ErrorCategory {
                 is Failure.Busy -> Busy
                 is Failure.Server -> Server
                 is Failure.Rejected -> Rejected
+                is Failure.Incompatible -> Incompatible
                 is Failure.ComputerDidNotAnswer -> ComputerDidNotAnswer
                 is Failure.UnreadableReply -> UnreadableReply
+                is Failure.StorageRefused -> StorageRefused
+                is Failure.SecretUnavailable -> KeystoreUnavailable // the wire never carries the word "secret" (leak detector)
+                is Failure.Media -> Media
+                is Failure.Runtime -> Runtime
                 is Failure.Device -> Device
-                is Failure.Storage -> Storage
+                is Failure.Folder -> Folder
                 is Failure.ProjectGit -> ProjectGit
+                is Failure.StagedRevert -> StagedRevert
                 is Failure.Termux -> Termux
                 is Failure.Unexpected -> Unexpected
                 is Failure.Unknown -> Unknown
@@ -66,7 +71,7 @@ public enum class ErrorCategory {
 }
 
 /**
- * DETAILED: screens by kind. TODO(move-to-core): generated from `:ui:routes` once routes exist; an engine cannot see
+ * DETAILED: screens by kind. TODO(ui-routes): generated from `:ui:routes` once routes exist; an engine cannot see
  * route classes (ADR §6.1), so this list is the analytics side of that mapping. Never route arguments.
  */
 public enum class ScreenId {

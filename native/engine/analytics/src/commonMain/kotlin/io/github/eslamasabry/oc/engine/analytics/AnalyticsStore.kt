@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 /**
  * Where the engine keeps its one small document (queue, consent, install id, daily ledger, backoff). App-wide, holds
  * no profile data, so it is not in ProfileScope; Manage space › Delete everything calls [AnalyticsEngine.deleteEverything].
- * TODO(move-to-core): the file binding (`files/native/analytics/queue.json` through one WriterLane, plan 16 §5.6
+ * TODO(app-wiring): the file binding (`files/native/analytics/queue.json` through one WriterLane, plan 16 §5.6
  * rule 7) belongs to `:core:data`; until then the app binds an implementation of this interface.
  * Implementations may throw; the engine wraps every call.
  */

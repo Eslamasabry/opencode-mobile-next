@@ -39,7 +39,7 @@ class AeadSecretStoreTest {
         store.write("pw.1", password)
         entries.map["pw.2"] = entries.map.getValue("pw.1")
         val swapped = store.read("pw.2")
-        assertIs<Failure.Storage>((swapped as Outcome.Failed).failure)
+        assertIs<Failure.SecretUnavailable>((swapped as Outcome.Failed).failure)
         assertFalse(swapped.failure.details!!.text.contains(password))
 
         entries.map["pw.3"] = Base64.Default.encode(byteArrayOf(0x02) + ByteArray(40))

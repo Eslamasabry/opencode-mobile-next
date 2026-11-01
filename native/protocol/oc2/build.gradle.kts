@@ -1,7 +1,13 @@
 plugins { id("oc.kmp.library") }
 
 kotlin {
-    sourceSets.commonMain.dependencies { implementation(project(":core:common")) }
+    sourceSets.commonMain.dependencies {
+        implementation(project(":core:common"))
+        // The adapter publishes core's GatewayEvent (Oc2CoreProjection); ADR §6.1 allows protocol → model/domain.
+        implementation(project(":core:model"))
+        implementation(project(":core:domain"))
+    }
+    sourceSets.commonTest.dependencies { implementation(project(":core:testing")) }
 }
 
 // Fixture-backed tests (desktopTest, JVM) read native/fixtures/oc2 and the Flutter originals under test/fixtures.

@@ -346,8 +346,8 @@ class AnalyticsEngineTest {
             listOf(
                 Failure.Refused(RefusalReason.ConsentMissing),
                 Failure.Folder(FolderProblem.Denied, null),
-                Failure.Server(503, Redacted.shape(IllegalStateException("db password hunter2"))),
-                Failure.Network(null),
+                Failure.Server(503, details = Redacted.shape(IllegalStateException("db password hunter2"))),
+                Failure.Network(),
             )
         val categories = failures.map(ErrorCategory::of)
         assertEquals(listOf(ErrorCategory.Refused, ErrorCategory.Folder, ErrorCategory.Server, ErrorCategory.Network), categories)

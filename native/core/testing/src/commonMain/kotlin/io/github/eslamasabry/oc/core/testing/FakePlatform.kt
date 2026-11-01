@@ -1,15 +1,13 @@
 package io.github.eslamasabry.oc.core.testing
 
-import io.github.eslamasabry.oc.core.domain.platform.NetworkGate
-import io.github.eslamasabry.oc.core.domain.platform.NetworkStatus
-import io.github.eslamasabry.oc.core.model.NetworkChange
 import io.github.eslamasabry.oc.core.model.NetworkState
-import io.github.eslamasabry.oc.core.security.HostClass
-import kotlinx.coroutines.flow.MutableSharedFlow
+import io.github.eslamasabry.oc.core.model.NetworkStatus
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 
-/** A network the test switches (plan 04 §14). */
+/**
+ * A network the test switches (plan 04 §14). The gate rule itself is `:core:net`'s `NetworkGate`, which tests build
+ * over this status (`:core:testing` may not see `:core:net`), so there is no second fake gate to drift from it.
+ */
 public class FakeNetworkStatus(initial: NetworkState = Online) : NetworkStatus {
     override val state: MutableStateFlow<NetworkState> = MutableStateFlow(initial)
 
@@ -22,17 +20,13 @@ public class FakeNetworkStatus(initial: NetworkState = Online) : NetworkStatus {
     }
 
     public companion object {
-        public val Online: NetworkState = NetworkState(NetworkState.Online.Yes, NetworkState.Transport.Wifi, false, 1L)
+        public val Online: NetworkState =
+            NetworkState(
+                online = NetworkState.Online.Yes,
+                transport = NetworkState.Transport.Wifi,
+                onWifi = true,
+                metered = false,
+                defaultNetworkId = 1L,
+            )
     }
 }
-
-/** The plan 04 §6.4 gate rule over a [FakeNetworkStatus]: loopback never waits; others wait while offline. */
-public class FakeNetworkGate(private val status: FakeNetworkStatus) : NetworkGate {
-    override val changes: MutableSharedFlow<NetworkChange> = MutableSharedFlow(extraBufferCapacity = 16)
-
-    override suspend fun awaitUsable(hostClass: HostClass) {
-        if (hostClass == HostClass.Loopback) return
-        status.state.first { it.online != NetworkState.Online.No }
-    }
-}
-

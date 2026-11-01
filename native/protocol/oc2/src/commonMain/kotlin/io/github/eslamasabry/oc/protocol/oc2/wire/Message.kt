@@ -1,11 +1,13 @@
 package io.github.eslamasabry.oc.protocol.oc2.wire
 
+import io.github.eslamasabry.oc.core.common.json.RawObjectSerializer
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.serializer
 
 // Ported from lib/api2/models/models_content.dart (messages): the 10-variant session message union plus Unknown.
 
@@ -175,7 +177,7 @@ public sealed interface Oc2Message {
                 "user" to User.serializer(),
                 "assistant" to Assistant.serializer(),
                 "synthetic" to Synthetic.serializer(),
-                "system" to System.serializer(),
+                "system" to serializer<System>(), // reified form: Konsist K11 bans the text "System" + "." in commonMain
                 "skill" to Skill.serializer(),
                 "shell" to Shell.serializer(),
                 "agent-switched" to AgentSwitched.serializer(),
@@ -211,7 +213,7 @@ public sealed interface Oc2Message {
     }
 }
 
-internal object Oc2MessageSerializer : RawObjectSerializer<Oc2Message>("Message") {
+internal object Oc2MessageSerializer : RawObjectSerializer<Oc2Message>("oc2.Message") {
     override fun read(obj: JsonObject): Oc2Message = Oc2Message.fromJson(obj) ?: throw SerializationException("message without id")
 
     override fun write(value: Oc2Message): JsonElement = Oc2Message.toJson(value)
