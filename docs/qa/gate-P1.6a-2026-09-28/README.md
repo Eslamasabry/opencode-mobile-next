@@ -155,7 +155,7 @@ The test uses the production `PaseoGateway`/`PaseoTransport`; it emits only fixe
 
 ### Isolation and build
 
-- Exact adb target: `adb-320437155564-pnE3nR._adb-tls-connect._tcp`, selected with `-s` on every invocation. Only `io.github.eslamasabry.opencode_mobile.preview` was installed or operated. No `run-as`, adb root, stable-app data access, or another app's data access was used.
+- Exact adb target: `adb-XXXXXXXXXXXX-xxxxxx._adb-tls-connect._tcp`, selected with `-s` on every invocation. Only `io.github.eslamasabry.opencode_mobile.preview` was installed or operated. No `run-as`, adb root, stable-app data access, or another app's data access was used.
 - Baseline stable package: versionCode **2055**, versionName **1.0.44**, lastUpdateTime **2026-09-27 20:59:37**. Preview was absent before installation.
 - Android **15 / API 35**, `arm64-v8a`, kernel `6.1.145-android14-11-g11c274d0441f-ab14259673`, SELinux **Enforcing**, system MemTotal **15,715,596 KiB**, unchanged `max_phantom_processes=32`.
 - Candidate base `01c3e7a2b13651b688b59d639c7122c34be861fc` on `codex/arm64`, plus the QA-only physical transport changes. Pinned Flutter 3.47.1; Ubuntu OpenJDK 17.0.20 (same vendor deviation as the x64 build). Release ARM64, `ocPreview=true`, versionCode 1, temporary signing key because `android/key.properties` was absent. The key and properties were deleted after the build.

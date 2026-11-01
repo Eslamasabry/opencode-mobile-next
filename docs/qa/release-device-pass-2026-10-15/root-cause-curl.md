@@ -133,7 +133,7 @@ Local heavy checks used `tool/qa/machine_lock.sh`.
 - Kotlin lint: `tool/qa/kotlin_static_analysis.sh` remains blocked by 286
   findings in unchanged files; no findings in the changed native files. No
   baseline expansion or suppression was added.
-- GREEN: on `eslam@169.58.71.211`, isolated copy
+- GREEN: on `eslam@203.0.113.10`, isolated copy
   `~/wt/oc_app-codex-curl-unit-20261015`, pinned
   `flutter build apk --release --config-only`, then
   `cd android && ./gradlew :app:testReleaseUnitTest --no-daemon`
