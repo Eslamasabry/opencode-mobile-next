@@ -134,14 +134,14 @@ import kotlin.time.Clock
 public class PaseoGateway(
     public val transport: PaseoTransport,
     scope: CoroutineScope,
-    private val lane: CoroutineDispatcher,
+    internal val lane: CoroutineDispatcher,
     /** Where long histories are mapped (AppDispatchers.default). */
     private val mapDispatcher: CoroutineDispatcher = lane,
     private val clock: Clock,
     directory: String? = null,
     /** Mode a runtime's new agent must start in (phone helper: `claude → default`, always asking). */
     defaultProviderModes: Map<String, String> = emptyMap(),
-    private val random: Random = Random.Default,
+    internal val random: Random = Random.Default,
     /** Overridable so tests do not wait for a warming daemon. */
     internal val providerWarmupAttempts: Int = 8,
     internal val providerWarmupIntervalMs: Long = 1_500,
@@ -174,6 +174,13 @@ public class PaseoGateway(
     internal val realIds = HashMap<String, String>()
     internal val appIds = HashMap<String, String>()
     internal val titleHints = HashMap<String, String>()
+    internal val archivedCopies = HashSet<String>()
+
+    /**
+     * The title the app saved for a conversation (by `provider:sessionId`): a record without a title of its own shows
+     * it, in every list and header (B-AGENT-180, 181). Installed by the owner of the saved titles.
+     */
+    public var savedTitle: ((String) -> String?)? = null
 
     internal var creating = 0
     internal val heldEvents = ArrayList<PaseoPush>()
@@ -573,7 +580,7 @@ public class PaseoGateway(
         }
     }
 
-    private suspend fun sendPrompt(
+    internal suspend fun sendPrompt(
         rawSessionId: String,
         messageId: String,
         prompt: OutgoingPrompt,
@@ -1036,9 +1043,8 @@ public class PaseoGateway(
         agent.str("id")?.let { realId -> appIds[realId]?.let { agent = agent.with("id", JsonPrimitive(it)) } }
         val id0 = agent.str("id")
         // A reloaded record can come back without its title: the known one stays.
-        val title = agent.str("title")
         val known = id0?.let { agents[it]?.str("title") ?: titleHints[it] }
-        if (title.isNullOrBlank() && !known.isNullOrBlank()) agent = agent.with("title", JsonPrimitive(known))
+        agent = io.github.eslamasabry.oc.protocol.paseo.feed.PaseoTitles.withTitle(agent, known, savedTitle)
         val session = paseoReply("agent") { paseoSession(agent) }
         if (session.directory != directoryValue || agent["archivedAt"].stringOrNull() != null) return null
         val id = session.id.raw
