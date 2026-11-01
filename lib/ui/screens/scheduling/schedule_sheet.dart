@@ -16,8 +16,8 @@ import 'schedule_copy.dart';
 enum ScheduleSheetRule { once, daily, weekdays, custom }
 
 /// What the sheet hands back besides saving: the person asked to delete the
-/// schedule, or to open its last run's conversation.
-enum ScheduleSheetExit { saved, delete, openRun }
+/// schedule, to open its last run's conversation, or to run it now.
+enum ScheduleSheetExit { saved, delete, openRun, runNow }
 
 /// Opens the one sheet that makes a scheduled prompt or changes one
 /// (vision pick "B sheet", 2026-10-20): the prompt first, then when it runs
@@ -36,6 +36,7 @@ Future<ScheduleSheetExit?> showScheduleSheet(
   ScheduledPrompt? existing,
   ScheduledPromptRun? lastRun,
   bool canOpenRun = false,
+  bool canRunNow = false,
   @visibleForTesting DateTime? debugNow,
 }) async {
   final l = AppLocalizations.of(context);
@@ -92,6 +93,7 @@ Future<ScheduleSheetExit?> showScheduleSheet(
           where: where,
           lastRun: lastRun,
           canOpenRun: canOpenRun,
+          canRunNow: canRunNow && existing != null,
         );
       },
     );
@@ -320,6 +322,7 @@ class _ScheduleForm extends StatelessWidget {
     required this.where,
     required this.lastRun,
     required this.canOpenRun,
+    required this.canRunNow,
   });
 
   final _ScheduleDraft draft;
@@ -327,6 +330,7 @@ class _ScheduleForm extends StatelessWidget {
   final String where;
   final ScheduledPromptRun? lastRun;
   final bool canOpenRun;
+  final bool canRunNow;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -431,6 +435,18 @@ class _ScheduleForm extends StatelessWidget {
                 )
               : null,
         ),
+        if (canRunNow)
+          KitRow(
+            key: const ValueKey('schedule-run-now'),
+            padding: EdgeInsets.zero,
+            leading: KitRow.icon(context, AppIconography.play),
+            title: l.scheduleRunNow,
+            supporting: TextSpan(text: l.scheduleRunNowNote),
+            supportingMaxLines: 2,
+            onTap: () => Navigator.of(
+              draft.sheetContext ?? context,
+            ).pop(ScheduleSheetExit.runNow),
+          ),
         if (run != null)
           KitRow(
             key: const ValueKey('schedule-last-run'),

@@ -1,17 +1,93 @@
+/// What the speech model is told the person speaks.
+///
+/// The packs are the multilingual Whisper models, so any language Whisper
+/// knows can be named. [auto] follows the app's language when Whisper knows
+/// it ([resolveVoiceLanguage]) and listens for the language otherwise;
+/// [detect] always listens for it. The rest are chosen by name; the stored
+/// choice is the enum name, so the first three keep their old ids.
 enum VoiceLanguage {
-  auto('', 'Auto detect'),
+  auto('', 'Auto'),
+  detect('', 'Detect from speech'),
   english('en', 'English'),
-  arabic('ar', 'Arabic');
+  arabic('ar', 'العربية'),
+  spanish('es', 'Español'),
+  french('fr', 'Français'),
+  german('de', 'Deutsch'),
+  italian('it', 'Italiano'),
+  portuguese('pt', 'Português'),
+  dutch('nl', 'Nederlands'),
+  russian('ru', 'Русский'),
+  ukrainian('uk', 'Українська'),
+  polish('pl', 'Polski'),
+  czech('cs', 'Čeština'),
+  romanian('ro', 'Română'),
+  greek('el', 'Ελληνικά'),
+  turkish('tr', 'Türkçe'),
+  hebrew('he', 'עברית'),
+  persian('fa', 'فارسی'),
+  urdu('ur', 'اردو'),
+  hindi('hi', 'हिन्दी'),
+  bengali('bn', 'বাংলা'),
+  tamil('ta', 'தமிழ்'),
+  chinese('zh', '中文'),
+  japanese('ja', '日本語'),
+  korean('ko', '한국어'),
+  vietnamese('vi', 'Tiếng Việt'),
+  thai('th', 'ไทย'),
+  indonesian('id', 'Bahasa Indonesia'),
+  malay('ms', 'Bahasa Melayu'),
+  swedish('sv', 'Svenska'),
+  norwegian('no', 'Norsk'),
+  danish('da', 'Dansk'),
+  finnish('fi', 'Suomi'),
+  hungarian('hu', 'Magyar'),
+  swahili('sw', 'Kiswahili');
 
   const VoiceLanguage(this.whisperCode, this.label);
 
+  /// Whisper's code; empty: the model listens for the language.
   final String whisperCode;
+
+  /// The language's own name for the picker ([auto] and [detect] are
+  /// worded by the app's strings instead).
   final String label;
+
+  /// A language the person names, not one of the two automatic choices.
+  bool get isNamed => whisperCode.isNotEmpty;
 
   static VoiceLanguage fromID(String? id) => values.firstWhere(
     (value) => value.name == id,
     orElse: () => VoiceLanguage.auto,
   );
+
+  /// The named language for a language code of the app's locale, or null
+  /// when Whisper has none. Old and regional codes are folded in (`iw`,
+  /// `nb`, `in`).
+  static VoiceLanguage? forLanguageCode(String? code) {
+    final lower = (code ?? '').toLowerCase();
+    final folded = switch (lower) {
+      'iw' => 'he',
+      'nb' || 'nn' => 'no',
+      'in' => 'id',
+      _ => lower,
+    };
+    if (folded.isEmpty) return null;
+    for (final value in values) {
+      if (value.isNamed && value.whisperCode == folded) return value;
+    }
+    return null;
+  }
+}
+
+/// The language the model is told for a recording: the chosen one, and for
+/// [VoiceLanguage.auto] the app's own language when Whisper knows it,
+/// otherwise [VoiceLanguage.detect] (the model listens for it).
+VoiceLanguage resolveVoiceLanguage(
+  VoiceLanguage chosen,
+  String? appLanguageCode,
+) {
+  if (chosen != VoiceLanguage.auto) return chosen;
+  return VoiceLanguage.forLanguageCode(appLanguageCode) ?? VoiceLanguage.detect;
 }
 
 class VoiceModelFile {

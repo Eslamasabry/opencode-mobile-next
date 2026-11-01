@@ -84,14 +84,16 @@ class SessionLinkBindings extends ChangeNotifier {
 
   static SessionLinkBinding _validated(SessionLinkBinding binding) {
     final origin = SessionAddressLink.normalizeOrigin(binding.origin);
+    final instanceId = binding.instanceId.toLowerCase();
     if (!SessionAddressLink.validInstance(binding.instanceId) ||
-        KitRedact.text(binding.instanceId) != binding.instanceId ||
+        KitRedact.containsSecret(binding.instanceId) ||
+        KitRedact.containsSecret(instanceId) ||
         binding.verifiedAt.millisecondsSinceEpoch < 0) {
       throw const SessionAddressFailure(SessionAddressFailureCode.invalidLink);
     }
     return SessionLinkBinding(
       origin: origin,
-      instanceId: binding.instanceId.toLowerCase(),
+      instanceId: instanceId,
       verifiedAt: binding.verifiedAt.toUtc(),
     );
   }
@@ -157,6 +159,10 @@ class SessionLinkBindings extends ChangeNotifier {
         SessionAddressFailureCode.instanceMismatch,
       );
     }
+    // Credential registration can change while this write waits in the lane
+    // or while durable membership is reloaded. Validate the canonical value
+    // immediately before handing it to plaintext preference storage.
+    binding = _validated(binding);
     final encoded = jsonEncode({
       'schemaVersion': 1,
       'origin': binding.origin,

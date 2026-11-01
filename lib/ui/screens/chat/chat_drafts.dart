@@ -42,6 +42,7 @@ extension _ChatDrafts on _ChatScreenState {
     for (final listener in [
       _scheduleDraftSave,
       _offerSendTip,
+      _offerMicTip,
       _onMentionText,
       _composerNoteFollowsEdits,
     ]) {

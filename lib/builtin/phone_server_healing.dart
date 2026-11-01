@@ -446,7 +446,11 @@ class PhoneServerHealing {
       // A stale server (below) is replaced here too: the explicit start
       // stops the app's own tracked process tree first (BuiltinLinux.kt
       // launchService → removeService), never anything found by name.
-      final failure = await starter.start(profile);
+      final failure = await starter.start(
+        profile,
+        launchAdmission: () => _launchAdmission(profile),
+        stillWanted: () => _launchCurrent(profile, epoch),
+      );
       if (!_launchCurrent(profile, epoch)) return;
       if (failure == null) {
         await recovery.check(profile);
@@ -540,6 +544,37 @@ class PhoneServerHealing {
       if (!clock.now().isBefore(deadline)) return true;
       await Future<void>.delayed(launchPollInterval);
     }
+  }
+
+  /// Whether opening the app may still start [profile] now: the same facts
+  /// [_launchStartWanted] checked, asked again just before the native start.
+  bool _mayLaunch(ServerProfile profile) =>
+      !_disposed &&
+      _foreground &&
+      connection.isProfileReadable(profile.id) &&
+      identical(_owner, profile) &&
+      idle.failure == null &&
+      connection.profile?.id == profile.id &&
+      !connection.hasConnectedServer &&
+      looksLikeInAppServer(profile) &&
+      AutomationPolicyController.forProfile(
+        connection.store.prefs,
+        profile.id,
+      ).value.allows(AutomationBehavior.restartPhoneServer);
+
+  /// The native intent generation an opening start may act on, read after
+  /// the owner claim; null when Stop (or anything else) came first.
+  Future<int?> _launchAdmission(ServerProfile profile) async {
+    if (!_mayLaunch(profile)) return null;
+    final admission = await _status();
+    final generation = admission?.serverRecoveryGeneration;
+    if (!_mayLaunch(profile) ||
+        admission == null ||
+        !admission.serverRestartWanted ||
+        _idleBlocksLaunch(admission)) {
+      return null;
+    }
+    return generation;
   }
 
   Future<BuiltinLinuxStatus?> _status() async {

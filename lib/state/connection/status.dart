@@ -59,6 +59,50 @@ mixin _ConnectionControllerStatus on ChangeNotifier {
   Future<AgentHelperStatus?> readConnectionHelperExit() =>
       _self._readConnectionHelperExit();
 
+  /// How long after Android stopped the agent's helper the conversation
+  /// says so ([agentHelperKilledByAndroid]).
+  static const agentKillNoticeFor = Duration(minutes: 5);
+
+  /// The helper exit the person closed the "It's back" line for.
+  DateTime? _agentKillNoticeDismissed;
+
+  /// Android stopped this agent's helper (a SIGKILL nobody asked for: its
+  /// process limit, or memory) within [agentKillNoticeFor]: the line says
+  /// that in plain words instead of "not answering", and once it is back,
+  /// that the conversation continues.
+  bool get agentHelperKilledByAndroid {
+    final exit = _lastConnectionHelperExit;
+    final at = exit?.lastExitAt;
+    if (!_self.isAgentBackend ||
+        exit == null ||
+        at == null ||
+        !exit.possibleResourceKill ||
+        exit.lastStopRequested != false) {
+      return false;
+    }
+    return clock.now().difference(at) < agentKillNoticeFor;
+  }
+
+  /// When Android last stopped the helper, as [agentHelperKilledByAndroid]
+  /// sees it (null when it does not apply).
+  DateTime? get agentHelperKilledAt =>
+      agentHelperKilledByAndroid ? _lastConnectionHelperExit?.lastExitAt : null;
+
+  /// Whether the "It's back; your conversation continues" line shows: the
+  /// helper Android stopped is answering again, and the person has not
+  /// closed the line for this stop.
+  bool get agentBackAfterKill {
+    final at = agentHelperKilledAt;
+    return at != null && _self.isConnected && _agentKillNoticeDismissed != at;
+  }
+
+  void dismissAgentBackAfterKill() {
+    final at = agentHelperKilledAt;
+    if (at == null) return;
+    _agentKillNoticeDismissed = at;
+    _self._notifyListeners();
+  }
+
   Timer? _connectionStatusTimer;
   String? _connectionStatusOwner;
   int? _connectionStatusAttempt;
@@ -518,7 +562,8 @@ extension _ConnectionControllerStatusImpl on ConnectionController {
                 ServerBackend.paseo => paseoServerCapabilities,
                 _ => api2ServerCapabilities,
               })
-          .withGenUi(_genUiEffective);
+          .withGenUi(_genUiEffective)
+          .withClaudeAgent(_self.claudeAgentTrial.capable);
 
   void _acceptRunningServerVersion(String? rawVersion) {
     final next = rawVersion?.trim() ?? '';

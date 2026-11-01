@@ -87,7 +87,7 @@ class _Api extends Api2Gateway {
       paseo ? paseoServerCapabilities : super.capabilities;
 
   @override
-  Future<Health> health() async => Health(healthy: true, version: '2.1.1');
+  Future<Health> health() async => Health(healthy: true, version: '2.2.5');
 }
 
 class _Store extends ProfileStore {
@@ -154,7 +154,7 @@ Future<ConnectionController> _connection({
       _Store(prefs: await SharedPreferences.getInstance()),
     )
     ..api = _Api(paseo: paseo, routes: routes)
-    ..version = '2.1.1'
+    ..version = '2.2.5'
     ..status = StreamStatus.connected;
 }
 

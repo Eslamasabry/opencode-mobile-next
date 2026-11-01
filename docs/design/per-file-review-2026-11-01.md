@@ -1,0 +1,5 @@
+# Per-file Keep / Undo in a multi-file edit (issue #27) - blocked
+
+Status: feature kept unavailable. Checked 2026-11-01 against the pinned OpenCode 2 contract.
+
+The only server call that undoes file changes is the staged session revert (`POST /api/session/{id}/revert/stage`, then `clear` or `commit`). It is scoped to a message boundary: it rolls back everything from the chosen prompt onward. Its `files` field is a boolean ("put the files back too"), not a list of paths, as `lib/api2/gateway_operations/ops_sessions.dart` and `docs/verification/staged-revert-beta-18600.md` confirm. The response lists the affected files, but nothing can restrict the undo to one of them, and OpenCode 1 has no per-file undo either. Faking it in the app (writing the old file content back ourselves) would bypass the server's snapshot and conflict with its staged-revert state, so we do not build it. Revisit when the server accepts a path list on stage, or exposes a per-file restore; the staged-revert screen (`lib/ui/screens/staged_revert_screen.dart`) already lists each file and is where Keep / Undo rows would go. Today's "Keep all" (commit) and "Undo all" (clear) are unchanged.

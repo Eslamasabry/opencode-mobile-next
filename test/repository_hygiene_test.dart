@@ -28,7 +28,7 @@ void main() {
     expect(contributing.existsSync(), isTrue);
     final text = contributing.readAsStringSync();
     // The facts a contributor cannot guess and cannot work without.
-    expect(text, contains('3.47.2'));
+    expect(text, contains('3.47.8'));
     expect(text, contains('flutter analyze'));
     expect(text, contains('--concurrency=1'));
     expect(text, contains('flutter_secure_storage'));
@@ -257,7 +257,7 @@ void main() {
 // ---------------------------------------------------------------------------
 
 /// The pinned Shorebird Flutter framework revision (AGENTS.md, PROC-1).
-const _pinnedRevisionPrefix = '91f8bd75';
+const _pinnedRevisionPrefix = '6e5e9495';
 
 const _baselinePath = 'test/repository_hygiene_baseline.json';
 
@@ -571,7 +571,7 @@ void _g25() {
           reason:
               'PROC-1: tests run on Flutter revision $running from '
               '${_runningFlutterRoot().path}; use the pinned Shorebird '
-              'Flutter 3.47.1 ($_pinnedRevisionPrefix…)',
+              'Flutter 3.47.8 ($_pinnedRevisionPrefix…)',
         );
 
         final widgets =

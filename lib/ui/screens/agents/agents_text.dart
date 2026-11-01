@@ -78,6 +78,29 @@ String agentRowLine(
   AgentAuthProbeResult? account,
   BuildContext? context,
 }) {
+  final base = _agentRowBaseLine(l10n, row, account: account, context: context);
+  final autoUpdate = row.autoUpdate;
+  if (autoUpdate == null) return base;
+  final version = row.autoUpdateVersion;
+  final update = switch (autoUpdate) {
+    AgentAutoUpdate.waiting => l10n.agentsStateUpdateWaiting,
+    AgentAutoUpdate.waitingWifi => l10n.agentsStateUpdateWifi,
+    AgentAutoUpdate.updating =>
+      version == null
+          ? l10n.agentsStateUpdatingHelper
+          : l10n.agentsStateUpdating(version),
+  };
+  // An agent that still runs on its older version says what it is doing
+  // below its usual line; one that cannot yet says only the update.
+  return row.status == PhoneAgentStatus.ready ? '$base\n$update' : update;
+}
+
+String _agentRowBaseLine(
+  AppLocalizations l10n,
+  AgentRow row, {
+  AgentAuthProbeResult? account,
+  BuildContext? context,
+}) {
   switch (row.status) {
     case PhoneAgentStatus.ready:
       final first = account?.state == AgentAuthProbeState.signedIn

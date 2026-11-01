@@ -5,26 +5,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart' show KitSkeletonRows;
 import 'package:opencode_mobile/ui/screens/about_screen.dart'
     show AboutScreen, aboutNoticesForReaders, buildProvenanceBody;
-import 'package:opencode_mobile/update/shorebird_update_notice.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-
-/// A scripted updater: answers [state], counts the downloads.
-class _Updater implements AppUpdateService {
-  _Updater(this.state, {this.available = true});
-
-  final AppUpdateState state;
-  final bool available;
-  int downloads = 0;
-
-  @override
-  bool get isAvailable => available;
-
-  @override
-  Future<AppUpdateState> checkForUpdate() async => state;
-
-  @override
-  Future<void> downloadUpdate() async => downloads++;
-}
 
 /// Settles the page, letting the package info and documents (real
 /// platform and asset futures) resolve first.
@@ -118,53 +99,6 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('about-copy-version')));
     await tester.pumpAndSettle();
     expect(clipboard, 'OpenCode Mobile 1.0.44+52');
-  });
-
-  testWidgets('check for updates: fetches an update and says to reopen', (
-    tester,
-  ) async {
-    final updater = _Updater(AppUpdateState.available);
-    await tester.pumpWidget(_app(AboutScreen(updateService: updater)));
-    await _settle(tester);
-
-    expect(find.text('Looks for a newer version of this app'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('about-check-updates')));
-    await tester.pumpAndSettle();
-    expect(updater.downloads, 1);
-    expect(
-      find.text('Update ready. Close and reopen the app to use it.'),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('check for updates: up to date, and a build that cannot', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _app(AboutScreen(updateService: _Updater(AppUpdateState.current))),
-    );
-    await _settle(tester);
-    await tester.tap(find.byKey(const ValueKey('about-check-updates')));
-    await tester.pumpAndSettle();
-    expect(find.text('You have the latest version'), findsOneWidget);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pumpWidget(
-      _app(
-        AboutScreen(
-          updateService: _Updater(AppUpdateState.current, available: false),
-        ),
-      ),
-    );
-    await _settle(tester);
-    await tester.tap(find.byKey(const ValueKey('about-check-updates')));
-    await tester.pumpAndSettle();
-    expect(
-      find.text(
-        "This build can't update itself. Install the newest release instead.",
-      ),
-      findsOneWidget,
-    );
   });
 
   testWidgets('one page: Open source lists licenses, no privacy tab', (

@@ -32,7 +32,7 @@ ${isolatedScript()}
       expect(result.exitCode, 23);
       expect(
         result.stdout,
-        contains('/2.1.294/linux-${entry.value.$1}/claude'),
+        contains('/2.1.316/linux-${entry.value.$1}/claude'),
       );
       expect(result.stdout, contains(entry.value.$2));
       expect(File('${temp.path}/bin/claude').existsSync(), isFalse);

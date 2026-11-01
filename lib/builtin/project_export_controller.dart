@@ -68,6 +68,7 @@ class ProjectExportController extends ChangeNotifier {
   int cacheFreed = 0;
 
   bool _disposed = false;
+  bool _cancelled = false;
 
   bool get exporting =>
       phase == ProjectExportPhase.preparing ||
@@ -110,58 +111,66 @@ class ProjectExportController extends ChangeNotifier {
   /// when it has finished, failed, or the person backed out of the picker.
   Future<void> export() async {
     final dir = _filesDir;
-    if (exporting || dir == null) return;
+    if (_disposed || exporting || dir == null) return;
     final private = includePrivate;
-    final String? destination;
-    try {
-      destination = await platform.pickDestination(
-        suggestedExportName(_now(), private: private),
-      );
-    } catch (_) {
-      _fail(ProjectExportFailure.destination, 'picker');
-      return;
-    }
-    if (destination == null) return;
+    _cancelled = false;
     phase = ProjectExportPhase.preparing;
     bytesDone = 0;
     bytesTotal = 0;
     result = null;
     _changed();
-    final String planPath;
+    String? planPath;
+    var failure = ProjectExportFailure.destination;
     try {
+      final destination = await platform.pickDestination(
+        suggestedExportName(_now(), private: private),
+      );
+      if (_stopIfCancelled()) return;
+      if (destination == null) {
+        phase = ProjectExportPhase.idle;
+        _changed();
+        return;
+      }
+      failure = ProjectExportFailure.source;
       final entries = await _plan(dir, private);
+      if (_stopIfCancelled()) return;
       bytesTotal = entries.fold(0, (sum, e) => sum + e.bytes);
       planPath = await _writePlan(entries);
-    } catch (e) {
-      _fail(ProjectExportFailure.source, e.runtimeType.toString());
-      return;
-    }
-    phase = ProjectExportPhase.running;
-    _changed();
-    final ProjectExportResult outcome;
-    try {
-      outcome = await platform.export(
+      if (_stopIfCancelled()) return;
+      phase = ProjectExportPhase.running;
+      _changed();
+      failure = ProjectExportFailure.failed;
+      final outcome = await platform.export(
         destination: destination,
         planPath: planPath,
         onProgress: (bytes) {
+          if (_disposed || _cancelled) return;
           bytesDone = bytes;
           _changed();
         },
       );
+      if (_stopIfCancelled()) return;
+      result = outcome;
+      exportedPrivate = private;
+      phase = outcome.ok ? ProjectExportPhase.done : ProjectExportPhase.failed;
+      if (outcome.ok) bytesDone = outcome.bytes;
+      _changed();
     } catch (e) {
-      _fail(ProjectExportFailure.failed, e.runtimeType.toString());
-      return;
+      if (!_stopIfCancelled()) _fail(failure, e.runtimeType.toString());
     } finally {
-      try {
-        final planFile = File(planPath);
-        if (planFile.existsSync()) planFile.deleteSync();
-      } catch (_) {}
+      if (planPath != null) {
+        try {
+          final planFile = File(planPath);
+          if (planFile.existsSync()) planFile.deleteSync();
+        } catch (_) {}
+      }
     }
-    result = outcome;
-    exportedPrivate = private;
-    phase = outcome.ok ? ProjectExportPhase.done : ProjectExportPhase.failed;
-    if (outcome.ok) bytesDone = outcome.bytes;
-    _changed();
+  }
+
+  bool _stopIfCancelled() {
+    if (!_cancelled && !_disposed) return false;
+    _fail(ProjectExportFailure.cancelled, '');
+    return true;
   }
 
   void _fail(ProjectExportFailure failure, String detail) {
@@ -172,13 +181,16 @@ class ProjectExportController extends ChangeNotifier {
 
   Future<void> cancel() async {
     if (!exporting) return;
+    _cancelled = true;
     try {
       await platform.cancel();
     } catch (_) {}
   }
 
   Future<void> clearCache() async {
-    if (cachePhase == CacheClearPhase.clearing) return;
+    if (_disposed || exporting || cachePhase == CacheClearPhase.clearing) {
+      return;
+    }
     cachePhase = CacheClearPhase.clearing;
     _changed();
     try {

@@ -3,6 +3,19 @@ part of '../chat_screen.dart';
 // Prompts waiting to be sent: the offline queue and the server's inbox
 // (steering and queued prompts).
 
+/// The sentence that says what the queue dropped, in the app language.
+String _evictionDetail(AppLocalizations l10n, OfflineQueueEviction e) {
+  final reasons = [
+    if (e.expired > 0) l10n.queueEvictedTooOld(e.expired),
+    if (e.overflowed + e.oversized > 0)
+      l10n.queueEvictedOverLimit(e.overflowed + e.oversized),
+  ];
+  return l10n.queueEvictedSummary(
+    e.removed,
+    reasons.join(l10n.queueEvictedJoin),
+  );
+}
+
 extension _ChatQueue on _ChatScreenState {
   /// Queues a drafted prompt for delivery when the server returns. Returns
   /// false (with the limits message shown) when the entry cannot be queued.
@@ -43,11 +56,13 @@ extension _ChatQueue on _ChatScreenState {
       // The queue evicts on age and size. Whatever it dropped to make room
       // is said here, in the same breath as the confirmation, rather than
       // leaving the user to notice a missing draft later.
-      final evicted = _conn.takeQueueEvictionNotice();
+      final evicted = _conn.takeQueueEviction();
       _showComposerNote(
         evicted == null
             ? _chatL10n(context).chatUiQueuedWillSendWhenReconnected
-            : _chatL10n(context).chatUiQueuedWithEviction(evicted),
+            : _chatL10n(context).chatUiQueuedWithEviction(
+                _evictionDetail(_chatL10n(context), evicted),
+              ),
         key: const Key('queued-draft-notice'),
       );
     } else {

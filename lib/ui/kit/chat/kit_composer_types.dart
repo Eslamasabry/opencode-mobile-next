@@ -99,6 +99,22 @@ enum KitVoicePhase {
 
   /// The engine failed: the reason, with a fix.
   failed,
+
+  /// The words are written down and will be sent in a few seconds
+  /// ([KitComposerVoice.sendAt]): "Sending in 3…", with Cancel.
+  sendingSoon,
+}
+
+/// How a held mic (push-to-talk) is going, shown in the listening words.
+enum KitVoiceHold {
+  /// Not a hold: the recording was started by a tap.
+  none,
+
+  /// The finger is down: "Release to send".
+  holding,
+
+  /// Dragged away: "Release to cancel".
+  cancelArmed,
 }
 
 /// A teaching tip on one of the composer's buttons ([KitComposer.stopTip],
@@ -110,6 +126,27 @@ class KitComposerTip {
 
   final String message;
   final VoidCallback onDismissed;
+}
+
+/// What the host does with a held mic (push-to-talk): hold to record, let go
+/// to stop and write it down, drag away and let go to throw it away.
+@immutable
+class KitComposerMicHold {
+  const KitComposerMicHold({
+    required this.onStart,
+    required this.onEnd,
+    this.onArmedChanged,
+  });
+
+  /// The finger has been down long enough: start recording.
+  final VoidCallback onStart;
+
+  /// The finger lifted: stop and transcribe, or throw the recording away
+  /// when `cancelled` (it was dragged away first).
+  final ValueChanged<bool> onEnd;
+
+  /// Dragged far enough to cancel (true), or back inside (false).
+  final ValueChanged<bool>? onArmedChanged;
 }
 
 /// Voice mode's state and actions. Non-null [KitComposer.voice] turns the
@@ -131,9 +168,26 @@ class KitComposerVoice {
     this.reason,
     this.fix,
     this.voiceKey,
+    this.hold = KitVoiceHold.none,
+    this.sendAt,
+    this.onSendNow,
+    this.onCancelSend,
   });
 
   final KitVoicePhase phase;
+
+  /// Listening by a held mic: the words say what letting go does.
+  final KitVoiceHold hold;
+
+  /// [KitVoicePhase.sendingSoon]: when the words go. The pill counts down
+  /// to it and calls [onSendNow] itself at that moment.
+  final DateTime? sendAt;
+
+  /// Send the words now (the countdown ran out, or the person tapped Send).
+  final VoidCallback? onSendNow;
+
+  /// Keep the words in the box and do not send them.
+  final VoidCallback? onCancelSend;
 
   /// Leaves voice mode; the draft keeps what was said.
   final VoidCallback onExit;

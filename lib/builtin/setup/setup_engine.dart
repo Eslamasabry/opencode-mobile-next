@@ -10,6 +10,7 @@ import '../../l10n/app_localizations.dart';
 import '../../termux/bridge.dart' show TermuxRuntime;
 import '../../ui/kit/kit_redact.dart';
 import '../builtin_linux.dart';
+import '../process_budget.dart';
 import 'components.dart';
 import 'preflight.dart';
 import 'setup_contract.dart';
@@ -233,6 +234,9 @@ class ChannelSetupEngine implements SetupEngine {
   bool _hostAbsent = false;
   bool _disposed = false;
 
+  /// Completed by [cancel] while a start waits for the process budget.
+  Completer<void>? _budgetCancel;
+
   @override
   List<SetupComponent> get registry => _components(strings(), const {});
 
@@ -287,6 +291,22 @@ class ChannelSetupEngine implements SetupEngine {
       if (host == SetupHostKind.termux) {
         TermuxSetupHost.validateParams(effectiveParams);
       }
+      if (host == SetupHostKind.builtin && ProcessBudgetGuard.instance.active) {
+        // Held while the phone has no room, is hot or low on battery
+        // (process_budget.dart); Cancel ends the wait.
+        final cancelled = _budgetCancel = Completer<void>();
+        try {
+          await ProcessBudgetGuard.instance.admit(
+            HeavyJob.setupJob,
+            cancelled: cancelled.future,
+          );
+        } on BudgetCancelled {
+          // Cancelled while waiting: _start below sees the flag and says so.
+        } finally {
+          _budgetCancel = null;
+        }
+        if (_disposed) return;
+      }
       try {
         await _start(ids, effectiveParams);
       } catch (error, stack) {
@@ -310,6 +330,8 @@ class ChannelSetupEngine implements SetupEngine {
   @override
   Future<void> cancel() async {
     _cancelRequested = true;
+    final waiting = _budgetCancel;
+    if (waiting != null && !waiting.isCompleted) waiting.complete();
     // Still checking: nothing native runs yet, and _start stops on the flag.
     if (_starting && _handedOver != _progress.value.jobId) return;
     final current = _progress.value;

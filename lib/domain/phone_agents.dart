@@ -15,6 +15,21 @@ enum PhoneAgentStatus {
   needsQualification,
 }
 
+/// An agent whose installed version differs from the app's pin is moved to
+/// the pin by the app itself when nothing is running (see
+/// lib/state/phone_agents_auto_update.dart). While that is pending or under
+/// way, the row says so instead of asking for a check.
+enum AgentAutoUpdate {
+  /// Will start once nothing is running.
+  waiting,
+
+  /// A big download that waits for Wi-Fi: it is not started over mobile data.
+  waitingWifi,
+
+  /// The install and the phone check are running now.
+  updating,
+}
+
 enum PhoneAgentFixAction {
   install,
   signIn,
@@ -61,9 +76,15 @@ final class PhoneAgentRuntime {
     this.stoppedInBackground = false,
     this.resetAt,
     this.checkRequiredReason,
+    this.behindPin = false,
   });
 
   final String agentId;
+
+  /// Installed at an older version than the app's pin that the app has
+  /// already qualified and can still run: work goes on it while the update
+  /// waits or downloads. [architectureQualified] is true for it.
+  final bool behindPin;
 
   /// Closed reason: firstCheck, agentVersion, helperVersion, installationChanged.
   final String? checkRequiredReason;
@@ -102,7 +123,71 @@ final class AgentRow {
     this.resetAt,
     this.checkRequiredReason,
     this.hasPartialPayload = false,
+    this.autoUpdate,
+    this.autoUpdateVersion,
+    this.behindPin = false,
   });
+
+  /// Runs on an older tested version until the automatic update finishes.
+  final bool behindPin;
+
+  AgentRow _withBehindPin() => AgentRow._(
+    id: id,
+    name: name,
+    iconKey: iconKey,
+    status: status,
+    statusMessage: statusMessage,
+    setupVisible: setupVisible,
+    chatVisible: chatVisible,
+    chatSelectable: chatSelectable,
+    installable: installable,
+    capabilities: capabilities,
+    fixAction: fixAction,
+    hiddenReason: hiddenReason,
+    resumeLabel: resumeLabel,
+    resumeNote: resumeNote,
+    resetAt: resetAt,
+    checkRequiredReason: checkRequiredReason,
+    hasPartialPayload: hasPartialPayload,
+    autoUpdate: autoUpdate,
+    autoUpdateVersion: autoUpdateVersion,
+    behindPin: true,
+  );
+
+  /// Set by the controller while an automatic update is pending or running.
+  final AgentAutoUpdate? autoUpdate;
+
+  /// The pinned version being installed ("2.1.316"); null when only the
+  /// shared helper changed.
+  final String? autoUpdateVersion;
+
+  /// This row with an automatic update pending or running. The fix action
+  /// goes away: the app is already doing it.
+  AgentRow withAutoUpdate(AgentAutoUpdate state, {String? version}) =>
+      AgentRow._(
+        id: id,
+        name: name,
+        iconKey: iconKey,
+        status: status,
+        statusMessage: statusMessage,
+        setupVisible: setupVisible,
+        chatVisible: chatVisible,
+        chatSelectable: chatSelectable,
+        installable: installable,
+        capabilities: capabilities,
+        fixAction: status == PhoneAgentStatus.needsQualification
+            ? null
+            : fixAction,
+        hiddenReason: hiddenReason,
+        resumeLabel: resumeLabel,
+        resumeNote: resumeNote,
+        resetAt: resetAt,
+        checkRequiredReason: checkRequiredReason,
+        hasPartialPayload: hasPartialPayload,
+        autoUpdate: state,
+        autoUpdateVersion: version,
+        behindPin: behindPin,
+      );
 
   final String id;
   final String name;
@@ -158,6 +243,25 @@ AgentCapabilities phoneAgentCapabilities({
 );
 
 AgentRow buildAgentRow({
+  required AgentDescriptor descriptor,
+  required AgentArchitecture architecture,
+  required ServerCapabilities serverCapabilities,
+  PhoneAgentRuntime? runtime,
+  UnverifiedResumePolicy unverifiedResumePolicy = UnverifiedResumePolicy.label,
+}) {
+  final row = _buildAgentRow(
+    descriptor: descriptor,
+    architecture: architecture,
+    serverCapabilities: serverCapabilities,
+    runtime: runtime,
+    unverifiedResumePolicy: unverifiedResumePolicy,
+  );
+  return runtime?.agentId == descriptor.id && runtime!.behindPin
+      ? row._withBehindPin()
+      : row;
+}
+
+AgentRow _buildAgentRow({
   required AgentDescriptor descriptor,
   required AgentArchitecture architecture,
   required ServerCapabilities serverCapabilities,

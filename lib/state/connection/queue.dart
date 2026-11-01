@@ -79,13 +79,17 @@ mixin _ConnectionControllerQueue on ChangeNotifier {
   /// Set when the queue dropped entries on its own — expiry or a limit —
   /// and cleared once a screen has shown it. A prompt the user asked to send
   /// never disappears silently.
-  String? _queueEvictionNotice;
+  OfflineQueueEviction? _queueEviction;
 
   /// Reads and clears the pending eviction notice.
-  String? takeQueueEvictionNotice() {
-    final notice = _queueEvictionNotice;
-    _queueEvictionNotice = null;
-    return notice;
+  String? takeQueueEvictionNotice() => takeQueueEviction()?.notice;
+
+  /// Reads and clears the pending eviction with its counts, so a screen can
+  /// word it in the app language.
+  OfflineQueueEviction? takeQueueEviction() {
+    final eviction = _queueEviction;
+    _queueEviction = null;
+    return eviction;
   }
 
   /// Bytes this device is holding for unsent work, for the settings readout.
@@ -359,7 +363,7 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
     final eviction = OfflineQueueStore.enforceLimits(_queueStore.load());
     _offlineQueue = eviction.kept;
     if (eviction.removed > 0) {
-      _queueEvictionNotice = eviction.notice;
+      _queueEviction = eviction;
       unawaited(_queueStore.save(eviction.kept));
     }
     return eviction.kept;
@@ -625,7 +629,7 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
           throw const OfflineQueueWriteException();
         }
         _offlineQueue = eviction.kept;
-        if (eviction.removed > 0) _queueEvictionNotice = eviction.notice;
+        if (eviction.removed > 0) _queueEviction = eviction;
         _notifyListeners();
         return true;
       });

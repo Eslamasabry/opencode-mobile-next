@@ -9,6 +9,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../platform/platform_capabilities.dart';
+import '../desktop/browser_context_menu_guard.dart';
 import '../desktop/desktop_interaction.dart' show desktopInteractions;
 import 'kit_menu.dart';
 import 'kit_tokens.dart';
@@ -26,6 +28,11 @@ import 'kit_tokens.dart';
 ///
 /// The region is excluded from semantics: every action in the menu is
 /// reachable from the child's own sheet or menu, which screen readers use.
+///
+/// In a browser the page's own context menu is held off only while the
+/// pointer is over a region (see [BrowserContextMenuGuard]), so a text field
+/// outside any region keeps the browser menu, whose Paste works on every
+/// origin.
 ///
 /// States: idle, focused (the ring), menu-open (a second click is ignored
 /// until the menu closes). No data states.
@@ -50,6 +57,28 @@ class KitContextRegion extends StatefulWidget {
 class _KitContextRegionState extends State<KitContextRegion> {
   bool _showFocus = false;
   bool _menuOpen = false;
+
+  /// True while this region has told the guard the pointer is inside it, so
+  /// a region unmounted mid-hover still hands its count back.
+  bool _hovering = false;
+
+  void _enter(PointerEnterEvent _) {
+    if (_hovering) return;
+    _hovering = true;
+    browserContextMenuGuard.enter();
+  }
+
+  void _leave([PointerExitEvent? _]) {
+    if (!_hovering) return;
+    _hovering = false;
+    browserContextMenuGuard.leave();
+  }
+
+  @override
+  void dispose() {
+    _leave();
+    super.dispose();
+  }
 
   Future<void> _open(Offset position) async {
     if (_menuOpen) return;
@@ -76,6 +105,12 @@ class _KitContextRegionState extends State<KitContextRegion> {
   Widget build(BuildContext context) {
     if (!desktopInteractions) return widget.child;
     final roles = KitTokens.of(context).roles;
+    final region = GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      excludeFromSemantics: true,
+      onSecondaryTapDown: (details) => unawaited(_open(details.globalPosition)),
+      child: widget.child,
+    );
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.f10, shift: true):
@@ -97,13 +132,17 @@ class _KitContextRegionState extends State<KitContextRegion> {
                   )
                 : null,
           ),
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            excludeFromSemantics: true,
-            onSecondaryTapDown: (details) =>
-                unawaited(_open(details.globalPosition)),
-            child: widget.child,
-          ),
+          // Only a browser has a competing native menu to hold off; a
+          // desktop window's tree stays exactly as it was.
+          child: platformCapabilities.isWeb
+              ? MouseRegion(
+                  key: const ValueKey('browser-context-menu-region'),
+                  opaque: false,
+                  onEnter: _enter,
+                  onExit: _leave,
+                  child: region,
+                )
+              : region,
         ),
       ),
     );

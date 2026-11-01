@@ -407,10 +407,26 @@ extension _EditorProbe on _ProfileEditorScreenState {
             validateCodexProjectDirectory(_codexDirectory.text.trim()) ??
             validateCodexConnectionToken(_token);
 
+  /// The browser cannot build the agent-socket transport; nothing is
+  /// written or probed, and the reason is said where the fields are.
+  void _showAgentSocketUnavailable() {
+    _set(() {
+      _codexTestResult = null;
+      _submitFailure = lookupAppLocalizations(
+        Localizations.localeOf(context),
+      ).browserAgentSocketUnavailable;
+      _submitDetails = null;
+    });
+  }
+
   Future<bool> _testCodexConnection({
     bool auto = false,
     bool forSave = false,
   }) async {
+    if (!platformCapabilities.supportsAgentSocketConnections) {
+      _showAgentSocketUnavailable();
+      return false;
+    }
     var url = _isPaseo
         ? normalizePaseoServerUrl(_url.text)
         : normalizeCodexServerUrl(_url.text);

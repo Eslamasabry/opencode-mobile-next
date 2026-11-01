@@ -118,7 +118,7 @@ MessageWithParts _compaction(String id, String kind, int created) =>
 
 // Owner's phone, 2026-10-28 (a Claude Code chat): after a compaction in the
 // middle of a running turn the newest row read "This part of OpenCode hit an
-// error", and "Compacting conversation…" stayed above the summary. Settling
+// error", and "Shortening conversation…" stayed above the summary. Settling
 // dropped the stale compacting row, so the rows, the parts and the turn
 // owners no longer shared one index and the newest row read past the end
 // (RangeError in _transcriptRow).
@@ -171,7 +171,7 @@ void main() {
       expect(errors.map((e) => e.exception), isEmpty);
       // The compacting line shows only while it is the newest thing.
       expect(
-        find.text('Compacting conversation…'),
+        find.text('Shortening conversation…'),
         entry.key == 'running compaction last' ? findsOneWidget : findsNothing,
       );
     });

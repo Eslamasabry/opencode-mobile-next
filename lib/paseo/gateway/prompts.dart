@@ -144,6 +144,9 @@ extension _PaseoPrompts on PaseoGateway {
     if (browserRequested && provider != 'claude') throw _browserUnavailable;
     await _requireProviderAvailable(provider);
     _checkLocation(scope, locationEpoch);
+    // On this phone: held until there is room for one more agent.
+    await beforeAgentStart?.call();
+    _checkLocation(scope, locationEpoch);
     final modes = _modesFor(provider);
     mode ??= defaultProviderModes[provider];
     // A provider whose snapshot lists modes must list the required one. Paseo

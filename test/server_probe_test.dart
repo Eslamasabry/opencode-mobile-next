@@ -174,7 +174,7 @@ void main() {
       expect(result.message, unsupportedOpenCode1Message);
       expect(
         openCode2UpgradeCommand,
-        'npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.1.1',
+        'npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.2.5',
       );
     },
   );
@@ -239,6 +239,66 @@ void main() {
       result.message,
       'That host name could not be found. Check the address spelling.',
     );
+  });
+
+  test('browser builds never claim a refused or unresolved host', () {
+    // The browser hides the socket cause: CORS rejection, mixed content,
+    // DNS and a stopped server all arrive as one generic error.
+    final refused = explainServerProbeFailure(
+      _transportFailure(cause: const SocketException('Connection refused')),
+      browser: true,
+    );
+    expect(refused.ok, isFalse);
+    expect(refused.message, contains('CORS'));
+    expect(refused.message, isNot(contains('refused')));
+    expect(refused.suggestsMissingServer, isTrue);
+
+    final unresolved = explainServerProbeFailure(
+      _transportFailure(
+        cause: const SocketException(
+          "Failed host lookup: 'opencode.exampel'",
+          osError: OSError('No address associated with hostname', 7),
+        ),
+      ),
+      browser: true,
+    );
+    expect(unresolved.message, isNot(contains('host name could not be found')));
+    expect(unresolved.message, contains('CORS'));
+
+    final timedOut = explainServerProbeFailure(
+      _transportFailure(type: DioExceptionType.connectionTimeout),
+      browser: true,
+    );
+    expect(timedOut.message, contains('timed out'));
+    expect(timedOut.message, contains('browser'));
+    expect(timedOut.suggestsMissingServer, isTrue);
+
+    final unknown = explainServerProbeFailure(
+      DioException(
+        requestOptions: RequestOptions(path: '/global/health'),
+        type: DioExceptionType.unknown,
+        message: 'The XMLHttpRequest onError callback was called.',
+      ),
+      browser: true,
+    );
+    expect(unknown.message, contains('CORS'));
+    // The browser's own error text is no help to a person: it stays out.
+    expect(unknown.message, isNot(contains('XMLHttpRequest')));
+    expect(unknown.suggestsMissingServer, isTrue);
+
+    // HTTP answers keep their exact verdicts in the browser too.
+    final wrongServer = explainServerProbeFailure(
+      DioException(
+        requestOptions: RequestOptions(path: '/global/health'),
+        type: DioExceptionType.badResponse,
+        response: Response(
+          requestOptions: RequestOptions(path: '/global/health'),
+          statusCode: 404,
+        ),
+      ),
+      browser: true,
+    );
+    expect(wrongServer.message, contains('HTTP 404'));
   });
 
   test('a refused connection keeps the is-the-server-running verdict', () {

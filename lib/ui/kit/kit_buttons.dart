@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
+import 'kit_chrome.dart';
 import 'kit_bidi.dart';
 import 'kit_copy.dart';
 import 'kit_icon_button.dart';
@@ -340,8 +341,9 @@ class KitButton extends StatelessWidget {
   final bool copied;
 
   @override
-  Widget build(BuildContext context) =>
-      KitMaxWidth.control(child: _buildContent(context));
+  Widget build(BuildContext context) => KitChrome.builder(
+    builder: (context) => KitMaxWidth.control(child: _buildContent(context)),
+  );
 
   Widget _buildContent(BuildContext context) {
     final copyText = this.copyText;

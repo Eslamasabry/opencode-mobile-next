@@ -7,13 +7,13 @@ of how the project is built and what a change has to satisfy.
 
 | Tool | Pinned version |
 |---|---|
-| Flutter | 3.47.1 — Shorebird's cached copy, `~/.shorebird/bin/cache/flutter/<rev>/bin/flutter` |
+| Flutter | 3.47.8 — Shorebird's cached copy, `~/.shorebird/bin/cache/flutter/<rev>/bin/flutter` |
 | JDK | 17 (temurin) |
 | Android SDK | API 37 |
 | Shorebird CLI | 1.6.x, only for release/patch work |
 
 The Flutter pin is not advisory. Release artifacts and the test suite are
-validated against 3.47.1; other local Flutters may fail to resolve packages or
+validated against 3.47.8; other local Flutters may fail to resolve packages or
 produce different analyzer results. Use the pinned binary for anything you
 intend to submit.
 
@@ -26,7 +26,7 @@ flutter test --concurrency=1         # serial; see "Tests" below
 ```
 
 CI ([android-quality.yml](.github/workflows/android-quality.yml)) runs the same
-two gates with upstream Flutter 3.47.2, plus Android lint and a test-signed
+two gates with upstream Flutter 3.47.8, plus Android lint and a test-signed
 release compile whose artifact is never distributed. It splits the suite into
 thirds so one hung invocation cannot eat the job timeout.
 

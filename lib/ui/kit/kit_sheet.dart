@@ -21,6 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import '../widgets/request_routes.dart';
+import 'kit_chrome.dart';
 import 'kit_buttons.dart';
 import 'kit_icon_button.dart';
 import 'kit_layout.dart';
@@ -694,7 +695,12 @@ class KitSheet extends StatelessWidget {
                               Semantics(
                                 header: true,
                                 namesRoute: true,
-                                child: KitText(title, role: KitTextRole.title),
+                                child: KitChrome(
+                                  child: KitText(
+                                    title,
+                                    role: KitTextRole.title,
+                                  ),
+                                ),
                               ),
                               if (leading == null) ?_line(tokens, subtitle),
                             ],

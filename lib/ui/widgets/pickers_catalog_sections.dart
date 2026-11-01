@@ -55,6 +55,7 @@ extension _ModelCatalogSections on _ModelCatalogViewState {
           tone: AppStatusTone.ok,
           message: status,
         ),
+      ?_claudeAgentNotice(),
       if (catalog != null && _canConnect && _freeOnly(catalog)) _freeOnlyNote(),
       if (catalog != null) ..._catalogNotices(context, catalog),
     ];
@@ -174,6 +175,7 @@ extension _ModelCatalogSections on _ModelCatalogViewState {
     if (!_canConnect || repository == null) return;
     try {
       final integrations = await repository.listIntegrations();
+      controller.claudeAgentTrial.observe(integrations);
       if (mounted) _set(() => _integrations = integrations);
     } catch (_) {
       // The rows fall back to the general "Connect a provider" one.
@@ -272,6 +274,7 @@ extension _ModelCatalogSections on _ModelCatalogViewState {
   /// general way in. Nothing when this server has no providers to connect.
   Widget _connectGroup(BuildContext context) {
     final rows = [
+      ?_claudeAgentRow(context),
       for (final integration in _actionableProviders())
         ?_providerAction(context, integration),
     ];
@@ -340,8 +343,14 @@ extension _ModelCatalogSections on _ModelCatalogViewState {
       if (cost != null &&
           (cost.inputPerMillion > 0 || cost.outputPerMillion > 0))
         _strings.modelPickerDetailsPrice(
-          _ModelCatalogViewState._money(cost.inputPerMillion),
-          _ModelCatalogViewState._money(cost.outputPerMillion),
+          _ModelCatalogViewState._money(
+            cost.inputPerMillion,
+            _strings.localeName,
+          ),
+          _ModelCatalogViewState._money(
+            cost.outputPerMillion,
+            _strings.localeName,
+          ),
         ),
     ];
     if (lines.isEmpty) return null;

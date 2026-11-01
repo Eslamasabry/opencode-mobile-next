@@ -148,7 +148,7 @@ class _AgentsSectionState extends ConsumerState<AgentsSection> {
       supportingMaxLines: 3,
       // The title names the agent: the chip says only the act, and every
       // chip starts at one edge (owner, 2026-10-08).
-      chip: removing
+      chip: removing || row.autoUpdate != null
           ? null
           : agentFixChip(
               l10n,

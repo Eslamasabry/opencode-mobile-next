@@ -12,7 +12,7 @@ with tempfile.TemporaryDirectory(prefix='schedule-android-') as d:
  d=Path(d)
  aar=next((cache/'androidx.work/work-runtime/2.10.5').glob('*/*.aar'))
  with zipfile.ZipFile(aar) as z:(d/'work.jar').write_bytes(z.read('classes.jar'))
- flutter=Path('/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/cache/artifacts/engine/android-arm64-release/flutter.jar')
+ flutter=Path('/home/eslam/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/cache/artifacts/engine/android-arm64-release/flutter.jar')
  cp=[Path('/home/eslam/Android/Sdk/platforms/android-37.0/android.jar'),flutter,d/'work.jar',next((cache/'com.google.guava/listenablefuture/1.0').glob('*/*.jar'))]
  stub=d/'Boundaries.kt'
  stub.write_text('''package io.github.eslamasabry.opencode_mobile
@@ -27,7 +27,9 @@ class BuiltinLinux {
 object NativeStrings { fun get(c:Context,id:Int,vararg args:Any):String = "" }
 object R { object mipmap {const val ic_launcher=1}; object string {
 const val native_schedule_channel=1; const val native_schedule_digest_title=2; const val native_schedule_title=3;
-const val native_schedule_digest_body=4; const val native_schedule_ran=5; const val native_schedule_skipped=6; const val native_schedule_failed=7
+const val native_schedule_digest_body=4; const val native_schedule_ran=5; const val native_schedule_skipped=6; const val native_schedule_failed=7;
+const val native_schedule_finished=8; const val native_schedule_open=9; const val native_schedule_why_needs_you=10; const val native_schedule_why_sign_in=11;
+const val native_schedule_why_agent=12; const val native_schedule_why_timeout=13; const val native_schedule_why_unavailable=14
 }}
 ''')
  files=list((root/'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile').glob('ScheduledPrompt*.kt'))

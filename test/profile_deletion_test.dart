@@ -264,6 +264,135 @@ void main() {
     },
   );
 
+  test(
+    'profile sweep matches owners, never namespaces or nested item ids',
+    () async {
+      final kept = <String, Object>{
+        'oc.profiles': '[]',
+        'oc.promptStash.keeper.doomed': 'keep',
+        'oc.orchestration.keeper.mutations.doomed.entry': 'keep',
+        'oc.draft.form.doomed.field.keeper': 'keep',
+        'oc.providerRuntimeRefresh.v1.keeper.%2Fa.doomed.project': true,
+        'oc.providerRuntimeUnloadable.keeper.%2Fa.doomed.project': true,
+        'oc.transcript.reasoningExpanded': true,
+        'oc.notify.quietStart': 60,
+        'oc.firstRun.state': 'done',
+        'oc.nudges.shown': '[]',
+      };
+      final owned = <String, Object>{
+        'oc.sessionLinkBinding.doomed': '{}',
+        'oc.termuxMigrationDone.doomed': 'job',
+        'oc.freeModelNoteDismissed.doomed': true,
+        'oc.draft.form.field.doomed': 'remove',
+        'oc.promptStash.doomed.entry': 'remove',
+        'oc.orchestration.doomed.mutations.entry': 'remove',
+        'oc.providerRuntimeRefresh.v1.doomed.%2Fproject': true,
+        'oc.providerRuntimeUnloadable.doomed.%2Fproject': true,
+      };
+      SharedPreferences.setMockInitialValues({...kept, ...owned});
+      final prefs = await SharedPreferences.getInstance();
+      final store = ProfileStore(prefs: prefs);
+      expect(store.profileScopedPreferenceKeys('doomed'), owned.keys.toSet());
+      for (final id in [
+        'profiles',
+        'draft',
+        'model',
+        'state',
+        'shown',
+        'quietStart',
+        'reasoningExpanded',
+      ]) {
+        expect(store.profileScopedPreferenceKeys(id), isEmpty, reason: id);
+      }
+      expect(await store.removeScopedPreferences('doomed'), isEmpty);
+      expect(prefs.getKeys(), kept.keys.toSet());
+    },
+  );
+
+  test(
+    'dotted profile ids never share another profile deletion scope',
+    () async {
+      final kept = <String, Object>{
+        'oc.profiles': jsonEncode([
+          {'id': 'a'},
+          {'id': 'a.b'},
+        ]),
+        'oc.model.a.b': 'keep',
+        'oc.draft.note.a.b': 'keep',
+        'oc.promptStash.a.b.entry': 'keep',
+        'oc.orchestration.a.b.lastKnown': 'keep',
+        'oc.providerRuntimeRefresh.v1.a.b.%2Fproject': true,
+        'oc.providerRuntimeUnloadable.a.b.%2Fproject': true,
+        'oc.a2aTasks.a': 'agent data',
+      };
+      final owned = <String, Object>{
+        'oc.model.a': 'remove',
+        'oc.draft.note.a': 'remove',
+        'oc.promptStash.a.entry': 'remove',
+        'oc.orchestration.a.lastKnown': 'remove',
+        'oc.providerRuntimeRefresh.v1.a.%2Fproject': true,
+        'oc.providerRuntimeUnloadable.a.%2Fproject': true,
+      };
+      SharedPreferences.setMockInitialValues({...kept, ...owned});
+      final prefs = await SharedPreferences.getInstance();
+      final store = ProfileStore(prefs: prefs);
+      expect(store.profileScopedPreferenceKeys('a'), owned.keys.toSet());
+      expect(await store.removeScopedPreferences('a'), isEmpty);
+      expect(prefs.getKeys(), kept.keys.toSet());
+    },
+  );
+
+  test(
+    'the sweep finds generated-interface and agent keys, keeps app-wide ones',
+    () async {
+      final kept = <String, Object>{
+        'oc.phraseChips.enabled': true,
+        'oc.usageWidget.v1': '{}',
+        'oc.readStateConsentMigration.v1': true,
+        'oc.replySpeed.inApp': '{}',
+        'oc.linuxReset.pending': true,
+        'oc.genui.covered.keeper': '{}',
+        'oc.genui.enabled.keeper': true,
+        'oc.sessionDisplayModels.keeper.agents': '{}',
+      };
+      final owned = <String, Object>{
+        'oc.genui.covered.doomed': '{}',
+        'oc.genui.enabled.doomed': true,
+        'oc.genui.journal.doomed': '{}',
+        'oc.phraseChips.doomed': '{}',
+        'oc.sessionDisplayModels.doomed.agents': '{}',
+        'oc.draft.note.doomed.agents': 'x',
+      };
+      SharedPreferences.setMockInitialValues({...kept, ...owned});
+      final prefs = await SharedPreferences.getInstance();
+      final store = ProfileStore(prefs: prefs);
+      expect(store.profileScopedPreferenceKeys('doomed'), owned.keys.toSet());
+      for (final id in ['enabled', 'v1', 'pending', 'inApp', 'covered']) {
+        expect(store.profileScopedPreferenceKeys(id), isEmpty, reason: id);
+      }
+      expect(await store.removeScopedPreferences('doomed'), isEmpty);
+      expect(prefs.getKeys(), kept.keys.toSet());
+    },
+  );
+
+  test(
+    'a saved profile named like an agent backend keeps its own keys',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'oc.profiles': jsonEncode([
+          {'id': 'doomed'},
+          {'id': 'doomed.agents'},
+        ]),
+        'oc.model.doomed': 'remove',
+        'oc.model.doomed.agents': 'keep',
+        'oc.genui.enabled.doomed.agents': true,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final store = ProfileStore(prefs: prefs);
+      expect(store.profileScopedPreferenceKeys('doomed'), {'oc.model.doomed'});
+    },
+  );
+
   test('deleting a profile leaves nothing keyed to it behind', () async {
     final (controller, prefs) = await boot();
 

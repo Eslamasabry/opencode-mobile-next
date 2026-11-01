@@ -12,6 +12,7 @@
 /// details.
 library;
 
+import '../locale_format.dart';
 import 'package:flutter/material.dart';
 
 import '../../domain/orchestration_gateway.dart';
@@ -1193,18 +1194,15 @@ String teamElapsedLabel(AppLocalizations l10n, Duration elapsed) {
 /// it needs no translation.
 const teamUsageSeparator = ' · ';
 
-/// "980", "12.4k", "1.2M": a token count in the chat's compact form.
-String teamCompactCount(int count) {
-  if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
-  if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}k';
-  return '$count';
-}
+/// "980", "12.4k", "1.2M": a token count in the chat's compact form, with
+/// the digits and separators of [locale].
+String teamCompactCount(int count, [String locale = 'en']) =>
+    formatCompactCount(locale, count);
 
 /// "$0.42": the app's session-row currency form (cents; three decimals
-/// only when the amount would otherwise round to nothing).
-String teamCurrencyLabel(double usd) => usd > 0 && usd < 0.01
-    ? '\$${usd.toStringAsFixed(3)}'
-    : '\$${usd.toStringAsFixed(2)}';
+/// only when the amount would otherwise round to nothing), per [locale].
+String teamCurrencyLabel(double usd, [String locale = 'en']) =>
+    formatUsd(locale, usd, decimals: usd > 0 && usd < 0.01 ? 3 : 2);
 
 /// Input plus output tokens as far as the host reported either, or null.
 int? teamUsageTokens(OrchestrationUsage? usage) {
@@ -1219,7 +1217,7 @@ String? teamUsageTokensLabel(AppLocalizations l10n, OrchestrationUsage? usage) {
   final tokens = teamUsageTokens(usage);
   return tokens == null
       ? null
-      : l10n.teamUiUsageTokens(teamCompactCount(tokens));
+      : l10n.teamUiUsageTokens(teamCompactCount(tokens, l10n.localeName));
 }
 
 /// "$0.42 est.": the cost with the estimate suffix — always, since every
@@ -1229,7 +1227,7 @@ String? teamUsageCostLabel(AppLocalizations l10n, OrchestrationUsage? usage) {
   final cost = usage?.costUsd;
   return cost == null
       ? null
-      : l10n.teamUiUsageCostEstimated(teamCurrencyLabel(cost));
+      : l10n.teamUiUsageCostEstimated(teamCurrencyLabel(cost, l10n.localeName));
 }
 
 /// "$0.42 est. · 12.4k tokens", whichever of the two the host reported,

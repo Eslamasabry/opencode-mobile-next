@@ -10,7 +10,28 @@ void main() {
       for (final state in KitTeamState.values)
         state.name: () => teamSample('kit_timeline_day', state: state),
     },
+    changes: {
+      'long day unfolds': KitMotionChange(
+        build: () => KitTimelineDay(
+          title: 'Today',
+          status: '11 events',
+          moreLabel: 'Show remaining events',
+          items: [for (var i = 0; i < 11; i++) KitTeamItem(title: 'Event $i')],
+        ),
+        act: (tester, stage) => stage.press(find.text('Show remaining events')),
+        shows: 'Event 10',
+      ),
+      'work finishes': KitMotionChange(
+        build: () =>
+            teamSample('kit_timeline_day', state: KitTeamState.running),
+        act: (tester, stage) => stage.rebuild(
+          teamSample('kit_timeline_day', state: KitTeamState.done),
+        ),
+        shows: 'Accepted · 5 min ago',
+      ),
+    },
   );
+
   testWidgets('long day folds after ten events', (tester) async {
     await pumpTeam(
       tester,

@@ -20,13 +20,16 @@ import 'package:opencode_mobile/ui/kit/kit_search_field.dart';
 import 'package:opencode_mobile/ui/kit/kit_segmented.dart';
 import 'package:opencode_mobile/ui/kit/kit_sheet.dart';
 import 'package:opencode_mobile/ui/kit/kit_state_view.dart';
+import 'package:opencode_mobile/ui/kit/kit_status_tag.dart';
 import 'package:opencode_mobile/ui/kit/kit_text.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 
+import '../../domain/claude_agent_trial.dart';
 import '../../domain/models.dart';
 import '../../domain/model_recommendations.dart';
 import '../../domain/provider_presentation.dart';
 import '../../domain/product_repository.dart';
+import '../../state/claude_agent_trial.dart';
 import '../../state/connection.dart';
 import '../../domain/free_model.dart' show openCodeFreeProviderID;
 import '../../domain/model_display_name.dart' show modelNameFromId;
@@ -36,6 +39,8 @@ import '../../state/model_library.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../app_theme.dart' show AppStatusTone;
+import '../locale_format.dart';
+import '../screens/agents/agents_screen.dart';
 import '../screens/library_screen.dart'
     show IntegrationsMode, IntegrationsScreen;
 
@@ -43,6 +48,7 @@ part 'pickers_catalog_sections.dart';
 part 'pickers_catalog_footer.dart';
 part 'pickers_catalog_models.dart';
 part 'pickers_choices.dart';
+part 'pickers_claude_agent.dart';
 
 AppLocalizations _pickerStrings(BuildContext context) =>
     Localizations.of<AppLocalizations>(context, AppLocalizations) ??
@@ -405,15 +411,19 @@ class _ModelCatalogViewState extends State<ModelCatalogView>
   void _set(VoidCallback fn) => setState(fn);
 
   // 1,048,576 reads "1M", not "1.0M"; 1,050,000 too.
-  static String _compactNumber(int value) => value >= 1000000
-      ? '${(value / 1000000).toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '')}M'
-      : value >= 1000
-      ? '${(value / 1000).round()}K'
-      : '$value';
+  static String _compactNumber(int value, String locale) {
+    final number = NumberFormat.decimalPattern(locale);
+    if (value >= 1000000) {
+      final one = NumberFormat('0.#', locale);
+      return '${one.format(value / 1000000)}M';
+    }
+    return value >= 1000
+        ? '${number.format((value / 1000).round())}K'
+        : number.format(value);
+  }
 
-  static String _money(double value) => value >= 1
-      ? '\$${value.toStringAsFixed(2)}'
-      : '\$${value.toStringAsFixed(3)}';
+  static String _money(double value, String locale) =>
+      formatUsd(locale, value, decimals: value >= 1 ? 2 : 3);
 
   final _search = TextEditingController();
 
@@ -765,9 +775,10 @@ String? modelCostLabel(CatalogModel model, {AppLocalizations? strings}) {
   final input = cost.inputPerMillion;
   final output = cost.outputPerMillion;
   if (input <= 0 && output <= 0) return null;
-  String money(double value) => value >= 1
-      ? '\$${value.toStringAsFixed(2)}'
-      : '\$${value.toStringAsFixed(3)}';
+  final locale =
+      (strings ?? lookupAppLocalizations(const Locale('en'))).localeName;
+  String money(double value) =>
+      formatUsd(locale, value, decimals: value >= 1 ? 2 : 3);
   return (strings ?? lookupAppLocalizations(const Locale('en'))).e7ModelUiCost(
     money(input),
     money(output),

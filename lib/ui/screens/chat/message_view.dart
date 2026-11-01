@@ -426,8 +426,8 @@ class _MessageView extends StatelessWidget {
       ?meta.modelLabel,
       if (showTimestamp) ...[
         if (meta.turnTokens case final tokens?)
-          strings.chatUiTokenCount(_fmtTokens(tokens)),
-        if (meta.turnCost case final cost?) _fmtCost(cost),
+          strings.chatUiTokenCount(_fmtTokens(tokens, strings.localeName)),
+        if (meta.turnCost case final cost?) _fmtCost(cost, strings.localeName),
       ],
     ];
     // The server ends a step the person declined as "aborted"; that is their
@@ -752,14 +752,12 @@ class _MessageView extends StatelessWidget {
           streaming: streaming && identical(run, all.last),
         );
 
-  static String _fmtTokens(int n) {
-    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
-    return '$n';
-  }
+  static String _fmtTokens(int n, String locale) =>
+      formatCompactCount(locale, n);
 
   /// Three decimals is the finest a reader can act on; anything smaller is
   /// "essentially free" rather than a string of zeros.
-  static String _fmtCost(double cost) =>
-      cost < .001 ? '< \$0.001' : '\$${cost.toStringAsFixed(3)}';
+  static String _fmtCost(double cost, String locale) => cost < .001
+      ? '< ${formatUsd(locale, 0.001, decimals: 3)}'
+      : formatUsd(locale, cost, decimals: 3);
 }

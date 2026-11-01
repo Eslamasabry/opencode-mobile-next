@@ -100,7 +100,7 @@ void main() {
       serverProbe = ({required baseUrl, username, password}) async {
         probedWith = password;
         return linux.running
-            ? const ServerProbeResult.success('2.1.1')
+            ? const ServerProbeResult.success('2.2.5')
             : const ServerProbeResult.failure('refused');
       };
       final starter = BuiltinServerStarter(linux: linux)

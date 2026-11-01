@@ -280,6 +280,20 @@ extension _ChatPage on _ChatScreenState {
     if (_conn.isIsolated) {
       return MarkdownInteractionScope(enabled: false, child: screen);
     }
+    return StopOnEscape(
+      // Find owns Esc while its bar is open; a stop already in flight is not
+      // sent twice.
+      enabled:
+          !_watching &&
+          !_findOpen &&
+          !_aborting &&
+          _conn.busySessions.contains(widget.sessionID),
+      onStop: () => unawaited(_abort()),
+      child: _withFindShortcuts(screen),
+    );
+  }
+
+  Widget _withFindShortcuts(Widget screen) {
     return Actions(
       actions: {
         FindInSurfaceIntent: CallbackAction<FindInSurfaceIntent>(
@@ -311,6 +325,8 @@ extension _ChatPage on _ChatScreenState {
               ? screen
               : ModelShortcuts(
                   onCycle: _cycleModel,
+                  onCycleVariant: _cycleVariant,
+                  onTranscriptKey: _scrollTranscriptByKey,
                   onBackground: _canBackgroundWork
                       ? _backgroundRunningWork
                       : null,

@@ -2534,6 +2534,30 @@
         "release-notes.md": "wrap"
       }
     },
+    "KitVitalsStrip": {
+      "lists": {
+        "vitals": {
+          "beyond": "fixed",
+          "shows": 4
+        }
+      },
+      "role": "reading",
+      "text": {
+        "## °C": "ellipsis:1",
+        "###%": "ellipsis:1",
+        "##.# GB": "ellipsis:1",
+        "#%": "ellipsis:1",
+        "Battery temperature": "ellipsis:1",
+        "Hot. node is using ###% CPU.": "ellipsis:3",
+        "Linux CPU": "ellipsis:1",
+        "Memory free": "ellipsis:1",
+        "One sentence under the readings.": "ellipsis:3",
+        "Phone heat": "ellipsis:1",
+        "Reading #": "ellipsis:1",
+        "Too hot": "ellipsis:1",
+        "—": "ellipsis:1"
+      }
+    },
     "KitWebPreview": {
       "role": "reading",
       "text": {

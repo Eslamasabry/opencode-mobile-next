@@ -161,6 +161,7 @@ extension _ChatSessionMenu on _ChatScreenState {
           timeline: _messages.isNotEmpty,
           hasPrompt: hasPrompt,
           preview: _devPreviewOffered(),
+          localSummary: LocalAssistantController.peek?.offersSummary ?? false,
         ),
         shortcuts: true,
         onSelected: (action) => unawaited(_runSessionMenuAction(action)),
@@ -193,6 +194,8 @@ extension _ChatSessionMenu on _ChatScreenState {
         await _fork();
       case SessionMenuAction.rename:
         await _renameCurrentSession();
+      case SessionMenuAction.summarizeLocal:
+        await _summarizeOnThisPhone();
       case SessionMenuAction.continueWith:
         await _continueWithAnotherAgent();
       case SessionMenuAction.continueOnComputer:

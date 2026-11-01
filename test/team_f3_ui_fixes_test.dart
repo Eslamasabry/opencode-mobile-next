@@ -143,7 +143,7 @@ void main() {
     },
   );
 
-  testWidgets('B-11: Promote dev to main is reachable from the overview', (
+  testWidgets('B-11: Put on main is reachable from the overview', (
     tester,
   ) async {
     final gateway = _Gateway(
@@ -161,16 +161,14 @@ void main() {
       ),
     );
     await _openOverview(tester, gateway);
-    final promote = find.widgetWithText(KitButton, 'Promote dev to main');
+    final promote = find.widgetWithText(KitButton, 'Put App on main');
     expect(promote, findsOneWidget);
     await tester.ensureVisible(promote);
     await tester.tap(promote);
     await tester.pumpAndSettle();
     expect(gateway.commands, isEmpty);
     expect(find.text('App: main0000000 → dev1111111'), findsWidgets);
-    await tester.tap(
-      find.widgetWithText(KitButton, 'Promote dev to main').last,
-    );
+    await tester.tap(find.widgetWithText(KitButton, 'Put App on main').last);
     await tester.pumpAndSettle();
     final command = gateway.commands.single;
     expect(command.action, TeamProjectAction.promote);

@@ -5,15 +5,22 @@ import 'dart:io';
 import 'package:uuid/uuid.dart';
 
 import '../domain/external_agent.dart';
+import 'browser_request.dart';
 
 /// Official A2A 1.0 JSON-RPC binding, protocol release 1.0.1. No legacy fallback.
 class A2aClient implements ExternalAgentGateway {
-  final HttpClient _http;
-  A2aClient({HttpClient? http}) : _http = http ?? HttpClient() {
-    _http.connectionTimeout = const Duration(seconds: 8);
+  final HttpClient? _http;
+  final BrowserA2aRequests? _browser;
+  A2aClient({HttpClient? http})
+    : _http = a2aIsWeb ? null : http ?? HttpClient(),
+      _browser = a2aIsWeb ? BrowserA2aRequests() : null {
+    _http?.connectionTimeout = const Duration(seconds: 8);
   }
   @override
-  void close() => _http.close(force: true);
+  void close() {
+    _http?.close(force: true);
+    _browser?.close();
+  }
 
   static Uri address(String raw) {
     if (raw.length > 2048) {
@@ -39,11 +46,18 @@ class A2aClient implements ExternalAgentGateway {
     Map<String, dynamic>? body,
     String? bearer,
   }) async {
+    final browser = _browser;
+    if (browser != null) {
+      return browser.request(url, body: body, bearer: bearer);
+    }
     HttpClientRequest? pending;
     var stopped = false;
     try {
       return await (() async {
-        final request = await _http.openUrl(body == null ? 'GET' : 'POST', url);
+        final request = await _http!.openUrl(
+          body == null ? 'GET' : 'POST',
+          url,
+        );
         pending = request;
         if (stopped) {
           request.abort();

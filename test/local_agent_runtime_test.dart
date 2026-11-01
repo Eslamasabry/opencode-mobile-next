@@ -13,6 +13,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/termux/bridge.dart';
 import 'package:opencode_mobile/termux/local_agent_runtime.dart';
 
@@ -61,19 +62,35 @@ fi
 mkdir -p "$prefix/bin"
 case "$spec" in
   @getpaseo/cli@*) cp "$OC_TEST_ROOT/paseo-stub" "$prefix/bin/paseo" ;;
-  @anthropic-ai/claude-code) cp "$OC_TEST_ROOT/claude-stub" "$prefix/bin/claude" ;;
+  @anthropic-ai/claude-code@*) cp "$OC_TEST_ROOT/claude-stub" "$prefix/bin/claude" ;;
 esac
 echo "added 1 package"
 ''';
 
 const _paseoStub = r'''#!/bin/bash
+# Behaves like Paseo 0.11 and later: the old launch flags are refused (the
+# real daemon prints "--listen was removed" and exits), settings are set with
+# `daemon config set <key> <value> --home <path>`, and `daemon run` runs the
+# daemon in the foreground from that config.
 if [ "${1:-}" = --version ]; then echo '0.8.0'; exit 0; fi
-printf '%s\n' "$*" > "$OC_TEST_ROOT/paseo-args.log"
-printf '%s' "${PASEO_PASSWORD:-}" > "$OC_TEST_ROOT/paseo-env-password"
-listen=''
-while [ $# -gt 0 ]; do
-  case "$1" in --listen) listen="$2"; shift 2 ;; *) shift ;; esac
+printf '%s\n' "$*" >> "$OC_TEST_ROOT/paseo-args.log"
+case "${1:-}" in
+  daemon) ;;
+  *) echo 'Error: --listen was removed. Use paseo daemon config set daemon.listen <value> --home <path>, then start or restart.' >&2; exit 1 ;;
+esac
+for arg in "$@"; do
+  case "$arg" in --foreground|--listen|--no-relay|--no-web-ui|--no-inject-mcp|--port|--relay|--web-ui|--no-mcp|--hostnames)
+    echo "Error: $arg was removed." >&2; exit 1 ;;
+  esac
 done
+if [ "${2:-}" = config ] && [ "${3:-}" = set ]; then
+  printf '%s=%s\n' "$4" "$5" >> "$OC_TEST_ROOT/paseo-config.log"
+  echo '{"action":"saved"}'
+  exit 0
+fi
+[ "${2:-}" = run ] || { echo 'Error: unknown command' >&2; exit 1; }
+printf '%s' "${PASEO_PASSWORD:-}" > "$OC_TEST_ROOT/paseo-env-password"
+listen=$(grep '^daemon.listen=' "$OC_TEST_ROOT/paseo-config.log" | tail -1 | cut -d= -f2)
 echo "paseo listening on $listen"
 [ -f "$OC_TEST_ROOT/paseo-silent" ] && exec sleep 600
 exec python3 - "$listen" <<'PY'
@@ -190,7 +207,12 @@ class _Fixture {
     return File(archive).readAsBytesSync();
   }
 
-  void writePins({String? sha, String? baseUrl, String? version}) {
+  void writePins({
+    String? sha,
+    String? baseUrl,
+    String? version,
+    String? claude,
+  }) {
     File('$ocDir/claude-pins').writeAsStringSync(
       TermuxBridge.localAgentsPinsFile({
         'node_version': version ?? _nodeVersion,
@@ -198,6 +220,7 @@ class _Fixture {
         'node_sha256_arm64': '0' * 64,
         'node_sha256_x64': sha ?? sha256.convert(tarball).toString(),
         'paseo_version': '0.8.0',
+        'claude_version': claude ?? '2.1.278',
       }),
     );
   }
@@ -331,6 +354,12 @@ void main() {
       expect(pins['node_base_url'], 'https://nodejs.org/dist');
       // Reviewed patch target; on-device verification is tracked separately.
       expect(pins['paseo_version'], '0.11.2');
+      // Claude Code never floats to npm's latest on this path: the pin is the
+      // same tested release the built-in Linux installs.
+      expect(
+        pins['claude_version'],
+        AgentCatalog.builtIn.byId('claude')!.recipe!.version,
+      );
       final file = TermuxBridge.localAgentsPinsFile();
       for (final entry in pins.entries) {
         expect(file, contains('${entry.key}=${entry.value}\n'));
@@ -381,17 +410,38 @@ void main() {
 
     test('the daemon is loopback-only, relay off, and never widened', () {
       expect(script, contains(r'LISTEN="127.0.0.1:$PORT"'));
-      final start = RegExp(r'exec paseo start[^\n]*').firstMatch(script)![0]!;
-      for (final flag in [
+      final run = RegExp(
+        r'exec paseo daemon run[^\n]*',
+      ).firstMatch(script)![0]!;
+      expect(run, contains(r'--home "$1"'));
+      // Every setting the old flags carried is set in the daemon's config.
+      for (final setting in [
+        r'daemon_set daemon.listen "$2" "$1"',
+        'daemon_set daemon.relay.enabled false',
+        'daemon_set daemon.mcp.injectIntoAgents false',
+        'daemon_set features.webUi.enabled false',
+      ]) {
+        expect(script, contains(setting));
+      }
+      // Paseo 0.11+ refuses these: launching with any of them is the bug.
+      expect(script, isNot(matches(RegExp(r'paseo\s+start\b'))));
+      for (final removed in [
         '--foreground',
-        r'--listen "$2"',
+        '--listen',
         '--no-relay',
         '--no-web-ui',
         '--no-inject-mcp',
+        '--hostnames',
       ]) {
-        expect(start, contains(flag));
+        expect(
+          RegExp(
+            r'^[^#\n]*paseo[^\n]*' + RegExp.escape(removed),
+            multiLine: true,
+          ).hasMatch(script),
+          isFalse,
+          reason: removed,
+        );
       }
-      expect(RegExp(r'paseo start').allMatches(script).length, 1);
       expect(script, isNot(contains('0.0.0.0')));
       expect(script, isNot(contains('relay.paseo')));
       expect(script, isNot(contains('--hostnames')));
@@ -427,7 +477,14 @@ void main() {
         contains(r'npm install -g --no-fund --no-audit --prefix "$1"'),
       );
       expect(script, contains(r'npm_install "@getpaseo/cli@$paseo_version"'));
-      expect(script, contains("npm_install '@anthropic-ai/claude-code'"));
+      expect(
+        script,
+        contains(r'npm_install "@anthropic-ai/claude-code@$claude_version"'),
+      );
+      expect(
+        script,
+        isNot(contains("npm_install '@anthropic-ai/claude-code'")),
+      );
     });
 
     test('remove keeps ~/.claude unless --forget-signin', () {
@@ -497,12 +554,23 @@ void main() {
       final npm = fx.read('${fx.root.path}/npm-calls.log');
       expect(npm, contains('--prefix ${fx.agentsDir}'));
       expect(npm, contains('@getpaseo/cli@0.8.0'));
-      expect(npm, contains('@anthropic-ai/claude-code'));
+      expect(npm, contains('@anthropic-ai/claude-code@2.1.278'));
       expect(fx.downloads, 1);
 
       final again = await fx.run(['install']);
       expect(again.phase, LocalAgentPhase.installed, reason: fx.log);
       expect(fx.downloads, 1);
+    });
+
+    test('Claude Code is installed at the pinned version, never npm latest, '
+        'and a different version installed is a failure', () async {
+      fx = await _Fixture.create();
+      fx.writePins(claude: '2.1.999');
+      final status = await fx.run(['install']);
+      expect(status.phase, LocalAgentPhase.failed, reason: fx.log);
+      final npm = fx.read('${fx.root.path}/npm-calls.log');
+      expect(npm, contains('@anthropic-ai/claude-code@2.1.999'));
+      expect(fx.log, contains('2.1.999 was pinned but 2.1.278 was installed'));
     });
 
     test('a checksum mismatch stops before anything is unpacked', () async {
@@ -573,13 +641,17 @@ void main() {
       ]);
       expect((mode.stdout as String).trim(), '600');
       expect(fx.read('${fx.root.path}/paseo-env-password'), password);
-      final args = fx.read('${fx.root.path}/paseo-args.log');
-      expect(
-        args.trim(),
-        'start --foreground --home ${fx.ubuntuHome}/.oc-paseo '
-        '--listen 127.0.0.1:${fx.port} --no-relay --no-web-ui '
-        '--no-inject-mcp',
-      );
+      final args = fx.read('${fx.root.path}/paseo-args.log').trim().split('\n');
+      final home = '${fx.ubuntuHome}/.oc-paseo';
+      expect(args, [
+        'daemon config set daemon.listen 127.0.0.1:${fx.port} --home $home',
+        'daemon config set daemon.relay.enabled false --home $home',
+        'daemon config set daemon.mcp.injectIntoAgents false --home $home',
+        'daemon config set features.webUi.enabled false --home $home',
+        'daemon config set features.dictation.enabled false --home $home',
+        'daemon config set features.voiceMode.enabled false --home $home',
+        'daemon run --home $home',
+      ]);
       expect(
         fx.read('${fx.root.path}/proot-calls.log'),
         contains(

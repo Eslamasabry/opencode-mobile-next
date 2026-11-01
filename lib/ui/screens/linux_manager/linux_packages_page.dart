@@ -112,6 +112,8 @@ class _State extends ConsumerState<LinuxPackagesPage> {
       LinuxJobKind.install => l10n.linuxMgrJobNoticeInstall,
       LinuxJobKind.remove => l10n.linuxMgrJobNoticeRemove,
       LinuxJobKind.update => l10n.linuxMgrJobNoticeUpdate,
+      LinuxJobKind.backup => l10n.linuxMgrJobBackingUp,
+      LinuxJobKind.restore => l10n.linuxMgrJobRestoring,
     };
     try {
       await _job.start(kind, names, notice: notice);

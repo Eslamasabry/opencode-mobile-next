@@ -68,6 +68,7 @@ Future<void> showKitViewer(
   required KitViewerSource source,
   String? path,
   KitAction? primary,
+  KitAction? secondary,
   List<KitMenuItem> more = const [],
   bool? asPage,
   bool interactive = true,
@@ -86,6 +87,7 @@ Future<void> showKitViewer(
       source: source,
       path: path,
       primary: primary,
+      secondary: secondary,
       more: more,
       onClose: () => Navigator.of(routeContext).pop(),
       interactive: interactive,
@@ -214,6 +216,7 @@ class KitViewer extends StatefulWidget {
     required this.source,
     this.path,
     this.primary,
+    this.secondary,
     this.more = const [],
     this.onClose,
     this.interactive = true,
@@ -266,6 +269,10 @@ class KitViewer extends StatefulWidget {
 
   /// At most one labelled action: "Add to prompt".
   final KitAction? primary;
+
+  /// One more visible action in the reader's bottom bar (Share on Wi-Fi),
+  /// shown for every kind of content, binary files included.
+  final KitAction? secondary;
 
   /// The caller's overflow items after the kit's own: Copy path, Save,
   /// Share, Open in Files, Open in Review.

@@ -245,7 +245,12 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   @override
   void initState() {
     super.initState();
-    if (!_isCodex) _probeSecureStorage();
+    // A browser on a plain-http network origin already knows the answer (the
+    // notice is built from the first frame, see _secureStorageNoticeText), so
+    // there is nothing to probe.
+    if (!_isCodex && platformCapabilities.supportsSecureCredentialStorage) {
+      _probeSecureStorage();
+    }
     _urlLength = _url.text.length;
     _urlFocus.addListener(_checkSocketAddressOnLeave);
   }

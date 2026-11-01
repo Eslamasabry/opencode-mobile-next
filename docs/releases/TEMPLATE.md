@@ -45,3 +45,7 @@ from the commits since the last tag; then trim and group it.
 ### Upgrading
 - Installs over the previous public release (same signing key). Saved
   servers, sign-ins and settings are kept.
+
+## Release checklist
+
+- [ ] Add this version's lines to `whatsNewByVersion` (see docs/release/whats-new.md).

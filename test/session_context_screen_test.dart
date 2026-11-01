@@ -478,7 +478,7 @@ void main() {
     await tester.tap(find.byKey(const Key('session-context-compact')));
     await tester.pumpAndSettle();
     // Asked first, with what is kept.
-    expect(find.text('Compact this conversation?'), findsOneWidget);
+    expect(find.text('Shorten this conversation?'), findsOneWidget);
     expect(find.text('Every message stays in the history.'), findsOneWidget);
     expect(controller.compactRepository!.compacted, isEmpty);
     await tester.tap(find.byKey(const Key('session-context-compact-confirm')));

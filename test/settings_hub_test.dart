@@ -11,6 +11,8 @@ import 'package:opencode_mobile/domain/product_repository.dart';
 import 'support/fake_event_channel.dart';
 import 'package:opencode_mobile/codex/gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
+import 'package:opencode_mobile/local_llm/local_llm_controller.dart';
+import 'package:opencode_mobile/local_llm/local_llm_ui.dart';
 import 'package:opencode_mobile/paseo/gateway.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/connection.dart';
@@ -28,6 +30,7 @@ import 'package:opencode_mobile/ui/search/search_index.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/settings_doors.dart';
+import 'local_llm/local_llm_fakes.dart' show Rig;
 
 class _Api extends FakeServerGateway {
   _Api(this._capabilities) : super(baseUrl: 'http://localhost');
@@ -862,7 +865,7 @@ void main() {
       // Agents is on every phone (where it cannot run it says why).
       // Phrase suggestions (the chat's own-phrase chips) is one Conversations row.
       // Help › Tips (the teaching system, 2026-10-21) is one Help row.
-      expect(total, 22);
+      expect(total, 23);
       expect(titles.toSet().length, titles.length);
       // The pairs that used to sit side by side are one row each now.
       for (final gone in [
@@ -955,6 +958,45 @@ void main() {
       // Stored, so a new conversation reads the same values.
       expect(controller.store.transcriptReasoningExpanded, isTrue);
       expect(controller.store.transcriptTimestampsVisible, isTrue);
+    });
+
+    testWidgets('Assistant on this phone is a row on the Conversations page', (
+      tester,
+    ) async {
+      final rig = await Rig.create(installed: true, enabled: true);
+      addTearDown(rig.controller.dispose);
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      localAssistantLoader = () async => rig.controller;
+      addTearDown(() => localAssistantLoader = LocalAssistantController.shared);
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.chat);
+
+      // Beside Voice typing, not only a search result.
+      final row = _row('settings-local-assistant');
+      await tester.ensureVisible(row);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: row, matching: find.text(_en.localAssistantTitle)),
+        findsOneWidget,
+      );
+      await tester.tap(row);
+      await tester.pumpAndSettle();
+      expect(find.byType(LocalAssistantSettingsScreen), findsOneWidget);
+    });
+
+    testWidgets('the Assistant row is absent off Android', (tester) async {
+      debugPlatformCapabilities = const PlatformCapabilities(
+        platform: TargetPlatform.linux,
+      );
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+      await openSettingsGroup(tester, SettingsGroup.chat);
+      expect(_row('settings-voice'), findsNothing);
+      expect(_row('settings-local-assistant'), findsNothing);
     });
 
     testWidgets('rows the server hides are one line with a Why', (

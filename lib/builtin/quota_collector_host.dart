@@ -150,8 +150,19 @@ class InAppQuotaCollector {
 
   /// A token reader for the quota gateway when [profile] is the app's own
   /// server; null for every other server, which keeps today's behaviour.
+  ///
+  /// The collector runs only while something reads usage
+  /// ([QuotaCollectorDemand]): reading the token wakes it first.
   static Future<String?> Function()? tokenReaderFor(ServerProfile profile) =>
-      looksLikeInAppServer(profile) ? () => readToken(profile.id) : null;
+      looksLikeInAppServer(profile)
+      ? () async {
+          final token = await readToken(profile.id);
+          if (token != null) {
+            await QuotaCollectorDemand.shared.use(profile, token);
+          }
+          return token;
+        }
+      : null;
 
   bool get supported => _supported ?? BuiltinLinux.supported;
 
@@ -368,6 +379,8 @@ class InAppQuotaCollector {
       );
     }
     await prefs.setBool(enabledKey(id), true);
+    // Set up and answering; it stops again once nothing reads usage.
+    QuotaCollectorDemand.shared.touch();
   }
 
   /// When the app opens or In-app Ubuntu starts: a collector that was set up
@@ -381,7 +394,10 @@ class InAppQuotaCollector {
       final root = await _rootfs();
       final changed = await _installFiles(root);
       final status = await _linux.status();
-      if (!changed && status.services.contains(serviceName)) return true;
+      if (!changed && status.services.contains(serviceName)) {
+        QuotaCollectorDemand.shared.touch();
+        return true;
+      }
       await _stageToken(root, token);
       await _linux.run(
         'chmod 700 $dir && chmod 600 $tokenPath $collectorPath $keysPath',
@@ -393,6 +409,7 @@ class InAppQuotaCollector {
         port: port,
         notice: null,
       );
+      QuotaCollectorDemand.shared.touch();
       return true;
     } on Object {
       return false;
@@ -405,6 +422,7 @@ class InAppQuotaCollector {
   /// Turns usage off: stops the service and removes its files, key copies
   /// and the token.
   Future<void> turnOff(String profileId) async {
+    QuotaCollectorDemand.shared.cancel();
     await _linux.stopService(serviceName);
     final result = await _linux.run(
       'rm -rf $dir && echo "qc removed"',
@@ -441,22 +459,6 @@ class InAppQuotaCollector {
     await (secure ?? const FlutterSecureStorage()).delete(
       key: tokenKey(profileId),
     );
-  }
-
-  /// Starts a collector that was set up, when In-app Ubuntu has just started.
-  /// Needs no screen. Quiet.
-  static Future<void> restartIfSetUp(
-    ServerProfile profile, {
-    BuiltinLinux? linux,
-  }) async {
-    if (!looksLikeInAppServer(profile)) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final host = InAppQuotaCollector(prefs: prefs, linux: linux);
-      await host.ensureRunning(profile);
-    } on Object {
-      // A failure shows on the Usage page, not as a popup.
-    }
   }
 
   /// Runs inside In-app Ubuntu (Node >= 20). Reads OpenCode's sign-in file
@@ -519,4 +521,103 @@ rmSync(`${dir}/auth.env`, { force: true });
 writeFileSync(`${dir}/auth.env`, env, { mode: 0o600 });
 console.log(`qc keys=ok codex=${codex} glm=${glm} minimax=${minimax}`);
 ''';
+}
+
+/// Keeps the quota collector running only while something reads usage:
+/// started by the first read ([use]), stopped [idleFor] after the last one.
+/// It used to run all the time beside the phone's OpenCode, two of the
+/// programs Android counts toward its limit of 32 (a Linux and Node), for a
+/// page and a widget read every few minutes at most.
+class QuotaCollectorDemand {
+  QuotaCollectorDemand({
+    Future<bool> Function(ServerProfile profile)? ensure,
+    Future<bool> Function(String token)? answers,
+    Future<void> Function()? stop,
+    this.idleFor = const Duration(minutes: 2),
+    this.answerWithin = const Duration(seconds: 20),
+    this.answerEvery = const Duration(milliseconds: 500),
+    bool? enabled,
+  }) : _enabled = enabled ?? BuiltinLinux.supported,
+       _ensure = ensure ?? _defaultEnsure,
+       _answers = answers ?? InAppQuotaCollector._defaultProbe,
+       _stop =
+           stop ??
+           (() => BuiltinLinux().stopService(InAppQuotaCollector.serviceName));
+
+  /// The app's one: off until `main` turns it on ([install]); tests make
+  /// their own.
+  static QuotaCollectorDemand shared = QuotaCollectorDemand(enabled: false);
+
+  static void install() => shared = QuotaCollectorDemand();
+
+  static Future<bool> _defaultEnsure(ServerProfile profile) async {
+    final prefs = await SharedPreferences.getInstance();
+    return InAppQuotaCollector(prefs: prefs).ensureRunning(profile);
+  }
+
+  /// Off where there is no in-app Linux (tests, desktop): nothing to wake.
+  final bool _enabled;
+  final Future<bool> Function(ServerProfile profile) _ensure;
+  final Future<bool> Function(String token) _answers;
+  final Future<void> Function() _stop;
+
+  /// How long it keeps running after the last read.
+  final Duration idleFor;
+
+  /// How long a read waits for a collector it just started.
+  final Duration answerWithin;
+  final Duration answerEvery;
+
+  Timer? _idle;
+  Future<void>? _waking;
+
+  /// Whether a stop is pending (the collector runs, or was just asked to).
+  bool get running => _idle != null;
+
+  /// Before a read: makes sure the collector runs and answers, then keeps
+  /// it for [idleFor] more. Quiet: a collector that cannot start leaves the
+  /// read to fail as it always did.
+  Future<void> use(ServerProfile profile, String token) {
+    if (!_enabled) return Future<void>.value();
+    touch();
+    return _waking ??= _wake(profile, token).whenComplete(() {
+      _waking = null;
+    });
+  }
+
+  Future<void> _wake(ServerProfile profile, String token) async {
+    try {
+      if (await _answers(token)) return;
+      if (!await _ensure(profile)) return;
+      final deadline = DateTime.now().add(answerWithin);
+      while (DateTime.now().isBefore(deadline)) {
+        if (await _answers(token)) return;
+        await Future<void>.delayed(answerEvery);
+      }
+    } on Object {
+      // The read says what is wrong.
+    } finally {
+      touch();
+    }
+  }
+
+  /// (Re)arms the stop [idleFor] from now.
+  void touch() {
+    if (!_enabled) return;
+    _idle?.cancel();
+    _idle = Timer(idleFor, () {
+      _idle = null;
+      if (_waking != null) {
+        touch();
+        return;
+      }
+      unawaited(_stop().catchError((Object _) {}));
+    });
+  }
+
+  /// Forgets a pending stop (the collector was turned off).
+  void cancel() {
+    _idle?.cancel();
+    _idle = null;
+  }
 }

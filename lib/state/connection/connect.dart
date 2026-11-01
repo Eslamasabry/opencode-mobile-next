@@ -364,7 +364,13 @@ extension _ConnectionControllerConnectImpl on ConnectionController {
     _lifecycleTransportReady = null;
     // Codex and Paseo share the socket-style profile and its connect path.
     final isCodex = profile.usesAgentSocket;
-    final validationError = profile.backend == ServerBackend.paseo
+    final validationError =
+        isCodex && !platformCapabilities.supportsAgentSocketConnections
+        // A browser cannot send the WebSocket header these use; the form
+        // already says so, and a link or a future sync must not start a
+        // connection that is certain to fail.
+        ? browserAgentSocketUnavailableMessage
+        : profile.backend == ServerBackend.paseo
         ? (profile.requiresCodexTokenReentry
               ? 'The saved password is unavailable. Enter it again.'
               : validatePaseoServerUrl(profile.baseUrl) ??

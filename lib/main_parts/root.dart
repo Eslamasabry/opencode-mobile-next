@@ -89,6 +89,16 @@ class _RootState extends ConsumerState<_Root> {
     // so its slot notification cannot rebuild an ancestor during this build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _startThermalGuard();
+      // Services the person keeps on in the phone's Linux come back when
+      // the app opens (the supervisor; reboot restore is native, S5).
+      if (mounted) {
+        unawaited(
+          ref
+              .read(linuxServicesProvider)
+              .ensureSupervisor()
+              .catchError((Object _) {}),
+        );
+      }
     });
   }
 
@@ -372,6 +382,14 @@ class _RootState extends ConsumerState<_Root> {
     _connectSaved();
   }
 
+  /// A saved Codex or Paseo profile in a build whose transport cannot reach
+  /// an agent-socket server, which is the browser: it cannot send the
+  /// WebSocket auth header. The servers screen explains; nothing
+  /// auto-connects and fails.
+  static bool _agentSocketUnavailable(ServerProfile profile) =>
+      profile.usesAgentSocket &&
+      !platformCapabilities.supportsAgentSocketConnections;
+
   void _connectSaved() {
     if (_started) return;
     final conn = _controller;
@@ -381,7 +399,8 @@ class _RootState extends ConsumerState<_Root> {
     final profile = conn.profile;
     if (profile == null ||
         profile.requiresPasswordReentry ||
-        profile.requiresCodexTokenReentry) {
+        profile.requiresCodexTokenReentry ||
+        _agentSocketUnavailable(profile)) {
       return;
     }
     _started = true;
@@ -451,7 +470,8 @@ class _RootState extends ConsumerState<_Root> {
       return const HomeScreen();
     }
     if (conn.profile!.requiresPasswordReentry ||
-        conn.profile!.requiresCodexTokenReentry) {
+        conn.profile!.requiresCodexTokenReentry ||
+        _agentSocketUnavailable(conn.profile!)) {
       return const ServersScreen();
     }
     _connectSaved();

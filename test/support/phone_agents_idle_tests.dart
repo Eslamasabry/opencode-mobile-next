@@ -417,6 +417,83 @@ void _phoneIdleTests() {
     },
   );
 
+  test(
+    'BA idle a streaming agent wakes the app only when its work starts or ends',
+    () async {
+      // 2026-11-01: every frame of a busy agent (each streamed word or tool
+      // line) re-ran the whole app's change handling, launcher widget and
+      // all, even with the app out of sight: 20-77% of a core.
+      final w = await _world(null, idleSupported: true);
+      final c = w.controller;
+      addTearDown(c.dispose);
+      w.state.runtimes['claude'] = _ready('claude');
+      await c.refreshAgentRows();
+      (w.host as _IdleHost).running = true;
+      w.state.gatewayFactory = (transport, directory) => PaseoGateway(
+        transport: transport,
+        directory: directory,
+        trackLocalWork: true,
+      );
+      late FakePaseoSocket observed;
+      w.state.configureSocket = (socket) {
+        observed = socket;
+        socket.handlers['fetch_agents_request'] = (_) => (
+          'fetch_agents_response',
+          {
+            'entries': [
+              {'agent': _agent('busy-claude', _project)},
+            ],
+            'pageInfo': {'hasMore': false, 'nextCursor': null},
+          },
+        );
+        socket.handlers['agent.provider_subagents.list.request'] = (request) =>
+            (
+              'agent.provider_subagents.list.response',
+              {
+                'parentAgentId': request['parentAgentId'],
+                'subagents': <Object?>[],
+                'error': null,
+              },
+            );
+      };
+      await c.rememberLastUsedProject(_project);
+      await c.refreshAgentRows();
+      await c.refreshChatFeed();
+      await pumpEventQueue();
+      expect(c.localPhoneAgentWorkBusy('local'), isFalse);
+      var seq = 0;
+      void frame(Map<String, dynamic> event) => observed.push('agent_stream', {
+        'agentId': 'busy-claude',
+        'epoch': 'one',
+        'seq': ++seq,
+        'event': event,
+      });
+      var notifications = 0;
+      c.addListener(() => notifications++);
+      frame({'type': 'turn_started', 'provider': 'claude'});
+      await pumpEventQueue();
+      expect(c.localPhoneAgentWorkBusy('local'), isTrue);
+      expect(notifications, greaterThan(0));
+      final started = notifications;
+      for (var i = 0; i < 200; i++) {
+        frame({
+          'type': 'timeline',
+          'provider': 'claude',
+          'item': {'type': 'assistant_message', 'text': 'word $i '},
+        });
+        if (i.isEven) await pumpEventQueue();
+      }
+      await pumpEventQueue();
+      // Nothing about the work changed while it streamed.
+      expect(notifications - started, lessThan(5));
+      expect(c.localPhoneAgentWorkBusy('local'), isTrue);
+      frame({'type': 'turn_completed', 'provider': 'claude'});
+      await pumpEventQueue();
+      expect(c.localPhoneAgentWorkBusy('local'), isFalse);
+      expect(notifications, greaterThan(started));
+    },
+  );
+
   for (final deletion in [false, true]) {
     test(
       'BA idle ${deletion ? 'deletion' : 'disposal'} during receipt read prevents launch',

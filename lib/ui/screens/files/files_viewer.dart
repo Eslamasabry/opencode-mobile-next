@@ -18,6 +18,7 @@ extension _FilesViewer on _FilesScreenState {
         path: _viewerPath(session),
         source: session.source,
         primary: _viewerPrimary(session),
+        secondary: _viewerShare(session),
         more: _viewerMore(session, embedded: false),
         wrap: preferences?.value.wrapCode,
         onWrapChanged: preferences == null
@@ -49,6 +50,43 @@ extension _FilesViewer on _FilesScreenState {
     icon: AppIconography.chat,
     onPressed: () => unawaited(_askAbout(session.path, session.initialLine)),
   );
+
+  /// Share on Wi-Fi: a second visible action beside Ask. Absent where the
+  /// platform cannot run the download server (a browser).
+  KitAction? _viewerShare(_ViewerSession session) {
+    final gateway = fileShareGateway ??= WifiFileShare();
+    if (!gateway.supported) return null;
+    return KitAction(
+      key: const Key('project-file-share-wifi'),
+      label: readerL10n(context).fileShareAction,
+      icon: AppIconography.network,
+      onPressed: () => unawaited(_shareOnWifi(session, gateway)),
+    );
+  }
+
+  Future<void> _shareOnWifi(
+    _ViewerSession session,
+    FileShareGateway gateway,
+  ) async {
+    try {
+      final content = session.content ?? await _fetchScoped(session.path);
+      if (content == null || !mounted) return;
+      final data = _FilesViewer._exportData(session.path, content);
+      final bytes =
+          data.bytes ?? Uint8List.fromList(utf8.encode(data.text ?? ''));
+      await showFileShareSheet(
+        context,
+        gateway: gateway,
+        source: FileShareSource.bytes(
+          data.name,
+          bytes,
+          mimeType: data.mimeType,
+        ),
+      );
+    } catch (error) {
+      if (mounted) _fail(error);
+    }
+  }
 
   Future<void> _askAbout(String path, int? line) async {
     if (widget.handoff != null) {

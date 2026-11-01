@@ -4,7 +4,9 @@ set -euo pipefail
 
 readonly EXIT_USAGE=64
 readonly RELEASE_BRANCH="master"
-readonly SHOREBIRD_FLUTTER_VERSION="3.47.1"
+# Override only to build a patch for an older release: a patch needs the exact
+# Flutter its release was built with (the 2.1.0 line is 3.47.1).
+readonly SHOREBIRD_FLUTTER_VERSION="${SHOREBIRD_FLUTTER_VERSION:-3.47.8}"
 readonly AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
 readonly APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
 readonly ANDROID_APPLICATION_ID="io.github.eslamasabry.opencode_mobile"

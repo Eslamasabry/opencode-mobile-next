@@ -175,10 +175,16 @@ class IntegrationConnectionInfo {
   final String? id;
   final String label;
 
+  /// The server's word for a problem with this connection ("needs_auth"),
+  /// null when it reports none. Only the word: the server's message text
+  /// never reaches the person.
+  final String? status;
+
   const IntegrationConnectionInfo({
     required this.type,
     this.id,
     required this.label,
+    this.status,
   });
 }
 

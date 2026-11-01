@@ -115,6 +115,21 @@ class _FakeLinux extends BuiltinLinux {
   }
 
   @override
+  Future<void> startServerForLaunch(
+    String script, {
+    int port = 4097,
+    required int expectedGeneration,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
+    // Opening the app uses the same intent/generation admission as native
+    // recovery, including when it replaces a tracked stale process.
+    if (!wanted || expectedGeneration != generation) {
+      throw const BuiltinLinuxException('The phone server could not start.');
+    }
+    await startServer(script, port: port, restoreRecipe: restoreRecipe);
+  }
+
+  @override
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),

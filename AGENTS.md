@@ -6,10 +6,17 @@ Working notes for coding agents in this repo. The human-facing equivalents are
 
 ## Toolchain — pinned, not advisory
 
-- Flutter **3.47.1** from Shorebird's cache:
-  `~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
+- Flutter **3.47.8** from Shorebird's cache:
+  `~/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/flutter`.
   A different local Flutter may fail to resolve packages or produce different
-  analyzer results.
+  analyzer results. (Dart 3.13.7; Shorebird CLI 1.6.134 ships this Flutter.)
+- **2.1.0 patch line:** a patch needs the release's exact Flutter, so patches for
+  the 2.1.0 release use 3.47.1
+  (`.../flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin`). Put that `bin`
+  first on PATH and run `SHOREBIRD_FLUTTER_VERSION=3.47.1 scripts/release.sh patch`;
+  `FLUTTER=` / `PINNED_DART=` override the tool/qa scripts the same way. Keep
+  that cache folder: `shorebird upgrade` deletes it, re-clone
+  `github.com/shorebirdtech/flutter` at that revision if it is gone.
 - JDK 17 (temurin), Android SDK API 37, Shorebird CLI 1.6.x (release/patch only).
 
 ## Commands and order
@@ -141,7 +148,8 @@ flutter test --concurrency=1    # serial in the phone-hosted container; a workst
   the maintainer's phone, or Android refuses the update and only an uninstall
   (which loses local data) gets past it. Ask for the installed certificate's
   SHA-256 and compare it with `apksigner verify --print-certs` before delivery.
-  Known signers: stable CI `2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC`,
+  Known signers: public CI sideload releases `842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C`
+  (2.0.0+56, 2.1.0+57), older stable CI `2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC`,
   local release key `1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C`.
   Never substitute or rotate a signer.
 - `master` is fast-forwarded only at approved milestones — see

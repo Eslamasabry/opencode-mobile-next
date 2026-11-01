@@ -13,6 +13,7 @@ import 'presentation.dart';
 const voiceNoticeAssets = <String>[
   'THIRD_PARTY_NOTICES.md',
   'LICENSES/Apache-2.0.txt',
+  'LICENSES/Apache-2.0-Kokoro.txt',
   'LICENSES/BSD-3-Clause-record.txt',
   'LICENSES/MIT-ONNX-Runtime.txt',
   'LICENSES/MIT-OpenAI-Whisper.txt',
@@ -69,6 +70,14 @@ const voiceNoticeComponents = <VoiceNoticeComponent>[
     license: 'MIT License',
     licenseAsset: 'LICENSES/MIT-OpenAI-Whisper.txt',
     website: 'https://github.com/openai/whisper',
+  ),
+  VoiceNoticeComponent(
+    id: 'kokoro',
+    name: 'Kokoro',
+    maker: 'hexgrad',
+    license: 'Apache License 2.0',
+    licenseAsset: 'LICENSES/Apache-2.0-Kokoro.txt',
+    website: 'https://huggingface.co/hexgrad/Kokoro-82M',
   ),
   VoiceNoticeComponent(
     id: 'sherpa-onnx',

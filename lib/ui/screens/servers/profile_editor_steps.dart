@@ -1,6 +1,27 @@
 part of '../servers_screen.dart';
 
 extension _EditorSteps on _ProfileEditorScreenState {
+  /// What the form says before a password is typed when the browser will not
+  /// keep it: a plain-`http` network origin has no WebCrypto, so the store
+  /// cannot encrypt. Null everywhere else (the keyring probe speaks for
+  /// itself) and for the agent-socket kinds, whose token is not stored by
+  /// the same path in a browser.
+  String? _secureStorageNoticeText(AppLocalizations copy) {
+    if (_secureStorageNotice case final notice?) return notice;
+    if (_isCodex || platformCapabilities.supportsSecureCredentialStorage) {
+      return null;
+    }
+    return copy.browserEditorInsecureOrigin;
+  }
+
+  /// Set where a "Paste" button cannot read the clipboard, a browser on a
+  /// plain-http network origin: the sentence that replaces the button and
+  /// points at the keyboard paste the address field already understands.
+  String? _pasteUnavailableHint(AppLocalizations copy) =>
+      platformCapabilities.supportsClipboardRead
+      ? null
+      : copy.browserPairingPasteHint;
+
   /// Closes the editor (nothing is saved yet), then takes the other way.
   VoidCallback? _leaveFor(VoidCallback? way) {
     if (way == null) return null;
@@ -187,6 +208,7 @@ extension _EditorSteps on _ProfileEditorScreenState {
                 onPaste: _pairing || _submitting
                     ? null
                     : () => unawaited(_pastePairing()),
+                pasteUnavailableHint: _pasteUnavailableHint(copy),
                 // Rendered only where a camera path exists.
                 // Desktop gets no affordance at all rather
                 // than one that opens and fails.
@@ -196,7 +218,7 @@ extension _EditorSteps on _ProfileEditorScreenState {
               ),
       ),
     ],
-    if (_secureStorageNotice case final notice?)
+    if (_secureStorageNoticeText(copy) case final notice?)
       _Rails(
         child: KitNotice(
           key: const ValueKey('server-secure-storage-notice'),
@@ -255,6 +277,7 @@ extension _EditorSteps on _ProfileEditorScreenState {
             onPaste: _pairing || _submitting
                 ? null
                 : () => unawaited(_pastePairing()),
+            pasteUnavailableHint: _pasteUnavailableHint(copy),
             onScan: platformCapabilities.supportsQrPairing
                 ? () => unawaited(_scanPairing())
                 : null,
@@ -283,6 +306,7 @@ class _BackendChoice extends StatelessWidget {
   Widget build(BuildContext context) {
     final copy = lookupAppLocalizations(Localizations.localeOf(context));
     final tokens = KitTokens.of(context);
+    final agentSockets = platformCapabilities.supportsAgentSocketConnections;
     return Padding(
       key: const ValueKey('server-backend-selector'),
       padding: EdgeInsetsDirectional.only(
@@ -305,12 +329,18 @@ class _BackendChoice extends StatelessWidget {
                 title: copy.addServerTypeOpenCode,
                 supporting: copy.addServerTypeOpenCodeDetail,
               ),
+              // Disabled, not hidden, in a browser: the choice exists in
+              // the product and the row says why it is not one here.
               KitChoice(
                 key: const ValueKey('server-backend-codex'),
                 value: ServerBackend.codex,
                 leading: KitRow.icon(context, AppIconography.code),
                 title: copy.addServerTypeCodex,
                 supporting: copy.addServerTypeCodexDetail,
+                enabled: agentSockets,
+                disabledReason: agentSockets
+                    ? null
+                    : copy.browserAgentSocketUnavailable,
               ),
               KitChoice(
                 key: const ValueKey('server-backend-paseo'),
@@ -318,6 +348,10 @@ class _BackendChoice extends StatelessWidget {
                 leading: KitRow.icon(context, AppIconography.agent),
                 title: copy.addServerTypePaseo,
                 supporting: copy.addServerTypePaseoDetail,
+                enabled: agentSockets,
+                disabledReason: agentSockets
+                    ? null
+                    : copy.browserAgentSocketUnavailable,
               ),
             ],
           ),

@@ -74,6 +74,10 @@ class ReportProblemStartup {
     int maxEntries,
     int maxBytes,
   ) async {
+    // A browser has no app-private disk to keep the report on; the in-memory
+    // diagnostics still back the Report a problem page, and saying "the saved
+    // report is unavailable" on every page load would be noise, not news.
+    if (kIsWeb && directory == null) return null;
     try {
       final report = await ReportProblem.open(
         directory: directory,

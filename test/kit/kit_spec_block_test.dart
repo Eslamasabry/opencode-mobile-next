@@ -5,6 +5,8 @@ import 'kit_motion_still.dart';
 import 'team_kit_test_support.dart';
 
 void main() {
+  final stillDraft = TextEditingController();
+  tearDownAll(stillDraft.dispose);
   kitMotionStillTests(
     'KitSpecBlock',
     builds: {
@@ -16,6 +18,26 @@ void main() {
         label: 'Goal',
         controller: TextEditingController(text: 'Keep drafts'),
         readOnly: true,
+      ),
+    },
+    changes: {
+      'draft restoration is immediate': KitMotionChange(
+        build: () =>
+            KitSpecBlock(label: 'Goal', controller: stillDraft..text = ''),
+        act: (tester, stage) async {
+          stillDraft.text = 'Restored goal';
+        },
+        shows: 'Restored goal',
+      ),
+      'approval preserves the draft': KitMotionChange(
+        build: () => KitSpecBlock(
+          label: 'Goal',
+          controller: stillDraft..text = 'Approved goal',
+        ),
+        act: (tester, stage) => stage.rebuild(
+          KitSpecBlock(label: 'Goal', controller: stillDraft, readOnly: true),
+        ),
+        shows: 'Approved goal',
       ),
     },
   );

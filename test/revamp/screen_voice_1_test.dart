@@ -192,16 +192,22 @@ void main() {
       expect(models.acts, ['cancel']);
     });
 
-    testWidgets('language is one tap and is saved on the manager', (
+    testWidgets('language opens a list, a pick is saved on the manager', (
       tester,
     ) async {
       final models = await ScriptedVoiceModels.create(installed: {'base'});
       addTearDown(models.dispose);
       await openSetup(tester, models);
 
-      await tester.ensureVisible(find.text('English', skipOffstage: false));
+      final row = find.byKey(const Key('voice-model-language'));
+      await tester.ensureVisible(row);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('English'));
+      await tester.tap(row);
+      await tester.pumpAndSettle();
+      final english = find.byKey(const Key('voice-language-english'));
+      await tester.ensureVisible(english);
+      await tester.pumpAndSettle();
+      await tester.tap(english);
       await tester.pumpAndSettle();
       expect(models.language, VoiceLanguage.english);
     });

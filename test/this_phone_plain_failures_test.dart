@@ -39,7 +39,7 @@ final _termuxProfile = ServerProfile(
   name: 'This phone',
   baseUrl: TermuxBridge.managedServerUrl,
   password: 'synthetic-test-secret',
-  serverVersion: '2.1.1',
+  serverVersion: '2.2.5',
 );
 
 Future<void> _settle(WidgetTester tester, {int frames = 10}) async {
@@ -73,7 +73,7 @@ void main() {
   Future<TermuxChannelFixture> termux(
     WidgetTester tester, {
     required String status,
-    String version = '2.1.1',
+    String version = '2.2.5',
   }) async {
     final channel = TermuxChannelFixture()
       ..inventoryOutput =
@@ -182,7 +182,7 @@ void main() {
       status: termuxSnapshot(
         phase: 'failed',
         message: 'OpenCode server exited (code 137)',
-        version: '2.1.1',
+        version: '2.2.5',
         extra: 'failure_kind=crash\n',
       ),
     );
@@ -217,7 +217,7 @@ void main() {
       status: termuxSnapshot(
         phase: 'failed',
         message: 'Could not install the Termux dependencies',
-        version: '2.1.1',
+        version: '2.2.5',
       ),
     );
     expect(

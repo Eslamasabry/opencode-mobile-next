@@ -16,6 +16,7 @@ import 'kit_menu.dart';
 import 'kit_motion.dart';
 import 'kit_optical.dart';
 import 'kit_reach.dart';
+import 'kit_row_value.dart' show KitRowValue;
 import 'kit_row_parts.dart' show KitExpandRow, KitRowMenu, KitSwitchRow;
 import 'kit_section_label.dart';
 import 'kit_surface.dart' show kitSurfaceMaterial;
@@ -471,7 +472,7 @@ class KitRow extends StatelessWidget {
     // From 1.3× text the enable action moves under the reason, so the
     // reason keeps the row's width instead of sharing it (A11Y-8).
     final enableBelow = enableButton != null && textScale >= 1.3;
-    final Widget? trailing = enableButton != null
+    Widget? trailing = enableButton != null
         ? (enableBelow ? null : enableButton)
         : this.trailing;
 
@@ -481,6 +482,32 @@ class KitRow extends StatelessWidget {
         data: IconThemeData(color: roles.text3),
         child: leading,
       );
+    }
+
+    // A title never breaks inside a word to make room for a trailing text
+    // value: where the title's longest word and the value do not share the
+    // row's width, the value goes under the title (the whole width, wrapping)
+    // instead of squeezing it. Otherwise the value ellipsizes first.
+    Widget? stackedValue;
+    if (trailing is KitRowValue &&
+        trailing.count == null &&
+        trailing.value.isNotEmpty &&
+        !wholeFileName) {
+      final value = trailing;
+      final word = _longestWordWidth(context, title, tokens.rowTitle);
+      final inner =
+          MediaQuery.sizeOf(context).width -
+          (leading != null ? tokens.iconTileSize + tokens.space3 : 0) -
+          tokens.space4 -
+          tokens.space1 -
+          tokens.space2;
+      if (word + value.naturalWidth(context) > inner) {
+        stackedValue = value.stacked(
+          context,
+          rail: padding == null ? tokens.space4 - tokens.space1 : null,
+        );
+        trailing = null;
+      }
     }
 
     // The words and the leading mark keep space2 above and below; a
@@ -510,7 +537,9 @@ class KitRow extends StatelessWidget {
             padding ??
             EdgeInsetsDirectional.only(
               start: tokens.space4,
-              end: trailing == null ? tokens.space4 : tokens.space1,
+              end: trailing == null && stackedValue == null
+                  ? tokens.space4
+                  : tokens.space1,
             ),
         child: Row(
           crossAxisAlignment: leadingAtTop
@@ -593,6 +622,7 @@ class KitRow extends StatelessWidget {
                         overflow: wholeFileName ? null : TextOverflow.ellipsis,
                         style: tokens.rowTitle.copyWith(color: titleColor),
                       ),
+                    ?stackedValue,
                     if (line != null) ...[
                       const SizedBox(height: KitTokens.rowLineGap),
                       Text.rich(
@@ -816,27 +846,45 @@ class _KitRowChipSlot extends StatelessWidget {
     // A Row at its minimum size still honours the column's minimum width,
     // with the chip at its end, so it ends on the same edge as the chevron
     // or value of the rows above and below it.
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Flexible(
-          child: Semantics(
-            container: true,
-            button: true,
-            label: chip.semanticsLabel,
-            onTap: chip.onPressed,
-            excludeSemantics: true,
-            child: KitChip.action(
-              key: chip.key,
-              label: chip.label,
-              onPressed: chip.onPressed,
+    //
+    // The row pads its end by space1 for a 48 dp target, but the chip's ink
+    // is the target, so without more it ended 4 dp from the screen edge,
+    // past the rail the chevron and the words end on (Linux services,
+    // 2026-10-31). The column keeps its width: the rail comes out of it.
+    child: _railed(
+      context,
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Flexible(
+            child: Semantics(
+              container: true,
+              button: true,
+              label: chip.semanticsLabel,
+              onTap: chip.onPressed,
+              excludeSemantics: true,
+              child: KitChip.action(
+                key: chip.key,
+                label: chip.label,
+                onPressed: chip.onPressed,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
+
+  static Widget _railed(BuildContext context, Widget row) {
+    final rail = KitRow.trailingRailOf(context);
+    return rail == null
+        ? row
+        : Padding(
+            padding: EdgeInsetsDirectional.only(end: rail),
+            child: row,
+          );
+  }
 }
 
 /// Tells [KitRow.icon] tiles inside a disabled or unavailable row to paint
@@ -1421,4 +1469,22 @@ String kitBreakableFileName(String name) {
     if ((char == '_' || char == '-') && i < name.length - 1) out.write(zwsp);
   }
   return out.toString();
+}
+
+/// The widest single word of [text] on one line in [style], at the person's
+/// text scale: what a title must keep whole.
+double _longestWordWidth(BuildContext context, String text, TextStyle style) {
+  var widest = 0.0;
+  for (final word in text.split(RegExp(r'\s+'))) {
+    if (word.isEmpty) continue;
+    final painter = TextPainter(
+      text: TextSpan(text: word, style: style),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    widest = math.max(widest, painter.width);
+    painter.dispose();
+  }
+  return widest.ceilToDouble();
 }

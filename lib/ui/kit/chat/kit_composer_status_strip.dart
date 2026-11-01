@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../app_iconography.dart';
+import '../kit_chrome.dart';
 import '../kit_chip.dart';
 import '../kit_frost.dart';
 import '../kit_max_width.dart';
@@ -90,8 +91,10 @@ class KitComposerStatusStrip extends StatelessWidget {
   final Key? stripKey;
 
   @override
-  Widget build(BuildContext context) =>
-      KitMaxWidth.conversation(child: _buildContent(context));
+  Widget build(BuildContext context) => KitChrome.builder(
+    builder: (context) =>
+        KitMaxWidth.conversation(child: _buildContent(context)),
+  );
 
   Widget _buildContent(BuildContext context) {
     final stop = this.stop;

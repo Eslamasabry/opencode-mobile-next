@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert' show utf8;
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
+import '../../domain/file_share_gateway.dart';
 import '../../domain/models.dart';
 import '../../domain/product_repository.dart';
 import '../../domain/delimited_text.dart';
@@ -12,6 +14,7 @@ import '../../domain/static_svg.dart';
 import '../../feedback/bug_report.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/local_pdf.dart';
+import '../../platform/wifi_file_share.dart';
 import '../../state/connection.dart';
 import '../../state/review_handoff.dart';
 import '../../state/shared_storage_gate.dart';
@@ -37,6 +40,7 @@ import '../kit/kit_undo.dart';
 import '../kit/kit_viewer.dart';
 import '../kit/motion/kit_refresh.dart';
 import '../widgets/file_preview.dart' show FilePreviewData;
+import '../widgets/file_share_sheet.dart';
 import '../widgets/product_states.dart' show productErrorText;
 import '../widgets/reader_preferences.dart';
 import 'chats/new_chat_screen.dart' show showNewChat;

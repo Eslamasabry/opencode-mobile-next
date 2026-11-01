@@ -6,4 +6,11 @@
     <string name="native_schedule_skipped">A scheduled prompt was skipped. Tap to review its history.</string>
     <string name="native_schedule_digest_title">Morning digest</string>
     <string name="native_schedule_digest_body">%1$d started · %2$d failed · %3$d skipped</string>
+    <string name="native_schedule_finished">Finished. Tap to open the conversation.</string>
+    <string name="native_schedule_open">Open</string>
+    <string name="native_schedule_why_needs_you">Stopped: it needs your answer.</string>
+    <string name="native_schedule_why_sign_in">Stopped: sign in again to continue.</string>
+    <string name="native_schedule_why_agent">The agent ran into a problem.</string>
+    <string name="native_schedule_why_timeout">It did not finish in time.</string>
+    <string name="native_schedule_why_unavailable">The server could not be reached.</string>
 </resources>

@@ -9,7 +9,9 @@
 # there too: they compare exactly, except the few images listed in
 # test/goldens/tolerances.json. Tests run in UTC, like CI, so clock times in
 # goldens do not follow the server's timezone or summer time. Needs key-only SSH to OC_VPS_HOST, whose
-# ~/.profile puts the pinned Flutter on PATH.
+# ~/.profile puts a Flutter on PATH; the script puts the Shorebird cache
+# revision OC_VPS_FLUTTER_REV (default: the current pin) in front of it. Use
+# 91f8bd75076e9c740aa13cf67eb9ec1a093f68f5 for the 3.47.1 (2.1.0 patch) line.
 set -euo pipefail
 # The worktree is the one you run it from, so any checkout can use one copy.
 root="$(git rev-parse --show-toplevel)"
@@ -49,6 +51,6 @@ quoted=$(printf '%q ' "${files[@]}" ${extra[@]+"${extra[@]}"})
 exec 3< <(exec sleep 2147483647)
 keep=$!
 trap 'kill "$keep" 2>/dev/null' EXIT
-inner="cd ~/wt/$name && flutter pub get >/dev/null 2>&1 && (cd widgetbook 2>/dev/null && flutter pub get >/dev/null 2>&1 || true) && TZ=UTC exec flutter test -j $jobs $quoted"
+inner="export PATH=\$HOME/.shorebird/bin/cache/flutter/${OC_VPS_FLUTTER_REV:-6e5e949520159b5ceb029598be37520cd433b046}/bin:\$PATH; cd ~/wt/$name && flutter pub get >/dev/null 2>&1 && (cd widgetbook 2>/dev/null && flutter pub get >/dev/null 2>&1 || true) && TZ=UTC exec flutter test -j $jobs $quoted"
 remote="exec 9<&0; setsid bash -c $(printf '%q' "$inner") <&- 9<&- & run=\$!; { cat <&9 >/dev/null; kill -TERM -\$run 2>/dev/null; } & watch=\$!; wait \$run; rc=\$?; kill \$watch 2>/dev/null; exit \$rc"
 ssh -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=4 "$host" "bash -lc $(printf '%q' "$remote")" <&3

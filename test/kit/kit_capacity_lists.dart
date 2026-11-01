@@ -192,4 +192,23 @@ final kitListStress = <KitListStress>[
       ],
     ),
   ),
+  KitListStress(
+    'KitVitalsStrip.vitals',
+    item: '_Cell',
+    count: 4,
+    build: (_, c, n) => KitVitalsStrip(
+      vitals: [
+        for (var i = 1; i <= n; i++)
+          KitVital(
+            value: '$i%',
+            word: c.t('Reading $i', 'قراءة $i'),
+            semanticsLabel: 'Reading $i',
+          ),
+      ],
+      summary: c.t(
+        'One sentence under the readings.',
+        'جملة واحدة تحت القراءات.',
+      ),
+    ),
+  ),
 ];

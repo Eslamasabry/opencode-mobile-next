@@ -51,6 +51,9 @@ internal class TermuxActivityPermissions(
             access.success(
                 when {
                     granted -> "granted"
+                    // Android may cancel a request with empty arrays; that is
+                    // not a permanent permission refusal.
+                    grantResults.isEmpty() -> "denied"
                     !activity.shouldShowRequestPermissionRationale(TermuxActivityEnvironment.PERMISSION) ->
                         "permanentlyDenied"
                     else -> "denied"

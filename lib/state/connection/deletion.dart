@@ -82,6 +82,10 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
       profileId,
     );
     final handoffDrain = AgentHandoffLinks.closeProfile(store.prefs, profileId);
+    final migrationOfferDrain = TermuxMigrationOfferStore.closeProfile(
+      store.prefs,
+      profileId,
+    );
     _profileDeletionRevisions[profileId] =
         (_profileDeletionRevisions[profileId] ?? 0) + 1;
     _monitorAttentionReader.forget(profileId);
@@ -112,6 +116,7 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
             policy.pauseForDeletion(),
             sessionLinkDrain,
             handoffDrain,
+            migrationOfferDrain,
             consentDrain,
             genUiDrain,
           ]);
@@ -152,6 +157,10 @@ extension _ConnectionControllerDeletionImpl on ConnectionController {
             ConsentOwners.cancelDeletion(store.prefs, profileId);
             await SessionLinkBindings.cancelDeletion(store.prefs, profileId);
             await AgentHandoffLinks.cancelDeletion(store.prefs, profileId);
+            await TermuxMigrationOfferStore.cancelDeletion(
+              store.prefs,
+              profileId,
+            );
             BuiltinServerOwner.forPreferences(
               store.prefs,
             ).cancelDeletion(profileId);

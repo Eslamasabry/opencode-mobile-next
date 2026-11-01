@@ -431,7 +431,7 @@ void main() {
       await tester.ensureVisible(tile);
       await tester.tap(tile);
       await tester.pump();
-      expect(copied, 'npm install -g @opencode/cli@2.1.1');
+      expect(copied, 'npm install -g @opencode/cli@2.2.5');
       expect(find.byType(SnackBar), findsNothing);
       await tester.pumpAndSettle();
       expect(

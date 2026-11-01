@@ -262,7 +262,12 @@ class _AutoApprovalIndicator extends StatelessWidget {
     required this.starting,
     required this.approved,
     required this.onOpen,
+    this.iconOnly = false,
   });
+
+  /// The glyph alone: a phone at large text with Stop on the row has no room
+  /// for the words (never a word cut in half). The label stays the spoken name.
+  final bool iconOnly;
 
   final EffectiveAutoApproval effective;
   final bool connected;
@@ -322,6 +327,8 @@ class _AutoApprovalIndicator extends StatelessWidget {
           icon: paused ? AppIconography.pause : AppIconography.shield,
           selected: automatic && !paused ? true : null,
           label: text,
+          iconOnly: iconOnly,
+          spoken: iconOnly ? label : null,
         ),
       ),
     );

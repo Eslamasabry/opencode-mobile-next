@@ -5,7 +5,11 @@ import 'package:flutter/services.dart';
 
 import 'audio.dart';
 import 'model_manager.dart';
+import 'model_manifest.dart';
 import 'recognizer.dart';
+import 'silence.dart';
+
+export 'silence.dart' show mayAutoSend, voiceAutoSendCountdown;
 import '../platform/platform_capabilities.dart';
 
 enum VoiceComposerState {
@@ -77,6 +81,21 @@ class VoiceComposerController extends ChangeNotifier {
   bool _disposed = false;
   bool _starting = false;
 
+  /// The app's language code (`en`, `ar`): what "Auto" listens for. The host
+  /// sets it from the app's locale before listening starts.
+  String? appLanguageCode;
+
+  /// The language the next recognition is told ([resolveVoiceLanguage]).
+  VoiceLanguage get effectiveLanguage =>
+      resolveVoiceLanguage(models.language, appLanguageCode);
+
+  SilenceDetector? _silence;
+  bool _stoppedOnSilence = false;
+
+  /// The last recording ended because the person stopped talking, not
+  /// because they pressed something.
+  bool get stoppedOnSilence => _stoppedOnSilence;
+
   static Future<VoiceComposerController> create() async {
     if (!platformCapabilities.supportsVoice) {
       throw StateError('Local voice input is unavailable on this platform.');
@@ -124,6 +143,11 @@ class VoiceComposerController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set before [startListening]: the recording ends by itself once the
+  /// person has spoken and then been quiet for [voiceSilenceToStop]. Read
+  /// when the recording starts; a new recording starts from what is set.
+  bool stopOnSilence = false;
+
   Future<void> startListening() async {
     if (!platformCapabilities.supportsVoice) {
       if (!_disposed) {
@@ -160,6 +184,8 @@ class VoiceComposerController extends ChangeNotifier {
     final generation = ++_generation;
     final audio = Pcm16Accumulator();
     _audio = audio;
+    _silence = stopOnSilence ? SilenceDetector() : null;
+    _stoppedOnSilence = false;
     _chunks.clear();
     _pendingChunks = 0;
     _chunkFailure = null;
@@ -196,6 +222,19 @@ class VoiceComposerController extends ChangeNotifier {
           }
           elapsed = _recordedBefore + audio.duration;
           level = audio.level;
+          final silence = _silence;
+          if (silence != null &&
+              silence.add(
+                level,
+                Duration(
+                  microseconds: bytes.length ~/ 2 * 1000000 ~/ voiceSampleRate,
+                ),
+              )) {
+            // Said once: the detector is dropped before the stop begins.
+            _silence = null;
+            _stoppedOnSilence = true;
+            unawaited(stopListening());
+          }
           notifyListeners();
         },
         onError: (Object exception, StackTrace stackTrace) {
@@ -264,7 +303,7 @@ class VoiceComposerController extends ChangeNotifier {
           pack.decoder,
         ),
         tokensPath: models.downloader.filePath(models.root, pack, pack.tokens),
-        language: models.language,
+        language: effectiveLanguage,
         samples: samples,
         numThreads: conservativeVoiceThreadCount(),
       );
@@ -387,6 +426,8 @@ class VoiceComposerController extends ChangeNotifier {
     final generation = _generation;
     _clock?.cancel();
     _clock = null;
+    _silence = null;
+    _stoppedOnSilence = false;
     _chunks.clear();
     _pendingChunks = 0;
     _chunkFailure = null;

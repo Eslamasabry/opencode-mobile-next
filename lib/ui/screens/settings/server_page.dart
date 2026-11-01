@@ -15,7 +15,7 @@ part of '../settings_screen.dart';
 /// offered only while the app is connected to that server; otherwise the page
 /// says so and offers to connect.
 /// The pinned official upgrade, run on the server's computer.
-const _serverUpdateCommands = 'npm install -g @opencode/cli@2.1.1';
+const _serverUpdateCommands = 'npm install -g @opencode/cli@2.2.5';
 
 /// Last good health per profile id, kept for the process: Settings and its
 /// server page paint it at once and refresh behind it.
@@ -606,6 +606,20 @@ class _ServerPageScreenState extends State<ServerPageScreen> {
           trailing: const KitChevron(),
           onTap: _edit,
         ),
+        if (!profile.usesAgentSocket)
+          KitRow(
+            key: const ValueKey('server-row-check-connection'),
+            title: copy.connCheckTitle,
+            supporting: TextSpan(text: copy.connCheckRowDetail),
+            supportingMaxLines: 2,
+            trailing: const KitChevron(),
+            onTap: () => _push(
+              ConnectionCheckScreen(
+                controller: controller,
+                profileId: profile.id,
+              ),
+            ),
+          ),
         if (live)
           KitRow(
             key: const ValueKey('server-row-supports'),

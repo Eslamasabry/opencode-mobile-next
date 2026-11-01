@@ -1,15 +1,20 @@
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 import '../domain/models.dart';
+import 'draft_attachment_storage.dart';
+import 'draft_attachment_storage_io.dart'
+    if (dart.library.js_interop) 'draft_attachment_storage_web.dart'
+    as platform;
 
-/// Small persisted metadata. Data-URL payloads live in app-private files.
+export 'draft_attachment_storage.dart';
+
+/// Small persisted metadata. Data-URL payloads live in the platform's
+/// app-private payload store (files on native builds, IndexedDB in a
+/// browser), never in preferences.
 class DraftAttachmentRef {
   const DraftAttachmentRef({
     required this.filename,
@@ -46,21 +51,39 @@ class DraftAttachmentRecovery {
   final List<String> unavailable;
 }
 
-/// Called under the controller's draft transaction queue. Files are committed
-/// before metadata; unreferenced files can be collected after metadata succeeds.
+/// Called under the controller's draft transaction queue. Payloads are
+/// committed before metadata; unreferenced payloads can be collected after
+/// metadata succeeds.
+///
+/// The vault decides identity (content hash), bounds, owner isolation and
+/// ordering; where the bytes live is a [DraftAttachmentStorage] chosen per
+/// platform — app-private files on native builds, the origin's IndexedDB in
+/// a browser. Metadata ([DraftAttachmentRef]) is identical on both, so a
+/// draft index written by one build reads on the other.
 class DraftAttachmentVault {
-  DraftAttachmentVault({Future<Directory> Function()? directory})
-    : _directory =
-          directory ??
-          (() async => Directory(
-            p.join(
-              (await getApplicationSupportDirectory()).path,
-              'draft-attachments-v1',
-            ),
-          ));
+  /// [directory] pins a native vault to a directory (tests); [storage]
+  /// supplies a store outright; otherwise [root] names this vault's
+  /// app-private root — a directory under app support on native, an
+  /// IndexedDB database in a browser — resolved on first use.
+  DraftAttachmentVault({
+    Future<platform.VaultDirectory> Function()? directory,
+    DraftAttachmentStorage? storage,
+    String root = defaultRoot,
+  }) : _storage = storage ?? _platformStorage(directory, root);
+
+  static DraftAttachmentStorage _platformStorage(
+    Future<platform.VaultDirectory> Function()? directory,
+    String root,
+  ) => directory == null
+      ? platform.defaultDraftAttachmentStorage(root)
+      : platform.directoryDraftAttachmentStorage(directory);
+
+  /// The ordinary composer drafts' root; stash and photo recovery use
+  /// their own so one collector never sees another's payloads.
+  static const defaultRoot = 'draft-attachments-v1';
   static const maxDiskBytes = 256 * 1024 * 1024;
   static const maxDraftBytes = 32 * 1024 * 1024;
-  final Future<Directory> Function() _directory;
+  final DraftAttachmentStorage _storage;
   final _cache = Expando<DraftAttachmentRef>();
   static final _hash = RegExp(r'^[0-9a-f]{64}$');
   static String ownerKey(String owner) =>
@@ -68,49 +91,13 @@ class DraftAttachmentVault {
   static String _id(String value) =>
       sha256.convert(utf8.encode(value)).toString();
 
-  // A length check followed by readAsBytes/readAsString is not a bound: the
-  // file can grow between the two. Enforce the expected size while streaming.
-  Future<Uint8List> _readBounded(File file, int expectedBytes) async {
-    final bytes = BytesBuilder(copy: false);
-    await for (final chunk in file.openRead()) {
-      if (chunk.length > expectedBytes - bytes.length) {
-        throw const FormatException('Attachment size changed');
-      }
-      bytes.add(chunk);
-    }
-    if (bytes.length != expectedBytes) {
-      throw const FormatException('Attachment size changed');
-    }
-    return bytes.takeBytes();
-  }
-
-  Future<File> _file(String owner, String id) async {
+  /// Validates the identity before any store sees it: a ref from a corrupt
+  /// index must never become a key or a path.
+  static String _checked(String id) {
     if (!_hash.hasMatch(id)) {
       throw const FormatException('Invalid attachment identity');
     }
-    return File(p.join((await _directory()).path, ownerKey(owner), '$id.blob'));
-  }
-
-  Future<List<File>> _files({String? owner}) async {
-    final root = await _directory();
-    if (!await root.exists()) return [];
-    final files = <File>[];
-    await for (final dir in root.list(followLinks: false)) {
-      if (dir is! Directory ||
-          !_hash.hasMatch(p.basename(dir.path)) ||
-          (owner != null && p.basename(dir.path) != ownerKey(owner))) {
-        continue;
-      }
-      await for (final file in dir.list(followLinks: false)) {
-        if (file is File &&
-            RegExp(
-              r'^[0-9a-f]{64}\.(blob|tmp)$',
-            ).hasMatch(p.basename(file.path))) {
-          files.add(file);
-        }
-      }
-    }
-    return files;
+    return id;
   }
 
   Future<List<DraftAttachmentRef>> store(
@@ -122,6 +109,7 @@ class DraftAttachmentVault {
       throw const FormatException('Too many draft attachments');
     }
     final refs = <DraftAttachmentRef>[];
+    final ownerId = ownerKey(owner);
     var draftBytes = 0;
     int? diskBytes;
     for (final attachment in attachments) {
@@ -152,37 +140,45 @@ class DraftAttachmentVault {
       }
       draftBytes += ref.bytes;
       if (draftBytes > maxDraftBytes) {
-        throw const FileSystemException(
-          'Draft attachment storage limit reached',
+        throw const DraftAttachmentStorageException(
+          DraftAttachmentStorageFailure.limit,
+          DraftAttachmentStorageException.draftLimitMessage,
         );
       }
-      final file = await _file(owner, ref.blob!);
+      final id = _checked(ref.blob!);
       var intact = false;
-      if (await file.exists() && await file.length() == ref.bytes) {
-        intact =
-            sha256.convert(await _readBounded(file, ref.bytes)).toString() ==
-            ref.blob;
+      final existing = await _storage.length(ownerId, id);
+      if (existing == ref.bytes) {
+        try {
+          intact =
+              sha256
+                  .convert(await _storage.read(ownerId, id, ref.bytes))
+                  .toString() ==
+              ref.blob;
+        } on FormatException {
+          intact = false;
+        }
       }
       if (!intact) {
-        if (await file.exists()) await file.delete();
+        if (existing != null) await _storage.delete(ownerId, id);
         if (diskBytes == null) {
           var total = 0;
-          for (final existing in await _files()) {
-            total += await existing.length();
+          for (final entry in await _storage.list()) {
+            total += entry.bytes;
           }
           diskBytes = total;
         }
         if (diskBytes + ref.bytes > maxDiskBytes) {
-          throw const FileSystemException('Draft attachment storage is full');
+          throw const DraftAttachmentStorageException(
+            DraftAttachmentStorageFailure.limit,
+            DraftAttachmentStorageException.rootLimitMessage,
+          );
         }
-        await file.parent.create(recursive: true);
-        final temporary = File(p.setExtension(file.path, '.tmp'));
-        await temporary.writeAsString(
-          attachment.url,
-          encoding: utf8,
-          flush: true,
+        await _storage.write(
+          ownerId,
+          id,
+          Uint8List.fromList(utf8.encode(attachment.url)),
         );
-        await temporary.rename(file.path);
         diskBytes = diskBytes + ref.bytes;
       }
       refs.add(ref);
@@ -197,6 +193,7 @@ class DraftAttachmentVault {
   }) async {
     final attachments = <PromptAttachment>[];
     final missing = <String>[];
+    final ownerId = ownerKey(owner);
     var restoredBytes = 0;
     for (final ref in refs) {
       try {
@@ -210,11 +207,11 @@ class DraftAttachmentVault {
           }
           // A malformed negative length must not buy more recovery capacity.
           restoredBytes += ref.bytes;
-          final file = await _file(owner, ref.blob!);
-          if (await file.length() != ref.bytes) {
+          final id = _checked(ref.blob!);
+          if (await _storage.length(ownerId, id) != ref.bytes) {
             throw const FormatException('Attachment size changed');
           }
-          url = utf8.decode(await _readBounded(file, ref.bytes));
+          url = utf8.decode(await _storage.read(ownerId, id, ref.bytes));
           if (_id(url) != ref.blob || Uri.tryParse(url)?.scheme != 'data') {
             throw const FormatException('Attachment content changed');
           }
@@ -253,13 +250,17 @@ class DraftAttachmentVault {
       for (final entry in retained.entries) {
         for (final ref in entry.value) {
           if (ref.blob != null && _hash.hasMatch(ref.blob!)) {
-            keep.add('${ownerKey(entry.key)}/${ref.blob}.blob');
+            keep.add('${ownerKey(entry.key)}/${ref.blob}');
           }
         }
       }
-      for (final file in await _files(owner: owner)) {
-        final key = '${p.basename(file.parent.path)}/${p.basename(file.path)}';
-        if (!keep.contains(key)) await file.delete();
+      final entries = await _storage.list(
+        ownerKey: owner == null ? null : ownerKey(owner),
+      );
+      for (final entry in entries) {
+        if (!entry.committed || !keep.contains(entry.key)) {
+          await _storage.delete(entry.ownerKey, entry.id);
+        }
       }
       return true;
     } catch (_) {

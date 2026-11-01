@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'desktop_interaction.dart';
 import '../../domain/settings_search.dart';
 import '../../l10n/app_localizations.dart';
+import '../../platform/platform_capabilities.dart';
 import '../app_iconography.dart';
 import '../kit/kit_row.dart';
 import '../kit/kit_row_parts.dart' show KitChevron;
@@ -98,6 +99,23 @@ Map<ShortcutActivator, Intent> _accelerator(
   SingleActivator(key, meta: true): intent,
 };
 
+/// The browser stand-in for an accelerator the browser itself owns.
+///
+/// Ctrl/Cmd+N (new window) and Ctrl/Cmd+W (close tab) are reserved by every
+/// major browser and cannot be intercepted by a page: Chrome and Firefox
+/// never deliver them to the app, and Ctrl+W would close the tab with the
+/// session in it. In a browser those two step to Alt/Option, which nothing
+/// in the browser chrome claims. Every other accelerator here is one a page
+/// may handle, and Flutter's web engine calls `preventDefault` on a handled
+/// key event so Ctrl+F does not also open the browser's find bar.
+Map<ShortcutActivator, Intent> _browserAccelerator(
+  LogicalKeyboardKey key,
+  Intent intent,
+) => {SingleActivator(key, alt: true): intent};
+
+/// True where the shell must avoid the browser-reserved accelerators.
+bool get _inBrowser => platformCapabilities.isWeb;
+
 /// Every shortcut the shell owns.
 ///
 /// Deliberately no plain-letter accelerators: every binding carries a
@@ -105,18 +123,38 @@ Map<ShortcutActivator, Intent> _accelerator(
 /// never fire one. Ctrl+Enter (send) stays on the composer field where it
 /// belongs, and Escape is left to Flutter's own modal dismiss action rather
 /// than re-bound here.
+///
+/// On a native desktop the table is exactly the one that shipped. In a
+/// browser the two reserved bindings move to Alt (see [_browserAccelerator])
+/// and everything else is unchanged.
 Map<ShortcutActivator, Intent> get appShortcutBindings => {
   ..._accelerator(LogicalKeyboardKey.keyK, const OpenCommandPaletteIntent()),
-  ..._accelerator(LogicalKeyboardKey.keyN, const NewSessionIntent()),
+  if (_inBrowser)
+    ..._browserAccelerator(LogicalKeyboardKey.keyN, const NewSessionIntent())
+  else
+    ..._accelerator(LogicalKeyboardKey.keyN, const NewSessionIntent()),
   ..._accelerator(LogicalKeyboardKey.keyF, const FindInSurfaceIntent()),
   ..._accelerator(LogicalKeyboardKey.comma, const OpenSettingsIntent()),
-  ..._accelerator(LogicalKeyboardKey.keyW, const CloseRouteIntent()),
+  if (_inBrowser)
+    ..._browserAccelerator(LogicalKeyboardKey.keyW, const CloseRouteIntent())
+  else
+    ..._accelerator(LogicalKeyboardKey.keyW, const CloseRouteIntent()),
   ..._accelerator(LogicalKeyboardKey.slash, const ShowShortcutsHelpIntent()),
   ..._accelerator(LogicalKeyboardKey.backquote, const OpenTerminalIntent()),
   ..._accelerator(LogicalKeyboardKey.digit1, const SelectDestinationIntent(0)),
   ..._accelerator(LogicalKeyboardKey.digit2, const SelectDestinationIntent(1)),
   ..._accelerator(LogicalKeyboardKey.digit3, const SelectDestinationIntent(2)),
 };
+
+/// The keys that start a new session, as the help sheet and the command
+/// launcher print them: Ctrl/Cmd+N on a native desktop, Alt/Option+N in a
+/// browser (see [_browserAccelerator]).
+String get newSessionShortcutKeys =>
+    _inBrowser ? '$shortcutAltLabel + N' : '$shortcutModifierLabel + N';
+
+/// The keys that close the current screen, with the same browser step-off.
+String get closeRouteShortcutKeys =>
+    _inBrowser ? '$shortcutAltLabel + W' : '$shortcutModifierLabel + W';
 
 /// Where a shortcut works: the help groups its rows by it.
 enum ShortcutHelpGroup {
@@ -125,6 +163,9 @@ enum ShortcutHelpGroup {
 
   /// Inside a conversation (the chat screen and its composer).
   conversation,
+
+  /// Inside a review of changes (the diff page).
+  review,
 }
 
 /// One row of the shortcuts help sheet.
@@ -148,12 +189,12 @@ List<ShortcutHelpEntry> shortcutHelp(AppLocalizations l10n) {
   const conversation = ShortcutHelpGroup.conversation;
   return [
     ShortcutHelpEntry('$mod + K', l10n.e7LocaleUiCommandLauncher),
-    ShortcutHelpEntry('$mod + N', l10n.e7LocaleUiNewSession),
+    ShortcutHelpEntry(newSessionShortcutKeys, l10n.e7LocaleUiNewSession),
     ShortcutHelpEntry('$mod + F', l10n.e7LocaleUiFindSurface),
     ShortcutHelpEntry('$mod + 1 … 3', l10n.e7LocaleUiDestinations),
     ShortcutHelpEntry('$mod + ,', l10n.e7LocaleUiSettings),
     ShortcutHelpEntry('$mod + `', l10n.e7LocaleUiTerminal),
-    ShortcutHelpEntry('$mod + W', l10n.e7LocaleUiCloseScreen),
+    ShortcutHelpEntry(closeRouteShortcutKeys, l10n.e7LocaleUiCloseScreen),
     ShortcutHelpEntry('$mod + /', l10n.e7LocaleUiThisList),
     ShortcutHelpEntry('Esc', l10n.e7LocaleUiCloseOverlay),
     ShortcutHelpEntry(
@@ -167,6 +208,11 @@ List<ShortcutHelpEntry> shortcutHelp(AppLocalizations l10n) {
     ShortcutHelpEntry(
       '$mod + Enter',
       l10n.e7LocaleUiSendPrompt,
+      group: conversation,
+    ),
+    ShortcutHelpEntry(
+      l10n.shortcutsStopReplyKeys,
+      l10n.shortcutsStopReply,
       group: conversation,
     ),
     ShortcutHelpEntry(
@@ -193,6 +239,36 @@ List<ShortcutHelpEntry> shortcutHelp(AppLocalizations l10n) {
       '↑ / ↓',
       l10n.gestureEquivShortcutPromptHistory,
       group: conversation,
+    ),
+    ShortcutHelpEntry(
+      'F4 / Shift + F4',
+      l10n.shortcutsThinkingLevel,
+      group: conversation,
+    ),
+    ShortcutHelpEntry(
+      'PgUp / PgDn',
+      l10n.shortcutsTranscriptPages,
+      group: conversation,
+    ),
+    ShortcutHelpEntry(
+      'Home / End',
+      l10n.shortcutsTranscriptEnds,
+      group: conversation,
+    ),
+    ShortcutHelpEntry(
+      '] / [',
+      '${l10n.shortcutsReviewNextFile} / ${l10n.shortcutsReviewPreviousFile}',
+      group: ShortcutHelpGroup.review,
+    ),
+    ShortcutHelpEntry(
+      'N / F7',
+      l10n.shortcutsReviewNextChange,
+      group: ShortcutHelpGroup.review,
+    ),
+    ShortcutHelpEntry(
+      'P / Shift + F7',
+      l10n.shortcutsReviewPreviousChange,
+      group: ShortcutHelpGroup.review,
     ),
   ];
 }
@@ -748,6 +824,7 @@ Future<void> showShortcutsHelp(BuildContext context) {
             label: switch (group) {
               ShortcutHelpGroup.anywhere => l10n.shortcutsHelpAnywhere,
               ShortcutHelpGroup.conversation => l10n.shortcutsHelpConversation,
+              ShortcutHelpGroup.review => l10n.shortcutsHelpReview,
             },
             leadingIcons: false,
             children: [
@@ -764,6 +841,13 @@ Future<void> showShortcutsHelp(BuildContext context) {
                   ),
             ],
           ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: KitText(
+            l10n.shortcutsNotWhileTyping,
+            tone: KitTextTone.secondary,
+          ),
+        ),
       ],
     ),
   );

@@ -1,9 +1,11 @@
 import '../scheduling/platform.dart';
 import 'dart:async';
 import 'dart:math' show Random;
+import '../platform/app_visibility.dart';
 import '../background/widget_v2_contract.dart';
 import '../background/widget_action_runner.dart'
     show widgetProfileFingerprint, widgetRunMarker;
+import 'claude_agent_trial.dart';
 import '../domain/team_project_gateway.dart';
 import '../ui/theme_packs.dart' show effectiveThemePack;
 import '../builtin/agents/gen_ui_search_publish.dart';
@@ -31,6 +33,7 @@ import '../domain/settings_scope.dart';
 import 'automation_policy.dart';
 import 'builtin_server_owner.dart';
 import 'session_link_bindings.dart';
+import 'termux_migration_offer.dart';
 import 'agent_handoff_links.dart';
 import 'shared_project_roots.dart';
 import 'consent_owners.dart';
@@ -94,6 +97,8 @@ import '../domain/agent_account.dart' show AgentAccountGateway;
 import '../builtin/builtin_server.dart' show looksLikeInAppServer;
 import '../background/widget_snapshot.dart';
 import '../l10n/app_localizations.dart';
+import '../network/transport_failure.dart'
+    show browserAgentSocketUnavailableMessage;
 import '../platform/platform_capabilities.dart';
 import '../diagnostics/app_diagnostics.dart';
 import '../diagnostics/perf_trace.dart';
@@ -154,6 +159,10 @@ import '../domain/agent_auth_probe.dart';
 import '../domain/turn_stall.dart';
 import '../paseo/chat_feed_source.dart';
 import '../builtin/agents/phone_agents_host.dart' show BuiltinPhoneAgents;
+import '../builtin/agents/paseo_scripts.dart' show PaseoPhoneScripts;
+import '../builtin/setup/phone_setup.dart' show PhoneSetup;
+import '../builtin/setup/setup_contract.dart' show SetupState;
+import 'phone_agents_auto_update.dart';
 import '../builtin/agents/agent_sign_in.dart' show ChannelAgentSignInHost;
 import 'phone_agent_host_port.dart';
 import 'conversation_title_memory.dart';
@@ -204,6 +213,7 @@ part 'connection/worktrees.dart';
 part 'connection/chat_feed.dart';
 part 'connection/phone_agents.dart';
 part 'connection/phone_agents_check.dart';
+part 'connection/phone_agents_auto_update.dart';
 part 'connection/phone_agents_cache.dart';
 part 'connection/phone_agents_backend.dart';
 part 'connection/phone_agents_idle.dart';
@@ -599,6 +609,12 @@ class ConnectionController extends ChangeNotifier
   late final PendingAuthStore _pendingAuth = PendingAuthStore(store.prefs);
 
   late final _sessionPins = SessionPinStore(store.prefs);
+
+  /// OpenCode's own Claude Agent on this phone's server, as a trial beside
+  /// Claude Code through Paseo (lib/state/claude_agent_trial.dart).
+  late final ClaudeAgentTrial claudeAgentTrial = ClaudeAgentTrial.forConnection(
+    this,
+  )..addListener(_notifyListeners);
   final PromptShelfStore _promptShelf;
 
   /// Running and waiting conversations in this server's other projects,

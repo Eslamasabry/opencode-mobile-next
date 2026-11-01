@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
@@ -28,6 +29,26 @@ void main() {
       );
     }
     await body.load();
+    // The families AppTheme.forLocale names for Arabic, as the kit gallery
+    // loads them, so the Arabic goldens read like a device.
+    const noto = [
+      'test/fixtures/fonts/NotoSansArabic-Regular.ttf',
+      'test/fixtures/fonts/NotoSansArabic-Bold.ttf',
+    ];
+    for (final family in const ['Noto Sans Arabic', 'sans-serif']) {
+      final loader = FontLoader(family);
+      final files = family == 'sans-serif'
+          ? [
+              'tool/capture/fonts/Roboto-Regular.ttf',
+              'tool/capture/fonts/Roboto-Medium.ttf',
+              'tool/capture/fonts/Roboto-Bold.ttf',
+            ]
+          : noto;
+      for (final path in files) {
+        loader.addFont(File(path).readAsBytes().then(ByteData.sublistView));
+      }
+      await loader.load();
+    }
     await _loadFont('AppPhosphorRegular', [
       'assets/fonts/phosphor/Phosphor.ttf',
     ]);
@@ -44,26 +65,44 @@ void main() {
   for (final id in curatedThemePacks) {
     for (final brightness in Brightness.values) {
       final mode = brightness == Brightness.dark ? 'dark' : 'light';
-      testWidgets('component gallery · ${id.name} · $mode', (tester) async {
-        final theme = AppTheme.fromPalette(themePack(id).palette(brightness));
-        tester.view.physicalSize = const Size(420, 900);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
+      for (final locale in const [Locale('en'), Locale('ar')]) {
+        final arabic = locale.languageCode == 'ar';
+        final suffix = arabic ? '_ar' : '';
+        testWidgets(
+          'component gallery · ${id.name} · $mode${arabic ? ' · ar' : ''}',
+          (tester) async {
+            final theme = AppTheme.forLocale(
+              AppTheme.fromPalette(themePack(id).palette(brightness)),
+              locale,
+            );
+            tester.view.physicalSize = const Size(420, 900);
+            tester.view.devicePixelRatio = 1;
+            addTearDown(tester.view.reset);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: theme,
-            home: const _Gallery(),
-          ),
-        );
-        await tester.pumpAndSettle();
+            await tester.pumpWidget(
+              MaterialApp(
+                debugShowCheckedModeBanner: false,
+                theme: theme,
+                locale: locale,
+                supportedLocales: const [Locale('en'), Locale('ar')],
+                localizationsDelegates: GlobalMaterialLocalizations.delegates,
+                home: _Gallery(arabic: arabic),
+              ),
+            );
+            await tester.pumpAndSettle();
 
-        await expectLater(
-          find.byType(_Gallery),
-          matchesGoldenFile('gallery_${id.name}_$mode.png'),
+            // Right to left comes from the locale, not from the test.
+            expect(
+              Directionality.of(tester.element(find.byType(_Gallery))),
+              arabic ? TextDirection.rtl : TextDirection.ltr,
+            );
+            await expectLater(
+              find.byType(_Gallery),
+              matchesGoldenFile('gallery_${id.name}_$mode$suffix.png'),
+            );
+          },
         );
-      });
+      }
     }
   }
 }
@@ -77,7 +116,12 @@ Future<void> _loadFont(String family, List<String> assets) async {
 }
 
 class _Gallery extends StatelessWidget {
-  const _Gallery();
+  const _Gallery({this.arabic = false});
+
+  /// The same rows with Arabic copy, laid out right to left.
+  final bool arabic;
+
+  String _t(String en, String ar) => arabic ? ar : en;
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +129,7 @@ class _Gallery extends StatelessWidget {
     final scheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gallery'),
+        title: Text(_t('Gallery', 'المعرض')),
         actions: [
           IconButton(
             icon: const Icon(AppIconography.settings),
@@ -96,14 +140,20 @@ class _Gallery extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Headline', style: theme.textTheme.headlineSmall),
-          Text('Title large', style: theme.textTheme.titleLarge),
           Text(
-            'Body text at the default size.',
+            _t('Headline', 'عنوان رئيسي'),
+            style: theme.textTheme.headlineSmall,
+          ),
+          Text(
+            _t('Title large', 'عنوان كبير'),
+            style: theme.textTheme.titleLarge,
+          ),
+          Text(
+            _t('Body text at the default size.', 'نص أساسي بالحجم الافتراضي.'),
             style: theme.textTheme.bodyMedium,
           ),
           Text(
-            'Supporting caption',
+            _t('Supporting caption', 'وصف مساند'),
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppTheme.mutedOf(theme),
             ),
@@ -111,23 +161,33 @@ class _Gallery extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              FilledButton(onPressed: () {}, child: const Text('Filled')),
+              FilledButton(
+                onPressed: () {},
+                child: Text(_t('Filled', 'مملوء')),
+              ),
               const SizedBox(width: 8),
-              OutlinedButton(onPressed: () {}, child: const Text('Outlined')),
+              OutlinedButton(
+                onPressed: () {},
+                child: Text(_t('Outlined', 'محدد')),
+              ),
               const SizedBox(width: 8),
-              TextButton(onPressed: () {}, child: const Text('Text')),
+              TextButton(onPressed: () {}, child: Text(_t('Text', 'نص'))),
             ],
           ),
           const SizedBox(height: 16),
-          const TextField(
-            decoration: InputDecoration(hintText: 'Ask OpenCode…'),
+          TextField(
+            decoration: InputDecoration(
+              hintText: _t('Ask OpenCode…', 'اسأل OpenCode…'),
+            ),
           ),
           const SizedBox(height: 16),
           Card(
             child: ListTile(
               leading: const Icon(AppIconography.chat),
-              title: const Text('Session title'),
-              subtitle: const Text('Updated 2 minutes ago'),
+              title: Text(_t('Session title', 'عنوان الجلسة')),
+              subtitle: Text(
+                _t('Updated 2 minutes ago', 'تم التحديث قبل دقيقتين'),
+              ),
               trailing: const Icon(AppIconography.chevronRight),
             ),
           ),
@@ -175,7 +235,14 @@ class _Gallery extends StatelessWidget {
               children: [
                 Icon(AppIconography.shield, color: scheme.primary),
                 const SizedBox(width: 10),
-                const Expanded(child: Text('Panel on surface1, no shadow')),
+                Expanded(
+                  child: Text(
+                    _t(
+                      'Panel on surface1, no shadow',
+                      'لوحة على السطح الأول بلا ظل',
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

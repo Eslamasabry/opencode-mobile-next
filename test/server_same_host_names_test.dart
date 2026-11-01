@@ -17,7 +17,7 @@ ServerProfile _p(String id, String url) => ServerProfile(
   name: 'Computer at 10.0.2.2',
   baseUrl: url,
   flavor: ServerFlavor.v2,
-  serverVersion: '2.1.1',
+  serverVersion: '2.2.5',
   password: 'synthetic',
 );
 

@@ -117,6 +117,10 @@ extension _ChatVoiceConversation on _ChatScreenState {
       // written down stay in the draft.
       _dictationBase = null;
       _voiceSettingsOpened = false;
+      _autoSendAt = null;
+      _autoSendText = null;
+      _pttMode = false;
+      _pttHeld = false;
       _updateSpeech(() => _voiceDictating = false);
     }
     if (_voiceConversation) {
@@ -338,10 +342,13 @@ extension _ChatVoiceConversation on _ChatScreenState {
     try {
       if (!current()) return;
       final speech = _readAloud!;
+      final natural = await _naturalSpeechFor(prose);
+      if (!current()) return;
       await speech.speak(
         '$_voiceReplyUtterancePrefix$canonicalID',
         prose,
-        voiceID: _readAloudVoiceID,
+        voiceID: _phoneVoiceID,
+        natural: natural,
       );
       if (!current()) await speech.stop();
     } on FormatException {
@@ -389,6 +396,10 @@ extension _ChatVoiceConversation on _ChatScreenState {
     final state = voice.state;
     final listening = state == VoiceComposerState.listening;
     _voiceLevel.value = listening ? voice.level : 0;
+    if (_voiceDictating && _autoSendAt != null) {
+      // The words are written down and waiting to go: the recording is done.
+      return;
+    }
     if (_voiceDictating) {
       _mergeDictation(
         state == VoiceComposerState.draft ? voice.draft : voice.transcript,
@@ -442,6 +453,7 @@ extension _ChatVoiceConversation on _ChatScreenState {
 
   void _finishDictation(VoiceComposerController voice) {
     final heardNothing = voice.draft.trim().isEmpty;
+    if (_beginAutoSend(voice)) return;
     _dictationBase = null;
     _updateSpeech(() => _voiceDictating = false);
     unawaited(voice.cancel());
@@ -457,6 +469,11 @@ extension _ChatVoiceConversation on _ChatScreenState {
   /// written down stay in the draft.
   void _leaveDictation() {
     if (!_voiceDictating) return;
+    _autoSendAt = null;
+    _autoSendText = null;
+    _pttMode = false;
+    _pttHeld = false;
+    _pttArmed = false;
     _dictationBase = null;
     _voiceSettingsOpened = false;
     _updateSpeech(() => _voiceDictating = false);
@@ -469,6 +486,11 @@ extension _ChatVoiceConversation on _ChatScreenState {
   void _pauseDictation() {
     final voice = _voice;
     if (!_voiceDictating || voice == null) return;
+    // Words waiting to be sent are never sent while the person is away.
+    if (_autoSendAt != null) {
+      _cancelAutoSend();
+      return;
+    }
     switch (voice.state) {
       case VoiceComposerState.listening:
         unawaited(voice.stopListening());
@@ -558,6 +580,8 @@ extension _ChatVoiceConversation on _ChatScreenState {
         }
     }
     final conversation = _voiceConversation;
+    final countdown = _voiceDictating && _autoSendAt != null;
+    if (countdown) phase = KitVoicePhase.sendingSoon;
     return KitComposerVoice(
       voiceKey: const Key('voice-mode'),
       phase: phase,
@@ -568,7 +592,15 @@ extension _ChatVoiceConversation on _ChatScreenState {
           : null,
       reason: reason,
       fix: fix,
-      onExit: conversation ? _interruptVoiceConversation : _leaveDictation,
+      hold: !_pttHeld
+          ? KitVoiceHold.none
+          : (_pttArmed ? KitVoiceHold.cancelArmed : KitVoiceHold.holding),
+      sendAt: countdown ? _autoSendAt : null,
+      onSendNow: countdown ? _autoSendNow : null,
+      onCancelSend: countdown ? _cancelAutoSend : null,
+      onExit: countdown
+          ? _cancelAutoSend
+          : (conversation ? _interruptVoiceConversation : _leaveDictation),
       onStopListening: voice == null
           ? null
           : () => unawaited(voice.stopListening()),

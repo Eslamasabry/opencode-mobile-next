@@ -4,6 +4,10 @@ part of '../chat_screen.dart';
 /// engine is the phone's, whatever server the reply came from).
 const _readAloudConsentKey = 'oc.readAloudConsent';
 
+/// Stands in for a phone voice when the natural voice is the reading choice:
+/// the phone's voice list is then only fetched if a reply needs it.
+const _naturalVoiceMarker = 'natural';
+
 extension _ChatReadAloud on _ChatScreenState {
   Object get _speechScopeNow {
     final profile = _conn.profile;
@@ -56,6 +60,40 @@ extension _ChatReadAloud on _ChatScreenState {
       _showComposerNote(_speechFailure(failure));
     }
   }
+
+  Future<NaturalVoiceController?> _naturalController() async {
+    if (!platformCapabilities.supportsReadAloud) return null;
+    try {
+      return await NaturalVoiceController.shared();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// The natural voice for [prose], or null when the phone's voice reads:
+  /// it is not the choice, an explicit phone voice was asked for, or it
+  /// cannot speak the reply's language (said once, in plain words).
+  Future<NaturalSpeech?> _naturalSpeechFor(
+    String prose, {
+    bool chooseVoice = false,
+  }) async {
+    if (chooseVoice) return null;
+    final appLanguage = Localizations.localeOf(context).languageCode;
+    final natural = await _naturalController();
+    if (natural == null || !natural.active || !mounted) return null;
+    final language = detectReadLanguage(prose, appLanguage);
+    final pack = natural.packFor(language);
+    if (pack == null) {
+      if (natural.takeFallbackNote(language)) {
+        _showComposerNote(_chatL10n(context).naturalVoiceFallbackNote);
+      }
+      return null;
+    }
+    return natural.speechFor(pack);
+  }
+
+  String? get _phoneVoiceID =>
+      _readAloudVoiceID == _naturalVoiceMarker ? null : _readAloudVoiceID;
 
   Future<void> _stopReading() async {
     _readAloudRequest++;
@@ -127,6 +165,14 @@ extension _ChatReadAloud on _ChatScreenState {
     if (!current()) return false;
     final speech = _readAloud ??= (ReadAloudController()
       ..addListener(_readAloudChanged));
+    if (_readAloudVoiceID == null && !chooseVoice) {
+      final natural = await _naturalController();
+      if (!mounted || !current()) return false;
+      if (natural != null && natural.active) {
+        _readAloudVoiceID = _naturalVoiceMarker;
+        return true;
+      }
+    }
     if (_readAloudVoiceID == null || chooseVoice) {
       final voices = await speech.voices();
       if (!mounted || !current()) return false;
@@ -204,10 +250,13 @@ extension _ChatReadAloud on _ChatScreenState {
         return;
       }
       final speech = _readAloud!;
+      final natural = await _naturalSpeechFor(prose, chooseVoice: chooseVoice);
+      if (!current()) return;
       await speech.speak(
         '${widget.sessionID}/${message.info.id}',
         prose,
-        voiceID: _readAloudVoiceID,
+        voiceID: _phoneVoiceID,
+        natural: natural,
       );
       if (!current()) await speech.stop();
     } on FormatException {

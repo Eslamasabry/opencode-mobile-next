@@ -39,12 +39,14 @@ void main() {
     final context = tester.element(find.byType(Navigator).first);
     expect(MediaQuery.textScalerOf(context).scale(10), 25);
 
-    // And rendered text picks the cap up: a Text's RichText scales at 2.5.
+    // And rendered text picks the cap up: a Text's RichText scales at 2.5,
+    // or at the frame's 1.3 when the first text is a frame part (a button,
+    // a chip, the top bar; KitChrome).
     final text = find.byType(Text).first;
     final richText = tester.widget<RichText>(
       find.descendant(of: text, matching: find.byType(RichText)).first,
     );
-    expect(richText.textScaler.scale(10), 25);
+    expect(richText.textScaler.scale(10), anyOf(25, 13));
     expect(tester.takeException(), isNull);
   });
 

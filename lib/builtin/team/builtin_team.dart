@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show ValueListenable, VoidCallback;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, VoidCallback, visibleForTesting;
 
 import '../../domain/team_directories.dart' show aiTeamHome;
 import '../../state/team_model.dart' show isValidTeamModel;
@@ -14,6 +15,7 @@ import '../../state/profiles.dart'
         OrchestrationProvider;
 import '../../ui/kit/kit_redact.dart';
 import '../builtin_linux.dart';
+import '../process_budget.dart';
 import '../setup/aiteam_scripts.dart';
 import 'builtin_team_start_progress.dart';
 export 'builtin_team_start_progress.dart';
@@ -808,6 +810,9 @@ exit 0
       _requireCurrent(gen, BuiltinTeamStage.starting);
       if (!linux.serviceRunning(serviceName) || !await supervisorAnswers()) {
         _requireCurrent(gen, BuiltinTeamStage.starting);
+        // Held while the phone has no room, is hot or low on battery.
+        await _admit();
+        _requireCurrent(gen, BuiltinTeamStage.starting);
         await _linux.startService(
           serviceName,
           serviceScript,
@@ -856,6 +861,15 @@ exit 0
     }
   }
 
+  /// The team is the heaviest thing the app runs: it starts only within
+  /// the process budget (process_budget.dart).
+  Future<void> _admit() =>
+      (admitTeam ?? ProcessBudgetGuard.instance.admit)(HeavyJob.aiTeam);
+
+  /// Test seam for the process budget.
+  @visibleForTesting
+  static Future<void> Function(HeavyJob job)? admitTeam;
+
   /// Starts the supervisor when it is not running, without waiting: for the
   /// app coming back after Android stopped it. The team answers a little
   /// later, and the Team card shows it as reconnecting meanwhile. With
@@ -873,6 +887,7 @@ exit 0
           if (gen != null) _progress.enter(gen, BuiltinTeamStartStep.service);
           if (!already) {
             try {
+              await _admit();
               await _linux.startService(
                 serviceName,
                 serviceScript,

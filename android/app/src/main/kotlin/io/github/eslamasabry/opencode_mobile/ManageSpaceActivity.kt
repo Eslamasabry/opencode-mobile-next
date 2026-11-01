@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile
 
 import android.content.Intent
+import android.os.Bundle
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 
@@ -18,6 +19,20 @@ import io.flutter.embedding.engine.FlutterEngine
  */
 class ManageSpaceActivity : FlutterActivity() {
     private var bridge: ProjectExportBridge? = null
+
+    // FlutterActivity consumes cached-engine, route, entrypoint-argument and
+    // debug bundle extras. This exported Settings surface must never forward
+    // an external caller's Flutter launch configuration to the embedding.
+    override fun onCreate(savedInstanceState: Bundle?) {
+        intent = Intent(this, ManageSpaceActivity::class.java)
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        val clean = Intent(this, ManageSpaceActivity::class.java)
+        this.intent = clean
+        super.onNewIntent(clean)
+    }
 
     override fun getDartEntrypointFunctionName(): String = "manageSpaceMain"
 

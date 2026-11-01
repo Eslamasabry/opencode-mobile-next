@@ -335,7 +335,7 @@ abstract final class KitTour {
     BuildContext context, {
     required List<KitTourStep> steps,
   }) async {
-    assert(steps.length >= 2 && steps.length <= 4, 'KitTour: 2–4 steps');
+    assert(steps.isNotEmpty && steps.length <= 4, 'KitTour: 1–4 steps');
     final navigator = Navigator.of(context);
     final still = KitMotion.reduced(context);
     // A popup route, not a page route: a page route on top drives the

@@ -1115,6 +1115,16 @@ A part joins the kit when two or more pages need it. Single-use widgets stay in 
 
 ---
 
+### Text scale: frame and reading (owner, 2026-10-31)
+
+The app's **frame** never scales its words above **1.3x** of normal, whatever the system font size; **reading text** keeps the full system scale.
+
+- **Frame** (capped): top bars and headers (project and branch line included), chips and chip rows (approval, model, Continue / Try again, phrase chips), the Stop control, the composer field with its hint and typed text, buttons, sheet headers, buttons, tabs, badges.
+- **Reading** (full scale): chat messages and replies, tool output, markdown, settings row titles and supporting text, help and tips, dialog body text.
+- **How.** `KitChrome` (`lib/ui/kit/kit_chrome.dart`) wraps `MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3)` and is applied inside the frame parts themselves (`KitTopBar`, `KitChip`, `KitButton`, `KitField.composer`, `KitComposerStatusStrip`, `KitSessionTabs`, the `KitSheet` title), so a screen gets the cap for free and never clamps by hand. A new frame part wraps its build in `KitChrome`.
+- The clamp acts on the system `TextScaler`, so Android's nonlinear scaling is kept below the cap. Semantics labels are not touched.
+- Tests: `test/kit_chrome_test.dart` (frame at 1.3x and reading at 2.0x under a 2.0 system scale; a chip label is never cut at 2x, English and Arabic).
+
 ## 5. Not in the kit (module parts)
 
 These 50 elements stay module widgets, for the reason given, and are still covered by the raw-widget gates:

@@ -476,6 +476,68 @@ void main() {
     );
   }
 
+  test(
+    'unauthenticated duplicate headers cannot abort the loopback receiver',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'migration-header-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final content = List<int>.filled(1024, 0);
+      final transport = BridgeTermuxMigrationTransport(
+        run: (script, {required timeout}) async {
+          final url = RegExp(
+            r"http://127\.0\.0\.1:\d+/archive",
+          ).firstMatch(script)![0]!;
+          final token = RegExp(
+            r"Authorization: Bearer ([A-Za-z0-9_=-]+)'",
+          ).firstMatch(script)![1]!;
+          final client = HttpClient();
+          try {
+            final parsed = Uri.parse(url);
+            final attack = await Socket.connect(parsed.host, parsed.port);
+            attack.write(
+              'PUT /archive HTTP/1.1\r\nHost: localhost\r\n'
+              'Authorization: invalid-one\r\nAuthorization: invalid-two\r\n'
+              'Content-Length: 0\r\nConnection: close\r\n\r\n',
+            );
+            await attack.flush();
+            final rejected = await attack
+                .cast<List<int>>()
+                .transform(utf8.decoder)
+                .join()
+                .timeout(const Duration(seconds: 2));
+            attack.destroy();
+            expect(rejected, startsWith('HTTP/1.1 403'));
+            final request = await client.putUrl(Uri.parse(url));
+            request.headers.set(
+              HttpHeaders.authorizationHeader,
+              'Bearer $token',
+            );
+            request.headers.set('x-offset', '0');
+            request.add(content);
+            final response = await request.close();
+            expect(response.statusCode, HttpStatus.noContent);
+            await response.drain<void>();
+            return _result('copied');
+          } finally {
+            client.close(force: true);
+          }
+        },
+      );
+      await transport.copy(
+        _job,
+        TermuxMigrationItem.projects,
+        TermuxMigrationArchive(
+          bytes: content.length,
+          sha256: sha256.convert(content).toString(),
+        ),
+        File('${directory.path}/migrations/$_job/archive.tar'),
+        cancelled: () => false,
+      );
+    },
+  );
+
   test('cancel before transfer dispatches nothing', () async {
     final transport = BridgeTermuxMigrationTransport(
       run: (_, {required timeout}) async {

@@ -7,6 +7,10 @@ import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../kit/kit_icon_button.dart';
 import '../kit/kit_menu.dart';
+import '../kit/kit_typing_guard.dart';
+
+/// Where a transcript key moves the chat.
+enum TranscriptKey { pageUp, pageDown, oldest, latest }
 
 /// Chat-local shortcuts also work with a hardware keyboard on Android.
 /// A sheet or dialog above the chat must keep ownership of the keyboard.
@@ -15,8 +19,17 @@ class ModelShortcuts extends StatelessWidget {
     super.key,
     required this.onCycle,
     this.onBackground,
+    this.onCycleVariant,
+    this.onTranscriptKey,
     required this.child,
   });
+
+  /// F4 / Shift+F4: the next / previous thinking level of the chat's model.
+  final Future<void> Function({bool reverse})? onCycleVariant;
+
+  /// PageUp / PageDown / Home / End move the transcript, but only when no
+  /// text field has focus (there they move the caret).
+  final void Function(TranscriptKey key)? onTranscriptKey;
 
   final Future<void> Function({bool reverse, bool favoritesOnly}) onCycle;
   final Widget child;
@@ -42,6 +55,43 @@ class ModelShortcuts extends StatelessWidget {
         unawaited(background());
         return KeyEventResult.handled;
       }
+      final transcript = onTranscriptKey;
+      if (transcript != null && event is! KeyUpEvent) {
+        final keyboard = HardwareKeyboard.instance;
+        final key = switch (event.logicalKey) {
+          LogicalKeyboardKey.pageUp => TranscriptKey.pageUp,
+          LogicalKeyboardKey.pageDown => TranscriptKey.pageDown,
+          LogicalKeyboardKey.home => TranscriptKey.oldest,
+          LogicalKeyboardKey.end => TranscriptKey.latest,
+          _ => null,
+        };
+        if (key != null &&
+            !keyboard.isControlPressed &&
+            !keyboard.isMetaPressed &&
+            !keyboard.isAltPressed &&
+            !keyboard.isShiftPressed &&
+            !kitTypingInField()) {
+          transcript(key);
+          return KeyEventResult.handled;
+        }
+      }
+      final variant = onCycleVariant;
+      if (variant != null) {
+        const nextVariant = SingleActivator(
+          LogicalKeyboardKey.f4,
+          includeRepeats: false,
+        );
+        const previousVariant = SingleActivator(
+          LogicalKeyboardKey.f4,
+          shift: true,
+          includeRepeats: false,
+        );
+        final back = previousVariant.accepts(event, HardwareKeyboard.instance);
+        if (back || nextVariant.accepts(event, HardwareKeyboard.instance)) {
+          unawaited(variant(reverse: back));
+          return KeyEventResult.handled;
+        }
+      }
       const next = SingleActivator(
         LogicalKeyboardKey.f2,
         includeRepeats: false,
@@ -56,6 +106,60 @@ class ModelShortcuts extends StatelessWidget {
         return KeyEventResult.ignored;
       }
       unawaited(onCycle(reverse: reverse, favoritesOnly: false));
+      return KeyEventResult.handled;
+    },
+    child: child,
+  );
+}
+
+/// Esc stops the running reply, on a hardware keyboard (tablet, Chromebook,
+/// DeX), and only when nothing else wants the key:
+///  - the chat is not running ([enabled] false),
+///  - a sheet, dialog or menu is above the chat (not the current route),
+///  - a text field is mid-composition (Esc cancels the IME's candidate, not
+///    the reply), or a modifier is held,
+///  - key repeats (holding Esc stops once, never a second run).
+/// An open find bar or selection handles Esc below this node first, since a
+/// handled key never bubbles here.
+class StopOnEscape extends StatelessWidget {
+  const StopOnEscape({
+    super.key,
+    required this.enabled,
+    required this.onStop,
+    required this.child,
+  });
+
+  final bool enabled;
+  final VoidCallback onStop;
+  final Widget child;
+
+  static bool _composing() {
+    final focus = FocusManager.instance.primaryFocus?.context;
+    final editable = focus?.findAncestorStateOfType<EditableTextState>();
+    return editable?.widget.controller.value.composing.isValid ?? false;
+  }
+
+  @override
+  Widget build(BuildContext context) => Focus(
+    canRequestFocus: false,
+    skipTraversal: true,
+    includeSemantics: false,
+    onKeyEvent: (_, event) {
+      if (!enabled ||
+          event is! KeyDownEvent ||
+          event.logicalKey != LogicalKeyboardKey.escape ||
+          !(ModalRoute.of(context)?.isCurrent ?? true)) {
+        return KeyEventResult.ignored;
+      }
+      final keyboard = HardwareKeyboard.instance;
+      if (keyboard.isControlPressed ||
+          keyboard.isMetaPressed ||
+          keyboard.isAltPressed ||
+          keyboard.isShiftPressed ||
+          _composing()) {
+        return KeyEventResult.ignored;
+      }
+      onStop();
       return KeyEventResult.handled;
     },
     child: child,

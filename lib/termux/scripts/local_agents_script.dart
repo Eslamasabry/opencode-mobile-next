@@ -15,8 +15,10 @@ import 'script_support.dart';
 /// Claude model list includes Opus 5.5; 2026-09-23). 0.9.2 and 0.11.2 are
 /// the tested versions (lib/paseo/tested_versions.dart); 0.11.2 device
 /// validation is pending.
-/// Claude Code is not pinned; the installed version is recorded in the
-/// script's state and shown in the app.
+/// Claude Code is pinned to the same tested release the built-in Linux
+/// installs (test/termux_local_agents_pins_test.dart keeps the two equal), so
+/// this path never floats to npm's `latest`. The installed version is
+/// recorded in the script's state and shown in the app.
 const termuxLocalAgentsPins = <String, String>{
   'node_version': 'v24.21.0',
   'node_base_url': 'https://nodejs.org/dist',
@@ -25,6 +27,7 @@ const termuxLocalAgentsPins = <String, String>{
   'node_sha256_x64':
       '6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff',
   'paseo_version': '0.11.2',
+  'claude_version': '2.1.316',
 };
 
 /// The verbs `claude.sh` runs detached from the bridge shell (their
@@ -565,14 +568,16 @@ install_agents() {
     x86_64|amd64) arch=x64 ;;
     *) fail unsupported_arch "Claude Code needs a 64-bit phone (this one reports $(uname -m))" ;;
   esac
-  local version sha base paseo_version
+  local version sha base paseo_version claude_version
   version=$(pin_value node_version)
   sha=$(pin_value "node_sha256_$arch")
   base=$(pin_value node_base_url)
   paseo_version=$(pin_value paseo_version)
+  claude_version=$(pin_value claude_version)
   [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail pins 'This build has no valid Node.js version pin'
   [[ "$sha" =~ ^[0-9a-f]{64}$ ]] || fail pins 'This build has no valid Node.js checksum pin'
   [[ "$paseo_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail pins 'This build has no valid Paseo version pin'
+  [[ "$claude_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail pins 'This build has no valid Claude Code version pin'
   case "$base" in
     https://*) ;;
     http://127.0.0.1:*) [ "${OC_CLAUDE_ALLOW_LOOPBACK_PINS:-}" = 1 ] || fail pins 'Node.js must be downloaded over https' ;;
@@ -594,13 +599,14 @@ install_agents() {
 
   CURRENT_STEP=claude
   write_state installing 'Installing Claude Code'
-  npm_install '@anthropic-ai/claude-code'
+  npm_install "@anthropic-ai/claude-code@$claude_version"
 
   write_state installing 'Checking the installed versions'
   local paseo_installed claude_installed
   paseo_installed=$(in_ubuntu paseo --version 2>/dev/null | head -1 | tr -d '\r' | awk '{print $NF}' || true)
   claude_installed=$(in_ubuntu claude --version 2>/dev/null | head -1 | tr -d '\r' | awk '{print $1}' || true)
   [ -n "$claude_installed" ] || fail error 'Claude Code installed but does not run in Ubuntu'
+  [ "$claude_installed" = "$claude_version" ] || fail error "Claude Code $claude_version was pinned but $claude_installed was installed"
   [ -n "$paseo_installed" ] || fail error 'Paseo installed but does not run in Ubuntu'
   # Paseo's terminal support loads node-pty. It ships glibc builds for arm64
   # and x64; say so plainly when this phone cannot load it.
@@ -673,7 +679,18 @@ run_daemon() {
     bash -c '
 IFS= read -r PASEO_PASSWORD || [ -n "${PASEO_PASSWORD:-}" ] || exit 66
 export PASEO_PASSWORD
-exec paseo start --foreground --home "$1" --listen "$2" --no-relay --no-web-ui --no-inject-mcp < /dev/null
+# Paseo 0.11 and later refuse the old launch flags (`start --foreground
+# --listen ... --no-relay --no-web-ui --no-inject-mcp`: "--listen was
+# removed"). The same settings live in the config of the daemon home, set before
+# each run, and `daemon run` runs it in the foreground.
+daemon_set() { paseo daemon config set "$1" "$2" --home "$3" > /dev/null || exit 70; }
+daemon_set daemon.listen "$2" "$1"
+daemon_set daemon.relay.enabled false "$1"
+daemon_set daemon.mcp.injectIntoAgents false "$1"
+daemon_set features.webUi.enabled false "$1"
+daemon_set features.dictation.enabled false "$1"
+daemon_set features.voiceMode.enabled false "$1"
+exec paseo daemon run --home "$1" < /dev/null
 ' oc-paseo "$PASEO_HOME" "$LISTEN" < "$PASSWORD_FILE" 2>&1 | write_daemon_log
   exit "${PIPESTATUS[0]}"
 }

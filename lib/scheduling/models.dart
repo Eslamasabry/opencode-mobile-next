@@ -231,7 +231,14 @@ class ScheduledPromptRun {
     this.finishedAt,
     this.sessionId,
     this.errorCode,
+    this.title,
+    this.summary,
   });
+
+  /// Conversation title and the first line of the reply, only for the
+  /// "finished" notification. Never persisted or sent anywhere else.
+  final String? title;
+  final String? summary;
 
   /// The durable occurrence identity, never reused after an uncertain dispatch.
   final String id;

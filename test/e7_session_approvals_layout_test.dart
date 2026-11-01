@@ -270,7 +270,9 @@ void main() {
         // approved. A 740 dp window has room for the chips, so the line under
         // the header does not say it twice (d12253567).
         expect(_chip, findsOneWidget);
-        expect(find.text('Auto-approve on'), findsOneWidget);
+        // At 2.5x on a phone with Stop on the row the chip is its glyph
+        // alone (no word cut in half); its name stays for a screen reader.
+        expect(find.text('Auto-approve on'), findsNothing);
         expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
         expect(_line, findsNothing);
 
@@ -386,7 +388,11 @@ void main() {
     // The connection banner animates while reconnecting; pump a fixed frame.
     await tester.pump(const Duration(milliseconds: 400));
     expect(_line, findsOneWidget);
-    expect(find.text('Auto-approve paused'), findsOneWidget);
+    // The line says it once (the chip over the composer names it too).
+    expect(
+      find.descendant(of: _line, matching: find.text('Auto-approve paused')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
     // A request arriving now waits for a person: covered by the controller
     // test. (A permission card next to the reconnecting banner at 320dp/2.5x

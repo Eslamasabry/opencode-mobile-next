@@ -18,6 +18,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 
+import '../diagnostics/perf_trace.dart';
 import '../domain/models.dart';
 import '../domain/agent_run_failure.dart';
 import '../domain/loopback_host.dart';
@@ -320,6 +321,7 @@ class PaseoTransport {
   Completer<void>? _ready;
   Timer? _keepAlive;
   int _epoch = 0;
+  int _bytesIn = 0;
   int _nextID = 0;
   bool _closed = false;
   bool _initialized = false;
@@ -579,6 +581,7 @@ class PaseoTransport {
 
   void _receive(int epoch, Object? frame) {
     if (epoch != _epoch || _closed) return;
+    _bytesIn += frame is String ? frame.length : 0;
     final cap = _boundedFrameBytes;
     if (frame is String &&
         frame.length >= backgroundDecodeChars &&
@@ -780,6 +783,18 @@ class PaseoTransport {
     workspaceFileEditing = false;
     if (_socket == null) return;
     final disconnectedEpoch = _epoch;
+    // What this link carried, for the radio audit: counts only (a loopback
+    // helper costs no radio; a remote one does).
+    PerfTrace.mark(
+      'net.stream',
+      attrs: {
+        'api': 'paseo',
+        'kind': 'agents',
+        'bytes': _bytesIn,
+        'loopback': isLoopbackHost(endpoint.host),
+      },
+    );
+    _bytesIn = 0;
     // Invalidate callbacks and frames from the old socket before allowing a
     // future connect to allocate a replacement epoch.
     _epoch++;

@@ -514,6 +514,12 @@ extension _EditorPairingAndSave on _ProfileEditorScreenState {
   }
 
   Future<void> _saveCodex() async {
+    // Every save here promises "Save and connect"; in a browser the connect
+    // half cannot happen, so nothing is written.
+    if (!platformCapabilities.supportsAgentSocketConnections) {
+      _showAgentSocketUnavailable();
+      return;
+    }
     var url = _isPaseo
         ? normalizePaseoServerUrl(_url.text)
         : normalizeCodexServerUrl(_url.text);

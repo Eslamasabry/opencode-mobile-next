@@ -169,7 +169,7 @@ and a `.thumb.png`, flags blank pages and "Scene failed" console errors in
 ## Run by hand
 
 ```bash
-FL=~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin
+FL=~/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin
 cd widgetbook
 $FL/flutter pub get && $FL/flutter analyze
 $FL/dart run tool/coverage_check.dart

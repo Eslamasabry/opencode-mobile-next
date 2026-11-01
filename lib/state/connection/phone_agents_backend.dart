@@ -203,26 +203,41 @@ extension _PhoneAgentBackend on _ConnectionControllerPhoneAgents {
   }
 
   /// While the agent backend exists, a lost connection is recovered without
-  /// a tap: checked every 10 s, recovered when offline twice.
+  /// a tap: checked every 10 s, recovered when offline twice. Out of sight
+  /// (the app kept live in the background) it is checked every 60 s: the
+  /// check wakes the CPU for nothing nobody is looking at (perf audit S5).
+  static const _paWatchForeground = Duration(seconds: 10);
+  static const _paWatchHidden = Duration(seconds: 60);
+
   void _paWatchBackend() {
     _paBackendWatch?.cancel();
     _paOfflineTicks = 0;
-    _paBackendWatch = Timer.periodic(const Duration(seconds: 10), (_) {
-      final backend = _paBackend;
-      if (_self._disposed || backend == null || backend._disposed) {
-        _paBackendWatch?.cancel();
-        _paBackendWatch = null;
-        return;
-      }
-      // Offline at two checks in a row (reconnect attempts alone don't
-      // restart a stopped helper).
-      if (backend.isConnected) {
-        _paOfflineTicks = 0;
-      } else if (++_paOfflineTicks >= 2) {
-        _paOfflineTicks = 0;
-        unawaited(recoverPhoneAgentBackend());
-      }
-    });
+    AppVisibility.instance.ensure();
+    // Moves to the other pace the moment the app goes out of sight or comes
+    // back, so the foreground pace is the same as before this change.
+    late final VisibilityPacedTimer watch;
+    watch = VisibilityPacedTimer(
+      visible: _paWatchForeground,
+      hidden: _paWatchHidden,
+      onTick: () {
+        final backend = _paBackend;
+        if (_self._disposed || backend == null || backend._disposed) {
+          watch.cancel();
+          if (identical(_paBackendWatch, watch)) _paBackendWatch = null;
+          return;
+        }
+        // Offline at two checks in a row (reconnect attempts alone don't
+        // restart a stopped helper).
+        if (backend.isConnected) {
+          _paOfflineTicks = 0;
+        } else if (++_paOfflineTicks >= 2) {
+          _paOfflineTicks = 0;
+          unawaited(recoverPhoneAgentBackend());
+        }
+      },
+    );
+    _paBackendWatch = watch;
+    watch.start();
   }
 
   /// Every (re)connect of the agent backend: Android stops the helper in the

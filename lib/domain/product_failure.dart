@@ -12,6 +12,8 @@ import '../builtin/builtin_linux.dart' show BuiltinLinuxException;
 import 'agent_run_failure.dart' show AgentRunFailure;
 import '../paseo/transport.dart' show PaseoFailure, PaseoFailureKind;
 import '../state/local_server_controls.dart' show LocalServerControlFailure;
+import '../state/draft_attachment_storage.dart'
+    show DraftAttachmentStorageException;
 import '../state/profiles.dart' show SecureStorageUnavailable;
 import '../termux/bridge.dart' show TermuxBridgeException;
 import '../termux/local_agent_runtime.dart' show LocalAgentFailure;
@@ -52,6 +54,9 @@ String? _authoredMessage(Object error) => switch (error) {
   ProductException(:final message) => message,
   McpOAuthCallbackException(:final message) => message,
   SecureStorageUnavailable(:final message) => message,
+  // A refused draft attachment says what to do next, in app-authored words
+  // free of paths and payload content.
+  DraftAttachmentStorageException(:final message) => message,
   BuiltinLinuxException(:final message) => message.trim(),
   TermuxBridgeException(:final message) => message.trim(),
   LocalAgentFailure(:final message) => message.trim(),
@@ -95,8 +100,25 @@ enum ProductFailureCategory {
   /// it), so the agent could not start there.
   projectGit,
 
+  /// The phone was setting up or updating an agent and could not take new
+  /// agent work at that moment. Nothing is lost; trying again works.
+  agentUpdating,
+
   /// Termux did not finish a command the app sent it.
   termux,
+
+  /// The agent host answered a file read: the file is over the size it
+  /// shows. Not a computer that is off.
+  fileTooBig,
+
+  /// The agent host answered: there is no such file (moved or deleted).
+  fileMissing,
+
+  /// The agent host answered: it may not read that file.
+  fileDenied,
+
+  /// The agent host answered: it will not show this kind of file (binary).
+  fileUnreadable,
 
   /// Nothing known about it: the generic connectivity line.
   unknown,
@@ -127,8 +149,44 @@ final RegExp _gitReason = RegExp(
   caseSensitive: false,
 );
 
+/// The built-in host refusing new work while agent setup runs
+/// (phone_agents_host.dart `_beginPayloadUse`).
+final RegExp _updatingReason = RegExp(
+  r'phone refused new agent work|agent setup is in progress',
+  caseSensitive: false,
+);
+
+bool _isUpdatingReason(String? reason) =>
+    reason != null && _updatingReason.hasMatch(reason);
+
 bool _isGitReason(String? reason) =>
     reason != null && _gitReason.hasMatch(reason);
+
+/// What a daemon's file read refusal says, from its reason. Sorted from the
+/// daemon's own words (`File is too large to display`, `ENOENT`, `EACCES`);
+/// every one of these used to read as "couldn't reach your computer".
+ProductFailureCategory? _fileReason(String? reason) {
+  if (reason == null) return null;
+  final text = reason.toLowerCase();
+  if (RegExp(r'too large|too big|exceeds? (the )?max').hasMatch(text) &&
+      text.contains('file')) {
+    return ProductFailureCategory.fileTooBig;
+  }
+  if (RegExp(
+    r'enoent|no such file|file not found|file does not exist',
+  ).hasMatch(text)) {
+    return ProductFailureCategory.fileMissing;
+  }
+  if (RegExp(
+    r'eacces|eperm|permission denied|not permitted|outside',
+  ).hasMatch(text)) {
+    return ProductFailureCategory.fileDenied;
+  }
+  if (RegExp(r'binary|cannot display|unsupported file').hasMatch(text)) {
+    return ProductFailureCategory.fileUnreadable;
+  }
+  return null;
+}
 
 /// Why an agent host refused this send and what it concerns, when the
 /// host said ([PaseoFailure.runFailure]); null for any other failure. The
@@ -294,10 +352,14 @@ ProductFailureCategory _classify(Object error) {
     if (cause is PaseoFailure && _isGitReason(cause.reason)) {
       return ProductFailureCategory.projectGit;
     }
+    if (cause is PaseoFailure && _isUpdatingReason(cause.reason)) {
+      return ProductFailureCategory.agentUpdating;
+    }
   }
   if (error is ProductException ||
       error is McpOAuthCallbackException ||
-      error is SecureStorageUnavailable) {
+      error is SecureStorageUnavailable ||
+      error is DraftAttachmentStorageException) {
     return ProductFailureCategory.words;
   }
   if (error is ApiException) {
@@ -307,6 +369,13 @@ ProductFailureCategory _classify(Object error) {
     }
     if (error is PaseoFailure && _isGitReason(error.reason)) {
       return ProductFailureCategory.projectGit;
+    }
+    if (error is PaseoFailure && _isUpdatingReason(error.reason)) {
+      return ProductFailureCategory.agentUpdating;
+    }
+    if (error is PaseoFailure) {
+      final file = _fileReason(error.reason);
+      if (file != null) return file;
     }
     final code = error.statusCode;
     if (code != null && code >= 400) return _forStatus(code);
@@ -380,6 +449,9 @@ String? _technicalDetails(Object? error) {
           (cause is ProductException ? null : _technicalDetails(cause)) ??
           '$cause';
     case SecureStorageUnavailable(:final cause):
+      if (cause == null) return null;
+      raw = '$cause';
+    case DraftAttachmentStorageException(:final cause):
       if (cause == null) return null;
       raw = '$cause';
     case McpOAuthCallbackException():

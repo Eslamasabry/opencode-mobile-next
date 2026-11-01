@@ -173,7 +173,7 @@ void main() {
       await tester.tap(copy);
       await tester.pumpAndSettle();
       expect(copiedText, HostScripts.install(4747));
-      expect(copiedText, contains('@opencode/cli@2.1.1'));
+      expect(copiedText, contains('@opencode/cli@2.2.5'));
       expect(
         copiedText,
         contains('opencode2 serve --hostname 127.0.0.1 --port 4747'),

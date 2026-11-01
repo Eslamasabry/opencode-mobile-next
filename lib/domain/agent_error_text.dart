@@ -33,6 +33,13 @@ enum AgentErrorCause {
   /// The provider account has no credit or quota left.
   outOfCredit,
 
+  /// OpenCode's free models refused the request ("Free usage limit
+  /// reached", `FreeUsageLimitError`). The refusal depends on the size of the
+  /// request: a long conversation is refused turn after turn while a new one
+  /// goes through, and the account is not blocked. Shortening the
+  /// conversation or starting a new one works; waiting need not.
+  freeTierLimit,
+
   /// A plan's usage allowance for this model is used up for now (OpenCode's
   /// free models and Go plan say "Free usage limit reached" / "Go usage
   /// limit exceeded"). It resets with the plan's window; another model works
@@ -64,6 +71,15 @@ final _rules = <(RegExp, AgentErrorCause)>[
       caseSensitive: false,
     ),
     AgentErrorCause.requestTooLarge,
+  ),
+  // OpenCode's free tier, by its structured name or its message: apart from
+  // a real provider rate limit, a plan allowance, auth and oversized input.
+  (
+    RegExp(
+      r'free.?usage.?limit|free (?:tier|model)s? limit',
+      caseSensitive: false,
+    ),
+    AgentErrorCause.freeTierLimit,
   ),
   // A plan's allowance used up: before credit and rate rules, since the
   // same reply can carry a 429 or a "subscribe" link.

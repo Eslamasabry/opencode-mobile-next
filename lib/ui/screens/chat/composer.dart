@@ -11,6 +11,7 @@ part of '../chat_screen.dart';
 enum _PromptTool {
   commands,
   attach,
+  pasteImage,
   webSources,
   gallery,
   camera,
@@ -74,7 +75,10 @@ class _ChatComposer extends StatelessWidget {
     required this.onPhotoLibrary,
     required this.onCamera,
     required this.onContentInserted,
+    required this.onPasteImage,
     required this.onVoice,
+    this.micHold,
+    this.micTip,
     required this.onConversation,
     required this.onWebSources,
     this.conversationMode = false,
@@ -184,7 +188,17 @@ class _ChatComposer extends StatelessWidget {
 
   /// Images committed by the IME (keyboard images, clipboard-image chips).
   final ValueChanged<KeyboardInsertedContent> onContentInserted;
+
+  /// Pastes the clipboard's picture (the selection menu's "Paste image" and
+  /// the + sheet's row); a text-only agent answers with its usual note.
+  final VoidCallback onPasteImage;
   final VoidCallback onVoice;
+
+  /// Holding the mic records until the finger lifts (push-to-talk).
+  final KitComposerMicHold? micHold;
+
+  /// The hold-to-talk tip over the mic, while it is this screen's to show.
+  final KitComposerTip? micTip;
   final VoidCallback onConversation;
   final VoidCallback onWebSources;
   final bool conversationMode;
@@ -209,6 +223,7 @@ class _ChatComposer extends StatelessWidget {
       sending || shelfBusy || (busy && !canSendWhileBusy);
 
   void _send() {
+    if (agentUpdateBlock.value?.blocks(agentName) == true) return;
     if (_hasPrompt && !sending && !shelfBusy && (!busy || canSendWhileBusy)) {
       onSend();
     }
@@ -221,7 +236,12 @@ class _ChatComposer extends StatelessWidget {
       listen: false,
     ).read(connProvider);
     return ListenableBuilder(
-      listenable: Listenable.merge([conn, controller, conn.delayedAnswers]),
+      listenable: Listenable.merge([
+        conn,
+        controller,
+        conn.delayedAnswers,
+        agentUpdateBlock,
+      ]),
       builder: (context, _) => _layout(context, conn),
     );
   }
@@ -236,6 +256,20 @@ class _ChatComposer extends StatelessWidget {
         conn.capabilities.offlinePromptQueue;
     final restore = onRestoreHistoryDraft;
     final waitingForYou = waitsForYou?.call() ?? false;
+    // An update that cannot let a message through right now says so before
+    // Send, with its progress; the draft stays and Send returns by itself.
+    final updateBlock = agentUpdateBlock.value;
+    final updateNote = updateBlock != null && updateBlock.blocks(agentName)
+        ? updateBlock.fraction == null
+              ? l10n.agentUpdateSendBlockedNoPercent(updateBlock.agentName)
+              : l10n.agentUpdateSendBlocked(
+                  updateBlock.agentName,
+                  (updateBlock.fraction! * 100)
+                      .round()
+                      .clamp(0, 100)
+                      .toString(),
+                )
+        : null;
     // The floating layer draws the gutters, the bottom edge and the safe
     // area ([KitComposer.layer]).
     return Padding(
@@ -270,6 +304,7 @@ class _ChatComposer extends StatelessWidget {
                 ? l10n.chatUiAskOpenCode
                 : l10n.chatUiAskAgent(KitBidi.auto(agentName!)),
             onSend: _send,
+            sendBlockedNote: updateNote,
             // Stop is the chips row's (above the field). The mic stays while
             // a reply runs, so speaking or typing waits to send after the
             // reply. What the reply is doing is written in the turn.
@@ -329,11 +364,24 @@ class _ChatComposer extends StatelessWidget {
                     !platformCapabilities.supportsVoice
                 ? null
                 : onVoice,
+            micHold:
+                isolated ||
+                    conversationMode ||
+                    !platformCapabilities.supportsVoice
+                ? null
+                : micHold,
+            micTip: micTip,
             onOpenEditor: isolated || conversationMode ? null : onOpenEditor,
             voice: voice,
             onContentInserted: isolated || !promptAttachmentsSupported
                 ? null
                 : onContentInserted,
+            pasteImage: isolated
+                ? null
+                : KitPasteImage(
+                    available: clipboardImages.hasImage,
+                    onPaste: onPasteImage,
+                  ),
             fieldLabel: l10n.composerFieldLabel,
             composerKey: const Key('chat-composer-surface'),
             fieldKey: const Key('chat-composer-field'),
@@ -571,6 +619,13 @@ class _ChatComposer extends StatelessWidget {
     final canClearText = controller.text.isNotEmpty && onClearText != null;
     final canStash = _hasPrompt && onStashPrompt != null;
     _ComposerSetting? chosen;
+    // Only the clip's declared types are looked at here; the picture itself
+    // is read when the person taps the row.
+    final clipboardHasImage =
+        !attachBlocked &&
+        promptAttachmentsSupported &&
+        await clipboardImages.hasImage();
+    if (!context.mounted) return;
     final tool = await showKitSheet<_PromptTool>(
       context,
       title: l10n.chatUiPromptTools,
@@ -578,6 +633,7 @@ class _ChatComposer extends StatelessWidget {
       body: (sheetContext) => _PromptToolsList(
         projectFilesSupported: onOpenProjectFiles != null,
         attachBlocked: attachBlocked,
+        clipboardHasImage: clipboardHasImage,
         attachmentsSupported: promptAttachmentsSupported,
         imagesOnly: promptImagesOnly,
         webSourcesSupported: webSourcesSupported,
@@ -611,6 +667,8 @@ class _ChatComposer extends StatelessWidget {
         onOpenCommands();
       case _PromptTool.attach:
         onAttach();
+      case _PromptTool.pasteImage:
+        onPasteImage();
       case _PromptTool.webSources:
         onWebSources();
       case _PromptTool.gallery:

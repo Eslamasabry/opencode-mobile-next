@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 /** WorkManager provides a bounded wake lock; this does not start a dataSync service. */
 class ScheduledPromptWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     /** What this attempt still owns, so cleanup releases exactly that. */
-    private class Attempt(val entry: ScheduledPromptStore.Entry) {
+    private class Attempt(val entry: ScheduledPromptStore.Entry, val manual: Boolean) {
         var acquired = false
         var claimed = false
     }
@@ -29,7 +29,7 @@ class ScheduledPromptWorker(context: Context, params: WorkerParameters) : Worker
             inputData.getLong("scheduledAtMs", -1),
         ) ?: return Result.success()
         val started = SystemClock.elapsedRealtime()
-        val attempt = Attempt(entry)
+        val attempt = Attempt(entry, inputData.getBoolean("manual", false))
         val outcome = try {
             execute(attempt, started)
         } catch (_: InterruptedException) {
@@ -49,7 +49,8 @@ class ScheduledPromptWorker(context: Context, params: WorkerParameters) : Worker
     private fun execute(attempt: Attempt, started: Long): Result {
         attempt.acquired = gate.tryAcquire(ScheduledPromptPolicy.WORKER_BUDGET_MS, TimeUnit.MILLISECONDS)
         val remaining = ScheduledPromptPolicy.remaining(started, SystemClock.elapsedRealtime())
-        return early(attempt.entry, attempt.acquired, remaining) ?: claimAndRun(attempt, remaining)
+        return early(attempt.entry, attempt.acquired, remaining)
+            ?: if (attempt.manual) runManual(attempt.entry, remaining) else claimAndRun(attempt, remaining)
     }
 
     /** A result for work that must end before any claim or transport exists; null to continue. */
@@ -64,6 +65,20 @@ class ScheduledPromptWorker(context: Context, params: WorkerParameters) : Worker
         }
         remaining <= MIN_DART_WINDOW_MS -> Result.retry() // Still before claim.
         else -> null
+    }
+
+    /** A person's "Run now": no claim and no settlement, so no schedule time moves. */
+    private fun runManual(entry: ScheduledPromptStore.Entry, remaining: Long): Result {
+        active.add(entry.workName)
+        val store = ScheduledPromptStore(applicationContext)
+        if (!store.profileExists(entry.profileId)) return Result.success()
+        val response = runDart(entry, "manual", remaining)
+        if (response != null && response.field("status") in VALID_STATUSES &&
+            response.field("error") != "stale_target" && store.profileExists(entry.profileId)
+        ) {
+            ScheduledPromptNotifications.show(applicationContext, entry, response)
+        }
+        return Result.success()
     }
 
     private fun claimAndRun(attempt: Attempt, remaining: Long): Result {
@@ -100,7 +115,7 @@ class ScheduledPromptWorker(context: Context, params: WorkerParameters) : Worker
         val args = mapOf(
             "profileId" to entry.profileId, "scheduleId" to entry.id, "revision" to entry.revision,
             "scheduledAtMs" to entry.due, "deadlineEpochMs" to System.currentTimeMillis() + dartWindow,
-            "recoveryOnly" to (claim == "recover"),
+            "recoveryOnly" to (claim == "recover"), "manual" to (claim == "manual"),
         )
         handler.post {
             if (!isStopped) {

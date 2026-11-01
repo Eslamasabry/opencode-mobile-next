@@ -17,6 +17,7 @@ import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/domain/agent_auth_probe.dart';
 import 'package:opencode_mobile/domain/phone_agent_host.dart';
 import 'package:opencode_mobile/l10n/app_localizations_en.dart';
+import 'package:opencode_mobile/paseo/transport.dart' show PaseoFailure;
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -481,7 +482,15 @@ void main() {
       fingerprint[1] = '2.1.283';
       gates['claude']['fingerprint'] = jsonEncode(fingerprint);
       await prefs.setString('${phoneAgentGatePrefix}phone', jsonEncode(gates));
+      // The older tested version is still installed: it keeps running work
+      // while the update to the pin is owed.
+      final older = await host.inspect('claude');
+      expect(older.behindPin, true);
+      expect(older.architectureQualified, true);
+      // With nothing to run on, the person is asked for the check.
+      versionValid = false;
       final runtime = await host.inspect('claude');
+      versionValid = true;
       expect(runtime.architectureQualified, false);
       expect(runtime.checkRequiredReason, 'agentVersion');
     },
@@ -517,6 +526,20 @@ void main() {
       expect(calls, isNot(contains('stopAgentHost')));
     },
   );
+
+  // Field report (4363): the Paseo helper exited with 137 around the automatic
+  // agent update. A phone check used to restart a healthy helper at the pinned
+  // version whenever the native side had no version recorded for it (it was
+  // started without one), SIGTERM then SIGKILL, dropping live conversations.
+  test('a new agent version does not restart a helper that already runs the '
+      'pinned Paseo', () async {
+    running = true;
+    final result = await host.selfTest('claude');
+    expect(result.passed, true, reason: '${result.failure}');
+    expect(calls, isNot(contains('startAgentHost')));
+    expect(calls, isNot(contains('stopAgentHost')));
+    expect(engine.runs, isNotEmpty, reason: 'the agent itself is installed');
+  });
 
   test(
     'idle parent with running provider child prevents helper update',
@@ -818,7 +841,7 @@ void main() {
     }
   });
   for (final sample in [
-    (id: 'codex', expectedBytes: 472874130),
+    (id: 'codex', expectedBytes: 508219890),
     (id: 'goose', expectedBytes: 468715890),
     (id: 'omp-acp', expectedBytes: 628181952),
     (id: 'fx', expectedBytes: 300000000),
@@ -998,6 +1021,262 @@ void main() {
       expect(secrets.keys, ['unrelated']);
     },
   );
+
+  // The owner's phone (APK 4360): starting agent work while the automatic
+  // update ran was refused with "Agent setup is in progress ... (phone check
+  // running)". The person's work wins now.
+  group('automatic update yields to the person\'s work', () {
+    late _HoldEngine hold;
+    Future<void> reopen() async {
+      await host.dispose();
+      hold = _HoldEngine();
+      host = BuiltinPhoneAgents(
+        profileId: 'phone',
+        prefs: prefs,
+        loadLock: () async => lock,
+        engineFactory: (_, _) => hold,
+        socketFactory: (_, _) async => _idleSocket(),
+      );
+    }
+
+    Future<Object?> startWork() async {
+      final gateway = host.newGatewaySync('/root/projects/app');
+      try {
+        await gateway.promptAsync('ses_one', text: 'hello');
+        return null;
+      } catch (error) {
+        return error;
+      }
+    }
+
+    test('while it downloads, work sets it aside and runs; the update is '
+        'marked to retry, not failed', () async {
+      await reopen();
+      final update = host.autoUpdate('claude');
+      await hold.started.future;
+      expect(host.autoUpdateCanYield, isTrue);
+      final error = await startWork();
+      expect('$error', isNot(contains('refused new agent work')));
+      expect('$error', isNot(contains('Agent setup is in progress')));
+      expect(hold.cancels, 1, reason: 'the download was set aside');
+      final result = await update;
+      expect(result.passed, isFalse);
+      expect(host.lastAutoUpdateYielded, isTrue);
+      expect(host.autoUpdateCanYield, isFalse);
+    });
+
+    test('with every byte in, or nothing known, the update is not set aside '
+        '(it may be switching versions)', () async {
+      await reopen();
+      final update = host.autoUpdate('claude');
+      await hold.started.future;
+      expect(host.autoUpdateCanYield, isTrue);
+      hold.emit(
+        const SetupProgress(
+          state: SetupState.running,
+          current: 'agent-claude',
+          overall: 0.9,
+          components: [
+            ComponentProgress(
+              id: 'agent-claude',
+              state: ComponentState.running,
+              bytesDone: 100,
+              bytesTotal: 100,
+            ),
+          ],
+        ),
+      );
+      expect(host.autoUpdateCanYield, isFalse);
+      hold.emit(
+        const SetupProgress(
+          state: SetupState.running,
+          current: 'agent-claude',
+          overall: 0.95,
+          components: [
+            ComponentProgress(
+              id: 'agent-claude',
+              state: ComponentState.running,
+            ),
+          ],
+        ),
+      );
+      expect(host.autoUpdateCanYield, isFalse);
+      await hold.cancel();
+      await update;
+    });
+
+    test('once it switches versions, work waits for it instead of being '
+        'refused', () async {
+      await reopen();
+      engine = hold;
+      hold.holdOpen = false;
+      hold.afterRun = const SetupProgress(
+        state: SetupState.done,
+        components: [],
+        overall: 1,
+      );
+      versionEntered = Completer<void>();
+      versionRelease = Completer<void>();
+      final update = host.autoUpdate('claude');
+      await versionEntered!.future;
+      expect(host.autoUpdateCanYield, isFalse);
+      var workDone = false;
+      final work = startWork().then((error) {
+        workDone = true;
+        return error;
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(workDone, isFalse, reason: 'it waits, it is not refused');
+      versionRelease!.complete();
+      expect((await update).passed, isTrue);
+      final error = await work;
+      expect('$error', isNot(contains('refused new agent work')));
+      versionEntered = null;
+      versionRelease = null;
+    });
+
+    test('a person\'s own check still blocks work, with the same plain '
+        'reason kept for Details', () async {
+      await reopen();
+      hold.holdOpen = false;
+      hold.afterRun = const SetupProgress(
+        state: SetupState.done,
+        components: [],
+        overall: 1,
+      );
+      versionEntered = Completer<void>();
+      versionRelease = Completer<void>();
+      final check = host.selfTest('claude');
+      await versionEntered!.future;
+      final error = await startWork();
+      expect(error, isA<PaseoFailure>());
+      expect((error! as PaseoFailure).reason, contains('phone check running'));
+      versionRelease!.complete();
+      await check;
+      versionEntered = null;
+      versionRelease = null;
+    });
+
+    test('an agent behind the pin that is still installed keeps running and '
+        'is not asked for a check; with nothing to run on it is', () async {
+      Future<void> oldGate() async {
+        final agent = AgentCatalog.builtIn.byId('claude')!;
+        await prefs.setString(
+          '${phoneAgentGatePrefix}phone',
+          jsonEncode({
+            'claude': {
+              'fingerprint': jsonEncode([
+                'claude',
+                '2.1.294',
+                agent.artifactFor(AgentArchitecture.arm64)!.sha256,
+                PaseoPhoneScripts.version,
+                PaseoPhoneScripts.packageLockSha256,
+                PaseoPhoneScripts.nodeVersion,
+              ]),
+              'architecture': 'arm64',
+              'activeVersion': '2.1.294',
+            },
+          }),
+        );
+      }
+
+      await oldGate();
+      final behind = await host.inspect('claude');
+      expect(behind.behindPin, isTrue);
+      expect(behind.architectureQualified, isTrue);
+      expect(behind.checkRequiredReason, isNull);
+      versionValid = false;
+      final gone = await host.inspect('claude');
+      expect(gone.behindPin, isFalse);
+      expect(gone.architectureQualified, isFalse);
+      expect(gone.checkRequiredReason, 'agentVersion');
+      versionValid = true;
+    });
+
+    test(
+      'an automatic update keeps the old proof until the new version '
+      'passes, so a set-aside one leaves the old version qualified',
+      () async {
+        await reopen();
+        final before = {
+          'claude': {
+            'fingerprint': jsonEncode([
+              'claude',
+              '2.1.294',
+              'x',
+              'p',
+              'l',
+              'n',
+            ]),
+            'architecture': 'arm64',
+            'activeVersion': '2.1.294',
+          },
+        };
+        await prefs.setString(
+          '${phoneAgentGatePrefix}phone',
+          jsonEncode(before),
+        );
+        final update = host.autoUpdate('claude');
+        await hold.started.future;
+        await startWork();
+        await update;
+        expect(
+          jsonDecode(prefs.getString('${phoneAgentGatePrefix}phone')!),
+          before,
+        );
+      },
+    );
+  });
+}
+
+/// An install that is still downloading until it is cancelled or released.
+class _HoldEngine extends FakeSetupEngine {
+  final started = Completer<void>();
+  bool holdOpen = true;
+  final _release = Completer<void>();
+
+  @override
+  Future<void> run(
+    Set<String> ids, {
+    Map<String, Map<String, String>> params = const {},
+  }) async {
+    runs.add(ids);
+    runParams.add(params);
+    if (!holdOpen) {
+      if (afterRun != null) emit(afterRun!);
+      return;
+    }
+    emit(
+      SetupProgress(
+        state: SetupState.running,
+        current: ids.first,
+        overall: 0.2,
+        components: [
+          ComponentProgress(
+            id: ids.first,
+            state: ComponentState.running,
+            bytesDone: 40,
+            bytesTotal: 100,
+          ),
+        ],
+      ),
+    );
+    if (!started.isCompleted) started.complete();
+    await _release.future;
+  }
+
+  @override
+  Future<void> cancel() async {
+    cancels++;
+    emit(
+      const SetupProgress(
+        state: SetupState.cancelled,
+        components: [],
+        overall: 0,
+      ),
+    );
+    if (!_release.isCompleted) _release.complete();
+  }
 }
 
 class _HeldAgentChecks extends BuiltinLinux {

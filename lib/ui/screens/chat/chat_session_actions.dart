@@ -74,6 +74,7 @@ extension _ChatSessionActions on _ChatScreenState {
       await actionApi.abort(widget.sessionID);
       _abortSucceeded = true;
       _conn.markStoppedByPerson(widget.sessionID);
+      _separateKeptDraft();
       if (mounted) {
         final prompt = _messages.lastIndexWhere(_isPrompt);
         _setChatState(() {
@@ -87,6 +88,22 @@ extension _ChatSessionActions on _ChatScreenState {
     } finally {
       if (mounted) _setChatState(() => _aborting = false);
     }
+  }
+
+  /// Stop keeps what the person had typed for the agent. Whatever they type
+  /// next would run straight onto it ("Keep goingUse the bash tool",
+  /// emulator 2026-10-30), so a kept draft ends in a blank line and the next
+  /// words start a paragraph of their own.
+  void _separateKeptDraft() {
+    if (!mounted) return;
+    final text = _composer.text;
+    if (text.trim().isEmpty || text.endsWith('\n\n')) return;
+    final next = '${text.trimRight()}\n\n';
+    _composer.value = TextEditingValue(
+      text: next,
+      selection: TextSelection.collapsed(offset: next.length),
+    );
+    unawaited(_persistDraft());
   }
 
   // A send in flight, and Stop while it still waits.
@@ -373,6 +390,43 @@ extension _ChatSessionActions on _ChatScreenState {
       );
       if (!confirmed || !mounted) return;
       _showComposerNote(_chatL10n(context).chatUiCompactionStarted);
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
+  }
+
+  /// The newest prompt that was words: what a new conversation starts from.
+  String _lastPromptText() {
+    for (final message in _messages.reversed) {
+      if (message.info.role != 'user') continue;
+      final text = message.parts
+          .where((part) => part.type == 'text' && !part.synthetic)
+          .map((part) => part.text)
+          .join()
+          .trim();
+      if (text.isNotEmpty) return text;
+    }
+    return '';
+  }
+
+  bool _canStartNew() => !_conn.isIsolated && !_watching;
+
+  /// "Continue in a new conversation" after the free tier refused a long one:
+  /// a new session in this project opens with the last prompt in its
+  /// composer, unsent. This conversation stays in the list.
+  Future<void> _continueInNewConversation() async {
+    if (!_canStartNew()) return;
+    final prompt = _lastPromptText();
+    try {
+      final session = await _conn.createSession();
+      await _conn.refreshSessions();
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        KitPageRoute<void>(
+          builder: (_) =>
+              ChatScreen(sessionID: session.id, initialText: prompt),
+        ),
+      );
     } catch (error) {
       if (mounted) _showActionError(error);
     }

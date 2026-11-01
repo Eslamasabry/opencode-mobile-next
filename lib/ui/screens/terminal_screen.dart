@@ -12,6 +12,7 @@ import '../../builtin/builtin_server.dart' show builtinLinuxProvider;
 import '../../builtin/local_terminal.dart';
 import '../../feedback/bug_report.dart';
 import '../../l10n/app_localizations.dart';
+import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/project_dev_server.dart';
 import '../app_theme.dart';

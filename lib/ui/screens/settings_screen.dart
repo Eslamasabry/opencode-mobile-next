@@ -31,6 +31,7 @@ import '../../termux/bridge.dart';
 import '../app_theme.dart';
 import '../early_l10n.dart';
 import '../kit/kit.dart';
+import 'settings/connection_check_screen.dart';
 import '../theme_packs.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/language_picker.dart'

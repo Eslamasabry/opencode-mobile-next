@@ -30,6 +30,7 @@ import 'kit_screen.dart';
 import 'kit_state_view.dart';
 import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
+import 'kit_typing_guard.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
 import 'kit_top_bar.dart';
@@ -657,12 +658,33 @@ class _KitDiffViewState extends State<KitDiffView> {
       return KeyEventResult.handled;
     }
     if (control || keyboard.isAltPressed) return KeyEventResult.ignored;
-    if ((key == LogicalKeyboardKey.keyN && !shift) ||
+    // Bare letters belong to a text field when one has focus (a comment
+    // being written): only the F-key forms work then.
+    final letters = !kitTypingInField();
+    if (!letters &&
+        key != LogicalKeyboardKey.f7 &&
+        key != LogicalKeyboardKey.escape) {
+      // Enter and the arrows move the caret or submit in the field.
+      return KeyEventResult.ignored;
+    }
+    if (letters &&
+        (key == LogicalKeyboardKey.bracketRight ||
+            key == LogicalKeyboardKey.bracketLeft)) {
+      final next = key == LogicalKeyboardKey.bracketRight;
+      final target = _file + (next ? 1 : -1);
+      if (target < 0 || target >= widget.files.length) {
+        return KeyEventResult.handled;
+      }
+      _openFile(target);
+      _bodyFocus.requestFocus();
+      return KeyEventResult.handled;
+    }
+    if ((letters && key == LogicalKeyboardKey.keyN && !shift) ||
         (key == LogicalKeyboardKey.f7 && !shift)) {
       _goToChange(_change + 1);
       return KeyEventResult.handled;
     }
-    if ((key == LogicalKeyboardKey.keyP && !shift) ||
+    if ((letters && key == LogicalKeyboardKey.keyP && !shift) ||
         (key == LogicalKeyboardKey.f7 && shift)) {
       _goToChange(_change - 1);
       return KeyEventResult.handled;

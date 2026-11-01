@@ -2,7 +2,7 @@
 from pathlib import Path
 import subprocess
 ROOT=Path(__file__).resolve().parents[2];OUT=ROOT/'docs/qa/BB9-2026-10-07'
-F=str(Path.home()/'.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter')
+F=str(Path.home()/'.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/flutter')
 def run(label,tests,name=None):
  cmd=[str(ROOT/'tool/qa/machine_lock.sh'),'test','--',F,'test','--no-pub','--concurrency=1','--reporter','expanded',*tests]
  if name:cmd+=['--plain-name',name]

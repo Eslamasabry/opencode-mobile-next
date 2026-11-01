@@ -11,6 +11,8 @@ import 'audio.dart';
 import 'device.dart';
 import 'model_manager.dart';
 import 'model_manifest.dart';
+import 'natural_voice_ui.dart';
+import 'voice_settings_parts.dart';
 import '../ui/app_theme.dart';
 import '../ui/kit/kit.dart';
 import '../platform/platform_capabilities.dart';
@@ -121,6 +123,7 @@ class VoiceSettingsScreen extends StatelessWidget {
               ),
               SizedBox(height: tokens.space4),
               _VoiceModelSetupBody(manager: manager),
+              const NaturalVoiceSection(),
             ],
           ),
         );
@@ -256,24 +259,13 @@ class _VoiceModelSetupBody extends StatelessWidget {
             ),
           ],
           SizedBox(height: tokens.space4),
-          KitText(strings.e7VoiceUiLanguage, role: KitTextRole.label),
-          SizedBox(height: tokens.space2),
-          KitSegmented<VoiceLanguage>(
-            key: const Key('voice-model-language'),
-            semanticsLabel: strings.e7VoiceUiLanguage,
-            selected: manager.language,
-            onChanged: busy
-                ? null
-                : (language) => unawaited(manager.setLanguage(language)),
+          VoiceLanguageRow(
+            manager: manager,
+            strings: strings,
+            enabled: !busy,
             disabledReason: busy ? strings.voiceSetupBusyReason : null,
-            segments: [
-              for (final language in VoiceLanguage.values)
-                KitSegment(
-                  value: language,
-                  label: voiceLanguageLabel(language, strings),
-                ),
-            ],
           ),
+          VoiceAutoSendRow(manager: manager, strings: strings),
         ],
       );
     },

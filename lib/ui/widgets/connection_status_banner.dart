@@ -27,9 +27,33 @@ KitStatus? connectionKitStatus(
   VoidCallback? onRecoverOwnership,
   BuildContext? Function()? actionContext,
   ServerProfile? switchingTo,
+  VoidCallback? onSeeRunning,
 }) {
   final snapshot = controller.connectionStatus;
   final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+  // Android stopped the agent's helper (too many programs, or memory) and
+  // it is answering again: say what happened once, in plain words, and that
+  // the conversation goes on. Closing it keeps it closed for that stop.
+  if (!snapshot.visible && controller.agentBackAfterKill) {
+    return KitStatus(
+      kind: KitStatusKind.connection,
+      id: 'agent-back:${snapshot.profileId}',
+      key: const ValueKey('agent-back-after-kill'),
+      icon: AppIconography.check,
+      tone: AppStatusTone.ok,
+      message: l10n.agentBackAfterKill,
+      semanticsLabel: l10n.agentBackAfterKill,
+      quiet: true,
+      onDismiss: controller.dismissAgentBackAfterKill,
+      action: onSeeRunning == null
+          ? null
+          : KitAction(
+              key: const ValueKey('agent-back-see-running'),
+              label: l10n.processBudgetSeeRunning,
+              onPressed: onSeeRunning,
+            ),
+    );
+  }
   // A deliberate switch between this phone's OpenCode versions
   // ([phoneRuntimeSwitchTarget]): the server being left stops, refuses its
   // old password and stops answering on purpose. One calm progress line
@@ -207,7 +231,11 @@ KitStatus? connectionKitStatus(
   // Already connecting: say it once. The server is named only when more than
   // one is saved, so the person can tell which one this is.
   final several = controller.store.profiles.length > 1;
+  // Android stopped the helper (exit 137, not asked for): it is being
+  // started again, and "not answering" would read as a crash.
+  final killed = agentName != null && controller.agentHelperKilledByAndroid;
   final message = switch (snapshot.phase) {
+    _ when killed => l10n.agentKilledByAndroid,
     ConnectionStatusPhase.serverBusy => l10n.workServerBusyPhone,
     ConnectionStatusPhase.connecting || ConnectionStatusPhase.reconnecting =>
       several

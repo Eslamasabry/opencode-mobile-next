@@ -10,15 +10,19 @@ import '../../domain/settings_search.dart';
 import '../../domain/settings_search_catalog.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
+import '../../platform/share_intent.dart';
 import '../../state/connection.dart';
 import '../../state/phone_host.dart' show PhoneHostKind;
 import '../../termux/bridge.dart' show TermuxBridge;
+import '../../local_llm/local_llm_controller.dart';
+import '../../local_llm/local_llm_ui.dart';
 import '../../voice/model_manager.dart';
 import '../../voice/voice_ui.dart';
 import '../app_iconography.dart';
 import '../desktop/desktop_interaction.dart';
 import '../desktop/shortcuts.dart';
 import '../screens/about_screen.dart';
+import '../screens/settings/updates_screen.dart';
 import '../screens/agent_account_screen.dart';
 import '../screens/app_diagnostics_screen.dart';
 import '../screens/automation_settings_screen.dart';
@@ -29,11 +33,14 @@ import '../screens/global_sessions_screen.dart';
 import '../screens/guide_screen.dart';
 import '../screens/keep_running_screen.dart';
 import '../screens/library_screen.dart';
+import '../screens/linux_manager/linux_backups_page.dart';
 import '../screens/linux_manager/linux_manager_screen.dart'
     show openLinuxManager;
 import '../screens/linux_manager/linux_packages_page.dart';
 import '../screens/linux_manager/linux_ports_page.dart';
 import '../screens/linux_manager/linux_processes_page.dart';
+import '../screens/linux_manager/linux_service_add_page.dart';
+import '../screens/linux_manager/linux_services_page.dart';
 import '../screens/linux_manager/linux_storage_page.dart';
 import '../screens/local_agent_screen.dart';
 import '../screens/project_hub_screen.dart';
@@ -41,6 +48,7 @@ import '../screens/saved_permissions_screen.dart';
 import '../screens/server_capabilities_screen.dart';
 import '../screens/session_import_screen.dart';
 import '../screens/settings/ai_setup_screen.dart';
+import '../screens/settings/browser_mode_screen.dart';
 import '../screens/settings/tips_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/servers_screen.dart' show ServersRouteRequest;
@@ -403,6 +411,27 @@ Future<void> _openVoice(BuildContext context, SearchScope scope) async {
     await pushKitPage<void>(
       context,
       (_) => VoiceSettingsScreen(manager: models),
+    );
+  } catch (error) {
+    if (context.mounted) showProductError(context, error);
+  }
+}
+
+/// Where Settings › Assistant on this phone gets its controller; a test swaps it.
+@visibleForTesting
+Future<LocalAssistantController> Function() localAssistantLoader =
+    LocalAssistantController.shared;
+
+Future<void> _openLocalAssistant(
+  BuildContext context,
+  SearchScope scope,
+) async {
+  try {
+    final controller = await localAssistantLoader();
+    if (!context.mounted) return;
+    await pushKitPage<void>(
+      context,
+      (_) => LocalAssistantSettingsScreen(controller: controller),
     );
   } catch (error) {
     if (context.mounted) showProductError(context, error);

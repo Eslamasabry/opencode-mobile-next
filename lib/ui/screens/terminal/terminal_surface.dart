@@ -583,14 +583,17 @@ class _TerminalSurfaceState extends State<TerminalSurface>
             onSelected: () =>
                 setState(() => _accessibleMode = !_accessibleMode),
           ),
-          KitMenuItem(
-            key: const ValueKey('terminal-paste'),
-            label: l10n.terminalScreenPaste(_title),
-            icon: AppIconography.paste,
-            enabled: canWrite,
-            disabledReason: l10n.e7SetupInputDisconnected,
-            onSelected: () => unawaited(_paste()),
-          ),
+          // A browser reads the clipboard only on a secure origin; there the
+          // item is not offered (keyboard paste into the terminal works).
+          if (platformCapabilities.supportsClipboardRead)
+            KitMenuItem(
+              key: const ValueKey('terminal-paste'),
+              label: l10n.terminalScreenPaste(_title),
+              icon: AppIconography.paste,
+              enabled: canWrite,
+              disabledReason: l10n.e7SetupInputDisconnected,
+              onSelected: () => unawaited(_paste()),
+            ),
           KitMenuItem(
             key: const Key('terminal-reconnect'),
             label: l10n.e7SetupReconnect,

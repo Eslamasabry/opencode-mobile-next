@@ -292,6 +292,28 @@ void main() {
     );
   }
 
+  test('normalized binding never persists a recognized credential', () async {
+    final (prefs, _) = await _setup();
+    final owner = SessionLinkBindings.forProfile(prefs, _profile);
+    KitRedact.registerKnownSecret(_instance);
+    addTearDown(KitRedact.clearKnownSecrets);
+    await expectLater(
+      owner.save(_binding(id: _instance.toUpperCase())),
+      _failure(SessionAddressFailureCode.invalidLink),
+    );
+    expect(prefs.containsKey(_key), isFalse);
+  });
+
+  test('binding checks newly known credentials at durable write', () async {
+    final (prefs, _) = await _setup();
+    final owner = SessionLinkBindings.forProfile(prefs, _profile);
+    final saving = owner.save(_binding());
+    KitRedact.registerKnownSecret(_instance);
+    addTearDown(KitRedact.clearKnownSecrets);
+    await expectLater(saving, _failure(SessionAddressFailureCode.invalidLink));
+    expect(prefs.containsKey(_key), isFalse);
+  });
+
   test(
     'credentials and recognized secrets never enter binding storage',
     () async {

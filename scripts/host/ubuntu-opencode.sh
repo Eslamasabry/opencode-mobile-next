@@ -43,12 +43,12 @@ readonly UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 readonly UNIT_FILE="$UNIT_DIR/$SERVICE_NAME.service"
 
 # OpenCode 2 is the only supported server. Reviewed npm tarball hashes.
-readonly OPENCODE_VERSION="2.1.1"
+readonly OPENCODE_VERSION="2.2.5"
 readonly OPENCODE_RELEASES="https://registry.npmjs.org/@opencode"
-readonly OPENCODE_X64_ASSET="cli-linux-x64-baseline-2.1.1.tgz"
-readonly OPENCODE_X64_SHA256="216d3861d0a167adad5850282439bae13483203f4b110f0510f260118bba2858"
-readonly OPENCODE_ARM64_ASSET="cli-linux-arm64-2.1.1.tgz"
-readonly OPENCODE_ARM64_SHA256="cfa3ae6363fc3082f03072297069d81f53559a761371fdb4b56fe6bfa01ca066"
+readonly OPENCODE_X64_ASSET="cli-linux-x64-baseline-2.2.5.tgz"
+readonly OPENCODE_X64_SHA256="873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08"
+readonly OPENCODE_ARM64_ASSET="cli-linux-arm64-2.2.5.tgz"
+readonly OPENCODE_ARM64_SHA256="f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053"
 readonly OPENCODE_MEMBER="package/bin/opencode"
 readonly OPENCODE_BIN_DIR="$HOME/.opencode/bin"
 

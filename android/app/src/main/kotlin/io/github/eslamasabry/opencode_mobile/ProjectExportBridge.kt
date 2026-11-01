@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.system.ErrnoException
 import android.system.Os
@@ -30,7 +31,8 @@ import java.util.zip.ZipOutputStream
  * "Save to" picker. It runs while the page is open (no service, no
  * unbounded background work); closing the page stops it and the partial
  * zip is deleted. Sources must be regular files inside filesDir, checked
- * with lstat so a link swapped in after planning is never followed.
+ * through pinned directory descriptors with O_NOFOLLOW at every component.
+ * A missing or replaced source fails the backup instead of reporting success.
  *
  * Also the manage-space actions: measure/clear the cache (never the running
  * in-app server's proot-tmp) and ActivityManager.clearApplicationUserData.
@@ -125,7 +127,6 @@ class ProjectExportBridge(
     }
 
     private fun runExport(uri: Uri, plan: File): Map<String, Any> {
-        val filesRoot = context.filesDir.canonicalPath + File.separator
         var bytes = 0L
         var files = 0
         var lastReport = 0L
@@ -139,17 +140,12 @@ class ProjectExportBridge(
                 for (line in lines) {
                     if (cancelled.get()) throw Cancelled()
                     val tab = line.indexOf('\t')
-                    if (tab <= 0) continue
+                    if (tab <= 0) throw IOException("invalid plan")
                     val name = line.substring(0, tab)
                     val source = File(line.substring(tab + 1))
-                    if (!safeName(name) || !regularFileInside(source, filesRoot)) continue
                     stage = "source"
-                    val input = try {
-                        FileInputStream(source)
-                    } catch (_: IOException) {
-                        // Gone since the plan was made: nothing to keep.
-                        continue
-                    }
+                    if (!safeName(name)) throw IOException("invalid entry")
+                    val input = openRegularFileInside(source)
                     input.use {
                         stage = "destination"
                         zip.putNextEntry(ZipEntry(name).apply { time = source.lastModified() })
@@ -203,16 +199,63 @@ class ProjectExportBridge(
         mapOf("ok" to false, "reason" to reason, "detail" to detail)
 
     private fun safeName(name: String): Boolean =
-        !name.startsWith("/") && name.split('/').none { it == ".." || it.isEmpty() }
+        !name.startsWith("/") && !name.contains('\\') &&
+            name.none { it.code < 32 || it.code == 127 } &&
+            name.split('/').none { it == "." || it == ".." || it.isEmpty() }
 
-    private fun regularFileInside(file: File, root: String): Boolean = try {
-        val parent = file.parentFile?.canonicalPath ?: ""
-        (parent + File.separator).startsWith(root) &&
-            OsConstants.S_ISREG(Os.lstat(file.path).st_mode)
-    } catch (_: ErrnoException) {
-        false
-    } catch (_: IOException) {
-        false
+    /** Open relative to held directories, never re-resolve a checked path.
+     * /proc/self/fd supplies openat semantics on Android's public Os API.
+     * Every untrusted component uses O_NOFOLLOW, including the final leaf;
+     * O_NONBLOCK means a swapped FIFO cannot hang the export worker.
+     */
+    private fun openRegularFileInside(file: File): FileInputStream {
+        // The planner reports a git object behind a proot link by its resolved
+        // path, which may name the same folder through /data/data instead of
+        // /data/user/0. Either spelling of the app's own folder is accepted;
+        // the walk below still never follows a link past it.
+        val path = file.absolutePath
+        val rootDir = listOf(context.filesDir.absolutePath, context.filesDir.canonicalPath)
+            .firstOrNull { path.startsWith(it + File.separator) }
+            ?: throw IOException("source outside files")
+        val relative = path.substring(rootDir.length + File.separator.length)
+        if (!safeName(relative)) throw IOException("invalid source")
+        val parts = relative.split('/')
+        fun open(path: String, directory: Boolean): ParcelFileDescriptor {
+            val flags = OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW or
+                OsConstants.O_CLOEXEC or OsConstants.O_NONBLOCK
+            val fd = Os.open(path, flags, 0)
+            try {
+                // Android's public OsConstants does not expose O_DIRECTORY.
+                // Inspect the opened descriptor rather than resolving the path again.
+                if (directory && !OsConstants.S_ISDIR(Os.fstat(fd).st_mode)) {
+                    throw IOException("unsupported source directory")
+                }
+                return ParcelFileDescriptor.dup(fd)
+            } finally {
+                Os.close(fd)
+            }
+        }
+        var parent = open(rootDir, true)
+        try {
+            for (part in parts.dropLast(1)) {
+                val next = open("/proc/self/fd/${parent.fd}/$part", true)
+                parent.close()
+                parent = next
+            }
+            val leaf = open("/proc/self/fd/${parent.fd}/${parts.last()}", false)
+            try {
+                val stat = Os.fstat(leaf.fileDescriptor)
+                if (!OsConstants.S_ISREG(stat.st_mode) || stat.st_nlink != 1L) {
+                    throw IOException("unsupported source")
+                }
+                return ParcelFileDescriptor.AutoCloseInputStream(leaf)
+            } catch (error: Exception) {
+                leaf.close()
+                throw error
+            }
+        } finally {
+            parent.close()
+        }
     }
 
     private fun cacheRoots(): List<File> =

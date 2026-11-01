@@ -1,4 +1,6 @@
 import '../../l10n/app_localizations.dart';
+import '../../network/transport_failure.dart'
+    show browserAgentSocketUnavailableMessage, browserProbeTimeoutMessage;
 
 /// Translates app-authored validation and manager messages at the presentation
 /// boundary. Unknown server/platform detail and copied raw diagnostics remain
@@ -148,6 +150,11 @@ Map<String, String> _messages(AppLocalizations l10n) => <String, String>{
       l10n.e7SetupLocalHttp,
   'The connection timed out. Check the address, and that the server is reachable from this phone.':
       l10n.e7SetupTimeout,
+  browserProbeTimeoutMessage: l10n.browserProbeTimeout,
+  browserAgentSocketUnavailableMessage: l10n.browserAgentSocketUnavailable,
+  // Compared with the exact text the browser transport produces.
+  'The browser could not reach the server. Check the address and that the server is running. A server on a different origin must allow the origin of this page (CORS), and a page loaded over https cannot use an http:// or ws:// server.':
+      l10n.browserTransportFailure,
   'Official installer plus a systemd user service that survives closed terminals and reboots.':
       l10n.e7SetupInstallServiceDetail,
   'The local server restarted, but the active server changed. Reconnect when you are ready.':

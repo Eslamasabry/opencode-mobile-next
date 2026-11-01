@@ -12,6 +12,7 @@ import 'team_digest.dart';
 import 'team_project_editors.dart';
 import 'team_refusal.dart';
 import 'team_status_words.dart';
+import '../../../locale_format.dart';
 
 part 'screen/overview.dart';
 part 'screen/overview_helpers.dart';

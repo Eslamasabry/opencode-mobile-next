@@ -162,6 +162,9 @@ class _ScheduledPromptsScreenState extends State<ScheduledPromptsScreen>
       where: _where(schedule ?? widget.target),
       lastRun: run,
       canOpenRun: run?.sessionId != null && widget.onOpenRun != null,
+      canRunNow:
+          c.platformStatus.supported &&
+          run?.status != ScheduledPromptRunStatus.running,
     );
     if (!mounted || schedule == null) return;
     switch (exit) {
@@ -169,6 +172,11 @@ class _ScheduledPromptsScreenState extends State<ScheduledPromptsScreen>
         await _delete(schedule);
       case ScheduleSheetExit.openRun:
         if (run != null) await _act(() => widget.onOpenRun!(run));
+      case ScheduleSheetExit.runNow:
+        await _act(() => c.runNow(schedule.id));
+        // The background worker records "sending now" a moment later.
+        await Future<void>.delayed(const Duration(seconds: 3));
+        if (mounted) await c.load();
       case ScheduleSheetExit.saved || null:
         break;
     }

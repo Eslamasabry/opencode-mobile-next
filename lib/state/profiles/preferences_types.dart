@@ -132,6 +132,13 @@ class SecureStorageUnavailable implements Exception {
     Object? cause,
   }) => SecureStorageUnavailable(messageFor(platform), cause: cause);
 
+  /// The browser build's sentence: the page's own situation when the probe
+  /// can name it, otherwise the plugin's failure in product words.
+  factory SecureStorageUnavailable.forBrowser(
+    BrowserSecretStorageState state, {
+    Object? cause,
+  }) => SecureStorageUnavailable(messageForBrowser(state), cause: cause);
+
   static const linuxMessage =
       'Could not store the password: no keyring is available. Install GNOME '
       'Keyring or KWallet, or run the app inside a desktop session, then try '
@@ -139,8 +146,29 @@ class SecureStorageUnavailable implements Exception {
   static const genericMessage =
       'Could not store the password securely on this device.';
 
+  /// WebCrypto, which the browser build encrypts with, exists only on https
+  /// and localhost pages. Nothing is kept in the clear instead.
+  static const browserInsecureContextMessage =
+      'Could not store the password: this page is not a secure context. '
+      'Open the app over https:// or from localhost, then try again.';
+  static const browserStorageBlockedMessage =
+      'Could not store the password: the browser is blocking site storage '
+      'for this page. Allow site data (private browsing may prevent it), '
+      'then try again.';
+  static const browserMessage =
+      'Could not store the password in this browser. Reload the page and '
+      'try again.';
+
   static String messageFor(TargetPlatform platform) =>
       platform == TargetPlatform.linux ? linuxMessage : genericMessage;
+
+  static String messageForBrowser(
+    BrowserSecretStorageState state,
+  ) => switch (state) {
+    BrowserSecretStorageState.insecureContext => browserInsecureContextMessage,
+    BrowserSecretStorageState.storageBlocked => browserStorageBlockedMessage,
+    BrowserSecretStorageState.available => browserMessage,
+  };
 
   @override
   String toString() => message;

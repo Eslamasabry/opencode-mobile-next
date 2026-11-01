@@ -27,6 +27,7 @@ import '../kit_live_background.dart';
 import '../kit_max_width.dart';
 import '../kit_menu.dart';
 import '../kit_motion.dart';
+import '../kit_paste_image_menu.dart';
 import '../kit_surface_look.dart';
 import '../kit_tappable.dart';
 import '../kit_text.dart';
@@ -37,6 +38,7 @@ import '../motion/kit_motion_parts.dart';
 import '../motion/kit_reveal.dart';
 import '../style/kit_style.dart';
 import 'kit_composer_chips.dart';
+import 'kit_mic_hold.dart';
 import 'kit_turn.dart';
 
 part 'kit_composer_types.dart';
@@ -78,6 +80,7 @@ class KitComposer extends StatefulWidget {
     this.offline = false,
     this.offlineAgentName = 'OpenCode',
     this.readOnlyReason,
+    this.sendBlockedNote,
     this.note,
     this.attachments,
     this.suggestions,
@@ -89,9 +92,12 @@ class KitComposer extends StatefulWidget {
     this.stuckNote,
     this.toolsDisabledReason,
     this.onVoice,
+    this.micHold,
+    this.micTip,
     this.voice,
     this.onOpenEditor,
     this.onContentInserted,
+    this.pasteImage,
     this.composerKey,
     this.fieldKey,
     this.sendKey,
@@ -151,6 +157,11 @@ class KitComposer extends StatefulWidget {
   /// choice: the words say it on the button and in the note.
   final KitComposerDelivery delivery;
 
+  /// Non-null: typing and the draft stay, Send is off, and these words (with
+  /// live progress, from the caller) say why and when it comes back. For a
+  /// moment the app cannot take a message and would otherwise refuse it.
+  final String? sendBlockedNote;
+
   /// Non-null: no typing; the reason is shown in the pill.
   final String? readOnlyReason;
 
@@ -197,6 +208,14 @@ class KitComposer extends StatefulWidget {
   /// The mic: the host enters voice mode; null: no voice.
   final VoidCallback? onVoice;
 
+  /// Holding the mic records until the finger lifts (push-to-talk); a quick
+  /// tap is still [onVoice]. Null: the mic only taps.
+  final KitComposerMicHold? micHold;
+
+  /// The teaching tip over the mic ("Hold the mic to talk"), shown while
+  /// non-null.
+  final KitComposerTip? micTip;
+
   /// Full-screen editor; shown only when there is text.
   final VoidCallback? onOpenEditor;
 
@@ -205,6 +224,10 @@ class KitComposer extends StatefulWidget {
 
   /// IME images.
   final ValueChanged<KeyboardInsertedContent>? onContentInserted;
+
+  /// "Paste image" in the field's selection menu while the clipboard holds a
+  /// picture; null leaves the platform menu alone.
+  final KitPasteImage? pasteImage;
 
   final Key? composerKey,
       fieldKey,
@@ -250,6 +273,9 @@ class KitComposer extends StatefulWidget {
 enum _Trailing { mic, send, sendDisabled, sending, none }
 
 class _KitComposerState extends State<KitComposer> {
+  /// Says the tap that follows a held mic is not a tap.
+  final KitMicHoldGate _micGate = KitMicHoldGate();
+
   bool _hasText = false;
 
   /// The tray "+" opens ([KitComposer.tray]).
@@ -313,6 +339,7 @@ class _KitComposerState extends State<KitComposer> {
 
   bool get _canSendNow =>
       !_readOnly &&
+      widget.sendBlockedNote == null &&
       widget.voice == null &&
       _hasContent &&
       !widget.sending &&
@@ -424,6 +451,7 @@ class _KitComposerState extends State<KitComposer> {
     // when there is not. Stop is not here (it sits above the pill, in the
     // chips row: [KitComposerStatusStrip.stop]).
     if (widget.sending) return _Trailing.sending;
+    if (widget.sendBlockedNote != null) return _Trailing.sendDisabled;
     if (widget.busy) {
       if (!_hasContent) {
         return widget.onVoice != null ? _Trailing.mic : _Trailing.sendDisabled;
@@ -472,6 +500,7 @@ class _KitComposerState extends State<KitComposer> {
     final reason = widget.readOnlyReason;
     if (reason != null) return reason;
     final parts = <String>[
+      ?widget.sendBlockedNote,
       if (widget.note case final note? when note.isNotEmpty) note,
       if (widget.toolsDisabledReason case final r? when r.isNotEmpty) r,
       if (widget.offline)
@@ -587,6 +616,7 @@ class _KitComposerState extends State<KitComposer> {
           contentInsertion: inserted == null
               ? null
               : ContentInsertionConfiguration(onContentInserted: inserted),
+          pasteImage: widget.pasteImage,
           maxLines: short ? 3 : 8,
           enabled: !readOnly,
           disabledReason: widget.readOnlyReason,
@@ -816,6 +846,36 @@ class _KitComposerState extends State<KitComposer> {
     );
   }
 
+  /// The mic: a tap enters voice mode; held, it records until the finger
+  /// lifts. The tip over it teaches the hold.
+  Widget _mic(AppLocalizations l10n) {
+    final hold = widget.micHold;
+    Widget mic = _Circle(
+      key: const ValueKey('kit-composer-mic'),
+      kind: _CircleKind.mic,
+      label: l10n.kitComposerVoice,
+      tappableKey: widget.voiceButtonKey,
+      // The tap a hold leaves behind is not a second start.
+      onTap: widget.onVoice == null
+          ? null
+          : () {
+              if (_micGate.takeHeld()) return;
+              widget.onVoice!();
+            },
+      secondary: widget.quiet,
+    );
+    if (hold != null) {
+      mic = KitMicHoldDetector(hold: hold, gate: _micGate, child: mic);
+    }
+    return KitTip(
+      tipKey: const ValueKey('kit-composer-mic-tip-bubble'),
+      message: widget.micTip?.message ?? '',
+      visible: widget.micTip != null,
+      onDismissed: () => widget.micTip?.onDismissed(),
+      child: mic,
+    );
+  }
+
   Widget _trailingControl(BuildContext context, AppLocalizations l10n) {
     final wide = KitLayout.windowOf(context).isWide;
     final trailing = _trailing();
@@ -865,14 +925,7 @@ class _KitComposerState extends State<KitComposer> {
 
     return switch (trailing) {
       _Trailing.none => const SizedBox.shrink(key: ValueKey('none')),
-      _Trailing.mic => _Circle(
-        key: const ValueKey('kit-composer-mic'),
-        kind: _CircleKind.mic,
-        label: l10n.kitComposerVoice,
-        tappableKey: widget.voiceButtonKey,
-        onTap: widget.onVoice,
-        secondary: widget.quiet,
-      ),
+      _Trailing.mic => _mic(l10n),
       _Trailing.send => send(),
       _Trailing.sending => send(),
       _Trailing.sendDisabled => send(enabled: false),

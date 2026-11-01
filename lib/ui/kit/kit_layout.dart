@@ -93,6 +93,10 @@ abstract final class KitLayout {
   /// ("Send as a GitHub issue" · "Copy"); narrower, the pair stacks.
   static const double pairRowMinWidth = 340;
 
+  /// The narrowest [KitVitalsStrip] that keeps three or four readings on one
+  /// line; narrower, they wrap two by two.
+  static const double vitalsRowMinWidth = 340;
+
   static const double popoverMinWidth = 200;
   static const double popoverMaxWidth = 320;
 

@@ -13,7 +13,7 @@ void main() {
     expect(message.info.role, 'user');
     expect(message.parts.single.type, 'v2:compaction');
     expect(message.parts.single.toolName, 'completed');
-    expect(message.parts.single.text, 'Conversation compacted.');
+    expect(message.parts.single.text, 'Conversation shortened.');
   });
 
   test('an expired sign-in is a sign-in error, its text kept for Details', () {

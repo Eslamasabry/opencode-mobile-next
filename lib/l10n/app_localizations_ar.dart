@@ -4815,19 +4815,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatUiCommandMap => 'دليل الأوامر';
 
   @override
-  String get chatUiCompactContext => 'اختصار السياق';
+  String get chatUiCompactContext => 'قصّر المحادثة';
 
   @override
-  String get chatUiCompactSession => 'اختصار المحادثة';
+  String get chatUiCompactSession => 'قصّر المحادثة';
 
   @override
-  String get chatUiCompactingConversation => 'جارٍ اختصار المحادثة…';
+  String get chatUiCompactingConversation => 'جارٍ تقصير المحادثة…';
 
   @override
-  String get chatUiCompactionFailed => 'فشل اختصار السياق';
+  String get chatUiCompactionFailed => 'فشل التقصير';
 
   @override
-  String get chatUiCompactionStarted => 'بدأ اختصار السياق';
+  String get chatUiCompactionStarted => 'بدأ التقصير';
 
   @override
   String get chatUiCompose => 'كتابة رسالة';
@@ -5274,7 +5274,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatUiSelectAModelBeforeCompactingThisSession =>
-      'اختر نموذجًا قبل اختصار هذه المحادثة.';
+      'اختر نموذجًا قبل تقصير هذه المحادثة.';
 
   @override
   String get chatUiServerCommands => 'أوامر الخادم';
@@ -10418,7 +10418,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get capabilitySubagentsDetail => 'اذكر وكيلا بعلامة @ في الطلب';
 
   @override
-  String get capabilityCompact => 'الضغط';
+  String get capabilityCompact => 'تقصير';
 
   @override
   String get capabilityCompactDetail => 'لخّص محادثة طويلة لتحرير السياق';
@@ -10596,7 +10596,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String nudgeCompact(String percent) {
-    return 'السياق ممتلئ بنسبة $percent%: اختصره لتتابع.';
+    return 'السياق ممتلئ بنسبة $percent%: قصّر المحادثة لتتابع.';
   }
 
   @override
@@ -10886,7 +10886,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get agentErrorRequestTooLargeHint =>
-      'أرسل مرفقات أقل أو أصغر، أو اضغط المحادثة، ثم حاول مجددًا.';
+      'أرسل مرفقات أقل أو أصغر، أو قصّر المحادثة، ثم حاول مجددًا.';
 
   @override
   String get agentErrorRateLimited => 'يحدّ مزوّد النموذج من سرعة الإرسال.';
@@ -10939,7 +10939,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get chatUiCompactAgain => 'اضغط المحادثة مجددًا';
+  String get chatUiCompactAgain => 'قصّرها مجددًا';
 
   @override
   String get chatUiCompactionFailedHint =>
@@ -17580,13 +17580,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sessionContextNearLimitBody =>
-      'قد تُحذف التفاصيل القديمة مما يراه النموذج. لخّص المحادثة للمتابعة، أو ابدأ محادثة جديدة.';
+      'قد تُحذف التفاصيل القديمة مما يراه النموذج. قصّر المحادثة للمتابعة، أو ابدأ محادثة جديدة.';
 
   @override
-  String get sessionContextCompactAction => 'تلخيص هذه المحادثة';
+  String get sessionContextCompactAction => 'قصّر هذه المحادثة';
 
   @override
-  String get sessionContextCompactTitle => 'هل تريد تلخيص هذه المحادثة؟';
+  String get sessionContextCompactTitle => 'هل تريد تقصير هذه المحادثة؟';
 
   @override
   String get sessionContextCompactBody =>
@@ -17596,11 +17596,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sessionContextCompactKept => 'تبقى جميع الرسائل في السجل.';
 
   @override
-  String get sessionContextCompactConfirm => 'تلخيص المحادثة';
+  String get sessionContextCompactConfirm => 'قصّر المحادثة';
 
   @override
   String get sessionContextCompactStarted =>
-      'بدأ التلخيص. تُحدَّث الأرقام بعد انتهائه.';
+      'بدأ التقصير. تُحدَّث الأرقام بعد انتهائه.';
 
   @override
   String get sessionContextCompactBusy => 'انتظر حتى ينتهي الرد.';
@@ -22758,14 +22758,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'تم تسجيل الدخول، لكن هذا الخادم لا يستطيع استخدامه';
 
   @override
-  String get chatUiCompactConfirmTitle => 'هل تريد تلخيص هذه المحادثة؟';
+  String get chatUiCompactConfirmTitle => 'هل تريد تقصير هذه المحادثة؟';
 
   @override
   String get chatUiCompactConfirmBody =>
-      'يستبدل التلخيص الرسائل السابقة بملخص قصير لتوفير المساحة. لا يمكن التراجع عنه.';
+      'يستبدل التقصير الرسائل السابقة بملخص قصير لتوفير المساحة. لا يمكن التراجع عنه.';
 
   @override
-  String get chatUiCompactConfirmAction => 'تلخيص المحادثة';
+  String get chatUiCompactConfirmAction => 'قصّر المحادثة';
 
   @override
   String get kitTurnReconnecting =>
@@ -27795,10 +27795,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kitContextRingTapHint => 'عرض تفاصيل السياق';
 
   @override
-  String get kitContextRingCompacting => 'جارٍ الضغط';
+  String get kitContextRingCompacting => 'جارٍ التقصير';
 
   @override
-  String get kitContextRingCompactingSemantics => 'السياق، جارٍ الضغط';
+  String get kitContextRingCompactingSemantics => 'السياق، جارٍ التقصير';
 
   @override
   String get kitContextSheetTitle => 'نافذة السياق';
@@ -27836,7 +27836,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kitContextChartCompacted => 'ضُغطت المحادثة هنا';
 
   @override
-  String get kitContextSheetCompactNow => 'اضغط الآن';
+  String get kitContextSheetCompactNow => 'قصّر الآن';
 
   @override
   String get phraseChipsRowLabel => 'عبارات سريعة';
@@ -35576,7 +35576,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String runningPhoneLimitBody(int count, int limit) {
-    return '$count من $limit عملية في الخلفية: فوق $limit يوقف أندرويد أقدم عمليات هذا التطبيق أولًا، وهي الخوادم. أوقف ما بقي يعمل أو ما لا تحتاجه، أو ارفع الحد من خيارات المطوّر › تعطيل قيود العمليات الفرعية.';
+    return '$count من $limit عملية في الخلفية: فوق $limit يوقف أندرويد أقدم عمليات هذا التطبيق أولًا، وهي الخوادم. الوكلاء الجدد ينتظرون حتى تتوفر مساحة. أوقف ما بقي يعمل أو ما لا تحتاجه.';
   }
 
   @override
@@ -35915,4 +35915,1834 @@ class AppLocalizationsAr extends AppLocalizations {
   String stopRowSemantics(String agent) {
     return 'إيقاف $agent';
   }
+
+  @override
+  String get vpttLetGoToFinish => 'ارفع إصبعك عند الانتهاء';
+
+  @override
+  String get vpttLetGoToCancel => 'ارفع إصبعك للإلغاء';
+
+  @override
+  String vpttSendingIn(String seconds) {
+    return 'الإرسال خلال $seconds…';
+  }
+
+  @override
+  String get vpttDontSend => 'لا ترسل';
+
+  @override
+  String get vpttLanguageFollowApp => 'مثل التطبيق';
+
+  @override
+  String get vpttLanguageFollowAppDetail =>
+      'يصغي بلغة التطبيق متى أمكن، ويتعرّف على اللغة من صوتك عندما لا يمكن.';
+
+  @override
+  String get vpttLanguageDetectDetail => 'يتعرّف على اللغة من صوتك في كل مرة.';
+
+  @override
+  String get vpttAutoSendTitle => 'أرسل عندما أتوقف عن الكلام';
+
+  @override
+  String get vpttAutoSendDetail =>
+      'بعد وقفة قصيرة تُرسل كلماتك، ولديك 3 ثوانٍ للإلغاء. الضغط المطوّل على الميكروفون لا يرسل من تلقاء نفسه.';
+
+  @override
+  String get tipHoldMic =>
+      'اضغط مطولًا على الميكروفون لتتحدث، وارفع إصبعك عند الانتهاء';
+
+  @override
+  String get tipHoldMicTitle => 'اضغط مطولًا للتحدث';
+
+  @override
+  String vpttLanguageUnavailableOffline(String language) {
+    return 'لغة التطبيق ($language) ليست ضمن ما يعرفه نموذج الكلام دون اتصال، لذلك يتعرّف على اللغة من صوتك بدلًا من ذلك.';
+  }
+
+  @override
+  String vpttLanguageCompactRough(String language) {
+    return 'النموذج المدمج ضعيف خارج الإنجليزية. للغة $language، اختر «متوازن» أو «دقة عالية» أعلاه.';
+  }
+
+  @override
+  String get connCheckTitle => 'فحص الاتصال';
+
+  @override
+  String get connCheckRowDetail =>
+      'اختبر العنوان وتسجيل الدخول والإصدار والتحديثات المباشرة والسرعة.';
+
+  @override
+  String get connCheckIntro =>
+      'خمسة فحوصات سريعة لهذا الخادم. لا يتغير شيء ولا يُحفظ.';
+
+  @override
+  String get connCheckRun => 'فحص الاتصال';
+
+  @override
+  String get connCheckAgain => 'افحص مرة أخرى';
+
+  @override
+  String get connCheckRunning => 'جارٍ الفحص…';
+
+  @override
+  String get connCheckStepAddress => 'العنوان يمكن الوصول إليه';
+
+  @override
+  String get connCheckStepSignIn => 'تم قبول تسجيل الدخول';
+
+  @override
+  String get connCheckStepVersion => 'إصدار الخادم مدعوم';
+
+  @override
+  String get connCheckStepLive => 'التحديثات المباشرة تصل';
+
+  @override
+  String get connCheckStepSpeed => 'زمن الاستجابة';
+
+  @override
+  String get connCheckAddressOk => 'ردّ الخادم.';
+
+  @override
+  String get connCheckAddressUnreachable =>
+      'لم يردّ أحد على هذا العنوان. تأكد أن الخادم يعمل وأن هذا الهاتف يستطيع الوصول إليه، مثلاً عبر Tailscale.';
+
+  @override
+  String get connCheckAddressNotOpenCode =>
+      'ردّ شيء ما لكنه ليس خادم OpenCode. تحقق من العنوان والمنفذ.';
+
+  @override
+  String get connCheckSignInOk => 'قبل الخادم تسجيل الدخول هذا.';
+
+  @override
+  String get connCheckNeedsPassword =>
+      'يطلب هذا الخادم كلمة مرور. أضفها تحت الاسم والعنوان.';
+
+  @override
+  String get connCheckPasswordRejected =>
+      'لم يقبل الخادم كلمة المرور المحفوظة. انسخ الحالية من الخادم واحفظها مرة أخرى.';
+
+  @override
+  String get connCheckVersionOkUnknown => 'هذا الخادم يعمل مع هذا التطبيق.';
+
+  @override
+  String get connCheckVersionUnsupported =>
+      'يعمل هذا الخادم بإصدار أقدم من OpenCode لم يعد التطبيق يدعمه. حدّثه إلى OpenCode 2.';
+
+  @override
+  String get connCheckVersionNotReady =>
+      'الخادم قيد البدء أو يبلغ عن مشكلة. انتظر لحظة ثم افحص مرة أخرى.';
+
+  @override
+  String get connCheckLiveOk => 'التحديثات تصل لحظة حدوثها.';
+
+  @override
+  String get connCheckLiveConnecting =>
+      'ما زال الاتصال بالتحديثات المباشرة قيد الإقامة. افحص مرة أخرى بعد لحظة.';
+
+  @override
+  String get connCheckLiveDown =>
+      'التحديثات المباشرة لا تصل. السبب المعتاد وسيط يخزّن الاتصالات الطويلة أو يقطعها.';
+
+  @override
+  String get connCheckLiveNotChecked =>
+      'اتصل بهذا الخادم لفحص التحديثات المباشرة.';
+
+  @override
+  String get connCheckSpeedSlow =>
+      'هذا بطيء. جرّب شبكة أقرب أو افحص المسار الذي تسلكه الشبكة الافتراضية.';
+
+  @override
+  String get connCheckSkipped =>
+      'لم يُفحص لأن خطوة سابقة تحتاج إلى إصلاح أولاً.';
+
+  @override
+  String get connCheckReachHelp => 'كيف تصل إلى حاسوبك';
+
+  @override
+  String get connCheckReachHelpDetail => 'Tailscale أو نفق SSH، خطوة بخطوة.';
+
+  @override
+  String get reachTitle => 'كيف تصل إلى حاسوبك';
+
+  @override
+  String get reachIntro =>
+      'يجب أن يبقى خادم OpenCode على حاسوبك خاصاً. هاتان الطريقتان تُبقيانه بعيداً عن الإنترنت العام. جرّب Tailscale أولاً.';
+
+  @override
+  String get reachTailscaleHeading => 'Tailscale (موصى به)';
+
+  @override
+  String get reachTailscale1 =>
+      'ثبّت Tailscale على حاسوبك وعلى هذا الهاتف وسجّل الدخول بالحساب نفسه على الاثنين.';
+
+  @override
+  String get reachTailscale2 =>
+      'على الحاسوب شغّل الخادم بكلمة مرور، مثلاً: opencode serve --port 4096';
+
+  @override
+  String get reachTailscale3 =>
+      'اعثر على اسم الحاسوب في Tailscale أو عنوانه 100.x.x.x في تطبيق Tailscale.';
+
+  @override
+  String get reachTailscale4 =>
+      'هنا أضف خادماً بهذا الاسم والمنفذ، مثلاً http://100.101.102.103:4096، وأدخل كلمة المرور.';
+
+  @override
+  String get reachSshHeading => 'نفق SSH (إن تعذّر استخدام Tailscale)';
+
+  @override
+  String get reachSsh1 =>
+      'تحتاج إلى تطبيق SSH على هذا الهاتف يستطيع تمرير منفذ، ووصول SSH إلى حاسوبك.';
+
+  @override
+  String get reachSsh2 =>
+      'شغّل الخادم على الحاسوب مربوطاً بنفسه فقط: opencode serve --port 4096';
+
+  @override
+  String get reachSsh3 =>
+      'في تطبيق SSH مرّر المنفذ المحلي 4096 إلى 127.0.0.1:4096 على الحاسوب وأبقِه يعمل.';
+
+  @override
+  String get reachSsh4 =>
+      'هنا أضف خادماً على http://127.0.0.1:4096 وأدخل كلمة المرور. ثم استخدم فحص الاتصال.';
+
+  @override
+  String get reachSshCommand =>
+      'ssh -N -L 127.0.0.1:4096:127.0.0.1:4096 you@your-computer';
+
+  @override
+  String get reachSafetyHeading => 'أبقِه خاصاً';
+
+  @override
+  String get reachSafety =>
+      'لا تفتح منفذ الخادم على الإنترنت العام ولا تشاركه عبر نفق عام. من يصل إليه يستطيع تشغيل أوامر على حاسوبك.';
+
+  @override
+  String connCheckVersionOk(String version) {
+    return 'الإصدار $version يعمل مع هذا التطبيق.';
+  }
+
+  @override
+  String connCheckSpeedOk(int ms) {
+    return 'نحو $ms م.ث للذهاب والإياب.';
+  }
+
+  @override
+  String get scheduleRunNow => 'شغّله الآن';
+
+  @override
+  String get scheduleRunNowNote =>
+      'يبدأ تشغيلًا واحدًا فورًا. يبقى موعد التشغيل التالي كما هو.';
+
+  @override
+  String get shortcutsHelpReview => 'في مراجعة';
+
+  @override
+  String get shortcutsStopReplyKeys => 'Esc أثناء الرد';
+
+  @override
+  String get shortcutsStopReply => 'إيقاف الرد الجاري';
+
+  @override
+  String get shortcutsReviewNextChange => 'التغيير التالي';
+
+  @override
+  String get shortcutsReviewPreviousChange => 'التغيير السابق';
+
+  @override
+  String queueEvictedTooOld(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مسودة أقدم من أن تُرسَل',
+      many: '$count مسودة أقدم من أن تُرسَل',
+      few: '$count مسودات أقدم من أن تُرسَل',
+      two: 'مسودتان أقدم من أن تُرسَلا',
+      one: 'مسودة واحدة أقدم من أن تُرسَل',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String queueEvictedOverLimit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مسودة للبقاء ضمن حد القائمة',
+      many: '$count مسودة للبقاء ضمن حد القائمة',
+      few: '$count مسودات للبقاء ضمن حد القائمة',
+      two: 'مسودتان للبقاء ضمن حد القائمة',
+      one: 'مسودة واحدة للبقاء ضمن حد القائمة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get queueEvictedJoin => ' و';
+
+  @override
+  String queueEvictedSummary(int count, String reasons) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم تجاهل $count مسودة في قائمة الانتظار: $reasons.',
+      many: 'تم تجاهل $count مسودة في قائمة الانتظار: $reasons.',
+      few: 'تم تجاهل $count مسودات في قائمة الانتظار: $reasons.',
+      two: 'تم تجاهل مسودتين في قائمة الانتظار: $reasons.',
+      one: 'تم تجاهل مسودة واحدة في قائمة الانتظار: $reasons.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatUiThinkingLevelDefault =>
+      'العودة إلى مستوى التفكير الافتراضي.';
+
+  @override
+  String chatUiThinkingLevelSet(String level) {
+    return 'التفكير: $level.';
+  }
+
+  @override
+  String get shortcutsThinkingLevel => 'مستوى التفكير التالي / السابق';
+
+  @override
+  String get shortcutsTranscriptPages => 'تمرير المحادثة صفحة صفحة';
+
+  @override
+  String get shortcutsTranscriptEnds => 'أول رسالة / أحدث رسالة';
+
+  @override
+  String get shortcutsReviewNextFile => 'الملف التالي';
+
+  @override
+  String get shortcutsReviewPreviousFile => 'الملف السابق';
+
+  @override
+  String get shortcutsNotWhileTyping =>
+      'المفاتيح المفردة مثل N وP و[ و] تعمل فقط عندما لا يكون حقل نصي في التركيز.';
+
+  @override
+  String get fileShareAction => 'مشاركة عبر Wi-Fi';
+
+  @override
+  String get fileShareTitle => 'مشاركة عبر Wi-Fi';
+
+  @override
+  String fileShareQrLabel(String name) {
+    return 'رمز QR لتنزيل $name';
+  }
+
+  @override
+  String get fileShareLinkLabel => 'الرابط';
+
+  @override
+  String get fileShareCopyLink => 'نسخ الرابط';
+
+  @override
+  String get fileShareWarning =>
+      'يمكن لأي شخص على شبكة Wi-Fi هذه ومعه الرابط تنزيل هذا الملف.';
+
+  @override
+  String fileShareDownloads(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'نُزِّل $count مرات',
+      one: 'نُزِّل مرة واحدة',
+      zero: 'لم يُنزَّل بعد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fileShareTimeLeft(String time) {
+    return 'تتوقف المشاركة خلال $time';
+  }
+
+  @override
+  String get fileShareStop => 'إيقاف المشاركة';
+
+  @override
+  String get fileShareEnded =>
+      'توقفت المشاركة. لا يمكن لأحد تنزيل هذا الملف الآن.';
+
+  @override
+  String get fileShareNoWifi =>
+      'هذا الهاتف غير متصل بشبكة Wi-Fi. اتصل بشبكة Wi-Fi لمشاركة هذا الملف مع جهاز قريب.';
+
+  @override
+  String get fileSharePrivate =>
+      'لا يمكن مشاركة هذا الملف لأنه قد يحتوي على مفاتيح أو كلمات مرور.';
+
+  @override
+  String get fileShareUnavailable =>
+      'تعذّر بدء المشاركة. حاول مرة أخرى بعد قليل.';
+
+  @override
+  String get readAloudVoiceTitle => 'صوت القراءة بصوت عالٍ';
+
+  @override
+  String get readAloudVoicePhone => 'صوت الهاتف';
+
+  @override
+  String get readAloudVoicePhoneDetail =>
+      'يستخدم أصوات الكلام المثبّتة على هذا الهاتف.';
+
+  @override
+  String readAloudVoiceNaturalDownload(String size) {
+    return 'صوت طبيعي (تنزيل، حوالي $size)';
+  }
+
+  @override
+  String get readAloudVoiceNatural => 'صوت طبيعي';
+
+  @override
+  String get readAloudVoiceNaturalDetail =>
+      'يبدو أقرب إلى صوت إنسان ويعمل دون إنترنت. الإنجليزية فقط حاليًا، وتُقرأ اللغات الأخرى بصوت الهاتف.';
+
+  @override
+  String get naturalVoiceDownloading => 'جارٍ تنزيل الصوت الطبيعي';
+
+  @override
+  String naturalVoiceRemove(String size) {
+    return 'إزالة الصوت الطبيعي ($size)';
+  }
+
+  @override
+  String get naturalVoiceRemoveTitle => 'إزالة الصوت الطبيعي؟';
+
+  @override
+  String get naturalVoiceRemoveBody =>
+      'تعود الردود لتُقرأ بصوت الهاتف. يمكنك تنزيل الصوت الطبيعي مرة أخرى لاحقًا.';
+
+  @override
+  String get naturalVoiceKeep => 'إبقاؤه';
+
+  @override
+  String get naturalVoiceFallbackNote =>
+      'الصوت الطبيعي لا يقرأ هذه اللغة بعد، لذلك يقرأ صوت الهاتف.';
+
+  @override
+  String naturalVoiceNoSpace(String size) {
+    return 'لا توجد مساحة تخزين كافية. حرّر نحو $size وحاول مرة أخرى.';
+  }
+
+  @override
+  String get naturalVoiceFailed =>
+      'تعذّر إعداد الصوت الطبيعي. تحقق من اتصالك وحاول مرة أخرى.';
+
+  @override
+  String processBudgetWaitRoom(int ceiling) {
+    return 'في انتظار مساحة: يسمح الهاتف بنحو $ceiling برنامجًا في وقت واحد.';
+  }
+
+  @override
+  String processBudgetAgentsRunning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'يعمل $count وكيلًا.',
+      few: 'يعمل $count وكلاء.',
+      two: 'يعمل وكيلان.',
+      one: 'يعمل وكيل واحد.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get processBudgetWaitWarm =>
+      'في الانتظار: الهاتف دافئ. يبدأ العمل تلقائيًا عندما يبرد الهاتف.';
+
+  @override
+  String get processBudgetWaitBattery =>
+      'في الانتظار: البطارية منخفضة. يبدأ العمل تلقائيًا عند شحن الهاتف.';
+
+  @override
+  String get processBudgetSeeRunning => 'عرض ما يعمل';
+
+  @override
+  String processBudgetCount(int count, int ceiling) {
+    return '$count منها تُحسب ضمن الحد البالغ نحو $ceiling';
+  }
+
+  @override
+  String get agentKilledByAndroid =>
+      'أوقف Android الوكيل لأن عدد البرامج العاملة كان كبيرًا جدًا. جارٍ تشغيله مرة أخرى…';
+
+  @override
+  String get agentBackAfterKill =>
+      'أوقف Android الوكيل لأن عدد البرامج العاملة كان كبيرًا جدًا. عاد للعمل، ومحادثتك مستمرة.';
+
+  @override
+  String agentsStateUpdating(String version) {
+    return 'جارٍ التحديث إلى $version…';
+  }
+
+  @override
+  String get agentsStateUpdatingHelper => 'جارٍ التحديث…';
+
+  @override
+  String get agentsStateUpdateWaiting => 'سيُحدَّث عندما لا يعمل شيء';
+
+  @override
+  String get agentErrorFreeTier => 'أوقفت نماذج OpenCode المجانية هذا الرد.';
+
+  @override
+  String get agentErrorFreeTierHint =>
+      'كثيرًا ما تُرفض المحادثات الطويلة في الخطة المجانية حتى لو استخدمتَ القليل اليوم. غالبًا ما يفيد تقصير هذه المحادثة أو بدء محادثة جديدة.';
+
+  @override
+  String agentErrorFreeTierSize(String tokens) {
+    return 'طول هذه المحادثة نحو $tokens رمز.';
+  }
+
+  @override
+  String get chatFreeTierShorten => 'قصّر هذه المحادثة';
+
+  @override
+  String get chatFreeTierNewConversation => 'تابع في محادثة جديدة';
+
+  @override
+  String get productErrorFileTooBig =>
+      'هذا الملف أكبر من أن يُعرض هنا (الحد 2 ميغابايت). افتحه على الحاسوب الذي يوجد عليه، أو اطلب من الوكيل جزءًا أصغر.';
+
+  @override
+  String get productErrorFileMissing =>
+      'هذا الملف لم يعد موجودًا. ربما نُقل أو حُذف.';
+
+  @override
+  String get productErrorFileDenied =>
+      'لا يسمح الحاسوب لهذا التطبيق بقراءة هذا الملف.';
+
+  @override
+  String get productErrorFileUnreadable =>
+      'لا يمكن عرض هذا النوع من الملفات هنا.';
+
+  @override
+  String phoneFileInstallTitle(String name) {
+    return 'تثبيت $name؟';
+  }
+
+  @override
+  String get phoneFileInstallBody =>
+      'ملف التطبيق هذا على هذا الهاتف. يطلب منك Android التأكيد قبل تثبيت أي شيء.';
+
+  @override
+  String get phoneFileInstallAction => 'تثبيت…';
+
+  @override
+  String phoneFileOpenTitle(String name) {
+    return 'فتح $name؟';
+  }
+
+  @override
+  String get phoneFileOpenBody =>
+      'هذا الملف على هذا الهاتف وهو أكبر من أن يُعرض هنا أو من نوع لا يُعرض. اختر التطبيق الذي يفتحه.';
+
+  @override
+  String get phoneFileOpenAction => 'فتح باستخدام…';
+
+  @override
+  String get phoneFileFindTitle => 'افتحه من الملفات';
+
+  @override
+  String phoneFileFindBody(String path) {
+    return 'لا يستطيع هذا الإصدار تسليم الملف إلى تطبيق آخر بعد. ابحث عنه في تطبيق الملفات: $path';
+  }
+
+  @override
+  String phoneFileWhereInstall(String name, String folder) {
+    return 'الملف $name موجود في $folder. افتحه من تطبيق الملفات لتثبيته.';
+  }
+
+  @override
+  String phoneFileWhereOpen(String name, String folder) {
+    return 'الملف $name موجود في $folder. افتحه من تطبيق الملفات.';
+  }
+
+  @override
+  String get agentsStateUpdateWifi => 'سيُحدَّث عبر Wi-Fi';
+
+  @override
+  String agentUpdateSendBlocked(String agent, String percent) {
+    return '$agent قيد التحديث، $percent%. يمكنك الإرسال عند انتهائه.';
+  }
+
+  @override
+  String agentUpdateSendBlockedNoPercent(String agent) {
+    return '$agent قيد التحديث. يمكنك الإرسال عند انتهائه.';
+  }
+
+  @override
+  String get productErrorAgentUpdating =>
+      'يجري تحديث وكلائك، لذا لم يبدأ هذا بعد. حاول بعد قليل؛ رسالتك محفوظة.';
+
+  @override
+  String get childLimitTitle => 'دع الوكلاء يشغّلون برامج أكثر في وقت واحد';
+
+  @override
+  String get childLimitBody =>
+      'يوقف أندرويد الوكلاء حين يشغّل التطبيق أكثر من 32 برنامجًا. إيقاف هذا القيد يسمح للمهام الكبيرة بالانتهاء؛ ويظل التطبيق يوقف العمل مؤقتًا حين يسخن الهاتف أو تنخفض البطارية.';
+
+  @override
+  String get childLimitStepsOpen =>
+      'في خيارات المطوّر، فعّل «تعطيل قيود العمليات الفرعية» ثم ارجع إلى هنا.';
+
+  @override
+  String get childLimitOpenDeveloper => 'افتح خيارات المطوّر';
+
+  @override
+  String get childLimitStepsEnable =>
+      'خيارات المطوّر متوقفة. فعّلها من الإعدادات › حول الهاتف: اضغط على رقم الإصدار سبع مرات.';
+
+  @override
+  String get childLimitOpenAbout => 'افتح حول الهاتف';
+
+  @override
+  String get childLimitStepsText =>
+      'افتح الإعدادات › النظام › خيارات المطوّر وفعّل «تعطيل قيود العمليات الفرعية».';
+
+  @override
+  String get childLimitHide => 'إخفاء';
+
+  @override
+  String get claudeAgentTrialTag => 'تجربة';
+
+  @override
+  String get claudeAgentTryTitle => 'جرّب Claude Agent';
+
+  @override
+  String get claudeAgentTrySupporting =>
+      'Claude داخل OpenCode، بتسجيل دخولك إلى Claude Code على هذا الهاتف. تبقى محادثات Claude Code كما هي.';
+
+  @override
+  String get claudeAgentPreparing => 'يجري إعداد Claude Agent…';
+
+  @override
+  String get claudeAgentNeedsSignInTitle =>
+      'Claude غير مسجّل الدخول على هذا الهاتف';
+
+  @override
+  String get claudeAgentNeedsSignInBody =>
+      'يستخدم Claude Agent تسجيل دخول Claude Code. سجّل الدخول إلى Claude Code في الوكلاء، ثم تحقّق مرة أخرى.';
+
+  @override
+  String get claudeAgentNotInstalledTitle =>
+      'Claude Code غير مثبّت على هذا الهاتف';
+
+  @override
+  String get claudeAgentNotInstalledBody =>
+      'يشغّل Claude Agent برنامج Claude Code الموجود على هذا الهاتف. ثبّته من الوكلاء، ثم تحقّق مرة أخرى.';
+
+  @override
+  String get claudeAgentBlockedTitle => 'تعذّر إعداد Claude Agent هنا';
+
+  @override
+  String get claudeAgentBlockedBody =>
+      'يحتوي Linux على هذا الهاتف بالفعل على برنامج آخر باسم claude في ‎/usr/local/sbin، والتطبيق لا يغيّره.';
+
+  @override
+  String get claudeAgentFailedTitle => 'لم يبدأ Claude Agent';
+
+  @override
+  String get claudeAgentFailedBody => 'لم تصل نماذجه. تحقّق مرة أخرى بعد قليل.';
+
+  @override
+  String get claudeAgentOpenAgents => 'افتح الوكلاء';
+
+  @override
+  String get claudeAgentCheckAgain => 'تحقّق مرة أخرى';
+
+  @override
+  String get claudeAgentCheckAgainLabel => 'تحقّق من Claude Agent مرة أخرى';
+
+  @override
+  String get claudeAgentReady =>
+      'Claude Agent جاهز. نماذجه موسومة بكلمة تجربة.';
+
+  @override
+  String get fullSpeedSetting => 'بأقصى سرعة دائمًا';
+
+  @override
+  String get fullSpeedSettingDetail =>
+      'عند الإيقاف: إذا سخن الهاتف أو انخفضت البطارية أو كان التطبيق مخفيًا، تعمل عمليات البناء والاختبارات على هذا الهاتف ببطء أكبر لتوفير الحرارة والبطارية. الردود لا تتباطأ.';
+
+  @override
+  String get fullSpeedSettingEasing =>
+      'عمليات البناء والاختبارات تعمل الآن ببطء أكبر لتوفير الحرارة والبطارية. الردود لا تتباطأ.';
+
+  @override
+  String get teamVoiceProductOwner => 'مالك المنتج';
+
+  @override
+  String get teamVoiceArchitect => 'المهندس المعماري';
+
+  @override
+  String get teamVoiceManager => 'المدير';
+
+  @override
+  String get teamVoiceDeveloper => 'المطوّر';
+
+  @override
+  String teamVoiceDeveloperAs(String persona) {
+    return 'المطوّر · $persona';
+  }
+
+  @override
+  String get teamVoiceReviewer => 'المراجع';
+
+  @override
+  String get teamVoiceSaysPlanning => 'أخطط لطريقة بنائه.';
+
+  @override
+  String get teamVoiceSaysPlanReady => 'الخطة جاهزة لك.';
+
+  @override
+  String get teamVoiceSaysStarting => 'أبدأ العمل على هذه المهمة.';
+
+  @override
+  String get teamVoiceSaysWorking => 'أعمل على هذه المهمة.';
+
+  @override
+  String get teamVoiceSaysChecking => 'أراجع العمل وفق معاييره.';
+
+  @override
+  String get teamVoiceSaysFoundProblems => 'وجدت مشكلات تحتاج إلى إصلاح.';
+
+  @override
+  String get teamVoiceSaysMerging => 'أدمج العمل في فرع dev.';
+
+  @override
+  String get teamVoiceSaysMerged => 'تم الدمج في فرع dev.';
+
+  @override
+  String get teamVoiceSaysPlanQueued => 'الخطة في الانتظار لتبدأ.';
+
+  @override
+  String get teamVoiceSaysQueued => 'هذه المهمة في الانتظار لتبدأ.';
+
+  @override
+  String get teamVoiceSaysWaitingForLane => 'في انتظار مسار متاح.';
+
+  @override
+  String get teamVoiceSaysWaitingForTask => 'في انتظار انتهاء مهمة أخرى.';
+
+  @override
+  String get teamVoiceSaysWaitingForChat => 'في انتظار انتهاء محادثتك.';
+
+  @override
+  String get teamVoiceSaysWaitingForCheck => 'في انتظار فحص هذا الهاتف.';
+
+  @override
+  String get teamVoiceSaysPaused => 'متوقفة مؤقتًا.';
+
+  @override
+  String get teamVoiceSaysStopped => 'متوقفة.';
+
+  @override
+  String get teamVoiceSaysInterrupted => 'انقطعت. استأنفها لتكمل من حيث توقفت.';
+
+  @override
+  String get teamVoiceSaysResuming => 'أتحقق من الجلسة السابقة قبل الاستئناف.';
+
+  @override
+  String get teamVoiceNowPlanning => 'المهندس المعماري يخطط';
+
+  @override
+  String teamVoiceNowWorking(String developer) {
+    return '$developer يعمل';
+  }
+
+  @override
+  String get teamVoiceNowChecking => 'المراجع يراجع';
+
+  @override
+  String get teamVoiceNowNeedsYou => 'في انتظارك';
+
+  @override
+  String get teamVoiceNowMerging => 'المدير يدمج في dev';
+
+  @override
+  String get teamVoiceNowMerged => 'تم الدمج في dev';
+
+  @override
+  String get teamVoiceNowWaiting => 'في انتظار البدء';
+
+  @override
+  String get teamVoiceNowPaused => 'متوقفة مؤقتًا';
+
+  @override
+  String get teamVoiceNowStopped => 'متوقفة';
+
+  @override
+  String get teamVoiceNowResuming => 'جارٍ الاستئناف';
+
+  @override
+  String get teamVoiceNowManager => 'لدى المدير تحديث';
+
+  @override
+  String teamVoiceReviewerResult(int total, int met) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'راجعت $total من المعايير: $met متحقق.',
+      one: 'راجعت معيارًا واحدًا: $met متحقق.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String teamVoiceApprovePlan(String name) {
+    return 'ابدأ بناء $name';
+  }
+
+  @override
+  String teamVoiceAcceptPhase(String phase) {
+    return 'اقبل $phase';
+  }
+
+  @override
+  String teamVoicePutOnMain(String repo) {
+    return 'انقل $repo إلى main';
+  }
+
+  @override
+  String get linuxSvcTitle => 'الخدمات';
+
+  @override
+  String get linuxSvcRowDetail => 'أبقِ برامجك تعمل باستمرار';
+
+  @override
+  String linuxSvcHubRunning(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تعمل: $names',
+      many: '$count تعمل: $names',
+      few: '$count تعمل: $names',
+      two: 'اثنتان تعملان: $names',
+      one: 'واحدة تعمل: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String linuxSvcHubOff(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count خدمة، كلها متوقفة',
+      many: '$count خدمة، كلها متوقفة',
+      few: '$count خدمات، كلها متوقفة',
+      two: 'خدمتان، متوقفتان',
+      one: 'خدمة واحدة، متوقفة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String linuxSvcHubCrashed(String name) {
+    return 'توقفت $name بعد أعطال متكررة';
+  }
+
+  @override
+  String get linuxSvcAdd => 'إضافة خدمة';
+
+  @override
+  String get linuxSvcAddDetail => 'شغّل أمرًا من عندك وأبقه يعمل';
+
+  @override
+  String get linuxSvcAddTitle => 'إضافة خدمة';
+
+  @override
+  String get linuxSvcEmpty =>
+      'لا شيء يعمل من تلقاء نفسه بعد. أضف أمرًا من عندك وسيبقى يعمل، حتى بعد عطل أو عند إعادة تشغيل التطبيق.';
+
+  @override
+  String get linuxSvcKeepsRunning =>
+      'الخدمة التي تشغّلها تبقى تعمل: تعود بعد أي عطل وعند إعادة تشغيل التطبيق، إلى أن توقفها.';
+
+  @override
+  String get linuxSvcScreenOff =>
+      'عند إطفاء الشاشة قد تتوقف الخدمات مؤقتًا ما لم يكن الهاتف يشحن.';
+
+  @override
+  String get linuxSvcRunning => 'تعمل';
+
+  @override
+  String linuxSvcRunningFor(String duration) {
+    return 'تعمل منذ $duration';
+  }
+
+  @override
+  String linuxSvcPort(String port) {
+    return 'المنفذ $port';
+  }
+
+  @override
+  String get linuxSvcOff => 'متوقفة';
+
+  @override
+  String get linuxSvcStarting => 'جارٍ التشغيل…';
+
+  @override
+  String get linuxSvcStopping => 'جارٍ الإيقاف…';
+
+  @override
+  String get linuxSvcRemoving => 'جارٍ الحذف…';
+
+  @override
+  String linuxSvcRetrying(int code, int seconds) {
+    return 'تعطلت (الرمز $code). تُعاد المحاولة بعد $seconds ث';
+  }
+
+  @override
+  String linuxSvcGaveUp(int count, String time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'توقفت بعد $count عطل · $time',
+      many: 'توقفت بعد $count عطلًا · $time',
+      few: 'توقفت بعد $count أعطال · $time',
+      two: 'توقفت بعد عطلين · $time',
+      one: 'توقفت بعد عطل واحد · $time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String linuxSvcGaveUpNoCount(String time) {
+    return 'توقفت بعد عطل · $time';
+  }
+
+  @override
+  String linuxSvcExited(int code) {
+    return 'انتهت (الرمز $code)';
+  }
+
+  @override
+  String linuxSvcPortBusy(String port) {
+    return 'المنفذ $port مستخدم بالفعل. ستُعاد المحاولة قريبًا';
+  }
+
+  @override
+  String get linuxSvcStart => 'تشغيل';
+
+  @override
+  String get linuxSvcStop => 'إيقاف';
+
+  @override
+  String linuxSvcStartNamed(String name) {
+    return 'تشغيل $name';
+  }
+
+  @override
+  String linuxSvcStopNamed(String name) {
+    return 'إيقاف $name';
+  }
+
+  @override
+  String linuxSvcRestartNamed(String name) {
+    return 'إعادة تشغيل $name';
+  }
+
+  @override
+  String linuxSvcRemoveNamed(String name) {
+    return 'حذف $name';
+  }
+
+  @override
+  String linuxSvcOpenNamed(String name) {
+    return 'فتح $name';
+  }
+
+  @override
+  String linuxSvcOpenDetail(String port) {
+    return 'صفحتها على المنفذ $port';
+  }
+
+  @override
+  String get linuxSvcStopDetail => 'تبقى متوقفة حتى تشغّلها من جديد';
+
+  @override
+  String get linuxSvcStartDetail =>
+      'تبقى تعمل، حتى بعد عطل أو إعادة تشغيل التطبيق';
+
+  @override
+  String linuxSvcCameBack(int count, String time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'عادت $count مرة بعد عطل، آخرها عند $time',
+      many: 'عادت $count مرة بعد عطل، آخرها عند $time',
+      few: 'عادت $count مرات بعد عطل، آخرها عند $time',
+      two: 'عادت مرتين بعد عطل، آخرها عند $time',
+      one: 'عادت مرة واحدة بعد عطل، عند $time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String linuxSvcRemoveTitle(String name) {
+    return 'حذف $name؟';
+  }
+
+  @override
+  String get linuxSvcRemoveBody => 'ستتوقف الآن ولن تبقى تعمل بعد ذلك.';
+
+  @override
+  String get linuxSvcRemoveGoes => 'يُحذف سجلها وإعداداتها';
+
+  @override
+  String get linuxSvcRemoveStays => 'يبقى البرنامج مثبّتًا';
+
+  @override
+  String get linuxSvcLogTitle => 'السجل';
+
+  @override
+  String get linuxSvcLogEmpty => 'لم يُكتب شيء بعد';
+
+  @override
+  String get linuxSvcLogStarted => 'بدأت';
+
+  @override
+  String linuxSvcLogCrashed(int code) {
+    return 'تعطلت (الرمز $code)';
+  }
+
+  @override
+  String linuxSvcLogEnded(int code) {
+    return 'انتهت (الرمز $code)';
+  }
+
+  @override
+  String linuxSvcLogRetry(int seconds) {
+    return 'إعادة المحاولة بعد $seconds ث';
+  }
+
+  @override
+  String get linuxSvcLogGaveUp => 'توقفت المحاولات بعد أعطال كثيرة';
+
+  @override
+  String linuxSvcLogPortBusy(String port) {
+    return 'المنفذ $port مستخدم';
+  }
+
+  @override
+  String get linuxSvcCouldNotStart => 'تعذّر تشغيل الخدمات.';
+
+  @override
+  String get linuxSvcProblemFailed => 'لم تنجح العملية. حاول مرة أخرى.';
+
+  @override
+  String get linuxSvcProblemMissing =>
+      'جهّز Linux من «هذا الهاتف» ثم عد لإضافة الخدمات.';
+
+  @override
+  String get linuxSvcProblemTooMany =>
+      'يمكنك الاحتفاظ بـ 16 خدمة كحد أقصى. احذف واحدة أولًا.';
+
+  @override
+  String get linuxSvcProblemWrite =>
+      'تعذّر الحفظ. قد تكون مساحة الهاتف ممتلئة.';
+
+  @override
+  String get linuxSvcErrNameShape =>
+      'استخدم من 2 إلى 24 حرفًا إنجليزيًا صغيرًا أو رقمًا أو شرطة، وابدأ بحرف';
+
+  @override
+  String get linuxSvcErrNameReserved =>
+      'هذا الاسم محجوز للتطبيق. اختر اسمًا آخر';
+
+  @override
+  String get linuxSvcErrNameTaken => 'هذا الاسم مستخدم لخدمة أخرى';
+
+  @override
+  String linuxSvcErrNameUsedBy(String name) {
+    return 'هذا الاسم تستخدمه $name';
+  }
+
+  @override
+  String get linuxSvcErrCommand => 'اكتب الأمر المراد تشغيله';
+
+  @override
+  String get linuxSvcErrFolder => 'اكتب المجلد الذي تعمل فيه، ويبدأ بـ /';
+
+  @override
+  String get linuxSvcErrPortRange => 'استخدم منفذًا بين 1024 و65535';
+
+  @override
+  String get linuxSvcErrPortLow =>
+      'المنافذ الأقل من 1024 غير مسموحة في أندرويد';
+
+  @override
+  String linuxSvcErrPortServer(String port) {
+    return 'المنفذ $port يخص OpenCode';
+  }
+
+  @override
+  String get linuxSvcErrPortReserved =>
+      'هذا المنفذ يخص OpenCode أو جزءًا آخر من التطبيق. اختر منفذًا آخر';
+
+  @override
+  String get linuxSvcErrPortTaken =>
+      'هذا المنفذ تستخدمه خدمة أخرى. اختر منفذًا آخر';
+
+  @override
+  String linuxSvcErrPortUsedBy(String port, String name) {
+    return 'المنفذ $port تستخدمه $name';
+  }
+
+  @override
+  String get linuxSvcFieldName => 'الاسم';
+
+  @override
+  String get linuxSvcFieldNameHelper =>
+      'من 2 إلى 24 حرفًا إنجليزيًا صغيرًا أو رقمًا أو شرطة';
+
+  @override
+  String get linuxSvcFieldCommand => 'الأمر';
+
+  @override
+  String get linuxSvcFieldCommandHelper =>
+      'يعمل في bash. ينبغي أن يبقى يعمل لا أن ينتهي';
+
+  @override
+  String get linuxSvcFieldFolder => 'المجلد';
+
+  @override
+  String get linuxSvcFieldPort => 'المنفذ';
+
+  @override
+  String get linuxSvcFieldPortHelper =>
+      'يتيح لك فتحها ويمنع برنامجين من التنازع على منفذ واحد';
+
+  @override
+  String get linuxSvcRestartSwitch => 'أعد التشغيل عند العطل';
+
+  @override
+  String get linuxSvcRestartSwitchDetail =>
+      'تعود من تلقاء نفسها، وبعد إعادة تشغيل التطبيق أيضًا';
+
+  @override
+  String get linuxSvcSaveStart => 'احفظ وشغّل';
+
+  @override
+  String get linuxSvcSaving => 'جارٍ الحفظ…';
+
+  @override
+  String get linuxSvcDownBody =>
+      'الجزء المسؤول عن تشغيل الخدمات في Linux لا يستجيب. حاول مرة أخرى.';
+
+  @override
+  String get linuxSvcPaused =>
+      'متوقفة مؤقتًا: الهاتف ساخن جدًا. تعمل من جديد عندما يبرد';
+
+  @override
+  String get linuxVitalsHeat => 'حرارة الهاتف';
+
+  @override
+  String get linuxVitalsCool => 'بارد';
+
+  @override
+  String get linuxVitalsWarm => 'دافئ';
+
+  @override
+  String get linuxVitalsHot => 'ساخن';
+
+  @override
+  String get linuxVitalsTooHot => 'ساخن جدًا';
+
+  @override
+  String get linuxVitalsMemoryFree => 'الذاكرة المتاحة';
+
+  @override
+  String get linuxVitalsLinuxCpu => 'معالج Linux';
+
+  @override
+  String linuxVitalsHeatLabel(Object heat) {
+    return 'حرارة الهاتف: $heat';
+  }
+
+  @override
+  String linuxVitalsMemoryLabel(Object value) {
+    return 'الذاكرة المتاحة: $value';
+  }
+
+  @override
+  String linuxVitalsCpuLabel(Object value) {
+    return 'معالج Linux: $value';
+  }
+
+  @override
+  String linuxVitalsSummaryCool(Object memory) {
+    return 'يستخدم Linux ‏$memory من الذاكرة. لا شيء يسخّن الهاتف.';
+  }
+
+  @override
+  String linuxVitalsSummary(Object memory) {
+    return 'يستخدم Linux ‏$memory من الذاكرة.';
+  }
+
+  @override
+  String linuxVitalsHeavy(Object heat, Object program, Object percent) {
+    return '$heat. ‏$program يستخدم $percent% من المعالج.';
+  }
+
+  @override
+  String linuxVitalsNotLinux(Object heat, Object percent) {
+    return '$heat، لكن ليس بسبب Linux: يستخدم $percent% من المعالج.';
+  }
+
+  @override
+  String get linuxVitalsOpenRunning => 'افتح ما يعمل الآن';
+
+  @override
+  String get starShareGroup => 'أخبر الآخرين';
+
+  @override
+  String get starRowTitle => 'قيّم بنجمة على GitHub';
+
+  @override
+  String get starRowDetail => 'يساعد الآخرين على العثور على التطبيق';
+
+  @override
+  String get shareRowTitle => 'شارك التطبيق';
+
+  @override
+  String get shareRowDetail => 'أرسل الرابط إلى صديق';
+
+  @override
+  String shareAppMessage(String url) {
+    return 'OpenCode Mobile: استخدم وكيل البرمجة OpenCode من هاتفك. $url';
+  }
+
+  @override
+  String get starShareSearchAliases =>
+      'نجمة قيّم جيت هاب مفضلة دعم مشروع مستودع شارك مشاركة التطبيق صديق إرسال رابط توصية دعوة star share github';
+
+  @override
+  String whatsNewTitle(String version) {
+    return 'الجديد في $version';
+  }
+
+  @override
+  String get whatsNewShare => 'مشاركة';
+
+  @override
+  String get whatsNewClose => 'إغلاق';
+
+  @override
+  String get whatsNewRowTitle => 'الجديد';
+
+  @override
+  String get whatsNewRowDetail => 'اطّلع على ما تغيّر في هذا الإصدار';
+
+  @override
+  String get whatsNew220Updates =>
+      'يحدّث التطبيق نفسه الآن. يمكنك البحث عن تحديث في أي وقت من الإعدادات › هذا التطبيق › التحديثات.';
+
+  @override
+  String get whatsNew220Agents =>
+      'OpenCode 2.2.5 مضمّن الآن، والوكلاء يحدّثون أنفسهم.';
+
+  @override
+  String get whatsNew220LargeText =>
+      'يبقى النص الكبير سهل القراءة. اختر الحجم من «المظهر».';
+
+  @override
+  String get whatsNew220PasteImages =>
+      'الصق صورة في مربع الرسالة لتعرضها على الوكيل.';
+
+  @override
+  String get whatsNew220Voice =>
+      'اضغط مطولًا على زر الميكروفون لتتحدث ثم ارفع إصبعك.';
+
+  @override
+  String get whatsNewBack => 'رجوع';
+
+  @override
+  String get whatsNewShowMe => 'أرني';
+
+  @override
+  String get whatsNewShowUpdates => 'ابحث عن تحديث من هنا في أي وقت.';
+
+  @override
+  String get whatsNewTipsTitle => 'الجديد في هذا الإصدار';
+
+  @override
+  String get whatsNewShowAgents => 'وكلاؤك وتحديثاتهم هنا.';
+
+  @override
+  String get whatsNewShowPaste =>
+      'اضغط مطولًا على مربع الرسالة، أو اضغط +، للصق صورة.';
+
+  @override
+  String get whatsNewShowMic => 'اضغط مطولًا على هذا الزر وتحدث ثم ارفع إصبعك.';
+
+  @override
+  String appUpdateReadyTitle(String version) {
+    return 'نسخة $version جاهزة';
+  }
+
+  @override
+  String get appUpdateUpdate => 'حدّث';
+
+  @override
+  String get appUpdateNotNow => 'ليس الآن';
+
+  @override
+  String appUpdateDownloadingTitle(String version) {
+    return 'جارٍ تنزيل نسخة $version';
+  }
+
+  @override
+  String appUpdatePercent(String percent) {
+    return 'اكتمل $percent٪';
+  }
+
+  @override
+  String get appUpdateCancel => 'إلغاء';
+
+  @override
+  String get appUpdateVerifying => 'جارٍ فحص التنزيل…';
+
+  @override
+  String get appUpdateInstalling => 'جارٍ التثبيت…';
+
+  @override
+  String appUpdateInstallReadyTitle(String version) {
+    return 'نسخة $version نُزّلت وفُحصت';
+  }
+
+  @override
+  String get appUpdateInstall => 'ثبّت';
+
+  @override
+  String get appUpdatePermissionNeeded =>
+      'للتثبيت، اسمح لهذا التطبيق بتثبيت التحديثات ثم ارجع.';
+
+  @override
+  String get appUpdateSettingsBadgeLabel => 'الإعدادات، يوجد تحديث';
+
+  @override
+  String get appUpdateWhatsNew => 'ما الجديد';
+
+  @override
+  String get appUpdateNow => 'حدّث الآن';
+
+  @override
+  String get appUpdateOpenSettings => 'افتح الإعدادات';
+
+  @override
+  String get appUpdatesTitle => 'التحديثات';
+
+  @override
+  String get appUpdatesSearchAliases =>
+      'update upgrade new version release install github check تحديث ترقية نسخة جديدة إصدار تثبيت';
+
+  @override
+  String get appUpdatesRowSummary => 'ابحث عن نسخ جديدة وثبّتها';
+
+  @override
+  String get appUpdateCheckedJustNow => 'محدّث · فُحص الآن';
+
+  @override
+  String appUpdateUpToDate(String when) {
+    return 'محدّث · فُحص $when';
+  }
+
+  @override
+  String get appUpdateNeverChecked => 'لم يُفحص بعد';
+
+  @override
+  String get appUpdateChecking => 'جارٍ الفحص…';
+
+  @override
+  String appUpdateAvailableLine(String version, String size) {
+    return '$version جاهزة · $size';
+  }
+
+  @override
+  String appUpdateSizeMb(String mb) {
+    return '$mb م.ب';
+  }
+
+  @override
+  String get appUpdateCheckingOff =>
+      'الفحص متوقف. استخدم افحص الآن عندما تريد.';
+
+  @override
+  String get appUpdateCheckSwitch => 'افحص GitHub بحثًا عن نسخ جديدة';
+
+  @override
+  String get appUpdateCheckSwitchBody =>
+      'يسأل التطبيق GitHub عن رقم أحدث نسخة ولا يرسل أي شيء عنك.';
+
+  @override
+  String get appUpdateCheckNow => 'افحص الآن';
+
+  @override
+  String get appUpdateTryAgain => 'حاول مرة أخرى';
+
+  @override
+  String get appUpdateFailNetwork =>
+      'تعذّر الوصول إلى GitHub. تحقق من اتصالك وحاول مرة أخرى.';
+
+  @override
+  String get appUpdateFailNoFile => 'هذا الإصدار لا يحتوي بعد على ملف لهاتفك.';
+
+  @override
+  String get appUpdateFailChecksum =>
+      'لم يطابق التنزيل مجموعه الاختباري، لذا لم يُثبَّت.';
+
+  @override
+  String get appUpdateFailSigner =>
+      'هذا التنزيل غير موقّع مثل تطبيقك، لذا لم يُثبَّت.';
+
+  @override
+  String get appUpdateFailPackage => 'هذا التنزيل لتطبيق آخر، لذا لم يُثبَّت.';
+
+  @override
+  String get appUpdateFailVersion =>
+      'هذا التنزيل ليس أحدث من تطبيقك، لذا لم يُثبَّت.';
+
+  @override
+  String get appUpdateFailStorage => 'لا توجد مساحة كافية لحفظ التنزيل.';
+
+  @override
+  String get appUpdateFailInstaller =>
+      'لم يتمكن أندرويد من إكمال التثبيت. حاول مرة أخرى.';
+
+  @override
+  String appUpdateCurrentVersion(String version) {
+    return 'نسخة $version';
+  }
+
+  @override
+  String get appUpdateBuildLabel => 'رقم البناء';
+
+  @override
+  String get appUpdateOpenRelease => 'افتح على GitHub';
+
+  @override
+  String appUpdateNotInstalled(String version) {
+    return 'تعذّر تثبيت $version';
+  }
+
+  @override
+  String get composerPasteImage => 'لصق صورة';
+
+  @override
+  String get composerPasteImageFromClipboard => 'لصق صورة من الحافظة';
+
+  @override
+  String get composerPasteImageFromClipboardSupporting =>
+      'إرفاق الصورة المنسوخة';
+
+  @override
+  String get composerPasteImageEmpty => 'لا توجد صورة في الحافظة.';
+
+  @override
+  String get removeFromPhoneBackupsKept =>
+      'النسخ الاحتياطية التي حفظتها تبقى في المكان الذي اخترته';
+
+  @override
+  String get linuxBackupRow => 'النسخ الاحتياطية';
+
+  @override
+  String get linuxBackupRowNever => 'لا توجد نسخة احتياطية بعد';
+
+  @override
+  String linuxBackupRowLast(Object date) {
+    return 'آخر نسخة احتياطية $date';
+  }
+
+  @override
+  String get linuxBackupWhat => 'ما الذي تريد نسخه احتياطيًا';
+
+  @override
+  String get linuxBackupSetup => 'الإعداد';
+
+  @override
+  String get linuxBackupSetupDetail =>
+      'الحزم والأدوات والخدمات وملفات الإعدادات';
+
+  @override
+  String get linuxBackupSetupProjects => 'الإعداد والمشاريع';
+
+  @override
+  String get linuxBackupSetupProjectsDetail =>
+      'ومشاريعك أيضًا، دون المجلدات التي يمكن تنزيلها من جديد';
+
+  @override
+  String get linuxBackupProjectsOnly => 'المشاريع فقط';
+
+  @override
+  String get linuxBackupProjectsOnlyDetail =>
+      'ملف zip لمشاريعك للاحتفاظ به أو نقله';
+
+  @override
+  String get linuxBackupNowSetup => 'انسخ الإعداد احتياطيًا';
+
+  @override
+  String get linuxBackupNowSetupProjects => 'انسخ الإعداد والمشاريع احتياطيًا';
+
+  @override
+  String get linuxBackupNowProjects => 'انسخ المشاريع احتياطيًا';
+
+  @override
+  String get linuxBackupPrivacy =>
+      'لا تحتوي النسخ الاحتياطية أبدًا على تسجيلات الدخول أو كلمات المرور أو مفاتيح SSH الخاصة. أنت تختار مكان حفظ كل نسخة.';
+
+  @override
+  String get linuxRestoreRow => 'استعادة من نسخة احتياطية';
+
+  @override
+  String get linuxRestoreRowDetail => 'اختر ملف نسخة احتياطية لإعادته';
+
+  @override
+  String linuxBackupSaving(Object done, Object total) {
+    return 'جارٍ حفظ النسخة الاحتياطية: $done من $total';
+  }
+
+  @override
+  String linuxBackupSaved(Object size, Object name) {
+    return 'تم حفظ النسخة الاحتياطية: $size، باسم $name';
+  }
+
+  @override
+  String get linuxBackupFailedTitle => 'لم تكتمل النسخة الاحتياطية';
+
+  @override
+  String get linuxRestoreFailedTitle => 'لم تكتمل الاستعادة';
+
+  @override
+  String get linuxBackupProblemBusy =>
+      'هناك مهمة أخرى تستخدم Linux الآن. حاول مرة أخرى عندما تنتهي.';
+
+  @override
+  String get linuxBackupProblemMissing => 'Linux غير مُعدّ على هذا الهاتف.';
+
+  @override
+  String get linuxBackupProblemJob =>
+      'تعذّر على Linux إعداد النسخة الاحتياطية.';
+
+  @override
+  String get linuxBackupProblemSave =>
+      'تعذّر حفظ النسخة الاحتياطية هناك. ربما لا توجد مساحة كافية.';
+
+  @override
+  String get linuxBackupProblemNotBackup =>
+      'هذا الملف ليس نسخة احتياطية من هذا التطبيق.';
+
+  @override
+  String get linuxBackupProblemNewer =>
+      'أُنشئت هذه النسخة الاحتياطية بإصدار أحدث من التطبيق. حدّث التطبيق أولًا.';
+
+  @override
+  String get linuxBackupProblemRestore =>
+      'تعذّر على Linux إعادة النسخة الاحتياطية.';
+
+  @override
+  String get linuxRestoreChecking => 'جارٍ قراءة النسخة الاحتياطية…';
+
+  @override
+  String get linuxRestoreTitle => 'هل تريد استعادة هذه النسخة الاحتياطية؟';
+
+  @override
+  String linuxRestoreBody(Object what, Object date) {
+    return '$what، أُنشئت في $date.';
+  }
+
+  @override
+  String get linuxRestoreConfirm => 'استعادة';
+
+  @override
+  String get linuxRestoreKeptProjects =>
+      'تبقى مشاريعك. المشروع الذي يحمل الاسم نفسه يعود باسم “الاسم (restored)”.';
+
+  @override
+  String get linuxRestoreReplacedSettings =>
+      'ملفات الإعدادات التي تحتويها تحل محل ملفاتك؛ وتُحفظ ملفاتك بإضافة “.before-restore”.';
+
+  @override
+  String get linuxRestoreAddedTools =>
+      'تُعاد الحزم والأدوات والخدمات المدرجة فيها.';
+
+  @override
+  String get linuxRestoreDone => 'تمت استعادة Linux.';
+
+  @override
+  String linuxRestoreSkipped(Object names) {
+    return 'لم يعد Ubuntu يحتوي على: $names';
+  }
+
+  @override
+  String linuxRestoreCounts(
+    Object projects,
+    Object services,
+    Object settings,
+    Object packages,
+  ) {
+    return 'تمت إعادة: المشاريع $projects، الخدمات $services، ملفات الإعدادات $settings، الحزم $packages';
+  }
+
+  @override
+  String get linuxMgrJobBackingUp => 'جارٍ نسخ Linux احتياطيًا';
+
+  @override
+  String get linuxMgrJobRestoring => 'جارٍ استعادة Linux';
+
+  @override
+  String get linuxMgrJobStopBackup => 'أوقف النسخ الاحتياطي';
+
+  @override
+  String get linuxMgrJobStopRestore => 'أوقف الاستعادة';
+
+  @override
+  String get linuxMgrJobStopBackupTitle => 'هل تريد إيقاف النسخ الاحتياطي؟';
+
+  @override
+  String get linuxMgrJobStopRestoreTitle => 'هل تريد إيقاف الاستعادة؟';
+
+  @override
+  String get linuxMgrJobDoneBackup => 'النسخة الاحتياطية جاهزة';
+
+  @override
+  String get linuxMgrJobDoneRestore => 'تمت استعادة Linux';
+
+  @override
+  String get linuxMgrResetBackUpFirst => 'انسخ احتياطيًا أولًا';
+
+  @override
+  String get localAssistantTitle => 'مساعد على هذا الهاتف';
+
+  @override
+  String get localAssistantSubtitle =>
+      'يكتب ملخصات قصيرة لمحادثاتك بنموذج يعمل على هذا الهاتف.';
+
+  @override
+  String get localAssistantSwitchTitle => 'تشغيل المساعد';
+
+  @override
+  String get localAssistantSwitchSupporting =>
+      'يضيف «لخّص على هذا الهاتف» إلى كل محادثة.';
+
+  @override
+  String get localAssistantPrivacy =>
+      'يُنزَّل النموذج مرة واحدة. بعد ذلك يعمل دون اتصال ولا يغادر ما تكتبه الهاتف.';
+
+  @override
+  String localAssistantNotDownloaded(String size) {
+    return 'غير منزَّل · $size';
+  }
+
+  @override
+  String localAssistantOnPhone(String size) {
+    return 'على هذا الهاتف · $size';
+  }
+
+  @override
+  String get localAssistantBackendGpu => 'يعمل على شريحة الرسوميات';
+
+  @override
+  String get localAssistantBackendCpu => 'يعمل على المعالج';
+
+  @override
+  String get localAssistantBackendIdle => 'يُحمَّل عند طلب ملخص';
+
+  @override
+  String localAssistantDownload(String size) {
+    return 'تنزيل ($size)';
+  }
+
+  @override
+  String get localAssistantDownloading => 'جارٍ تنزيل المساعد';
+
+  @override
+  String get localAssistantVerifying => 'جارٍ التحقق من التنزيل';
+
+  @override
+  String localAssistantProgress(String received, String total) {
+    return '$received من $total';
+  }
+
+  @override
+  String get localAssistantCancelDownload => 'إلغاء التنزيل';
+
+  @override
+  String localAssistantDelete(String size) {
+    return 'حذف من هذا الهاتف ($size)';
+  }
+
+  @override
+  String get localAssistantDeleteTitle => 'حذف المساعد؟';
+
+  @override
+  String localAssistantDeleteBody(String size) {
+    return 'يحرر هذا $size. يمكنك تنزيله مجددًا لاحقًا.';
+  }
+
+  @override
+  String localAssistantNeedsWifi(String size) {
+    return 'أنت غير متصل بشبكة Wi‑Fi. حجم التنزيل $size.';
+  }
+
+  @override
+  String get localAssistantUseMobileData => 'التنزيل عبر بيانات الجوال';
+
+  @override
+  String localAssistantNoSpace(String size) {
+    return 'لا توجد مساحة كافية. حرِّر نحو $size وحاول مجددًا.';
+  }
+
+  @override
+  String get localAssistantUnavailableMemory =>
+      'ذاكرة هذا الهاتف أقل من اللازم للمساعد. يحتاج إلى نحو 6 غيغابايت.';
+
+  @override
+  String get localAssistantUnavailableAbi =>
+      'يعمل المساعد على الهواتف ذات 64 بت فقط.';
+
+  @override
+  String get localAssistantUnavailablePlatform =>
+      'المساعد متاح على هواتف أندرويد.';
+
+  @override
+  String get localAssistantSetupFailed => 'تعذّر إعداد المساعد. حاول مجددًا.';
+
+  @override
+  String get localAssistantTryAgain => 'حاول مجددًا';
+
+  @override
+  String get localAssistantSummarizeMenu => 'لخّص على هذا الهاتف';
+
+  @override
+  String get localAssistantSummarizeSupporting => 'يُكتب هنا دون شبكة';
+
+  @override
+  String get localAssistantSheetTitle => 'الملخص';
+
+  @override
+  String get localAssistantSheetSubtitle => 'كُتب على هذا الهاتف';
+
+  @override
+  String get localAssistantPreparing => 'جارٍ تجهيز المساعد';
+
+  @override
+  String get localAssistantStop => 'إيقاف';
+
+  @override
+  String get localAssistantCopy => 'نسخ الملخص';
+
+  @override
+  String get localAssistantDone => 'تم';
+
+  @override
+  String get localAssistantStopped => 'أُوقف. هذا ما كُتب حتى الآن.';
+
+  @override
+  String get localAssistantRunFailed => 'تعذّر إكمال الملخص. حاول مجددًا.';
+
+  @override
+  String localAssistantStats(String seconds, String rate) {
+    return 'أولى الكلمات بعد $seconds ث · $rate كلمة في الثانية';
+  }
+
+  @override
+  String get localAssistantSearchAliases =>
+      'مساعد ملخص دون اتصال نموذج محلي ذكاء اصطناعي';
+
+  @override
+  String get browserModeTitle => 'وضع المتصفح';
+
+  @override
+  String get browserModeSubtitle =>
+      'ما الذي يعمل في هذا المتصفح وما الذي يحتاج تطبيق الهاتف';
+
+  @override
+  String get browserModeIntro =>
+      'هذا تطبيق OpenCode Mobile يعمل داخل متصفح الويب. تعمل خوادم OpenCode البعيدة كما في تطبيق الهاتف. أما الميزات التي تحتاج إلى الهاتف نفسه فلا تُعرض هنا.';
+
+  @override
+  String get browserModeAvailableHeading => 'متاح في المتصفح';
+
+  @override
+  String get browserModeAvailableServers =>
+      'الاتصال بخوادم OpenCode، والمحادثة، والموافقة على الطلبات، وتصفح الملفات، ومتابعة النشاط.';
+
+  @override
+  String get browserModeAvailableKeyboard =>
+      'اختصارات لوحة المفاتيح، وقوائم النقر بالزر الأيمن، وإفلات المرفقات بالسحب في متصفح سطح المكتب.';
+
+  @override
+  String get browserModeAvailablePaste =>
+      'اللصق في أي حقل باستخدام لوحة المفاتيح.';
+
+  @override
+  String get browserModeUnavailableHeading => 'يحتاج تطبيق الهاتف';
+
+  @override
+  String get browserModeUnavailableTermux =>
+      'تشغيل خادم أو وكلاء ذكاء اصطناعي على هذا الجهاز، والإعداد على الجهاز.';
+
+  @override
+  String get browserModeUnavailableVoice =>
+      'الإدخال الصوتي، والقراءة بصوت عالٍ، والاقتران بمسح رمز QR بالكاميرا.';
+
+  @override
+  String get browserModeUnavailableBackground =>
+      'المراقبة في الخلفية، والإشعارات، وأداة الشاشة الرئيسية، واختصارات المشغّل، وبلاطة الإعدادات السريعة. أبقِ هذا التبويب مفتوحًا لمتابعة الجلسة.';
+
+  @override
+  String get browserModeUnavailableAgentSocket =>
+      'اتصالات Codex وPaseo. تسجّل الدخول برأس WebSocket لا تستطيع المتصفحات إرساله، ولا يوجد حتى الآن تسجيل دخول مدعوم لها في المتصفح.';
+
+  @override
+  String get browserModeContextHeading => 'هذه الصفحة';
+
+  @override
+  String get browserModeSecureContextOk =>
+      'فُتحت من أصل آمن. يمكن حفظ كلمات مرور الخوادم، ويمكن لأزرار اللصق قراءة الحافظة.';
+
+  @override
+  String get browserModeSecureContextMissing =>
+      'فُتحت عبر HTTP عادي من عنوان على الشبكة، ولا يعدّه المتصفح آمنًا. لا يمكن حفظ كلمات مرور الخوادم هنا ولا يمكن لأزرار اللصق قراءة الحافظة. افتح التطبيق عبر HTTPS أو من localhost لرفع القيدين. تعمل الخوادم التي بلا كلمة مرور كالمعتاد، ويمكنك اللصق في الحقول بلوحة المفاتيح.';
+
+  @override
+  String get browserModeMixedContent =>
+      'الصفحة المفتوحة عبر HTTPS لا تصل إلا إلى خوادم HTTPS؛ فالمتصفح يحجب اتصالات HTTP العادية منها.';
+
+  @override
+  String get browserModeCors =>
+      'يجب أن يسمح الخادم بأصل هذه الصفحة. إذا فشل اختبار الاتصال هنا فورًا بينما يعمل العنوان نفسه من تطبيق الهاتف، فالخادم يرفض طلبات المتصفح من هذا الأصل.';
+
+  @override
+  String get browserEditorInsecureOrigin =>
+      'فُتحت هذه الصفحة عبر HTTP عادي من عنوان على الشبكة، لذلك لن يحتفظ المتصفح بكلمة مرور الخادم. اترك كلمة المرور فارغة لخادم لا يملك واحدة، أو افتح التطبيق عبر HTTPS أو من localhost لحفظها.';
+
+  @override
+  String get browserPairingPasteHint =>
+      'انسخ الرمز الذي يطبعه أمر الاقتران والصقه في حقل عنوان الخادم بلوحة المفاتيح. يحتاج زر اللصق إلى صفحة آمنة (HTTPS أو localhost).';
+
+  @override
+  String get browserAgentSocketUnavailable =>
+      'اتصالات Codex وPaseo غير متاحة في المتصفح. تسجّل الدخول برأس WebSocket لا تستطيع المتصفحات إرساله، ولا يوجد حتى الآن تسجيل دخول مدعوم في المتصفح. استخدم تطبيق الهاتف أو سطح المكتب لها؛ أما خوادم OpenCode فتعمل هنا.';
+
+  @override
+  String get browserAgentSocketRowUnavailable => 'غير متاح في المتصفح';
+
+  @override
+  String get browserTransportFailure =>
+      'تعذّر على المتصفح الوصول إلى الخادم. تحقق من العنوان ومن أن الخادم يعمل. يجب أن يسمح الخادم الموجود على أصل مختلف بأصل هذه الصفحة (CORS)، ولا تستطيع صفحة محمّلة عبر https استخدام خادم http:// أو ws://.';
+
+  @override
+  String get browserProbeTimeout =>
+      'انتهت مهلة الاتصال. تحقق من العنوان ومن أن الخادم يمكن الوصول إليه من هذا المتصفح.';
+
+  @override
+  String get aboutBrowserSummary =>
+      'عميل متصفح لخادم OpenCode الذي تختاره. الصوت والمراقبة في الخلفية والخوادم على هذا الجهاز غير متاحة هنا.';
 }

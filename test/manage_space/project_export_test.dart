@@ -46,8 +46,8 @@ void main() {
     expect(names, contains('projects/app/lib/main.dart'));
     expect(names, contains('projects/app/.env.example'));
     expect(names, contains('projects/web/index.html'));
-    // A git remote without a password is an ordinary file.
-    expect(names, contains('projects/web/.git/config'));
+    // Git config stays private even when currently credential-free.
+    expect(names, isNot(contains('projects/web/.git/config')));
     expect(names, isNot(contains('projects/app/.env')));
     expect(names, isNot(contains('projects/app/.git/config')));
     expect(names, isNot(contains('projects/app/deploy/server.pem')));
@@ -57,6 +57,55 @@ void main() {
     // Links are neither followed nor listed.
     expect(names.any((n) => n.contains('outside')), isFalse);
     expect(names.any((n) => n.contains('linked')), isFalse);
+  });
+
+  test(
+    'plain export excludes private root folders and all git configuration',
+    () {
+      write('projects/.ssh/config', 'Host example');
+      write(
+        'projects/app/.git/config.worktree',
+        '[http]\nextraHeader = fixture',
+      );
+      write(
+        'projects/app/.git/config',
+        '[remote]\nurl = https://fixture@x.dev/r',
+      );
+      write('projects/web/.git/config', 'x' * (65 * 1024));
+      write('projects/app/.gitconfig', '[credential]\nhelper = fixture');
+      final names = ProjectStorageScanner.plan(files.path).map((e) => e.name);
+      for (final path in [
+        'projects/.ssh/config',
+        'projects/app/.git/config',
+        'projects/web/.git/config',
+        'projects/app/.git/config.worktree',
+        'projects/app/.gitconfig',
+      ]) {
+        expect(names, isNot(contains(path)), reason: path);
+      }
+      expect(
+        ProjectStorageScanner.scan(
+          files.path,
+        ).projects.singleWhere((p) => p.name == '.ssh').privateFiles,
+        1,
+      );
+    },
+  );
+
+  test('private export retains the private Termux migration exports', () {
+    write('linux/ubuntu/root/.oc-migration-exports/job/config/settings', '{}');
+    final name = 'opencode/.oc-migration-exports/job/config/settings';
+    expect(
+      ProjectStorageScanner.plan(files.path).map((e) => e.name),
+      isNot(contains(name)),
+    );
+    expect(
+      ProjectStorageScanner.plan(
+        files.path,
+        includePrivate: true,
+      ).map((e) => e.name),
+      contains(name),
+    );
   });
 
   test('a private export adds credentials and OpenCode data, not logs', () {
@@ -85,11 +134,11 @@ void main() {
     expect(app.bytes, 15 + 13 + 7 + gitConfig.lengthSync() + 3);
     expect(app.files, 5);
     expect(app.privateFiles, 3); // .env, .git/config with a token, .pem
-    expect(facts.projects.last.privateFiles, 0);
+    expect(facts.projects.last.privateFiles, 1);
     expect(facts.serverInstalled, isTrue);
     expect(facts.serverBytes, greaterThanOrEqualTo(10));
     expect(facts.privateDataBytes, 9 + 2 + 2);
-    expect(facts.privateFiles, 3);
+    expect(facts.privateFiles, 4);
   });
 
   test('nothing installed measures as nothing, never an error', () {
@@ -161,15 +210,28 @@ void main() {
   });
 
   test(
-    'the plan file frames one entry per line and skips unframeable',
+    'plan refuses unframeable names rather than silently omitting files',
     () async {
+      await expectLater(
+        writeExportPlan(files, const [
+          ProjectExportEntry(name: 'projects/a/b\tc', source: '/f/b', bytes: 1),
+        ]),
+        throwsA(isA<FileSystemException>()),
+      );
       final plan = await writeExportPlan(files, const [
         ProjectExportEntry(name: 'projects/a/x', source: '/f/a/x', bytes: 1),
-        ProjectExportEntry(name: 'projects/a/b\tc', source: '/f/b', bytes: 1),
       ]);
       expect(plan.readAsLinesSync(), ['projects/a/x\t/f/a/x']);
     },
   );
+
+  test('overlapping legacy project names refuse incomplete backups', () {
+    write('linux/ubuntu/root/projects/app/legacy.txt', 'legacy');
+    expect(
+      () => ProjectStorageScanner.plan(files.path),
+      throwsA(isA<FileSystemException>()),
+    );
+  });
 
   test('the suggested file name says when it is private', () {
     final day = DateTime(2026, 9, 8);

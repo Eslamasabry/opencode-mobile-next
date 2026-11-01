@@ -332,7 +332,7 @@ void main() {
       );
       expect(
         BuiltinLinux.installOpenCodeScript(),
-        contains("export OC_REQUESTED_VERSION='2.1.1'"),
+        contains("export OC_REQUESTED_VERSION='2.2.5'"),
       );
       expect(
         BuiltinLinux.serverScript(),
@@ -558,7 +558,7 @@ void main() {
       }
       const reviewedLength = 56249;
       const reviewedHash =
-          '2136b3927c9b35f61f89f960991554aae07b53da39a5bb9f9298796493b968f8';
+          '55ed990eafb0973ed992abe1e6ed82bd916beaca9fdfc3641af30847e58649f4';
       expect(script.length, reviewedLength);
       expect(sha256.convert(utf8.encode(script)).toString(), reviewedHash);
     });

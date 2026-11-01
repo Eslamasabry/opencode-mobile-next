@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/domain/agent_catalog.dart';
 import 'package:opencode_mobile/paseo/gateway.dart';
 import 'package:opencode_mobile/paseo/tested_versions.dart';
 import 'package:opencode_mobile/paseo/transport.dart';
@@ -129,6 +130,14 @@ void main() {
     test('the old and the new daemon are both accepted', () {
       expect(paseoSupports('0.9.2'), isTrue);
       expect(paseoSupports('0.11.2'), isTrue);
+      // Daemons that updated themselves on a computer, each run live.
+      expect(paseoSupports('0.12.0'), isTrue);
+      expect(paseoSupports('0.13.2'), isTrue);
+      expect(paseoSupports('0.14.0'), isTrue);
+      // Not run: stays refused until it has evidence.
+      expect(paseoSupports('0.13.0'), isFalse);
+      expect(paseoSupports('0.13.1'), isFalse);
+      expect(paseoSupports('0.14.1'), isFalse);
       expect(paseoSupports('0.11.3'), isFalse);
       expect(paseoSupports('0.9.3'), isFalse);
       expect(paseoSupports(null), isFalse);
@@ -137,6 +146,16 @@ void main() {
     test('Claude Code: the previous and the current pin are accepted', () {
       expect(claudeCodeSupports('2.1.283'), isTrue);
       expect(claudeCodeSupports('2.1.294'), isTrue);
+      expect(claudeCodeSupports('2.1.316'), isTrue);
+      expect(claudeCodeSupports('2.1.317'), isFalse);
+      // The catalog pin is always a tested release, or gen-UI would silently
+      // stop qualifying on a fresh install.
+      expect(
+        claudeCodeSupports(
+          AgentCatalog.builtIn.byId('claude')!.recipe!.version,
+        ),
+        isTrue,
+      );
       expect(claudeCodeSupports('2.1.282'), isFalse);
       expect(claudeCodeSupports(null), isFalse);
     });

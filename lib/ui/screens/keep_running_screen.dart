@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../builtin/app_exit_recovery.dart' show appLifecycleBridgeProvider;
+import '../../builtin/agents/phone_budget.dart';
 import '../../builtin/thermal_guard.dart';
 import '../../builtin/thermal_guard_teams.dart';
 import '../../l10n/app_localizations.dart';
@@ -212,6 +214,7 @@ class _KeepRunningSectionState extends ConsumerState<KeepRunningSection>
           ),
         ],
         _ThermalGuardGroup(l10n: l10n),
+        _FullSpeedGroup(l10n: l10n),
         SizedBox(height: tokens.sectionGap),
         rails(
           KitText(
@@ -315,6 +318,76 @@ class _ThermalGuardGroup extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// "Always full speed": the app never slows the agents' programs (warm
+/// phone, low battery, app hidden) and gives agents no phone-budget note.
+/// Off by default. Only where the heat control runs (Android).
+class _FullSpeedGroup extends ConsumerStatefulWidget {
+  const _FullSpeedGroup({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  ConsumerState<_FullSpeedGroup> createState() => _FullSpeedGroupState();
+}
+
+class _FullSpeedGroupState extends ConsumerState<_FullSpeedGroup> {
+  bool _on = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_load());
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() => _on = prefs.getBool(FullSpeedPreference.key) ?? false);
+  }
+
+  Future<void> _set(bool value) async {
+    setState(() => _on = value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(FullSpeedPreference.key, value);
+    // Takes effect now: priorities restored (or lowered), and the note and
+    // caps taken back (or written) for every agent profile.
+    unawaited(heatThrottle?.evaluate());
+    unawaited(PhoneBudgetFiles.applyEverywhere(fullSpeed: value));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final throttle = heatThrottle;
+    if (throttle == null) return const SizedBox.shrink();
+    final l10n = widget.l10n;
+    final tokens = KitTokens.of(context);
+    return Padding(
+      padding: EdgeInsetsDirectional.only(top: tokens.sectionGap),
+      child: ListenableBuilder(
+        listenable: throttle,
+        builder: (context, _) => KitRowGroup(
+          children: [
+            KitArrival(
+              id: 'keep-running-full-speed',
+              child: KitSwitchRow(
+                key: const ValueKey('keep-running-full-speed'),
+                switchKey: const ValueKey('keep-running-full-speed-switch'),
+                leading: KitRow.icon(context, AppIconography.speed),
+                title: l10n.fullSpeedSetting,
+                supporting: throttle.tier.slowsAgents
+                    ? l10n.fullSpeedSettingEasing
+                    : l10n.fullSpeedSettingDetail,
+                value: _on,
+                onChanged: (value) => unawaited(_set(value)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

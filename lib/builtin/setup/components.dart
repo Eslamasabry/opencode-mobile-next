@@ -237,7 +237,7 @@ typedef OpenCodeAsset = ({String url, String sha256, String member});
 /// unpacked or run. No npm: its wrapper package and install scripts are what
 /// failed on the owner's ARM64 phone (build 2062, npm 11.19 `allowScripts`).
 ///
-/// - OpenCode 2 (`@opencode/cli` 2.1.1) has no GitHub release. Its official
+/// - OpenCode 2 (`@opencode/cli` 2.2.5) has no GitHub release. Its official
 ///   per-platform npm packages hold only the program and a package.json,
 ///   with no install script; their tarballs' SHA-512 matched the registry's
 ///   published `integrity` on 2026-10-21, and these are those files'
@@ -249,15 +249,15 @@ abstract final class OpenCodePins {
   static const v2Arm64 = (
     url:
         'https://registry.npmjs.org/@opencode/cli-linux-arm64/-/'
-        'cli-linux-arm64-2.1.1.tgz',
-    sha256: 'cfa3ae6363fc3082f03072297069d81f53559a761371fdb4b56fe6bfa01ca066',
+        'cli-linux-arm64-2.2.5.tgz',
+    sha256: 'f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053',
     member: 'package/bin/opencode',
   );
   static const v2X64 = (
     url:
         'https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/'
-        'cli-linux-x64-baseline-2.1.1.tgz',
-    sha256: '216d3861d0a167adad5850282439bae13483203f4b110f0510f260118bba2858',
+        'cli-linux-x64-baseline-2.2.5.tgz',
+    sha256: '873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08',
     member: 'package/bin/opencode',
   );
 
@@ -558,7 +558,9 @@ while [ "\$oc_i" -lt $probeSeconds ]; do
   for oc_path in $health; do
     oc_code=\$(curl -s --max-time 3 -o /dev/null -w '%{http_code}' \\
       -u "opencode:\$oc_pw" "http://127.0.0.1:\$oc_port\$oc_path" 2>/dev/null) || true
-    case "\$oc_code" in 200|401) oc_started=1 ;; esac
+    # The probe supplies its own fresh credential. A 401 may be another
+    # listener on this port, and cannot prove this candidate started.
+    case "\$oc_code" in 200) oc_alive && oc_started=1 ;; esac
   done
   [ -z "\$oc_started" ] || break
   oc_alive || break

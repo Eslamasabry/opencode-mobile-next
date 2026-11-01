@@ -96,6 +96,7 @@ Future<void> _pump(
   String session = 'parent',
   bool settle = true,
   Size size = const Size(412, 915),
+  double textScale = 1,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -106,6 +107,12 @@ Future<void> _pump(
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         home: ChatScreen(sessionID: session),
       ),
     ),
@@ -173,6 +180,29 @@ void main() {
     expect(find.byKey(const Key('composer-model-context')), findsOneWidget);
     expect(_line, findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('at 2x text on a phone with Stop on the row the chip is its '
+      'glyph, never a word cut in half', (tester) async {
+    final handle = tester.ensureSemantics();
+    final (controller, _) = await _boot();
+    await _pump(tester, controller, size: const Size(319, 708), textScale: 2);
+    _working(controller);
+    await tester.pumpAndSettle();
+    expect(_chip, findsOneWidget);
+    expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: _chip,
+        matching: find.byWidgetPredicate(
+          (w) => w is Text && (w.textSpan?.toPlainText() ?? w.data ?? '') != '',
+        ),
+      ),
+      findsNothing,
+    );
+    expect(tester.getSemantics(_chip).label, contains('Ask first'));
+    expect(tester.takeException(), isNull);
+    handle.dispose();
   });
 
   testWidgets('working: the chips stay in the row with Stop, and the line '

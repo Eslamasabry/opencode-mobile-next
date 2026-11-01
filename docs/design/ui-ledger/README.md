@@ -274,6 +274,7 @@ Files with no surface of their own and no interactive element (also in
 - `lib/ui/screens/inbox/inbox_items.dart`: Data only: the InboxEntry kinds the Inbox page (lib/ui/screens/inbox/inbox_screen.dart, page inbox) lists; no surface or control of its own.
 - `lib/ui/screens/library/integrations_autowait.dart`: Not a page: the wait on an automatic sign-in, part of the Integrations screen.
 - `lib/ui/screens/linux_manager/linux_manager_common.dart`: shared helpers and the package job panel (LinuxJobPanel) shown on the hub and Packages; its Stop is listed on the hub page
+- `lib/ui/screens/linux_manager/linux_services_common.dart`: the live list of services, their words and the Remove question, shared by the Services pages; the acts are listed on those pages
 - `lib/ui/screens/linux_manager/linux_reset.dart`: the Reset Linux question and flow, listed as the Reset row on the hub page
 - `lib/ui/screens/recent_error_words.dart`: Pure helpers that turn recorded error categories into plain words for App diagnostics; no visual surface or gestures.
 - `lib/ui/screens/scheduling/schedule_copy.dart`: Localized fixed error-code mapping, with no independent surface.

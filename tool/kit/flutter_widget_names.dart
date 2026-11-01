@@ -19,7 +19,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-const _defaultFlutterRoot = '91f8bd75076e9c740aa13cf67eb9ec1a093f68f5';
+const _defaultFlutterRoot = '6e5e949520159b5ceb029598be37520cd433b046';
 
 String _expandUser(String path) {
   if (!path.startsWith('~')) return path;

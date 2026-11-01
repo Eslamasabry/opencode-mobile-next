@@ -255,19 +255,19 @@ AgentCatalog _builtInCatalog() {
 
   const github = 'https://github.com';
   final gemini = archive(
-    'https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.63.0.tgz',
-    '97a6edfc10645463b517f0518d46a8c72efbdc12558a9a948607f726284a0420',
+    'https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz',
+    '269734d35287fbd8ed2982534258ecf4a95f184b6e06e6732e0d6850c28701d9',
     'package/bundle/gemini.js',
-    bytes: 20810043,
-    installedBytes: 98439442,
+    bytes: 20889095,
+    installedBytes: 98815455,
     format: AgentArtifactFormat.npmTarGz,
   );
   final qwen = archive(
-    'https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.25.0.tgz',
-    'afeab0c85d682f201101319ce05decf3302d7ed7fb6319baa6a592051ea1a1ba',
+    'https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz',
+    'a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89',
     'package/cli-entry.js',
-    bytes: 33195960,
-    installedBytes: 116286799,
+    bytes: 42796897,
+    installedBytes: 154807157,
     format: AgentArtifactFormat.npmTarGz,
   );
   return AgentCatalog(
@@ -279,17 +279,17 @@ AgentCatalog _builtInCatalog() {
         'opencode',
         AgentSignInMethod.apiKeyHost,
         AgentInstallRecipe(
-          version: '2.1.1',
+          version: '2.2.5',
           executable: 'opencode',
           artifacts: {
             AgentArchitecture.arm64: archive(
-              'https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.1.1.tgz',
-              'cfa3ae6363fc3082f03072297069d81f53559a761371fdb4b56fe6bfa01ca066',
+              'https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.5.tgz',
+              'f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053',
               'package/bin/opencode',
             ),
             AgentArchitecture.x64: archive(
-              'https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.1.1.tgz',
-              '216d3861d0a167adad5850282439bae13483203f4b110f0510f260118bba2858',
+              'https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.5.tgz',
+              '873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08',
               'package/bin/opencode',
             ),
           },
@@ -303,18 +303,18 @@ AgentCatalog _builtInCatalog() {
         'claude',
         AgentSignInMethod.browserOAuthHost,
         AgentInstallRecipe(
-          version: '2.1.294',
+          version: '2.1.316',
           executable: 'claude',
           artifacts: {
             AgentArchitecture.arm64: binary(
-              'https://downloads.claude.ai/claude-code-releases/2.1.294/linux-arm64/claude',
-              'e5d2df19f30a6d63bf11188121f7edb2775249b57352a69269509a4b1496e763',
-              252108792,
+              'https://downloads.claude.ai/claude-code-releases/2.1.316/linux-arm64/claude',
+              '55cdb8e162d190432696ea54010e0fca2e18d06fa7a7127fd563b9ffd4f22624',
+              328459544,
             ),
             AgentArchitecture.x64: binary(
-              'https://downloads.claude.ai/claude-code-releases/2.1.294/linux-x64/claude',
-              '27122ca7b624f537546fbef35b80c66370d974ff258f3d9b10ac50bb8771f262',
-              252755128,
+              'https://downloads.claude.ai/claude-code-releases/2.1.316/linux-x64/claude',
+              'fd13c70000fec3f2116dfbcbb6121210b4a29328bf0e46210a59dd594a67d824',
+              328262000,
             ),
           },
           signInArgs: ['auth', 'login', '--claudeai'],
@@ -327,22 +327,22 @@ AgentCatalog _builtInCatalog() {
         'codex',
         AgentSignInMethod.browserOAuthHost,
         AgentInstallRecipe(
-          version: '0.162.1',
+          version: '0.166.0',
           executable: 'codex',
           artifacts: {
             AgentArchitecture.arm64: archive(
-              '$github/openai/codex/releases/download/rust-v0.162.1/codex-aarch64-unknown-linux-musl.tar.gz',
-              'bf3ca2719f1143b1440fbd85c149379e696c782c50ad7991f8bfcec60b2600c1',
+              '$github/openai/codex/releases/download/rust-v0.166.0/codex-aarch64-unknown-linux-musl.tar.gz',
+              '94eb707605ec2646b2e05b7edf7c4e7b3ccf02b16237c34ae9beb8cfb7f810a9',
               'codex-aarch64-unknown-linux-musl',
-              bytes: 103595962,
-              installedBytes: 254866040,
+              bytes: 113382496,
+              installedBytes: 277549176,
             ),
             AgentArchitecture.x64: archive(
-              '$github/openai/codex/releases/download/rust-v0.162.1/codex-x86_64-unknown-linux-musl.tar.gz',
-              '86f268d81b898f3e144c5ecff2ad2fda2c5802e042d6195b72538fe0fa125057',
+              '$github/openai/codex/releases/download/rust-v0.166.0/codex-x86_64-unknown-linux-musl.tar.gz',
+              'a0bf572d2f93f056c6712a6da348e96078dc84f3885fd7be67807ef389cb3978',
               'codex-x86_64-unknown-linux-musl',
-              bytes: 111350218,
-              installedBytes: 294415048,
+              bytes: 121764138,
+              installedBytes: 319346888,
             ),
           },
           launchArgs: ['app-server'],
@@ -356,7 +356,7 @@ AgentCatalog _builtInCatalog() {
         'gemini',
         AgentSignInMethod.browserOAuthHost,
         AgentInstallRecipe(
-          version: '0.63.0',
+          version: '0.66.0',
           executable: 'gemini',
           artifacts: {
             AgentArchitecture.arm64: gemini,
@@ -374,7 +374,7 @@ AgentCatalog _builtInCatalog() {
         'qwen',
         AgentSignInMethod.apiKeyHost,
         AgentInstallRecipe(
-          version: '0.25.0',
+          version: '0.26.4',
           executable: 'qwen',
           artifacts: {
             AgentArchitecture.arm64: qwen,
@@ -392,22 +392,22 @@ AgentCatalog _builtInCatalog() {
         'kilo',
         AgentSignInMethod.browserOAuthHost,
         AgentInstallRecipe(
-          version: '7.8.3',
+          version: '7.8.18',
           executable: 'kilo',
           artifacts: {
             AgentArchitecture.arm64: archive(
-              'https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.3.tgz',
-              'bd61f03eb14053fdcaf5245eb1740455b0447fe9d6d48b4adaeea6bb4ae53a90',
+              'https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.18.tgz',
+              '0f1bd0fb983f67ec1edf53c185e9521268f8f133af2a4cec2f1967e5d60e45ef',
               'package/bin/kilo',
-              bytes: 63881791,
-              installedBytes: 169322640,
+              bytes: 83529597,
+              installedBytes: 258264056,
             ),
             AgentArchitecture.x64: archive(
-              'https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.3.tgz',
-              '03b963726d8002ea6bee21d8db6121201e6ed8230a0e1fce8857f4c8d091333c',
+              'https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.18.tgz',
+              'bde638d0a493155088e4454fbe4a9697571443665e2a22d5a78cad645b96b554',
               'package/bin/kilo',
-              bytes: 64190979,
-              installedBytes: 170363008,
+              bytes: 84132773,
+              installedBytes: 259213488,
             ),
           },
           launchArgs: ['acp'],
@@ -423,22 +423,22 @@ AgentCatalog _builtInCatalog() {
         'cline',
         AgentSignInMethod.browserOAuthHost,
         AgentInstallRecipe(
-          version: '3.0.68',
+          version: '3.0.74',
           executable: 'cline',
           artifacts: {
             AgentArchitecture.arm64: archive(
-              'https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.68.tgz',
-              '5e0ad56ba4c494c437f6dcdc2557c165478e05e1800e1fe6f7d476e4fd4c84f2',
+              'https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.74.tgz',
+              '10c1f63c143b6f7eba3320543df2f6081232d79fb1830c293cf006115dce9049',
               'package/bin/cline',
-              bytes: 49689972,
-              installedBytes: 130861352,
+              bytes: 54812128,
+              installedBytes: 162253096,
             ),
             AgentArchitecture.x64: archive(
-              'https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.68.tgz',
-              'a979929090eb9a934b3907e2cf519368964d6a35e96079d6db4fc89caad98ab1',
+              'https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.74.tgz',
+              '52502438a8d78a451156c38df2eb31116d658c94d1d5461b4e29761d06211bfc',
               'package/bin/cline',
-              bytes: 49918778,
-              installedBytes: 130434528,
+              bytes: 55037574,
+              installedBytes: 161793504,
             ),
           },
           launchArgs: ['--acp'],

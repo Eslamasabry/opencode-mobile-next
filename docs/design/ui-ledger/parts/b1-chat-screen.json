@@ -991,6 +991,10 @@
       "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
     },
     {
+      "file": "lib/ui/screens/chat/chat_local_summary.dart",
+      "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): the conversation menu's Summarize on this phone entry; the sheet it opens is lib/local_llm/local_llm_ui.dart. No separate surface."
+    },
+    {
       "file": "lib/ui/screens/chat/chat_stream.dart",
       "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface."
     },

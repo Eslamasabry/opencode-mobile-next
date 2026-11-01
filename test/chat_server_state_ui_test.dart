@@ -555,9 +555,39 @@ void main() {
       // No model is selected in this harness, so the existing compaction
       // path reports its precondition: proof the button reaches it.
       expect(
-        find.textContaining('Select a model before compacting'),
+        find.textContaining('Select a model before shortening'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('free-tier limit: plain words, Shorten, new conversation, '
+        'details only for the server text', (tester) async {
+      final api = _Api()
+        ..messagesResult = [
+          _user('u1'),
+          _assistant(
+            'a1',
+            errorText:
+                'FreeUsageLimitError: Free usage limit reached. Subscribe '
+                'to OpenCode Go to keep going: https://opencode.ai/go',
+            errorKind: MessageErrorKind.unknown,
+          ),
+        ];
+      await _pumpChat(tester, api);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('error-card-free-tier')), findsOneWidget);
+      expect(
+        find.text("OpenCode's free models stopped this reply."),
+        findsOneWidget,
+      );
+      expect(find.textContaining('even when you'), findsOneWidget);
+      expect(find.textContaining('FreeUsageLimitError'), findsNothing);
+      expect(find.text('Shorten this conversation'), findsOneWidget);
+      expect(find.text('Continue in a new conversation'), findsOneWidget);
+      // Never an automatic retry, another model by itself or a resend.
+      expect(find.byKey(const Key('error-action-resend')), findsNothing);
+      expect(api.prompts, isEmpty);
+      expect(find.byKey(const Key('error-action-details')), findsOneWidget);
     });
 
     testWidgets('provider auth opens the providers screen', (tester) async {

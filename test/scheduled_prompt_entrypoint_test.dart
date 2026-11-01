@@ -44,6 +44,7 @@ class _Runner extends ScheduledPromptRunner {
     ScheduledPrompt schedule, {
     required int deadlineEpochMs,
     required Future<bool> Function() isCurrent,
+    bool manual = false,
     Future<void> Function(String)? onSessionCreated,
   }) async {
     expect(await isCurrent(), isTrue);

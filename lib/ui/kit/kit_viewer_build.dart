@@ -170,7 +170,8 @@ extension _KitViewerBuild on _KitViewerState {
         _loading || _error != null || _isEmpty || (large && primary != null)
         ? null
         : content?.copyText;
-    if (primary == null && copyText == null) return null;
+    final secondary = _loading || _error != null ? null : widget.secondary;
+    if (primary == null && copyText == null && secondary == null) return null;
     final copy = copyText == null
         ? null
         : KitAction(
@@ -186,11 +187,17 @@ extension _KitViewerBuild on _KitViewerState {
           key: const ValueKey('kit-viewer-primary'),
           child: KitButton.fromAction(primary, role: KitButtonRole.primary),
         ),
+      if (secondary != null)
+        KitButton.fromAction(
+          secondary,
+          role: KitButtonRole.secondary,
+          expand: true,
+        ),
       if (copy != null)
         KitButton.fromAction(
           copy,
           role: KitButtonRole.secondary,
-          expand: primary == null || large,
+          expand: primary == null || large || secondary != null,
         ),
     ];
     final bar = Padding(
@@ -202,7 +209,7 @@ extension _KitViewerBuild on _KitViewerState {
       ),
       // Side by side, the main action taking the room; stacked at large
       // text, so neither label is cut.
-      child: large || children.length == 1
+      child: large || secondary != null || children.length == 1
           ? Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -52,8 +52,74 @@ Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
 }
 
+/// An agent conversation's connection whose helper Android stopped.
+class _KilledAgent extends _Controller {
+  _KilledAgent(super.store);
+  bool back = false;
+  int dismissed = 0;
+  @override
+  bool get isAgentBackend => true;
+  @override
+  ServerProfile? get profile =>
+      ServerProfile(id: 'laptop', name: 'Claude Code', baseUrl: 'ws://x');
+  @override
+  bool get agentHelperKilledByAndroid => true;
+  @override
+  bool get agentBackAfterKill => back;
+  @override
+  void dismissAgentBackAfterKill() => dismissed++;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('Android stopping the agent reads as that, then as back', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final c = _KilledAgent(
+      ProfileStore(prefs: await SharedPreferences.getInstance()),
+    );
+    addTearDown(c.dispose);
+    c.show(ConnectionStatusPhase.notAnswering);
+    KitStatus? status;
+    var opened = 0;
+    Future<void> read() => tester.pumpWidget(
+      MaterialApp(
+        key: UniqueKey(),
+        home: Builder(
+          builder: (context) {
+            status = connectionKitStatus(
+              context,
+              c,
+              onSeeRunning: () => opened++,
+            );
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    await read();
+    expect(
+      status?.message,
+      'Android stopped the agent because too many programs were running. '
+      'Starting it again…',
+    );
+    expect(status?.message, isNot(contains("isn't answering")));
+    // Back: one plain line, closable, with the way to what runs.
+    c.back = true;
+    c.show(ConnectionStatusPhase.connected);
+    await read();
+    expect(
+      status?.message,
+      "Android stopped the agent because too many programs were running. "
+      "It's back; your conversation continues.",
+    );
+    status?.onDismiss?.call();
+    expect(c.dismissed, 1);
+    status?.action?.onPressed?.call();
+    expect(opened, 1);
+  });
 
   Future<_Controller> controller() async {
     SharedPreferences.setMockInitialValues({});

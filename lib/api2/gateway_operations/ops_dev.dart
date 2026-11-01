@@ -280,6 +280,13 @@ mixin _Api2DevOps on _Api2Core implements OneShotCommandGateway {
             'location[directory]': ?_directory,
           },
         );
+        // A browser socket cannot carry headers or a custom client: the
+        // single-use, 60-second ticket in the URL is the whole credential,
+        // so the socket opens right away through the browser's own stack.
+        if (platformCapabilities.isWeb) {
+          final socket = await platformWebSocketConnector(uri);
+          return PtyTerminalChannel(socket, initialCursor: cursor ?? 0);
+        }
         // The ticket authenticates OC2. A BYO proxy also needs the phone's
         // Basic header so revocation still applies before websocket forwarding.
         // Keep both credentials out of the URL except the single-use ticket.

@@ -46,6 +46,75 @@ class KitRowValue extends StatelessWidget {
   /// conversation's Model and Project).
   final bool prominent;
 
+  /// The text style the value draws in.
+  TextStyle _style(BuildContext context) => prominent
+      ? KitText.styleOf(context, KitTextRole.body, tone: KitTextTone.secondary)
+      : KitTokens.of(context).rowValue;
+
+  /// How wide the value is on one line with its chevron and end rail: what
+  /// [KitRow] weighs against the title's longest word to decide whether the
+  /// two share a line. Only for a text value (not a count).
+  double naturalWidth(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    final painter = TextPainter(
+      text: TextSpan(text: value, style: _style(context)),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    final rail = KitRow.trailingRailOf(context) ?? tokens.space4;
+    final chevronSize = tokens.iconSize(context, tokens.smallIconSize);
+    return width.ceilToDouble() +
+        (chevron ? tokens.space1 + chevronSize : 0) +
+        rail;
+  }
+
+  /// The value under its row's title instead of beside it: the whole row's
+  /// width, wrapping where it must, the chevron at the end of the line. A
+  /// title never breaks inside a word to make room for a value.
+  Widget stacked(BuildContext context, {double? rail}) {
+    final tokens = KitTokens.of(context);
+    final chevronSize = tokens.iconSize(context, tokens.smallIconSize);
+    return Padding(
+      padding: EdgeInsets.only(top: KitTokens.rowLineGap),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Text(
+              value,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: _style(context),
+            ),
+          ),
+          // The chevron ends where a beside-the-title value's does.
+          if (chevron)
+            Padding(
+              padding: EdgeInsetsDirectional.only(
+                start: tokens.space1,
+                end: KitOptical.endPad(
+                  context,
+                  AppIconography.chevronRight,
+                  chevronSize,
+                  rail ?? tokens.space4,
+                ),
+              ),
+              child: Icon(
+                AppIconography.chevronRight,
+                size: chevronSize,
+                color: tokens.roles.text3,
+              ),
+            )
+          else
+            SizedBox(width: rail ?? tokens.space4),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) =>
       KitMaxWidth.chip(child: _buildContent(context));

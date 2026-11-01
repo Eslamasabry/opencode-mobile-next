@@ -8061,31 +8061,31 @@ abstract class AppLocalizations {
   /// Chat journey: Compact context
   ///
   /// In en, this message translates to:
-  /// **'Compact context'**
+  /// **'Shorten conversation'**
   String get chatUiCompactContext;
 
   /// Chat journey: Compact session
   ///
   /// In en, this message translates to:
-  /// **'Compact conversation'**
+  /// **'Shorten conversation'**
   String get chatUiCompactSession;
 
   /// Chat journey: Compacting conversation…
   ///
   /// In en, this message translates to:
-  /// **'Compacting conversation…'**
+  /// **'Shortening conversation…'**
   String get chatUiCompactingConversation;
 
   /// Chat journey: Compaction failed
   ///
   /// In en, this message translates to:
-  /// **'Compaction failed'**
+  /// **'Shortening failed'**
   String get chatUiCompactionFailed;
 
   /// Chat journey: Compaction started
   ///
   /// In en, this message translates to:
-  /// **'Compaction started'**
+  /// **'Shortening started'**
   String get chatUiCompactionStarted;
 
   /// Chat journey: Compose
@@ -8883,7 +8883,7 @@ abstract class AppLocalizations {
   /// Chat journey: Select a model before compacting this session.
   ///
   /// In en, this message translates to:
-  /// **'Select a model before compacting this conversation.'**
+  /// **'Select a model before shortening this conversation.'**
   String get chatUiSelectAModelBeforeCompactingThisSession;
 
   /// Chat journey: Server commands
@@ -17131,7 +17131,7 @@ abstract class AppLocalizations {
   /// No description provided for @capabilityCompact.
   ///
   /// In en, this message translates to:
-  /// **'Compact'**
+  /// **'Shorten'**
   String get capabilityCompact;
 
   /// No description provided for @capabilityCompactDetail.
@@ -17461,7 +17461,7 @@ abstract class AppLocalizations {
   /// One-time tip above the composer when the conversation uses most of the model's context window. Its button compacts the conversation.
   ///
   /// In en, this message translates to:
-  /// **'The context is {percent}% full: compact to keep going.'**
+  /// **'The context is {percent}% full: shorten the conversation to keep going.'**
   String nudgeCompact(String percent);
 
   /// Tooltip of the close button on a one-time tip card.
@@ -17947,7 +17947,7 @@ abstract class AppLocalizations {
   /// What to do when a request is too large
   ///
   /// In en, this message translates to:
-  /// **'Send fewer or smaller attachments, or compact the conversation, then try again.'**
+  /// **'Send fewer or smaller attachments, or shorten the conversation, then try again.'**
   String get agentErrorRequestTooLargeHint;
 
   /// Plain-language error headline: rate limit
@@ -18031,7 +18031,7 @@ abstract class AppLocalizations {
   /// Button on a failed compaction notice that retries the compaction
   ///
   /// In en, this message translates to:
-  /// **'Compact again'**
+  /// **'Shorten again'**
   String get chatUiCompactAgain;
 
   /// What a failed compaction means for the reader, shown before the server's reason
@@ -27893,19 +27893,19 @@ abstract class AppLocalizations {
   /// Conversation context: what being near the limit means and what to do.
   ///
   /// In en, this message translates to:
-  /// **'Older details may be dropped from what the model sees. Compact the conversation to keep going, or start a new one.'**
+  /// **'Older details may be dropped from what the model sees. Shorten the conversation to keep going, or start a new one.'**
   String get sessionContextNearLimitBody;
 
   /// Conversation context: starts compacting the conversation.
   ///
   /// In en, this message translates to:
-  /// **'Compact this conversation'**
+  /// **'Shorten this conversation'**
   String get sessionContextCompactAction;
 
   /// Conversation context: the compact confirmation's question.
   ///
   /// In en, this message translates to:
-  /// **'Compact this conversation?'**
+  /// **'Shorten this conversation?'**
   String get sessionContextCompactTitle;
 
   /// Conversation context: what compacting does.
@@ -27923,13 +27923,13 @@ abstract class AppLocalizations {
   /// Conversation context: the compact confirmation's button.
   ///
   /// In en, this message translates to:
-  /// **'Compact conversation'**
+  /// **'Shorten conversation'**
   String get sessionContextCompactConfirm;
 
   /// Conversation context: shown after compacting was started.
   ///
   /// In en, this message translates to:
-  /// **'Compacting started. The numbers update when it finishes.'**
+  /// **'Shortening started. The numbers update when it finishes.'**
   String get sessionContextCompactStarted;
 
   /// Conversation context: why compacting is unavailable while a reply runs.
@@ -35835,19 +35835,19 @@ abstract class AppLocalizations {
   /// Confirm sheet title before compacting the conversation
   ///
   /// In en, this message translates to:
-  /// **'Compact this conversation?'**
+  /// **'Shorten this conversation?'**
   String get chatUiCompactConfirmTitle;
 
   /// Confirm sheet: one line on what Compact does
   ///
   /// In en, this message translates to:
-  /// **'Compact replaces earlier messages with a short summary to save space. It can\'t be undone.'**
+  /// **'Shortening replaces earlier messages with a short summary to save space. It can\'t be undone.'**
   String get chatUiCompactConfirmBody;
 
   /// Confirm sheet button that starts compacting
   ///
   /// In en, this message translates to:
-  /// **'Compact conversation'**
+  /// **'Shorten conversation'**
   String get chatUiCompactConfirmAction;
 
   /// KitTurn: end line of an unfinished turn while the connection is coming back
@@ -43803,13 +43803,13 @@ abstract class AppLocalizations {
   /// Context ring: the word beside the ring while the conversation is being compacted
   ///
   /// In en, this message translates to:
-  /// **'Compacting'**
+  /// **'Shortening'**
   String get kitContextRingCompacting;
 
   /// Context ring: screen-reader words while the conversation is being compacted
   ///
   /// In en, this message translates to:
-  /// **'Context, compacting'**
+  /// **'Context, shortening'**
   String get kitContextRingCompactingSemantics;
 
   /// Context details sheet: its title
@@ -43875,7 +43875,7 @@ abstract class AppLocalizations {
   /// Context details sheet: the button that compacts the conversation
   ///
   /// In en, this message translates to:
-  /// **'Compact now'**
+  /// **'Shorten now'**
   String get kitContextSheetCompactNow;
 
   /// Chat: the accessible name of the row of the person's own common short phrases above the message box
@@ -55965,7 +55965,7 @@ abstract class AppLocalizations {
   /// Body of the near-limit warning on Running on this phone. The Developer options path is text only.
   ///
   /// In en, this message translates to:
-  /// **'{count} of {limit} background processes: above {limit}, Android stops this app\'s oldest processes first, and those are the servers. Stop what was left behind or isn\'t needed, or lift the limit with Developer options › Disable child process restrictions.'**
+  /// **'{count} of {limit} background processes: above {limit}, Android stops this app\'s oldest processes first, and those are the servers. New agents wait for room. Stop what was left behind or isn\'t needed.'**
   String runningPhoneLimitBody(int count, int limit);
 
   /// Label of a group of processes on Running on this phone: what started them.
@@ -56333,6 +56333,2849 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop {agent}'**
   String stopRowSemantics(String agent);
+
+  /// Voice mode while the mic is held: letting go finishes the recording
+  ///
+  /// In en, this message translates to:
+  /// **'Let go when you\'re done'**
+  String get vpttLetGoToFinish;
+
+  /// Voice mode while the mic is held and dragged away: letting go throws the recording away
+  ///
+  /// In en, this message translates to:
+  /// **'Let go to cancel'**
+  String get vpttLetGoToCancel;
+
+  /// Voice mode: the spoken words will be sent after a countdown; seconds is the whole seconds left
+  ///
+  /// In en, this message translates to:
+  /// **'Sending in {seconds}…'**
+  String vpttSendingIn(String seconds);
+
+  /// Voice mode countdown: keep the words in the box and do not send them
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t send'**
+  String get vpttDontSend;
+
+  /// Voice typing language choice: listen for the app's own language
+  ///
+  /// In en, this message translates to:
+  /// **'Same as the app'**
+  String get vpttLanguageFollowApp;
+
+  /// Voice typing language choice: what Same as the app does
+  ///
+  /// In en, this message translates to:
+  /// **'Listens for the app\'s language when it can, and works out the language from your voice when it can\'t.'**
+  String get vpttLanguageFollowAppDetail;
+
+  /// Voice typing language choice: what Detect from speech does
+  ///
+  /// In en, this message translates to:
+  /// **'Works out the language from your voice each time.'**
+  String get vpttLanguageDetectDetail;
+
+  /// Voice typing setting: stop listening after a pause and send
+  ///
+  /// In en, this message translates to:
+  /// **'Send when I stop talking'**
+  String get vpttAutoSendTitle;
+
+  /// Voice typing setting: what Send when I stop talking does
+  ///
+  /// In en, this message translates to:
+  /// **'After a short pause, your words are sent. You get 3 seconds to cancel. Holding the mic never sends by itself.'**
+  String get vpttAutoSendDetail;
+
+  /// Tip above the composer's mic: holding it records until the finger lifts
+  ///
+  /// In en, this message translates to:
+  /// **'Hold the mic to talk, let go to finish'**
+  String get tipHoldMic;
+
+  /// Help › Tips row: the tip about holding the mic
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to talk'**
+  String get tipHoldMicTitle;
+
+  /// Voice typing language row: the app's language has no offline speech support, so Same as the app falls back to detecting
+  ///
+  /// In en, this message translates to:
+  /// **'Your app\'s language ({language}) isn\'t one the offline speech model knows, so it works out the language from your voice instead.'**
+  String vpttLanguageUnavailableOffline(String language);
+
+  /// Voice typing language row: the smallest speech model recognises non-English languages poorly; language is the language's own name
+  ///
+  /// In en, this message translates to:
+  /// **'The Compact model is rough outside English. For {language}, choose Balanced or High accuracy above.'**
+  String vpttLanguageCompactRough(String language);
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Check connection'**
+  String get connCheckTitle;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Test the address, sign-in, version, live updates and speed.'**
+  String get connCheckRowDetail;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Five quick checks against this server. Nothing is changed or saved.'**
+  String get connCheckIntro;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Check connection'**
+  String get connCheckRun;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get connCheckAgain;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get connCheckRunning;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Address reachable'**
+  String get connCheckStepAddress;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in accepted'**
+  String get connCheckStepSignIn;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Server version supported'**
+  String get connCheckStepVersion;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Live updates arriving'**
+  String get connCheckStepLive;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Round-trip time'**
+  String get connCheckStepSpeed;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'The server answered.'**
+  String get connCheckAddressOk;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing answered at this address. Check that the server is running and that this phone can reach it, for example over Tailscale.'**
+  String get connCheckAddressUnreachable;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Something answered, but it is not an OpenCode server. Check the address and the port.'**
+  String get connCheckAddressNotOpenCode;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'The server accepted this sign-in.'**
+  String get connCheckSignInOk;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'This server asks for a password. Add it under Name and address.'**
+  String get connCheckNeedsPassword;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not accept the saved password. Copy the current one from the server and save it again.'**
+  String get connCheckPasswordRejected;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'This server works with this app.'**
+  String get connCheckVersionOkUnknown;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'This server runs an older OpenCode that this app no longer supports. Update it to OpenCode 2.'**
+  String get connCheckVersionUnsupported;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is starting, or reports a problem. Wait a moment and check again.'**
+  String get connCheckVersionNotReady;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates are arriving as they happen.'**
+  String get connCheckLiveOk;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Still connecting to live updates. Check again in a moment.'**
+  String get connCheckLiveConnecting;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Live updates are not arriving. A proxy that buffers or cuts long connections is the usual cause.'**
+  String get connCheckLiveDown;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to this server to check live updates.'**
+  String get connCheckLiveNotChecked;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'That is slow. Try a closer network, or check the route your VPN takes.'**
+  String get connCheckSpeedSlow;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Not checked, because an earlier step needs fixing first.'**
+  String get connCheckSkipped;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'How to reach your computer'**
+  String get connCheckReachHelp;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailscale or an SSH tunnel, step by step.'**
+  String get connCheckReachHelpDetail;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'How to reach your computer'**
+  String get reachTitle;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Your computer\'s OpenCode server should stay private. These two ways keep it off the public internet. Try Tailscale first.'**
+  String get reachIntro;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailscale (recommended)'**
+  String get reachTailscaleHeading;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Install Tailscale on your computer and on this phone, and sign in to the same account on both.'**
+  String get reachTailscale1;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'On the computer, start the server with a password, for example: opencode serve --port 4096'**
+  String get reachTailscale2;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Find the computer\'s Tailscale name or its 100.x.x.x address in the Tailscale app.'**
+  String get reachTailscale3;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Here, add a server with that name and port, for example http://100.101.102.103:4096, and enter the password.'**
+  String get reachTailscale4;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH tunnel (if you cannot use Tailscale)'**
+  String get reachSshHeading;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'You need an SSH app on this phone that can forward a port, and SSH access to your computer.'**
+  String get reachSsh1;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the server on the computer, bound to itself only: opencode serve --port 4096'**
+  String get reachSsh2;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'In the SSH app, forward local port 4096 to 127.0.0.1:4096 on the computer, and keep it running.'**
+  String get reachSsh3;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Here, add a server at http://127.0.0.1:4096 and enter the password. Then use Check connection.'**
+  String get reachSsh4;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'ssh -N -L 127.0.0.1:4096:127.0.0.1:4096 you@your-computer'**
+  String get reachSshCommand;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it private'**
+  String get reachSafetyHeading;
+
+  /// Connection check on a server's page.
+  ///
+  /// In en, this message translates to:
+  /// **'Never open the server\'s port to the public internet or share it through a public tunnel. Anyone who reaches it can run commands on your computer.'**
+  String get reachSafety;
+
+  /// Version check result, with the server's version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} works with this app.'**
+  String connCheckVersionOk(String version);
+
+  /// Round-trip time in milliseconds.
+  ///
+  /// In en, this message translates to:
+  /// **'About {ms} ms for a round trip.'**
+  String connCheckSpeedOk(int ms);
+
+  /// No description provided for @scheduleRunNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Run now'**
+  String get scheduleRunNow;
+
+  /// No description provided for @scheduleRunNowNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts one run right away. The next scheduled time stays the same.'**
+  String get scheduleRunNowNote;
+
+  /// Keyboard shortcuts sheet: section of shortcuts that work while reviewing changes
+  ///
+  /// In en, this message translates to:
+  /// **'In a review'**
+  String get shortcutsHelpReview;
+
+  /// Keyboard shortcuts sheet: the key label for stopping a running reply (must differ from the plain Esc row)
+  ///
+  /// In en, this message translates to:
+  /// **'Esc while a reply runs'**
+  String get shortcutsStopReplyKeys;
+
+  /// Keyboard shortcuts sheet: Esc stops the reply that is running
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the running reply'**
+  String get shortcutsStopReply;
+
+  /// Keyboard shortcuts sheet: jump to the next change in a review
+  ///
+  /// In en, this message translates to:
+  /// **'Next change'**
+  String get shortcutsReviewNextChange;
+
+  /// Keyboard shortcuts sheet: jump to the previous change in a review
+  ///
+  /// In en, this message translates to:
+  /// **'Previous change'**
+  String get shortcutsReviewPreviousChange;
+
+  /// Queue notice reason: drafts dropped for age
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 was too old to send} other{{count} were too old to send}}'**
+  String queueEvictedTooOld(int count);
+
+  /// Queue notice reason: drafts dropped for size
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 to stay within the queue limit} other{{count} to stay within the queue limit}}'**
+  String queueEvictedOverLimit(int count);
+
+  /// No description provided for @queueEvictedJoin.
+  ///
+  /// In en, this message translates to:
+  /// **' and '**
+  String get queueEvictedJoin;
+
+  /// Queue notice: what was discarded
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Discarded 1 queued draft: {reasons}.} other{Discarded {count} queued drafts: {reasons}.}}'**
+  String queueEvictedSummary(int count, String reasons);
+
+  /// Thinking level: default
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking level back to the default.'**
+  String get chatUiThinkingLevelDefault;
+
+  /// Thinking level changed from the keyboard
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking: {level}.'**
+  String chatUiThinkingLevelSet(String level);
+
+  /// Shortcuts sheet: cycle the thinking level
+  ///
+  /// In en, this message translates to:
+  /// **'Next / previous thinking level'**
+  String get shortcutsThinkingLevel;
+
+  /// Shortcuts sheet: move the transcript by page
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll the conversation by a page'**
+  String get shortcutsTranscriptPages;
+
+  /// Shortcuts sheet: jump to the first or last message
+  ///
+  /// In en, this message translates to:
+  /// **'First message / latest message'**
+  String get shortcutsTranscriptEnds;
+
+  /// Shortcuts sheet: next file in a review
+  ///
+  /// In en, this message translates to:
+  /// **'Next file'**
+  String get shortcutsReviewNextFile;
+
+  /// Shortcuts sheet: previous file in a review
+  ///
+  /// In en, this message translates to:
+  /// **'Previous file'**
+  String get shortcutsReviewPreviousFile;
+
+  /// Shortcuts sheet: note under single-key shortcuts
+  ///
+  /// In en, this message translates to:
+  /// **'Single keys such as N, P, [ and ] only work when no text field has focus.'**
+  String get shortcutsNotWhileTyping;
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'Share on Wi-Fi'**
+  String get fileShareAction;
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'Share on Wi-Fi'**
+  String get fileShareTitle;
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'QR code to download {name}'**
+  String fileShareQrLabel(String name);
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get fileShareLinkLabel;
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get fileShareCopyLink;
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone on this Wi-Fi with the link can download this file.'**
+  String get fileShareWarning;
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Not downloaded yet} =1{Downloaded 1 time} other{Downloaded {count} times}}'**
+  String fileShareDownloads(int count);
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'Stops sharing in {time}'**
+  String fileShareTimeLeft(String time);
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing'**
+  String get fileShareStop;
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing has stopped. Nobody can download this file now.'**
+  String get fileShareEnded;
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'This phone is not on Wi-Fi. Connect to Wi-Fi to share this file with a nearby device.'**
+  String get fileShareNoWifi;
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'This file can\'t be shared because it may hold keys or passwords.'**
+  String get fileSharePrivate;
+
+  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing could not start. Try again in a moment.'**
+  String get fileShareUnavailable;
+
+  /// Settings › Voice: the choice of who reads replies aloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-aloud voice'**
+  String get readAloudVoiceTitle;
+
+  /// Read-aloud voice choice: the speech voice installed on the phone (default).
+  ///
+  /// In en, this message translates to:
+  /// **'Phone\'s voice'**
+  String get readAloudVoicePhone;
+
+  /// Detail under the Phone's voice choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses the speech voices installed on this phone.'**
+  String get readAloudVoicePhoneDetail;
+
+  /// Read-aloud voice choice that downloads the natural voice; {size} is the download size such as 142 MB.
+  ///
+  /// In en, this message translates to:
+  /// **'Natural voice (download, about {size})'**
+  String readAloudVoiceNaturalDownload(String size);
+
+  /// Read-aloud voice choice once the natural voice is on the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Natural voice'**
+  String get readAloudVoiceNatural;
+
+  /// Detail under the Natural voice choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sounds more like a person and works offline. English only for now; other languages are read by the phone\'s voice.'**
+  String get readAloudVoiceNaturalDetail;
+
+  /// Progress title while the natural voice downloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading the natural voice'**
+  String get naturalVoiceDownloading;
+
+  /// Button that deletes the downloaded natural voice; {size} is the space it frees.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove natural voice ({size})'**
+  String naturalVoiceRemove(String size);
+
+  /// Confirmation title for removing the natural voice.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the natural voice?'**
+  String get naturalVoiceRemoveTitle;
+
+  /// Confirmation body for removing the natural voice.
+  ///
+  /// In en, this message translates to:
+  /// **'Replies go back to being read by the phone\'s voice. You can download the natural voice again later.'**
+  String get naturalVoiceRemoveBody;
+
+  /// Cancel button of the remove-natural-voice confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it'**
+  String get naturalVoiceKeep;
+
+  /// Shown once when a reply is in a language the natural voice does not speak.
+  ///
+  /// In en, this message translates to:
+  /// **'The natural voice can\'t read this language yet, so the phone\'s voice is reading.'**
+  String get naturalVoiceFallbackNote;
+
+  /// Natural voice download could not start for lack of space; {size} is what is needed.
+  ///
+  /// In en, this message translates to:
+  /// **'There isn\'t enough free storage. Free up about {size} and try again.'**
+  String naturalVoiceNoSpace(String size);
+
+  /// Natural voice download failed for a reason other than space.
+  ///
+  /// In en, this message translates to:
+  /// **'The natural voice could not be set up. Check your connection and try again.'**
+  String get naturalVoiceFailed;
+
+  /// App-wide status line while new heavy work (a new agent conversation, the AI Team, a setup job) waits because the app runs too many programs. It starts by itself when room frees up. Followed by processBudgetAgentsRunning when agents run.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for room: the phone allows about {ceiling} programs at once.'**
+  String processBudgetWaitRoom(int ceiling);
+
+  /// Second sentence of the waiting-for-room line: how many agent conversations run now.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 agent is running.} other{{count} agents are running.}}'**
+  String processBudgetAgentsRunning(int count);
+
+  /// App-wide status line while new heavy work waits because the phone is hot.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting: the phone is warm. It starts by itself when the phone cools down.'**
+  String get processBudgetWaitWarm;
+
+  /// App-wide status line while new heavy work waits because the battery is at or under 20% and not charging.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting: the battery is low. It starts by itself once the phone charges.'**
+  String get processBudgetWaitBattery;
+
+  /// Action on the waiting line: opens Running on this phone.
+  ///
+  /// In en, this message translates to:
+  /// **'See what runs'**
+  String get processBudgetSeeRunning;
+
+  /// Caption on Running on this phone: how many programs count toward the limit, and the app's ceiling (32, or 48 when Android's limit is off).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of them count toward the limit of about {ceiling}'**
+  String processBudgetCount(int count, int ceiling);
+
+  /// Status line of an agent conversation while the agent helper restarts after Android killed it (exit 137, not requested).
+  ///
+  /// In en, this message translates to:
+  /// **'Android stopped the agent because too many programs were running. Starting it again…'**
+  String get agentKilledByAndroid;
+
+  /// Status line of an agent conversation once the helper is back after Android killed it.
+  ///
+  /// In en, this message translates to:
+  /// **'Android stopped the agent because too many programs were running. It\'s back; your conversation continues.'**
+  String get agentBackAfterKill;
+
+  /// Agent row: the app is moving this agent to the version it was tested with, by itself
+  ///
+  /// In en, this message translates to:
+  /// **'Updating to {version}…'**
+  String agentsStateUpdating(String version);
+
+  /// Agent row: the app is updating the shared helper this agent runs on, by itself
+  ///
+  /// In en, this message translates to:
+  /// **'Updating…'**
+  String get agentsStateUpdatingHelper;
+
+  /// Agent row: an automatic update is waiting for a quiet moment (no conversation or setup running)
+  ///
+  /// In en, this message translates to:
+  /// **'Will update when nothing is running'**
+  String get agentsStateUpdateWaiting;
+
+  /// Headline when OpenCode's free tier refuses a request (FreeUsageLimitError)
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode\'s free models stopped this reply.'**
+  String get agentErrorFreeTier;
+
+  /// What to do when OpenCode's free tier refuses a long conversation
+  ///
+  /// In en, this message translates to:
+  /// **'Long conversations are often refused on the free tier, even when you\'ve used little today. Shortening this one or starting a new one usually helps.'**
+  String get agentErrorFreeTierHint;
+
+  /// Free-tier refusal note: how large the conversation context is; tokens is a short count such as 167k
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation is about {tokens} tokens long.'**
+  String agentErrorFreeTierSize(String tokens);
+
+  /// Free-tier refusal action: compact the conversation
+  ///
+  /// In en, this message translates to:
+  /// **'Shorten this conversation'**
+  String get chatFreeTierShorten;
+
+  /// Free-tier refusal action: start a new conversation carrying the last prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Continue in a new conversation'**
+  String get chatFreeTierNewConversation;
+
+  /// Failure words when the agent host refuses to send a file because it is over the size the viewer reads; not a computer that is off
+  ///
+  /// In en, this message translates to:
+  /// **'This file is too big to show here (the limit is 2 MB). Open it on the computer where it lives, or ask the agent for a smaller piece.'**
+  String get productErrorFileTooBig;
+
+  /// Failure words when the agent host answers that a file does not exist
+  ///
+  /// In en, this message translates to:
+  /// **'That file isn\'t there any more. It may have been moved or deleted.'**
+  String get productErrorFileMissing;
+
+  /// Failure words when the agent host refuses to read a file (permission)
+  ///
+  /// In en, this message translates to:
+  /// **'The computer won\'t let this app read that file.'**
+  String get productErrorFileDenied;
+
+  /// Failure words when the agent host will not show a file (binary or unsupported)
+  ///
+  /// In en, this message translates to:
+  /// **'This kind of file can\'t be shown here.'**
+  String get productErrorFileUnreadable;
+
+  /// Question when a reply links an Android app file (.apk) that is on this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Install {name}?'**
+  String phoneFileInstallTitle(String name);
+
+  /// Body of the install question for an .apk on this phone; the app never installs silently
+  ///
+  /// In en, this message translates to:
+  /// **'This app file is on this phone. Android asks you to confirm before anything is installed.'**
+  String get phoneFileInstallBody;
+
+  /// Confirm button that hands an .apk to Android's installer
+  ///
+  /// In en, this message translates to:
+  /// **'Install…'**
+  String get phoneFileInstallAction;
+
+  /// Question when a reply links a large or non-text file that is on this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Open {name}?'**
+  String phoneFileOpenTitle(String name);
+
+  /// Body of the open question for a large or binary file on this phone
+  ///
+  /// In en, this message translates to:
+  /// **'This file is on this phone and is too big or the wrong kind to show here. Choose which app opens it.'**
+  String get phoneFileOpenBody;
+
+  /// Confirm button that hands a phone file to Android's app chooser
+  ///
+  /// In en, this message translates to:
+  /// **'Open with…'**
+  String get phoneFileOpenAction;
+
+  /// Title when this version cannot hand a phone file to another app
+  ///
+  /// In en, this message translates to:
+  /// **'Open it in Files'**
+  String get phoneFileFindTitle;
+
+  /// Body when the phone file cannot be opened from here; names where it is
+  ///
+  /// In en, this message translates to:
+  /// **'This version can\'t hand the file to another app yet. Find it in your Files app: {path}'**
+  String phoneFileFindBody(String path);
+
+  /// Shown instead of Install… when this build cannot hand the .apk to Android; says where the file is
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is in {folder}. Open it from the Files app to install it.'**
+  String phoneFileWhereInstall(String name, String folder);
+
+  /// Shown instead of Open with… when this build cannot hand the file to Android; says where the file is
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is in {folder}. Open it from the Files app.'**
+  String phoneFileWhereOpen(String name, String folder);
+
+  /// Agent row: a big automatic update waits for Wi-Fi instead of using mobile data
+  ///
+  /// In en, this message translates to:
+  /// **'Will update on Wi-Fi'**
+  String get agentsStateUpdateWifi;
+
+  /// Composer note while an agent update cannot let a message through: Send is off until it finishes; the draft is kept
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} is updating, {percent}%. You can send when it\'s done.'**
+  String agentUpdateSendBlocked(String agent, String percent);
+
+  /// Composer note while an agent update cannot let a message through and its progress is not known yet
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} is updating. You can send when it\'s done.'**
+  String agentUpdateSendBlockedNoPercent(String agent);
+
+  /// Plain words when the phone could not start agent work because agent setup or an update was running; technical text goes under Details
+  ///
+  /// In en, this message translates to:
+  /// **'Your agents are being updated, so this could not start yet. Try again in a moment; your message is kept.'**
+  String get productErrorAgentUpdating;
+
+  /// Running on this phone: card that leads to Developer options on Android 14+ after Android stopped agent work.
+  ///
+  /// In en, this message translates to:
+  /// **'Let agents run more programs at once'**
+  String get childLimitTitle;
+
+  /// Child process limit card: why, honestly (never says unlimited).
+  ///
+  /// In en, this message translates to:
+  /// **'Android stops agents when the app runs more than 32 programs. Turning this off lets bigger jobs finish; the app still pauses work when the phone gets hot or the battery is low.'**
+  String get childLimitBody;
+
+  /// Child process limit card: the step when Developer options are on.
+  ///
+  /// In en, this message translates to:
+  /// **'In Developer options, turn on “Disable child process restrictions”, then come back.'**
+  String get childLimitStepsOpen;
+
+  /// Child process limit card: button that opens Developer options.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Developer options'**
+  String get childLimitOpenDeveloper;
+
+  /// Child process limit card: the step when Developer options are off.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer options are off. Turn them on in Settings › About phone: tap Build number seven times.'**
+  String get childLimitStepsEnable;
+
+  /// Child process limit card: button that opens About phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Open About phone'**
+  String get childLimitOpenAbout;
+
+  /// Child process limit card: steps as text only (no button).
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings › System › Developer options and turn on “Disable child process restrictions”.'**
+  String get childLimitStepsText;
+
+  /// Child process limit card: quiet action that hides the card.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get childLimitHide;
+
+  /// Small tag beside Claude Agent's models and its row in the model picker: this is a trial
+  ///
+  /// In en, this message translates to:
+  /// **'Trial'**
+  String get claudeAgentTrialTag;
+
+  /// Model picker row on this phone's server that turns on OpenCode's own Claude Agent provider
+  ///
+  /// In en, this message translates to:
+  /// **'Try Claude Agent'**
+  String get claudeAgentTryTitle;
+
+  /// Supporting line of the Try Claude Agent row
+  ///
+  /// In en, this message translates to:
+  /// **'Claude inside OpenCode, with your Claude Code sign-in on this phone. Your Claude Code chats stay as they are.'**
+  String get claudeAgentTrySupporting;
+
+  /// Supporting line of the Try Claude Agent row while the app sets it up
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up Claude Agent…'**
+  String get claudeAgentPreparing;
+
+  /// Model picker notice title when OpenCode's Claude Agent finds no Claude Code sign-in
+  ///
+  /// In en, this message translates to:
+  /// **'Claude isn\'t signed in on this phone'**
+  String get claudeAgentNeedsSignInTitle;
+
+  /// Model picker notice body: where to sign in (the existing Agents page)
+  ///
+  /// In en, this message translates to:
+  /// **'Claude Agent uses Claude Code\'s sign-in. Sign in to Claude Code in Agents, then check again.'**
+  String get claudeAgentNeedsSignInBody;
+
+  /// Model picker notice title when Claude Code is missing from the phone's Linux
+  ///
+  /// In en, this message translates to:
+  /// **'Claude Code isn\'t installed on this phone'**
+  String get claudeAgentNotInstalledTitle;
+
+  /// Model picker notice body when Claude Code is not installed
+  ///
+  /// In en, this message translates to:
+  /// **'Claude Agent runs the Claude Code on this phone. Install it in Agents, then check again.'**
+  String get claudeAgentNotInstalledBody;
+
+  /// Model picker notice title when another program named claude already exists where the app would add its launcher
+  ///
+  /// In en, this message translates to:
+  /// **'Claude Agent can\'t be set up here'**
+  String get claudeAgentBlockedTitle;
+
+  /// Model picker notice body for the blocked case
+  ///
+  /// In en, this message translates to:
+  /// **'This phone\'s Linux already has another program called claude in /usr/local/sbin, and the app leaves it alone.'**
+  String get claudeAgentBlockedBody;
+
+  /// Model picker notice title when Claude Agent's models did not arrive
+  ///
+  /// In en, this message translates to:
+  /// **'Claude Agent didn\'t start'**
+  String get claudeAgentFailedTitle;
+
+  /// Model picker notice body for the failed case
+  ///
+  /// In en, this message translates to:
+  /// **'Its models didn\'t arrive. Check again in a moment.'**
+  String get claudeAgentFailedBody;
+
+  /// Notice action that opens Settings › Agents, where Claude Code is installed and signed in
+  ///
+  /// In en, this message translates to:
+  /// **'Open Agents'**
+  String get claudeAgentOpenAgents;
+
+  /// Notice action that checks Claude Agent again
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get claudeAgentCheckAgain;
+
+  /// Screen reader name of the Check again action
+  ///
+  /// In en, this message translates to:
+  /// **'Check Claude Agent again'**
+  String get claudeAgentCheckAgainLabel;
+
+  /// Model picker status once Claude Agent's models arrived
+  ///
+  /// In en, this message translates to:
+  /// **'Claude Agent is ready. Its models are marked Trial.'**
+  String get claudeAgentReady;
+
+  /// Keep running screen: switch title. On means the app never slows the agents' programs when the phone is warm, the battery is low or the app is hidden
+  ///
+  /// In en, this message translates to:
+  /// **'Always full speed'**
+  String get fullSpeedSetting;
+
+  /// Keep running screen: one line under the Always full speed switch
+  ///
+  /// In en, this message translates to:
+  /// **'Off: when the phone is warm, the battery is low or the app is hidden, builds and tests on this phone run slower to save heat and battery. Replies are not slowed.'**
+  String get fullSpeedSettingDetail;
+
+  /// Keep running screen: replaces the line under the Always full speed switch while the agents' programs run at lower priority
+  ///
+  /// In en, this message translates to:
+  /// **'Builds and tests are running slower right now to save heat and battery. Replies are not slowed.'**
+  String get fullSpeedSettingEasing;
+
+  /// No description provided for @teamVoiceProductOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Product owner'**
+  String get teamVoiceProductOwner;
+
+  /// No description provided for @teamVoiceArchitect.
+  ///
+  /// In en, this message translates to:
+  /// **'Architect'**
+  String get teamVoiceArchitect;
+
+  /// No description provided for @teamVoiceManager.
+  ///
+  /// In en, this message translates to:
+  /// **'Manager'**
+  String get teamVoiceManager;
+
+  /// No description provided for @teamVoiceDeveloper.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer'**
+  String get teamVoiceDeveloper;
+
+  /// No description provided for @teamVoiceDeveloperAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer · {persona}'**
+  String teamVoiceDeveloperAs(String persona);
+
+  /// No description provided for @teamVoiceReviewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewer'**
+  String get teamVoiceReviewer;
+
+  /// No description provided for @teamVoiceSaysPlanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Planning how to build it.'**
+  String get teamVoiceSaysPlanning;
+
+  /// No description provided for @teamVoiceSaysPlanReady.
+  ///
+  /// In en, this message translates to:
+  /// **'The plan is ready for you.'**
+  String get teamVoiceSaysPlanReady;
+
+  /// No description provided for @teamVoiceSaysStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting on this task.'**
+  String get teamVoiceSaysStarting;
+
+  /// No description provided for @teamVoiceSaysWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working on this task.'**
+  String get teamVoiceSaysWorking;
+
+  /// No description provided for @teamVoiceSaysChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the work against its criteria.'**
+  String get teamVoiceSaysChecking;
+
+  /// No description provided for @teamVoiceSaysFoundProblems.
+  ///
+  /// In en, this message translates to:
+  /// **'Found problems that need a fix.'**
+  String get teamVoiceSaysFoundProblems;
+
+  /// No description provided for @teamVoiceSaysMerging.
+  ///
+  /// In en, this message translates to:
+  /// **'Merging the work into dev.'**
+  String get teamVoiceSaysMerging;
+
+  /// No description provided for @teamVoiceSaysMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Merged into dev.'**
+  String get teamVoiceSaysMerged;
+
+  /// No description provided for @teamVoiceSaysPlanQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'The plan is in line to start.'**
+  String get teamVoiceSaysPlanQueued;
+
+  /// No description provided for @teamVoiceSaysQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'This task is in line to start.'**
+  String get teamVoiceSaysQueued;
+
+  /// No description provided for @teamVoiceSaysWaitingForLane.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a free lane.'**
+  String get teamVoiceSaysWaitingForLane;
+
+  /// No description provided for @teamVoiceSaysWaitingForTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for another task to finish.'**
+  String get teamVoiceSaysWaitingForTask;
+
+  /// No description provided for @teamVoiceSaysWaitingForChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your chat to finish.'**
+  String get teamVoiceSaysWaitingForChat;
+
+  /// No description provided for @teamVoiceSaysWaitingForCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for this phone to be checked.'**
+  String get teamVoiceSaysWaitingForCheck;
+
+  /// No description provided for @teamVoiceSaysPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused.'**
+  String get teamVoiceSaysPaused;
+
+  /// No description provided for @teamVoiceSaysStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped.'**
+  String get teamVoiceSaysStopped;
+
+  /// No description provided for @teamVoiceSaysInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Interrupted. Resume it to pick up where it was.'**
+  String get teamVoiceSaysInterrupted;
+
+  /// No description provided for @teamVoiceSaysResuming.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the earlier session before resuming.'**
+  String get teamVoiceSaysResuming;
+
+  /// No description provided for @teamVoiceNowPlanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Architect is planning'**
+  String get teamVoiceNowPlanning;
+
+  /// No description provided for @teamVoiceNowWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'{developer} is working'**
+  String teamVoiceNowWorking(String developer);
+
+  /// No description provided for @teamVoiceNowChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewer is checking'**
+  String get teamVoiceNowChecking;
+
+  /// No description provided for @teamVoiceNowNeedsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for you'**
+  String get teamVoiceNowNeedsYou;
+
+  /// No description provided for @teamVoiceNowMerging.
+  ///
+  /// In en, this message translates to:
+  /// **'Manager is merging into dev'**
+  String get teamVoiceNowMerging;
+
+  /// No description provided for @teamVoiceNowMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Merged into dev'**
+  String get teamVoiceNowMerged;
+
+  /// No description provided for @teamVoiceNowWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to start'**
+  String get teamVoiceNowWaiting;
+
+  /// No description provided for @teamVoiceNowPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get teamVoiceNowPaused;
+
+  /// No description provided for @teamVoiceNowStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get teamVoiceNowStopped;
+
+  /// No description provided for @teamVoiceNowResuming.
+  ///
+  /// In en, this message translates to:
+  /// **'Resuming'**
+  String get teamVoiceNowResuming;
+
+  /// No description provided for @teamVoiceNowManager.
+  ///
+  /// In en, this message translates to:
+  /// **'Manager has an update'**
+  String get teamVoiceNowManager;
+
+  /// No description provided for @teamVoiceReviewerResult.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, =1{Checked 1 criterion: {met} met.} other{Checked {total} criteria: {met} met.}}'**
+  String teamVoiceReviewerResult(int total, int met);
+
+  /// No description provided for @teamVoiceApprovePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Start building {name}'**
+  String teamVoiceApprovePlan(String name);
+
+  /// No description provided for @teamVoiceAcceptPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept {phase}'**
+  String teamVoiceAcceptPhase(String phase);
+
+  /// No description provided for @teamVoicePutOnMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Put {repo} on main'**
+  String teamVoicePutOnMain(String repo);
+
+  /// Linux manager: title of the Services page and its hub row.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get linuxSvcTitle;
+
+  /// Linux manager hub: the Services row when nothing is known yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your own programs running'**
+  String get linuxSvcRowDetail;
+
+  /// Linux manager hub: the Services row line when some services run; names are comma separated.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 running: {names}} other{{count} running: {names}}}'**
+  String linuxSvcHubRunning(int count, String names);
+
+  /// Linux manager hub: the Services row line when none runs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 service, off} other{{count} services, all off}}'**
+  String linuxSvcHubOff(int count);
+
+  /// Linux manager hub: the Services row line when a service gave up.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} stopped after crashing'**
+  String linuxSvcHubCrashed(String name);
+
+  /// Services page: first row.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a service'**
+  String get linuxSvcAdd;
+
+  /// Services page: first row, supporting line.
+  ///
+  /// In en, this message translates to:
+  /// **'Run a command of your own and keep it running'**
+  String get linuxSvcAddDetail;
+
+  /// Add a service page: title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a service'**
+  String get linuxSvcAddTitle;
+
+  /// Services page: empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing runs on its own yet. Add your own command and it keeps running, even after a crash or when the app restarts.'**
+  String get linuxSvcEmpty;
+
+  /// Services page: caption under the list.
+  ///
+  /// In en, this message translates to:
+  /// **'A service you start keeps running: it comes back after a crash and when the app restarts, until you stop it.'**
+  String get linuxSvcKeepsRunning;
+
+  /// Services page: caption about the screen being off.
+  ///
+  /// In en, this message translates to:
+  /// **'While the screen is off, services may pause unless the phone is charging.'**
+  String get linuxSvcScreenOff;
+
+  /// Service state: running, start time unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get linuxSvcRunning;
+
+  /// Service state: running; duration is a kit duration such as 3 h 12 min.
+  ///
+  /// In en, this message translates to:
+  /// **'Running for {duration}'**
+  String linuxSvcRunningFor(String duration);
+
+  /// Service row: the port, after the state.
+  ///
+  /// In en, this message translates to:
+  /// **'port {port}'**
+  String linuxSvcPort(String port);
+
+  /// Service state: off.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get linuxSvcOff;
+
+  /// Service state: starting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting…'**
+  String get linuxSvcStarting;
+
+  /// Service state: stopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping…'**
+  String get linuxSvcStopping;
+
+  /// Service state: being removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing…'**
+  String get linuxSvcRemoving;
+
+  /// Service state: crashed and will be tried again; counts down.
+  ///
+  /// In en, this message translates to:
+  /// **'Crashed (exit {code}). Trying again in {seconds} s'**
+  String linuxSvcRetrying(int code, int seconds);
+
+  /// Service state: gave up after crashing; time is the clock time of the last exit.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Stopped after crashing once · {time}} other{Stopped after crashing {count} times · {time}}}'**
+  String linuxSvcGaveUp(int count, String time);
+
+  /// Service state: gave up, number of crashes unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped after crashing · {time}'**
+  String linuxSvcGaveUpNoCount(String time);
+
+  /// Service state: the program ended by itself.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished (exit {code})'**
+  String linuxSvcExited(int code);
+
+  /// Service state: its port is taken by another program.
+  ///
+  /// In en, this message translates to:
+  /// **'Port {port} is already in use. Trying again soon'**
+  String linuxSvcPortBusy(String port);
+
+  /// Service chip: start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get linuxSvcStart;
+
+  /// Service chip: stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get linuxSvcStop;
+
+  /// Service act naming its target.
+  ///
+  /// In en, this message translates to:
+  /// **'Start {name}'**
+  String linuxSvcStartNamed(String name);
+
+  /// Service act naming its target.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop {name}'**
+  String linuxSvcStopNamed(String name);
+
+  /// Service act naming its target.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart {name}'**
+  String linuxSvcRestartNamed(String name);
+
+  /// Service act naming its target.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}'**
+  String linuxSvcRemoveNamed(String name);
+
+  /// Service act: open its page in the preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {name}'**
+  String linuxSvcOpenNamed(String name);
+
+  /// Service act: open, supporting line.
+  ///
+  /// In en, this message translates to:
+  /// **'Its page on port {port}'**
+  String linuxSvcOpenDetail(String port);
+
+  /// Service act: stop, supporting line.
+  ///
+  /// In en, this message translates to:
+  /// **'It stays stopped until you start it again'**
+  String get linuxSvcStopDetail;
+
+  /// Service act: start, supporting line.
+  ///
+  /// In en, this message translates to:
+  /// **'It keeps running, also after a crash or an app restart'**
+  String get linuxSvcStartDetail;
+
+  /// Service page: how often it came back after a crash.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Came back once after a crash, at {time}} other{Came back {count} times after a crash, last at {time}}}'**
+  String linuxSvcCameBack(int count, String time);
+
+  /// Remove question: title.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String linuxSvcRemoveTitle(String name);
+
+  /// Remove question: body.
+  ///
+  /// In en, this message translates to:
+  /// **'It stops now and is no longer kept running.'**
+  String get linuxSvcRemoveBody;
+
+  /// Remove question: what goes.
+  ///
+  /// In en, this message translates to:
+  /// **'Its log and settings are deleted'**
+  String get linuxSvcRemoveGoes;
+
+  /// Remove question: what stays.
+  ///
+  /// In en, this message translates to:
+  /// **'The program stays installed'**
+  String get linuxSvcRemoveStays;
+
+  /// Service log: title.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get linuxSvcLogTitle;
+
+  /// Service log: empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing written yet'**
+  String get linuxSvcLogEmpty;
+
+  /// Service log: marker line, started.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get linuxSvcLogStarted;
+
+  /// Service log: marker line, crashed.
+  ///
+  /// In en, this message translates to:
+  /// **'Crashed (exit {code})'**
+  String linuxSvcLogCrashed(int code);
+
+  /// Service log: marker line, ended normally.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended (exit {code})'**
+  String linuxSvcLogEnded(int code);
+
+  /// Service log: marker line, retry delay.
+  ///
+  /// In en, this message translates to:
+  /// **'Trying again in {seconds} s'**
+  String linuxSvcLogRetry(int seconds);
+
+  /// Service log: marker line, gave up.
+  ///
+  /// In en, this message translates to:
+  /// **'Gave up after crashing too many times'**
+  String get linuxSvcLogGaveUp;
+
+  /// Service log: marker line, port busy.
+  ///
+  /// In en, this message translates to:
+  /// **'Port {port} is in use'**
+  String linuxSvcLogPortBusy(String port);
+
+  /// Services page: error title when the service runner is down.
+  ///
+  /// In en, this message translates to:
+  /// **'Services couldn\'t start.'**
+  String get linuxSvcCouldNotStart;
+
+  /// Services: a problem with no other words.
+  ///
+  /// In en, this message translates to:
+  /// **'That didn\'t work. Try again.'**
+  String get linuxSvcProblemFailed;
+
+  /// Services page: Linux is not installed.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up Linux from This phone, then come back to add services.'**
+  String get linuxSvcProblemMissing;
+
+  /// Services: too many.
+  ///
+  /// In en, this message translates to:
+  /// **'You can keep up to 16 services. Remove one first.'**
+  String get linuxSvcProblemTooMany;
+
+  /// Services: could not write the files.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save that. The phone may be out of space.'**
+  String get linuxSvcProblemWrite;
+
+  /// Add a service: name rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 2 to 24 lowercase letters, numbers or dashes, starting with a letter'**
+  String get linuxSvcErrNameShape;
+
+  /// Add a service: reserved name.
+  ///
+  /// In en, this message translates to:
+  /// **'That name is kept for the app. Pick another'**
+  String get linuxSvcErrNameReserved;
+
+  /// Add a service: name taken.
+  ///
+  /// In en, this message translates to:
+  /// **'That name is already used by a service'**
+  String get linuxSvcErrNameTaken;
+
+  /// Add a service: name taken by a known service.
+  ///
+  /// In en, this message translates to:
+  /// **'That name is used by {name}'**
+  String linuxSvcErrNameUsedBy(String name);
+
+  /// Add a service: empty command.
+  ///
+  /// In en, this message translates to:
+  /// **'Write the command to run'**
+  String get linuxSvcErrCommand;
+
+  /// Add a service: bad folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Write the folder it runs in, starting with /'**
+  String get linuxSvcErrFolder;
+
+  /// Add a service: port out of range.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a port from 1024 to 65535'**
+  String get linuxSvcErrPortRange;
+
+  /// Add a service: port below 1024.
+  ///
+  /// In en, this message translates to:
+  /// **'Ports below 1024 aren\'t allowed on Android'**
+  String get linuxSvcErrPortLow;
+
+  /// Add a service: the server's port.
+  ///
+  /// In en, this message translates to:
+  /// **'Port {port} belongs to OpenCode'**
+  String linuxSvcErrPortServer(String port);
+
+  /// Add a service: reserved port.
+  ///
+  /// In en, this message translates to:
+  /// **'That port belongs to OpenCode or another part of this app. Pick another port'**
+  String get linuxSvcErrPortReserved;
+
+  /// Add a service: port taken.
+  ///
+  /// In en, this message translates to:
+  /// **'That port is already used by another service. Pick another port'**
+  String get linuxSvcErrPortTaken;
+
+  /// Add a service: port taken by a known service.
+  ///
+  /// In en, this message translates to:
+  /// **'Port {port} is used by {name}'**
+  String linuxSvcErrPortUsedBy(String port, String name);
+
+  /// Add a service: field.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get linuxSvcFieldName;
+
+  /// Add a service: name helper.
+  ///
+  /// In en, this message translates to:
+  /// **'2 to 24 lowercase letters, numbers or dashes'**
+  String get linuxSvcFieldNameHelper;
+
+  /// Add a service: field.
+  ///
+  /// In en, this message translates to:
+  /// **'Command'**
+  String get linuxSvcFieldCommand;
+
+  /// Add a service: command helper.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs in bash. It should keep running, not finish'**
+  String get linuxSvcFieldCommandHelper;
+
+  /// Add a service: field.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get linuxSvcFieldFolder;
+
+  /// Add a service: field; the field is marked optional by the kit.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get linuxSvcFieldPort;
+
+  /// Add a service: port helper.
+  ///
+  /// In en, this message translates to:
+  /// **'Lets you open it and stops two programs fighting over one port'**
+  String get linuxSvcFieldPortHelper;
+
+  /// Add a service: switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart when it crashes'**
+  String get linuxSvcRestartSwitch;
+
+  /// Add a service: switch, supporting line.
+  ///
+  /// In en, this message translates to:
+  /// **'It comes back by itself, also after a restart of the app'**
+  String get linuxSvcRestartSwitchDetail;
+
+  /// Add a service: primary button.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and start'**
+  String get linuxSvcSaveStart;
+
+  /// Add a service: busy.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get linuxSvcSaving;
+
+  /// Services page: the service runner does not answer (body under the title).
+  ///
+  /// In en, this message translates to:
+  /// **'The part of Linux that keeps services running isn\'t answering. Try again.'**
+  String get linuxSvcDownBody;
+
+  /// Service state: wanted on, but held off while the phone is too hot.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused: the phone is too hot. Starts again when it cools'**
+  String get linuxSvcPaused;
+
+  /// Vitals strip: the word under the phone's heat.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone heat'**
+  String get linuxVitalsHeat;
+
+  /// Heat word: Android reports no or light heat.
+  ///
+  /// In en, this message translates to:
+  /// **'Cool'**
+  String get linuxVitalsCool;
+
+  /// Heat word: Android reports moderate heat.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm'**
+  String get linuxVitalsWarm;
+
+  /// Heat word: Android throttles the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Hot'**
+  String get linuxVitalsHot;
+
+  /// Heat word: critical heat or worse.
+  ///
+  /// In en, this message translates to:
+  /// **'Too hot'**
+  String get linuxVitalsTooHot;
+
+  /// Vitals strip: the phone's free memory.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory free'**
+  String get linuxVitalsMemoryFree;
+
+  /// Vitals strip: the share of the phone's CPU Linux uses.
+  ///
+  /// In en, this message translates to:
+  /// **'Linux CPU'**
+  String get linuxVitalsLinuxCpu;
+
+  /// Screen reader label of the heat reading.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone heat: {heat}'**
+  String linuxVitalsHeatLabel(Object heat);
+
+  /// Screen reader label of free memory.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory free: {value}'**
+  String linuxVitalsMemoryLabel(Object value);
+
+  /// Screen reader label of Linux CPU.
+  ///
+  /// In en, this message translates to:
+  /// **'Linux CPU: {value}'**
+  String linuxVitalsCpuLabel(Object value);
+
+  /// Vitals sentence when the phone is cool.
+  ///
+  /// In en, this message translates to:
+  /// **'Linux uses {memory} of memory. Nothing is heating the phone.'**
+  String linuxVitalsSummaryCool(Object memory);
+
+  /// Vitals sentence when Android does not say how hot the phone is.
+  ///
+  /// In en, this message translates to:
+  /// **'Linux uses {memory} of memory.'**
+  String linuxVitalsSummary(Object memory);
+
+  /// Vitals sentence when the phone is warm and a Linux program is busy; tapping opens Running.
+  ///
+  /// In en, this message translates to:
+  /// **'{heat}. {program} is using {percent}% CPU.'**
+  String linuxVitalsHeavy(Object heat, Object program, Object percent);
+
+  /// Vitals sentence when the phone is warm and Linux is quiet.
+  ///
+  /// In en, this message translates to:
+  /// **'{heat}, but not because of Linux: it uses {percent}% CPU.'**
+  String linuxVitalsNotLinux(Object heat, Object percent);
+
+  /// Screen reader action of the vitals sentence that names a program.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Running now'**
+  String get linuxVitalsOpenRunning;
+
+  /// About: group holding the Star on GitHub and Share the app rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell others'**
+  String get starShareGroup;
+
+  /// About: row that opens the project page on GitHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Star on GitHub'**
+  String get starRowTitle;
+
+  /// About: supporting line of the Star on GitHub row.
+  ///
+  /// In en, this message translates to:
+  /// **'Helps others find the app'**
+  String get starRowDetail;
+
+  /// About: row that opens the system share sheet with a link to the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Share the app'**
+  String get shareRowTitle;
+
+  /// About: supporting line of the Share the app row.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a link to a friend'**
+  String get shareRowDetail;
+
+  /// The one line shared by Share the app; {url} is the website link.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode Mobile: use your OpenCode coding agent from your phone. {url}'**
+  String shareAppMessage(String url);
+
+  /// Search keywords for the Star on GitHub and Share the app rows.
+  ///
+  /// In en, this message translates to:
+  /// **'star github favorite rate like support project repository share app friend send link recommend invite tell'**
+  String get starShareSearchAliases;
+
+  /// What's new sheet title; {version} is the app version.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new in {version}'**
+  String whatsNewTitle(String version);
+
+  /// What's new sheet: opens the share sheet with a link to the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get whatsNewShare;
+
+  /// What's new sheet: closes it.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get whatsNewClose;
+
+  /// About: row that opens the What's new sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get whatsNewRowTitle;
+
+  /// About: supporting line of the What's new row.
+  ///
+  /// In en, this message translates to:
+  /// **'See what changed in this version'**
+  String get whatsNewRowDetail;
+
+  /// What's new 2.2.0 line.
+  ///
+  /// In en, this message translates to:
+  /// **'The app now updates itself. You can check for an update any time in Settings › This app › Updates.'**
+  String get whatsNew220Updates;
+
+  /// What's new 2.2.0 line.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode 2.2.5 is built in, and your agents update themselves.'**
+  String get whatsNew220Agents;
+
+  /// What's new 2.2.0 line.
+  ///
+  /// In en, this message translates to:
+  /// **'Large text stays easy to read. Pick your size in Appearance.'**
+  String get whatsNew220LargeText;
+
+  /// What's new 2.2.0 line.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste an image into the message box to show it to the agent.'**
+  String get whatsNew220PasteImages;
+
+  /// What's new 2.2.0 line.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold the microphone button to talk, then let go.'**
+  String get whatsNew220Voice;
+
+  /// What's new walkthrough: previous step.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get whatsNewBack;
+
+  /// What's new walkthrough: goes to the real control and highlights it.
+  ///
+  /// In en, this message translates to:
+  /// **'Show me'**
+  String get whatsNewShowMe;
+
+  /// Highlight sentence over About > Check for updates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for an update here, any time.'**
+  String get whatsNewShowUpdates;
+
+  /// Help > Tips: name of the What's new walkthrough.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new in this version'**
+  String get whatsNewTipsTitle;
+
+  /// Highlight sentence over Settings > Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Your agents and their updates are here.'**
+  String get whatsNewShowAgents;
+
+  /// Highlight sentence over the message box paste control.
+  ///
+  /// In en, this message translates to:
+  /// **'Press and hold the message box, or tap +, to paste an image.'**
+  String get whatsNewShowPaste;
+
+  /// Highlight sentence over the microphone.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold this button and talk, then let go.'**
+  String get whatsNewShowMic;
+
+  /// Status line and sheet title when a newer release exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is ready'**
+  String appUpdateReadyTitle(String version);
+
+  /// Action on the update status line.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get appUpdateUpdate;
+
+  /// Dismisses the update offer until the next app start.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get appUpdateNotNow;
+
+  /// Status line while the update downloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading version {version}'**
+  String appUpdateDownloadingTitle(String version);
+
+  /// Download progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% done'**
+  String appUpdatePercent(String percent);
+
+  /// Stops the download.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get appUpdateCancel;
+
+  /// Status while the file is verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the download…'**
+  String get appUpdateVerifying;
+
+  /// Status while Android installs.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing…'**
+  String get appUpdateInstalling;
+
+  /// Status line when the checked file waits for the install.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is downloaded and checked'**
+  String appUpdateInstallReadyTitle(String version);
+
+  /// Starts the Android install of the checked file.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get appUpdateInstall;
+
+  /// Shown when Android must first allow installs from this app.
+  ///
+  /// In en, this message translates to:
+  /// **'To install it, allow this app to install updates, then come back.'**
+  String get appUpdatePermissionNeeded;
+
+  /// Screen reader label of the Settings gear while an update waits.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings, update available'**
+  String get appUpdateSettingsBadgeLabel;
+
+  /// Link and section for the release notes.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get appUpdateWhatsNew;
+
+  /// Primary action of the update sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Update now'**
+  String get appUpdateNow;
+
+  /// Secondary action of the update sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get appUpdateOpenSettings;
+
+  /// Title of the Updates page.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get appUpdatesTitle;
+
+  /// Search words for the Updates row.
+  ///
+  /// In en, this message translates to:
+  /// **'update upgrade new version release install github check تحديث ترقية نسخة جديدة إصدار تثبيت'**
+  String get appUpdatesSearchAliases;
+
+  /// Supporting line of the Updates row.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for and install new versions'**
+  String get appUpdatesRowSummary;
+
+  /// Updates page state.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to date · checked just now'**
+  String get appUpdateCheckedJustNow;
+
+  /// Updates page state; {when} is a relative time.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to date · checked {when}'**
+  String appUpdateUpToDate(String when);
+
+  /// Updates page state before any check.
+  ///
+  /// In en, this message translates to:
+  /// **'Not checked yet'**
+  String get appUpdateNeverChecked;
+
+  /// Updates page state while asking GitHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get appUpdateChecking;
+
+  /// Updates page state with the download size.
+  ///
+  /// In en, this message translates to:
+  /// **'{version} is ready · {size}'**
+  String appUpdateAvailableLine(String version, String size);
+
+  /// A size in megabytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{mb} MB'**
+  String appUpdateSizeMb(String mb);
+
+  /// Updates page state with the switch off.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking is off. Use Check now when you want to look.'**
+  String get appUpdateCheckingOff;
+
+  /// Switch label on the Updates page.
+  ///
+  /// In en, this message translates to:
+  /// **'Check GitHub for new versions'**
+  String get appUpdateCheckSwitch;
+
+  /// Privacy line under the check switch.
+  ///
+  /// In en, this message translates to:
+  /// **'The app asks GitHub for the latest version number and sends nothing about you.'**
+  String get appUpdateCheckSwitchBody;
+
+  /// Row that checks immediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Check now'**
+  String get appUpdateCheckNow;
+
+  /// Retries a failed update.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get appUpdateTryAgain;
+
+  /// Plain failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach GitHub. Check your connection and try again.'**
+  String get appUpdateFailNetwork;
+
+  /// Plain failure.
+  ///
+  /// In en, this message translates to:
+  /// **'This release has no file for your phone yet.'**
+  String get appUpdateFailNoFile;
+
+  /// Plain failure.
+  ///
+  /// In en, this message translates to:
+  /// **'The download didn\'t match its checksum, so it wasn\'t installed.'**
+  String get appUpdateFailChecksum;
+
+  /// Plain failure; owner wording.
+  ///
+  /// In en, this message translates to:
+  /// **'This download isn\'t signed like your app, so it wasn\'t installed.'**
+  String get appUpdateFailSigner;
+
+  /// Plain failure.
+  ///
+  /// In en, this message translates to:
+  /// **'This download is for a different app, so it wasn\'t installed.'**
+  String get appUpdateFailPackage;
+
+  /// Plain failure.
+  ///
+  /// In en, this message translates to:
+  /// **'This download isn\'t newer than your app, so it wasn\'t installed.'**
+  String get appUpdateFailVersion;
+
+  /// Plain failure.
+  ///
+  /// In en, this message translates to:
+  /// **'There wasn\'t room to save the download.'**
+  String get appUpdateFailStorage;
+
+  /// Plain failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Android couldn\'t finish the install. Try again.'**
+  String get appUpdateFailInstaller;
+
+  /// Updates page
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String appUpdateCurrentVersion(String version);
+
+  /// Updates page
+  ///
+  /// In en, this message translates to:
+  /// **'Build'**
+  String get appUpdateBuildLabel;
+
+  /// Updates page
+  ///
+  /// In en, this message translates to:
+  /// **'Open on GitHub'**
+  String get appUpdateOpenRelease;
+
+  /// Updates page row after a refused or failed update
+  ///
+  /// In en, this message translates to:
+  /// **'{version} couldn\'t be installed'**
+  String appUpdateNotInstalled(String version);
+
+  /// Item in the message box's text-selection menu, next to Paste, when the clipboard holds a picture: attaches it to the message
+  ///
+  /// In en, this message translates to:
+  /// **'Paste image'**
+  String get composerPasteImage;
+
+  /// Row in the composer's + tools sheet, shown only when the clipboard holds a picture
+  ///
+  /// In en, this message translates to:
+  /// **'Paste image from clipboard'**
+  String get composerPasteImageFromClipboard;
+
+  /// Supporting line under the paste-image row in the composer's + tools sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Attach the copied picture'**
+  String get composerPasteImageFromClipboardSupporting;
+
+  /// Note over the message box when Paste image finds no picture on the clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'There is no picture on the clipboard.'**
+  String get composerPasteImageEmpty;
+
+  /// Remove from this phone, shown only once a Linux backup was saved: both choices leave the backup files alone, because they live in the place the person picked with Save to
+  ///
+  /// In en, this message translates to:
+  /// **'Backups you saved stay where you put them'**
+  String get removeFromPhoneBackupsKept;
+
+  /// Linux hub row and the Backups page title.
+  ///
+  /// In en, this message translates to:
+  /// **'Backups'**
+  String get linuxBackupRow;
+
+  /// Backups row when none was saved.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup yet'**
+  String get linuxBackupRowNever;
+
+  /// Backups row: when the last one was saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup {date}'**
+  String linuxBackupRowLast(Object date);
+
+  /// Section label.
+  ///
+  /// In en, this message translates to:
+  /// **'What to back up'**
+  String get linuxBackupWhat;
+
+  /// Backup kind.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup'**
+  String get linuxBackupSetup;
+
+  /// Backup kind detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Packages, tools, services and settings files'**
+  String get linuxBackupSetupDetail;
+
+  /// Backup kind.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup and projects'**
+  String get linuxBackupSetupProjects;
+
+  /// Backup kind detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Also your projects, without folders they can download again'**
+  String get linuxBackupSetupProjectsDetail;
+
+  /// Backup kind (was Export projects on This phone).
+  ///
+  /// In en, this message translates to:
+  /// **'Projects only'**
+  String get linuxBackupProjectsOnly;
+
+  /// Backup kind detail.
+  ///
+  /// In en, this message translates to:
+  /// **'A zip of your projects to keep or move'**
+  String get linuxBackupProjectsOnlyDetail;
+
+  /// Primary button.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up setup'**
+  String get linuxBackupNowSetup;
+
+  /// Primary button.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up setup and projects'**
+  String get linuxBackupNowSetupProjects;
+
+  /// Primary button.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up projects'**
+  String get linuxBackupNowProjects;
+
+  /// Footnote on the Backups page.
+  ///
+  /// In en, this message translates to:
+  /// **'Backups never hold sign-ins, passwords or private SSH keys. You choose where each one is saved.'**
+  String get linuxBackupPrivacy;
+
+  /// Row that opens the file picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from a backup'**
+  String get linuxRestoreRow;
+
+  /// Restore row detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a backup file to put back'**
+  String get linuxRestoreRowDetail;
+
+  /// Progress caption while the zip is written.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving the backup: {done} of {total}'**
+  String linuxBackupSaving(Object done, Object total);
+
+  /// Done notice.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved: {size}, as {name}'**
+  String linuxBackupSaved(Object size, Object name);
+
+  /// Failure notice title.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup didn\'t finish'**
+  String get linuxBackupFailedTitle;
+
+  /// Failure notice title.
+  ///
+  /// In en, this message translates to:
+  /// **'The restore didn\'t finish'**
+  String get linuxRestoreFailedTitle;
+
+  /// Problem.
+  ///
+  /// In en, this message translates to:
+  /// **'Another task is using Linux now. Try again when it ends.'**
+  String get linuxBackupProblemBusy;
+
+  /// Problem.
+  ///
+  /// In en, this message translates to:
+  /// **'Linux isn\'t set up on this phone.'**
+  String get linuxBackupProblemMissing;
+
+  /// Problem.
+  ///
+  /// In en, this message translates to:
+  /// **'Linux couldn\'t make the backup.'**
+  String get linuxBackupProblemJob;
+
+  /// Problem.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup couldn\'t be saved there. There may not be enough room.'**
+  String get linuxBackupProblemSave;
+
+  /// Problem.
+  ///
+  /// In en, this message translates to:
+  /// **'That file isn\'t a backup made by this app.'**
+  String get linuxBackupProblemNotBackup;
+
+  /// Problem.
+  ///
+  /// In en, this message translates to:
+  /// **'That backup was made by a newer version of the app. Update the app first.'**
+  String get linuxBackupProblemNewer;
+
+  /// Problem.
+  ///
+  /// In en, this message translates to:
+  /// **'Linux couldn\'t put the backup back.'**
+  String get linuxBackupProblemRestore;
+
+  /// While a chosen file is read.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the backup…'**
+  String get linuxRestoreChecking;
+
+  /// Restore question title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this backup?'**
+  String get linuxRestoreTitle;
+
+  /// Restore question body.
+  ///
+  /// In en, this message translates to:
+  /// **'{what}, made on {date}.'**
+  String linuxRestoreBody(Object what, Object date);
+
+  /// Restore question button.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get linuxRestoreConfirm;
+
+  /// Consequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your projects stay. One with the same name comes back as “name (restored)”.'**
+  String get linuxRestoreKeptProjects;
+
+  /// Consequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings files it holds replace yours; yours are kept with “.before-restore” added.'**
+  String get linuxRestoreReplacedSettings;
+
+  /// Consequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Packages, tools and services it lists are put back.'**
+  String get linuxRestoreAddedTools;
+
+  /// Done notice.
+  ///
+  /// In en, this message translates to:
+  /// **'Linux is restored.'**
+  String get linuxRestoreDone;
+
+  /// Restore note.
+  ///
+  /// In en, this message translates to:
+  /// **'Ubuntu no longer has: {names}'**
+  String linuxRestoreSkipped(Object names);
+
+  /// Restore summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Back: projects {projects}, services {services}, settings files {settings}, packages {packages}'**
+  String linuxRestoreCounts(
+    Object projects,
+    Object services,
+    Object settings,
+    Object packages,
+  );
+
+  /// Job panel title.
+  ///
+  /// In en, this message translates to:
+  /// **'Backing up Linux'**
+  String get linuxMgrJobBackingUp;
+
+  /// Job panel title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring Linux'**
+  String get linuxMgrJobRestoring;
+
+  /// Job stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the backup'**
+  String get linuxMgrJobStopBackup;
+
+  /// Job stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop restoring'**
+  String get linuxMgrJobStopRestore;
+
+  /// Job stop question.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the backup?'**
+  String get linuxMgrJobStopBackupTitle;
+
+  /// Job stop question.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop restoring?'**
+  String get linuxMgrJobStopRestoreTitle;
+
+  /// Job done.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup is ready'**
+  String get linuxMgrJobDoneBackup;
+
+  /// Job done.
+  ///
+  /// In en, this message translates to:
+  /// **'Linux is restored'**
+  String get linuxMgrJobDoneRestore;
+
+  /// Reset question alternative.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up first'**
+  String get linuxMgrResetBackUpFirst;
+
+  /// Settings row and page title: the on-device assistant
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant on this phone'**
+  String get localAssistantTitle;
+
+  /// Assistant page: one line saying what it does
+  ///
+  /// In en, this message translates to:
+  /// **'Writes short summaries of your conversations with a model that runs on this phone.'**
+  String get localAssistantSubtitle;
+
+  /// Switch row title
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on the assistant'**
+  String get localAssistantSwitchTitle;
+
+  /// Switch row supporting line
+  ///
+  /// In en, this message translates to:
+  /// **'Adds Summarize on this phone to every conversation.'**
+  String get localAssistantSwitchSupporting;
+
+  /// Privacy note on the assistant page
+  ///
+  /// In en, this message translates to:
+  /// **'The model is downloaded once. After that it works offline and nothing you write leaves the phone.'**
+  String get localAssistantPrivacy;
+
+  /// Model status line before download
+  ///
+  /// In en, this message translates to:
+  /// **'Not downloaded · {size}'**
+  String localAssistantNotDownloaded(String size);
+
+  /// Model status line once downloaded
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone · {size}'**
+  String localAssistantOnPhone(String size);
+
+  /// Which chip the loaded model runs on
+  ///
+  /// In en, this message translates to:
+  /// **'Runs on the graphics chip'**
+  String get localAssistantBackendGpu;
+
+  /// Which chip the loaded model runs on
+  ///
+  /// In en, this message translates to:
+  /// **'Runs on the processor'**
+  String get localAssistantBackendCpu;
+
+  /// Backend line while the model is not in memory
+  ///
+  /// In en, this message translates to:
+  /// **'Loads when you ask for a summary'**
+  String get localAssistantBackendIdle;
+
+  /// Primary action: start the model download
+  ///
+  /// In en, this message translates to:
+  /// **'Download ({size})'**
+  String localAssistantDownload(String size);
+
+  /// Progress title
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading the assistant'**
+  String get localAssistantDownloading;
+
+  /// Progress title while the file is verified
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the download'**
+  String get localAssistantVerifying;
+
+  /// Download progress caption
+  ///
+  /// In en, this message translates to:
+  /// **'{received} of {total}'**
+  String localAssistantProgress(String received, String total);
+
+  /// Stops the model download
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel download'**
+  String get localAssistantCancelDownload;
+
+  /// Removes the downloaded model
+  ///
+  /// In en, this message translates to:
+  /// **'Delete from this phone ({size})'**
+  String localAssistantDelete(String size);
+
+  /// Confirm title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the assistant?'**
+  String get localAssistantDeleteTitle;
+
+  /// Confirm body
+  ///
+  /// In en, this message translates to:
+  /// **'This frees {size}. You can download it again later.'**
+  String localAssistantDeleteBody(String size);
+
+  /// Shown instead of starting the download off Wi-Fi
+  ///
+  /// In en, this message translates to:
+  /// **'You are not on Wi-Fi. The download is {size}.'**
+  String localAssistantNeedsWifi(String size);
+
+  /// Lets the person override the Wi-Fi rule once
+  ///
+  /// In en, this message translates to:
+  /// **'Download on mobile data'**
+  String get localAssistantUseMobileData;
+
+  /// Shown instead of starting the download without room
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough free space. Free about {size} and try again.'**
+  String localAssistantNoSpace(String size);
+
+  /// Why the assistant is not offered
+  ///
+  /// In en, this message translates to:
+  /// **'This phone has too little memory for the assistant. It needs about 6 GB.'**
+  String get localAssistantUnavailableMemory;
+
+  /// Why the assistant is not offered
+  ///
+  /// In en, this message translates to:
+  /// **'The assistant runs on 64-bit phones only.'**
+  String get localAssistantUnavailableAbi;
+
+  /// Why the assistant is not offered
+  ///
+  /// In en, this message translates to:
+  /// **'The assistant is available on Android phones.'**
+  String get localAssistantUnavailablePlatform;
+
+  /// Download or load failed; the technical text sits under Details
+  ///
+  /// In en, this message translates to:
+  /// **'The assistant could not be set up. Try again.'**
+  String get localAssistantSetupFailed;
+
+  /// Retry after a failure
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get localAssistantTryAgain;
+
+  /// Conversation menu entry: write a summary with the on-device model
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize on this phone'**
+  String get localAssistantSummarizeMenu;
+
+  /// Conversation menu entry supporting line
+  ///
+  /// In en, this message translates to:
+  /// **'Written here, with no network'**
+  String get localAssistantSummarizeSupporting;
+
+  /// Summary sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get localAssistantSheetTitle;
+
+  /// Summary sheet subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Written on this phone'**
+  String get localAssistantSheetSubtitle;
+
+  /// Shown while the model loads before the first words
+  ///
+  /// In en, this message translates to:
+  /// **'Getting the assistant ready'**
+  String get localAssistantPreparing;
+
+  /// Stops the summary
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get localAssistantStop;
+
+  /// Copies the summary
+  ///
+  /// In en, this message translates to:
+  /// **'Copy summary'**
+  String get localAssistantCopy;
+
+  /// Closes the summary sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get localAssistantDone;
+
+  /// Note under a stopped summary
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped. This is what was written so far.'**
+  String get localAssistantStopped;
+
+  /// Note under a failed summary
+  ///
+  /// In en, this message translates to:
+  /// **'The summary could not be finished. Try again.'**
+  String get localAssistantRunFailed;
+
+  /// Small line under a finished summary
+  ///
+  /// In en, this message translates to:
+  /// **'First words after {seconds} s · {rate} words a second'**
+  String localAssistantStats(String seconds, String rate);
+
+  /// Settings search keywords
+  ///
+  /// In en, this message translates to:
+  /// **'assistant gemma summarize offline on-device model local ai'**
+  String get localAssistantSearchAliases;
+
+  /// Settings › Help row title for the web build only
+  ///
+  /// In en, this message translates to:
+  /// **'Browser mode'**
+  String get browserModeTitle;
+
+  /// Settings › Help row, web build only: the line under the title
+  ///
+  /// In en, this message translates to:
+  /// **'What works in this browser and what needs the phone app'**
+  String get browserModeSubtitle;
+
+  /// Browser mode page: opening paragraph
+  ///
+  /// In en, this message translates to:
+  /// **'This is OpenCode Mobile running in a web browser. Remote OpenCode servers work as they do in the phone app. Features that need the phone itself are not offered here.'**
+  String get browserModeIntro;
+
+  /// Browser mode page: section heading
+  ///
+  /// In en, this message translates to:
+  /// **'Available in the browser'**
+  String get browserModeAvailableHeading;
+
+  /// Browser mode page: what works
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to OpenCode servers, chat, approve requests, browse files, and follow activity.'**
+  String get browserModeAvailableServers;
+
+  /// Browser mode page: what works on a desktop browser
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts, right-click menus, and drag-and-drop attachments on a desktop browser.'**
+  String get browserModeAvailableKeyboard;
+
+  /// Browser mode page: what works
+  ///
+  /// In en, this message translates to:
+  /// **'Pasting into any field with the keyboard.'**
+  String get browserModeAvailablePaste;
+
+  /// Browser mode page: section heading
+  ///
+  /// In en, this message translates to:
+  /// **'Needs the phone app'**
+  String get browserModeUnavailableHeading;
+
+  /// Browser mode page: needs the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Running a server or AI agents on this device, and the on-device setup.'**
+  String get browserModeUnavailableTermux;
+
+  /// Browser mode page: needs the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input, read-aloud, and camera QR pairing.'**
+  String get browserModeUnavailableVoice;
+
+  /// Browser mode page: needs the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Background monitoring, notifications, the home-screen widget, launcher shortcuts, and the Quick Settings tile. Keep this tab open to keep following a session.'**
+  String get browserModeUnavailableBackground;
+
+  /// Browser mode page: needs the phone or desktop app
+  ///
+  /// In en, this message translates to:
+  /// **'Codex and Paseo connections. They sign in with a WebSocket header that browsers cannot send, and there is no supported browser sign-in for them yet.'**
+  String get browserModeUnavailableAgentSocket;
+
+  /// Browser mode page: section heading for facts about the open page
+  ///
+  /// In en, this message translates to:
+  /// **'This page'**
+  String get browserModeContextHeading;
+
+  /// Browser mode page: the page is a secure origin
+  ///
+  /// In en, this message translates to:
+  /// **'Opened from a secure origin. Server passwords can be saved, and the Paste buttons can read the clipboard.'**
+  String get browserModeSecureContextOk;
+
+  /// Browser mode page: the page is not a secure origin
+  ///
+  /// In en, this message translates to:
+  /// **'Opened over plain HTTP from a network address, which the browser does not treat as secure. Server passwords cannot be saved here and the Paste buttons cannot read the clipboard. Open the app over HTTPS or from localhost to lift both limits. Servers without a password still work, and you can still paste into fields with the keyboard.'**
+  String get browserModeSecureContextMissing;
+
+  /// Browser mode page: mixed content
+  ///
+  /// In en, this message translates to:
+  /// **'A page opened over HTTPS can only reach HTTPS servers; the browser blocks plain-HTTP connections from it.'**
+  String get browserModeMixedContent;
+
+  /// Browser mode page: cross-origin requests
+  ///
+  /// In en, this message translates to:
+  /// **'The server must allow this page’s origin. If a connection test fails at once here while the same address works from the phone app, the server is refusing browser requests from this origin.'**
+  String get browserModeCors;
+
+  /// Add server form, web build on a non-secure origin: shown before a password is typed
+  ///
+  /// In en, this message translates to:
+  /// **'This page was opened over plain HTTP from a network address, so the browser will not keep a server password. Leave the password empty for a server that has none, or open the app over HTTPS or from localhost to save one.'**
+  String get browserEditorInsecureOrigin;
+
+  /// Add server form, web build without clipboard access: replaces the Paste pairing code button
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the code the pairing command prints and paste it into the server address field with the keyboard. The Paste button needs a secure (HTTPS or localhost) page.'**
+  String get browserPairingPasteHint;
+
+  /// Web build: why Codex and Paseo cannot be chosen or connected
+  ///
+  /// In en, this message translates to:
+  /// **'Codex and Paseo connections are not available in the browser. They sign in with a WebSocket header that browsers cannot send, and no browser sign-in is supported yet. Use the phone or desktop app for them; OpenCode servers work here.'**
+  String get browserAgentSocketUnavailable;
+
+  /// Servers list, web build: the line on a saved Codex or Paseo server
+  ///
+  /// In en, this message translates to:
+  /// **'Not available in the browser'**
+  String get browserAgentSocketRowUnavailable;
+
+  /// Web build: the connection failed with no more detail from the browser
+  ///
+  /// In en, this message translates to:
+  /// **'The browser could not reach the server. Check the address and that the server is running. A server on a different origin must allow the origin of this page (CORS), and a page loaded over https cannot use an http:// or ws:// server.'**
+  String get browserTransportFailure;
+
+  /// Add server form, web build: the connection check timed out
+  ///
+  /// In en, this message translates to:
+  /// **'The connection timed out. Check the address, and that the server is reachable from this browser.'**
+  String get browserProbeTimeout;
+
+  /// About: the line under the version, web build only
+  ///
+  /// In en, this message translates to:
+  /// **'A browser client for the OpenCode server you choose. Voice, background monitoring and servers on this device are not available here.'**
+  String get aboutBrowserSummary;
 }
 
 class _AppLocalizationsDelegate

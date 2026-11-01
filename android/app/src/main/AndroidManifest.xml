@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- The app installs its own new version (AppUpdateChannel); Android still
+         asks for the person's confirmation every time. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
@@ -34,6 +37,8 @@
          app's own project space. API 30+ uses All files access; older
          Androids use the classic storage permissions. -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+    <!-- Lets Android's installer open an .apk the agent saved to Downloads; it still asks the person first -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
     <!-- Drive the on-device opencode server through Termux's RUN_COMMAND service -->
@@ -63,6 +68,18 @@
         android:enableOnBackInvokedCallback="true"
         android:manageSpaceActivity=".ManageSpaceActivity"
         android:networkSecurityConfig="@xml/network_security_config">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.localfiles"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/local_file_paths"/>
+        </provider>
+        <!-- Optional GPU libraries for the on-device assistant (LiteRT-LM). -->
+        <uses-native-library android:name="libvndksupport.so" android:required="false"/>
+        <uses-native-library android:name="libOpenCL.so" android:required="false"/>
         <receiver android:name=".ScheduledPromptReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
@@ -162,6 +179,8 @@
             <meta-data android:name="io.flutter.embedding.android.NormalTheme" android:resource="@style/WidgetOverlayTheme" />
         </activity>
         <receiver android:name=".WidgetActionReceiver" android:exported="false" />
+        <!-- PackageInstaller's answer to an in-app update (AppUpdateChannel). -->
+        <receiver android:name=".AppUpdateStatusReceiver" android:exported="false" />
         <service
             android:name=".TermuxResultService"
             android:exported="false" />

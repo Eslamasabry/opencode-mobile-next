@@ -3,7 +3,7 @@ from pathlib import Path
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
-FLUTTER = Path.home() / '.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter'
+FLUTTER = Path.home() / '.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/flutter'
 EVIDENCE = ROOT / 'docs/qa/BB3-2026-10-07'
 CASES = [
     ('status', 'lib/builtin/builtin_linux.dart',

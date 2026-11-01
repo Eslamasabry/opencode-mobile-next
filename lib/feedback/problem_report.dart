@@ -23,7 +23,7 @@ const int problemReportMaxLinkLength = 2048;
 /// arrives already contexted: that target builds but is not hardware-tested.
 String bugReportPlatformLabel() {
   final capabilities = platformCapabilities;
-  if (capabilities.isWeb) return 'Web (unsupported)';
+  if (capabilities.isWeb) return 'Web browser (preview)';
   return switch (capabilities.platform) {
     TargetPlatform.android => 'Android',
     TargetPlatform.windows =>

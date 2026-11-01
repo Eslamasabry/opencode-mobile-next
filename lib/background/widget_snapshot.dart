@@ -542,7 +542,7 @@ Map<String, Object?> _safeWidgetAsk(Map ask) {
 
 /// Only a display name, even when a caller accidentally supplies a path.
 String safeWidgetProject(String value) {
-  final parts = value.split(RegExp(r'[\\/]+')).where((p) => p.isNotEmpty);
+  final parts = value.split(_pathSeparators).where((p) => p.isNotEmpty);
   if (parts.isEmpty) return '';
   final name = safeWidgetTitle(parts.last);
   // A folder called "project" or "tmp" tells the person nothing; show no line.
@@ -630,10 +630,14 @@ String safeWidgetAssistantPreview(List<MessageWithParts> messages) {
   return '';
 }
 
+// Built once: every launcher write masks each title, folder and preview.
+final _whitespaceRun = RegExp(r'\s+');
+final _pathSeparators = RegExp(r'[\\/]+');
+
 String _safeWidgetText(String value, int limit) {
   final safe = String.fromCharCodes(
     KitRedact.text(value).runes.map((c) => _unsafeInTitle(c) ? 0x20 : c),
-  ).replaceAll(RegExp(r'\s+'), ' ').trim();
+  ).replaceAll(_whitespaceRun, ' ').trim();
   return String.fromCharCodes(safe.runes.take(limit));
 }
 

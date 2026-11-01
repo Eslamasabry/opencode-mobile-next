@@ -39,7 +39,7 @@ set -uo pipefail
 top="$(git rev-parse --show-toplevel)" || exit 2
 cd "$top" || exit 2
 
-PINNED_DART="$HOME/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart"
+PINNED_DART="${PINNED_DART:-$HOME/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/dart}"
 SKIP_CI='[skip ci]'
 
 find_dart() {

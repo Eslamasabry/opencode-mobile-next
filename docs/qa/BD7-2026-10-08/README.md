@@ -229,8 +229,8 @@ regression initially failed, then passed after the per-record generation guard
 was added. All53 offline Python QA checks passed; the2197 candidate preflight
 test failed as expected before the candidate metadata was switched. The
 [late-open frontend contract](../../design/bd7-late-open-contract.md) records the
-readiness behavior. The local correction commit is forthcoming and will be
-appended by the lead.
+readiness behavior. The local correction commit is `4e4218d46` (`[skip ci]`);
+no push or history rewrite occurred.
 
 The current driver accepts and defaults to2197; normal restoration remains2196.
 The2197 APK file is absent, and no build or device session ran in this correction

@@ -4789,10 +4789,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatUiCommandMap => 'Command map';
 
   @override
-  String get chatUiCompactContext => 'Compact context';
+  String get chatUiCompactContext => 'Shorten conversation';
 
   @override
-  String get chatUiCompactSession => 'Compact conversation';
+  String get chatUiCompactSession => 'Shorten conversation';
 
   @override
   String get chatUiCompactingConversation => 'Compactando a conversa…';
@@ -4801,7 +4801,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatUiCompactionFailed => 'A compactação falhou';
 
   @override
-  String get chatUiCompactionStarted => 'Compaction started';
+  String get chatUiCompactionStarted => 'Shortening started';
 
   @override
   String get chatUiCompose => 'Compose';
@@ -5247,7 +5247,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatUiSelectAModelBeforeCompactingThisSession =>
-      'Select a model before compacting this conversation.';
+      'Select a model before shortening this conversation.';
 
   @override
   String get chatUiServerCommands => 'Server commands';
@@ -10339,7 +10339,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get capabilitySubagentsDetail => 'Mention an agent with @ in a prompt';
 
   @override
-  String get capabilityCompact => 'Compact';
+  String get capabilityCompact => 'Shorten';
 
   @override
   String get capabilityCompactDetail =>
@@ -10529,7 +10529,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String nudgeCompact(String percent) {
-    return 'The context is $percent% full: compact to keep going.';
+    return 'The context is $percent% full: shorten the conversation to keep going.';
   }
 
   @override
@@ -10820,7 +10820,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get agentErrorRequestTooLargeHint =>
-      'Send fewer or smaller attachments, or compact the conversation, then try again.';
+      'Send fewer or smaller attachments, or shorten the conversation, then try again.';
 
   @override
   String get agentErrorRateLimited =>
@@ -17515,13 +17515,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sessionContextNearLimitBody =>
-      'Older details may be dropped from what the model sees. Compact the conversation to keep going, or start a new one.';
+      'Older details may be dropped from what the model sees. Shorten the conversation to keep going, or start a new one.';
 
   @override
-  String get sessionContextCompactAction => 'Compact this conversation';
+  String get sessionContextCompactAction => 'Shorten this conversation';
 
   @override
-  String get sessionContextCompactTitle => 'Compact this conversation?';
+  String get sessionContextCompactTitle => 'Shorten this conversation?';
 
   @override
   String get sessionContextCompactBody =>
@@ -17531,11 +17531,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sessionContextCompactKept => 'Every message stays in the history.';
 
   @override
-  String get sessionContextCompactConfirm => 'Compact conversation';
+  String get sessionContextCompactConfirm => 'Shorten conversation';
 
   @override
   String get sessionContextCompactStarted =>
-      'Compacting started. The numbers update when it finishes.';
+      'Shortening started. The numbers update when it finishes.';
 
   @override
   String get sessionContextCompactBusy => 'Wait for the reply to finish.';
@@ -22732,14 +22732,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Signed in, but this server can\'t use it';
 
   @override
-  String get chatUiCompactConfirmTitle => 'Compact this conversation?';
+  String get chatUiCompactConfirmTitle => 'Shorten this conversation?';
 
   @override
   String get chatUiCompactConfirmBody =>
-      'Compact replaces earlier messages with a short summary to save space. It can\'t be undone.';
+      'Shortening replaces earlier messages with a short summary to save space. It can\'t be undone.';
 
   @override
-  String get chatUiCompactConfirmAction => 'Compact conversation';
+  String get chatUiCompactConfirmAction => 'Shorten conversation';
 
   @override
   String get kitTurnReconnecting =>
@@ -27817,10 +27817,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get kitContextRingTapHint => 'Show context details';
 
   @override
-  String get kitContextRingCompacting => 'Compacting';
+  String get kitContextRingCompacting => 'Shortening';
 
   @override
-  String get kitContextRingCompactingSemantics => 'Context, compacting';
+  String get kitContextRingCompactingSemantics => 'Context, shortening';
 
   @override
   String get kitContextSheetTitle => 'Context window';
@@ -27858,7 +27858,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get kitContextChartCompacted => 'Compacted here';
 
   @override
-  String get kitContextSheetCompactNow => 'Compact now';
+  String get kitContextSheetCompactNow => 'Shorten now';
 
   @override
   String get phraseChipsRowLabel => 'Quick phrases';
@@ -35514,7 +35514,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String runningPhoneLimitBody(int count, int limit) {
-    return '$count of $limit background processes: above $limit, Android stops this app\'s oldest processes first, and those are the servers. Stop what was left behind or isn\'t needed, or lift the limit with Developer options › Disable child process restrictions.';
+    return '$count of $limit background processes: above $limit, Android stops this app\'s oldest processes first, and those are the servers. New agents wait for room. Stop what was left behind or isn\'t needed.';
   }
 
   @override
@@ -35855,4 +35855,1826 @@ class AppLocalizationsPt extends AppLocalizations {
   String stopRowSemantics(String agent) {
     return 'Stop $agent';
   }
+
+  @override
+  String get vpttLetGoToFinish => 'Let go when you\'re done';
+
+  @override
+  String get vpttLetGoToCancel => 'Let go to cancel';
+
+  @override
+  String vpttSendingIn(String seconds) {
+    return 'Sending in $seconds…';
+  }
+
+  @override
+  String get vpttDontSend => 'Don\'t send';
+
+  @override
+  String get vpttLanguageFollowApp => 'Same as the app';
+
+  @override
+  String get vpttLanguageFollowAppDetail =>
+      'Listens for the app\'s language when it can, and works out the language from your voice when it can\'t.';
+
+  @override
+  String get vpttLanguageDetectDetail =>
+      'Works out the language from your voice each time.';
+
+  @override
+  String get vpttAutoSendTitle => 'Send when I stop talking';
+
+  @override
+  String get vpttAutoSendDetail =>
+      'After a short pause, your words are sent. You get 3 seconds to cancel. Holding the mic never sends by itself.';
+
+  @override
+  String get tipHoldMic => 'Hold the mic to talk, let go to finish';
+
+  @override
+  String get tipHoldMicTitle => 'Hold to talk';
+
+  @override
+  String vpttLanguageUnavailableOffline(String language) {
+    return 'Your app\'s language ($language) isn\'t one the offline speech model knows, so it works out the language from your voice instead.';
+  }
+
+  @override
+  String vpttLanguageCompactRough(String language) {
+    return 'The Compact model is rough outside English. For $language, choose Balanced or High accuracy above.';
+  }
+
+  @override
+  String get connCheckTitle => 'Check connection';
+
+  @override
+  String get connCheckRowDetail =>
+      'Test the address, sign-in, version, live updates and speed.';
+
+  @override
+  String get connCheckIntro =>
+      'Five quick checks against this server. Nothing is changed or saved.';
+
+  @override
+  String get connCheckRun => 'Check connection';
+
+  @override
+  String get connCheckAgain => 'Check again';
+
+  @override
+  String get connCheckRunning => 'Checking…';
+
+  @override
+  String get connCheckStepAddress => 'Address reachable';
+
+  @override
+  String get connCheckStepSignIn => 'Sign-in accepted';
+
+  @override
+  String get connCheckStepVersion => 'Server version supported';
+
+  @override
+  String get connCheckStepLive => 'Live updates arriving';
+
+  @override
+  String get connCheckStepSpeed => 'Round-trip time';
+
+  @override
+  String get connCheckAddressOk => 'The server answered.';
+
+  @override
+  String get connCheckAddressUnreachable =>
+      'Nothing answered at this address. Check that the server is running and that this phone can reach it, for example over Tailscale.';
+
+  @override
+  String get connCheckAddressNotOpenCode =>
+      'Something answered, but it is not an OpenCode server. Check the address and the port.';
+
+  @override
+  String get connCheckSignInOk => 'The server accepted this sign-in.';
+
+  @override
+  String get connCheckNeedsPassword =>
+      'This server asks for a password. Add it under Name and address.';
+
+  @override
+  String get connCheckPasswordRejected =>
+      'The server did not accept the saved password. Copy the current one from the server and save it again.';
+
+  @override
+  String get connCheckVersionOkUnknown => 'This server works with this app.';
+
+  @override
+  String get connCheckVersionUnsupported =>
+      'This server runs an older OpenCode that this app no longer supports. Update it to OpenCode 2.';
+
+  @override
+  String get connCheckVersionNotReady =>
+      'The server is starting, or reports a problem. Wait a moment and check again.';
+
+  @override
+  String get connCheckLiveOk => 'Updates are arriving as they happen.';
+
+  @override
+  String get connCheckLiveConnecting =>
+      'Still connecting to live updates. Check again in a moment.';
+
+  @override
+  String get connCheckLiveDown =>
+      'Live updates are not arriving. A proxy that buffers or cuts long connections is the usual cause.';
+
+  @override
+  String get connCheckLiveNotChecked =>
+      'Connect to this server to check live updates.';
+
+  @override
+  String get connCheckSpeedSlow =>
+      'That is slow. Try a closer network, or check the route your VPN takes.';
+
+  @override
+  String get connCheckSkipped =>
+      'Not checked, because an earlier step needs fixing first.';
+
+  @override
+  String get connCheckReachHelp => 'How to reach your computer';
+
+  @override
+  String get connCheckReachHelpDetail =>
+      'Tailscale or an SSH tunnel, step by step.';
+
+  @override
+  String get reachTitle => 'How to reach your computer';
+
+  @override
+  String get reachIntro =>
+      'Your computer\'s OpenCode server should stay private. These two ways keep it off the public internet. Try Tailscale first.';
+
+  @override
+  String get reachTailscaleHeading => 'Tailscale (recommended)';
+
+  @override
+  String get reachTailscale1 =>
+      'Install Tailscale on your computer and on this phone, and sign in to the same account on both.';
+
+  @override
+  String get reachTailscale2 =>
+      'On the computer, start the server with a password, for example: opencode serve --port 4096';
+
+  @override
+  String get reachTailscale3 =>
+      'Find the computer\'s Tailscale name or its 100.x.x.x address in the Tailscale app.';
+
+  @override
+  String get reachTailscale4 =>
+      'Here, add a server with that name and port, for example http://100.101.102.103:4096, and enter the password.';
+
+  @override
+  String get reachSshHeading => 'SSH tunnel (if you cannot use Tailscale)';
+
+  @override
+  String get reachSsh1 =>
+      'You need an SSH app on this phone that can forward a port, and SSH access to your computer.';
+
+  @override
+  String get reachSsh2 =>
+      'Start the server on the computer, bound to itself only: opencode serve --port 4096';
+
+  @override
+  String get reachSsh3 =>
+      'In the SSH app, forward local port 4096 to 127.0.0.1:4096 on the computer, and keep it running.';
+
+  @override
+  String get reachSsh4 =>
+      'Here, add a server at http://127.0.0.1:4096 and enter the password. Then use Check connection.';
+
+  @override
+  String get reachSshCommand =>
+      'ssh -N -L 127.0.0.1:4096:127.0.0.1:4096 you@your-computer';
+
+  @override
+  String get reachSafetyHeading => 'Keep it private';
+
+  @override
+  String get reachSafety =>
+      'Never open the server\'s port to the public internet or share it through a public tunnel. Anyone who reaches it can run commands on your computer.';
+
+  @override
+  String connCheckVersionOk(String version) {
+    return 'Version $version works with this app.';
+  }
+
+  @override
+  String connCheckSpeedOk(int ms) {
+    return 'About $ms ms for a round trip.';
+  }
+
+  @override
+  String get scheduleRunNow => 'Run now';
+
+  @override
+  String get scheduleRunNowNote =>
+      'Starts one run right away. The next scheduled time stays the same.';
+
+  @override
+  String get shortcutsHelpReview => 'In a review';
+
+  @override
+  String get shortcutsStopReplyKeys => 'Esc while a reply runs';
+
+  @override
+  String get shortcutsStopReply => 'Stop the running reply';
+
+  @override
+  String get shortcutsReviewNextChange => 'Next change';
+
+  @override
+  String get shortcutsReviewPreviousChange => 'Previous change';
+
+  @override
+  String queueEvictedTooOld(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count were too old to send',
+      one: '1 was too old to send',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String queueEvictedOverLimit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count to stay within the queue limit',
+      one: '1 to stay within the queue limit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get queueEvictedJoin => ' and ';
+
+  @override
+  String queueEvictedSummary(int count, String reasons) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Discarded $count queued drafts: $reasons.',
+      one: 'Discarded 1 queued draft: $reasons.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatUiThinkingLevelDefault =>
+      'Thinking level back to the default.';
+
+  @override
+  String chatUiThinkingLevelSet(String level) {
+    return 'Thinking: $level.';
+  }
+
+  @override
+  String get shortcutsThinkingLevel => 'Next / previous thinking level';
+
+  @override
+  String get shortcutsTranscriptPages => 'Scroll the conversation by a page';
+
+  @override
+  String get shortcutsTranscriptEnds => 'First message / latest message';
+
+  @override
+  String get shortcutsReviewNextFile => 'Next file';
+
+  @override
+  String get shortcutsReviewPreviousFile => 'Previous file';
+
+  @override
+  String get shortcutsNotWhileTyping =>
+      'Single keys such as N, P, [ and ] only work when no text field has focus.';
+
+  @override
+  String get fileShareAction => 'Share on Wi-Fi';
+
+  @override
+  String get fileShareTitle => 'Share on Wi-Fi';
+
+  @override
+  String fileShareQrLabel(String name) {
+    return 'QR code to download $name';
+  }
+
+  @override
+  String get fileShareLinkLabel => 'Link';
+
+  @override
+  String get fileShareCopyLink => 'Copy link';
+
+  @override
+  String get fileShareWarning =>
+      'Anyone on this Wi-Fi with the link can download this file.';
+
+  @override
+  String fileShareDownloads(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Downloaded $count times',
+      one: 'Downloaded 1 time',
+      zero: 'Not downloaded yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fileShareTimeLeft(String time) {
+    return 'Stops sharing in $time';
+  }
+
+  @override
+  String get fileShareStop => 'Stop sharing';
+
+  @override
+  String get fileShareEnded =>
+      'Sharing has stopped. Nobody can download this file now.';
+
+  @override
+  String get fileShareNoWifi =>
+      'This phone is not on Wi-Fi. Connect to Wi-Fi to share this file with a nearby device.';
+
+  @override
+  String get fileSharePrivate =>
+      'This file can\'t be shared because it may hold keys or passwords.';
+
+  @override
+  String get fileShareUnavailable =>
+      'Sharing could not start. Try again in a moment.';
+
+  @override
+  String get readAloudVoiceTitle => 'Read-aloud voice';
+
+  @override
+  String get readAloudVoicePhone => 'Phone\'s voice';
+
+  @override
+  String get readAloudVoicePhoneDetail =>
+      'Uses the speech voices installed on this phone.';
+
+  @override
+  String readAloudVoiceNaturalDownload(String size) {
+    return 'Natural voice (download, about $size)';
+  }
+
+  @override
+  String get readAloudVoiceNatural => 'Natural voice';
+
+  @override
+  String get readAloudVoiceNaturalDetail =>
+      'Sounds more like a person and works offline. English only for now; other languages are read by the phone\'s voice.';
+
+  @override
+  String get naturalVoiceDownloading => 'Downloading the natural voice';
+
+  @override
+  String naturalVoiceRemove(String size) {
+    return 'Remove natural voice ($size)';
+  }
+
+  @override
+  String get naturalVoiceRemoveTitle => 'Remove the natural voice?';
+
+  @override
+  String get naturalVoiceRemoveBody =>
+      'Replies go back to being read by the phone\'s voice. You can download the natural voice again later.';
+
+  @override
+  String get naturalVoiceKeep => 'Keep it';
+
+  @override
+  String get naturalVoiceFallbackNote =>
+      'The natural voice can\'t read this language yet, so the phone\'s voice is reading.';
+
+  @override
+  String naturalVoiceNoSpace(String size) {
+    return 'There isn\'t enough free storage. Free up about $size and try again.';
+  }
+
+  @override
+  String get naturalVoiceFailed =>
+      'The natural voice could not be set up. Check your connection and try again.';
+
+  @override
+  String processBudgetWaitRoom(int ceiling) {
+    return 'Waiting for room: the phone allows about $ceiling programs at once.';
+  }
+
+  @override
+  String processBudgetAgentsRunning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count agents are running.',
+      one: '1 agent is running.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get processBudgetWaitWarm =>
+      'Waiting: the phone is warm. It starts by itself when the phone cools down.';
+
+  @override
+  String get processBudgetWaitBattery =>
+      'Waiting: the battery is low. It starts by itself once the phone charges.';
+
+  @override
+  String get processBudgetSeeRunning => 'See what runs';
+
+  @override
+  String processBudgetCount(int count, int ceiling) {
+    return '$count of them count toward the limit of about $ceiling';
+  }
+
+  @override
+  String get agentKilledByAndroid =>
+      'Android stopped the agent because too many programs were running. Starting it again…';
+
+  @override
+  String get agentBackAfterKill =>
+      'Android stopped the agent because too many programs were running. It\'s back; your conversation continues.';
+
+  @override
+  String agentsStateUpdating(String version) {
+    return 'Updating to $version…';
+  }
+
+  @override
+  String get agentsStateUpdatingHelper => 'Updating…';
+
+  @override
+  String get agentsStateUpdateWaiting => 'Will update when nothing is running';
+
+  @override
+  String get agentErrorFreeTier =>
+      'OpenCode\'s free models stopped this reply.';
+
+  @override
+  String get agentErrorFreeTierHint =>
+      'Long conversations are often refused on the free tier, even when you\'ve used little today. Shortening this one or starting a new one usually helps.';
+
+  @override
+  String agentErrorFreeTierSize(String tokens) {
+    return 'This conversation is about $tokens tokens long.';
+  }
+
+  @override
+  String get chatFreeTierShorten => 'Shorten this conversation';
+
+  @override
+  String get chatFreeTierNewConversation => 'Continue in a new conversation';
+
+  @override
+  String get productErrorFileTooBig =>
+      'This file is too big to show here (the limit is 2 MB). Open it on the computer where it lives, or ask the agent for a smaller piece.';
+
+  @override
+  String get productErrorFileMissing =>
+      'That file isn\'t there any more. It may have been moved or deleted.';
+
+  @override
+  String get productErrorFileDenied =>
+      'The computer won\'t let this app read that file.';
+
+  @override
+  String get productErrorFileUnreadable =>
+      'This kind of file can\'t be shown here.';
+
+  @override
+  String phoneFileInstallTitle(String name) {
+    return 'Install $name?';
+  }
+
+  @override
+  String get phoneFileInstallBody =>
+      'This app file is on this phone. Android asks you to confirm before anything is installed.';
+
+  @override
+  String get phoneFileInstallAction => 'Install…';
+
+  @override
+  String phoneFileOpenTitle(String name) {
+    return 'Open $name?';
+  }
+
+  @override
+  String get phoneFileOpenBody =>
+      'This file is on this phone and is too big or the wrong kind to show here. Choose which app opens it.';
+
+  @override
+  String get phoneFileOpenAction => 'Open with…';
+
+  @override
+  String get phoneFileFindTitle => 'Open it in Files';
+
+  @override
+  String phoneFileFindBody(String path) {
+    return 'This version can\'t hand the file to another app yet. Find it in your Files app: $path';
+  }
+
+  @override
+  String phoneFileWhereInstall(String name, String folder) {
+    return '$name is in $folder. Open it from the Files app to install it.';
+  }
+
+  @override
+  String phoneFileWhereOpen(String name, String folder) {
+    return '$name is in $folder. Open it from the Files app.';
+  }
+
+  @override
+  String get agentsStateUpdateWifi => 'Will update on Wi-Fi';
+
+  @override
+  String agentUpdateSendBlocked(String agent, String percent) {
+    return '$agent is updating, $percent%. You can send when it\'s done.';
+  }
+
+  @override
+  String agentUpdateSendBlockedNoPercent(String agent) {
+    return '$agent is updating. You can send when it\'s done.';
+  }
+
+  @override
+  String get productErrorAgentUpdating =>
+      'Your agents are being updated, so this could not start yet. Try again in a moment; your message is kept.';
+
+  @override
+  String get childLimitTitle => 'Let agents run more programs at once';
+
+  @override
+  String get childLimitBody =>
+      'Android stops agents when the app runs more than 32 programs. Turning this off lets bigger jobs finish; the app still pauses work when the phone gets hot or the battery is low.';
+
+  @override
+  String get childLimitStepsOpen =>
+      'In Developer options, turn on “Disable child process restrictions”, then come back.';
+
+  @override
+  String get childLimitOpenDeveloper => 'Open Developer options';
+
+  @override
+  String get childLimitStepsEnable =>
+      'Developer options are off. Turn them on in Settings › About phone: tap Build number seven times.';
+
+  @override
+  String get childLimitOpenAbout => 'Open About phone';
+
+  @override
+  String get childLimitStepsText =>
+      'Open Settings › System › Developer options and turn on “Disable child process restrictions”.';
+
+  @override
+  String get childLimitHide => 'Hide';
+
+  @override
+  String get claudeAgentTrialTag => 'Trial';
+
+  @override
+  String get claudeAgentTryTitle => 'Try Claude Agent';
+
+  @override
+  String get claudeAgentTrySupporting =>
+      'Claude inside OpenCode, with your Claude Code sign-in on this phone. Your Claude Code chats stay as they are.';
+
+  @override
+  String get claudeAgentPreparing => 'Setting up Claude Agent…';
+
+  @override
+  String get claudeAgentNeedsSignInTitle =>
+      'Claude isn\'t signed in on this phone';
+
+  @override
+  String get claudeAgentNeedsSignInBody =>
+      'Claude Agent uses Claude Code\'s sign-in. Sign in to Claude Code in Agents, then check again.';
+
+  @override
+  String get claudeAgentNotInstalledTitle =>
+      'Claude Code isn\'t installed on this phone';
+
+  @override
+  String get claudeAgentNotInstalledBody =>
+      'Claude Agent runs the Claude Code on this phone. Install it in Agents, then check again.';
+
+  @override
+  String get claudeAgentBlockedTitle => 'Claude Agent can\'t be set up here';
+
+  @override
+  String get claudeAgentBlockedBody =>
+      'This phone\'s Linux already has another program called claude in /usr/local/sbin, and the app leaves it alone.';
+
+  @override
+  String get claudeAgentFailedTitle => 'Claude Agent didn\'t start';
+
+  @override
+  String get claudeAgentFailedBody =>
+      'Its models didn\'t arrive. Check again in a moment.';
+
+  @override
+  String get claudeAgentOpenAgents => 'Open Agents';
+
+  @override
+  String get claudeAgentCheckAgain => 'Check again';
+
+  @override
+  String get claudeAgentCheckAgainLabel => 'Check Claude Agent again';
+
+  @override
+  String get claudeAgentReady =>
+      'Claude Agent is ready. Its models are marked Trial.';
+
+  @override
+  String get fullSpeedSetting => 'Always full speed';
+
+  @override
+  String get fullSpeedSettingDetail =>
+      'Off: when the phone is warm, the battery is low or the app is hidden, builds and tests on this phone run slower to save heat and battery. Replies are not slowed.';
+
+  @override
+  String get fullSpeedSettingEasing =>
+      'Builds and tests are running slower right now to save heat and battery. Replies are not slowed.';
+
+  @override
+  String get teamVoiceProductOwner => 'Product owner';
+
+  @override
+  String get teamVoiceArchitect => 'Architect';
+
+  @override
+  String get teamVoiceManager => 'Manager';
+
+  @override
+  String get teamVoiceDeveloper => 'Developer';
+
+  @override
+  String teamVoiceDeveloperAs(String persona) {
+    return 'Developer · $persona';
+  }
+
+  @override
+  String get teamVoiceReviewer => 'Reviewer';
+
+  @override
+  String get teamVoiceSaysPlanning => 'Planning how to build it.';
+
+  @override
+  String get teamVoiceSaysPlanReady => 'The plan is ready for you.';
+
+  @override
+  String get teamVoiceSaysStarting => 'Starting on this task.';
+
+  @override
+  String get teamVoiceSaysWorking => 'Working on this task.';
+
+  @override
+  String get teamVoiceSaysChecking => 'Checking the work against its criteria.';
+
+  @override
+  String get teamVoiceSaysFoundProblems => 'Found problems that need a fix.';
+
+  @override
+  String get teamVoiceSaysMerging => 'Merging the work into dev.';
+
+  @override
+  String get teamVoiceSaysMerged => 'Merged into dev.';
+
+  @override
+  String get teamVoiceSaysPlanQueued => 'The plan is in line to start.';
+
+  @override
+  String get teamVoiceSaysQueued => 'This task is in line to start.';
+
+  @override
+  String get teamVoiceSaysWaitingForLane => 'Waiting for a free lane.';
+
+  @override
+  String get teamVoiceSaysWaitingForTask =>
+      'Waiting for another task to finish.';
+
+  @override
+  String get teamVoiceSaysWaitingForChat => 'Waiting for your chat to finish.';
+
+  @override
+  String get teamVoiceSaysWaitingForCheck =>
+      'Waiting for this phone to be checked.';
+
+  @override
+  String get teamVoiceSaysPaused => 'Paused.';
+
+  @override
+  String get teamVoiceSaysStopped => 'Stopped.';
+
+  @override
+  String get teamVoiceSaysInterrupted =>
+      'Interrupted. Resume it to pick up where it was.';
+
+  @override
+  String get teamVoiceSaysResuming =>
+      'Checking the earlier session before resuming.';
+
+  @override
+  String get teamVoiceNowPlanning => 'Architect is planning';
+
+  @override
+  String teamVoiceNowWorking(String developer) {
+    return '$developer is working';
+  }
+
+  @override
+  String get teamVoiceNowChecking => 'Reviewer is checking';
+
+  @override
+  String get teamVoiceNowNeedsYou => 'Waiting for you';
+
+  @override
+  String get teamVoiceNowMerging => 'Manager is merging into dev';
+
+  @override
+  String get teamVoiceNowMerged => 'Merged into dev';
+
+  @override
+  String get teamVoiceNowWaiting => 'Waiting to start';
+
+  @override
+  String get teamVoiceNowPaused => 'Paused';
+
+  @override
+  String get teamVoiceNowStopped => 'Stopped';
+
+  @override
+  String get teamVoiceNowResuming => 'Resuming';
+
+  @override
+  String get teamVoiceNowManager => 'Manager has an update';
+
+  @override
+  String teamVoiceReviewerResult(int total, int met) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Checked $total criteria: $met met.',
+      one: 'Checked 1 criterion: $met met.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String teamVoiceApprovePlan(String name) {
+    return 'Start building $name';
+  }
+
+  @override
+  String teamVoiceAcceptPhase(String phase) {
+    return 'Accept $phase';
+  }
+
+  @override
+  String teamVoicePutOnMain(String repo) {
+    return 'Put $repo on main';
+  }
+
+  @override
+  String get linuxSvcTitle => 'Services';
+
+  @override
+  String get linuxSvcRowDetail => 'Keep your own programs running';
+
+  @override
+  String linuxSvcHubRunning(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count running: $names',
+      one: '1 running: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String linuxSvcHubOff(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count services, all off',
+      one: '1 service, off',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String linuxSvcHubCrashed(String name) {
+    return '$name stopped after crashing';
+  }
+
+  @override
+  String get linuxSvcAdd => 'Add a service';
+
+  @override
+  String get linuxSvcAddDetail =>
+      'Run a command of your own and keep it running';
+
+  @override
+  String get linuxSvcAddTitle => 'Add a service';
+
+  @override
+  String get linuxSvcEmpty =>
+      'Nothing runs on its own yet. Add your own command and it keeps running, even after a crash or when the app restarts.';
+
+  @override
+  String get linuxSvcKeepsRunning =>
+      'A service you start keeps running: it comes back after a crash and when the app restarts, until you stop it.';
+
+  @override
+  String get linuxSvcScreenOff =>
+      'While the screen is off, services may pause unless the phone is charging.';
+
+  @override
+  String get linuxSvcRunning => 'Running';
+
+  @override
+  String linuxSvcRunningFor(String duration) {
+    return 'Running for $duration';
+  }
+
+  @override
+  String linuxSvcPort(String port) {
+    return 'port $port';
+  }
+
+  @override
+  String get linuxSvcOff => 'Off';
+
+  @override
+  String get linuxSvcStarting => 'Starting…';
+
+  @override
+  String get linuxSvcStopping => 'Stopping…';
+
+  @override
+  String get linuxSvcRemoving => 'Removing…';
+
+  @override
+  String linuxSvcRetrying(int code, int seconds) {
+    return 'Crashed (exit $code). Trying again in $seconds s';
+  }
+
+  @override
+  String linuxSvcGaveUp(int count, String time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Stopped after crashing $count times · $time',
+      one: 'Stopped after crashing once · $time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String linuxSvcGaveUpNoCount(String time) {
+    return 'Stopped after crashing · $time';
+  }
+
+  @override
+  String linuxSvcExited(int code) {
+    return 'Finished (exit $code)';
+  }
+
+  @override
+  String linuxSvcPortBusy(String port) {
+    return 'Port $port is already in use. Trying again soon';
+  }
+
+  @override
+  String get linuxSvcStart => 'Start';
+
+  @override
+  String get linuxSvcStop => 'Stop';
+
+  @override
+  String linuxSvcStartNamed(String name) {
+    return 'Start $name';
+  }
+
+  @override
+  String linuxSvcStopNamed(String name) {
+    return 'Stop $name';
+  }
+
+  @override
+  String linuxSvcRestartNamed(String name) {
+    return 'Restart $name';
+  }
+
+  @override
+  String linuxSvcRemoveNamed(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String linuxSvcOpenNamed(String name) {
+    return 'Open $name';
+  }
+
+  @override
+  String linuxSvcOpenDetail(String port) {
+    return 'Its page on port $port';
+  }
+
+  @override
+  String get linuxSvcStopDetail => 'It stays stopped until you start it again';
+
+  @override
+  String get linuxSvcStartDetail =>
+      'It keeps running, also after a crash or an app restart';
+
+  @override
+  String linuxSvcCameBack(int count, String time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Came back $count times after a crash, last at $time',
+      one: 'Came back once after a crash, at $time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String linuxSvcRemoveTitle(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get linuxSvcRemoveBody =>
+      'It stops now and is no longer kept running.';
+
+  @override
+  String get linuxSvcRemoveGoes => 'Its log and settings are deleted';
+
+  @override
+  String get linuxSvcRemoveStays => 'The program stays installed';
+
+  @override
+  String get linuxSvcLogTitle => 'Log';
+
+  @override
+  String get linuxSvcLogEmpty => 'Nothing written yet';
+
+  @override
+  String get linuxSvcLogStarted => 'Started';
+
+  @override
+  String linuxSvcLogCrashed(int code) {
+    return 'Crashed (exit $code)';
+  }
+
+  @override
+  String linuxSvcLogEnded(int code) {
+    return 'Ended (exit $code)';
+  }
+
+  @override
+  String linuxSvcLogRetry(int seconds) {
+    return 'Trying again in $seconds s';
+  }
+
+  @override
+  String get linuxSvcLogGaveUp => 'Gave up after crashing too many times';
+
+  @override
+  String linuxSvcLogPortBusy(String port) {
+    return 'Port $port is in use';
+  }
+
+  @override
+  String get linuxSvcCouldNotStart => 'Services couldn\'t start.';
+
+  @override
+  String get linuxSvcProblemFailed => 'That didn\'t work. Try again.';
+
+  @override
+  String get linuxSvcProblemMissing =>
+      'Set up Linux from This phone, then come back to add services.';
+
+  @override
+  String get linuxSvcProblemTooMany =>
+      'You can keep up to 16 services. Remove one first.';
+
+  @override
+  String get linuxSvcProblemWrite =>
+      'Couldn\'t save that. The phone may be out of space.';
+
+  @override
+  String get linuxSvcErrNameShape =>
+      'Use 2 to 24 lowercase letters, numbers or dashes, starting with a letter';
+
+  @override
+  String get linuxSvcErrNameReserved =>
+      'That name is kept for the app. Pick another';
+
+  @override
+  String get linuxSvcErrNameTaken => 'That name is already used by a service';
+
+  @override
+  String linuxSvcErrNameUsedBy(String name) {
+    return 'That name is used by $name';
+  }
+
+  @override
+  String get linuxSvcErrCommand => 'Write the command to run';
+
+  @override
+  String get linuxSvcErrFolder =>
+      'Write the folder it runs in, starting with /';
+
+  @override
+  String get linuxSvcErrPortRange => 'Use a port from 1024 to 65535';
+
+  @override
+  String get linuxSvcErrPortLow =>
+      'Ports below 1024 aren\'t allowed on Android';
+
+  @override
+  String linuxSvcErrPortServer(String port) {
+    return 'Port $port belongs to OpenCode';
+  }
+
+  @override
+  String get linuxSvcErrPortReserved =>
+      'That port belongs to OpenCode or another part of this app. Pick another port';
+
+  @override
+  String get linuxSvcErrPortTaken =>
+      'That port is already used by another service. Pick another port';
+
+  @override
+  String linuxSvcErrPortUsedBy(String port, String name) {
+    return 'Port $port is used by $name';
+  }
+
+  @override
+  String get linuxSvcFieldName => 'Name';
+
+  @override
+  String get linuxSvcFieldNameHelper =>
+      '2 to 24 lowercase letters, numbers or dashes';
+
+  @override
+  String get linuxSvcFieldCommand => 'Command';
+
+  @override
+  String get linuxSvcFieldCommandHelper =>
+      'Runs in bash. It should keep running, not finish';
+
+  @override
+  String get linuxSvcFieldFolder => 'Folder';
+
+  @override
+  String get linuxSvcFieldPort => 'Port';
+
+  @override
+  String get linuxSvcFieldPortHelper =>
+      'Lets you open it and stops two programs fighting over one port';
+
+  @override
+  String get linuxSvcRestartSwitch => 'Restart when it crashes';
+
+  @override
+  String get linuxSvcRestartSwitchDetail =>
+      'It comes back by itself, also after a restart of the app';
+
+  @override
+  String get linuxSvcSaveStart => 'Save and start';
+
+  @override
+  String get linuxSvcSaving => 'Saving…';
+
+  @override
+  String get linuxSvcDownBody =>
+      'The part of Linux that keeps services running isn\'t answering. Try again.';
+
+  @override
+  String get linuxSvcPaused =>
+      'Paused: the phone is too hot. Starts again when it cools';
+
+  @override
+  String get linuxVitalsHeat => 'Phone heat';
+
+  @override
+  String get linuxVitalsCool => 'Cool';
+
+  @override
+  String get linuxVitalsWarm => 'Warm';
+
+  @override
+  String get linuxVitalsHot => 'Hot';
+
+  @override
+  String get linuxVitalsTooHot => 'Too hot';
+
+  @override
+  String get linuxVitalsMemoryFree => 'Memory free';
+
+  @override
+  String get linuxVitalsLinuxCpu => 'Linux CPU';
+
+  @override
+  String linuxVitalsHeatLabel(Object heat) {
+    return 'Phone heat: $heat';
+  }
+
+  @override
+  String linuxVitalsMemoryLabel(Object value) {
+    return 'Memory free: $value';
+  }
+
+  @override
+  String linuxVitalsCpuLabel(Object value) {
+    return 'Linux CPU: $value';
+  }
+
+  @override
+  String linuxVitalsSummaryCool(Object memory) {
+    return 'Linux uses $memory of memory. Nothing is heating the phone.';
+  }
+
+  @override
+  String linuxVitalsSummary(Object memory) {
+    return 'Linux uses $memory of memory.';
+  }
+
+  @override
+  String linuxVitalsHeavy(Object heat, Object program, Object percent) {
+    return '$heat. $program is using $percent% CPU.';
+  }
+
+  @override
+  String linuxVitalsNotLinux(Object heat, Object percent) {
+    return '$heat, but not because of Linux: it uses $percent% CPU.';
+  }
+
+  @override
+  String get linuxVitalsOpenRunning => 'Open Running now';
+
+  @override
+  String get starShareGroup => 'Tell others';
+
+  @override
+  String get starRowTitle => 'Star on GitHub';
+
+  @override
+  String get starRowDetail => 'Helps others find the app';
+
+  @override
+  String get shareRowTitle => 'Share the app';
+
+  @override
+  String get shareRowDetail => 'Send a link to a friend';
+
+  @override
+  String shareAppMessage(String url) {
+    return 'OpenCode Mobile: use your OpenCode coding agent from your phone. $url';
+  }
+
+  @override
+  String get starShareSearchAliases =>
+      'star github favorite rate like support project repository share app friend send link recommend invite tell';
+
+  @override
+  String whatsNewTitle(String version) {
+    return 'What\'s new in $version';
+  }
+
+  @override
+  String get whatsNewShare => 'Share';
+
+  @override
+  String get whatsNewClose => 'Close';
+
+  @override
+  String get whatsNewRowTitle => 'What\'s new';
+
+  @override
+  String get whatsNewRowDetail => 'See what changed in this version';
+
+  @override
+  String get whatsNew220Updates =>
+      'The app now updates itself. You can check for an update any time in Settings › This app › Updates.';
+
+  @override
+  String get whatsNew220Agents =>
+      'OpenCode 2.2.5 is built in, and your agents update themselves.';
+
+  @override
+  String get whatsNew220LargeText =>
+      'Large text stays easy to read. Pick your size in Appearance.';
+
+  @override
+  String get whatsNew220PasteImages =>
+      'Paste an image into the message box to show it to the agent.';
+
+  @override
+  String get whatsNew220Voice =>
+      'Hold the microphone button to talk, then let go.';
+
+  @override
+  String get whatsNewBack => 'Back';
+
+  @override
+  String get whatsNewShowMe => 'Show me';
+
+  @override
+  String get whatsNewShowUpdates => 'Check for an update here, any time.';
+
+  @override
+  String get whatsNewTipsTitle => 'What\'s new in this version';
+
+  @override
+  String get whatsNewShowAgents => 'Your agents and their updates are here.';
+
+  @override
+  String get whatsNewShowPaste =>
+      'Press and hold the message box, or tap +, to paste an image.';
+
+  @override
+  String get whatsNewShowMic => 'Hold this button and talk, then let go.';
+
+  @override
+  String appUpdateReadyTitle(String version) {
+    return 'Version $version is ready';
+  }
+
+  @override
+  String get appUpdateUpdate => 'Update';
+
+  @override
+  String get appUpdateNotNow => 'Not now';
+
+  @override
+  String appUpdateDownloadingTitle(String version) {
+    return 'Downloading version $version';
+  }
+
+  @override
+  String appUpdatePercent(String percent) {
+    return '$percent% done';
+  }
+
+  @override
+  String get appUpdateCancel => 'Cancel';
+
+  @override
+  String get appUpdateVerifying => 'Checking the download…';
+
+  @override
+  String get appUpdateInstalling => 'Installing…';
+
+  @override
+  String appUpdateInstallReadyTitle(String version) {
+    return 'Version $version is downloaded and checked';
+  }
+
+  @override
+  String get appUpdateInstall => 'Install';
+
+  @override
+  String get appUpdatePermissionNeeded =>
+      'To install it, allow this app to install updates, then come back.';
+
+  @override
+  String get appUpdateSettingsBadgeLabel => 'Settings, update available';
+
+  @override
+  String get appUpdateWhatsNew => 'What\'s new';
+
+  @override
+  String get appUpdateNow => 'Update now';
+
+  @override
+  String get appUpdateOpenSettings => 'Open Settings';
+
+  @override
+  String get appUpdatesTitle => 'Updates';
+
+  @override
+  String get appUpdatesSearchAliases =>
+      'update upgrade new version release install github check تحديث ترقية نسخة جديدة إصدار تثبيت';
+
+  @override
+  String get appUpdatesRowSummary => 'Check for and install new versions';
+
+  @override
+  String get appUpdateCheckedJustNow => 'Up to date · checked just now';
+
+  @override
+  String appUpdateUpToDate(String when) {
+    return 'Up to date · checked $when';
+  }
+
+  @override
+  String get appUpdateNeverChecked => 'Not checked yet';
+
+  @override
+  String get appUpdateChecking => 'Checking…';
+
+  @override
+  String appUpdateAvailableLine(String version, String size) {
+    return '$version is ready · $size';
+  }
+
+  @override
+  String appUpdateSizeMb(String mb) {
+    return '$mb MB';
+  }
+
+  @override
+  String get appUpdateCheckingOff =>
+      'Checking is off. Use Check now when you want to look.';
+
+  @override
+  String get appUpdateCheckSwitch => 'Check GitHub for new versions';
+
+  @override
+  String get appUpdateCheckSwitchBody =>
+      'The app asks GitHub for the latest version number and sends nothing about you.';
+
+  @override
+  String get appUpdateCheckNow => 'Check now';
+
+  @override
+  String get appUpdateTryAgain => 'Try again';
+
+  @override
+  String get appUpdateFailNetwork =>
+      'Couldn\'t reach GitHub. Check your connection and try again.';
+
+  @override
+  String get appUpdateFailNoFile =>
+      'This release has no file for your phone yet.';
+
+  @override
+  String get appUpdateFailChecksum =>
+      'The download didn\'t match its checksum, so it wasn\'t installed.';
+
+  @override
+  String get appUpdateFailSigner =>
+      'This download isn\'t signed like your app, so it wasn\'t installed.';
+
+  @override
+  String get appUpdateFailPackage =>
+      'This download is for a different app, so it wasn\'t installed.';
+
+  @override
+  String get appUpdateFailVersion =>
+      'This download isn\'t newer than your app, so it wasn\'t installed.';
+
+  @override
+  String get appUpdateFailStorage => 'There wasn\'t room to save the download.';
+
+  @override
+  String get appUpdateFailInstaller =>
+      'Android couldn\'t finish the install. Try again.';
+
+  @override
+  String appUpdateCurrentVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get appUpdateBuildLabel => 'Build';
+
+  @override
+  String get appUpdateOpenRelease => 'Open on GitHub';
+
+  @override
+  String appUpdateNotInstalled(String version) {
+    return '$version couldn\'t be installed';
+  }
+
+  @override
+  String get composerPasteImage => 'Paste image';
+
+  @override
+  String get composerPasteImageFromClipboard => 'Paste image from clipboard';
+
+  @override
+  String get composerPasteImageFromClipboardSupporting =>
+      'Attach the copied picture';
+
+  @override
+  String get composerPasteImageEmpty => 'There is no picture on the clipboard.';
+
+  @override
+  String get removeFromPhoneBackupsKept =>
+      'Backups you saved stay where you put them';
+
+  @override
+  String get linuxBackupRow => 'Backups';
+
+  @override
+  String get linuxBackupRowNever => 'No backup yet';
+
+  @override
+  String linuxBackupRowLast(Object date) {
+    return 'Last backup $date';
+  }
+
+  @override
+  String get linuxBackupWhat => 'What to back up';
+
+  @override
+  String get linuxBackupSetup => 'Setup';
+
+  @override
+  String get linuxBackupSetupDetail =>
+      'Packages, tools, services and settings files';
+
+  @override
+  String get linuxBackupSetupProjects => 'Setup and projects';
+
+  @override
+  String get linuxBackupSetupProjectsDetail =>
+      'Also your projects, without folders they can download again';
+
+  @override
+  String get linuxBackupProjectsOnly => 'Projects only';
+
+  @override
+  String get linuxBackupProjectsOnlyDetail =>
+      'A zip of your projects to keep or move';
+
+  @override
+  String get linuxBackupNowSetup => 'Back up setup';
+
+  @override
+  String get linuxBackupNowSetupProjects => 'Back up setup and projects';
+
+  @override
+  String get linuxBackupNowProjects => 'Back up projects';
+
+  @override
+  String get linuxBackupPrivacy =>
+      'Backups never hold sign-ins, passwords or private SSH keys. You choose where each one is saved.';
+
+  @override
+  String get linuxRestoreRow => 'Restore from a backup';
+
+  @override
+  String get linuxRestoreRowDetail => 'Choose a backup file to put back';
+
+  @override
+  String linuxBackupSaving(Object done, Object total) {
+    return 'Saving the backup: $done of $total';
+  }
+
+  @override
+  String linuxBackupSaved(Object size, Object name) {
+    return 'Backup saved: $size, as $name';
+  }
+
+  @override
+  String get linuxBackupFailedTitle => 'The backup didn\'t finish';
+
+  @override
+  String get linuxRestoreFailedTitle => 'The restore didn\'t finish';
+
+  @override
+  String get linuxBackupProblemBusy =>
+      'Another task is using Linux now. Try again when it ends.';
+
+  @override
+  String get linuxBackupProblemMissing => 'Linux isn\'t set up on this phone.';
+
+  @override
+  String get linuxBackupProblemJob => 'Linux couldn\'t make the backup.';
+
+  @override
+  String get linuxBackupProblemSave =>
+      'The backup couldn\'t be saved there. There may not be enough room.';
+
+  @override
+  String get linuxBackupProblemNotBackup =>
+      'That file isn\'t a backup made by this app.';
+
+  @override
+  String get linuxBackupProblemNewer =>
+      'That backup was made by a newer version of the app. Update the app first.';
+
+  @override
+  String get linuxBackupProblemRestore =>
+      'Linux couldn\'t put the backup back.';
+
+  @override
+  String get linuxRestoreChecking => 'Reading the backup…';
+
+  @override
+  String get linuxRestoreTitle => 'Restore this backup?';
+
+  @override
+  String linuxRestoreBody(Object what, Object date) {
+    return '$what, made on $date.';
+  }
+
+  @override
+  String get linuxRestoreConfirm => 'Restore';
+
+  @override
+  String get linuxRestoreKeptProjects =>
+      'Your projects stay. One with the same name comes back as “name (restored)”.';
+
+  @override
+  String get linuxRestoreReplacedSettings =>
+      'Settings files it holds replace yours; yours are kept with “.before-restore” added.';
+
+  @override
+  String get linuxRestoreAddedTools =>
+      'Packages, tools and services it lists are put back.';
+
+  @override
+  String get linuxRestoreDone => 'Linux is restored.';
+
+  @override
+  String linuxRestoreSkipped(Object names) {
+    return 'Ubuntu no longer has: $names';
+  }
+
+  @override
+  String linuxRestoreCounts(
+    Object projects,
+    Object services,
+    Object settings,
+    Object packages,
+  ) {
+    return 'Back: projects $projects, services $services, settings files $settings, packages $packages';
+  }
+
+  @override
+  String get linuxMgrJobBackingUp => 'Backing up Linux';
+
+  @override
+  String get linuxMgrJobRestoring => 'Restoring Linux';
+
+  @override
+  String get linuxMgrJobStopBackup => 'Stop the backup';
+
+  @override
+  String get linuxMgrJobStopRestore => 'Stop restoring';
+
+  @override
+  String get linuxMgrJobStopBackupTitle => 'Stop the backup?';
+
+  @override
+  String get linuxMgrJobStopRestoreTitle => 'Stop restoring?';
+
+  @override
+  String get linuxMgrJobDoneBackup => 'The backup is ready';
+
+  @override
+  String get linuxMgrJobDoneRestore => 'Linux is restored';
+
+  @override
+  String get linuxMgrResetBackUpFirst => 'Back up first';
+
+  @override
+  String get localAssistantTitle => 'Assistant on this phone';
+
+  @override
+  String get localAssistantSubtitle =>
+      'Writes short summaries of your conversations with a model that runs on this phone.';
+
+  @override
+  String get localAssistantSwitchTitle => 'Turn on the assistant';
+
+  @override
+  String get localAssistantSwitchSupporting =>
+      'Adds Summarize on this phone to every conversation.';
+
+  @override
+  String get localAssistantPrivacy =>
+      'The model is downloaded once. After that it works offline and nothing you write leaves the phone.';
+
+  @override
+  String localAssistantNotDownloaded(String size) {
+    return 'Not downloaded · $size';
+  }
+
+  @override
+  String localAssistantOnPhone(String size) {
+    return 'On this phone · $size';
+  }
+
+  @override
+  String get localAssistantBackendGpu => 'Runs on the graphics chip';
+
+  @override
+  String get localAssistantBackendCpu => 'Runs on the processor';
+
+  @override
+  String get localAssistantBackendIdle => 'Loads when you ask for a summary';
+
+  @override
+  String localAssistantDownload(String size) {
+    return 'Download ($size)';
+  }
+
+  @override
+  String get localAssistantDownloading => 'Downloading the assistant';
+
+  @override
+  String get localAssistantVerifying => 'Checking the download';
+
+  @override
+  String localAssistantProgress(String received, String total) {
+    return '$received of $total';
+  }
+
+  @override
+  String get localAssistantCancelDownload => 'Cancel download';
+
+  @override
+  String localAssistantDelete(String size) {
+    return 'Delete from this phone ($size)';
+  }
+
+  @override
+  String get localAssistantDeleteTitle => 'Delete the assistant?';
+
+  @override
+  String localAssistantDeleteBody(String size) {
+    return 'This frees $size. You can download it again later.';
+  }
+
+  @override
+  String localAssistantNeedsWifi(String size) {
+    return 'You are not on Wi-Fi. The download is $size.';
+  }
+
+  @override
+  String get localAssistantUseMobileData => 'Download on mobile data';
+
+  @override
+  String localAssistantNoSpace(String size) {
+    return 'Not enough free space. Free about $size and try again.';
+  }
+
+  @override
+  String get localAssistantUnavailableMemory =>
+      'This phone has too little memory for the assistant. It needs about 6 GB.';
+
+  @override
+  String get localAssistantUnavailableAbi =>
+      'The assistant runs on 64-bit phones only.';
+
+  @override
+  String get localAssistantUnavailablePlatform =>
+      'The assistant is available on Android phones.';
+
+  @override
+  String get localAssistantSetupFailed =>
+      'The assistant could not be set up. Try again.';
+
+  @override
+  String get localAssistantTryAgain => 'Try again';
+
+  @override
+  String get localAssistantSummarizeMenu => 'Summarize on this phone';
+
+  @override
+  String get localAssistantSummarizeSupporting =>
+      'Written here, with no network';
+
+  @override
+  String get localAssistantSheetTitle => 'Summary';
+
+  @override
+  String get localAssistantSheetSubtitle => 'Written on this phone';
+
+  @override
+  String get localAssistantPreparing => 'Getting the assistant ready';
+
+  @override
+  String get localAssistantStop => 'Stop';
+
+  @override
+  String get localAssistantCopy => 'Copy summary';
+
+  @override
+  String get localAssistantDone => 'Done';
+
+  @override
+  String get localAssistantStopped =>
+      'Stopped. This is what was written so far.';
+
+  @override
+  String get localAssistantRunFailed =>
+      'The summary could not be finished. Try again.';
+
+  @override
+  String localAssistantStats(String seconds, String rate) {
+    return 'First words after $seconds s · $rate words a second';
+  }
+
+  @override
+  String get localAssistantSearchAliases =>
+      'assistant gemma summarize offline on-device model local ai';
+
+  @override
+  String get browserModeTitle => 'Browser mode';
+
+  @override
+  String get browserModeSubtitle =>
+      'What works in this browser and what needs the phone app';
+
+  @override
+  String get browserModeIntro =>
+      'This is OpenCode Mobile running in a web browser. Remote OpenCode servers work as they do in the phone app. Features that need the phone itself are not offered here.';
+
+  @override
+  String get browserModeAvailableHeading => 'Available in the browser';
+
+  @override
+  String get browserModeAvailableServers =>
+      'Connect to OpenCode servers, chat, approve requests, browse files, and follow activity.';
+
+  @override
+  String get browserModeAvailableKeyboard =>
+      'Keyboard shortcuts, right-click menus, and drag-and-drop attachments on a desktop browser.';
+
+  @override
+  String get browserModeAvailablePaste =>
+      'Pasting into any field with the keyboard.';
+
+  @override
+  String get browserModeUnavailableHeading => 'Needs the phone app';
+
+  @override
+  String get browserModeUnavailableTermux =>
+      'Running a server or AI agents on this device, and the on-device setup.';
+
+  @override
+  String get browserModeUnavailableVoice =>
+      'Voice input, read-aloud, and camera QR pairing.';
+
+  @override
+  String get browserModeUnavailableBackground =>
+      'Background monitoring, notifications, the home-screen widget, launcher shortcuts, and the Quick Settings tile. Keep this tab open to keep following a session.';
+
+  @override
+  String get browserModeUnavailableAgentSocket =>
+      'Codex and Paseo connections. They sign in with a WebSocket header that browsers cannot send, and there is no supported browser sign-in for them yet.';
+
+  @override
+  String get browserModeContextHeading => 'This page';
+
+  @override
+  String get browserModeSecureContextOk =>
+      'Opened from a secure origin. Server passwords can be saved, and the Paste buttons can read the clipboard.';
+
+  @override
+  String get browserModeSecureContextMissing =>
+      'Opened over plain HTTP from a network address, which the browser does not treat as secure. Server passwords cannot be saved here and the Paste buttons cannot read the clipboard. Open the app over HTTPS or from localhost to lift both limits. Servers without a password still work, and you can still paste into fields with the keyboard.';
+
+  @override
+  String get browserModeMixedContent =>
+      'A page opened over HTTPS can only reach HTTPS servers; the browser blocks plain-HTTP connections from it.';
+
+  @override
+  String get browserModeCors =>
+      'The server must allow this page’s origin. If a connection test fails at once here while the same address works from the phone app, the server is refusing browser requests from this origin.';
+
+  @override
+  String get browserEditorInsecureOrigin =>
+      'This page was opened over plain HTTP from a network address, so the browser will not keep a server password. Leave the password empty for a server that has none, or open the app over HTTPS or from localhost to save one.';
+
+  @override
+  String get browserPairingPasteHint =>
+      'Copy the code the pairing command prints and paste it into the server address field with the keyboard. The Paste button needs a secure (HTTPS or localhost) page.';
+
+  @override
+  String get browserAgentSocketUnavailable =>
+      'Codex and Paseo connections are not available in the browser. They sign in with a WebSocket header that browsers cannot send, and no browser sign-in is supported yet. Use the phone or desktop app for them; OpenCode servers work here.';
+
+  @override
+  String get browserAgentSocketRowUnavailable => 'Not available in the browser';
+
+  @override
+  String get browserTransportFailure =>
+      'The browser could not reach the server. Check the address and that the server is running. A server on a different origin must allow the origin of this page (CORS), and a page loaded over https cannot use an http:// or ws:// server.';
+
+  @override
+  String get browserProbeTimeout =>
+      'The connection timed out. Check the address, and that the server is reachable from this browser.';
+
+  @override
+  String get aboutBrowserSummary =>
+      'A browser client for the OpenCode server you choose. Voice, background monitoring and servers on this device are not available here.';
 }

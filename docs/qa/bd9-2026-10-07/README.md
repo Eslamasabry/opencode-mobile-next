@@ -451,7 +451,8 @@ BD9 project/title. It captures the brief refresh transition; no actual account
 or provider values appear. This is device evidence, not a mock golden.
 
 Before releasing that SAME emulator flock, the driver installed the approved
-normal2195 APK with adb -s emulator-5554 install-r-d. Installed version, live
+normal2195 APK using `adb -s emulator-5554 install -r -d <owner-apk>`.
+Installed version, live
 process, resumed MainActivity and first-frame checks ALL PASS. See
 [verified-normal-restore.json](verified-normal-restore.json). The emulator was
 left with normal app2195 installed and launchable, preserving data/signer.

@@ -12,7 +12,7 @@ import '../l10n/app_localizations.dart';
 import '../state/profiles.dart';
 import 'builtin_linux.dart';
 import 'deliberate_stop.dart';
-import 'quota_collector_host.dart';
+import 'linux_services/rootfs_linux_services.dart';
 import 'setup/setup_engine.dart' show ChannelSetupEngine;
 import 'team/builtin_team.dart';
 
@@ -221,6 +221,7 @@ Future<BuiltinServerStartFailure?> startBuiltinServer({
   Duration pollInterval = const Duration(seconds: 2),
   bool Function()? stillWanted,
   int? recoveryGeneration,
+  int? launchGeneration,
   bool migrateLegacyHistory = false,
   Future<void> Function(ServerProfile profile)? saveRenewedPassword,
 }) async {
@@ -280,14 +281,24 @@ Future<BuiltinServerStartFailure?> startBuiltinServer({
       runtime: BuiltinLinux.runtimeFor(profile.flavor),
     );
     step = 'start';
-    if (recoveryGeneration == null) {
+    final restoreRecipe = BuiltinServerRestoreRecipe(
+      profileId: profile.id,
+      runtime: BuiltinLinux.runtimeFor(profile.flavor),
+    );
+    if (launchGeneration != null) {
+      // Opening the app may replace a stale or stopped server, but only while
+      // the native intent it observed still stands: Stop wins.
+      await linux.startServerForLaunch(
+        script,
+        port: BuiltinLinux.serverPort,
+        expectedGeneration: launchGeneration,
+        restoreRecipe: restoreRecipe,
+      );
+    } else if (recoveryGeneration == null) {
       await linux.startServer(
         script,
         port: BuiltinLinux.serverPort,
-        restoreRecipe: BuiltinServerRestoreRecipe(
-          profileId: profile.id,
-          runtime: BuiltinLinux.runtimeFor(profile.flavor),
-        ),
+        restoreRecipe: restoreRecipe,
       );
     } else {
       await linux.restartServer(
@@ -360,6 +371,11 @@ String couldNotStartReason(Object error, String step) {
   final details = error is BuiltinLinuxException ? error.details : null;
   final why = details != null && details.isNotEmpty ? '; $details' : '';
   return 'The phone server could not start ($step: $kind$why)';
+}
+
+/// The app's opening start found the person's Stop (or another owner) first.
+class _LaunchWithdrawn implements Exception {
+  const _LaunchWithdrawn();
 }
 
 /// Starts the in-app server for the app shell: once on its own when the app
@@ -521,11 +537,17 @@ class BuiltinServerStarter extends ChangeNotifier {
   }
 
   /// Starts (or restarts) the server for [profile] and waits for it.
+  ///
+  /// [launchAdmission] is the app's opening start: it answers the native
+  /// intent generation still wanted, or null when the person's Stop (or a
+  /// different owner) came first. It is asked after the owner claim, and the
+  /// native start refuses a generation Stop has since changed.
   Future<BuiltinServerStartFailure?> start(
     ServerProfile profile, {
     bool automatic = false,
     bool Function()? stillWanted,
     int? recoveryGeneration,
+    Future<int?> Function()? launchAdmission,
     bool migrateLegacyHistory = false,
   }) async {
     if (_starting) {
@@ -544,6 +566,12 @@ class BuiltinServerStarter extends ChangeNotifier {
     BuiltinServerStartFailure? failure;
     try {
       if (!automatic) await beforeManualStart?.call(profile);
+      // Opening the app: the native intent is read after the claim, so Stop
+      // pressed while claiming or saving the password is still seen.
+      final launchGeneration = await launchAdmission?.call();
+      if (launchAdmission != null && launchGeneration == null) {
+        throw const _LaunchWithdrawn();
+      }
       failure = await startBuiltinServer(
         linux: linux,
         profile: profile,
@@ -551,8 +579,14 @@ class BuiltinServerStarter extends ChangeNotifier {
         pollInterval: pollInterval,
         stillWanted: () => !_disposed && (stillWanted?.call() ?? true),
         recoveryGeneration: recoveryGeneration,
+        launchGeneration: launchGeneration,
         migrateLegacyHistory: migrateLegacyHistory,
         saveRenewedPassword: saveRenewedPassword,
+      );
+    } on _LaunchWithdrawn {
+      failure = const BuiltinServerStartFailure.detail(
+        'The server start was not confirmed.',
+        problem: BuiltinStartProblem.interrupted,
       );
     } catch (error) {
       failure = BuiltinServerStartFailure.detail(
@@ -573,8 +607,15 @@ class BuiltinServerStarter extends ChangeNotifier {
         _handoverProfile = profile;
         _handoverUntil = clock.now().add(handover);
       }
-      // Usage on In-app Ubuntu comes back with it unless it was turned off.
-      unawaited(InAppQuotaCollector.restartIfSetUp(profile, linux: linux));
+      // Usage on In-app Ubuntu is not started with it any more: the
+      // collector runs only while something reads usage
+      // (QuotaCollectorDemand), two programs fewer toward Android's limit.
+      // Services the person keeps on come back with Linux.
+      unawaited(
+        RootfsLinuxServices(
+          linux: linux,
+        ).ensureSupervisor().catchError((Object _) {}),
+      );
       // A team the person turned on comes back with OpenCode: Android
       // stops both when it reclaims the app.
       if ((!automatic || recoveryGeneration == null) &&

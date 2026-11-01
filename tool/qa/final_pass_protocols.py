@@ -305,7 +305,7 @@ def _fq3(config, context):
     if type(config) is not dict or set(config) - {"oc1_model", "oc2_model"}:
         return _result("blocked", "fq3_configuration_invalid")
     run_id = "fq3-" + context.run_id
-    dart = Path.home() / ".shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart"
+    dart = Path.home() / ".shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/dart"
     receipt = context.root / "docs/qa/FQ3e-2026-10-09" / (run_id + ".json")
     if receipt.exists():
         return _result("blocked", "evidence_already_exists")

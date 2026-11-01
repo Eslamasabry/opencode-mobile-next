@@ -58,6 +58,16 @@ class ScheduledPromptsPlatform {
     'entries': entries,
     'digestAtMs': digestAt?.millisecondsSinceEpoch,
   });
+
+  /// Starts one run of a saved schedule now, through the same background
+  /// worker a timed run uses. It does not move the next scheduled time.
+  Future<void> runNow(String profileId, String scheduleId, int revision) =>
+      channel.invokeMethod<void>('runNow', {
+        'profileId': profileId,
+        'scheduleId': scheduleId,
+        'revision': revision,
+      });
+
   Future<void> requestExactAlarm() =>
       channel.invokeMethod<void>('requestExactAlarm');
   Future<void> restoreProfile(String profileId) async {

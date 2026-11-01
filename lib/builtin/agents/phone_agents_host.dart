@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,12 +21,14 @@ import '../../paseo/gateway.dart';
 import '../../paseo/transport.dart';
 import '../../ui/kit/kit_redact.dart';
 import '../builtin_linux.dart';
+import '../process_budget.dart';
 import '../setup/setup_engine.dart';
 import '../setup/setup_contract.dart';
 import 'agent_components.dart';
 import 'agent_install_guard.dart';
 import 'agent_removal_scripts.dart';
 import 'paseo_scripts.dart';
+import 'phone_budget.dart';
 
 /// Strict native idle receipt. Missing or malformed fields never admit resume.
 final class PhoneAgentIdleState {
@@ -109,6 +112,14 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   int _generation = 0;
   bool _startInFlight = false;
   bool _checkInFlight = false;
+
+  /// The agent an automatic update is running for, null for a person's own
+  /// check. While it only downloads, a send sets it aside (see
+  /// [autoUpdateCanYield]); once it switches versions a send waits for it.
+  String? _autoUpdateAgent;
+  bool _autoSwitching = false;
+  bool _autoYieldRequested = false;
+  bool _lastAutoYielded = false;
   AgentSetupProgress _progress = const AgentSetupProgress(
     agentId: '',
     phase: AgentSetupPhase.idle,
@@ -484,7 +495,58 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
     }
   }
 
+  Future<AgentPhoneCheckResult> autoUpdate(String agentId) async {
+    _autoUpdateAgent = agentId;
+    _autoSwitching = false;
+    _autoYieldRequested = false;
+    _lastAutoYielded = false;
+    try {
+      final result = await _phoneCheck(agentId, automatic: true);
+      _lastAutoYielded = _autoYieldRequested && !result.passed;
+      return result;
+    } finally {
+      _autoUpdateAgent = null;
+    }
+  }
+
+  bool get autoUpdateCanYield {
+    if (_autoUpdateAgent == null || !_checkInFlight || _autoSwitching) {
+      return false;
+    }
+    final done = _progress.downloadedBytes;
+    final total = _progress.totalBytes;
+    // Only on positive proof that bytes are still coming in. Once every byte
+    // is in, or when nothing is known, the install may be verifying or
+    // switching versions: cancelling then could leave a new launcher with an
+    // old proof, so the work waits instead.
+    return done != null && total != null && total > 0 && done < total;
+  }
+
+  bool get lastAutoUpdateYielded => _lastAutoYielded;
+
+  Future<void> _awaitCheckEnd(Duration limit) async {
+    final end = DateTime.now().add(limit);
+    while (_checkInFlight && DateTime.now().isBefore(end) && !_disposed) {
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    }
+  }
+
+  /// The person's work starts while an automatic update runs: set the update
+  /// aside when it can be (the older version stays installed and runs the
+  /// work), otherwise let it finish. Never a refusal while it is automatic.
+  Future<void> _yieldToWork() async {
+    if (_autoUpdateAgent == null || !_checkInFlight) return;
+    if (autoUpdateCanYield) {
+      _autoYieldRequested = true;
+      await cancelInstall();
+      await _awaitCheckEnd(const Duration(seconds: 45));
+    } else {
+      await _awaitCheckEnd(const Duration(minutes: 5));
+    }
+  }
+
   Future<void> _beginPayloadUse() async {
+    await _yieldToWork();
     // Which gate refused goes to Details (the cause names it, in fixed words).
     final gate = _disposed
         ? 'agent host closed'
@@ -844,6 +906,8 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       _idleReadOnlySecret = false;
       final password = await _password();
       fence();
+      await _writePhoneBudget();
+      fence();
       await _invoke('startAgentHost', {
         'password': password,
         'port': 4099,
@@ -856,6 +920,22 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       fence();
     } finally {
       _startInFlight = false;
+    }
+  }
+
+  /// The phone-budget note and thread caps for Claude Code (S3 of the perf
+  /// audit). Best effort and quiet: a start never waits on or fails for it.
+  Future<void> _writePhoneBudget() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final files = await getApplicationSupportDirectory();
+      PhoneBudgetFiles.apply(
+        filesDir: files,
+        profileId: profileId,
+        fullSpeed: prefs.getBool(FullSpeedPreference.key) ?? false,
+      );
+    } on Object {
+      // No folder to write to (tests, desktop): nothing to do.
     }
   }
 
@@ -932,6 +1012,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       trackLocalWork: true,
       beforePayloadUse: _beginPayloadUse,
       afterPayloadUse: _endPayloadUse,
+      beforeAgentStart: _admitAgent,
     );
   }
 
@@ -953,8 +1034,14 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
       trackLocalWork: true,
       beforePayloadUse: _beginPayloadUse,
       afterPayloadUse: _endPayloadUse,
+      beforeAgentStart: _admitAgent,
     );
   }
+
+  /// A new agent process waits for room under the process budget, so
+  /// Android never has a reason to stop the helper and every conversation.
+  Future<void> _admitAgent() =>
+      ProcessBudgetGuard.instance.admit(HeavyJob.agentSession);
 
   PaseoTransport _transport(String password) => PaseoTransport(
     endpoint: 'ws://127.0.0.1:4099/ws',
@@ -1019,6 +1106,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
   Future<AgentPhoneCheckResult> _phoneCheck(
     String agentId, {
     bool previous = false,
+    bool automatic = false,
   }) async {
     if (_removeInFlight || _checkInFlight || _payloadUses > 0) {
       throw const AgentHostException(AgentHostFailure.busy);
@@ -1087,8 +1175,13 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
         throw const AgentHostException(AgentHostFailure.busy);
       }
       // Clear old proof only once the check has exclusive, safe admission.
-      final gates = _readGates()..remove(agentId);
-      await _writeGates(gates);
+      // An automatic update keeps the old proof until the new version
+      // passes: the older version stays usable meanwhile, and a set-aside
+      // update leaves it as it was.
+      if (!automatic) {
+        final gates = _readGates()..remove(agentId);
+        await _writeGates(gates);
+      }
       if (!previous && activeVersion != agent.recipe!.version) {
         final retained = await _linux.runAgentSetupCheck(
           AgentPhoneScripts.check(
@@ -1107,6 +1200,7 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
         helperOnly: activeVersion != agent.recipe!.version,
       );
       await _waitInstall();
+      _autoSwitching = true;
       _checkGeneration(generation);
       completed.add(AgentPhoneCheckStep.install);
       _checkProgress(agentId, AgentPhoneCheckStep.version);
@@ -1129,7 +1223,28 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
           idleProbe.localWorkBusy != false) {
         throw const AgentHostException(AgentHostFailure.busy);
       }
-      await start(restartIfVersionChanged: true);
+      // A helper that already runs at the pinned Paseo version keeps running:
+      // a new agent version needs no restart (new conversations start the
+      // agent from its launcher, and the provider list is refreshed below),
+      // and a restart would drop every live conversation and could end in a
+      // SIGKILL. The native side cannot tell a helper it started without a
+      // version (an ordinary start) from an old one, so it would restart it.
+      final liveHelper =
+          !helperStoppedForRollback &&
+          idleProbe != null &&
+          idleProbe.transport.connected &&
+          idleProbe.transport.serverVersion == PaseoPhoneScripts.version;
+      if (liveHelper) {
+        try {
+          await idleProbe
+              .loadHostAgentProviders(refresh: true)
+              .timeout(const Duration(seconds: 20));
+        } catch (_) {
+          // The list refreshes on its own at the next read.
+        }
+      } else {
+        await start(restartIfVersionChanged: true);
+      }
       if ((await _invoke('agentHostStatus'))['running'] != true) {
         throw const AgentHostException(AgentHostFailure.daemon);
       }
@@ -1310,6 +1425,9 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
         fingerprintMatches &&
         version['installed'] == true &&
         version['version'] == activeVersion;
+    final olderPin = qualified || arch == null
+        ? null
+        : await _olderQualifiedVersion(agent, arch, pin);
     // Resume proof is supplied only by the controller's verified host load.
     return PhoneAgentRuntime(
       agentId: agentId,
@@ -1320,15 +1438,47 @@ final class BuiltinPhoneAgents implements PhoneAgentHost {
           version['installed'] == true || version['foundVersion'] is String,
       payloadPresent: version['payloadPresent'] == true,
       hostAvailable: host['running'] == true,
-      architectureQualified: qualified,
-      checkRequiredReason: qualified
+      architectureQualified: qualified || olderPin != null,
+      behindPin: olderPin != null,
+      checkRequiredReason: qualified || olderPin != null
           ? null
           : _gateChangeReason(pin, agent, arch),
       capabilities: capabilities,
       signInPhase: signIn?.inspected == true ? signIn!.phase : null,
       resetAt: signIn?.resetAt,
-      stoppedInBackground: qualified && host['running'] != true,
+      stoppedInBackground:
+          (qualified || olderPin != null) && host['running'] != true,
     );
+  }
+
+  /// The version an earlier app qualified for [agent] when only the agent's
+  /// version moved since (same helper pins, same CPU) and that version is
+  /// still the one installed: it keeps running the person's work until the
+  /// update to the pin finishes. Null when there is nothing to run on.
+  Future<String?> _olderQualifiedVersion(
+    AgentDescriptor agent,
+    AgentArchitecture arch,
+    Object? pin,
+  ) async {
+    if (pin is! Map || pin['architecture'] != arch.name) return null;
+    if (_gateChangeReason(pin, agent, arch) != 'agentVersion') return null;
+    try {
+      final old = jsonDecode(pin['fingerprint'] as String) as List;
+      final oldVersion = old[1];
+      if (oldVersion is! String || oldVersion == agent.recipe!.version) {
+        return null;
+      }
+      if (agent.id == 'claude' && !claudeCodeSupports(oldVersion)) return null;
+      final found = await _invoke('agentHostVersion', {
+        'executable': agent.recipe!.executable,
+        'version': oldVersion,
+      });
+      return found['installed'] == true && found['version'] == oldVersion
+          ? oldVersion
+          : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   String _gateChangeReason(

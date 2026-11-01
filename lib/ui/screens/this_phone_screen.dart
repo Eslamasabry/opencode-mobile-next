@@ -17,8 +17,6 @@ import '../../builtin/thermal_guard_teams.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/automation_policy.dart';
 import '../../termux/managed_server_recovery.dart';
-import '../../builtin/project_export.dart' show MethodChannelProjectExport;
-import '../../builtin/project_export_controller.dart';
 import '../../builtin/reply_watch.dart';
 import '../../builtin/setup/component_removal.dart';
 import '../../builtin/setup/components.dart' show SetupComponentIds;
@@ -53,7 +51,6 @@ import 'keep_running_screen.dart';
 import 'library_screen.dart' show IntegrationsScreen, IntegrationsMode;
 import 'linux_manager/linux_manager_screen.dart';
 import 'local_agent_screen.dart';
-import 'manage_space_screen.dart' show ProjectExportScreen;
 import 'phone_setup/phone_setup_routes.dart';
 import 'phone_setup/phone_setup_selection.dart';
 import 'phone_setup/phone_setup_termux_job_screen.dart';
@@ -1192,25 +1189,9 @@ class _ThisPhoneScreenState extends ConsumerState<ThisPhoneScreen> {
             onTap: () => unawaited(_openLinux()),
           ),
         if (inApp) ?_replySpeed(context, l10n),
-        if (inApp)
-          KitRow(
-            key: const ValueKey('this-phone-export-projects'),
-            leading: icon(AppIconography.zip),
-            title: l10n.thisPhoneExportProjects,
-            supporting: TextSpan(text: l10n.thisPhoneExportProjectsDetail),
-            trailing: const KitChevron(),
-            onTap: () => unawaited(
-              pushKitPage<void>(
-                context,
-                (_) => ProjectExportScreen(
-                  controller: ProjectExportController(
-                    platform: MethodChannelProjectExport(),
-                  ),
-                ),
-              ),
-            ),
-          )
-        else ...[
+        // Export projects moved into Linux › Backups as "Projects only"
+        // (owner, 2026-10-31).
+        if (!inApp) ...[
           const TermuxStorageRow(),
           // Left out, not dead, when the list cannot be read: the group
           // then draws no hairline for it either.

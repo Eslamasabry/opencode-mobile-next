@@ -67,18 +67,21 @@ Finder get _titleText => find.descendant(
 );
 
 void main() {
-  testWidgets('the title keeps one line on a phone, two at large text', (
+  testWidgets('the title keeps one line on a phone, also at large text', (
     tester,
   ) async {
     await tester.pumpWidget(_bar());
     expect(tester.widget<Text>(_titleText).maxLines, 1);
     final one = tester.getSize(find.byKey(const Key('title'))).height;
+    // Under the project line the title stays on one line at large text
+    // too: the header would otherwise fill a third of the screen.
     await tester.pumpWidget(_bar(textScale: 1.5));
     await tester.pumpAndSettle();
-    expect(tester.widget<Text>(_titleText).maxLines, 2);
+    expect(tester.widget<Text>(_titleText).maxLines, 1);
     expect(
       tester.getSize(find.byKey(const Key('title'))).height,
       greaterThan(one),
+      reason: 'the line itself is larger',
     );
   });
 

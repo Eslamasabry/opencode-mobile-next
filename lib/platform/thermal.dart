@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show File;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -71,6 +72,52 @@ class ThermalReading {
   String toString() => 'ThermalReading(${status.name}, $headroom)';
 }
 
+/// One reading of the battery: its level (0–100) and whether it charges.
+/// Either is null when the phone does not say.
+@immutable
+class BatteryReading {
+  const BatteryReading({this.level, this.charging});
+
+  static const unknown = BatteryReading();
+
+  factory BatteryReading.fromMap(Object? raw) {
+    if (raw is! Map) return unknown;
+    final level = raw['level'];
+    final charging = raw['charging'];
+    return BatteryReading(
+      level: level is int && level >= 0 && level <= 100 ? level : null,
+      charging: charging is bool ? charging : null,
+    );
+  }
+
+  /// From the kernel's power-supply files (`capacity`, `status`), the
+  /// fallback on builds whose native side has no `battery` call yet.
+  static BatteryReading fromSysfs(String? capacity, String? status) {
+    final level = int.tryParse(capacity?.trim() ?? '');
+    final state = status?.trim().toLowerCase();
+    return BatteryReading(
+      level: level != null && level >= 0 && level <= 100 ? level : null,
+      charging: switch (state) {
+        'charging' || 'full' => true,
+        'discharging' || 'not charging' => false,
+        _ => null,
+      },
+    );
+  }
+
+  final int? level;
+  final bool? charging;
+
+  @override
+  bool operator ==(Object other) =>
+      other is BatteryReading &&
+      other.level == level &&
+      other.charging == charging;
+
+  @override
+  int get hashCode => Object.hash(level, charging);
+}
+
 /// The Dart half of `oc/thermal` (ThermalMonitor.kt). Every call answers
 /// something safe when the channel is absent (desktop, tests) or fails.
 class ThermalBridge {
@@ -96,12 +143,72 @@ class ThermalBridge {
     }
   }
 
+  /// The battery now. Builds whose native side predates the `battery` call
+  /// read the kernel's power-supply files instead; unknown when neither
+  /// answers (the budget then does not wait on the battery).
+  Future<BatteryReading> battery() async {
+    try {
+      final raw = await _channel.invokeMethod<Object?>('battery');
+      return BatteryReading.fromMap(raw);
+    } on MissingPluginException {
+      return _sysfsBattery();
+    } on PlatformException {
+      return _sysfsBattery();
+    }
+  }
+
+  static Future<BatteryReading> _sysfsBattery() async {
+    if (kIsWeb) return BatteryReading.unknown;
+    Future<String?> read(String name) async {
+      try {
+        return await File(
+          '/sys/class/power_supply/battery/$name',
+        ).readAsString().timeout(const Duration(seconds: 1));
+      } on Object {
+        return null;
+      }
+    }
+
+    return BatteryReading.fromSysfs(
+      await read('capacity'),
+      await read('status'),
+    );
+  }
+
   /// Every status change, and a fresh headroom about every 30 seconds
   /// while listened to. Empty where there is no channel.
   Stream<ThermalReading> readings() => _events
       .receiveBroadcastStream()
       .map(ThermalReading.fromMap)
       .handleError((Object _) {}, test: (error) => true);
+
+  /// Moves the agent helper's programs to Android's background class
+  /// (`normal`, `slow` or `hold`); null on a build whose native side
+  /// predates it (the caller then falls back to renice). The answer counts
+  /// processes and threads set; no names.
+  Future<Map<String, Object?>?> agentPriority(String level) async {
+    try {
+      final raw = await _channel.invokeMethod<Object?>('agentPriority', {
+        'level': level,
+      });
+      return raw is Map ? Map<String, Object?>.from(raw) : null;
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
+    }
+  }
+
+  /// Whether Android's battery saver is on; false when unknown.
+  Future<bool> powerSave() async {
+    try {
+      return await _channel.invokeMethod<bool>('powerSave') == true;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
 
   /// Posts one notification on the AI Team's existing status channel;
   /// false when that channel does not exist or is silenced.

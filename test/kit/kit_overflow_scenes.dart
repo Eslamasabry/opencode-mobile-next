@@ -467,6 +467,18 @@ final kitOverflowScenes = <KitOverflowScene>[
       build: (_, c) => _OverflowStatusFrame(copy: c),
     ),
     KitOverflowScene(
+      const ['KitChrome'],
+      'default',
+      build: (_, c) => KitChrome(
+        child: KitText(
+          c.t(
+            'Words in the frame stop growing at 1.3x and wrap inside the box.',
+            'الكلمات داخل الإطار تتوقف عن التكبّر عند 1.3 وتلتف داخل الصندوق.',
+          ),
+        ),
+      ),
+    ),
+    KitOverflowScene(
       const ['KitTabStrip'],
       'counts-and-attention',
       build: (_, c) => KitTabStrip(

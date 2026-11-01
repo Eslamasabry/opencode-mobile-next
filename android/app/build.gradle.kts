@@ -89,6 +89,8 @@ android {
             signingConfig = signingConfigs.getByName("release")
             proguardFiles("widget-status-release.pro")
             proguardFiles("scheduled-prompts.pro")
+            // LiteRT-LM finds its Java classes by name from native code (JNI).
+            proguardFiles("litert-lm.pro")
             // Release instrumentation shares the target's Kotlin/native ABI.
             // R8 prototype rewrites otherwise break test-APK calls into it.
             if (listOf(ocPreview, ocStableEngineQa, ocBd9Smoke, ocBuiltinRuntimeQa).any { it })
@@ -175,6 +177,8 @@ dependencies {
     // (PinnedSessionShortcuts.kt); same major line the Flutter embedding
     // already pulls in transitively, pinned so the compile classpath is
     // explicit rather than inherited.
+    // On-device assistant runtime (LocalLlmBridge.kt): Google LiteRT-LM, Apache 2.0; arm64-v8a + x86_64 libs.
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.19.0")
     implementation("androidx.core:core:1.13.1")
     // Reads the Ubuntu Base tarball for the built-in Linux (BuiltinLinux.kt).
     implementation("org.apache.commons:commons-compress:1.27.1")

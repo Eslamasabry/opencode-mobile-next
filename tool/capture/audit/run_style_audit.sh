@@ -11,7 +11,7 @@
 #     set:   all | matrix | rtl
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
-FLUTTER=${FLUTTER:-$HOME/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter}
+FLUTTER=${FLUTTER:-$HOME/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/flutter}
 ROOT=${ROOT:-/home/eslam/Storage2/launch-footage/audit-styles}
 combo=$1
 set_=${2:-all}

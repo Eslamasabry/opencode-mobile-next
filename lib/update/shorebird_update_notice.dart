@@ -8,6 +8,7 @@ import '../l10n/app_localizations.dart';
 import '../ui/app_iconography.dart';
 import '../ui/kit/kit_status_line.dart';
 import '../ui/kit/kit_status_slot.dart';
+import 'app_update_controller.dart';
 
 enum AppUpdateState { current, available, restartRequired, unavailable }
 
@@ -153,9 +154,15 @@ class ShorebirdUpdateNotice extends StatefulWidget {
     this.currentProfileId,
     this.allowsAutomaticUpdate,
     this.onDownloaded,
+    this.updates,
   });
 
   final AppUpdateService service;
+
+  /// The app-wide update holder. When given, a downloaded patch is reported
+  /// to it and the status line is drawn from there (`AppUpdateNotice`), so a
+  /// newer release wins over the patch; this widget still downloads.
+  final AppUpdateController? updates;
   final Widget child;
 
   /// The current saved server owns this app-wide automatic act. Returning
@@ -267,11 +274,12 @@ class _ShorebirdUpdateNoticeState extends State<ShorebirdUpdateNotice>
 
   void _showReady() {
     if (!mounted || _ready) return;
+    widget.updates?.patchReady();
     setState(() => _ready = true);
   }
 
   KitStatus? _status(BuildContext context) {
-    if (!_ready || _hidden) return null;
+    if (!_ready || _hidden || widget.updates != null) return null;
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return KitStatus(
       kind: KitStatusKind.update,

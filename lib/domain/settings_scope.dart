@@ -337,12 +337,22 @@ abstract final class SettingsScopeCatalog {
       labelCode: 'device',
     ),
     SettingsRowScope(
+      rowId: 'settings-updates',
+      owners: _device,
+      labelCode: 'device',
+    ),
+    SettingsRowScope(
       rowId: 'settings-setup-guide',
       owners: _device,
       labelCode: 'device',
     ),
     SettingsRowScope(
       rowId: 'settings-tips',
+      owners: _device,
+      labelCode: 'device',
+    ),
+    SettingsRowScope(
+      rowId: 'settings-browser-mode',
       owners: _device,
       labelCode: 'device',
     ),

@@ -48,7 +48,7 @@ jobs:
         run: |
           set -euo pipefail
           sdk="$RUNNER_TEMP/bd9-flutter"
-          revision=91f8bd75076e9c740aa13cf67eb9ec1a093f68f5
+          revision=6e5e949520159b5ceb029598be37520cd433b046
           git init "$sdk"
           git -C "$sdk" remote add origin https://github.com/shorebirdtech/flutter.git
           git -C "$sdk" fetch --depth 1 origin "$revision"
@@ -59,7 +59,7 @@ jobs:
           "$sdk/bin/flutter" --version
           # Shorebird supplies this metadata for its fork; a shallow detached
           # checkout cannot infer the published Flutter version from Git tags.
-          test "$(cat "$sdk/bin/internal/engine.version")" = 03e67977a7ff5893d96ac97f22c6a795530c0040
+          test "$(cat "$sdk/bin/internal/engine.version")" = 3f9fd7b230491dab27d914895c601ef1305ae0b4
           cp tool/qa/bd9_flutter_version.json "$sdk/bin/cache/flutter.version.json"
           "$sdk/bin/flutter" --version
           "$sdk/bin/flutter" precache --android

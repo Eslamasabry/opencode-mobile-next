@@ -53,6 +53,10 @@ extension _ChatComposerRegion on _ChatScreenState {
           effective: approval,
           connected: _conn.isConnected,
           starting: _conn.connectionStarting,
+          iconOnly:
+              _stopRowShown &&
+              MediaQuery.textScalerOf(context).scale(1) >= 1.3 &&
+              KitLayout.windowOf(context) == KitWindow.compact,
           approved: _conn.autoApprovedFor(widget.sessionID),
           onOpen: (chipContext) =>
               unawaited(_showApprovalModeMenu(chipContext)),
@@ -624,7 +628,10 @@ extension _ChatComposerRegion on _ChatScreenState {
       onCamera: () => _pickPhoto(ImageSource.camera),
       onContentInserted: (content) =>
           unawaited(_handleInsertedContent(content)),
+      onPasteImage: () => unawaited(_pasteClipboardImage()),
       onVoice: _openVoice,
+      micHold: _micHold(),
+      micTip: _micTip(),
       onConversation: _startVoiceConversation,
       onWebSources: _addWebSources,
       conversationMode: _voiceConversation,

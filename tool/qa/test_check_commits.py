@@ -47,7 +47,7 @@ class CommitGateTest(unittest.TestCase):
         self.git('commit', '-q', '-m', VALID)
         # Real formatter, only a tiny synthetic file: DART, else the pinned
         # Shorebird Flutter if present, else whatever dart is on PATH (CI).
-        pinned = Path.home() / '.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart'
+        pinned = Path.home() / '.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/dart'
         dart = os.environ.get('DART') or (str(pinned) if pinned.exists() else shutil.which('dart'))
         if not dart:
             self.skipTest('no dart available')

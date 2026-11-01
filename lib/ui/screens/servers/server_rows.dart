@@ -110,6 +110,11 @@ class _ServerRow extends StatelessWidget {
         : p.requiresCodexTokenReentry
         ? copy.e7SetupTokenRequired
         : null;
+    // A Codex or Paseo server saved elsewhere, seen from a browser: its
+    // transport cannot be built here, and the row says so.
+    final agentSocketBlocked =
+        p.usesAgentSocket &&
+        !platformCapabilities.supportsAgentSocketConnections;
     final waiting = connected ? 0 : (snapshot?.requests.length ?? 0);
     final running = working ?? snapshot?.runningCount ?? 0;
     final wordStyle = KitText.styleOf(
@@ -176,6 +181,11 @@ class _ServerRow extends StatelessWidget {
             // the strong label weight, never in the danger colour.
             if (reentry != null)
               TextSpan(text: '$reentry · ', style: wordStyle),
+            if (agentSocketBlocked)
+              TextSpan(
+                text: '${copy.browserAgentSocketRowUnavailable} · ',
+                style: wordStyle,
+              ),
             if (queued > 0)
               TextSpan(
                 text: '${copy.serverRowQueuedWaiting(queued)} · ',

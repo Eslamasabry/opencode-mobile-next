@@ -32,9 +32,6 @@ QUALITY_WORKFLOW = Path(".github/workflows/android-quality.yml")
 # these steps successful. The test job is a matrix of shards that together run
 # every test file exactly once, so every shard of the workflow must be present.
 CHECKS_STEPS = {
-    "Verify generated OpenCode SDK integrity",
-    "Test generated OpenCode SDK",
-    "Analyze generated OpenCode SDK",
     "Analyze",
     "Check the serial test runner",
     "Run Android release lint",

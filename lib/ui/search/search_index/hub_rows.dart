@@ -270,6 +270,17 @@ extension _IndexHubRows on _IndexBuild {
         gate: (scope) => scope.platform.supportsVoice,
         open: _openVoice,
       ),
+      SearchEntry(
+        id: 'settings-local-assistant',
+        kind: SearchEntryKind.hubRow,
+        group: SettingsGroup.chat,
+        icon: AppIconography.sparkle,
+        title: l10n.localAssistantTitle,
+        keywords: l10n.localAssistantSearchAliases,
+        // The runtime ships for Android only.
+        gate: (scope) => scope.platform.supportsVoice,
+        open: _openLocalAssistant,
+      ),
       // This app: what notifies, what keeps it running, how it looks, what
       // it keeps, what it has cost.
       SearchEntry(
@@ -444,6 +455,20 @@ extension _IndexHubRows on _IndexBuild {
         pages: const ['tips-page'],
         open: _screen((scope) => TipsScreen(controller: scope.controller)),
       ),
+      // The browser build has no phone services and a few limits the
+      // browser imposes on the page; one row says which, so nothing has to
+      // be discovered by tapping something that does not work.
+      SearchEntry(
+        id: 'settings-browser-mode',
+        kind: SearchEntryKind.hubRow,
+        group: SettingsGroup.help,
+        icon: AppIconography.browser,
+        title: l10n.browserModeTitle,
+        keywords: l10n.browserModeSubtitle,
+        pages: const ['browser-mode-screen'],
+        gate: (scope) => scope.platform.isWeb,
+        open: _screen((_) => const BrowserModeScreen()),
+      ),
       SearchEntry(
         id: 'settings-about-notices',
         kind: SearchEntryKind.hubRow,
@@ -455,6 +480,19 @@ extension _IndexHubRows on _IndexBuild {
             '${l10n.e7SettingsDetailUi18}',
         pages: const ['about', 'about-open-source-tab'],
         open: _screen((scope) => AboutScreen(controller: scope.controller)),
+      ),
+
+      // The app's own new versions: Android installs them itself.
+      SearchEntry(
+        id: 'settings-updates',
+        kind: SearchEntryKind.hubRow,
+        group: SettingsGroup.thisApp,
+        icon: AppIconography.systemDownload,
+        title: l10n.appUpdatesTitle,
+        keywords: l10n.appUpdatesSearchAliases,
+        pages: const ['updates-settings'],
+        gate: (scope) => scope.platform.isAndroid,
+        open: _screen((_) => const UpdatesScreen()),
       ),
 
       // ---- Inside the hub's pages ----------------------------------------
@@ -654,6 +692,35 @@ extension _IndexHubRows on _IndexBuild {
         open: _screen(
           (scope) => KitArrivalScope(
             rowId: 'settings-voice-notices',
+            child: AboutScreen(controller: scope.controller),
+          ),
+        ),
+      ),
+      SearchEntry(
+        id: 'about-star-github',
+        kind: SearchEntryKind.insideSettings,
+        parent: l10n.aboutTitle,
+        icon: AppIconography.star,
+        title: l10n.starRowTitle,
+        keywords: l10n.starShareSearchAliases,
+        open: _screen(
+          (scope) => KitArrivalScope(
+            rowId: 'about-star-github',
+            child: AboutScreen(controller: scope.controller),
+          ),
+        ),
+      ),
+      SearchEntry(
+        id: 'about-share-app',
+        kind: SearchEntryKind.insideSettings,
+        parent: l10n.aboutTitle,
+        icon: AppIconography.shareNetwork,
+        title: l10n.shareRowTitle,
+        keywords: l10n.starShareSearchAliases,
+        gate: (_) => ShareOut.supported,
+        open: _screen(
+          (scope) => KitArrivalScope(
+            rowId: 'about-share-app',
             child: AboutScreen(controller: scope.controller),
           ),
         ),

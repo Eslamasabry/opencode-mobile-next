@@ -107,7 +107,7 @@ on loopback: bind the server to `127.0.0.1` and bring the connection to
 - **On-device (Termux)** — tap **On-device (Termux)** on the Servers
   screen. The app detects Termux (or opens its F-Droid page), walks you
   through the one required unlock line, installs Ubuntu via proot-distro
-  plus Node and `@opencode/cli@2.1.1` in the chroot, launches
+  plus Node and `@opencode/cli@2.2.5` in the chroot, launches
   `opencode2 serve` detached, health-polls until live, and connects. A "Live
   log in Termux" button streams install/server logs at any time. The native
   side is
@@ -122,7 +122,7 @@ on loopback: bind the server to `127.0.0.1` and bring the connection to
   proot-distro install ubuntu
   proot-distro login ubuntu     # then inside the chroot:
     apt update && apt install -y nodejs npm
-    npm i -g @opencode/cli@2.1.1
+    npm i -g @opencode/cli@2.2.5
     opencode2 serve --hostname 127.0.0.1 --port 4096
     exit
   ```
@@ -162,7 +162,7 @@ uncertain delivery must not silently retry or resend a mutation.
 OpenCode 2 is the only supported OpenCode protocol. The handwritten
 `lib/api2/` client handles HTTP Basic authentication, `/api` routes, typed
 messages, volatile SSE events, cursor pagination, forms, inbox delivery and
-single-use terminal connection tickets. Stable 2.1.1 uses `/api/info` for
+single-use terminal connection tickets. Stable 2.2.5 uses `/api/info` for
 identity; the earlier beta uses `/api/health`. Reconnects reconcile state by
 refetching because the global event stream does not replay missed events.
 
@@ -174,7 +174,7 @@ sign-in, git initialization, worktree creation and shell settings are supported
 by the existing OpenCode 2 adapters.
 
 A remote OpenCode 1 response produces the plain explanation that support has
-ended and a copyable `npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.1.1` upgrade command.
+ended and a copyable `npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.2.5` upgrade command.
 Managed phone installations instead enter the automatic history-migration
 flow. It preserves the saved profile ID and original database, copies history
 before the first OpenCode 2 start, and requires server-side import confirmation
@@ -195,7 +195,7 @@ there is no generated OpenCode 1 SDK or generator.
 
 | Tool | Version |
 |---|---|
-| Flutter | **3.47.1** (Shorebird's fork) — the exact version pinned for Shorebird releases; CI's quality gate uses upstream 3.47.2 |
+| Flutter | **3.47.8** (Shorebird's fork) — the exact version pinned for Shorebird releases; CI's quality gate uses upstream 3.47.8 |
 | Android SDK | API 37 (`flutter_secure_storage` 11 requires it) |
 | Shorebird CLI | 1.6.x (only needed for release/patch work) |
 
@@ -207,7 +207,7 @@ flutter build linux          # desktop build, same codebase
 ```
 
 The Flutter pin matters: release artifacts and the local test suite use
-Shorebird's pinned 3.47.1
+Shorebird's pinned 3.47.8
 (`~/.shorebird/bin/cache/flutter/<rev>/bin/flutter` after installing
 Shorebird); `SHOREBIRD_FLUTTER_VERSION` in `scripts/release.sh` and
 `android-release.yml` must agree. Older local Flutters may fail to resolve
@@ -240,10 +240,10 @@ can ship as patches. There are two ways to make one:
   [android-release.yml](../.github/workflows/android-release.yml) runs on a
   `v<x.y.z+N>` tag of the current `master`. It runs
   `shorebird release android --build-name x.y.z --build-number N
-  --flutter-version 3.47.1 --artifact apk`, with the same version derivation as
+  --flutter-version 3.47.8 --artifact apk`, with the same version derivation as
   `scripts/release.sh`. It signs with the `RELEASE_*` keystore secrets, checks
   the APK signer, package and version, and stages a draft GitHub release. The
-  draft notes record `Shorebird release <version>, Flutter 3.47.1 (Shorebird
+  draft notes record `Shorebird release <version>, Flutter 3.47.8 (Shorebird
   engine)`. Only a tag run uploads to Shorebird. A manual dispatch on a branch
   builds with `--dry-run` and uploads nothing. `./scripts/release.sh github`
   will not publish that draft unless the build run ran on the candidate tag and

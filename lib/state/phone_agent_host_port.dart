@@ -40,6 +40,22 @@ abstract interface class PhoneAgentAuthPort {
   Future<AgentAuthProbeResult> signOut(String agentId);
 }
 
+/// An automatic update of an agent behind the app's pin. The person's work
+/// wins: [autoUpdateCanYield] says the update can still be set aside (it is
+/// only downloading), and a send that starts then cancels it, runs on the
+/// older version, and the update retries when nothing is running.
+abstract interface class PhoneAgentAutoUpdatePort {
+  Future<AgentPhoneCheckResult> autoUpdate(String agentId);
+
+  /// True while an automatic update is running and has not started to switch
+  /// versions.
+  bool get autoUpdateCanYield;
+
+  /// The last automatic update was set aside for the person's work: try it
+  /// again when nothing is running, it did not fail.
+  bool get lastAutoUpdateYielded;
+}
+
 abstract interface class PhoneAgentLivenessPort {
   Future<bool?> helperRunning();
 }
@@ -81,6 +97,7 @@ final class BuiltinPhoneAgentHostPort
         PhoneAgentHostPort,
         PhoneAgentAuthPort,
         PhoneAgentLivenessPort,
+        PhoneAgentAutoUpdatePort,
         PhoneAgentDaemonHealthPort,
         PhoneAgentDiagnosticsPort,
         PhoneAgentRemovalPort,
@@ -143,6 +160,13 @@ final class BuiltinPhoneAgentHostPort
   @override
   Future<AgentPhoneCheckResult> selfTest(String agentId) =>
       _host.selfTest(agentId);
+  @override
+  Future<AgentPhoneCheckResult> autoUpdate(String agentId) =>
+      _host.autoUpdate(agentId);
+  @override
+  bool get autoUpdateCanYield => _host.autoUpdateCanYield;
+  @override
+  bool get lastAutoUpdateYielded => _host.lastAutoUpdateYielded;
   @override
   Future<AgentArchitecture?> architecture() => _host.architecture();
   @override

@@ -7,6 +7,10 @@ extension _PhoneAgentIdle on _ConnectionControllerPhoneAgents {
     'The agents could not reconnect. Open agent setup and try again.',
     cause: 'agent_idle_resume_unavailable',
   );
+
+  /// No reading seen yet: the first change always notifies.
+  static const Object _unreadWork = Object();
+
   static const _idleStale = ProductException(
     'The agents could not reconnect. Open agent setup and try again.',
     cause: 'idle_resume_stale',
@@ -58,10 +62,18 @@ extension _PhoneAgentIdle on _ConnectionControllerPhoneAgents {
     if (_paBusySubscriptions.containsKey(gateway)) return;
     final host = _paHost;
     late StreamSubscription<void> sub;
-    void changed() {
-      if (!_self._disposed && identical(_paHost, host)) {
-        _self._notifyListeners();
-      }
+    // The gateway reports a change after every frame from the helper, and a
+    // busy agent sends dozens a second (each streamed word, each tool line).
+    // Only its work truth (busy, idle or unknown) matters here: notifying the
+    // whole app per frame rebuilt the launcher widget and every listener and
+    // kept a core 20-77% busy even with the app out of sight (2026-11-01).
+    Object? shown = _unreadWork;
+    void changed({bool always = false}) {
+      if (_self._disposed || !identical(_paHost, host)) return;
+      final reading = gateway.localWorkBusy;
+      if (!always && reading == shown) return;
+      shown = reading;
+      _self._notifyListeners();
     }
 
     sub = gateway.localWorkChanges.listen(
@@ -69,7 +81,7 @@ extension _PhoneAgentIdle on _ConnectionControllerPhoneAgents {
       onDone: () {
         if (identical(_paBusySubscriptions[gateway], sub)) {
           _paBusySubscriptions.remove(gateway);
-          changed();
+          changed(always: true);
         }
       },
     );

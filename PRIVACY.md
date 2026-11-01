@@ -47,9 +47,10 @@ The front never receives a password from the app.
 ## Data stored on your device
 
 The app stores server profile metadata, interface preferences, cached server
-state, downloaded voice models, unsent drafts and photos awaiting recovery, and
-prompts queued while offline. Ordinary draft and pending-photo payloads use
-app-private files; their metadata uses preferences. New stash attachment payloads
+state, downloaded voice models, the optional on-device assistant model, unsent
+drafts and photos awaiting recovery, and prompts queued while offline. Ordinary
+draft and pending-photo payloads use app-private files; their metadata uses
+preferences. New stash attachment payloads
 also use a separate app-private file store. Older inline stash payloads migrate
 when Saved prompts is opened; failed migrations retain their original data.
 Queued prompts and unmigrated legacy stashes can still include attachments
@@ -57,6 +58,20 @@ encoded into preferences. These local stores are not
 encrypted separately from the Android app sandbox. Queue entries are bounded by
 age, count, and total size. Server passwords are stored with Android secure
 storage. Android backup is disabled for this app.
+
+In browser mode, profile metadata, preferences and draft metadata stay in this
+site's browser storage. Draft, photo and stash attachment bytes use IndexedDB;
+profile deletion removes the profile's local payloads. Clearing this site's data
+also removes these stores. Browser eviction, private browsing and storage quotas
+can prevent retention, so the app reports failed saves rather than claiming the
+attachments were kept.
+
+Browser passwords require a secure context (HTTPS or localhost) and writable
+site storage. The web secure-storage plugin encrypts passwords with WebCrypto,
+but stores its key material alongside ciphertext in localStorage. This is not an
+OS keystore and does not protect against scripts executing in this origin or
+someone with access to the browser profile. There is no plaintext fallback on
+insecure origins. Use a trusted host and browser profile.
 
 On-device Termux setup writes a server password into the private Termux/Ubuntu
 environment so that the local server can restart. Protect access to both apps
@@ -157,6 +172,29 @@ does not upload the recording, and voice input never sends a prompt
 automatically. Transcribed text is sent only if you choose to submit it as part
 of a prompt.
 
+## Optional assistant on this phone
+
+Settings › Conversations › Assistant on this phone is off by default, and
+nothing downloads until you tap Download. The model (Google's Gemma 4 E4B,
+about 3.7 GB, Apache 2.0) is fetched once over HTTPS from huggingface.co at a
+fixed revision and checked against a size and SHA-256 built into the app. The
+request carries only the file's address and your IP address, the same as
+loading any website, and Hugging Face's own privacy terms apply to it. Off
+Wi-Fi the app asks before using mobile data.
+
+After that, "Summarize on this phone" in a conversation's menu runs the model
+on the phone with no network. Only the words said in that conversation are
+handed to it (no tool output, no reasoning), and assistant replies are masked
+for secrets the way every copy is. The summary is shown in a sheet and is not
+saved; Copy puts it on the clipboard at your request. Nothing you write is sent
+anywhere because of this feature.
+
+The model file lives in the app's private storage and the on/off choice in
+preferences. Both belong to the phone, not to a server profile, so removing a
+server does not touch them. Delete from this phone on the same settings page
+removes the file; Clear storage and uninstalling remove everything. Android
+backup is disabled, so the model is never copied off the device.
+
 ## Optional read-aloud
 
 On Android, Read reply prose requires confirmation before accessing the system
@@ -217,8 +255,9 @@ two-letter monogram instead.
 
 ## Permissions
 
-- **Internet:** connect to your server, download local voice models, open links,
-  and check for app updates.
+- **Internet:** connect to your server, download local voice models and, if you
+  ask for it, the on-device assistant model, open links, and check for app
+  updates.
 - **Microphone:** capture audio only while you use local voice input.
 - **Notifications and foreground service:** show the persistent status and
   privacy-safe coding alerts used by optional background mode.

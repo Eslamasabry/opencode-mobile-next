@@ -1,0 +1,12 @@
+  PID  PPID     ELAPSED    RSS NAME                        ARGS                       
+ 4149   410       05:27 288772 io.github.eslamasabry.opencode_mobile io.github.eslamasabry.opencode_mobile
+ 4212  4149       05:26   3580 libproot.so                 libproot.so --root-id --kill-on-exit --link2symlink -L --sysvipc --rootfs=/data/user/0/io.github.eslamasabry.opencode_mobile/files/linux/ubun
+ 4216  4212       05:26 220028 opencode2                   opencode2 serve --hostname 127.0.0.1 --port 4097
+ 4399  4216       05:20  46660 node                        node /root/.oc-genui/openCode2/server.cjs
+ 4477  4216       05:19  47056 node                        node /root/.oc-genui/openCode2/server.cjs
+ 4573  4149       05:18   3584 libproot.so                 libproot.so --change-id=1000:1000 --kill-on-exit --link2symlink -L --sysvipc --rootfs=/data/user/0/io.github.eslamasabry.opencode_mobile/file
+ 4577  4573       05:18 115312 node                        node --disable-warning=DEP0040 /home/oc/.local/bin/paseo daemon run --home /home/oc/.oc-profiles/1793454775471416/paseo
+ 4652  4577       05:16  69160 Paseo Supervisor            Paseo Supervisor
+ 4682  4652       05:16 326764 Paseo Daemon                Paseo Daemon
+ 4836  4682       05:12  74376 node                        node /home/oc/.local/share/oc-paseo/0.11.2-b0bcc4f6191b/node_modules/@getpaseo/server/dist/server/terminal/terminal-worker-process.js
+ 4849  4682       05:12  14596 esbuild                     esbuild --service=0.25.12 --ping

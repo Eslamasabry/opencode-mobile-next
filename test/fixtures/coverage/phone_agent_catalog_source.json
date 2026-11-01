@@ -18,7 +18,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "2.1.1",
+        "version": "2.2.5",
         "executable": "opencode",
         "launchArgs": [
           "serve",
@@ -28,14 +28,14 @@
         "signInArgs": [],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.1.1.tgz",
-            "sha256": "cfa3ae6363fc3082f03072297069d81f53559a761371fdb4b56fe6bfa01ca066",
+            "url": "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.5.tgz",
+            "sha256": "f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053",
             "format": "tarGz",
             "archiveMember": "package/bin/opencode"
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.1.1.tgz",
-            "sha256": "216d3861d0a167adad5850282439bae13483203f4b110f0510f260118bba2858",
+            "url": "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.5.tgz",
+            "sha256": "873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08",
             "format": "tarGz",
             "archiveMember": "package/bin/opencode"
           }
@@ -60,7 +60,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "2.1.294",
+        "version": "2.1.316",
         "executable": "claude",
         "launchArgs": [],
         "signInArgs": [
@@ -70,18 +70,18 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://downloads.claude.ai/claude-code-releases/2.1.294/linux-arm64/claude",
-            "sha256": "e5d2df19f30a6d63bf11188121f7edb2775249b57352a69269509a4b1496e763",
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.316/linux-arm64/claude",
+            "sha256": "55cdb8e162d190432696ea54010e0fca2e18d06fa7a7127fd563b9ffd4f22624",
             "format": "executable",
-            "downloadBytes": 252108792,
-            "installedBytes": 252108792
+            "downloadBytes": 328459544,
+            "installedBytes": 328459544
           },
           "x64": {
-            "url": "https://downloads.claude.ai/claude-code-releases/2.1.294/linux-x64/claude",
-            "sha256": "27122ca7b624f537546fbef35b80c66370d974ff258f3d9b10ac50bb8771f262",
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.316/linux-x64/claude",
+            "sha256": "fd13c70000fec3f2116dfbcbb6121210b4a29328bf0e46210a59dd594a67d824",
             "format": "executable",
-            "downloadBytes": 252755128,
-            "installedBytes": 252755128
+            "downloadBytes": 328262000,
+            "installedBytes": 328262000
           }
         }
       }
@@ -104,7 +104,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "0.162.1",
+        "version": "0.166.0",
         "executable": "codex",
         "launchArgs": [
           "app-server"
@@ -115,20 +115,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://github.com/openai/codex/releases/download/rust-v0.162.1/codex-aarch64-unknown-linux-musl.tar.gz",
-            "sha256": "bf3ca2719f1143b1440fbd85c149379e696c782c50ad7991f8bfcec60b2600c1",
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-aarch64-unknown-linux-musl.tar.gz",
+            "sha256": "94eb707605ec2646b2e05b7edf7c4e7b3ccf02b16237c34ae9beb8cfb7f810a9",
             "format": "tarGz",
             "archiveMember": "codex-aarch64-unknown-linux-musl",
-            "downloadBytes": 103595962,
-            "installedBytes": 254866040
+            "downloadBytes": 113382496,
+            "installedBytes": 277549176
           },
           "x64": {
-            "url": "https://github.com/openai/codex/releases/download/rust-v0.162.1/codex-x86_64-unknown-linux-musl.tar.gz",
-            "sha256": "86f268d81b898f3e144c5ecff2ad2fda2c5802e042d6195b72538fe0fa125057",
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-x86_64-unknown-linux-musl.tar.gz",
+            "sha256": "a0bf572d2f93f056c6712a6da348e96078dc84f3885fd7be67807ef389cb3978",
             "format": "tarGz",
             "archiveMember": "codex-x86_64-unknown-linux-musl",
-            "downloadBytes": 111350218,
-            "installedBytes": 294415048
+            "downloadBytes": 121764138,
+            "installedBytes": 319346888
           }
         }
       }
@@ -151,7 +151,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "0.63.0",
+        "version": "0.66.0",
         "executable": "gemini",
         "launchArgs": [
           "--acp"
@@ -159,20 +159,20 @@
         "signInArgs": [],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.63.0.tgz",
-            "sha256": "97a6edfc10645463b517f0518d46a8c72efbdc12558a9a948607f726284a0420",
+            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
+            "sha256": "269734d35287fbd8ed2982534258ecf4a95f184b6e06e6732e0d6850c28701d9",
             "format": "npmTarGz",
             "archiveMember": "package/bundle/gemini.js",
-            "downloadBytes": 20810043,
-            "installedBytes": 98439442
+            "downloadBytes": 20889095,
+            "installedBytes": 98815455
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.63.0.tgz",
-            "sha256": "97a6edfc10645463b517f0518d46a8c72efbdc12558a9a948607f726284a0420",
+            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
+            "sha256": "269734d35287fbd8ed2982534258ecf4a95f184b6e06e6732e0d6850c28701d9",
             "format": "npmTarGz",
             "archiveMember": "package/bundle/gemini.js",
-            "downloadBytes": 20810043,
-            "installedBytes": 98439442
+            "downloadBytes": 20889095,
+            "installedBytes": 98815455
           }
         }
       }
@@ -195,7 +195,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "0.25.0",
+        "version": "0.26.4",
         "executable": "qwen",
         "launchArgs": [
           "--acp"
@@ -203,20 +203,20 @@
         "signInArgs": [],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.25.0.tgz",
-            "sha256": "afeab0c85d682f201101319ce05decf3302d7ed7fb6319baa6a592051ea1a1ba",
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz",
+            "sha256": "a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89",
             "format": "npmTarGz",
             "archiveMember": "package/cli-entry.js",
-            "downloadBytes": 33195960,
-            "installedBytes": 116286799
+            "downloadBytes": 42796897,
+            "installedBytes": 154807157
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.25.0.tgz",
-            "sha256": "afeab0c85d682f201101319ce05decf3302d7ed7fb6319baa6a592051ea1a1ba",
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz",
+            "sha256": "a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89",
             "format": "npmTarGz",
             "archiveMember": "package/cli-entry.js",
-            "downloadBytes": 33195960,
-            "installedBytes": 116286799
+            "downloadBytes": 42796897,
+            "installedBytes": 154807157
           }
         }
       }
@@ -239,7 +239,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "7.8.3",
+        "version": "7.8.18",
         "executable": "kilo",
         "launchArgs": [
           "acp"
@@ -250,20 +250,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.3.tgz",
-            "sha256": "bd61f03eb14053fdcaf5245eb1740455b0447fe9d6d48b4adaeea6bb4ae53a90",
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.18.tgz",
+            "sha256": "0f1bd0fb983f67ec1edf53c185e9521268f8f133af2a4cec2f1967e5d60e45ef",
             "format": "tarGz",
             "archiveMember": "package/bin/kilo",
-            "downloadBytes": 63881791,
-            "installedBytes": 169322640
+            "downloadBytes": 83529597,
+            "installedBytes": 258264056
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.3.tgz",
-            "sha256": "03b963726d8002ea6bee21d8db6121201e6ed8230a0e1fce8857f4c8d091333c",
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.18.tgz",
+            "sha256": "bde638d0a493155088e4454fbe4a9697571443665e2a22d5a78cad645b96b554",
             "format": "tarGz",
             "archiveMember": "package/bin/kilo",
-            "downloadBytes": 64190979,
-            "installedBytes": 170363008
+            "downloadBytes": 84132773,
+            "installedBytes": 259213488
           }
         }
       }
@@ -286,7 +286,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "3.0.68",
+        "version": "3.0.74",
         "executable": "cline",
         "launchArgs": [
           "--acp"
@@ -296,20 +296,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.68.tgz",
-            "sha256": "5e0ad56ba4c494c437f6dcdc2557c165478e05e1800e1fe6f7d476e4fd4c84f2",
+            "url": "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.74.tgz",
+            "sha256": "10c1f63c143b6f7eba3320543df2f6081232d79fb1830c293cf006115dce9049",
             "format": "tarGz",
             "archiveMember": "package/bin/cline",
-            "downloadBytes": 49689972,
-            "installedBytes": 130861352
+            "downloadBytes": 54812128,
+            "installedBytes": 162253096
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.68.tgz",
-            "sha256": "a979929090eb9a934b3907e2cf519368964d6a35e96079d6db4fc89caad98ab1",
+            "url": "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.74.tgz",
+            "sha256": "52502438a8d78a451156c38df2eb31116d658c94d1d5461b4e29761d06211bfc",
             "format": "tarGz",
             "archiveMember": "package/bin/cline",
-            "downloadBytes": 49918778,
-            "installedBytes": 130434528
+            "downloadBytes": 55037574,
+            "installedBytes": 161793504
           }
         }
       }

@@ -49,6 +49,7 @@ abstract final class KitRedact {
     if (value.length < 6 || _knownSecrets.contains(value)) return;
     _knownSecrets.add(value);
     _knownSecrets.sort((a, b) => b.length.compareTo(a.length));
+    _memo.clear();
   }
 
   /// Registers secret fields in a trusted credential/configuration response.
@@ -100,7 +101,10 @@ abstract final class KitRedact {
 
   /// Drops process-local registrations. Tests must clear these in setup and
   /// teardown; the app must re-register still-loaded secrets after clearing.
-  static void clearKnownSecrets() => _knownSecrets.clear();
+  static void clearKnownSecrets() {
+    _knownSecrets.clear();
+    _memo.clear();
+  }
 
   /// Group 1: a quote right before the name (the header sits in a quoted
   /// string, or is a quoted key); group 2: a quote closing the key.
@@ -174,6 +178,25 @@ abstract final class KitRedact {
   /// credential patterns. Exact matching is case-sensitive and literal.
   static String text(String s) {
     if (s.isEmpty) return s;
+    if (s.length > _memoMaxInput) return _redact(s);
+    final known = _memo.remove(s);
+    if (known != null) return _memo[s] = known;
+    final out = _redact(s);
+    _memo[s] = out;
+    if (_memo.length > _memoEntries) _memo.remove(_memo.keys.first);
+    return out;
+  }
+
+  /// Recent short inputs and their masked text, newest last. Launcher
+  /// surfaces mask the same titles, folders and previews on every change of
+  /// the connection (several times a second while an agent works), and the
+  /// patterns below cost far more than a lookup. Cleared whenever the known
+  /// secrets change, since they change the result.
+  static final Map<String, String> _memo = <String, String>{};
+  static const _memoEntries = 512;
+  static const _memoMaxInput = 1024;
+
+  static String _redact(String s) {
     var out = s;
     for (final secret in _knownSecrets) {
       out = out.replaceAll(secret, mask);

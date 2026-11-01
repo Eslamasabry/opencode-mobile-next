@@ -14,9 +14,11 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart' show CancelToken, Options, ProgressCallback;
 
+import '../domain/claude_agent_trial.dart' show ExternalIntegrationGateway;
 import '../domain/mcp_oauth.dart';
 import '../domain/models.dart';
 import '../domain/product_repository.dart' show ProductRepository;
+import '../domain/pty_terminal_channel.dart';
 import '../domain/server_gateway.dart';
 import '../domain/server_trust.dart';
 import '../ui/kit/kit_redact.dart';
@@ -24,6 +26,8 @@ import '../domain/parallel_requests.dart';
 import '../domain/session_title_text.dart';
 import '../domain/terminal_lifecycle.dart';
 import '../domain/plugin_inventory.dart';
+import '../network/platform_websocket.dart';
+import '../platform/platform_capabilities.dart';
 import 'plugin_mapper.dart';
 import 'client.dart';
 import 'active_context_mapper.dart';
@@ -62,7 +66,8 @@ class Api2OperationsGateway extends _Api2Core
         IntegrationCommandGateway,
         IntegrationAuthRecoveryGateway,
         UsageStatisticsGateway,
-        HistoryMigrationGateway {
+        HistoryMigrationGateway,
+        ExternalIntegrationGateway {
   Api2OperationsGateway({required super.client});
 }
 

@@ -180,7 +180,7 @@ void main() {
 
   test('CI pins the same Flutter line the release script does', () {
     final pinned = RegExp(
-      r'SHOREBIRD_FLUTTER_VERSION="([^"]+)"',
+      r'SHOREBIRD_FLUTTER_VERSION="(?:\$\{SHOREBIRD_FLUTTER_VERSION:-)?([^"}]+)',
     ).firstMatch(_read('scripts/release.sh'))?.group(1);
     expect(pinned, isNotNull);
     // Android releases are Shorebird builds in CI too, on the exact fork

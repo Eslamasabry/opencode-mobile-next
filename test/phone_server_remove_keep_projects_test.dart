@@ -19,6 +19,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/server_probe.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/builtin_server.dart';
+import 'package:opencode_mobile/builtin/linux_backup/linux_backup.dart'
+    show linuxLastBackupKey;
 import 'package:opencode_mobile/builtin/setup/phone_setup.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
@@ -338,6 +340,78 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('without a saved backup the question does not mention one', (
+    tester,
+  ) async {
+    final linux = _RemovalLinux(sizes: _measured);
+    await openRemove(tester, linux);
+    expect(find.text(l10n.removeFromPhoneBackupsKept), findsNothing);
+    await tester.tap(
+      find.byKey(const ValueKey('phone-server-remove-everything')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.removeFromPhoneBackupsKept), findsNothing);
+  });
+
+  testWidgets(
+    'a saved Linux backup is said to stay, then forgotten with Linux',
+    (tester) async {
+      await store.prefs.setInt(linuxLastBackupKey, 1700000000000);
+      await store.prefs.setString('oc.linux.other', 'x');
+      await store.prefs.setString('oc.draft.phone', 'kept');
+      final linux = _RemovalLinux(sizes: _measured);
+      final removed = await openRemove(tester, linux);
+
+      // Both paths say the backup files stay where the person put them.
+      expect(
+        inSheet(
+          'phone-server-remove-sheet',
+          find.text(l10n.removeFromPhoneBackupsKept),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('phone-server-remove-everything')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        inSheet(
+          'phone-server-delete-everything-sheet',
+          find.text(l10n.removeFromPhoneBackupsKept),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(
+        store.prefs.getInt(linuxLastBackupKey),
+        isNotNull,
+        reason: 'cancelling removes nothing',
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('phone-server-remove-confirm')),
+      );
+      await tester.pumpAndSettle();
+      expect(removed.value, isTrue);
+      expect(store.prefs.getInt(linuxLastBackupKey), isNull);
+      expect(store.prefs.containsKey('oc.linux.other'), isFalse);
+      expect(store.prefs.getString('oc.draft.phone'), 'kept');
+    },
+  );
+
+  testWidgets('a removal that failed keeps the last-backup stamp', (
+    tester,
+  ) async {
+    await store.prefs.setInt(linuxLastBackupKey, 1700000000000);
+    final linux = _RemovalLinux(sizes: _measured, failRemove: true);
+    final removed = await openRemove(tester, linux);
+    await tester.tap(find.byKey(const ValueKey('phone-server-remove-confirm')));
+    await tester.pumpAndSettle();
+    expect(removed.value, isFalse);
+    expect(store.prefs.getInt(linuxLastBackupKey), 1700000000000);
   });
 
   testWidgets('a failed removal keeps the question open and the entry', (

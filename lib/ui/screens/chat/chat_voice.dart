@@ -25,6 +25,26 @@ mixin _ChatVoiceFields {
   /// its selection each time a chunk is written down.
   TextEditingValue? _dictationBase;
 
+  /// Push-to-talk: the mic is held. [_pttHeld] while the finger is down,
+  /// [_pttArmed] once it is dragged far enough that letting go cancels.
+  bool _pttMode = false;
+  bool _pttHeld = false;
+  bool _pttArmed = false;
+
+  /// The finger lifted while the recording was still starting: what to do as
+  /// soon as it is listening (null: nothing yet; false: finish; true: cancel).
+  bool? _pttEndedEarly;
+
+  /// When the words of a dictation that ended on silence will be sent
+  /// (Settings › Voice typing › Send when I stop talking), and the words as
+  /// they were then: any other change cancels the send.
+  DateTime? _autoSendAt;
+  String? _autoSendText;
+
+  /// A recording was started by a tap: the hold-to-talk tip may be offered
+  /// once the box is empty again.
+  bool _micTipWanted = false;
+
   /// The controller whose changes drive voice mode (listened to once).
   VoiceComposerController? _voiceListened;
   VoiceComposerState? _voiceShownState;
@@ -63,7 +83,7 @@ extension _ChatVoice on _ChatScreenState {
   /// what is said into the draft; in a voice conversation it is sent. The
   /// first time, P10.4's automatic setup picks and fetches the speech model
   /// and hands over a recording already listening.
-  Future<void> _openVoice() async {
+  Future<void> _openVoice({bool pushToTalk = false}) async {
     if (_conn.isIsolated) return;
     // The tools sheet hides the entry point off Android; this keeps a
     // programmatic call (a shortcut, a restored intent) from starting a model
@@ -84,13 +104,21 @@ extension _ChatVoice on _ChatScreenState {
         _conn.isProfileReadable(_conn.promptShelfProfileID) &&
         (ModalRoute.of(context)?.isCurrent ?? true);
     _setChatState(() => _voiceOpening = true);
+    _autoSendAt = null;
+    _autoSendText = null;
     try {
       await _stopReading();
       if (!current()) return;
       final voice = await _getVoice();
       if (!mounted || !current()) return;
       _listenToVoice(voice);
+      voice.appLanguageCode = Localizations.localeOf(context).languageCode;
       if (!voice.models.isReady) {
+        // Whoever pressed is not holding the mic once a setup sheet has been
+        // through: this one is a plain recording.
+        _pttMode = false;
+        _pttHeld = false;
+        _pttEndedEarly = null;
         final ready = await showVoiceAutomaticSetupSheet(context, voice);
         if (!ready || !current()) {
           // A recording the setup started belongs to no mode now.
@@ -107,7 +135,14 @@ extension _ChatVoice on _ChatScreenState {
         _dictationBase = _composer.value;
         _updateSpeech(() => _voiceDictating = true);
       }
+      _pttMode = pushToTalk && _pttMode;
+      // A tap may end by itself on silence, when the person opted in; a
+      // held mic, and a voice conversation, end only by the person.
+      final byTap = !pushToTalk && !_voiceConversation;
+      if (byTap) _micTipWanted = true;
+      voice.stopOnSilence = byTap && voice.models.autoSend;
       await voice.startListening();
+      await _applyEarlyRelease(voice);
     } catch (error) {
       if (mounted && current()) {
         if (_voiceDictating) _leaveDictation();
@@ -115,6 +150,164 @@ extension _ChatVoice on _ChatScreenState {
       }
     } finally {
       if (mounted) _setChatState(() => _voiceOpening = false);
+    }
+  }
+}
+
+// --- push-to-talk ------------------------------------------------------
+
+extension _ChatPushToTalk on _ChatScreenState {
+  /// Holding the mic: record until the finger lifts.
+  KitComposerMicHold? _micHold() => KitComposerMicHold(
+    onStart: _pttStart,
+    onEnd: _pttEnd,
+    onArmedChanged: (armed) {
+      if (!_pttHeld || _pttArmed == armed) return;
+      _updateSpeech(() => _pttArmed = armed);
+    },
+  );
+
+  void _pttStart() {
+    if (_voiceOpening || _sending || _voiceDictating || _voiceConversation) {
+      return;
+    }
+    _conn.tips.markUsed(TeachingIds.holdMic);
+    _micTipWanted = false;
+    _pttMode = true;
+    _pttHeld = true;
+    _pttArmed = false;
+    _pttEndedEarly = null;
+    unawaited(_openVoice(pushToTalk: true));
+  }
+
+  /// The finger lifted: finish and write it down, or throw it away.
+  void _pttEnd(bool cancelled) {
+    if (!_pttHeld) return;
+    _updateSpeech(() {
+      _pttHeld = false;
+      _pttArmed = false;
+    });
+    final voice = _voice;
+    if (voice == null || !_pttMode) return;
+    if (voice.state != VoiceComposerState.listening) {
+      // Still getting the microphone: act when it is listening.
+      _pttEndedEarly = cancelled;
+      return;
+    }
+    _finishHold(voice, cancelled);
+  }
+
+  Future<void> _applyEarlyRelease(VoiceComposerController voice) async {
+    final cancelled = _pttEndedEarly;
+    _pttEndedEarly = null;
+    if (cancelled == null || !_pttMode || !mounted) return;
+    if (voice.state == VoiceComposerState.listening) {
+      _finishHold(voice, cancelled);
+    } else if (_voiceDictating) {
+      _discardDictation();
+    }
+  }
+
+  /// A touch too short to be speech is a slip, not a message.
+  void _finishHold(VoiceComposerController voice, bool cancelled) {
+    if (cancelled || voice.elapsed < const Duration(milliseconds: 400)) {
+      _discardDictation();
+    } else {
+      unawaited(voice.stopListening());
+    }
+  }
+
+  /// Dictation ends and the box is as it was before: the words said so far
+  /// are dropped.
+  void _discardDictation() {
+    final base = _dictationBase;
+    if (base != null) _composer.value = base;
+    _leaveDictation();
+  }
+}
+
+// --- send when I stop talking ------------------------------------------
+
+extension _ChatAutoSend on _ChatScreenState {
+  /// A dictation that ended on silence, with the setting on: the words wait
+  /// [voiceAutoSendCountdown] in the pill, with Cancel. True when it began.
+  bool _beginAutoSend(VoiceComposerController voice) {
+    if (!voice.stoppedOnSilence ||
+        !voice.models.autoSend ||
+        _conn.isIsolated ||
+        _sending ||
+        !mayAutoSend(voice.draft)) {
+      return false;
+    }
+    _autoSendAt = clock.now().add(voiceAutoSendCountdown);
+    _autoSendText = _composer.text;
+    unawaited(voice.cancel());
+    _updateSpeech(() {});
+    return true;
+  }
+
+  void _cancelAutoSend() {
+    if (_autoSendAt == null) return;
+    _autoSendAt = null;
+    _autoSendText = null;
+    _leaveDictation();
+    _focus.requestFocus();
+  }
+
+  /// The countdown ran out (or Send was tapped): the words go through the
+  /// one send path, as if typed - unless anything changed meanwhile.
+  void _autoSendNow() {
+    final at = _autoSendAt;
+    if (at == null || !_voiceDictating) return;
+    final unchanged =
+        _composer.text == _autoSendText && mayAutoSend(_composer.text);
+    if (!unchanged || _sending || !mounted) {
+      _cancelAutoSend();
+      return;
+    }
+    _autoSendAt = null;
+    _autoSendText = null;
+    _dictationBase = null;
+    _updateSpeech(() => _voiceDictating = false);
+    unawaited(_send());
+  }
+
+  /// The hold-to-talk tip while it is this screen's to show.
+  KitComposerTip? _micTip() {
+    const id = TeachingIds.holdMic;
+    final tips = _conn.tips;
+    if (!tips.isActive(id) || tips.activeIsReplay) return null;
+    return KitComposerTip(
+      message: _chatL10n(context).tipHoldMic,
+      onDismissed: () => tips.dismiss(id),
+    );
+  }
+
+  /// The tip's moment: the mic was used by tapping and the box is empty
+  /// again, so the mic is on screen. Called as the words change.
+  void _offerMicTip() {
+    const id = TeachingIds.holdMic;
+    final tips = _conn.tips;
+    if (!_micTipWanted ||
+        _composer.text.isNotEmpty ||
+        _voiceDictating ||
+        _voiceConversation ||
+        _conn.isIsolated ||
+        !platformCapabilities.supportsVoice ||
+        tips.isActive(id) ||
+        !tips.due(id, maxCount: teachingEntry(id).maxCount)) {
+      return;
+    }
+    if (offerTip(
+      tips,
+      id,
+      visit: this,
+      moment: TipMoment(
+        questionWaiting: _tipMoment().questionWaiting,
+        onboarding: _tipMoment().onboarding,
+      ),
+    )) {
+      _micTipWanted = false;
     }
   }
 }

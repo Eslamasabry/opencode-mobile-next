@@ -44,7 +44,7 @@ class ReleaseBuildPlanTest(unittest.TestCase):
     def test_toolchain_is_the_pinned_shorebird_cache(self):
         self.assertEqual(planner.PINNED_FLUTTER, str(
             Path.home() / '.shorebird/bin/cache/flutter/'
-            '91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter'))
+            '6e5e949520159b5ceb029598be37520cd433b046/bin/flutter'))
 
     def test_relative_root_becomes_absolute_for_native_target(self):
         commands = planner.build_commands('qa', repo_root='.')

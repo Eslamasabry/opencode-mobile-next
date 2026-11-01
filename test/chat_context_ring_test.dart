@@ -251,7 +251,7 @@ void main() {
       20,
       85,
     ], session: Session(id: 'session-1', compactingSince: DateTime(2026)));
-    expect(find.text('Compacting'), findsOneWidget);
+    expect(find.text('Shortening'), findsOneWidget);
     expect(find.text('85 %'), findsNothing);
   });
 
@@ -290,10 +290,10 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('context-compact-now')));
       await tester.pumpAndSettle();
-      expect(find.text('Compact this conversation?'), findsOneWidget);
+      expect(find.text('Shorten this conversation?'), findsOneWidget);
       expect(repository.compacted, isEmpty);
       await tester.tap(
-        find.widgetWithText(KitButton, 'Compact conversation').last,
+        find.widgetWithText(KitButton, 'Shorten conversation').last,
       );
       await tester.pumpAndSettle();
       expect(repository.compacted, ['session-1']);

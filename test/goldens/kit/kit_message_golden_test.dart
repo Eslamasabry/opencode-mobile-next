@@ -121,6 +121,25 @@ final _states = <String, Widget>{
     _replyMessage,
   ]),
   'reply': _scene([_replyMessage]),
+  // An AI Team role's turn: the speaker line above the prose.
+  'reply_speaker': _scene([
+    const KitMessage.reply(
+      speaker: 'Reviewer',
+      speakerIcon: AppIconography.checkCircle,
+      speakerNote: '3 min',
+      body: KitMarkdown(
+        '**Booking form** meets 3 of 3 criteria. The team ran the form '
+        'tests itself: 14 passed.',
+        selectable: false,
+      ),
+    ),
+    const KitMessage.reply(
+      speaker: 'Developer · Frontend',
+      speakerIcon: AppIconography.code,
+      speakerNote: '1 min',
+      body: KitMarkdown('Working on this task.', selectable: false),
+    ),
+  ]),
   'reply_code': _scene([
     const KitMessage.reply(
       body: KitMarkdown(

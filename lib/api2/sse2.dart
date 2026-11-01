@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' show Random;
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart' show CancelToken;
 import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 
+import '../platform/app_visibility.dart';
+import '../platform/network.dart';
 import 'events.dart';
+import 'reconnect_backoff.dart';
 import 'transport.dart';
 import '../diagnostics/perf_trace.dart';
 
@@ -137,7 +141,41 @@ class Api2EventStream {
     this.onError,
     this.queryBuilder,
     this.path = '/event',
-  });
+    bool Function()? isHidden,
+    Future<bool> Function()? isOffline,
+    Random? random,
+  }) : _isHidden = isHidden,
+       _isOffline = isOffline,
+       _random = random;
+
+  /// Whether the app is out of sight; the retry pace follows it
+  /// ([ReconnectBackoff]). Null follows [AppVisibility].
+  final bool Function()? _isHidden;
+
+  /// Whether Android says there is no network at all; asked before a
+  /// retry out of sight, which then waits instead of waking the radio.
+  final Future<bool> Function()? _isOffline;
+  final Random? _random;
+  bool _watchingVisibility = false;
+
+  bool get _hidden =>
+      _isHidden != null ? _isHidden() : AppVisibility.instance.hidden.value;
+
+  Future<bool> _offline() async {
+    final probe = _isOffline;
+    if (probe != null) return probe();
+    return (await const NetworkBridge().current()).hasNoNetwork;
+  }
+
+  /// Back in sight: a retry that was waiting out a long pause goes now.
+  void _onVisibilityChanged() {
+    if (_disposed || _hidden || _running) return;
+    if (_retryTimer?.isActive ?? false) {
+      _retryTimer?.cancel();
+      _retryTimer = null;
+      _connect();
+    }
+  }
 
   static const _giveUpVisualAfter = 6;
   static const _backoffResetAfter = Duration(seconds: 30);
@@ -161,6 +199,11 @@ class Api2EventStream {
   void start() {
     assert(!_disposed);
     if (_disposed) return;
+    if (_isHidden == null && !_watchingVisibility) {
+      _watchingVisibility = true;
+      AppVisibility.instance.ensure();
+      AppVisibility.instance.hidden.addListener(_onVisibilityChanged);
+    }
     _connect();
   }
 
@@ -168,6 +211,10 @@ class Api2EventStream {
     if (_disposed) return;
     _disposed = true;
     _generation += 1;
+    if (_watchingVisibility) {
+      _watchingVisibility = false;
+      AppVisibility.instance.hidden.removeListener(_onVisibilityChanged);
+    }
     _retryTimer?.cancel();
     _retryTimer = null;
     _nextAttempt.value = null;
@@ -202,25 +249,52 @@ class Api2EventStream {
         if (!_isCurrent(generation)) return;
         _running = false;
         _attempt += 1;
-        final ms = (500 * (1 << _attempt.clamp(0, 5))).clamp(500, 16000);
-        // Known before the status goes out, so whoever hears "reconnecting"
-        // already reads when the next try is.
-        _nextAttempt.value = DateTime.now().add(Duration(milliseconds: ms));
-        onStatus(
-          _attempt >= _giveUpVisualAfter
-              ? Api2StreamStatus.disconnected
-              : Api2StreamStatus.reconnecting,
+        final delay = ReconnectBackoff.delay(
+          _attempt,
+          hidden: _hidden,
+          random: _random,
         );
-        if (!_isCurrent(generation)) {
-          _nextAttempt.value = null;
-          return;
-        }
-        _retryTimer = Timer(Duration(milliseconds: ms), () {
-          _retryTimer = null;
-          if (_isCurrent(generation)) _connect();
-        });
+        _scheduleRetry(generation, delay);
       }),
     );
+  }
+
+  /// Arms the next try [delay] from now. Out of sight, a try that finds no
+  /// network at all is not made: the stream waits another pause instead.
+  void _scheduleRetry(int generation, Duration delay) {
+    // Known before the status goes out, so whoever hears "reconnecting"
+    // already reads when the next try is.
+    _nextAttempt.value = DateTime.now().add(delay);
+    onStatus(
+      _attempt >= _giveUpVisualAfter
+          ? Api2StreamStatus.disconnected
+          : Api2StreamStatus.reconnecting,
+    );
+    if (!_isCurrent(generation)) {
+      _nextAttempt.value = null;
+      return;
+    }
+    _retryTimer = Timer(delay, () async {
+      _retryTimer = null;
+      if (!_isCurrent(generation)) return;
+      if (_hidden) {
+        var offline = false;
+        try {
+          offline = await _offline();
+        } on Object {
+          offline = false;
+        }
+        if (!_isCurrent(generation)) return;
+        if (offline) {
+          _scheduleRetry(
+            generation,
+            ReconnectBackoff.delay(_attempt, hidden: true, random: _random),
+          );
+          return;
+        }
+      }
+      _connect();
+    });
   }
 
   Future<void> _pump(int generation) async {
@@ -234,6 +308,10 @@ class Api2EventStream {
     final connectStarted = PerfTrace.nowMicros;
     final attempt = _attempt;
     var sawEvent = false;
+    // What this connection cost, for the radio audit: bytes heard and how
+    // long it stayed up. Counts only; no path, query or credential.
+    var bytesHeard = 0;
+    var connectedAt = 0;
     try {
       final cancelToken = CancelToken();
       requestCancelToken = cancelToken;
@@ -245,6 +323,7 @@ class Api2EventStream {
       );
       if (!_isCurrent(generation)) return;
       _nextAttempt.value = null;
+      connectedAt = PerfTrace.nowMicros;
       onStatus(Api2StreamStatus.connected);
       backoffResetTimer = Timer(_backoffResetAfter, () {
         if (_isCurrent(generation)) _attempt = 0;
@@ -290,6 +369,7 @@ class Api2EventStream {
       subscription = response.data!.stream.cast<Uint8List>().listen(
         (chunk) {
           if (!_isCurrent(generation)) return;
+          bytesHeard += chunk.length;
           parser.add(chunk);
         },
         onError: (Object error, StackTrace stackTrace) {
@@ -310,6 +390,19 @@ class Api2EventStream {
         onError?.call(e is Api2Error ? e : Exception('Event stream lost: $e'));
       }
     } finally {
+      PerfTrace.mark(
+        'net.stream',
+        attrs: {
+          'api': 'oc2',
+          'kind': this is Api2SessionLogStream ? 'session_log' : 'events',
+          'bytes': bytesHeard,
+          'upSeconds': connectedAt == 0
+              ? 0
+              : (PerfTrace.nowMicros - connectedAt) ~/ 1000000,
+          'attempt': attempt,
+          'hidden': _hidden,
+        },
+      );
       backoffResetTimer?.cancel();
       if (!subscriptionTerminated) await subscription?.cancel();
       if (requestCancelToken != null && !requestCancelToken.isCancelled) {

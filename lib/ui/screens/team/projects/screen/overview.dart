@@ -356,7 +356,7 @@ class TeamProjectOverview extends StatelessWidget {
                     ),
                   ],
                   primary: KitAction(
-                    label: l.teamProjectTaskPromote,
+                    label: l.teamVoicePutOnMain(repo.name),
                     onPressed: () => confirmAndPromote(context, c, p, repo),
                   ),
                 ),

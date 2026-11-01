@@ -1,8 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/models.dart';
@@ -153,19 +150,13 @@ class PromptShelfStore {
 
   /// Never share the ordinary draft vault root: its
   /// collector has no knowledge of stash references and would erase this data.
+  /// The default root is resolved by the vault per platform (an app-support
+  /// directory on native builds, an IndexedDB database in a browser).
   PromptShelfStore.withAttachmentFiles(
     this.preferences, {
     DraftAttachmentVault? vault,
   }) : _attachmentVault =
-           vault ??
-           DraftAttachmentVault(
-             directory: () async => Directory(
-               p.join(
-                 (await getApplicationSupportDirectory()).path,
-                 attachmentDirectoryName,
-               ),
-             ),
-           );
+           vault ?? DraftAttachmentVault(root: attachmentDirectoryName);
 
   final SharedPreferences preferences;
   final DraftAttachmentVault? _attachmentVault;

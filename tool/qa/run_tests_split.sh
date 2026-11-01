@@ -39,7 +39,7 @@ remote="${OC_SPLIT_REMOTE:-vps}"
 remote_repo="${OC_SPLIT_REPO:-Storage/Code/oc_app}"
 remote_jobs="${OC_SPLIT_REMOTE_JOBS:-6}"
 local_jobs="${OC_SPLIT_LOCAL_JOBS:-2}"
-flutter="${FLUTTER:-$HOME/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter}"
+flutter="${FLUTTER:-$HOME/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/flutter}"
 cd "$root"
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "run_tests_split: commit first; the split tests HEAD, not the working copy" >&2

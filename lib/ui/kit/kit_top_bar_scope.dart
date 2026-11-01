@@ -298,6 +298,29 @@ class _KitTopBarScopeLineState extends State<_KitTopBarScopeLine> {
     // the parts wrap like the rest of the line.
     final large =
         MediaQuery.textScalerOf(context).scale(1) >= _kScopeWrapTextScale;
+    // At large text on a phone the project and the branch share one line,
+    // each cut with an ellipsis only past its share, instead of stacking
+    // into two rows that eat a third of the screen. Every word is still its
+    // own target with its full semantics label.
+    if (large &&
+        link == null &&
+        originWord == null &&
+        branchWord != null &&
+        scope.label.isNotEmpty &&
+        KitLayout.windowOf(context) == KitWindow.compact) {
+      final dot = 2 * tokens.space2 + widthOf('\u00b7');
+      int share(double needs) =>
+          math.max(tokens.minTarget, needs).ceil().clamp(1, 100000);
+      return Row(
+        children: [
+          Flexible(flex: share(widthOf(scope.label)), child: project),
+          Flexible(
+            flex: share(dot + widthOf(branch!.label)),
+            child: branchWord,
+          ),
+        ],
+      );
+    }
     if (originWord != null && link == null && !large) {
       // What each part needs whole; a part is cut only past its share.
       final dot = 2 * tokens.space2 + widthOf('\u00b7');

@@ -95,7 +95,7 @@ Future<void> confirmAndPromote(
     context,
     title: l.teamProjectTaskPromoteConfirmTitle,
     body: l.teamProjectTaskPromoteBody,
-    confirmLabel: l.teamProjectTaskPromote,
+    confirmLabel: l.teamVoicePutOnMain(repo.name),
     consequences: ['${repo.name}: ${repo.mainCommit} → ${repo.devCommit}'],
     action: () async {
       await c.execute(

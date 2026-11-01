@@ -1,11 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/models.dart';
@@ -94,16 +91,11 @@ class PromptPhotoStore extends ChangeNotifier {
     ImagePicker? picker,
     DraftAttachmentVault? vault,
   }) : _picker = picker ?? ImagePicker(),
-       _vault =
-           vault ??
-           DraftAttachmentVault(
-             directory: () async => Directory(
-               p.join(
-                 (await getApplicationSupportDirectory()).path,
-                 'prompt-photo-recovery-v1',
-               ),
-             ),
-           );
+       _vault = vault ?? DraftAttachmentVault(root: attachmentRoot);
+
+  /// This store's own vault root, resolved per platform by the vault and
+  /// never shared with composer drafts or the stash.
+  static const attachmentRoot = 'prompt-photo-recovery-v1';
   static const key = 'oc.pendingPromptPhoto';
   static const maxBytes = 10 * 1024 * 1024;
 

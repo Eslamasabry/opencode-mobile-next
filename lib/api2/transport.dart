@@ -2,6 +2,10 @@ import 'dart:convert';
 import 'dart:io' show HandshakeException;
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+import '../network/platform_dio.dart';
+import '../network/transport_failure.dart';
 
 import 'dialect.dart';
 import '../domain/models.dart' show unexpectedHealthShapeTag;
@@ -90,6 +94,9 @@ class Api2Transport {
       cleartextConfirmedOrigin: cleartextConfirmedOrigin,
       certificatePinSha256: certificatePinSha256,
     );
+    // Browser builds stream `/api/event` and the session log through Fetch;
+    // native keeps dart:io.
+    configurePlatformDio(_dio);
     if (password.isNotEmpty) {
       _dio.options.headers['Authorization'] = 'Basic $basicToken';
     }
@@ -369,7 +376,15 @@ class Api2Transport {
   /// Maps a transport failure onto the typed [Api2Error] hierarchy using the
   /// `_tag`-discriminated error envelope. 401 is always [Api2AuthRequired]
   /// even when the body is empty (the Basic-auth gate sends none).
-  static Api2Error mapError(DioException e, String what) {
+  ///
+  /// A [browser] build cannot tell CORS rejection, mixed content, DNS and a
+  /// stopped server apart, so a no-status failure there names those
+  /// possibilities instead of the adapter's generic text.
+  static Api2Error mapError(
+    DioException e,
+    String what, {
+    bool browser = kIsWeb,
+  }) {
     final trustTag = serverTrustErrorTag(e.error);
     if (trustTag != null) {
       return Api2NetworkError(e.error.toString(), tag: trustTag);
@@ -410,10 +425,13 @@ class Api2Transport {
           e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout;
+      final cancelled = e.type == DioExceptionType.cancel;
       return Api2NetworkError(
-        '$what failed: $message',
+        browser && !timedOut && !cancelled
+            ? '$what failed: ${browserNetworkFailureMessage()}'
+            : '$what failed: $message',
         timedOut: timedOut,
-        cancelled: e.type == DioExceptionType.cancel,
+        cancelled: cancelled,
       );
     }
     if (status == 503 ||

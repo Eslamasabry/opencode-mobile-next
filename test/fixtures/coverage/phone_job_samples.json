@@ -133,7 +133,7 @@
           },
           "opencode": {
             "runtime": "opencode2",
-            "version": "2.1.1"
+            "version": "2.2.5"
           }
         },
         "components": {
@@ -733,7 +733,7 @@
           "opencode": {
             "state": "done",
             "weight": 20,
-            "version": "2.1.1"
+            "version": "2.2.5"
           },
           "start": {
             "state": "done",
@@ -884,7 +884,7 @@
           "path": "version",
           "kind": "string",
           "probes": [
-            "2.1.1"
+            "2.2.5"
           ],
           "primary": false
         },

@@ -53,7 +53,7 @@ void main() {
   });
 
   test('bundled Claude evidence qualifies arm64 and x64 with exact helper', () {
-    expect(claude.recipe!.version, '2.1.294');
+    expect(claude.recipe!.version, '2.1.316');
     for (final architecture in AgentArchitecture.values) {
       final proof = AgentCertificationMatrix.bundled.capabilitiesFor(
         descriptor: claude,

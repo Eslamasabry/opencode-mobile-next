@@ -22,6 +22,10 @@ import '../domain/orchestration_gateway.dart' show OrchestrationHostMode;
 import '../orchestration/adapters/gascity/gascity_probe.dart'
     show isTailnetHost;
 import '../platform/platform_capabilities.dart';
+import 'browser_secret_storage.dart';
+import 'browser_secret_storage_io.dart'
+    if (dart.library.js_interop) 'browser_secret_storage_web.dart'
+    as browser;
 // A plain value type (no widgets): the person's effect choices.
 import 'effects.dart' show KitEffects, KitTextSize;
 import 'app_preferences.dart';
@@ -34,8 +38,10 @@ import 'setup_audit_store.dart';
 import 'session_link_bindings.dart';
 import 'agent_handoff_links.dart';
 import 'pending_command_journal.dart';
+import 'termux_migration_offer.dart';
 
 export '../domain/server_probe.dart' show ServerFlavor;
+export 'browser_secret_storage.dart' show BrowserSecretStorageState;
 export '../domain/loopback_host.dart' show isLoopbackHost, isPrivateNetworkHost;
 export '../domain/orchestration_gateway.dart' show OrchestrationHostMode;
 
@@ -49,10 +55,18 @@ class _ProfileStoreChanges extends ChangeNotifier {
 }
 
 /// Persists server profiles. Metadata in SharedPreferences, secrets in the
-/// Android Keystore via flutter_secure_storage.
+/// platform keyring via flutter_secure_storage: the Android Keystore, the
+/// desktop Secret Service, or, in a browser, WebCrypto-encrypted entries in
+/// the origin's localStorage whose key material the plugin keeps beside them
+/// (a secure context is required; see [BrowserSecretStorageState]).
 class ProfileStore {
   static const _profilesKey = 'oc.profiles';
   static const _activeKey = 'oc.activeProfile';
+
+  /// The tail that makes a phone server's agent backend its own profile id
+  /// (`agentBackendProfileSuffix` in connection.dart). Its keys are swept
+  /// with its phone; test/profile_deletion_test.dart pins the match.
+  static const _agentBackendSuffix = '.agents';
 
   /// The origin the person confirmed for non-loopback plain HTTP,
   /// per profile: `oc.cleartextOk.<profileId>`. Named by the
@@ -103,12 +117,20 @@ class ProfileStore {
   final ByoHostSigner? byoHostSigner;
   final Future<void> Function(String)? agentHostCleanup;
 
+  /// Answers whether this page can keep a secret at all; consulted only
+  /// when [platformCapabilities] says the build is a browser one. Injected
+  /// by tests that run on the VM but describe a browser.
+  final BrowserSecretStorageState Function() _browserSecretStorage;
+
   ProfileStore({
     required this.prefs,
     FlutterSecureStorage? secure,
     ByoHostSigner? byoHostSigner,
     Future<void> Function(String)? agentHostCleanup,
+    BrowserSecretStorageState Function()? browserSecretStorage,
   }) : secure = secure ?? const FlutterSecureStorage(),
+       _browserSecretStorage =
+           browserSecretStorage ?? browser.browserSecretStorageState,
        agentHostCleanup =
            agentHostCleanup ??
            (ChannelAgentHostCleanup.supported
@@ -314,6 +336,26 @@ class ProfileStore {
     return _cache;
   }
 
+  /// The stored secret, or null when there is none.
+  ///
+  /// The browser plugin answers null for a stored entry it can no longer
+  /// decrypt (its key material was cleared while the ciphertext stayed, or
+  /// the page moved to an insecure origin) exactly as it does for a missing
+  /// one. That is the browser's version of the unreadable Keystore entry
+  /// handled in [_restoreSecret], so an undecryptable entry is turned into
+  /// the same exception and the profile asks for its password again instead
+  /// of quietly connecting without one. Native builds are not asked: their
+  /// plugins already distinguish the two through the exception path.
+  Future<String?> _readSecret(String key) async {
+    final value = await secure.read(key: key);
+    if (value == null &&
+        platformCapabilities.isWeb &&
+        await secure.containsKey(key: key)) {
+      throw StateError('The stored secret cannot be decrypted');
+    }
+    return value;
+  }
+
   Future<void> _restoreSecret(ServerProfile p) async {
     try {
       p.teamEngineAuth =
@@ -324,14 +366,14 @@ class ProfileStore {
     }
     try {
       if (p.usesAgentSocket) {
-        p.codexToken = await secure.read(key: '$_codexTokenKey${p.id}') ?? '';
+        p.codexToken = await _readSecret('$_codexTokenKey${p.id}') ?? '';
         KitRedact.registerKnownSecret(p.codexToken);
         p.requiresCodexTokenReentry =
             p.agentSocketSecretRequired && p.codexToken.isEmpty;
         p.password = '';
         p.requiresPasswordReentry = false;
       } else {
-        p.password = await secure.read(key: '$_passwordKey${p.id}') ?? '';
+        p.password = await _readSecret('$_passwordKey${p.id}') ?? '';
         KitRedact.registerKnownSecret(p.password);
         p.requiresPasswordReentry = false;
         p.codexToken = '';
@@ -445,12 +487,7 @@ class ProfileStore {
       }
     } catch (error) {
       await _restoreProfiles(previousRaw);
-      if (_isKeyringFailure(error)) {
-        throw SecureStorageUnavailable.forPlatform(
-          platformCapabilities.platform,
-          cause: error,
-        );
-      }
+      if (_isKeyringFailure(error)) throw _secureStorageUnavailable(error);
       rethrow;
     }
     await _syncCleartextConfirmation(profile);
@@ -566,16 +603,41 @@ class ProfileStore {
 
   /// flutter_secure_storage reports a missing or locked keyring as a
   /// [PlatformException]; on a platform without the plugin at all the call
-  /// surfaces as [MissingPluginException].
+  /// surfaces as [MissingPluginException]. The browser plugin has no
+  /// channel: an insecure context is an [UnsupportedError], and a refused
+  /// localStorage write arrives as the browser's own exception object, which
+  /// is not a Dart [Error]. Programming errors stay programming errors.
   static bool _isKeyringFailure(Object error) =>
-      error is PlatformException || error is MissingPluginException;
+      error is PlatformException ||
+      error is MissingPluginException ||
+      (platformCapabilities.isWeb &&
+          (error is UnsupportedError || error is! Error));
+
+  /// The product sentence for a refused secret write on this build.
+  SecureStorageUnavailable _secureStorageUnavailable(Object error) =>
+      platformCapabilities.isWeb
+      ? SecureStorageUnavailable.forBrowser(
+          _browserSecretStorage(),
+          cause: error,
+        )
+      : SecureStorageUnavailable.forPlatform(
+          platformCapabilities.platform,
+          cause: error,
+        );
 
   static const _probeKey = 'oc.secure.probe';
 
   /// Null when the keyring answers, otherwise the sentence to show before the
-  /// user types a password that could not be kept. Only Linux desktops lack
-  /// a keyring in practice; elsewhere the probe is skipped.
+  /// user types a password that could not be kept. Linux desktops can lack
+  /// a keyring, and a browser page can lack a secure context or writable
+  /// site storage; elsewhere the probe is skipped.
   Future<String?> secureStorageProblem() async {
+    if (platformCapabilities.isWeb) {
+      final state = _browserSecretStorage();
+      return state == BrowserSecretStorageState.available
+          ? null
+          : SecureStorageUnavailable.messageForBrowser(state);
+    }
     final platform = platformCapabilities.platform;
     if (platform != TargetPlatform.linux) return null;
     try {
@@ -589,26 +651,91 @@ class ProfileStore {
     }
   }
 
-  /// Every preference key this app scopes to [profileId].
-  ///
-  /// Profile-scoped keys are namespaced as `oc.<what>.<profileId>` — model,
-  /// explicit-model flag, agent, variant, and location — or carry the id as an
-  /// interior segment, as the provider-runtime migration flag does
-  /// (`oc.providerRuntimeRefresh.v1.<profileId>.<location>`). Matching the
-  /// shape rather than a fixed list means a key added later is deleted with
-  /// the profile even if nobody remembers to update this method; the app-wide
-  /// keys (`oc.profiles`, `oc.activeProfile`, `oc.offlineQueue`,
-  /// `oc.sessionDrafts`, `oc.widgetSessions`, appearance, theme) carry no id
-  /// segment and are never matched.
+  /// Every preference key owned by [profileId], matched at its owner position.
+  /// Ordinary keys use `oc.<what>.<profileId>`; the agent backend of a phone
+  /// server is the profile `<profileId>.agents` and its keys are swept with
+  /// its phone. Drafts predate that convention and put the owner last;
+  /// provider-runtime refresh markers put a version before it, and the
+  /// generated-interface keys put an item name before it. Never match
+  /// arbitrary item/location/namespace text: another profile can have a
+  /// session or draft target named like this id.
   Set<String> profileScopedPreferenceKeys(String profileId) {
     if (profileId.isEmpty) return const {};
-    final suffix = '.$profileId';
-    final infix = '.$profileId.';
+    // Historical ids were not restricted to dot-free strings. For legacy
+    // nested keys prefer the longest saved owner, never a shorter id prefix.
+    final ids = {profileId, for (final profile in _cache) profile.id};
+    try {
+      final rows = jsonDecode(prefs.getString(_profilesKey) ?? '[]');
+      if (rows is List) {
+        for (final row in rows) {
+          if (row is Map && row['id'] is String) ids.add(row['id'] as String);
+        }
+      }
+    } catch (_) {
+      // Loaded profiles still protect known owners if the cached blob is bad.
+    }
+    final longerIds = ids.where((id) => id.length > profileId.length);
+    // A saved profile with this exact id is its own owner, not a backend.
+    final backendId = '$profileId$_agentBackendSuffix';
+    final ownedIds = ids.contains(backendId)
+        ? {profileId}
+        : {profileId, backendId};
+    bool nestedOwner(String value) =>
+        value.startsWith('$profileId.') &&
+        !longerIds.any((id) => value.startsWith('$id.'));
+    bool owns(String key) {
+      if (!key.startsWith('oc.')) return false;
+      final namespaceEnd = key.indexOf('.', 3);
+      // App-wide keys such as oc.profiles have no owner at all.
+      if (namespaceEnd < 0) return false;
+      final namespace = key.substring(3, namespaceEnd);
+      var ownerAndItem = key.substring(namespaceEnd + 1);
+      switch (namespace) {
+        // These are app-wide namespaces, despite having multiple segments.
+        case 'transcript':
+        case 'notify':
+        case 'firstRun':
+        case 'nudges':
+        case 'secure':
+        case 'dev':
+        case 'linuxReset':
+        case 'mobile':
+        case 'replySpeed':
+        case 'readStateConsentMigration':
+        case 'usageAlertSeen':
+        case 'usageAlerts':
+        case 'usageWidget':
+        // External agents have their own registry and deletion lifecycle.
+        case 'a2aTasks':
+        case 'a2aBearer':
+          return false;
+        case 'phraseChips':
+          // `oc.phraseChips.enabled` is the app-wide switch.
+          return ownerAndItem != 'enabled' && ownedIds.contains(ownerAndItem);
+        case 'draft':
+          return ownedIds.any((id) => ownerAndItem.endsWith('.$id')) &&
+              !longerIds.any((id) => ownerAndItem.endsWith('.$id'));
+        case 'genui':
+          // oc.genui.<covered|enabled|journal>.<profile>
+          final itemEnd = ownerAndItem.indexOf('.');
+          if (itemEnd < 0) return false;
+          return ownedIds.contains(ownerAndItem.substring(itemEnd + 1));
+        case 'providerRuntimeRefresh':
+          final versionEnd = ownerAndItem.indexOf('.');
+          if (versionEnd < 0) return false;
+          ownerAndItem = ownerAndItem.substring(versionEnd + 1);
+          return nestedOwner(ownerAndItem);
+        case 'providerRuntimeUnloadable':
+        case 'promptStash':
+        case 'orchestration':
+          return nestedOwner(ownerAndItem);
+      }
+      return ownedIds.contains(ownerAndItem);
+    }
+
     return {
       for (final key in prefs.getKeys())
-        if (key.startsWith('oc.') &&
-            (key.endsWith(suffix) || key.contains(infix)))
-          key,
+        if (owns(key)) key,
     };
   }
 
@@ -645,6 +772,7 @@ class ProfileStore {
       defaultsDrain,
       auditDrain,
       SessionLinkBindings.closeProfile(prefs, profileId),
+      TermuxMigrationOfferStore.closeProfile(prefs, profileId),
       ContextUsageMemory.closeProfile(prefs, profileId),
       PhraseChipStore.closeProfile(prefs, profileId),
     ]);
@@ -761,12 +889,7 @@ class ProfileStore {
           !await prefs.setString(_activeKey, previousActive!)) {
         throw StateError('Could not restore the active server profile');
       }
-      if (_isKeyringFailure(error)) {
-        throw SecureStorageUnavailable.forPlatform(
-          platformCapabilities.platform,
-          cause: error,
-        );
-      }
+      if (_isKeyringFailure(error)) throw _secureStorageUnavailable(error);
       rethrow;
     }
     _cache = next;

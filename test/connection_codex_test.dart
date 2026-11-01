@@ -8,6 +8,9 @@ import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:opencode_mobile/platform/platform_capabilities.dart';
+import 'package:opencode_mobile/network/transport_failure.dart'
+    show browserAgentSocketUnavailableMessage;
 
 class _FakeChannel implements LiveEventChannel {
   _FakeChannel(this._onEvent, this._onStatus);
@@ -167,6 +170,27 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   tearDown(() => serverProbe = probeServerConnection);
+
+  test(
+    'browser rejects saved Codex profiles before building a transport',
+    () async {
+      debugPlatformCapabilities = const PlatformCapabilities.browser();
+      addTearDown(() => debugPlatformCapabilities = null);
+      var builtTransport = false;
+      final controller = ConnectionController(
+        await _store(),
+        codexGatewayFactory: (_) {
+          builtTransport = true;
+          throw StateError('must not construct native transport');
+        },
+      );
+      addTearDown(controller.dispose);
+      await controller.connect(_codexProfile());
+      expect(builtTransport, isFalse);
+      expect(controller.status, StreamStatus.disconnected);
+      expect(controller.lastError, browserAgentSocketUnavailableMessage);
+    },
+  );
 
   testWidgets(
     'Codex startup uses a non-null profile scope for sessions and catalog',

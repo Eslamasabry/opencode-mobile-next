@@ -93,6 +93,27 @@ class _AssistantErrorRow extends StatelessWidget {
     final usageLimit =
         agentKind == null &&
         classifyAgentError(raw) == AgentErrorCause.usageLimit;
+    // OpenCode's free tier refused a request that is large: shorten the
+    // conversation or carry on in a new one. Never another model by itself.
+    final freeTier =
+        agentKind == null &&
+        !recovered &&
+        classifyAgentError(raw) == AgentErrorCause.freeTierLimit;
+    final tokens = freeTier ? chat?._contextReading()?.tokens : null;
+    final shorten = freeTier && onCompact != null
+        ? KitAction(
+            key: const Key('error-action-shorten'),
+            label: strings.chatFreeTierShorten,
+            onPressed: onCompact,
+          )
+        : null;
+    final inNewConversation = freeTier && chat != null && chat._canStartNew()
+        ? KitAction(
+            key: const Key('error-action-new-conversation'),
+            label: strings.chatFreeTierNewConversation,
+            onPressed: () => unawaited(chat._continueInNewConversation()),
+          )
+        : null;
     final signIn = run == null || recovered ? null : chat?._agentSignIn(run);
     // Another model first, then the agent's own sign-in by name; Error
     // details moves to the reply's menu (a notice shows two actions).
@@ -144,6 +165,10 @@ class _AssistantErrorRow extends StatelessWidget {
                 onPressed: onResend,
               ),
       ),
+      _ when freeTier && (shorten ?? inNewConversation ?? choose) != null => (
+        'free-tier',
+        shorten ?? inNewConversation ?? choose,
+      ),
       _ when usageLimit && choose != null => ('usage-limit', choose),
       _ => _typedFix(strings, kind, useSuggestion, named),
     };
@@ -161,10 +186,20 @@ class _AssistantErrorRow extends StatelessWidget {
         tone: recovered ? AppStatusTone.neutral : AppStatusTone.failure,
         message: text,
         liveRegion: false,
-        notes: [?hint],
+        notes: [
+          ?hint,
+          if (tokens != null)
+            strings.agentErrorFreeTierSize(_shortTokenCount(tokens)),
+        ],
         actions: [
           ?fix,
           if (signInAgain != null && !identical(fix, signInAgain)) signInAgain,
+          // The free tier's second way on; another model waits in the
+          // reply's menu.
+          if (freeTier && shorten != null && inNewConversation != null)
+            inNewConversation
+          else if (freeTier && !identical(fix, choose) && choose != null)
+            choose,
           // A notice shows two actions. When nothing else fixes the failure
           // this is the way on; otherwise it waits in the reply's menu and
           // the conversation menu.
@@ -259,6 +294,10 @@ class _AssistantErrorRow extends StatelessWidget {
     ),
   };
 }
+
+/// 167000 as "167k"; small counts as they are.
+String _shortTokenCount(int tokens) =>
+    tokens >= 10000 ? '${(tokens / 1000).round()}k' : '$tokens';
 
 /// An error row's Details: the agent, model and code beside the host's whole
 /// words ("Internal error: …" kept here, never in the row's words), or the

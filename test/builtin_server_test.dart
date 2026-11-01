@@ -17,6 +17,7 @@ class _FakeLinux extends BuiltinLinux {
   final scripts = <String>[];
   final started = <String>[];
   final restorationRecipes = <BuiltinServerRestoreRecipe?>[];
+  final launched = <int>[];
   BuiltinLinuxException? startError;
   BuiltinLinuxRunResult Function(String script)? runAnswer;
 
@@ -38,6 +39,17 @@ class _FakeLinux extends BuiltinLinux {
     scripts.add(script);
     return runAnswer?.call(script) ??
         const BuiltinLinuxRunResult(exitCode: 0, output: '');
+  }
+
+  @override
+  Future<void> startServerForLaunch(
+    String script, {
+    int port = 4097,
+    required int expectedGeneration,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
+    launched.add(expectedGeneration);
+    await startServer(script, port: port, restoreRecipe: restoreRecipe);
   }
 
   @override
@@ -70,7 +82,7 @@ void main() {
     linux = _FakeLinux();
     serverProbe = ({required baseUrl, username, password}) async =>
         linux.serverRunning
-        ? const ServerProbeResult.success('2.1.1')
+        ? const ServerProbeResult.success('2.2.5')
         : const ServerProbeResult.failure('refused');
   });
 
@@ -133,7 +145,7 @@ void main() {
       var wanted = true;
       serverProbe = ({required baseUrl, username, password}) async {
         wanted = false;
-        return const ServerProbeResult.success('2.1.1');
+        return const ServerProbeResult.success('2.2.5');
       };
       final failure = await startBuiltinServer(
         linux: linux,
@@ -271,6 +283,32 @@ void main() {
       expect(await starter.autoStartIfStopped(_inApp()), isFalse);
       expect(linux.started, isEmpty);
       expect(starter.recognises(_inApp()), isFalse);
+    });
+
+    test('the opening start uses the guarded native start', () async {
+      expect(
+        await starter.start(_inApp(), launchAdmission: () async => 7),
+        isNull,
+      );
+      expect(linux.launched, [7]);
+      expect(linux.started, hasLength(1));
+      expect(linux.restorationRecipes.single?.toMap(), {
+        'version': 1,
+        'profileId': 'builtin',
+        'runtime': 'openCode2',
+      });
+    });
+
+    test('a Stop seen at admission withdraws the opening start', () async {
+      final failure = await starter.start(
+        _inApp(),
+        launchAdmission: () async => null,
+      );
+      expect(failure?.problem, BuiltinStartProblem.interrupted);
+      expect(failure!.retryable, isFalse);
+      expect(linux.scripts, isEmpty, reason: 'no password was written');
+      expect(linux.launched, isEmpty);
+      expect(linux.started, isEmpty);
     });
 
     test('names the server it brings up while starting and for a short '

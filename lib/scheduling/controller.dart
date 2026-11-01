@@ -182,6 +182,29 @@ class ScheduledPromptsController extends ChangeNotifier {
   Future<void> setEnabled(String id, bool enabled) =>
       _mutate(() => store.setEnabled(profileId, id, enabled));
   Future<void> delete(String id) => _mutate(() => store.delete(profileId, id));
+
+  /// Runs the saved schedule once, now. The next scheduled time is kept.
+  Future<void> runNow(String id) async {
+    errorCode = null;
+    try {
+      final schedule = (await store.load(
+        profileId,
+      )).where((s) => s.id == id).firstOrNull;
+      if (schedule == null || !platformStatus.supported) {
+        throw const ScheduledPromptStoreException('unsupported');
+      }
+      await platform.runNow(profileId, id, schedule.revision);
+    } on ScheduledPromptStoreException catch (error) {
+      errorCode = error.code;
+      rethrow;
+    } catch (_) {
+      errorCode = 'unavailable';
+      rethrow;
+    } finally {
+      _changed();
+    }
+  }
+
   Future<void> setDigest(ScheduledPromptDigest value) =>
       _mutate(() => store.setDigest(profileId, value));
   Future<void> refreshPlatformStatus() async {

@@ -24,6 +24,7 @@ import 'package:intl/intl.dart' hide TextDirection;
 import '../../l10n/app_localizations.dart';
 import '../app_iconography.dart';
 import '../theme_roles.dart' show readableOn;
+import 'kit_chrome.dart';
 import 'kit_icon.dart';
 import 'kit_ink_layer.dart';
 import 'kit_max_width.dart';
@@ -59,6 +60,7 @@ class KitChip extends StatelessWidget {
     this.icon,
     this.tone = KitChipTone.neutral,
   }) : kind = KitChipKind.plain,
+       iconOnly = false,
        mark = null,
        onLongPress = null,
        spoken = null,
@@ -88,6 +90,7 @@ class KitChip extends StatelessWidget {
     this.onLongPress,
     this.glyph,
     this.liveRegion = false,
+    this.iconOnly = false,
   }) : kind = KitChipKind.action,
        mark = null,
        onRemove = null,
@@ -105,6 +108,7 @@ class KitChip extends StatelessWidget {
     this.icon,
     this.onPressed,
   }) : kind = KitChipKind.removable,
+       iconOnly = false,
        mark = null,
        onLongPress = null,
        spoken = null,
@@ -124,6 +128,7 @@ class KitChip extends StatelessWidget {
     this.onPressed,
     this.icon,
   }) : kind = KitChipKind.count,
+       iconOnly = false,
        mark = null,
        onLongPress = null,
        spoken = null,
@@ -145,6 +150,7 @@ class KitChip extends StatelessWidget {
     this.mark,
     this.expanded,
   }) : kind = KitChipKind.summary,
+       iconOnly = false,
        onLongPress = null,
        spoken = null,
        glyph = null,
@@ -189,6 +195,11 @@ class KitChip extends StatelessWidget {
   /// politely, without taking focus.
   final bool liveRegion;
 
+  /// An action chip only: the glyph alone, no words drawn (the approval chip
+  /// on a phone at large text, where its row has no room for the word beside
+  /// Stop). The caller names it for a screen reader ([spoken]).
+  final bool iconOnly;
+
   static const _removeKey = ValueKey('kit-chip-remove');
   static const _checkKey = ValueKey('kit-chip-check');
 
@@ -210,8 +221,9 @@ class KitChip extends StatelessWidget {
       : own;
 
   @override
-  Widget build(BuildContext context) =>
-      KitMaxWidth.chip(child: _buildContent(context));
+  Widget build(BuildContext context) => KitChrome.builder(
+    builder: (context) => KitMaxWidth.chip(child: _buildContent(context)),
+  );
 
   Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
@@ -261,7 +273,7 @@ class KitChip extends StatelessWidget {
     final glyphExtent =
         tokens.iconSize(context, tokens.smallIconSize) + tokens.space1;
     Widget startGlyph(IconData data, Color color, {Key? key}) => Padding(
-      padding: EdgeInsetsDirectional.only(end: tokens.space1),
+      padding: EdgeInsetsDirectional.only(end: iconOnly ? 0 : tokens.space1),
       child: Icon(
         data,
         key: key,
@@ -333,7 +345,7 @@ class KitChip extends StatelessWidget {
         return _ChipFrame(
           tokens: tokens,
           tint: tint,
-          span: TextSpan(text: label, style: emphasized),
+          span: TextSpan(text: iconOnly ? '' : label, style: emphasized),
           textSemantics: spoken ?? label,
           leading: AnimatedSwitcher(
             duration: reduceMotion ? Duration.zero : KitMotion.quick,

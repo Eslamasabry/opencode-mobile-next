@@ -7,13 +7,21 @@ import 'package:opencode_mobile/ui/screens/team/projects/team_project_conversati
 import 'kit/kit_harness.dart';
 
 class _Gateway implements OrchestrationProjectGateway {
-  _Gateway({this.requests = const [], this.promotionReady = false});
+  _Gateway({
+    this.requests = const [],
+    this.promotionReady = false,
+    this.timeline = const [],
+    this.results = const [],
+  });
   final bool promotionReady;
+  final List<TeamTimelineEvent> timeline;
+  final List<TeamCriterionResult> results;
   final List<TeamRequest> requests;
   final commands = <TeamProjectCommand>[];
   bool rejectMessage = false;
   @override
   Future<TeamWorkspace> teamWorkspace() async => TeamWorkspace(
+    roles: const [TeamProjectRole(id: 'frontend', name: 'Frontend')],
     projects: [
       TeamProject(
         id: 'p',
@@ -21,6 +29,7 @@ class _Gateway implements OrchestrationProjectGateway {
         revision: 7,
         status: 'running',
         requests: requests,
+        timeline: timeline,
         planApproved: promotionReady,
         mergeQueue: promotionReady
             ? const [
@@ -47,6 +56,7 @@ class _Gateway implements OrchestrationProjectGateway {
             title: 'Keep drafts after restart',
             status: promotionReady ? 'merged' : 'review',
             repoId: 'repo',
+            criterionResults: results,
             findings: promotionReady
                 ? const []
                 : [
@@ -188,15 +198,11 @@ void main() {
     tester,
   ) async {
     final gateway = await _open(tester, source: _Gateway(promotionReady: true));
-    await tester.tap(
-      find.widgetWithText(KitButton, 'Promote dev to main').last,
-    );
+    await tester.tap(find.widgetWithText(KitButton, 'Put App on main').last);
     await tester.pumpAndSettle();
     expect(gateway.commands, isEmpty);
     expect(find.text('App: main-reviewed → dev-reviewed'), findsWidgets);
-    await tester.tap(
-      find.widgetWithText(KitButton, 'Promote dev to main').last,
-    );
+    await tester.tap(find.widgetWithText(KitButton, 'Put App on main').last);
     await tester.pumpAndSettle();
     final command = gateway.commands.single;
     expect(command.action, TeamProjectAction.promote);
@@ -204,5 +210,47 @@ void main() {
     expect(command.expectedDevCommit, 'dev-reviewed');
     expect(command.expectedMainCommit, 'main-reviewed');
     expect(command.expectedRevision, 7);
+  });
+
+  testWidgets('each engine line is said by its role, and the top bar says '
+      'who is doing what now', (tester) async {
+    TeamTimelineEvent work(String suffix) => TeamTimelineEvent(
+      kind: 'job',
+      text: 'Work $suffix',
+      actor: 'engine',
+      taskId: 'task',
+    );
+    await _open(
+      tester,
+      source: _Gateway(
+        timeline: [
+          work('is queued.'),
+          work('is running.'),
+          work('is checking acceptance criteria.'),
+        ],
+        results: const [
+          TeamCriterionResult(criterion: 'Drafts survive', status: 'met'),
+          TeamCriterionResult(criterion: 'Restart is quick', status: 'unmet'),
+        ],
+      ),
+    );
+    // The newest line is the reviewer's, so the top bar names it.
+    expect(find.textContaining('Reviewer is checking'), findsOneWidget);
+    // One turn per role, in the order they spoke, under the role's name.
+    expect(find.text('Manager'), findsOneWidget);
+    expect(find.text('This task is in line to start.'), findsOneWidget);
+    expect(find.text('Developer · Frontend'), findsOneWidget);
+    expect(find.text('Working on this task.'), findsOneWidget);
+    expect(
+      find.textContaining('Checking the work against its criteria.'),
+      findsOneWidget,
+    );
+    // The reviewer's result joins its own turn, above its results card.
+    expect(find.text('Reviewer'), findsOneWidget);
+    expect(find.textContaining('Checked 2 criteria: 1 met.'), findsOneWidget);
+    // A speaker line is read once, as a header.
+    final handle = tester.ensureSemantics();
+    expect(find.bySemanticsLabel('Developer · Frontend'), findsOneWidget);
+    handle.dispose();
   });
 }

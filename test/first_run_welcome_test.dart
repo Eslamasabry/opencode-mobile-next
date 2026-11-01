@@ -452,7 +452,7 @@ void main() {
     final probed = <String>[];
     serverProbe = ({required baseUrl, username, password}) async {
       probed.add(baseUrl);
-      return const ServerProbeResult.success('2.1.1');
+      return const ServerProbeResult.success('2.2.5');
     };
 
     final (store, controller) = await _state();
@@ -483,7 +483,7 @@ void main() {
 
     expect(probed, ['https://box.example:4096']);
     expect(find.byKey(const ValueKey('server-test-success')), findsOneWidget);
-    expect(find.text('OpenCode 2 · 2.1.1'), findsOneWidget);
+    expect(find.text('OpenCode 2 · 2.2.5'), findsOneWidget);
     expect(find.text('Connected — save to finish.'), findsOneWidget);
   });
 

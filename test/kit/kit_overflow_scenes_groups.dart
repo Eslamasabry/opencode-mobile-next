@@ -579,4 +579,56 @@ final _groupOverflowScenes = <KitOverflowScene>[
       child: const SizedBox.expand(),
     ),
   ),
+  KitOverflowScene(
+    const ['KitVitalsStrip'],
+    'default',
+    build: (_, c) => KitVitalsStrip(
+      vitals: [
+        KitVital(
+          value: c.t('Too hot', 'ساخن جدًا'),
+          word: c.t('Phone heat', 'حرارة الهاتف'),
+          semanticsLabel: 'Phone heat',
+        ),
+        KitVital(
+          value: '12.4 GB',
+          word: c.t('Memory free', 'الذاكرة المتاحة'),
+          semanticsLabel: 'Memory free',
+        ),
+        KitVital(
+          value: '100%',
+          word: c.t('Linux CPU', 'معالج Linux'),
+          semanticsLabel: 'Linux CPU',
+        ),
+        KitVital(
+          value: '41 °C',
+          word: c.t('Battery temperature', 'حرارة البطارية'),
+          semanticsLabel: 'Battery temperature',
+        ),
+      ],
+      summary: c.t(
+        'Hot. node is using 180% CPU.',
+        'ساخن. node يستخدم 180% من المعالج.',
+      ),
+      onSummaryTap: () {},
+    ),
+  ),
+  KitOverflowScene(
+    const ['KitVitalsStrip'],
+    'loading',
+    build: (_, c) => KitVitalsStrip(
+      loading: true,
+      vitals: [
+        KitVital(
+          value: '',
+          word: c.t('Phone heat', 'حرارة الهاتف'),
+          semanticsLabel: 'Phone heat',
+        ),
+        KitVital(
+          value: '',
+          word: c.t('Memory free', 'الذاكرة المتاحة'),
+          semanticsLabel: 'Memory free',
+        ),
+      ],
+    ),
+  ),
 ];

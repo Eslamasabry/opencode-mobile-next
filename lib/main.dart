@@ -8,7 +8,10 @@ import 'ui/screens/scheduling/schedule_routes.dart';
 export 'background/widget_action_entrypoint.dart' show widgetActionMain;
 import 'ui/search/search_index.dart';
 import 'ui/screens/profile_monitor_screen.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'state/paseo_usage_monitor.dart';
+import 'state/whats_new.dart';
+import 'ui/screens/whats_new_sheet.dart';
 import 'state/usage_signin_destination.dart';
 import 'ui/screens/library_screen.dart'
     show IntegrationsMode, IntegrationsScreen;
@@ -29,10 +32,13 @@ import 'background/live_background.dart';
 import 'builtin/app_exit_recovery.dart';
 import 'builtin/builtin_server.dart';
 import 'builtin/linux_manager/linux_reset_flow.dart';
+import 'builtin/linux_services/rootfs_linux_services.dart';
 import 'builtin/phone_server_healing.dart';
 import 'builtin/reply_watch.dart';
 import 'builtin/setup/phone_setup.dart';
 import 'builtin/setup/setup_engine.dart' show ChannelSetupEngine;
+import 'builtin/process_budget.dart';
+import 'builtin/quota_collector_host.dart' show QuotaCollectorDemand;
 import 'builtin/setup/setup_finish.dart';
 import 'builtin/setup/termux_setup_finish.dart';
 import 'builtin/team/builtin_team.dart' show BuiltinTeam;
@@ -48,6 +54,7 @@ import 'domain/chat_feed.dart' show isTemporaryProjectDirectory;
 import 'domain/connection_status.dart';
 import 'domain/server_gateway.dart' show ProductException;
 import 'l10n/app_localizations.dart';
+import 'platform/child_process_limit.dart' show childProcessLimitLifted;
 import 'platform/launch_shortcut.dart';
 import 'platform/session_link.dart';
 import 'state/session_address_controller.dart'
@@ -60,6 +67,8 @@ import 'domain/team_link.dart';
 import 'state/app_locale.dart' show resolveAppLocales;
 import 'state/connection.dart';
 import 'state/in_app_auto_update.dart';
+import 'update/app_update_controller.dart';
+import 'update/app_update_notice.dart';
 import 'state/managed_move.dart';
 import 'state/automation_policy.dart';
 import 'state/local_server_controls.dart';
@@ -135,6 +144,10 @@ Future<void> main() async {
   // as time since launch.
   PerfTrace.markOnce('app.main');
   WidgetsFlutterBinding.ensureInitialized();
+  // The app's own budget for heavy work (Android stops an app's child
+  // programs past 32), and the usage collector that runs only on demand.
+  ProcessBudgetGuard.install(limitLifted: childProcessLimitLifted);
+  QuotaCollectorDemand.install();
   if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
     // Restores the remembered size, position and maximized state, clamped to
     // a display that still exists, and saves it again on close. Android never
@@ -286,7 +299,33 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_controller.restoreBackgroundLiveMode());
       unawaited(_consumeScheduledPromptOpen());
+      unawaited(_showWhatsNewAfterUpdate());
     });
+  }
+
+  /// The first launch on a new build opens "What's new" once; a fresh
+  /// install (no saved servers yet) never does.
+  Future<void> _showWhatsNewAfterUpdate() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (!mounted) return;
+      final due = WhatsNew.takeDue(
+        _controller.store.prefs,
+        version: info.version,
+        build: info.buildNumber,
+        existingInstall: _controller.store.profiles.isNotEmpty,
+      );
+      if (!due) return;
+      final context = _navigatorKey.currentState?.overlay?.context;
+      if (context == null || !context.mounted) return;
+      await showWhatsNewSheet(
+        context,
+        version: info.version,
+        controller: _controller,
+      );
+    } catch (_) {
+      // A missing sheet must never disturb start-up.
+    }
   }
 
   @override
@@ -439,58 +478,64 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
                         valueListenable: _notice,
                         builder: (context, notice, notices) =>
                             UpdateStatusScope(status: notice, child: notices!),
-                        child: ShorebirdUpdateNotice(
-                          service: _updateService,
-                          currentProfileId: () => _controller.profile?.id,
-                          allowsAutomaticUpdate: (id) =>
-                              AutomationPolicyController.forProfile(
-                                _controller.store.prefs,
-                                id,
-                              ).value.allows(AutomationBehavior.applyCodePush),
-                          onDownloaded:
-                              ({
-                                required profileId,
-                                required eventId,
-                                required at,
-                              }) async {
-                                await _controller.recordServerAct(
-                                  profileId: profileId,
-                                  kind: AutomaticActKind.update,
-                                  eventId: eventId,
-                                  at: at,
-                                );
-                              },
-                          child: DesktopReleaseNotice(
-                            navigatorKey: _navigatorKey,
-                            // Desktop only. On Android this returns its child
-                            // untouched, so the touch product gains no key handling.
-                            child: AppShortcuts(
-                              navigatorKey: _navigatorKey,
-                              signals: _shortcutSignals,
-                              handlers: AppShortcutHandlers(
-                                onNewSession: () =>
-                                    unawaited(_startNewSession()),
-                                onOpenSettings: _openSettings,
-                                paletteCommands: _shellCommands,
-                              ),
-                              // Settings › Appearance › Effects, above the
-                              // navigator so every route and its transitions read
-                              // the same choices. Calls without a context (a send
-                              // from a controller) obey Vibration via the flag.
-                              child: ValueListenableBuilder<KitEffects>(
-                                valueListenable: _controller.effects,
-                                builder: (context, effects, navigator) {
-                                  KitHaptics.enabled = effects.haptics;
-                                  return KitEffectsScope(
-                                    effects: saver
-                                        ? effects.underSaver
-                                        : effects,
-                                    // The Style's own ground (design schools,
-                                    // hook H6); Solid keeps the theme as is.
-                                    child: kitStyleTheme(child: navigator!),
+                        child: AppUpdateNotice(
+                          controller: ref.read(appUpdateProvider),
+                          child: ShorebirdUpdateNotice(
+                            service: _updateService,
+                            updates: ref.read(appUpdateProvider),
+                            currentProfileId: () => _controller.profile?.id,
+                            allowsAutomaticUpdate: (id) =>
+                                AutomationPolicyController.forProfile(
+                                  _controller.store.prefs,
+                                  id,
+                                ).value.allows(
+                                  AutomationBehavior.applyCodePush,
+                                ),
+                            onDownloaded:
+                                ({
+                                  required profileId,
+                                  required eventId,
+                                  required at,
+                                }) async {
+                                  await _controller.recordServerAct(
+                                    profileId: profileId,
+                                    kind: AutomaticActKind.update,
+                                    eventId: eventId,
+                                    at: at,
                                   );
                                 },
-                                child: child ?? const SizedBox.shrink(),
+                            child: DesktopReleaseNotice(
+                              navigatorKey: _navigatorKey,
+                              // Desktop only. On Android this returns its child
+                              // untouched, so the touch product gains no key handling.
+                              child: AppShortcuts(
+                                navigatorKey: _navigatorKey,
+                                signals: _shortcutSignals,
+                                handlers: AppShortcutHandlers(
+                                  onNewSession: () =>
+                                      unawaited(_startNewSession()),
+                                  onOpenSettings: _openSettings,
+                                  paletteCommands: _shellCommands,
+                                ),
+                                // Settings › Appearance › Effects, above the
+                                // navigator so every route and its transitions read
+                                // the same choices. Calls without a context (a send
+                                // from a controller) obey Vibration via the flag.
+                                child: ValueListenableBuilder<KitEffects>(
+                                  valueListenable: _controller.effects,
+                                  builder: (context, effects, navigator) {
+                                    KitHaptics.enabled = effects.haptics;
+                                    return KitEffectsScope(
+                                      effects: saver
+                                          ? effects.underSaver
+                                          : effects,
+                                      // The Style's own ground (design schools,
+                                      // hook H6); Solid keeps the theme as is.
+                                      child: kitStyleTheme(child: navigator!),
+                                    );
+                                  },
+                                  child: child ?? const SizedBox.shrink(),
+                                ),
                               ),
                             ),
                           ),

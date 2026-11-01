@@ -946,6 +946,17 @@ void main() {
       semantics.dispose();
     });
 
+    testWidgets('a chip ends on the row rail, 16 dp inside the row', (
+      tester,
+    ) async {
+      // The chip's ink is its own 48 dp target, so the row's 4 dp end
+      // padding left it nearly touching the screen edge (2026-10-31).
+      await _pump(tester, KitRowGroup(children: rows([])));
+      final row = tester.getRect(find.byType(KitRow).first);
+      final chip = tester.getRect(find.byKey(const ValueKey('chip-Codex')));
+      expect(row.right - chip.right, 16);
+    });
+
     testWidgets('from 1.3x text the chip moves under the words', (
       tester,
     ) async {

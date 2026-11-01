@@ -51,6 +51,7 @@ String _fakeProgram(
   String version, {
   bool starts = true,
   bool runs = true,
+  bool acceptsAuth = true,
   bool activeFails = false,
 }) =>
     '''#!/bin/sh
@@ -69,7 +70,7 @@ import http.server, sys
 class H(http.server.BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def do_GET(self):
-        self.send_response(401 if self.headers.get("Authorization") is None else 200)
+        self.send_response(401 if ${acceptsAuth ? 'self.headers.get("Authorization") is None' : 'True'} else 200)
         self.end_headers()
 http.server.HTTPServer(("127.0.0.1", int(sys.argv[1])), H).serve_forever()
 ' "\$5"''' : '''echo "Error: Failed to start server: database is locked" >&2
@@ -154,13 +155,14 @@ void main() {
     TermuxRuntime runtime,
     ({OpenCodeAsset arm64, OpenCodeAsset x64}) assets, {
     String machine = 'aarch64',
+    int probeSeconds = 150,
   }) {
     fakeUname(machine);
     final script = SetupScripts.openCodeNativeInstall(
       runtime,
       assets: assets,
       root: root.path,
-      probeSeconds: 150,
+      probeSeconds: probeSeconds,
     );
     return Process.run(
       'dash',
@@ -214,19 +216,19 @@ void main() {
       // The pins scripts/host/ubuntu-opencode.sh carries, and baseline x64.
       expect(
         OpenCodePins.v2Arm64.sha256,
-        'cfa3ae6363fc3082f03072297069d81f53559a761371fdb4b56fe6bfa01ca066',
+        'f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053',
       );
       expect(
         OpenCodePins.v2X64.sha256,
-        '216d3861d0a167adad5850282439bae13483203f4b110f0510f260118bba2858',
+        '873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08',
       );
       expect(
         OpenCodePins.v2X64.url,
-        contains('cli-linux-x64-baseline-2.1.1.tgz'),
+        contains('cli-linux-x64-baseline-2.2.5.tgz'),
       );
-      expect(OpenCodePins.v2Arm64.url, contains('cli-linux-arm64-2.1.1.tgz'));
-      expect(OpenCodePins.v2X64.url, contains('cli-linux-x64-baseline-2.1.1'));
-      expect(OpenCodePins.v2Arm64.url, contains('cli-linux-arm64-2.1.1'));
+      expect(OpenCodePins.v2Arm64.url, contains('cli-linux-arm64-2.2.5.tgz'));
+      expect(OpenCodePins.v2X64.url, contains('cli-linux-x64-baseline-2.2.5'));
+      expect(OpenCodePins.v2Arm64.url, contains('cli-linux-arm64-2.2.5'));
       // Another version is not installed from an unpinned file.
       expect(
         SetupScripts.openCodeNativeInstall(
@@ -281,13 +283,13 @@ void main() {
 
     test('ARM64 gets the arm64 archive: installed, proven, linked; the old '
         'npm wrapper is replaced and the check passes afterwards', () async {
-      final sha = archive('arm.tgz', 'opencode', _fakeProgram('2.1.1'));
+      final sha = archive('arm.tgz', 'opencode', _fakeProgram('2.2.5'));
       // What an older build left: npm's wrapper, reporting the right version.
       final npm = Directory('${root.path}/usr/local/lib/node_modules')
         ..createSync(recursive: true);
       final wrapper = File('${npm.path}/opencode-ai/bin/opencode2')
         ..createSync(recursive: true)
-        ..writeAsStringSync('#!/bin/sh\necho 2.1.1\n');
+        ..writeAsStringSync('#!/bin/sh\necho 2.2.5\n');
       Process.runSync('chmod', ['+x', wrapper.path]);
       Directory('${npm.path}/opencode-linux-arm64').createSync();
       Directory('${root.path}/usr/local/bin').createSync(recursive: true);
@@ -306,7 +308,7 @@ void main() {
       expect(result.exitCode, 0, reason: '${result.stdout}${result.stderr}');
       final out = result.stdout as String;
       expect(out, contains('::oc stage Checking that OpenCode starts'));
-      expect(out, contains('::oc version 2.1.1'));
+      expect(out, contains('::oc version 2.2.5'));
       expect(
         Link('${root.path}/usr/local/bin/opencode2').targetSync(),
         '${root.path}/opt/opencode2/bin/opencode2',
@@ -325,7 +327,7 @@ void main() {
 
       final after = await check(TermuxRuntime.openCode2);
       expect(after.exitCode, 0, reason: '${after.stderr}');
-      expect((after.stdout as String).trim(), '2.1.1');
+      expect((after.stdout as String).trim(), '2.2.5');
     }, skip: skip);
 
     test('x86_64 gets the x64 archive; OpenCode 2 unpacks the npm '
@@ -333,14 +335,14 @@ void main() {
       final sha = archive(
         'x64.tgz',
         'package/bin/opencode2',
-        _fakeProgram('opencode v2.1.1'),
+        _fakeProgram('opencode v2.2.5'),
       );
       final result = await install(TermuxRuntime.openCode2, (
         arm64: asset('missing-arm.tgz', '0' * 64, 'package/bin/opencode2'),
         x64: asset('x64.tgz', sha, 'package/bin/opencode2'),
       ), machine: 'x86_64');
       expect(result.exitCode, 0, reason: '${result.stdout}${result.stderr}');
-      expect(result.stdout, contains('::oc version 2.1.1'));
+      expect(result.stdout, contains('::oc version 2.2.5'));
       expect(
         File('${root.path}/opt/opencode2/bin/opencode2').existsSync(),
         isTrue,
@@ -351,11 +353,34 @@ void main() {
       );
       final after = await check(TermuxRuntime.openCode2);
       expect(after.exitCode, 0, reason: '${after.stderr}');
-      expect((after.stdout as String).trim(), '2.1.1');
+      expect((after.stdout as String).trim(), '2.2.5');
     }, skip: skip);
 
+    test(
+      'an unauthorized health response does not prove the candidate starts',
+      () async {
+        final previous = File('${root.path}/opt/opencode/bin/opencode')
+          ..createSync(recursive: true)
+          ..writeAsStringSync('old');
+        final sha = archive(
+          'reject.tgz',
+          'opencode',
+          _fakeProgram('1.18.32', acceptsAuth: false),
+        );
+        final pin = asset('reject.tgz', sha, 'opencode');
+        final result = await install(TermuxRuntime.openCode1, (
+          arm64: pin,
+          x64: pin,
+        ), probeSeconds: 2);
+        expect(result.exitCode, isNot(0));
+        expect(previous.readAsStringSync(), 'old');
+        expect(lastLine(result), OpenCodeInstallFailure.noStart);
+      },
+      skip: skip,
+    );
+
     test('a checksum mismatch stops before anything is unpacked', () async {
-      archive('arm.tgz', 'opencode', _fakeProgram('2.1.1'));
+      archive('arm.tgz', 'opencode', _fakeProgram('2.2.5'));
       final result = await install(TermuxRuntime.openCode2, (
         arm64: asset('arm.tgz', 'f' * 64, 'opencode'),
         x64: asset('arm.tgz', 'f' * 64, 'opencode'),
@@ -386,7 +411,7 @@ void main() {
       () async {
         final previous = File('${root.path}/opt/opencode2/bin/opencode2')
           ..createSync(recursive: true)
-          ..writeAsStringSync(_fakeProgram('2.1.1'));
+          ..writeAsStringSync(_fakeProgram('2.2.5'));
         await Process.run('chmod', ['755', previous.path]);
         Directory('${root.path}/usr/local/bin').createSync(recursive: true);
         final link = Link('${root.path}/usr/local/bin/opencode2')
@@ -394,7 +419,7 @@ void main() {
         final sha = archive(
           'activation.tgz',
           'opencode',
-          _fakeProgram('2.1.1', activeFails: true),
+          _fakeProgram('2.2.5', activeFails: true),
         );
         final pin = asset('activation.tgz', sha, 'opencode');
         final result = await install(TermuxRuntime.openCode2, (
@@ -406,7 +431,7 @@ void main() {
           lastLine(result),
           '[oc] OpenCode could not finish updating. Run setup again.',
         );
-        expect(previous.readAsStringSync(), _fakeProgram('2.1.1'));
+        expect(previous.readAsStringSync(), _fakeProgram('2.2.5'));
         expect(link.targetSync(), previous.path);
         expect((await check(TermuxRuntime.openCode2)).exitCode, 0);
         expect(
@@ -434,11 +459,11 @@ void main() {
       final empty = await run(null);
       expect(lastLine(empty), OpenCodeInstallFailure.noProgram);
 
-      final broken = await run(_fakeProgram('2.1.1', runs: false));
+      final broken = await run(_fakeProgram('2.2.5', runs: false));
       expect(lastLine(broken), OpenCodeInstallFailure.wontRun);
       expect(broken.stdout, contains('Exec format error'));
 
-      final silent = await run(_fakeProgram('2.1.1', starts: false));
+      final silent = await run(_fakeProgram('2.2.5', starts: false));
       expect(silent.exitCode, isNot(0));
       final said = '${silent.stdout}${silent.stderr}';
       expect(said, contains('database is locked'));

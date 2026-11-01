@@ -48,6 +48,20 @@ final _en = lookupAppLocalizations(const Locale('en'));
 
 Finder _key(String key) => find.byKey(ValueKey(key));
 
+/// The AI Team row's state words as drawn: beside the title, or under it
+/// when the row is too narrow to share a line (the row's value then moves
+/// into the row's own text). Either way the person reads them on screen.
+String _teamRowLine(WidgetTester tester) {
+  final value = tester.widget<KitRow>(_key('settings-ai-team')).trailing;
+  expect(value, isA<KitRowValue>());
+  final words = (value! as KitRowValue).value;
+  expect(
+    find.descendant(of: _key('settings-ai-team'), matching: find.text(words)),
+    findsOneWidget,
+  );
+  return words;
+}
+
 /// A scripted Gas City probe: answers [found] for every address, or
 /// unreachable.
 class _Probe {
@@ -589,14 +603,7 @@ void main() {
     }
 
     // The state is the row's short value at its end (canvas Settings.png).
-    String line(WidgetTester tester) => tester
-        .widget<KitRowValue>(
-          find.descendant(
-            of: _key('settings-ai-team'),
-            matching: find.byType(KitRowValue),
-          ),
-        )
-        .value;
+    String line(WidgetTester tester) => _teamRowLine(tester);
 
     testWidgets('has an AI Team row that reads Off and what it is for, and '
         'opens the intro', (tester) async {
@@ -686,14 +693,7 @@ void main() {
       await _settle(tester);
       await tester.ensureVisible(_key('settings-ai-team'));
       await _settle(tester);
-      String line() => tester
-          .widget<KitRowValue>(
-            find.descendant(
-              of: _key('settings-ai-team'),
-              matching: find.byType(KitRowValue),
-            ),
-          )
-          .value;
+      String line() => _teamRowLine(tester);
       expect(line(), _en.teamDiscoverTurningOn);
 
       // Done installing: the card offers to turn it on; Settings reads Off.
@@ -720,14 +720,7 @@ void main() {
       await _settle(tester);
       await tester.ensureVisible(_key('settings-ai-team'));
       await _settle(tester);
-      final line = tester
-          .widget<KitRowValue>(
-            find.descendant(
-              of: _key('settings-ai-team'),
-              matching: find.byType(KitRowValue),
-            ),
-          )
-          .value;
+      final line = _teamRowLine(tester);
       expect(line, teamStateLine(_en, controller));
       expect(line, isNot(startsWith(_en.teamUiRowOff)));
       await tester.pumpWidget(const SizedBox.shrink());

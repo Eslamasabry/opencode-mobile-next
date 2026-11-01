@@ -9,6 +9,7 @@ import '../builtin/migration/termux_migration_controller.dart';
 import '../builtin/migration/termux_migration_transport.dart';
 import '../state/connection.dart';
 import '../state/profiles.dart';
+import '../state/termux_migration_offer.dart';
 import '../termux/bridge.dart';
 import '../voice/device.dart';
 import 'termux_migration.dart';
@@ -35,14 +36,14 @@ abstract final class TermuxMigrationService {
         PreferencesTermuxMigrationJournal.key(profileId),
       );
 
-  static Future<void> dismissOffer(ProfileStore store, String profileId) async {
-    if (!await store.prefs.setBool(
-      'oc.termuxMigrationOffer.$profileId',
-      true,
-    )) {
-      throw const TermuxMigrationException(TermuxMigrationFailure.storage);
-    }
-  }
+  static Future<void> dismissOffer(ProfileStore store, String profileId) =>
+      TermuxMigrationOfferStore.dismiss(
+        store.prefs,
+        profileId,
+        mayWrite: () => store.profiles.any(
+          (profile) => profile.id == profileId && eligible(profile),
+        ),
+      );
 
   static Future<TermuxMigrationController> create({
     required ConnectionController connection,

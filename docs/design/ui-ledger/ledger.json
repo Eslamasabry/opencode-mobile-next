@@ -1,5 +1,5 @@
 {
- "generatedFrom": "1ead509046c2e5de981b4fe860da7b30a035a932",
+ "generatedFrom": "2e4981744a72f255161c994493e4d5cc92518702",
  "pages": [
   {
    "id": "system",
@@ -35646,6 +35646,71 @@
    "elements": []
   },
   {
+   "id": "linux-backups",
+   "title": "Backups",
+   "kind": "screen",
+   "area": "misc",
+   "file": "lib/ui/screens/linux_manager/linux_backups_page.dart",
+   "widget": "LinuxBackupsPage",
+   "presentedBy": [],
+   "line": 47,
+   "purpose": "Keep a copy of the phone's Linux setup: choose setup, setup and projects, or projects only (the former Export projects), save one zip where the person picks, and restore one from a file. Backups never hold sign-ins, passwords or private SSH keys.",
+   "reachedFrom": [
+    {
+     "page": "linux-manager",
+     "element": "linux-manager-backups"
+    },
+    {
+     "page": "linux-manager",
+     "element": "linux-manager-reset"
+    }
+   ],
+   "gates": [
+    "in-app host only"
+   ],
+   "elements": [
+    {
+     "id": "linux-backups-go",
+     "type": "button",
+     "label": "Back up <what>",
+     "key": "linux-backup-go",
+     "file": "lib/ui/screens/linux_manager/linux_backups_page.dart",
+     "line": 297,
+     "action": "mutate",
+     "target": null,
+     "effect": "Asks where to save the zip, makes the backup inside Linux and saves it; Projects only opens the projects export.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "linux-backups-choice",
+     "type": "list-tile",
+     "label": "Setup / Setup and projects / Projects only",
+     "key": "linux-backup-choice",
+     "file": "lib/ui/screens/linux_manager/linux_backups_page.dart",
+     "line": 322,
+     "action": "other",
+     "target": null,
+     "effect": "Chooses what the primary backs up.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "linux-backups-restore",
+     "type": "list-tile",
+     "label": "Restore from a backup",
+     "key": "linux-restore-row",
+     "file": "lib/ui/screens/linux_manager/linux_backups_page.dart",
+     "line": 350,
+     "action": "mutate",
+     "target": null,
+     "effect": "Opens the file picker, reads the backup, asks, then puts it back.",
+     "gates": [],
+     "destructive": false
+    }
+   ]
+  },
+  {
    "id": "linux-manager",
    "title": "Linux on this phone",
    "kind": "screen",
@@ -35748,6 +35813,19 @@
      "destructive": false
     },
     {
+     "id": "linux-manager-services",
+     "type": "list-tile",
+     "label": "Services",
+     "key": "linux-row-services",
+     "file": "lib/ui/screens/linux_manager/linux_manager_screen.dart",
+     "line": 154,
+     "action": "navigate",
+     "target": "linux-services",
+     "effect": "Opens Services. The line under it names what runs, or the one that gave up.",
+     "gates": [],
+     "destructive": false
+    },
+    {
      "id": "linux-manager-reset",
      "type": "list-tile",
      "label": "Reset Linux",
@@ -35761,6 +35839,19 @@
       "not while setup or a package job runs"
      ],
      "destructive": true
+    },
+    {
+     "id": "linux-manager-backups",
+     "type": "list-tile",
+     "label": "Backups",
+     "key": "linux-row-backups",
+     "file": "lib/ui/screens/linux_manager/linux_manager_screen.dart",
+     "line": 322,
+     "action": "navigate",
+     "target": "linux-backups",
+     "effect": "Opens Backups. The line under it says when the last backup was saved, or that there is none yet.",
+     "gates": [],
+     "destructive": false
     }
    ]
   },
@@ -35996,6 +36087,223 @@
       "not the OpenCode server",
       "disabled while stopping"
      ],
+     "destructive": true
+    }
+   ]
+  },
+  {
+   "id": "linux-service-add",
+   "title": "Add a service",
+   "kind": "screen",
+   "area": "misc",
+   "file": "lib/ui/screens/linux_manager/linux_service_add_page.dart",
+   "widget": "LinuxServiceAddPage",
+   "presentedBy": [],
+   "line": 33,
+   "purpose": "A command of your own: name, command, folder, optional port and restart-on-crash; each field says what is wrong beside it.",
+   "reachedFrom": [
+    {
+     "page": "linux-services",
+     "element": "linux-services-add"
+    }
+   ],
+   "gates": [
+    "in-app host only"
+   ],
+   "elements": [
+    {
+     "id": "linux-service-save",
+     "type": "button",
+     "label": "Save and start",
+     "key": "linux-service-save",
+     "file": "lib/ui/screens/linux_manager/linux_service_add_page.dart",
+     "line": 207,
+     "action": "other",
+     "target": null,
+     "effect": "save() then start(); closes. A start that fails is shown on the list.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "linux-service-restart-toggle",
+     "type": "toggle",
+     "label": "Restart when it crashes",
+     "key": "linux-service-restart-switch",
+     "file": "lib/ui/screens/linux_manager/linux_service_add_page.dart",
+     "line": 303,
+     "action": "other",
+     "target": null,
+     "effect": "Chooses restart on-failure (on) or never.",
+     "gates": [],
+     "destructive": false
+    }
+   ]
+  },
+  {
+   "id": "linux-service",
+   "title": "Service",
+   "kind": "screen",
+   "area": "misc",
+   "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
+   "widget": "LinuxServicePage",
+   "presentedBy": [],
+   "line": 23,
+   "purpose": "One service: its state in words, Open (with a port), Start or Stop, Restart, Remove, and its live log with search and copy.",
+   "reachedFrom": [
+    {
+     "page": "linux-services",
+     "element": "linux-services-row"
+    }
+   ],
+   "gates": [
+    "in-app host only"
+   ],
+   "elements": [
+    {
+     "id": "linux-service-open",
+     "type": "list-tile",
+     "label": "Open <service>",
+     "key": "linux-service-open",
+     "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
+     "line": 213,
+     "action": "navigate",
+     "target": null,
+     "effect": "openDevPreview on the service's port.",
+     "gates": [
+      "the service has a port and is running"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "linux-service-stop",
+     "type": "list-tile",
+     "label": "Stop <service>",
+     "key": "linux-service-stop",
+     "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
+     "line": 225,
+     "action": "other",
+     "target": null,
+     "effect": "stop(): stays stopped until started again.",
+     "gates": [
+      "it is kept running"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "linux-service-start",
+     "type": "list-tile",
+     "label": "Start <service>",
+     "key": "linux-service-start",
+     "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
+     "line": 237,
+     "action": "other",
+     "target": null,
+     "effect": "start(): kept running, also after a crash or a restart.",
+     "gates": [
+      "it is off or gave up"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "linux-service-restart",
+     "type": "list-tile",
+     "label": "Restart <service>",
+     "key": "linux-service-restart",
+     "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
+     "line": 249,
+     "action": "other",
+     "target": null,
+     "effect": "restart(): a new kick.",
+     "gates": [
+      "it is running"
+     ],
+     "destructive": false
+    },
+    {
+     "id": "linux-service-remove",
+     "type": "list-tile",
+     "label": "Remove <service>",
+     "key": "linux-service-remove",
+     "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
+     "line": 258,
+     "action": "open-dialog",
+     "target": null,
+     "effect": "Asks, then remove() and leaves the page.",
+     "gates": [],
+     "destructive": true
+    }
+   ]
+  },
+  {
+   "id": "linux-services",
+   "title": "Services",
+   "kind": "screen",
+   "area": "misc",
+   "file": "lib/ui/screens/linux_manager/linux_services_page.dart",
+   "widget": "LinuxServicesPage",
+   "presentedBy": [],
+   "line": 35,
+   "purpose": "What the person keeps running in the app's Linux: one list by urgency, each service with its state in words and a Start or Stop chip; Add a service first.",
+   "reachedFrom": [
+    {
+     "page": "linux-manager",
+     "element": "linux-manager-services"
+    }
+   ],
+   "gates": [
+    "in-app host only"
+   ],
+   "elements": [
+    {
+     "id": "linux-services-add",
+     "type": "list-tile",
+     "label": "Add a service",
+     "key": "linux-services-add",
+     "file": "lib/ui/screens/linux_manager/linux_services_page.dart",
+     "line": 209,
+     "action": "navigate",
+     "target": "linux-service-add",
+     "effect": "Opens the form for a command of your own.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "linux-services-row",
+     "type": "list-tile",
+     "label": "<service> · state",
+     "key": "linux-service-<name>",
+     "file": "lib/ui/screens/linux_manager/linux_services_page.dart",
+     "line": 250,
+     "action": "navigate",
+     "target": "linux-service",
+     "effect": "Opens the service page.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "linux-services-chip",
+     "type": "chip",
+     "label": "Start / Stop",
+     "key": "linux-service-chip-<name>",
+     "file": "lib/ui/screens/linux_manager/linux_services_page.dart",
+     "line": 255,
+     "action": "other",
+     "target": null,
+     "effect": "start() keeps it running; stop() leaves it off until started again.",
+     "gates": [],
+     "destructive": false
+    },
+    {
+     "id": "linux-services-remove",
+     "type": "menu-item",
+     "label": "Remove <service>",
+     "key": "linux-service-remove-<name>",
+     "file": "lib/ui/screens/linux_manager/linux_services_page.dart",
+     "line": 297,
+     "action": "open-dialog",
+     "target": null,
+     "effect": "Asks, then remove(): the log and settings go, the program stays installed.",
+     "gates": [],
      "destructive": true
     }
    ]
@@ -39420,6 +39728,11 @@
    },
    {
     "from": "linux-manager",
+    "element": "linux-manager-services",
+    "to": "linux-services"
+   },
+   {
+    "from": "linux-manager",
     "element": "linux-manager-running",
     "to": "linux-processes"
    },
@@ -39437,6 +39750,21 @@
     "from": "linux-manager",
     "element": "linux-manager-packages",
     "to": "linux-packages"
+   },
+   {
+    "from": "linux-manager",
+    "element": "linux-manager-backups",
+    "to": "linux-backups"
+   },
+   {
+    "from": "linux-services",
+    "element": "linux-services-add",
+    "to": "linux-service-add"
+   },
+   {
+    "from": "linux-services",
+    "element": "linux-services-row",
+    "to": "linux-service"
    },
    {
     "from": "scheduled-prompts",
@@ -39610,6 +39938,12 @@
     "from": "mcp-catalog",
     "element": "mcp-catalog-switch",
     "to": "mcp-catalog-remove-sheet",
+    "secondary": true
+   },
+   {
+    "from": "linux-manager",
+    "element": "linux-manager-reset",
+    "to": "linux-backups",
     "secondary": true
    },
    {
@@ -40344,6 +40678,11 @@
    "part": "b1-chat-screen"
   },
   {
+   "file": "lib/ui/screens/chat/chat_local_summary.dart",
+   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): the conversation menu's Summarize on this phone entry; the sheet it opens is lib/local_llm/local_llm_ui.dart. No separate surface.",
+   "part": "b1-chat-screen"
+  },
+  {
    "file": "lib/ui/screens/chat/chat_mentions.dart",
    "reason": "Not a page: the chat's @-mention search state and helpers, drawn in the composer.",
    "part": "o-usage-and-settings"
@@ -40661,6 +41000,11 @@
   {
    "file": "lib/ui/screens/linux_manager/linux_reset.dart",
    "reason": "the Reset Linux question and flow, listed as the Reset row on the hub page",
+   "part": "q-linux-manager"
+  },
+  {
+   "file": "lib/ui/screens/linux_manager/linux_services_common.dart",
+   "reason": "the live list of services, their words and the Remove question, shared by the Services pages; the acts are listed on those pages",
    "part": "q-linux-manager"
   },
   {

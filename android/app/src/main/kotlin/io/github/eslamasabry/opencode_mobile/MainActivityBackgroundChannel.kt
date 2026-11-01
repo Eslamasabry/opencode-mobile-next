@@ -36,6 +36,9 @@ internal class MainActivityBackgroundChannel(
                     result.success(background.backgroundStatus())
                 }
                 "openAppSettings" -> openAppSettings(result)
+                // Needs a release (native): the child process limit card.
+                "childProcessLimit" -> result.success(ChildProcessLimit.status(activity))
+                "openDeveloperOptions" -> openDeveloperOptions(result)
                 "monitorNetworkPolicy" -> {
                     val connectivity = activity.getSystemService(ConnectivityManager::class.java)
                     val capabilities = connectivity.getNetworkCapabilities(connectivity.activeNetwork)
@@ -97,6 +100,20 @@ internal class MainActivityBackgroundChannel(
         }
         activity.startActivity(intent)
         result.success(null)
+    }
+
+    /** Developer options when they are on, else About phone (Build number). Needs a release (native). */
+    private fun openDeveloperOptions(result: MethodChannel.Result) {
+        val developerOn = ChildProcessLimit.developerOptionsEnabled(activity) == true
+        if (developerOn && runCatching {
+                activity.startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
+            }.isSuccess
+        ) {
+            result.success(mapOf("opened" to "developer"))
+            return
+        }
+        val about = runCatching { activity.startActivity(Intent(Settings.ACTION_DEVICE_INFO_SETTINGS)) }.isSuccess
+        result.success(mapOf("opened" to if (about) "about" else "none"))
     }
 
     private fun codingAlertRequest(call: MethodCall) = CodingAlertRequest(

@@ -8,12 +8,15 @@ import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../l10n/app_localizations_en.dart';
+import '../../platform/platform_capabilities.dart';
 import '../app_iconography.dart';
 import 'kit_buttons.dart';
+import 'kit_chrome.dart';
 import 'kit_icon_button.dart';
 import 'kit_layout.dart';
 import 'kit_max_width.dart';
 import 'kit_motion.dart';
+import 'kit_paste_image_menu.dart';
 import 'kit_redact.dart';
 import 'kit_sheet.dart' show KitDraft;
 import 'kit_since.dart';
@@ -199,6 +202,7 @@ class KitField extends StatefulWidget {
        saved = false,
        onReplace = null,
        contentInsertion = null,
+       pasteImage = null,
        revealKey = null,
        pasteKey = null,
        replaceKey = null,
@@ -218,6 +222,7 @@ class KitField extends StatefulWidget {
     this.onChanged,
     this.onSubmitted,
     this.contentInsertion,
+    this.pasteImage,
     this.maxLines,
     this.enabled = true,
     this.disabledReason,
@@ -288,6 +293,7 @@ class KitField extends StatefulWidget {
        action = null,
        selectAllOnFocus = false,
        contentInsertion = null,
+       pasteImage = null,
        actionKey = null,
        optional = false,
        _mode = _KitFieldMode.secret;
@@ -365,6 +371,11 @@ class KitField extends StatefulWidget {
   /// [KitField.composer] only: images from the keyboard.
   final ContentInsertionConfiguration? contentInsertion;
 
+  /// [KitField.composer] only: "Paste image" in the selection menu, shown
+  /// while the clipboard holds a picture (the framework's Paste reads text
+  /// only).
+  final KitPasteImage? pasteImage;
+
   /// On the inner editable.
   final Key? fieldKey;
   final Key? actionKey;
@@ -396,6 +407,14 @@ class KitField extends StatefulWidget {
 }
 
 class _KitFieldState extends State<KitField> {
+  /// The framework's default selection menu for a text field.
+  static Widget _platformContextMenu(
+    BuildContext context,
+    EditableTextState state,
+  ) => SystemContextMenu.isSupportedByField(state)
+      ? SystemContextMenu.editableText(editableTextState: state)
+      : AdaptiveTextSelectionToolbar.editableText(editableTextState: state);
+
   TextEditingController? _ownController;
   FocusNode? _ownFocus;
   TextEditingController? _listening;
@@ -660,8 +679,14 @@ class _KitFieldState extends State<KitField> {
   ];
 
   @override
-  Widget build(BuildContext context) =>
-      KitMaxWidth.reading(child: _buildContent(context));
+  Widget build(BuildContext context) => widget._mode == _KitFieldMode.composer
+      // The composer's typed words and hint are the frame (KitChrome); every
+      // other field is reading and keeps the full system scale.
+      ? KitChrome.builder(
+          builder: (context) =>
+              KitMaxWidth.reading(child: _buildContent(context)),
+        )
+      : KitMaxWidth.reading(child: _buildContent(context));
 
   Widget _buildContent(BuildContext context) {
     if (widget.validator == null) {
@@ -775,6 +800,12 @@ class _KitFieldState extends State<KitField> {
       onChanged: widget.onChanged,
       onFieldSubmitted: _multiline ? null : (_) => _submit(),
       contentInsertionConfiguration: widget.contentInsertion,
+      // The platform's own menu; the composer adds "Paste image" to it while
+      // the clipboard holds a picture. (A null builder would remove the menu.)
+      contextMenuBuilder: widget.pasteImage == null
+          ? _platformContextMenu
+          : (context, state) =>
+                KitPasteImageMenu(state: state, paste: widget.pasteImage!),
       style: style,
       strutStyle: singleLine
           ? StrutStyle(
@@ -893,7 +924,11 @@ class _KitFieldState extends State<KitField> {
               ? () => setState(() => _revealed = !_revealed)
               : null,
         ),
-        if (widget._mode == _KitFieldMode.secret)
+        // A browser can read the clipboard only on a secure origin; there
+        // the button is not built (keyboard paste into the field keeps
+        // working) rather than built to fail.
+        if (widget._mode == _KitFieldMode.secret &&
+            platformCapabilities.supportsClipboardRead)
           KitIconButton(
             key: widget.pasteKey,
             icon: AppIconography.paste,

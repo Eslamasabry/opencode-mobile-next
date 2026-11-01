@@ -52,9 +52,9 @@ enum KitBubbleWidth { auto, compact, full }
 /// has no control row and opens its menu on long-press; a reply has no
 /// frame; step boundaries are never drawn.
 ///
-/// States: prompt (with or without attachments), reply, thought (working,
-/// folded, open), notice (quiet, failed, with action, open), marker
-/// (still, working) (KIT-12).
+/// States: prompt (with or without attachments), reply (with or without a
+/// speaker), thought (working, folded, open), notice (quiet, failed, with
+/// action, open), marker (still, working) (KIT-12).
 class KitMessage extends StatelessWidget {
   /// The person's words: an end-aligned surface2 bubble, radii 20/20/6/20
   /// (the small corner at the bottom end). No control row: long-press,
@@ -86,13 +86,24 @@ class KitMessage extends StatelessWidget {
        bodyKey = null,
        thoughtKey = null,
        noticeKey = null,
-       markerKey = null;
+       markerKey = null,
+       speaker = null,
+       speakerIcon = null,
+       speakerNote = null;
 
   /// The agent's prose: plain body text on the prose's start edge.
+  ///
+  /// With [speaker], a quiet line above the prose says who is talking
+  /// (an AI Team role: "Reviewer", "Manager (Opus 5.5)"), with
+  /// [speakerIcon] before it and [speakerNote] (an age, "3 min") after it.
+  /// The line is read once, before the prose: "Reviewer, 3 min".
   const KitMessage.reply({
     super.key,
     required KitMarkdown this.body,
     this.bodyKey,
+    this.speaker,
+    this.speakerIcon,
+    this.speakerNote,
   }) : kind = KitMessageKind.reply,
        note = null,
        noteAction = null,
@@ -147,7 +158,10 @@ class KitMessage extends StatelessWidget {
        bubbleKey = null,
        bodyKey = null,
        noticeKey = null,
-       markerKey = null;
+       markerKey = null,
+       speaker = null,
+       speakerIcon = null,
+       speakerNote = null;
 
   /// Something that happened during a turn that nobody typed ("Context
   /// added", "Instructions updated", a compaction summary). It does not end
@@ -179,7 +193,10 @@ class KitMessage extends StatelessWidget {
        bubbleKey = null,
        bodyKey = null,
        thoughtKey = null,
-       markerKey = null;
+       markerKey = null,
+       speaker = null,
+       speakerIcon = null,
+       speakerNote = null;
 
   /// A quiet divider row for a switch (model, agent, project) or a running
   /// compaction: hairline, centred words, hairline.
@@ -210,7 +227,10 @@ class KitMessage extends StatelessWidget {
        bubbleKey = null,
        bodyKey = null,
        thoughtKey = null,
-       noticeKey = null;
+       noticeKey = null,
+       speaker = null,
+       speakerIcon = null,
+       speakerNote = null;
 
   final KitMessageKind kind;
 
@@ -282,6 +302,15 @@ class KitMessage extends StatelessWidget {
 
   final Key? bubbleKey, bodyKey, thoughtKey, noticeKey, markerKey;
 
+  /// Who says a reply (an AI Team role), or null for the agent's own prose.
+  final String? speaker;
+
+  /// The speaker's glyph, drawn before [speaker]; decorative.
+  final IconData? speakerIcon;
+
+  /// A short tail after [speaker], such as an age ("3 min").
+  final String? speakerNote;
+
   @override
   Widget build(BuildContext context) =>
       KitMaxWidth.conversation(child: _buildContent(context));
@@ -290,12 +319,67 @@ class KitMessage extends StatelessWidget {
     KitMessageKind.prompt => _Prompt(message: this),
     KitMessageKind.reply => KeyedSubtree(
       key: bodyKey,
-      child: Align(alignment: AlignmentDirectional.topStart, child: body),
+      child: speaker == null
+          ? Align(alignment: AlignmentDirectional.topStart, child: body)
+          : _SpokenReply(message: this),
     ),
     KitMessageKind.thought => _Thought(message: this),
     KitMessageKind.notice => _Notice(message: this),
     KitMessageKind.marker => _Marker(message: this),
   };
+}
+
+// ── Reply with a speaker ──────────────────────────────────────────────────
+
+/// A reply under a speaker line: the role's glyph, its name in the label
+/// style and the note in the caption style, wrapping at large text.
+class _SpokenReply extends StatelessWidget {
+  const _SpokenReply({required this.message});
+
+  final KitMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    final icon = message.speakerIcon;
+    final note = message.speakerNote;
+    final name = message.speaker!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          header: true,
+          label: note == null ? name : '$name, $note',
+          excludeSemantics: true,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: AppIconography.inlineSize,
+                  color: tokens.roles.text2,
+                ),
+                SizedBox(width: tokens.space2),
+              ],
+              Flexible(
+                child: Wrap(
+                  spacing: tokens.space2,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    KitText(name, role: KitTextRole.label),
+                    if (note != null) KitText(note, role: KitTextRole.caption),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: tokens.space1),
+        Align(alignment: AlignmentDirectional.topStart, child: message.body),
+      ],
+    );
+  }
 }
 
 // ── Prompt ────────────────────────────────────────────────────────────────

@@ -167,7 +167,9 @@ void main() {
         expect(e.maxCount, inInclusiveRange(1, 2), reason: e.id);
         expect(e.anchors, isNotEmpty, reason: e.id);
         expect(e.trigger, isNotEmpty, reason: e.id);
-        if (e.kind == TeachingKind.tour) {
+        // The What's new walkthrough runs in its own sheet, not as a
+        // highlight tour over one screen, so it has no KitTour steps.
+        if (e.kind == TeachingKind.tour && e.id != TeachingIds.whatsNew) {
           expect(e.steps!(_en).length, inInclusiveRange(2, 4), reason: e.id);
         }
       }
@@ -332,8 +334,10 @@ void main() {
       ]);
       // One tour, not two: the older Appearance tour is gone.
       expect(
-        teachingRegistry.where((e) => e.kind == TeachingKind.tour),
-        hasLength(1),
+        teachingRegistry
+            .where((e) => e.kind == TeachingKind.tour)
+            .map((e) => e.id),
+        [TeachingIds.makeItYours, TeachingIds.whatsNew],
       );
     });
 

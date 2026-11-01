@@ -303,7 +303,7 @@ void main() {
             part: _tagged(
               type: 'v2:compaction',
               kind: 'running',
-              text: 'Compacting conversation…',
+              text: 'Shortening conversation…',
             ),
             messageId: 'msg_8',
           ),
@@ -314,7 +314,7 @@ void main() {
         find.byKey(const ValueKey('compaction-running-msg_8')),
         findsOneWidget,
       );
-      expect(find.text('Compacting conversation…'), findsOneWidget);
+      expect(find.text('Shortening conversation…'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
@@ -369,7 +369,7 @@ void main() {
         find.byKey(const ValueKey('compaction-failed-msg_10')),
         findsOneWidget,
       );
-      expect(find.textContaining('Compaction failed'), findsOneWidget);
+      expect(find.textContaining('Shortening failed'), findsOneWidget);
       // What it means for the reader; the server's own text is not copy.
       expect(
         find.textContaining('still too long for the model'),
@@ -397,7 +397,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text('Compact again'), findsOneWidget);
+      expect(find.text('Shorten again'), findsOneWidget);
       await tester.tap(find.byKey(const Key('transcript-notice-action')));
       expect(retried, 1);
     });

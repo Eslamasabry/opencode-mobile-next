@@ -79,6 +79,9 @@ Future<Map<String, Object?>> executeScheduledPrompt(
   final schedule = (await store.load(
     profileId,
   )).where((s) => s.id == scheduleId).firstOrNull;
+  if (args['manual'] == true) {
+    return _executeNow(args, schedule, store, platform, runner, now);
+  }
   if (schedule == null ||
       !schedule.enabled ||
       schedule.revision != args['revision'] ||
@@ -175,5 +178,81 @@ Future<Map<String, Object?>> executeScheduledPrompt(
     'error': run.errorCode,
     'sessionId': run.sessionId,
     'late': run.late,
+    'title': run.title,
+    'summary': run.summary,
+  };
+}
+
+/// "Run now": the same runner a timed run uses, started by the person. It
+/// never claims or advances an occurrence, so the next scheduled time stays.
+Future<Map<String, Object?>> _executeNow(
+  Map<String, dynamic> args,
+  ScheduledPrompt? schedule,
+  ScheduledPromptStore store,
+  ScheduledPromptsPlatform platform,
+  ScheduledPromptRunner? runner,
+  DateTime Function() now,
+) async {
+  final profileId = args['profileId'] as String;
+  if (schedule == null || schedule.revision != args['revision']) {
+    return {'status': 'skipped', 'error': 'stale_target'};
+  }
+  final admittedAt = now();
+  final runId = scheduledOccurrenceId(schedule, admittedAt);
+  await store.recordRun(
+    profileId,
+    ScheduledPromptRun(
+      id: runId,
+      scheduleId: schedule.id,
+      scheduledAt: admittedAt,
+      startedAt: admittedAt,
+      status: ScheduledPromptRunStatus.running,
+    ),
+  );
+  final prefs = runner == null ? await SharedPreferences.getInstance() : null;
+  runner ??= ScheduledPromptRunner(
+    loadProfile: ProfileStore(prefs: prefs!).loadForWidgetAction,
+    now: now,
+  );
+  final result = await runner.execute(
+    schedule,
+    manual: true,
+    deadlineEpochMs: args['deadlineEpochMs'] as int,
+    onSessionCreated: (sessionId) => store.recordRun(
+      profileId,
+      ScheduledPromptRun(
+        id: runId,
+        scheduleId: schedule.id,
+        scheduledAt: admittedAt,
+        startedAt: admittedAt,
+        status: ScheduledPromptRunStatus.running,
+        sessionId: sessionId,
+      ),
+    ),
+    isCurrent: () async {
+      final current = (await store.load(
+        profileId,
+      )).where((s) => s.id == schedule.id).firstOrNull;
+      return current != null && current.revision == schedule.revision;
+    },
+  );
+  final run = ScheduledPromptRun(
+    id: runId,
+    scheduleId: schedule.id,
+    scheduledAt: admittedAt,
+    startedAt: admittedAt,
+    status: result.status,
+    finishedAt: result.finishedAt,
+    sessionId: result.sessionId,
+    errorCode: result.errorCode,
+  );
+  await store.recordRun(profileId, run);
+  return {
+    'status': run.status.name,
+    'error': run.errorCode,
+    'sessionId': run.sessionId,
+    'late': false,
+    'title': result.title,
+    'summary': result.summary,
   };
 }

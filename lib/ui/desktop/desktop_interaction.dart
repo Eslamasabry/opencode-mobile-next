@@ -13,21 +13,29 @@ import '../kit/kit_text.dart' show KitSelectable, KitSelectMode;
 ///
 /// Delegates to [PlatformCapabilities] — the shared seam landed while this
 /// layer was in flight, and one answer to "is this desktop?" is the whole
-/// point of it. Kept as a named getter rather than inlining
-/// `platformCapabilities.isDesktop` at ~40 call sites so the *reason* each
-/// gate exists stays legible, and so `debugPlatformCapabilities` swaps every
-/// one of them at once.
-bool get desktopInteractions => platformCapabilities.isDesktop;
+/// point of it. Kept as a named getter rather than inlining the capability
+/// at ~40 call sites so the *reason* each gate exists stays legible, and so
+/// `debugPlatformCapabilities` swaps every one of them at once.
+///
+/// This is [PlatformCapabilities.usesDesktopInteractions], not `isDesktop`:
+/// a desktop *browser* has the same keyboard and mouse as a desktop window
+/// and gets the same layer, while a phone browser stays on the touch
+/// product. What a browser does not get is anything about a native window —
+/// geometry, taskbar icon, release check — which still key off `isDesktop`.
+bool get desktopInteractions => platformCapabilities.usesDesktopInteractions;
 
 /// The modifier a desktop user expects for accelerators: Command on macOS,
 /// Control everywhere else. Both are accepted by every binding so a keyboard
-/// attached to any platform keeps working.
-bool get _isApple =>
-    !platformCapabilities.isWeb &&
-    platformCapabilities.platform == TargetPlatform.macOS;
+/// attached to any platform keeps working. A browser on a Mac is still a Mac
+/// keyboard, so the label follows the operating system there too.
+bool get _isApple => platformCapabilities.platform == TargetPlatform.macOS;
 
 /// Human-readable prefix for the shortcut help sheet.
 String get shortcutModifierLabel => _isApple ? '⌘' : 'Ctrl';
+
+/// Human-readable label for the Alt/Option key, used by the bindings that
+/// have to step off Ctrl/Cmd in a browser (see `appShortcutBindings`).
+String get shortcutAltLabel => _isApple ? '⌥' : 'Alt';
 
 /// App-wide scroll behaviour.
 ///

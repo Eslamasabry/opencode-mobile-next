@@ -97,7 +97,7 @@ def quality_jobs():
     workflow = (root/'.github/workflows/android-quality.yml').read_text()
     shards = len(re.search(r'shard: \[([^\]]*)\]', workflow).group(1).split(','))
     variant = os.getenv('MOCK_JOBS', 'full')
-    checks = ['Verify generated OpenCode SDK integrity', 'Test generated OpenCode SDK', 'Analyze generated OpenCode SDK', 'Analyze', 'Check the serial test runner', 'Run Android release lint']
+    checks = ['Analyze', 'Check the serial test runner', 'Run Android release lint']
     build = ['Check out source', 'Compile test-signed release APK', 'Verify release artifact exists', 'Upload test-signed APK']
     def job(name, steps, conclusion='success', step_conclusion='success'):
         return dict(name=name, conclusion=conclusion, steps=[dict(name=step, conclusion=step_conclusion) for step in steps])

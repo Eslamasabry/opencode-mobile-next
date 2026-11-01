@@ -71,6 +71,21 @@ internal class ScheduledPromptScheduler(private val context: Context) {
         val policy = if (replacePending) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP
         WorkManager.getInstance(context).enqueueUniqueWork(name, policy, request)
     }
+    /**
+     * "Run now": the same worker a timed run uses, started at once. It is
+     * never claimed or indexed, so the schedule's next time stays as it is.
+     */
+    fun runNow(profile: String, scheduleId: String, revision: Long) {
+        val entry = ScheduledPromptStore.Entry.orNull(profile, scheduleId, revision, System.currentTimeMillis())
+            ?: error("invalid_schedule")
+        val request = OneTimeWorkRequestBuilder<ScheduledPromptWorker>()
+            .setInputData(Data.Builder().putString("profileId", entry.profileId).putString("scheduleId", entry.id)
+                .putLong("revision", entry.revision).putLong("scheduledAtMs", entry.due)
+                .putBoolean("manual", true).build())
+            .addTag(tag(entry.profileId)).build()
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork(entry.workName + ".manual", ExistingWorkPolicy.KEEP, request)
+    }
     private fun cancel(entry: ScheduledPromptStore.Entry) {
         alarms.cancel(pending(entry))
         // Updating the next date from inside an executing worker must not stop it.

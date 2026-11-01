@@ -406,6 +406,24 @@ void main() {
       },
     );
 
+    test('Settings search finds Services on the in-app Linux only', () async {
+      debugPlatformCapabilities = const PlatformCapabilities.android();
+      addTearDown(() => debugPlatformCapabilities = null);
+      final inApp = await _controller(baseUrl: 'http://127.0.0.1:4097');
+      addTearDown(inApp.dispose);
+      final found = [
+        for (final entry in searchIndex(_en, scope(inApp)))
+          if (entry.title == _en.linuxSvcTitle) entry.id,
+      ];
+      expect(found, ['inside-linux-services']);
+      final other = await _controller();
+      addTearDown(other.dispose);
+      expect(
+        _ids(searchIndex(_en, scope(other))),
+        isNot(contains('inside-linux-services')),
+      );
+    });
+
     test(
       'OpenCode 1 on a phone has everything but desktop and AI Team',
       () async {

@@ -508,6 +508,48 @@ void main() {
       ], tokens: Tokens(input: thousands * 1000, output: 0)),
     ];
 
+    testWidgets('the free-tier notice stands alone: no second Shorten above '
+        'the composer until the notice is gone', (tester) async {
+      final refused = MessageWithParts(
+        info: MessageInfo(
+          id: 'assistant-2',
+          sessionID: 'session-1',
+          role: 'assistant',
+          providerID: 'p',
+          modelID: 'm',
+          errorText: 'FreeUsageLimitError: Free usage limit reached',
+          time: MsgTime(created: 3, completed: 4),
+        ),
+        parts: const [],
+      );
+      final turns = [
+        ...transcript(85),
+        _message('user-2', 'user', [Part(type: 'text', text: 'more')]),
+        refused,
+      ];
+      final controller = await _controller(_Api(transcript: turns));
+      addTearDown(controller.dispose);
+      controller
+        ..catalog = catalog
+        ..selectedModel = ModelRef(providerID: 'p', modelID: 'm');
+      await _pumpChat(tester, controller);
+      await tester.pumpAndSettle();
+      expect(find.text('Shorten this conversation'), findsOneWidget);
+      expect(_nudge(NudgeId.compact), findsNothing);
+      expect(controller.nudges.wasShown(NudgeId.compact), isFalse);
+
+      // The refused reply is gone (a new answer arrived): the nudge returns.
+      turns
+        ..removeLast()
+        ..removeLast();
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
+      await _pumpChat(tester, controller);
+      await tester.pumpAndSettle();
+      expect(find.text('Shorten this conversation'), findsNothing);
+      expect(_nudge(NudgeId.compact), findsOneWidget);
+    });
+
     testWidgets('above 80 percent the card compacts the conversation', (
       tester,
     ) async {
@@ -525,15 +567,17 @@ void main() {
 
       expect(_nudge(NudgeId.compact), findsOneWidget);
       expect(
-        find.text('The context is 85% full: compact to keep going.'),
+        find.text(
+          'The context is 85% full: shorten the conversation to keep going.',
+        ),
         findsOneWidget,
       );
       await tester.tap(_action(NudgeId.compact));
       await tester.pumpAndSettle();
       // Asked first: nothing is compacted until the person confirms.
-      expect(find.text('Compact this conversation?'), findsOneWidget);
+      expect(find.text('Shorten this conversation?'), findsOneWidget);
       expect(repository.compacted, isEmpty);
-      await tester.tap(find.widgetWithText(KitButton, 'Compact conversation'));
+      await tester.tap(find.widgetWithText(KitButton, 'Shorten conversation'));
       await tester.pumpAndSettle();
       expect(repository.compacted, ['session-1']);
       expect(_nudge(NudgeId.compact), findsNothing);

@@ -111,6 +111,21 @@ void main() {
     await unmountRunning(tester);
   });
 
+  testWidgets('the page says how many count toward the limit', (tester) async {
+    await pumpRunning(
+      tester,
+      PhoneProcessWatch(processes: fake(normalProcesses())),
+    );
+    final count = normalProcesses()
+        .where((p) => p.owner != PhoneProcessOwner.app)
+        .length;
+    expect(
+      find.text('$count of them count toward the limit of about 32'),
+      findsOneWidget,
+    );
+    await unmountRunning(tester);
+  });
+
   testWidgets('an unknown conversation is just "Claude Code"', (tester) async {
     final processes = fake([
       for (final p in normalProcesses())
@@ -255,10 +270,9 @@ void main() {
     );
     expect(find.byKey(const ValueKey('running-near-limit')), findsOneWidget);
     expect(find.text('Servers may be stopped'), findsOneWidget);
-    expect(
-      find.textContaining('Developer options › Disable child process'),
-      findsOneWidget,
-    );
+    // New agents wait for room (the process budget); the Developer
+    // options way is the guided card's, shown only after a real stop.
+    expect(find.textContaining('New agents wait for room'), findsOneWidget);
     await unmountRunning(tester);
 
     await pumpRunning(
@@ -352,6 +366,29 @@ void main() {
       });
     }
   }
+
+  testWidgets('a nested process row lets its facts wrap at 2.0x text', (
+    tester,
+  ) async {
+    final processes = fake(hotProcesses());
+    await pumpRunning(
+      tester,
+      PhoneProcessWatch(processes: processes),
+      size: const Size(320, 800),
+      textScale: 2,
+    );
+    final line = find.byKey(const Key('running-proc-line-15003'));
+    await tester.dragUntilVisible(
+      line,
+      find.byType(Scrollable).first,
+      const Offset(0, -200),
+    );
+    // KitRow gives a supporting line three lines from 2.0x text; a row deep
+    // in the tree has little width left, so it must get more than that
+    // rather than ending in "running 9 m…".
+    expect(tester.widget<Text>(line).maxLines, greaterThan(3));
+    await unmountRunning(tester);
+  });
 
   test('rows use plain names for the kernel names seen on a phone', () {
     // Read from a device: Node's kernel name is its main thread's, the

@@ -8,7 +8,10 @@ import '../platform/platform_capabilities.dart';
 import '../state/profiles.dart' show ServerProfile;
 import '../termux/bridge.dart' show TermuxBridge, TermuxRuntime;
 import '../termux/opencode_ubuntu_setup.dart';
+import 'builtin_server_restore.dart';
 import 'setup/setup_contract.dart' show setupToolsChanged;
+
+export 'builtin_server_restore.dart';
 
 /// Where the built-in Ubuntu is in its life, as the Android side reports it.
 enum BuiltinLinuxPhase {
@@ -22,60 +25,6 @@ enum BuiltinLinuxPhase {
     'ready' => ready,
     'failed' => failed,
     _ => idle,
-  };
-}
-
-/// Native restoration after OS process reclamation; force-stop stays stopped.
-enum BuiltinServerRestorePhase {
-  idle,
-  waiting,
-  restoring,
-  unavailable;
-
-  static BuiltinServerRestorePhase parse(Object? value) => switch (value) {
-    null || 'idle' => idle,
-    'waiting' => waiting,
-    'restoring' => restoring,
-    _ => unavailable,
-  };
-}
-
-/// Fixed reasons only; native process identity and errors stay private.
-enum BuiltinServerRestoreReason {
-  stopped,
-  policyDisabled,
-  budgetExhausted,
-  ownershipUnknown,
-  storageUnavailable,
-  componentRecoveryRequired,
-  systemTimeout;
-
-  static BuiltinServerRestoreReason? parse(Object? value) => switch (value) {
-    null => null,
-    'stopped' => stopped,
-    'policyDisabled' => policyDisabled,
-    'budgetExhausted' => budgetExhausted,
-    'storageUnavailable' => storageUnavailable,
-    'componentRecoveryRequired' => componentRecoveryRequired,
-    'systemTimeout' => systemTimeout,
-    _ => ownershipUnknown,
-  };
-}
-
-/// Selects a canonical native command. Contains no script or account data.
-class BuiltinServerRestoreRecipe {
-  const BuiltinServerRestoreRecipe({
-    required this.profileId,
-    required this.runtime,
-  });
-
-  final String profileId;
-  final TermuxRuntime runtime;
-
-  Map<String, Object> toMap() => {
-    'version': 1,
-    'profileId': profileId,
-    'runtime': runtime.name,
   };
 }
 
@@ -733,14 +682,38 @@ class BuiltinLinux {
     String script, {
     int port = serverPort,
     BuiltinServerRestoreRecipe? restoreRecipe,
+  }) => _startServer('startServer', script, port, restoreRecipe);
+
+  /// The app's opening start: [startServer], but only while the native intent
+  /// generation the caller saw still stands. A Stop that came first wins.
+  Future<void> startServerForLaunch(
+    String script, {
+    int port = serverPort,
+    required int expectedGeneration,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) => _startServer(
+    'startServerForLaunch',
+    script,
+    port,
+    restoreRecipe,
+    expectedGeneration: expectedGeneration,
+  );
+
+  Future<void> _startServer(
+    String method,
+    String script,
+    int port,
+    BuiltinServerRestoreRecipe? restoreRecipe, {
+    int? expectedGeneration,
   }) async {
     final arguments = {
       'script': script,
       'port': port,
+      'expectedGeneration': ?expectedGeneration,
       if (restoreRecipe != null) 'restoreRecipe': restoreRecipe.toMap(),
     };
     try {
-      await _invoke<void>('startServer', arguments);
+      await _invoke<void>(method, arguments);
     } on BuiltinLinuxException catch (error) {
       if (restoreRecipe == null) rethrow;
       throw BuiltinLinuxException(

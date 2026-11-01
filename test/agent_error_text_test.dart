@@ -31,12 +31,36 @@ void main() {
       // OpenCode's own plan limits, seen on the owner's phone and emulator.
       'Free usage limit reached. Subscribe to OpenCode Go to keep going: '
               'https://opencode.ai/go':
-          AgentErrorCause.usageLimit,
+          AgentErrorCause.freeTierLimit,
+      'FreeUsageLimitError': AgentErrorCause.freeTierLimit,
+      'APIError 429: Free usage limit reached': AgentErrorCause.freeTierLimit,
       'Go usage limit exceeded': AgentErrorCause.usageLimit,
     };
     for (final entry in cases.entries) {
       expect(classifyAgentError(entry.key), entry.value, reason: entry.key);
     }
+    // Not the free tier: a real provider rate limit, auth, an oversized
+    // request and a context overflow stay what they are.
+    expect(
+      classifyAgentError('429 Too Many Requests: rate limit exceeded'),
+      AgentErrorCause.rateLimited,
+    );
+    expect(
+      classifyAgentError('401 Unauthorized: invalid api key'),
+      AgentErrorCause.providerAuth,
+    );
+    expect(
+      classifyAgentError('413 Payload Too Large'),
+      AgentErrorCause.requestTooLarge,
+    );
+    expect(
+      classifyAgentError('prompt is too long: 210000 tokens > 200000 maximum'),
+      isNot(AgentErrorCause.freeTierLimit),
+    );
+    expect(
+      classifyAgentError('Go usage limit exceeded'),
+      AgentErrorCause.usageLimit,
+    );
     // A rate limit that also mentions a dropped socket is a rate limit.
     expect(
       classifyAgentError('429 rate limit; connection closed'),
@@ -53,6 +77,18 @@ void main() {
     expect(words.humanized, isTrue);
     expect(words.headline, isNot(contains('ECONNRESET')));
     expect(words.headline, isNot(contains('fetch()')));
+  });
+
+  test('the free-tier limit is said plainly, with the way on', () {
+    final words = agentErrorWords('Free usage limit reached', en);
+    expect(words.headline, "OpenCode's free models stopped this reply.");
+    expect(words.hint, contains('even when you'));
+    expect(words.humanized, isTrue);
+    final ar = agentErrorWords(
+      'Free usage limit reached',
+      lookupAppLocalizations(const Locale('ar')),
+    );
+    expect(ar.headline, isNot(words.headline));
   });
 
   test('unknown failures keep technical text out of the headline', () {

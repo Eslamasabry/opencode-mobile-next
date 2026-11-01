@@ -43,7 +43,7 @@ env:
   # Shorebird's Flutter fork the release engine is built from. Must equal
   # SHOREBIRD_FLUTTER_VERSION in scripts/release.sh (checked below) so CI and
   # local sideload releases ship the same engine.
-  SHOREBIRD_FLUTTER_VERSION: "3.47.1"
+  SHOREBIRD_FLUTTER_VERSION: "3.47.8"
 
 jobs:
   # scripts/verify_github_release.py checks this job's name and the step names
@@ -93,7 +93,7 @@ jobs:
             echo "::error::pubspec.yaml must contain exactly one version in x.y.z+positive-build-number form. Found: ${version:-<none>}"
             exit 1
           fi
-          pinned="$(sed -n 's/^readonly SHOREBIRD_FLUTTER_VERSION="\([^"]*\)"$/\1/p' scripts/release.sh)"
+          pinned="$(sed -n 's/^readonly SHOREBIRD_FLUTTER_VERSION="${SHOREBIRD_FLUTTER_VERSION:-\([^}]*\)}"$/\1/p' scripts/release.sh)"
           if [ "$pinned" != "$SHOREBIRD_FLUTTER_VERSION" ]; then
             echo "::error::Workflow Shorebird Flutter $SHOREBIRD_FLUTTER_VERSION differs from scripts/release.sh (${pinned:-<none>})"
             exit 1

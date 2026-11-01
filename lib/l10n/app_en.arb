@@ -3912,23 +3912,23 @@
   "@chatUiCommandMap": {
     "description": "Chat journey: Command map"
   },
-  "chatUiCompactContext": "Compact context",
+  "chatUiCompactContext": "Shorten conversation",
   "@chatUiCompactContext": {
     "description": "Chat journey: Compact context"
   },
-  "chatUiCompactSession": "Compact conversation",
+  "chatUiCompactSession": "Shorten conversation",
   "@chatUiCompactSession": {
     "description": "Chat journey: Compact session"
   },
-  "chatUiCompactingConversation": "Compacting conversation…",
+  "chatUiCompactingConversation": "Shortening conversation…",
   "@chatUiCompactingConversation": {
     "description": "Chat journey: Compacting conversation…"
   },
-  "chatUiCompactionFailed": "Compaction failed",
+  "chatUiCompactionFailed": "Shortening failed",
   "@chatUiCompactionFailed": {
     "description": "Chat journey: Compaction failed"
   },
-  "chatUiCompactionStarted": "Compaction started",
+  "chatUiCompactionStarted": "Shortening started",
   "@chatUiCompactionStarted": {
     "description": "Chat journey: Compaction started"
   },
@@ -4470,7 +4470,7 @@
   "@chatUiSearchText": {
     "description": "Chat journey: Search text"
   },
-  "chatUiSelectAModelBeforeCompactingThisSession": "Select a model before compacting this conversation.",
+  "chatUiSelectAModelBeforeCompactingThisSession": "Select a model before shortening this conversation.",
   "@chatUiSelectAModelBeforeCompactingThisSession": {
     "description": "Chat journey: Select a model before compacting this session."
   },
@@ -11093,7 +11093,7 @@
   "capabilityAttachmentsDetail": "Send files and photos with a prompt",
   "capabilitySubagents": "Delegate to a subagent",
   "capabilitySubagentsDetail": "Mention an agent with @ in a prompt",
-  "capabilityCompact": "Compact",
+  "capabilityCompact": "Shorten",
   "capabilityCompactDetail": "Summarize a long conversation to free up context",
   "capabilityShare": "Share",
   "capabilityShareDetail": "Publish a link to a conversation",
@@ -11165,7 +11165,7 @@
   "@nudgeLeave": {
     "description": "One-time tip above the composer after a run has kept the person waiting for a minute while finished-run notifications are on."
   },
-  "nudgeCompact": "The context is {percent}% full: compact to keep going.",
+  "nudgeCompact": "The context is {percent}% full: shorten the conversation to keep going.",
   "@nudgeCompact": {
     "description": "One-time tip above the composer when the conversation uses most of the model's context window. Its button compacts the conversation.",
     "placeholders": {
@@ -11532,7 +11532,7 @@
   "@agentErrorRequestTooLarge": {
     "description": "Plain-language error headline: payload or queue overflow"
   },
-  "agentErrorRequestTooLargeHint": "Send fewer or smaller attachments, or compact the conversation, then try again.",
+  "agentErrorRequestTooLargeHint": "Send fewer or smaller attachments, or shorten the conversation, then try again.",
   "@agentErrorRequestTooLargeHint": {
     "description": "What to do when a request is too large"
   },
@@ -11601,7 +11601,7 @@
       }
     }
   },
-  "chatUiCompactAgain": "Compact again",
+  "chatUiCompactAgain": "Shorten again",
   "@chatUiCompactAgain": {
     "description": "Button on a failed compaction notice that retries the compaction"
   },
@@ -20507,15 +20507,15 @@
   "@sessionContextNearLimitTitle": {
     "description": "Conversation context: title of the notice near the model's limit."
   },
-  "sessionContextNearLimitBody": "Older details may be dropped from what the model sees. Compact the conversation to keep going, or start a new one.",
+  "sessionContextNearLimitBody": "Older details may be dropped from what the model sees. Shorten the conversation to keep going, or start a new one.",
   "@sessionContextNearLimitBody": {
     "description": "Conversation context: what being near the limit means and what to do."
   },
-  "sessionContextCompactAction": "Compact this conversation",
+  "sessionContextCompactAction": "Shorten this conversation",
   "@sessionContextCompactAction": {
     "description": "Conversation context: starts compacting the conversation."
   },
-  "sessionContextCompactTitle": "Compact this conversation?",
+  "sessionContextCompactTitle": "Shorten this conversation?",
   "@sessionContextCompactTitle": {
     "description": "Conversation context: the compact confirmation's question."
   },
@@ -20527,11 +20527,11 @@
   "@sessionContextCompactKept": {
     "description": "Conversation context: what compacting keeps."
   },
-  "sessionContextCompactConfirm": "Compact conversation",
+  "sessionContextCompactConfirm": "Shorten conversation",
   "@sessionContextCompactConfirm": {
     "description": "Conversation context: the compact confirmation's button."
   },
-  "sessionContextCompactStarted": "Compacting started. The numbers update when it finishes.",
+  "sessionContextCompactStarted": "Shortening started. The numbers update when it finishes.",
   "@sessionContextCompactStarted": {
     "description": "Conversation context: shown after compacting was started."
   },
@@ -27415,15 +27415,15 @@
   "@integrationsSignedInUnusable": {
     "description": "Providers list: word for a provider whose saved sign-in stayed unloaded after a reload (a subscription sign-in the server has no loader for). Replaces 'Connected'; its fix is an API key."
   },
-  "chatUiCompactConfirmTitle": "Compact this conversation?",
+  "chatUiCompactConfirmTitle": "Shorten this conversation?",
   "@chatUiCompactConfirmTitle": {
     "description": "Confirm sheet title before compacting the conversation"
   },
-  "chatUiCompactConfirmBody": "Compact replaces earlier messages with a short summary to save space. It can't be undone.",
+  "chatUiCompactConfirmBody": "Shortening replaces earlier messages with a short summary to save space. It can't be undone.",
   "@chatUiCompactConfirmBody": {
     "description": "Confirm sheet: one line on what Compact does"
   },
-  "chatUiCompactConfirmAction": "Compact conversation",
+  "chatUiCompactConfirmAction": "Shorten conversation",
   "@chatUiCompactConfirmAction": {
     "description": "Confirm sheet button that starts compacting"
   },
@@ -33364,11 +33364,11 @@
   "@kitContextRingTapHint": {
     "description": "Context ring: what a tap does, said by the screen reader after its label"
   },
-  "kitContextRingCompacting": "Compacting",
+  "kitContextRingCompacting": "Shortening",
   "@kitContextRingCompacting": {
     "description": "Context ring: the word beside the ring while the conversation is being compacted"
   },
-  "kitContextRingCompactingSemantics": "Context, compacting",
+  "kitContextRingCompactingSemantics": "Context, shortening",
   "@kitContextRingCompactingSemantics": {
     "description": "Context ring: screen-reader words while the conversation is being compacted"
   },
@@ -33432,7 +33432,7 @@
   "@kitContextChartCompacted": {
     "description": "Context chart: the note under a drop where the conversation was compacted"
   },
-  "kitContextSheetCompactNow": "Compact now",
+  "kitContextSheetCompactNow": "Shorten now",
   "@kitContextSheetCompactNow": {
     "description": "Context details sheet: the button that compacts the conversation"
   },
@@ -36519,7 +36519,7 @@
     "placeholders": {
       "version": {
         "type": "String",
-        "example": "2.1.1"
+        "example": "2.2.5"
       }
     }
   },
@@ -43408,7 +43408,7 @@
   "@runningPhoneLimitTitle": {
     "description": "Title of the warning shown when the app runs 28 or more background processes (Android stops an app's oldest children above 32)."
   },
-  "runningPhoneLimitBody": "{count} of {limit} background processes: above {limit}, Android stops this app's oldest processes first, and those are the servers. Stop what was left behind or isn't needed, or lift the limit with Developer options › Disable child process restrictions.",
+  "runningPhoneLimitBody": "{count} of {limit} background processes: above {limit}, Android stops this app's oldest processes first, and those are the servers. New agents wait for room. Stop what was left behind or isn't needed.",
   "@runningPhoneLimitBody": {
     "description": "Body of the near-limit warning on Running on this phone. The Developer options path is text only.",
     "placeholders": {
@@ -43822,5 +43822,2267 @@
         "type": "String"
       }
     }
+  },
+  "vpttLetGoToFinish": "Let go when you're done",
+  "@vpttLetGoToFinish": {
+    "description": "Voice mode while the mic is held: letting go finishes the recording"
+  },
+  "vpttLetGoToCancel": "Let go to cancel",
+  "@vpttLetGoToCancel": {
+    "description": "Voice mode while the mic is held and dragged away: letting go throws the recording away"
+  },
+  "vpttSendingIn": "Sending in {seconds}…",
+  "@vpttSendingIn": {
+    "description": "Voice mode: the spoken words will be sent after a countdown; seconds is the whole seconds left",
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "vpttDontSend": "Don't send",
+  "@vpttDontSend": {
+    "description": "Voice mode countdown: keep the words in the box and do not send them"
+  },
+  "vpttLanguageFollowApp": "Same as the app",
+  "@vpttLanguageFollowApp": {
+    "description": "Voice typing language choice: listen for the app's own language"
+  },
+  "vpttLanguageFollowAppDetail": "Listens for the app's language when it can, and works out the language from your voice when it can't.",
+  "@vpttLanguageFollowAppDetail": {
+    "description": "Voice typing language choice: what Same as the app does"
+  },
+  "vpttLanguageDetectDetail": "Works out the language from your voice each time.",
+  "@vpttLanguageDetectDetail": {
+    "description": "Voice typing language choice: what Detect from speech does"
+  },
+  "vpttAutoSendTitle": "Send when I stop talking",
+  "@vpttAutoSendTitle": {
+    "description": "Voice typing setting: stop listening after a pause and send"
+  },
+  "vpttAutoSendDetail": "After a short pause, your words are sent. You get 3 seconds to cancel. Holding the mic never sends by itself.",
+  "@vpttAutoSendDetail": {
+    "description": "Voice typing setting: what Send when I stop talking does"
+  },
+  "tipHoldMic": "Hold the mic to talk, let go to finish",
+  "@tipHoldMic": {
+    "description": "Tip above the composer's mic: holding it records until the finger lifts"
+  },
+  "tipHoldMicTitle": "Hold to talk",
+  "@tipHoldMicTitle": {
+    "description": "Help › Tips row: the tip about holding the mic"
+  },
+  "vpttLanguageUnavailableOffline": "Your app's language ({language}) isn't one the offline speech model knows, so it works out the language from your voice instead.",
+  "@vpttLanguageUnavailableOffline": {
+    "description": "Voice typing language row: the app's language has no offline speech support, so Same as the app falls back to detecting",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "vpttLanguageCompactRough": "The Compact model is rough outside English. For {language}, choose Balanced or High accuracy above.",
+  "@vpttLanguageCompactRough": {
+    "description": "Voice typing language row: the smallest speech model recognises non-English languages poorly; language is the language's own name",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "connCheckTitle": "Check connection",
+  "@connCheckTitle": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckRowDetail": "Test the address, sign-in, version, live updates and speed.",
+  "@connCheckRowDetail": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckIntro": "Five quick checks against this server. Nothing is changed or saved.",
+  "@connCheckIntro": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckRun": "Check connection",
+  "@connCheckRun": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckAgain": "Check again",
+  "@connCheckAgain": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckRunning": "Checking…",
+  "@connCheckRunning": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckStepAddress": "Address reachable",
+  "@connCheckStepAddress": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckStepSignIn": "Sign-in accepted",
+  "@connCheckStepSignIn": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckStepVersion": "Server version supported",
+  "@connCheckStepVersion": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckStepLive": "Live updates arriving",
+  "@connCheckStepLive": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckStepSpeed": "Round-trip time",
+  "@connCheckStepSpeed": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckAddressOk": "The server answered.",
+  "@connCheckAddressOk": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckAddressUnreachable": "Nothing answered at this address. Check that the server is running and that this phone can reach it, for example over Tailscale.",
+  "@connCheckAddressUnreachable": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckAddressNotOpenCode": "Something answered, but it is not an OpenCode server. Check the address and the port.",
+  "@connCheckAddressNotOpenCode": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckSignInOk": "The server accepted this sign-in.",
+  "@connCheckSignInOk": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckNeedsPassword": "This server asks for a password. Add it under Name and address.",
+  "@connCheckNeedsPassword": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckPasswordRejected": "The server did not accept the saved password. Copy the current one from the server and save it again.",
+  "@connCheckPasswordRejected": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckVersionOkUnknown": "This server works with this app.",
+  "@connCheckVersionOkUnknown": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckVersionUnsupported": "This server runs an older OpenCode that this app no longer supports. Update it to OpenCode 2.",
+  "@connCheckVersionUnsupported": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckVersionNotReady": "The server is starting, or reports a problem. Wait a moment and check again.",
+  "@connCheckVersionNotReady": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckLiveOk": "Updates are arriving as they happen.",
+  "@connCheckLiveOk": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckLiveConnecting": "Still connecting to live updates. Check again in a moment.",
+  "@connCheckLiveConnecting": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckLiveDown": "Live updates are not arriving. A proxy that buffers or cuts long connections is the usual cause.",
+  "@connCheckLiveDown": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckLiveNotChecked": "Connect to this server to check live updates.",
+  "@connCheckLiveNotChecked": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckSpeedSlow": "That is slow. Try a closer network, or check the route your VPN takes.",
+  "@connCheckSpeedSlow": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckSkipped": "Not checked, because an earlier step needs fixing first.",
+  "@connCheckSkipped": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckReachHelp": "How to reach your computer",
+  "@connCheckReachHelp": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckReachHelpDetail": "Tailscale or an SSH tunnel, step by step.",
+  "@connCheckReachHelpDetail": {
+    "description": "Connection check on a server's page."
+  },
+  "reachTitle": "How to reach your computer",
+  "@reachTitle": {
+    "description": "Connection check on a server's page."
+  },
+  "reachIntro": "Your computer's OpenCode server should stay private. These two ways keep it off the public internet. Try Tailscale first.",
+  "@reachIntro": {
+    "description": "Connection check on a server's page."
+  },
+  "reachTailscaleHeading": "Tailscale (recommended)",
+  "@reachTailscaleHeading": {
+    "description": "Connection check on a server's page."
+  },
+  "reachTailscale1": "Install Tailscale on your computer and on this phone, and sign in to the same account on both.",
+  "@reachTailscale1": {
+    "description": "Connection check on a server's page."
+  },
+  "reachTailscale2": "On the computer, start the server with a password, for example: opencode serve --port 4096",
+  "@reachTailscale2": {
+    "description": "Connection check on a server's page."
+  },
+  "reachTailscale3": "Find the computer's Tailscale name or its 100.x.x.x address in the Tailscale app.",
+  "@reachTailscale3": {
+    "description": "Connection check on a server's page."
+  },
+  "reachTailscale4": "Here, add a server with that name and port, for example http://100.101.102.103:4096, and enter the password.",
+  "@reachTailscale4": {
+    "description": "Connection check on a server's page."
+  },
+  "reachSshHeading": "SSH tunnel (if you cannot use Tailscale)",
+  "@reachSshHeading": {
+    "description": "Connection check on a server's page."
+  },
+  "reachSsh1": "You need an SSH app on this phone that can forward a port, and SSH access to your computer.",
+  "@reachSsh1": {
+    "description": "Connection check on a server's page."
+  },
+  "reachSsh2": "Start the server on the computer, bound to itself only: opencode serve --port 4096",
+  "@reachSsh2": {
+    "description": "Connection check on a server's page."
+  },
+  "reachSsh3": "In the SSH app, forward local port 4096 to 127.0.0.1:4096 on the computer, and keep it running.",
+  "@reachSsh3": {
+    "description": "Connection check on a server's page."
+  },
+  "reachSsh4": "Here, add a server at http://127.0.0.1:4096 and enter the password. Then use Check connection.",
+  "@reachSsh4": {
+    "description": "Connection check on a server's page."
+  },
+  "reachSshCommand": "ssh -N -L 127.0.0.1:4096:127.0.0.1:4096 you@your-computer",
+  "@reachSshCommand": {
+    "description": "Connection check on a server's page."
+  },
+  "reachSafetyHeading": "Keep it private",
+  "@reachSafetyHeading": {
+    "description": "Connection check on a server's page."
+  },
+  "reachSafety": "Never open the server's port to the public internet or share it through a public tunnel. Anyone who reaches it can run commands on your computer.",
+  "@reachSafety": {
+    "description": "Connection check on a server's page."
+  },
+  "connCheckVersionOk": "Version {version} works with this app.",
+  "@connCheckVersionOk": {
+    "description": "Version check result, with the server's version.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "connCheckSpeedOk": "About {ms} ms for a round trip.",
+  "@connCheckSpeedOk": {
+    "description": "Round-trip time in milliseconds.",
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "scheduleRunNow": "Run now",
+  "scheduleRunNowNote": "Starts one run right away. The next scheduled time stays the same.",
+  "shortcutsHelpReview": "In a review",
+  "@shortcutsHelpReview": {
+    "description": "Keyboard shortcuts sheet: section of shortcuts that work while reviewing changes"
+  },
+  "shortcutsStopReplyKeys": "Esc while a reply runs",
+  "@shortcutsStopReplyKeys": {
+    "description": "Keyboard shortcuts sheet: the key label for stopping a running reply (must differ from the plain Esc row)"
+  },
+  "shortcutsStopReply": "Stop the running reply",
+  "@shortcutsStopReply": {
+    "description": "Keyboard shortcuts sheet: Esc stops the reply that is running"
+  },
+  "shortcutsReviewNextChange": "Next change",
+  "@shortcutsReviewNextChange": {
+    "description": "Keyboard shortcuts sheet: jump to the next change in a review"
+  },
+  "shortcutsReviewPreviousChange": "Previous change",
+  "@shortcutsReviewPreviousChange": {
+    "description": "Keyboard shortcuts sheet: jump to the previous change in a review"
+  },
+  "queueEvictedTooOld": "{count, plural, =1{1 was too old to send} other{{count} were too old to send}}",
+  "@queueEvictedTooOld": {
+    "description": "Queue notice reason: drafts dropped for age",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "queueEvictedOverLimit": "{count, plural, =1{1 to stay within the queue limit} other{{count} to stay within the queue limit}}",
+  "@queueEvictedOverLimit": {
+    "description": "Queue notice reason: drafts dropped for size",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "queueEvictedJoin": " and ",
+  "queueEvictedSummary": "{count, plural, =1{Discarded 1 queued draft: {reasons}.} other{Discarded {count} queued drafts: {reasons}.}}",
+  "@queueEvictedSummary": {
+    "description": "Queue notice: what was discarded",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "reasons": {
+        "type": "String"
+      }
+    }
+  },
+  "chatUiThinkingLevelDefault": "Thinking level back to the default.",
+  "@chatUiThinkingLevelDefault": {
+    "description": "Thinking level: default"
+  },
+  "chatUiThinkingLevelSet": "Thinking: {level}.",
+  "@chatUiThinkingLevelSet": {
+    "description": "Thinking level changed from the keyboard",
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutsThinkingLevel": "Next / previous thinking level",
+  "@shortcutsThinkingLevel": {
+    "description": "Shortcuts sheet: cycle the thinking level"
+  },
+  "shortcutsTranscriptPages": "Scroll the conversation by a page",
+  "@shortcutsTranscriptPages": {
+    "description": "Shortcuts sheet: move the transcript by page"
+  },
+  "shortcutsTranscriptEnds": "First message / latest message",
+  "@shortcutsTranscriptEnds": {
+    "description": "Shortcuts sheet: jump to the first or last message"
+  },
+  "shortcutsReviewNextFile": "Next file",
+  "@shortcutsReviewNextFile": {
+    "description": "Shortcuts sheet: next file in a review"
+  },
+  "shortcutsReviewPreviousFile": "Previous file",
+  "@shortcutsReviewPreviousFile": {
+    "description": "Shortcuts sheet: previous file in a review"
+  },
+  "shortcutsNotWhileTyping": "Single keys such as N, P, [ and ] only work when no text field has focus.",
+  "@shortcutsNotWhileTyping": {
+    "description": "Shortcuts sheet: note under single-key shortcuts"
+  },
+  "fileShareAction": "Share on Wi-Fi",
+  "@fileShareAction": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer)."
+  },
+  "fileShareTitle": "Share on Wi-Fi",
+  "@fileShareTitle": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer)."
+  },
+  "fileShareQrLabel": "QR code to download {name}",
+  "@fileShareQrLabel": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fileShareLinkLabel": "Link",
+  "@fileShareLinkLabel": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer)."
+  },
+  "fileShareCopyLink": "Copy link",
+  "@fileShareCopyLink": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer)."
+  },
+  "fileShareWarning": "Anyone on this Wi-Fi with the link can download this file.",
+  "@fileShareWarning": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer)."
+  },
+  "fileShareDownloads": "{count, plural, =0{Not downloaded yet} =1{Downloaded 1 time} other{Downloaded {count} times}}",
+  "@fileShareDownloads": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileShareTimeLeft": "Stops sharing in {time}",
+  "@fileShareTimeLeft": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fileShareStop": "Stop sharing",
+  "@fileShareStop": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer)."
+  },
+  "fileShareEnded": "Sharing has stopped. Nobody can download this file now.",
+  "@fileShareEnded": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer)."
+  },
+  "fileShareNoWifi": "This phone is not on Wi-Fi. Connect to Wi-Fi to share this file with a nearby device.",
+  "@fileShareNoWifi": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer)."
+  },
+  "fileSharePrivate": "This file can't be shared because it may hold keys or passwords.",
+  "@fileSharePrivate": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer)."
+  },
+  "fileShareUnavailable": "Sharing could not start. Try again in a moment.",
+  "@fileShareUnavailable": {
+    "description": "Share a file on the local Wi-Fi (sheet opened from the file viewer)."
+  },
+  "readAloudVoiceTitle": "Read-aloud voice",
+  "@readAloudVoiceTitle": {
+    "description": "Settings › Voice: the choice of who reads replies aloud."
+  },
+  "readAloudVoicePhone": "Phone's voice",
+  "@readAloudVoicePhone": {
+    "description": "Read-aloud voice choice: the speech voice installed on the phone (default)."
+  },
+  "readAloudVoicePhoneDetail": "Uses the speech voices installed on this phone.",
+  "@readAloudVoicePhoneDetail": {
+    "description": "Detail under the Phone's voice choice."
+  },
+  "readAloudVoiceNaturalDownload": "Natural voice (download, about {size})",
+  "@readAloudVoiceNaturalDownload": {
+    "description": "Read-aloud voice choice that downloads the natural voice; {size} is the download size such as 142 MB.",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "readAloudVoiceNatural": "Natural voice",
+  "@readAloudVoiceNatural": {
+    "description": "Read-aloud voice choice once the natural voice is on the phone."
+  },
+  "readAloudVoiceNaturalDetail": "Sounds more like a person and works offline. English only for now; other languages are read by the phone's voice.",
+  "@readAloudVoiceNaturalDetail": {
+    "description": "Detail under the Natural voice choice."
+  },
+  "naturalVoiceDownloading": "Downloading the natural voice",
+  "@naturalVoiceDownloading": {
+    "description": "Progress title while the natural voice downloads."
+  },
+  "naturalVoiceRemove": "Remove natural voice ({size})",
+  "@naturalVoiceRemove": {
+    "description": "Button that deletes the downloaded natural voice; {size} is the space it frees.",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "naturalVoiceRemoveTitle": "Remove the natural voice?",
+  "@naturalVoiceRemoveTitle": {
+    "description": "Confirmation title for removing the natural voice."
+  },
+  "naturalVoiceRemoveBody": "Replies go back to being read by the phone's voice. You can download the natural voice again later.",
+  "@naturalVoiceRemoveBody": {
+    "description": "Confirmation body for removing the natural voice."
+  },
+  "naturalVoiceKeep": "Keep it",
+  "@naturalVoiceKeep": {
+    "description": "Cancel button of the remove-natural-voice confirmation."
+  },
+  "naturalVoiceFallbackNote": "The natural voice can't read this language yet, so the phone's voice is reading.",
+  "@naturalVoiceFallbackNote": {
+    "description": "Shown once when a reply is in a language the natural voice does not speak."
+  },
+  "naturalVoiceNoSpace": "There isn't enough free storage. Free up about {size} and try again.",
+  "@naturalVoiceNoSpace": {
+    "description": "Natural voice download could not start for lack of space; {size} is what is needed.",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "naturalVoiceFailed": "The natural voice could not be set up. Check your connection and try again.",
+  "@naturalVoiceFailed": {
+    "description": "Natural voice download failed for a reason other than space."
+  },
+  "processBudgetWaitRoom": "Waiting for room: the phone allows about {ceiling} programs at once.",
+  "@processBudgetWaitRoom": {
+    "description": "App-wide status line while new heavy work (a new agent conversation, the AI Team, a setup job) waits because the app runs too many programs. It starts by itself when room frees up. Followed by processBudgetAgentsRunning when agents run.",
+    "placeholders": {
+      "ceiling": {
+        "type": "int"
+      }
+    }
+  },
+  "processBudgetAgentsRunning": "{count, plural, =1{1 agent is running.} other{{count} agents are running.}}",
+  "@processBudgetAgentsRunning": {
+    "description": "Second sentence of the waiting-for-room line: how many agent conversations run now.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "processBudgetWaitWarm": "Waiting: the phone is warm. It starts by itself when the phone cools down.",
+  "@processBudgetWaitWarm": {
+    "description": "App-wide status line while new heavy work waits because the phone is hot."
+  },
+  "processBudgetWaitBattery": "Waiting: the battery is low. It starts by itself once the phone charges.",
+  "@processBudgetWaitBattery": {
+    "description": "App-wide status line while new heavy work waits because the battery is at or under 20% and not charging."
+  },
+  "processBudgetSeeRunning": "See what runs",
+  "@processBudgetSeeRunning": {
+    "description": "Action on the waiting line: opens Running on this phone."
+  },
+  "processBudgetCount": "{count} of them count toward the limit of about {ceiling}",
+  "@processBudgetCount": {
+    "description": "Caption on Running on this phone: how many programs count toward the limit, and the app's ceiling (32, or 48 when Android's limit is off).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "ceiling": {
+        "type": "int"
+      }
+    }
+  },
+  "agentKilledByAndroid": "Android stopped the agent because too many programs were running. Starting it again…",
+  "@agentKilledByAndroid": {
+    "description": "Status line of an agent conversation while the agent helper restarts after Android killed it (exit 137, not requested)."
+  },
+  "agentBackAfterKill": "Android stopped the agent because too many programs were running. It's back; your conversation continues.",
+  "@agentBackAfterKill": {
+    "description": "Status line of an agent conversation once the helper is back after Android killed it."
+  },
+  "agentsStateUpdating": "Updating to {version}…",
+  "@agentsStateUpdating": {
+    "description": "Agent row: the app is moving this agent to the version it was tested with, by itself",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "2.1.316"
+      }
+    }
+  },
+  "agentsStateUpdatingHelper": "Updating…",
+  "@agentsStateUpdatingHelper": {
+    "description": "Agent row: the app is updating the shared helper this agent runs on, by itself"
+  },
+  "agentsStateUpdateWaiting": "Will update when nothing is running",
+  "@agentsStateUpdateWaiting": {
+    "description": "Agent row: an automatic update is waiting for a quiet moment (no conversation or setup running)"
+  },
+  "agentErrorFreeTier": "OpenCode's free models stopped this reply.",
+  "@agentErrorFreeTier": {
+    "description": "Headline when OpenCode's free tier refuses a request (FreeUsageLimitError)"
+  },
+  "agentErrorFreeTierHint": "Long conversations are often refused on the free tier, even when you've used little today. Shortening this one or starting a new one usually helps.",
+  "@agentErrorFreeTierHint": {
+    "description": "What to do when OpenCode's free tier refuses a long conversation"
+  },
+  "agentErrorFreeTierSize": "This conversation is about {tokens} tokens long.",
+  "@agentErrorFreeTierSize": {
+    "description": "Free-tier refusal note: how large the conversation context is; tokens is a short count such as 167k",
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "chatFreeTierShorten": "Shorten this conversation",
+  "@chatFreeTierShorten": {
+    "description": "Free-tier refusal action: compact the conversation"
+  },
+  "chatFreeTierNewConversation": "Continue in a new conversation",
+  "@chatFreeTierNewConversation": {
+    "description": "Free-tier refusal action: start a new conversation carrying the last prompt"
+  },
+  "productErrorFileTooBig": "This file is too big to show here (the limit is 2 MB). Open it on the computer where it lives, or ask the agent for a smaller piece.",
+  "@productErrorFileTooBig": {
+    "description": "Failure words when the agent host refuses to send a file because it is over the size the viewer reads; not a computer that is off"
+  },
+  "productErrorFileMissing": "That file isn't there any more. It may have been moved or deleted.",
+  "@productErrorFileMissing": {
+    "description": "Failure words when the agent host answers that a file does not exist"
+  },
+  "productErrorFileDenied": "The computer won't let this app read that file.",
+  "@productErrorFileDenied": {
+    "description": "Failure words when the agent host refuses to read a file (permission)"
+  },
+  "productErrorFileUnreadable": "This kind of file can't be shown here.",
+  "@productErrorFileUnreadable": {
+    "description": "Failure words when the agent host will not show a file (binary or unsupported)"
+  },
+  "phoneFileInstallTitle": "Install {name}?",
+  "@phoneFileInstallTitle": {
+    "description": "Question when a reply links an Android app file (.apk) that is on this phone",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneFileInstallBody": "This app file is on this phone. Android asks you to confirm before anything is installed.",
+  "@phoneFileInstallBody": {
+    "description": "Body of the install question for an .apk on this phone; the app never installs silently"
+  },
+  "phoneFileInstallAction": "Install…",
+  "@phoneFileInstallAction": {
+    "description": "Confirm button that hands an .apk to Android's installer"
+  },
+  "phoneFileOpenTitle": "Open {name}?",
+  "@phoneFileOpenTitle": {
+    "description": "Question when a reply links a large or non-text file that is on this phone",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneFileOpenBody": "This file is on this phone and is too big or the wrong kind to show here. Choose which app opens it.",
+  "@phoneFileOpenBody": {
+    "description": "Body of the open question for a large or binary file on this phone"
+  },
+  "phoneFileOpenAction": "Open with…",
+  "@phoneFileOpenAction": {
+    "description": "Confirm button that hands a phone file to Android's app chooser"
+  },
+  "phoneFileFindTitle": "Open it in Files",
+  "@phoneFileFindTitle": {
+    "description": "Title when this version cannot hand a phone file to another app"
+  },
+  "phoneFileFindBody": "This version can't hand the file to another app yet. Find it in your Files app: {path}",
+  "@phoneFileFindBody": {
+    "description": "Body when the phone file cannot be opened from here; names where it is",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneFileWhereInstall": "{name} is in {folder}. Open it from the Files app to install it.",
+  "@phoneFileWhereInstall": {
+    "description": "Shown instead of Install… when this build cannot hand the .apk to Android; says where the file is",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneFileWhereOpen": "{name} is in {folder}. Open it from the Files app.",
+  "@phoneFileWhereOpen": {
+    "description": "Shown instead of Open with… when this build cannot hand the file to Android; says where the file is",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "agentsStateUpdateWifi": "Will update on Wi-Fi",
+  "@agentsStateUpdateWifi": {
+    "description": "Agent row: a big automatic update waits for Wi-Fi instead of using mobile data"
+  },
+  "agentUpdateSendBlocked": "{agent} is updating, {percent}%. You can send when it's done.",
+  "@agentUpdateSendBlocked": {
+    "description": "Composer note while an agent update cannot let a message through: Send is off until it finishes; the draft is kept",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      },
+      "percent": {
+        "type": "String",
+        "example": "40"
+      }
+    }
+  },
+  "agentUpdateSendBlockedNoPercent": "{agent} is updating. You can send when it's done.",
+  "@agentUpdateSendBlockedNoPercent": {
+    "description": "Composer note while an agent update cannot let a message through and its progress is not known yet",
+    "placeholders": {
+      "agent": {
+        "type": "String",
+        "example": "Claude Code"
+      }
+    }
+  },
+  "productErrorAgentUpdating": "Your agents are being updated, so this could not start yet. Try again in a moment; your message is kept.",
+  "@productErrorAgentUpdating": {
+    "description": "Plain words when the phone could not start agent work because agent setup or an update was running; technical text goes under Details"
+  },
+  "childLimitTitle": "Let agents run more programs at once",
+  "@childLimitTitle": {
+    "description": "Running on this phone: card that leads to Developer options on Android 14+ after Android stopped agent work."
+  },
+  "childLimitBody": "Android stops agents when the app runs more than 32 programs. Turning this off lets bigger jobs finish; the app still pauses work when the phone gets hot or the battery is low.",
+  "@childLimitBody": {
+    "description": "Child process limit card: why, honestly (never says unlimited)."
+  },
+  "childLimitStepsOpen": "In Developer options, turn on “Disable child process restrictions”, then come back.",
+  "@childLimitStepsOpen": {
+    "description": "Child process limit card: the step when Developer options are on."
+  },
+  "childLimitOpenDeveloper": "Open Developer options",
+  "@childLimitOpenDeveloper": {
+    "description": "Child process limit card: button that opens Developer options."
+  },
+  "childLimitStepsEnable": "Developer options are off. Turn them on in Settings › About phone: tap Build number seven times.",
+  "@childLimitStepsEnable": {
+    "description": "Child process limit card: the step when Developer options are off."
+  },
+  "childLimitOpenAbout": "Open About phone",
+  "@childLimitOpenAbout": {
+    "description": "Child process limit card: button that opens About phone."
+  },
+  "childLimitStepsText": "Open Settings › System › Developer options and turn on “Disable child process restrictions”.",
+  "@childLimitStepsText": {
+    "description": "Child process limit card: steps as text only (no button)."
+  },
+  "childLimitHide": "Hide",
+  "@childLimitHide": {
+    "description": "Child process limit card: quiet action that hides the card."
+  },
+  "claudeAgentTrialTag": "Trial",
+  "@claudeAgentTrialTag": {
+    "description": "Small tag beside Claude Agent's models and its row in the model picker: this is a trial"
+  },
+  "claudeAgentTryTitle": "Try Claude Agent",
+  "@claudeAgentTryTitle": {
+    "description": "Model picker row on this phone's server that turns on OpenCode's own Claude Agent provider"
+  },
+  "claudeAgentTrySupporting": "Claude inside OpenCode, with your Claude Code sign-in on this phone. Your Claude Code chats stay as they are.",
+  "@claudeAgentTrySupporting": {
+    "description": "Supporting line of the Try Claude Agent row"
+  },
+  "claudeAgentPreparing": "Setting up Claude Agent…",
+  "@claudeAgentPreparing": {
+    "description": "Supporting line of the Try Claude Agent row while the app sets it up"
+  },
+  "claudeAgentNeedsSignInTitle": "Claude isn't signed in on this phone",
+  "@claudeAgentNeedsSignInTitle": {
+    "description": "Model picker notice title when OpenCode's Claude Agent finds no Claude Code sign-in"
+  },
+  "claudeAgentNeedsSignInBody": "Claude Agent uses Claude Code's sign-in. Sign in to Claude Code in Agents, then check again.",
+  "@claudeAgentNeedsSignInBody": {
+    "description": "Model picker notice body: where to sign in (the existing Agents page)"
+  },
+  "claudeAgentNotInstalledTitle": "Claude Code isn't installed on this phone",
+  "@claudeAgentNotInstalledTitle": {
+    "description": "Model picker notice title when Claude Code is missing from the phone's Linux"
+  },
+  "claudeAgentNotInstalledBody": "Claude Agent runs the Claude Code on this phone. Install it in Agents, then check again.",
+  "@claudeAgentNotInstalledBody": {
+    "description": "Model picker notice body when Claude Code is not installed"
+  },
+  "claudeAgentBlockedTitle": "Claude Agent can't be set up here",
+  "@claudeAgentBlockedTitle": {
+    "description": "Model picker notice title when another program named claude already exists where the app would add its launcher"
+  },
+  "claudeAgentBlockedBody": "This phone's Linux already has another program called claude in /usr/local/sbin, and the app leaves it alone.",
+  "@claudeAgentBlockedBody": {
+    "description": "Model picker notice body for the blocked case"
+  },
+  "claudeAgentFailedTitle": "Claude Agent didn't start",
+  "@claudeAgentFailedTitle": {
+    "description": "Model picker notice title when Claude Agent's models did not arrive"
+  },
+  "claudeAgentFailedBody": "Its models didn't arrive. Check again in a moment.",
+  "@claudeAgentFailedBody": {
+    "description": "Model picker notice body for the failed case"
+  },
+  "claudeAgentOpenAgents": "Open Agents",
+  "@claudeAgentOpenAgents": {
+    "description": "Notice action that opens Settings › Agents, where Claude Code is installed and signed in"
+  },
+  "claudeAgentCheckAgain": "Check again",
+  "@claudeAgentCheckAgain": {
+    "description": "Notice action that checks Claude Agent again"
+  },
+  "claudeAgentCheckAgainLabel": "Check Claude Agent again",
+  "@claudeAgentCheckAgainLabel": {
+    "description": "Screen reader name of the Check again action"
+  },
+  "claudeAgentReady": "Claude Agent is ready. Its models are marked Trial.",
+  "@claudeAgentReady": {
+    "description": "Model picker status once Claude Agent's models arrived"
+  },
+  "fullSpeedSetting": "Always full speed",
+  "@fullSpeedSetting": {
+    "description": "Keep running screen: switch title. On means the app never slows the agents' programs when the phone is warm, the battery is low or the app is hidden"
+  },
+  "fullSpeedSettingDetail": "Off: when the phone is warm, the battery is low or the app is hidden, builds and tests on this phone run slower to save heat and battery. Replies are not slowed.",
+  "@fullSpeedSettingDetail": {
+    "description": "Keep running screen: one line under the Always full speed switch"
+  },
+  "fullSpeedSettingEasing": "Builds and tests are running slower right now to save heat and battery. Replies are not slowed.",
+  "@fullSpeedSettingEasing": {
+    "description": "Keep running screen: replaces the line under the Always full speed switch while the agents' programs run at lower priority"
+  },
+  "teamVoiceProductOwner": "Product owner",
+  "teamVoiceArchitect": "Architect",
+  "teamVoiceManager": "Manager",
+  "teamVoiceDeveloper": "Developer",
+  "teamVoiceDeveloperAs": "Developer · {persona}",
+  "@teamVoiceDeveloperAs": {
+    "placeholders": {
+      "persona": {
+        "type": "String"
+      }
+    }
+  },
+  "teamVoiceReviewer": "Reviewer",
+  "teamVoiceSaysPlanning": "Planning how to build it.",
+  "teamVoiceSaysPlanReady": "The plan is ready for you.",
+  "teamVoiceSaysStarting": "Starting on this task.",
+  "teamVoiceSaysWorking": "Working on this task.",
+  "teamVoiceSaysChecking": "Checking the work against its criteria.",
+  "teamVoiceSaysFoundProblems": "Found problems that need a fix.",
+  "teamVoiceSaysMerging": "Merging the work into dev.",
+  "teamVoiceSaysMerged": "Merged into dev.",
+  "teamVoiceSaysPlanQueued": "The plan is in line to start.",
+  "teamVoiceSaysQueued": "This task is in line to start.",
+  "teamVoiceSaysWaitingForLane": "Waiting for a free lane.",
+  "teamVoiceSaysWaitingForTask": "Waiting for another task to finish.",
+  "teamVoiceSaysWaitingForChat": "Waiting for your chat to finish.",
+  "teamVoiceSaysWaitingForCheck": "Waiting for this phone to be checked.",
+  "teamVoiceSaysPaused": "Paused.",
+  "teamVoiceSaysStopped": "Stopped.",
+  "teamVoiceSaysInterrupted": "Interrupted. Resume it to pick up where it was.",
+  "teamVoiceSaysResuming": "Checking the earlier session before resuming.",
+  "teamVoiceNowPlanning": "Architect is planning",
+  "teamVoiceNowWorking": "{developer} is working",
+  "@teamVoiceNowWorking": {
+    "placeholders": {
+      "developer": {
+        "type": "String"
+      }
+    }
+  },
+  "teamVoiceNowChecking": "Reviewer is checking",
+  "teamVoiceNowNeedsYou": "Waiting for you",
+  "teamVoiceNowMerging": "Manager is merging into dev",
+  "teamVoiceNowMerged": "Merged into dev",
+  "teamVoiceNowWaiting": "Waiting to start",
+  "teamVoiceNowPaused": "Paused",
+  "teamVoiceNowStopped": "Stopped",
+  "teamVoiceNowResuming": "Resuming",
+  "teamVoiceNowManager": "Manager has an update",
+  "teamVoiceReviewerResult": "{total, plural, =1{Checked 1 criterion: {met} met.} other{Checked {total} criteria: {met} met.}}",
+  "@teamVoiceReviewerResult": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "met": {
+        "type": "int"
+      }
+    }
+  },
+  "teamVoiceApprovePlan": "Start building {name}",
+  "@teamVoiceApprovePlan": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "teamVoiceAcceptPhase": "Accept {phase}",
+  "@teamVoiceAcceptPhase": {
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      }
+    }
+  },
+  "teamVoicePutOnMain": "Put {repo} on main",
+  "@teamVoicePutOnMain": {
+    "placeholders": {
+      "repo": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcTitle": "Services",
+  "@linuxSvcTitle": {
+    "description": "Linux manager: title of the Services page and its hub row."
+  },
+  "linuxSvcRowDetail": "Keep your own programs running",
+  "@linuxSvcRowDetail": {
+    "description": "Linux manager hub: the Services row when nothing is known yet."
+  },
+  "linuxSvcHubRunning": "{count, plural, =1{1 running: {names}} other{{count} running: {names}}}",
+  "@linuxSvcHubRunning": {
+    "description": "Linux manager hub: the Services row line when some services run; names are comma separated.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcHubOff": "{count, plural, =1{1 service, off} other{{count} services, all off}}",
+  "@linuxSvcHubOff": {
+    "description": "Linux manager hub: the Services row line when none runs.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "linuxSvcHubCrashed": "{name} stopped after crashing",
+  "@linuxSvcHubCrashed": {
+    "description": "Linux manager hub: the Services row line when a service gave up.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcAdd": "Add a service",
+  "@linuxSvcAdd": {
+    "description": "Services page: first row."
+  },
+  "linuxSvcAddDetail": "Run a command of your own and keep it running",
+  "@linuxSvcAddDetail": {
+    "description": "Services page: first row, supporting line."
+  },
+  "linuxSvcAddTitle": "Add a service",
+  "@linuxSvcAddTitle": {
+    "description": "Add a service page: title."
+  },
+  "linuxSvcEmpty": "Nothing runs on its own yet. Add your own command and it keeps running, even after a crash or when the app restarts.",
+  "@linuxSvcEmpty": {
+    "description": "Services page: empty state."
+  },
+  "linuxSvcKeepsRunning": "A service you start keeps running: it comes back after a crash and when the app restarts, until you stop it.",
+  "@linuxSvcKeepsRunning": {
+    "description": "Services page: caption under the list."
+  },
+  "linuxSvcScreenOff": "While the screen is off, services may pause unless the phone is charging.",
+  "@linuxSvcScreenOff": {
+    "description": "Services page: caption about the screen being off."
+  },
+  "linuxSvcRunning": "Running",
+  "@linuxSvcRunning": {
+    "description": "Service state: running, start time unknown."
+  },
+  "linuxSvcRunningFor": "Running for {duration}",
+  "@linuxSvcRunningFor": {
+    "description": "Service state: running; duration is a kit duration such as 3 h 12 min.",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcPort": "port {port}",
+  "@linuxSvcPort": {
+    "description": "Service row: the port, after the state.",
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcOff": "Off",
+  "@linuxSvcOff": {
+    "description": "Service state: off."
+  },
+  "linuxSvcStarting": "Starting…",
+  "@linuxSvcStarting": {
+    "description": "Service state: starting."
+  },
+  "linuxSvcStopping": "Stopping…",
+  "@linuxSvcStopping": {
+    "description": "Service state: stopping."
+  },
+  "linuxSvcRemoving": "Removing…",
+  "@linuxSvcRemoving": {
+    "description": "Service state: being removed."
+  },
+  "linuxSvcRetrying": "Crashed (exit {code}). Trying again in {seconds} s",
+  "@linuxSvcRetrying": {
+    "description": "Service state: crashed and will be tried again; counts down.",
+    "placeholders": {
+      "code": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "linuxSvcGaveUp": "{count, plural, =1{Stopped after crashing once · {time}} other{Stopped after crashing {count} times · {time}}}",
+  "@linuxSvcGaveUp": {
+    "description": "Service state: gave up after crashing; time is the clock time of the last exit.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcGaveUpNoCount": "Stopped after crashing · {time}",
+  "@linuxSvcGaveUpNoCount": {
+    "description": "Service state: gave up, number of crashes unknown.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcExited": "Finished (exit {code})",
+  "@linuxSvcExited": {
+    "description": "Service state: the program ended by itself.",
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "linuxSvcPortBusy": "Port {port} is already in use. Trying again soon",
+  "@linuxSvcPortBusy": {
+    "description": "Service state: its port is taken by another program.",
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcStart": "Start",
+  "@linuxSvcStart": {
+    "description": "Service chip: start."
+  },
+  "linuxSvcStop": "Stop",
+  "@linuxSvcStop": {
+    "description": "Service chip: stop."
+  },
+  "linuxSvcStartNamed": "Start {name}",
+  "@linuxSvcStartNamed": {
+    "description": "Service act naming its target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcStopNamed": "Stop {name}",
+  "@linuxSvcStopNamed": {
+    "description": "Service act naming its target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcRestartNamed": "Restart {name}",
+  "@linuxSvcRestartNamed": {
+    "description": "Service act naming its target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcRemoveNamed": "Remove {name}",
+  "@linuxSvcRemoveNamed": {
+    "description": "Service act naming its target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcOpenNamed": "Open {name}",
+  "@linuxSvcOpenNamed": {
+    "description": "Service act: open its page in the preview.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcOpenDetail": "Its page on port {port}",
+  "@linuxSvcOpenDetail": {
+    "description": "Service act: open, supporting line.",
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcStopDetail": "It stays stopped until you start it again",
+  "@linuxSvcStopDetail": {
+    "description": "Service act: stop, supporting line."
+  },
+  "linuxSvcStartDetail": "It keeps running, also after a crash or an app restart",
+  "@linuxSvcStartDetail": {
+    "description": "Service act: start, supporting line."
+  },
+  "linuxSvcCameBack": "{count, plural, =1{Came back once after a crash, at {time}} other{Came back {count} times after a crash, last at {time}}}",
+  "@linuxSvcCameBack": {
+    "description": "Service page: how often it came back after a crash.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcRemoveTitle": "Remove {name}?",
+  "@linuxSvcRemoveTitle": {
+    "description": "Remove question: title.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcRemoveBody": "It stops now and is no longer kept running.",
+  "@linuxSvcRemoveBody": {
+    "description": "Remove question: body."
+  },
+  "linuxSvcRemoveGoes": "Its log and settings are deleted",
+  "@linuxSvcRemoveGoes": {
+    "description": "Remove question: what goes."
+  },
+  "linuxSvcRemoveStays": "The program stays installed",
+  "@linuxSvcRemoveStays": {
+    "description": "Remove question: what stays."
+  },
+  "linuxSvcLogTitle": "Log",
+  "@linuxSvcLogTitle": {
+    "description": "Service log: title."
+  },
+  "linuxSvcLogEmpty": "Nothing written yet",
+  "@linuxSvcLogEmpty": {
+    "description": "Service log: empty."
+  },
+  "linuxSvcLogStarted": "Started",
+  "@linuxSvcLogStarted": {
+    "description": "Service log: marker line, started."
+  },
+  "linuxSvcLogCrashed": "Crashed (exit {code})",
+  "@linuxSvcLogCrashed": {
+    "description": "Service log: marker line, crashed.",
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "linuxSvcLogEnded": "Ended (exit {code})",
+  "@linuxSvcLogEnded": {
+    "description": "Service log: marker line, ended normally.",
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "linuxSvcLogRetry": "Trying again in {seconds} s",
+  "@linuxSvcLogRetry": {
+    "description": "Service log: marker line, retry delay.",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "linuxSvcLogGaveUp": "Gave up after crashing too many times",
+  "@linuxSvcLogGaveUp": {
+    "description": "Service log: marker line, gave up."
+  },
+  "linuxSvcLogPortBusy": "Port {port} is in use",
+  "@linuxSvcLogPortBusy": {
+    "description": "Service log: marker line, port busy.",
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcCouldNotStart": "Services couldn't start.",
+  "@linuxSvcCouldNotStart": {
+    "description": "Services page: error title when the service runner is down."
+  },
+  "linuxSvcProblemFailed": "That didn't work. Try again.",
+  "@linuxSvcProblemFailed": {
+    "description": "Services: a problem with no other words."
+  },
+  "linuxSvcProblemMissing": "Set up Linux from This phone, then come back to add services.",
+  "@linuxSvcProblemMissing": {
+    "description": "Services page: Linux is not installed."
+  },
+  "linuxSvcProblemTooMany": "You can keep up to 16 services. Remove one first.",
+  "@linuxSvcProblemTooMany": {
+    "description": "Services: too many."
+  },
+  "linuxSvcProblemWrite": "Couldn't save that. The phone may be out of space.",
+  "@linuxSvcProblemWrite": {
+    "description": "Services: could not write the files."
+  },
+  "linuxSvcErrNameShape": "Use 2 to 24 lowercase letters, numbers or dashes, starting with a letter",
+  "@linuxSvcErrNameShape": {
+    "description": "Add a service: name rule."
+  },
+  "linuxSvcErrNameReserved": "That name is kept for the app. Pick another",
+  "@linuxSvcErrNameReserved": {
+    "description": "Add a service: reserved name."
+  },
+  "linuxSvcErrNameTaken": "That name is already used by a service",
+  "@linuxSvcErrNameTaken": {
+    "description": "Add a service: name taken."
+  },
+  "linuxSvcErrNameUsedBy": "That name is used by {name}",
+  "@linuxSvcErrNameUsedBy": {
+    "description": "Add a service: name taken by a known service.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcErrCommand": "Write the command to run",
+  "@linuxSvcErrCommand": {
+    "description": "Add a service: empty command."
+  },
+  "linuxSvcErrFolder": "Write the folder it runs in, starting with /",
+  "@linuxSvcErrFolder": {
+    "description": "Add a service: bad folder."
+  },
+  "linuxSvcErrPortRange": "Use a port from 1024 to 65535",
+  "@linuxSvcErrPortRange": {
+    "description": "Add a service: port out of range."
+  },
+  "linuxSvcErrPortLow": "Ports below 1024 aren't allowed on Android",
+  "@linuxSvcErrPortLow": {
+    "description": "Add a service: port below 1024."
+  },
+  "linuxSvcErrPortServer": "Port {port} belongs to OpenCode",
+  "@linuxSvcErrPortServer": {
+    "description": "Add a service: the server's port.",
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcErrPortReserved": "That port belongs to OpenCode or another part of this app. Pick another port",
+  "@linuxSvcErrPortReserved": {
+    "description": "Add a service: reserved port."
+  },
+  "linuxSvcErrPortTaken": "That port is already used by another service. Pick another port",
+  "@linuxSvcErrPortTaken": {
+    "description": "Add a service: port taken."
+  },
+  "linuxSvcErrPortUsedBy": "Port {port} is used by {name}",
+  "@linuxSvcErrPortUsedBy": {
+    "description": "Add a service: port taken by a known service.",
+    "placeholders": {
+      "port": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linuxSvcFieldName": "Name",
+  "@linuxSvcFieldName": {
+    "description": "Add a service: field."
+  },
+  "linuxSvcFieldNameHelper": "2 to 24 lowercase letters, numbers or dashes",
+  "@linuxSvcFieldNameHelper": {
+    "description": "Add a service: name helper."
+  },
+  "linuxSvcFieldCommand": "Command",
+  "@linuxSvcFieldCommand": {
+    "description": "Add a service: field."
+  },
+  "linuxSvcFieldCommandHelper": "Runs in bash. It should keep running, not finish",
+  "@linuxSvcFieldCommandHelper": {
+    "description": "Add a service: command helper."
+  },
+  "linuxSvcFieldFolder": "Folder",
+  "@linuxSvcFieldFolder": {
+    "description": "Add a service: field."
+  },
+  "linuxSvcFieldPort": "Port",
+  "@linuxSvcFieldPort": {
+    "description": "Add a service: field; the field is marked optional by the kit."
+  },
+  "linuxSvcFieldPortHelper": "Lets you open it and stops two programs fighting over one port",
+  "@linuxSvcFieldPortHelper": {
+    "description": "Add a service: port helper."
+  },
+  "linuxSvcRestartSwitch": "Restart when it crashes",
+  "@linuxSvcRestartSwitch": {
+    "description": "Add a service: switch."
+  },
+  "linuxSvcRestartSwitchDetail": "It comes back by itself, also after a restart of the app",
+  "@linuxSvcRestartSwitchDetail": {
+    "description": "Add a service: switch, supporting line."
+  },
+  "linuxSvcSaveStart": "Save and start",
+  "@linuxSvcSaveStart": {
+    "description": "Add a service: primary button."
+  },
+  "linuxSvcSaving": "Saving…",
+  "@linuxSvcSaving": {
+    "description": "Add a service: busy."
+  },
+  "linuxSvcDownBody": "The part of Linux that keeps services running isn't answering. Try again.",
+  "@linuxSvcDownBody": {
+    "description": "Services page: the service runner does not answer (body under the title)."
+  },
+  "linuxSvcPaused": "Paused: the phone is too hot. Starts again when it cools",
+  "@linuxSvcPaused": {
+    "description": "Service state: wanted on, but held off while the phone is too hot."
+  },
+  "linuxVitalsHeat": "Phone heat",
+  "@linuxVitalsHeat": {
+    "description": "Vitals strip: the word under the phone's heat."
+  },
+  "linuxVitalsCool": "Cool",
+  "@linuxVitalsCool": {
+    "description": "Heat word: Android reports no or light heat."
+  },
+  "linuxVitalsWarm": "Warm",
+  "@linuxVitalsWarm": {
+    "description": "Heat word: Android reports moderate heat."
+  },
+  "linuxVitalsHot": "Hot",
+  "@linuxVitalsHot": {
+    "description": "Heat word: Android throttles the phone."
+  },
+  "linuxVitalsTooHot": "Too hot",
+  "@linuxVitalsTooHot": {
+    "description": "Heat word: critical heat or worse."
+  },
+  "linuxVitalsMemoryFree": "Memory free",
+  "@linuxVitalsMemoryFree": {
+    "description": "Vitals strip: the phone's free memory."
+  },
+  "linuxVitalsLinuxCpu": "Linux CPU",
+  "@linuxVitalsLinuxCpu": {
+    "description": "Vitals strip: the share of the phone's CPU Linux uses."
+  },
+  "linuxVitalsHeatLabel": "Phone heat: {heat}",
+  "@linuxVitalsHeatLabel": {
+    "description": "Screen reader label of the heat reading.",
+    "placeholders": {
+      "heat": {}
+    }
+  },
+  "linuxVitalsMemoryLabel": "Memory free: {value}",
+  "@linuxVitalsMemoryLabel": {
+    "description": "Screen reader label of free memory.",
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "linuxVitalsCpuLabel": "Linux CPU: {value}",
+  "@linuxVitalsCpuLabel": {
+    "description": "Screen reader label of Linux CPU.",
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "linuxVitalsSummaryCool": "Linux uses {memory} of memory. Nothing is heating the phone.",
+  "@linuxVitalsSummaryCool": {
+    "description": "Vitals sentence when the phone is cool.",
+    "placeholders": {
+      "memory": {}
+    }
+  },
+  "linuxVitalsSummary": "Linux uses {memory} of memory.",
+  "@linuxVitalsSummary": {
+    "description": "Vitals sentence when Android does not say how hot the phone is.",
+    "placeholders": {
+      "memory": {}
+    }
+  },
+  "linuxVitalsHeavy": "{heat}. {program} is using {percent}% CPU.",
+  "@linuxVitalsHeavy": {
+    "description": "Vitals sentence when the phone is warm and a Linux program is busy; tapping opens Running.",
+    "placeholders": {
+      "heat": {},
+      "program": {},
+      "percent": {}
+    }
+  },
+  "linuxVitalsNotLinux": "{heat}, but not because of Linux: it uses {percent}% CPU.",
+  "@linuxVitalsNotLinux": {
+    "description": "Vitals sentence when the phone is warm and Linux is quiet.",
+    "placeholders": {
+      "heat": {},
+      "percent": {}
+    }
+  },
+  "linuxVitalsOpenRunning": "Open Running now",
+  "@linuxVitalsOpenRunning": {
+    "description": "Screen reader action of the vitals sentence that names a program."
+  },
+  "starShareGroup": "Tell others",
+  "@starShareGroup": {
+    "description": "About: group holding the Star on GitHub and Share the app rows."
+  },
+  "starRowTitle": "Star on GitHub",
+  "@starRowTitle": {
+    "description": "About: row that opens the project page on GitHub."
+  },
+  "starRowDetail": "Helps others find the app",
+  "@starRowDetail": {
+    "description": "About: supporting line of the Star on GitHub row."
+  },
+  "shareRowTitle": "Share the app",
+  "@shareRowTitle": {
+    "description": "About: row that opens the system share sheet with a link to the app."
+  },
+  "shareRowDetail": "Send a link to a friend",
+  "@shareRowDetail": {
+    "description": "About: supporting line of the Share the app row."
+  },
+  "shareAppMessage": "OpenCode Mobile: use your OpenCode coding agent from your phone. {url}",
+  "@shareAppMessage": {
+    "description": "The one line shared by Share the app; {url} is the website link.",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "starShareSearchAliases": "star github favorite rate like support project repository share app friend send link recommend invite tell",
+  "@starShareSearchAliases": {
+    "description": "Search keywords for the Star on GitHub and Share the app rows."
+  },
+  "whatsNewTitle": "What's new in {version}",
+  "@whatsNewTitle": {
+    "description": "What's new sheet title; {version} is the app version.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "whatsNewShare": "Share",
+  "@whatsNewShare": {
+    "description": "What's new sheet: opens the share sheet with a link to the app."
+  },
+  "whatsNewClose": "Close",
+  "@whatsNewClose": {
+    "description": "What's new sheet: closes it."
+  },
+  "whatsNewRowTitle": "What's new",
+  "@whatsNewRowTitle": {
+    "description": "About: row that opens the What's new sheet."
+  },
+  "whatsNewRowDetail": "See what changed in this version",
+  "@whatsNewRowDetail": {
+    "description": "About: supporting line of the What's new row."
+  },
+  "whatsNew220Updates": "The app now updates itself. You can check for an update any time in Settings › This app › Updates.",
+  "@whatsNew220Updates": {
+    "description": "What's new 2.2.0 line."
+  },
+  "whatsNew220Agents": "OpenCode 2.2.5 is built in, and your agents update themselves.",
+  "@whatsNew220Agents": {
+    "description": "What's new 2.2.0 line."
+  },
+  "whatsNew220LargeText": "Large text stays easy to read. Pick your size in Appearance.",
+  "@whatsNew220LargeText": {
+    "description": "What's new 2.2.0 line."
+  },
+  "whatsNew220PasteImages": "Paste an image into the message box to show it to the agent.",
+  "@whatsNew220PasteImages": {
+    "description": "What's new 2.2.0 line."
+  },
+  "whatsNew220Voice": "Hold the microphone button to talk, then let go.",
+  "@whatsNew220Voice": {
+    "description": "What's new 2.2.0 line."
+  },
+  "whatsNewBack": "Back",
+  "@whatsNewBack": {
+    "description": "What's new walkthrough: previous step."
+  },
+  "whatsNewShowMe": "Show me",
+  "@whatsNewShowMe": {
+    "description": "What's new walkthrough: goes to the real control and highlights it."
+  },
+  "whatsNewShowUpdates": "Check for an update here, any time.",
+  "@whatsNewShowUpdates": {
+    "description": "Highlight sentence over About > Check for updates."
+  },
+  "whatsNewTipsTitle": "What's new in this version",
+  "@whatsNewTipsTitle": {
+    "description": "Help > Tips: name of the What's new walkthrough."
+  },
+  "whatsNewShowAgents": "Your agents and their updates are here.",
+  "@whatsNewShowAgents": {
+    "description": "Highlight sentence over Settings > Agents."
+  },
+  "whatsNewShowPaste": "Press and hold the message box, or tap +, to paste an image.",
+  "@whatsNewShowPaste": {
+    "description": "Highlight sentence over the message box paste control."
+  },
+  "whatsNewShowMic": "Hold this button and talk, then let go.",
+  "@whatsNewShowMic": {
+    "description": "Highlight sentence over the microphone."
+  },
+  "appUpdateReadyTitle": "Version {version} is ready",
+  "@appUpdateReadyTitle": {
+    "description": "Status line and sheet title when a newer release exists.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateUpdate": "Update",
+  "@appUpdateUpdate": {
+    "description": "Action on the update status line."
+  },
+  "appUpdateNotNow": "Not now",
+  "@appUpdateNotNow": {
+    "description": "Dismisses the update offer until the next app start."
+  },
+  "appUpdateDownloadingTitle": "Downloading version {version}",
+  "@appUpdateDownloadingTitle": {
+    "description": "Status line while the update downloads.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdatePercent": "{percent}% done",
+  "@appUpdatePercent": {
+    "description": "Download progress.",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateCancel": "Cancel",
+  "@appUpdateCancel": {
+    "description": "Stops the download."
+  },
+  "appUpdateVerifying": "Checking the download…",
+  "@appUpdateVerifying": {
+    "description": "Status while the file is verified."
+  },
+  "appUpdateInstalling": "Installing…",
+  "@appUpdateInstalling": {
+    "description": "Status while Android installs."
+  },
+  "appUpdateInstallReadyTitle": "Version {version} is downloaded and checked",
+  "@appUpdateInstallReadyTitle": {
+    "description": "Status line when the checked file waits for the install.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateInstall": "Install",
+  "@appUpdateInstall": {
+    "description": "Starts the Android install of the checked file."
+  },
+  "appUpdatePermissionNeeded": "To install it, allow this app to install updates, then come back.",
+  "@appUpdatePermissionNeeded": {
+    "description": "Shown when Android must first allow installs from this app."
+  },
+  "appUpdateSettingsBadgeLabel": "Settings, update available",
+  "@appUpdateSettingsBadgeLabel": {
+    "description": "Screen reader label of the Settings gear while an update waits."
+  },
+  "appUpdateWhatsNew": "What's new",
+  "@appUpdateWhatsNew": {
+    "description": "Link and section for the release notes."
+  },
+  "appUpdateNow": "Update now",
+  "@appUpdateNow": {
+    "description": "Primary action of the update sheet."
+  },
+  "appUpdateOpenSettings": "Open Settings",
+  "@appUpdateOpenSettings": {
+    "description": "Secondary action of the update sheet."
+  },
+  "appUpdatesTitle": "Updates",
+  "@appUpdatesTitle": {
+    "description": "Title of the Updates page."
+  },
+  "appUpdatesSearchAliases": "update upgrade new version release install github check تحديث ترقية نسخة جديدة إصدار تثبيت",
+  "@appUpdatesSearchAliases": {
+    "description": "Search words for the Updates row."
+  },
+  "appUpdatesRowSummary": "Check for and install new versions",
+  "@appUpdatesRowSummary": {
+    "description": "Supporting line of the Updates row."
+  },
+  "appUpdateCheckedJustNow": "Up to date · checked just now",
+  "@appUpdateCheckedJustNow": {
+    "description": "Updates page state."
+  },
+  "appUpdateUpToDate": "Up to date · checked {when}",
+  "@appUpdateUpToDate": {
+    "description": "Updates page state; {when} is a relative time.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateNeverChecked": "Not checked yet",
+  "@appUpdateNeverChecked": {
+    "description": "Updates page state before any check."
+  },
+  "appUpdateChecking": "Checking…",
+  "@appUpdateChecking": {
+    "description": "Updates page state while asking GitHub."
+  },
+  "appUpdateAvailableLine": "{version} is ready · {size}",
+  "@appUpdateAvailableLine": {
+    "description": "Updates page state with the download size.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateSizeMb": "{mb} MB",
+  "@appUpdateSizeMb": {
+    "description": "A size in megabytes.",
+    "placeholders": {
+      "mb": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateCheckingOff": "Checking is off. Use Check now when you want to look.",
+  "@appUpdateCheckingOff": {
+    "description": "Updates page state with the switch off."
+  },
+  "appUpdateCheckSwitch": "Check GitHub for new versions",
+  "@appUpdateCheckSwitch": {
+    "description": "Switch label on the Updates page."
+  },
+  "appUpdateCheckSwitchBody": "The app asks GitHub for the latest version number and sends nothing about you.",
+  "@appUpdateCheckSwitchBody": {
+    "description": "Privacy line under the check switch."
+  },
+  "appUpdateCheckNow": "Check now",
+  "@appUpdateCheckNow": {
+    "description": "Row that checks immediately."
+  },
+  "appUpdateTryAgain": "Try again",
+  "@appUpdateTryAgain": {
+    "description": "Retries a failed update."
+  },
+  "appUpdateFailNetwork": "Couldn't reach GitHub. Check your connection and try again.",
+  "@appUpdateFailNetwork": {
+    "description": "Plain failure."
+  },
+  "appUpdateFailNoFile": "This release has no file for your phone yet.",
+  "@appUpdateFailNoFile": {
+    "description": "Plain failure."
+  },
+  "appUpdateFailChecksum": "The download didn't match its checksum, so it wasn't installed.",
+  "@appUpdateFailChecksum": {
+    "description": "Plain failure."
+  },
+  "appUpdateFailSigner": "This download isn't signed like your app, so it wasn't installed.",
+  "@appUpdateFailSigner": {
+    "description": "Plain failure; owner wording."
+  },
+  "appUpdateFailPackage": "This download is for a different app, so it wasn't installed.",
+  "@appUpdateFailPackage": {
+    "description": "Plain failure."
+  },
+  "appUpdateFailVersion": "This download isn't newer than your app, so it wasn't installed.",
+  "@appUpdateFailVersion": {
+    "description": "Plain failure."
+  },
+  "appUpdateFailStorage": "There wasn't room to save the download.",
+  "@appUpdateFailStorage": {
+    "description": "Plain failure."
+  },
+  "appUpdateFailInstaller": "Android couldn't finish the install. Try again.",
+  "@appUpdateFailInstaller": {
+    "description": "Plain failure."
+  },
+  "appUpdateCurrentVersion": "Version {version}",
+  "@appUpdateCurrentVersion": {
+    "description": "Updates page",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateBuildLabel": "Build",
+  "@appUpdateBuildLabel": {
+    "description": "Updates page"
+  },
+  "appUpdateOpenRelease": "Open on GitHub",
+  "@appUpdateOpenRelease": {
+    "description": "Updates page"
+  },
+  "appUpdateNotInstalled": "{version} couldn't be installed",
+  "@appUpdateNotInstalled": {
+    "description": "Updates page row after a refused or failed update",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "composerPasteImage": "Paste image",
+  "@composerPasteImage": {
+    "description": "Item in the message box's text-selection menu, next to Paste, when the clipboard holds a picture: attaches it to the message"
+  },
+  "composerPasteImageFromClipboard": "Paste image from clipboard",
+  "@composerPasteImageFromClipboard": {
+    "description": "Row in the composer's + tools sheet, shown only when the clipboard holds a picture"
+  },
+  "composerPasteImageFromClipboardSupporting": "Attach the copied picture",
+  "@composerPasteImageFromClipboardSupporting": {
+    "description": "Supporting line under the paste-image row in the composer's + tools sheet"
+  },
+  "composerPasteImageEmpty": "There is no picture on the clipboard.",
+  "@composerPasteImageEmpty": {
+    "description": "Note over the message box when Paste image finds no picture on the clipboard"
+  },
+  "removeFromPhoneBackupsKept": "Backups you saved stay where you put them",
+  "@removeFromPhoneBackupsKept": {
+    "description": "Remove from this phone, shown only once a Linux backup was saved: both choices leave the backup files alone, because they live in the place the person picked with Save to"
+  },
+  "linuxBackupRow": "Backups",
+  "@linuxBackupRow": {
+    "description": "Linux hub row and the Backups page title."
+  },
+  "linuxBackupRowNever": "No backup yet",
+  "@linuxBackupRowNever": {
+    "description": "Backups row when none was saved."
+  },
+  "linuxBackupRowLast": "Last backup {date}",
+  "@linuxBackupRowLast": {
+    "description": "Backups row: when the last one was saved.",
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "linuxBackupWhat": "What to back up",
+  "@linuxBackupWhat": {
+    "description": "Section label."
+  },
+  "linuxBackupSetup": "Setup",
+  "@linuxBackupSetup": {
+    "description": "Backup kind."
+  },
+  "linuxBackupSetupDetail": "Packages, tools, services and settings files",
+  "@linuxBackupSetupDetail": {
+    "description": "Backup kind detail."
+  },
+  "linuxBackupSetupProjects": "Setup and projects",
+  "@linuxBackupSetupProjects": {
+    "description": "Backup kind."
+  },
+  "linuxBackupSetupProjectsDetail": "Also your projects, without folders they can download again",
+  "@linuxBackupSetupProjectsDetail": {
+    "description": "Backup kind detail."
+  },
+  "linuxBackupProjectsOnly": "Projects only",
+  "@linuxBackupProjectsOnly": {
+    "description": "Backup kind (was Export projects on This phone)."
+  },
+  "linuxBackupProjectsOnlyDetail": "A zip of your projects to keep or move",
+  "@linuxBackupProjectsOnlyDetail": {
+    "description": "Backup kind detail."
+  },
+  "linuxBackupNowSetup": "Back up setup",
+  "@linuxBackupNowSetup": {
+    "description": "Primary button."
+  },
+  "linuxBackupNowSetupProjects": "Back up setup and projects",
+  "@linuxBackupNowSetupProjects": {
+    "description": "Primary button."
+  },
+  "linuxBackupNowProjects": "Back up projects",
+  "@linuxBackupNowProjects": {
+    "description": "Primary button."
+  },
+  "linuxBackupPrivacy": "Backups never hold sign-ins, passwords or private SSH keys. You choose where each one is saved.",
+  "@linuxBackupPrivacy": {
+    "description": "Footnote on the Backups page."
+  },
+  "linuxRestoreRow": "Restore from a backup",
+  "@linuxRestoreRow": {
+    "description": "Row that opens the file picker."
+  },
+  "linuxRestoreRowDetail": "Choose a backup file to put back",
+  "@linuxRestoreRowDetail": {
+    "description": "Restore row detail."
+  },
+  "linuxBackupSaving": "Saving the backup: {done} of {total}",
+  "@linuxBackupSaving": {
+    "description": "Progress caption while the zip is written.",
+    "placeholders": {
+      "done": {},
+      "total": {}
+    }
+  },
+  "linuxBackupSaved": "Backup saved: {size}, as {name}",
+  "@linuxBackupSaved": {
+    "description": "Done notice.",
+    "placeholders": {
+      "size": {},
+      "name": {}
+    }
+  },
+  "linuxBackupFailedTitle": "The backup didn't finish",
+  "@linuxBackupFailedTitle": {
+    "description": "Failure notice title."
+  },
+  "linuxRestoreFailedTitle": "The restore didn't finish",
+  "@linuxRestoreFailedTitle": {
+    "description": "Failure notice title."
+  },
+  "linuxBackupProblemBusy": "Another task is using Linux now. Try again when it ends.",
+  "@linuxBackupProblemBusy": {
+    "description": "Problem."
+  },
+  "linuxBackupProblemMissing": "Linux isn't set up on this phone.",
+  "@linuxBackupProblemMissing": {
+    "description": "Problem."
+  },
+  "linuxBackupProblemJob": "Linux couldn't make the backup.",
+  "@linuxBackupProblemJob": {
+    "description": "Problem."
+  },
+  "linuxBackupProblemSave": "The backup couldn't be saved there. There may not be enough room.",
+  "@linuxBackupProblemSave": {
+    "description": "Problem."
+  },
+  "linuxBackupProblemNotBackup": "That file isn't a backup made by this app.",
+  "@linuxBackupProblemNotBackup": {
+    "description": "Problem."
+  },
+  "linuxBackupProblemNewer": "That backup was made by a newer version of the app. Update the app first.",
+  "@linuxBackupProblemNewer": {
+    "description": "Problem."
+  },
+  "linuxBackupProblemRestore": "Linux couldn't put the backup back.",
+  "@linuxBackupProblemRestore": {
+    "description": "Problem."
+  },
+  "linuxRestoreChecking": "Reading the backup…",
+  "@linuxRestoreChecking": {
+    "description": "While a chosen file is read."
+  },
+  "linuxRestoreTitle": "Restore this backup?",
+  "@linuxRestoreTitle": {
+    "description": "Restore question title."
+  },
+  "linuxRestoreBody": "{what}, made on {date}.",
+  "@linuxRestoreBody": {
+    "description": "Restore question body.",
+    "placeholders": {
+      "what": {},
+      "date": {}
+    }
+  },
+  "linuxRestoreConfirm": "Restore",
+  "@linuxRestoreConfirm": {
+    "description": "Restore question button."
+  },
+  "linuxRestoreKeptProjects": "Your projects stay. One with the same name comes back as “name (restored)”.",
+  "@linuxRestoreKeptProjects": {
+    "description": "Consequence."
+  },
+  "linuxRestoreReplacedSettings": "Settings files it holds replace yours; yours are kept with “.before-restore” added.",
+  "@linuxRestoreReplacedSettings": {
+    "description": "Consequence."
+  },
+  "linuxRestoreAddedTools": "Packages, tools and services it lists are put back.",
+  "@linuxRestoreAddedTools": {
+    "description": "Consequence."
+  },
+  "linuxRestoreDone": "Linux is restored.",
+  "@linuxRestoreDone": {
+    "description": "Done notice."
+  },
+  "linuxRestoreSkipped": "Ubuntu no longer has: {names}",
+  "@linuxRestoreSkipped": {
+    "description": "Restore note.",
+    "placeholders": {
+      "names": {}
+    }
+  },
+  "linuxRestoreCounts": "Back: projects {projects}, services {services}, settings files {settings}, packages {packages}",
+  "@linuxRestoreCounts": {
+    "description": "Restore summary.",
+    "placeholders": {
+      "projects": {},
+      "services": {},
+      "settings": {},
+      "packages": {}
+    }
+  },
+  "linuxMgrJobBackingUp": "Backing up Linux",
+  "@linuxMgrJobBackingUp": {
+    "description": "Job panel title."
+  },
+  "linuxMgrJobRestoring": "Restoring Linux",
+  "@linuxMgrJobRestoring": {
+    "description": "Job panel title."
+  },
+  "linuxMgrJobStopBackup": "Stop the backup",
+  "@linuxMgrJobStopBackup": {
+    "description": "Job stop."
+  },
+  "linuxMgrJobStopRestore": "Stop restoring",
+  "@linuxMgrJobStopRestore": {
+    "description": "Job stop."
+  },
+  "linuxMgrJobStopBackupTitle": "Stop the backup?",
+  "@linuxMgrJobStopBackupTitle": {
+    "description": "Job stop question."
+  },
+  "linuxMgrJobStopRestoreTitle": "Stop restoring?",
+  "@linuxMgrJobStopRestoreTitle": {
+    "description": "Job stop question."
+  },
+  "linuxMgrJobDoneBackup": "The backup is ready",
+  "@linuxMgrJobDoneBackup": {
+    "description": "Job done."
+  },
+  "linuxMgrJobDoneRestore": "Linux is restored",
+  "@linuxMgrJobDoneRestore": {
+    "description": "Job done."
+  },
+  "linuxMgrResetBackUpFirst": "Back up first",
+  "@linuxMgrResetBackUpFirst": {
+    "description": "Reset question alternative."
+  },
+  "localAssistantTitle": "Assistant on this phone",
+  "@localAssistantTitle": {
+    "description": "Settings row and page title: the on-device assistant"
+  },
+  "localAssistantSubtitle": "Writes short summaries of your conversations with a model that runs on this phone.",
+  "@localAssistantSubtitle": {
+    "description": "Assistant page: one line saying what it does"
+  },
+  "localAssistantSwitchTitle": "Turn on the assistant",
+  "@localAssistantSwitchTitle": {
+    "description": "Switch row title"
+  },
+  "localAssistantSwitchSupporting": "Adds Summarize on this phone to every conversation.",
+  "@localAssistantSwitchSupporting": {
+    "description": "Switch row supporting line"
+  },
+  "localAssistantPrivacy": "The model is downloaded once. After that it works offline and nothing you write leaves the phone.",
+  "@localAssistantPrivacy": {
+    "description": "Privacy note on the assistant page"
+  },
+  "localAssistantNotDownloaded": "Not downloaded · {size}",
+  "@localAssistantNotDownloaded": {
+    "description": "Model status line before download",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "localAssistantOnPhone": "On this phone · {size}",
+  "@localAssistantOnPhone": {
+    "description": "Model status line once downloaded",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "localAssistantBackendGpu": "Runs on the graphics chip",
+  "@localAssistantBackendGpu": {
+    "description": "Which chip the loaded model runs on"
+  },
+  "localAssistantBackendCpu": "Runs on the processor",
+  "@localAssistantBackendCpu": {
+    "description": "Which chip the loaded model runs on"
+  },
+  "localAssistantBackendIdle": "Loads when you ask for a summary",
+  "@localAssistantBackendIdle": {
+    "description": "Backend line while the model is not in memory"
+  },
+  "localAssistantDownload": "Download ({size})",
+  "@localAssistantDownload": {
+    "description": "Primary action: start the model download",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "localAssistantDownloading": "Downloading the assistant",
+  "@localAssistantDownloading": {
+    "description": "Progress title"
+  },
+  "localAssistantVerifying": "Checking the download",
+  "@localAssistantVerifying": {
+    "description": "Progress title while the file is verified"
+  },
+  "localAssistantProgress": "{received} of {total}",
+  "@localAssistantProgress": {
+    "description": "Download progress caption",
+    "placeholders": {
+      "received": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "localAssistantCancelDownload": "Cancel download",
+  "@localAssistantCancelDownload": {
+    "description": "Stops the model download"
+  },
+  "localAssistantDelete": "Delete from this phone ({size})",
+  "@localAssistantDelete": {
+    "description": "Removes the downloaded model",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "localAssistantDeleteTitle": "Delete the assistant?",
+  "@localAssistantDeleteTitle": {
+    "description": "Confirm title"
+  },
+  "localAssistantDeleteBody": "This frees {size}. You can download it again later.",
+  "@localAssistantDeleteBody": {
+    "description": "Confirm body",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "localAssistantNeedsWifi": "You are not on Wi-Fi. The download is {size}.",
+  "@localAssistantNeedsWifi": {
+    "description": "Shown instead of starting the download off Wi-Fi",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "localAssistantUseMobileData": "Download on mobile data",
+  "@localAssistantUseMobileData": {
+    "description": "Lets the person override the Wi-Fi rule once"
+  },
+  "localAssistantNoSpace": "Not enough free space. Free about {size} and try again.",
+  "@localAssistantNoSpace": {
+    "description": "Shown instead of starting the download without room",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "localAssistantUnavailableMemory": "This phone has too little memory for the assistant. It needs about 6 GB.",
+  "@localAssistantUnavailableMemory": {
+    "description": "Why the assistant is not offered"
+  },
+  "localAssistantUnavailableAbi": "The assistant runs on 64-bit phones only.",
+  "@localAssistantUnavailableAbi": {
+    "description": "Why the assistant is not offered"
+  },
+  "localAssistantUnavailablePlatform": "The assistant is available on Android phones.",
+  "@localAssistantUnavailablePlatform": {
+    "description": "Why the assistant is not offered"
+  },
+  "localAssistantSetupFailed": "The assistant could not be set up. Try again.",
+  "@localAssistantSetupFailed": {
+    "description": "Download or load failed; the technical text sits under Details"
+  },
+  "localAssistantTryAgain": "Try again",
+  "@localAssistantTryAgain": {
+    "description": "Retry after a failure"
+  },
+  "localAssistantSummarizeMenu": "Summarize on this phone",
+  "@localAssistantSummarizeMenu": {
+    "description": "Conversation menu entry: write a summary with the on-device model"
+  },
+  "localAssistantSummarizeSupporting": "Written here, with no network",
+  "@localAssistantSummarizeSupporting": {
+    "description": "Conversation menu entry supporting line"
+  },
+  "localAssistantSheetTitle": "Summary",
+  "@localAssistantSheetTitle": {
+    "description": "Summary sheet title"
+  },
+  "localAssistantSheetSubtitle": "Written on this phone",
+  "@localAssistantSheetSubtitle": {
+    "description": "Summary sheet subtitle"
+  },
+  "localAssistantPreparing": "Getting the assistant ready",
+  "@localAssistantPreparing": {
+    "description": "Shown while the model loads before the first words"
+  },
+  "localAssistantStop": "Stop",
+  "@localAssistantStop": {
+    "description": "Stops the summary"
+  },
+  "localAssistantCopy": "Copy summary",
+  "@localAssistantCopy": {
+    "description": "Copies the summary"
+  },
+  "localAssistantDone": "Done",
+  "@localAssistantDone": {
+    "description": "Closes the summary sheet"
+  },
+  "localAssistantStopped": "Stopped. This is what was written so far.",
+  "@localAssistantStopped": {
+    "description": "Note under a stopped summary"
+  },
+  "localAssistantRunFailed": "The summary could not be finished. Try again.",
+  "@localAssistantRunFailed": {
+    "description": "Note under a failed summary"
+  },
+  "localAssistantStats": "First words after {seconds} s · {rate} words a second",
+  "@localAssistantStats": {
+    "description": "Small line under a finished summary",
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "localAssistantSearchAliases": "assistant gemma summarize offline on-device model local ai",
+  "@localAssistantSearchAliases": {
+    "description": "Settings search keywords"
+  },
+  "browserModeTitle": "Browser mode",
+  "@browserModeTitle": {
+    "description": "Settings › Help row title for the web build only"
+  },
+  "browserModeSubtitle": "What works in this browser and what needs the phone app",
+  "@browserModeSubtitle": {
+    "description": "Settings › Help row, web build only: the line under the title"
+  },
+  "browserModeIntro": "This is OpenCode Mobile running in a web browser. Remote OpenCode servers work as they do in the phone app. Features that need the phone itself are not offered here.",
+  "@browserModeIntro": {
+    "description": "Browser mode page: opening paragraph"
+  },
+  "browserModeAvailableHeading": "Available in the browser",
+  "@browserModeAvailableHeading": {
+    "description": "Browser mode page: section heading"
+  },
+  "browserModeAvailableServers": "Connect to OpenCode servers, chat, approve requests, browse files, and follow activity.",
+  "@browserModeAvailableServers": {
+    "description": "Browser mode page: what works"
+  },
+  "browserModeAvailableKeyboard": "Keyboard shortcuts, right-click menus, and drag-and-drop attachments on a desktop browser.",
+  "@browserModeAvailableKeyboard": {
+    "description": "Browser mode page: what works on a desktop browser"
+  },
+  "browserModeAvailablePaste": "Pasting into any field with the keyboard.",
+  "@browserModeAvailablePaste": {
+    "description": "Browser mode page: what works"
+  },
+  "browserModeUnavailableHeading": "Needs the phone app",
+  "@browserModeUnavailableHeading": {
+    "description": "Browser mode page: section heading"
+  },
+  "browserModeUnavailableTermux": "Running a server or AI agents on this device, and the on-device setup.",
+  "@browserModeUnavailableTermux": {
+    "description": "Browser mode page: needs the phone"
+  },
+  "browserModeUnavailableVoice": "Voice input, read-aloud, and camera QR pairing.",
+  "@browserModeUnavailableVoice": {
+    "description": "Browser mode page: needs the phone"
+  },
+  "browserModeUnavailableBackground": "Background monitoring, notifications, the home-screen widget, launcher shortcuts, and the Quick Settings tile. Keep this tab open to keep following a session.",
+  "@browserModeUnavailableBackground": {
+    "description": "Browser mode page: needs the phone"
+  },
+  "browserModeUnavailableAgentSocket": "Codex and Paseo connections. They sign in with a WebSocket header that browsers cannot send, and there is no supported browser sign-in for them yet.",
+  "@browserModeUnavailableAgentSocket": {
+    "description": "Browser mode page: needs the phone or desktop app"
+  },
+  "browserModeContextHeading": "This page",
+  "@browserModeContextHeading": {
+    "description": "Browser mode page: section heading for facts about the open page"
+  },
+  "browserModeSecureContextOk": "Opened from a secure origin. Server passwords can be saved, and the Paste buttons can read the clipboard.",
+  "@browserModeSecureContextOk": {
+    "description": "Browser mode page: the page is a secure origin"
+  },
+  "browserModeSecureContextMissing": "Opened over plain HTTP from a network address, which the browser does not treat as secure. Server passwords cannot be saved here and the Paste buttons cannot read the clipboard. Open the app over HTTPS or from localhost to lift both limits. Servers without a password still work, and you can still paste into fields with the keyboard.",
+  "@browserModeSecureContextMissing": {
+    "description": "Browser mode page: the page is not a secure origin"
+  },
+  "browserModeMixedContent": "A page opened over HTTPS can only reach HTTPS servers; the browser blocks plain-HTTP connections from it.",
+  "@browserModeMixedContent": {
+    "description": "Browser mode page: mixed content"
+  },
+  "browserModeCors": "The server must allow this page’s origin. If a connection test fails at once here while the same address works from the phone app, the server is refusing browser requests from this origin.",
+  "@browserModeCors": {
+    "description": "Browser mode page: cross-origin requests"
+  },
+  "browserEditorInsecureOrigin": "This page was opened over plain HTTP from a network address, so the browser will not keep a server password. Leave the password empty for a server that has none, or open the app over HTTPS or from localhost to save one.",
+  "@browserEditorInsecureOrigin": {
+    "description": "Add server form, web build on a non-secure origin: shown before a password is typed"
+  },
+  "browserPairingPasteHint": "Copy the code the pairing command prints and paste it into the server address field with the keyboard. The Paste button needs a secure (HTTPS or localhost) page.",
+  "@browserPairingPasteHint": {
+    "description": "Add server form, web build without clipboard access: replaces the Paste pairing code button"
+  },
+  "browserAgentSocketUnavailable": "Codex and Paseo connections are not available in the browser. They sign in with a WebSocket header that browsers cannot send, and no browser sign-in is supported yet. Use the phone or desktop app for them; OpenCode servers work here.",
+  "@browserAgentSocketUnavailable": {
+    "description": "Web build: why Codex and Paseo cannot be chosen or connected"
+  },
+  "browserAgentSocketRowUnavailable": "Not available in the browser",
+  "@browserAgentSocketRowUnavailable": {
+    "description": "Servers list, web build: the line on a saved Codex or Paseo server"
+  },
+  "browserTransportFailure": "The browser could not reach the server. Check the address and that the server is running. A server on a different origin must allow the origin of this page (CORS), and a page loaded over https cannot use an http:// or ws:// server.",
+  "@browserTransportFailure": {
+    "description": "Web build: the connection failed with no more detail from the browser"
+  },
+  "browserProbeTimeout": "The connection timed out. Check the address, and that the server is reachable from this browser.",
+  "@browserProbeTimeout": {
+    "description": "Add server form, web build: the connection check timed out"
+  },
+  "aboutBrowserSummary": "A browser client for the OpenCode server you choose. Voice, background monitoring and servers on this device are not available here.",
+  "@aboutBrowserSummary": {
+    "description": "About: the line under the version, web build only"
   }
 }

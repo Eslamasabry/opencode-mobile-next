@@ -94,6 +94,7 @@ class _Linux extends BuiltinLinux {
   int generation = 0;
   int restarts = 0;
   int starts = 0;
+  void Function()? duringPasswordWrite;
   Completer<void>? startGate;
   final startEntered = Completer<void>();
   bool idleSupported = false;
@@ -195,7 +196,10 @@ class _Linux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
-  }) async => const BuiltinLinuxRunResult(exitCode: 0, output: '');
+  }) async {
+    duringPasswordWrite?.call();
+    return const BuiltinLinuxRunResult(exitCode: 0, output: '');
+  }
 
   @override
   Future<void> restartServer(
@@ -208,6 +212,19 @@ class _Linux extends BuiltinLinux {
     }
     restarts++;
     running = !dies;
+  }
+
+  @override
+  Future<void> startServerForLaunch(
+    String script, {
+    int port = 4097,
+    required int expectedGeneration,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
+    if (!wanted || generation != expectedGeneration) {
+      throw const BuiltinLinuxException('The server cannot start.');
+    }
+    await startServer(script, port: port, restoreRecipe: restoreRecipe);
   }
 
   @override
@@ -1052,6 +1069,44 @@ void main() {
       PhoneServerHealing.reconnectBackoff = const Duration(seconds: 10);
       PhoneServerHealing.staleAfter = const Duration(seconds: 90);
     });
+
+    test('Stop during the launch health probe prevents replacement', () async {
+      linux
+        ..running = true
+        ..healthy = false
+        ..uptime = const Duration(minutes: 5);
+      var probes = 0;
+      serverProbe = ({required baseUrl, username, password}) async {
+        probes++;
+        // Recovery checks first; launch makes the second probe.
+        if (probes >= 2) {
+          linux.wanted = false;
+          linux.generation++;
+        }
+        return const ServerProbeResult.failure('Rejected', needsPassword: true);
+      };
+      final owner = bind()..setForeground(true);
+      await owner.startForLaunch(phone);
+      expect(linux.starts, 0);
+    });
+
+    test(
+      'Stop while saving the launch password prevents replacement',
+      () async {
+        linux
+          ..running = true
+          ..healthy = false
+          ..rejects = true
+          ..uptime = const Duration(minutes: 5)
+          ..duringPasswordWrite = () {
+            linux.wanted = false;
+            linux.generation++;
+          };
+        final owner = bind()..setForeground(true);
+        await owner.startForLaunch(phone);
+        expect(linux.starts, 0);
+      },
+    );
 
     test('one that rejects our password is replaced at launch', () async {
       linux

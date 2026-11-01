@@ -42,7 +42,7 @@ class _Host extends PhoneHost {
 Future<void> _settle() => Future<void>.delayed(Duration.zero);
 
 void main() {
-  const pinned = '2.1.1';
+  const pinned = '2.2.5';
 
   bool decide({
     String? installed = '2.0.29',
@@ -63,8 +63,8 @@ void main() {
 
   group('shouldAutoUpdateInApp', () {
     test('up to date does nothing, with or without a leading v', () {
-      expect(decide(installed: '2.1.1'), isFalse);
-      expect(decide(installed: 'v2.1.1'), isFalse);
+      expect(decide(installed: '2.2.5'), isFalse);
+      expect(decide(installed: 'v2.2.5'), isFalse);
     });
     test('an unknown version does nothing', () {
       expect(decide(installed: null), isFalse);

@@ -5,9 +5,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.BatteryManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.Process
 import android.os.PowerManager
 import android.util.Log
 import io.flutter.plugin.common.BinaryMessenger
@@ -79,6 +81,28 @@ object ThermalMonitor {
             try {
                 when (call.method) {
                     "current" -> result.success(reading())
+                    // Needs a release: Android's background class for the agents'
+                    // programs (AgentPriority). Dart falls back to renice.
+                    "agentPriority" -> {
+                        val level = call.argument<String>("level") ?: ""
+                        Thread({
+                            val done = try {
+                                AgentPriority.apply(level, Process.myUid(), Process.myPid())?.toMap()
+                            } catch (error: Exception) {
+                                null
+                            }
+                            main.post {
+                                if (done == null) result.error("priority", "not applied", null)
+                                else result.success(done)
+                            }
+                        }, "oc-agent-priority").start()
+                    }
+                    "powerSave" -> result.success(
+                        appContext?.getSystemService(PowerManager::class.java)?.isPowerSaveMode == true,
+                    )
+                    // Needs a release: the app's process budget waits on a low,
+                    // unplugged battery (Dart treats a missing answer as unknown).
+                    "battery" -> result.success(battery())
                     "notify" -> result.success(
                         notify(
                             call.argument<String>("title") ?: "",
@@ -133,6 +157,17 @@ object ThermalMonitor {
                 Log.w(TAG, "thermal event failed", error)
             }
         }
+    }
+
+    /** Level 0-100 and whether it charges; nulls when Android does not say. */
+    private fun battery(): Map<String, Any?> {
+        val manager = appContext?.getSystemService(BatteryManager::class.java)
+            ?: return mapOf("level" to null, "charging" to null)
+        val level = manager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        return mapOf(
+            "level" to level.takeIf { it in 0..100 },
+            "charging" to manager.isCharging,
+        )
     }
 
     private fun reading(): Map<String, Any?> {

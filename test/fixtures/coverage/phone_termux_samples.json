@@ -171,7 +171,7 @@
           "runtime": "opencode2",
           "phase": "starting_server",
           "message": "Starting the server",
-          "version": "2.1.1"
+          "version": "2.2.5"
         },
         "log": "x"
       },
@@ -227,7 +227,7 @@
           "path": "version",
           "kind": "string",
           "probes": [
-            "2.1.1"
+            "2.2.5"
           ],
           "primary": false
         },
@@ -355,7 +355,7 @@
           "runtime": "opencode2",
           "phase": "ready",
           "message": "OpenCode is ready",
-          "version": "2.1.1",
+          "version": "2.2.5",
           "operation": "op2",
           "operation_result": "completed"
         },
@@ -411,7 +411,7 @@
           "path": "version",
           "kind": "string",
           "probes": [
-            "2.1.1"
+            "2.2.5"
           ],
           "primary": false
         },

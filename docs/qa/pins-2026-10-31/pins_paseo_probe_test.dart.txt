@@ -1,0 +1,117 @@
+// Explicit signed-out preview proof; not part of the normal test suite.
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/domain/models.dart';
+import 'package:opencode_mobile/paseo/gateway.dart';
+import 'package:opencode_mobile/paseo/transport.dart';
+
+void main() {
+  final secretFile = Platform.environment['P16A_SECRET_FILE'];
+  final outputFile = Platform.environment['P16A_REPORT_FILE'];
+  test(
+    'signed-out preview Paseo uses the app gateway',
+    () async {
+      final password = File(secretFile!).readAsStringSync().trim();
+      final endpoint = Platform.environment['PROBE_ENDPOINT']!;
+      final report = <String, Object?>{};
+      addTearDown(() => File(outputFile!).writeAsString(jsonEncode(report)));
+      final wrong = PaseoTransport(
+        endpoint: endpoint,
+        password: 'invalid-test-secret',
+      );
+      try {
+        await wrong.connect();
+        report['wrongPasswordRejected'] = false;
+      } on PaseoFailure catch (failure) {
+        report['wrongPasswordFailureKind'] = failure.kind.name;
+        report['wrongPasswordRejected'] =
+            failure.kind == PaseoFailureKind.authentication;
+      } finally {
+        await wrong.close();
+      }
+      expect(report['wrongPasswordRejected'], isTrue);
+      final gateway = PaseoGateway.connect(
+        baseUrl: endpoint,
+        password: password,
+        directory: Platform.environment['PROBE_DIR'],
+      );
+      addTearDown(gateway.close);
+      final events = <String>{};
+      final channel = gateway.openEventChannel(
+        onEvent: (event) {
+          events.add(event.type);
+        },
+        onStatus: (_) {},
+      )..start();
+      addTearDown(channel.dispose);
+      final watch = Stopwatch()..start();
+      final health = await gateway.health();
+      report['version'] = health.version;
+      report['handshakeMs'] = watch.elapsedMilliseconds;
+      final providers = await gateway.providers();
+      report['claudeProvider'] = providers.providers.where((x) => x.id == 'claude').map((x) => '${x.id} models=${x.modelIDs.length}').toList();
+      report['providerIds'] = providers.providers
+          .map((provider) => provider.id)
+          .toList();
+      report['sessionCountBefore'] = (await gateway.sessions()).length;
+      final session = await gateway.createSession();
+      report['draftCreated'] = true;
+      try {
+        await gateway.promptAsync(
+          session.id,
+          text: 'Reply with OK.',
+          model: ModelRef(providerID: 'claude', modelID: 'claude-sonnet-4-6'),
+          agent: 'default',
+        );
+        report['promptAccepted'] = true;
+        final signedOut = RegExp(
+          r'not logged in|not authenticated|authentication required|login',
+          caseSensitive: false,
+        );
+        report['signedOutViaHistory'] = false;
+        for (var attempt = 0; attempt < 20; attempt++) {
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+          final history = await gateway.messages(session.id);
+          report['historyRoles'] = history
+              .map((message) => message.info.role)
+              .toList();
+          if (history.any(
+            (message) => signedOut.hasMatch(
+              '${message.info.errorText ?? ''} ${message.parts.map((part) => part.text).join(' ')}',
+            ),
+          )) {
+            report['signedOutViaHistory'] = true;
+            break;
+          }
+        }
+        await gateway.deleteSession(session.id);
+        report['testSessionDeleted'] = true;
+      } on PaseoFailure catch (failure) {
+        report['promptFailureKind'] = failure.kind.name;
+      } on TimeoutException {
+        report['promptWaitExpired'] = true;
+      }
+      expect(report['signedOutViaHistory'], isTrue);
+      report['eventTypes'] = events.toList()..sort();
+      // Only classify the error. Never emit the daemon body, prompt, or secret.
+      report['daemonSaysSignedOut'] = RegExp(
+        r'not logged in|not authenticated|authentication required|login',
+        caseSensitive: false,
+      ).hasMatch(gateway.transport.lastDaemonError ?? '');
+      await channel.dispose();
+      gateway.close();
+      final again = PaseoTransport(endpoint: endpoint, password: password);
+      await again.connect();
+      report['reconnectSucceeded'] = again.connected;
+      expect(again.connected, isTrue);
+      await again.close();
+    },
+    skip: secretFile == null || outputFile == null
+        ? 'Explicit preview probe only'
+        : false,
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+}

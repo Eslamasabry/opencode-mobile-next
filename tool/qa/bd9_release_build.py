@@ -12,7 +12,7 @@ import shlex
 
 PINNED_FLUTTER = str(
     Path.home() / '.shorebird/bin/cache/flutter/'
-    '91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter'
+    '6e5e949520159b5ceb029598be37520cd433b046/bin/flutter'
 )
 BUILD_NUMBER = '2201'
 NORMAL_TARGET = 'lib/main.dart'

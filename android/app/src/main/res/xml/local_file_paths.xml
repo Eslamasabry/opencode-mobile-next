@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Shared storage (/sdcard): files the built-in Linux or Termux saved for the person. -->
+    <external-path name="shared_storage" path="."/>
+</paths>

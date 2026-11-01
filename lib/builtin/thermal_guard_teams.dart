@@ -7,11 +7,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../diagnostics/app_diagnostics.dart';
 import '../diagnostics/report_problem_startup.dart';
+import '../platform/app_visibility.dart';
 import '../platform/platform_capabilities.dart';
 import '../platform/thermal.dart';
 import '../state/automation_policy.dart';
 import '../state/profiles.dart';
+import 'agents/phone_budget.dart' show FullSpeedPreference;
 import 'builtin_linux.dart';
+import 'heat_tier.dart';
+import 'linux_services/linux_services_heat.dart';
+import 'linux_services/rootfs_linux_services.dart';
+import 'process_budget.dart' show ProcessBudgetGuard;
 import 'setup/setup_engine.dart' show ChannelSetupEngine;
 import 'team/builtin_team.dart';
 import 'thermal_guard.dart';
@@ -324,6 +330,10 @@ final thermalGuardSlotProvider = Provider<ValueNotifier<ThermalGuard?>>((ref) {
   return slot;
 });
 
+/// The agents' priority control, once the shell started the guard; the
+/// process budget asks it whether new heavy work should wait.
+AgentThrottle? heatThrottle;
+
 /// Starts the guard once per process from the app shell.
 void startThermalGuard(
   ValueNotifier<ThermalGuard?> slot, {
@@ -339,7 +349,22 @@ void startThermalGuard(
   onAct,
 }) {
   if (slot.value != null || !platformCapabilities.isAndroid) return;
-  final guard = ThermalGuard(
+  // The gentler steps below the pause (slow, then hold new work) share the
+  // guard's one native listener. "Always full speed" turns them off.
+  AppVisibility.instance.ensure();
+  final throttle = AgentThrottle(
+    fullSpeed: () => store.prefs.getBool(FullSpeedPreference.key) ?? false,
+  );
+  // Linux services are held off at CRITICAL and given back once cool
+  // (owner decision 2026-10-31), from the same readings.
+  final services = RootfsLinuxServices(linux: linux);
+  late final ThermalGuard guard;
+  final servicesHeat = LinuxServicesHeat(
+    readHold: services.heatHeld,
+    setHold: services.setHeatHold,
+    enabled: () => guard.enabled,
+  );
+  guard = ThermalGuard(
     bridge: ThermalBridge(),
     port: GasCityThermalTeams(
       store: store,
@@ -348,10 +373,16 @@ void startThermalGuard(
     prefs: store.prefs,
     diagnostics: diagnostics,
     // Thermal changes go to the persisted problem report once it is open.
-    onReading: (reading) =>
-        ReportProblemStartup.current?.recordThermal(reading),
+    onReading: (reading) {
+      ReportProblemStartup.current?.recordThermal(reading);
+      unawaited(throttle.observe(reading));
+      unawaited(servicesHeat.observe(reading));
+    },
     onAct: onAct,
   );
+  heatThrottle = throttle;
+  ProcessBudgetGuard.fullSpeedReader = () =>
+      store.prefs.getBool(FullSpeedPreference.key) ?? false;
   slot.value = guard;
   unawaited(guard.start());
 }

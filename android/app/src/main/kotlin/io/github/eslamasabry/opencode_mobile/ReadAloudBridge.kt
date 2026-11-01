@@ -5,8 +5,10 @@ import android.media.AudioAttributes
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioFocusRequest
+import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecordingConfiguration
+import android.media.AudioTrack
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -18,8 +20,13 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.util.Locale
+import java.util.concurrent.Executors
 
 /** Lazy, foreground-only system TTS. Never logs text or engine diagnostics.
+ * The optional natural voice is synthesized in Dart; this class only plays the
+ * 16-bit mono PCM it streams in (naturalBegin/naturalWrite/naturalEnd) through
+ * the same audio attributes, focus, interruption monitors and cancel() as the
+ * system voice. No text reaches this side for it.
  * Offline voice metadata is an engine declaration, not a network sandbox.
  * All mutable state and channel callbacks are confined to the main thread.
  */
@@ -63,6 +70,13 @@ class ReadAloudBridge(private val activity: Activity, messenger: BinaryMessenger
         }
     } else null
     private val playbackTimeout = Runnable { cancel("engineUnavailable") }
+    // Natural voice playback. The writer thread only feeds the track and
+    // never blocks in native code; everything else stays on the main thread.
+    private val writer = Executors.newSingleThreadExecutor()
+    private var track: AudioTrack? = null
+    @Volatile private var trackGeneration = 0L
+    private var trackRate = 24000
+    private var queuedFrames = 0L
 
     init { channel.setMethodCallHandler(::handle) }
 
@@ -89,6 +103,7 @@ class ReadAloudBridge(private val activity: Activity, messenger: BinaryMessenger
         pause()
         destroyed = true
         releaseEngine()
+        writer.shutdown()
         channel.setMethodCallHandler(null)
     }
 
@@ -103,6 +118,10 @@ class ReadAloudBridge(private val activity: Activity, messenger: BinaryMessenger
             if (id != null && id == operation) cancel()
             result.success(null)
             return
+        }
+        if (call.method == "naturalBegin" || call.method == "naturalWrite" ||
+            call.method == "naturalEnd") {
+            handleNatural(call, result); return
         }
         if (call.method != "voices" && call.method != "speak") {
             result.notImplemented(); return
@@ -167,6 +186,112 @@ class ReadAloudBridge(private val activity: Activity, messenger: BinaryMessenger
                 cancel("engineUnavailable"); error(result, "engineUnavailable")
             }
         }
+    }
+
+    private fun handleNatural(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as? Map<*, *>
+        val id = args?.get("operationID") as? String
+        when (call.method) {
+            "naturalBegin" -> {
+                val rate = (args?.get("sampleRate") as? Int) ?: 0
+                if (!foreground) { error(result, "busy"); return }
+                if (id.isNullOrBlank() || id.length > 128 || rate < 8000 || rate > 48000) {
+                    error(result, "engineUnavailable"); return
+                }
+                if (captureActive()) { error(result, "busy"); return }
+                cancel()
+                if (pending != null) { error(result, "busy"); return }
+                operation = id
+                try {
+                    val format = AudioFormat.Builder()
+                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                        .setSampleRate(rate)
+                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build()
+                    val minimum = AudioTrack.getMinBufferSize(
+                        rate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
+                    if (minimum <= 0) throw IllegalStateException()
+                    val created = AudioTrack.Builder()
+                        .setAudioAttributes(attributes)
+                        .setAudioFormat(format)
+                        .setBufferSizeInBytes(maxOf(minimum, rate))
+                        .setTransferMode(AudioTrack.MODE_STREAM).build()
+                    startMonitors()
+                    if (!requestFocus()) {
+                        created.release()
+                        cancel("busy"); error(result, "busy"); return
+                    }
+                    track = created
+                    trackRate = rate
+                    queuedFrames = 0
+                    accepted = true
+                    // Loading the voice can take a few seconds before the first sound.
+                    handler.removeCallbacks(playbackTimeout)
+                    handler.postDelayed(playbackTimeout, 90000)
+                    result.success(mapOf("operationID" to id, "status" to "accepted"))
+                } catch (_: Exception) {
+                    cancel("engineUnavailable"); error(result, "engineUnavailable")
+                }
+            }
+            "naturalWrite" -> {
+                val data = args?.get("pcm") as? ByteArray
+                val current = track
+                if (id == null || id != operation || current == null || data == null ||
+                    data.isEmpty()) { result.success(null); return }
+                val generation = trackGeneration
+                queuedFrames += data.size / 2
+                // Playback ends by then even when synthesis is ahead of the speaker.
+                handler.removeCallbacks(playbackTimeout)
+                handler.postDelayed(playbackTimeout, queuedFrames * 1000L / trackRate + 90000)
+                writer.execute {
+                    try {
+                        if (generation != trackGeneration) return@execute
+                        if (current.playState != AudioTrack.PLAYSTATE_PLAYING) current.play()
+                        var offset = 0
+                        while (offset < data.size && generation == trackGeneration) {
+                            val written = current.write(
+                                data, offset, data.size - offset, AudioTrack.WRITE_NON_BLOCKING)
+                            if (written < 0) throw IllegalStateException()
+                            offset += written
+                            if (offset < data.size) Thread.sleep(15)
+                        }
+                    } catch (_: Exception) {
+                        handler.post { if (generation == trackGeneration) cancel("engineUnavailable") }
+                    }
+                }
+                result.success(null)
+            }
+            else -> {
+                val current = track
+                if (id == null || id != operation || current == null) {
+                    result.success(null); return
+                }
+                val generation = trackGeneration
+                if (queuedFrames == 0L) { cancel("completed"); result.success(null); return }
+                // Runs after every queued write, then waits for the speaker to catch up.
+                writer.execute { handler.post { pollDrain(generation, current) } }
+                result.success(null)
+            }
+        }
+    }
+
+    private fun pollDrain(generation: Long, current: AudioTrack) {
+        if (generation != trackGeneration || destroyed) return
+        val played = try {
+            current.playbackHeadPosition.toLong() and 0xFFFFFFFFL
+        } catch (_: Exception) { Long.MAX_VALUE }
+        if (played >= queuedFrames) cancel("completed")
+        else handler.postDelayed({ pollDrain(generation, current) }, 100)
+    }
+
+    private fun releaseTrack() {
+        trackGeneration++
+        queuedFrames = 0
+        val old = track ?: return
+        track = null
+        // Pause and flush stop the sound now; release waits behind any queued write.
+        try { old.pause(); old.flush() } catch (_: Exception) {}
+        try { writer.execute { try { old.release() } catch (_: Exception) {} } }
+        catch (_: Exception) { try { old.release() } catch (_: Exception) {} }
     }
 
     private fun offlineVoices(): List<Voice> = engine?.voices.orEmpty()
@@ -305,6 +430,7 @@ class ReadAloudBridge(private val activity: Activity, messenger: BinaryMessenger
         utterance = null
         chunks = emptyList()
         handler.removeCallbacks(playbackTimeout)
+        releaseTrack()
         val stopped = try { engine?.stop()?.let { it == TextToSpeech.SUCCESS } ?: true }
             catch (_: Exception) { false }
         if (monitors) {

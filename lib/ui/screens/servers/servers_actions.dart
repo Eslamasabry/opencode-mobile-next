@@ -208,6 +208,19 @@ extension _ServersActions on _ServersScreenState {
   /// [detectedRunning] lets saved credential edits reconnect the live server.
   Future<void> _connect(ServerProfile p, {bool detectedRunning = false}) async {
     if (_busy) return;
+    // A Codex or Paseo profile reached the browser's list only by being
+    // saved elsewhere; its transport cannot be built here, so the list says
+    // so instead of starting a connect that fails.
+    if (p.usesAgentSocket &&
+        !platformCapabilities.supportsAgentSocketConnections) {
+      _set(() {
+        _listFailure = lookupAppLocalizations(
+          Localizations.localeOf(context),
+        ).browserAgentSocketUnavailable;
+        _listFailureDetails = null;
+      });
+      return;
+    }
     if (p.requiresPasswordReentry || p.requiresCodexTokenReentry) {
       await _edit(
         existing: p,

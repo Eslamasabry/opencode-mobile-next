@@ -136,7 +136,8 @@ AgentRunFailureKind classifyAgentRunFailure(String reason) {
     AgentErrorCause.providerAuth => AgentRunFailureKind.signIn,
     AgentErrorCause.outOfCredit => AgentRunFailureKind.noCredit,
     // A plan's allowance for this model is used up: another model works now.
-    AgentErrorCause.usageLimit => AgentRunFailureKind.modelUnavailable,
+    AgentErrorCause.usageLimit ||
+    AgentErrorCause.freeTierLimit => AgentRunFailureKind.modelUnavailable,
     AgentErrorCause.rateLimited ||
     AgentErrorCause.providerBusy => AgentRunFailureKind.busy,
     AgentErrorCause.providerUnreachable ||

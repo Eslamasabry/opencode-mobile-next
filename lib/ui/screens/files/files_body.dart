@@ -59,6 +59,7 @@ extension _FilesBody on _FilesScreenState {
       path: _viewerPath(session),
       source: session.source,
       primary: _viewerPrimary(session),
+      secondary: _viewerShare(session),
       more: _viewerMore(session, embedded: true),
       wrap: preferences?.value.wrapCode,
       onWrapChanged: preferences == null

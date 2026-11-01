@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show OrdinalSortKey;
 
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
@@ -21,7 +22,9 @@ import 'kit_presence.dart';
 import 'kit_status_mark.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
+import 'kit_chrome.dart';
 import 'kit_tokens.dart';
+import 'kit_update_dot.dart';
 
 part 'kit_top_bar_centred.dart';
 part 'kit_top_bar_pill.dart';
@@ -326,6 +329,10 @@ class KitTopBar extends StatelessWidget {
       'KitTopBar: a destructive act goes in menu, last, and confirms '
       '(KIT-28), never in actions',
     );
+    return KitChrome.builder(builder: _buildContent);
+  }
+
+  Widget _buildContent(BuildContext context) {
     final tokens = KitTokens.of(context);
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final window = KitLayout.isShort(context)
@@ -426,6 +433,16 @@ class KitTopBar extends StatelessWidget {
             padding: EdgeInsetsDirectional.only(top: controlsTop),
             child: child,
           );
+    // A screen reader reads Back, then the title with its line, then the
+    // actions, then Close, whichever way the bar mirrors: the order comes
+    // from these keys, not from where the pieces happen to sit (in Arabic
+    // the title used to be read before Back).
+    Widget ordered(double order, Widget child, {bool group = false}) =>
+        Semantics(
+          container: group,
+          sortKey: OrdinalSortKey(order),
+          child: child,
+        );
     final bar = LayoutBuilder(
       builder: (context, constraints) {
         // The buttons sit on the title's first line. A tall title block
@@ -435,7 +452,10 @@ class KitTopBar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (resolved == KitTopBarExit.back) ...[
-              control(exitButton(AppIconography.back, l10n.kitTopBarBack)),
+              ordered(
+                0,
+                control(exitButton(AppIconography.back, l10n.kitTopBarBack)),
+              ),
               // The title's words start on the page's text rail (56 dp,
               // KitTokens.textRail), where the rows' words below it do; a
               // switcher's tappable pads its words by space2 itself.
@@ -457,43 +477,54 @@ class KitTopBar extends StatelessWidget {
                     : tokens.gutter - tokens.space2,
               ),
             Expanded(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: tokens.minTarget),
-                child: _KitTopBarTitle(
-                  title: title,
-                  subtitle: subtitle,
-                  subtitleTail: subtitleTail,
-                  subtitleTone: subtitleTone,
-                  needsYou: needsYou,
-                  onTitleTap: onTitleTap,
-                  titleTapLabel: titleTapLabel,
-                  brand: brand,
-                  titleKey: titleKey,
-                  scope: scope,
-                  lineTop: titleLine == null ? null : titleTop,
+              child: ordered(
+                1,
+                group: true,
+                ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: tokens.minTarget),
+                  child: _KitTopBarTitle(
+                    title: title,
+                    subtitle: subtitle,
+                    subtitleTail: subtitleTail,
+                    subtitleTone: subtitleTone,
+                    needsYou: needsYou,
+                    onTitleTap: onTitleTap,
+                    titleTapLabel: titleTapLabel,
+                    brand: brand,
+                    titleKey: titleKey,
+                    scope: scope,
+                    lineTop: titleLine == null ? null : titleTop,
+                  ),
                 ),
               ),
             ),
             if (actions.isNotEmpty || menu.isNotEmpty || accessory != null) ...[
               SizedBox(width: tokens.space2),
-              control(
-                _KitTopBarActions(
-                  actions: actions,
-                  accessory: accessory,
-                  accessoryShown: accessoryShown,
-                  menu: menu,
-                  window: window,
-                  menuKey: menuKey,
-                  menuLabel: menuLabel,
-                  // The title keeps at least half the bar (KitTopBar.md).
-                  reserved: constraints.maxWidth / 2,
-                  maxWidth: constraints.maxWidth,
+              ordered(
+                2,
+                group: true,
+                control(
+                  _KitTopBarActions(
+                    actions: actions,
+                    accessory: accessory,
+                    accessoryShown: accessoryShown,
+                    menu: menu,
+                    window: window,
+                    menuKey: menuKey,
+                    menuLabel: menuLabel,
+                    // The title keeps at least half the bar (KitTopBar.md).
+                    reserved: constraints.maxWidth / 2,
+                    maxWidth: constraints.maxWidth,
+                  ),
                 ),
               ),
             ],
             if (resolved == KitTopBarExit.close) ...[
               SizedBox(width: tokens.space1),
-              control(exitButton(AppIconography.close, l10n.kitTopBarClose)),
+              ordered(
+                3,
+                control(exitButton(AppIconography.close, l10n.kitTopBarClose)),
+              ),
             ],
             SizedBox(width: _endRoom(context, tokens, resolved, window)),
           ],
@@ -634,7 +665,10 @@ class _KitTopBarTitle extends StatelessWidget {
     final reduced = KitMotion.reduced(context);
     final phone = KitLayout.windowOf(context) == KitWindow.compact;
     final large = MediaQuery.textScalerOf(context).scale(1) >= 1.3;
-    final oneLine = phone && !large;
+    // With the project line under it, the title keeps to one line at large
+    // text too (the full words are the header's label, and on a tap), so the
+    // header does not fill a third of the screen.
+    final oneLine = phone && (!large || scope != null);
     final text = AnimatedSwitcher(
       duration: reduced ? Duration.zero : KitMotion.quick,
       switchInCurve: KitMotion.enter,
@@ -1073,6 +1107,7 @@ class KitShellControls extends StatelessWidget {
     this.projectKey,
     this.searchKey,
     this.settingsKey,
+    this.updateAvailable = false,
   });
 
   /// The server's display name.
@@ -1108,6 +1143,10 @@ class KitShellControls extends StatelessWidget {
   final Key? projectKey;
   final Key? searchKey;
   final Key? settingsKey;
+
+  /// An app update waits: the gear carries a dot and is named "Settings,
+  /// update available" (the badge stays after the notice's Not now).
+  final bool updateAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -1166,14 +1205,19 @@ class KitShellControls extends StatelessWidget {
             onPressed: onSearch,
           ),
         if (onSettings != null)
-          KitIconButton(
-            key: settingsKey,
-            icon: AppIconography.settingsGear,
-            tooltip: l10n.librarySettingsTitle,
-            size: 24,
-            round: true,
-            motion: KitIconMotion.turn,
-            onPressed: onSettings,
+          KitUpdateDot(
+            show: updateAvailable,
+            child: KitIconButton(
+              key: settingsKey,
+              icon: AppIconography.settingsGear,
+              tooltip: updateAvailable
+                  ? l10n.appUpdateSettingsBadgeLabel
+                  : l10n.librarySettingsTitle,
+              size: 24,
+              round: true,
+              motion: KitIconMotion.turn,
+              onPressed: onSettings,
+            ),
           ),
       ];
       return Row(

@@ -1235,10 +1235,14 @@ graph LR
   embedded_message_view["embedded-message-view"]:::ext
   files["files"]:::ext
   global_sessions["global-sessions"]:::ext
+  linux_backups["linux-backups"]
   linux_manager["linux-manager"]
   linux_packages["linux-packages"]
   linux_ports["linux-ports"]
   linux_processes["linux-processes"]
+  linux_service["linux-service"]
+  linux_service_add["linux-service-add"]
+  linux_services["linux-services"]
   linux_storage["linux-storage"]
   managed_workspaces["managed-workspaces"]:::ext
   project_hub["project-hub"]:::ext
@@ -1255,10 +1259,14 @@ graph LR
   prompt_stash_sheet --> confirm_sheet
   project_hub --> scheduled_prompts
   termux_setup_installed --> running_on_phone
+  linux_manager --> linux_services
   linux_manager --> linux_processes
   linux_manager --> linux_ports
   linux_manager --> linux_storage
   linux_manager --> linux_packages
+  linux_manager --> linux_backups
+  linux_services --> linux_service_add
+  linux_services --> linux_service
   scheduled_prompts --> scheduled_prompt_editor
   scheduled_prompts --> scheduled_prompt_time
   scheduled_prompt_editor --> chat
@@ -1659,10 +1667,14 @@ graph LR
 | `embedded-context-menu-region` | overlay | 1 / 2 | `embedded-message-view` / (embedded)<br>`files` / (embedded)<br>`global-sessions` / (embedded)<br>`managed-workspaces` / (embedded)<br>`terminal` / (embedded)<br>`worktrees` / (embedded) | _none_ |
 | `confirm-sheet` | sheet | 3 / 4 | `prompt-stash-sheet` / prompt-stash-sheet-delete | _none_ |
 | `scheduled-prompt-time` | sheet | 2 / 4 | `scheduled-prompts` / scheduled-digest | _none_ |
-| `linux-manager` | screen | 2 / 2 | `termux-setup-installed` | linux-manager-running -> `linux-processes`<br>linux-manager-ports -> `linux-ports`<br>linux-manager-storage -> `linux-storage`<br>linux-manager-packages -> `linux-packages` |
+| `linux-backups` | screen | 3 / 3 | `linux-manager` / linux-manager-backups<br>`linux-manager` / linux-manager-reset | _none_ |
+| `linux-manager` | screen | 2 / 2 | `termux-setup-installed` | linux-manager-services -> `linux-services`<br>linux-manager-running -> `linux-processes`<br>linux-manager-ports -> `linux-ports`<br>linux-manager-storage -> `linux-storage`<br>linux-manager-packages -> `linux-packages`<br>linux-manager-backups -> `linux-backups`<br>linux-manager-reset -> `linux-backups` |
 | `linux-packages` | screen | 3 / 3 | `linux-manager` / linux-manager-packages | _none_ |
 | `linux-ports` | screen | 3 / 3 | `linux-manager` / linux-manager-ports | _none_ |
 | `linux-processes` | screen | 3 / 3 | `linux-manager` / linux-manager-running | _none_ |
+| `linux-service-add` | screen | 4 / 4 | `linux-services` / linux-services-add | _none_ |
+| `linux-service` | screen | 4 / 4 | `linux-services` / linux-services-row | _none_ |
+| `linux-services` | screen | 3 / 3 | `linux-manager` / linux-manager-services | linux-services-add -> `linux-service-add`<br>linux-services-row -> `linux-service` |
 | `linux-storage` | screen | 3 / 3 | `linux-manager` / linux-manager-storage | _none_ |
 | `running-on-phone` | screen | 2 / 2 | `termux-setup-installed` / this-phone-running-row | _none_ |
 | `scheduled-prompt-editor` | sheet | 2 / 3 | `embedded-composer` / composer-send-later<br>`scheduled-prompts` / scheduled-create<br>`scheduled-prompts` / scheduled-row | scheduled-editor-last-run -> `chat`<br>scheduled-editor-delete -> `scheduled-prompt-delete` |

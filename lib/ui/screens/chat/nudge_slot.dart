@@ -34,7 +34,17 @@ extension _ChatNudges on _ChatScreenState {
       _conn.questionForSession(widget.sessionID) != null ||
       _conn.formForSession(widget.sessionID) != null ||
       _retryState != null ||
+      _freeTierNoticeShowing ||
       FirstReplyNotifyOffer.pendingFor(_conn);
+
+  /// The free-tier notice is on screen (the newest reply was refused by
+  /// OpenCode's free models): it already offers Shorten, so the context
+  /// nudge's own Shorten waits until the notice is gone.
+  bool get _freeTierNoticeShowing =>
+      _messages.isNotEmpty &&
+      _messages.last.info.role == 'assistant' &&
+      classifyAgentError(_messages.last.info.errorText ?? '') ==
+          AgentErrorCause.freeTierLimit;
 
   ConversationNudgeFacts _nudgeFacts() {
     final busy = _conn.busySessions.contains(widget.sessionID);

@@ -223,6 +223,11 @@ class GuideScreen extends StatelessWidget {
                           Bullet(
                             onDevice
                                 ? l10n.e7SharedPasswordsAreStoredInTheAndroidKeystore
+                                // A browser on a plain-http network origin
+                                // cannot keep a password at all.
+                                : !platformCapabilities
+                                      .supportsSecureCredentialStorage
+                                ? l10n.browserEditorInsecureOrigin
                                 : platformCapabilities.platform ==
                                       TargetPlatform.iOS
                                 ? l10n.iosKeychainGuide
@@ -250,7 +255,7 @@ class GuideScreen extends StatelessWidget {
       'proot-distro install ubuntu\n'
       'proot-distro login ubuntu\n'
       '  apt update && apt install -y nodejs npm\n'
-      '  npm i -g @opencode/cli@2.1.1\n'
+      '  npm i -g @opencode/cli@2.2.5\n'
       '  opencode2 serve --hostname 127.0.0.1 --port 4096 &\n'
       'exit';
 

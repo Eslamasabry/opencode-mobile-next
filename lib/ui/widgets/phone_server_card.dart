@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../builtin/app_exit_recovery.dart' show appLifecycleBridgeProvider;
 import '../../builtin/builtin_linux.dart';
 import '../../builtin/builtin_server.dart';
+import '../../builtin/linux_backup/linux_backup.dart'
+    show forgetLinuxDevicePreferences, linuxLastBackupKey;
 import '../../builtin/setup/phone_setup.dart';
 import '../../builtin/setup/setup_contract.dart';
 import '../../domain/opencode_history_copy.dart';
@@ -322,14 +324,18 @@ enum PhoneRuntimeRemoval {
 /// slow reading (many projects) leaves them out rather than holding the
 /// question back or showing a made-up figure. [queuedPrompts] waiting for
 /// this phone's server are said to move to Saved prompts (P7.2) on both
-/// paths. Removal runs inside the question ([showKitConfirm]'s action): a
-/// failure keeps it open with Try again (DATA-14). [beforeRemove] runs
-/// first on every attempt; [onWorking] is true while an attempt runs and
-/// false once it ended, so a failed attempt no longer reads as removing.
+/// paths. Once a Linux backup was saved ([backupsSaved]) both paths also say
+/// that the backup files stay: they live where the person picked with Save
+/// to, outside everything removal touches. Removal runs inside the question
+/// ([showKitConfirm]'s action): a failure keeps it open with Try again
+/// (DATA-14). [beforeRemove] runs first on every attempt; [onWorking] is true
+/// while an attempt runs and false once it ended, so a failed attempt no
+/// longer reads as removing.
 Future<PhoneRuntimeRemoval> confirmPhoneRuntimeRemoval(
   BuildContext context, {
   required BuiltinLinux linux,
   int queuedPrompts = 0,
+  bool backupsSaved = false,
   Future<void> Function()? beforeRemove,
   ValueChanged<bool>? onWorking,
   Duration measureTimeout = const Duration(seconds: 3),
@@ -354,6 +360,15 @@ Future<PhoneRuntimeRemoval> confirmPhoneRuntimeRemoval(
         l10n.serversRemoveQueuedKept(queuedPrompts),
         mark: KitConsequenceMark.kept,
         key: const ValueKey('phone-server-remove-queued-kept'),
+      ),
+  ];
+
+  final backupsKept = [
+    if (backupsSaved)
+      KitConsequence(
+        l10n.removeFromPhoneBackupsKept,
+        mark: KitConsequenceMark.kept,
+        key: const ValueKey('phone-server-remove-backups-kept'),
       ),
   ];
 
@@ -389,6 +404,7 @@ Future<PhoneRuntimeRemoval> confirmPhoneRuntimeRemoval(
         mark: KitConsequenceMark.kept,
         key: const ValueKey('phone-server-remove-kept'),
       ),
+      ...backupsKept,
       ...queuedKept,
     ],
     alternative: KitAction(
@@ -422,6 +438,7 @@ Future<PhoneRuntimeRemoval> confirmPhoneRuntimeRemoval(
         l10n.removeFromPhoneDeleteLost,
         mark: KitConsequenceMark.lost,
       ),
+      ...backupsKept,
       ...queuedKept,
     ],
     // The kit keeps the confirm disabled until the exact name is typed;
@@ -461,10 +478,14 @@ Future<bool> _removePhoneServer(
       queued += connection.queuedPromptCountForProfile(profile.id);
     }
   }
+  // Device-scope settings of the in-app Linux (`oc.linux.*`): read before
+  // the question, cleared once removal worked.
+  final prefs = connection.store.prefs;
   final outcome = await confirmPhoneRuntimeRemoval(
     context,
     linux: linux,
     queuedPrompts: queued,
+    backupsSaved: prefs.getInt(linuxLastBackupKey) != null,
     onWorking: (working) {
       if (working) onRemoving?.call();
       onRemovingChanged?.call(working);
@@ -478,6 +499,11 @@ Future<bool> _removePhoneServer(
     },
   );
   if (!outcome.removed) return false;
+  try {
+    await forgetLinuxDevicePreferences(prefs);
+  } catch (_) {
+    // Only a hub line ("Last backup ...") is at stake; removal went through.
+  }
   final problems = await forgetInAppServerProfiles(connection, l10n);
   // OpenCode itself is gone either way; what could not be cleared is said.
   await fail(problems);

@@ -4,8 +4,6 @@
 /// `lib/state/profiles.dart` re-exports it for the rest of the app.
 library;
 
-import 'dart:io' show InternetAddress, InternetAddressType;
-
 /// The hosts that represent this device and need no remote HTTP consent.
 ///
 /// Kept as one predicate on purpose. The app used to have three loopback
@@ -41,8 +39,8 @@ bool isPrivateNetworkHost(String host) {
   if (zone >= 0) h = h.substring(0, zone);
   if (h.endsWith('.')) h = h.substring(0, h.length - 1);
   if (h.isEmpty) return false;
-  final address = InternetAddress.tryParse(h);
-  if (address == null) {
+  final bytes = _parseAddress(h);
+  if (bytes == null) {
     // A name: only mDNS (`printer.local`), never a bare `local`.
     if (!h.endsWith('.local') || h.length <= '.local'.length) return false;
     return h
@@ -50,17 +48,28 @@ bool isPrivateNetworkHost(String host) {
         .split('.')
         .every((label) => label.isNotEmpty);
   }
-  final b = address.rawAddress;
-  if (address.type == InternetAddressType.IPv4 && b.length == 4) {
-    return _privateIpv4(b[0], b[1]);
+  if (bytes.length == 4) return _privateIpv4(bytes[0], bytes[1]);
+  final mapped =
+      bytes.take(10).every((x) => x == 0) &&
+      bytes[10] == 0xff &&
+      bytes[11] == 0xff;
+  if (mapped) return _privateIpv4(bytes[12], bytes[13]);
+  return (bytes[0] & 0xFE) == 0xFC ||
+      (bytes[0] == 0xFE && (bytes[1] & 0xC0) == 0x80);
+}
+
+/// The four (IPv4) or sixteen (IPv6) bytes of an address literal, or null for
+/// a name. Parsed in plain Dart, not with `dart:io`'s `InternetAddress`,
+/// which throws on the web: the same verdict has to be reachable from a
+/// browser build.
+List<int>? _parseAddress(String host) {
+  try {
+    return host.contains(':')
+        ? Uri.parseIPv6Address(host)
+        : Uri.parseIPv4Address(host);
+  } on FormatException {
+    return null;
   }
-  if (address.type == InternetAddressType.IPv6 && b.length == 16) {
-    final mapped =
-        b.take(10).every((x) => x == 0) && b[10] == 0xff && b[11] == 0xff;
-    if (mapped) return _privateIpv4(b[12], b[13]);
-    return (b[0] & 0xFE) == 0xFC || (b[0] == 0xFE && (b[1] & 0xC0) == 0x80);
-  }
-  return false;
 }
 
 bool _privateIpv4(int a, int b) =>

@@ -209,16 +209,15 @@ class LinuxManager {
     LinuxJobKind kind,
     List<String> names, {
     required String notice,
-  }) async {
+  }) => startScriptJob(linuxJobScript(kind, names), notice: notice);
+
+  /// Starts [script] (a [linuxJobFrame]) as the one long job.
+  Future<void> startScriptJob(String script, {required String notice}) async {
     await requireQuiet();
     // Taking the slot once proves nothing else holds it right now.
     await _run('exit 0', timeout: const Duration(seconds: 12));
     try {
-      await linux.startService(
-        linuxJobService,
-        linuxJobScript(kind, names),
-        notice: notice,
-      );
+      await linux.startService(linuxJobService, script, notice: notice);
     } on BuiltinLinuxException catch (error) {
       throw LinuxManagerException(
         LinuxProblem.unavailable,
@@ -340,6 +339,12 @@ class LinuxJobController extends ChangeNotifier {
   bool _disposed = false;
   bool _dismissed = false;
 
+  /// Bumped when a job starts: a read that began before it describes the job
+  /// before (or none), and must not overwrite the running state. Otherwise a
+  /// backup that waits for "not running" takes that stale read as the job
+  /// having ended, and it quietly never starts.
+  int _epoch = 0;
+
   LinuxJobState get state => _state;
 
   /// The person has seen how the last job ended: it is not shown again.
@@ -368,13 +373,21 @@ class LinuxJobController extends ChangeNotifier {
   Future<void> refresh() async {
     if (_reading || _disposed) return;
     _reading = true;
+    final epoch = _epoch;
+    var stale = false;
     try {
-      _set(await manager.readJob());
+      final read = await manager.readJob();
+      if (epoch == _epoch) {
+        _set(read);
+      } else {
+        stale = true;
+      }
     } on BuiltinLinuxException {
       // Unreadable now: the last state stays.
     } finally {
       _reading = false;
     }
+    if (stale) unawaited(refresh());
   }
 
   Future<void> start(
@@ -383,10 +396,25 @@ class LinuxJobController extends ChangeNotifier {
     required String notice,
   }) async {
     await manager.startJob(kind, names, notice: notice);
+    _epoch++;
     _dismissed = false;
     _set(
       LinuxJobState(kind: kind, names: names, status: LinuxJobStatus.running),
     );
+    unawaited(refresh());
+  }
+
+  /// Starts a backup or restore job: [script] is its whole
+  /// [linuxJobFrame].
+  Future<void> startScript(
+    LinuxJobKind kind,
+    String script, {
+    required String notice,
+  }) async {
+    await manager.startScriptJob(script, notice: notice);
+    _epoch++;
+    _dismissed = false;
+    _set(LinuxJobState(kind: kind, status: LinuxJobStatus.running));
     unawaited(refresh());
   }
 

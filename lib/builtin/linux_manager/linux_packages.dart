@@ -171,8 +171,9 @@ void _requireNames(List<String> names) {
   }
 }
 
-/// What a long job does.
-enum LinuxJobKind { install, remove, update }
+/// What a long job does: apt work, or a backup or restore of Linux
+/// (lib/builtin/linux_backup).
+enum LinuxJobKind { install, remove, update, backup, restore }
 
 /// How a job's script ends: the last line it prints.
 const linuxJobExitPrefix = '::oc job-exit ';
@@ -190,6 +191,11 @@ String linuxJobScript(LinuxJobKind kind, [List<String> names = const []]) {
     _requireNames(names);
   }
   final body = switch (kind) {
+    LinuxJobKind.backup || LinuxJobKind.restore => throw ArgumentError.value(
+      kind,
+      'kind',
+      'A backup or restore brings its own body: linuxJobFrame.',
+    ),
     LinuxJobKind.install =>
       'oc_stage "Installing ${names.join(', ')}"\n'
           'oc_apt_install ${names.join(' ')}\n',
@@ -204,6 +210,18 @@ String linuxJobScript(LinuxJobKind kind, [List<String> names = const []]) {
           'oc_apt_run "" upgrade -y --no-install-recommends '
           '-o Dpkg::Options::=--force-confold\n',
   };
+  return linuxJobFrame(kind, body, names: names);
+}
+
+/// The frame every long job runs in: it names itself (`::oc job <kind>`),
+/// takes the job lock, stops itself after [linuxJobBudget], and ends with
+/// `::oc job-exit <code>`. [body] is shell that runs after the setup
+/// prelude (so `oc_stage` and `oc_apt_*` are there).
+String linuxJobFrame(
+  LinuxJobKind kind,
+  String body, {
+  List<String> names = const [],
+}) {
   return '''$setupPrelude
 export DEBIAN_FRONTEND=noninteractive
 printf '::oc job ${kind.name}\\n'

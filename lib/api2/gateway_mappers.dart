@@ -14,7 +14,7 @@ import 'transport.dart';
 
 // ---------------- Capabilities ----------------
 
-/// The exact feature truth for an OpenCode 2 server (stable 2.1.1 probed live
+/// The exact feature truth for an OpenCode 2 server (stable 2.2.5 and 2.1.1 probed live (2026-10-31: 46/46 live proof both, OpenAPI diff additive)
 /// 2026-10-21 and 2.0.29 on 2026-10-14; beta-18600 before that), per
 /// `docs/opencode2-port-matrix.md` §2:
 ///
@@ -302,10 +302,10 @@ MessageWithParts mapApi2Message(String sessionID, Api2Message message) {
           'completed' =>
             message.summary?.isNotEmpty == true
                 ? message.summary!
-                : 'Conversation compacted.',
+                : 'Conversation shortened.',
           'failed' =>
-            message.error?.message ?? 'Conversation compaction failed',
-          _ => 'Compacting conversation…',
+            message.error?.message ?? 'Shortening the conversation failed',
+          _ => 'Shortening conversation…',
         },
       );
     case Api2SyntheticMessage():

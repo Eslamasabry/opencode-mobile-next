@@ -6,7 +6,13 @@
 # Why: the local Gradle release build needs 4-5 GB and trips low-memory alerts.
 # The real signing key never leaves this PC:
 #   1. rsync this worktree (build/, .dart_tool/, .git/, key.properties left out)
-#      to ~/wt/<name> on OC_VPS_HOST;
+#      to ~/wt/<name>-apk on OC_VPS_HOST. That folder is the build's alone:
+#      vps_test.sh syncs ~/wt/<name> with --delete, and on 2026-10-31 a test
+#      run doing so mid-build removed the generated (git-ignored)
+#      GeneratedPluginRegistrant.java before Gradle compiled it. APK 4293 then
+#      registered no plugins and crashed on every start. The folder's lock is
+#      held by the sync and the whole build, so two builds of one worktree
+#      cannot overwrite each other either;
 #   2. the server signs with a THROWAWAY keystore it creates once under
 #      ~/.oc-throwaway-signing/ (its android/key.properties points there), and
 #      runs `flutter build apk --release --build-number=N`; Gradle's
@@ -15,11 +21,14 @@
 #   4. here the APK is re-signed with the real key from key.properties (read
 #      only inside this script; passwords go to apksigner by environment
 #      variable, never argv or output). The script FAILS unless the signer
-#      SHA-256 is the known local release key.
+#      SHA-256 is the known local release key, and unless the APK still holds
+#      the plugin registrant (tool/qa/apk_has_plugins.sh).
 # Output: build number, final APK path, size, signer digest, elapsed time.
 # Differences from a PC build: signed by apksigner after the build (same key,
 # same certificate; the signature blocks are rewritten, contents are not).
-# Env: OC_BUILD_ARGS (extra `flutter build apk` arguments, e.g.
+# Env: OC_VPS_FLUTTER_REV (Shorebird cache revision on the server; default is
+# the current pin, set 91f8bd75076e9c740aa13cf67eb9ec1a093f68f5 for 3.47.1),
+# OC_BUILD_ARGS (extra `flutter build apk` arguments, e.g.
 # --split-debug-info=build/symbols; empty by default), OC_VPS_HOST, OC_KEY_PROPERTIES (default: this worktree's
 # android/key.properties, else the main checkout's), ANDROID_BUILD_TOOLS.
 set -euo pipefail
@@ -45,6 +54,8 @@ if [[ ! -f "$kp" ]]; then
 fi
 [[ -f "$kp" ]] || { echo "vps_build_apk: no key.properties found" >&2; exit 66; }
 out="$root/build/vps-apk"
+# The build's own server folder and its lock (see step 1).
+sdir="$name-apk"
 mkdir -p "$out"
 log="$out/server-build-$n.log"
 
@@ -52,10 +63,13 @@ ssh -o BatchMode=yes "$host" "mkdir -p ~/wt"
 rsync -a --delete --exclude build/ --exclude .dart_tool/ --exclude .git/ \
   --exclude 'test/**/failures/' --exclude android/key.properties \
   --exclude '*.keystore' --exclude '*.jks' \
-  "$root/" "$host:wt/$name/"
+  --rsync-path="flock ~/wt/.$sdir.lock rsync" \
+  "$root/" "$host:wt/$sdir/"
 
 # Server side: throwaway keystore (created once), key.properties, build.
 ssh -o BatchMode=yes "$host" "bash -lc 'set -euo pipefail
+exec 8>~/wt/.$sdir.lock
+flock 8
 d=\$HOME/.oc-throwaway-signing
 if [[ ! -f \$d/throwaway.jks ]]; then
   mkdir -p \$d && chmod 700 \$d
@@ -67,20 +81,21 @@ if [[ ! -f \$d/throwaway.jks ]]; then
     \$pw \$pw \$d/throwaway.jks > \$d/key.properties
   chmod 600 \$d/key.properties
 fi
-cp \$d/key.properties ~/wt/$name/android/key.properties
-cd ~/wt/$name
+cp \$d/key.properties ~/wt/$sdir/android/key.properties
+export PATH=\$HOME/.shorebird/bin/cache/flutter/${OC_VPS_FLUTTER_REV:-6e5e949520159b5ceb029598be37520cd433b046}/bin:\$PATH
+cd ~/wt/$sdir
 rm -rf build/app/outputs
 flutter pub get >/dev/null 2>&1
 # One release build at a time on the server: parallel Gradle builds from
 # several worktrees exhausted its memory (it has no swap) and killed a daemon.
-flock \$HOME/.oc-vps-apk-build.lock flutter build apk --release --build-number=$n ${OC_BUILD_ARGS:-} > ~/wt/$name/vps-build-$n.log 2>&1 || { tail -40 ~/wt/$name/vps-build-$n.log; exit 1; }
-'" >/dev/null || { ssh -o BatchMode=yes "$host" "tail -40 ~/wt/$name/vps-build-$n.log" >&2 || true; echo "vps_build_apk: server build failed" >&2; exit 1; }
-ssh -o BatchMode=yes "$host" "cat ~/wt/$name/vps-build-$n.log" > "$log" || true
+flock \$HOME/.oc-vps-apk-build.lock flutter build apk --release --build-number=$n ${OC_BUILD_ARGS:-} > ~/wt/$sdir/vps-build-$n.log 2>&1 || { tail -40 ~/wt/$sdir/vps-build-$n.log; exit 1; }
+'" >/dev/null || { ssh -o BatchMode=yes "$host" "tail -40 ~/wt/$sdir/vps-build-$n.log" >&2 || true; echo "vps_build_apk: server build failed" >&2; exit 1; }
+ssh -o BatchMode=yes "$host" "cat ~/wt/$sdir/vps-build-$n.log" > "$log" || true
 server_secs=$((SECONDS - start))
 
 raw="$out/app-release-server-$n.apk"
-scp -q -o BatchMode=yes "$host:wt/$name/build/app/outputs/flutter-apk/app-release.apk" "$raw"
-scp -q -o BatchMode=yes "$host:wt/$name/build/app/outputs/mapping/release/mapping.txt" "$out/mapping-$n.txt" || echo "vps_build_apk: no mapping.txt" >&2
+scp -q -o BatchMode=yes "$host:wt/$sdir/build/app/outputs/flutter-apk/app-release.apk" "$raw"
+scp -q -o BatchMode=yes "$host:wt/$sdir/build/app/outputs/mapping/release/mapping.txt" "$out/mapping-$n.txt" || echo "vps_build_apk: no mapping.txt" >&2
 
 final="$out/app-release-$n.apk"
 "$bt/zipalign" -c -P 16 4 "$raw" || "$bt/zipalign" -c 4 "$raw"
@@ -90,6 +105,10 @@ OC_KS_PASS="$(getp storePassword)" OC_KEY_PASS="$(getp keyPassword)" \
   "$bt/apksigner" sign --v1-signing-enabled false --ks "$ks" --ks-key-alias "$alias_" \
   --ks-pass env:OC_KS_PASS --key-pass env:OC_KEY_PASS --out "$final" "$raw" >/dev/null
 rm -f "$raw" "$final.idsig"
+if ! "$root/tool/qa/apk_has_plugins.sh" "$final"; then
+  echo "vps_build_apk: plugin registrant missing; removing $final" >&2
+  rm -f "$final"; exit 1
+fi
 
 certs="$("$bt/apksigner" verify --print-certs "$final")"
 digest="$(grep -m1 'certificate SHA-256 digest' <<<"$certs" | awk '{print toupper($NF)}')"

@@ -18,6 +18,7 @@ const settingsGroupRowIds = <SettingsGroup, List<String>>{
     'settings-phrase-chips',
     'default-shell-settings-entry',
     'settings-voice',
+    'settings-local-assistant',
     'settings-automation',
   ],
   SettingsGroup.thisApp: [
@@ -26,10 +27,12 @@ const settingsGroupRowIds = <SettingsGroup, List<String>>{
     'settings-category-appearance',
     'settings-category-language',
     'settings-category-privacy',
+    'settings-updates',
   ],
   SettingsGroup.help: [
     'settings-setup-guide',
     'settings-tips',
+    'settings-browser-mode',
     'library-report-bug',
     'settings-about-notices',
   ],
@@ -302,6 +305,7 @@ class _SettingsGroupBodyState extends State<_SettingsGroupBody> {
                 builder: (_) => DefaultShellRow(controller: controller),
               ),
         row('settings-voice'),
+        row('settings-local-assistant'),
         row('settings-automation'),
       ],
       SettingsGroup.thisApp => [
@@ -324,10 +328,12 @@ class _SettingsGroupBodyState extends State<_SettingsGroupBody> {
           builder: (_) => LanguageSettingsRow(controller: controller),
         ),
         row('settings-category-privacy'),
+        row('settings-updates'),
       ],
       SettingsGroup.help => [
         row('settings-setup-guide'),
         row('settings-tips'),
+        row('settings-browser-mode'),
         // Report a problem: every failure state offers it too; this row is
         // the deliberate path, with the count of errors kept (P8.2).
         row(

@@ -5,7 +5,10 @@ import 'package:flutter/widgets.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../state/tips.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
 import '../kit/kit_page_route.dart';
+import '../screens/whats_new_sheet.dart';
 import '../kit/kit_tip.dart';
 import '../screens/settings_screen.dart' show AppearanceSettingsScreen;
 
@@ -63,7 +66,9 @@ class TeachingEntry {
 abstract final class TeachingIds {
   static const stopAfterStep = 'stop-after-step';
   static const sendLater = 'send-later';
+  static const holdMic = 'hold-mic';
   static const makeItYours = 'make-it-yours';
+  static const whatsNew = 'whats-new';
 
   /// The earlier three-step Appearance tour "Make it yours" replaced: an
   /// answer given to it (done, declined) stands for the new one.
@@ -115,6 +120,18 @@ final List<TeachingEntry> teachingRegistry = [
     priority: 1,
   ),
   TeachingEntry(
+    id: TeachingIds.holdMic,
+    kind: TeachingKind.tip,
+    title: (l10n) => l10n.tipHoldMicTitle,
+    message: (l10n) => l10n.tipHoldMic,
+    copyKeys: const ['tipHoldMicTitle', 'tipHoldMic'],
+    anchors: const [Key('composer-voice-button')],
+    trigger:
+        'the mic was used with a tap and the box is empty again; '
+        'done once the person holds the mic to talk',
+    priority: 1,
+  ),
+  TeachingEntry(
     id: TeachingIds.makeItYours,
     kind: TeachingKind.tour,
     title: (l10n) => l10n.tourMakeItYoursTitle,
@@ -154,6 +171,18 @@ final List<TeachingEntry> teachingRegistry = [
         message: l10n.tourMakeItYoursComfort,
       ),
     ],
+  ),
+  TeachingEntry(
+    id: TeachingIds.whatsNew,
+    kind: TeachingKind.tour,
+    title: (l10n) => l10n.whatsNewTipsTitle,
+    message: (l10n) => l10n.whatsNewRowDetail,
+    copyKeys: const ['whatsNewTipsTitle', 'whatsNewRowDetail'],
+    anchors: const [Key('about-whats-new')],
+    trigger:
+        'once after an update (never on a fresh install): the walkthrough '
+        'of what is new; replayed from About › What\'s new',
+    maxCount: 1,
   ),
 ];
 
@@ -273,6 +302,16 @@ Future<void> replayTour(
   ConnectionController controller,
   String id,
 ) async {
+  if (id == TeachingIds.whatsNew) {
+    final info = await PackageInfo.fromPlatform();
+    if (!context.mounted) return;
+    await showWhatsNewSheet(
+      context,
+      version: info.version,
+      controller: controller,
+    );
+    return;
+  }
   if (id != TeachingIds.makeItYours) return;
   final tips = controller.tips..replay(id);
   await _openAndRun(context, controller);

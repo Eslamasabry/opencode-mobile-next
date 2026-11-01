@@ -10,7 +10,17 @@ void main() {
       for (final state in KitTeamState.values)
         state.name: () => teamSample('kit_server_lane', state: state),
     },
+    changes: {
+      'work finishes': KitMotionChange(
+        build: () => teamSample('kit_server_lane', state: KitTeamState.running),
+        act: (tester, stage) => stage.rebuild(
+          teamSample('kit_server_lane', state: KitTeamState.done),
+        ),
+        shows: 'Accepted · 5 min ago',
+      ),
+    },
   );
+
   testWidgets('wraps at 360 dp with 2x text', (tester) async {
     await pumpTeam(tester, teamSample('kit_server_lane'), scale: 2);
     expect(tester.takeException(), isNull);

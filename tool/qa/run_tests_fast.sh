@@ -28,7 +28,7 @@ shards="${OC_FAST_SHARDS:-4}"
 concurrency="${OC_FAST_CONCURRENCY:-2}"
 chunk_size="${OC_FAST_CHUNK_SIZE:-1000}"
 chunk_timeout="${OC_FAST_CHUNK_TIMEOUT:-3600}"
-flutter="${FLUTTER:-$HOME/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter}"
+flutter="${FLUTTER:-$HOME/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/flutter}"
 output=""
 
 while [[ $# -gt 0 ]]; do

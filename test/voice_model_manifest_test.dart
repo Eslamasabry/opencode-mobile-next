@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/voice/model_manifest.dart';
+import 'package:opencode_mobile/voice/natural_voice.dart';
 
 void main() {
   test('voice dependencies and Android permission are pinned', () {
@@ -17,7 +18,7 @@ void main() {
     ).readAsStringSync();
     final audio = File('lib/voice/audio.dart').readAsStringSync();
 
-    expect(pubspec, contains('sherpa_onnx: 1.13.7'));
+    expect(pubspec, contains('sherpa_onnx: 2.0.1'));
     expect(pubspec, contains('record: 7.1.1'));
     expect(manifest, contains('android.permission.RECORD_AUDIO'));
     expect(manifest, contains('android.permission.POST_NOTIFICATIONS'));
@@ -102,7 +103,7 @@ void main() {
     expect(pubspec, contains('- LICENSES/'));
     expect(notices, contains('sherpa-onnx'));
     expect(notices, contains('ONNX Runtime'));
-    expect(notices, contains('1.27.1'));
+    expect(notices, contains('1.28.2'));
     expect(notices, contains('OpenAI Whisper'));
     for (final pack in voiceModelPacks) {
       expect(notices, contains(pack.repository));
@@ -112,6 +113,11 @@ void main() {
     expect(File('LICENSES/BSD-3-Clause-record.txt').existsSync(), isTrue);
     expect(File('LICENSES/MIT-ONNX-Runtime.txt').existsSync(), isTrue);
     expect(File('LICENSES/MIT-OpenAI-Whisper.txt').existsSync(), isTrue);
+    expect(File('LICENSES/Apache-2.0-Kokoro.txt').existsSync(), isTrue);
+    for (final pack in naturalVoicePacks) {
+      expect(notices, contains(pack.repository));
+      expect(notices, contains(pack.revision));
+    }
     expect(
       File('lib/voice/notices.dart').readAsStringSync(),
       contains('VoiceNoticesView'),

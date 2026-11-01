@@ -31,6 +31,75 @@ extension _ChatCommandActions on _ChatScreenState {
     }
   }
 
+  /// F4 / Shift+F4: steps the chat's thinking level through the levels its
+  /// model offers (the default first), wrapping at the ends.
+  Future<void> _cycleVariant({bool reverse = false}) async {
+    if (_conn.isIsolated) return;
+    final model = _conn.modelForSession(widget.sessionID);
+    final catalog = _conn.catalog;
+    if (model == null || catalog == null) return;
+    final match = catalog.models.where(
+      (m) => m.providerID == model.providerID && m.id == model.modelID,
+    );
+    if (match.isEmpty) return;
+    final levels = [
+      '',
+      for (final v in match.first.variants)
+        if (!v.disabled) v.id,
+    ];
+    if (levels.length < 2) return;
+    final at = levels.indexOf(_conn.variantForSession(widget.sessionID));
+    final step = reverse ? -1 : 1;
+    final next = levels[((at < 0 ? 0 : at) + step) % levels.length];
+    final revision = _conn.connectionRevision;
+    try {
+      await _conn.selectModelForSession(
+        widget.sessionID,
+        model,
+        variant: next,
+        recordRecent: false,
+      );
+      if (!mounted || revision != _conn.connectionRevision) return;
+      _showComposerNote(
+        next.isEmpty
+            ? _chatL10n(context).chatUiThinkingLevelDefault
+            : _chatL10n(context).chatUiThinkingLevelSet(
+                presentedEffort(next, _chatL10n(context)),
+              ),
+      );
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
+  }
+
+  /// PageUp / PageDown / Home / End on the transcript. The list is reversed,
+  /// so "earlier" is a positive offset and Home is the last item.
+  void _scrollTranscriptByKey(TranscriptKey key) {
+    if (!_messageScroll.isAttached) return;
+    switch (key) {
+      case TranscriptKey.latest:
+        _jumpToLatest();
+      case TranscriptKey.oldest:
+        final count = _renderedMessageCount;
+        if (count > 0) _messageScroll.jumpTo(index: count - 1);
+      case TranscriptKey.pageUp || TranscriptKey.pageDown:
+        final page = (_transcriptExtent > 0 ? _transcriptExtent : 400) * 0.85;
+        final delta = key == TranscriptKey.pageUp ? page : -page;
+        if (KitMotion.reduced(context)) {
+          _messageOffset.animateScroll(
+            offset: delta,
+            duration: const Duration(milliseconds: 1),
+          );
+        } else {
+          _messageOffset.animateScroll(
+            offset: delta,
+            duration: KitMotion.standard,
+            curve: KitMotion.enter,
+          );
+        }
+    }
+  }
+
   Widget? _modelCycleButton() {
     if (_conn.isIsolated) return null;
     final library = _conn.modelLibrary;

@@ -99,7 +99,7 @@ image-picker implementations share the variant in
 ### sherpa-onnx
 
 - Component: `sherpa_onnx` Flutter package and native sherpa-onnx runtime
-- Version: 1.13.6
+- Version: 2.0.1
 - Project: https://github.com/k2-fsa/sherpa-onnx
 - Copyright: sherpa-onnx contributors, including Xiaomi Corporation notices in
   the distributed source
@@ -111,8 +111,9 @@ for Android ABIs through its `sherpa_onnx_android_*` packages.
 ### ONNX Runtime
 
 - Component: ONNX Runtime native inference runtime used by sherpa-onnx
-- Version provenance: sherpa-onnx 1.13.6 declares ONNX Runtime 1.27.1 in its
-  release changelog for the packaged native runtime
+- Version provenance: sherpa-onnx 2.0.1 packages ONNX Runtime 1.28.2 (the
+  libonnxruntime.so in its Android packages reports that version; the 1.13.8
+  release changelog records the update from 1.27.1)
 - Project: https://github.com/microsoft/onnxruntime
 - Copyright: Microsoft Corporation
 - License: MIT; see `LICENSES/MIT-ONNX-Runtime.txt`
@@ -239,6 +240,20 @@ Face and are fetched from immutable repository revisions:
 The application verifies every downloaded file against the byte length and
 SHA-256 digest pinned in `lib/voice/model_manifest.dart`. Neither Hugging Face,
 OpenAI, nor the sherpa-onnx project endorses this application.
+
+### Kokoro natural reading voice (optional download)
+
+The optional "Natural voice" for read-aloud downloads Kokoro-82M v1.0
+(hexgrad, Apache-2.0), packaged for sherpa-onnx as an int8 ONNX model with its
+voices, tokens and an English pronunciation lexicon derived from the misaki
+dictionaries (Apache-2.0). The notice and license text are in
+`LICENSES/Apache-2.0-Kokoro.txt`. The application does not modify or
+redistribute the bytes; they are fetched from the immutable revision
+`csukuangfj/kokoro-int8-multi-lang-v1_0` at
+`57adb37fc0e8d4bd430cfc1b8f8c2294945b9af2` and verified against the byte length
+and SHA-256 digest pinned in `lib/voice/natural_voice.dart`. Arabic is not
+offered: sherpa-onnx 2.0 removed espeak-ng, which the published Arabic
+Kokoro-runtime models (Nabra-82M, Apache-2.0) need for pronunciation.
 
 ## Package inventory
 
@@ -379,16 +394,16 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `shared_preferences_platform_interface` | 2.4.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `shared_preferences_web` | 2.4.3 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
 | `shared_preferences_windows` | 2.4.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
-| `sherpa_onnx` | 1.13.7 | Apache-2.0 | — | runtime |
-| `sherpa_onnx_android_arm64` | 1.13.7 | Apache-2.0 | — | runtime |
-| `sherpa_onnx_android_armeabi` | 1.13.7 | Apache-2.0 | — | runtime |
-| `sherpa_onnx_android_x86` | 1.13.7 | Apache-2.0 | — | runtime |
-| `sherpa_onnx_android_x86_64` | 1.13.7 | Apache-2.0 | — | runtime |
-| `sherpa_onnx_ios` | 1.13.7 | Apache-2.0 | — | runtime |
-| `sherpa_onnx_linux` | 1.13.7 | Apache-2.0 | — | runtime |
-| `sherpa_onnx_macos` | 1.13.7 | Apache-2.0 | — | runtime |
-| `sherpa_onnx_web` | 1.13.7 | Apache-2.0 | — | runtime |
-| `sherpa_onnx_windows` | 1.13.7 | Apache-2.0 | — | runtime |
+| `sherpa_onnx` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_android_arm64` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_android_armeabi` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_android_x86` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_android_x86_64` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_ios` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_linux` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_macos` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_web` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_windows` | 2.0.1 | Apache-2.0 | — | runtime |
 | `shorebird_code_push` | 2.0.7 | MIT | — | runtime |
 | `source_span` | 1.10.2 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `stack_trace` | 1.12.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |

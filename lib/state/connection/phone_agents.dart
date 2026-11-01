@@ -96,6 +96,14 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   /// Auth/version refreshes spawn private native children. Keep them outside
   /// a phone check's installation and helper-restart admission window.
   bool _paChecking = false;
+
+  /// Automatic update of installed agents behind the app's pin: which pins
+  /// were tried this app run, the agent being updated, and the wait timer.
+  final _paAutoAttempted = <String>{};
+  String? _paAutoUpdating;
+  final _paAutoWifiWaiting = <String>{};
+  bool _paAutoRunning = false;
+  Timer? _paAutoRetry;
   final _paSources =
       <String, ({PaseoGateway gateway, PaseoChatFeedSource source})>{};
 
@@ -378,7 +386,8 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
   // ---- rows ---------------------------------------------------------------
 
   @override
-  List<AgentRow> get agentRows => phoneAgentsAvailable ? _paRows : const [];
+  List<AgentRow> get agentRows =>
+      phoneAgentsAvailable ? _self._paWithAutoUpdate(_paRows) : const [];
 
   AgentRow? _paRowFor(String agentId) {
     for (final row in _paRows) {
@@ -583,11 +592,16 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
           if (runtime.installed &&
               descriptor.signInMethod != AgentSignInMethod.none &&
               (host is PhoneAgentAuthPort || runtime.signInPhase == null)) {
-            final auth = await _paProbeSignIn(host, descriptor.id);
+            // A list refresh reuses an answer the agent gave lately: each
+            // check starts a Linux, a shell, Python and the agent's own
+            // program (Claude Code: about 330 MB), and the rows refresh
+            // often. Signing in, out and "Check again" always ask afresh.
+            final known = _paFreshAuth(descriptor.id);
+            final auth = known ?? await _paProbeSignIn(host, descriptor.id);
             if (_self._disposed || _paHost != host || _paHostProfile != owner) {
               return;
             }
-            _paAuthResults[descriptor.id] = auth;
+            _paNoteAuth(descriptor.id, auth, read: known == null);
             runtime = PhoneAgentRuntime(
               agentId: runtime.agentId,
               installed: runtime.installed,
@@ -595,6 +609,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
               hostAvailable: runtime.hostAvailable,
               architectureQualified: runtime.architectureQualified,
               checkRequiredReason: runtime.checkRequiredReason,
+              behindPin: runtime.behindPin,
               capabilities: runtime.capabilities,
               signInPhase:
                   auth.state == AgentAuthProbeState.signedIn &&
@@ -653,6 +668,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     // Mark the auto-resume only for the final, freshly inspected rows.
     if (autoResume) _paAutoResuming = true;
     if (!_self._disposed) _self._notifyListeners();
+    unawaited(_self._paConsiderAutoUpdate().catchError((Object _) {}));
     // Rows are read when the person opens an agent screen or sheet: an
     // installed agent whose helper Android stopped is started again here
     // instead of asking them to tap Resume after every app start. One try a
@@ -677,6 +693,40 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
 
   final _paAuthResults = <String, AgentAuthProbeResult>{};
   final _paAuthRevisions = <String, int>{};
+
+  /// When each agent last answered a sign-in check itself.
+  final _paAuthReadAt = <String, DateTime>{};
+
+  /// How long a list refresh reuses the agent's last answer.
+  static const paSignInFresh = Duration(minutes: 10);
+
+  /// The last answer for [agentId] when the agent gave it within
+  /// [paSignInFresh]; null when it must be asked again (never asked, too
+  /// old, or the check could not run).
+  AgentAuthProbeResult? _paFreshAuth(String agentId) {
+    final result = _paAuthResults[agentId];
+    final at = _paAuthReadAt[agentId];
+    if (result == null ||
+        at == null ||
+        result.state == AgentAuthProbeState.error) {
+      return null;
+    }
+    return clock.now().difference(at) < paSignInFresh ? result : null;
+  }
+
+  void _paNoteAuth(
+    String agentId,
+    AgentAuthProbeResult result, {
+    required bool read,
+  }) {
+    _paAuthResults[agentId] = result;
+    if (!read) return;
+    if (result.state == AgentAuthProbeState.error) {
+      _paAuthReadAt.remove(agentId);
+    } else {
+      _paAuthReadAt[agentId] = clock.now();
+    }
+  }
 
   /// A row still "Checking sign-in…" is read again a few seconds later, so
   /// it reaches a final state without the person reopening the sheet.
@@ -804,7 +854,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     final owner = _paHostProfile;
     final result = await _paProbeSignIn(host, agentId);
     if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
-    _paAuthResults[agentId] = result;
+    _paNoteAuth(agentId, result, read: true);
     _self._notifyListeners();
     final rows = refreshAgentRows().then((_) {
       if (!_self._disposed) _self._notifyListeners();
@@ -843,7 +893,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     _paAuthRevisions[agentId] = (_paAuthRevisions[agentId] ?? 0) + 1;
     final result = await (host as PhoneAgentAuthPort).signOut(agentId);
     if (_self._disposed || _paHost != host || _paHostProfile != owner) return;
-    _paAuthResults[agentId] = result;
+    _paNoteAuth(agentId, result, read: true);
     if (result.state != AgentAuthProbeState.signedOut) {
       _self._notifyListeners();
       throw const ProductException(
@@ -1434,7 +1484,7 @@ mixin _ConnectionControllerPhoneAgents on ChangeNotifier
     }
   }
 
-  Timer? _paBackendWatch;
+  VisibilityPacedTimer? _paBackendWatch;
   Timer? _paListRefresh;
   bool _paRecovering = false;
   int _paOfflineTicks = 0;

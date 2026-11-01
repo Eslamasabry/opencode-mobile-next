@@ -42,10 +42,13 @@ class ScheduledPromptRunner {
     required int deadlineEpochMs,
     required Future<bool> Function() isCurrent,
     Future<void> Function(String sessionId)? onSessionCreated,
+    bool manual = false,
   }) async {
     final startedAt = now();
-    final scheduledAt = schedule.nextRunAt ?? startedAt;
+    // A manual "Run now" has no timed moment; it is identified by its start.
+    final scheduledAt = manual ? startedAt : schedule.nextRunAt ?? startedAt;
     final late =
+        !manual &&
         startedAt.difference(scheduledAt) > const Duration(minutes: 15);
     ScheduledAgentConnection? connection;
     String? sessionId = schedule.sessionId;
@@ -55,7 +58,11 @@ class ScheduledPromptRunner {
     ScheduledPromptRun result(
       ScheduledPromptRunStatus status, [
       String? error,
+      String? title,
+      String? summary,
     ]) => ScheduledPromptRun(
+      title: title,
+      summary: summary,
       id: scheduledOccurrenceId(schedule, scheduledAt),
       scheduleId: schedule.id,
       scheduledAt: scheduledAt,
@@ -107,7 +114,9 @@ class ScheduledPromptRunner {
 
     try {
       schedule.validate();
-      if (!schedule.enabled) throw const ScheduledRunFailure('stale_target');
+      if (!schedule.enabled && !manual) {
+        throw const ScheduledRunFailure('stale_target');
+      }
       final profile = await read(() => loadProfile(schedule.profileId));
       if (profile == null ||
           scheduledProfileFingerprint(profile) != schedule.profileFingerprint) {
@@ -262,34 +271,51 @@ class ScheduledPromptRunner {
       accepted = true;
       // Remote servers own their run after acknowledgement. A runtime started
       // just for this occurrence must finish before its bounded lease releases.
-      if (!connection.startedPhoneServer) {
-        return result(ScheduledPromptRunStatus.ran);
+      // A remote run is followed too, within this attempt's own deadline, so
+      // the person can be told when it ends. If the deadline comes first the
+      // prompt was still accepted: the run reports "started", not a failure.
+      final remote = !connection.startedPhoneServer;
+      Future<ScheduledPromptRun> follow() async {
+        while (true) {
+          final session = await read(() => gateway.session(sessionId!));
+          final messages = await read(() => gateway.messages(sessionId!));
+          final statuses = await read(gateway.sessionStatuses);
+          final replies = messages.where(
+            (m) =>
+                m.info.role == 'assistant' &&
+                !beforeMessages.contains(m.info.id),
+          );
+          if (session.lastRunFailed ||
+              replies.any((m) => m.info.errorText != null)) {
+            return result(ScheduledPromptRunStatus.failed, 'agent_failed');
+          }
+          final permissions = await read(gateway.pendingPermissions);
+          if (permissions.any((p) => p.sessionID == sessionId)) {
+            return result(ScheduledPromptRunStatus.failed, 'needs_you');
+          }
+          if (gateway.capabilities.forms &&
+              (await read(() => gateway.sessionForms(sessionId!))).isNotEmpty) {
+            return result(ScheduledPromptRunStatus.failed, 'needs_you');
+          }
+          if (replies.any((message) => message.info.time?.isDone == true) &&
+              (statuses[sessionId] == null || statuses[sessionId] == 'idle')) {
+            final title = session.title?.trim();
+            return result(
+              ScheduledPromptRunStatus.ran,
+              null,
+              title == null || title.isEmpty ? null : title,
+              scheduledReplyLine(replies),
+            );
+          }
+          await delay(const Duration(seconds: 2)).timeout(remaining());
+        }
       }
-      while (true) {
-        final session = await read(() => gateway.session(sessionId!));
-        final messages = await read(() => gateway.messages(sessionId!));
-        final statuses = await read(gateway.sessionStatuses);
-        final replies = messages.where(
-          (m) =>
-              m.info.role == 'assistant' && !beforeMessages.contains(m.info.id),
-        );
-        if (session.lastRunFailed ||
-            replies.any((m) => m.info.errorText != null)) {
-          return result(ScheduledPromptRunStatus.failed, 'agent_failed');
-        }
-        final permissions = await read(gateway.pendingPermissions);
-        if (permissions.any((p) => p.sessionID == sessionId)) {
-          return result(ScheduledPromptRunStatus.failed, 'needs_you');
-        }
-        if (gateway.capabilities.forms &&
-            (await read(() => gateway.sessionForms(sessionId!))).isNotEmpty) {
-          return result(ScheduledPromptRunStatus.failed, 'needs_you');
-        }
-        if (replies.any((message) => message.info.time?.isDone == true) &&
-            (statuses[sessionId] == null || statuses[sessionId] == 'idle')) {
-          return result(ScheduledPromptRunStatus.ran);
-        }
-        await delay(const Duration(seconds: 2)).timeout(remaining());
+
+      try {
+        return await follow();
+      } catch (_) {
+        if (remote) return result(ScheduledPromptRunStatus.ran);
+        rethrow;
       }
     } on ScheduledRunFailure catch (error) {
       return result(
@@ -330,4 +356,23 @@ class ScheduledPromptRunner {
       }
     }
   }
+}
+
+/// The first line of the newest assistant reply, about 100 characters, for
+/// the "finished" notice. Text only: never errors, tool output or reasoning.
+String? scheduledReplyLine(Iterable<MessageWithParts> replies) {
+  for (final message in replies.toList().reversed) {
+    final text = message.parts
+        .where((p) => p.type == 'text' && !p.synthetic)
+        .map((p) => p.text)
+        .join('\n');
+    for (final raw in text.split('\n')) {
+      final line = raw.replaceFirst(RegExp(r'^[\s#>*\-]+'), '').trim();
+      if (line.isEmpty) continue;
+      return line.length <= 100
+          ? line
+          : '${line.substring(0, 99).trimRight()}…';
+    }
+  }
+  return null;
 }

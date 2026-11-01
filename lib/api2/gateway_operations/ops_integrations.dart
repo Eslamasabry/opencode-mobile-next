@@ -93,12 +93,16 @@ mixin _Api2IntegrationOps on _Api2Core {
         if (raw is! Map) continue;
         final connection = Map<String, dynamic>.from(raw);
         final type = (connection['type'] ?? '').toString();
+        final status = connection['status'];
         connections.add(
           IntegrationConnectionInfo(
             type: type,
             id: connection['id']?.toString(),
             label: (connection['label'] ?? connection['name'] ?? type)
                 .toString(),
+            status: status is Map && status['status'] is String
+                ? status['status'] as String
+                : null,
           ),
         );
       }
@@ -168,6 +172,20 @@ mixin _Api2IntegrationOps on _Api2Core {
           body: {'key': key, 'label': ?label},
         );
       });
+
+  /// `POST /integration/{id}/connect/external`: records that the person
+  /// chose a login the server checks on its own (Claude Agent's
+  /// "claude-login"). No secret is sent ([ExternalIntegrationGateway]).
+  Future<void> connectIntegrationExternal(
+    String integrationID,
+    String methodID,
+  ) => _guard('Could not connect the integration', () async {
+    await _transport.postJson(
+      '/integration/${Uri.encodeComponent(integrationID)}/connect/external',
+      query: _loc(),
+      body: {'methodID': methodID},
+    );
+  });
 
   @override
   Future<void> disconnectIntegration(IntegrationInfo integration) =>

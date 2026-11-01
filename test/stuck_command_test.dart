@@ -229,6 +229,35 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('Stop keeps the typed draft apart from the next words '
+      '(no "Keep goingUse the bash tool")', (tester) async {
+    final api = _Api()..messagesResult = stuckTurn();
+    await _pump(tester, api);
+    await _type(tester, 'Keep going');
+    await tester.tap(find.byKey(const Key('chat-stop-button')));
+    await tester.pump();
+    await tester.pump();
+    expect(api.calls, ['abort']);
+    final field = find.byKey(const Key('chat-composer-field'));
+    final kept = tester
+        .widget<EditableText>(
+          find.descendant(of: field, matching: find.byType(EditableText)),
+        )
+        .controller
+        .text;
+    expect(kept.trim(), 'Keep going');
+    // What a keyboard does next: the new words go after the kept text.
+    await _type(tester, '${kept}Use the bash tool');
+    final joined = tester
+        .widget<EditableText>(
+          find.descendant(of: field, matching: find.byType(EditableText)),
+        )
+        .controller
+        .text;
+    expect(joined, isNot(contains('goingUse')));
+    expect(joined, contains('Keep going\n\nUse the bash tool'));
+  });
+
   testWidgets('a command inside the limit, or one sent to the background, is '
       'not stuck', (tester) async {
     final api = _Api()

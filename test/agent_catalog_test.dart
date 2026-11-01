@@ -190,7 +190,7 @@ void main() {
         catalog.byId('gemini')!.artifactFor(AgentArchitecture.arm64)!.format,
         AgentArtifactFormat.npmTarGz,
       );
-      expect(catalog.byId('claude')!.recipe!.version, '2.1.294');
+      expect(catalog.byId('claude')!.recipe!.version, '2.1.316');
     },
   );
 
@@ -198,23 +198,23 @@ void main() {
     final catalog = AgentCatalog.builtIn;
     const pins = {
       'kilo': (
-        version: '7.8.3',
+        version: '7.8.18',
         member: 'package/bin/kilo',
         args: ['acp'],
         signIn: ['auth', 'login'],
         arm64:
-            'bd61f03eb14053fdcaf5245eb1740455b0447fe9d6d48b4adaeea6bb4ae53a90',
-        x64: '03b963726d8002ea6bee21d8db6121201e6ed8230a0e1fce8857f4c8d091333c',
+            '0f1bd0fb983f67ec1edf53c185e9521268f8f133af2a4cec2f1967e5d60e45ef',
+        x64: 'bde638d0a493155088e4454fbe4a9697571443665e2a22d5a78cad645b96b554',
         path: '@kilocode/cli-linux-',
       ),
       'cline': (
-        version: '3.0.68',
+        version: '3.0.74',
         member: 'package/bin/cline',
         args: ['--acp'],
         signIn: ['auth'],
         arm64:
-            '5e0ad56ba4c494c437f6dcdc2557c165478e05e1800e1fe6f7d476e4fd4c84f2',
-        x64: 'a979929090eb9a934b3907e2cf519368964d6a35e96079d6db4fc89caad98ab1',
+            '10c1f63c143b6f7eba3320543df2f6081232d79fb1830c293cf006115dce9049',
+        x64: '52502438a8d78a451156c38df2eb31116d658c94d1d5461b4e29761d06211bfc',
         path: '@cline/cli-linux-',
       ),
     };
@@ -249,11 +249,11 @@ void main() {
     final preferred = catalog.agents.first;
     expect(preferred.id, 'opencode2');
     expect(preferred.route, AgentRoute.opencode2);
-    expect(preferred.recipe!.version, '2.1.1');
+    expect(preferred.recipe!.version, '2.2.5');
     for (final architecture in AgentArchitecture.values) {
       expect(
         preferred.artifactFor(architecture)!.url.path,
-        endsWith('-2.1.1.tgz'),
+        endsWith('-2.2.5.tgz'),
       );
     }
     expect(catalog.byId('opencode'), isNull);

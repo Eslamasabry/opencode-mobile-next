@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../kit_buttons.dart';
 import '../kit_chip.dart';
 import '../kit_max_width.dart';
+import '../kit_motion.dart';
+import '../kit_tappable.dart';
+import '../../app_iconography.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
 import 'kit_team_data.dart';
@@ -48,21 +51,15 @@ class KitFindingsCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: t.minTarget,
-                  height: t.minTarget,
-                  child: Checkbox(
-                    value: finding.selected,
-                    activeColor: t.roles.text1,
-                    checkColor: t.roles.surface1,
-                    onChanged:
-                        state == KitTeamState.stale ||
-                            state == KitTeamState.loading ||
-                            finding.onChanged == null
-                        ? null
-                        : (value) => finding.onChanged!(value!),
-                    semanticLabel: '${finding.severityLabel}: ${finding.title}',
-                  ),
+                _FindingSelection(
+                  selected: finding.selected,
+                  label: '${finding.severityLabel}: ${finding.title}',
+                  disabledReason: status,
+                  onChanged:
+                      state == KitTeamState.stale ||
+                          state == KitTeamState.loading
+                      ? null
+                      : finding.onChanged,
                 ),
                 Expanded(
                   child: Column(
@@ -92,6 +89,77 @@ class KitFindingsCard extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// The choice-mark pattern, with neutral ink and no animation when motion is off.
+/// Keep the same tappable mounted as selection changes so keyboard focus stays.
+class _FindingSelection extends StatelessWidget {
+  const _FindingSelection({
+    required this.selected,
+    required this.label,
+    required this.disabledReason,
+    required this.onChanged,
+  });
+
+  final bool selected;
+  final String label;
+  final String disabledReason;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = KitTokens.of(context);
+    final roles = tokens.roles;
+    final enabled = onChanged != null;
+    final duration = KitMotion.reduced(context)
+        ? Duration.zero
+        : KitMotion.quick;
+    final ink = enabled ? roles.text1 : roles.text3;
+    return MergeSemantics(
+      child: Semantics(
+        checked: selected,
+        child: KitTappable(
+          label: label,
+          onTap: enabled ? () => onChanged!(!selected) : null,
+          disabledReason: enabled ? null : disabledReason,
+          shape: KitShape.button,
+          child: SizedBox.square(
+            dimension: tokens.minTarget,
+            child: Center(
+              child: ExcludeSemantics(
+                child: AnimatedContainer(
+                  width: tokens.smallIconSize,
+                  height: tokens.smallIconSize,
+                  duration: duration,
+                  curve: KitMotion.enter,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      KitTokens.choiceMarkRadius,
+                    ),
+                    color: selected ? ink : null,
+                    border: Border.all(
+                      color: ink,
+                      width: KitTokens.hairlineWidth(context),
+                    ),
+                  ),
+                  child: AnimatedScale(
+                    scale: selected ? 1 : 0,
+                    duration: duration,
+                    curve: KitMotion.enter,
+                    child: Icon(
+                      AppIconography.check,
+                      size: tokens.smallIconSize - tokens.space1,
+                      color: roles.surface1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

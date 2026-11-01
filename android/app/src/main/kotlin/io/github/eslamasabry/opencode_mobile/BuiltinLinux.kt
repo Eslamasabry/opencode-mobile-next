@@ -3,6 +3,8 @@ package io.github.eslamasabry.opencode_mobile
 import android.content.Context
 import android.app.ActivityManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import android.os.Process as AndroidProcess
 import android.os.SystemClock
@@ -3384,6 +3386,21 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
+    /**
+     * The app's opening start. Like [startServer] (it replaces a stale tracked
+     * server and arms the same restore), but only while the intent and
+     * generation the app observed still stand. Stop moves the generation
+     * under this same monitor, so a Stop that came first is not overwritten.
+     */
+    @Synchronized
+    fun startServerForLaunch(script: String, port: Int, expectedGeneration: Long, restoreRecipe: Map<*, *>? = null) {
+        synchronized(recoveryLock) {
+            check(activityResumed && restartWanted && !userStopped &&
+                recoveryGeneration == expectedGeneration) { "The phone server could not start." }
+        }
+        startServer(script, port, restoreRecipe)
+    }
+
     // A WorkManager occurrence owns only the exact process it creates. It does
     // not arm restart policy or start a permanent foreground service.
     private val scheduledPhoneProcesses = mutableMapOf<String, Process>()
@@ -3687,6 +3704,7 @@ class BuiltinLinux(private val context: Context) {
             }
         } catch (_: Throwable) { false }
         if (!running) {
+            noticeGate.reset()
             if (!holdsRecovery) try { BuiltinServerService.stop(context) } catch (_: Throwable) { }
             return
         }
@@ -3694,12 +3712,33 @@ class BuiltinLinux(private val context: Context) {
         // Only the words change here. Android refuses to (re)start a
         // foreground service from the background, and a service can end
         // while the app is away; the notification then keeps its old text.
+        // A busy agent changes the set of programs many times a minute, and
+        // every start re-posted the shared row (ServiceNoticeGate).
+        val notice = currentNotice()
+        val now = SystemClock.elapsedRealtime()
+        when (val step = noticeGate.decide(notice, BuiltinServerService.isForegroundRunning, now)) {
+            ServiceNoticeGate.Decision.Skip -> return
+            is ServiceNoticeGate.Decision.Wait -> {
+                if (noticeRecheck.compareAndSet(false, true)) {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        noticeRecheck.set(false)
+                        try { synchronized(this) { serviceSetChanged() } } catch (_: Throwable) { }
+                    }, step.delayMs)
+                }
+                return
+            }
+            ServiceNoticeGate.Decision.Send -> Unit
+        }
         try {
-            BuiltinServerService.start(context, currentNotice())
+            BuiltinServerService.start(context, notice)
+            noticeGate.sent(notice, now)
         } catch (error: Exception) {
             Log.w(TAG, "notification not updated", error)
         }
     }
+
+    private val noticeGate = ServiceNoticeGate()
+    private val noticeRecheck = java.util.concurrent.atomic.AtomicBoolean(false)
 
     /**
      * Keeps what runs on disk (AppLifecycle): a stop by the person clears
@@ -3834,8 +3873,12 @@ class BuiltinLinux(private val context: Context) {
     }
     val workHeld: Boolean get() = workLeases.held
     internal fun idleWorkBusy(): Boolean? = workLeases.logicalWorkBusy()
-    fun setChatWorkLease(name: String, on: Boolean, forMs: Long): Map<String, Boolean> =
-        workLeases.chat(name, on, forMs, serverRunning)
+    fun setChatWorkLease(name: String, on: Boolean, forMs: Long): Map<String, Boolean> {
+        // Service shutdown and wake admission share this monitor: a Stop that
+        // lands between the server check and the lease cannot be followed by
+        // a lease for a server that is gone.
+        return synchronized(this) { workLeases.chat(name, on, forMs, serverRunning) }
+    }
     /** A helper chat owns a different lease scope from OpenCode server replies. */
     fun setPhoneAgentChatWorkLease(profile: String, name: String, on: Boolean, forMs: Long): Map<String, Boolean> {
         return synchronized(this) {
@@ -4258,6 +4301,9 @@ class BuiltinLinux(private val context: Context) {
          * start that still runs (same pid and start time) gets SIGKILL then.
          */
         fun stopTree(process: Process, graceMs: Long = 3000) {
+            // An exited Process still exposes its old pid, which the kernel
+            // may already have assigned to an unrelated process tree.
+            if (!process.isAlive) return
             val root = pidOf(process)
             if (root == null) {
                 process.destroy()

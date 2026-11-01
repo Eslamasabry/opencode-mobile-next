@@ -42,9 +42,8 @@ Widget _needsYou(
   );
 }
 
-String _money(double v) => v == v.roundToDouble()
-    ? '\$${v.toStringAsFixed(0)}'
-    : '\$${v.toStringAsFixed(2)}';
+String _money(String locale, double v) =>
+    formatUsd(locale, v, decimals: v == v.roundToDouble() ? 0 : 2);
 
 String _costLine(AppLocalizations l, TeamProject p) {
   if (!p.usageReported) return l.teamProjectCostNotReported;
@@ -52,11 +51,17 @@ String _costLine(AppLocalizations l, TeamProject p) {
   final daily = b.unlimited ? null : b.daily;
   final total = b.unlimited ? null : b.total;
   final today = daily == null
-      ? l.teamProjectCostToday(_money(p.spentToday))
-      : l.teamProjectCostTodayOf(_money(p.spentToday), _money(daily));
+      ? l.teamProjectCostToday(_money(l.localeName, p.spentToday))
+      : l.teamProjectCostTodayOf(
+          _money(l.localeName, p.spentToday),
+          _money(l.localeName, daily),
+        );
   final all = total == null
-      ? l.teamProjectCostTotal(_money(p.spent))
-      : l.teamProjectCostTotalOf(_money(p.spent), _money(total));
+      ? l.teamProjectCostTotal(_money(l.localeName, p.spent))
+      : l.teamProjectCostTotalOf(
+          _money(l.localeName, p.spent),
+          _money(l.localeName, total),
+        );
   return [
     today,
     all,
@@ -68,8 +73,11 @@ String _todayCost(AppLocalizations l, TeamProject p) {
   final b = p.settings.budget;
   final daily = b.unlimited ? null : b.daily;
   return daily == null
-      ? l.teamProjectCostToday(_money(p.spentToday))
-      : l.teamProjectCostTodayOf(_money(p.spentToday), _money(daily));
+      ? l.teamProjectCostToday(_money(l.localeName, p.spentToday))
+      : l.teamProjectCostTodayOf(
+          _money(l.localeName, p.spentToday),
+          _money(l.localeName, daily),
+        );
 }
 
 String _headline(AppLocalizations l, TeamProject p) {

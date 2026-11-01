@@ -56,6 +56,7 @@ class _PromptToolsList extends StatelessWidget {
   const _PromptToolsList({
     this.projectFilesSupported = false,
     required this.attachBlocked,
+    this.clipboardHasImage = false,
     required this.attachmentsSupported,
     this.imagesOnly = false,
     required this.webSourcesSupported,
@@ -87,6 +88,9 @@ class _PromptToolsList extends StatelessWidget {
 
   final bool projectFilesSupported;
   final bool attachBlocked;
+
+  /// The clipboard holds a picture: the sheet offers to paste it.
+  final bool clipboardHasImage;
   final bool attachmentsSupported;
   final bool imagesOnly;
   final bool webSourcesSupported;
@@ -181,6 +185,14 @@ class _PromptToolsList extends StatelessWidget {
                     : agentName == null
                     ? l10n.composerToolsTextOnly
                     : l10n.composerToolsAgentTextOnly(KitBidi.auto(agentName!)),
+              ),
+            if (clipboardHasImage)
+              tool(
+                _PromptTool.pasteImage,
+                key: 'paste-image',
+                icon: AppIconography.images,
+                title: l10n.composerPasteImageFromClipboard,
+                supporting: l10n.composerPasteImageFromClipboardSupporting,
               ),
             if (attachmentsSupported &&
                 photos &&

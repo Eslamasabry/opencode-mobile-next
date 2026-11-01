@@ -100,7 +100,7 @@ fi
 # user-local tools (gh) live in ~/.local/bin.
 # `|| true`: with pipefail an absent cache would otherwise abort here with
 # ls's status instead of the flutter-on-PATH check below.
-PINNED_FLUTTER_BIN="$(ls -d "$HOME"/.shorebird/bin/cache/flutter/*/bin 2>/dev/null | head -1 || true)"
+PINNED_FLUTTER_BIN="${PINNED_FLUTTER_BIN:-$HOME/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin}"
 export PATH="$PINNED_FLUTTER_BIN:$HOME/.shorebird/bin:$HOME/.local/bin:$PATH"
 
 [[ -f android/key.properties ]] ||
@@ -112,7 +112,7 @@ command -v gh >/dev/null 2>&1 ||
 
 step "Preflight: toolchains and auth"
 command -v flutter >/dev/null 2>&1 ||
-  fail "flutter is not on PATH (use the Shorebird-pinned 3.47.1 binary)."
+  fail "flutter is not on PATH (use the Shorebird-pinned 3.47.8 binary)."
 gh auth status >/dev/null 2>&1 || fail "gh is not authenticated: run 'gh auth login'."
 shorebird doctor >/dev/null 2>&1 ||
   fail "shorebird doctor failed — fix Shorebird auth/setup first."

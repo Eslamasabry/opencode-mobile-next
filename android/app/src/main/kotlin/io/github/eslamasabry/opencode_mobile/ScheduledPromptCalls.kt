@@ -45,6 +45,15 @@ internal class ScheduledPromptCalls(private val context: Context, private val is
                 store.acknowledge(profile, call.argument<List<String>>("ids").orEmpty().toSet())
                 null
             }
+            "runNow" -> {
+                requireProfile(profile)
+                require(store.profileExists(profile))
+                scheduler.runNow(
+                    profile, call.argument<String>("scheduleId").orEmpty(),
+                    call.argument<Number>("revision")?.toLong() ?: -1L,
+                )
+                null
+            }
             "status" -> status()
             else -> phone(call, profile)
         }

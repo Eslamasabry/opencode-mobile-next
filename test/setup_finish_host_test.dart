@@ -48,8 +48,65 @@ class _ReadyLinux extends _OwnershipLinux {
   }
 }
 
+class _RunningLinux extends _ReadyLinux {
+  final calls = <String>[];
+  @override
+  Future<BuiltinLinuxStatus> status() async => const BuiltinLinuxStatus(
+    installed: true,
+    phase: BuiltinLinuxPhase.ready,
+    serverRunning: true,
+  );
+  @override
+  Future<void> stopServer() async => calls.add('stop');
+  @override
+  Future<void> startServer(
+    String script, {
+    int port = 4097,
+    BuiltinServerRestoreRecipe? restoreRecipe,
+  }) async {
+    calls.add('start');
+    // Ends the finish here: the stop-before-start order is what is checked.
+    throw const BuiltinLinuxException('stop here');
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  for (final changed in [true, false]) {
+    test(
+      'finish ${changed ? 'stops' : 'keeps'} the running server when OpenCode '
+      '${changed ? 'was' : 'was not'} replaced',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        const secure = MethodChannel(
+          'plugins.it_nomads.com/flutter_secure_storage',
+        );
+        final messenger =
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        messenger.setMockMethodCallHandler(secure, (_) async => null);
+        addTearDown(() => messenger.setMockMethodCallHandler(secure, null));
+        final linux = _RunningLinux();
+        final starter = BuiltinServerStarter(linux: linux);
+        addTearDown(starter.dispose);
+        final finisher = BuiltinSetupFinisher(
+          store: ProfileStore(prefs: await SharedPreferences.getInstance()),
+          starter: starter,
+          connect: (_) async => null,
+          isConnectedTo: (_) => true,
+          strings: () => lookupAppLocalizations(const Locale('en')),
+        );
+        await finisher.call(
+          SetupFinishRequest(
+            host: SetupHostKind.builtin,
+            runtime: TermuxRuntime.openCode2,
+            openCodeChanged: changed,
+          ),
+        );
+        expect(linux.calls, changed ? ['stop', 'start'] : isEmpty);
+      },
+    );
+  }
 
   test(
     'ownership failure keeps its stable recovery code through setup finish',
@@ -223,7 +280,7 @@ void main() {
         addTearDown(starter.dispose);
         final originalProbe = serverProbe;
         serverProbe = ({required baseUrl, username, password}) async =>
-            const ServerProbeResult.success('2.1.1');
+            const ServerProbeResult.success('2.2.5');
         addTearDown(() => serverProbe = originalProbe);
         ServerProfile? connected;
         final finisher = BuiltinSetupFinisher(

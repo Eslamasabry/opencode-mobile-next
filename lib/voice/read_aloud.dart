@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../platform/platform_capabilities.dart';
+import 'natural_synthesis.dart';
+import 'natural_voice.dart';
 
 enum ReadAloudFailure {
   unsupported,
@@ -77,6 +79,7 @@ class ReadAloudController extends ChangeNotifier with WidgetsBindingObserver {
   int _generation = 0;
   final Set<String> _pendingOperations = {};
   final Map<String, ReadAloudFailure> _retiredFailures = {};
+  NaturalSynthesis? _synthesis;
 
   bool get speaking => _speaking;
   String? get activeID => _activeID;
@@ -186,7 +189,16 @@ class ReadAloudController extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Resolves when playback is accepted, not when all chunks have completed.
   /// [id] stays in Dart; native callbacks contain only generated operation IDs.
-  Future<void> speak(String id, String text, {String? voiceID}) async {
+  ///
+  /// With [natural] the text is spoken by the downloaded natural voice: it is
+  /// synthesized in a worker isolate and streamed to the same native audio
+  /// path (attributes, focus, interruptions and stop) as the phone's voice.
+  Future<void> speak(
+    String id,
+    String text, {
+    String? voiceID,
+    NaturalSpeech? natural,
+  }) async {
     _prepare();
     if (text.trim().isEmpty || text.length > 12000) {
       _fail(ReadAloudFailure.tooLong);
@@ -219,11 +231,12 @@ class ReadAloudController extends ChangeNotifier with WidgetsBindingObserver {
     ReadAloudFailure? retiredFailure;
     try {
       final result = await _channel
-          .invokeMethod<Object?>('speak', {
-            'operationID': operation,
-            'text': text,
-            'voiceID': voiceID,
-          })
+          .invokeMethod<Object?>(
+            natural == null ? 'speak' : 'naturalBegin',
+            natural == null
+                ? {'operationID': operation, 'text': text, 'voiceID': voiceID}
+                : {'operationID': operation, 'sampleRate': natural.sampleRate},
+          )
           .timeout(const Duration(seconds: 12));
       retiredFailure = _retiredFailures[operation];
       if (retiredFailure != null) {
@@ -235,6 +248,7 @@ class ReadAloudController extends ChangeNotifier with WidgetsBindingObserver {
           result['status'] != 'accepted') {
         throw const ReadAloudException(ReadAloudFailure.engineUnavailable);
       }
+      if (natural != null) _startSynthesis(operation, text, natural);
     } catch (error) {
       retiredFailure ??= _retiredFailures[operation];
       if (retiredFailure != null) {
@@ -251,7 +265,44 @@ class ReadAloudController extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  void _startSynthesis(String operation, String text, NaturalSpeech natural) {
+    bool current() => _operation == operation && !_disposed;
+    void send(String method, [Object? extra]) {
+      unawaited(
+        _channel
+            .invokeMethod<Object?>(method, {
+              'operationID': operation,
+              'pcm': ?extra,
+            })
+            .catchError((Object _) {
+              if (!current()) return null;
+              _clear(failure: ReadAloudFailure.engineUnavailable);
+              unawaited(_stopOperation(operation));
+              return null;
+            }),
+      );
+    }
+
+    _synthesis = startNaturalSynthesis(
+      natural,
+      text,
+      onChunk: (pcm) {
+        if (current()) send('naturalWrite', pcm);
+      },
+      onDone: () {
+        if (current()) send('naturalEnd');
+      },
+      onError: () {
+        if (!current()) return;
+        _clear(failure: ReadAloudFailure.engineUnavailable);
+        unawaited(_stopOperation(operation));
+      },
+    );
+  }
+
   void _clear({ReadAloudFailure? failure}) {
+    _synthesis?.cancel();
+    _synthesis = null;
     final operation = _operation;
     if (failure != null &&
         operation != null &&

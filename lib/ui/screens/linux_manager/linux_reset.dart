@@ -25,6 +25,7 @@ import '../../kit/kit.dart';
 import '../../widgets/phone_server_card.dart'
     show PhoneServerCardRoutes, forgetInAppServerProfiles;
 import '../phone_setup/phone_setup_selection.dart';
+import 'linux_backups_page.dart' show openLinuxBackups;
 import 'linux_manager_common.dart';
 
 /// What a fresh Linux gets: the same selection as the first setup.
@@ -54,6 +55,7 @@ Future<bool> resetLinux(BuildContext context, WidgetRef ref) async {
   final linux = ref.read(builtinLinuxProvider);
   final engine = PhoneSetup.engine;
   LinuxResetOutcome? outcome;
+  var backUpFirst = false;
   final yes = await showKitConfirm(
     context,
     title: l10n.linuxMgrResetTitle,
@@ -62,6 +64,15 @@ Future<bool> resetLinux(BuildContext context, WidgetRef ref) async {
     kind: KitConfirmKind.destructive,
     icon: AppIconography.restart,
     typedName: l10n.linuxMgrResetWord,
+    // A setup backup first, the plan's "Back up first" (S3): Reset waits
+    // until the person comes back from Backups and asks again.
+    alternative: KitAction(
+      key: const ValueKey('linux-reset-backup-first'),
+      label: l10n.linuxMgrResetBackUpFirst,
+      icon: AppIconography.archive,
+      // The sheet closes itself (false) and then runs this.
+      onPressed: () => backUpFirst = true,
+    ),
     consequenceItems: [
       KitConsequence(
         l10n.linuxMgrResetLostTools,
@@ -100,6 +111,10 @@ Future<bool> resetLinux(BuildContext context, WidgetRef ref) async {
     sheetKey: const ValueKey('linux-reset-sheet'),
     confirmKey: const ValueKey('linux-reset-confirm'),
   );
+  if (backUpFirst && context.mounted) {
+    await openLinuxBackups(context);
+    return false;
+  }
   final done = outcome;
   if (!yes || done == null || !context.mounted) return false;
   if (done.result == LinuxResetResult.notErased) {

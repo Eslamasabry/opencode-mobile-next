@@ -24,7 +24,8 @@ enum KitMessageKind { prompt, reply, thought, notice, marker }
 /// has no control row and opens its menu on long-press; a reply has no
 /// frame; step boundaries are never drawn.
 ///
-/// States: prompt (with or without attachments), reply, thought (working,
+/// States: prompt (with or without attachments), reply (with or without a
+/// speaker), thought (working,
 /// folded, open), notice (quiet, failed, with action, open), marker
 /// (still, working) (KIT-12).
 class KitMessage extends StatelessWidget {
@@ -49,6 +50,9 @@ class KitMessage extends StatelessWidget {
     super.key,
     required KitMarkdown this.body,
     this.bodyKey,
+    this.speaker,                             // an AI Team role ("Reviewer"); a quiet line above the prose
+    this.speakerIcon,                         // the role's glyph before the name; decorative
+    this.speakerNote,                         // a short tail after the name ("3 min")
   });
 
   /// Folded reasoning. Title: [heading] when the agent wrote one, else
@@ -126,7 +130,7 @@ class KitMessage extends StatelessWidget {
 
 ## States
 
-Declared (KIT-12): **prompt** (plain; with attachments; with time; with a note, and its action once the wait is slow), **reply**, **thought** working / folded / open, **notice** quiet / failed / with action / open, **marker** still / working. No loading, empty or error of its own: the host passes words it has (a reply still streaming is simply a growing `body`). No disabled. No working other than `thought.running` and `marker.working`, which describe the agent, not a tap.
+Declared (KIT-12): **prompt** (plain; with attachments; with time; with a note, and its action once the wait is slow), **reply** (plain; with a speaker line), **thought** working / folded / open, **notice** quiet / failed / with action / open, **marker** still / working. No loading, empty or error of its own: the host passes words it has (a reply still streaming is simply a growing `body`). No disabled. No working other than `thought.running` and `marker.working`, which describe the agent, not a tap.
 
 ## Tokens
 
@@ -144,7 +148,7 @@ Declared (KIT-12): **prompt** (plain; with attachments; with time; with a note, 
 
 ## Accessibility
 
-- A prompt is one semantics container labelled "You said, {text}" plus attachment names, with the menu items as custom actions. A reply reads as its Markdown (headings, links).
+- A prompt is one semantics container labelled "You said, {text}" plus attachment names, with the menu items as custom actions. A reply reads as its Markdown (headings, links). A reply with a speaker first reads its speaker line once, as a header ("Reviewer, 3 min"); the glyph is decorative.
 - Folds are buttons with `expanded` semantics; the chevron is excluded.
 - A failed notice's label starts with "Failed," (the word, not a colour).
 - Nothing here is a live region (A11Y-3).

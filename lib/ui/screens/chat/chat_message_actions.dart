@@ -81,6 +81,23 @@ extension _ChatMessageActions on _ChatScreenState {
         icon: AppIconography.info,
         onSelected: () => unawaited(_showNoReplyDetails(_noReplyFailure()!)),
       ),
+    // The free-tier refusal shows Shorten and a new conversation; choosing
+    // another model is here (never switched for the person).
+    if (message.info.role == 'assistant' &&
+        classifyAgentError(message.info.errorText ?? '') ==
+            AgentErrorCause.freeTierLimit)
+      KitMenuItem(
+        key: const ValueKey('message-menu-choose-model'),
+        label: _chatL10n(context).chatUiChooseAnotherModel,
+        icon: AppIconography.link,
+        onSelected: () => unawaited(
+          showModelPicker(
+            context,
+            applyScope: _modelApplyScope,
+            sessionID: widget.sessionID,
+          ),
+        ),
+      ),
     if (_offersContinueAfterFailure(message))
       KitMenuItem(
         key: const ValueKey('message-menu-continue-with'),

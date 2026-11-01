@@ -260,6 +260,22 @@ void main() {
     await source.close();
   });
 
+  testWidgets('the last native lease cannot outlive the reply ceiling', (
+    tester,
+  ) async {
+    final source = _Source();
+    final replies = watch()..attach(source);
+    source.busy('s1', true);
+    await tester.pump();
+    for (var i = 0; i < 71; i++) {
+      await tester.pump(const Duration(minutes: 5));
+    }
+    expect(holds.last, (true, const Duration(minutes: 5)));
+    replies.dispose();
+    await tester.pump();
+    await source.close();
+  });
+
   testWidgets('only replies on the in-app server keep the phone awake', (
     tester,
   ) async {

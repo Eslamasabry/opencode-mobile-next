@@ -3,6 +3,12 @@ import 'package:flutter/widgets.dart';
 import '../kit/kit_context_region.dart';
 import '../kit/kit_menu.dart';
 
+export 'browser_context_menu_guard.dart'
+    show
+        BrowserContextMenuGuard,
+        browserContextMenuGuard,
+        debugBrowserContextMenuGuard;
+
 /// One entry in a right-click menu.
 ///
 /// Retired by screen-shell-1: use [KitMenuItem]. Kept so the seven callers

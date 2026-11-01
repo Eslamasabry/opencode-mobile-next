@@ -21,4 +21,13 @@ void main() {
       expect(bugReportPlatformLabel(), expected, reason: 'platform $platform');
     });
   });
+
+  test('a browser reports as a preview, whatever system is under it', () {
+    for (final platform in [TargetPlatform.linux, TargetPlatform.android]) {
+      debugPlatformCapabilities = PlatformCapabilities.browser(
+        platform: platform,
+      );
+      expect(bugReportPlatformLabel(), 'Web browser (preview)');
+    }
+  });
 }

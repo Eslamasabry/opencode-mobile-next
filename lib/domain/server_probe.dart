@@ -1,10 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../diagnostics/perf_trace.dart';
+import '../network/platform_dio.dart';
+import '../network/transport_failure.dart';
 import '../ui/kit/kit_redact.dart';
 import '../domain/loopback_host.dart' show isCleartextRemoteBase;
 
@@ -13,7 +14,7 @@ enum ServerFlavor { v2, unknown }
 
 /// Install the supported server without modifying its conversation data.
 const openCode2UpgradeCommand =
-    'npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.1.1';
+    'npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.2.5';
 const unsupportedOpenCode1Message =
     'This server runs OpenCode 1, which this app no longer supports. '
     'Update it to OpenCode 2.';
@@ -116,6 +117,7 @@ Future<ServerProbeResult> probeServerConnection({
     ),
   );
   PerfTraceInterceptor.attach(dio, 'probe');
+  configurePlatformDio(dio);
   final adapterFactory = serverProbeAdapterFactory;
   if (adapterFactory != null) dio.httpClientAdapter = adapterFactory();
   try {
@@ -237,7 +239,15 @@ Future<ServerProbeResult?> _probeV2(
 
 /// Maps a transport failure to a truthful product-facing probe verdict.
 /// Public so tests can exercise the mapping without a live network.
-ServerProbeResult explainServerProbeFailure(DioException error) {
+///
+/// A [browser] build never learns why a request failed before an HTTP
+/// answer (CORS rejection, mixed content, DNS and a stopped server all
+/// surface as one generic error), so it reports those possibilities rather
+/// than a "refused" or "host not found" verdict it cannot back up.
+ServerProbeResult explainServerProbeFailure(
+  DioException error, {
+  bool browser = kIsWeb,
+}) {
   final status = error.response?.statusCode;
   if (status == 401 || status == 403) {
     return const ServerProbeResult.failure(
@@ -253,7 +263,7 @@ ServerProbeResult explainServerProbeFailure(DioException error) {
   }
   // A hostname that never resolved is a spelling problem, not a server
   // problem — send the user to the address, not to the server.
-  if (_isHostLookupFailure(error)) {
+  if (!browser && isHostLookupFailure(error.error)) {
     return const ServerProbeResult.failure(
       'That host name could not be found. Check the address spelling.',
     );
@@ -261,38 +271,32 @@ ServerProbeResult explainServerProbeFailure(DioException error) {
   return switch (error.type) {
     DioExceptionType.connectionTimeout ||
     DioExceptionType.receiveTimeout ||
-    DioExceptionType.sendTimeout => const ServerProbeResult.failure(
-      'The connection timed out. Check the address, and that the server '
-      'is reachable from this phone.',
+    DioExceptionType.sendTimeout => ServerProbeResult.failure(
+      browser
+          ? browserProbeTimeoutMessage
+          : 'The connection timed out. Check the address, and that the '
+                'server is reachable from this phone.',
       suggestsMissingServer: true,
     ),
     DioExceptionType.badCertificate => const ServerProbeResult.failure(
       'The server’s TLS certificate was rejected. '
       'Use a certificate this phone trusts.',
     ),
+    DioExceptionType.connectionError when browser => ServerProbeResult.failure(
+      browserNetworkFailureMessage(),
+      suggestsMissingServer: true,
+    ),
     DioExceptionType.connectionError => const ServerProbeResult.failure(
       'The connection was refused. Is opencode2 serve running on that '
       'host and port?',
+      suggestsMissingServer: true,
+    ),
+    _ when browser => ServerProbeResult.failure(
+      browserNetworkFailureMessage(),
       suggestsMissingServer: true,
     ),
     _ => const ServerProbeResult.failure(
       'The connection test could not finish. Try again.',
     ),
   };
-}
-
-/// True when the failure is DNS resolution (the host name never resolved),
-/// as opposed to a reachable host refusing the connection. Checked through
-/// [SocketException.osError] so a typo'd hostname is not mislabeled
-/// "connection refused".
-bool _isHostLookupFailure(DioException error) {
-  final cause = error.error;
-  if (cause is! SocketException) return false;
-  final details = '${cause.message} ${cause.osError?.message ?? ''}'
-      .toLowerCase();
-  return details.contains('failed host lookup') ||
-      details.contains('no address associated with hostname') ||
-      details.contains('name or service not known') ||
-      details.contains('nodename nor servname') ||
-      details.contains('temporary failure in name resolution');
 }

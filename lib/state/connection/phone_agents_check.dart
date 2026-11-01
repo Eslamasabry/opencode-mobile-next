@@ -4,6 +4,7 @@ extension _PhoneAgentCheckPublication on ConnectionController {
   Future<AgentPhoneCheckResult> _runAgentPhoneCheck(
     String agentId, {
     bool previousVersion = false,
+    bool automatic = false,
   }) async {
     if (_paChecking) {
       return AgentPhoneCheckResult(
@@ -33,6 +34,8 @@ extension _PhoneAgentCheckPublication on ConnectionController {
       }
       result = previousVersion && host is PhoneAgentRecoveryPort
           ? await (host as PhoneAgentRecoveryPort).usePreviousVersion(agentId)
+          : automatic && host is PhoneAgentAutoUpdatePort
+          ? await (host as PhoneAgentAutoUpdatePort).autoUpdate(agentId)
           : await host.selfTest(agentId);
       result = await _paExplainUnavailable(result);
     } finally {
@@ -47,6 +50,9 @@ extension _PhoneAgentCheckPublication on ConnectionController {
     if (_self._disposed || _paHost != host || _paHostProfile != owner) {
       return result;
     }
+    // A check can change the sign-in (it reinstalls, or reads it itself):
+    // the rows ask this agent again rather than reuse an older answer.
+    _paAuthReadAt.remove(agentId);
     await refreshAgentRows();
     if (!_self._disposed && _paHost == host && _paHostProfile == owner) {
       _paChecks[agentId] = result;

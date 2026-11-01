@@ -104,6 +104,7 @@ abstract final class ProjectExportPolicy {
   /// File names that hold sign-ins or keys wherever they are.
   static const privateNames = {
     'auth.json',
+    '.gitconfig',
     '.git-credentials',
     '.netrc',
     '_netrc',
@@ -139,13 +140,11 @@ abstract final class ProjectExportPolicy {
     '.env.dist',
   };
 
-  /// A remote URL with a password or token in it (`https://u:t@host`).
-  static final _urlCredential = RegExp(r'://[^/\s:@]+:[^/\s@]+@');
-
-  /// Whether [relative] (a `/` path inside a project) is private. [readText]
-  /// reads a small file's text, for `.git/config`.
+  /// Whether [relative] (a `/` path inside projects) is private.
+  /// Git config is always private: credentials may be in user-only URLs,
+  /// extraHeader, helpers, includes, or content changed after the scan.
   static bool isPrivate(String relative, {String? Function()? readText}) {
-    final parts = relative.split('/');
+    final parts = relative.toLowerCase().split('/');
     final name = parts.last;
     if (parts.any(privateFolders.contains)) return true;
     if (privateNames.contains(name)) return true;
@@ -158,9 +157,9 @@ abstract final class ProjectExportPolicy {
     if (dot > 0 && privateExtensions.contains(lower.substring(dot))) {
       return true;
     }
-    if (relative == '.git/config' || relative.endsWith('/.git/config')) {
-      final text = readText?.call();
-      if (text != null && _urlCredential.hasMatch(text)) return true;
+    if (parts.contains('.git') &&
+        (name == 'config' || name == 'config.worktree')) {
+      return true;
     }
     return false;
   }
@@ -172,6 +171,7 @@ abstract final class ProjectExportPolicy {
     '.config/opencode',
     '.oc-opencode2/config',
     '.oc-opencode2/data',
+    '.oc-migration-exports',
   ];
 
   /// Regenerable parts of those roots that are left out even then.
@@ -194,8 +194,8 @@ class AppStorageLayout {
   String get ready => '$filesDir/linux/ubuntu.ready';
 }
 
-/// Walks the files without following links and without reading contents
-/// (except a `.git/config`'s few bytes). Synchronous on purpose: run it in
+/// Walks the files without following links or reading contents.
+/// Synchronous on purpose: run it in
 /// an isolate ([ProjectStorageScanner.scanInBackground]).
 abstract final class ProjectStorageScanner {
   static AppStorageFacts scan(String filesDir) {
@@ -210,13 +210,7 @@ abstract final class ProjectStorageScanner {
       ) {
         bytes += size;
         files++;
-        final inProject = relative.contains('/')
-            ? relative.substring(relative.indexOf('/') + 1)
-            : relative;
-        if (ProjectExportPolicy.isPrivate(
-          inProject,
-          readText: () => _smallText(path),
-        )) {
+        if (ProjectExportPolicy.isPrivate(relative)) {
           privateFiles++;
         }
       });
@@ -260,19 +254,14 @@ abstract final class ProjectStorageScanner {
   }) {
     final layout = AppStorageLayout(filesDir);
     final entries = <ProjectExportEntry>[];
-    for (final top in _projectTops(layout)) {
+    for (final top in _projectTops(layout, strict: true)) {
       _walk(top.path, 'projects/${top.name}', gitLinksUnder: filesDir, (
         name,
         path,
         size,
       ) {
-        final inProject = name.substring('projects/${top.name}'.length);
-        final relative = inProject.startsWith('/')
-            ? inProject.substring(1)
-            : top.name;
         final private = ProjectExportPolicy.isPrivate(
-          relative,
-          readText: () => _smallText(path),
+          name.substring('projects/'.length),
         );
         if (private && !includePrivate) return;
         entries.add(
@@ -283,9 +272,9 @@ abstract final class ProjectStorageScanner {
             private: private,
           ),
         );
-      });
+      }, strict: true);
     }
-    if (includePrivate) entries.addAll(_privateData(layout));
+    if (includePrivate) entries.addAll(_privateData(layout, strict: true));
     return entries;
   }
 
@@ -294,7 +283,10 @@ abstract final class ProjectStorageScanner {
     bool includePrivate = false,
   }) => Isolate.run(() => plan(filesDir, includePrivate: includePrivate));
 
-  static List<ProjectExportEntry> _privateData(AppStorageLayout layout) {
+  static List<ProjectExportEntry> _privateData(
+    AppStorageLayout layout, {
+    bool strict = false,
+  }) {
     final entries = <ProjectExportEntry>[];
     for (final root in ProjectExportPolicy.privateDataRoots) {
       _walk(
@@ -309,14 +301,16 @@ abstract final class ProjectStorageScanner {
           ),
         ),
         skip: ProjectExportPolicy.privateDataSkipped,
+        strict: strict,
       );
     }
     return entries;
   }
 
   static Iterable<({String name, String path})> _projectTops(
-    AppStorageLayout layout,
-  ) sync* {
+    AppStorageLayout layout, {
+    bool strict = false,
+  }) sync* {
     final seen = <String>{};
     for (final folder in [layout.projects, layout.legacyProjects]) {
       if (_kind(folder) != FileSystemEntityType.directory) continue;
@@ -324,6 +318,7 @@ abstract final class ProjectStorageScanner {
       try {
         children = Directory(folder).listSync(followLinks: false);
       } on FileSystemException {
+        if (strict) rethrow;
         continue;
       }
       for (final child in children) {
@@ -333,7 +328,12 @@ abstract final class ProjectStorageScanner {
             kind != FileSystemEntityType.file) {
           continue;
         }
-        if (!seen.add(name)) continue;
+        if (!seen.add(name)) {
+          if (strict) {
+            throw const FileSystemException('conflicting project roots');
+          }
+          continue;
+        }
         yield (name: name, path: child.path);
       }
     }
@@ -355,16 +355,17 @@ abstract final class ProjectStorageScanner {
     String prefix,
     void Function(String name, String path, int bytes) visit, {
     Set<String> skip = const {},
+    bool strict = false,
     String? gitLinksUnder,
   }) {
     final kind = _kind(path);
     if (kind == FileSystemEntityType.file) {
-      visit(prefix, path, _size(path));
+      visit(prefix, path, _size(path, strict: strict));
       return;
     }
     if (kind == FileSystemEntityType.link && gitLinksUnder != null) {
       final bytes = linkedObjectFile(path, gitLinksUnder);
-      if (bytes != null) visit(prefix, bytes, _size(bytes));
+      if (bytes != null) visit(prefix, bytes, _size(bytes, strict: strict));
       return;
     }
     if (kind != FileSystemEntityType.directory) return;
@@ -372,13 +373,20 @@ abstract final class ProjectStorageScanner {
     try {
       children = Directory(path).listSync(followLinks: false);
     } on FileSystemException {
+      if (strict) rethrow;
       return;
     }
     for (final child in children) {
       final name = child.path.substring(child.path.lastIndexOf('/') + 1);
       if (skip.contains(name)) continue;
       if (gitLinksUnder != null && name.startsWith(l2sPrefix)) continue;
-      _walk(child.path, '$prefix/$name', visit, gitLinksUnder: gitLinksUnder);
+      _walk(
+        child.path,
+        '$prefix/$name',
+        visit,
+        strict: strict,
+        gitLinksUnder: gitLinksUnder,
+      );
     }
   }
 
@@ -429,21 +437,12 @@ abstract final class ProjectStorageScanner {
   static FileSystemEntityType _kind(String path) =>
       FileSystemEntity.typeSync(path, followLinks: false);
 
-  static int _size(String path) {
+  static int _size(String path, {bool strict = false}) {
     try {
       return File(path).lengthSync();
     } on FileSystemException {
+      if (strict) rethrow;
       return 0;
-    }
-  }
-
-  static String? _smallText(String path) {
-    try {
-      final file = File(path);
-      if (file.lengthSync() > 64 * 1024) return null;
-      return file.readAsStringSync();
-    } catch (_) {
-      return null;
     }
   }
 }
@@ -618,17 +617,18 @@ Future<File> writeExportPlan(
   Directory dir,
   List<ProjectExportEntry> entries,
 ) async {
+  if (entries.any(
+    (entry) =>
+        entry.name.contains(RegExp('[\t\n\r]')) ||
+        entry.source.contains(RegExp('[\t\n\r]')),
+  )) {
+    throw const FileSystemException('unsupported export name');
+  }
   final file = File(
     '${dir.path}/project-export-${DateTime.now().microsecondsSinceEpoch}.plan',
   );
   final sink = file.openWrite();
   for (final e in entries) {
-    // Names and paths with a tab or newline cannot be framed: left out
-    // rather than mis-framed.
-    if (e.name.contains(RegExp('[\t\n\r]')) ||
-        e.source.contains(RegExp('[\t\n\r]'))) {
-      continue;
-    }
     sink.write('${e.name}\t${e.source}\n');
   }
   await sink.close();

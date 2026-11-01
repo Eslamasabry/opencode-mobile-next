@@ -22,6 +22,7 @@ enum SessionMenuAction {
   compact,
   fork,
   rename,
+  summarizeLocal,
   continueWith,
   continueOnComputer,
   continueOnPhone,
@@ -68,6 +69,7 @@ class SessionMenuOffer {
     this.delete = false,
     this.hasPrompt = true,
     this.preview = false,
+    this.localSummary = false,
   });
 
   /// The server's part; [hasPrompt] and [timeline] default to what a Work
@@ -81,6 +83,7 @@ class SessionMenuOffer {
     bool hasPrompt = true,
     bool continueWith = true,
     bool preview = false,
+    bool localSummary = false,
   }) => SessionMenuOffer(
     changes: capabilities.sessionDiff,
     timeline: timeline,
@@ -96,6 +99,7 @@ class SessionMenuOffer {
     delete: capabilities.sessionDelete,
     hasPrompt: hasPrompt,
     preview: preview,
+    localSummary: localSummary,
   );
 
   final bool changes;
@@ -121,6 +125,10 @@ class SessionMenuOffer {
   /// The conversation mentioned a local dev server (`localhost:5173`):
   /// "Preview a running app" lists the ports it named.
   final bool preview;
+
+  /// "Summarize on this phone": the assistant is on, downloaded and
+  /// allowed on this phone, and the conversation has something to summarize.
+  final bool localSummary;
 }
 
 /// The conversation menu: "Go to" (Changes, Timeline, Find, Subagents,
@@ -238,6 +246,15 @@ List<KitMenuItem> sessionMenuItems(
         AppIconography.fork,
         act,
         supporting: l10n.sessionMenuForkHint,
+        enabled: offer.hasPrompt,
+      ),
+    if (offer.localSummary)
+      item(
+        SessionMenuAction.summarizeLocal,
+        l10n.localAssistantSummarizeMenu,
+        AppIconography.sparkle,
+        act,
+        supporting: l10n.localAssistantSummarizeSupporting,
         enabled: offer.hasPrompt,
       ),
     item(

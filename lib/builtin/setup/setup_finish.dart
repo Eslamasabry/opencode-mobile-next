@@ -73,6 +73,18 @@ class BuiltinSetupFinisher {
     if (!request.openCodeChanged && running && isConnectedTo(profile)) {
       return null;
     }
+    // The job just replaced the OpenCode program. A server still running
+    // is the old process, and the native start returns early for a server
+    // already running the same script, so stop it first: otherwise the
+    // phone keeps serving the old version (a 2.1.1 server missed the 2.2.5
+    // Claude Agent integration while the page said "Up to date").
+    if (request.openCodeChanged && running) {
+      try {
+        await linux.stopServer();
+      } on BuiltinLinuxException {
+        // The start below still reports whether a server answers.
+      }
+    }
     // Running but not ours to trust (another runtime, or the app is not
     // connected to it): restarting costs seconds and removes the doubt.
     final migrating = profile.requiresOpenCode2Migration;

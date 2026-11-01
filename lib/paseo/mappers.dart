@@ -903,7 +903,7 @@ MessageWithParts? paseoItemMessage(
             messageID: id,
             type: 'v2:compaction',
             toolName: done ? 'completed' : 'running',
-            text: done ? 'Conversation compacted.' : 'Compacting conversation…',
+            text: done ? 'Conversation shortened.' : 'Shortening conversation…',
             toolState: ToolState(
               status: 'completed',
               metadata: {

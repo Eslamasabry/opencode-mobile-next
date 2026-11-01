@@ -404,9 +404,12 @@ cat "\$archive.ready"
             received.isCompleted ||
             request.method != 'PUT' ||
             request.uri.path != '/archive' ||
-            request.headers.value(HttpHeaders.authorizationHeader) !=
-                'Bearer $token' ||
-            request.headers.value('x-offset') != '$offset') {
+            !_singleHeader(
+              request,
+              HttpHeaders.authorizationHeader,
+              'Bearer $token',
+            ) ||
+            !_singleHeader(request, 'x-offset', '$offset')) {
           await _respond(request, HttpStatus.forbidden);
           return;
         }
@@ -578,6 +581,11 @@ printf 'copied\\n'
         throw const TermuxMigrationException(TermuxMigrationFailure.storage);
       }
     }
+  }
+
+  static bool _singleHeader(HttpRequest request, String name, String expected) {
+    final values = request.headers[name];
+    return values != null && values.length == 1 && values.single == expected;
   }
 
   static Future<void> _respond(HttpRequest request, int status) async {

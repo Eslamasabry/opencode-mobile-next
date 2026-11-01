@@ -106,9 +106,17 @@ abstract final class TermuxAccess {
         _ => TermuxAccessAnswer.denied,
       };
     } on MissingPluginException {
-      answer = await TermuxBridge.requestPermission()
-          ? TermuxAccessAnswer.granted
-          : TermuxAccessAnswer.denied;
+      try {
+        answer = await TermuxBridge.requestPermission()
+            ? TermuxAccessAnswer.granted
+            : TermuxAccessAnswer.denied;
+      } on MissingPluginException {
+        answer = TermuxAccessAnswer.denied;
+      } on PlatformException {
+        // Exceptions in a compatibility catch do not reach the sibling
+        // catch below. A concurrent/cancelled request still answers safely.
+        answer = TermuxAccessAnswer.denied;
+      }
     } on PlatformException {
       answer = TermuxAccessAnswer.denied;
     }

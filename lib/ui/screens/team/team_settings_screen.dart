@@ -504,8 +504,10 @@ class _TeamSettingsScreenState extends State<TeamSettingsScreen> {
         : (input ?? 0) + (output ?? 0);
     if ((cost ?? 0) == 0 && (tokens ?? 0) == 0) return null;
     final figures = [
-      if (cost != null) l10n.teamUiUsageCostEstimated(teamCurrencyLabel(cost)),
-      if (tokens != null) l10n.teamUiUsageTokens(teamCompactCount(tokens)),
+      if (cost != null)
+        l10n.teamUiUsageCostEstimated(teamCurrencyLabel(cost, l10n.localeName)),
+      if (tokens != null)
+        l10n.teamUiUsageTokens(teamCompactCount(tokens, l10n.localeName)),
     ];
     final lines = [
       l10n.teamHomeSpentHint,

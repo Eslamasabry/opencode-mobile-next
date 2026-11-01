@@ -14,10 +14,13 @@ class MainActivity : FlutterFragmentActivity() {
     private var nativeReplies: NativeChannelReplies? = null
     private var readAloud: ReadAloudBridge? = null
     private var localPdf: LocalPdfBridge? = null
+    private var localLlm: LocalLlmBridge? = null
     private var networkMonitor: NetworkMonitor? = null
     private var projectExport: ProjectExportBridge? = null
     private var byoHostSigner: ByoHostSigner? = null
+    private var clipboardImage: ClipboardImageBridge? = null
     private var crashDiagnostics: CrashDiagnosticsBridge? = null
+    private var appUpdate: AppUpdateChannel? = null
     private val termux by lazy { TermuxActivityBridge(this, handler) }
     private val launches by lazy { LaunchActivityBridge(this) }
     private val background by lazy { MainActivityBackground(this, handler) }
@@ -36,10 +39,17 @@ class MainActivity : FlutterFragmentActivity() {
         TailscaleHandoff(this, flutterEngine.dartExecutor.binaryMessenger)
         byoHostSigner?.dispose()
         byoHostSigner = ByoHostSigner(this, flutterEngine.dartExecutor.binaryMessenger)
+        clipboardImage?.dispose()
+        clipboardImage = ClipboardImageBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         networkMonitor?.dispose()
         networkMonitor = NetworkMonitor(this, flutterEngine.dartExecutor.binaryMessenger)
+        // The app installs its own new version (oc/app_update).
+        appUpdate?.dispose()
+        appUpdate = AppUpdateChannel(this).also { it.register(flutterEngine.dartExecutor.binaryMessenger) }
         localPdf?.dispose()
         localPdf = LocalPdfBridge(this, flutterEngine.dartExecutor.binaryMessenger)
+        localLlm?.dispose()
+        localLlm = LocalLlmBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         readAloud?.dispose()
         readAloud = ReadAloudBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         // Export projects on This phone (oc/project_export).
@@ -75,6 +85,8 @@ class MainActivity : FlutterFragmentActivity() {
         termux.reset()
         projectExport?.dispose()
         projectExport = null
+        appUpdate?.dispose()
+        appUpdate = null
         networkMonitor?.dispose()
         networkMonitor = null
         localPdf?.dispose()
@@ -108,6 +120,8 @@ class MainActivity : FlutterFragmentActivity() {
         crashDiagnostics = null
         nativeReplies?.detach()
         nativeReplies = null
+        clipboardImage?.dispose()
+        clipboardImage = null
         byoHostSigner?.dispose()
         byoHostSigner = null
         networkMonitor?.dispose()
@@ -117,7 +131,14 @@ class MainActivity : FlutterFragmentActivity() {
         localPdf = null
         readAloud?.dispose()
         readAloud = null
+        localLlm?.dispose()
+        localLlm = null
         super.onDestroy()
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        localLlm?.onTrimMemory(level)
     }
 
     /**
@@ -166,7 +187,7 @@ class MainActivity : FlutterFragmentActivity() {
                             result.error(SetupPersistenceException.CODE, null, null)
                         } else {
                             result.error("builtin_linux", "The phone operation could not finish. Try again.",
-                                if (call.method in setOf("startServer", "run", "status")) {
+                                if (call.method in setOf("startServer", "startServerForLaunch", "run", "status")) {
                                     serverStartDetail(error)
                                 } else null)
                         }
@@ -345,6 +366,19 @@ class MainActivity : FlutterFragmentActivity() {
                 }
                 inBackground {
                     linux.restartServer(script, port, generation)
+                    null
+                }
+            }
+            "startServerForLaunch" -> {
+                val script = call.argument<String>("script")
+                val port = call.argument<Int>("port")
+                val generation = call.argument<Number>("expectedGeneration")?.toLong()
+                if (script == null || port == null || generation == null) {
+                    result.error("builtin_linux", "A server needs a script and a port", null)
+                    return
+                }
+                inBackground {
+                    linux.startServerForLaunch(script, port, generation, call.argument<Map<*, *>>("restoreRecipe"))
                     null
                 }
             }

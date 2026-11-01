@@ -18,7 +18,7 @@ Local builds and tests use the Shorebird-pinned Flutter, which is what the
 Android release path uses too:
 
 ```sh
-~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
+~/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/flutter
 # Flutter 3.47.2 / Dart 3.13.2
 ```
 

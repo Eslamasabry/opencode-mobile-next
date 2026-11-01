@@ -108,6 +108,7 @@ class _PairingActions extends StatelessWidget {
     required this.failure,
     required this.onPaste,
     required this.onScan,
+    this.pasteUnavailableHint,
   });
 
   /// The next move, under the command shown above with its copy button.
@@ -117,6 +118,12 @@ class _PairingActions extends StatelessWidget {
   final String? notice;
   final String? failure;
   final VoidCallback? onPaste;
+
+  /// Set where a "Paste" button cannot read the clipboard, a browser on a
+  /// plain-http network origin. The button is then replaced by this
+  /// sentence, which points at the keyboard paste the address field already
+  /// understands, rather than by a button that fails.
+  final String? pasteUnavailableHint;
 
   /// Null wherever there is no camera path — desktop, and anywhere else
   /// `supportsQrPairing` says no. The button is then not built at all, so no
@@ -130,8 +137,16 @@ class _PairingActions extends StatelessWidget {
     final notice = this.notice;
     final failure = this.failure;
     final scan = onScan;
+    final hint = pasteUnavailableHint;
     final Widget buttons;
-    if (compact) {
+    if (hint != null) {
+      buttons = KitText(
+        hint,
+        key: const ValueKey('server-pairing-paste-unavailable'),
+        role: KitTextRole.secondary,
+        tone: KitTextTone.secondary,
+      );
+    } else if (compact) {
       buttons = KitInset(
         child: Wrap(
           spacing: tokens.space1,
