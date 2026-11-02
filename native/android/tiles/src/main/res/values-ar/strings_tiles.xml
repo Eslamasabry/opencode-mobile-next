@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copied verbatim from android/app/src/main/res/values-ar/strings.xml. -->
+<resources>
+    <string name="shortcut_connect_short">اتصال</string>
+    <string name="shortcut_connect_long">اختر خادمًا للاتصال به</string>
+    <string name="shortcut_new_task_short">محادثة جديدة</string>
+    <string name="shortcut_new_task_long">ابدأ محادثة جديدة على الخادم الحالي</string>
+    <string name="shortcut_session_untitled">محادثة بلا عنوان</string>
+    <string name="shortcut_session_unavailable">لم تعد هذه المحادثة متاحة</string>
+    <string name="tile_label">OpenCode</string>
+    <string name="tile_label_with_count">OpenCode · %1$s</string>
+    <string name="tile_all_clear">لا شيء يحتاج إليك</string>
+    <plurals name="tile_need_you">
+        <item quantity="zero">لا شيء يحتاج إليك</item>
+        <item quantity="one">طلب واحد يحتاج إليك</item>
+        <item quantity="two">طلبان يحتاجان إليك</item>
+        <item quantity="few">%1$d طلبات تحتاج إليك</item>
+        <item quantity="many">%1$d طلبًا يحتاج إليك</item>
+        <item quantity="other">%1$d طلب يحتاج إليك</item>
+    </plurals>
+    <string name="pause_tile_label">الوضع في الخلفية</string>
+    <string name="pause_tile_label_with_state">الوضع في الخلفية · %1$s</string>
+    <string name="pause_tile_on">يعمل</string>
+    <string name="pause_tile_paused">متوقف مؤقتًا</string>
+    <string name="pause_tile_off">متوقف في الإعدادات</string>
+</resources>

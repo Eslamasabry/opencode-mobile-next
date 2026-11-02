@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copied verbatim from android/app/src/main/res/values/strings.xml. -->
+<resources>
+    <string name="shortcut_connect_short">Connect</string>
+    <string name="shortcut_connect_long">Choose a server to connect</string>
+    <string name="shortcut_new_task_short">New conversation</string>
+    <string name="shortcut_new_task_long">Start a new conversation on the current server</string>
+    <!-- Dynamic pinned-session shortcuts (PinnedShortcuts.kt). -->
+    <string name="shortcut_session_untitled">Untitled conversation</string>
+    <string name="shortcut_session_unavailable">This conversation is no longer available</string>
+    <!-- Quick Settings tile (AttentionTileService.kt). The product name is
+         the tile label; the count goes into the subtitle on Android 10+ and
+         is folded into the label below that. -->
+    <string name="tile_label">OpenCode</string>
+    <string name="tile_label_with_count">OpenCode · %1$s</string>
+    <string name="tile_all_clear">Nothing needs you</string>
+    <plurals name="tile_need_you">
+        <item quantity="one">%1$d needs you</item>
+        <item quantity="other">%1$d need you</item>
+    </plurals>
+    <!-- Pause/resume Quick Settings tile (PauseTileService.kt). -->
+    <string name="pause_tile_label">Background mode</string>
+    <string name="pause_tile_label_with_state">Background mode · %1$s</string>
+    <string name="pause_tile_on">On</string>
+    <string name="pause_tile_paused">Paused</string>
+    <string name="pause_tile_off">Off in Settings</string>
+</resources>
