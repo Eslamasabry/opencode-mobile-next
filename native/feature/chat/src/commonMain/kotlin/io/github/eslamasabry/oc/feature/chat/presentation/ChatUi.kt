@@ -153,6 +153,9 @@ public interface ChatActions {
 
     public fun retryLoad()
 
+    /** Opens Project Files for this conversation (P12-FILES). */
+    public fun openFiles() {}
+
     public fun stop()
 
     /** Opens find with [query]; null closes it. */

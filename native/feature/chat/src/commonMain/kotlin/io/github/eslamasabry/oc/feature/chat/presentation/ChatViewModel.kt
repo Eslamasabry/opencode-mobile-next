@@ -12,6 +12,7 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
+import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
  * is [ChatPresenter]'s; this class only gives it the entry's scope (03 §14.3: WhileSubscribed(5 s)).
  */
 @AssistedInject
-public class ChatViewModel(@Assisted route: ChatRoute, private val worlds: ChatWorlds, nav: AppNavigator) :
+public class ChatViewModel(@Assisted route: ChatRoute, private val worlds: ChatWorlds, private val nav: AppNavigator) :
     ViewModel(), ChatActions {
     private val world = worlds.open(route.ref)
     private val presenter =
@@ -42,6 +43,9 @@ public class ChatViewModel(@Assisted route: ChatRoute, private val worlds: ChatW
     override fun dismissConfirm(): Unit = presenter.dismissConfirm()
 
     override fun retryLoad(): Unit = presenter.retryLoad()
+
+    /** Project Files for this conversation (P12-FILES; 07 §5 D01/D02, `/files` and the chat's Files action). */
+    override fun openFiles(): Unit = nav.open(FilesRoute.Folder(presenter.ref))
 
     override fun stop(): Unit = presenter.stop()
 
