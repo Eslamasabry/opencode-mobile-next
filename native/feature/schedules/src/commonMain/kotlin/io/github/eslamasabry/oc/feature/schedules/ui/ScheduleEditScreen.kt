@@ -53,6 +53,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 @Composable
 public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditActions) {
     val words = scheduleWords()
+    // Re-seeded only when the view model loads new starting values, never on recomposition.
+    val draft = remember(state.seed) { EditorDraft(state.fields) }
     KitScreen(
         topBar = {
             KitTopBar(
@@ -64,28 +66,54 @@ public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditAction
         },
         loading = state.phase == EditPhase.Loading,
         loadingLabel = words.loading,
+        // The one main action stays at the thumb, visible without scrolling (screen standard).
+        bottom =
+            if (state.phase != EditPhase.Ready) null
+            else ({
+                KitButton(
+                    if (state.saving) words.saving else words.save,
+                    { actions.save(draft.fields()) },
+                    Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
+                    enabled = if (state.saving) KitEnabled.Disabled(words.saving) else KitEnabled.Enabled,
+                    working = state.saving,
+                )
+            }),
         width = KitScreenWidth.Reading,
     ) {
         when (state.phase) {
             EditPhase.Loading -> KitStateView(KitStateKind.Loading, words.loading)
             EditPhase.Unavailable -> KitStateView(KitStateKind.Missing, if (state.editing) words.unavailableEdit else words.unavailableServer)
-            EditPhase.Ready -> EditorForm(state, actions, words)
+            EditPhase.Ready -> EditorForm(state, draft, words)
         }
     }
 }
 
+/** The typed fields of one editor visit; they live only in this composition and survive a refused save. */
+private class EditorDraft(start: EditorFields) {
+    val prompt = TextFieldState(start.prompt)
+    val project = TextFieldState(start.project)
+    val time = TextFieldState(start.time)
+    val date = TextFieldState(start.date)
+    val hours = TextFieldState(start.hours)
+    var kind by mutableStateOf(start.kind)
+    var missed by mutableStateOf(start.missed)
+    var model by mutableStateOf(start.model)
+
+    fun fields(): EditorFields =
+        EditorFields(
+            prompt = prompt.text.toString(),
+            project = project.text.toString(),
+            kind = kind,
+            time = time.text.toString(),
+            date = date.text.toString(),
+            hours = hours.text.toString(),
+            missed = missed,
+            model = model,
+        )
+}
+
 @Composable
-private fun EditorForm(state: ScheduleEditUi, actions: ScheduleEditActions, words: ScheduleWords) {
-    // Re-seeded only when the view model loads new starting values, never on recomposition.
-    val start = state.fields
-    val prompt = remember(state.seed) { TextFieldState(start.prompt) }
-    val project = remember(state.seed) { TextFieldState(start.project) }
-    val time = remember(state.seed) { TextFieldState(start.time) }
-    val date = remember(state.seed) { TextFieldState(start.date) }
-    val hours = remember(state.seed) { TextFieldState(start.hours) }
-    var kind by remember(state.seed) { mutableStateOf(start.kind) }
-    var missed by remember(state.seed) { mutableStateOf(start.missed) }
-    var model by remember(state.seed) { mutableStateOf(start.model) }
+private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: ScheduleWords) {
     val enabled = if (state.saving) KitEnabled.Disabled(words.saving) else KitEnabled.Enabled
     Column(
         Modifier.fillMaxSize()
@@ -96,7 +124,7 @@ private fun EditorForm(state: ScheduleEditUi, actions: ScheduleEditActions, word
     ) {
         state.error?.let { KitErrorNotice(words.error(it)) }
         KitField(
-            prompt,
+            draft.prompt,
             words.prompt,
             kind = KitFieldKind.Multiline,
             helper = words.promptHelp,
@@ -105,7 +133,7 @@ private fun EditorForm(state: ScheduleEditUi, actions: ScheduleEditActions, word
             enabled = enabled,
         )
         KitField(
-            project,
+            draft.project,
             words.project,
             kind = KitFieldKind.Path,
             placeholder = "/home/me/project",
@@ -120,14 +148,14 @@ private fun EditorForm(state: ScheduleEditUi, actions: ScheduleEditActions, word
                 KitSegment(RecurrenceKind.Weekdays, words.kindWeekdays),
                 KitSegment(RecurrenceKind.Interval, words.kindInterval),
             ),
-            selected = kind,
+            selected = draft.kind,
             semanticsLabel = words.repeat,
             enabled = enabled,
-            onChange = { kind = it },
+            onChange = { draft.kind = it },
         )
-        if (kind == RecurrenceKind.Once) {
+        if (draft.kind == RecurrenceKind.Once) {
             KitField(
-                date,
+                draft.date,
                 words.date,
                 kind = KitFieldKind.Mono,
                 error = if (state.issue == EditIssue.DateInvalid) words.issueDate else null,
@@ -135,16 +163,16 @@ private fun EditorForm(state: ScheduleEditUi, actions: ScheduleEditActions, word
             )
         }
         KitField(
-            time,
+            draft.time,
             words.time,
             kind = KitFieldKind.Mono,
-            helper = if (kind == RecurrenceKind.Interval) words.firstAt else null,
+            helper = if (draft.kind == RecurrenceKind.Interval) words.firstAt else null,
             error = if (state.issue == EditIssue.TimeInvalid) words.issueTime else null,
             enabled = enabled,
         )
-        if (kind == RecurrenceKind.Interval) {
+        if (draft.kind == RecurrenceKind.Interval) {
             KitField(
-                hours,
+                draft.hours,
                 words.hours,
                 kind = KitFieldKind.Number,
                 error = if (state.issue == EditIssue.HoursInvalid) words.issueHours else null,
@@ -154,39 +182,19 @@ private fun EditorForm(state: ScheduleEditUi, actions: ScheduleEditActions, word
         KitSectionLabel(words.missed)
         KitChoiceList(
             listOf(KitChoice(MissedRunPolicy.CatchUp, words.missedCatchUp), KitChoice(MissedRunPolicy.Skip, words.missedSkip)),
-            selected = missed,
+            selected = draft.missed,
             semanticsLabel = words.missed,
-            onSelect = { missed = it },
+            onSelect = { draft.missed = it },
         )
-        if (state.models.isNotEmpty() || model != null) {
+        if (state.models.isNotEmpty() || draft.model != null) {
             KitSectionLabel(words.model)
             val choices =
                 listOf(KitChoice<ModelChoice?>(null, words.modelDefault)) +
-                    (state.models + listOfNotNull(model).filter { it !in state.models }).map { KitChoice<ModelChoice?>(it, it.label) }
-            KitChoiceList(choices, selected = model, semanticsLabel = words.model, onSelect = { model = it })
+                    (state.models + listOfNotNull(draft.model).filter { it !in state.models }).map { KitChoice<ModelChoice?>(it, it.label) }
+            KitChoiceList(choices, selected = draft.model, semanticsLabel = words.model, onSelect = { draft.model = it })
         }
         KitRowGroup(label = words.conversation) {
             KitRow(if (state.continuesConversation) words.continuesTitle(state.conversationTitle) else words.newEachTime)
         }
-        KitButton(
-            if (state.saving) words.saving else words.save,
-            {
-                actions.save(
-                    EditorFields(
-                        prompt = prompt.text.toString(),
-                        project = project.text.toString(),
-                        kind = kind,
-                        time = time.text.toString(),
-                        date = date.text.toString(),
-                        hours = hours.text.toString(),
-                        missed = missed,
-                        model = model,
-                    ),
-                )
-            },
-            Modifier.fillMaxWidth(),
-            enabled = enabled,
-            working = state.saving,
-        )
     }
 }
