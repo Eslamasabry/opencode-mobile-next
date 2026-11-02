@@ -311,7 +311,7 @@ class AndroidNotificationSettings(
     /** Re-reads Android's on/off: the page calls it on every visit through [facts] refresh below. */
     private fun read(): NotificationFacts {
         fun flag(key: String, fallback: Boolean): Boolean =
-            runCatchingRead { (stores.prefs.get(key) as? PrefValue.Bool)?.value } ?: fallback
+            readOrNull { (stores.prefs.get(key) as? PrefValue.Bool)?.value } ?: fallback
         return NotificationFacts(
             blocked = !manager.areNotificationsEnabled(),
             finishedWork = flag(FINISHED, true),
@@ -348,7 +348,7 @@ class AndroidNotificationSettings(
         }
     }
 
-    private inline fun <T> runCatchingRead(read: () -> T?): T? =
+    private inline fun <T> readOrNull(read: () -> T?): T? =
         try {
             read()
         } catch (_: IllegalStateException) {
