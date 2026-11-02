@@ -53,6 +53,7 @@ class ComposerModelsFilesTest {
 
         override suspend fun selectModel(choice: ComposerModel?, variant: String): Boolean {
             calls += "select <${choice?.label}>"
+            variants += variant
             return selectResult
         }
 
@@ -67,6 +68,21 @@ class ComposerModelsFilesTest {
         override fun dismissAttachmentFailure() {
             calls += "dismiss"
         }
+
+        override suspend fun selectAgent(agent: String): Boolean {
+            calls += "agent <$agent>"
+            return true
+        }
+
+        override fun mentionFile(path: String) {
+            calls += "mention <$path>"
+        }
+
+        override fun attach(kind: io.github.eslamasabry.oc.feature.chat.composer.presentation.AttachKind) {
+            calls += "attach $kind"
+        }
+
+        val variants = mutableListOf<String>()
     }
 
     @Composable
@@ -257,4 +273,116 @@ class ComposerModelsFilesTest {
                 Locale.setDefault(before)
             }
         }
+
+    // ---- the full composer journeys (P12) ----
+
+    private val thinker =
+        ComposerModel("prov", "think", "Thinker", supportsAttachments = true, variants = listOf("low", "high"))
+
+    @Test
+    fun `B-AGENT-172 the model sheet offers the chosen model's thinking levels and the agents`() =
+        runComposeUiTest {
+            val actions = Actions()
+            val models =
+                ComposerModels(
+                    choices = listOf(mini, thinker),
+                    selected = thinker,
+                    variant = "high",
+                    agents =
+                        listOf(
+                            io.github.eslamasabry.oc.feature.chat.world.ComposerAgent("build"),
+                            io.github.eslamasabry.oc.feature.chat.world.ComposerAgent("plan"),
+                        ),
+                    agent = "build",
+                )
+            setContent { Theme { KitSheetHost { BasicComposer(ui(models = models), actions, chrome) } } }
+            onNodeWithText("build · Thinker · high").assertIsDisplayed()
+            onNodeWithContentDescription("Model").performClick()
+            onNodeWithText("Thinking").assertIsDisplayed()
+            onNodeWithText("low").performClick()
+            onNodeWithText("Agent").assertIsDisplayed()
+            onNodeWithText("plan").performClick()
+            waitForIdle()
+            assertEquals(listOf("low"), actions.variants)
+            assertTrue("agent <plan>" in actions.calls)
+        }
+
+    @Test
+    fun `B-NAV-034 a refused model change says so in plain words`() = runComposeUiTest {
+        val models =
+            ComposerModels(
+                choices = listOf(mini),
+                selected = mini,
+                failure = Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.DispatchUncertain),
+            )
+        setContent { Theme { KitSheetHost { BasicComposer(ui(models = models), Actions(), chrome) } } }
+        onNodeWithContentDescription("Model").performClick()
+        onNodeWithText("Could not confirm the model choice. Check your selection and try again.").assertIsDisplayed()
+    }
+
+    @Test
+    fun `B-CHAT-009 the Add sheet lists file, photos and clipboard rows where the platform offers them`() =
+        runComposeUiTest {
+            val actions = Actions()
+            val state =
+                ui().copy(
+                    attachKinds =
+                        setOf(
+                            io.github.eslamasabry.oc.feature.chat.composer.presentation.AttachKind.Photos,
+                            io.github.eslamasabry.oc.feature.chat.composer.presentation.AttachKind.Clipboard,
+                        )
+                )
+            setContent { Theme { KitSheetHost { BasicComposer(state, actions, chrome) } } }
+            onNodeWithText("Attach").performClick()
+            onNodeWithText("Add to prompt").assertIsDisplayed()
+            onNodeWithText("Attach file").assertIsDisplayed()
+            onNodeWithText("Take photo").assertDoesNotExist()
+            onNodeWithText("Photo library").performClick()
+            waitForIdle()
+            assertTrue("attach Photos" in actions.calls)
+        }
+
+    @Test
+    fun `B-NAV-049 a slash field lists server commands and a tap fills the command`() =
+        runComposeUiTest {
+            val actions = Actions()
+            val state =
+                mutableStateOf(
+                    ui().copy(
+                        commandMatches =
+                            listOf(io.github.eslamasabry.oc.feature.chat.world.ComposerCommand("review"))
+                    )
+                )
+            setContent { Theme { BasicComposer(state.value, actions, chrome) } }
+            onNode(hasSetTextAction()).performTextReplacement("/re")
+            onNodeWithText("/review").performClick()
+            waitForIdle()
+            onNode(hasSetTextAction()).assert(hasText("/review ", substring = true))
+        }
+
+    @Test
+    fun `B-CHAT-087 an at-word lists project files and a tap inserts and stages the file`() =
+        runComposeUiTest {
+            val actions = Actions()
+            val state = ui().copy(fileMatches = listOf("src/main.kt"))
+            setContent { Theme { BasicComposer(state, actions, chrome) } }
+            onNode(hasSetTextAction()).performTextReplacement("look at @ma")
+            onNodeWithText("@src/main.kt").performClick()
+            waitForIdle()
+            onNode(hasSetTextAction()).assert(hasText("look at @src/main.kt ", substring = true))
+            assertTrue("mention <src/main.kt>" in actions.calls)
+        }
+
+    @Test
+    fun `B-STATE-016 files show the on-device draft note in Arabic too`() = runComposeUiTest {
+        val before = Locale.getDefault()
+        Locale.setDefault(Locale.forLanguageTag("ar"))
+        try {
+            val draft = DraftFacts(attachments = listOf(file("notes.txt")))
+            setContent { Theme("ar") { BasicComposer(ui(draft = draft), Actions(), chrome) } }
+            onNodeWithText("تُحفظ المرفقات مع هذه المسودة على هذا الجهاز.").assertIsDisplayed()
+        } finally {
+            Locale.setDefault(before)
+        }
+    }
 }

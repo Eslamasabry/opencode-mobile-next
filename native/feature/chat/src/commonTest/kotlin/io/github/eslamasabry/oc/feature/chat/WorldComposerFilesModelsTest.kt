@@ -154,6 +154,10 @@ class WorldComposerFilesModelsTest {
         var catalog: Outcome<CatalogSnapshot> =
             Outcome.Failed(Failure.Unavailable(FeatureId("serverCatalog")))
         var defaults: Outcome<ChatDefaults> = Outcome.Ok(ChatDefaults(null, null))
+        var commands: Outcome<kotlinx.collections.immutable.ImmutableList<io.github.eslamasabry.oc.core.model.CommandInfo>> =
+            Outcome.Ok(persistentListOf())
+
+        override suspend fun commands() = commands
 
         override suspend fun catalog(): Outcome<CatalogSnapshot> = catalog
 
@@ -728,5 +732,58 @@ class WorldComposerFilesModelsTest {
             assertIs<Outcome.Failed>(second.world.send(""))
             runCurrent()
             assertTrue(second.base.sentPrompts.isEmpty())
+        }
+
+    // ---- P12: staged @ files and server commands ----
+
+    @Test
+    fun `B-CHAT-087 a picked project file rides with its mention range and is dropped with its words`() =
+        runTest {
+            val f = Fixture(this)
+            f.base.setLocation(io.github.eslamasabry.oc.core.model.ServerLocation(directory = "/work"))
+            f.open()
+            f.world.draftChanged("see @src/a.kt now")
+            assertIs<Outcome.Ok<Unit>>(f.world.mentionFile("src/a.kt"))
+            val staged = f.world.draft.value.attachments.single()
+            assertEquals("file:///work/src/a.kt", staged.url)
+            assertIs<Outcome.Ok<Unit>>(f.world.send("see @src/a.kt now"))
+            runCurrent()
+            val sent = f.base.sentPrompts.single().second.attachments.single()
+            assertEquals(4, sent.mentionStart)
+            assertEquals(13, sent.mentionEnd)
+            assertEquals("file:///work/src/a.kt", sent.url)
+        }
+
+    @Test
+    fun `B-CHAT-087 a mention whose words were deleted sends no file`() = runTest {
+        val f = Fixture(this)
+        f.base.setLocation(io.github.eslamasabry.oc.core.model.ServerLocation(directory = "/work"))
+        f.open()
+        f.world.draftChanged("see @src/a.kt")
+        assertIs<Outcome.Ok<Unit>>(f.world.mentionFile("src/a.kt"))
+        f.world.draftChanged("never mind")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("never mind"))
+        runCurrent()
+        assertTrue(f.base.sentPrompts.single().second.attachments.isEmpty())
+    }
+
+    @Test
+    fun `B-NAV-051 server commands load for the conversation and a command line runs as a command`() =
+        runTest {
+            val f = Fixture(this)
+            f.operations.commands =
+                Outcome.Ok(
+                    persistentListOf(
+                        io.github.eslamasabry.oc.core.model.CommandInfo("review", "Review", null, false)
+                    )
+                )
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.loadCommands())
+            assertEquals(listOf("review"), f.world.commands.value.map { it.name })
+            f.world.draftChanged("/review now")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("/review now"))
+            runCurrent()
+            assertTrue(f.base.sentPrompts.isEmpty(), "a command never goes out as a prompt")
+            assertTrue(f.base.calls.any { it.startsWith("slashCommand") })
         }
 }
