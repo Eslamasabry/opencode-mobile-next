@@ -83,7 +83,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitComposerSending
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStopShort
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -201,7 +200,7 @@ public fun BasicComposer(
         val attachmentFailure = state.attachmentFailure
         if (attachmentFailure != null) {
             KitNotice(
-                message = stringResource(attachmentWords(attachmentFailure)),
+                message = attachmentWords(attachmentFailure),
                 tone = StatusTone.Failure,
                 actions =
                     listOf(
@@ -412,22 +411,25 @@ public fun BasicComposer(
 }
 
 /** Plain words per failure kind; raw details stay in the Failure's redacted fold. */
-private fun attachmentWords(failure: Failure): StringResource =
-    when (failure) {
-        is Failure.StorageRefused -> Res.string.composerPreviewAttachmentStorage
-        is Failure.Media ->
-            when (failure.problem) {
-                MediaProblem.AttachmentTooLarge,
-                MediaProblem.AttachmentsTotalTooLarge,
-                -> Res.string.composerPreviewAttachmentTooLarge
-                MediaProblem.AttachmentUnsupported,
-                MediaProblem.OfficeUnreadable,
-                MediaProblem.OfficeEmpty,
-                -> Res.string.composerPreviewAttachmentUnsupported
-                else -> Res.string.composerPreviewAttachmentFailed
-            }
-        else -> Res.string.composerPreviewAttachmentFailed
-    }
+@Composable
+private fun attachmentWords(failure: Failure): String =
+    stringResource(
+        when (failure) {
+            is Failure.StorageRefused -> Res.string.composerPreviewAttachmentStorage
+            is Failure.Media ->
+                when (failure.problem) {
+                    MediaProblem.AttachmentTooLarge,
+                    MediaProblem.AttachmentsTotalTooLarge,
+                    -> Res.string.composerPreviewAttachmentTooLarge
+                    MediaProblem.AttachmentUnsupported,
+                    MediaProblem.OfficeUnreadable,
+                    MediaProblem.OfficeEmpty,
+                    -> Res.string.composerPreviewAttachmentUnsupported
+                    else -> Res.string.composerPreviewAttachmentFailed
+                }
+            else -> Res.string.composerPreviewAttachmentFailed
+        },
+    )
 
 /**
  * Plain bookkeeping: synchronous input reporting does not mutate Compose state or the field
