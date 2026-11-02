@@ -45,6 +45,7 @@ internal data class ChatLocal(
     val menu: MessageMenuUi? = null,
     val confirm: ChatConfirm? = null,
     val clip: ClipUi? = null,
+    val readAloud: ReadAloudUi? = null,
     val arrival: PendingArrival? = null,
     val actionFailure: Failure? = null,
     val atLiveEdge: Boolean = true,
@@ -159,6 +160,7 @@ public class ChatPresenter(
             arrival = arrival,
             capabilities = ChatCapabilitiesUi(fork = i.capabilities.sessionFork, deleteMessage = i.capabilities.messageDelete),
             guardBack = BackOrder.handles(l.menu != null, l.confirm != null, l.findQuery != null, i.draft.unsaved),
+            readAloud = l.readAloud,
         )
     }
 
@@ -286,6 +288,10 @@ public class ChatPresenter(
                 val text = textOf(world.transcript.value, target) ?: return
                 local.update { it.copy(clip = ClipUi(nextId++, text)) }
             }
+            MessageAction.ReadAloud -> {
+                val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
+                local.update { it.copy(readAloud = ReadAloudUi(nextId++, target.rowKey, text)) }
+            }
             MessageAction.SendAgain -> {
                 val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
                 launcher.launch { world.send(text) } // a failed send shows on its bubble (status line), not twice
@@ -315,6 +321,10 @@ public class ChatPresenter(
 
     override fun clipDone(id: Long) {
         local.update { if (it.clip?.id == id) it.copy(clip = null) else it }
+    }
+
+    override fun readAloudDone(id: Long) {
+        local.update { if (it.readAloud?.id == id) it.copy(readAloud = null) else it }
     }
 
     // ---- Arrivals and reading ----

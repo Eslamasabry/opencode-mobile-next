@@ -32,7 +32,11 @@ import kotlin.time.Instant
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CompletableDeferred
+import kotlin.time.Duration
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.TestScope
 
@@ -209,6 +213,14 @@ class FakeHub(
     override fun openAppSettings() {
         settingsOpened++
     }
+
+    override fun ticks(period: Duration): Flow<Unit> =
+        flow {
+            while (true) {
+                emit(Unit)
+                delay(period)
+            }
+        }
 }
 
 class FakeField(var value: String = "", var sel: IntRange? = null, var sendable: Boolean = true) : VoiceFieldPort {

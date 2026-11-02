@@ -122,9 +122,13 @@ public class ReplyReaderPresenter(
         mutable.update { it.copy(asking = false) }
     }
 
-    public fun stop() {
+    public fun stop(): Unit = stopIn(scope)
+
+    /** Stops a reading from a scope that outlives this presenter (the screen is going away). */
+    public fun stopIn(cleanup: CoroutineScope) {
         val r = reader ?: return
-        scope.launch { r.stop() }
+        if (mutable.value.reading == null) return
+        cleanup.launch { r.stop() }
     }
 
     public fun dismissNote() {

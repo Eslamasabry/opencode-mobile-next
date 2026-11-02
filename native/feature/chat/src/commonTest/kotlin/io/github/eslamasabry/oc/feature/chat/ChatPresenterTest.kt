@@ -158,6 +158,22 @@ class ChatPresenterTest {
     }
 
     @Test
+    fun `B-MEDIA-009 Read aloud on a reply hands its text to the reader once`() {
+        world.transcript.value = stateOf(*turn(1).toTypedArray(), *turn(2).toTypedArray())
+        val p = presenter()
+        p.openMessageMenu("footer:u2")
+        val menu = assertNotNull(p.current().menu)
+        assertTrue(MessageAction.ReadAloud in menu.actions, "a reply with text can be read aloud")
+        p.messageAction(menu.target, MessageAction.ReadAloud)
+        val asked = assertNotNull(p.current().readAloud)
+        assertTrue(asked.text.isNotBlank())
+        assertEquals(menu.target.rowKey, asked.rowKey)
+        p.readAloudDone(asked.id)
+        assertNull(p.current().readAloud, "handed over once, never again on recomposition")
+        assertTrue(world.calls.isEmpty(), "reading touches no server")
+    }
+
+    @Test
     fun `09-6_6 a delete the server refuses says so on the status line, dismissible`() {
         world.transcript.value = stateOf(*turn(1).toTypedArray())
         world.deleteResult = Outcome.Failed(Failure.Network(NetworkWhy.Reset))

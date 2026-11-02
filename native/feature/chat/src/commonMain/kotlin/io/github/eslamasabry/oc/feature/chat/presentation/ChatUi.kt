@@ -38,6 +38,8 @@ public data class ChatUi(
     val capabilities: ChatCapabilitiesUi,
     /** The Back guard is enabled (07 §3.4): the system's predictive preview is off only while this is true. */
     val guardBack: Boolean,
+    /** A reply the person asked to hear (P12-VOICE): the screen hands it to the reader once, then acknowledges. */
+    val readAloud: ReadAloudUi? = null,
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -119,7 +121,7 @@ public data class MessageTarget(val turnId: String, val rowKey: String, val kind
 public enum class TargetKind { Prompt, Reply }
 
 /** One action list per message for every way in (plan 09 §6.6). Order is the menu's order; destructive last. */
-public enum class MessageAction { Copy, SendAgain, Fork, Delete }
+public enum class MessageAction { Copy, ReadAloud, SendAgain, Fork, Delete }
 
 public data class MessageMenuUi(val target: MessageTarget, val actions: ImmutableList<MessageAction>)
 
@@ -132,6 +134,8 @@ public sealed interface ChatConfirm {
 }
 
 public data class ClipUi(val id: Long, val text: String)
+
+public data class ReadAloudUi(val id: Long, val rowKey: String, val text: String)
 
 /**
  * One-time details the chat was opened with, acknowledged through [ChatActions.arrivalShown] (07 §2.5).
@@ -177,6 +181,9 @@ public interface ChatActions {
     public fun confirmDelete()
 
     public fun clipDone(id: Long)
+
+    /** The reader took the reply ([ChatUi.readAloud]). */
+    public fun readAloudDone(id: Long) {}
 
     public fun arrivalShown(id: Long)
 

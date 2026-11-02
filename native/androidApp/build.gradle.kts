@@ -31,6 +31,9 @@ dependencies {
             ":engine:requests",
             ":ui:kit-chat",
             ":ui:kit-content",
+            ":engine:voice",
+            ":android:voice",
+            ":feature:voice",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

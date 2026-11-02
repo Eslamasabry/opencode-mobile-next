@@ -65,6 +65,8 @@ import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitReadRequest
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedBody
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedTitle
@@ -87,6 +89,7 @@ import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
 import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitCopy
+import io.github.eslamasabry.oc.ui.words.res.voiceNativeReadAloud
 import io.github.eslamasabry.oc.ui.words.res.kitDiscardTitle
 import io.github.eslamasabry.oc.ui.words.res.kitJumpLatest
 import io.github.eslamasabry.oc.ui.words.res.kitMessageActions
@@ -129,6 +132,7 @@ public fun ChatScreen(
     modifier: Modifier = Modifier,
     requests: RequestSlotUi = RequestSlotUi(),
     requestActions: ChatRequestActions? = null,
+    replyReader: KitReplyReader? = null,
 ) {
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
     val requestState by rememberUpdatedState(requests)
@@ -217,6 +221,12 @@ public fun ChatScreen(
                 loadingLabel = stringResource(Res.string.chatLoadingConversation),
                 bottom = {
                     Column {
+                        // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone consent.
+                        replyReader?.Reader(
+                            state.readAloud?.let { KitReadRequest(it.id, it.rowKey, it.text) },
+                            actions::readAloudDone,
+                            Modifier.padding(horizontal = Space.S4.dp),
+                        )
                         if (requestActions != null)
                             ChatRequestSlot(
                                 requests,
@@ -275,7 +285,7 @@ public fun ChatScreen(
 
             // The menu opens over the composer's end, where the action that opened it is under the
             // thumb.
-            MessageMenu(state.menu, actions, Modifier.align(Alignment.BottomEnd))
+            MessageMenu(state.menu, actions, Modifier.align(Alignment.BottomEnd), reads = replyReader != null)
             KitConfirm(
                 spec = confirmSpec(state.confirm),
                 onConfirm = {
@@ -393,17 +403,18 @@ private fun FindBar(find: FindUi, actions: ChatActions) {
  * never broken.
  */
 @Composable
-private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Modifier) {
+private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Modifier, reads: Boolean = false) {
     val items =
         menu
             ?.actions
             .orEmpty()
-            .filter { it != MessageAction.Copy }
+            .filter { it != MessageAction.Copy && (reads || it != MessageAction.ReadAloud) }
             .map { action ->
                 KitMenuItem(
                     label =
                         when (action) {
                             MessageAction.Copy -> stringResource(Res.string.kitCopy)
+                            MessageAction.ReadAloud -> stringResource(Res.string.voiceNativeReadAloud)
                             MessageAction.SendAgain ->
                                 stringResource(Res.string.chatUiSendPromptAgain)
                             MessageAction.Fork ->

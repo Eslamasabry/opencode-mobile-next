@@ -145,8 +145,8 @@ class ChatRulesTest {
             MessageActions.of(TargetKind.Prompt, ChatCapabilitiesUi(), busy = false, messageId = "u1", hasText = true),
             "absent, never disabled: no fork or delete without the capability",
         )
-        assertEquals(listOf(MessageAction.Copy, MessageAction.Delete), MessageActions.of(TargetKind.Reply, all, false, "a1", hasText = true))
-        assertEquals(listOf(MessageAction.Copy), MessageActions.of(TargetKind.Reply, all, false, messageId = null, hasText = true))
+        assertEquals(listOf(MessageAction.Copy, MessageAction.ReadAloud, MessageAction.Delete), MessageActions.of(TargetKind.Reply, all, false, "a1", hasText = true))
+        assertEquals(listOf(MessageAction.Copy, MessageAction.ReadAloud), MessageActions.of(TargetKind.Reply, all, false, messageId = null, hasText = true))
         assertTrue(MessageActions.of(TargetKind.Reply, ChatCapabilitiesUi(), false, null, hasText = false).isEmpty())
     }
 

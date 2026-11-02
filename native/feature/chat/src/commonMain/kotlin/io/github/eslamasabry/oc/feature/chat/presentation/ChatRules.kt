@@ -155,6 +155,7 @@ public object MessageActions {
     public fun of(kind: TargetKind, caps: ChatCapabilitiesUi, busy: Boolean, messageId: String?, hasText: Boolean): ImmutableList<MessageAction> {
         val out = ArrayList<MessageAction>(4)
         if (hasText) out += MessageAction.Copy
+        if (kind == TargetKind.Reply && hasText) out += MessageAction.ReadAloud
         if (kind == TargetKind.Prompt && hasText && !busy) out += MessageAction.SendAgain
         if (kind == TargetKind.Prompt && caps.fork && messageId != null) out += MessageAction.Fork
         if (caps.deleteMessage && messageId != null) out += MessageAction.Delete

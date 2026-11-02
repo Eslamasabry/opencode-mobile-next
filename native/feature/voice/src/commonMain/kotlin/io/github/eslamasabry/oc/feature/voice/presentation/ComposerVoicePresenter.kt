@@ -16,11 +16,10 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -114,9 +113,10 @@ public class ComposerVoicePresenter(
     private var listeningSince: Instant? = null
     private var earlyEnd: EarlyEnd? = null
     private var countdown: AutoSendCountdown? = null
-    private var countdownJob: Job? = null
-    private var tickJob: Job? = null
-    private var levelJob: Job? = null
+
+    /** Bumped to end the running clock, level mirror and countdown (they stop at their next tick). */
+    private var ticking = 0
+    private var counting = 0
     private var foreground = true
 
     init {
@@ -236,13 +236,16 @@ public class ComposerVoicePresenter(
         if (!inForeground) clearCountdown()
     }
 
-    /** The conversation's composer went away: a recording it started is cancelled, keeping nothing. */
-    public fun close() {
+    /**
+     * The conversation's composer went away: a recording it started is cancelled, keeping nothing. [cleanup] outlives
+     * this presenter's own scope (the ViewModel's scope is already cancelled when it is cleared).
+     */
+    public fun close(cleanup: CoroutineScope = scope) {
         clearCountdown()
         if (owner) {
             val p = parts
             owner = false
-            if (p != null) scope.launch { p.dictation.cancel(keepWords = false) }
+            if (p != null) cleanup.launch { p.dictation.cancel(keepWords = false) }
         }
     }
 
@@ -385,24 +388,22 @@ public class ComposerVoicePresenter(
 
     private fun startTicking() {
         stopTicking()
-        val p = parts
-        if (p != null) levelJob = scope.launch { p.dictation.level.collect { levelMirror.value = it } }
-        tickJob =
-            scope.launch {
-                while (true) {
-                    val since = listeningSince ?: break
-                    val seconds = (clock.now() - since).inWholeSeconds.toInt()
-                    mutable.update { it.copy(elapsedSeconds = seconds) }
-                    delay(TICK)
-                }
+        val generation = ticking
+        val p = parts ?: return
+        scope.launch {
+            p.dictation.level.takeWhile { generation == ticking }.collect { levelMirror.value = it }
+        }
+        scope.launch {
+            hub.ticks(TICK).takeWhile { generation == ticking && listeningSince != null }.collect {
+                val since = listeningSince ?: return@collect
+                val seconds = (clock.now() - since).inWholeSeconds.toInt()
+                mutable.update { it.copy(elapsedSeconds = seconds) }
             }
+        }
     }
 
     private fun stopTicking() {
-        tickJob?.cancel()
-        tickJob = null
-        levelJob?.cancel()
-        levelJob = null
+        ticking++
         levelMirror.value = 0f
     }
 
@@ -420,18 +421,14 @@ public class ComposerVoicePresenter(
                 note = null,
             )
         }
-        countdownJob =
-            scope.launch {
-                while (true) {
-                    val left = counted.secondsLeft(clock.now())
-                    mutable.update { it.copy(secondsLeft = left) }
-                    if (left == 0) {
-                        decide(sendNow = false)
-                        break
-                    }
-                    delay(COUNTDOWN_STEP)
-                }
+        val generation = ++counting
+        scope.launch {
+            hub.ticks(COUNTDOWN_STEP).takeWhile { generation == counting && countdown === counted }.collect {
+                val left = counted.secondsLeft(clock.now())
+                mutable.update { it.copy(secondsLeft = left) }
+                if (left == 0) decide(sendNow = false)
             }
+        }
     }
 
     private fun decide(sendNow: Boolean) {
@@ -461,15 +458,13 @@ public class ComposerVoicePresenter(
     }
 
     private fun clearCountdown() {
-        val job = countdownJob
         countdown = null
-        countdownJob = null
+        counting++
         if (mutable.value.phase == MicPhase.Countdown) {
             mutable.update { it.copy(phase = MicPhase.Idle, mode = null, secondsLeft = null) }
         } else {
             mutable.update { it.copy(secondsLeft = null) }
         }
-        job?.cancel()
     }
 
     public companion object {

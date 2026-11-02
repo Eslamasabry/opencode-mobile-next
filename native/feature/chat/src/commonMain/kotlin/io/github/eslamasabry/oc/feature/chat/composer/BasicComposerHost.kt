@@ -49,6 +49,8 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerVoice
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
@@ -93,7 +95,7 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Inject
 @ContributesBinding(AppScope::class)
-public class BasicComposerHost : ComposerHost {
+public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : ComposerHost {
     @Composable
     override fun Composer(target: ComposerTarget, chrome: ComposerChrome, modifier: Modifier) {
         val vm =
@@ -103,7 +105,7 @@ public class BasicComposerHost : ComposerHost {
                 create(target)
             }
         val state by vm.state.collectAsStateWithLifecycle()
-        BasicComposer(state, vm, chrome, modifier)
+        BasicComposer(state, vm, chrome, modifier, voice = voices.firstOrNull())
     }
 }
 
@@ -120,6 +122,7 @@ public fun BasicComposer(
     actions: BasicComposerActions,
     chrome: ComposerChrome,
     modifier: Modifier = Modifier,
+    voice: KitComposerVoice? = null,
 ) {
     val field = remember(state.targetKey) { TextFieldState() }
     val focus = remember(state.targetKey) { FocusRequester() }
@@ -170,6 +173,24 @@ public fun BasicComposer(
             }
         }
     }
+    // P12-VOICE: the voice slot types into this field and sends through this composer's one send path.
+    val canSend =
+        state.available && editorReady && state.draft.ready && state.draft.failure == null &&
+            !state.draft.sendBlocked && !state.pickingFile && !state.sending
+    val voiceField =
+        KitVoiceField(
+            key = state.targetKey,
+            text = { field.text.toString() },
+            selection = { field.selection.let { it.start..it.end } },
+            replace = { words ->
+                field.edit { replace(0, length, words) }
+                editor.userEditSerial += 1
+                editor.lastReported = words
+                actions.draftChanged(words)
+            },
+            send = send,
+            canSend = { canSend },
+        )
     var modelsOpen by remember(state.targetKey) { mutableStateOf(false) }
     val selectAndClose: (ComposerModel?) -> Unit = { choice ->
         scope.launch { if (actions.selectModel(choice)) modelsOpen = false }
@@ -252,6 +273,7 @@ public fun BasicComposer(
                 modifier = Modifier.testTag("chat-attach-button"),
             )
         }
+        voice?.Panel(voiceField, Modifier.fillMaxWidth())
         if (state.draft.attachments.isNotEmpty()) {
             KitChipWrap(Modifier.fillMaxWidth().testTag("chat-attachments")) {
                 state.draft.attachments.forEachIndexed { index, attachment ->
@@ -287,6 +309,7 @@ public fun BasicComposer(
                     },
                     modifier = Modifier.weight(1f).testTag("chat-composer-field"),
                 )
+            if (!chrome.requestWaiting()) voice?.Mic(voiceField, Modifier)
             if (busy || chrome.requestWaiting()) {
                 KitButton(
                     label =

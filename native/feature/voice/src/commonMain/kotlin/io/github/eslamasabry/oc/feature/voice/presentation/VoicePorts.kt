@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.engine.voice.state.PackId
 import io.github.eslamasabry.oc.engine.voice.state.ReadAloudState
 import io.github.eslamasabry.oc.engine.voice.state.VoiceHost
 import io.github.eslamasabry.oc.engine.voice.state.VoiceState
+import kotlin.time.Duration
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /*
@@ -172,4 +174,7 @@ public interface VoiceHub {
 
     /** Android's app settings page for this app ("Allow microphone in Android settings"). */
     public fun openAppSettings()
+
+    /** A tick every [period] while collected (the pill's clock and the countdown); the platform owns the timer. */
+    public fun ticks(period: Duration): Flow<Unit>
 }
