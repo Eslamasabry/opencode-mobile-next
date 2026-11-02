@@ -1,0 +1,20 @@
+<resources>
+    <string name="agentsHubOnPhone">على هذا الهاتف</string>
+    <string name="agentsHubOnComputers">على حواسيبك</string>
+    <string name="agentsHubComputersEmpty">لم تُضف أي حاسوب بعد. أضف حاسوبًا يشغّل Paseo لاستخدام Claude Code أو Pi من هذا الهاتف.</string>
+    <string name="agentsHubAddComputer">إضافة حاسوب</string>
+    <string name="agentsHubCheck">فحص الاتصال</string>
+    <string name="agentsHubCheckAgents">فحص الوكلاء</string>
+    <string name="agentsHubFolderHint">/home/you/project</string>
+    <string name="agentsHubInvalidAddress">استخدم عنوان ws:// على هذا الجهاز أو شبكتك الخاصة، أو عنوان wss://.</string>
+    <string name="agentsHubInvalidFolder">أدخل مجلد المشروع كمسار كامل، مثل ‎/home/you/project.</string>
+    <string name="agentsHubInvalidPassword">لا يمكن استخدام كلمة المرور هذه. استخدم حروفًا وأرقامًا ورموزًا بلا مسافات.</string>
+    <string name="agentsHubAdded">تم الحفظ. تظهر محادثاته في المحادثات.</string>
+    <string name="agentsHubAddFailed">تعذّر حفظ هذا الحاسوب. تحقّق من التفاصيل وحاول مجددًا.</string>
+    <string name="agentsHubAgentsFailed">تعذّرت قراءة الوكلاء على ذلك الحاسوب. تأكّد من أن Paseo يعمل هناك.</string>
+    <string name="agentsHubStartFailed">تعذّر بدء محادثة هناك. لا يزال الحاسوب محفوظًا.</string>
+    <string name="agentsHubSignInFailed">لم يقبل ذلك الحاسوب كلمة المرور.</string>
+    <string name="agentsHubNotAnswering">لم يُجب ذلك الحاسوب. تأكّد من أن Paseo يعمل وأن هذا الهاتف يصل إليه.</string>
+    <string name="agentsHubNotConnected">غير متصل</string>
+    <string name="agentsHubDefaultName">Paseo</string>
+</resources>

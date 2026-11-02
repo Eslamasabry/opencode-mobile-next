@@ -1,0 +1,20 @@
+<resources>
+    <string name="agentsHubOnPhone">On this phone</string>
+    <string name="agentsHubOnComputers">On your computers</string>
+    <string name="agentsHubComputersEmpty">No computer added yet. Add one that runs Paseo to use Claude Code or Pi from this phone.</string>
+    <string name="agentsHubAddComputer">Add a computer</string>
+    <string name="agentsHubCheck">Check the connection</string>
+    <string name="agentsHubCheckAgents">Check agents</string>
+    <string name="agentsHubFolderHint">/home/you/project</string>
+    <string name="agentsHubInvalidAddress">Use a ws:// address on this device or your private network, or a wss:// address.</string>
+    <string name="agentsHubInvalidFolder">Enter the project folder as a full path, like /home/you/project.</string>
+    <string name="agentsHubInvalidPassword">This password can't be used. Use letters, numbers and symbols without spaces.</string>
+    <string name="agentsHubAdded">Saved. Its conversations appear in Conversations.</string>
+    <string name="agentsHubAddFailed">Couldn't save this computer. Check the details and try again.</string>
+    <string name="agentsHubAgentsFailed">Couldn't read the agents on that computer. Check that Paseo is running there.</string>
+    <string name="agentsHubStartFailed">Couldn't start a conversation there. The computer is still saved.</string>
+    <string name="agentsHubSignInFailed">That computer didn't accept the password.</string>
+    <string name="agentsHubNotAnswering">That computer didn't answer. Check that Paseo is running and this phone can reach it.</string>
+    <string name="agentsHubNotConnected">Not connected</string>
+    <string name="agentsHubDefaultName">Paseo</string>
+</resources>
