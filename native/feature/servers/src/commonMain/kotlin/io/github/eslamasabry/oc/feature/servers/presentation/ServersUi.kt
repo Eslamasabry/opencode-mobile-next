@@ -38,4 +38,7 @@ public interface ServersActions {
     public fun create(id: ProfileId)
 
     public fun remove(id: ProfileId)
+
+    /** Settings › Agents (agents on this phone and on Paseo computers). */
+    public fun openAgents() {}
 }

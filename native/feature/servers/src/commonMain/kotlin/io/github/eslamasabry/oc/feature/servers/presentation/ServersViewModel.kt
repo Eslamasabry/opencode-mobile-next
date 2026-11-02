@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
+import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,6 +48,8 @@ public class ServersViewModel(
             )
 
     override fun back(): Unit = nav.back()
+
+    override fun openAgents(): Unit = nav.open(AgentsRoute.Home)
 
     private var consentAddress: String? = null
 
