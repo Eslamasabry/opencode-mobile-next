@@ -11,8 +11,13 @@ android {
 }
 
 dependencies {
+    // The Android half of the in-app update notice (UpdateFeed / UpdatePlatform / UpdateStore, unit P12-PLATFORM).
+    implementation(project(":engine:updates"))
+    implementation(project(":core:common"))
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.androidx.core.ktx)
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.junit4)
     testImplementation(libs.robolectric)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

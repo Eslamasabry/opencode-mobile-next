@@ -35,17 +35,19 @@ public class ChatsViewModel(
     private val day: FeedDay,
     private val clock: Clock,
     private val nav: AppNavigator,
+    private val updates: UpdateDoor = NoUpdateDoor(),
 ) : ViewModel(), ChatsActions {
     private val filters = MutableStateFlow(ChatsFilters())
 
     public val state: StateFlow<ChatsUi> =
-        combine(feed.snapshot, briefs.brief, filters) { snapshot, brief, chosen ->
-                build(snapshot, brief, chosen)
+        combine(feed.snapshot, briefs.brief, filters, updates.ready) { snapshot, brief, chosen, update ->
+                build(snapshot, brief, chosen).copy(updateReady = update)
             }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
-                build(feed.snapshot.value, briefs.brief.value, filters.value),
+                build(feed.snapshot.value, briefs.brief.value, filters.value)
+                    .copy(updateReady = updates.ready.value),
             )
 
     private fun build(snapshot: ChatFeedSnapshot, brief: ReturnBrief, chosen: ChatsFilters) =
@@ -64,6 +66,8 @@ public class ChatsViewModel(
     override fun openSettings() {
         if (settings.available) settings.open()
     }
+
+    override fun openUpdate(): Unit = updates.open()
 
     override fun search(query: String): Unit = filters.update { it.copy(query = query) }
 

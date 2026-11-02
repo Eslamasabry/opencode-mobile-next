@@ -20,6 +20,24 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Share target (P12-PLATFORM): text shared from any app lands in a new conversation's draft. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <!-- Static launcher shortcuts (Connect, New conversation), ids as in the Flutter app. -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
+        <!-- Notification buttons (P12-PLATFORM); frozen Flutter FQCNs. Tiles, widgets and the update receiver merge
+             from :android:tiles and :android:widgets. -->
+        <receiver
+            android:name=".CodingActionReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".StatusActionReceiver"
+            android:exported="false" />
     </application>
 </manifest>

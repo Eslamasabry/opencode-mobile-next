@@ -76,6 +76,24 @@ public class ClosedSettingsDoor : SettingsDoor {
 }
 
 /**
+ * The in-app update badge (unit P12-PLATFORM, Flutter gear dot): [ready] while a newer release waits; [open] shows
+ * the Updates page with Update now. Closed by default; :androidApp binds the updater.
+ */
+public interface UpdateDoor {
+    public val ready: StateFlow<Boolean>
+
+    public fun open()
+}
+
+@ContributesBinding(AppScope::class)
+@Inject
+public class NoUpdateDoor : UpdateDoor {
+    override val ready: StateFlow<Boolean> = MutableStateFlow(false).asStateFlow()
+
+    override fun open(): Unit = Unit
+}
+
+/**
  * Engine types the list needs, bound here because app graphs depend on this module, not on
  * `:engine:agents`.
  */

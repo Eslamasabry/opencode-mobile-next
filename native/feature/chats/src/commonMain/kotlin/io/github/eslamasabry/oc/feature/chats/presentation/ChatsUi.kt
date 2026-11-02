@@ -88,6 +88,8 @@ public data class ChatsUi(
     /** Connections whose rows did not all load, named in one quiet line. */
     val incomplete: ImmutableList<String> = persistentListOf(),
     val settingsAvailable: Boolean = false,
+    /** A newer app release waits (the Flutter gear dot): the bar offers Update. */
+    val updateReady: Boolean = false,
 )
 
 /** Methods are intents, never widget names (ADR §9.1). */
@@ -97,6 +99,9 @@ public interface ChatsActions {
     public fun newConversation()
 
     public fun openSettings()
+
+    /** Opens the Updates page (only offered while [ChatsUi.updateReady]). */
+    public fun openUpdate() {}
 
     public fun search(query: String)
 

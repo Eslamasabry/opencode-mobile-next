@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,6 +11,7 @@ import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.shell.App
 import io.github.eslamasabry.opencode_mobile.graph.appGraph
+import io.github.eslamasabry.opencode_mobile.graph.platformHub
 
 /** Frozen FQCN (ADR §9.9). EntryRouter and ActivityResults attach here in slice 2. */
 class MainActivity : ComponentActivity() {
@@ -28,6 +30,24 @@ class MainActivity : ComponentActivity() {
                 App(graph.shell, platform, graph.metroViewModelFactory)
             }
         }
+    }
+
+    // P12-PLATFORM: launcher / pinned shortcuts, notification taps and shares. Posted so the shell's first frame
+    // attaches the back stack first; each extra is consumed once.
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        if (savedInstanceState == null) window.decorView.post { platformHub.route(intent) }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        platformHub.route(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        platformHub.onResumed(this)
     }
 
     override fun onDestroy() {
