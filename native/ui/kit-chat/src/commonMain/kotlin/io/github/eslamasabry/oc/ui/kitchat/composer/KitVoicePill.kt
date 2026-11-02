@@ -36,13 +36,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 
-/** The level meter's bars (Dart `LevelMeter`, B-MEDIA-003): bar i is lit when the level reaches (i + 1) / 12. */
-public object KitLevelMeterRules {
-    public const val BARS: Int = 9
-
-    public fun isLit(index: Int, level: Float): Boolean = level >= (index + 1) / 12f
-}
-
 /**
  * The voice pill above the composer field while voice runs (plan 06 §7.8 `KitComposerVoice`): what is happening in
  * plain words ([title], a polite live region), the time since listening began ([elapsed]), the words heard so far

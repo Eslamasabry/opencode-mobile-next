@@ -165,9 +165,10 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
             }
             ReadAloudVoice(state, actions)
         }
+        // Inside the frame: KitScreen places the sheet host these overlays register with.
+        LanguageSheet(state, actions)
+        VoiceConfirmView(state, actions)
     }
-    LanguageSheet(state, actions)
-    VoiceConfirmView(state, actions)
 }
 
 @Composable
