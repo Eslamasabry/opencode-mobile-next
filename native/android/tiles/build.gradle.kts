@@ -4,6 +4,12 @@
 plugins { id("oc.android.library") }
 
 android {
+    // :core:common's inline attempt {} is JVM 17 bytecode; the convention leaves Android libraries on AGP's default
+    // (11), which cannot inline it (same seam as :android:agenthost; build-logic request in the S3-AGENTHOST report).
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
     testOptions {
         unitTests.isIncludeAndroidResources = true
         unitTests.isReturnDefaultValues = false
