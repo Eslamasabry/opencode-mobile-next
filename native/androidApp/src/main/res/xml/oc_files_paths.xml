@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P12-FILES: Open with hands over only the latest private cache copy (FilesWiring.kt AndroidFileHandoff). -->
+<paths>
+    <cache-path name="open-with" path="open-with/" />
+</paths>
