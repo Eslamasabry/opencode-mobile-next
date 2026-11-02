@@ -120,6 +120,13 @@ public class MigrationRunner internal constructor(
         (mutableState.value as? RunnerState.Open)?.let { mutableState.value = it.copy(notices = MigrationNoticeSet()) }
     }
 
+    /**
+     * Start fresh, phase 1 (plan 05 §9.4): journals the request and moves nothing in this process, because it holds a
+     * loaded `SharedPreferencesImpl` that would write the old map back. The caller then restarts the app; phase 2 runs
+     * in [StartFreshTransaction.recoverBeforeOpen] before anything opens the prefs file. False when not allowed now.
+     */
+    public suspend fun requestStartFresh(): Boolean = withContext(io) { StartFreshTransaction(paths, now).request() }
+
     /** The writer engines use for every native secret change after the gate opens (plan 05 §4.4 rule 1). */
     public fun secretChanges(): NativeSecretChanges {
         val writer = LedgeredSecretWriter(ledger, prefs, sink) { fssNames() }
@@ -320,7 +327,8 @@ public class MigrationRunner internal constructor(
         // R2 is offered only before any engine started and while the backup verifies (plan 05 §9.4). R2 is S6's.
         val restore = j != null && j.firstOpenAt == null &&
             S0Backup(paths, interrupter, freeBytes, nativeVersionCode, now).verifyPublished() != null
-        return RunnerState.Blocked(reason, step, neededBytes, restoreAvailable = restore)
+        val fresh = j != null && j.firstOpenAt == null && j.schema <= MigrationJournal.SCHEMA
+        return RunnerState.Blocked(reason, step, neededBytes, restoreAvailable = restore, startFreshAvailable = fresh)
     }
 
     private suspend fun open(j: MigrationJournal, write: Boolean): RunnerState.Open {

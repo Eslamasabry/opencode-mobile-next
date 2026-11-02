@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P12-MIGRATION: the same-package build keeps the Flutter app's launcher name (android/app appLabel). -->
+<resources>
+    <string name="app_label_preview">OpenCode Mobile</string>
+</resources>

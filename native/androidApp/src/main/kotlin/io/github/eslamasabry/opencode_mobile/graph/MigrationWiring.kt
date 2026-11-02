@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.Application
+import android.content.ComponentName
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.runtime.Composable
@@ -48,6 +49,7 @@ import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
+import io.github.eslamasabry.opencode_mobile.MainActivity
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
@@ -87,10 +89,18 @@ class MigrationWiring(
 
     private val scope = CoroutineScope(appScope.coroutineContext + dispatchers.io)
 
+    init {
+        // Start fresh, phase 2 (plan 05 §9.4): before the runner or any store opens a prefs file. A few renames only.
+        if (adoptsFlutterData && AndroidMigration.recoverBeforeOpen(application, clock)) {
+            AppLog.tagged("migration").i { "start fresh finished; old data kept" }
+        }
+    }
+
     @OptIn(MigrationOnly::class)
     private val runner: MigrationRunnerPort =
         if (adoptsFlutterData) {
             RunnerPort(
+                application,
                 AndroidMigration.create(
                     context = application,
                     secrets = SecretSink(AndroidDataStores.secretsForMigration(application, redactor, dispatchers.io)),
@@ -150,7 +160,11 @@ internal val AndroidAppGraph.migration: MigrationWiring
     get() = (this as MigrationGraphAccessors).migrationWiring
 
 /** `:android:migration`'s runner as the engine drives it; its states mapped in one place. */
-private class RunnerPort(private val runner: MigrationRunner, scope: CoroutineScope) : MigrationRunnerPort {
+private class RunnerPort(
+    private val application: Application,
+    private val runner: MigrationRunner,
+    scope: CoroutineScope,
+) : MigrationRunnerPort {
     override val progress: StateFlow<MigrationProgress> =
         runner.state.map(::progressOf).stateIn(scope, SharingStarted.Eagerly, progressOf(runner.state.value))
 
@@ -164,9 +178,19 @@ private class RunnerPort(private val runner: MigrationRunner, scope: CoroutineSc
 
     override suspend fun acknowledgeNotices() = runner.acknowledgeNotices()
 
-    /** Start fresh and R2 need the two-phase RestoreTransaction (plan 05 §9.4), not built yet: not offered. */
-    override suspend fun startFresh(): Boolean = false
+    /**
+     * Start fresh, phase 1: journal the request, then restart the app (plan 05 §9.4: this process holds the loaded
+     * prefs file, so nothing moves here). Phase 2 runs in [MigrationWiring]'s init on the next start.
+     */
+    override suspend fun startFresh(): Boolean {
+        if (!runner.requestStartFresh()) return false
+        val restart = Intent.makeRestartActivityTask(ComponentName(application, MainActivity::class.java))
+        application.startActivity(restart)
+        android.os.Process.killProcess(android.os.Process.myPid())
+        return true
+    }
 
+    /** R2 needs the RestoreTransaction (plan 05 §9.4, staged copy + outbound hold), not built yet: not offered. */
     override suspend fun restorePreUpdateData(): Boolean = false
 
     private fun progressOf(state: RunnerState): MigrationProgress =
@@ -185,7 +209,7 @@ private class RunnerPort(private val runner: MigrationRunner, scope: CoroutineSc
                     step = state.step,
                     neededBytes = state.neededBytes,
                     restoreAvailable = false,
-                    startFreshAvailable = false,
+                    startFreshAvailable = state.startFreshAvailable,
                 )
         }
 

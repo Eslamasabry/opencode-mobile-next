@@ -93,6 +93,20 @@ internal class MigrationJournal private constructor(private val root: LinkedHash
             root["blocked"] = value?.let { linkedMapOf<String, Any?>("reason" to it.reason, "step" to it.step, "neededBytes" to it.neededBytes) }
         }
 
+    /**
+     * Plan 05 §7.2 `pendingSwap`: `{"kind": "startFresh", "at": ms, "phase": "requested" | "moved"}` while a Start
+     * fresh move is under way (§9.4); null otherwise.
+     */
+    var pendingSwap: PendingSwap?
+        get() = (root["pendingSwap"] as? Map<*, *>)?.let { m ->
+            val kind = m["kind"] as? String ?: return@let null
+            val at = m["at"] as? Long ?: return@let null
+            PendingSwap(kind, at, m["phase"] as? String ?: PendingSwap.REQUESTED)
+        }
+        set(value) {
+            root["pendingSwap"] = value?.let { linkedMapOf<String, Any?>("kind" to it.kind, "at" to it.at, "phase" to it.phase) }
+        }
+
     /** Census flags for S2-GATEUI's one-time notice (plan 02 §3.7 item 4). */
     var deferredFeatures: Set<DeferredFeature>
         get() = ((obj("notices")["deferred"] as? List<*>) ?: emptyList<Any?>())
@@ -148,6 +162,14 @@ internal class MigrationJournal private constructor(private val root: LinkedHash
         @Suppress("UNCHECKED_CAST")
         fun parse(text: String): MigrationJournal? =
             (MiniJson.parseOrNull(text) as? LinkedHashMap<String, Any?>)?.let { MigrationJournal(it) }
+    }
+}
+
+internal data class PendingSwap(val kind: String, val at: Long, val phase: String) {
+    companion object {
+        const val START_FRESH = "startFresh"
+        const val REQUESTED = "requested"
+        const val MOVED = "moved"
     }
 }
 

@@ -18,6 +18,8 @@ public sealed interface RunnerState {
         val neededBytes: Long? = null,
         /** R2 is allowed only while the gate has never opened (plan 05 §9.4). R2 itself is S6's (not built here). */
         val restoreAvailable: Boolean,
+        /** Start fresh (keeps a copy) can be requested now: the journal is readable and the gate never opened (§9.4). */
+        val startFreshAvailable: Boolean = false,
     ) : RunnerState
 }
 
