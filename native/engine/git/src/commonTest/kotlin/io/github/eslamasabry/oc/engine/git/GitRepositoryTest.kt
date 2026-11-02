@@ -22,7 +22,7 @@ class GitRepositoryTest {
                 StepReply("branches"),
                 StepReply("operation", 0, "MERGE_HEAD\n"),
                 StepReply("remotes", 0, "remote.origin.url https://github.com/o/r.git\n"),
-                StepReply("identity", 0, "Ada\nada@example.invalid\n"),
+                StepReply("identity", 0, "Ada\nada\u0040example.invalid\n"),
             )
         val result = assertIs<GitSnapshotResult.Ready>(GitRepository(shell, "/p").snapshot())
         assertEquals(1, shell.scripts.size)

@@ -147,6 +147,9 @@ public interface ChatActions {
     /** Back (button, gesture or Esc): pops when nothing is lost (07 §3.4). */
     public fun leaveRequested()
 
+    /** Opens the Git page of this conversation's project (07 D09). */
+    public fun openGit() {}
+
     public fun confirmLeave()
 
     public fun dismissConfirm()

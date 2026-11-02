@@ -120,6 +120,19 @@ public class GitHubTokenStore(private val secrets: SecretStore, private val reda
     }
 }
 
+/** What the Git page drives of a GitHub sign-in (the page never sees a token). */
+public interface GitHubSignInControl {
+    public val state: StateFlow<GitHubSignIn>
+
+    public suspend fun load()
+
+    public fun startSignIn()
+
+    public fun cancel()
+
+    public suspend fun signOut(): Outcome<Unit>
+}
+
 /**
  * One profile's GitHub sign-in (B-SEC-084): walks Loading → SignedOut → RequestingCode → WaitingForUser → Finishing →
  * SignedIn and stores the token under the profile key. A failed attempt says why and stores nothing; Cancel ignores a
@@ -131,15 +144,15 @@ public class GitHubAccount(
     private val flow: GitHubDeviceFlow,
     private val scope: CoroutineScope,
     private val nowMs: () -> Long,
-) {
+) : GitHubSignInControl {
     private val mutableState = MutableStateFlow<GitHubSignIn>(GitHubSignIn.Loading)
-    public val state: StateFlow<GitHubSignIn> = mutableState.asStateFlow()
+    override val state: StateFlow<GitHubSignIn> = mutableState.asStateFlow()
 
     private var attempt = 0
     private var job: Job? = null
 
     /** Reads the stored sign-in once. A storage failure reads as signed out (the person can sign in again). */
-    public suspend fun load() {
+    override suspend fun load() {
         if (mutableState.value != GitHubSignIn.Loading) return
         val stored = (tokens.read(profile) as? Outcome.Ok)?.value
         mutableState.value =
@@ -147,7 +160,7 @@ public class GitHubAccount(
     }
 
     /** Starts a device sign-in; a second tap while one runs does nothing. */
-    public fun startSignIn() {
+    override fun startSignIn() {
         if (job?.isActive == true) return
         val mine = ++attempt
         mutableState.value = GitHubSignIn.RequestingCode
@@ -188,7 +201,7 @@ public class GitHubAccount(
     }
 
     /** Stops waiting; a token that arrives later is ignored and nothing is stored. */
-    public fun cancel() {
+    override fun cancel() {
         attempt++
         job?.cancel()
         job = null
@@ -196,7 +209,7 @@ public class GitHubAccount(
     }
 
     /** Forgets the sign-in on this device. */
-    public suspend fun signOut(): Outcome<Unit> {
+    override suspend fun signOut(): Outcome<Unit> {
         attempt++
         job?.cancel()
         val deleted = tokens.delete(profile)

@@ -93,6 +93,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitMessageActions
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
+import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSending
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
@@ -207,7 +208,12 @@ public fun ChatScreen(
                                     stringResource(Res.string.kitTopBarSearch),
                                     { actions.find(state.find?.query ?: "") },
                                     testTag = "chat-find-open",
-                                )
+                                ),
+                                KitLineAction(
+                                    stringResource(Res.string.gitSheetTitle),
+                                    actions::openGit,
+                                    testTag = "chat-git-chip",
+                                ),
                             ),
                     )
                 },

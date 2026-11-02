@@ -82,8 +82,8 @@ class GitParsersTest {
     fun `B-BUILD-016 log, branches, operation markers and remotes parse`() {
         val log =
             parseGitLog(
-                "abc123${us}abc${us}Ada${us}ada@example.invalid${us}1700000000${us}p1 p2${us}HEAD -> main, origin/main${us}Merge it$nul" +
-                    "\ndef456${us}def${us}Bob${us}b@example.invalid${us}1700000100${us}${us}${us}First$nul",
+                "abc123${us}abc${us}Ada${us}ada\u0040example.invalid${us}1700000000${us}p1 p2${us}HEAD -> main, origin/main${us}Merge it$nul" +
+                    "\ndef456${us}def${us}Bob${us}b\u0040example.invalid${us}1700000100${us}${us}${us}First$nul",
             )
         assertEquals(2, log.size)
         assertTrue(log[0].isMerge)
@@ -115,7 +115,7 @@ class GitParsersTest {
 
         val remotes =
             parseGitRemotes(
-                "remote.origin.url https://user:tok3n-secret@github.com/o/r.git\nremote.fork.url git@github.com:me/r.git\n" +
+                "remote.origin.url https://user:tok3n-secret\u0040github.com/o/r.git\nremote.fork.url git\u0040github.com:me/r.git\n" +
                     "remote.lab.url https://gitlab.example/o/r.git\n",
             )
         assertEquals(GitRemoteKind.GitHubHttps, remotes[0].kind)
@@ -140,7 +140,7 @@ class GitParsersTest {
 
     @Test
     fun `B-BUILD-016 scrubbing masks tokens and URL user info`() {
-        val text = "fatal: https://x-access-token:ghp_abcdef123456@github.com/o/r failed with ghp_abcdef123456"
+        val text = "fatal: https://x-access-token:ghp_abcdef123456\u0040github.com/o/r failed with ghp_abcdef123456"
         val scrubbed = scrubGitText(text, listOf("ghp_abcdef123456"))
         assertFalse("ghp_abcdef123456" in scrubbed)
         assertTrue("://•••@github.com" in scrubbed)

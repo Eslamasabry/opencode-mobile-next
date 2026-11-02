@@ -31,6 +31,8 @@ dependencies {
             ":engine:requests",
             ":ui:kit-chat",
             ":ui:kit-content",
+            ":engine:git",
+            ":feature:git",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)
