@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pinned-session shortcut icon: a chat bubble on the same neutral disc as
+     the static shortcuts, fixed tint for the same reason as
+     ic_shortcut_connect. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#FF1F2A44"
+        android:pathData="M24,0A24,24 0 1,1 24,48A24,24 0 1,1 24,0Z" />
+    <group
+        android:scaleX="1.25"
+        android:scaleY="1.25"
+        android:translateX="9"
+        android:translateY="9">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M20,2H4C2.9,2 2,2.9 2,4v18l4,-4h14c1.1,0 2,-0.9 2,-2V4C22,2.9 21.1,2 20,2zM18,14H6v-2h12V14zM18,11H6V9h12V11zM18,8H6V6h12V8z" />
+    </group>
+</vector>

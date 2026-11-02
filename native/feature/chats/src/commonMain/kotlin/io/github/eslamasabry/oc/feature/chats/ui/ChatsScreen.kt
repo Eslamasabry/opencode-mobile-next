@@ -54,6 +54,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNeedsYou
+import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewChat
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchTitle
@@ -85,10 +86,12 @@ import org.jetbrains.compose.resources.stringResource
 public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
     val newLabel = stringResource(Res.string.chatsHomeNewChat)
     val settingsLabel = stringResource(Res.string.serversTitle)
+    val updateLabel = stringResource(Res.string.appUpdateUpdate)
     val barActions = buildList {
         // Hidden while the empty state offers it (one way, not two).
         if (state.phase != ChatsPhase.Empty) add(KitLineAction(newLabel, actions::newConversation))
         if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings))
+        if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate))
     }
     KitScreen(
         topBar = {

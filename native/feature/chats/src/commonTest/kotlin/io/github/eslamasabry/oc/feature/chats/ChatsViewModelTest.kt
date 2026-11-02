@@ -134,6 +134,28 @@ class ChatsViewModelTest {
     }
 
     @Test
+    fun `B-MIGR-012 a waiting release puts Update in the bar and it opens the updater`() {
+        val nav = RecordingNavigator()
+        var opened = 0
+        val waiting = MutableStateFlow(true)
+        val door =
+            object : io.github.eslamasabry.oc.feature.chats.presentation.UpdateDoor {
+                override val ready: StateFlow<Boolean> = waiting
+
+                override fun open() {
+                    opened++
+                }
+            }
+        val vm =
+            ChatsViewModel(Feed(), Briefs(), Door(available = true), { Instant.fromEpochMilliseconds(0) }, clock, nav, door)
+        assertTrue(vm.state.value.updateReady)
+        vm.openUpdate()
+        assertEquals(1, opened)
+        val none = ChatsViewModel(Feed(), Briefs(), Door(available = true), { Instant.fromEpochMilliseconds(0) }, clock, nav)
+        assertFalse(none.state.value.updateReady)
+    }
+
+    @Test
     fun `SCREENS-NAV-27 filters and search follow the feed, and Continue dismisses exactly the brief shown`() =
         runTest {
             val feed = Feed()

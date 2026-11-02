@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- :android:tiles. The two Quick Settings tiles of the Flutter app's manifest, with their frozen FQCNs written out
+     in full (a library resolves ".Name" against its own namespace). The binding permission is what lets only the
+     system bind them. The icon is this module's tile_ic_mark (the Flutter app used ic_launcher_monochrome). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The app installs its own new version (AndroidUpdatePlatform); Android still asks the person every time. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <application>
+        <!-- PackageInstaller's answer to an in-app update (Flutter FQCN kept). -->
+        <receiver
+            android:name="io.github.eslamasabry.opencode_mobile.AppUpdateStatusReceiver"
+            android:exported="false" />
+        <!-- Reads the cached needs-attention count the app writes and opens Activity on tap. -->
+        <service
+            android:name="io.github.eslamasabry.opencode_mobile.AttentionTileService"
+            android:exported="true"
+            android:icon="@drawable/tile_ic_mark"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+        <!-- Background mode on / paused / off in Settings. -->
+        <service
+            android:name="io.github.eslamasabry.opencode_mobile.PauseTileService"
+            android:exported="true"
+            android:icon="@drawable/tile_ic_mark"
+            android:label="@string/pause_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

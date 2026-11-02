@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static launcher shortcuts (long-press the app icon), ids and extras as in the Flutter app (B-ANDR-029). Each is an
+     explicit MAIN intent for MainActivity carrying the whitelisted oc.shortcut extra (LaunchActions in :android:tiles).
+     Nothing here connects, creates a session or sends a prompt on its own. The preview flavour differs only in the
+     package it targets. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="connect"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_connect"
+        android:shortcutShortLabel="@string/shortcut_connect_short"
+        android:shortcutLongLabel="@string/shortcut_connect_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="io.github.eslamasabry.opencode_mobile"
+            android:targetClass="io.github.eslamasabry.opencode_mobile.MainActivity">
+            <extra android:name="oc.shortcut" android:value="connect" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="new_task"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_new_task"
+        android:shortcutShortLabel="@string/shortcut_new_task_short"
+        android:shortcutLongLabel="@string/shortcut_new_task_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="io.github.eslamasabry.opencode_mobile"
+            android:targetClass="io.github.eslamasabry.opencode_mobile.MainActivity">
+            <extra android:name="oc.shortcut" android:value="new_task" />
+        </intent>
+    </shortcut>
+</shortcuts>

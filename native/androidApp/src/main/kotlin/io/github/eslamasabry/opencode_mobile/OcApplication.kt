@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.core.security.RedactingWriter
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
+import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
 
 /**
  * The ADR §9.7 order, slice-0 form: steps 1 (crash handler), 3 (crash-loop guard), 4 (Flutter
@@ -40,6 +41,7 @@ class OcApplication : Application(), GraphOwner {
             createGraphFactory<AndroidAppGraph.Factory>()
                 .create(this, buildInfo, redactor, LaunchMode.Normal)
         appGraph.previewRuntime // warm stores, restore saved profile, connect
+        (appGraph as PlatformAccessors).platform.start() // P12-PLATFORM: channels, widgets feed, alerts, update check
         AppLog.tagged("App").i { "graph ready ${buildInfo.versionName} (${buildInfo.versionCode})" }
     }
 }
