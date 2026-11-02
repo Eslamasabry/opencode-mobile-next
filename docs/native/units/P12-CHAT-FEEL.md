@@ -3,8 +3,8 @@ VERIFIED: green — :feature:chat:desktopTest 143/143, :ui:kit-chat:desktopTest 
 # P12-CHAT-FEEL — the chat screen feels native
 
 Branch: `claude/chat-screen-native-parity-x5sslh` (based on `native/p12-chatbase-2026-11-03` @ `92991b8e`).
-Commits: `790ef34d` (Markdown replies, code copy, message actions, links), `0d0331a2` (picture viewer, stream-safe
-reveal, off-main code colour), `97566a8b` (scroll place survives rotation/back), plus this report.
+Commits: `5b7ff96f` (Markdown replies, code copy, message actions, links), `a407155f` (picture viewer, stream-safe
+reveal, off-main code colour), `32f08343` (scroll place survives rotation/back), plus this report.
 
 Finish line: on the phone, a reply reads like Flutter's (formatted Markdown, tappable links through the link policy,
 code with Copy and sideways scroll, pictures that open), every message has the Flutter action list, and the reader's
