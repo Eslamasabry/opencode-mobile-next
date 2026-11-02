@@ -188,7 +188,7 @@ class AllConversationsViewModelTest {
     }
 
     @Test
-    fun `SCREENS-NAV-34 search, Running and project filters narrow the loaded rows; archived ones are their own filter`() {
+    fun `SCREENS-NAV-34 search, Running and project filters narrow the loaded rows, archived ones are their own filter`() {
         val gateway =
             FakeServerGateway(
                 listOf(
@@ -276,7 +276,7 @@ class AllConversationsViewModelTest {
     }
 
     @Test
-    fun `SCREENS-NAV-34 rename starts from the readable title and keeps the new one; a refusal says so`() {
+    fun `SCREENS-NAV-34 rename starts from the readable title and keeps the new one, a refusal says so`() {
         val gateway = FakeServerGateway(listOf(session("a", 1, "Old name")))
         val vm = vm(Nav(), server(p1, gateway))
         vm.rename("p1/a")

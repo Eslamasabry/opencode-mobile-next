@@ -233,7 +233,13 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                 }
             }
         }
+        RenameDialog(state, actions)
     }
+}
+
+/** Inside the KitScreen body, so the dialog finds the screen's KitSheetHost. */
+@Composable
+private fun RenameDialog(state: AllConversationsUi, actions: ChatsAllActions) {
     val renaming = state.renaming
     val emptyTitle = stringResource(Res.string.p12RenameEmpty)
     KitInputDialog(

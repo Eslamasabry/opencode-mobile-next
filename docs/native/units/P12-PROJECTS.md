@@ -102,3 +102,48 @@ built-in folder browsing), worktrees/health/services (other units).
 5. Device check: Conversations → Projects → Open a folder → New conversation here → reply arrives in the chat; All
    conversations → Select two → Delete → Undo → Delete → wait → both gone on the server; profile removal clears
    `oc.openedProjects.<id>`.
+
+## Verified on the VPS (2026-11-02)
+
+Branch `p12v/projects`, from `origin/native/p12-projects-2026-11-03` (`b07eeead`). `native/m1-2026-11-03` was already
+an ancestor, so no rebase was needed. JDK 21, real Android SDK, Gradle with `-Dorg.gradle.workers.max=3 -Xmx3g` under `nice -n 5`.
+
+Commands and results (final run):
+
+| Command | Result |
+|---|---|
+| `:feature:projects:desktopTest` | 21 tests, 0 failed |
+| `:feature:chats:desktopTest` | 42 tests, 0 failed |
+| `:ui:routes:desktopTest` / `:ui:words:desktopTest` | 1 / 4 tests, 0 failed |
+| `:androidApp:assemblePreviewDebug` | built (`androidApp-preview-debug.apk`), so the Android side of `:feature:projects`, `:feature:chats` and `ProjectsWiring.kt` compiles |
+| `:androidApp:testPreviewDebugUnitTest` | 11 tests, 0 failed |
+| `:desktopApp:compileKotlin` | compiles |
+| `:quality:test` | 48 tests, 2 failed, both outside this unit (below). `GraphSmokeTest` and `DesktopShellUiTest`, which this unit edited, pass |
+
+`testDebugUnitTest` does not exist for `:feature:*` (their KMP Android targets have no host tests), so desktopTest is
+the test run for those modules. Their Android code compiles as part of the APK build.
+
+Fixes made (no assertion weakened, no test deleted):
+
+1. `AllConversationsViewModelTest`: two test names had `;`, which Kotlin/JVM refuses in a name, so the chats test
+   source set could not compile. Changed `;` to `,`. The names keep their wording.
+2. `ProjectsPickerScreen` (open-folder dialog) and `ChatsAllScreen` (rename dialog): the `KitInputDialog` was placed
+   after the `KitScreen` instead of inside its body, so it had no `KitSheetHost` and threw `KitRuleBroken` ("Kit dialogs
+   need a KitSheetHost"). Each dialog now lives in its own private composable, which is called inside the screen body.
+   This fixed `ProjectsScreenTest` › the open-folder dialog…, and it would have crashed the real app the first time
+   either dialog opened.
+3. `AllConversationsRules.build`: the no-server state dropped the route's filters, so `ChatsRoute.All("running")` with
+   no server showed `running = false` (`ChatsViewModelTest` › route argument reaches the assisted ViewModel…). The
+   no-server state now carries `running` and `archived`.
+4. Shared file, outside the write set: `quality/.../ChatWorldReviewTest.kt` now passes `filePickers = emptySet()`. This
+   is a pre-existing m1 break (the composer added the parameter), and `:quality:test` could not compile without the
+   fix. It is the same fix the P12-SETTINGS verifier made.
+
+Still failing in `:quality:test`, not caused by this unit (also failing on the settings branch):
+
+- `KonsistRulesTest` K1: `feature/chat/.../composer/BasicComposerHost.kt` (m1 composer WIP). The chat owner needs to fix it.
+- `p3/TranscriptStreamUiTest` 6,000-word reply: `UncompletedCoroutinesError` after its 1 min `runTest` timeout on the
+  loaded shared VPS. It uses only chat/transcript code.
+
+Remaining gaps: §5.5 device journeys were not run (there is no emulator on the VPS). §5.4 protocol asks (`listProjects`,
+`listGlobalSessions`, `listFiles`) are still open.

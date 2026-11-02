@@ -134,7 +134,13 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                 }
             }
         }
+        PathDialog(state, actions)
     }
+}
+
+/** Inside the KitScreen body, so the dialog finds the screen's KitSheetHost. */
+@Composable
+private fun PathDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
     val notAbsolute = stringResource(Res.string.p12PathNotAbsolute)
     val badParts = stringResource(Res.string.p12PathBadParts)
     val home = stringResource(Res.string.folderBrowserHomeHere)

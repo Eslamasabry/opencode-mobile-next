@@ -79,7 +79,15 @@ public object AllConversationsRules {
     private data class Entry(val profile: ProfileId, val session: Session, val running: Boolean)
 
     public fun build(model: AllModel): AllConversationsUi {
-        if (model.known && model.servers.isEmpty()) return AllConversationsUi(phase = AllPhase.NoServer, query = model.query)
+        // No server: the route's filters still show as set, so they hold when a server comes back.
+        if (model.known && model.servers.isEmpty()) {
+            return AllConversationsUi(
+                phase = AllPhase.NoServer,
+                query = model.query,
+                running = model.running,
+                archived = model.archived,
+            )
+        }
         val names = model.servers.associate { it.profile to it.name }
         val many = model.servers.size > 1
         val hidden = model.pending.toSet() + model.hiddenSent
