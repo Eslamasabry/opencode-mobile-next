@@ -67,3 +67,4 @@
 :engine:schedules	F	P12-SCHEDULES	slice-4
 :android:schedules	F	P12-SCHEDULES	slice-4
 :feature:schedules	F	P12-SCHEDULES	slice-4
+:engine:cards	F	P12-CHAT-CARDS	slice-5

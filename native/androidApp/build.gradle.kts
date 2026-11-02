@@ -82,6 +82,7 @@ dependencies {
             ":engine:schedules",
             ":android:schedules",
             ":feature:schedules",
+            ":engine:cards", // P12-CHAT-CARDS
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

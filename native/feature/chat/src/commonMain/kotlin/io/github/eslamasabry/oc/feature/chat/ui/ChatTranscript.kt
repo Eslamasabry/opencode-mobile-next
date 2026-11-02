@@ -18,6 +18,8 @@ import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.engine.transcript.state.WorkLineRow
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
+import io.github.eslamasabry.oc.feature.chat.cards.CardAnswerDisplay
+import io.github.eslamasabry.oc.feature.chat.cards.ChatTurnCards
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
@@ -212,17 +214,21 @@ private fun ChatRow(
                     onLongClickLabel = listWords.messageActions,
                     role = KitTappableRole.Row,
                 ) {
-                    KitPromptBubble(row.text)
+                    KitPromptBubble(CardAnswerDisplay.text(row.text))
                 }
             } else {
-                KitPromptBubble(row.text)
+                KitPromptBubble(CardAnswerDisplay.text(row.text))
             }
         is ThoughtRow -> KitQuietLine(words.thought(row.firstLine))
         is WorkLineRow ->
-            KitQuietLine(
-                if (listWords != null) workLineWords(row.calls, row.state)
-                else words.workLine(row.calls, row.failed, row.state)
-            )
+            // P12-CHAT-CARDS: a turn's agent cards stand right under its work line, in the reply (never folded in).
+            Column {
+                KitQuietLine(
+                    if (listWords != null) workLineWords(row.calls, row.state)
+                    else words.workLine(row.calls, row.failed, row.state)
+                )
+                ChatTurnCards(row.turnId)
+            }
         is NoticeRow -> KitQuietLine(words.notice(row.notice))
         is FooterRow ->
             if (onOpenMenu != null && listWords != null) {
