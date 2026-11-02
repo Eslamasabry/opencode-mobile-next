@@ -1,0 +1,2 @@
+custom(io.github.eslamasabry.opencode_mobile/.PauseTileService)
+custom(io.github.eslamasabry.opencode_mobile/.AttentionTileService)

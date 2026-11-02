@@ -1,0 +1,25 @@
+      Package: io.github.eslamasabry.opencode_mobile  UID: 10234
+        Calls: 0
+        Last known FG: 485830
+        Last reset: [1793544524573] 2026-11-01 18:48:44
+
+        PackageInfo:
+          IsShadow: false (installed)
+          Version: 10000
+          Backup Allowed: false
+          Last package update time: 1793545808739
+
+        Shortcuts:
+        Total bitmap size: 0 (0 B)
+
+  Pending saves: Num=0 Executor=java.util.concurrent.ThreadPoolExecutor@e437d81[Running, pool size = 1, active threads = 0, queued tasks = 0, completed tasks = 3]
+
+      Bitmap directories: 
+        Path: bitmaps/ has 0 files, size=0 (0 B)
+
+  Non-persistent: user ID:0
+    Host packages:
+      VoiceInteractionManager: com.google.android.googlequicksearchbox
+
+
+

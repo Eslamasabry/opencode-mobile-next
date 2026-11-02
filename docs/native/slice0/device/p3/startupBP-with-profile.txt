@@ -1,0 +1,65 @@
+
+io.github.eslamasabry.oc.benchmark.StartupBenchmark:INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupBenchmark_startupBaselineProfile_iter000_2026-11-01-14-38-53.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StartupBenchmark_startupBaselineProfile_iter000_2026-11-01-14-38-53.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupBenchmark_startupBaselineProfile_iter001_2026-11-01-14-38-56.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StartupBenchmark_startupBaselineProfile_iter001_2026-11-01-14-38-56.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupBenchmark_startupBaselineProfile_iter002_2026-11-01-14-38-58.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StartupBenchmark_startupBaselineProfile_iter002_2026-11-01-14-38-58.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupBenchmark_startupBaselineProfile_iter003_2026-11-01-14-39-00.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StartupBenchmark_startupBaselineProfile_iter003_2026-11-01-14-39-00.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupBenchmark_startupBaselineProfile_iter004_2026-11-01-14-39-02.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StartupBenchmark_startupBaselineProfile_iter004_2026-11-01-14-39-02.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-05.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-05.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupBenchmark_startupBaselineProfile_iter006_2026-11-01-14-39-07.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StartupBenchmark_startupBaselineProfile_iter006_2026-11-01-14-39-07.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupBenchmark_startupBaselineProfile_iter007_2026-11-01-14-39-09.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StartupBenchmark_startupBaselineProfile_iter007_2026-11-01-14-39-09.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupBenchmark_startupBaselineProfile_iter008_2026-11-01-14-39-12.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StartupBenchmark_startupBaselineProfile_iter008_2026-11-01-14-39-12.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupBenchmark_startupBaselineProfile_iter009_2026-11-01-14-39-14.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StartupBenchmark_startupBaselineProfile_iter009_2026-11-01-14-39-14.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_max=266.315191
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_median=234.4490255
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_min=217.063629
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_stddev=17.083675626487757
+INSTRUMENTATION_STATUS: android.studio.display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupBenchmark_startupBaselineProfile
+  timeToInitialDisplayMs   [min 217.1](file://StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-05.perfetto-trace),   [median 234.4](file://StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-05.perfetto-trace),   [max 266.3](file://StartupBenchmark_startupBaselineProfile_iter000_2026-11-01-14-38-53.perfetto-trace)
+    Traces: Iteration [0](file://StartupBenchmark_startupBaselineProfile_iter000_2026-11-01-14-38-53.perfetto-trace) [1](file://StartupBenchmark_startupBaselineProfile_iter001_2026-11-01-14-38-56.perfetto-trace) [2](file://StartupBenchmark_startupBaselineProfile_iter002_2026-11-01-14-38-58.perfetto-trace) [3](file://StartupBenchmark_startupBaselineProfile_iter003_2026-11-01-14-39-00.perfetto-trace) [4](file://StartupBenchmark_startupBaselineProfile_iter004_2026-11-01-14-39-02.perfetto-trace) [5](file://StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-05.perfetto-trace) [6](file://StartupBenchmark_startupBaselineProfile_iter006_2026-11-01-14-39-07.perfetto-trace) [7](file://StartupBenchmark_startupBaselineProfile_iter007_2026-11-01-14-39-09.perfetto-trace) [8](file://StartupBenchmark_startupBaselineProfile_iter008_2026-11-01-14-39-12.perfetto-trace) [9](file://StartupBenchmark_startupBaselineProfile_iter009_2026-11-01-14-39-14.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupBenchmark_startupBaselineProfile
+  timeToInitialDisplayMs   [min 217.1](file://StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-05.perfetto-trace),   [median 234.4](file://StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-05.perfetto-trace),   [max 266.3](file://StartupBenchmark_startupBaselineProfile_iter000_2026-11-01-14-38-53.perfetto-trace)
+    Traces: Iteration [0](file://StartupBenchmark_startupBaselineProfile_iter000_2026-11-01-14-38-53.perfetto-trace) [1](file://StartupBenchmark_startupBaselineProfile_iter001_2026-11-01-14-38-56.perfetto-trace) [2](file://StartupBenchmark_startupBaselineProfile_iter002_2026-11-01-14-38-58.perfetto-trace) [3](file://StartupBenchmark_startupBaselineProfile_iter003_2026-11-01-14-39-00.perfetto-trace) [4](file://StartupBenchmark_startupBaselineProfile_iter004_2026-11-01-14-39-02.perfetto-trace) [5](file://StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-05.perfetto-trace) [6](file://StartupBenchmark_startupBaselineProfile_iter006_2026-11-01-14-39-07.perfetto-trace) [7](file://StartupBenchmark_startupBaselineProfile_iter007_2026-11-01-14-39-09.perfetto-trace) [8](file://StartupBenchmark_startupBaselineProfile_iter008_2026-11-01-14-39-12.perfetto-trace) [9](file://StartupBenchmark_startupBaselineProfile_iter009_2026-11-01-14-39-14.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark.outputDirPath=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupBenchmark_startupBaselineProfile
+  timeToInitialDisplayMs   [min 217.1](file://StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-05.perfetto-trace),   [median 234.4](file://StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-05.perfetto-trace),   [max 266.3](file://StartupBenchmark_startupBaselineProfile_iter000_2026-11-01-14-38-53.perfetto-trace)
+    Traces: Iteration [0](file://StartupBenchmark_startupBaselineProfile_iter000_2026-11-01-14-38-53.perfetto-trace) [1](file://StartupBenchmark_startupBaselineProfile_iter001_2026-11-01-14-38-56.perfetto-trace) [2](file://StartupBenchmark_startupBaselineProfile_iter002_2026-11-01-14-38-58.perfetto-trace) [3](file://StartupBenchmark_startupBaselineProfile_iter003_2026-11-01-14-39-00.perfetto-trace) [4](file://StartupBenchmark_startupBaselineProfile_iter004_2026-11-01-14-39-02.perfetto-trace) [5](file://StartupBenchmark_startupBaselineProfile_iter005_2026-11-01-14-39-05.perfetto-trace) [6](file://StartupBenchmark_startupBaselineProfile_iter006_2026-11-01-14-39-07.perfetto-trace) [7](file://StartupBenchmark_startupBaselineProfile_iter007_2026-11-01-14-39-09.perfetto-trace) [8](file://StartupBenchmark_startupBaselineProfile_iter008_2026-11-01-14-39-12.perfetto-trace) [9](file://StartupBenchmark_startupBaselineProfile_iter009_2026-11-01-14-39-14.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark.outputDirPath=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark
+INSTRUMENTATION_STATUS_CODE: 2
+.
+
+Time: 26.623
+
+OK (1 test)
+
+

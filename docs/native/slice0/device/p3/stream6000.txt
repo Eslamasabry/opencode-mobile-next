@@ -1,0 +1,65 @@
+
+io.github.eslamasabry.oc.benchmark.StreamBenchmark:INSTRUMENTATION_STATUS: additionalTestOutputFile_StreamBenchmark_stream6000_iter000_2026-11-01-14-29-58.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StreamBenchmark_stream6000_iter000_2026-11-01-14-29-58.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StreamBenchmark_stream6000_iter001_2026-11-01-14-31-50.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StreamBenchmark_stream6000_iter001_2026-11-01-14-31-50.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StreamBenchmark_stream6000_iter002_2026-11-01-14-33-40.perfetto-trace=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark/StreamBenchmark_stream6000_iter002_2026-11-01-14-33-40.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: EMULATOR_frame_count_max=5174.0
+INSTRUMENTATION_STATUS: EMULATOR_frame_count_median=5169.0
+INSTRUMENTATION_STATUS: EMULATOR_frame_count_min=5141.0
+INSTRUMENTATION_STATUS: EMULATOR_frame_count_stddev=17.7857620959388
+INSTRUMENTATION_STATUS: EMULATOR_frame_duration_cpu_millis_p50=24.146671
+INSTRUMENTATION_STATUS: EMULATOR_frame_duration_cpu_millis_p90=29.3671673
+INSTRUMENTATION_STATUS: EMULATOR_frame_duration_cpu_millis_p95=30.8753563
+INSTRUMENTATION_STATUS: EMULATOR_frame_duration_cpu_millis_p99=34.33209152
+INSTRUMENTATION_STATUS: EMULATOR_frame_overrun_millis_p50=8.2104195
+INSTRUMENTATION_STATUS: EMULATOR_frame_overrun_millis_p90=13.823450700000002
+INSTRUMENTATION_STATUS: EMULATOR_frame_overrun_millis_p95=16.036465449999998
+INSTRUMENTATION_STATUS: EMULATOR_frame_overrun_millis_p99=19.86785456
+INSTRUMENTATION_STATUS: android.studio.display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StreamBenchmark_stream6000
+  frameCount           [min 5,141.0](file://StreamBenchmark_stream6000_iter002_2026-11-01-14-33-40.perfetto-trace),   [median 5,169.0](file://StreamBenchmark_stream6000_iter001_2026-11-01-14-31-50.perfetto-trace),   [max 5,174.0](file://StreamBenchmark_stream6000_iter001_2026-11-01-14-31-50.perfetto-trace)
+  frameDurationCpuMs   P50     24.1,   P90     29.4,   P95     30.9,   P99     34.3
+  frameOverrunMs       P50      8.2,   P90     13.8,   P95     16.0,   P99     19.9
+    Traces: Iteration [0](file://StreamBenchmark_stream6000_iter000_2026-11-01-14-29-58.perfetto-trace) [1](file://StreamBenchmark_stream6000_iter001_2026-11-01-14-31-50.perfetto-trace) [2](file://StreamBenchmark_stream6000_iter002_2026-11-01-14-33-40.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StreamBenchmark_stream6000
+  frameCount           [min 5,141.0](file://StreamBenchmark_stream6000_iter002_2026-11-01-14-33-40.perfetto-trace),   [median 5,169.0](file://StreamBenchmark_stream6000_iter001_2026-11-01-14-31-50.perfetto-trace),   [max 5,174.0](file://StreamBenchmark_stream6000_iter001_2026-11-01-14-31-50.perfetto-trace)
+  frameDurationCpuMs   P50     24.1,   P90     29.4,   P95     30.9,   P99     34.3
+  frameOverrunMs       P50      8.2,   P90     13.8,   P95     16.0,   P99     19.9
+    Traces: Iteration [0](file://StreamBenchmark_stream6000_iter000_2026-11-01-14-29-58.perfetto-trace) [1](file://StreamBenchmark_stream6000_iter001_2026-11-01-14-31-50.perfetto-trace) [2](file://StreamBenchmark_stream6000_iter002_2026-11-01-14-33-40.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark.outputDirPath=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StreamBenchmark_stream6000
+  frameCount           [min 5,141.0](file://StreamBenchmark_stream6000_iter002_2026-11-01-14-33-40.perfetto-trace),   [median 5,169.0](file://StreamBenchmark_stream6000_iter001_2026-11-01-14-31-50.perfetto-trace),   [max 5,174.0](file://StreamBenchmark_stream6000_iter001_2026-11-01-14-31-50.perfetto-trace)
+  frameDurationCpuMs   P50     24.1,   P90     29.4,   P95     30.9,   P99     34.3
+  frameOverrunMs       P50      8.2,   P90     13.8,   P95     16.0,   P99     19.9
+    Traces: Iteration [0](file://StreamBenchmark_stream6000_iter000_2026-11-01-14-29-58.perfetto-trace) [1](file://StreamBenchmark_stream6000_iter001_2026-11-01-14-31-50.perfetto-trace) [2](file://StreamBenchmark_stream6000_iter002_2026-11-01-14-33-40.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark.outputDirPath=/storage/emulated/0/Android/media/io.github.eslamasabry.oc.benchmark
+INSTRUMENTATION_STATUS_CODE: 2
+.
+
+Time: 335.236
+
+OK (1 test)
+
+
