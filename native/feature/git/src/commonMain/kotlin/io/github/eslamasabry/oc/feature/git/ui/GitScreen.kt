@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.git.GitBusy
 import io.github.eslamasabry.oc.engine.git.GitDiffView
-import io.github.eslamasabry.oc.engine.git.GitHost
 import io.github.eslamasabry.oc.engine.git.GitHubSignIn
 import io.github.eslamasabry.oc.engine.git.GitPageView
 import io.github.eslamasabry.oc.engine.git.GitProblem
@@ -242,7 +241,8 @@ private fun Ready(snapshot: GitSnapshot, state: GitUi, actions: GitActions, enab
             modifier = Modifier.testTag("git-push-row"),
         )
     }
-    if (state.host == null || state.host == GitHost.Server) Gutter { KitText(ownSignIn, role = KitTextRole.Supporting) }
+    // Every host today pushes with the Git sign-in set up where the project lives (the app never hands over its token).
+    Gutter { KitText(ownSignIn, role = KitTextRole.Supporting) }
 
     // Changed files: tick to include in the next save; "Changes" opens the file's diff.
     val files = snapshot.status.files

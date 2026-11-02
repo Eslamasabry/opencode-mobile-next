@@ -1,0 +1,185 @@
+package io.github.eslamasabry.oc.feature.git
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.Redacted
+import io.github.eslamasabry.oc.core.common.RedactorApi
+import io.github.eslamasabry.oc.engine.git.GitActionResult
+import io.github.eslamasabry.oc.engine.git.GitAction
+import io.github.eslamasabry.oc.engine.git.GitBranchState
+import io.github.eslamasabry.oc.engine.git.GitChangeKind
+import io.github.eslamasabry.oc.engine.git.GitFailure
+import io.github.eslamasabry.oc.engine.git.GitFileChange
+import io.github.eslamasabry.oc.engine.git.GitHubSignIn
+import io.github.eslamasabry.oc.engine.git.GitPageView
+import io.github.eslamasabry.oc.engine.git.GitProblem
+import io.github.eslamasabry.oc.engine.git.GitRemote
+import io.github.eslamasabry.oc.engine.git.GitRemoteKind
+import io.github.eslamasabry.oc.engine.git.GitSnapshot
+import io.github.eslamasabry.oc.engine.git.GitStatus
+import io.github.eslamasabry.oc.engine.git.GitUnavailableReason
+import io.github.eslamasabry.oc.feature.git.presentation.GitActions
+import io.github.eslamasabry.oc.feature.git.presentation.GitUi
+import io.github.eslamasabry.oc.feature.git.ui.GitScreen
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
+import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
+import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import java.util.Locale
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+
+/** The real GitScreen, by visible text (B-NAV-020/022, B-SEC-084). */
+@OptIn(ExperimentalTestApi::class)
+class GitScreenTest {
+    private var previous: Locale = Locale.getDefault()
+    private val calls = mutableListOf<String>()
+
+    @BeforeTest
+    fun before() {
+        previous = Locale.getDefault()
+        Locale.setDefault(Locale.ENGLISH)
+    }
+
+    @AfterTest
+    fun after() {
+        Locale.setDefault(previous)
+    }
+
+    private val actions =
+        object : GitActions {
+            override fun back() { calls += "back" }
+            override fun refresh() { calls += "refresh" }
+            override fun pull() { calls += "pull" }
+            override fun push() { calls += "push" }
+            override fun toggleFile(path: String) { calls += "toggle $path" }
+            override fun commit(message: String) { calls += "commit $message" }
+            override fun commitAndPush(message: String) { calls += "commitAndPush $message" }
+            override fun openBranches() { calls += "branches" }
+            override fun closeSheet() {}
+            override fun switchBranch(name: String) {}
+            override fun createBranch(name: String) {}
+            override fun openDiff(path: String) { calls += "diff $path" }
+            override fun closeDiff() {}
+            override fun askDiscard(path: String) {}
+            override fun confirm() {}
+            override fun dismissConfirm() {}
+            override fun setIdentity(name: String, email: String) {}
+            override fun signIn() { calls += "signIn" }
+            override fun cancelSignIn() {}
+            override fun askSignOut() {}
+            override fun openGitHub() {}
+            override fun manageGitHubAccess() {}
+            override fun dismissResult() {}
+        }
+
+    @Composable
+    private fun Screen(state: GitUi) {
+        CompositionLocalProvider(LocalKitSecretSink provides KitSecretSink {}) {
+            KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), localeTag = "en", stillFrame = true) {
+                Box(Modifier.width(412.dp)) { GitScreen(state, actions) }
+            }
+        }
+    }
+
+    private val snapshot =
+        GitSnapshot(
+            status =
+                GitStatus(
+                    GitBranchState(head = "main", commit = "abc", upstream = "origin/main", ahead = 2),
+                    persistentListOf(GitFileChange("src/app.kt", unstaged = GitChangeKind.Modified, addedLines = 3, deletedLines = 1)),
+                ),
+            remotes = persistentListOf(GitRemote("origin", GitRemoteKind.GitHubHttps, "https://github.com/o/r.git")),
+        )
+
+    @Test
+    fun `B-NAV-022 a server that cannot run commands says so in plain words`() = runComposeUiTest {
+        setContent { Screen(GitUi(view = GitPageView.Unavailable(GitUnavailableReason.ServerCannotRunCommands), signIn = GitHubSignIn.SignedOut())) }
+        onNodeWithText("This server can’t run Git for the app. Use Git on that computer instead.").assertExists()
+    }
+
+    @Test
+    fun `B-NAV-020 a ready page shows the branch, Get latest, Send and the changed file with its counts`() = runComposeUiTest {
+        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), selected = persistentSetOf("src/app.kt"), signIn = GitHubSignIn.SignedOut())) }
+        onNodeWithText("Get latest").assertExists()
+        onNodeWithText("Send").assertExists()
+        onNodeWithText("2 commits to push").assertExists()
+        onNodeWithText("src/app.kt").assertExists()
+        onNodeWithText("Modified · +3 −1").assertExists()
+        onNodeWithText("Save 1 file").assertExists()
+        onNodeWithTag("git-push-row").performClick()
+        onNodeWithTag("git-diff-src/app.kt").performClick()
+        assertTrue("push" in calls)
+        assertTrue("diff src/app.kt" in calls)
+    }
+
+    @OptIn(RedactorApi::class)
+    @Test
+    fun `B-NAV-020 a failed action shows plain words and keeps Git's text under Details`() = runComposeUiTest {
+        val gitText = "fatal: Not possible to fast-forward, aborting."
+        setContent {
+            Screen(
+                GitUi(
+                    view = GitPageView.Ready(snapshot),
+                    result = GitActionResult.failure(GitAction.Pull, GitFailure(GitProblem.CannotFastForward, gitText)),
+                    resultDetails = Redacted(gitText),
+                    signIn = GitHubSignIn.SignedOut(),
+                ),
+            )
+        }
+        onNodeWithText(
+            "The remote and this branch both have new commits, so they can’t be combined automatically. Merge or rebase on that device.",
+        ).assertExists()
+        onNodeWithText(gitText).assertDoesNotExist()
+        onNodeWithTag("kit-details-toggle").performClick()
+        onNodeWithText(gitText).assertExists()
+    }
+
+    @Test
+    fun `B-SEC-084 GitHub sign-in is a visible row and the waiting code is shown`() = runComposeUiTest {
+        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedOut())) }
+        onNodeWithText("Sign in to GitHub").performClick()
+        assertEquals("signIn", calls.last())
+    }
+
+    @Test
+    fun `B-SEC-084 while waiting the code and Open GitHub are shown`() = runComposeUiTest {
+        setContent {
+            Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.WaitingForUser("WDJB-MJHT", "https://github.com/login/device", 0)))
+        }
+        onNodeWithText("WDJB-MJHT").assertExists()
+        onNodeWithText("Open GitHub").assertExists()
+        assertTrue(onAllNodesWithText("Enter this code on GitHub to finish signing in.").fetchSemanticsNodes().isNotEmpty())
+    }
+
+    @Test
+    fun `B-NAV-020 Arabic words are used in Arabic`() = runComposeUiTest {
+        Locale.setDefault(Locale.forLanguageTag("ar"))
+        setContent {
+            CompositionLocalProvider(LocalKitSecretSink provides KitSecretSink {}) {
+                KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), localeTag = "ar", stillFrame = true) {
+                    Box(Modifier.width(412.dp)) { GitScreen(GitUi(view = GitPageView.NotRepository, signIn = GitHubSignIn.SignedOut()), actions) }
+                }
+            }
+        }
+        onNodeWithText("ليس مستودع Git").assertExists()
+        onNodeWithText("Not a Git repository").assertDoesNotExist()
+    }
+}
