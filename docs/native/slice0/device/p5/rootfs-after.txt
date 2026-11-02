@@ -1,0 +1,12 @@
+1024001 4096 1793545803 files/linux
+1024002 4096 1793545803 files/linux/ubuntu
+1024006 8 1793545803 files/linux/ubuntu.ready
+1024003 4096 1793545803 files/linux/ubuntu/etc
+1024009 22 1793545803 files/linux/ubuntu/etc/link -> '../usr/bin/fixture-bin'
+1024008 13 1793545803 files/linux/ubuntu/etc/os-release
+1024004 4096 1793545803 files/linux/ubuntu/usr
+1024005 4096 1793545803 files/linux/ubuntu/usr/bin
+1024007 1048576 1793545803 files/linux/ubuntu/usr/bin/fixture-bin
+9db2937085cfed64564d0f186e60142bc16a4582eb743f3b6a72573dde2aeaac  files/linux/ubuntu/etc/os-release
+02935f0134b32f2ead40448dde78fc14952c9ca9254c324b03e04fc1a15ed91a  files/linux/ubuntu/usr/bin/fixture-bin
+e80b71cd14d3cbd65f4173abcbfcf01a545dbca32a72d575108b553a648cc96f  files/linux/ubuntu.ready

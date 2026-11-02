@@ -13,6 +13,15 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "benchmark-rules.pro")
         }
     }
+    // Slice-0 P5 + P12-MIGRATION: the same-package build. `switch` has no applicationIdSuffix, so it is
+    // io.github.eslamasabry.opencode_mobile and installs OVER the Flutter app (adb install -r) when signed with the
+    // same key; on first launch MigrationWiring runs the day-1 migration behind the update gate. See
+    // docs/native/units/P12-MIGRATION.md "Building the same-package APK" for the signing step.
+    productFlavors {
+        create("switch") {
+            dimension = "channel"
+        }
+    }
 }
 
 dependencies {
@@ -52,6 +61,9 @@ dependencies {
             ":engine:analytics",
             ":engine:diagnostics",
             ":android:notifications",
+            ":android:migration",
+            ":engine:migration",
+            ":feature:gate",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

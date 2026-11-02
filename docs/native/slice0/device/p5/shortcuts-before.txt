@@ -1,0 +1,40 @@
+      Package: io.github.eslamasabry.opencode_mobile  UID: 10234
+        Calls: 0
+        Last known FG: 0
+        Last reset: [1793544524573] 2026-11-01 18:48:44
+
+        PackageInfo:
+          IsShadow: false (installed)
+          Version: 57
+          Backup Allowed: false
+          Last package update time: 1793544559963
+
+        Shortcuts:
+          ShortcutInfo {id=new_task, flags=0x1a4 [ImManIc-rStr]
+            packageName=io.github.eslamasabry.opencode_mobile
+            activity=ComponentInfo{io.github.eslamasabry.opencode_mobile/io.github.eslamasabry.opencode_mobile.MainActivity}
+            shortLabel=New conversation, resId=2131755295[shortcut_new_task_short]
+            longLabel=Start a new conversation on the current server, resId=2131755294[shortcut_new_task_long]
+            disabledMessage=null, resId=0[null]
+            disabledReason=[Not disabled]
+            categories=null
+            persons=null
+            icon=null
+            rank=1, timestamp=1793545764210
+            intents=[Intent { act=android.intent.action.MAIN flg=0x1000c000 cmp=io.github.eslamasabry.opencode_mobile/.MainActivity }/PersistableBundle[{oc.shortcut=new_task}]]
+            extras=null
+            iconRes=2131230890[drawable/ic_shortcut_new_task], bitmapPath=null, iconUri=null}
+          ShortcutInfo {id=connect, flags=0x1a4 [ImManIc-rStr]
+            packageName=io.github.eslamasabry.opencode_mobile
+            activity=ComponentInfo{io.github.eslamasabry.opencode_mobile/io.github.eslamasabry.opencode_mobile.MainActivity}
+            shortLabel=Connect, resId=2131755293[shortcut_connect_short]
+            longLabel=Choose a server to connect, resId=2131755292[shortcut_connect_long]
+            disabledMessage=null, resId=0[null]
+            disabledReason=[Not disabled]
+            categories=null
+            persons=null
+            icon=null
+            rank=0, timestamp=1793545764210
+            intents=[Intent { act=android.intent.action.MAIN flg=0x1000c000 cmp=io.github.eslamasabry.opencode_mobile/.MainActivity }/PersistableBundle[{oc.shortcut=connect}]]
+            extras=null
+            iconRes=2131230889[drawable/ic_shortcut_connect], bitmapPath=null, iconUri=null}

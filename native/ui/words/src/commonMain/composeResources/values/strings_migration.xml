@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The update gate (plan 05 §8.2, 01 §9.7, 02 §3.7 item 4). Written for the native app; not from the ARB.
+     Every language changes at once: the l10n lane translates new English into the other files. -->
+<resources>
+    <string name="migration_opening">Opening…</string>
+    <string name="migration_updating">Updating your app…</string>
+    <string name="migration_still_updating">Still updating. The first start after an update can take a little longer.</string>
+    <string name="migration_try_again">Try moving your data again</string>
+    <string name="migration_reenter_title">A few sign-ins need you again</string>
+    <string name="migration_reenter_body">The update couldn't read these saved sign-ins. Everything else came across.</string>
+    <string name="migration_reenter_row_password">%1$s · Enter password</string>
+    <string name="migration_reenter_row_token">%1$s · Enter token</string>
+    <string name="migration_reenter_row_github">%1$s · Sign in to GitHub again</string>
+    <string name="migration_reenter_row_byo">%1$s · Set up again</string>
+    <string name="migration_reenter_unnamed">A saved server</string>
+    <string name="migration_reenter_later">Sign in to these later</string>
+    <string name="migration_failed_title">The update couldn't finish moving your data</string>
+    <string name="migration_failed_body">Nothing was deleted. Your data from before the update is safe on this phone.</string>
+    <string name="migration_restore_row">Restore data from before the update</string>
+    <string name="migration_restore_confirm">This puts back your settings and servers as they were before the update. Changes since then are kept in a copy.</string>
+    <string name="migration_restore_confirm_title">Restore older data?</string>
+    <string name="migration_restore_confirm_action">Restore data from before the update</string>
+    <string name="migration_start_fresh_row">Start fresh (keeps a copy of your old data)</string>
+    <string name="migration_start_fresh_confirm">You'll start with no saved servers and default settings. A copy of your old data stays on this phone.</string>
+    <string name="migration_start_fresh_confirm_title">Start fresh?</string>
+    <string name="migration_start_fresh_confirm_action">Start fresh and keep a copy</string>
+    <string name="migration_report_row">Report a problem</string>
+    <string name="migration_details">Details · %1$s</string>
+    <string name="migration_space_title">Your phone is almost full</string>
+    <string name="migration_space_body">The update needs %1$s of free space to keep a safety copy of your data. Free up space, then try again.</string>
+    <string name="migration_save_failed_title">Couldn't save on this phone</string>
+    <string name="migration_open_storage_row">Open storage settings</string>
+    <string name="migration_close">Close</string>
+    <string name="migration_deferred_notice">AI Team and Memory aren't in this version yet. Your projects and notes stay on this phone.</string>
+</resources>
