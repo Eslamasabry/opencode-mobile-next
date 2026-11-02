@@ -50,3 +50,6 @@
 :feature:settings	F	(slice brief names the agent)	slice-4
 :ui:kit-content	S	content-kit-owner	slice-3
 :feature:servers	F	preview-servers-owner	slice-2
+:engine:updates	S	platform (P12-PLATFORM)	parity
+:feature:updates	F	platform (P12-PLATFORM)	parity
+:android:tiles	F	platform (P12-PLATFORM)	parity
