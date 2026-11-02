@@ -94,7 +94,7 @@ class RecordingNavigator : AppNavigator {
 }
 
 /** A scripted [ChatWorld]: flows the test sets, commands recorded, results the test chooses. */
-class FakeChatWorld(override val ref: ConversationRef = Ref) : ChatWorld {
+open class FakeChatWorld(override val ref: ConversationRef = Ref) : ChatWorld {
     override val transcript = MutableStateFlow(TranscriptState.Empty)
     override val load = MutableStateFlow<ChatLoad>(ChatLoad.Live)
     override val title = MutableStateFlow<String?>("Fix the build")
