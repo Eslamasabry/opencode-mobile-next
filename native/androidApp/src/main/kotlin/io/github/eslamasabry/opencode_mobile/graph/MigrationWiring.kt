@@ -82,7 +82,6 @@ class MigrationWiring(
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
     clock: Clock,
-    profiles: Lazy<ProfileStore>,
 ) {
     /** True when this build replaces the Flutter app (same package): only then is there anything to adopt. */
     val adoptsFlutterData: Boolean = application.packageName == FLUTTER_PACKAGE
@@ -118,7 +117,9 @@ class MigrationWiring(
 
     /** Started at graph creation (ADR §9.7 step 5, off the main thread); the stores wait on its gate. */
     val engine: MigrationEngine =
-        MigrationEngine(runner, ReentryNames { id -> nameOf(profiles.value, id) }, scope).also { it.start() }
+        // Names are read through the graph at call time (after the gate opened): no ProfileStore ↔ gate cycle in DI.
+        MigrationEngine(runner, ReentryNames { id -> nameOf(application.appGraph.previewRuntime.profiles, id) }, scope)
+            .also { it.start() }
 
     /** The gate's platform ways out; [navigator] opens the Servers page for a re-enter row. */
     fun gatePlatform(navigator: AppNavigator): GatePlatform = AndroidGatePlatform(application, navigator)
