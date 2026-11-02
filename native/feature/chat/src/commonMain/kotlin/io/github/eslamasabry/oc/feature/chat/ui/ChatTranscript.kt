@@ -125,6 +125,7 @@ internal fun ChatTranscriptList(
     onRetrySend: (Long) -> Unit,
     modifier: Modifier = Modifier,
     facts: TurnFactsUi = TurnFactsUi.Empty,
+    onOpenSession: ((String) -> Unit)? = null,
 ) {
     val folds = rememberTranscriptFolds()
     val newestKey =
@@ -170,7 +171,7 @@ internal fun ChatTranscriptList(
             }
         }
         items(rows, key = { it.key }, contentType = { it.kind }) { row ->
-            ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds)
+            ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession)
         }
     }
 }
@@ -205,6 +206,7 @@ private fun ChatRow(
     onOpenMenu: ((String) -> Unit)?,
     facts: TurnFactsUi = TurnFactsUi.Empty,
     folds: TranscriptFolds? = null,
+    onOpenSession: ((String) -> Unit)? = null,
 ) {
     when (row) {
         is BlockRow ->
@@ -239,7 +241,7 @@ private fun ChatRow(
         is ThoughtRow -> KitQuietLine(words.thought(row.firstLine))
         is WorkLineRow -> {
             val work = facts.work[row.turnId]
-            if (work != null && folds != null) TurnWorkLine(work, facts.nowMs, folds)
+            if (work != null && folds != null) TurnWorkLine(work, facts.nowMs, folds, onOpenSession)
             else KitQuietLine(
                 if (listWords != null) workLineWords(row.calls, row.state)
                 else words.workLine(row.calls, row.failed, row.state)

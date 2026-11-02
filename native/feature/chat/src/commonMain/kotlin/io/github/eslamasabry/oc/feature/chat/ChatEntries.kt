@@ -33,7 +33,7 @@ public class ChatEntries(private val composerHost: ComposerHost, private val env
             val requests by vm.requests.collectAsStateWithLifecycle()
             val slot = requests?.state?.collectAsStateWithLifecycle()?.value ?: io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi()
             val facts by vm.facts.collectAsStateWithLifecycle()
-            environment.Provide { ChatScreen(state, vm, composerHost, requests = slot, requestActions = requests, facts = facts) }
+            environment.Provide { ChatScreen(state, vm, composerHost, requests = slot, requestActions = requests, facts = facts, onOpenSession = vm::openSession) }
         }
     }
 }

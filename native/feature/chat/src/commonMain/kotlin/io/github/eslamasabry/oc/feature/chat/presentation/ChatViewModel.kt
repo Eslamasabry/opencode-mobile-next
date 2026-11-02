@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.chat.presentation
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import kotlin.time.Clock
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -31,7 +33,7 @@ import kotlinx.coroutines.launch
 public class ChatViewModel(
     @Assisted route: ChatRoute,
     private val worlds: ChatWorlds,
-    nav: AppNavigator,
+    private val nav: AppNavigator,
     clock: Clock,
 ) :
     ViewModel(), ChatActions {
@@ -53,6 +55,11 @@ public class ChatViewModel(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(STOP_AFTER_MS),
             )
+
+    /** B-CHAT-110: a task step opens the conversation its sub-agent ran in (same server, same profile). */
+    public fun openSession(sessionId: String) {
+        if (sessionId.isNotBlank()) nav.openChat(ConversationRef(world.ref.profileId, SessionId(sessionId)))
+    }
 
     override fun onCleared() {
         worlds.release(world)

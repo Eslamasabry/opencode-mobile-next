@@ -135,6 +135,7 @@ public fun ChatScreen(
     requests: RequestSlotUi = RequestSlotUi(),
     requestActions: ChatRequestActions? = null,
     facts: TurnFactsUi = TurnFactsUi.Empty,
+    onOpenSession: ((String) -> Unit)? = null,
 ) {
     var contextOpen by remember { mutableStateOf(false) }
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
@@ -277,6 +278,7 @@ public fun ChatScreen(
                                 onRetrySend = actions::retrySend,
                                 modifier = Modifier.fillMaxSize(),
                                 facts = facts,
+                                onOpenSession = onOpenSession,
                             )
                             EarlierMessagesPill(
                                 state,

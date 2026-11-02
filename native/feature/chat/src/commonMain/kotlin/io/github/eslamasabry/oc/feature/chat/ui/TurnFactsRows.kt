@@ -14,6 +14,8 @@ import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
@@ -29,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkState
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitCodeShowAll
 import io.github.eslamasabry.oc.ui.words.res.kitToolFailed
+import io.github.eslamasabry.oc.ui.words.res.kitToolOpenConversation
 import io.github.eslamasabry.oc.ui.words.res.kitWorkEarlierSteps
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -64,7 +67,7 @@ private fun WorkLineState.toKit(): KitWorkState =
  * by itself until the person folds it.
  */
 @Composable
-internal fun TurnWorkLine(work: TurnWork, nowMs: Long, folds: TranscriptFolds) {
+internal fun TurnWorkLine(work: TurnWork, nowMs: Long, folds: TranscriptFolds, onOpenSession: ((String) -> Unit)? = null) {
     val key = "work:${work.turnId}"
     val kitState = work.state.toKit()
     val expanded = folds.open[key] ?: kitState.opensByDefault
@@ -88,7 +91,7 @@ internal fun TurnWorkLine(work: TurnWork, nowMs: Long, folds: TranscriptFolds) {
         earlier = earlier,
         modifier = Modifier.testTag("chat-work-line"),
     ) {
-        for (step in work.steps.drop(hidden)) StepRow(step, nowMs, folds)
+        for (step in work.steps.drop(hidden)) StepRow(step, nowMs, folds, onOpenSession)
     }
 }
 
@@ -100,7 +103,7 @@ private fun nowWords(step: TurnStep): String {
 }
 
 @Composable
-private fun StepRow(step: TurnStep, nowMs: Long, folds: TranscriptFolds) {
+private fun StepRow(step: TurnStep, nowMs: Long, folds: TranscriptFolds, onOpenSession: ((String) -> Unit)?) {
     val key = "step:${step.partId}"
     val f = step.facts
     val runningFor = if (step.state == StepState.Running) step.startedAtMs?.let { (nowMs - it).coerceAtLeast(0) } else null
@@ -120,7 +123,8 @@ private fun StepRow(step: TurnStep, nowMs: Long, folds: TranscriptFolds) {
     val out = step.output
     val text = out.text.takeIf { it.isNotEmpty() }
     val shell = f.kind == ToolKind.Shell
-    val hasBody = text != null || (shell && !f.subject.isNullOrBlank())
+    val child = f.childSessionId?.takeIf { onOpenSession != null }
+    val hasBody = text != null || (shell && !f.subject.isNullOrBlank()) || child != null
     val full = folds.full[key] == true
     val lines = text?.lines()?.size ?: 0
     val more = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines)
@@ -133,6 +137,13 @@ private fun StepRow(step: TurnStep, nowMs: Long, folds: TranscriptFolds) {
             if (!hasBody) null
             else {
                 {
+                    if (child != null && onOpenSession != null)
+                        KitButton(
+                            stringResource(Res.string.kitToolOpenConversation),
+                            { onOpenSession(child) },
+                            role = KitButtonRole.Tertiary,
+                            modifier = Modifier.testTag("chat-step-open-session"),
+                        )
                     if (shell)
                         KitCommandBox(
                             command = f.subject ?: "",

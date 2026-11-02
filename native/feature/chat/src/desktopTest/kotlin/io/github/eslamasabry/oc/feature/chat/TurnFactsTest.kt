@@ -334,6 +334,36 @@ class TurnFactsTest {
             onNodeWithText("Rate limited. Retrying 2 in 0:42").assertIsDisplayed()
         }
 
+    @Test
+    fun `B-CHAT-110 a task step opens the conversation its sub-agent ran in`() =
+        runComposeUiTest {
+            val k = keeper()
+            val task =
+                tool(
+                    "t9", "m2", "task", ToolStatus.Completed, mapOf("subagent_type" to "explore", "description" to "look"),
+                    2_000, 3_000, output = "found it",
+                    metadata = JsonObject(mapOf("sessionId" to JsonPrimitive("child-1"))),
+                )
+            k.history(listOf(prompt, msg(info("m2", Role.Assistant, 2_000, done = 4_000, finish = "stop"), task, text("x", "m2", "ok"))))
+            val facts = TurnFactsPresenter(FixedClock).present(k.feed.value, 5_000)
+            val opened = mutableListOf<String>()
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts, onOpenSession = { opened += it }) } }
+            onNodeWithText("Delegated 1 task").assertIsDisplayed().performClick()
+            onNodeWithTag("chat-step-t9").performClick()
+            onNodeWithText("Open its conversation").assertIsDisplayed().performClick()
+            assertEquals(listOf("child-1"), opened)
+        }
+
+    @Test
+    fun `B-CHAT-069 a compaction reaches the transcript as a notice, never a reply`() {
+        val compaction = Part("c1", "m5", sid, PartType.Compaction, "compaction")
+        val bridged = io.github.eslamasabry.oc.feature.chat.world.P3Bridge(sid).message(msg(info("m5", Role.User, 5_000), compaction))
+        val part = bridged.parts.single()
+        assertEquals(io.github.eslamasabry.oc.engine.transcript.state.PartType.Compaction, part.type)
+        assertEquals(io.github.eslamasabry.oc.engine.transcript.state.NoticeKind.Compaction.name, part.text)
+    }
+
     private fun model(provider: String, id: String, window: Int) =
         CatalogModel(
             id = id,
