@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.settings.presentation
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 
 /** The five styles (B-KIT-037), in picker order; stored as `oc.effectsSurfaceStyle` by `:engine:settings`. */
 public enum class SurfaceStyle { Solid, Soft, Brutal, Paper, Signal }
@@ -20,6 +21,10 @@ public data class PersonalPrefs(
     val motion: MotionLevel = MotionLevel.Full,
     val reasoning: Boolean = false,
     val timestamps: Boolean = false,
+    /** In-app text size (`oc.textSize`), applied at the app root (B-KIT-059). */
+    val textSize: AppTextSize = AppTextSize.Normal,
+    /** The app language (`oc.appLocale`); [AppLanguage.System] follows the phone (B-L10N-001). */
+    val language: AppLanguage = AppLanguage.System,
 ) {
     public val saver: Boolean get() = mode == AppearanceMode.Saver
 }
@@ -38,4 +43,18 @@ public sealed interface PersonalChange {
     public data class Reasoning(val on: Boolean) : PersonalChange
 
     public data class Timestamps(val on: Boolean) : PersonalChange
+
+    public data class TextSize(val size: AppTextSize) : PersonalChange
+
+    public data class Language(val language: AppLanguage) : PersonalChange
+}
+
+/**
+ * The languages the Language page offers: the two the native app ships words for, plus the phone's own. [tag] is the
+ * BCP 47 tag the theme and the words use; null follows the phone.
+ */
+public enum class AppLanguage(public val tag: String?) {
+    System(null),
+    English("en"),
+    Arabic("ar"),
 }

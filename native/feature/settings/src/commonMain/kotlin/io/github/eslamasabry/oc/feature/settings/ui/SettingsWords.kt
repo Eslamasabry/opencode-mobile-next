@@ -11,6 +11,13 @@ import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.color.Packs
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.text.AppTextSize
+import io.github.eslamasabry.oc.ui.words.res.diagnosticsReportShareFailed
+import io.github.eslamasabry.oc.ui.words.res.reportProblemCopied
+import io.github.eslamasabry.oc.ui.words.res.textSizeDefault
+import io.github.eslamasabry.oc.ui.words.res.textSizeLarge
+import io.github.eslamasabry.oc.ui.words.res.textSizeSmall
+import io.github.eslamasabry.oc.ui.words.res.textSizeSmallest
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailChecksum
@@ -232,4 +239,17 @@ internal fun noteWords(note: SettingsNote): String =
         SettingsNote.ChoiceNotSaved, SettingsNote.ConsentNotSaved -> stringResource(Res.string.effectsSaveFailed)
         SettingsNote.TestNotSent -> PendingWords.TEST_NOT_SENT
         SettingsNote.UpdateFailed -> stringResource(Res.string.appUpdateFailNetwork)
+        SettingsNote.ReportCopied -> stringResource(Res.string.reportProblemCopied)
+        SettingsNote.ShareFailed -> stringResource(Res.string.diagnosticsReportShareFailed)
     }
+
+@Composable
+internal fun textSizeWords(size: AppTextSize): String =
+    stringResource(
+        when (size) {
+            AppTextSize.Smallest -> Res.string.textSizeSmallest
+            AppTextSize.Small -> Res.string.textSizeSmall
+            AppTextSize.Normal -> Res.string.textSizeDefault
+            AppTextSize.Large -> Res.string.textSizeLarge
+        },
+    )

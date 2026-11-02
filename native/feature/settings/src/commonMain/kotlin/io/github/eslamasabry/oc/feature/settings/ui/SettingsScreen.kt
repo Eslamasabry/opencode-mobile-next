@@ -26,11 +26,13 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
+import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.notifyDismiss
 import io.github.eslamasabry.oc.ui.words.res.settingsHubPrivacyRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
+import io.github.eslamasabry.oc.ui.words.res.settingsV3Language
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Notifications
 import org.jetbrains.compose.resources.stringResource
 
@@ -70,6 +72,14 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions, modifier:
         SettingsPage.WhatWeCollect ->
             SettingsFrame(PendingWords.WHAT_WE_COLLECT, back, state, actions, modifier) {
                 state.privacy?.let { WhatWeCollectBody(it, actions) }
+            }
+        SettingsPage.Language ->
+            SettingsFrame(stringResource(Res.string.settingsV3Language), back, state, actions, modifier) {
+                LanguageBody(state.language, actions)
+            }
+        SettingsPage.ReportProblem ->
+            SettingsFrame(stringResource(Res.string.kitReportProblem), back, state, actions, modifier) {
+                ReportBody(state.report, actions)
             }
     }
 }

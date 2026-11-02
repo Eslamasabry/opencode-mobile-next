@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SurfaceStyle
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
@@ -33,12 +34,13 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceSaverMotion
 import io.github.eslamasabry.oc.ui.words.res.appearanceSaverNote
 import io.github.eslamasabry.oc.ui.words.res.appearanceSeeAllThemes
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionSystemOff
+import io.github.eslamasabry.oc.ui.words.res.textSizeTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
  * I04, one page (plan 06 K4): light or dark, the colour pack (most used first, "See all 31 themes" for the rest), the
  * five styles and Motion. Every choice applies at once (no Apply). Saver holds Style and Motion and says so.
- * Fine-tune, accent, text size, glow and the guided first visit are S4-APPEAR's.
+ * Text size is the last question (B-KIT-059). Fine-tune, accent, glow and the guided first visit are S4-APPEAR's.
  */
 @Composable
 internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions) {
@@ -101,4 +103,16 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
     }
     if (!ui.heldBySaver) KitGroupNote(motionHint(ui.motion))
     if (ui.systemMotionOff) KitGroupNote(stringResource(Res.string.effectsMotionSystemOff))
+
+    // B-KIT-059: Default until chosen; applies at the app root at once, this page included.
+    KitSectionLabel(stringResource(Res.string.textSizeTitle))
+    Box(gutter) {
+        KitSegmented(
+            segments = AppTextSize.entries.map { KitSegment(it, textSizeWords(it)) },
+            selected = ui.textSize,
+            semanticsLabel = stringResource(Res.string.textSizeTitle),
+            modifier = Modifier.testTag("appearance-text-size"),
+            onChange = actions::onTextSize,
+        )
+    }
 }

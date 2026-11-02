@@ -61,6 +61,8 @@ class FakeChoices(initial: PersonalPrefs = PersonalPrefs()) : PersonalChoices {
                 is PersonalChange.Motion -> v.copy(motion = change.motion)
                 is PersonalChange.Reasoning -> v.copy(reasoning = change.on)
                 is PersonalChange.Timestamps -> v.copy(timestamps = change.on)
+                is PersonalChange.TextSize -> v.copy(textSize = change.size)
+                is PersonalChange.Language -> v.copy(language = change.language)
             }
         return Outcome.Ok(flow.value)
     }

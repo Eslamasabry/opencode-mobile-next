@@ -63,7 +63,16 @@ public data class SettingsFacts(
     val dynamicColour: Boolean = false,
     /** The phone's "Remove animations" is on: nothing moves whatever Motion says. */
     val systemMotionOff: Boolean = false,
-)
+    /** The host can build and hand over the diagnostics report: Report a problem opens its page here. */
+    val diagnostics: Boolean = false,
+    /**
+     * The places the host can open; a row leading anywhere else is absent, never dead (02 §3.7). Null = every place
+     * (a host with every feature routed).
+     */
+    val opens: Set<SettingsOutside>? = null,
+) {
+    public fun canOpen(place: SettingsOutside): Boolean = opens?.contains(place) ?: true
+}
 
 /** Which rows exist (plan 07 §4.2, I01–I20). A row the platform or the server cannot serve is absent, never greyed. */
 public object SettingsStructure {
@@ -90,15 +99,17 @@ public object SettingsStructure {
                         SettingsRowId.Notifications -> SettingsDoor.Page(SettingsPage.Notifications).takeIf { p.notifications }
                         SettingsRowId.Background -> SettingsDoor.Outside(SettingsOutside.KeepRunning).takeIf { p.backgroundService }
                         SettingsRowId.Appearance -> SettingsDoor.Page(SettingsPage.Appearance)
-                        SettingsRowId.Language -> SettingsDoor.Outside(SettingsOutside.Language)
+                        SettingsRowId.Language -> SettingsDoor.Page(SettingsPage.Language)
                         SettingsRowId.Privacy -> SettingsDoor.Page(SettingsPage.Privacy)
                         SettingsRowId.Updates -> SettingsDoor.Page(SettingsPage.Updates).takeIf { p.inAppUpdater || p.desktopReleaseCheck }
                         SettingsRowId.Guide -> SettingsDoor.Outside(SettingsOutside.Guide)
                         SettingsRowId.Tips -> SettingsDoor.Outside(SettingsOutside.Tips)
-                        SettingsRowId.ReportProblem -> SettingsDoor.Outside(SettingsOutside.ReportProblem)
+                        SettingsRowId.ReportProblem ->
+                            if (facts.diagnostics) SettingsDoor.Page(SettingsPage.ReportProblem)
+                            else SettingsDoor.Outside(SettingsOutside.ReportProblem)
                         SettingsRowId.About -> SettingsDoor.Page(SettingsPage.About)
                     }
-                door?.let { SettingsRowUi(id, it) }
+                door?.takeIf { it !is SettingsDoor.Outside || facts.canOpen(it.place) }?.let { SettingsRowUi(id, it) }
             }.toImmutableList()
     }
 

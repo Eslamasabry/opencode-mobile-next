@@ -89,8 +89,8 @@ class SettingsPresenterTest {
     fun `SCREENS-NAV-90 a row another feature owns is handed to the host, not drawn here`() =
         rig {
             p.onRow(SettingsRowId.Background); settle()
-            p.onRow(SettingsRowId.Language); settle()
-            assertEquals(listOf(SettingsOutside.KeepRunning, SettingsOutside.Language), openers.opened)
+            p.onRow(SettingsRowId.Servers); settle()
+            assertEquals(listOf(SettingsOutside.KeepRunning, SettingsOutside.Servers), openers.opened)
             assertEquals(SettingsPage.Hub, ui.page)
         }
 

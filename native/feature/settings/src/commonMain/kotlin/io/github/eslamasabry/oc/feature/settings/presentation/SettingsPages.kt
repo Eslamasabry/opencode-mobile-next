@@ -29,6 +29,12 @@ public sealed interface SettingsPage {
 
     /** Settings › This app › Privacy › What we collect (plan 18 §6): one page, no new level. */
     public data object WhatWeCollect : SettingsPage
+
+    /** Settings › This app › Language: one check-mark choice per language, each in its own name. */
+    public data object Language : SettingsPage
+
+    /** Settings › Help › Report a problem: the safe diagnostics report, previewed, then copied or shared. */
+    public data object ReportProblem : SettingsPage
 }
 
 /**

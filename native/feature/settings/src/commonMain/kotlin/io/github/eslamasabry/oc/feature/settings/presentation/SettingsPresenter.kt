@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.color.Packs
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -38,6 +39,7 @@ public class SettingsPresenter(
     private val notifications: NotificationSettings? = null,
     private val updates: UpdateSettings? = null,
     private val about: AboutFacts = AboutFacts(),
+    private val diagnostics: DiagnosticsExport? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -46,6 +48,7 @@ public class SettingsPresenter(
         val allPacks: Boolean = false,
         val note: SettingsNote? = null,
         val consentSaving: Boolean = false,
+        val report: ReportUi? = null,
     )
 
     private data class Engines(
@@ -97,6 +100,8 @@ public class SettingsPresenter(
             updates = e.updates,
             about = about,
             privacy = e.collect?.let { PrivacyUi(it, l.consentSaving) },
+            language = p.language,
+            report = l.report,
             note = l.note,
         )
     }
@@ -112,6 +117,7 @@ public class SettingsPresenter(
             seeAllCount = if (listed.size < available.size) available.size else 0,
             style = p.style,
             motion = p.motion,
+            textSize = p.textSize,
             heldBySaver = p.saver,
             systemMotionOff = f.systemMotionOff,
         )
@@ -119,6 +125,7 @@ public class SettingsPresenter(
 
     override fun onOpen(page: SettingsPage) {
         local.update { if (it.stack.last() == page) it else it.copy(stack = (it.stack + page).toImmutableList()) }
+        if (page == SettingsPage.ReportProblem) loadReport()
     }
 
     override fun onBack(): Boolean {
@@ -226,6 +233,50 @@ public class SettingsPresenter(
             }
         }
     }
+
+    override fun onTextSize(size: AppTextSize) {
+        if (prefs.value.textSize != size) write(PersonalChange.TextSize(size), SettingsNote.AppearanceNotSaved)
+    }
+
+    override fun onLanguage(language: AppLanguage) {
+        if (prefs.value.language != language) write(PersonalChange.Language(language), SettingsNote.ChoiceNotSaved)
+    }
+
+    override fun onRetryReport() {
+        loadReport()
+    }
+
+    override fun onCopyReport() {
+        val port = diagnostics ?: return
+        val text = (local.value.report as? ReportUi.Ready)?.text ?: return
+        scope.launch {
+            val note = if (port.copy(text) is Outcome.Ok) SettingsNote.ReportCopied else SettingsNote.ShareFailed
+            local.update { it.copy(note = note) }
+        }
+    }
+
+    override fun onShareReport() {
+        val port = diagnostics ?: return
+        val text = (local.value.report as? ReportUi.Ready)?.text ?: return
+        run(SettingsNote.ShareFailed) { port.share(text) }
+    }
+
+    /** Builds the preview once per visit; a newer request wins over a slower older one. */
+    private fun loadReport() {
+        val port = diagnostics ?: return
+        val generation = ++reportGeneration
+        local.update { it.copy(report = ReportUi.Loading) }
+        scope.launch {
+            val built =
+                when (val result = port.report()) {
+                    is Outcome.Ok -> ReportUi.Ready(result.value)
+                    is Outcome.Failed -> ReportUi.Failed
+                }
+            if (generation == reportGeneration) local.update { it.copy(report = built) }
+        }
+    }
+
+    private var reportGeneration = 0L
 
     override fun onNoteSeen() {
         local.update { it.copy(note = null) }

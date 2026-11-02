@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
+import io.github.eslamasabry.oc.ui.design.text.AppTextSize
+
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -45,4 +47,19 @@ public interface SettingsActions {
     public fun onDetailedUsage(on: Boolean)
 
     public fun onNoteSeen()
+
+    /** Appearance › Text size: applies at the app root at once (B-KIT-059). */
+    public fun onTextSize(size: AppTextSize) {}
+
+    /** Language: one tap chooses; the page stays, now in the chosen language (B-L10N-001). */
+    public fun onLanguage(language: AppLanguage) {}
+
+    /** Report a problem: copy the previewed report as it is shown. */
+    public fun onCopyReport() {}
+
+    /** Report a problem: open Android's share sheet with the previewed report. */
+    public fun onShareReport() {}
+
+    /** Report a problem: build the report again after it could not be read. */
+    public fun onRetryReport() {}
 }
