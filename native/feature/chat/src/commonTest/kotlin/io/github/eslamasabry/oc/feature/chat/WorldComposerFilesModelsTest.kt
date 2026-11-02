@@ -639,7 +639,7 @@ class WorldComposerFilesModelsTest {
     }
 
     @Test
-    fun `B-STATE-103 finding 5 an accepted file-only send settles on its canonical user message`() =
+    fun `B-STATE-043 finding 5 an accepted file-only send settles on its canonical user message`() =
         runTest {
             val f = Fixture(this)
             f.open()
@@ -661,7 +661,7 @@ class WorldComposerFilesModelsTest {
         }
 
     @Test
-    fun `B-STATE-103 finding 6 a different file with the same name is not the unconfirmed send`() =
+    fun `B-STATE-043 finding 6 a different file with the same name is not the unconfirmed send`() =
         runTest {
             val f = Fixture(this)
             f.base.admission = PromptAdmission.Uncertain

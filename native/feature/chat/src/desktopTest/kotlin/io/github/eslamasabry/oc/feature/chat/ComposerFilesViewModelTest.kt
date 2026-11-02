@@ -308,7 +308,7 @@ class ComposerFilesViewModelTest {
     // ---- RUNBOOK §7 finding 3 (red against the GLM patch) ----
 
     @Test
-    fun `B-STATE-103 finding 3 Send refuses at once while a pick starts, before any state publishes`() =
+    fun `B-STATE-101 finding 3 Send refuses at once while a pick starts, before any state publishes`() =
         runTest {
             val main = kotlinx.coroutines.test.StandardTestDispatcher(testScheduler)
             Dispatchers.setMain(main)
@@ -332,7 +332,7 @@ class ComposerFilesViewModelTest {
         }
 
     @Test
-    fun `B-STATE-103 finding 3 Send refuses at once while a model change runs`() = runTest {
+    fun `B-STATE-101 finding 3 Send refuses at once while a model change runs`() = runTest {
         val main = kotlinx.coroutines.test.StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(main)
         val world = FilesWorld()
@@ -350,7 +350,7 @@ class ComposerFilesViewModelTest {
     }
 
     @Test
-    fun `B-STATE-103 finding 3 a second removal waits for the first commit, never resurrecting a file`() =
+    fun `B-STATE-101 finding 3 a second removal waits for the first commit, never resurrecting a file`() =
         runTest {
             val world = FilesWorld().apply {
                 draft.update { it.copy(attachments = listOf(file("a.txt"), file("b.txt"), file("c.txt"))) }
@@ -375,7 +375,7 @@ class ComposerFilesViewModelTest {
         }
 
     @Test
-    fun `B-STATE-103 finding 3 a pick that returns after the draft target changed writes nothing`() =
+    fun `B-STATE-101 finding 3 a pick that returns after the draft target changed writes nothing`() =
         runTest {
             val world = FilesWorld()
             val vm = BasicComposerViewModel(
