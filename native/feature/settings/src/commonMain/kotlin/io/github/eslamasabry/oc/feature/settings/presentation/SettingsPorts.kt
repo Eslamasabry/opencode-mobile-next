@@ -69,3 +69,16 @@ public interface UpdateSettings {
     /** Download (Available), cancel (Downloading) or install (Downloaded): the one main action of the state. */
     public suspend fun act(): Outcome<Unit>
 }
+
+/**
+ * Report a problem (plan 07 I18, B-SEC-041): the report is generated lines and already-redacted entries only, never raw
+ * exception text, server addresses or credentials. Nothing leaves the phone until the person copies or shares it.
+ */
+public interface DiagnosticsExport {
+    /** The report exactly as it will be copied or shared. */
+    public suspend fun report(): Outcome<String>
+
+    public suspend fun copy(text: String): Outcome<Unit>
+
+    public suspend fun share(text: String): Outcome<Unit>
+}

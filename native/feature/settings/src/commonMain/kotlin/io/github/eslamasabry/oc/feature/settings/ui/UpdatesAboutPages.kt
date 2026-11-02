@@ -157,12 +157,14 @@ internal fun ColumnScope.AboutBody(about: AboutFacts, actions: SettingsActions) 
         )
     }
     KitRowGroup {
-        KitRow(
-            title = stringResource(Res.string.aboutAllLicences),
-            supporting = stringResource(Res.string.aboutAllLicencesDetail),
-            trailing = KitRowTrailing.Chevron,
-            onClick = { actions.onOutside(SettingsOutside.Notices) },
-        )
+        if (about.notices) {
+            KitRow(
+                title = stringResource(Res.string.aboutAllLicences),
+                supporting = stringResource(Res.string.aboutAllLicencesDetail),
+                trailing = KitRowTrailing.Chevron,
+                onClick = { actions.onOutside(SettingsOutside.Notices) },
+            )
+        }
         KitRow(
             title = stringResource(Res.string.privacyPolicyTitle),
             trailing = KitRowTrailing.Chevron,

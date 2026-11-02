@@ -15,6 +15,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
@@ -25,11 +26,25 @@ import io.github.eslamasabry.oc.ui.shell.nav.RowTransformGate
 import io.github.eslamasabry.oc.ui.shell.nav.ShellNavDisplay
 import io.github.eslamasabry.oc.ui.shell.nav.motionLevelOf
 
-/** The root both apps call (plan 03 §21.1). Boot/migration gate and safe mode join with :engine:entry (slice 2). */
+/**
+ * The root both apps call (plan 03 §21.1). Boot/migration gate and safe mode join with :engine:entry (slice 2).
+ * [appearance] and [localeTag] are the person's stored choices (Settings › Appearance, Language), applied here so every
+ * screen follows them live; a host that passes no [localeTag] gets the platform's. A host passes a tag always or never.
+ */
 @Composable
-public fun App(deps: ShellDependencies, platform: KitPlatform, viewModels: MetroViewModelFactory) {
+public fun App(
+    deps: ShellDependencies,
+    platform: KitPlatform,
+    viewModels: MetroViewModelFactory,
+    appearance: KitAppearance = KitAppearance.Default,
+    localeTag: String? = null,
+) {
     CompositionLocalProvider(LocalKitPlatform provides platform, LocalMetroViewModelFactory provides viewModels) {
-        KitTheme { NavShell(start = ChatsRoute.Home, deps = deps) }
+        if (localeTag == null) {
+            KitTheme(appearance = appearance) { NavShell(start = ChatsRoute.Home, deps = deps) }
+        } else {
+            KitTheme(appearance = appearance, localeTag = localeTag) { NavShell(start = ChatsRoute.Home, deps = deps) }
+        }
     }
 }
 

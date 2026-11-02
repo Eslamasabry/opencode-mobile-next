@@ -15,6 +15,8 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:analytics"))
+        // P12-SETTINGS: personal choices over the device Preferences facade (PreferencesChoices).
+        implementation(project(":engine:settings"))
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(

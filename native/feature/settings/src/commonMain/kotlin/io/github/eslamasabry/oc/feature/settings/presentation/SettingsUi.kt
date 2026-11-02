@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.engine.analytics.WhatWeCollect
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -19,6 +20,10 @@ public data class SettingsUi(
     val updates: UpdateFacts? = null,
     val about: AboutFacts = AboutFacts(),
     val privacy: PrivacyUi? = null,
+    /** The language in use (acknowledged), for the Language page and its row. */
+    val language: AppLanguage = AppLanguage.System,
+    /** Report a problem's preview; null until the page opens. */
+    val report: ReportUi? = null,
     /** One plain line about the last save that did not stick, if any. */
     val note: SettingsNote? = null,
 ) {
@@ -47,6 +52,7 @@ public data class AppearanceUi(
     val seeAllCount: Int = 0,
     val style: SurfaceStyle = SurfaceStyle.Solid,
     val motion: MotionLevel = MotionLevel.Full,
+    val textSize: AppTextSize = AppTextSize.Normal,
     /** Saver holds Style and Motion (B-KIT-008): shown, not changeable, with the reason. */
     val heldBySaver: Boolean = false,
     val systemMotionOff: Boolean = false,
@@ -122,8 +128,26 @@ public data class UpdateFacts(
     val state: UpdateState = UpdateState.NeverChecked,
 )
 
-public data class AboutFacts(val version: String = "", val build: String = "", val whatsNew: Boolean = true)
+public data class AboutFacts(
+    val version: String = "",
+    val build: String = "",
+    val whatsNew: Boolean = true,
+    /** The open-source notices page exists in this build. */
+    val notices: Boolean = true,
+)
 
 public data class PrivacyUi(val collect: WhatWeCollect, val saving: Boolean = false)
 
-public enum class SettingsNote { AppearanceNotSaved, ChoiceNotSaved, ConsentNotSaved, TestNotSent, UpdateFailed }
+public enum class SettingsNote {
+    AppearanceNotSaved, ChoiceNotSaved, ConsentNotSaved, TestNotSent, UpdateFailed, ReportCopied, ShareFailed,
+}
+
+/** Report a problem's preview (B-SEC-060: the exact safe text that is shared). */
+public sealed interface ReportUi {
+    public data object Loading : ReportUi
+
+    public data class Ready(val text: String) : ReportUi
+
+    /** The report could not be built: a plain line and Try again, never the reason's text. */
+    public data object Failed : ReportUi
+}
