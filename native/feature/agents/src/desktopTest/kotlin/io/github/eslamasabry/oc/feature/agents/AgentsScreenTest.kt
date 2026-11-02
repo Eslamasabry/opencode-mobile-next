@@ -9,6 +9,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
@@ -120,8 +121,9 @@ class AgentsScreenTest {
             Screen(AgentsUi(adding = true, check = ComputerCheck.Ready("0.8.0", persistentListOf("Claude Code", "Pi"))), actions)
         }
         onNodeWithText("Ready on that computer: Claude Code, Pi.").assertExists()
-        onNodeWithText("Check the connection").performClick()
-        onNodeWithText("Save and connect").performClick()
+        // The form is taller than the test window: scroll each button into view, as a person would.
+        onNodeWithText("Check the connection").performScrollTo().performClick()
+        onNodeWithText("Save and connect").performScrollTo().performClick()
         assertEquals(listOf("check", "save"), actions.calls)
     }
 
