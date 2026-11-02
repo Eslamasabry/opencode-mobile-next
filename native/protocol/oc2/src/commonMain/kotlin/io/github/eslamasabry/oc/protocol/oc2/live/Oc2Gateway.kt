@@ -492,19 +492,50 @@ internal class Oc2Gateway(
                 }
         }
 
+    /** `POST /session/{id}/shell {command}`: v2 runs it as the session's own agent (Flutter api2). */
     override suspend fun shell(
         session: SessionId,
         command: String,
         agent: String,
         model: ModelSelection?,
-    ): Outcome<Unit> = unavailable("conversationShell")
+    ): Outcome<Unit> =
+        unit(
+            "/session/${sid(session)}/shell",
+            HttpMethod.Post,
+            buildJsonObject { put("command", command) },
+        )
 
+    /**
+     * `POST /session/{id}/command {command, text}` (Flutter `Api2Gateway.slashCommand`). The model is
+     * session state on v2, so it never rides the body.
+     */
     override suspend fun slashCommand(
         session: SessionId,
         command: String,
         args: String,
         model: ModelSelection?,
-    ): Outcome<Unit> = unavailable("slashCommands")
+    ): Outcome<Unit> =
+        unit(
+            "/session/${sid(session)}/command",
+            HttpMethod.Post,
+            buildJsonObject {
+                put("command", command.removePrefix("/"))
+                put("text", args)
+            },
+        )
+
+    /** `GET /command`: the server's own slash commands, name order (Flutter chat_commands.dart). */
+    override suspend fun commands(): Outcome<ImmutableList<CommandInfo>> =
+        read("/command", query = locationQuery()) { root ->
+            entries(root)
+                .mapNotNull { value ->
+                    val obj = value as? JsonObject ?: return@mapNotNull null
+                    val name = obj.str("name")?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                    CommandInfo(name, obj.str("description"), obj.str("agent"), false)
+                }
+                .sortedBy { it.name }
+                .toImmutableList()
+        }
 
     override suspend fun todos(id: SessionId): Outcome<ImmutableList<Todo>> =
         unavailable("sessionTodos")
@@ -690,8 +721,19 @@ internal class Oc2Gateway(
     override suspend fun fileContent(path: String): Outcome<FileContent> =
         unavailable("fileBrowsing")
 
+    /** `GET /fs/find?query=&type=file` (Flutter `Api2Gateway.findFile`): project-relative paths. */
     override suspend fun findFile(query: String): Outcome<ImmutableList<String>> =
-        unavailable("fileBrowsing")
+        read(
+            "/fs/find",
+            query = locationQuery() + mapOf("query" to query, "type" to "file"),
+        ) { root ->
+            entries(root)
+                .mapNotNull { value ->
+                    val obj = value as? JsonObject ?: return@mapNotNull null
+                    obj.str("path")?.takeIf { obj.str("type") != "directory" }
+                }
+                .toImmutableList()
+        }
 
     override suspend fun findText(pattern: String): Outcome<ImmutableList<FindMatch>> =
         unavailable("fileBrowsing")
@@ -759,7 +801,7 @@ internal class Oc2Gateway(
                 offlinePromptQueue = false,
                 fileBrowsing = false,
                 terminal = false,
-                conversationShell = false,
+                conversationShell = true,
                 projectManagement = false,
                 globalSessionSearch = false,
                 sessionDiff = false,
@@ -774,8 +816,8 @@ internal class Oc2Gateway(
                 sessionNotes = false,
                 serverCatalog = true,
                 sessionModelProviderSwitching = true,
-                agentSelection = false,
-                slashCommands = false,
+                agentSelection = true,
+                slashCommands = true,
                 profileAttentionPolling = false,
                 managedWorkspaces = false,
                 workspaceWarp = false,

@@ -211,12 +211,13 @@ public class Drafts(
         sessionId: String,
         text: String,
         attachments: List<PromptAttachment>,
+        location: DraftLocation? = null,
         permit: () -> Boolean = { true },
     ): Outcome<Unit> {
         val files = attachments.toList()
         return lane.withLock {
             if (!permit()) return@withLock Failure.Refused(RefusalReason.ProfileDeleted).failed()
-            saveLocked(profileId, sessionId, text, files, null, Exactness.WholeState)
+            saveLocked(profileId, sessionId, text, files, location, Exactness.WholeState)
         }
     }
 
@@ -247,6 +248,18 @@ public class Drafts(
         } else if (files == null && (drafts[key]?.text == text || nothingStored)) {
             return Unit.ok()
         }
+        // A whole-state write keeps the conversation's directory/workspace binding: a `file:` reference
+        // is meaningful only there. Unknown location keeps the stored one; a file reference with no
+        // location at all is refused rather than saved unbound.
+        val place =
+            if (exactness != Exactness.WholeState) location
+            else location ?: previous?.let { DraftLocation(it.directory, it.workspace) }
+        if (
+            exactness == Exactness.WholeState &&
+                place?.directory == null &&
+                files.orEmpty().any { schemeOf(it.url) == "file" }
+        )
+            return Failure.StorageRefused().failed()
         var refs: List<AttachmentRef> = previous?.attachments.orEmpty()
         var filesToStore = files
         if (files == null && refs.isNotEmpty() && previous != null && previous.profileId != owner) {
@@ -286,8 +299,8 @@ public class Drafts(
                     text = text,
                     updatedAt = clock.now().toEpochMilliseconds(),
                     attachments = refs,
-                    directory = if (files == null) previous?.directory else location?.directory,
-                    workspace = if (files == null) previous?.workspace else location?.workspace,
+                    directory = if (files == null) previous?.directory else place?.directory,
+                    workspace = if (files == null) previous?.workspace else place?.workspace,
                 )
         }
         if (next.size > MAX_DRAFTS) {

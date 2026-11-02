@@ -272,4 +272,65 @@ class ConversationDraftAttachmentsTest {
             assertNull(handle.state.value.failure)
             assertEquals(1, handle.state.value.attachments.size)
         }
+
+    // ---- RUNBOOK §7 finding 7: the draft keeps its directory/workspace binding ----
+
+    private val here = io.github.eslamasabry.oc.engine.composer.drafts.DraftLocation("/work/a", "ws1")
+    private val elsewhere = io.github.eslamasabry.oc.engine.composer.drafts.DraftLocation("/work/b", "ws1")
+    private val projectFile =
+        io.github.eslamasabry.oc.core.model.PromptAttachment(
+            "text/plain",
+            "main.kt",
+            "file:///work/a/main.kt",
+        )
+
+    @Test
+    fun `B-STATE-016 finding 7 a whole-state write records the conversation's location`() = runTest {
+        val handle = facade().open(ref())
+        handle.bindLocation(here)
+        runCurrent()
+        handle.changed("see @main.kt")
+        assertIs<Outcome.Ok<Unit>>(handle.replaceAttachments(listOf(projectFile)))
+        val saved = assertNotNull(store().draft("alpha", "same"))
+        assertEquals("/work/a", saved.directory)
+        assertEquals("ws1", saved.workspace)
+    }
+
+    @Test
+    fun `B-STATE-016 finding 7 a file reference restores only in its own location and fails closed elsewhere`() =
+        runTest {
+            val first = facade().open(ref())
+            first.bindLocation(here)
+            runCurrent()
+            first.changed("see @main.kt")
+            assertIs<Outcome.Ok<Unit>>(first.replaceAttachments(listOf(projectFile)))
+            val original = prefs.string(Drafts.KEY)
+
+            val moved = facade().open(ref())
+            runCurrent()
+            assertFalse(moved.state.value.ready, "a file reference waits for the conversation's location")
+            moved.bindLocation(elsewhere)
+            runCurrent()
+            assertFalse(moved.state.value.ready)
+            assertNotNull(moved.state.value.failure, "another place's file is never restored")
+            assertEquals(original, prefs.string(Drafts.KEY), "the saved draft is preserved")
+
+            val back = facade().open(ref())
+            back.bindLocation(here)
+            runCurrent()
+            assertTrue(back.state.value.ready)
+            assertEquals(listOf(projectFile), back.state.value.attachments)
+        }
+
+    @Test
+    fun `B-STATE-016 finding 7 data files restore without waiting for a location`() = runTest {
+        val note = dataAttachment("n.txt", "bytes")
+        val first = facade().open(ref())
+        runCurrent()
+        assertIs<Outcome.Ok<Unit>>(first.replaceAttachments(listOf(note)))
+        val again = facade().open(ref())
+        runCurrent()
+        assertTrue(again.state.value.ready)
+        assertEquals(listOf(note), again.state.value.attachments)
+    }
 }

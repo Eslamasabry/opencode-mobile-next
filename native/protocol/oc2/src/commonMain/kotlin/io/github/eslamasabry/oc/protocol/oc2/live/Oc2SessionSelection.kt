@@ -134,10 +134,14 @@ internal object Oc2SessionSelection {
             model = agent.model?.let { "${it.providerID}/${it.id}" },
         )
 
-    /** `GET /model/default` row to a bare ref; a row without a provider id names no default. */
+    /**
+     * `GET /model/default` row to a bare ref; a row without a provider id names no default. The id is
+     * the catalog row's own ([catalogModelId]): a mode row (`gpt-5-high` over base `gpt-5`) is its own
+     * choice, so the default must name the row the picker shows, never the base `modelID`.
+     */
     fun defaultModelRef(info: Oc2ModelInfo?): ModelRef? {
         if (info == null) return null
         val provider = info.providerID ?: return null
-        return ModelRef(provider, info.modelID ?: info.id)
+        return ModelRef(provider, catalogModelId(info))
     }
 }

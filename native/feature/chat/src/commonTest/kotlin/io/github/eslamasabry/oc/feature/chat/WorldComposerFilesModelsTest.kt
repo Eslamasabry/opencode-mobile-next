@@ -77,6 +77,7 @@ import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -153,6 +154,10 @@ class WorldComposerFilesModelsTest {
         var catalog: Outcome<CatalogSnapshot> =
             Outcome.Failed(Failure.Unavailable(FeatureId("serverCatalog")))
         var defaults: Outcome<ChatDefaults> = Outcome.Ok(ChatDefaults(null, null))
+        var commands: Outcome<kotlinx.collections.immutable.ImmutableList<io.github.eslamasabry.oc.core.model.CommandInfo>> =
+            Outcome.Ok(persistentListOf())
+
+        override suspend fun commands() = commands
 
         override suspend fun catalog(): Outcome<CatalogSnapshot> = catalog
 
@@ -178,16 +183,39 @@ class WorldComposerFilesModelsTest {
             return Outcome.Ok(Unit)
         }
 
-        override suspend fun session(id: SessionId): Outcome<Session> =
-            when (val read = base.session(id)) {
-                is Outcome.Failed -> read
-                is Outcome.Ok ->
-                    Outcome.Ok(
-                        read.value.copy(
-                            selection = applied?.let { SessionSelection(it, "", null, true, false) }
+        override suspend fun setSessionAgent(session: SessionId, agent: String): Outcome<Unit> {
+            appliedAgent = agent
+            return Outcome.Ok(Unit)
+        }
+
+        var appliedAgent: String? = null
+
+        override suspend fun createSelectedSession(defaults: SessionSelection): Outcome<Session> =
+            base.createSession(io.github.eslamasabry.oc.core.model.NewSession())
+
+        /** Holds the next session read after it captured its (then current) answer. */
+        var holdNextRead: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+        var failReads: Boolean = false
+
+        override suspend fun session(id: SessionId): Outcome<Session> {
+            if (failReads) return Outcome.Failed(Failure.Network(NetworkWhy.Refused))
+            val answer =
+                when (val read = base.session(id)) {
+                    is Outcome.Failed -> read
+                    is Outcome.Ok ->
+                        Outcome.Ok(
+                            read.value.copy(
+                                selection =
+                                    applied?.let { SessionSelection(it, "", appliedAgent, true, true) }
+                            )
                         )
-                    )
+                }
+            holdNextRead?.let {
+                holdNextRead = null
+                it.await()
             }
+            return answer
+        }
 
         override suspend fun prompt(
             session: SessionId,
@@ -196,13 +224,20 @@ class WorldComposerFilesModelsTest {
         ): Outcome<PromptAdmission> {
             if (failNextPrompt) {
                 failNextPrompt = false
-                return Outcome.Failed(Failure.Network(NetworkWhy.Refused))
+                // A refusal proves nothing left (a network failure may have: that stays unconfirmed).
+                return Outcome.Failed(Failure.Unavailable(FeatureId("prompt")))
             }
             return base.prompt(session, prompt, commandId)
         }
     }
 
-    private inner class Fixture(val test: TestScope, selection: ModelRef? = null) {
+    private inner class Fixture(
+        val test: TestScope,
+        selection: ModelRef? = null,
+        val prefsBackend: InMemoryPrefsBackend = InMemoryPrefsBackend(),
+        val composerPrefs: MemoryComposerPrefs = MemoryComposerPrefs(),
+        val payloads: MemoryPayloadStore = MemoryPayloadStore(),
+    ) {
         val base =
             FakeServerGateway(listOf(Session(ref.sessionId, time = SessionTime(idleMs = 20))))
         val gateway = SelectionGateway(base, selection)
@@ -213,14 +248,14 @@ class WorldComposerFilesModelsTest {
         val app = AppCoroutineScope(test.backgroundScope.coroutineContext)
         val kv =
             PrefsKeyValueStore(
-                InMemoryPrefsBackend(),
+                prefsBackend,
                 FlutterPrefsCodec(JavaListDecoder.Unsupported),
                 StateMigrationGate.alwaysOpen(),
                 dispatcher,
             )
         val drafts =
             ConversationDrafts(
-                Drafts(MemoryComposerPrefs(), AttachmentVault(MemoryPayloadStore()), profiles, TestClock()),
+                Drafts(composerPrefs, AttachmentVault(payloads), profiles, TestClock()),
                 app,
                 dispatchers,
             )
@@ -535,5 +570,220 @@ class WorldComposerFilesModelsTest {
             assertFalse(
                 DraftFacts(text = "", saved = "", attachments = emptyList(), savedAttachments = emptyList()).unsaved
             )
+        }
+
+    // ---- RUNBOOK §7 review findings (red against the GLM patch) ----
+
+    @Test
+    fun `B-CHAT-105 finding 4 an older model load never overwrites a newer verified choice`() =
+        runTest {
+            val f = Fixture(this, selection = ModelRef("prov", "m1"))
+            f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
+            f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+            val m2 = f.world.models.value.choices.single { it.modelId == "m2" }
+            // A reload reads the session (still m1) and stalls before publishing.
+            val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+            f.gateway.holdNextRead = hold
+            val reload = async { f.world.loadModels() }
+            runCurrent()
+            assertIs<Outcome.Ok<Unit>>(f.world.selectModel(m2))
+            assertEquals("m2", f.world.models.value.selected?.modelId)
+            hold.complete(Unit)
+            reload.await()
+            assertEquals("m2", f.world.models.value.selected?.modelId, "the verified m2 stays")
+        }
+
+    @Test
+    fun `B-CHAT-105 finding 4 a failed session read never claims the catalog default as the choice`() =
+        runTest {
+            val f = Fixture(this, selection = ModelRef("prov", "m2"))
+            f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
+            f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+            f.open()
+            f.gateway.failReads = true
+            assertIs<Outcome.Failed>(f.world.loadModels())
+            assertNull(f.world.models.value.selected, "the real choice is unknown, not the default")
+            assertNotNull(f.world.models.value.failure)
+            assertFalse(f.world.models.value.loading)
+        }
+
+    @Test
+    fun `B-CHAT-105 finding 4 a failed default read is surfaced when the session names no model`() =
+        runTest {
+            val f = Fixture(this, selection = null)
+            f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1")))
+            f.operations.defaults = Outcome.Failed(Failure.Network(NetworkWhy.Refused))
+            f.open()
+            assertIs<Outcome.Failed>(f.world.loadModels())
+            assertNull(f.world.models.value.selected)
+            assertNotNull(f.world.models.value.failure)
+        }
+
+    @Test
+    fun `B-CHAT-105 finding 4 a refused selection keeps the previous choice and says so`() = runTest {
+        val f = Fixture(this, selection = ModelRef("prov", "m1"))
+        f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
+        f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+        f.open()
+        f.world.loadModels()
+        val m2 = f.world.models.value.choices.single { it.modelId == "m2" }
+        f.gateway.acknowledge = false
+        assertIs<Outcome.Failed>(f.world.selectModel(m2))
+        assertEquals("m1", f.world.models.value.selected?.modelId)
+        assertNotNull(f.world.models.value.failure, "the person sees the change did not happen")
+        f.gateway.acknowledge = true
+        assertIs<Outcome.Ok<Unit>>(f.world.selectModel(m2))
+        assertNull(f.world.models.value.failure)
+    }
+
+    @Test
+    fun `B-STATE-043 finding 5 an accepted file-only send settles on its canonical user message`() =
+        runTest {
+            val f = Fixture(this)
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.replaceAttachments(listOf(file("only.txt"))))
+            assertIs<Outcome.Ok<Unit>>(f.world.send(""))
+            runCurrent()
+            assertEquals(1, f.world.pending.value.size)
+            f.base.events.emit(
+                GatewayEvent.MessageUpserted(MessageInfo("u1", ref.sessionId.raw, Role.User))
+            )
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(
+                    Part("fp", "u1", ref.sessionId.raw, PartType.File, "file", filename = "only.txt")
+                )
+            )
+            advanceTimeBy(60)
+            runCurrent()
+            assertTrue(f.world.pending.value.isEmpty(), "no empty Sending bubble is left behind")
+        }
+
+    @Test
+    fun `B-STATE-043 finding 6 a different file with the same name is not the unconfirmed send`() =
+        runTest {
+            val f = Fixture(this)
+            f.base.admission = PromptAdmission.Uncertain
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.replaceAttachments(listOf(file("a.txt", "first"))))
+            assertIs<Outcome.Ok<Unit>>(f.world.send(""))
+            runCurrent()
+            assertEquals(PendingState.Unconfirmed, f.world.pending.value.single().state)
+            assertTrue(f.world.draft.value.sendBlocked)
+            assertIs<Outcome.Ok<Unit>>(f.world.replaceAttachments(listOf(file("a.txt", "second"))))
+            assertFalse(f.world.draft.value.sendBlocked, "another payload is another send")
+        }
+
+    @Test
+    fun `B-STATE-043 finding 6 after a restart equal text with different files is not blocked`() =
+        runTest {
+            val first = Fixture(this)
+            first.base.admission = PromptAdmission.Uncertain
+            first.open()
+            first.world.draftChanged("same words")
+            assertIs<Outcome.Ok<Unit>>(first.world.replaceAttachments(listOf(file("a.txt", "one"))))
+            assertIs<Outcome.Ok<Unit>>(first.world.send("same words"))
+            runCurrent()
+            assertEquals(PendingState.Unconfirmed, first.world.pending.value.single().state)
+            assertIs<Outcome.Ok<Unit>>(first.world.replaceAttachments(listOf(file("b.txt", "two"))))
+            advanceTimeBy(600)
+            runCurrent()
+            val second =
+                Fixture(
+                    this,
+                    prefsBackend = first.prefsBackend,
+                    composerPrefs = first.composerPrefs,
+                    payloads = first.payloads,
+                )
+            second.open()
+            advanceTimeBy(600)
+            runCurrent()
+            assertEquals(PendingState.Unconfirmed, second.world.pending.value.single().state)
+            assertEquals("same words", second.world.draft.value.text)
+            assertEquals(listOf("b.txt"), second.world.draft.value.attachments.map { it.filename })
+            assertFalse(second.world.draft.value.sendBlocked, "files decide as much as words")
+        }
+
+    @Test
+    fun `B-STATE-043 finding 6 after a restart an attachment-only unknown receipt blocks the same files`() =
+        runTest {
+            val first = Fixture(this)
+            first.base.admission = PromptAdmission.Uncertain
+            first.open()
+            assertIs<Outcome.Ok<Unit>>(first.world.replaceAttachments(listOf(file("a.txt", "one"))))
+            assertIs<Outcome.Ok<Unit>>(first.world.send(""))
+            runCurrent()
+            advanceTimeBy(600)
+            runCurrent()
+            val second =
+                Fixture(
+                    this,
+                    prefsBackend = first.prefsBackend,
+                    composerPrefs = first.composerPrefs,
+                    payloads = first.payloads,
+                )
+            second.open()
+            advanceTimeBy(600)
+            runCurrent()
+            assertEquals(PendingState.Unconfirmed, second.world.pending.value.single().state)
+            assertEquals(listOf("a.txt"), second.world.draft.value.attachments.map { it.filename })
+            assertTrue(second.world.draft.value.sendBlocked)
+            assertIs<Outcome.Failed>(second.world.send(""))
+            runCurrent()
+            assertTrue(second.base.sentPrompts.isEmpty())
+        }
+
+    // ---- P12: staged @ files and server commands ----
+
+    @Test
+    fun `B-CHAT-087 a picked project file rides with its mention range and is dropped with its words`() =
+        runTest {
+            val f = Fixture(this)
+            f.base.setLocation(io.github.eslamasabry.oc.core.model.ServerLocation(directory = "/work"))
+            f.open()
+            f.world.draftChanged("see @src/a.kt now")
+            assertIs<Outcome.Ok<Unit>>(f.world.mentionFile("src/a.kt"))
+            val staged = f.world.draft.value.attachments.single()
+            assertEquals("file:///work/src/a.kt", staged.url)
+            assertIs<Outcome.Ok<Unit>>(f.world.send("see @src/a.kt now"))
+            runCurrent()
+            val sent = f.base.sentPrompts.single().second.attachments.single()
+            assertEquals(4, sent.mentionStart)
+            assertEquals(13, sent.mentionEnd)
+            assertEquals("file:///work/src/a.kt", sent.url)
+        }
+
+    @Test
+    fun `B-CHAT-087 a mention whose words were deleted sends no file`() = runTest {
+        val f = Fixture(this)
+        f.base.setLocation(io.github.eslamasabry.oc.core.model.ServerLocation(directory = "/work"))
+        f.open()
+        f.world.draftChanged("see @src/a.kt")
+        assertIs<Outcome.Ok<Unit>>(f.world.mentionFile("src/a.kt"))
+        f.world.draftChanged("never mind")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("never mind"))
+        runCurrent()
+        assertTrue(f.base.sentPrompts.single().second.attachments.isEmpty())
+    }
+
+    @Test
+    fun `B-NAV-051 server commands load for the conversation and a command line runs as a command`() =
+        runTest {
+            val f = Fixture(this)
+            f.operations.commands =
+                Outcome.Ok(
+                    persistentListOf(
+                        io.github.eslamasabry.oc.core.model.CommandInfo("review", "Review", null, false)
+                    )
+                )
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.loadCommands())
+            assertEquals(listOf("review"), f.world.commands.value.map { it.name })
+            f.world.draftChanged("/review now")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("/review now"))
+            runCurrent()
+            assertTrue(f.base.sentPrompts.isEmpty(), "a command never goes out as a prompt")
+            assertTrue(f.base.calls.any { it.startsWith("slashCommand") })
         }
 }

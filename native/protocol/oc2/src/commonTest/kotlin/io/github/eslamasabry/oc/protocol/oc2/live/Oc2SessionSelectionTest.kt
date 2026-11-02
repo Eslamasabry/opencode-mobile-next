@@ -301,11 +301,12 @@ class Oc2SessionSelectionTest {
     }
 
     @Test
-    fun `B-NAV-034 model switching and the callable catalog are enabled without unrelated agent controls`() = runTest {
+    fun `B-NAV-034 model switching, agent choice and the callable catalog are enabled`() = runTest {
         val engine = MockEngine { error("Capabilities are read without network") }
         val gateway = gateway(engine)
         assertTrue(gateway.capabilities.value.sessionModelProviderSwitching)
-        assertFalse(gateway.capabilities.value.agentSelection)
+        // POST /session/{id}/agent is callable (Flutter api2ServerCapabilities keeps agentSelection).
+        assertTrue(gateway.capabilities.value.agentSelection)
         assertTrue(gateway.capabilities.value.serverCatalog)
         gateway.close()
     }
