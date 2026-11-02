@@ -16,7 +16,7 @@ class KitMdSourceTest {
         assertTrue(prose.inlines.spans.any { it.kind == KitSpanKind.Link("https://example.com") })
         assertTrue(prose.inlines.spans.any { it.kind == KitSpanKind.Path("lib/main.dart", 12) })
         assertTrue(prose.inlines.spans.any { it.kind == KitSpanKind.Bold })
-        assertTrue(b.single().key.startsWith("b:m/p:0"), "keys stay unique per row")
+        assertEquals("b:m/p:0#0", b.single().key, "keys are per row and position")
     }
 
     @Test

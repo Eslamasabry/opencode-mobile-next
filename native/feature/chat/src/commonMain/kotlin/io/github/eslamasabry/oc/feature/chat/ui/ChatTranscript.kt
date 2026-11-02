@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -16,10 +17,12 @@ import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeChunk
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
+import io.github.eslamasabry.oc.ui.kitchat.code.KitStandaloneRedaction
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdReveal
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
+import io.github.eslamasabry.oc.ui.kitchat.markdown.settle
 import io.github.eslamasabry.oc.ui.kitchat.markdown.takesCaret
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -103,7 +106,11 @@ internal object ListKeys {
     fun pending(localId: Long): String = "pending:$localId"
 }
 
-/** The P3 transcript: the engine's rows only (kept for `:quality`'s P3 stream test). */
+/**
+ * The P3 transcript: the engine's rows only (kept for `:quality`'s P3 stream test). P12-CHAT-FEEL: it draws replies the
+ * way the chat screen does (Markdown, code with Copy), so the frame test measures the shipping path; links and Copy do
+ * nothing here.
+ */
 @Composable
 public fun ChatTranscript(
     state: TranscriptState,
@@ -113,6 +120,9 @@ public fun ChatTranscript(
     motion: KitMotionLevel,
     modifier: Modifier = Modifier,
 ) {
+    val reply = remember { ReplyActions(KitMarkdownActions(onLink = {}), copyLabel = "Copy", copy = {}) }
+    // Its callers (the P3 test, the benchmark proof screen) run without the app graph: a pattern-masking redactor.
+    KitStandaloneRedaction {
     ChatTranscriptList(
         rows = state.rows,
         live = null,
@@ -125,7 +135,9 @@ public fun ChatTranscript(
         onOpenMenu = null,
         onRetrySend = {},
         modifier = modifier,
+        reply = reply,
     )
+    }
 }
 
 /**
@@ -308,13 +320,18 @@ private fun RichBlock(
     val column = Modifier.replyColumn(row.continued, row.continues)
     if (row.kind == RowKind.Code) {
         val body = remember(row.text) { FenceText.body(row.text) }
+        val streamed = row.origin == Origin.Streamed
+        // A streamed fence keeps the stream-tuned block until its words have all landed and faded: the settled view
+        // takes over only then, so its reveal never stops half way (and never holds up the blocks after it).
+        val revealing =
+            streamed && reveal.stateFor(row.key, row.key.substringBeforeLast(':'), row.live, body.length).active
         when {
-            row.live || row.open ->
+            row.live || row.open || revealing ->
                 KitReplyBlock(
                     text = body,
                     kind = KitBlockKind.Code,
                     live = row.live,
-                    streamed = row.origin == Origin.Streamed,
+                    streamed = streamed,
                     revealKey = row.key,
                     revealGroup = row.key.substringBeforeLast(':'),
                     registry = reveal,
@@ -348,6 +365,12 @@ private fun RichBlock(
     val blocks = remember(row.key, row.text, row.live) { KitMdSource.blocks(row.key, row.text, row.live) }
     val streamed = row.origin == Origin.Streamed
     val md = remember(reveal, motion, streamed, row.key) { KitMdReveal(reveal, row.key.substringBeforeLast(':'), motion, streamed) }
+    // A growing row can re-parse into fewer blocks; the reveal of a block that went away is finished, not orphaned.
+    val drawn = remember(row.key) { IntArray(1) }
+    SideEffect {
+        for (i in blocks.size until drawn[0]) md.settle("${row.key}#$i")
+        drawn[0] = blocks.size
+    }
     Column(column) {
         val last = blocks.lastIndex
         blocks.forEachIndexed { i, block ->

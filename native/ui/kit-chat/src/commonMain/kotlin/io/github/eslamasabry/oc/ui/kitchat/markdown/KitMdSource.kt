@@ -20,8 +20,25 @@ import kotlinx.collections.immutable.toImmutableList
 public object KitMdSource {
     public fun blocks(key: String, text: String, streaming: Boolean): ImmutableList<KitMdBlock> {
         if (text.isEmpty()) return persistentListOf()
-        return MarkdownBlocks.parse(key, text, streaming).mapNotNull(::toKit).toImmutableList()
+        // Keys by position, not by offset: a streaming row re-parses as it grows (a paragraph that becomes a list
+        // item, an unfinished mark), and its reveal state must stay the same one, never orphaned mid-reveal.
+        return MarkdownBlocks.parse(key, text, streaming)
+            .mapNotNull(::toKit)
+            .mapIndexed { i, b -> rekey(b, "$key#$i") }
+            .toImmutableList()
     }
+
+    private fun rekey(b: KitMdBlock, key: String): KitMdBlock =
+        when (b) {
+            is KitMdBlock.Prose -> b.copy(key = key)
+            is KitMdBlock.Heading -> b.copy(key = key)
+            is KitMdBlock.Quote -> b.copy(key = key, children = b.children.map { rekey(it, "$key:q") }.toImmutableList())
+            is KitMdBlock.ListItem -> b.copy(key = key)
+            is KitMdBlock.Code -> b.copy(key = key)
+            is KitMdBlock.Table -> b.copy(key = key)
+            is KitMdBlock.Rule -> b.copy(key = key)
+            is KitMdBlock.Pictures -> b.copy(key = key)
+        }
 
     private fun toKit(b: Block): KitMdBlock? =
         when (b) {

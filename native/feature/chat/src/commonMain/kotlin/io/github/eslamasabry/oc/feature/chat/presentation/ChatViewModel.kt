@@ -90,6 +90,10 @@ public class ChatViewModel(
 
     override fun confirmUndo(): Unit = presenter.confirmUndo()
 
+    override fun openPicture(path: String, name: String): Unit = presenter.openPicture(path, name)
+
+    override fun closePicture(): Unit = presenter.closePicture()
+
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)

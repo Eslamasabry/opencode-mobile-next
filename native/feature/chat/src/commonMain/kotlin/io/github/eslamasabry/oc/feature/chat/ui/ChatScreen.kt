@@ -25,7 +25,12 @@ import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
 import io.github.eslamasabry.oc.feature.chat.composer.InsertRequest
+import io.github.eslamasabry.oc.feature.chat.presentation.PictureUi
 import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
+import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureContent
+import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureView
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureFailed
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureLoading
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
@@ -300,6 +305,7 @@ public fun ChatScreen(
             // thumb.
             MessageMenu(state.menu, actions, Modifier.align(Alignment.BottomEnd))
             SelectTextSheet(state.select, actions)
+            PictureSheet(state.picture, actions)
             KitConfirm(
                 spec = confirmSpec(state.confirm),
                 onConfirm = {
@@ -472,6 +478,32 @@ private fun SelectTextSheet(select: SelectTextUi?, actions: ChatActions) {
     }
 }
 
+/** P12-CHAT-FEEL: a reply's server picture, pinch to zoom; Back or Done closes it. */
+@Composable
+private fun PictureSheet(picture: PictureUi?, actions: ChatActions) {
+    KitSheet(
+        visible = picture != null,
+        onDismissRequest = actions::closePicture,
+        title = picture?.name ?: stringResource(Res.string.chatFeelPicture),
+        closeLabel = stringResource(Res.string.chatFeelDone),
+        height = io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight.Full,
+    ) {
+        if (picture != null) {
+            KitPictureView(
+                content =
+                    when {
+                        picture.failed -> KitPictureContent.Unavailable
+                        picture.bytes == null -> KitPictureContent.Loading
+                        else -> KitPictureContent.Bytes(picture.bytes)
+                    },
+                description = picture.name,
+                loadingLabel = stringResource(Res.string.chatFeelPictureLoading),
+                failedLabel = stringResource(Res.string.chatFeelPictureFailed),
+            )
+        }
+    }
+}
+
 @Composable
 private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
     when (confirm) {
@@ -585,7 +617,15 @@ internal fun rememberReplyActions(actions: ChatActions): ReplyActions {
                     onLink = actions::openLink,
                     copyCodeLabel = copy,
                     onCopyCode = actions::copyText,
-                    onPicture = { p -> p.url?.let(actions::openLink) },
+                    onPicture = { p ->
+                        val url = p.url
+                        val path = p.path
+                        when {
+                            url != null -> actions.openLink(url)
+                            path != null -> actions.openPicture(path, p.label ?: path.substringAfterLast('/'))
+                        }
+                    },
+                    openFilePictures = true,
                     pictureLabel = { p ->
                         p.label
                             ?: p.path?.let { onServer.replace("\u0000", it) }

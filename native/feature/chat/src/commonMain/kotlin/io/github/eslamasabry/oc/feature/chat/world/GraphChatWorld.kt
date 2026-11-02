@@ -1152,6 +1152,22 @@ internal class GraphChatWorld(
         return r
     }
 
+    @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+    override suspend fun readPicture(path: String): Outcome<ByteArray> {
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val read = a.gateway.fileContent(path)
+        if (currentAttached() !== a) return Outcome.Failed(STALE)
+        val file = (read as? Outcome.Ok)?.value ?: return read as Outcome.Failed
+        if (file.encoding?.lowercase() != "base64" || file.content.length > MAX_PICTURE_BASE64) {
+            return Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
+        }
+        return try {
+            Outcome.Ok(kotlin.io.encoding.Base64.Default.decode(file.content.filterNot { it.isWhitespace() }))
+        } catch (_: IllegalArgumentException) {
+            Outcome.Failed(Failure.Unexpected())
+        }
+    }
+
     override fun markRead() {
         val a = currentAttached() ?: return
         a.graph.scope.launch(registry.mainContext) {
@@ -1179,3 +1195,6 @@ internal class GraphChatWorld(
         val STALE = Failure.Refused(RefusalReason.StaleScope)
     }
 }
+
+/** 20 MB of picture as base64 (Flutter's attachment cap); a bigger file is not opened in the chat. */
+private const val MAX_PICTURE_BASE64: Int = 28_000_000

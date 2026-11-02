@@ -13,4 +13,6 @@
     <string name="chatFeelPictureOnServer">Picture on the server: %1$s</string>
     <string name="chatFeelPictureOnWeb">Picture from %1$s. Tap to open it outside the app.</string>
     <string name="chatFeelDone">Done</string>
+    <string name="chatFeelPictureLoading">Opening the picture…</string>
+    <string name="chatFeelPictureFailed">This picture can't be shown here.</string>
 </resources>

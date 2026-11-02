@@ -173,6 +173,13 @@ public interface ChatWorld {
     public suspend fun revertFrom(from: MessageId): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionRevert")))
 
+    /**
+     * P12-CHAT-FEEL: the bytes of a picture a reply names by its server path (B-CHAT-059), for the in-chat viewer.
+     * Read through the conversation's own file transport; never a web fetch.
+     */
+    public suspend fun readPicture(path: String): Outcome<ByteArray> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
+
     /** The visible transcript was read at the live edge (plan 09 §6.7). */
     public fun markRead()
 }

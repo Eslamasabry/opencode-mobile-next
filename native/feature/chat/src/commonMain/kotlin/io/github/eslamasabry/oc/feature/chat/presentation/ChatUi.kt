@@ -42,6 +42,8 @@ public data class ChatUi(
     val select: SelectTextUi? = null,
     /** P12-CHAT-FEEL: words "Edit and resend" puts in the composer once, then acknowledged ([ChatActions.insertDone]). */
     val insert: ClipUi? = null,
+    /** P12-CHAT-FEEL: the picture viewer over the chat; null = closed. */
+    val picture: PictureUi? = null,
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -144,6 +146,9 @@ public sealed interface ChatConfirm {
     public data class OpenLink(val url: String, val host: String) : ChatConfirm
 }
 
+/** A reply's server picture in the viewer. [bytes] null while loading; [failed] when it could not be read. */
+public class PictureUi(public val id: Long, public val name: String, public val bytes: ByteArray?, public val failed: Boolean)
+
 /** One message's words in a sheet where any part of them can be selected (Flutter's selectable message). */
 public data class SelectTextUi(val id: Long, val text: String)
 
@@ -222,4 +227,9 @@ public interface ChatActions {
 
     /** The person confirmed "Undo from here". */
     public fun confirmUndo() {}
+
+    /** A picture tile that names a file on the server: read it and show it in the viewer. */
+    public fun openPicture(path: String, name: String) {}
+
+    public fun closePicture() {}
 }

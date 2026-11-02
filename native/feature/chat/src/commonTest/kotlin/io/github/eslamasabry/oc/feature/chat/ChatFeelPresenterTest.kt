@@ -43,6 +43,12 @@ class ChatFeelPresenterTest {
 
     private class RevertWorld : FakeChatWorld() {
         var revertResult: Outcome<Unit> = Outcome.Ok(Unit)
+        var picture: Outcome<ByteArray> = Outcome.Ok(byteArrayOf(1, 2, 3))
+
+        override suspend fun readPicture(path: String): Outcome<ByteArray> {
+            calls += "read $path"
+            return picture
+        }
 
         override suspend fun revertFrom(from: MessageId): Outcome<Unit> {
             calls += "revert ${from.raw}"
@@ -202,5 +208,21 @@ class ChatFeelPresenterTest {
             assertEquals(expected, CodeCopy.of(rows, rows.indexOfFirst { it.key == key }), "from $key")
         }
         assertNull(CodeCopy.of(rows, rows.indexOfFirst { it.key == "prompt:u1" }), "only code copies as code")
+    }
+
+    @Test
+    fun `B-CHAT-059 a server picture opens in the viewer through the chat's own transport, and Back closes it`() {
+        val p = presenter()
+        p.openPicture("out/plot.png", "plot.png")
+        val shown = assertNotNull(p.current().picture)
+        assertEquals("plot.png", shown.name)
+        assertEquals(3, shown.bytes?.size)
+        assertEquals(listOf("read out/plot.png"), world.calls)
+        p.leaveRequested()
+        assertNull(p.current().picture)
+        assertEquals(emptyList(), nav.calls, "Back closed the viewer first")
+        world.picture = Outcome.Failed(Failure.Unexpected())
+        p.openPicture("gone.png", "gone.png")
+        assertTrue(p.current().picture!!.failed, "a plain line, never the error text")
     }
 }

@@ -13,4 +13,6 @@
     <string name="chatFeelPictureOnServer">صورة على الخادم: %1$s</string>
     <string name="chatFeelPictureOnWeb">صورة من %1$s. انقر لفتحها خارج التطبيق.</string>
     <string name="chatFeelDone">تم</string>
+    <string name="chatFeelPictureLoading">جارٍ فتح الصورة…</string>
+    <string name="chatFeelPictureFailed">لا يمكن عرض هذه الصورة هنا.</string>
 </resources>

@@ -53,6 +53,7 @@ internal data class ChatLocal(
     val select: SelectTextUi? = null,
     val insert: ClipUi? = null,
     val linkRefused: Boolean = false,
+    val picture: PictureUi? = null,
 )
 
 internal data class PendingArrival(val id: Long, val focusComposer: Boolean, val landOnFailure: Boolean)
@@ -162,9 +163,10 @@ public class ChatPresenter(
             clip = l.clip,
             arrival = arrival,
             capabilities = capsOf(i.capabilities),
-            guardBack = BackOrder.handles(l.menu != null || l.select != null, l.confirm != null, l.findQuery != null, i.draft.unsaved),
+            guardBack = BackOrder.handles(l.menu != null || l.select != null || l.picture != null, l.confirm != null, l.findQuery != null, i.draft.unsaved),
             select = l.select,
             insert = l.insert,
+            picture = l.picture,
         )
     }
 
@@ -185,8 +187,13 @@ public class ChatPresenter(
 
     override fun leaveRequested() {
         val l = local.value
-        when (BackOrder.next(l.menu != null || l.select != null, l.confirm != null, l.findQuery != null, world.draft.value.unsaved)) {
-            BackStep.CloseMenu -> if (l.menu != null) closeMessageMenu() else closeSelection()
+        when (BackOrder.next(l.menu != null || l.select != null || l.picture != null, l.confirm != null, l.findQuery != null, world.draft.value.unsaved)) {
+            BackStep.CloseMenu ->
+                when {
+                    l.menu != null -> closeMessageMenu()
+                    l.select != null -> closeSelection()
+                    else -> closePicture()
+                }
             BackStep.CloseConfirm -> dismissConfirm()
             BackStep.CloseFind -> find(null)
             BackStep.Leave -> nav.back()
@@ -370,6 +377,22 @@ public class ChatPresenter(
 
     override fun closeSelection() {
         local.update { it.copy(select = null) }
+    }
+
+    override fun openPicture(path: String, name: String) {
+        val id = nextId++
+        local.update { it.copy(picture = PictureUi(id, name, bytes = null, failed = false)) }
+        launcher.launch {
+            val read = world.readPicture(path)
+            local.update {
+                if (it.picture?.id != id) it
+                else it.copy(picture = PictureUi(id, name, (read as? Outcome.Ok)?.value, failed = read !is Outcome.Ok))
+            }
+        }
+    }
+
+    override fun closePicture() {
+        local.update { it.copy(picture = null) }
     }
 
     override fun insertDone(id: Long) {
