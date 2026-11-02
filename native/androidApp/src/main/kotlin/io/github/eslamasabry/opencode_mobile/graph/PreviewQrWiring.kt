@@ -49,6 +49,12 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.security.ApprovedLink
 import io.github.eslamasabry.oc.core.security.ExternalLinkOpener
+import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
+import io.github.eslamasabry.oc.core.security.LinkDecision
+import io.github.eslamasabry.oc.core.security.LinkOrigin
+import io.github.eslamasabry.oc.feature.preview.presentation.BrowserTicket
+import io.github.eslamasabry.oc.feature.preview.presentation.NoPreviewBrowser
+import io.github.eslamasabry.oc.feature.preview.presentation.PreviewBrowser
 import io.github.eslamasabry.oc.feature.preview.presentation.PagePhase
 import io.github.eslamasabry.oc.feature.preview.presentation.PreviewEgress
 import io.github.eslamasabry.oc.feature.preview.ui.NoWebPreviewSlot
@@ -85,6 +91,20 @@ class AndroidExternalLinkOpener(private val application: Application) : External
             Outcome.Failed(Failure.Device())
         }
     }
+}
+
+/** The preview's way to the browser: ExternalLinkPolicy decides, ExternalLinkOpener opens. */
+@ContributesBinding(AppScope::class, replaces = [NoPreviewBrowser::class])
+@Inject
+class PolicyPreviewBrowser(private val policy: ExternalLinkPolicy, private val opener: ExternalLinkOpener) : PreviewBrowser {
+    override fun check(url: String, appAuthored: Boolean): BrowserTicket =
+        when (val decision = policy.check(url, if (appAuthored) LinkOrigin.AppAuthored else LinkOrigin.ServerContent)) {
+            is LinkDecision.Open -> BrowserTicket.Open(decision.link)
+            is LinkDecision.AskFirst -> BrowserTicket.AskFirst(decision.shownHost, decision.link)
+            is LinkDecision.Refuse -> BrowserTicket.Refused
+        }
+
+    override fun open(token: Any): Boolean = (token as? ApprovedLink)?.let { opener.open(it) is Outcome.Ok } ?: false
 }
 
 /** The dev preview's page: `:android:webview` [KitWebPreview] under the screen's [PreviewEgress]. */

@@ -8,13 +8,7 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
-import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
-import io.github.eslamasabry.oc.core.security.ApprovedLink
-import io.github.eslamasabry.oc.core.security.ExternalLinkOpener
-import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
-import io.github.eslamasabry.oc.core.security.LinkDecision
-import io.github.eslamasabry.oc.core.security.LinkOrigin
 import io.github.eslamasabry.oc.engine.connection.SavedServer
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
@@ -33,16 +27,15 @@ internal fun serverAddressFor(ref: ConversationRef?, servers: List<SavedServer>)
 
 /**
  * The running page of one port (Flutter `DevPreviewScreen`). The target is resolved once, when the page opens, so the
- * page never swaps hosts under the person. Links to anywhere else go through [ExternalLinkPolicy] → [ExternalLinkOpener]
- * (AGENTS invariant 8): the app's own target opens directly, a page's link to elsewhere asks first.
+ * page never swaps hosts under the person. Links to anywhere else go through [PreviewBrowser] (the app's link policy and
+ * opener, AGENTS invariant 8): the app's own target opens directly, a page's link to elsewhere asks first.
  */
 @AssistedInject
 public class DevPreviewViewModel(
     @Assisted private val route: PreviewRoute.Page,
     connections: ServerConnections,
     private val nav: AppNavigator,
-    private val policy: ExternalLinkPolicy,
-    private val opener: ExternalLinkOpener,
+    private val browser: PreviewBrowser,
 ) : ViewModel(), DevPreviewActions {
     private val target =
         DevPreviewTarget.resolve(
@@ -69,15 +62,14 @@ public class DevPreviewViewModel(
     public val pageEgress: PreviewEgress? get() = egress
 
     /** An approved link waiting for "Open in browser"; never in observable state. */
-    private var pending: ApprovedLink? = null
+    private var pending: Any? = null
 
     override fun back(): Unit = nav.back()
 
     override fun openInBrowser() {
         val url = mutable.value.shown ?: mutable.value.origin ?: return
         // The address the app built (and pages on that same origin) is app-authored; anything else asks first.
-        val origin = if (egress?.mayLoad(url) == true) LinkOrigin.AppAuthored else LinkOrigin.ServerContent
-        decide(policy.check(url, origin))
+        decide(browser.check(url, appAuthored = egress?.mayLoad(url) == true))
     }
 
     override fun showDetails(open: Boolean): Unit = mutable.update { it.copy(details = open) }
@@ -91,13 +83,13 @@ public class DevPreviewViewModel(
 
     override fun pageCanGoBack(can: Boolean): Unit = mutable.update { it.copy(canGoBack = can) }
 
-    override fun pageLeave(url: String): Unit = decide(policy.check(url, LinkOrigin.ServerContent))
+    override fun pageLeave(url: String): Unit = decide(browser.check(url, appAuthored = false))
 
     override fun confirmLeave() {
-        val link = pending ?: return
+        val token = pending ?: return
         pending = null
         mutable.update { it.copy(leaveHost = null) }
-        open(link)
+        open(token)
     }
 
     override fun cancelLeave() {
@@ -107,19 +99,19 @@ public class DevPreviewViewModel(
 
     override fun noticeShown(): Unit = mutable.update { it.copy(notice = null) }
 
-    private fun decide(decision: LinkDecision) {
-        when (decision) {
-            is LinkDecision.Open -> open(decision.link)
-            is LinkDecision.AskFirst -> {
-                pending = decision.link
-                mutable.update { it.copy(leaveHost = decision.shownHost) }
+    private fun decide(ticket: BrowserTicket) {
+        when (ticket) {
+            is BrowserTicket.Open -> open(ticket.token)
+            is BrowserTicket.AskFirst -> {
+                pending = ticket.token
+                mutable.update { it.copy(leaveHost = ticket.host) }
             }
-            is LinkDecision.Refuse -> mutable.update { it.copy(notice = PreviewNotice.LinkBlocked) }
+            BrowserTicket.Refused -> mutable.update { it.copy(notice = PreviewNotice.LinkBlocked) }
         }
     }
 
-    private fun open(link: ApprovedLink) {
-        if (opener.open(link) is Outcome.Failed) mutable.update { it.copy(notice = PreviewNotice.OpenFailed) }
+    private fun open(token: Any) {
+        if (!browser.open(token)) mutable.update { it.copy(notice = PreviewNotice.OpenFailed) }
     }
 
     @AssistedFactory

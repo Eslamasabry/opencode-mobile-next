@@ -7,4 +7,5 @@
     <string name="previewQrPairFilled">تمّ الملء من رمز الاقتران. راجِعه ثم احفظ.</string>
     <string name="previewQrLinkFilled">تمّ ملء العنوان من الرابط. أضِف كلمة المرور ثم احفظ.</string>
     <string name="previewQrScanRejected">رمز QR هذا ليس رمز اقتران. وجّه الكاميرا إلى الرمز الذي يطبعه opencode2 pair.</string>
+    <string name="previewQrPairingCodeLabel">رمز الاقتران</string>
 </resources>

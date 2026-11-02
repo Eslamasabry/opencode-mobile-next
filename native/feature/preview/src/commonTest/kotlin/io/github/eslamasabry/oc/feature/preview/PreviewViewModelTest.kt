@@ -8,7 +8,10 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.security.ApprovedLink
 import io.github.eslamasabry.oc.core.security.ExternalLinkOpener
 import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
+import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
+import io.github.eslamasabry.oc.feature.preview.presentation.BrowserTicket
+import io.github.eslamasabry.oc.feature.preview.presentation.PreviewBrowser
 import io.github.eslamasabry.oc.engine.connection.SavedServer
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.feature.preview.presentation.DevPreviewTarget
@@ -85,12 +88,26 @@ class PreviewViewModelTest {
         }
     }
 
+    /** The same mapping the app wiring makes: the real ExternalLinkPolicy, then the opener. */
+    private class PolicyBrowser(private val opener: Opener) : PreviewBrowser {
+        private val policy = ExternalLinkPolicy()
+
+        override fun check(url: String, appAuthored: Boolean): BrowserTicket =
+            when (val d = policy.check(url, if (appAuthored) LinkOrigin.AppAuthored else LinkOrigin.ServerContent)) {
+                is LinkDecision.Open -> BrowserTicket.Open(d.link)
+                is LinkDecision.AskFirst -> BrowserTicket.AskFirst(d.shownHost, d.link)
+                is LinkDecision.Refuse -> BrowserTicket.Refused
+            }
+
+        override fun open(token: Any): Boolean = opener.open(token as ApprovedLink) is Outcome.Ok
+    }
+
     @BeforeTest fun main() = Dispatchers.setMain(UnconfinedTestDispatcher())
 
     @AfterTest fun reset() = Dispatchers.resetMain()
 
     private fun page(route: PreviewRoute.Page, vararg saved: SavedServer, opener: Opener = Opener()) =
-        DevPreviewViewModel(route, Connections(*saved), Navigator(), ExternalLinkPolicy(), opener)
+        DevPreviewViewModel(route, Connections(*saved), Navigator(), PolicyBrowser(opener))
 
     @Test
     fun `B-CHAT-027 the page opens the conversation's server, else the connected one`() {

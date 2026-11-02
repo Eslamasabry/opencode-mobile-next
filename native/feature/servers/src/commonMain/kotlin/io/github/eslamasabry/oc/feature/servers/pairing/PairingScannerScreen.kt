@@ -6,22 +6,24 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
@@ -53,31 +55,34 @@ import io.github.eslamasabry.oc.ui.words.res.e7SetupPairTooMany
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairUrlsType
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairUsernameType
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPastePairing
+import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
 import io.github.eslamasabry.oc.ui.words.res.e7SetupScanInstruction
 import io.github.eslamasabry.oc.ui.words.res.e7SetupScanPairing
 import io.github.eslamasabry.oc.ui.words.res.pairingScannerAllowCamera
 import io.github.eslamasabry.oc.ui.words.res.pairingScannerStarting
 import io.github.eslamasabry.oc.ui.words.res.previewQrScanRejected
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** The plain sentence for each pairing problem; no sentence ever echoes the input (B-PROTO-065). */
-public fun pairingProblemWords(problem: PairingProblem): StringResource =
-    when (problem) {
-        PairingProblem.Empty -> Res.string.e7SetupEmptyPairClipboard
-        PairingProblem.TooLong -> Res.string.e7SetupPairLong
-        PairingProblem.NotJson -> Res.string.e7SetupPairInvalid
-        PairingProblem.Shape -> Res.string.e7SetupPairShape
-        PairingProblem.NoUrls -> Res.string.e7SetupPairNoUrls
-        PairingProblem.UrlsType -> Res.string.e7SetupPairUrlsType
-        PairingProblem.TooMany -> Res.string.e7SetupPairTooMany
-        PairingProblem.AddressType -> Res.string.e7SetupPairAddressType
-        PairingProblem.AddressLong -> Res.string.e7SetupPairAddressLong
-        PairingProblem.AddressMissing -> Res.string.e7SetupPairAddressMissing
-        PairingProblem.UsernameType -> Res.string.e7SetupPairUsernameType
-        PairingProblem.PasswordMissing -> Res.string.e7SetupPairPasswordMissing
-        PairingProblem.PasswordType -> Res.string.e7SetupPairPasswordType
-    }
+@Composable
+public fun pairingProblemText(problem: PairingProblem): String =
+    stringResource(
+        when (problem) {
+            PairingProblem.Empty -> Res.string.e7SetupEmptyPairClipboard
+            PairingProblem.TooLong -> Res.string.e7SetupPairLong
+            PairingProblem.NotJson -> Res.string.e7SetupPairInvalid
+            PairingProblem.Shape -> Res.string.e7SetupPairShape
+            PairingProblem.NoUrls -> Res.string.e7SetupPairNoUrls
+            PairingProblem.UrlsType -> Res.string.e7SetupPairUrlsType
+            PairingProblem.TooMany -> Res.string.e7SetupPairTooMany
+            PairingProblem.AddressType -> Res.string.e7SetupPairAddressType
+            PairingProblem.AddressLong -> Res.string.e7SetupPairAddressLong
+            PairingProblem.AddressMissing -> Res.string.e7SetupPairAddressMissing
+            PairingProblem.UsernameType -> Res.string.e7SetupPairUsernameType
+            PairingProblem.PasswordMissing -> Res.string.e7SetupPairPasswordMissing
+            PairingProblem.PasswordType -> Res.string.e7SetupPairPasswordType
+        }
+    )
 
 /**
  * Scan pairing code (plan 07 E03, Flutter `PairingScannerScreen`): the camera fills the page with the instruction and
@@ -93,7 +98,17 @@ public fun PairingScannerScreen(
     modifier: Modifier = Modifier,
 ) {
     val handle = remember { QrScannerHandle() }
-    val clipboard = LocalClipboardManager.current
+    // "Paste instead" is the kit's secret field and its Paste button: the code carries a password.
+    val code = remember { TextFieldState() }
+    LaunchedEffect(code) {
+        snapshotFlow { code.text.toString() }
+            .collect { text ->
+                if (PairingText.looksLikePayload(text) || ShareLink.origin(text) != null) {
+                    code.edit { replace(0, length, "") }
+                    actions.pasted(text)
+                }
+            }
+    }
     val noCamera = !slot.supported || handle.stage == ScanStage.NoCamera
     KitScreen(
         modifier = modifier.fillMaxSize(),
@@ -118,12 +133,18 @@ public fun PairingScannerScreen(
                     KitText(stringResource(Res.string.e7SetupCameraPrivacy), role = TypeRole.Secondary, tone = TextTone.Secondary)
                 }
                 if (state.rejected && state.problem == null) KitNotice(stringResource(Res.string.previewQrScanRejected))
-                state.problem?.let { KitErrorNotice(stringResource(pairingProblemWords(it))) }
-                KitButton(
-                    stringResource(Res.string.e7SetupPastePairing),
-                    { actions.pasted(clipboard.getText()?.text) },
+                state.problem?.let { KitErrorNotice(pairingProblemText(it)) }
+                KitField(
+                    code,
+                    stringResource(Res.string.previewQrPairingCodeLabel),
                     modifier = Modifier.testTag("pairing-paste"),
-                    role = if (noCamera) KitButtonRole.Primary else KitButtonRole.Secondary,
+                    kind = KitFieldKind.Secret,
+                    helper = stringResource(Res.string.e7SetupPastePairing),
+                    onSubmit = {
+                        val text = code.text.toString()
+                        code.edit { replace(0, length, "") }
+                        actions.pasted(text)
+                    },
                 )
             }
         },
