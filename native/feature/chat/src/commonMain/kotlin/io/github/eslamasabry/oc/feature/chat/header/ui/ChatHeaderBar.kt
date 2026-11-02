@@ -1,0 +1,370 @@
+package io.github.eslamasabry.oc.feature.chat.header.ui
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderActions
+import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderUi
+import io.github.eslamasabry.oc.feature.chat.header.presentation.ContextLevel
+import io.github.eslamasabry.oc.feature.chat.header.presentation.DetailsUi
+import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderAction
+import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderConfirm
+import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderRules
+import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderSheet
+import io.github.eslamasabry.oc.feature.chat.header.presentation.TranscriptWords
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuGroup
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
+import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.status.KitStatus
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
+import io.github.eslamasabry.oc.ui.kitchat.header.KitChatMoreMenu
+import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
+import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderArchiveFailed
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderContext
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderDeleteFailed
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderFailureDetails
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderForkFailed
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderInUse
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderNotReported
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderRenameFailed
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderServer
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderShareFailed
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderTokens
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderUnshareFailed
+import io.github.eslamasabry.oc.ui.words.res.chatRenameEmpty
+import io.github.eslamasabry.oc.ui.words.res.chatUiAgent
+import io.github.eslamasabry.oc.ui.words.res.chatUiAssistant
+import io.github.eslamasabry.oc.ui.words.res.chatUiCopyTranscript
+import io.github.eslamasabry.oc.ui.words.res.chatUiForkSession
+import io.github.eslamasabry.oc.ui.words.res.chatUiModel
+import io.github.eslamasabry.oc.ui.words.res.chatUiOpenCodeSession
+import io.github.eslamasabry.oc.ui.words.res.chatUiRename
+import io.github.eslamasabry.oc.ui.words.res.chatUiRenameSession
+import io.github.eslamasabry.oc.ui.words.res.chatUiShareSession
+import io.github.eslamasabry.oc.ui.words.res.chatUiStopSharing
+import io.github.eslamasabry.oc.ui.words.res.chatUiTitle
+import io.github.eslamasabry.oc.ui.words.res.chatUiUser
+import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
+import io.github.eslamasabry.oc.ui.words.res.continueWithFactProject
+import io.github.eslamasabry.oc.ui.words.res.continueWithLoadFailed
+import io.github.eslamasabry.oc.ui.words.res.continueWithMenu
+import io.github.eslamasabry.oc.ui.words.res.continueWithModelFailed
+import io.github.eslamasabry.oc.ui.words.res.continueWithModelsHere
+import io.github.eslamasabry.oc.ui.words.res.continueWithNativeNote
+import io.github.eslamasabry.oc.ui.words.res.continueWithNothingReady
+import io.github.eslamasabry.oc.ui.words.res.continueWithSubtitle
+import io.github.eslamasabry.oc.ui.words.res.continueWithTitle
+import io.github.eslamasabry.oc.ui.words.res.continueWithTryAgain
+import io.github.eslamasabry.oc.ui.words.res.historyLoadedOnly
+import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
+import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
+import io.github.eslamasabry.oc.ui.words.res.sessionArchiveBody
+import io.github.eslamasabry.oc.ui.words.res.sessionArchiveTitle
+import io.github.eslamasabry.oc.ui.words.res.sessionContextLoading
+import io.github.eslamasabry.oc.ui.words.res.sessionContextVerdictFull
+import io.github.eslamasabry.oc.ui.words.res.sessionContextVerdictNear
+import io.github.eslamasabry.oc.ui.words.res.sessionContextVerdictPlenty
+import io.github.eslamasabry.oc.ui.words.res.sessionDeleteBody
+import io.github.eslamasabry.oc.ui.words.res.sessionDeleteTitle
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuArchive
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuDelete
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuDetails
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuDo
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuFind
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuGoTo
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuNeedsPrompt
+import io.github.eslamasabry.oc.ui.words.res.transcriptFindReasoning
+import org.jetbrains.compose.resources.stringResource
+
+/** What the chat screen hands its bar: the header's state and intents (plain values and an interface). */
+@Immutable
+public class ChatHeaderSlot(public val state: ChatHeaderUi, public val actions: ChatHeaderActions)
+
+/**
+ * The conversation's bar (Flutter chat_top_bar.dart): Back, the title (tap to rename), "server · project" under it,
+ * then Find and the ⋯ conversation menu. No new bar level: it replaces the chat's plain bar in place.
+ */
+@Composable
+public fun ChatHeaderTopBar(slot: ChatHeaderSlot, onBack: () -> Unit, onFind: () -> Unit) {
+    val state = slot.state
+    val actions = slot.actions
+    val subtitle =
+        when {
+            state.serverName != null && state.projectName != null ->
+                stringResource(Res.string.continueWithSubtitle, state.serverName, state.projectName)
+            else -> state.serverName ?: state.projectName
+        }
+    val transcriptWords = transcriptWords()
+    val items = menuItems(state, actions, onFind, transcriptWords)
+    KitTopBar(
+        title = state.title ?: stringResource(Res.string.commandUntitledChat),
+        subtitle = subtitle,
+        exit = KitTopBarExit.Back,
+        exitLabel = stringResource(Res.string.kitTopBarBack),
+        onExit = onBack,
+        onTitleTap = actions::renameRequested,
+        titleTapLabel = stringResource(Res.string.chatUiRenameSession),
+        more = {
+            KitChatMoreMenu(
+                label = stringResource(Res.string.kitTopBarMore),
+                expanded = state.menuOpen,
+                items = items,
+                onOpen = actions::openMenu,
+                onDismissRequest = actions::closeMenu,
+            )
+        },
+    )
+    // A failed act is the one status line under the bar: plain words, Details on demand, dismissible.
+    var detailsOpen by remember { mutableStateOf<Long?>(null) }
+    val failure = state.failure
+    KitStatusContribution(
+        failure?.let {
+            KitStatus(
+                KitStatusKind.Info,
+                failureWords(it.action),
+                id = "chat-header-failure-${it.id}",
+                action = KitLineAction(stringResource(Res.string.chatHeaderFailureDetails), { detailsOpen = it.id }),
+                onDismiss = actions::dismissFailure,
+                dismissLabel = stringResource(Res.string.kitSheetDismiss),
+            )
+        },
+    )
+    KitSheet(
+        visible = failure != null && detailsOpen == failure.id,
+        onDismissRequest = { detailsOpen = null },
+        title = stringResource(Res.string.chatHeaderFailureDetails),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        failure?.let { KitErrorNotice(message = failureWords(it.action), failure = it.failure) }
+    }
+}
+
+/** The header's dialogs, sheets and clipboard effect; drawn once, over the chat (same modal layer). */
+@Composable
+public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
+    val state = slot.state
+    val actions = slot.actions
+    val empty = stringResource(Res.string.chatRenameEmpty)
+    KitInputDialog(
+        visible = state.renaming != null,
+        title = stringResource(Res.string.chatUiRenameSession),
+        fieldLabel = stringResource(Res.string.chatUiTitle),
+        confirmLabel = stringResource(Res.string.chatUiRename),
+        initial = state.renaming.orEmpty(),
+        validate = { if (HeaderRules.renameValid(it)) null else empty },
+        onResult = actions::renameDone,
+    )
+    val untitled = stringResource(Res.string.commandUntitledChat)
+    KitConfirm(
+        spec =
+            when (val c = state.confirm) {
+                null -> null
+                is HeaderConfirm.Archive ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.sessionArchiveTitle, c.title ?: untitled),
+                        confirmLabel = stringResource(Res.string.sessionMenuArchive),
+                        kind = KitConfirmKind.Neutral,
+                        body = stringResource(Res.string.sessionArchiveBody),
+                    )
+                is HeaderConfirm.Delete ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.sessionDeleteTitle, c.title ?: untitled),
+                        confirmLabel = stringResource(Res.string.sessionMenuDelete),
+                        kind = KitConfirmKind.Destructive,
+                        body = stringResource(Res.string.sessionDeleteBody),
+                    )
+            },
+        onConfirm = actions::confirm,
+        onCancel = actions::dismissConfirm,
+    )
+    val sheet = state.sheet
+    KitSheet(
+        visible = sheet is HeaderSheet.Details,
+        onDismissRequest = actions::closeSheet,
+        title = stringResource(Res.string.sessionMenuDetails),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        (sheet as? HeaderSheet.Details)?.let { DetailsBody(it.facts) }
+    }
+    KitSheet(
+        visible = sheet is HeaderSheet.ContinueWith,
+        onDismissRequest = actions::closeSheet,
+        title = stringResource(Res.string.continueWithTitle),
+        subtitle =
+            listOfNotNull(state.title, state.projectName).takeIf { it.isNotEmpty() }?.joinToString(" · "),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        (sheet as? HeaderSheet.ContinueWith)?.let { ContinueBody(it, state.working == HeaderAction.ContinueWith, actions) }
+    }
+    val clip = state.clip
+    KitClipboardEffect(clip?.id, clip?.text, actions::clipDone)
+}
+
+@Composable
+private fun DetailsBody(facts: DetailsUi) {
+    val none = stringResource(Res.string.chatHeaderNotReported)
+    Column(Modifier.fillMaxWidth().testTag("chat-details-sheet")) {
+        KitRowGroup {
+            KitRow(stringResource(Res.string.chatHeaderServer), trailing = KitRowTrailing.Value(facts.serverName ?: none, chevron = false))
+            KitRow(stringResource(Res.string.continueWithFactProject), trailing = KitRowTrailing.Value(facts.projectName ?: none, chevron = false))
+            KitRow(stringResource(Res.string.chatUiModel), trailing = KitRowTrailing.Value(facts.model ?: none, chevron = false))
+            KitRow(stringResource(Res.string.chatUiAgent), trailing = KitRowTrailing.Value(facts.agent ?: none, chevron = false))
+            val percent = facts.contextPercent
+            val context =
+                if (percent == null) none
+                else
+                    when (facts.contextLevel) {
+                        ContextLevel.Full -> stringResource(Res.string.sessionContextVerdictFull, Numbers.format(percent))
+                        ContextLevel.Warning -> stringResource(Res.string.sessionContextVerdictNear, Numbers.format(percent))
+                        else -> stringResource(Res.string.sessionContextVerdictPlenty, Numbers.format(percent))
+                    }
+            KitRow(stringResource(Res.string.chatHeaderContext), trailing = KitRowTrailing.Value(context, chevron = false))
+            facts.totalTokens?.let {
+                KitRow(stringResource(Res.string.chatHeaderTokens), trailing = KitRowTrailing.Value(Numbers.format(it), chevron = false))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ContinueBody(sheet: HeaderSheet.ContinueWith, working: Boolean, actions: ChatHeaderActions) {
+    Column(Modifier.fillMaxWidth().testTag("continue-with-sheet")) {
+        KitNotice(message = stringResource(Res.string.continueWithNativeNote))
+        when {
+            sheet.failure != null && sheet.choices.isEmpty() ->
+                KitErrorNotice(
+                    message = stringResource(Res.string.continueWithLoadFailed),
+                    failure = sheet.failure,
+                    retry = KitLineAction(stringResource(Res.string.continueWithTryAgain), actions::retryContinueWith),
+                )
+            sheet.loading -> KitNotice(message = stringResource(Res.string.sessionContextLoading))
+            sheet.choices.size <= 1 && sheet.choices.all { it.current } ->
+                KitNotice(message = stringResource(Res.string.continueWithNothingReady))
+            else -> {
+                if (sheet.failure != null) KitErrorNotice(message = stringResource(Res.string.continueWithModelFailed), failure = sheet.failure)
+                KitSectionLabel(stringResource(Res.string.continueWithModelsHere))
+                KitRowGroup {
+                    sheet.choices.forEach { choice ->
+                        KitRow(
+                            title = choice.label,
+                            supporting = choice.providerId,
+                            trailing =
+                                if (choice.current) KitRowTrailing.Value(stringResource(Res.string.chatHeaderInUse), chevron = false)
+                                else KitRowTrailing.Chevron,
+                            enabled = !working,
+                            onClick = { actions.continueWith(choice) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun menuItems(
+    state: ChatHeaderUi,
+    actions: ChatHeaderActions,
+    onFind: () -> Unit,
+    words: TranscriptWords,
+): List<KitMenuItem> {
+    val goTo = KitMenuGroup("go-to", stringResource(Res.string.sessionMenuGoTo))
+    val act = KitMenuGroup("do", stringResource(Res.string.sessionMenuDo))
+    val needsPrompt = stringResource(Res.string.sessionMenuNeedsPrompt)
+    val mask = rememberKitMask()
+    val working = stringResource(Res.string.kitTurnLiveWorking)
+    return state.menu.map { action ->
+        val enabled =
+            when {
+                state.working == action -> KitEnabled.Disabled(working)
+                HeaderRules.needsPrompt(action) && !state.hasPrompt -> KitEnabled.Disabled(needsPrompt)
+                else -> KitEnabled.Enabled
+            }
+        KitMenuItem(
+            label = menuWords(action),
+            onSelect = {
+                when (action) {
+                    HeaderAction.Find -> {
+                        actions.closeMenu()
+                        onFind()
+                    }
+                    HeaderAction.CopyTranscript -> actions.copyTranscript(words, mask)
+                    else -> actions.choose(action)
+                }
+            },
+            group =
+                when (action) {
+                    HeaderAction.Find, HeaderAction.Details -> goTo
+                    HeaderAction.Delete -> null
+                    else -> act
+                },
+            destructive = action == HeaderAction.Delete,
+            enabled = enabled,
+        )
+    }
+}
+
+@Composable
+private fun menuWords(action: HeaderAction): String =
+    when (action) {
+        HeaderAction.Find -> stringResource(Res.string.sessionMenuFind)
+        HeaderAction.Details -> stringResource(Res.string.sessionMenuDetails)
+        HeaderAction.Share -> stringResource(Res.string.chatUiShareSession)
+        HeaderAction.Unshare -> stringResource(Res.string.chatUiStopSharing)
+        HeaderAction.Fork -> stringResource(Res.string.chatUiForkSession)
+        HeaderAction.Rename -> stringResource(Res.string.chatUiRenameSession)
+        HeaderAction.ContinueWith -> stringResource(Res.string.continueWithMenu)
+        HeaderAction.CopyTranscript -> stringResource(Res.string.chatUiCopyTranscript)
+        HeaderAction.Archive -> stringResource(Res.string.sessionMenuArchive)
+        HeaderAction.Delete -> stringResource(Res.string.sessionMenuDelete)
+    }
+
+@Composable
+private fun failureWords(action: HeaderAction): String =
+    when (action) {
+        HeaderAction.Rename -> stringResource(Res.string.chatHeaderRenameFailed)
+        HeaderAction.Share -> stringResource(Res.string.chatHeaderShareFailed)
+        HeaderAction.Unshare -> stringResource(Res.string.chatHeaderUnshareFailed)
+        HeaderAction.Fork -> stringResource(Res.string.chatHeaderForkFailed)
+        HeaderAction.Archive -> stringResource(Res.string.chatHeaderArchiveFailed)
+        HeaderAction.Delete -> stringResource(Res.string.chatHeaderDeleteFailed)
+        else -> stringResource(Res.string.continueWithModelFailed)
+    }
+
+@Composable
+private fun transcriptWords(): TranscriptWords {
+    val untitled = stringResource(Res.string.chatUiOpenCodeSession)
+    val user = stringResource(Res.string.chatUiUser)
+    val assistant = stringResource(Res.string.chatUiAssistant)
+    val reasoning = stringResource(Res.string.transcriptFindReasoning)
+    val partial = stringResource(Res.string.historyLoadedOnly)
+    return remember(untitled, user, assistant, reasoning, partial) { TranscriptWords(untitled, user, assistant, reasoning, partial) }
+}

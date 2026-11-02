@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P12 CHAT-HEADER: the conversation header, its menu and sheets. Owner: l10n-owner adopts or moves these. -->
+<resources>
+    <string name="chatHeaderServer">الخادم</string>
+    <string name="chatHeaderContext">السياق المستخدم</string>
+    <string name="chatHeaderNotReported">لم يُبلَّغ عنه بعد</string>
+    <string name="chatHeaderTokens">الرموز</string>
+    <string name="chatHeaderInUse">قيد الاستخدام</string>
+    <string name="chatHeaderRenameFailed">تعذّرت إعادة تسمية المحادثة.</string>
+    <string name="chatHeaderShareFailed">تعذّرت مشاركة المحادثة.</string>
+    <string name="chatHeaderUnshareFailed">تعذّر إيقاف المشاركة.</string>
+    <string name="chatHeaderForkFailed">تعذّر نسخ المحادثة.</string>
+    <string name="chatHeaderArchiveFailed">تعذّرت أرشفة المحادثة.</string>
+    <string name="chatHeaderDeleteFailed">تعذّر حذف المحادثة.</string>
+    <string name="chatHeaderFailureDetails">التفاصيل</string>
+</resources>

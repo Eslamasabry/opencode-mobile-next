@@ -10,6 +10,8 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
+import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
+import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
@@ -32,7 +34,11 @@ public class ChatEntries(private val composerHost: ComposerHost, private val env
             val state by vm.state.collectAsStateWithLifecycle()
             val requests by vm.requests.collectAsStateWithLifecycle()
             val slot = requests?.state?.collectAsStateWithLifecycle()?.value ?: io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi()
-            environment.Provide { ChatScreen(state, vm, composerHost, requests = slot, requestActions = requests) }
+            val headerVm = assistedMetroViewModel<ChatHeaderViewModel, ChatHeaderViewModel.Factory> { create(route) }
+            val header by headerVm.state.collectAsStateWithLifecycle()
+            environment.Provide {
+                ChatScreen(state, vm, composerHost, requests = slot, requestActions = requests, header = ChatHeaderSlot(header, headerVm))
+            }
         }
     }
 }

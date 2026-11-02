@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P12 CHAT-HEADER: the conversation header, its menu and sheets. Owner: l10n-owner adopts or moves these. -->
+<resources>
+    <string name="chatHeaderServer">Server</string>
+    <string name="chatHeaderContext">Context used</string>
+    <string name="chatHeaderNotReported">Not reported yet</string>
+    <string name="chatHeaderTokens">Tokens</string>
+    <string name="chatHeaderInUse">In use</string>
+    <string name="chatHeaderRenameFailed">Couldn't rename the conversation.</string>
+    <string name="chatHeaderShareFailed">Couldn't share the conversation.</string>
+    <string name="chatHeaderUnshareFailed">Couldn't stop sharing.</string>
+    <string name="chatHeaderForkFailed">Couldn't fork the conversation.</string>
+    <string name="chatHeaderArchiveFailed">Couldn't archive the conversation.</string>
+    <string name="chatHeaderDeleteFailed">Couldn't delete the conversation.</string>
+    <string name="chatHeaderFailureDetails">Details</string>
+</resources>

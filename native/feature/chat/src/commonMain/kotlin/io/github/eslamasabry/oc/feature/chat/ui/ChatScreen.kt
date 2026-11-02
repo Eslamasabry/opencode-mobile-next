@@ -24,6 +24,9 @@ import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
+import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
+import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
+import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
@@ -130,6 +133,7 @@ public fun ChatScreen(
     modifier: Modifier = Modifier,
     requests: RequestSlotUi = RequestSlotUi(),
     requestActions: ChatRequestActions? = null,
+    header: ChatHeaderSlot? = null,
 ) {
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
     val requestState by rememberUpdatedState(requests)
@@ -197,7 +201,9 @@ public fun ChatScreen(
                 modifier = Modifier.fillMaxSize(),
                 page = true,
                 topBar = {
-                    KitTopBar(
+                    if (header != null) {
+                        ChatHeaderTopBar(header, actions::leaveRequested) { actions.find(state.find?.query ?: "") }
+                    } else KitTopBar(
                         title = state.title ?: stringResource(Res.string.commandUntitledChat),
                         exit = KitTopBarExit.Back,
                         exitLabel = stringResource(Res.string.kitTopBarBack),
@@ -288,6 +294,7 @@ public fun ChatScreen(
                 },
                 onCancel = actions::dismissConfirm,
             )
+            header?.let { ChatHeaderOverlays(it) }
         }
     }
 }
