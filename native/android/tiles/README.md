@@ -60,3 +60,12 @@ the Flutter app's `AttentionTileService.kt`, `PauseTileService.kt`, `PinnedSessi
 ```bash
 ./gradlew :android:tiles:testDebugUnitTest
 ```
+
+## The in-app updater's Android half (unit P12-PLATFORM)
+
+`oc/android/tiles/updates/AndroidUpdates.kt` binds the `:engine:updates` ports: `AndroidUpdateFeed` (GitHub over
+`HttpURLConnection`, resumable `<file>.part` download with Range / 416 restart), `AndroidUpdatePlatform` (ABIs, SHA-256,
+`getPackageArchiveInfo` package / versionCode / signer, `canRequestPackageInstalls`, PackageInstaller session) and
+`PrefsUpdateStore` (`oc_updates` preferences, app-wide). `AppUpdateStatusReceiver` keeps the Flutter FQCN and is declared
+in this module's manifest with `REQUEST_INSTALL_PACKAGES`. `:androidApp` builds `AppUpdates` from them in
+`graph/PlatformWiring.kt`.
