@@ -56,3 +56,5 @@
 :engine:migration	S	migration-owner (P12-MIGRATION)	slice-2
 :feature:gate	F	migration-owner (S2-GATEUI, P12-MIGRATION)	slice-2
 :feature:linux	F	P12-LINUX	parity
+:engine:git	F	P12-GIT	parity-p12
+:feature:git	F	P12-GIT	parity-p12

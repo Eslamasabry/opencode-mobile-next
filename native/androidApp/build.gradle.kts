@@ -69,6 +69,8 @@ dependencies {
             ":engine:runtime",
             ":feature:phone",
             ":feature:linux",
+            ":engine:git",
+            ":feature:git",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

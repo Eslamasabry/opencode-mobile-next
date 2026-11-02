@@ -10,6 +10,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter
@@ -77,5 +78,22 @@ class ChatScreenHostTest {
             setContent { Root { ChatScreen(state, actions, composer) } }
             onNodeWithText("Leave without saving").assertIsDisplayed().performClick()
             assertEquals(listOf("back"), nav.calls)
+        }
+
+    @Test
+    fun `B-NAV-020 the chat top bar has a visible Git action that opens the Git page`() =
+        runComposeUiTest {
+            val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var opened = 0
+            val actions =
+                object : ChatActions by presenter {
+                    override fun openGit() {
+                        opened++
+                    }
+                }
+            val state = ChatUi.loading(Ref).copy(title = "Native chat", phase = ChatPhase.Live)
+            setContent { Root { ChatScreen(state, actions, composer) } }
+            onNodeWithText("Git").assertIsDisplayed().performClick()
+            assertEquals(1, opened)
         }
 }
