@@ -58,7 +58,8 @@ class PairingTextTest {
         assertEquals(PairingProblem.PasswordType, problem("""{"urls":["https://a.example"],"password":null}"""))
         assertEquals(PairingProblem.TooLong, problem("{\"urls\":[\"" + "a".repeat(9000) + "\"]}"))
         val deep = "[".repeat(4000) + "]".repeat(4000)
-        assertEquals(PairingProblem.AddressType, problem("""{"urls":[$deep],"password":"x"}"""))
+        assertEquals(PairingProblem.NotJson, problem("""{"urls":[$deep],"password":"x"}"""))
+        assertEquals(PairingProblem.AddressType, problem("""{"urls":[[[["https://a.example"]]]],"password":"x"}"""))
     }
 
     @Test

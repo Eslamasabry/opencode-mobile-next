@@ -93,6 +93,8 @@ public object PairingText {
         val trimmed = raw.trim()
         if (trimmed.isEmpty()) return problem(PairingProblem.Empty)
         if (trimmed.length > PairingPayload.MAX_LENGTH) return problem(PairingProblem.TooLong)
+        // The JSON reader recurses per level; a pasted wall of brackets must be refused before it can overflow the stack.
+        if (nestingTooDeep(trimmed)) return problem(PairingProblem.NotJson)
         val decoded: JsonElement =
             try {
                 json.parseToJsonElement(trimmed)
@@ -164,6 +166,26 @@ public object PairingText {
     }
 
     private fun problem(p: PairingProblem): PairingRead = PairingRead.Problem(p)
+
+    /** True when brackets outside strings nest deeper than [MAX_DEPTH]. */
+    private fun nestingTooDeep(text: String): Boolean {
+        var depth = 0
+        var inString = false
+        var escaped = false
+        for (c in text) {
+            when {
+                escaped -> escaped = false
+                inString && c == '\\' -> escaped = true
+                c == '"' -> inString = !inString
+                inString -> Unit
+                c == '[' || c == '{' -> if (++depth > MAX_DEPTH) return true
+                c == ']' || c == '}' -> depth--
+            }
+        }
+        return false
+    }
+
+    private const val MAX_DEPTH = 32
 
     private const val INVALID = "<invalid address>"
 }
