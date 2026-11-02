@@ -43,7 +43,6 @@ class ComposerFilesViewModelTest {
     /** The scripted world: only the frozen model/file members matter here. */
     private class FilesWorld : FakeChatWorld() {
         override val models = MutableStateFlow(ComposerModels())
-        val calls = mutableListOf<String>()
         var selectResult: Outcome<Unit> = Outcome.Ok(Unit)
         var selectGate: CompletableDeferred<Unit>? = null
         var replaceResult: Outcome<Unit> = Outcome.Ok(Unit)

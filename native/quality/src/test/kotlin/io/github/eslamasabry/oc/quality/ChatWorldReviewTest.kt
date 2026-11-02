@@ -362,6 +362,7 @@ class ChatWorldReviewTest {
                         ref.sessionId.raw,
                     ),
                     worlds,
+                    filePickers = emptySet(),
                 )
             backgroundScope.launch { vm.state.collect {} }
             runCurrent()

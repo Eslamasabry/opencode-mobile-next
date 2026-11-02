@@ -143,3 +143,50 @@ by visible text (no Compose build possible here).
 - Read aloud reads prose from the transcript text with an interim markdown stripper (`SpeechProse`).
 - `ComposerVoicePresenter` and the countdown tick through `VoiceHub.ticks()` because Konsist K1 allows features only
   `kotlinx.coroutines.flow.*`, `launch` and `CoroutineScope` (no `delay`/`Job`).
+
+## Verified on the VPS (2026-11-02)
+
+Branch `p12v/voice`, from `origin/native/p12-voice-2026-11-03` (`53ab0f35`). `native/m1-2026-11-03` was already an
+ancestor, so no rebase was needed. JDK 21, real Android SDK, Gradle with `-Dorg.gradle.workers.max=3 -Xmx3g` under `nice -n 5`.
+
+| Command | Result |
+|---|---|
+| `:feature:voice:desktopTest` | 30 tests, 0 failed (`ComposerVoicePresenterTest` 18, `VoiceSettingsPresenterTest` 7, `ReplyReaderPresenterTest` 5) |
+| `:ui:kit-chat:desktopTest` | 115 tests, 1 failed: `ReplyStreamFrameBenchmark` PB-11 (below). `KitMicPressTest` and `KitLevelMeterRulesTest` pass |
+| `:feature:chat:desktopTest` | 103 tests, 8 failed, all m1 composer files/models WIP (below). `ChatPresenterTest` (incl. Read aloud) and `ChatRulesTest`, which this unit edited, pass |
+| `:ui:routes:desktopTest` / `:ui:words:desktopTest` | pass |
+| `:androidApp:assemblePreviewDebug` | built, so `VoiceWiring.kt`, the Compose screens, the kit mic/pill and the manifest `<queries>` compile with no change |
+| `:androidApp:testPreviewDebugUnitTest` | 11 tests, 0 failed |
+| `:desktopApp:compileKotlin` | compiles |
+| `:quality:test` | 48 tests, 2 failed, both outside this unit (below). `ModuleOwnersTest` passes with the new row |
+
+`testDebugUnitTest` does not exist for these KMP feature modules (no Android host tests), so desktopTest is the test
+run for them. The unit's own code needed **no fix**. Edits made, all outside the write set:
+
+1. `native/MODULE_OWNERS`: added `:feature:voice	F	(slice brief names the agent)	slice-12` (§5.2). `ModuleOwnersTest` needs it.
+2. `:feature:chat` test sources did not compile on the m1 base: the composer WIP changed the APIs and left the tests
+   behind. Without these fixes, none of the chat tests this unit edited could run:
+   - `ChatFakes.kt`: `FakeChatWorld` is now `open` (`ComposerFilesViewModelTest.FilesWorld` extends it).
+   - `ComposerFilesViewModelTest`: `FilesWorld` drops its own `calls` list, which shadowed `FakeChatWorld.calls`, and
+     uses the inherited one. Every assertion filters by the `replace` prefix, so they check the same thing.
+   - `ComposerDraftViewModelTest`: passes `filePickers = emptySet()`.
+   - `WorldComposerFilesModelsTest.SelectionGateway`: implements the two new `SessionSelectionGateway` members
+     (`createSelectedSession`, `setSessionAgent`) as Unavailable. These rows never reach them.
+3. `quality/.../ChatWorldReviewTest.kt`: passes `filePickers = emptySet()`, the same pre-existing m1 break and fix as
+   in P12-SETTINGS.
+
+Failing, not caused by this unit:
+
+- `:feature:chat`: `ComposerFilesViewModelTest` (4), `ComposerModelsFilesTest` (3: "Loading models…", the attach
+  button's content description, Arabic "نموذج"), `WorldComposerFilesModelsTest` B-CHAT-107 retry. These are the m1
+  model/file composer WIP. This unit's `BasicComposer` change is a `voice: KitComposerVoice? = null` parameter, and with
+  null (what these tests pass) it renders nothing extra. It does not touch the ViewModels. The composer owner needs to
+  finish that WIP.
+- `:ui:kit-chat` `ReplyStreamFrameBenchmark` PB-11: `UncompletedCoroutinesError` after the 1 min `runTest` timeout, both
+  in the full run and alone (load average ~10–15 on the shared VPS). This is reply-stream code; voice added only
+  composer files to kit-chat.
+- `:quality`: `KonsistRulesTest` K1 on `BasicComposerHost.kt` (the same m1 violation as on the other branches; voice's
+  added imports are `ui.kitchat` kit parts) and `TranscriptStreamUiTest` 6,000-word reply (load-bound timeout).
+
+Remaining gaps: no device run (there is no emulator on the VPS), so mic permission, the recognizer and read aloud on a
+phone are unchecked. §5.3 (Settings › Voice row → `VoiceRoute.Settings`) still waits for `:feature:settings` routing.
