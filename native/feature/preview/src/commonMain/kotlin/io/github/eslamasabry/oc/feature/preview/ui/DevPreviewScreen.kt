@@ -135,7 +135,7 @@ public fun DevPreviewScreen(
                                 primary = KitAction(browser, actions::openInBrowser),
                                 modifier = Modifier.align(Alignment.Center),
                             )
-                        else -> {
+                        else -> if (origin != null && egress != null) {
                             slot.Page(origin, egress, handle, events, Modifier.fillMaxSize().testTag("dev-preview-page"))
                             if (state.phase == PagePhase.Failed) {
                                 KitStateView(
