@@ -66,13 +66,16 @@ dependencies {
             ":feature:gate",
             ":protocol:paseo",
             ":feature:agents",
+            ":engine:runtime",
+            ":feature:phone",
+            ":feature:linux",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
-    debugImplementation(libs.compose.resources) // P6 proof screen (debug only)
-    debugImplementation(libs.compose.foundation)
+    implementation(libs.compose.resources) // getString outside composition (LinuxWiring's job notice words); P6's proof screen too.
+    debugImplementation(libs.compose.foundation) // P6 proof screen (debug only)
     implementation(libs.metrox.viewmodel.compose)
     implementation(libs.kotlinx.io.core) // Real app-private draft payload vault.
     testImplementation(kotlin("test-junit"))

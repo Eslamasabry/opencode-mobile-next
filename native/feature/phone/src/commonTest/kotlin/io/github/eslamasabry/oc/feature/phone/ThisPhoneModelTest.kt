@@ -184,8 +184,9 @@ class ThisPhoneModelTest {
             rig.model.act(PhoneAct.SetUp)
             rig.model.openRunning()
             rig.model.openKeepRunning()
+            rig.model.openLinux()
             rig.model.back()
-            assertEquals(listOf("open SetupStart", "open Running", "open KeepRunning", "back"), rig.nav.calls)
+            assertEquals(listOf("open SetupStart", "open Running", "open KeepRunning", "open Linux", "back"), rig.nav.calls)
             rig.settings.opens = false
             rig.model.act(PhoneAct.OpenAppSettings)
             runCurrent()

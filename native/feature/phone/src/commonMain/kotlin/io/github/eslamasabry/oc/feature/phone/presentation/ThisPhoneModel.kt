@@ -130,6 +130,8 @@ public class ThisPhoneModel(
 
     override fun openKeepRunning(): Unit = nav.open(PhonePage.KeepRunning)
 
+    override fun openLinux(): Unit = nav.open(PhonePage.Linux)
+
     override fun back(): Unit = nav.back()
 
     init {

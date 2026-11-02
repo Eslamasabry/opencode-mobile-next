@@ -55,3 +55,4 @@
 :android:migration	S	migration-owner (S2-MIGRRUN, P12-MIGRATION)	slice-2
 :engine:migration	S	migration-owner (P12-MIGRATION)	slice-2
 :feature:gate	F	migration-owner (S2-GATEUI, P12-MIGRATION)	slice-2
+:feature:linux	F	P12-LINUX	parity
