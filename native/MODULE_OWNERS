@@ -63,3 +63,4 @@
 :android:tiles	F	platform (P12-PLATFORM)	parity
 :feature:preview	F	PREVIEW-QR (P12)	slice-5
 :android:webview	F	PREVIEW-QR (P12)	slice-5
+:feature:prompts	F	P12-PROMPTS	slice-3

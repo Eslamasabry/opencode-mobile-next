@@ -30,12 +30,16 @@ An unverified `p12v/projects` merge was in progress at hand-over; it was aborted
 | 5 | git (`p12v/git`) | `dc8783c59` | (this) | Conflicts: MODULE_OWNERS, androidApp deps (union), ChatWorldReviewTest (HEAD). Integration fix: WorldComposerFilesModelsTest `SelectionGateway` got duplicate `createSelectedSession`/`setSessionAgent` (the verifier's stubs vs the composer's real fakes); kept the composer's. Compile green; `:engine:git`, `:feature:chat`, `:feature:git`, `:ui:routes` green; `:quality:test` only the known P3 timeout |
 | 6 | platform (`p12v/platform`) | `92732babf` | (this) | Conflicts: MODULE_OWNERS, androidApp deps (union; `:android:notifications` was already listed, kept once), MainActivity (P12-SETTINGS `attachBaseContext` + P12-PLATFORM `onPostCreate`/`onNewIntent`/`onResume` routing, both kept; the migration-wrapped root stays), BasicComposerHost (HEAD). Compile green; `:android:tiles`, `:engine:updates`, `:feature:chat`, `:feature:chats`, `:feature:updates`, `:ui:routes` green; `:quality:test` only the known P3 timeout |
 | 7 | previewqr (`p12v/previewqr`) | `d8ca921f1` | (this) | Conflicts: MODULE_OWNERS, androidApp deps (union); ChatScreen top-bar actions (git's chip kept, then `+ extraActions` from preview); ServersUi/ServersViewModel/ServersScreen (agents' Settings › Agents entry + pairing scanner/paste, both kept). Compile green; `:android:webview`, `:feature:chat`, `:feature:preview`, `:feature:servers`, `:ui:routes`, `:ui:words` green; `:quality:test` only the known P3 timeout |
+| 8 | prompts (`p12v/prompts`) | `ebb4951a7` | (this) | Conflicts: MODULE_OWNERS, androidApp deps (union); ChatEntries (preview's `extraActions` + prompts' `ChatPromptsDoor` both passed; one `navigator`, plus `inbox`); ChatScreen (git chip, saved-prompts action, then `+ extraActions`; both params); BasicComposerHost, WorldComposerFilesModelsTest, ChatWorldReviewTest kept HEAD (the verifier's gateway stubs again duplicated the composer's fakes). Compile green; `:feature:chat`, `:feature:prompts`, `:ui:routes` green; `:ui:kit-chat` and `:quality:test` only the two pre-existing frame-test timeouts |
 
 ## Known
 
-- `quality/…/p3/TranscriptStreamUiTest` times out at the 1-minute `runComposeUiTest` budget (124 s wall,
-  ~8 000 real frames) while the host load average is ~18 (parallel verifiers). Nothing on its path
-  (TranscriptEngine, `ChatTranscript`, kit-chat) changed in the merge; load-bound, re-check when the host is quiet.
+- **Pre-existing, not merge breaks:** `quality/…/p3/TranscriptStreamUiTest` (P3) and `ui/kit-chat`
+  `ReplyStreamFrameBenchmark` B-CHAT-096 PB-11 run ~8 000 real Compose frames inside the default 1-minute
+  `runTest`/`runComposeUiTest` budget. On this host they take 81 s and 95 s even alone at load average 4.4
+  (124 s at load 18). `git diff 596ee5310 HEAD` (the pre-session base) is empty for `ui/kit-chat`,
+  `engine/transcript`, `ui/kit`, `ui/design` and `core/markdown`, so no merge here changed their path. Owner
+  fix: a longer explicit `timeout` on those two tests, or move them to the device benchmark (P3 already owes J2).
 - Same pattern: `android/migration` `MigrationRunnerTest` B-MIGR-010 (exhaustive kill-at-every-step) runs 49 s of a
   60 s `runTest` budget alone and times out when the host is loaded.
 
@@ -48,3 +52,4 @@ An unverified `p12v/projects` merge was in progress at hand-over; it was aborted
 | Wave | Time | APK | Units |
 |------|------|-----|-------|
 | 1 | 2026-11-02 22:01 | `~/wt/p12-apks/p12-wave1-501d3abf9-preview-debug.apk` (25.1 MB) | P12-COMPOSER |
+| 2 | 2026-11-02 23:55 | `~/wt/p12-apks/p12-wave2-021be255a-preview-debug.apk` (34.9 MB) | migration, agents, linux, git, platform, previewqr |

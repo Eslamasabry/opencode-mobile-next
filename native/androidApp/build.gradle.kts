@@ -78,6 +78,7 @@ dependencies {
             ":feature:preview", // PREVIEW-QR
             ":android:webview", // PREVIEW-QR
             ":android:camera", // PREVIEW-QR (pairing scanner)
+            ":feature:prompts",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)
