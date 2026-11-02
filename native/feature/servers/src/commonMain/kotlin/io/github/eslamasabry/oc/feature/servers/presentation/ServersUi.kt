@@ -54,4 +54,6 @@ public interface ServersActions {
 
     /** The waiting pairing, once; it carries the password, so it never enters [ServersUi]. */
     public fun takePairing(): PairingFill? = null
+    /** The server's scheduled prompts (:feature:schedules). */
+    public fun openSchedules(id: ProfileId) {}
 }

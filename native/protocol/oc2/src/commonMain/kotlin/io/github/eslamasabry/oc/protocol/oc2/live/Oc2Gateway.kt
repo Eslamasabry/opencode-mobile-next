@@ -777,7 +777,7 @@ internal class Oc2Gateway(
     companion object {
         val Capabilities =
             ServerCapabilities(
-                scheduledPrompts = false,
+                scheduledPrompts = true, // Flutter api2 parity (gateway_mappers.dart): schedules run client-side over the normal session API
                 phoneTeamExecution = false,
                 genUi = false,
                 sessionAddressHandoff = false,

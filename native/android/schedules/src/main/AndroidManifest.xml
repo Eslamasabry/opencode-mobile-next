@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The started/finished notices of scheduled runs (Android 13+ asks the person once). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application>
+        <!--
+            The notification trampoline lives in :androidApp (it reaches the app graph); it routes the tap
+            (B-NAV-054), opens MainActivity and finishes. Not exported: only our own PendingIntents start it.
+        -->
+        <activity
+            android:name="io.github.eslamasabry.opencode_mobile.graph.ScheduleOpenActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+    </application>
+</manifest>

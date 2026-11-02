@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="oc_schedule_channel">Scheduled prompts</string>
+    <string name="oc_schedule_title">Scheduled prompt</string>
+    <string name="oc_schedule_running">Running your scheduled prompt…</string>
+    <string name="oc_schedule_ran">Sent. The reply is in the conversation.</string>
+    <string name="oc_schedule_finished">Finished. Tap to read the reply.</string>
+    <string name="oc_schedule_skipped">Skipped this time. Tap to see why.</string>
+    <string name="oc_schedule_failed">Didn\'t finish. Tap to see why.</string>
+    <string name="oc_schedule_why_needs_you">It\'s waiting for your answer. Open the conversation to continue.</string>
+    <string name="oc_schedule_why_sign_in">The server asked to sign in again.</string>
+    <string name="oc_schedule_why_agent">The agent stopped with an error.</string>
+    <string name="oc_schedule_why_timeout">It didn\'t finish in time. It was not sent again.</string>
+    <string name="oc_schedule_why_unavailable">The server couldn\'t be reached.</string>
+    <string name="oc_schedule_digest_title">Scheduled prompts this morning</string>
+    <string name="oc_schedule_digest_body">%1$d replied, %2$d didn\'t finish, %3$d skipped</string>
+    <string name="oc_schedule_open">Open</string>
+</resources>

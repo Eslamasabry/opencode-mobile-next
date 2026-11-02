@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.PairingRoute
+import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -145,6 +146,10 @@ public class ServersViewModel(
     }
 
     override fun takePairing(): PairingFill? = pairing.take()
+
+    override fun openSchedules(id: ProfileId) {
+        nav.open(SchedulesRoute.List(id))
+    }
 
     private fun operation(block: suspend () -> Unit) {
         if (local.value.busy || connections.busy.value) return
