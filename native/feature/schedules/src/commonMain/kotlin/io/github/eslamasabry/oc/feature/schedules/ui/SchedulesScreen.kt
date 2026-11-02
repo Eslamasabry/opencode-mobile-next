@@ -57,17 +57,14 @@ public fun SchedulesScreen(state: SchedulesUi, actions: SchedulesActions) {
             loading = state.phase == SchedulesPhase.Loading,
             loadingLabel = words.loading,
             bottom =
-                if (state.phase == SchedulesPhase.List) {
-                    {
-                        KitButton(
-                            words.new,
-                            actions::create,
-                            Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
-                        )
-                    }
-                } else {
-                    null
-                },
+                if (state.phase != SchedulesPhase.List) null
+                else ({
+                    KitButton(
+                        words.new,
+                        actions::create,
+                        Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
+                    )
+                }),
             width = KitScreenWidth.Reading,
         ) {
             when (state.phase) {
@@ -156,6 +153,7 @@ private fun ScheduleGroup(
         KitRow(
             title = words.runNow,
             enabled = enabled.isEnabled,
+            disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
             onClick = { actions.runNow(row.id) },
         )
         row.last?.let { last ->
