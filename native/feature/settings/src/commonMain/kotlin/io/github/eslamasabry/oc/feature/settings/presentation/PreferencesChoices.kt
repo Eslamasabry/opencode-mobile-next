@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.engine.settings.prefs.AppearanceChoice
 import io.github.eslamasabry.oc.engine.settings.prefs.DevicePreferences
@@ -28,15 +30,23 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel as KitMotion
  * `:engine:settings` [Preferences] as [PersonalChoices]: field-for-field over the acknowledged snapshot. Nothing is
  * optimistic: [value] moves only when the store acknowledged the write (B-STATE-005), and every change is one
  * all-or-nothing commit under the existing Flutter keys (B-STATE-003), so a migrated install keeps its choices.
+ *
+ * The facade can only be built once the preference file is warm, so the app hands it over late: [preferences]
+ * suspends until then and returns null when the file could not be opened (writes then fail plainly, reads stay at
+ * the defaults). [snapshot] is the acknowledged value the app already mirrors for the theme.
  */
-public class PreferencesChoices(private val preferences: Preferences, scope: CoroutineScope) : PersonalChoices {
+public class PreferencesChoices(
+    private val preferences: suspend () -> Preferences?,
+    snapshot: StateFlow<DevicePreferences>,
+    scope: CoroutineScope,
+) : PersonalChoices {
     override val value: StateFlow<PersonalPrefs> =
-        preferences.value
-            .map(PreferenceMapping::personal)
-            .stateIn(scope, SharingStarted.Eagerly, PreferenceMapping.personal(preferences.value.value))
+        snapshot.map(PreferenceMapping::personal).stateIn(scope, SharingStarted.Eagerly, PreferenceMapping.personal(snapshot.value))
 
-    override suspend fun set(change: PersonalChange): Outcome<PersonalPrefs> =
-        preferences.set(PreferenceMapping.change(change, preferences.value.value)).map(PreferenceMapping::personal)
+    override suspend fun set(change: PersonalChange): Outcome<PersonalPrefs> {
+        val prefs = preferences() ?: return Failure.StorageRefused().failed()
+        return prefs.set(PreferenceMapping.change(change, prefs.value.value)).map(PreferenceMapping::personal)
+    }
 }
 
 /** The pure mapping between the stored device preferences and what Settings and the theme read. */
