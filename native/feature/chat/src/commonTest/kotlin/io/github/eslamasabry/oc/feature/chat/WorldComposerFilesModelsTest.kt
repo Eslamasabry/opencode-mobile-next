@@ -168,6 +168,12 @@ class WorldComposerFilesModelsTest {
         var acknowledge: Boolean = true
         var failNextPrompt: Boolean = false
 
+        override suspend fun createSelectedSession(defaults: SessionSelection): Outcome<Session> =
+            Outcome.Failed(Failure.Unavailable(FeatureId("createSelectedSession")))
+
+        override suspend fun setSessionAgent(session: SessionId, agent: String): Outcome<Unit> =
+            Outcome.Failed(Failure.Unavailable(FeatureId("setSessionAgent")))
+
         override suspend fun setSessionModel(
             session: SessionId,
             model: ModelRef,
