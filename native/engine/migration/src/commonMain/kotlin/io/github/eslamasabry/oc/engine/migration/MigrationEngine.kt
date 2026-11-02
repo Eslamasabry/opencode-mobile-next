@@ -51,17 +51,18 @@ public class MigrationEngine(
     private val names: ReentryNames,
     private val scope: CoroutineScope,
 ) {
-    private val stateGate = StateMigrationGate(GateState.Closed)
+    // Start from what the runner already knows: a build with nothing to adopt is open before the first read.
+    private val stateGate = StateMigrationGate(gateStateOf(runner.progress.value))
 
     /** Bound for every store as the app's `MigrationGate`. */
     public val gate: MigrationGate get() = stateGate
 
-    private val mutableView = MutableStateFlow(MigrationView(MigrationProgress.Waiting))
+    private val mutableView = MutableStateFlow(MigrationView(runner.progress.value))
     public val view: StateFlow<MigrationView> = mutableView.asStateFlow()
 
     private val actions = Mutex()
     private var started = false
-    private var opened = false
+    private var opened = runner.progress.value is MigrationProgress.Open
     private var deferredSeen = false
 
     /** Starts the runner and follows it. A second call is ignored. */

@@ -225,4 +225,11 @@ class MigrationEngineTest {
         runCurrent()
         assertEquals(1, runner.runs)
     }
+
+    @Test
+    fun `B-MIGR-004 a build with nothing to adopt is open before start and before any store reads`() = runTest {
+        val engine = MigrationEngine(MigrationRunnerPort.Nothing, { null }, backgroundScope)
+        assertIs<GateState.Open>(engine.gate.state.value)
+        assertIs<MigrationProgress.Open>(engine.view.value.progress)
+    }
 }

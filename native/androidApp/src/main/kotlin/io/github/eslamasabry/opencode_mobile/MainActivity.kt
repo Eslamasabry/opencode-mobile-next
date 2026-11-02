@@ -9,7 +9,9 @@ import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.shell.App
+import io.github.eslamasabry.opencode_mobile.graph.MigrationRoot
 import io.github.eslamasabry.opencode_mobile.graph.appGraph
+import io.github.eslamasabry.opencode_mobile.graph.migration
 
 /** Frozen FQCN (ADR §9.9). EntryRouter and ActivityResults attach here in slice 2. */
 class MainActivity : ComponentActivity() {
@@ -25,7 +27,9 @@ class MainActivity : ComponentActivity() {
             CompositionLocalProvider(
                 LocalKitSecretSink provides KitSecretSink(graph.redactor::registerSecret)
             ) {
-                App(graph.shell, platform, graph.metroViewModelFactory)
+                MigrationRoot(graph.migration, graph.shell.navigator, platform) {
+                    App(graph.shell, platform, graph.metroViewModelFactory)
+                }
             }
         }
     }

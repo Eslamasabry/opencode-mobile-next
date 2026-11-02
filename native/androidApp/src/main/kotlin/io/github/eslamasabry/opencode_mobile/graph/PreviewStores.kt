@@ -5,7 +5,7 @@ import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.data.android.AndroidDataStores
 import io.github.eslamasabry.oc.core.data.lane.DefaultWriterLanes
-import io.github.eslamasabry.oc.core.data.migration.StateMigrationGate
+import io.github.eslamasabry.oc.core.data.migration.MigrationGate
 import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.core.net.HttpClientFactory
@@ -21,15 +21,18 @@ import kotlin.random.asKotlinRandom
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-/** Fresh, separate preview package only. This is deliberately not a production migration gate. */
+/**
+ * The app's stores behind the migration gate (P12: MigrationWiring). On the preview package the gate is open from the
+ * start; on the real package it opens when the day-1 migration of the Flutter data has finished.
+ */
 @SingleIn(AppScope::class)
 @Inject
-class PreviewStores(application: Application, dispatchers: AppDispatchers, redactor: Redactor) {
-    init {
-        check(application.packageName == "io.github.eslamasabry.opencode_mobile.native")
-    }
-
-    private val gate = StateMigrationGate.alwaysOpen()
+class PreviewStores(
+    application: Application,
+    dispatchers: AppDispatchers,
+    redactor: Redactor,
+    private val gate: MigrationGate,
+) {
     val prefs = AndroidDataStores.flutterPrefs(application, gate, dispatchers.io)
     val secrets = AndroidDataStores.secrets(application, gate, redactor, dispatchers.io)
     val lanes = DefaultWriterLanes()
@@ -40,6 +43,7 @@ class PreviewStores(application: Application, dispatchers: AppDispatchers, redac
     /** Every synchronous composer read follows both preference warm-up and profile restoration. */
     suspend fun warm(): Outcome<Unit> = warming.withLock {
         if (prepared) return@withLock Unit.ok()
+        gate.awaitOpen() // nothing reads the adopted file before the migration has finished (plan 05 §7.3)
         when (
             val result =
                 attempt({ Failure.StorageRefused() }) {
