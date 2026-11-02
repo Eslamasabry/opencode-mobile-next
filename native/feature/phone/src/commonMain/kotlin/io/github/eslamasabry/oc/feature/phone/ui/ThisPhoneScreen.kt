@@ -31,6 +31,8 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.keepRunningOpenFailed
 import io.github.eslamasabry.oc.ui.words.res.keepRunningRowSubtitle
 import io.github.eslamasabry.oc.ui.words.res.keepRunningTitle
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrRow
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardUpdate
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardVersion
@@ -165,6 +167,13 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                     supportingMaxLines = 2,
                     trailing = KitRowTrailing.Chevron,
                     onClick = actions::openKeepRunning,
+                )
+                KitRow(
+                    title = stringResource(Res.string.linuxMgrRow),
+                    supporting = stringResource(Res.string.linuxMgrRowDetail),
+                    supportingMaxLines = 2,
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openLinux,
                 )
             }
         }

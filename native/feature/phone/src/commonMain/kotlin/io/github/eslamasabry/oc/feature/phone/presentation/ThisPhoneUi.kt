@@ -76,6 +76,9 @@ public interface ThisPhoneActions {
 
     public fun openKeepRunning()
 
+    /** The "Linux" row: the Linux manager of the phone's own Ubuntu. */
+    public fun openLinux() {}
+
     public fun back()
 
     /** The page became the top entry (re-read the status, tick the countdown) or left it. */

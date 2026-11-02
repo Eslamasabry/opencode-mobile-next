@@ -107,7 +107,10 @@ private fun TestScope.settle() {
     runCurrent()
 }
 
-private val notices = LinuxJobNotices { kind -> "notice ${kind.wire}" }
+private val notices =
+    object : LinuxJobNotices {
+        override suspend fun notice(kind: LinuxJobKind): String = "notice ${kind.wire}"
+    }
 
 class LinuxResetFlowTest {
     @Test
@@ -382,5 +385,17 @@ class LinuxPagesModelsTest {
         settle()
         assertFalse(LinuxManager.JOB_SERVICE in host.running)
         assertEquals(LinuxJobStatus.Interrupted, model.state.value.job.status)
+    }
+}
+
+class LinuxSizeTest {
+    @Test
+    fun `B-LINUX-089 sizes read in short plain units`() {
+        assertEquals("0 B", LinuxSize.format(0))
+        assertEquals("512 B", LinuxSize.format(512))
+        assertEquals("1 KB", LinuxSize.format(1024))
+        assertEquals("1.5 KB", LinuxSize.format(1536))
+        assertEquals("320 MB", LinuxSize.format(320L * 1024 * 1024))
+        assertEquals("1.4 GB", LinuxSize.format((1.4 * 1024 * 1024 * 1024).toLong()))
     }
 }

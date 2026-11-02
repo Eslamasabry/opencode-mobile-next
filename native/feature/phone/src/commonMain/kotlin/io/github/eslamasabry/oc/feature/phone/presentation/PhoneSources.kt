@@ -162,7 +162,8 @@ public interface ChildLimitSource {
 }
 
 /** The pages these screens open. The entry installer maps them to `PhoneRoute`s once :ui:routes has them. */
-public enum class PhonePage { Running, KeepRunning, SetupStart, SetupProgress }
+/** [Linux] is the Linux manager (:feature:linux), reached from This phone's "Linux" row. */
+public enum class PhonePage { Running, KeepRunning, SetupStart, SetupProgress, Linux }
 
 public interface PhoneNavigator {
     public fun open(page: PhonePage)

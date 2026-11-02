@@ -46,6 +46,8 @@ public class ThisPhoneViewModel(
 
     override fun openKeepRunning(): Unit = model.openKeepRunning()
 
+    override fun openLinux(): Unit = model.openLinux()
+
     override fun back(): Unit = model.back()
 
     override fun shown(visible: Boolean): Unit = model.shown(visible)

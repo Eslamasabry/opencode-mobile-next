@@ -36,10 +36,14 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
+import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
@@ -87,7 +91,12 @@ import org.jetbrains.compose.resources.stringResource
  * field.
  */
 @Composable
-public fun ServersScreen(state: ServersUi, actions: ServersActions) {
+public fun ServersScreen(
+    state: ServersUi,
+    actions: ServersActions,
+    /** Opens This phone (the phone's own server and Linux); null where the platform has no built-in Linux. */
+    onThisPhone: (() -> Unit)? = null,
+) {
     val name = remember { TextFieldState() }
     val address = remember { TextFieldState() }
     val username = remember { TextFieldState("opencode") }
@@ -139,6 +148,15 @@ public fun ServersScreen(state: ServersUi, actions: ServersActions) {
                         copyLabel = stringResource(Res.string.kitCopyDetails),
                     )
                 }
+            }
+            onThisPhone?.let {
+                KitRow(
+                    title = stringResource(Res.string.settingsV3ThisPhone),
+                    supporting = stringResource(Res.string.linuxMgrRowDetail),
+                    supportingMaxLines = 2,
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = it,
+                )
             }
             if (state.servers.isEmpty()) KitText(stringResource(Res.string.serversEmpty))
             else KitText(stringResource(Res.string.serversSaved))

@@ -53,8 +53,8 @@ public interface LinuxResetMarker {
 }
 
 /** The notice text the long job's Android service shows (the binding resolves it from :ui:words). */
-public fun interface LinuxJobNotices {
-    public fun notice(kind: LinuxJobKind): String
+public interface LinuxJobNotices {
+    public suspend fun notice(kind: LinuxJobKind): String
 }
 
 /** Every repeating job of :feature:linux (plan 13 §11.2). None runs while the app is hidden. */
