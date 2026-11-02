@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -9,10 +10,13 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import io.github.eslamasabry.oc.feature.chat.composer.ChatPromptsDoor
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
+import io.github.eslamasabry.oc.ui.kitchat.composer.ComposerInbox
+import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 
@@ -25,14 +29,22 @@ import io.github.eslamasabry.oc.ui.routes.EntryInstaller
  */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class ChatEntries(private val composerHost: ComposerHost, private val environment: KitChatEnvironment) : EntryInstaller {
+public class ChatEntries(
+    private val composerHost: ComposerHost,
+    private val environment: KitChatEnvironment,
+    private val inbox: ComposerInbox,
+    private val navigator: AppNavigator,
+) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ChatRoute> { route ->
             val vm = assistedMetroViewModel<ChatViewModel, ChatViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
             val requests by vm.requests.collectAsStateWithLifecycle()
             val slot = requests?.state?.collectAsStateWithLifecycle()?.value ?: io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi()
-            environment.Provide { ChatScreen(state, vm, composerHost, requests = slot, requestActions = requests) }
+            val prompts = remember(route.ref) { ChatPromptsDoor(route.ref, inbox, navigator) }
+            environment.Provide {
+                ChatScreen(state, vm, composerHost, requests = slot, requestActions = requests, prompts = prompts)
+            }
         }
     }
 }

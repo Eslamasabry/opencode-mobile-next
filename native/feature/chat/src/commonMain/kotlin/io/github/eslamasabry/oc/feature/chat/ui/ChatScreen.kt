@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
+import io.github.eslamasabry.oc.feature.chat.composer.ChatPromptsDoor
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
@@ -93,6 +94,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitMessageActions
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
+import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSending
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
@@ -129,6 +131,7 @@ public fun ChatScreen(
     modifier: Modifier = Modifier,
     requests: RequestSlotUi = RequestSlotUi(),
     requestActions: ChatRequestActions? = null,
+    prompts: ChatPromptsDoor? = null,
 ) {
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
     val requestState by rememberUpdatedState(requests)
@@ -174,13 +177,14 @@ public fun ChatScreen(
     }
 
     val chrome =
-        remember(actions) {
+        remember(actions, prompts) {
             ComposerChrome(
                 busy = { latest.live != null },
                 requestWaiting = { requestState.card != null },
                 onSent = { list.following = true },
-                pendingInsert = { null }, // agent ```choices arrive with cards (S5)
-                insertDone = {},
+                // Saved prompts and slash commands (P12-PROMPTS); agent ```choices arrive with cards (S5).
+                pendingInsert = { prompts?.pending() },
+                insertDone = { prompts?.done(it) },
                 focusRequest = { latest.arrival?.takeIf { it.focusComposer }?.id },
                 focusDone = actions::arrivalShown,
                 onStop = actions::stop,
@@ -202,12 +206,19 @@ public fun ChatScreen(
                         exitLabel = stringResource(Res.string.kitTopBarBack),
                         onExit = actions::leaveRequested,
                         actions =
-                            listOf(
+                            listOfNotNull(
                                 KitLineAction(
                                     stringResource(Res.string.kitTopBarSearch),
                                     { actions.find(state.find?.query ?: "") },
                                     testTag = "chat-find-open",
-                                )
+                                ),
+                                prompts?.let {
+                                    KitLineAction(
+                                        stringResource(Res.string.promptStashTitle),
+                                        it::open,
+                                        testTag = "chat-saved-prompts-open",
+                                    )
+                                },
                             ),
                     )
                 },

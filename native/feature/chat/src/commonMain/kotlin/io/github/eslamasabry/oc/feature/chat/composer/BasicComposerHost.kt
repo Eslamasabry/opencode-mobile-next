@@ -158,6 +158,21 @@ public fun BasicComposer(
             chrome.focusDone(focusId)
         }
     }
+    // Saved prompts and slash commands (P12-PROMPTS): each offer lands once, after the draft is
+    // restored; an empty field takes it whole, otherwise it goes on a new line after the words.
+    val insert = chrome.pendingInsert()
+    LaunchedEffect(insert?.id, editorReady, state.draft.ready) {
+        val request = insert ?: return@LaunchedEffect
+        if (!editorReady || !state.draft.ready) return@LaunchedEffect
+        val current = field.text.toString()
+        val next = if (current.isBlank()) request.text else current.trimEnd() + "\n" + request.text
+        field.edit { replace(0, length, next) }
+        editor.userEditSerial += 1
+        editor.lastReported = next
+        repeatRevision = null
+        actions.draftChanged(next)
+        chrome.insertDone(request.id)
+    }
     val busy = chrome.busy()
     val scope = rememberCoroutineScope()
     val send: () -> Unit = {
