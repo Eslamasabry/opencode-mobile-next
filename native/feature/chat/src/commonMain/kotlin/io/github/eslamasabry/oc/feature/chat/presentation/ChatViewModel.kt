@@ -1,5 +1,13 @@
 package io.github.eslamasabry.oc.feature.chat.presentation
 
+import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
+import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
+import kotlin.time.Clock
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.engine.transcript.ledger.latest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.zacsweers.metro.AppScope
@@ -22,7 +30,12 @@ import kotlinx.coroutines.launch
  * is [ChatPresenter]'s; this class only gives it the entry's scope (03 §14.3: WhileSubscribed(5 s)).
  */
 @AssistedInject
-public class ChatViewModel(@Assisted private val route: ChatRoute, private val worlds: ChatWorlds, private val nav: AppNavigator) :
+public class ChatViewModel(
+    @Assisted private val route: ChatRoute,
+    private val worlds: ChatWorlds,
+    private val nav: AppNavigator,
+    clock: Clock,
+) :
     ViewModel(), ChatActions {
     private val world = worlds.open(route.ref)
     private val presenter =
@@ -31,6 +44,21 @@ public class ChatViewModel(@Assisted private val route: ChatRoute, private val w
     public val requests = world.requests
 
     public val state: StateFlow<ChatUi> = presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(STOP_AFTER_MS))
+
+    /** CHAT-TRANSCRIPT: steps, results, context, retry and stall beside the rows (side tables, never the rows). */
+    public val facts: StateFlow<TurnFactsUi> =
+        TurnFactsPresenter(clock)
+            .states(
+                (world as? TurnFeedSource)?.turnFeed ?: flowOf(TurnFeed.Empty),
+                world.requests.latest { model -> model?.state?.map { it.card != null } ?: flowOf(false) },
+                viewModelScope,
+                SharingStarted.WhileSubscribed(STOP_AFTER_MS),
+            )
+
+    /** B-CHAT-110: a task step opens the conversation its sub-agent ran in (same server, same profile). */
+    public fun openSession(sessionId: String) {
+        if (sessionId.isNotBlank()) nav.openChat(ConversationRef(world.ref.profileId, SessionId(sessionId)))
+    }
 
     override fun onCleared() {
         worlds.release(world)

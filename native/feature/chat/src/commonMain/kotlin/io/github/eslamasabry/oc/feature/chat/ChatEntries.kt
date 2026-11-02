@@ -55,6 +55,7 @@ public class ChatEntries(
             val state by vm.state.collectAsStateWithLifecycle()
             val requests by vm.requests.collectAsStateWithLifecycle()
             val slot = requests?.state?.collectAsStateWithLifecycle()?.value ?: io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi()
+            val facts by vm.facts.collectAsStateWithLifecycle()
             // PREVIEW-QR: the dev servers this conversation mentioned (rows are newest first; the scan wants oldest first).
             val preview =
                 KitLineAction(stringResource(Res.string.devPreviewMenu), {
@@ -84,6 +85,8 @@ public class ChatEntries(
                         requestActions = requests,
                         extraActions = listOf(preview),
                         prompts = prompts,
+                        facts = facts,
+                        onOpenSession = vm::openSession,
                     )
                 }
             }

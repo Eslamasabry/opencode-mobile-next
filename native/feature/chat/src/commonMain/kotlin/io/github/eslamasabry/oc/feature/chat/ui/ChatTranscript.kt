@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.cards.CardAnswerDisplay
 import io.github.eslamasabry.oc.feature.chat.cards.ChatTurnCards
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
+import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -75,6 +76,9 @@ internal class ChatListWords(
 internal object ListKeys {
     const val LIVE: String = "live"
 
+    /** CHAT-TRANSCRIPT: background work still running (B-CHAT-007), just above the live line. */
+    const val BACKGROUND: String = "background"
+
     fun pending(localId: Long): String = "pending:$localId"
 }
 
@@ -122,7 +126,10 @@ internal fun ChatTranscriptList(
     onOpenMenu: ((String) -> Unit)?,
     onRetrySend: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    facts: TurnFactsUi = TurnFactsUi.Empty,
+    onOpenSession: ((String) -> Unit)? = null,
 ) {
+    val folds = rememberTranscriptFolds()
     val newestKey =
         when {
             live != null -> ListKeys.LIVE
@@ -139,10 +146,21 @@ internal fun ChatTranscriptList(
         if (live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
                 // No Stop here (plan 09 §4.4): Stop sits in the composer's row.
+                // Retry, stall and shortening fold into the live line: no new bar (CHAT-TRANSCRIPT).
+                val notice = facts.live
                 KitQuietLine(
-                    if (live.stopping) listWords.stopping else listWords.working,
+                    when {
+                        live.stopping -> listWords.stopping
+                        notice != null -> liveNoticeWords(notice)
+                        else -> listWords.working
+                    },
                     Modifier.testTag("chat-live-line"),
                 )
+            }
+        }
+        if (facts.background.isNotEmpty() && listWords != null) {
+            item(key = ListKeys.BACKGROUND, contentType = "background") {
+                KitQuietLine(backgroundWords(facts.background, facts.nowMs), Modifier.testTag("chat-background-work"))
             }
         }
         if (listWords != null) {
@@ -155,7 +173,7 @@ internal fun ChatTranscriptList(
             }
         }
         items(rows, key = { it.key }, contentType = { it.kind }) { row ->
-            ChatRow(row, words, listWords, reveal, motion, onOpenMenu)
+            ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession)
         }
     }
 }
@@ -188,6 +206,9 @@ private fun ChatRow(
     reveal: RevealRegistry,
     motion: KitMotionLevel,
     onOpenMenu: ((String) -> Unit)?,
+    facts: TurnFactsUi = TurnFactsUi.Empty,
+    folds: TranscriptFolds? = null,
+    onOpenSession: ((String) -> Unit)? = null,
 ) {
     when (row) {
         is BlockRow ->
@@ -223,14 +244,16 @@ private fun ChatRow(
         is WorkLineRow ->
             // P12-CHAT-CARDS: a turn's agent cards stand right under its work line, in the reply (never folded in).
             Column {
-                KitQuietLine(
+                val work = facts.work[row.turnId]
+                if (work != null && folds != null) TurnWorkLine(work, facts.nowMs, folds, onOpenSession)
+                else KitQuietLine(
                     if (listWords != null) workLineWords(row.calls, row.state)
                     else words.workLine(row.calls, row.failed, row.state)
                 )
                 ChatTurnCards(row.turnId)
             }
         is NoticeRow -> KitQuietLine(words.notice(row.notice))
-        is FooterRow ->
+        is FooterRow -> Column {
             if (onOpenMenu != null && listWords != null) {
                 KitTappable(
                     onClick = { onOpenMenu(row.key) },
@@ -243,6 +266,9 @@ private fun ChatRow(
             } else {
                 KitQuietLine(words.footer(row.failed))
             }
+            val result = facts.results[row.turnId]
+            if (result != null && folds != null) TurnResultLine(row.turnId, result, folds)
+        }
     }
 }
 

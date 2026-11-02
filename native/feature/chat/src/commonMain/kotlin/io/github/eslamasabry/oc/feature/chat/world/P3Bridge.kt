@@ -83,7 +83,9 @@ internal class P3Bridge(private val sessionId: String) {
             messageId = p.messageId,
             sessionId = p.sessionId,
             type = type(p.type),
-            text = p.text,
+            // A compaction part carries no words; its kind name lets the reducer draw the compaction notice
+            // (B-CHAT-069: a compaction is a notice in the transcript, never a reply).
+            text = if (p.type == CorePartType.Compaction) NoticeKind.Compaction.name else p.text,
             toolName = p.toolName,
             toolStatus = p.tool?.status?.let(::tool),
             synthetic = p.synthetic,
