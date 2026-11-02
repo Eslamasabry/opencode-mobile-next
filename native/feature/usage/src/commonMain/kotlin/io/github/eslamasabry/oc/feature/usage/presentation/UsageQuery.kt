@@ -1,12 +1,7 @@
 package io.github.eslamasabry.oc.feature.usage.presentation
 
+import io.github.eslamasabry.oc.engine.usage.UsageCalendar
 import kotlin.time.Instant
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.minus
-import kotlinx.datetime.toLocalDateTime
 
 /** The calendar ranges the Usage page offers (Flutter `UsageRange`). */
 public enum class UsageRange { Today, ThirtyDays, Year, AllTime }
@@ -40,22 +35,17 @@ public data class UsageQuery(val fromMs: Long?, val toMs: Long, val timezone: St
             val id = timezone?.trim()?.takeIf { it.isNotEmpty() } ?: return null
             // A chosen project that has no id is refused, never widened to all projects.
             if (projectId != null && projectId.isBlank()) return null
-            val zone =
-                try {
-                    TimeZone.of(id)
-                } catch (_: IllegalArgumentException) {
-                    return null
-                }
-            val today = now.toLocalDateTime(zone).date
-            val start =
+            // Calendar arithmetic in the device's own zone; an unreadable zone is refused, never dated in UTC.
+            if (!UsageCalendar.isReadable(id)) return null
+            val fromMs =
                 when (range) {
-                    UsageRange.Today -> today
-                    UsageRange.ThirtyDays -> today.minus(29, DateTimeUnit.DAY)
-                    UsageRange.Year -> LocalDate(today.year, 1, 1)
+                    UsageRange.Today -> UsageCalendar.startOfDayMs(now, id) ?: return null
+                    UsageRange.ThirtyDays -> UsageCalendar.startOfDayMs(now, id, daysBack = 29) ?: return null
+                    UsageRange.Year -> UsageCalendar.startOfYearMs(now, id) ?: return null
                     UsageRange.AllTime -> null
                 }
             return UsageQuery(
-                fromMs = start?.atStartOfDayIn(zone)?.toEpochMilliseconds(),
+                fromMs = fromMs,
                 toMs = now.toEpochMilliseconds() + 1,
                 timezone = id,
                 projectId = projectId,

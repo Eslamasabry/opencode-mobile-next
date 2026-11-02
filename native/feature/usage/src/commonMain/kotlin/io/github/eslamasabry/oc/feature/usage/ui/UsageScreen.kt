@@ -92,6 +92,7 @@ import io.github.eslamasabry.oc.ui.words.res.usageSubagents
 import io.github.eslamasabry.oc.ui.words.res.usageSucceeded
 import io.github.eslamasabry.oc.ui.words.res.usageSuccessRate
 import io.github.eslamasabry.oc.ui.words.res.usageThirtyDays
+import io.github.eslamasabry.oc.engine.usage.UsageCalendar
 import io.github.eslamasabry.oc.ui.words.res.usageTimezone
 import io.github.eslamasabry.oc.ui.words.res.usageTimezoneUnavailable
 import io.github.eslamasabry.oc.ui.words.res.usageTinyCost
@@ -105,9 +106,6 @@ import io.github.eslamasabry.oc.ui.words.res.usageTotalTokens
 import io.github.eslamasabry.oc.ui.words.res.usageUnfinished
 import io.github.eslamasabry.oc.ui.words.res.usageUnsupported
 import io.github.eslamasabry.oc.ui.words.res.usageYear
-import kotlin.time.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -180,14 +178,16 @@ private fun Total(report: UsageReport, timezone: String?) {
     ) {
         KitText(stringResource(Res.string.p12UsageCost), role = TypeRole.Label, tone = TextTone.Secondary)
         KitText(cost(report.cost), role = TypeRole.LargeTitle)
-        val zone = timezone?.let { zoneOf(it) }
-        if (zone != null) {
+        val zone = timezone?.takeIf { UsageCalendar.isReadable(it) }
+        val first = zone?.let { UsageCalendar.dayLabel(report.fromMs, it) }
+        val last = zone?.let { UsageCalendar.dayLabel(report.toMs - 1, it) }
+        if (zone != null && first != null && last != null) {
             KitText(
-                stringResource(Res.string.usagePeriod, day(report.fromMs, zone), day(report.toMs - 1, zone)),
+                stringResource(Res.string.usagePeriod, first, last),
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,
             )
-            KitText(stringResource(Res.string.usageTimezone, zone.id), role = TypeRole.Caption, tone = TextTone.Tertiary)
+            KitText(stringResource(Res.string.usageTimezone, zone), role = TypeRole.Caption, tone = TextTone.Tertiary)
         }
     }
 }
@@ -388,12 +388,3 @@ private fun ValueRow(title: String, value: String) {
 @Composable
 private fun cost(value: Double): String =
     if (UsageFigures.isTiny(value)) stringResource(Res.string.usageTinyCost) else UsageFigures.money(value)
-
-private fun zoneOf(id: String): TimeZone? =
-    try {
-        TimeZone.of(id)
-    } catch (_: IllegalArgumentException) {
-        null
-    }
-
-private fun day(ms: Long, zone: TimeZone): String = Instant.fromEpochMilliseconds(ms).toLocalDateTime(zone).date.toString()

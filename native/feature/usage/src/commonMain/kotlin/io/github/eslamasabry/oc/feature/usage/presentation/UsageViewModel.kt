@@ -17,7 +17,6 @@ import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.UsageRoute
 import kotlin.time.Clock
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,8 +40,8 @@ public class UsageViewModel(
     private val local = MutableStateFlow(UsageUi(server = route.profile))
     public val state: StateFlow<UsageUi> = local.asStateFlow()
 
-    private var readJob: Job? = null
-    private var projectsJob: Job? = null
+    private var cancelRead: () -> Unit = {}
+    private var cancelProjects: () -> Unit = {}
     private var generation = 0
 
     /** The last good reading and the filters it answers. */
@@ -98,20 +97,20 @@ public class UsageViewModel(
     }
 
     private fun loadProjects() {
-        projectsJob?.cancel()
+        cancelProjects()
         val server = local.value.server ?: return
-        projectsJob = viewModelScope.launch {
+        viewModelScope.launch {
             val listed = source.projects(server)
             if (local.value.server != server) return@launch
             when (listed) {
                 is Outcome.Ok -> local.update { it.copy(projects = listed.value, projectsFailed = false) }
                 is Outcome.Failed -> local.update { it.copy(projectsFailed = true) }
             }
-        }
+        }.also { job -> cancelProjects = { job.cancel() } }
     }
 
     private fun read() {
-        readJob?.cancel()
+        cancelRead()
         val mine = ++generation
         val s = local.value
         val server = s.server
@@ -140,7 +139,7 @@ public class UsageViewModel(
                 failure = null,
             )
         }
-        readJob = viewModelScope.launch {
+        viewModelScope.launch {
             val result = source.statistics(server, query)
             if (mine != generation) return@launch
             when (result) {
@@ -166,7 +165,7 @@ public class UsageViewModel(
                     }
                 }
             }
-        }
+        }.also { job -> cancelRead = { job.cancel() } }
     }
 
     private fun phaseOf(failure: Failure): UsagePhase =
