@@ -11,7 +11,9 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -20,6 +22,7 @@ import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
+import io.github.eslamasabry.oc.feature.chat.world.ComposerCommand
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
@@ -30,6 +33,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 
 /**
@@ -54,6 +59,12 @@ public data class BasicComposerUi(
     val attachmentFailure: Failure? = null,
     /** This platform contributed a file picker. */
     val filesAvailable: Boolean = false,
+    /** Server slash commands matching a `/word` field (B-NAV-049). */
+    val commandMatches: List<ComposerCommand> = emptyList(),
+    /** Project files matching the `@word` being typed (B-CHAT-087). */
+    val fileMatches: List<String> = emptyList(),
+    /** The extra ways to attach this platform offers besides the document picker. */
+    val attachKinds: Set<AttachKind> = emptySet(),
 ) {
     override fun toString(): String =
         "BasicComposerUi(available=$available, sending=$sending, steers=$steers, draft=$draft, " +
@@ -76,7 +87,10 @@ public interface BasicComposerActions {
     public fun loadModels() {}
 
     /** True = the world verified the new choice and published it. */
-    public suspend fun selectModel(choice: ComposerModel?): Boolean = false
+    public suspend fun selectModel(choice: ComposerModel?, variant: String = ""): Boolean = false
+
+    /** True = the world verified the conversation now runs as [agent]. */
+    public suspend fun selectAgent(agent: String): Boolean = false
 
     /** Opens the platform picker; a cancelled pick changes nothing. */
     public fun attachFile() {}
@@ -85,6 +99,48 @@ public interface BasicComposerActions {
     public fun removeAttachment(index: Int) {}
 
     public fun dismissAttachmentFailure() {}
+
+    /** Stages the project file picked from the `@` list (the field inserts its `@path`). */
+    public fun mentionFile(path: String) {}
+
+    /** Photos, camera or clipboard picture, where the platform offers them. */
+    public fun attach(kind: AttachKind) {}
+}
+
+/** What a typed field asks the suggestion strip for (Flutter `_activeAgentQuery`, slash match). */
+public sealed interface ComposerQuery {
+    public data class Command(val query: String) : ComposerQuery
+
+    public data class File(val query: String, val start: Int) : ComposerQuery
+
+    public companion object {
+        private val SLASH = Regex("^/(\\S*)$")
+        private val BEFORE = setOf('(', '[', '{', '"', '\'')
+
+        /** The query the end of [text] asks for, or null. */
+        public fun of(text: String): ComposerQuery? {
+            SLASH.find(text.trim())?.let {
+                return Command(it.groupValues[1])
+            }
+            val at = text.lastIndexOf('@')
+            if (at < 0) return null
+            val word = text.substring(at + 1)
+            if (word.any { it.isWhitespace() }) return null
+            if (at > 0 && !text[at - 1].isWhitespace() && text[at - 1] !in BEFORE) return null
+            return File(word, at)
+        }
+
+        /** Name prefix first, then contains, then the rest; at most [limit], no folders or spaces. */
+        public fun rankFiles(query: String, paths: List<String>, limit: Int = 20): List<String> {
+            val q = query.lowercase()
+            val usable = paths.filter { it.isNotBlank() && !it.endsWith("/") && ' ' !in it }.distinct()
+            fun name(p: String) = p.substringAfterLast('/').lowercase()
+            val prefix = usable.filter { name(it).startsWith(q) }
+            val contains = usable.filter { it !in prefix && it.lowercase().contains(q) }
+            val rest = usable.filter { it !in prefix && it !in contains }
+            return (prefix + contains + rest).take(limit)
+        }
+    }
 }
 
 /** Pure send gate, so the never-twice rule is table-tested without a ViewModel. */
@@ -106,8 +162,13 @@ public object SendGate {
 public class BasicComposerViewModel(
     @Assisted target: ComposerTarget,
     private val worlds: ChatWorlds,
-    private val filePickers: Set<PromptFilePicker>,
+    private val filePickers: Set<PromptFilePicker> = emptySet(),
+    private val attachSources: Set<ComposerAttachSource> = emptySet(),
 ) : ViewModel(), BasicComposerActions {
+    private val query = MutableStateFlow<ComposerQuery?>(null)
+    private val fileMatches = MutableStateFlow<List<String>>(emptyList())
+    private var commandsRequested = false
+
     private val world: ChatWorld? =
         target.sessionId?.let {
             worlds.open(ConversationRef(ProfileId(target.profileId), SessionId(it)))
@@ -161,8 +222,27 @@ public class BasicComposerViewModel(
                         combine(pickingFile, committingFiles) { picking, committing ->
                             picking to committing
                         }
+                    val suggestions =
+                        combine(query, world.commands, fileMatches) { q, commands, files ->
+                            when (q) {
+                                is ComposerQuery.Command ->
+                                    commands
+                                        .filter { it.name.startsWith(q.query, ignoreCase = true) }
+                                        .plus(
+                                            commands.filter {
+                                                !it.name.startsWith(q.query, ignoreCase = true) &&
+                                                    it.name.contains(q.query, ignoreCase = true)
+                                            }
+                                        )
+                                        .take(MAX_COMMANDS) to emptyList()
+                                is ComposerQuery.File -> emptyList<ComposerCommand>() to files
+                                null -> emptyList<ComposerCommand>() to emptyList()
+                            }
+                        }
                     combine(
-                        gated,
+                        combine(gated, suggestions) { ui, s ->
+                            ui.copy(commandMatches = s.first, fileMatches = s.second)
+                        },
                         world.models,
                         filesBusy,
                         selectingModel,
@@ -170,6 +250,7 @@ public class BasicComposerViewModel(
                     ) { ui, models, busy, selecting, failure ->
                         val (picking, committing) = busy
                         ui.copy(
+                            attachKinds = attachSources.flatMapTo(HashSet()) { it.kinds },
                             available = ui.available && !picking && !committing && !selecting,
                             canRepeat = ui.canRepeat && !picking && !committing && !selecting,
                             models = models,
@@ -192,12 +273,111 @@ public class BasicComposerViewModel(
                 ),
             )
 
+    init {
+        // One project-file search once typing settles; a newer `@` word cancels the older search.
+        world?.let { w ->
+            viewModelScope.launch {
+                @OptIn(kotlinx.coroutines.FlowPreview::class)
+                query.debounce(SEARCH_DEBOUNCE_MS).collectLatest { q ->
+                    if (q is ComposerQuery.File && q.query.isNotEmpty()) {
+                        val found = w.findFiles(q.query)
+                        if (query.value == q && found is Outcome.Ok)
+                            fileMatches.value = ComposerQuery.rankFiles(q.query, found.value)
+                    }
+                }
+            }
+        }
+    }
+
     override fun draftChanged(text: String) {
         world?.draftChanged(text)
+        suggest(text)
     }
+
+    /** The strip follows the words: `/` lists server commands, `@` searches project files. */
+    private fun suggest(text: String) {
+        val w = world ?: return
+        val next = ComposerQuery.of(text)
+        if (next == query.value) return
+        query.value = next
+        when (next) {
+            is ComposerQuery.Command ->
+                if (!commandsRequested) {
+                    commandsRequested = true
+                    viewModelScope.launch {
+                        if (w.loadCommands() is Outcome.Failed) commandsRequested = false
+                    }
+                }
+            is ComposerQuery.File -> fileMatches.value = emptyList()
+            null -> fileMatches.value = emptyList()
+        }
+    }
+
+    override fun mentionFile(path: String) {
+        val w = world ?: return
+        query.value = null
+        fileMatches.value = emptyList()
+        if (committingFiles.value || pickingFile.value) return
+        committingFiles.value = true
+        viewModelScope.launch {
+            try {
+                // Without a project folder the words still name the file; nothing is staged.
+                w.mentionFile(path)
+            } finally {
+                committingFiles.value = false
+            }
+        }
+    }
+
+    override fun attach(kind: AttachKind) {
+        val w = world ?: return
+        val source = attachSources.firstOrNull { kind in it.kinds } ?: return
+        if (pickingFile.value || committingFiles.value) return
+        pickingFile.value = true
+        val generation = w.draftGeneration
+        viewModelScope.launch {
+            try {
+                when (val picked = source.attach(kind, w.draft.value.attachments)) {
+                    is Outcome.Ok -> {
+                        if (picked.value.isEmpty()) {
+                            // A cancel changes nothing; an empty clipboard says so in plain words.
+                            if (kind == AttachKind.Clipboard)
+                                attachmentFailure.value = Failure.Unavailable(FeatureId("clipboardImage"))
+                            return@launch
+                        }
+                        if (w.draftGeneration != generation) {
+                            attachmentFailure.value = Failure.Refused(RefusalReason.StaleScope)
+                            return@launch
+                        }
+                        val latest = w.draft.value
+                        if (!latest.ready || latest.failure != null || latest.sendBlocked) {
+                            attachmentFailure.value =
+                                latest.failure ?: Failure.Unavailable(FeatureId("promptAttachments"))
+                            return@launch
+                        }
+                        val room = MAX_FILES - latest.attachments.size
+                        if (room <= 0) {
+                            attachmentFailure.value = Failure.Media(MediaProblem.DraftFull)
+                            return@launch
+                        }
+                        committingFiles.value = true
+                        commit(w, latest.attachments + picked.value.take(room))
+                    }
+                    is Outcome.Failed -> attachmentFailure.value = picked.failure
+                }
+            } finally {
+                pickingFile.value = false
+            }
+        }
+    }
+
+    /** Read directly, never through [state]: StateFlow publishes later than a tap can arrive. */
+    private fun busy(): Boolean =
+        sending.value || pickingFile.value || committingFiles.value || selectingModel.value
 
     override suspend fun send(text: String): Boolean {
         val w = world ?: return false
+        if (busy()) return false
         if (!SendGate.accepts(state.value.copy(sending = sending.value), text)) return false
         w.draftChanged(
             text
@@ -212,7 +392,7 @@ public class BasicComposerViewModel(
 
     override suspend fun sendAgain(text: String, expectedRevision: Long): Boolean {
         val w = world ?: return false
-        if (sending.value || !state.value.canRepeat) return false
+        if (busy() || !state.value.canRepeat) return false
         sending.value = true
         return try {
             w.sendRepeated(text, expectedRevision) is Outcome.Ok
@@ -229,12 +409,23 @@ public class BasicComposerViewModel(
         viewModelScope.launch { world?.loadModels() }
     }
 
-    override suspend fun selectModel(choice: ComposerModel?): Boolean {
+    override suspend fun selectModel(choice: ComposerModel?, variant: String): Boolean {
         val w = world ?: return false
-        if (selectingModel.value) return false
+        if (selectingModel.value || sending.value) return false
         selectingModel.value = true
         return try {
-            w.selectModel(choice) is Outcome.Ok
+            w.selectModel(choice, variant) is Outcome.Ok
+        } finally {
+            selectingModel.value = false
+        }
+    }
+
+    override suspend fun selectAgent(agent: String): Boolean {
+        val w = world ?: return false
+        if (selectingModel.value || sending.value) return false
+        selectingModel.value = true
+        return try {
+            w.selectAgent(agent) is Outcome.Ok
         } finally {
             selectingModel.value = false
         }
@@ -243,13 +434,19 @@ public class BasicComposerViewModel(
     override fun attachFile() {
         val w = world ?: return
         val picker = filePickers.firstOrNull() ?: return
-        if (pickingFile.value) return
+        if (pickingFile.value || committingFiles.value) return
         pickingFile.value = true
+        // The draft owner the pick belongs to: a result for a replaced owner writes nothing.
+        val generation = w.draftGeneration
         viewModelScope.launch {
             try {
                 when (val picked = picker.pickFile(w.draft.value.attachments)) {
                     is Outcome.Ok -> {
                         val file = picked.value ?: return@launch // cancelled: no change
+                        if (w.draftGeneration != generation) {
+                            attachmentFailure.value = Failure.Refused(RefusalReason.StaleScope)
+                            return@launch
+                        }
                         // The world may have moved while the picker was up; append to the latest
                         // files and only through a settled draft.
                         val latest = w.draft.value
@@ -258,6 +455,7 @@ public class BasicComposerViewModel(
                                 latest.failure ?: Failure.Unavailable(FeatureId("promptAttachments"))
                             return@launch
                         }
+                        committingFiles.value = true
                         commit(w, latest.attachments + file)
                     }
                     is Outcome.Failed -> attachmentFailure.value = picked.failure
@@ -270,16 +468,18 @@ public class BasicComposerViewModel(
 
     override fun removeAttachment(index: Int) {
         val w = world ?: return
-        viewModelScope.launch {
-            val latest = w.draft.value
-            if (index !in latest.attachments.indices) return@launch
-            if (!latest.ready || latest.failure != null || latest.sendBlocked) {
-                attachmentFailure.value =
-                    latest.failure ?: Failure.Unavailable(FeatureId("promptAttachments"))
-                return@launch
-            }
-            commit(w, latest.attachments.filterIndexed { i, _ -> i != index })
+        // One file operation at a time, latched before any suspension: a second tap during a
+        // commit would edit a list that is about to change.
+        if (committingFiles.value || pickingFile.value || sending.value) return
+        val latest = w.draft.value
+        if (index !in latest.attachments.indices) return
+        if (!latest.ready || latest.failure != null || latest.sendBlocked) {
+            attachmentFailure.value =
+                latest.failure ?: Failure.Unavailable(FeatureId("promptAttachments"))
+            return
         }
+        committingFiles.value = true
+        viewModelScope.launch { commit(w, latest.attachments.filterIndexed { i, _ -> i != index }) }
     }
 
     override fun dismissAttachmentFailure() {
@@ -311,5 +511,8 @@ public class BasicComposerViewModel(
 
     private companion object {
         const val STOP_AFTER_MS = 5_000L
+        const val SEARCH_DEBOUNCE_MS = 150L
+        const val MAX_COMMANDS = 8
+        const val MAX_FILES = 5
     }
 }

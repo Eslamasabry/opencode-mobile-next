@@ -1,0 +1,20 @@
+<resources>
+    <string name="composerFullThinking">التفكير</string>
+    <string name="composerFullThinkingDefault">الافتراضي</string>
+    <string name="composerFullAgent">الوكيل</string>
+    <string name="composerFullModels">النماذج</string>
+    <string name="composerFullModelChangeFailed">تعذّر تأكيد اختيار النموذج. تحقّق من اختيارك وأعد المحاولة.</string>
+    <string name="composerFullAttach">إرفاق</string>
+    <string name="composerFullAddTitle">إضافة إلى الطلب</string>
+    <string name="composerFullPhotoLibrary">مكتبة الصور</string>
+    <string name="composerFullTakePhoto">التقاط صورة</string>
+    <string name="composerFullPasteImage">لصق صورة من الحافظة</string>
+    <string name="composerFullPasteEmpty">لا توجد صورة في الحافظة.</string>
+    <string name="composerFullDraftFull">أزل مرفقًا أولًا. تتسع المسودة لما يصل إلى 5 ملفات بإجمالي 20 MB.</string>
+    <string name="composerFullPhotoDenied">رُفض الوصول إلى الصور. اسمح بالوصول إلى الكاميرا أو الصور في إعدادات تطبيق Android، ثم حاول مجددًا.</string>
+    <string name="composerFullStale">تغيّرت المحادثة أثناء الاختيار. حاول مجددًا.</string>
+    <string name="composerFullCommands">الأوامر</string>
+    <string name="composerFullFiles">ملفات من المشروع</string>
+    <string name="composerFullAttachmentsLocal">تُحفظ المرفقات مع هذه المسودة على هذا الجهاز.</string>
+    <string name="composerFullSteerHint">وجّهه أثناء عمله…</string>
+</resources>

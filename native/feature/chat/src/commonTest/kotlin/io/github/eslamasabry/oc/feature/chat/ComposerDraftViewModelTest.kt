@@ -39,7 +39,7 @@ class ComposerDraftViewModelTest {
             override fun release(world: ChatWorld) = Unit
         }
 
-    private fun vm() = BasicComposerViewModel(ComposerTarget("p1", "s1"), worlds)
+    private fun vm() = BasicComposerViewModel(ComposerTarget("p1", "s1"), worlds, emptySet())
 
     @BeforeTest fun main() = Dispatchers.setMain(UnconfinedTestDispatcher())
 

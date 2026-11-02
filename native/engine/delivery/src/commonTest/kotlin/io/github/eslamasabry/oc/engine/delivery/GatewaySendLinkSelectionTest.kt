@@ -25,7 +25,7 @@ import kotlin.test.assertTrue
 
 /** The production [GatewaySendLink] selection contract: mutate once, then a strict readback (full-composer contract). */
 class GatewaySendLinkSelectionTest {
-    private class Server(fake: FakeServerGateway = FakeServerGateway(listOf(Session(S1)))) :
+    private class Server(val fake: FakeServerGateway = FakeServerGateway(listOf(Session(S1)))) :
         ServerGateway by fake, SessionSelectionGateway {
         val modelMutations = mutableListOf<Triple<ModelRef, String, SessionId>>()
         val agentMutations = mutableListOf<Pair<String, SessionId>>()
@@ -45,6 +45,9 @@ class GatewaySendLinkSelectionTest {
             agentMutations += agent to session
             return agentAnswer
         }
+
+        override suspend fun createSelectedSession(defaults: SessionSelection): Outcome<Session> =
+            fake.createSession(io.github.eslamasabry.oc.core.model.NewSession())
     }
 
     private fun sel(provider: String = "p", id: String = "m", variant: String? = "Think") =
@@ -100,12 +103,12 @@ class GatewaySendLinkSelectionTest {
         // A readback that itself fails returns as-is: still no prompt upstream.
         g.readback(known(ModelRef("p", "m"), "Think"))
         g.fake.failNext = Failure.Server(status = 503)
-        assertEquals(Failure.Server(status = 503).failed<Unit>(), link.applySelection(S1, sel(), null))
+        assertEquals(Failure.Server(status = 503).failed(), link.applySelection(S1, sel(), null))
         assertEquals(3, g.modelMutations.size)
     }
 
     @Test
-    fun `B-STATE-119 DLV-12 without the facet an advertised switching capability fails closed; inline semantics stay`() =
+    fun `B-STATE-119 DLV-12 without the facet an advertised switching capability fails closed, inline semantics stay`() =
         runTest {
             val fake = FakeServerGateway(listOf(Session(S1)))
             val link = GatewaySendLink(P1, "http://h", fake)
@@ -136,10 +139,10 @@ class GatewaySendLinkSelectionTest {
         g.modelAnswer = Failure.Server(status = 500).failed()
         g.agentAnswer = Failure.Busy().failed()
         val link = GatewaySendLink(P1, "http://h", g)
-        assertEquals(Failure.Server(status = 500).failed<Unit>(), link.applySelection(S1, sel(), null))
+        assertEquals(Failure.Server(status = 500).failed(), link.applySelection(S1, sel(), null))
         assertFalse(g.fake.calls.contains("session ses_1"), "a failed mutation is never read back")
         assertEquals(1, g.modelMutations.size)
-        assertEquals(Failure.Busy().failed<Unit>(), link.applySelection(S1, null, "build"))
+        assertEquals(Failure.Busy().failed(), link.applySelection(S1, null, "build"))
         assertEquals(1, g.agentMutations.size)
     }
 }

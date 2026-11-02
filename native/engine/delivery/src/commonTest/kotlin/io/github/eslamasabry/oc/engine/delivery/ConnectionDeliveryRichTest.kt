@@ -32,7 +32,7 @@ import kotlin.time.Instant
 
 /** [ConnectionDelivery.send] hands a rich request to the durable pipeline unchanged (full-composer contract). */
 class ConnectionDeliveryRichTest {
-    private class RichServer(fake: FakeServerGateway = FakeServerGateway(listOf(Session(S1)))) :
+    private class RichServer(val fake: FakeServerGateway = FakeServerGateway(listOf(Session(S1)))) :
         ServerGateway by fake, SessionSelectionGateway {
         var applied: Triple<String, String, String>? = null
 
@@ -46,6 +46,9 @@ class ConnectionDeliveryRichTest {
         }
 
         override suspend fun setSessionAgent(session: SessionId, agent: String): Outcome<Unit> = Outcome.Ok(Unit)
+
+        override suspend fun createSelectedSession(defaults: SessionSelection): Outcome<Session> =
+            fake.createSession(io.github.eslamasabry.oc.core.model.NewSession())
     }
 
     private fun delivery(test: TestScope, server: RichServer): ConnectionDelivery =
