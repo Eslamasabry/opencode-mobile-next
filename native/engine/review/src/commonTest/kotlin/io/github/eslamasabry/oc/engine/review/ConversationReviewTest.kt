@@ -36,10 +36,10 @@ class ConversationReviewTest {
     private fun TestScope.review(): ConversationReview = ConversationReview(S, gateways, backgroundScope, pageSize = 2)
 
     private fun history() {
-        // Newest-first pages of two.
+        // Pages of two, newest page first, each chronological (the gateway contract).
         fake.pages = listOf(
-            listOf(reply("a3", 6), prompt("u2", 5)),
-            listOf(reply("a2", 4, edit("b.kt", 1, 0)), reply("a1", 3, edit("a.kt", 2, 1))),
+            listOf(prompt("u2", 5), reply("a3", 6)),
+            listOf(reply("a1", 3, edit("a.kt", 2, 1)), reply("a2", 4, edit("b.kt", 1, 0))),
             listOf(prompt("u1", 1)),
         )
     }

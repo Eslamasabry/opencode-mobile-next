@@ -80,7 +80,7 @@ internal fun edit(path: String, added: Int? = null, removed: Int? = null, before
 internal class StagedFake(
     val base: FakeServerGateway = FakeServerGateway(listOf(Session(S))),
 ) : ServerGateway by base, StagedRevertGateway {
-    /** Newest-first pages. */
+    /** Pages newest page first, each chronological. */
     var pages: List<List<MessageWithParts>> = listOf(emptyList())
     var staged: SessionRevert? = null
     var stageResult: (MessageId, Boolean) -> Outcome<SessionRevert> = { m, _ -> SessionRevert(m, null, "snap", persistentListOf(FileDiff("a.kt", additions = 1, deletions = 0))).ok() }

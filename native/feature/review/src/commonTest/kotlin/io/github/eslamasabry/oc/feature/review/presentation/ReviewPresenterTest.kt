@@ -59,7 +59,7 @@ private fun reply(id: String, at: Long, vararg edits: Pair<String, Int>) =
     )
 
 private class Fake(val base: FakeServerGateway = FakeServerGateway(listOf(Session(S)))) : ServerGateway by base, StagedRevertGateway {
-    var history = listOf(reply("a2", 4, "src/b.kt" to 2), prompt("u2", 3), reply("a1", 2, "src/a.kt" to 3), prompt("u1", 1)) // newest first
+    var history = listOf(prompt("u1", 1), reply("a1", 2, "src/a.kt" to 3), prompt("u2", 3), reply("a2", 4, "src/b.kt" to 2)) // one chronological page
     var staged: SessionRevert? = null
     var stageFails: Failure? = null
     val calls = mutableListOf<String>()

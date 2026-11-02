@@ -154,21 +154,24 @@ public class ConversationReview(
         mutable.update { s -> if (s.loaded && s.staged == staged) s else s.copy(staged = staged, revision = s.revision + 1, loaded = true) }
     }
 
-    /** The history, oldest first, from up to [maxPages] newest-first pages. */
+    /**
+     * The history, oldest first. Pages come newest page first, each in chronological order (the gateway contract),
+     * up to [maxPages] pages.
+     */
     public suspend fun history(): Outcome<HistoryRead> {
         val g = gateways.value ?: return notConnected()
-        val out = ArrayList<MessageWithParts>()
+        val pages = ArrayList<List<MessageWithParts>>()
         var cursor: String? = null
         repeat(maxPages) {
             when (val page = g.live.messagePage(session, cursor, pageSize)) {
                 is Outcome.Failed -> return page
                 is Outcome.Ok -> {
-                    out += page.value.items
-                    cursor = page.value.nextCursor ?: return HistoryRead(out.asReversed().toImmutableList(), complete = true).ok()
+                    pages += page.value.items
+                    cursor = page.value.nextCursor ?: return HistoryRead(pages.asReversed().flatten().toImmutableList(), complete = true).ok()
                 }
             }
         }
-        return HistoryRead(out.asReversed().toImmutableList(), complete = false).ok()
+        return HistoryRead(pages.asReversed().flatten().toImmutableList(), complete = false).ok()
     }
 
     /** The files the turn of [messageId] changed; with null, the whole conversation's (tool evidence, B-CHAT-068). */
@@ -227,7 +230,7 @@ public class ConversationReview(
             when (val page = g.live.messagePage(session, cursor, pageSize)) {
                 is Outcome.Failed -> return page
                 is Outcome.Ok -> {
-                    // Pages are newest first; within a page the order is the server's, so count by position.
+                    // Pages come newest first, each in chronological order: count what follows within the page.
                     val ids = page.value.items.map { it.info.id }
                     val at = ids.indexOf(promptId)
                     if (at >= 0) return (newer + countNewer(page.value.items, at)).ok()
@@ -239,13 +242,13 @@ public class ConversationReview(
         return Outcome.Ok(null)
     }
 
-    /** Messages of one page newer than the one at [at]: by creation time when every row has one, else by position. */
+    /** Messages of one chronological page newer than the one at [at]: by creation time when every row has one, else by position. */
     private fun countNewer(items: List<MessageWithParts>, at: Int): Int {
         val pivot = items[at].info.time?.createdMs
         return if (pivot != null && items.all { it.info.time?.createdMs != null }) {
             items.withIndex().count { (i, m) -> i != at && (m.info.time!!.createdMs!! > pivot || (m.info.time!!.createdMs == pivot && i < at)) }
         } else {
-            at // newest first: everything before it is newer
+            items.size - 1 - at // chronological: everything after it is newer
         }
     }
 
