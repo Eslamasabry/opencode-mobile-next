@@ -60,6 +60,8 @@ public data class ReviewState(
     val working: Boolean = false,
     /** The conversation is running a turn: undo waits for it (B-CHAT-106). */
     val running: Boolean = false,
+    /** The conversation's title as the server names it (the questions name the conversation); null until read. */
+    val title: String? = null,
 )
 
 /** A point-in-time review of the staged undo: actions on it are refused once it is not current. */
@@ -141,6 +143,7 @@ public class ConversationReview(
         return when (val read = g.live.session(session)) {
             is Outcome.Failed -> read
             is Outcome.Ok -> {
+                mutable.update { it.copy(title = read.value.title) }
                 adopt(read.value.stagedRevert)
                 Unit.ok()
             }

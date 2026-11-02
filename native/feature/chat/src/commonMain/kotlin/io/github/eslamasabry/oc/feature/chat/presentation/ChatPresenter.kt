@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.ReviewRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -157,7 +158,7 @@ public class ChatPresenter(
             confirm = l.confirm,
             clip = l.clip,
             arrival = arrival,
-            capabilities = ChatCapabilitiesUi(fork = i.capabilities.sessionFork, deleteMessage = i.capabilities.messageDelete),
+            capabilities = ChatCapabilitiesUi(fork = i.capabilities.sessionFork, deleteMessage = i.capabilities.messageDelete, undo = i.capabilities.sessionRevert, changes = true),
             guardBack = BackOrder.handles(l.menu != null, l.confirm != null, l.findQuery != null, i.draft.unsaved),
         )
     }
@@ -270,7 +271,7 @@ public class ChatPresenter(
         val target = MessageTarget(row.turnId, rowKey, kind, messageId)
         val hasText = !textOf(t, target).isNullOrBlank()
         val caps = world.capabilities.value
-        val actions = MessageActions.of(kind, ChatCapabilitiesUi(caps.sessionFork, caps.messageDelete), t.run.busy, messageId, hasText)
+        val actions = MessageActions.of(kind, ChatCapabilitiesUi(caps.sessionFork, caps.messageDelete, undo = caps.sessionRevert, changes = true), t.run.busy, messageId, hasText)
         if (actions.isEmpty()) return
         local.update { it.copy(menu = MessageMenuUi(target, actions), actionFailure = null) }
     }
@@ -299,8 +300,14 @@ public class ChatPresenter(
                     }
                 }
             }
+            MessageAction.Changes -> nav.open(ReviewRoute.Changes(world.ref, target.messageId ?: return))
+            MessageAction.UndoFromHere -> nav.open(ReviewRoute.UndoFromHere(world.ref, target.messageId ?: return))
             MessageAction.Delete -> if (target.messageId != null) local.update { it.copy(confirm = ChatConfirm.DeleteMessage(target)) }
         }
+    }
+
+    override fun openChanges() {
+        nav.open(ReviewRoute.Changes(world.ref))
     }
 
     override fun confirmDelete() {

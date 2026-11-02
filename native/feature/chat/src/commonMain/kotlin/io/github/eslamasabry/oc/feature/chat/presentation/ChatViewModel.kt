@@ -57,6 +57,8 @@ public class ChatViewModel(@Assisted route: ChatRoute, private val worlds: ChatW
 
     override fun openMessageMenu(rowKey: String): Unit = presenter.openMessageMenu(rowKey)
 
+    override fun openChanges(): Unit = presenter.openChanges()
+
     override fun closeMessageMenu(): Unit = presenter.closeMessageMenu()
 
     override fun messageAction(target: MessageTarget, action: MessageAction): Unit = presenter.messageAction(target, action)

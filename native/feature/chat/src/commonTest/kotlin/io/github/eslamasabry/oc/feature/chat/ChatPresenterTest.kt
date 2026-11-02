@@ -195,7 +195,7 @@ class ChatPresenterTest {
         p.openMessageMenu("prompt:u1")
         val target = p.current().menu!!.target
         assertEquals(
-            listOf(MessageAction.Copy, MessageAction.SendAgain, MessageAction.Fork, MessageAction.Delete),
+            listOf(MessageAction.Copy, MessageAction.SendAgain, MessageAction.Fork, MessageAction.UndoFromHere, MessageAction.Delete),
             p.current().menu!!.actions,
         )
         p.messageAction(target, MessageAction.SendAgain)
@@ -207,7 +207,7 @@ class ChatPresenterTest {
     @Test
     fun `09-6_6 the menu follows the server's flags, never the backend kind`() {
         world.transcript.value = stateOf(*turn(1).toTypedArray())
-        world.capabilities.value = ServerCapabilities(sessionFork = false, messageDelete = false)
+        world.capabilities.value = ServerCapabilities(sessionFork = false, messageDelete = false, sessionRevert = false)
         val p = presenter()
         p.openMessageMenu("prompt:u1")
         assertEquals(listOf(MessageAction.Copy, MessageAction.SendAgain), p.current().menu!!.actions)
@@ -344,5 +344,17 @@ class ChatPresenterTest {
         p.messageAction(p.current().menu!!.target, MessageAction.Delete)
         p.confirmDelete()
         assertEquals(StatusPick.ACTION, p.current().status?.id)
+    }
+
+    @Test
+    fun `B-CHAT-120 undo from here and the turn's changes open the review pages`() {
+        world.transcript.value = stateOf(*turn(1).toTypedArray())
+        val p = presenter()
+        p.openMessageMenu("prompt:u1")
+        p.messageAction(p.current().menu!!.target, MessageAction.UndoFromHere)
+        p.openMessageMenu("footer:u1")
+        p.messageAction(p.current().menu!!.target, MessageAction.Changes)
+        p.openChanges()
+        assertEquals(listOf("open", "open", "open"), nav.calls)
     }
 }

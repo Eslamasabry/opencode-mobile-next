@@ -157,6 +157,8 @@ public object MessageActions {
         if (hasText) out += MessageAction.Copy
         if (kind == TargetKind.Prompt && hasText && !busy) out += MessageAction.SendAgain
         if (kind == TargetKind.Prompt && caps.fork && messageId != null) out += MessageAction.Fork
+        if (kind == TargetKind.Reply && caps.changes && messageId != null) out += MessageAction.Changes
+        if (kind == TargetKind.Prompt && caps.undo && messageId != null && !busy) out += MessageAction.UndoFromHere
         if (caps.deleteMessage && messageId != null) out += MessageAction.Delete
         return out.toImmutableList()
     }

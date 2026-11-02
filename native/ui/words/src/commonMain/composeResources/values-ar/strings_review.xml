@@ -1,0 +1,12 @@
+<resources>
+    <string name="reviewTurnTitle">تغييرات هذه الجولة</string>
+    <string name="reviewOneFileUnavailable">التراجع عن ملف واحد في كل مرة غير متاح بعد: هذا الخادم يتراجع بدءًا من طلب فقط. استخدم «تراجع عن الكل» أو «التراجع بدءًا من هذا الطلب».</string>
+    <string name="reviewNoDiff">لم يُبلّغ الخادم عن الأسطر التي تغيّرت في هذا الملف.</string>
+    <string name="reviewFileGone">هذا الملف لم يعد ضمن هذه التغييرات.</string>
+    <string name="reviewIncomplete">تعذّرت قراءة الرسائل الأقدم، لذا قد تنقص هذه القائمة بعض الملفات.</string>
+    <string name="reviewNoChangesBody">لم يُبلّغ الوكيل عن أي تعديلات ملفات هنا.</string>
+    <string name="reviewWaiting">هناك تراجع ينتظر مراجعتك. الرسائل بعد طلبه مخفية حتى تختار.</string>
+    <string name="reviewUndoUnknown">«تراجع عن الكل» يحتاج الطلب الذي بدأت منه هذه التغييرات، وتعذّرت قراءته.</string>
+    <string name="reviewUndoUnavailable">هذا الخادم لا يستطيع التراجع بدءًا من طلب.</string>
+    <string name="reviewToolEvidence">بحسب ما أبلغت عنه أدوات الوكيل. التغييرات التي أجرتها الأوامر غير مدرجة.</string>
+</resources>

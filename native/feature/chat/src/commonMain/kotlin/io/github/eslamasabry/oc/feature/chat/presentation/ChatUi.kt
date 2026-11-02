@@ -119,7 +119,16 @@ public data class MessageTarget(val turnId: String, val rowKey: String, val kind
 public enum class TargetKind { Prompt, Reply }
 
 /** One action list per message for every way in (plan 09 §6.6). Order is the menu's order; destructive last. */
-public enum class MessageAction { Copy, SendAgain, Fork, Delete }
+public enum class MessageAction {
+    Copy,
+    SendAgain,
+    Fork,
+    /** P12-REVIEW: the files the reply's turn changed (ReviewRoute.Changes). */
+    Changes,
+    /** P12-REVIEW: "Undo from here" on a prompt (ReviewRoute.UndoFromHere). */
+    UndoFromHere,
+    Delete,
+}
 
 public data class MessageMenuUi(val target: MessageTarget, val actions: ImmutableList<MessageAction>)
 
@@ -140,7 +149,14 @@ public data class ClipUi(val id: Long, val text: String)
 public data class ChatArrivalUi(val id: Long, val focusComposer: Boolean, val landOnIndex: Int?)
 
 /** The flags the screen reads, never the backend kind (ADR §9.1). */
-public data class ChatCapabilitiesUi(val fork: Boolean = false, val deleteMessage: Boolean = false)
+public data class ChatCapabilitiesUi(
+    val fork: Boolean = false,
+    val deleteMessage: Boolean = false,
+    /** `sessionRevert`: Undo from here (P12-REVIEW). */
+    val undo: Boolean = false,
+    /** A reply's turn can list its changed files (P12-REVIEW). */
+    val changes: Boolean = false,
+)
 
 /** Intents, named after what the person wants (ADR §9.1), never after widgets. */
 public interface ChatActions {
@@ -169,6 +185,9 @@ public interface ChatActions {
 
     /** From a prompt (tap or long-press) or a reply's footer; the ViewModel resolves the message. */
     public fun openMessageMenu(rowKey: String)
+
+    /** The conversation's changed files (P12-REVIEW, ReviewRoute.Changes). */
+    public fun openChanges() {}
 
     public fun closeMessageMenu()
 

@@ -151,6 +151,25 @@ class ChatRulesTest {
     }
 
     @Test
+    fun `B-CHAT-120 undo from here is on a prompt only where the server undoes, never while a reply runs`() {
+        val review = ChatCapabilitiesUi(fork = true, deleteMessage = true, undo = true, changes = true)
+        assertEquals(
+            listOf(MessageAction.Copy, MessageAction.SendAgain, MessageAction.Fork, MessageAction.UndoFromHere, MessageAction.Delete),
+            MessageActions.of(TargetKind.Prompt, review, busy = false, messageId = "u1", hasText = true),
+        )
+        assertEquals(
+            listOf(MessageAction.Copy, MessageAction.Fork, MessageAction.Delete),
+            MessageActions.of(TargetKind.Prompt, review, busy = true, messageId = "u1", hasText = true),
+        )
+        assertEquals(
+            listOf(MessageAction.Copy, MessageAction.Changes, MessageAction.Delete),
+            MessageActions.of(TargetKind.Reply, review, busy = false, messageId = "a1", hasText = true),
+            "a reply's turn opens its changed files; delete stays last",
+        )
+        assertEquals(listOf(MessageAction.Copy), MessageActions.of(TargetKind.Reply, review, false, messageId = null, hasText = true))
+    }
+
+    @Test
     fun `09-6_6 copy reply is the turn's prose in order, thoughts, notices and other turns skipped`() {
         val s =
             stateOf(
