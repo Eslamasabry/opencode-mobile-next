@@ -51,4 +51,3 @@
 :ui:kit-content	S	content-kit-owner	slice-3
 :feature:servers	F	preview-servers-owner	slice-2
 :core:markdown	S	markdown-owner (S2-MD)	slice-2
-:benchmark	S	coordinator (slice-0 proof P3)	slice-0
