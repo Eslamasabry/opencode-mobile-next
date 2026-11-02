@@ -1,0 +1,14 @@
+<resources>
+    <!-- أنواع أعطال الخادم (docs/native/server-errors-2026-11-02/contract.md): جملة واحدة واضحة لكل نوع،
+          دون نص استثناء أو نص من الخادم. -->
+    <string name="serverFailureCertificate">تعذّر التحقق من شهادة هذا الخادم. تحقّق من الخادم، ثم حاول مجددًا.</string>
+    <string name="serverFailureIncompatible">يعمل هذا الخادم بإصدار لا يستطيع هذا التطبيق العمل معه.</string>
+    <string name="serverFailureNetwork">تعذّر الوصول إلى هذا الخادم. تحقّق من الشبكة أو عنوان الخادم، ثم حاول مجددًا.</string>
+    <string name="serverFailureRejected">رفض الخادم هذا الطلب. تحقّق من الخادم، ثم حاول مجددًا.</string>
+    <string name="serverFailureSecret">تعذّر على هذا التطبيق قراءة كلمة المرور المحفوظة. أدخل كلمة المرور مجددًا.</string>
+    <string name="serverFailureServer">حدثت مشكلة في الخادم. حاول مجددًا لاحقًا.</string>
+    <string name="serverFailureStorage">تعذّر على هذا التطبيق قراءة بيانات الاتصال أو حفظها على هذا الهاتف. حاول مجددًا.</string>
+    <string name="serverFailureTimeout">لم يجب الخادم في الوقت المتاح. حاول مجددًا.</string>
+    <string name="serverFailureUnreadableReply">ردّ الخادم، لكن هذا التطبيق لم يتمكن من قراءة ردّه.</string>
+    <string name="serverFailureOther">تعذّر على التطبيق إكمال هذا الاتصال. حاول مجددًا.</string>
+</resources>

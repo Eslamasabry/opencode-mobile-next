@@ -49,7 +49,9 @@ oc_say "tree: HEAD $head_short$dirty; base $base (merge-base $(git -C "$top" mer
 [[ -n "$dirty" ]] && oc_say "note: uncommitted changes are included; this run counts only for this exact tree"
 
 # --- PC part --------------------------------------------------------------------------------------------------------
-mapfile -t changed < <(cd "$top" && oc_changed_files "$base")
+changed_text="$(cd "$top" && oc_changed_files "$base")" || oc_die2 "cannot enumerate changed paths"
+changed=()
+[[ -z "$changed_text" ]] || mapfile -t changed <<<"$changed_text"
 mapfile -t modules < <(printf '%s\n' "${changed[@]}" | oc_paths_to_modules)
 oc_say "changed paths: ${#changed[@]}; touched modules: ${modules[*]:-(none)}"
 
@@ -115,7 +117,11 @@ fi
 
 ((build_logic)) && run_gradle build-logic -p build-logic test
 run_gradle tests --continue "${tasks[@]}"
-((strings)) && run_gradle strings-drift :tools:strings:run --args="check --repo .."
+if ((strings)); then
+  # This check also reads the frozen Flutter inputs outside native/.
+  oc_check_jdk && oc_check_memory || { oc_status 2; exit 2; }
+  where=local run_gradle strings-drift :tools:strings:run --args="check --repo .."
+fi
 
 if [[ -x "$OC_NATIVE/tool/qa/detekt.sh" ]]; then
   oc_step detekt "$OC_NATIVE/tool/qa/detekt.sh" "${modules[@]}" || oc_status 1

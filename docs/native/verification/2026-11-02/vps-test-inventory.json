@@ -1,0 +1,2858 @@
+{
+  "sourceIds": {
+    "preview-qualified-source-id.txt": "e857d5a0a5e194000734a295d3d710032322a286fe702d247e09205eb2e5be7d",
+    "preview-qualified-source-id-after.txt": "e857d5a0a5e194000734a295d3d710032322a286fe702d247e09205eb2e5be7d",
+    "final-quality-source-id.txt": "e857d5a0a5e194000734a295d3d710032322a286fe702d247e09205eb2e5be7d"
+  },
+  "sourceIdsMatch": true,
+  "tests": 3470,
+  "failures": 0,
+  "skipped": 1,
+  "skippedCases": [
+    {
+      "suite": "LiveOc2ServerSmokeTest[desktop]",
+      "case": "B-PROTO-042 real OC2 admits one prompt and emits a real response[desktop]"
+    }
+  ],
+  "rows": [
+    {
+      "path": "protocol/oc2/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.protocol.oc2.wire.Oc2ModelsTest.xml",
+      "suite": "Oc2ModelsTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "protocol/oc2/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.protocol.oc2.fixtures.Oc2FixtureDecodeTest.xml",
+      "suite": "Oc2FixtureDecodeTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "protocol/oc2/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.protocol.oc2.events.Oc2EventsTest.xml",
+      "suite": "Oc2EventsTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "protocol/oc2/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.protocol.oc2.adapter.Oc2CoreProjectionTest.xml",
+      "suite": "Oc2CoreProjectionTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "protocol/oc2/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.protocol.oc2.fixtures.Oc2EventRegistryDocTest.xml",
+      "suite": "Oc2EventRegistryDocTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "protocol/oc2/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.protocol.oc2.send.Oc2PromptSendTest.xml",
+      "suite": "Oc2PromptSendTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "protocol/oc2/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.protocol.oc2.live.LiveOc2ServerSmokeTest.xml",
+      "suite": "LiveOc2ServerSmokeTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 1
+    },
+    {
+      "path": "protocol/oc2/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.protocol.oc2.fixtures.Oc2ParityTest.xml",
+      "suite": "Oc2ParityTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "protocol/oc2/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.protocol.oc2.live.Oc2LiveGatewayTest.xml",
+      "suite": "Oc2LiveGatewayTest[desktop]",
+      "tests": 19,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "protocol/oc2/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.protocol.oc2.fixtures.Oc2FixtureManifestTest.xml",
+      "suite": "Oc2FixtureManifestTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "protocol/oc2/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.protocol.oc2.adapter.Oc2EventAdapterTest.xml",
+      "suite": "Oc2EventAdapterTest[desktop]",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kitchat.KitChatGoldensTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kitchat.KitChatGoldensTest",
+      "tests": 24,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kitchat.ComposerMotionGoldensTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kitchat.ComposerMotionGoldensTest",
+      "tests": 15,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlockTest.xml",
+      "suite": "KitCodeBlockTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.code.CodeTokenizerTest.xml",
+      "suite": "CodeTokenizerTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.markdown.MarkdownStreamingTest.xml",
+      "suite": "MarkdownStreamingTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.markdown.InlineAnnotatedTest.xml",
+      "suite": "InlineAnnotatedTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.form.KitFormTest.xml",
+      "suite": "KitFormTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffViewTest.xml",
+      "suite": "KitDiffViewTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.turn.LiveSweepTest.xml",
+      "suite": "LiveSweepTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.RevealTest.xml",
+      "suite": "RevealTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCardTest.xml",
+      "suite": "KitPermissionCardTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.code.CodeTextTest.xml",
+      "suite": "CodeTextTest[desktop]",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownTest.xml",
+      "suite": "KitMarkdownTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.composer.ComposerKeysUiTest.xml",
+      "suite": "ComposerKeysUiTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.composer.MovingPartTest.xml",
+      "suite": "MovingPartTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.composer.GlowColoursTest.xml",
+      "suite": "GlowColoursTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.diff.DiffModelTest.xml",
+      "suite": "DiffModelTest[desktop]",
+      "tests": 14,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.transcript.ChunkSeamTest.xml",
+      "suite": "ChunkSeamTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.composer.ComposerGlowUiTest.xml",
+      "suite": "ComposerGlowUiTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRowTest.xml",
+      "suite": "KitToolRowTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kitchat.composer.StopGuardTest.xml",
+      "suite": "StopGuardTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/design/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.design.PacksTest.xml",
+      "suite": "PacksTest[desktop]",
+      "tests": 16,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/design/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.design.LayoutTokensTest.xml",
+      "suite": "LayoutTokensTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/design/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.design.DesignTokensTest.xml",
+      "suite": "DesignTokensTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/routes/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.routes.RouteSavingTest.xml",
+      "suite": "RouteSavingTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.content.ViewerRulesTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.content.ViewerRulesTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalRulesTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalRulesTest",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.content.KitQrReadabilityTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.content.KitQrReadabilityTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.content.ZoomMathTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.content.ZoomMathTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.content.ContentGoldensTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.content.ContentGoldensTest",
+      "tests": 24,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.content.PdfLimitsTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.content.PdfLimitsTest",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalAccessibleModeTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalAccessibleModeTest",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalTranscriptTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalTranscriptTest",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.content.ViewerRulesTest.xml",
+      "suite": "ViewerRulesTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalRulesTest.xml",
+      "suite": "KitTerminalRulesTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.content.ZoomMathTest.xml",
+      "suite": "ZoomMathTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.content.QrPayloadTest.xml",
+      "suite": "QrPayloadTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.content.ContentPartsDesktopTest.xml",
+      "suite": "ContentPartsDesktopTest[desktop]",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.content.PdfLimitsTest.xml",
+      "suite": "PdfLimitsTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit-content/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.content.terminal.TerminalTranscriptTest.xml",
+      "suite": "TerminalTranscriptTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/shell/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.shell.nav.RowTransformGateTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.shell.nav.RowTransformGateTest",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/shell/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.shell.nav.AndroidSystemMotionTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.shell.nav.AndroidSystemMotionTest",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/shell/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.shell.nav.ShellMotionTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.shell.nav.ShellMotionTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/shell/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.shell.nav.RowTransformGateTest.xml",
+      "suite": "RowTransformGateTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/shell/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.shell.nav.PredictiveBackShellTest.xml",
+      "suite": "PredictiveBackShellTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/shell/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.shell.nav.FrameCaptureTest.xml",
+      "suite": "FrameCaptureTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/shell/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.shell.nav.ShellMotionTest.xml",
+      "suite": "ShellMotionTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/words/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.words.WordsTest.xml",
+      "suite": "WordsTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.PartAGoldensTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.PartAGoldensTest",
+      "tests": 36,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.KitFrostFallbackGoldenTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.KitFrostFallbackGoldenTest",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.PartBRulesTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.PartBRulesTest",
+      "tests": 27,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.KitGoldensTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.KitGoldensTest",
+      "tests": 16,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.KitbRulesTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.KitbRulesTest",
+      "tests": 17,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.TextScaleCapTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.TextScaleCapTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.PartBGoldensTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.PartBGoldensTest",
+      "tests": 40,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.KitbGoldensTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.KitbGoldensTest",
+      "tests": 36,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.ui.kit.AndroidKitPlatformTest.xml",
+      "suite": "io.github.eslamasabry.oc.ui.kit.AndroidKitPlatformTest",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.Kita1FrameInsetsTest.xml",
+      "suite": "Kita1FrameInsetsTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.Kita1PaneSheetTest.xml",
+      "suite": "Kita1PaneSheetTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.Kita2ModalReviewTest.xml",
+      "suite": "Kita2ModalReviewTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.PartBRulesTest.xml",
+      "suite": "PartBRulesTest[desktop]",
+      "tests": 27,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.Kita2ActionsReviewTest.xml",
+      "suite": "Kita2ActionsReviewTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.KitSeamsDesktopTest.xml",
+      "suite": "KitSeamsDesktopTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.Kita1RowValueTest.xml",
+      "suite": "Kita1RowValueTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.PartADesktopTest.xml",
+      "suite": "PartADesktopTest[desktop]",
+      "tests": 28,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.Kita1PaneStatusTest.xml",
+      "suite": "Kita1PaneStatusTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.Kita2InputReviewTest.xml",
+      "suite": "Kita2InputReviewTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.PartBDesktopTest.xml",
+      "suite": "PartBDesktopTest[desktop]",
+      "tests": 21,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.KitbDesktopTest.xml",
+      "suite": "KitbDesktopTest[desktop]",
+      "tests": 26,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.KitbRulesTest.xml",
+      "suite": "KitbRulesTest[desktop]",
+      "tests": 17,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.Kita1DisabledRowTest.xml",
+      "suite": "Kita1DisabledRowTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "ui/kit/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.ui.kit.Kita2SecretReviewTest.xml",
+      "suite": "Kita2SecretReviewTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "build-logic/convention/build/test-results/test/TEST-oc.buildlogic.ModuleRulesTest.xml",
+      "suite": "oc.buildlogic.ModuleRulesTest",
+      "tests": 20,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/common/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.common.pace.PacerTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.common.pace.PacerTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/common/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.common.CommonTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.common.CommonTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/common/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.common.dart.DartJsonTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.common.dart.DartJsonTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/common/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.common.pace.PacerTest.xml",
+      "suite": "PacerTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/common/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.common.CommonTest.xml",
+      "suite": "CommonTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/common/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.common.dart.DartJsonTest.xml",
+      "suite": "DartJsonTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/net/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.net.stream.EventStreamLoopTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.net.stream.EventStreamLoopTest",
+      "tests": 29,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/net/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.net.stream.BackoffPolicyTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.net.stream.BackoffPolicyTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/net/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.net.HttpTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.net.HttpTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/net/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.net.sse.SseParserTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.net.sse.SseParserTest",
+      "tests": 14,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/net/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.net.stream.EventStreamLoopTest.xml",
+      "suite": "EventStreamLoopTest[desktop]",
+      "tests": 29,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/net/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.net.stream.BackoffPolicyTest.xml",
+      "suite": "BackoffPolicyTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/net/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.net.okhttp.TransportTrustTest.xml",
+      "suite": "TransportTrustTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/net/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.net.HttpTest.xml",
+      "suite": "HttpTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/net/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.net.sse.SseParserTest.xml",
+      "suite": "SseParserTest[desktop]",
+      "tests": 14,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/net/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.net.okhttp.NoResendTest.xml",
+      "suite": "NoResendTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/domain/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.domain.DomainTest.xml",
+      "suite": "DomainTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/domain/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.domain.capabilities.CapabilitySnapshotTest.xml",
+      "suite": "CapabilitySnapshotTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/domain/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.domain.capabilities.CapabilitiesTest.xml",
+      "suite": "CapabilitiesTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/domain/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.domain.FeatureNamesTest.xml",
+      "suite": "FeatureNamesTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/security/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.security.RedactorTest.xml",
+      "suite": "RedactorTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/security/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.security.LinksTest.xml",
+      "suite": "LinksTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/security/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.security.AddressRulesTest.xml",
+      "suite": "AddressRulesTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.data.FlutterPrefsStoreAndroidTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.data.FlutterPrefsStoreAndroidTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.data.FlutterPrefsCodecTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.data.FlutterPrefsCodecTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.data.WriterLaneTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.data.WriterLaneTest",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.data.GatedSecretStoreTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.data.GatedSecretStoreTest",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.data.PrefsKeyValueStoreTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.data.PrefsKeyValueStoreTest",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.data.ProfileScopeTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.data.ProfileScopeTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/testAndroidHostTest/TEST-io.github.eslamasabry.oc.core.data.AeadSecretStoreTest.xml",
+      "suite": "io.github.eslamasabry.oc.core.data.AeadSecretStoreTest",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.data.ConcurrencyTest.xml",
+      "suite": "ConcurrencyTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.data.FlutterPrefsCodecTest.xml",
+      "suite": "FlutterPrefsCodecTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.data.SoftwareAeadSecretStoreTest.xml",
+      "suite": "SoftwareAeadSecretStoreTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.data.AdoptedFixtureTest.xml",
+      "suite": "AdoptedFixtureTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.data.WriterLaneTest.xml",
+      "suite": "WriterLaneTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.data.GatedSecretStoreTest.xml",
+      "suite": "GatedSecretStoreTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.data.PrefsKeyValueStoreTest.xml",
+      "suite": "PrefsKeyValueStoreTest[desktop]",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.data.ProfileScopeTest.xml",
+      "suite": "ProfileScopeTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.data.AeadSecretStoreTest.xml",
+      "suite": "AeadSecretStoreTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/data/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.data.ProfileSweepShapesTest.xml",
+      "suite": "ProfileSweepShapesTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "core/model/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.core.model.ModelTest.xml",
+      "suite": "ModelTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "quality/build/test-results/test/TEST-io.github.eslamasabry.oc.quality.ChatReviewUiTest.xml",
+      "suite": "io.github.eslamasabry.oc.quality.ChatReviewUiTest",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "quality/build/test-results/test/TEST-io.github.eslamasabry.oc.quality.GraphSmokeTest.xml",
+      "suite": "io.github.eslamasabry.oc.quality.GraphSmokeTest",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "quality/build/test-results/test/TEST-io.github.eslamasabry.oc.feature.chat.world.ChatWorldReviewTest.xml",
+      "suite": "io.github.eslamasabry.oc.feature.chat.world.ChatWorldReviewTest",
+      "tests": 15,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "quality/build/test-results/test/TEST-io.github.eslamasabry.oc.quality.ModuleOwnersTest.xml",
+      "suite": "io.github.eslamasabry.oc.quality.ModuleOwnersTest",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "quality/build/test-results/test/TEST-io.github.eslamasabry.oc.quality.KitOnlyPlantedTest.xml",
+      "suite": "io.github.eslamasabry.oc.quality.KitOnlyPlantedTest",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "quality/build/test-results/test/TEST-io.github.eslamasabry.oc.quality.KonsistRulesTest.xml",
+      "suite": "io.github.eslamasabry.oc.quality.KonsistRulesTest",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "quality/build/test-results/test/TEST-io.github.eslamasabry.oc.quality.DesktopShellUiTest.xml",
+      "suite": "io.github.eslamasabry.oc.quality.DesktopShellUiTest",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "quality/build/test-results/test/TEST-io.github.eslamasabry.oc.quality.ScopeFileTest.xml",
+      "suite": "io.github.eslamasabry.oc.quality.ScopeFileTest",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/onboarding/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.onboarding.RootAndFirstRunTest.xml",
+      "suite": "RootAndFirstRunTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/onboarding/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.onboarding.OpeningGateTest.xml",
+      "suite": "OpeningGateTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/phone/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.phone.KeepRunningModelTest.xml",
+      "suite": "KeepRunningModelTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/phone/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.phone.RunningModelTest.xml",
+      "suite": "RunningModelTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/phone/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.phone.PhoneServerStateTest.xml",
+      "suite": "PhoneServerStateTest[desktop]",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/phone/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.phone.ThisPhoneModelTest.xml",
+      "suite": "ThisPhoneModelTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/phone/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.phone.PhoneScreensTest.xml",
+      "suite": "PhoneScreensTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/phone/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.phone.PhoneTimersTest.xml",
+      "suite": "PhoneTimersTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.settings.SettingsScreenUiTest.xml",
+      "suite": "SettingsScreenUiTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.settings.SettingsStructureTest.xml",
+      "suite": "SettingsStructureTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.settings.PendingWordsTest.xml",
+      "suite": "PendingWordsTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.settings.SettingsSearchTest.xml",
+      "suite": "SettingsSearchTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.settings.SettingsPresenterTest.xml",
+      "suite": "SettingsPresenterTest[desktop]",
+      "tests": 16,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.settings.PrivacyPresenterTest.xml",
+      "suite": "PrivacyPresenterTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.settings.SettingsGoldensTest.xml",
+      "suite": "SettingsGoldensTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chat.ChatPresenterTest.xml",
+      "suite": "ChatPresenterTest[desktop]",
+      "tests": 19,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestsModelTest.xml",
+      "suite": "ChatRequestsModelTest[desktop]",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chat.ChatScreenHostTest.xml",
+      "suite": "ChatScreenHostTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chat.ChatRulesTest.xml",
+      "suite": "ChatRulesTest[desktop]",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chat/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chat.WorldRulesTest.xml",
+      "suite": "WorldRulesTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/agents/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.agents.signin.SignInTerminalSessionTest.xml",
+      "suite": "SignInTerminalSessionTest[desktop]",
+      "tests": 15,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/agents/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.agents.presentation.SignInTerminalPresenterTest.xml",
+      "suite": "SignInTerminalPresenterTest[desktop]",
+      "tests": 15,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chats/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chats.ChatsViewModelTest.xml",
+      "suite": "ChatsViewModelTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chats/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chats.ChatsScreenTest.xml",
+      "suite": "ChatsScreenTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chats/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chats.ChatsStateTest.xml",
+      "suite": "ChatsStateTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chats/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chats.SessionTitlesTest.xml",
+      "suite": "SessionTitlesTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chat-composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chatcomposer.ComposerScreenUiTest.xml",
+      "suite": "ComposerScreenUiTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chat-composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chatcomposer.ModelChipLabelTest.xml",
+      "suite": "ModelChipLabelTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chat-composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chatcomposer.FieldButtonsTest.xml",
+      "suite": "FieldButtonsTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chat-composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chatcomposer.ComposerKeysTest.xml",
+      "suite": "ComposerKeysTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chat-composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chatcomposer.ComposerGoldensTest.xml",
+      "suite": "ComposerGoldensTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/chat-composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.chatcomposer.ComposerPresenterTest.xml",
+      "suite": "ComposerPresenterTest[desktop]",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "feature/servers/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.feature.servers.ServersViewModelTest.xml",
+      "suite": "ServersViewModelTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/flutter-migration-readers/build/test-results/test/TEST-io.github.eslamasabry.oc.migration.readers.CommittedFixturesTest.xml",
+      "suite": "io.github.eslamasabry.oc.migration.readers.CommittedFixturesTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/flutter-migration-readers/build/test-results/test/TEST-io.github.eslamasabry.oc.migration.readers.secure.FlutterSecureStorageReaderTest.xml",
+      "suite": "io.github.eslamasabry.oc.migration.readers.secure.FlutterSecureStorageReaderTest",
+      "tests": 14,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/flutter-migration-readers/build/test-results/test/TEST-io.github.eslamasabry.oc.migration.readers.prefs.AsyncBackendsAndPickerTest.xml",
+      "suite": "io.github.eslamasabry.oc.migration.readers.prefs.AsyncBackendsAndPickerTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/flutter-migration-readers/build/test-results/test/TEST-io.github.eslamasabry.oc.migration.readers.xml.AndroidPrefsXmlTest.xml",
+      "suite": "io.github.eslamasabry.oc.migration.readers.xml.AndroidPrefsXmlTest",
+      "tests": 12,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/flutter-migration-readers/build/test-results/test/TEST-io.github.eslamasabry.oc.migration.readers.model.FlutterKeyRegistryTest.xml",
+      "suite": "io.github.eslamasabry.oc.migration.readers.model.FlutterKeyRegistryTest",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/flutter-migration-readers/build/test-results/test/TEST-io.github.eslamasabry.oc.migration.readers.json.MiniJsonTest.xml",
+      "suite": "io.github.eslamasabry.oc.migration.readers.json.MiniJsonTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/flutter-migration-readers/build/test-results/test/TEST-io.github.eslamasabry.oc.migration.readers.prefs.FlutterPrefsCodecTest.xml",
+      "suite": "io.github.eslamasabry.oc.migration.readers.prefs.FlutterPrefsCodecTest",
+      "tests": 12,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/flutter-migration-readers/build/test-results/test/TEST-io.github.eslamasabry.oc.migration.readers.migration.CredentialAndBaselineTest.xml",
+      "suite": "io.github.eslamasabry.oc.migration.readers.migration.CredentialAndBaselineTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/flutter-migration-readers/build/test-results/test/TEST-io.github.eslamasabry.oc.migration.readers.migration.RestoreTransactionTest.xml",
+      "suite": "io.github.eslamasabry.oc.migration.readers.migration.RestoreTransactionTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/flutter-migration-readers/build/test-results/test/TEST-io.github.eslamasabry.oc.migration.readers.migration.BackupPublisherTest.xml",
+      "suite": "io.github.eslamasabry.oc.migration.readers.migration.BackupPublisherTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/flutter-migration-readers/build/test-results/test/TEST-io.github.eslamasabry.oc.migration.readers.migration.StepRunnerTest.xml",
+      "suite": "io.github.eslamasabry.oc.migration.readers.migration.StepRunnerTest",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/strings/build/test-results/test/TEST-io.github.eslamasabry.oc.tools.strings.KeepNativeTest.xml",
+      "suite": "io.github.eslamasabry.oc.tools.strings.KeepNativeTest",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/strings/build/test-results/test/TEST-io.github.eslamasabry.oc.tools.strings.IcuTest.xml",
+      "suite": "io.github.eslamasabry.oc.tools.strings.IcuTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/strings/build/test-results/test/TEST-io.github.eslamasabry.oc.tools.strings.HandTest.xml",
+      "suite": "io.github.eslamasabry.oc.tools.strings.HandTest",
+      "tests": 12,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/strings/build/test-results/test/TEST-io.github.eslamasabry.oc.tools.strings.ConverterTest.xml",
+      "suite": "io.github.eslamasabry.oc.tools.strings.ConverterTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/strings/build/test-results/test/TEST-io.github.eslamasabry.oc.tools.strings.EscapeTest.xml",
+      "suite": "io.github.eslamasabry.oc.tools.strings.EscapeTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/strings/build/test-results/test/TEST-io.github.eslamasabry.oc.tools.strings.RealArbTest.xml",
+      "suite": "io.github.eslamasabry.oc.tools.strings.RealArbTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/strings/build/test-results/test/TEST-io.github.eslamasabry.oc.tools.strings.DriftTest.xml",
+      "suite": "io.github.eslamasabry.oc.tools.strings.DriftTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/strings/build/test-results/test/TEST-io.github.eslamasabry.oc.tools.strings.PluralRulesTest.xml",
+      "suite": "io.github.eslamasabry.oc.tools.strings.PluralRulesTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/strings/build/test-results/test/TEST-io.github.eslamasabry.oc.tools.strings.GoldenTest.xml",
+      "suite": "io.github.eslamasabry.oc.tools.strings.GoldenTest",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "tools/strings/build/test-results/test/TEST-io.github.eslamasabry.oc.tools.strings.AndroidStringsTest.xml",
+      "suite": "io.github.eslamasabry.oc.tools.strings.AndroidStringsTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeProcessTreeTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeProcessTreeTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeIdleHeartbeatTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeIdleHeartbeatTest",
+      "tests": 17,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeEngineReadinessTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeEngineReadinessTest",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeOrphanReaperTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeOrphanReaperTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeRuntimeOwnershipTest",
+      "tests": 34,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeInstallerVisibilityTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeInstallerVisibilityTest",
+      "tests": 14,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeWorkLeaseHostTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeWorkLeaseHostTest",
+      "tests": 49,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.AgentPriorityTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.AgentPriorityTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.PaseoStaleLockTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.PaseoStaleLockTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.BuiltinGitObjectsTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.BuiltinGitObjectsTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeServerRecipeTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeServerRecipeTest",
+      "tests": 16,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeProcessListTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeProcessListTest",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeRecoveryBudgetTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeRecoveryBudgetTest",
+      "tests": 23,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.StatusNotificationModelTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.StatusNotificationModelTest",
+      "tests": 19,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeInstallerOwnershipTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeInstallerOwnershipTest",
+      "tests": 35,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.AlertCopyTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.AlertCopyTest",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeIdleReturnNotificationTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeIdleReturnNotificationTest",
+      "tests": 14,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.ChildProcessLimitTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.ChildProcessLimitTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.SetupWorkScopesTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.SetupWorkScopesTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeInstallerAdmissionTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeInstallerAdmissionTest",
+      "tests": 18,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeIdleReceiverDispatchTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeIdleReceiverDispatchTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeServerRestoreEventTest",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.AlertButtonsTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.AlertButtonsTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.SetupScriptCompletionTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.SetupScriptCompletionTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.RestartBackoffTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.RestartBackoffTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.PhoneAgentClaudeHomeTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.PhoneAgentClaudeHomeTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeIdleStateTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeIdleStateTest",
+      "tests": 29,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeAgentHostAdmissionTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeAgentHostAdmissionTest",
+      "tests": 22,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeComponentUpdateRecoveryTest",
+      "tests": 21,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.IdleStopPolicyTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.IdleStopPolicyTest",
+      "tests": 16,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.ServiceNoticeGateTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.ServiceNoticeGateTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.WorkLeasesTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.WorkLeasesTest",
+      "tests": 19,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.SetupStepRetryTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.SetupStepRetryTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeProcRaceTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeProcRaceTest",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.NativeIdleTimerTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.NativeIdleTimerTest",
+      "tests": 17,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/linux/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.ServiceDiagnosticsTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.ServiceDiagnosticsTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/platform/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.platform.TraceRecorderTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.platform.TraceRecorderTest",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/platform/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.platform.FieldFrameStatsRobolectricTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.platform.FieldFrameStatsRobolectricTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/platform/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.platform.NativeCrashStoreTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.platform.NativeCrashStoreTest",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/platform/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.platform.NetworkTrackerTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.platform.NetworkTrackerTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/platform/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.platform.StartupHistoryTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.platform.StartupHistoryTest",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/platform/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.platform.FieldFrameStatsTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.platform.FieldFrameStatsTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/platform/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.platform.AndroidPlatformRobolectricTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.platform.AndroidPlatformRobolectricTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/platform/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.platform.ProfileStatusTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.platform.ProfileStatusTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/camera/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.camera.scan.ScanWindowTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.camera.scan.ScanWindowTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/camera/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.camera.access.CameraAccessFlowTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.camera.access.CameraAccessFlowTest",
+      "tests": 12,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/camera/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.camera.scan.QrFixtureDecodeTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.camera.scan.QrFixtureDecodeTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/camera/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.camera.scan.ScanSessionTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.camera.scan.ScanSessionTest",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/camera/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.camera.access.AndroidCameraHardwareTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.camera.access.AndroidCameraHardwareTest",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/camera/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.camera.capture.CaptureFilesTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.camera.capture.CaptureFilesTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/media/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.media.image.AndroidImageCodecTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.media.image.AndroidImageCodecTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/media/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.media.image.ImageScaleTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.media.image.ImageScaleTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/media/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.media.clipboard.ClipboardImagesTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.media.clipboard.ClipboardImagesTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/voice/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.voice.AndroidPlatformTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.voice.AndroidPlatformTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/voice/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.voice.HttpsModelFetcherTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.voice.HttpsModelFetcherTest",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/voice/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.voice.SherpaSpeechTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.voice.SherpaSpeechTest",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/voice/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.voice.RulesTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.voice.RulesTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/agenthost/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.agenthost.TestedClaudeVersionsTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.agenthost.TestedClaudeVersionsTest",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/agenthost/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.agenthost.PaseoStaleLockTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.agenthost.PaseoStaleLockTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/agenthost/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.agenthost.PhoneAgentAuthOtherOwnersTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.agenthost.PhoneAgentAuthOtherOwnersTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/agenthost/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.agenthost.PhoneAgentAuthTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.agenthost.PhoneAgentAuthTest",
+      "tests": 49,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/agenthost/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.agenthost.PhoneAgentClaudeHomeTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.agenthost.PhoneAgentClaudeHomeTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/agenthost/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.agenthost.AndroidAgentHostTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.agenthost.AndroidAgentHostTest",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/agenthost/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.agenthost.PhoneAgentHostTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.agenthost.PhoneAgentHostTest",
+      "tests": 14,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/agenthost/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.agenthost.NativeAgentHostAdmissionTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.agenthost.NativeAgentHostAdmissionTest",
+      "tests": 22,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/agenthost/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.agenthost.AgentProcessesTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.agenthost.AgentProcessesTest",
+      "tests": 19,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.widgets.WidgetSurfaceTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.widgets.WidgetSurfaceTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.WidgetActionPolicyTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.WidgetActionPolicyTest",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.WidgetStatusPolicyTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.WidgetStatusPolicyTest",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.TwoWidgetsRenderTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.TwoWidgetsRenderTest",
+      "tests": 17,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.WidgetSnapshotRaceTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.WidgetSnapshotRaceTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.WidgetCardRenderTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.WidgetCardRenderTest",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.UsageWidgetPlansTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.UsageWidgetPlansTest",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.StatusWidgetModelTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.StatusWidgetModelTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.WidgetProvidersTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.WidgetProvidersTest",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.WidgetSessionCardLayoutTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.WidgetSessionCardLayoutTest",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.widgets.WidgetActionDispatchTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.widgets.WidgetActionDispatchTest",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.widgets.WidgetRuntimeLifecycleTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.widgets.WidgetRuntimeLifecycleTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.widgets.WidgetFeedTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.widgets.WidgetFeedTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.widgets.WidgetPersistenceTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.widgets.WidgetPersistenceTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.WidgetV2PolicyTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.WidgetV2PolicyTest",
+      "tests": 20,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.WidgetActionLeaseTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.WidgetActionLeaseTest",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.WidgetConversationPresentationTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.WidgetConversationPresentationTest",
+      "tests": 16,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.opencode_mobile.UsageWidgetFitTest.xml",
+      "suite": "io.github.eslamasabry.opencode_mobile.UsageWidgetFitTest",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/widgets/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.widgets.WidgetActionIngressTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.widgets.WidgetActionIngressTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/notifications/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.notifications.ReplyWatchPolicyTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.notifications.ReplyWatchPolicyTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/notifications/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.notifications.StatusRowRulesTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.notifications.StatusRowRulesTest",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/notifications/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.notifications.ReplyWatchServiceTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.notifications.ReplyWatchServiceTest",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/notifications/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.notifications.PromotableStatusTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.notifications.PromotableStatusTest",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/notifications/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.notifications.NotificationActionBodyTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.notifications.NotificationActionBodyTest",
+      "tests": 17,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/notifications/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.notifications.NotificationTextTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.notifications.NotificationTextTest",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/notifications/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.notifications.AlertRulesTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.notifications.AlertRulesTest",
+      "tests": 14,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/notifications/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.notifications.AlertShadeTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.notifications.AlertShadeTest",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "android/notifications/build/test-results/testDebugUnitTest/TEST-io.github.eslamasabry.oc.android.notifications.ChannelsTest.xml",
+      "suite": "io.github.eslamasabry.oc.android.notifications.ChannelsTest",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.DlvParallelFlushTest.xml",
+      "suite": "DlvParallelFlushTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.DlvStopTest.xml",
+      "suite": "DlvStopTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.DlvScopeTest.xml",
+      "suite": "DlvScopeTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.OfflineQueueStoreTest.xml",
+      "suite": "OfflineQueueStoreTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.PromptDeliveryTest.xml",
+      "suite": "PromptDeliveryTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.DlvRestartTest.xml",
+      "suite": "DlvRestartTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.DlvReviewIdTest.xml",
+      "suite": "DlvReviewIdTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.StopTest.xml",
+      "suite": "StopTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.ReceiptsTest.xml",
+      "suite": "ReceiptsTest[desktop]",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.ConversationActivityTest.xml",
+      "suite": "ConversationActivityTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.FlutterQueueFixtureTest.xml",
+      "suite": "FlutterQueueFixtureTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.DlvIdentityTest.xml",
+      "suite": "DlvIdentityTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.DlvClearTest.xml",
+      "suite": "DlvClearTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.GatewaySendLinkTest.xml",
+      "suite": "GatewaySendLinkTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.OfflineQueueTest.xml",
+      "suite": "OfflineQueueTest[desktop]",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.SteerTest.xml",
+      "suite": "SteerTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.DlvTrimTest.xml",
+      "suite": "DlvTrimTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/delivery/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.delivery.DlvChipTest.xml",
+      "suite": "DlvChipTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/entry/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.entry.EntryRouterTest.xml",
+      "suite": "EntryRouterTest[desktop]",
+      "tests": 14,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/entry/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.entry.EntryDeciderTest.xml",
+      "suite": "EntryDeciderTest[desktop]",
+      "tests": 26,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/entry/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.entry.EntryIntentParserTest.xml",
+      "suite": "EntryIntentParserTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/entry/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.entry.EntryLinkParserTest.xml",
+      "suite": "EntryLinkParserTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/entry/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.entry.AppBootstrapTest.xml",
+      "suite": "AppBootstrapTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/profiles/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.profiles.ProfileStoreTest.xml",
+      "suite": "ProfileStoreTest[desktop]",
+      "tests": 17,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/profiles/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.profiles.ProfileDeletionSweepTest.xml",
+      "suite": "ProfileDeletionSweepTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/profiles/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.profiles.EngEmbeddedEditTest.xml",
+      "suite": "EngEmbeddedEditTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/profiles/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.profiles.EngTransactionTest.xml",
+      "suite": "EngTransactionTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/profiles/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.profiles.ProfileDeletionTest.xml",
+      "suite": "ProfileDeletionTest[desktop]",
+      "tests": 20,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/profiles/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.profiles.SignInResetTest.xml",
+      "suite": "SignInResetTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.composer.StartersTest.xml",
+      "suite": "StartersTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.composer.PhraseMomentTest.xml",
+      "suite": "PhraseMomentTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.composer.FilePayloadStoreTest.xml",
+      "suite": "FilePayloadStoreTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.composer.StashTest.xml",
+      "suite": "StashTest[desktop]",
+      "tests": 18,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.composer.DraftAutosaveTest.xml",
+      "suite": "DraftAutosaveTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.composer.AttachmentVaultTest.xml",
+      "suite": "AttachmentVaultTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.composer.PhraseChipsTest.xml",
+      "suite": "PhraseChipsTest[desktop]",
+      "tests": 19,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.composer.ComposerInputTest.xml",
+      "suite": "ComposerInputTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.composer.DraftsTest.xml",
+      "suite": "DraftsTest[desktop]",
+      "tests": 19,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.composer.ReviewReferencesTest.xml",
+      "suite": "ReviewReferencesTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/composer/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.composer.PhotoRecoveryTest.xml",
+      "suite": "PhotoRecoveryTest[desktop]",
+      "tests": 12,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/media/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.media.preview.StaticSvgTest.xml",
+      "suite": "StaticSvgTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/media/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.media.office.OfficeTextTest.xml",
+      "suite": "OfficeTextTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/media/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.media.preview.FilePreviewTest.xml",
+      "suite": "FilePreviewTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/media/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.media.attach.PromptAttachmentMimeTest.xml",
+      "suite": "PromptAttachmentMimeTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/media/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.media.attach.PendingPhotoRecoveryTest.xml",
+      "suite": "PendingPhotoRecoveryTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/media/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.media.preview.DelimitedTextTest.xml",
+      "suite": "DelimitedTextTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/media/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.media.xml.XmlPullTest.xml",
+      "suite": "XmlPullTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/media/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.media.attach.AttachmentIntakeTest.xml",
+      "suite": "AttachmentIntakeTest[desktop]",
+      "tests": 14,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.scope.SettingsScopeCatalogTest.xml",
+      "suite": "SettingsScopeCatalogTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.prefs.DisplayPreferenceRollbackTest.xml",
+      "suite": "DisplayPreferenceRollbackTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.scope.SettingsAccessTest.xml",
+      "suite": "SettingsAccessTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.scope.SettingsEditTokenTest.xml",
+      "suite": "SettingsEditTokenTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.consent.InFlowConsentStoreTest.xml",
+      "suite": "InFlowConsentStoreTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.defaults.InteractionDefaultsTest.xml",
+      "suite": "InteractionDefaultsTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.defaults.DefaultNoticesTest.xml",
+      "suite": "DefaultNoticesTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.prefs.SharedPreferencesAcrossGraphsTest.xml",
+      "suite": "SharedPreferencesAcrossGraphsTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.teaching.NudgeRegistryTest.xml",
+      "suite": "NudgeRegistryTest[desktop]",
+      "tests": 21,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.teaching.TipControllerTest.xml",
+      "suite": "TipControllerTest[desktop]",
+      "tests": 12,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.consent.MobileDownloadConsentStoreTest.xml",
+      "suite": "MobileDownloadConsentStoreTest[desktop]",
+      "tests": 14,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.scope.SessionAgentSettingTest.xml",
+      "suite": "SessionAgentSettingTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.consent.ReadStateConsentStoreTest.xml",
+      "suite": "ReadStateConsentStoreTest[desktop]",
+      "tests": 19,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/settings/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.settings.prefs.PreferencesTest.xml",
+      "suite": "PreferencesTest[desktop]",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/agents/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.agents.feed.MergedChatFeedTest.xml",
+      "suite": "MergedChatFeedTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/agents/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.agents.feed.ChatFeedTest.xml",
+      "suite": "ChatFeedTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/agents/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.agents.feed.ReturnBriefTest.xml",
+      "suite": "ReturnBriefTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/analytics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.analytics.WhatWeCollectTest.xml",
+      "suite": "WhatWeCollectTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/analytics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.analytics.AnalyticsPrivacyTest.xml",
+      "suite": "AnalyticsPrivacyTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/analytics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.analytics.IdentityTest.xml",
+      "suite": "IdentityTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/analytics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.analytics.EventQueueTest.xml",
+      "suite": "EventQueueTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/analytics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.analytics.AnalyticsSchemaTest.xml",
+      "suite": "AnalyticsSchemaTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/analytics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.analytics.UploadPolicyTest.xml",
+      "suite": "UploadPolicyTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/analytics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.analytics.AnalyticsEngineTest.xml",
+      "suite": "AnalyticsEngineTest[desktop]",
+      "tests": 16,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/analytics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.analytics.AnalyticsFieldTypesTest.xml",
+      "suite": "AnalyticsFieldTypesTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/transcript/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.transcript.StreamCostTest.xml",
+      "suite": "StreamCostTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/transcript/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.transcript.TranscriptReducerTest.xml",
+      "suite": "TranscriptReducerTest[desktop]",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/transcript/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.transcript.ChatReviewRegressionTest.xml",
+      "suite": "ChatReviewRegressionTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/transcript/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.transcript.StreamCostBenchmark.xml",
+      "suite": "StreamCostBenchmark[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/transcript/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.transcript.PublishCountTest.xml",
+      "suite": "PublishCountTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/transcript/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.transcript.RecordedStreamTest.xml",
+      "suite": "RecordedStreamTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/runtime/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.runtime.server.OpenCodeUpdateTest.xml",
+      "suite": "OpenCodeUpdateTest[desktop]",
+      "tests": 12,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/runtime/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.runtime.server.AppOpenStartTest.xml",
+      "suite": "AppOpenStartTest[desktop]",
+      "tests": 15,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/runtime/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.runtime.heat.AgentThrottleTest.xml",
+      "suite": "AgentThrottleTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/runtime/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudgetTest.xml",
+      "suite": "ProcessBudgetTest[desktop]",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/runtime/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.runtime.server.PhoneServerStarterTest.xml",
+      "suite": "PhoneServerStarterTest[desktop]",
+      "tests": 12,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/runtime/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.runtime.heat.ThermalPolicyTest.xml",
+      "suite": "ThermalPolicyTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/runtime/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudgetGuardTest.xml",
+      "suite": "ProcessBudgetGuardTest[desktop]",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/runtime/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.runtime.heat.HeatTierPolicyTest.xml",
+      "suite": "HeatTierPolicyTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/runtime/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.runtime.server.DeliberateStopTest.xml",
+      "suite": "DeliberateStopTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/runtime/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.runtime.heat.ServicesHeatHoldTest.xml",
+      "suite": "ServicesHeatHoldTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.models.Sha256Test.xml",
+      "suite": "Sha256Test[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.dictation.DraftMergeTest.xml",
+      "suite": "DraftMergeTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.audio.LevelMeterTest.xml",
+      "suite": "LevelMeterTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.readaloud.ReadAloudTest.xml",
+      "suite": "ReadAloudTest[desktop]",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.models.PackInstallerTransportTest.xml",
+      "suite": "PackInstallerTransportTest[desktop]",
+      "tests": 1,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.dictation.VoiceControllerTest.xml",
+      "suite": "VoiceControllerTest[desktop]",
+      "tests": 20,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.models.ModelCatalogTest.xml",
+      "suite": "ModelCatalogTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.models.PackInstallerTest.xml",
+      "suite": "PackInstallerTest[desktop]",
+      "tests": 22,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.audio.Pcm16ChunkerTest.xml",
+      "suite": "Pcm16ChunkerTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.models.PackSupportTest.xml",
+      "suite": "PackSupportTest[desktop]",
+      "tests": 7,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.readaloud.ReadTextTest.xml",
+      "suite": "ReadTextTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.language.VoiceLanguageTest.xml",
+      "suite": "VoiceLanguageTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.models.ModelPacksTest.xml",
+      "suite": "ModelPacksTest[desktop]",
+      "tests": 10,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.audio.SilenceDetectorTest.xml",
+      "suite": "SilenceDetectorTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.setup.VoiceSetupTest.xml",
+      "suite": "VoiceSetupTest[desktop]",
+      "tests": 16,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/voice/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.voice.dictation.AutoSendPolicyTest.xml",
+      "suite": "AutoSendPolicyTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/diagnostics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTraceTest.xml",
+      "suite": "PerfTraceTest[desktop]",
+      "tests": 12,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/diagnostics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.diagnostics.exit.KeepAliveAdviceTest.xml",
+      "suite": "KeepAliveAdviceTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/diagnostics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.diagnostics.exit.ExitClassifierTest.xml",
+      "suite": "ExitClassifierTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/diagnostics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.diagnostics.DiagnosticsTest.xml",
+      "suite": "DiagnosticsTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/diagnostics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.diagnostics.crash.CrashLoopGuardTest.xml",
+      "suite": "CrashLoopGuardTest[desktop]",
+      "tests": 2,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/diagnostics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.diagnostics.crash.CrashDiagnosticsTest.xml",
+      "suite": "CrashDiagnosticsTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/diagnostics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.diagnostics.exit.LaunchIntakeTest.xml",
+      "suite": "LaunchIntakeTest[desktop]",
+      "tests": 3,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/diagnostics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.diagnostics.crash.CrashStartupTest.xml",
+      "suite": "CrashStartupTest[desktop]",
+      "tests": 15,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/diagnostics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.diagnostics.exit.ExitHistoryTest.xml",
+      "suite": "ExitHistoryTest[desktop]",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/diagnostics/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.diagnostics.crash.NativeCrashRecordTest.xml",
+      "suite": "NativeCrashRecordTest[desktop]",
+      "tests": 4,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/requests/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.requests.forms.FormRequestsTest.xml",
+      "suite": "FormRequestsTest[desktop]",
+      "tests": 13,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/requests/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.requests.consent.AlwaysAllowInvitationTest.xml",
+      "suite": "AlwaysAllowInvitationTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/requests/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.requests.PermissionAskTest.xml",
+      "suite": "PermissionAskTest[desktop]",
+      "tests": 11,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/requests/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.requests.RequestsEngineTest.xml",
+      "suite": "RequestsEngineTest[desktop]",
+      "tests": 33,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/requests/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.requests.questions.QuestionsTest.xml",
+      "suite": "QuestionsTest[desktop]",
+      "tests": 6,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/requests/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.requests.forms.FormSchemaTest.xml",
+      "suite": "FormSchemaTest[desktop]",
+      "tests": 8,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/requests/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.requests.consent.AutoApprovalTest.xml",
+      "suite": "AutoApprovalTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/requests/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.requests.forms.FormRulesTest.xml",
+      "suite": "FormRulesTest[desktop]",
+      "tests": 9,
+      "failures": 0,
+      "skipped": 0
+    },
+    {
+      "path": "engine/connection/build/test-results/desktopTest/TEST-io.github.eslamasabry.oc.engine.connection.ConnectionRegistryTest.xml",
+      "suite": "ConnectionRegistryTest[desktop]",
+      "tests": 5,
+      "failures": 0,
+      "skipped": 0
+    }
+  ],
+  "failedSuites": [],
+  "broadExit": 1,
+  "qualityExit": 0,
+  "buildLogicExit": 0
+}

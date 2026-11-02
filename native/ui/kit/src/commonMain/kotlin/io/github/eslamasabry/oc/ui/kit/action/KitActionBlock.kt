@@ -124,10 +124,10 @@ private fun MoreActions(overflow: List<KitAction>, modifier: Modifier = Modifier
         overflow.map { a ->
             KitMenuItem(
                 label = a.label,
-                onSelect = { a.onClick?.invoke() },
+                onSelect = { if (!a.working && a.runnable) a.onClick?.invoke() },
                 icon = a.icon,
                 destructive = a.destructive,
-                enabled = if (a.onClick == null && a.enabled is KitEnabled.Enabled) KitEnabled.Disabled(a.label) else a.enabled,
+                enabled = if (a.working || a.onClick == null) KitEnabled.Disabled(a.enabled.reason ?: a.label) else a.enabled,
             )
         }
     KitMenu(expanded = open, items = items, onDismissRequest = { open = false }, modifier = modifier) {

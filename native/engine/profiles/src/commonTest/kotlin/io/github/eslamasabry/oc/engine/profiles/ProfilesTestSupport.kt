@@ -2,10 +2,10 @@ package io.github.eslamasabry.oc.engine.profiles
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
-import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.FlutterPrefsCodec
 import io.github.eslamasabry.oc.core.data.kv.InMemoryPrefsBackend
 import io.github.eslamasabry.oc.core.data.kv.JavaListDecoder
@@ -35,6 +35,9 @@ internal class FakeSecrets(initial: Map<String, String> = emptyMap()) : SecretSt
     val deleted = mutableListOf<String>()
     var failAllReads = false
     val failReads = mutableSetOf<String>()
+    var beforeWrite: (suspend (String) -> Unit)? = null
+    var afterWrite: ((String) -> Unit)? = null
+    var beforeDelete: (suspend (String) -> Unit)? = null
     var failWrites = false
     var failAllDeletes = false
     val failDeletes = mutableSetOf<String>()
@@ -52,12 +55,15 @@ internal class FakeSecrets(initial: Map<String, String> = emptyMap()) : SecretSt
         if (failAllReads || name in failReads) refused() else values[name].ok()
 
     override suspend fun write(name: String, value: String): Outcome<Unit> {
+        beforeWrite?.invoke(name)
         if (failWrites) return refused()
         values[name] = value
+        afterWrite?.invoke(name)
         return Unit.ok()
     }
 
     override suspend fun delete(name: String): Outcome<Unit> {
+        beforeDelete?.invoke(name)
         if (failAllDeletes || name in failDeletes) return refused()
         deleted += name
         if (name !in retainDeletes) values.remove(name)
@@ -166,3 +172,6 @@ internal class MapCopy(
         "$k=$text"
     }
 }
+
+internal fun Harness.confirmedQueue(profileId: ProfileId): QueuedPromptRemovalPlan =
+    (QueuedPromptRemovalPlan.fromSnapshot(profileId, string("oc.offlineQueue")) as Outcome.Ok).value

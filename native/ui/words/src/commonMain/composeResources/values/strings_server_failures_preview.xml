@@ -1,0 +1,15 @@
+<resources>
+    <!-- Server failure kinds (docs/native/server-errors-2026-11-02/contract.md): one plain sentence per
+          ServerFailureKind, never exception text or server prose. Sign-in, cleartext-consent and invalid-address
+          copy stays in strings_servers_preview.xml; Other keeps the existing generic issue fallback. -->
+    <string name="serverFailureCertificate">This server's certificate could not be verified. Check the server, then try again.</string>
+    <string name="serverFailureIncompatible">This server runs a version this app cannot work with.</string>
+    <string name="serverFailureNetwork">Could not reach this server. Check the network or the server address, then try again.</string>
+    <string name="serverFailureRejected">The server refused this request. Check the server, then try again.</string>
+    <string name="serverFailureSecret">This app could not read its saved password. Enter the password again.</string>
+    <string name="serverFailureServer">The server had a problem. Try again later.</string>
+    <string name="serverFailureStorage">This app could not read or save this connection on this phone. Try again.</string>
+    <string name="serverFailureTimeout">The server did not answer in time. Try again.</string>
+    <string name="serverFailureUnreadableReply">The server replied, but this app could not read its response.</string>
+    <string name="serverFailureOther">The app could not complete this connection. Try again.</string>
+</resources>

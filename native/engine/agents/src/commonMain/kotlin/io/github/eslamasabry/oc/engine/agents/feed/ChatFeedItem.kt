@@ -7,15 +7,20 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /** Dart `ChatStatus`, in the order the list ranks them (needs you, running, the rest). */
-public enum class ChatStatus { NeedsYou, Running, Failed, Idle }
+public enum class ChatStatus {
+    NeedsYou,
+    Running,
+    Failed,
+    Idle,
+}
 
 /** [ChatFeedItem.agentId] of OpenCode chats (Dart `defaultChatAgentId`). */
 public const val OPENCODE_AGENT_ID: String = "opencode"
 
 /**
- * One conversation row on Conversations (Dart `ChatFeedItem`, 17 §1.6). Immutable, and it holds **only what a row
- * shows**: equality is what decides whether the feed revision moves (B-CHAT-014). Compare and key by [identity];
- * session ids collide across sources.
+ * One conversation row on Conversations (Dart `ChatFeedItem`, 17 §1.6). Immutable, and it holds
+ * **only what a row shows**: equality is what decides whether the feed revision moves (B-CHAT-014).
+ * Compare and key by [identity]; session ids collide across sources.
  */
 public data class ChatFeedItem(
     val sourceId: String,
@@ -40,16 +45,26 @@ public data class ChatFeedItem(
     val finishedUnseen: Boolean = false,
     /** False for an agent chat that cannot resume (always true for OpenCode). */
     val canReopen: Boolean = true,
+    /**
+     * Opaque `[baseUrl, directory, workspace]` key shared with the return brief; null means
+     * unknown.
+     */
+    val locationKey: String? = null,
 ) {
-    /** The list key (Dart `identity`): source, session and folder. */
-    val identity: String get() = "$sourceId|${sessionId.raw}|${directory.orEmpty()}"
+    /** The list key: profile, source, session, folder and captured location. */
+    val identity: String
+        get() =
+            "${profileId.raw}|$sourceId|${sessionId.raw}|${directory.orEmpty()}|${locationKey.orEmpty()}"
 
-    val ref: ConversationRef get() = ConversationRef(profileId, sessionId)
+    val ref: ConversationRef
+        get() = ConversationRef(profileId, sessionId)
 
-    val isSubagent: Boolean get() = parentId != null
+    val isSubagent: Boolean
+        get() = parentId != null
 
     /** Temporary, home or root folder: listed, never offered as a project (B-CHAT-013). */
-    val inOtherFolder: Boolean get() = FeedFolders.isOtherFolder(directory)
+    val inOtherFolder: Boolean
+        get() = FeedFolders.isOtherFolder(directory)
 }
 
 /** One real project (Dart `ProjectSummary`): the recent-projects strip and the project filter. */
@@ -61,15 +76,23 @@ public data class ProjectSummary(
     val lastActivityMs: Long,
 )
 
-/** The merged feed as the list reads it (Dart `ChatFeedSnapshot`, reduced to what slice 2 shows). */
+/**
+ * The merged feed as the list reads it (Dart `ChatFeedSnapshot`, reduced to what slice 2 shows).
+ */
 public data class ChatFeedSnapshot(
     /** Needs-you rows first, then running, then the rest, each newest first; stable. */
     val items: ImmutableList<ChatFeedItem> = persistentListOf(),
     /** Moves only when [items] or a flag below changes (B-CHAT-014). */
     val revision: Long = 0,
-    /** A read is in flight and no rows are known yet: show a skeleton. Never true once rows show (B-NAV-031). */
+    /**
+     * A read is in flight and no rows are known yet: show a skeleton. Never true once rows show
+     * (B-NAV-031).
+     */
     val loading: Boolean = false,
-    /** False while a source failed or holds only its first page: rows are real, older ones may be missing. */
+    /**
+     * False while a source failed or holds only its first page: rows are real, older ones may be
+     * missing.
+     */
     val complete: Boolean = true,
     /** Labels of the sources whose rows did not all load (named in one quiet line). */
     val incompleteSources: ImmutableList<String> = persistentListOf(),
@@ -89,11 +112,9 @@ public data class ChatFeedFilter(
         (includeSubagents || !item.isSubagent) &&
             (projectDirectory == null || item.directory == projectDirectory) &&
             (!otherFolders || item.inOtherFolder) &&
-            (
-                (!needsYou && !running) ||
-                    (needsYou && item.status == ChatStatus.NeedsYou) ||
-                    (running && item.status == ChatStatus.Running)
-                )
+            ((!needsYou && !running) ||
+                (needsYou && item.status == ChatStatus.NeedsYou) ||
+                (running && item.status == ChatStatus.Running))
 
     public fun apply(items: List<ChatFeedItem>): List<ChatFeedItem> = items.filter(::matches)
 }

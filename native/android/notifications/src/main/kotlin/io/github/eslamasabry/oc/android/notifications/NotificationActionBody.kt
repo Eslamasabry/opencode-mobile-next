@@ -34,7 +34,7 @@ public class NotificationActionBody(
     private val lock: DeviceLock,
     private val answerDeadline: Duration = 15.seconds,
     /** The person swiped the status row away (S11-9): reply watch ends for that run only. */
-    private val onRowDismissed: (session: String) -> Unit = {},
+    private val onRowDismissed: (run: ReplyRun) -> Unit = {},
 ) {
     private val inFlight = mutableSetOf<String>()
 
@@ -57,11 +57,11 @@ public class NotificationActionBody(
             val outcome = withTimeoutOrNull(answerDeadline) { answerer.answer(answer) }
             return when {
                 outcome is Outcome.Ok -> {
-                    shade.dismiss(tap.key)
+                    shade.dismissIfCurrent(tap)
                     ShadeOutcome.Answered
                 }
                 outcome is Outcome.Failed && outcome.failure.meansGone() -> {
-                    shade.dismiss(tap.key)
+                    shade.dismissIfCurrent(tap)
                     ShadeOutcome.DismissedGone
                 }
                 else -> repost(tap)
@@ -75,13 +75,13 @@ public class NotificationActionBody(
     public suspend fun onStatusAction(intent: Intent): ShadeOutcome {
         if (intent.action != FrozenExtras.ACTION_STATUS) return ShadeOutcome.Ignored
         if (intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) == StatusRenderer.DISMISSED_ACTION) {
-            onRowDismissed(intent.getStringExtra(FrozenExtras.EXTRA_STATUS_SESSION).orEmpty())
+            val run = intent.statusRun() ?: return ShadeOutcome.Ignored
+            onRowDismissed(run)
             return ShadeOutcome.RowDismissed
         }
         if (intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) != StatusAction.StopReply.wire) return ShadeOutcome.Ignored
-        val session = intent.getStringExtra(FrozenExtras.EXTRA_STATUS_SESSION).orEmpty()
-        if (session.isBlank()) return ShadeOutcome.Ignored
-        val outcome = withTimeoutOrNull(answerDeadline) { stopper.stop(SessionId(session)) }
+        val conversation = intent.statusConversation() ?: return ShadeOutcome.Ignored
+        val outcome = withTimeoutOrNull(answerDeadline) { stopper.stop(conversation) }
         // On failure the row stays; its content tap (an activity PendingIntent) opens that chat.
         return if (outcome is Outcome.Ok || (outcome as? Outcome.Failed)?.failure is Failure.NotFound) {
             ShadeOutcome.StopSent
@@ -100,7 +100,7 @@ public class NotificationActionBody(
         }
 
     private fun repost(tap: ShadeTap): ShadeOutcome {
-        shade.showOpenOnly(tap)
+        shade.showOpenOnlyIfCurrent(tap)
         return ShadeOutcome.RepostedOpen
     }
 

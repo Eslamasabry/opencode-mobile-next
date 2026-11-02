@@ -1,0 +1,29 @@
+{
+  "family": "DejaVu Sans",
+  "upstream_version": "2.37",
+  "source": "Debian fonts-dejavu-core 2.37-8, unmodified /usr/share/fonts/truetype/dejavu files",
+  "upstream": "https://dejavu-fonts.github.io/",
+  "license": "LICENSE.txt",
+  "files": [
+    {
+      "file": "DejaVuSans.ttf",
+      "bytes": 759720,
+      "sha256": "ae7b7855e115a5966d8b1b3f80f254ccc117ec86f9965e202ee2940453837280"
+    },
+    {
+      "file": "DejaVuSans-Bold.ttf",
+      "bytes": 708920,
+      "sha256": "5c1247acef7f2b8522a31742c76d6adcb5569bacc0be7ceaa4dc39dd252ce895"
+    },
+    {
+      "file": "DejaVuSans-Oblique.ttf",
+      "bytes": 637648,
+      "sha256": "2d7b524ce7d51db78591b4e19c8185b89f3af0aa6534c5e524cf0c6f4ea673de"
+    },
+    {
+      "file": "DejaVuSans-BoldOblique.ttf",
+      "bytes": 645600,
+      "sha256": "58d78a24ddff9ab30427550d68f0b9b7dd28d6690f9f4b3e4ebac7105252e9b2"
+    }
+  ]
+}

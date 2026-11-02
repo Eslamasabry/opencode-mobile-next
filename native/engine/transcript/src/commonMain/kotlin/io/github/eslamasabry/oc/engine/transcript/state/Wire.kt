@@ -48,6 +48,7 @@ public data class Part(
     val toolStatus: ToolStatus? = null,
     val synthetic: Boolean = false,
     val ended: Boolean = false,
+    val searchText: String = "",
 ) {
     /** Dart Part.isRenderable (plan 09 §2.2). */
     public val isRenderable: Boolean

@@ -42,6 +42,7 @@ class TranscriptReducerTest {
     @Test
     fun `B-CHAT-121 turns group by prompt, a notice never starts a turn, rows come newest first`() {
         apply(Ev.prompt("u1", "Hello"))
+        apply(io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent.MessageUpserted(io.github.eslamasabry.oc.engine.transcript.state.MessageInfo("n1", S, io.github.eslamasabry.oc.engine.transcript.state.Role.User)))
         apply(GatewayEvent.Notice(S, "n1", "n1-p", NoticeKind.InstructionsUpdated))
         apply(GatewayEvent.RunStarted(S), Ev.assistant("a1"), Ev.text("a1", "t1"), Ev.delta("a1", "t1", "Hi there."))
         apply(Ev.tool("a1", "c1", ToolStatus.Completed), Ev.assistant("a1", completed = 5))

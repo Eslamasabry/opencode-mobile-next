@@ -5,11 +5,12 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.attempt
-import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.dart.DartJson
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
+import kotlin.concurrent.atomics.AtomicReference
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentHashMapOf
@@ -20,7 +21,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.withLock
-import kotlin.concurrent.atomics.AtomicReference
 
 // ---- The route probe (no Android types: :android:platform implements it over ConnectivityManager's default network)
 
@@ -93,6 +93,8 @@ public class MobileDownloadConsentStore(
 
     private val entries = AtomicReference<PersistentMap<String, Entry>>(persistentHashMapOf())
     private val closed = AtomicReference<PersistentSet<String>>(persistentHashSetOf())
+    private data class Request(val generation: Long, val revoked: Boolean)
+    private val requests = AtomicReference<Map<String, Request>>(emptyMap())
     private val mutexes = ProfileMutexes()
     private val changes = Revision()
     private val log = AppLog.tagged("MobileDownloadConsent")
@@ -101,7 +103,12 @@ public class MobileDownloadConsentStore(
     override val revision: StateFlow<Long> = changes.flow
 
     override fun read(profileId: ProfileId, topic: ConsentTopic): ConsentRead =
-        if (topic != ConsentTopic.MobileDownload) ConsentRead.Unknown else choice(profileId)?.read ?: ConsentRead.Unknown
+        when {
+            topic != ConsentTopic.MobileDownload -> ConsentRead.Unknown
+            requests.load()[profileId.raw]?.revoked == true -> ConsentRead.Refused
+            !storageAvailable(profileId) -> ConsentRead.Unknown
+            else -> choice(profileId)?.read ?: ConsentRead.Unknown
+        }
 
     /** The stored answer; null while the profile is closed, absent, or its record unreadable. */
     public fun choice(profileId: ProfileId): ConsentChoice? = if (!present(profileId)) null else entry(profileId)?.choice
@@ -145,11 +152,26 @@ public class MobileDownloadConsentStore(
         }
 
     /** Settings may revise any answer. */
-    public suspend fun changeFromSettings(profileId: ProfileId, allow: Boolean): Outcome<Unit> =
-        mutexes.of(profileId).withLock {
-            writableEntry(profileId) ?: return@withLock Outcome.Failed(unwritable(profileId))
-            save(profileId, if (allow) ConsentChoice.Accepted else ConsentChoice.Denied)
+    public suspend fun changeFromSettings(profileId: ProfileId, allow: Boolean): Outcome<Unit> {
+        var generation = 0L
+        update(requests) { current ->
+            generation = (current[profileId.raw]?.generation ?: 0) + 1
+            current + (profileId.raw to Request(generation, !allow || current[profileId.raw]?.revoked == true))
         }
+        // B-SEC-013 / SI-22: withdraw the grant before waiting for the writer or storage.
+        changes.bump()
+        return mutexes.of(profileId).withLock {
+            writableEntry(profileId) ?: return@withLock Outcome.Failed(unwritable(profileId))
+            val written = save(profileId, if (allow) ConsentChoice.Accepted else ConsentChoice.Denied)
+            if (written is Outcome.Ok) {
+                update(requests) { current ->
+                    if (current[profileId.raw]?.generation == generation) current + (profileId.raw to Request(generation, !allow)) else current
+                }
+                changes.bump()
+            }
+            written
+        }
+    }
 
     override fun closeProfile(profileId: ProfileId) {
         update(closed) { it.adding(profileId.raw) }
@@ -209,6 +231,10 @@ public class MobileDownloadConsentStore(
         }
         if (bytes <= THRESHOLD_BYTES) {
             return MobileDownloadDecision(MobileDownloadDecisionKind.Allowed, MobileDownloadReason.BelowThreshold)
+        }
+        if (!storageAvailable(profileId)) return unavailable(MobileDownloadReason.StorageUnavailable)
+        if (requests.load()[profileId.raw]?.revoked == true) {
+            return MobileDownloadDecision(MobileDownloadDecisionKind.Blocked, MobileDownloadReason.Declined)
         }
         return when (entry(profileId)?.choice) {
             ConsentChoice.Accepted -> MobileDownloadDecision(MobileDownloadDecisionKind.Allowed, MobileDownloadReason.Accepted)

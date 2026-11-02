@@ -6,20 +6,23 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitRecord
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.concurrent.atomics.AtomicInt
-import kotlin.concurrent.atomics.AtomicReference
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** What the platform hands the crash startup: the store, and this start's evidence (never trace files, 16 §1.10). */
 public class CrashStartupEvidence(
@@ -50,33 +53,61 @@ public class CrashStartup(
     private val dispatchers: AppDispatchers,
     public val launchBudget: Duration = LAUNCH_BUDGET,
 ) {
-    private val generation = AtomicInt(0)
-    private val opening = AtomicReference<Deferred<CrashDiagnostics?>?>(null)
-    private val readiness = AtomicReference(CompletableDeferred<CrashDiagnostics?>())
-    private val mutableCurrent = MutableStateFlow<CrashDiagnostics?>(null)
+    private class Opening(val pending: Deferred<CrashDiagnostics?>, val bounded: Deferred<CrashDiagnostics?>)
+    private data class Lifecycle(
+        val token: Any = Any(),
+        val ready: CompletableDeferred<CrashDiagnostics?> = CompletableDeferred(),
+        val opening: Opening? = null,
+        val controller: CrashDiagnostics? = null,
+    )
+    private val lifecycle = MutableStateFlow(Lifecycle())
 
-    /** The attached store, once (and while) this generation opened one. */
-    public val current: StateFlow<CrashDiagnostics?> = mutableCurrent.asStateFlow()
+    /** A synchronous view of the same atomically published generation used by start and reset. */
+    @OptIn(kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi::class)
+    public val current: StateFlow<CrashDiagnostics?> = object : StateFlow<CrashDiagnostics?> {
+        override val value: CrashDiagnostics? get() = lifecycle.value.controller
+        override val replayCache: List<CrashDiagnostics?> get() = listOf(value)
+        override suspend fun collect(collector: FlowCollector<CrashDiagnostics?>): Nothing {
+            lifecycle.map { it.controller }.distinctUntilChanged().collect(collector)
+            awaitCancellation()
+        }
+    }
 
     /** Actual readiness of this generation, independent of the bounded launch wait. Null on failure or reset. */
-    public val ready: Deferred<CrashDiagnostics?> get() = readiness.load()
+    public val ready: Deferred<CrashDiagnostics?> get() = lifecycle.value.ready
 
-    /** The bounded launch wait; every call in one generation answers the same wait and opens the platform once. */
+    /** Install the lazy operation before any source or file I/O can run (B-SEC-045 eng-8). */
     public fun start(): Deferred<CrashDiagnostics?> {
-        opening.load()?.let { return it }
-        val gen = generation.load()
-        val ready = readiness.load()
-        val pending = scope.async(dispatchers.io) { openAndPublish(gen, ready) }
-        val bounded = scope.async { withTimeoutOrNull(launchBudget) { pending.await() } }
-        if (opening.compareAndSet(null, bounded)) return bounded
-        pending.cancel()
-        bounded.cancel()
-        return opening.load() ?: bounded
+        val initial = lifecycle.value
+        initial.opening?.let { return it.bounded }
+        val pending = scope.async(dispatchers.io, start = CoroutineStart.LAZY) { openAndPublish(initial.token, initial.ready) }
+        val bounded = scope.async(start = CoroutineStart.LAZY) {
+            try {
+                withTimeoutOrNull(launchBudget) { pending.await() }
+            } catch (cancelled: CancellationException) {
+                if (lifecycle.value.token === initial.token) throw cancelled
+                null
+            }
+        }
+        val candidate = Opening(pending, bounded)
+        while (true) {
+            val state = lifecycle.value
+            if (state.token !== initial.token || state.opening != null) {
+                pending.cancel()
+                bounded.cancel()
+                return state.opening?.bounded ?: start()
+            }
+            if (lifecycle.compareAndSet(state, state.copy(opening = candidate))) {
+                pending.start()
+                bounded.start()
+                return bounded
+            }
+        }
     }
 
     /** A global error before the store attached keeps its category in the ring only, never its text or stack. */
     public suspend fun capture(error: Throwable, source: CrashSource = CrashSource.Platform) {
-        val controller = mutableCurrent.value
+        val controller = lifecycle.value.controller
         if (controller == null) {
             diagnostics.record(source.wire, CrashRecordCategory.of(error).wire)
         } else {
@@ -86,28 +117,44 @@ public class CrashStartup(
 
     /** A new generation: drops late replies, cancels replays, closes the current store. */
     public fun reset() {
-        generation.addAndFetch(1)
-        mutableCurrent.value?.close()
-        mutableCurrent.value = null
-        opening.store(null)
-        readiness.exchange(CompletableDeferred()).complete(null)
+        while (true) {
+            val previous = lifecycle.value
+            if (lifecycle.compareAndSet(previous, Lifecycle())) {
+                previous.controller?.close()
+                previous.ready.complete(null)
+                previous.opening?.pending?.cancel()
+                return
+            }
+        }
     }
 
-    private suspend fun openAndPublish(gen: Int, ready: CompletableDeferred<CrashDiagnostics?>): CrashDiagnostics? {
-        fun canOpen() = generation.load() == gen
-        val controller = (attempt({ Failure.Unexpected() }) { open(::canOpen) } as? Outcome.Ok)?.value
+    private suspend fun openAndPublish(token: Any, ready: CompletableDeferred<CrashDiagnostics?>): CrashDiagnostics? {
+        fun canOpen() = lifecycle.value.token === token
+        if (!canOpen()) return null
+        val controller = try {
+            (attempt({ Failure.Unexpected() }) { open(::canOpen) } as? Outcome.Ok)?.value
+        } catch (cancelled: CancellationException) {
+            if (canOpen()) throw cancelled
+            return null
+        }
+        while (true) {
+            val state = lifecycle.value
+            if (state.token !== token) {
+                controller?.close()
+                return null
+            }
+            if (lifecycle.compareAndSet(state, state.copy(controller = controller))) break
+        }
+        val restored = controller?.storedRecords().orEmpty()
+        ready.complete(controller)
         if (!canOpen()) {
             controller?.close()
             return null
         }
-        val restored = controller?.storedRecords().orEmpty()
-        mutableCurrent.value = controller
-        ready.complete(controller)
         // Readiness settles before the ring hears anything.
         if (controller != null && restored.isNotEmpty()) {
             scope.launch {
                 for (entry in restored) {
-                    // A ring listener may reset the startup mid-replay.
                     if (!canOpen() || controller.isClosed) break
                     if (entry !in controller.storedRecords()) continue
                     diagnostics.record("crash.${entry.source.wire}", entry.category.wire, at = entry.at)
@@ -125,7 +172,7 @@ public class CrashStartup(
             }
         // A reply from a reset generation never attaches or touches evidence.
         if (!canOpen()) return null
-        val controller = CrashDiagnostics.open(evidence.store, diagnostics, clock, scope)
+        val controller = CrashDiagnostics.open(GenerationCrashStore(evidence.store, canOpen), diagnostics, clock, scope)
         if (!canOpen()) {
             controller.close()
             return null
@@ -140,5 +187,28 @@ public class CrashStartup(
 
     public companion object {
         public val LAUNCH_BUDGET: Duration = 300.milliseconds
+    }
+}
+
+/** Fence both sides of every suspended file operation, including a platform read that ignores cancellation. */
+private class GenerationCrashStore(private val delegate: CrashStore, private val isCurrent: () -> Boolean) : CrashStore {
+    private fun check() { if (!isCurrent()) throw CancellationException("crash generation replaced") }
+    override suspend fun read(file: CrashFile, maxBytes: Int): Outcome<String?> {
+        check()
+        val result = delegate.read(file, maxBytes)
+        check()
+        return result
+    }
+    override suspend fun write(file: CrashFile, text: String): Outcome<Unit> {
+        check()
+        val result = delegate.write(file, text)
+        check()
+        return result
+    }
+    override suspend fun delete(file: CrashFile): Outcome<Unit> {
+        check()
+        val result = delegate.delete(file)
+        check()
+        return result
     }
 }

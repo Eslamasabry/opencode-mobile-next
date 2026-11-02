@@ -12,6 +12,7 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
+import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 
@@ -24,12 +25,14 @@ import io.github.eslamasabry.oc.ui.routes.EntryInstaller
  */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class ChatEntries(private val composerHost: ComposerHost) : EntryInstaller {
+public class ChatEntries(private val composerHost: ComposerHost, private val environment: KitChatEnvironment) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ChatRoute> { route ->
             val vm = assistedMetroViewModel<ChatViewModel, ChatViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
-            ChatScreen(state, vm, composerHost)
+            val requests by vm.requests.collectAsStateWithLifecycle()
+            val slot = requests?.state?.collectAsStateWithLifecycle()?.value ?: io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi()
+            environment.Provide { ChatScreen(state, vm, composerHost, requests = slot, requestActions = requests) }
         }
     }
 }

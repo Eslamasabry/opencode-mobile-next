@@ -1,0 +1,12 @@
+{
+  "phase": "after-restart",
+  "draftCount": 1,
+  "entries": [
+    {
+      "profile": "b973a894-65c6-4898-89b0-f69c4bb8ba8e",
+      "session": "ses_e63164b38ffekmHDba0SRvgYHQ",
+      "exactProbe": true,
+      "textSha256": "8123616a43d0f82271dd1a51f6a79e0dd3094074d4ebc82b2ce4ba321e0accc7"
+    }
+  ]
+}

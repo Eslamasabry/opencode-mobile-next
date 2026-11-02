@@ -1,0 +1,48 @@
+{
+  "nativeSourceId": "3e2f32bd779f818969c41dccd068029172ec6ce8a314c1a60334e5477b83f483",
+  "versionCode": 10002,
+  "apkSha256": "4c1155d98e78d9dc1e23077a1ce012a7d5b5bce5e6a60fe69dd690fdb35267d7",
+  "apkBytes": 22386235,
+  "checks": {
+    "engine/connection": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "feature/servers": {
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "quality-focused": {
+      "tests": 44,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "emulator": {
+    "api": 35,
+    "sameCertificateUpdate": true,
+    "malformedReplySpecificCopy": true,
+    "malformedReplyDetails": "OpenGateway \u00b7 UnreadableReply",
+    "refusedPortSpecificCopy": true,
+    "refusedPortDetails": "OpenGateway \u00b7 Network \u00b7 Refused",
+    "detailsCollapsedInitially": true,
+    "copyActionInvoked": true,
+    "realConnection": true,
+    "realReply": true,
+    "phoneOnlyFailureResolved": true,
+    "physicalPhone": false,
+    "coldRestartReconnect": true,
+    "noReplay": true
+  },
+  "ownerFeedback": {
+    "browserSignInSucceeded": true,
+    "diagnostic": "OpenGateway \u00b7 Network \u00b7 Refused",
+    "connectionRestoredAfterAddressAndTailscaleRoutingChecks": true,
+    "preciseWhichCheckFixedItConfirmed": false
+  }
+}

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.core.data.kv
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.data.lane.WriterLane
 import kotlinx.coroutines.flow.SharedFlow
@@ -37,6 +38,13 @@ public interface KeyValueStore {
      * anything is written, as the plugin does. A closed lane returns `Failure.Refused(ProfileClosing)`.
      */
     public suspend fun commit(lane: WriterLane, edit: PrefEdit.() -> Unit): Outcome<Unit>
+
+    /**
+     * Atomic conditional edit of several keys, under the file-wide lock. B-STATE-063 eng-4: a queue removal and
+     * its saved prompts must share one comparison and commit. Unsupported stores refuse rather than lose data.
+     */
+    public suspend fun compareAndCommit(lane: WriterLane, expected: Map<String, PrefValue?>, edit: PrefEdit.() -> Unit): Outcome<Boolean> =
+        Outcome.Failed(Failure.StorageRefused())
 
     /**
      * Atomic compare-and-set of one string key (schedule envelope CAS, widget snapshot patches). `Ok(false)` when the

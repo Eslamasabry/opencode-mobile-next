@@ -8,6 +8,13 @@ import io.github.eslamasabry.oc.core.testing.TestDispatchers
 import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitReason
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitRecord
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -18,13 +25,6 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertSame
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CrashStartupTest {
@@ -44,6 +44,47 @@ class CrashStartupTest {
             diagnostics.errors.collect { if (it.isNotEmpty() && startup()?.ready?.isCompleted != true) early = true }
         }
         return { early }
+    }
+
+    @Test
+    fun `B-SEC-045 eng-8 startup claims ownership before an immediate source reenters`() = runTest {
+        var opens = 0
+        lateinit var crash: CrashStartup
+        crash = CrashStartup(CrashStartupSource {
+            opens++
+            if (opens == 1) crash.start()
+            Outcome.Ok(CrashStartupEvidence(FakeCrashStore()))
+        }, diagnostics, clock, backgroundScope, TestDispatchers(UnconfinedTestDispatcher(testScheduler)))
+        assertNotNull(crash.start().await())
+        assertEquals(1, opens)
+    }
+
+    @Test
+    fun `B-SEC-045 eng-8 reset during suspended consent read cannot erase evidence`() = runTest {
+        val backing = FakeCrashStore(CrashFile.Records to "evidence", CrashFile.NativeLastCrash to "evidence")
+        val entered = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        val held = object : CrashStore by backing {
+            override suspend fun read(file: CrashFile, maxBytes: Int): Outcome<String?> {
+                if (file == CrashFile.Consent) {
+                    entered.complete(Unit)
+                    // The platform read may finish after cancellation. Its result still needs a generation fence.
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) { release.await() }
+                }
+                return backing.read(file, maxBytes)
+            }
+        }
+        val crash = startup { Outcome.Ok(CrashStartupEvidence(held)) }
+        val old = crash.start()
+        entered.await()
+        val before = backing.files.toMap()
+        crash.reset()
+        release.complete(Unit)
+        assertNull(old.await())
+        runCurrent()
+        assertEquals(before, backing.files)
+        assertNull(crash.current.value)
+        assertTrue(diagnostics.isEmpty)
     }
 
     @Test

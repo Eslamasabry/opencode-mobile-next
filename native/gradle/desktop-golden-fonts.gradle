@@ -1,0 +1,58 @@
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.testing.Test
+
+// Desktop-test environment only. Android keeps its device system Arabic fonts.
+if (!System.getProperty('os.name').toLowerCase(Locale.ROOT).startsWith('linux')) {
+    return
+}
+
+def fontDirectory = rootProject.layout.projectDirectory.dir('fixtures/fonts/dejavu')
+def fontFiles = files(
+    fontDirectory.file('DejaVuSans.ttf'),
+    fontDirectory.file('DejaVuSans-Bold.ttf'),
+    fontDirectory.file('DejaVuSans-Oblique.ttf'),
+    fontDirectory.file('DejaVuSans-BoldOblique.ttf'),
+)
+def configFile = layout.buildDirectory.file('golden-fonts/fonts.conf')
+def isolatedFonts = layout.buildDirectory.dir('golden-fonts/fonts')
+def cacheDirectory = layout.buildDirectory.dir('golden-fonts/cache')
+def xmlEscape = { String value ->
+    value.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+}
+// Absolute paths are explicit inputs so relocation regenerates the configuration.
+def fontConfigXml = '''<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+  <dir>''' + xmlEscape(isolatedFonts.get().asFile.absolutePath) + '''</dir>
+  <cachedir>''' + xmlEscape(cacheDirectory.get().asFile.absolutePath) + '''</cachedir>
+</fontconfig>
+'''
+
+def prepareFonts = tasks.register('prepareDesktopGoldenFonts', Sync) {
+    group = 'verification'
+    description = 'Prepare the isolated DejaVu font inventory for Linux desktop goldens.'
+    inputs.files(fontFiles).withPropertyName('desktopGoldenFonts')
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.property('fontconfigXml', fontConfigXml)
+    // Sync's declared output contains exactly the four named faces, even after a fixture inventory change.
+    from(fontFiles)
+    into(isolatedFonts)
+    outputs.file(configFile)
+    doLast {
+        def target = configFile.get().asFile
+        target.parentFile.mkdirs()
+        target.setText(fontConfigXml, 'UTF-8')
+    }
+}
+
+tasks.withType(Test).matching { it.name == 'desktopTest' }.configureEach {
+    dependsOn(prepareFonts)
+    inputs.files(fontFiles).withPropertyName('desktopGoldenFonts')
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file(configFile).withPropertyName('desktopGoldenFontConfig')
+        .withPathSensitivity(PathSensitivity.NONE)
+    environment('FONTCONFIG_FILE', configFile.get().asFile.absolutePath)
+    // Fontconfig owns this generated cache, never the host's cache or font directories.
+    outputs.dir(cacheDirectory).withPropertyName('desktopGoldenFontCache')
+}

@@ -158,10 +158,10 @@ done
 R="$(new_repo)"; cd "$R" || exit 1; printf 'range "%s", emulator "%s", public "%s", version "1.10.2.3"\n' "$CIDR" "$EMU" "$PUBLIC" >native/a.txt
 commit "fix(core-common): ranges [skip ci]" "Body." "${GOOD_TRAILERS[@]}"
 expect "scan: CIDR ranges, the allow-listed emulator alias and public addresses pass" 0 native/tool/scan_push.sh native/main
-R="$(new_repo)"; cd "$R" || exit 1; mkdir -p native/fx; printf 'k = "%s"\nimport x.y.internal.Foo\nhost "%s.0"\n' "$GHTOKEN" "${P10%.*}" >native/fx/RedactorTest.kt
+R="$(new_repo)"; cd "$R" || exit 1; mkdir -p native/fx; printf 'k = "%s"\nimport x.y.internal.Foo\nhost "%s"\n' "$GHTOKEN" "$CIDR" >native/fx/RedactorTest.kt
 echo '@path native/fx/RedactorTest.kt github-token  # canary fixture' >>native/tool/scan_push.allow
 commit "test(core-common): canary [skip ci]" "Body." "${GOOD_TRAILERS[@]}"
-expect "scan: an @path allow, a package named internal and a network address pass" 0 native/tool/scan_push.sh native/main
+expect "scan: an @path allow, a package named internal and a canonical range pass" 0 native/tool/scan_push.sh native/main
 printf 'k = "%s"\n' "$PEMKEY" >>native/fx/RedactorTest.kt; commit "test(core-common): more [skip ci]" "Body." "${GOOD_TRAILERS[@]}"
 expect "scan: an @path allow covers only its rule" 1 native/tool/scan_push.sh native/main
 R="$(new_repo)"; cd "$R" || exit 1; printf 'k = "%s"\n' "$GHTOKEN" >native/a.txt
@@ -245,9 +245,9 @@ R="$(new_repo)"; cd "$R" || exit 1
 mods="$(source native/tool/lib/common.sh; printf '%s\n' native/core/common/src/x.kt native/ui/kit/src/a.kt android/app/Main.kt native/tool/t0.sh native/build-logic/x.kts | oc_paths_to_modules | paste -sd' ')"
 expect "ladder: paths map to modules (Flutter android/ ignored)" 0 test "$mods" = ":core:common :ui:kit build-logic"
 tasks="$(source native/tool/lib/common.sh; oc_module_test_tasks :ui:kit | paste -sd' ')"
-expect "ladder: a golden module verifies Roborazzi" 0 test "$tasks" = "desktopTest verifyRoborazziAndroidHostTest"
+expect "ladder: a golden module verifies Roborazzi" 0 test "$tasks" = "desktopTest compileAndroidMain verifyRoborazziAndroidHostTest"
 tasks="$(source native/tool/lib/common.sh; oc_module_test_tasks :ui:kit record | paste -sd' ')"
-expect "ladder: --record records Roborazzi" 0 test "$tasks" = "desktopTest recordRoborazziAndroidHostTest"
+expect "ladder: --record records Roborazzi" 0 test "$tasks" = "desktopTest compileAndroidMain recordRoborazziAndroidHostTest"
 echo x >native/core/common/C.kt
 expect "ladder: t1 dry run lists the touched module" 0 native/tool/t1.sh --base native/main --globs 'native/**' --dry-run
 expect_out "ladder: t1 tasks include :core:common:desktopTest" 'tasks: .*:core:common:desktopTest'
@@ -338,6 +338,8 @@ fi
 expect "ladder: t2 dry run lists every step" 0 native/tool/t2.sh --dry-run --where local
 expect_out "ladder: t2 includes the assemble step" 'step assemble: ./gradlew -Poc.debugSignRelease=true'
 expect "ladder: a run writes exit-code" 0 bash -c 'ls native/build/native-t2/*/exit-code >/dev/null'
+
+expect "GATES review: offline regression suite" 0 python3 "$TOOL_SRC/test/test_gates_review.py"
 
 echo
 echo "native/tool self-tests: $pass passed, $fail failed"

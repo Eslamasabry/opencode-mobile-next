@@ -11,7 +11,7 @@ Every script follows the plan 02 §8 contract: exit `0` pass, `1` a test or gate
 | `t2.sh [--where vps\|local] [--steps a,b] [--detach]` | coordinator, checkpoints | the steps in `ladder/t2.tasks`; a missing gate task is a failure |
 | `t3.sh <apk> --signer <sha256> [--flows L] [--upgrade <apk>] [--detach]` | emulator lane holder | versionCode and signer, emulator lock, flows (animations off), E2E-05 with animations on, instrumented classes, S-28 sweep, upgrade journey |
 | `t4.sh --apks <dir> [--journeys L] [--detach]` | performance lane holder | quiet-PC checks, `restore_device.sh`, Macrobenchmark journeys from `tool/perf/journeys.tsv`, `compare.py` |
-| `vps_gradle.sh [--unit U] -- <gradle args>` | the ladder | rsync to `~/wt/ocn-<U>` on `$OC_VPS_HOST`, Gradle under the VPS lock, reports pulled back |
+| `vps_gradle.sh [--unit U] -- <gradle args>` | the ladder | per-worktree VPS workspace, one remote lease across sync/build/collection, reports and selected recorded screenshots pulled back |
 | `check_write_set.sh <brief.md> \| --globs G` | builder before reporting; coordinator before merging | every path changed since the merge-base is inside the write set |
 | `check_commits.sh [<base> [<head>]]` | before a push or merge | plan 02 §9.1 message rules |
 | `twin_check.sh [--kind K] [--verify-copy]` | coordinator, weekly | `TWINS.md` rows vs the Flutter tree: SHAs, paths, drift commits, byte equality |
@@ -25,3 +25,21 @@ Environment: `OC_BASE` (default `native/main`), `OC_VPS_HOST` (never committed),
 
 `scan_push.allow` takes exact values (`<rule> <value>  # reason`) and reviewed fixture files
 (`@path <glob> <rule|*>  # reason`). Every line needs a reason; only the coordinator adds lines for other units' files.
+
+T2 sends its selected steps as one batch to `vps_gradle.sh`; both the global VPS build lock and T2 lock stay held
+until every step and result pull completes. Each workspace, including the separate APK workspace, is synchronized
+before first use. `--no-sync` accepts only a matching source digest, verified against the remote files. Default
+workspace names contain the worktree basename and a digest of its absolute path; `--unit U` explicitly chooses one.
+A report or golden retrieval failure is exit 2. Golden recording returns only each selected module's
+`src/screenshots/`, including removals, before releasing the lease.
+
+T1 includes `compileAndroidMain` for every touched KMP module, with or without Android host-test sources. Its
+strings drift check runs locally under the shared PC build slot, since it reads the frozen Flutter inputs too.
+Local T2 and T3 Gradle commands use that same slot. Device ladder cancellation stops active step process groups,
+then restores device settings and writes a non-pass done-file; failed restoration is also exit 2.
+
+The offline review regressions are in `test/test_gates_review.py` and run from `test/run_tests.sh`. They use local
+throwaway Git repositories and SSH/device shims; no real remote or device is contacted. `scan_push.sh --push`
+accepts one branch destination and a small list of options; it pins the scanned commit and disables automatic tag
+publication. Private host addresses are checked even at range boundaries or before numeric URL paths. Only explicit
+canonical network range literals are exempt outside URLs.

@@ -1,0 +1,43 @@
+{
+  "nativeSourceId": "6340f02501c4375d194ffdcfbc54168319621a3570acb403cb60de213a09a8fd",
+  "package": "io.github.eslamasabry.opencode_mobile.native",
+  "versionCode": 10001,
+  "apkSha256": "4fc04f3f144b6dc3a5f0874a2edf0457104edee187be9ffe6e6e348839cf5f09",
+  "signerSha256": "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
+  "checks": {
+    "engine/composer": {
+      "tests": 143,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "feature/chat": {
+      "tests": 68,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ui/kit": {
+      "tests": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "vps-quality-focused": {
+      "tests": 44,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "scope": "focused draft integration; not a new full parity/release qualification",
+  "emulator": {
+    "api": 35,
+    "exactWhitespaceRestore": true,
+    "acceptedClear": true,
+    "noReplay": true,
+    "wrongTypePreserved": true,
+    "profileDeletion": true,
+    "physicalPhone": false
+  }
+}

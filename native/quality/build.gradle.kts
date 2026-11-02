@@ -5,6 +5,9 @@ plugins {
 }
 
 dependencies {
+    testImplementation(libs.navigationevent.compose)
+    testImplementation(project(":engine:requests"))
+    testImplementation(project(":engine:delivery"))
     testImplementation(libs.konsist)
     testImplementation(project(":desktopApp")) // desktop graph smoke
     listOf(

@@ -1,0 +1,28 @@
+<resources>
+    <string name="serversTitle">الخوادم</string>
+    <string name="serversNewTitle">محادثة جديدة</string>
+    <string name="serversSaved">الخوادم المحفوظة</string>
+    <string name="serversEmpty">أضف خادم OpenCode 2 لبدء محادثة.</string>
+    <string name="serversAdd">إضافة خادم</string>
+    <string name="serversName">الاسم</string>
+    <string name="serversAddress">عنوان الخادم</string>
+    <string name="serversUsername">اسم المستخدم</string>
+    <string name="serversPassword">كلمة المرور</string>
+    <string name="serversCleartext">السماح باتصال HTTP لهذا العنوان</string>
+    <string name="serversCleartextHelp">لا يشفّر HTTP كلمة مرورك أو محادثاتك. استخدمه فقط على شبكة تثق بها.</string>
+    <string name="serversCleartextRequired">أكّد السماح باتصال HTTP لهذا العنوان قبل الاتصال.</string>
+    <string name="serversConnect">اتصال</string>
+    <string name="serversConnected">متصل</string>
+    <string name="serversCreate">بدء محادثة</string>
+    <string name="serversSave">حفظ واتصال</string>
+    <string name="serversRemove">إزالة الخادم</string>
+    <string name="serversCancel">إلغاء</string>
+    <string name="serversRemoveConfirm">هل تريد إزالة %1$s وبيانات اتصاله المحفوظة من هذا التطبيق؟</string>
+    <string name="serversWorking">يرجى انتظار اكتمال الإجراء الحالي.</string>
+    <string name="serversInvalidAddress">أدخل عنوان الخادم.</string>
+    <string name="serversSaveFailed">تعذّر حفظ هذا الخادم. تحقّق من العنوان وحاول مجددًا.</string>
+    <string name="serversConnectFailed">تعذّر الاتصال. تحقّق من عنوان الخادم والشبكة، ثم حاول مجددًا.</string>
+    <string name="serversCreateFailed">تعذّر بدء المحادثة. ما زال خادمك محفوظًا.</string>
+    <string name="serversRemoveFailed">تعذّرت إزالة هذا الخادم. لم تتغير بياناته المحفوظة.</string>
+    <string name="serversSignInFailed">لم يقبل الخادم بيانات تسجيل الدخول هذه. تحقّق من اسم المستخدم وكلمة المرور.</string>
+</resources>

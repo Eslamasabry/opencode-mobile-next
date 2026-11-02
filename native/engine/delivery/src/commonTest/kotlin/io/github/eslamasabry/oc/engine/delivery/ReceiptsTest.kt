@@ -138,10 +138,11 @@ class ReceiptsTest {
         w.queue.queuePrompt(prompt("a"))
         w.link.answer = { FakeLink.Answer.LostResponse }
         w.queue.flush()
-        // The person discards the review entry and writes a new one that happens to reuse the id.
+        // The person discards the review entry; its durable identity remains reserved.
         w.queue.remove("a")
         w.policy.allows = false
-        w.queue.queuePrompt(prompt("a", text = "replacement"))
+        assertEquals(Outcome.Ok(io.github.eslamasabry.oc.engine.delivery.queue.QueueRefusal.DuplicateId), w.queue.queuePrompt(prompt("a", text = "replacement")))
+        w.queue.queuePrompt(prompt("replacement", text = "replacement"))
         assertEquals(false, w.queue.checkReceipt("a"))
         assertEquals("replacement", w.queue.entries().single().text, "the replacement is not discarded")
     }
@@ -166,10 +167,10 @@ class ReceiptsTest {
 
         val disk = Disk(mapOf(FlutterPrefsCodec.physicalKey("${PendingCommandJournal.KEY_PREFIX}${P1.raw}") to RawPref.Str("{\"schemaVersion\":2,\"commands\":[]}")))
         val m = World(disk, this, link = receiptLink())
-        m.queue.queuePrompt(prompt("a"))
+        assertIs<Outcome.Failed>(m.queue.queuePrompt(prompt("a")), "an unreadable identity ledger cannot admit a new id")
         m.queue.flush()
         assertTrue(m.link.attempts.isEmpty(), "a malformed journal grants no claim: nothing sent")
-        assertNotNull(m.queue.entries().single().dispatchedAt, "kept for review, conservatively")
+        assertTrue(m.queue.entries().isEmpty(), "admission failed: the caller keeps the draft")
     }
 
     @Test

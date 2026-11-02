@@ -2,9 +2,12 @@
 <!-- Slice 0: only the components already built (plan 03 §22.1). Every later component keeps its frozen FQCN. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".OcApplication"
         android:allowBackup="false"
+        android:usesCleartextTraffic="true"
         android:label="@string/app_label_preview"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">

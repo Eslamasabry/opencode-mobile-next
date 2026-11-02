@@ -10,7 +10,7 @@ kotlin {
         implementation(project(":core:common"))
         implementation(project(":core:model"))
         implementation(project(":core:domain"))
-        implementation(project(":core:data"))
+        api(project(":core:data")) // DeliveryStorage exposes the adopted store and writer lanes
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(kotlin("test-junit"))

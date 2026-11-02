@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -39,6 +40,7 @@ import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusLineFold
@@ -47,6 +49,9 @@ import io.github.eslamasabry.oc.ui.kit.status.kitStatusSlotAbove
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+
+/** Optional host inset source; null uses the platform's safe drawing area and keyboard. */
+internal val LocalKitScreenInsets = compositionLocalOf<WindowInsets?> { null }
 
 /** How wide a single-pane body may grow on medium and wider windows (Dart `KitScreenWidth`). */
 public enum class KitScreenWidth(internal val cap: CapRole) {
@@ -92,7 +97,12 @@ public fun KitScreen(
     val window = LocalKitWindow.current
     val cap = if (window.cls == WindowClass.Compact) CapRole.Fill else width.cap
     val inner: @Composable (line: KitStatus?, ownsLine: Boolean) -> Unit = { line, ownsLine ->
-        Column(Modifier.fillMaxSize().testTag("kit-screen")) {
+        val insets = LocalKitScreenInsets.current ?: WindowInsets.safeDrawing.union(WindowInsets.ime)
+        Column(
+            Modifier.fillMaxSize()
+                .then(if (framed) Modifier.windowInsetsPadding(insets) else Modifier)
+                .testTag("kit-screen"),
+        ) {
             if (topBar != null) {
                 Box(Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))) {
                     topBar()
@@ -125,7 +135,17 @@ public fun KitScreen(
         }
     }
     if (framed) {
-        KitSheetHost(modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content() }
+        ScreenSheetHost(modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content() }
+    } else {
+        Box(modifier) { content() }
+    }
+}
+
+/** Pane and nested page frames use the encompassing window's modal layer. */
+@Composable
+private fun ScreenSheetHost(modifier: Modifier, content: @Composable () -> Unit) {
+    if (LocalKitSheetHost.current == null) {
+        KitSheetHost(modifier, content)
     } else {
         Box(modifier) { content() }
     }
@@ -184,11 +204,20 @@ public fun KitPaneScreen(
     BoxWithConstraints(modifier.fillMaxSize()) {
         val window = LocalKitWindow.current
         val body = maxWidth.value
-        Panes(
-            list, detail, emptyDetail, side, topBar, status, search, loading, loadingLabel, bottom,
-            showsDetail = Layout.showsDetail(window.cls, window.short, body),
-            showsSide = side != null && Layout.showsSide(window.cls, window.short, body),
-        )
+        val showsDetail = Layout.showsDetail(window.cls, window.short, body)
+        val panes: @Composable (KitStatus?, Boolean) -> Unit = { line, ownsLine ->
+            Panes(
+                list, detail, emptyDetail, side, topBar, status, search, loading, loadingLabel, bottom,
+                showsDetail = showsDetail,
+                showsSide = side != null && Layout.showsSide(window.cls, window.short, body),
+                line = line, ownsLine = ownsLine,
+            )
+        }
+        if (showsDetail && !kitStatusSlotAbove()) {
+            KitStatusSlot(status) { panes(it, true) }
+        } else {
+            panes(null, false)
+        }
     }
 }
 
@@ -206,12 +235,15 @@ private fun Panes(
     bottom: (@Composable () -> Unit)?,
     showsDetail: Boolean,
     showsSide: Boolean,
+    line: KitStatus?,
+    ownsLine: Boolean,
 ) {
     val modifier = Modifier
     val hairline = LocalKitColors.current.hairline
     val listPane: @Composable () -> Unit = {
         KitScreen(
-            topBar = topBar, status = status, search = search, loading = loading, loadingLabel = loadingLabel,
+            topBar = if (ownsLine) ({ Column { topBar?.invoke(); KitStatusLineFold(line) } }) else topBar,
+            status = status, search = search, loading = loading, loadingLabel = loadingLabel,
             bottom = bottom, page = showsDetail && topBar == null, body = list,
         )
     }
@@ -223,7 +255,7 @@ private fun Panes(
         val x = if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl) 0.5f else size.width - 0.5f
         drawLine(hairline, Offset(x, 0f), Offset(x, size.height), 1f)
     }
-    KitSheetHost(modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+    ScreenSheetHost(modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
         Row(Modifier.fillMaxSize()) {
             Box(
                 Modifier.width(Layout.PANE_LIST_WIDTH.dp).fillMaxHeight().endRule()

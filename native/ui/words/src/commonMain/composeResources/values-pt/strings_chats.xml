@@ -51,4 +51,6 @@
     <string name="agentsCancel">Cancelar</string>
     <string name="chatsHomeOtherFolders">Outras pastas</string>
     <string name="shellServerSwitching">Trocando…</string>
+    <string name="chatsReturnBriefUnknown">Não é possível saber o que há de novo neste servidor</string>
+    <string name="chatsReturnBriefMore">e mais %1$d</string>
 </resources>

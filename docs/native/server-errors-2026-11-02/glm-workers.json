@@ -1,0 +1,82 @@
+{
+  "workers": [
+    {
+      "name": "failure-tests",
+      "role": "independent regression tests and stubs",
+      "runner": "OpenCode 1.19.0",
+      "model": "zai-coding-plan/glm-5.3",
+      "machine": "VPS",
+      "exit": 0,
+      "patchSha256": "3ee392e4e5f1b0588e060fec7abe1bdff1f87e6d284d6ec7b92f78c8b718abe4",
+      "toolCalls": 85,
+      "workerRanChecks": false
+    },
+    {
+      "name": "phone-handoff",
+      "role": "existing Linux handoff feasibility contract",
+      "runner": "OpenCode 1.19.0",
+      "model": "zai-coding-plan/glm-5.3",
+      "machine": "VPS",
+      "exit": 0,
+      "patchSha256": "005cb096d4143d163ac5368d1215dbc21281188e90e3b93cadea9541dda74291",
+      "toolCalls": 45,
+      "workerRanChecks": false
+    },
+    {
+      "name": "page-parity-map",
+      "role": "routed pages parity source inventory",
+      "runner": "OpenCode 1.19.0",
+      "model": "zai-coding-plan/glm-5.3",
+      "machine": "VPS",
+      "exit": 0,
+      "patchSha256": "9301e940a1b69d70dbd22f211530d072f7c804ff9755552a2a764a550dd165db",
+      "toolCalls": 82,
+      "workerRanChecks": false
+    },
+    {
+      "name": "connection-builder",
+      "role": "engine annotation and Android runtime implementation",
+      "runner": "OpenCode 1.19.0",
+      "model": "zai-coding-plan/glm-5.3",
+      "machine": "VPS",
+      "exit": 0,
+      "patchSha256": "279c9c2a9bfa10e5b68265c3925fee92a7f9ff10fda25af20a88a2d922d44cf1",
+      "toolCalls": 29,
+      "workerRanChecks": false
+    },
+    {
+      "name": "ui-builder",
+      "role": "typed failure copy and kit Details implementation",
+      "runner": "OpenCode 1.19.0",
+      "model": "zai-coding-plan/glm-5.3",
+      "machine": "VPS",
+      "exit": 0,
+      "patchSha256": "8f1fa7280927badd91c0e8566e197ec173f17f53527a403d96460da37b44a188",
+      "toolCalls": 33,
+      "workerRanChecks": false
+    },
+    {
+      "name": "final-review",
+      "role": "independent bounded production source review",
+      "runner": "OpenCode 1.19.0",
+      "model": "zai-coding-plan/glm-5.3",
+      "machine": "VPS",
+      "exit": 0,
+      "patchSha256": "7c92176477a7cde5557e16bd30d6b33ceb2c0a7db2677644a51230a13269f78d",
+      "toolCalls": 21,
+      "workerRanChecks": false
+    }
+  ],
+  "coordinatorReview": true,
+  "corrections": [
+    "UI tests now render production ServersScreen with required secret sink and actual resource locale",
+    "UI tests moved out of presentation package; architecture rule unchanged",
+    "unknown/storage body copy corrected; no unsupported network/disk-full cause",
+    "Linux handoff draft removed unverified setup advice and wrong file attribution",
+    "parity draft corrected wired search, leave confirmation, composer integration and CSV width"
+  ],
+  "cancelledDuplicatesExcluded": [
+    "page-parity-map-v2"
+  ],
+  "qualification": "Worker completion/source review is not test or device qualification; execution evidence is separate"
+}

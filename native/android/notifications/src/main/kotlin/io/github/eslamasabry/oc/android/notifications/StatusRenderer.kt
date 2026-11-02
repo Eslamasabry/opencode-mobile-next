@@ -25,7 +25,7 @@ public class StatusRenderer(private val context: Context, private val words: Not
                 .setSmallIcon(R.drawable.notify_ic_status)
                 .setContentTitle(content.title)
                 .setContentText(content.text.ifEmpty { content.lines.firstOrNull().orEmpty() })
-                .setContentIntent(openIntent(CONTENT_REQUEST, null))
+                .setContentIntent(openIntent(CONTENT_REQUEST, null, content))
                 .setOngoing(ongoing)
                 .setAutoCancel(!ongoing)
                 .setOnlyAlertOnce(true)
@@ -38,7 +38,7 @@ public class StatusRenderer(private val context: Context, private val words: Not
                         .setContentTitle(content.publicTitle)
                         .build(),
                 )
-                .setDeleteIntent(dismissIntent(content.sessionId))
+                .setDeleteIntent(dismissIntent(content))
         if (content.subText.isNotEmpty()) builder.setSubText(content.subText)
         if (content.lines.isNotEmpty()) {
             if (chip != null) {
@@ -61,27 +61,46 @@ public class StatusRenderer(private val context: Context, private val words: Not
         return builder.build()
     }
 
-    private fun openIntent(requestCode: Int, launch: String?): PendingIntent =
+    private fun openIntent(requestCode: Int, launch: String?, content: StatusContent): PendingIntent =
         PendingIntent.getActivity(
             context,
             requestCode,
             Intent().apply {
                 component = FrozenComponents.of(context, FrozenComponents.MAIN_ACTIVITY)
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                data = targetUri("opencode://status/open", content)
+                putStatusConversation(content.conversation)
+                // EntryRouter already understands the frozen conversation routing extras.
+                content.conversation?.let {
+                    putExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID, it.profileId.raw)
+                    putExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID, it.sessionId.raw)
+                }
                 if (launch != null) putExtra(FrozenExtras.EXTRA_LAUNCH_ACTION, launch)
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-    private fun dismissIntent(session: String): PendingIntent =
+    /** Extras do not participate in PendingIntent identity; keep older delivered actions on their own chat. */
+    private fun targetUri(base: String, content: StatusContent): android.net.Uri =
+        base.toUri().buildUpon()
+            .appendQueryParameter("profile", content.conversation?.profileId?.raw.orEmpty())
+            .appendQueryParameter("session", content.conversation?.sessionId?.raw.orEmpty())
+            .build()
+
+    private fun dismissIntent(content: StatusContent): PendingIntent =
         PendingIntent.getBroadcast(
             context,
             DISMISS_REQUEST,
             Intent(FrozenExtras.ACTION_STATUS).apply {
                 component = FrozenComponents.of(context, FrozenComponents.STATUS_ACTION_RECEIVER)
-                data = FrozenExtras.STATUS_DISMISSED_URI.toUri()
+                // A previously delivered delete intent keeps its own turn when this row is replaced.
+                data = FrozenExtras.STATUS_DISMISSED_URI.toUri().buildUpon()
+                    .appendPath(content.conversation?.profileId?.raw.orEmpty())
+                    .appendPath(content.conversation?.sessionId?.raw.orEmpty())
+                    .appendPath(content.turnId).build()
                 putExtra(FrozenExtras.EXTRA_STATUS_ACTION, DISMISSED_ACTION)
-                putExtra(FrozenExtras.EXTRA_STATUS_SESSION, session)
+                putStatusConversation(content.conversation)
+                putExtra(FrozenExtras.EXTRA_STATUS_TURN, content.turnId)
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -90,11 +109,11 @@ public class StatusRenderer(private val context: Context, private val words: Not
         val icon = R.drawable.notify_ic_status
         return when (action) {
             StatusAction.Open ->
-                NotificationCompat.Action(icon, words.text(R.string.notify_status_action_open), openIntent(OPEN_REQUEST, null))
+                NotificationCompat.Action(icon, words.text(R.string.notify_status_action_open), openIntent(OPEN_REQUEST, null, content))
             StatusAction.Start ->
-                NotificationCompat.Action(icon, words.text(R.string.notify_status_action_start), openIntent(START_REQUEST, null))
+                NotificationCompat.Action(icon, words.text(R.string.notify_status_action_start), openIntent(START_REQUEST, null, content))
             StatusAction.NewChat ->
-                NotificationCompat.Action(icon, words.text(R.string.notify_status_action_new_chat), openIntent(NEW_CHAT_REQUEST, "new_task"))
+                NotificationCompat.Action(icon, words.text(R.string.notify_status_action_new_chat), openIntent(NEW_CHAT_REQUEST, "new_task", content))
             StatusAction.StopReply ->
                 NotificationCompat.Action(
                     icon,
@@ -104,9 +123,9 @@ public class StatusRenderer(private val context: Context, private val words: Not
                         STOP_REPLY_REQUEST,
                         Intent(FrozenExtras.ACTION_STATUS).apply {
                             component = FrozenComponents.of(context, FrozenComponents.STATUS_ACTION_RECEIVER)
-                            data = FrozenExtras.STOP_REPLY_URI.toUri()
+                            data = targetUri(FrozenExtras.STOP_REPLY_URI, content)
                             putExtra(FrozenExtras.EXTRA_STATUS_ACTION, StatusAction.StopReply.wire)
-                            putExtra(FrozenExtras.EXTRA_STATUS_SESSION, content.sessionId)
+                            putStatusConversation(content.conversation)
                         },
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                     ),

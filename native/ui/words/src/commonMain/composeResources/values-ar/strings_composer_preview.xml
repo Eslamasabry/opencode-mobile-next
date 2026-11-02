@@ -1,0 +1,20 @@
+<resources>
+    <string name="composerPreviewModelButton">النموذج</string>
+    <string name="composerPreviewModelDefault">الافتراضي من الخادم</string>
+    <string name="composerPreviewModelsTitle">اختيار نموذج</string>
+    <string name="composerPreviewModelsLoading">جارٍ تحميل النماذج…</string>
+    <string name="composerPreviewModelsEmpty">لا تتوفر نماذج حاليًا.</string>
+    <string name="composerPreviewModelsFailed">تعذّر تحميل قائمة النماذج.</string>
+    <string name="composerPreviewModelsRetry">حاول مجددًا</string>
+    <string name="composerPreviewModelsClose">إغلاق</string>
+    <string name="composerPreviewAttachFile">إرفاق ملف</string>
+    <string name="composerPreviewAttachNoPicker">لا يمكن إرفاق الملفات على هذا الجهاز هنا.</string>
+    <string name="composerPreviewAttachModelWithoutFiles">هذا النموذج لا يقبل الملفات. اختر نموذجًا يقبلها.</string>
+    <string name="composerPreviewAttachmentRemove">إزالة</string>
+    <string name="composerPreviewAttachmentFailed">تعذّر إرفاق الملف.</string>
+    <string name="composerPreviewAttachmentTooLarge">حجم هذا الملف كبير جدًا للإرفاق.</string>
+    <string name="composerPreviewAttachmentUnsupported">لا يمكن إرفاق هذا النوع من الملفات.</string>
+    <string name="composerPreviewAttachmentStorage">تعذّر حفظ الملف على هذا الجهاز.</string>
+    <string name="composerPreviewAttachmentDismiss">تجاهل</string>
+    <string name="composerPreviewAttachmentRetry">حاول مجددًا</string>
+</resources>

@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.android.notifications
 
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+
+
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
@@ -28,6 +32,7 @@ import org.robolectric.annotation.Config
  * `NotificationActionBody` (plan 11 §10.6; 16 WP-16.8 `NotificationActionAuthTest`; `NoTrampolineTest`). Every test
  * also asserts that no activity was started: Android 12+ blocks notification trampolines silently.
  */
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class NotificationActionBodyTest {
@@ -48,6 +53,10 @@ class NotificationActionBodyTest {
             dismissed += key
         }
 
+        override fun dismissIfCurrent(tap: ShadeTap): Boolean { dismiss(tap.key); return true }
+
+        override fun showOpenOnlyIfCurrent(tap: ShadeTap): AlertShown = showOpenOnly(tap)
+
         override fun isShowing(key: String): Boolean = false
     }
 
@@ -58,9 +67,9 @@ class NotificationActionBodyTest {
     private val shade = FakeShade()
     private val answers = mutableListOf<ShadeAnswer>()
     private var reply: suspend (ShadeAnswer) -> Outcome<Unit> = { Unit.ok() }
-    private val stops = mutableListOf<SessionId>()
+    private val stops = mutableListOf<ConversationRef>()
     private var lock = Lock(sdkInt = 35, locked = false)
-    private val dismissedRows = mutableListOf<String>()
+    private val dismissedRows = mutableListOf<ReplyRun>()
 
     private fun body() =
         NotificationActionBody(
@@ -216,9 +225,10 @@ class NotificationActionBodyTest {
                     data = Uri.parse(FrozenExtras.STOP_REPLY_URI)
                     action?.let { putExtra(FrozenExtras.EXTRA_STATUS_ACTION, it) }
                     putExtra(FrozenExtras.EXTRA_STATUS_SESSION, session)
+                    putExtra(FrozenExtras.EXTRA_STATUS_PROFILE, "p1")
                 }
             assertEquals(ShadeOutcome.StopSent, body().onStatusAction(status("stop_reply")))
-            assertEquals(listOf("ses_7"), stops.map { it.raw })
+            assertEquals(listOf("ses_7"), stops.map { it.sessionId.raw })
             assertEquals(ShadeOutcome.Ignored, body().onStatusAction(status("open")))
             assertEquals(ShadeOutcome.Ignored, body().onStatusAction(status("stop_reply", session = "")))
             assertEquals(ShadeOutcome.Ignored, body().onStatusAction(status("stop_reply", act = "other")))
@@ -232,11 +242,80 @@ class NotificationActionBodyTest {
                 Intent(FrozenExtras.ACTION_STATUS).apply {
                     putExtra(FrozenExtras.EXTRA_STATUS_ACTION, StatusRenderer.DISMISSED_ACTION)
                     putExtra(FrozenExtras.EXTRA_STATUS_SESSION, "ses_7")
+                    putExtra(FrozenExtras.EXTRA_STATUS_PROFILE, "p1")
+                    putExtra(FrozenExtras.EXTRA_STATUS_TURN, "turn_1")
                 }
             assertEquals(ShadeOutcome.RowDismissed, body().onStatusAction(swipe))
-            assertEquals(listOf("ses_7"), dismissedRows)
+            assertEquals(listOf(ReplyRun(ConversationRef(ProfileId("p1"), SessionId("ses_7")), "turn_1")), dismissedRows)
             assertTrue(stops.isEmpty())
         }
+
+    @Test
+    fun `B-CHAT-074 notify finding 2 old answer completion preserves the replacement request`() = runTest {
+        val manager = app.getSystemService(android.app.NotificationManager::class.java)
+        val words = NotifyWords(app) { "en" }
+        val realShade = AndroidAlertShade(app, words, ChannelRegistry(manager, words).also { it.ensure() })
+        val route = AlertRoute.Post(NotifyChannel.CodingAction, AlertGroups.NEEDS_YOU)
+        val a = CodingAlert(AlertKind.Permission, "ses_1", "input:p1:ses_1", requestId = "per_1", profileId = "p1", detail = "npm test", ask = PermissionAsk(AskAction.Run, "npm test"))
+        for (result in listOf(Unit.ok(), Failed(Failure.NotFound()), Failed(Failure.Network()))) {
+            realShade.show(a, route)
+            val gate = CompletableDeferred<Outcome<Unit>>()
+            val body = NotificationActionBody(realShade, { gate.await() }, { Unit.ok() }, lock)
+            val answering = async { body.onCodingAction(tapIntent("deny")) }
+            runCurrent()
+            realShade.show(a.copy(requestId = "per_2"), route)
+            gate.complete(result)
+            answering.await()
+            val row = manager.activeNotifications.single { it.id == NotificationIds.alert(a.key) }.notification
+            val open = shadowOf(row.contentIntent).savedIntent
+            assertEquals("per_2", open.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID))
+            assertEquals(2, row.actions.size)
+        }
+    }
+
+    @Test
+    fun `B-ANDR-040 notify finding 5 refuses a legacy stop without a profile`() = runTest {
+        val intent = Intent(FrozenExtras.ACTION_STATUS).apply {
+            putExtra(FrozenExtras.EXTRA_STATUS_ACTION, StatusAction.StopReply.wire)
+            putExtra(FrozenExtras.EXTRA_STATUS_SESSION, "ses_7")
+        }
+        assertEquals(ShadeOutcome.Ignored, body().onStatusAction(intent))
+        assertTrue(stops.isEmpty())
+    }
+
+    @Test
+    fun `B-ANDR-040 notify finding 5 status stop and failed-stop Open retain the exact profile and chat`() = runTest {
+        val words = NotifyWords(app) { "en" }
+        val renderer = StatusRenderer(app, words)
+        for (profile in listOf("p1", "p2")) {
+            val target = ConversationRef(ProfileId(profile), SessionId("same_session"))
+            val row = renderer.build(StatusContent(StatusKind.Working, "Working", conversation = target,
+                actions = listOf(StatusAction.Open, StatusAction.StopReply)), true, null)
+            val stop = shadowOf(row.actions[1].actionIntent).savedIntent
+            var stopped: ConversationRef? = null
+            val handler = NotificationActionBody(shade, { Unit.ok() }, { stopped = it; Failed(Failure.Network()) }, lock)
+            assertEquals(ShadeOutcome.StopFailed, handler.onStatusAction(stop))
+            assertEquals(target, stopped)
+            for (pending in listOf(row.contentIntent, row.actions[0].actionIntent)) {
+                val open = shadowOf(pending).savedIntent
+                assertEquals(profile, open.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID))
+                assertEquals("same_session", open.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID))
+            }
+        }
+    }
+
+    @Test
+    fun `B-ANDR-040 notify finding 5 a held status action keeps its target after another profile replaces the row`() = runTest {
+        val renderer = StatusRenderer(app, NotifyWords(app) { "en" })
+        fun row(profile: String) = renderer.build(StatusContent(StatusKind.Working, "Working",
+            conversation = ConversationRef(ProfileId(profile), SessionId("same_session")),
+            actions = listOf(StatusAction.Open, StatusAction.StopReply)), true, null)
+        val first = row("p1")
+        row("p2")
+        for (pending in listOf(first.contentIntent, first.actions[0].actionIntent, first.actions[1].actionIntent)) {
+            assertEquals("p1", shadowOf(pending).savedIntent.statusConversation()?.profileId?.raw)
+        }
+    }
 
     private fun Failed(failure: Failure): Outcome<Unit> = Outcome.Failed(failure)
 }

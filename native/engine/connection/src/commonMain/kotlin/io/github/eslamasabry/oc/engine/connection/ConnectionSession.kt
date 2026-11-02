@@ -11,16 +11,29 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/** Slice-0 skeleton of the connection-scoped session (status, capabilities); the reconnect loop is slice 1. */
+/**
+ * Slice-0 skeleton of the connection-scoped session (status, capabilities); the reconnect loop is
+ * slice 1.
+ */
 @SingleIn(ConnectionScope::class)
 @Inject
 public class ConnectionSession(
     public val profile: ServerProfile,
     private val gateway: ServerGateway,
 ) {
+    /**
+     * The gateway of this exact live graph; callers must retain the graph identity when
+     * dispatching.
+     */
+    public val server: ServerGateway
+        get() = gateway
+
+    public val readState: ConnectionReadState = ConnectionReadState()
+
     private val mutableStatus = MutableStateFlow<StreamStatus>(StreamStatus.Connecting)
     public val status: StateFlow<StreamStatus> = mutableStatus.asStateFlow()
-    public val capabilities: StateFlow<ServerCapabilities> get() = gateway.capabilities
+    public val capabilities: StateFlow<ServerCapabilities>
+        get() = gateway.capabilities
 
     internal fun markConnected() {
         mutableStatus.value = StreamStatus.Connected

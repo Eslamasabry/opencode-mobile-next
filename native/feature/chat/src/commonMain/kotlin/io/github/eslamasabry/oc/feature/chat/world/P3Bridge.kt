@@ -88,6 +88,9 @@ internal class P3Bridge(private val sessionId: String) {
             toolStatus = p.tool?.status?.let(::tool),
             synthetic = p.synthetic,
             ended = p.ended,
+            searchText = listOfNotNull(p.toolName, p.tool?.title, p.tool?.input?.toString(), p.tool?.inputRaw,
+                p.tool?.output, p.tool?.outputValue?.toString(), p.tool?.outputFiles?.joinToString { listOfNotNull(it.path, it.filename).joinToString(" ") },
+                p.filename, p.mime, p.text.takeIf { p.type == CorePartType.File }).joinToString("\n"),
         )
 
     private fun type(t: CorePartType): PartType =

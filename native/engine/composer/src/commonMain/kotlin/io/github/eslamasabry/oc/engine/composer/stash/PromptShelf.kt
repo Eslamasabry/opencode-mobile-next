@@ -16,18 +16,19 @@ import io.github.eslamasabry.oc.engine.composer.vault.AttachmentRecovery
 import io.github.eslamasabry.oc.engine.composer.vault.AttachmentRef
 import io.github.eslamasabry.oc.engine.composer.vault.AttachmentVault
 import io.github.eslamasabry.oc.engine.composer.vault.schemeOf
+import kotlin.concurrent.atomics.AtomicReference
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.concurrent.atomics.AtomicReference
 
 /**
  * Saved prompts and prompt history (plan 09 §10.8; port of `lib/state/prompt_shelf.dart` and
- * `saved_prompts_controller.dart`). One key per saved prompt, `oc.promptStash.<profile>.<id>`; history
- * `oc.promptHistory.<profile>`; payloads in the `prompt-stash-attachments-v1` vault, published only after the owner
- * marker `oc.stashAttachmentVault.<profile>` is committed (a crash leaves discoverable orphans). One lane for every
- * profile, because the disk budget spans profiles. An unreadable shelf is refused, never silently dropped.
+ * `saved_prompts_controller.dart`). One key per saved prompt, `oc.promptStash.<profile>.<id>`;
+ * history `oc.promptHistory.<profile>`; payloads in the `prompt-stash-attachments-v1` vault,
+ * published only after the owner marker `oc.stashAttachmentVault.<profile>` is committed (a crash
+ * leaves discoverable orphans). One lane for every profile, because the disk budget spans profiles.
+ * An unreadable shelf is refused, never silently dropped.
  */
 public class PromptShelf(
     private val prefs: ComposerPrefs,
@@ -57,13 +58,16 @@ public class PromptShelf(
         for (key in prefs.keys().filter { it.startsWith(prefix) }) {
             val raw = prefs.string(key) ?: throw StoredFormatException("Stash entry is not text")
             val prompt = stashedPromptFromJson(parseJson(raw).asObject())
-            if (prompt.id.isEmpty() || key != "$prefix${prompt.id}") throw StoredFormatException("Stash identity changed")
+            if (prompt.id.isEmpty() || key != "$prefix${prompt.id}")
+                throw StoredFormatException("Stash identity changed")
             entries += prompt
         }
         return entries.sortedByDescending { it.createdAt }
     }
 
-    /** Newest first. Failed with `Storage(Unreadable)` for a corrupt shelf (never shown as empty). */
+    /**
+     * Newest first. Failed with `Storage(Unreadable)` for a corrupt shelf (never shown as empty).
+     */
     public fun stashes(profile: String): Outcome<List<StashedPrompt>> =
         try {
             readStashes(profile).ok()
@@ -71,11 +75,16 @@ public class PromptShelf(
             Failure.StorageRefused().failed()
         }
 
-    /** Sent prompts, newest first ("Reuse a prompt"; desktop arrow keys). A corrupt list reads as empty. */
+    /**
+     * Sent prompts, newest first ("Reuse a prompt"; desktop arrow keys). A corrupt list reads as
+     * empty.
+     */
     public fun history(profile: String): List<String> {
         val raw = prefs.string(historyKey(profile)) ?: return emptyList()
         return try {
-            (parseJson(raw) as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content }.orEmpty()
+            (parseJson(raw) as? JsonArray)
+                ?.mapNotNull { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content }
+                .orEmpty()
         } catch (e: StoredFormatException) {
             emptyList()
         }
@@ -84,7 +93,8 @@ public class PromptShelf(
     private fun current(profile: String): Failure? =
         when {
             profile.isEmpty() -> Failure.Refused(RefusalReason.StaleScope)
-            profile in closing.load() || !profiles.exists(profile) -> Failure.Refused(RefusalReason.ProfileDeleted)
+            profile in closing.load() || !profiles.exists(profile) ->
+                Failure.Refused(RefusalReason.ProfileDeleted)
             else -> null
         }
 
@@ -92,77 +102,99 @@ public class PromptShelf(
         prefs.bool(ownerKey(profile)) == true || prefs.commit { putBool(ownerKey(profile), true) }
 
     /**
-     * Deletes this profile's unreferenced stash payloads. Suppressed (false, nothing deleted) when the shelf cannot be
-     * read, a blob reference is corrupt, or a reference is neither blob nor URL (B-STATE-136).
+     * Deletes this profile's unreferenced stash payloads. Suppressed (false, nothing deleted) when
+     * the shelf cannot be read, a blob reference is corrupt, or a reference is neither blob nor URL
+     * (B-STATE-136).
      */
     private suspend fun collect(profile: String): Boolean {
-        val refs =
-            try {
-                readStashes(profile).flatMap { it.attachmentRefs }
-            } catch (e: StoredFormatException) {
-                return false
-            }
-        for (ref in refs) {
-            val blob = ref.blob
-            if (blob != null && (ref.url != null || !BLOB.matches(blob))) return false
-            if (blob == null && ref.url == null) return false
-        }
+        val refs = retained(profile) ?: return false
         if (refs.any { it.blob != null } && !ensureOwner(profile)) return false
         // Shelves that never published files have nothing to collect.
         if (!prefs.contains(ownerKey(profile))) return true
         return vault.collect(mapOf(profile to refs), owner = profile)
     }
 
-    /** Moves data-URL attachments into the vault; file and web URLs stay as references. */
-    private suspend fun externalize(profile: String, prompt: StashedPrompt): Outcome<StashedPrompt> {
-        if (prompt.attachments.isEmpty()) return prompt.ok()
-        if (prompt.attachments.size > MAX_ATTACHMENTS) return Failure.StorageRefused().failed()
-        val data = prompt.attachments.filter { schemeOf(it.url) == "data" }
-        var stored: List<AttachmentRef> = emptyList()
-        if (data.isNotEmpty()) {
-            if (!ensureOwner(profile)) return Failure.StorageRefused().failed()
-            when (val r = vault.store(profile, data)) {
-                is Outcome.Ok -> stored = r.value
-                is Outcome.Failed -> return r
-            }
-        }
-        var index = 0
+    /** Validates the entire shelf before deletion or collection can make a change. */
+    private fun retained(profile: String): List<AttachmentRef>? {
         val refs =
-            prompt.attachments.map {
-                if (schemeOf(it.url) == "data") stored[index++] else AttachmentRef(filename = it.filename, mime = it.mime, url = it.url)
+            try {
+                readStashes(profile).flatMap { it.attachmentRefs }
+            } catch (e: StoredFormatException) {
+                return null
             }
-        return prompt.copy(attachments = emptyList(), attachmentRefs = refs).ok()
+        for (ref in refs) {
+            val blob = ref.blob
+            if (blob != null && (ref.url != null || !BLOB.matches(blob))) return null
+            if (blob == null && ref.url == null) return null
+        }
+        return refs
     }
 
     /**
-     * Saves [prompt] under its id. Refused when the profile is gone, the id repeats, the shelf holds 50 (a saved
-     * prompt is never evicted), or the identity or location holds something secret-like.
+     * Validates every attachment; data URLs move to the vault and file/web URLs stay as references.
+     */
+    private suspend fun externalize(
+        profile: String,
+        prompt: StashedPrompt,
+    ): Outcome<StashedPrompt> {
+        if (prompt.attachments.isEmpty()) return prompt.ok()
+        if (prompt.attachments.size > MAX_ATTACHMENTS) return Failure.StorageRefused().failed()
+        if (prompt.attachments.any { schemeOf(it.url) == "data" } && !ensureOwner(profile)) {
+            return Failure.StorageRefused().failed()
+        }
+        return when (val stored = vault.store(profile, prompt.attachments)) {
+            is Outcome.Ok ->
+                prompt.copy(attachments = emptyList(), attachmentRefs = stored.value).ok()
+            is Outcome.Failed -> stored
+        }
+    }
+
+    /**
+     * Saves [prompt] under its id. Refused when the profile is gone, the id repeats, the shelf
+     * holds 50 (a saved prompt is never evicted), or the identity or location holds something
+     * secret-like.
      */
     public suspend fun stash(profile: String, prompt: StashedPrompt): Outcome<Unit> {
-        val snapshot = prompt.copy(attachments = prompt.attachments.toList(), references = prompt.references.toList())
+        val snapshot =
+            prompt.copy(
+                attachments = prompt.attachments.toList(),
+                references = prompt.references.toList(),
+            )
         return lane.withLock {
-            current(profile)?.let { return@withLock it.failed() }
-            if (snapshot.id.isEmpty() || listOfNotNull(snapshot.id, snapshot.directory, snapshot.workspace).any(redactor::containsSecret)) {
-                return@withLock Failure.StorageRefused().failed()
+            current(profile)?.let {
+                return@withLock it.failed()
             }
-            if (snapshot.attachmentRefs.isNotEmpty()) return@withLock Failure.StorageRefused().failed()
+            if (snapshot.id.isEmpty() || snapshot.attachmentRefs.isNotEmpty())
+                return@withLock Failure.StorageRefused().failed()
+            val safe =
+                try {
+                    SavedPromptSafety(redactor).sanitize(profile, snapshot)
+                } catch (e: StoredFormatException) {
+                    return@withLock Failure.StorageRefused().failed()
+                }
             val existing =
                 try {
                     readStashes(profile)
                 } catch (e: StoredFormatException) {
                     return@withLock Failure.StorageRefused().failed()
                 }
-            if (existing.any { it.id == snapshot.id }) return@withLock Failure.StorageRefused().failed()
+            if (existing.any { it.id == snapshot.id })
+                return@withLock Failure.StorageRefused().failed()
             if (existing.size >= CAPACITY) return@withLock Failure.StorageRefused().failed()
             if (!collect(profile)) return@withLock Failure.StorageRefused().failed()
             try {
                 val saved =
-                    when (val r = externalize(profile, snapshot)) {
+                    when (val r = externalize(profile, safe)) {
                         is Outcome.Ok -> r.value
                         is Outcome.Failed -> return@withLock r
                     }
-                if (current(profile) != null) return@withLock Failure.Refused(RefusalReason.ProfileDeleted).failed()
-                if (!prefs.commit { putString(stashKey(profile, saved.id), saved.toJson().toString()) }) {
+                if (current(profile) != null)
+                    return@withLock Failure.Refused(RefusalReason.ProfileDeleted).failed()
+                if (
+                    !prefs.commit {
+                        putString(stashKey(profile, saved.id), saved.toJson().toString())
+                    }
+                ) {
                     return@withLock Failure.StorageRefused().failed()
                 }
                 Unit.ok()
@@ -173,15 +205,26 @@ public class PromptShelf(
     }
 
     /** Removes one saved prompt and then its unreferenced payloads. */
-    public suspend fun remove(profile: String, id: String): Outcome<Unit> =
-        lane.withLock {
-            current(profile)?.let { return@withLock it.failed() }
-            if (!adoptExisting(profile)) return@withLock Failure.StorageRefused().failed()
-            if (!prefs.commit { remove(stashKey(profile, id)) }) return@withLock Failure.StorageRefused().failed()
-            if (!collect(profile)) Failure.StorageRefused().failed() else Unit.ok()
+    public suspend fun remove(profile: String, id: String): Outcome<Unit> = lane.withLock {
+        current(profile)?.let {
+            return@withLock it.failed()
         }
+        if (retained(profile) == null || !adoptExisting(profile))
+            return@withLock Failure.StorageRefused().failed()
+        if (!prefs.commit { remove(stashKey(profile, id)) })
+            return@withLock Failure.StorageRefused().failed()
+        // Deletion has committed. Keep its acknowledgement (and Undo) even if cleanup fails. The
+        // durable
+        // owner marker remains, so a later stash, removal or profile cleanup retries the orphan
+        // collection.
+        collect(profile)
+        Unit.ok()
+    }
 
-    /** Records an owner marker for older file-backed records before their metadata goes (or when unreadable). */
+    /**
+     * Records an owner marker for older file-backed records before their metadata goes (or when
+     * unreadable).
+     */
     private suspend fun adoptExisting(profile: String): Boolean {
         if (prefs.contains(ownerKey(profile))) return ensureOwner(profile)
         val mayHaveFiles =
@@ -193,31 +236,46 @@ public class PromptShelf(
         return !mayHaveFiles || ensureOwner(profile)
     }
 
-    /** Reads the files back without consuming the saved prompt; the caller rechecks place and conversation. */
-    public suspend fun restoreAttachments(profile: String, id: String, sameLocation: Boolean): Outcome<AttachmentRecovery> =
-        lane.withLock {
-            current(profile)?.let { return@withLock it.failed() }
-            val prompt =
-                when (val all = stashes(profile)) {
-                    is Outcome.Ok -> all.value.firstOrNull { it.id == id } ?: return@withLock Failure.StorageRefused().failed()
-                    is Outcome.Failed -> return@withLock all
-                }
-            if (prompt.attachmentRefs.isNotEmpty()) return@withLock vault.restore(profile, prompt.attachmentRefs, sameLocation).ok()
-            val (available, unavailable) =
-                prompt.attachments.partition {
-                    schemeOf(it.url) in setOf("data", "file", "http", "https") && (sameLocation || schemeOf(it.url) != "file")
-                }
-            AttachmentRecovery(available, unavailable.map { it.filename }).ok()
+    /**
+     * Reads the files back without consuming the saved prompt; the caller rechecks place and
+     * conversation.
+     */
+    public suspend fun restoreAttachments(
+        profile: String,
+        id: String,
+        sameLocation: Boolean,
+    ): Outcome<AttachmentRecovery> = lane.withLock {
+        current(profile)?.let {
+            return@withLock it.failed()
         }
+        val prompt =
+            when (val all = stashes(profile)) {
+                is Outcome.Ok ->
+                    all.value.firstOrNull { it.id == id }
+                        ?: return@withLock Failure.StorageRefused().failed()
+                is Outcome.Failed -> return@withLock all
+            }
+        if (prompt.attachmentRefs.isNotEmpty())
+            return@withLock vault.restore(profile, prompt.attachmentRefs, sameLocation).ok()
+        val (available, unavailable) =
+            prompt.attachments.partition {
+                schemeOf(it.url) in setOf("data", "file", "http", "https") &&
+                    (sameLocation || schemeOf(it.url) != "file")
+            }
+        AttachmentRecovery(available, unavailable.map { it.filename }).ok()
+    }
 
     /**
-     * Deletes a saved prompt at once and returns its Undo, which puts back the exact text, metadata and bytes
-     * (B-STATE-085). Undo is single use and refused once the profile is gone (B-STATE-086).
+     * Deletes a saved prompt at once and returns its Undo, which puts back the exact text, metadata
+     * and bytes (B-STATE-085). Undo is single use and refused once the profile is gone
+     * (B-STATE-086).
      */
     public suspend fun deleteWithUndo(profile: String, id: String): Outcome<SavedPromptUndo> {
         val prompt =
             when (val all = stashes(profile)) {
-                is Outcome.Ok -> all.value.firstOrNull { it.id == id } ?: return Failure.StorageRefused().failed()
+                is Outcome.Ok ->
+                    all.value.firstOrNull { it.id == id }
+                        ?: return Failure.StorageRefused().failed()
                 is Outcome.Failed -> return all
             }
         val files =
@@ -225,29 +283,42 @@ public class PromptShelf(
                 is Outcome.Ok -> r.value
                 is Outcome.Failed -> return r
             }
-        val original = prompt.copy(attachments = prompt.attachments.ifEmpty { files.attachments }, attachmentRefs = emptyList())
+        val original =
+            prompt.copy(
+                attachments = prompt.attachments.ifEmpty { files.attachments },
+                attachmentRefs = emptyList(),
+            )
         return when (val removed = remove(profile, id)) {
             is Outcome.Failed -> removed
             is Outcome.Ok -> SavedPromptUndo { stash(profile, original) }.ok()
         }
     }
 
-    /** Remembers a sent prompt (newest first, deduplicated, 50). A late send after deletion writes nothing. */
-    public suspend fun recordSent(profile: String, text: String): Outcome<Unit> =
-        lane.withLock {
-            current(profile)?.let { return@withLock it.failed() }
-            if (text.isBlank()) return@withLock Unit.ok()
-            val next = (listOf(text) + history(profile).filter { it != text }).take(CAPACITY)
-            if (prefs.commit { putString(historyKey(profile), JsonArray(next.map(::JsonPrimitive)).toString()) }) {
-                Unit.ok()
-            } else {
-                Failure.StorageRefused().failed()
-            }
+    /**
+     * Remembers a sent prompt (newest first, deduplicated, 50). A late send after deletion writes
+     * nothing.
+     */
+    public suspend fun recordSent(profile: String, text: String): Outcome<Unit> = lane.withLock {
+        current(profile)?.let {
+            return@withLock it.failed()
         }
+        if (text.isBlank()) return@withLock Unit.ok()
+        val next = (listOf(text) + history(profile).filter { it != text }).take(CAPACITY)
+        if (
+            prefs.commit {
+                putString(historyKey(profile), JsonArray(next.map(::JsonPrimitive)).toString())
+            }
+        ) {
+            Unit.ok()
+        } else {
+            Failure.StorageRefused().failed()
+        }
+    }
 
     /**
-     * Profile deletion: refuses later writes at once, then removes every saved prompt, the history, the payloads and
-     * finally the owner marker. False leaves something to retry (a retry also removes files orphaned by a failed run).
+     * Profile deletion: refuses later writes at once, then removes every saved prompt, the history,
+     * the payloads and finally the owner marker. False leaves something to retry (a retry also
+     * removes files orphaned by a failed run).
      */
     public suspend fun clearForProfile(profile: String): Boolean {
         while (true) {
@@ -258,7 +329,8 @@ public class PromptShelf(
             if (!adoptExisting(profile)) return@withLock false
             val prefix = "oc.promptStash.$profile."
             val keys = prefs.keys().filter { it.startsWith(prefix) || it == historyKey(profile) }
-            if (keys.isNotEmpty() && !prefs.commit { keys.forEach { remove(it) } }) return@withLock false
+            if (keys.isNotEmpty() && !prefs.commit { keys.forEach { remove(it) } })
+                return@withLock false
             if (!collect(profile)) return@withLock false
             !prefs.contains(ownerKey(profile)) || prefs.commit { remove(ownerKey(profile)) }
         }
@@ -273,16 +345,18 @@ public class PromptShelf(
     }
 }
 
-/** A one-use Undo (Flutter `SavedPromptUndo`): a second use, or one after the profile is gone, is refused. */
+/**
+ * A one-use Undo (Flutter `SavedPromptUndo`): a second use, or one after the profile is gone, is
+ * refused.
+ */
 public class SavedPromptUndo internal constructor(private val action: suspend () -> Outcome<Unit>) {
     private val lock = Mutex()
     private var used = false
 
-    public suspend fun undo(): Outcome<Unit> =
-        lock.withLock {
-            if (used) return@withLock Failure.Refused(RefusalReason.AlreadyAnswered).failed()
-            val result = action()
-            if (result is Outcome.Ok) used = true
-            result
-        }
+    public suspend fun undo(): Outcome<Unit> = lock.withLock {
+        if (used) return@withLock Failure.Refused(RefusalReason.AlreadyAnswered).failed()
+        val result = action()
+        if (result is Outcome.Ok) used = true
+        result
+    }
 }

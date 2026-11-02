@@ -89,9 +89,10 @@ oc_say "device: $serial online; installed versionCode ${installed:-none}"
 if [[ -n "$installed" ]] && ((installed > vc)); then
   oc_say "FAIL: the emulator has versionCode $installed > $vc; Android refuses the downgrade (never uninstall)"; oc_status 1; exit 1
 fi
-anim() { local v; for v in window_animation_scale transition_animation_scale animator_duration_scale; do
-  "$adb" -s "$serial" shell settings put global "$v" "$1"; done; }
-trap 'anim 1 >/dev/null 2>&1; oc_finish $?' EXIT
+anim() { local v rc=0; for v in window_animation_scale transition_animation_scale animator_duration_scale; do
+  "$adb" -s "$serial" shell settings put global "$v" "$1" || rc=1; done; return "$rc"; }
+oc_restore_animations() { anim 1 >/dev/null 2>&1; }
+OC_CLEANUP=oc_restore_animations
 
 runpy=(python3 -I "$OC_NATIVE/e2e/runner/run.py" --app native --variant "$variant" --apk "$apk" --serial "$serial"
   --expect-signer "$signer" --lock "$OC_RUN_DIR/inner.lock" --skip-resource-checks)
@@ -104,13 +105,13 @@ anim 1
 oc_step flows-animations-on "${runpy[@]}" --flows E2E-05 --out "$OC_RUN_DIR/flows-anim" || oc_status 1
 
 # 6. instrumented classes
-oc_step instrumented env ANDROID_SERIAL="$serial" "$OC_TOOL_DIR/lib/gradlew.sh" \
+oc_step instrumented oc_with_lock "$(oc_build_lock_file)" env ANDROID_SERIAL="$serial" "$OC_TOOL_DIR/lib/gradlew.sh" \
   :androidApp:connectedStableReleaseAndroidTest
 rc=$?
 if ((rc != 0)); then
   m="$(oc_gradle_missing_tasks "$OC_RUN_DIR/instrumented.log")"
   [[ -n "$m" ]] && oc_say "  MISSING: $m"
-  oc_status 1
+  if ((rc == 75)); then oc_status 2; else oc_status 1; fi
 fi
 
 # 7. S-28 sweep

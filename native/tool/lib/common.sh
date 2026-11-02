@@ -35,10 +35,10 @@ oc_changed_files() {
   top="$(oc_repo_root)" || return 2
   mb="$(git -C "$top" merge-base "$base" HEAD)" || return 2
   {
-    git -C "$top" diff --name-only "$mb" HEAD
-    git -C "$top" diff --name-only --cached
-    git -C "$top" diff --name-only
-    git -C "$top" ls-files --others --exclude-standard
+    git -C "$top" diff --name-only "$mb" HEAD || return 2
+    git -C "$top" diff --name-only --cached || return 2
+    git -C "$top" diff --name-only || return 2
+    git -C "$top" ls-files --others --exclude-standard || return 2
   } | sed '/^$/d' | sort -u
 }
 
@@ -82,6 +82,7 @@ oc_module_test_tasks() {
   [[ -f "$bf" ]] || return 1
   if grep -qE 'id\("oc\.kmp\.' "$bf"; then
     echo desktopTest
+    echo compileAndroidMain
     if [[ -d "$dir/src/androidHostTest" ]]; then
       if grep -q 'libs.plugins.roborazzi' "$bf"; then
         [[ "$mode" == record ]] && echo recordRoborazziAndroidHostTest || echo verifyRoborazziAndroidHostTest
@@ -111,7 +112,10 @@ oc_run_init() {
   OC_RUN_START=$(date +%s)
   OC_STATUS=0
   export OC_RUN_DIR OC_SUMMARY
-  trap 'oc_finish $?' EXIT
+  trap 'oc_cleanup_finish $?' EXIT
+  trap 'oc_terminate 130' INT
+  trap 'oc_terminate 143' TERM
+  trap 'oc_terminate 129' HUP
   oc_say "run: $1 $2"
   oc_say "date: $(date -u +%Y-%m-%dT%H:%M:%SZ)  host-role: ${OC_HOST_ROLE:-unset}  cwd: native/"
 }
@@ -120,6 +124,36 @@ oc_say() { printf '%s\n' "$*" | tee -a "${OC_SUMMARY:-/dev/null}"; }
 
 # Raise the run status: 1 beats 0, 2 beats both (a run that could not happen is never a pass).
 oc_status() { local s="$1"; (( s > OC_STATUS )) && OC_STATUS=$s; return 0; }
+
+# Keep the active step in its own process group so cancellation stops grandchildren too.
+oc_stop_step() {
+  if [[ -n "${OC_STEP_PID:-}" ]]; then
+    local deadline=$((SECONDS + 5))
+    kill -TERM -- "-$OC_STEP_PID" 2>/dev/null || true
+    # A wrapper may exit before its grandchildren. Ignore zombies, but wait for every live member of the group.
+    while ps -eo pgid=,stat= | awk -v group="$OC_STEP_PID" \
+      '$1 == group && $2 !~ /^Z/ { live = 1 } END { exit !live }'; do
+      ((SECONDS < deadline)) || kill -KILL -- "-$OC_STEP_PID" 2>/dev/null || true
+      sleep 0.05
+    done
+    wait "$OC_STEP_PID" 2>/dev/null || true
+    OC_STEP_PID=""
+  fi
+}
+oc_terminate() {
+  oc_status 2
+  oc_stop_step
+  exit "$1"
+}
+oc_cleanup_finish() {
+  local rc="$1"
+  trap - INT TERM HUP
+  oc_stop_step
+  if [[ -n "${OC_CLEANUP:-}" ]]; then
+    "$OC_CLEANUP" || oc_status 2
+  fi
+  oc_finish "$rc"
+}
 
 oc_finish() {
   local rc="$1"
@@ -142,7 +176,14 @@ oc_step() {
   local log="$OC_RUN_DIR/$name.log" t0 rc
   oc_say "step $name: $(oc_quote "$@")"
   t0=$(date +%s)
-  "$@" >"$log" 2>&1; rc=$?
+  local monitor=0
+  [[ $- == *m* ]] && monitor=1
+  set -m
+  (set +m; "$@") >"$log" 2>&1 &
+  OC_STEP_PID=$!
+  ((monitor)) || set +m
+  wait "$OC_STEP_PID"; rc=$?
+  OC_STEP_PID=""
   oc_say "step $name: exit $rc in $(( $(date +%s) - t0 )) s (log: ${log#"$OC_NATIVE/"})"
   return $rc
 }

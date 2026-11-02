@@ -31,3 +31,22 @@
 :engine:entry	S	coordinator	slice-2
 :engine:composer	S	chat-lead	slice-3
 :engine:runtime	S	runtime-owner	slice-3
+:engine:attention	S	attention-owner (widget ingress contract)	slice-4
+:android:agenthost	S	runtime-owner	slice-3
+:android:camera	F	QR-CAMERA	slice-3
+:android:media	S	media-lead	slice-3
+:android:notifications	F	NOTIFY (folds into S4-BG)	slice-4
+:android:voice	S	media-lead	slice-4
+:android:widgets	F	widgets (S4-WIDGETS)	slice-4
+:engine:agents	S	agents-owner	slice-2
+:engine:delivery	F	S2-DLV	slice-2
+:engine:media	S	media-lead	slice-3
+:engine:requests	S	chat-lead	slice-2
+:engine:voice	S	media-lead	slice-4
+:feature:agents	F	S3-AGENTSUI (S3-TERMMIN sign-in)	slice-3
+:feature:chat-composer	F	(slice brief names the agent)	slice-3
+:feature:onboarding	F	(slice brief names the agent)	slice-2
+:feature:phone	F	(slice brief names the agent)	slice-3
+:feature:settings	F	(slice brief names the agent)	slice-4
+:ui:kit-content	S	content-kit-owner	slice-3
+:feature:servers	F	preview-servers-owner	slice-2

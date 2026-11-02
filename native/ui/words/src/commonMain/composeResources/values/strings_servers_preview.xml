@@ -1,0 +1,28 @@
+<resources>
+    <string name="serversTitle">Servers</string>
+    <string name="serversNewTitle">New conversation</string>
+    <string name="serversSaved">Saved servers</string>
+    <string name="serversEmpty">Add an OpenCode 2 server to start a conversation.</string>
+    <string name="serversAdd">Add a server</string>
+    <string name="serversName">Name</string>
+    <string name="serversAddress">Server address</string>
+    <string name="serversUsername">Username</string>
+    <string name="serversPassword">Password</string>
+    <string name="serversCleartext">Allow HTTP for this address</string>
+    <string name="serversCleartextHelp">HTTP does not encrypt your password or conversations. Use it only on a network you trust.</string>
+    <string name="serversCleartextRequired">Confirm HTTP for this address before connecting.</string>
+    <string name="serversConnect">Connect</string>
+    <string name="serversConnected">Connected</string>
+    <string name="serversCreate">Start conversation</string>
+    <string name="serversSave">Save and connect</string>
+    <string name="serversRemove">Remove server</string>
+    <string name="serversCancel">Cancel</string>
+    <string name="serversRemoveConfirm">Remove %1$s and its saved connection details from this app?</string>
+    <string name="serversWorking">Please wait for the current action.</string>
+    <string name="serversInvalidAddress">Enter a server address.</string>
+    <string name="serversSaveFailed">Could not save this server. Check the address and try again.</string>
+    <string name="serversConnectFailed">Could not connect. Check the server address and network, then try again.</string>
+    <string name="serversCreateFailed">Could not start a conversation. Your server is still saved.</string>
+    <string name="serversRemoveFailed">Could not remove this server. Its saved details are unchanged.</string>
+    <string name="serversSignInFailed">The server did not accept these sign-in details. Check the username and password.</string>
+</resources>

@@ -68,4 +68,6 @@
     <string name="shellServerSwitching">Cambiando…</string>
     <string name="claudeImportTitle">Importar desde Claude Code</string>
     <string name="workServerRestartBodyCommand">El comando en ejecución también se detendrá. Tus conversaciones se conservan.</string>
+    <string name="chatsReturnBriefUnknown">No se puede saber qué hay de nuevo en este servidor</string>
+    <string name="chatsReturnBriefMore">y %1$d más</string>
 </resources>

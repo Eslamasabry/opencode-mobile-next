@@ -27,6 +27,8 @@ public class ChatViewModel(@Assisted route: ChatRoute, private val worlds: ChatW
     private val presenter =
         ChatPresenter(world, nav, { block -> viewModelScope.launch { block() } }, focusComposer = route.focusComposer)
 
+    public val requests = world.requests
+
     public val state: StateFlow<ChatUi> = presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(STOP_AFTER_MS))
 
     override fun onCleared() {
@@ -48,6 +50,8 @@ public class ChatViewModel(@Assisted route: ChatRoute, private val worlds: ChatW
     override fun findNext(): Unit = presenter.findNext()
 
     override fun findPrevious(): Unit = presenter.findPrevious()
+
+    override fun loadOlder(): Unit = presenter.loadOlder()
 
     override fun openTimeline(): Unit = presenter.openTimeline()
 

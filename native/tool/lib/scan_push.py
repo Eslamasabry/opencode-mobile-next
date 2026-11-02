@@ -36,7 +36,7 @@ EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-
 PERSONAL_DOMAINS = re.compile(
     r"@(?:gmail|googlemail|outlook|hotmail|live|yahoo|icloud|me|proton|protonmail|pm)\.(?:com|me|net|co\.uk)$", re.I
 )
-IPV4 = re.compile(r"(?<![\w.])(\d{1,3}(?:\.\d{1,3}){3})(?![\w]|\.\d)(/\d{1,2})?")
+IPV4 = re.compile(r"(?<![\w.])(\d{1,3}(?:\.\d{1,3}){3})(?![\w]|\.\d)(/\d+)?")
 IPV6 = re.compile(r"(?<![\w:])((?:f[cd][0-9a-f]{2}|fe[89ab][0-9a-f]):[0-9a-f:]*:[0-9a-f:]*)(/\d{1,3})?", re.I)
 # Tailnet and home.arpa names are private anywhere; .lan and .internal only as a URL or user@ host, because
 # "x.y.internal" is also a Kotlin package path.
@@ -45,6 +45,7 @@ PRIVATE_HOST = re.compile(
     r"|(?:://|@)[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:lan|internal)(?![\w.-])",
     re.I,
 )
+RANGE_LITERALS = {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10", "169.254.0.0/16"}
 CGNAT = ipaddress.ip_network("100.64.0.0/10")
 BAD_FILE = re.compile(
     r"(?:^|/)(?:[^/]+\.(?:jks|keystore|p12|pfx|key)|key\.properties|local\.properties|google-services\.json|\.env|"
@@ -98,21 +99,22 @@ def mask(value, rule):
         sep = "." if "." in value else ":"
         return value.split(sep)[0] + sep + "…"
     if rule == "private-host":
-        return "…" + value[-12:]
+        return "<redacted>"
     return value[:4] + "…(" + str(len(value)) + " chars)"
 
 
 def private_ip(text):
     for m in IPV4.finditer(text):
-        if m.group(2):  # CIDR notation names a range, not a host.
-            continue
         try:
             ip = ipaddress.IPv4Address(m.group(1))
         except ValueError:
             continue
         s = str(ip)
-        if s.endswith(".0") or s.endswith(".255"):
-            continue  # a network or broadcast address names a range boundary, not a host
+        # Only canonical RFC range literals are exempt, and never in a URL authority.
+        literal = m.group(0)
+        url_host = re.search(r"[a-z][a-z0-9+.-]*://[^/\s]*$", text[:m.start()], re.I)
+        if not url_host and literal in RANGE_LITERALS:
+            continue
         # RFC 1918, link-local and the tailnet range; not loopback, documentation or benchmark ranges.
         if (
             ip in ipaddress.ip_network("10.0.0.0/8")
@@ -123,7 +125,7 @@ def private_ip(text):
         ):
             yield "private-ip", s
     for m in IPV6.finditer(text):
-        if m.group(2):
+        if m.group(0).lower() in {"fc00::/7", "fe80::/10"}:
             continue
         try:
             ipaddress.IPv6Address(m.group(1))
@@ -177,6 +179,13 @@ def scan_patch(lines, label):
             cols = 2 if raw.startswith("diff --cc ") else 1
             path = raw.split(" b/", 1)[-1] if " b/" in raw else raw.split()[-1]
             lineno = 0
+            if BAD_FILE.search(path):
+                report(label + "destination", "forbidden-file", path)
+            continue
+        if raw.startswith("rename to "):
+            path = raw[len("rename to "):]
+            if BAD_FILE.search(path):
+                report(label + "destination", "forbidden-file", path)
             continue
         if raw.startswith("+++ "):
             p = raw[4:]
@@ -217,6 +226,7 @@ def main():
         for chunk in data.split("\x00\x01")[1:]:
             commits += 1
             head, _, patch = chunk.partition("\x00\x02")
+            patch, _, destinations = patch.partition("\x00\x03")
             sha, author, committer, message = (head.split("\x1f") + ["", "", "", ""])[:4]
             label = sha[:8] + " "
             for who, email in (("author", author), ("committer", committer)):
@@ -226,6 +236,9 @@ def main():
                 for rule, value in scan_text(line):
                     report("%smessage:%d" % (label, i), rule, value)
             scan_patch(patch.split("\n"), label)
+            for path in destinations.split("\x00"):
+                if BAD_FILE.search(path):
+                    report(label + "destination", "forbidden-file", path)
     scope = ("%d commit(s)" % commits) if mode == "--commits" else "the patch"
     if hits:
         print("scan_push: %d hit(s) in %s; push blocked (allow-list: native/tool/scan_push.allow)" % (hits, scope))

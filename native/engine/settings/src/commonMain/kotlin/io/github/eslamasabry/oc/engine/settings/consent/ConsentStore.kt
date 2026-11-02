@@ -3,14 +3,15 @@ package io.github.eslamasabry.oc.engine.settings.consent
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.dart.DartJson
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefType
 import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
 import io.github.eslamasabry.oc.core.data.scope.KeyScope
 import io.github.eslamasabry.oc.core.data.scope.KeyShape
+import kotlin.concurrent.atomics.AtomicReference
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.coroutines.flow.Flow
@@ -21,7 +22,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
-import kotlin.concurrent.atomics.AtomicReference
 
 /**
  * The three-state consent read (plan 03 §10.2 `CleartextConsent` shape, plan 16 SI-22): a missing record is
@@ -114,6 +114,7 @@ public object ConsentKeys {
     public const val IN_FLOW_PREFIX: String = "oc.inFlowConsent."
     public const val SHARE_VIEWS_PREFIX: String = "oc.shareSessionViews."
     public const val SHARE_VIEWS_ORIGIN_PREFIX: String = "oc.shareSessionViewsOrigin."
+    public const val SHARE_VIEWS_OWNER_PREFIX: String = "oc.shareSessionViewsOwner."
     public const val SHARE_VIEWS_DEFAULT_PREFIX: String = "oc.shareSessionViewsDefault."
 
     /** The legacy app-wide value, read once by the read-state migration (L3). */
@@ -124,6 +125,7 @@ public object ConsentKeys {
     public fun inFlow(id: ProfileId): String = IN_FLOW_PREFIX + id.raw
     public fun shareViews(id: ProfileId): String = SHARE_VIEWS_PREFIX + id.raw
     public fun shareViewsOrigin(id: ProfileId): String = SHARE_VIEWS_ORIGIN_PREFIX + id.raw
+    public fun shareViewsOwner(id: ProfileId): String = SHARE_VIEWS_OWNER_PREFIX + id.raw
     public fun shareViewsDefault(id: ProfileId): String = SHARE_VIEWS_DEFAULT_PREFIX + id.raw
 
     private const val OWNER = ":engine:settings"
@@ -134,6 +136,7 @@ public object ConsentKeys {
         KeyShape(IN_FLOW_PREFIX, KeyScope.Profile, PrefType.Str, OWNER, "ask-once in-flow consents"),
         KeyShape(SHARE_VIEWS_PREFIX, KeyScope.Profile, PrefType.Bool, OWNER, "read-state sharing consent"),
         KeyShape(SHARE_VIEWS_ORIGIN_PREFIX, KeyScope.Profile, PrefType.Str, OWNER, "read-state consent origin"),
+        KeyShape(SHARE_VIEWS_OWNER_PREFIX, KeyScope.Profile, PrefType.Str, OWNER, "read-state consent owner digest"),
         KeyShape(SHARE_VIEWS_DEFAULT_PREFIX, KeyScope.Profile, PrefType.Bool, OWNER, "read-state consent default"),
         KeyShape(READ_STATE_MIGRATION, KeyScope.Other, PrefType.Str, OWNER, "L3 read-state migration journal"),
     )

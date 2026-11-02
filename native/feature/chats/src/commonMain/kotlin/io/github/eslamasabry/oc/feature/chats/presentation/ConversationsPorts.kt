@@ -2,8 +2,8 @@ package io.github.eslamasabry.oc.feature.chats.presentation
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
-import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provides
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -17,9 +17,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * The Conversations list's read side: the merged `ChatFeed` of `:engine:agents` for the saved connections. The
- * connection owner binds the real one (one `OpenCodeChatFeedSource` per live graph) with `replaces =
- * [QuietConversationsFeed::class]`; until then the list says "No conversations yet".
+ * The Conversations list's read side: the merged `ChatFeed` of `:engine:agents` for the saved
+ * connections. The connection owner binds the real one (one `OpenCodeChatFeedSource` per live
+ * graph) with `replaces = [QuietConversationsFeed::class]`; until then the list says "No
+ * conversations yet".
  */
 public interface ConversationsFeed {
     public val snapshot: StateFlow<ChatFeedSnapshot>
@@ -31,13 +32,17 @@ public interface ConversationsFeed {
 public interface ReturnBriefFeed {
     public val brief: StateFlow<ReturnBrief>
 
-    /** Acknowledges exactly the rows of [shown] (`ReturnBriefStore.acknowledge`). */
+    /**
+     * Acknowledges exactly the rendered rows of [shown] (`ReturnBriefStore.acknowledge`). Route by
+     * [ReturnBrief.scope] (the captured profile and location), never by the active profile or
+     * latest brief at dispatch time.
+     */
     public suspend fun dismiss(shown: ReturnBrief): Outcome<Unit>
 }
 
 /**
- * The gear: opens Settings. `:ui:routes` has no Settings key yet (route request in the S2-CHATS report), so the
- * default door is closed and the gear is absent, never dead (02 §3.7).
+ * The gear: opens Settings. `:ui:routes` has no Settings key yet (route request in the S2-CHATS
+ * report), so the default door is closed and the gear is absent, never dead (02 §3.7).
  */
 public interface SettingsDoor {
     public val available: Boolean
@@ -48,7 +53,8 @@ public interface SettingsDoor {
 @ContributesBinding(AppScope::class)
 @Inject
 public class QuietConversationsFeed : ConversationsFeed {
-    override val snapshot: StateFlow<ChatFeedSnapshot> = MutableStateFlow(ChatFeedSnapshot()).asStateFlow()
+    override val snapshot: StateFlow<ChatFeedSnapshot> =
+        MutableStateFlow(ChatFeedSnapshot()).asStateFlow()
 
     override suspend fun refresh(): Outcome<Unit> = Unit.ok()
 }
@@ -69,7 +75,10 @@ public class ClosedSettingsDoor : SettingsDoor {
     override fun open(): Unit = Unit
 }
 
-/** Engine types the list needs, bound here because app graphs depend on this module, not on `:engine:agents`. */
+/**
+ * Engine types the list needs, bound here because app graphs depend on this module, not on
+ * `:engine:agents`.
+ */
 @BindingContainer
 @ContributesTo(AppScope::class)
 public object ChatsBindings {

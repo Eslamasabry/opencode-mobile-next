@@ -13,13 +13,19 @@ import io.github.eslamasabry.oc.core.testing.TestClock
 import io.github.eslamasabry.oc.core.testing.TestDispatchers
 import io.github.eslamasabry.oc.core.testing.TestPacer
 import io.github.eslamasabry.oc.core.testing.assertTimerTable
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -411,6 +417,261 @@ class RequestsEngineTest {
             engine.answer(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once))
             engine.close()
             assertEquals(listOf("reply p1 Once"), port.replies)
+        }
+
+    @Test
+    fun `B-AGENT-031 req-1 cancelling the initiating caller does not strand the shared write`() =
+        runTest {
+            val engine = engine()
+            ask(permission("p1"))
+            val gate = CompletableDeferred<Unit>()
+            port.replyGate = gate
+            val first = async {
+                engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once))
+            }
+            runCurrent()
+            val second = async {
+                engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Reject))
+            }
+            runCurrent()
+            first.cancelAndJoin()
+            gate.complete(Unit)
+            runCurrent()
+            val completed = second.isCompleted
+            if (!completed) second.cancelAndJoin()
+            assertTrue(completed, "the remaining caller must receive the shared result")
+            assertEquals(Outcome.Ok(Unit), second.await())
+            assertIs<AnswerPhase.Sent>(engine.phaseOf("p1"))
+            assertEquals(listOf("reply p1 Once"), port.replies)
+        }
+
+    @Test
+    fun `B-PROTO-048 req-2 settlement during transport wake resolves both callers without dispatch`() =
+        runTest {
+            val engine = engine()
+            ask(permission("p1"))
+            val gate = CompletableDeferred<Unit>()
+            port.wakeGate = gate
+            val first = async {
+                engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once))
+            }
+            runCurrent()
+            val second = async {
+                engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Reject))
+            }
+            runCurrent()
+            port.events.emit(GatewayEvent.PermissionSettled(S1, RequestId("p1")))
+            runCurrent()
+            gate.complete(Unit)
+            assertEquals(Outcome.Ok(Unit), first.await())
+            assertEquals(Outcome.Ok(Unit), second.await())
+            assertEquals(emptyList(), port.replies)
+            assertEquals(emptyList(), engine.pending.value)
+        }
+
+    @Test
+    fun `B-AGENT-031 req-1 connection cancellation completes the shared result as uncertain without replay`() =
+        runTest {
+            val owner = CoroutineScope(backgroundScope.coroutineContext + Job(backgroundScope.coroutineContext[Job]))
+            val engine = engine(owner)
+            ask(permission("p1"))
+            port.replyGate = CompletableDeferred()
+            val caller = async { engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)) }
+            runCurrent()
+            owner.cancel()
+            runCurrent()
+            val completed = caller.isCompleted
+            if (!completed) caller.cancelAndJoin()
+            assertTrue(completed)
+            assertEquals(Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain)), caller.await())
+            assertIs<AnswerPhase.NotAccepted>(engine.phaseOf("p1"))
+            port.replyGate?.complete(Unit)
+            runCurrent()
+            assertEquals(1, port.replies.size)
+        }
+
+    @Test
+    fun `B-PROTO-048 req-2 settlement at claim publication never loses the captured entry`() =
+        runTest {
+            val dispatcher = UnconfinedTestDispatcher(testScheduler)
+            val engine = RequestsEngine(port, backgroundScope, TestDispatchers(dispatcher), clock, TestPacer())
+            ask(permission("p1"))
+            backgroundScope.launch(dispatcher) {
+                engine.pending.collect { pending ->
+                    if (pending.any { it.phase is AnswerPhase.Sending }) {
+                        port.events.emit(GatewayEvent.PermissionSettled(S1, RequestId("p1")))
+                    }
+                }
+            }
+            assertEquals(Outcome.Ok(Unit), engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)))
+            assertEquals(emptyList(), engine.pending.value)
+            assertEquals(emptyList(), port.replies)
+        }
+
+    @Test
+    fun `B-PROTO-048 req-3 project snapshots never admit or tombstone another projects asks`() =
+        runTest {
+            val engine = engine()
+            port.events.currentDirectory = "/project-a"
+            port.permissions = listOf(permission("a"))
+            port.events.emit(GatewayEvent.PermissionAsked(permission("a")), directory = "/project-a")
+            port.events.emit(GatewayEvent.PermissionAsked(permission("b", session = S2)), directory = "/project-b")
+            runCurrent()
+            // Other-project attention belongs to its owner; this engine must not accept an answer for B.
+            assertIs<Outcome.Failed>(engine.answer(RequestId("b"), RequestAnswer.Permission(PermissionReply.Once)))
+            engine.refresh()
+            port.events.currentDirectory = "/project-b"
+            port.permissions = listOf(permission("b", session = S2))
+            engine.refresh()
+            assertEquals(listOf("b"), engine.pending.value.map { it.id.raw })
+            assertEquals(Outcome.Ok(Unit), engine.answer(RequestId("b"), RequestAnswer.Permission(PermissionReply.Once)))
+            engine.flushHeld(S2)
+            assertEquals(listOf("reply b Once"), port.replies)
+        }
+
+    @Test
+    fun `B-CHAT-076 req-4 generic not found without an id keeps a listed request retryable`() =
+        runTest {
+            val engine = engine()
+            ask(permission("p1"))
+            val failure = Failure.NotFound(WireTag("NotFoundError"), null)
+            port.failNextReply = failure
+            assertEquals(Outcome.Failed(failure), engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)))
+            assertIs<AnswerPhase.NotAccepted>(engine.phaseOf("p1"))
+            assertEquals(Outcome.Ok(Unit), engine.retry(RequestId("p1")))
+            assertEquals(2, port.replies.size)
+        }
+
+    @Test
+    fun `B-CHAT-076 req-4 wrong request-kind and mismatched-id errors do not resolve listed permissions`() =
+        runTest {
+            val engine = engine()
+            val failures = listOf(
+                Failure.NotFound(WireTag("NotFoundError"), RequestId("p0")),
+                Failure.NotFound(WireTag("SessionNotFoundError"), RequestId("p1")),
+                Failure.NotFound(WireTag("QuestionNotFoundError"), null),
+                Failure.NotFound(WireTag("PermissionNotFoundError"), RequestId("other")),
+            )
+            failures.forEachIndexed { index, failure ->
+                val id = "p$index"
+                ask(permission(id))
+                port.failNextReply = failure
+                assertEquals(Outcome.Failed(failure), engine.answerNow(RequestId(id), RequestAnswer.Permission(PermissionReply.Once)))
+                assertIs<AnswerPhase.NotAccepted>(engine.phaseOf(id))
+            }
+            assertEquals(failures.size, port.replies.size)
+        }
+
+    @Test
+    fun `B-CHAT-072 req-5 direct engine commands reject invalid question payloads without writes`() =
+        runTest {
+            val engine = engine()
+            val q =
+                question("q1").let {
+                    it.copy(prompts = persistentListOf(it.prompts.single().copy(custom = false)))
+                }
+            port.questions = listOf(q)
+            engine.refresh()
+            val invalid =
+                listOf(
+                    persistentListOf(), // missing prompt
+                    persistentListOf(
+                        persistentListOf<String>(),
+                        persistentListOf("Yes"),
+                    ), // extra prompt
+                    answers(), // required prompt left empty
+                    answers("Maybe"), // not offered, no custom answer
+                    answers("Yes", "No"), // single-choice cardinality
+                    answers("Yes", "Yes"), // duplicate selection
+                    answers("   "), // blank text
+                )
+            invalid.forEach { payload ->
+                assertIs<Outcome.Failed>(
+                    engine.answer(RequestId("q1"), RequestAnswer.Question(payload))
+                )
+                assertIs<Outcome.Failed>(
+                    engine.answerNow(RequestId("q1"), RequestAnswer.Question(payload))
+                )
+                assertIs<AnswerPhase.Waiting>(engine.phaseOf("q1"))
+            }
+            engine.flushHeld(S1)
+            assertEquals(emptyList(), port.replies)
+            assertEquals(
+                Outcome.Ok(Unit),
+                engine.answerNow(RequestId("q1"), RequestAnswer.Question(answers("Yes"))),
+            )
+            assertEquals(listOf("answer q1 [[Yes]]"), port.replies)
+        }
+
+    @Test
+    fun `B-CHAT-072 req-5 valid optional custom multiple and multi-prompt answers still send`() =
+        runTest {
+            val engine = engine()
+            val optional =
+                question("optional").let {
+                    it.copy(
+                        prompts =
+                            persistentListOf(
+                                it.prompts.single().copy(optional = true, custom = false)
+                            )
+                    )
+                }
+            val multiple =
+                question("multiple", multiple = true).let {
+                    it.copy(prompts = persistentListOf(it.prompts.single().copy(custom = false)))
+                }
+            port.questions =
+                listOf(question("custom"), optional, multiple, question("many", prompts = 2))
+            engine.refresh()
+            val payloads =
+                listOf(
+                    "custom" to answers("Later"),
+                    "optional" to answers(),
+                    "multiple" to answers("Yes", "No"),
+                    "many" to persistentListOf(persistentListOf("Yes"), persistentListOf("No")),
+                )
+            payloads.forEach { (id, values) ->
+                assertEquals(
+                    Outcome.Ok(Unit),
+                    engine.answerNow(RequestId(id), RequestAnswer.Question(values)),
+                )
+            }
+            assertEquals(
+                listOf(
+                    "answer custom [[Later]]",
+                    "answer optional [[]]",
+                    "answer multiple [[Yes, No]]",
+                    "answer many [[Yes], [No]]",
+                ),
+                port.replies,
+            )
+        }
+
+    @Test
+    fun `B-CHAT-072 req-5 held answers are checked against updated prompts before claiming`() =
+        runTest {
+            val engine = engine()
+            val original = question("q1")
+            port.questions = listOf(original)
+            engine.refresh()
+            assertEquals(
+                Outcome.Ok(Unit),
+                engine.answer(RequestId("q1"), RequestAnswer.Question(answers("Later"))),
+            )
+            port.questions =
+                listOf(
+                    original.copy(
+                        prompts = persistentListOf(original.prompts.single().copy(custom = false))
+                    )
+                )
+            engine.refresh()
+            engine.flushHeld(S1)
+            assertEquals(emptyList(), port.replies)
+            assertIs<AnswerPhase.NotAccepted>(engine.phaseOf("q1"))
+            assertIs<Outcome.Failed>(engine.retry(RequestId("q1")))
+            advanceTimeBy(HELD_ANSWER + 1.milliseconds)
+            runCurrent()
+            assertEquals(emptyList(), port.replies)
         }
 
     @Test

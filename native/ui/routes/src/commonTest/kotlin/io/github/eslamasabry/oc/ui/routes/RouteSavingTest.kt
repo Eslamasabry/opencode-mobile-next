@@ -4,10 +4,10 @@ import androidx.navigation3.runtime.NavKey
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
-import kotlinx.serialization.PolymorphicSerializer
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.serialization.PolymorphicSerializer
+import kotlinx.serialization.json.Json
 
 /** P-03-5: subclassesOfSealed registers nested sealed routes declared across files. */
 class RouteSavingTest {
@@ -17,6 +17,7 @@ class RouteSavingTest {
     private val samples: List<AppRoute> =
         listOf(
             ChatsRoute.Home,
+            ServersRoute.Home,
             ChatsRoute.All("running"),
             ChatsRoute.New(ProfileId("p1"), draftKey = "d1"),
             ChatRoute(ConversationRef(ProfileId("p1"), SessionId("s1")), focusComposer = true),

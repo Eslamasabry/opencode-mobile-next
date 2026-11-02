@@ -105,6 +105,7 @@ public fun KitSwitchRow(
     val hapticsOn = LocalKitAppearance.current.haptics
     var asking by rememberSaveable { mutableStateOf(false) }
     val on = enabled.isEnabled
+    val canConfirm = on && !locked && !checked && risk != null && asking
     Column(modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth()
@@ -151,10 +152,13 @@ public fun KitSwitchRow(
                     KitButton(
                         label = stringResource(Res.string.kitRiskTurnOn),
                         onClick = {
-                            asking = false
-                            onCheckedChange(true)
+                            if (canConfirm) {
+                                asking = false
+                                onCheckedChange(true)
+                            }
                         },
                         role = KitButtonRole.Secondary,
+                        enabled = if (canConfirm) KitEnabled.Enabled else KitEnabled.Disabled(enabled.reason ?: title),
                         haptic = KitHaptic.ToggleOn,
                     )
                     KitButton(label = stringResource(Res.string.kitRiskNotNow), onClick = { asking = false }, role = KitButtonRole.Tertiary)

@@ -95,7 +95,7 @@ public class ChatPresenter(
     public fun current(): ChatUi {
         val inputs = inputsNow()
         val l = local.value
-        val hits = l.findQuery?.let { TranscriptFind.search(inputs.transcript.rows, it) } ?: persistentListOf()
+        val hits = l.findQuery?.let { TranscriptFind.search(inputs.transcript, it) } ?: persistentListOf()
         return present(inputs, l, hits)
     }
 
@@ -104,7 +104,7 @@ public class ChatPresenter(
         val hits =
             combine(world.transcript, local.map { it.findQuery }.distinctUntilChanged()) { t, q -> t to q }
                 .conflate()
-                .map { (t, q) -> if (q == null) persistentListOf() else TranscriptFind.search(t.rows, q) }
+                .map { (t, q) -> if (q == null) persistentListOf() else TranscriptFind.search(t, q) }
                 .flowOn(work)
         val inputs =
             combine(world.transcript, world.load, world.title, world.capabilities, world.link) { t, l, ti, c, k ->
@@ -113,7 +113,7 @@ public class ChatPresenter(
                 .combine(world.draft) { (f, p), d -> ChatInputs(f.t, f.l, f.ti, f.c, f.k, p, d) }
         // Read acknowledgement follows the world, not the screen's composition (plan 09 §6.7).
         combine(world.load, world.transcript, local) { _, _, _ -> syncRead() }.launchIn(scope)
-        return combine(inputs, local, hits) { i, l, h -> present(i, l, h) }
+        return combine(inputs, local, hits, world.hasOlder) { i, l, h, _ -> present(i, l, h) }
             .stateIn(scope, started, ChatUi.loading(world.ref))
     }
 
@@ -131,7 +131,7 @@ public class ChatPresenter(
         val cursor = TranscriptFind.keep(hits, l.findKey, l.findCursor)
         val hit = hits.getOrNull(cursor)
         val find = l.findQuery?.let { q ->
-            FindUi(q, hits.size, cursor, hit?.rowKey, hit?.let { t.indexOf(it.rowKey) } ?: -1, partial = false)
+            FindUi(q, hits.size, cursor, hit?.rowKey, hit?.let { t.indexOf(it.rowKey) } ?: -1, partial = world.hasOlder.value)
         }
         val arrival = l.arrival?.let { a ->
             val land = if (a.landOnFailure) Landing.newestFailedKey(t.rows)?.let(t::indexOf)?.takeIf { it >= 0 } else null
@@ -249,6 +249,8 @@ public class ChatPresenter(
     }
 
     /** Slice 2: the timeline sheet is S4's; until it lands the pill opens find, the in-chat way to a message. */
+    override fun loadOlder() { launcher.launch { world.loadOlder() } }
+
     override fun openTimeline() {
         if (local.value.findQuery == null) find("")
     }

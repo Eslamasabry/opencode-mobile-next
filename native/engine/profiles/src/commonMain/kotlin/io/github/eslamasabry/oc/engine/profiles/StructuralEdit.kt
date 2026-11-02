@@ -2,11 +2,12 @@ package io.github.eslamasabry.oc.engine.profiles
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
-import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLane
@@ -234,28 +235,56 @@ public class EmbeddedRecordCleaner(
     private val refuseUnreadable: Boolean = true,
 ) : ProfileResourceCleaner {
     override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> {
-        val before = LinkedHashMap<String, PrefValue>()
-        edit.keys.forEach { key -> kv.get(key)?.let { before[key] = it } }
-        val after = LinkedHashMap(before)
-        val removed = when (val result = edit.apply(after, profileId, options.structuralPlan)) {
-            is EmbeddedEditResult.Edited -> result.removed
-            EmbeddedEditResult.Unreadable ->
-                if (refuseUnreadable) return Failure.StorageRefused().failed() else 0
-        }
-        if (after == before) return removed.ok()
-        return kv.commit(lane) {
-            for (key in edit.keys) {
-                when (val value = after[key]) {
-                    null -> if (key in before) remove(key)
-                    before[key] -> Unit
-                    is PrefValue.Str -> putString(key, value.value)
-                    is PrefValue.Bool -> putBool(key, value.value)
-                    is PrefValue.Int64 -> putLong(key, value.value)
-                    is PrefValue.Dbl -> putDouble(key, value.value)
-                    is PrefValue.StrList -> putStringList(key, value.value)
-                    is PrefValue.Undecodable -> Unit
+        repeat(8) {
+            val expected = edit.keys.associateWith(kv::get)
+            val before = expected.filterValues { it != null }.mapValues { it.value!! }
+            val after = LinkedHashMap(before)
+            if (edit === FlutterEraEdits.OfflineQueue) {
+                val raw = (before["oc.offlineQueue"] as? PrefValue.Str)?.value
+                val actual = QueuedPromptRemovalPlan.fromSnapshot(profileId, raw)
+                if (actual is Outcome.Failed) return actual
+                val plan = (actual as Outcome.Ok).value
+                if (plan.records != "[]" && options.confirmedQueue != plan) return Failure.Refused(RefusalReason.StaleScope).failed()
+            }
+            val removed = when (val result = edit.apply(after, profileId, options.structuralPlan)) {
+                is EmbeddedEditResult.Edited -> result.removed
+                EmbeddedEditResult.Unreadable -> if (refuseUnreadable) return Failure.StorageRefused().failed() else 0
+            }
+            if (after == before) return removed.ok()
+            val written = kv.compareAndCommit(lane, expected) {
+                for (key in edit.keys) {
+                    when (val value = after[key]) {
+                        null -> if (key in before) remove(key)
+                        before[key] -> Unit
+                        is PrefValue.Str -> putString(key, value.value)
+                        is PrefValue.Bool -> putBool(key, value.value)
+                        is PrefValue.Int64 -> putLong(key, value.value)
+                        is PrefValue.Dbl -> putDouble(key, value.value)
+                        is PrefValue.StrList -> putStringList(key, value.value)
+                        is PrefValue.Undecodable -> Unit
+                    }
                 }
             }
-        }.map { removed }
+            when (written) {
+                is Outcome.Failed -> return written
+                is Outcome.Ok -> if (written.value) return removed.ok()
+            }
+            // B-STATE-063 eng-4: recompute against the acknowledged data after a conflicting writer.
+        }
+        return Failure.Refused(RefusalReason.StaleScope).failed()
+    }
+}
+
+/** Only the target's confirmed queued records; another profile's append does not invalidate it. */
+public class QueuedPromptRemovalPlan private constructor(private val profileId: ProfileId, internal val records: String) {
+    override fun equals(other: Any?): Boolean = other is QueuedPromptRemovalPlan && other.profileId == profileId && other.records == records
+    override fun hashCode(): Int = 31 * profileId.hashCode() + records.hashCode()
+    override fun toString(): String = "QueuedPromptRemovalPlan"
+
+    public companion object {
+        public fun fromSnapshot(profileId: ProfileId, raw: String?): Outcome<QueuedPromptRemovalPlan> {
+            val rows = if (raw == null) emptyList<Any?>() else DartJson.decodeOrNull(raw) as? List<*> ?: return Failure.StorageRefused().failed()
+            return QueuedPromptRemovalPlan(profileId, DartJson.encode(rows.filter { (it as? Map<*, *>)?.get("profileID") == profileId.raw })).ok()
+        }
     }
 }

@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.engine.delivery.port
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
@@ -52,15 +53,43 @@ public class GatewaySendLink(
     override suspend fun revertPending(session: SessionId): Outcome<Boolean> =
         gateway.session(session).map { it.reverted || it.stagedRevert != null }
 
+    /**
+     * Session-selection servers: mutate once (no retry), then read the session back — the server must hold exactly
+     * the requested provider, id and normalized variant before the choice counts; a stale or unknown readback fails
+     * closed and the session payload is never echoed into the failure. Without the facet the prompt's inline model
+     * stays the semantics, except a server that advertises `sessionModelProviderSwitching` without the facet: that
+     * fails closed rather than silently dropping a person's choice.
+     */
     override suspend fun applySelection(session: SessionId, model: ModelSelection?, agent: String?): Outcome<Unit> {
-        val selection = gateway.facet<SessionSelectionGateway>() ?: return Unit.ok()
+        if (model == null && agent == null) return Unit.ok()
+        val selection = gateway.facet<SessionSelectionGateway>()
+            ?: return if (model != null && capabilities.sessionModelProviderSwitching) {
+                Failure.Unavailable(FeatureId("sessionModelProviderSwitching")).failed()
+            } else {
+                Unit.ok()
+            }
         if (model != null) {
-            val r = selection.setSessionModel(session, model.model, model.variant ?: "")
-            if (r is Outcome.Failed) return r
+            val applied = selection.setSessionModel(session, model.model, model.variant ?: "")
+            if (applied is Outcome.Failed) return applied
         }
         if (agent != null) {
-            val r = selection.setSessionAgent(session, agent)
-            if (r is Outcome.Failed) return r
+            val applied = selection.setSessionAgent(session, agent)
+            if (applied is Outcome.Failed) return applied
+        }
+        if (model != null) {
+            when (val readback = gateway.session(session)) {
+                is Outcome.Failed -> return readback
+                is Outcome.Ok -> {
+                    val chosen = readback.value.selection
+                    val matches =
+                        chosen != null &&
+                            chosen.modelKnown &&
+                            chosen.model?.providerId == model.model.providerId &&
+                            chosen.model?.modelId == model.model.modelId &&
+                            chosen.variant.trim() == model.variant.orEmpty().trim()
+                    if (!matches) return Failure.Refused(RefusalReason.StaleScope).failed()
+                }
+            }
         }
         return Unit.ok()
     }

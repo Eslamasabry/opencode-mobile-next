@@ -1,0 +1,7 @@
+<resources>
+    <string name="chatDraftRestoring">Opening your saved draft…</string>
+    <string name="chatDraftAlreadySent">This text may already have been sent. Check the conversation before sending it again.</string>
+    <string name="chatDraftRepeatTitle">Send this text again?</string>
+    <string name="chatDraftRepeatAction">Send again</string>
+    <string name="chatDraftRepeatBody">This text is already in the conversation. Send it again only if you want a new reply.</string>
+</resources>

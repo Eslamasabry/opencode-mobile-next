@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
 import android.net.Uri
@@ -8,21 +9,27 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
+import android.view.LayoutInflater
+import android.view.View
 import android.widget.RemoteViews
-import org.json.JSONObject
-import io.github.eslamasabry.oc.android.widgets.R
+import android.widget.TextView
 import io.github.eslamasabry.oc.android.widgets.MainActivity
 import io.github.eslamasabry.oc.android.widgets.NativeStrings
+import io.github.eslamasabry.oc.android.widgets.R
+import org.json.JSONObject
 
 /**
- * The Conversations widget (widget_conversations.xml, the 4x2 entry). The top item is the one
- * that matters now: a request that needs you (its ask, the exact command, Allow / Reply / Open),
- * else a working turn (title, "Working · project · step · 3 min"), else the last conversation.
- * The next conversations follow as one-line rows, as many as the height holds. Allow keeps the
- * card's rule: only a command shown whole may be allowed from the home screen, and the tap goes
- * through the same action policy, lease and confirm step as before.
+ * The Conversations widget (widget_conversations.xml, the 4x2 entry). The top item is the one that
+ * matters now: a request that needs you (its ask, the exact command, Allow / Reply / Open), else a
+ * working turn (title, "Working · project · step · 3 min"), else the last conversation. The next
+ * conversations follow as one-line rows, as many as the height holds. Allow keeps the card's rule:
+ * only a command shown whole may be allowed from the home screen, and the tap goes through the same
+ * action policy, lease and confirm step as before.
  */
-internal class ConversationsWidgetBinder(private val env: WidgetRowEnv, private val text: WidgetRowText) {
+internal class ConversationsWidgetBinder(
+    private val env: WidgetRowEnv,
+    private val text: WidgetRowText,
+) {
     private val g = env.g
 
     fun bind(frame: SessionWidgetFrame): RemoteViews {
@@ -30,9 +37,13 @@ internal class ConversationsWidgetBinder(private val env: WidgetRowEnv, private 
         paintChrome(v)
         // Edit scopes the widget to one project; "" lists them all.
         val project = WidgetV2Style.project(env.context, env.id, env.snapshot)
-        val sessions = env.state.sessions.filter { project.isBlank() || it.optString("project") == project }
+        val sessions =
+            env.state.sessions.filter { project.isBlank() || it.optString("project") == project }
         if (project.isNotBlank()) {
-            v.setTextViewText(R.id.cv_label, env.copy.join(env.str(R.string.widget_conversations_title), project))
+            v.setTextViewText(
+                R.id.cv_label,
+                env.copy.join(env.str(R.string.widget_conversations_title), project),
+            )
         }
         val hero = sessions.firstOrNull()?.let { WidgetRowModel(env, it) }
         v.setOnClickPendingIntent(android.R.id.background, env.open(null))
@@ -42,14 +53,52 @@ internal class ConversationsWidgetBinder(private val env: WidgetRowEnv, private 
         }
         val inner = frame.widthDp - SIDE_PADDING_DP
         v.setOnClickPendingIntent(R.id.cv_hero, env.open(hero.session))
-        val heroHeight = when (hero.lead) {
-            WidgetLayoutPolicy.Lead.NEEDS_YOU -> needs(v, hero, inner)
-            WidgetLayoutPolicy.Lead.WORKING -> working(v, hero)
-            else -> last(v, hero)
-        }
-        val rows = ConversationsWidgetPlan.rows(frame.effectiveHeightDp, heroHeight, sessions.size - 1)
+        val heroHeight =
+            when (hero.lead) {
+                WidgetLayoutPolicy.Lead.NEEDS_YOU -> needs(v, hero, inner)
+                WidgetLayoutPolicy.Lead.WORKING -> working(v, hero)
+                else -> last(v, hero)
+            }
+        val rows =
+            ConversationsWidgetPlan.rows(frame.effectiveHeightDp, heroHeight, sessions.size - 1)
         ConversationsWidgetRows(env).bind(v, sessions.drop(1).take(rows))
+        if (
+            hero.request && !readableApproval(v, frame, hero.ask?.optString("file").isNullOrBlank())
+        ) {
+            v.show(R.id.cv_allow_hit, false)
+            v.setOnClickPendingIntent(R.id.cv_allow_hit, null)
+        }
         return v
+    }
+
+    /** Verify the final RemoteViews too: even two complete lines can be clipped by a short host. */
+    private fun readableApproval(
+        views: RemoteViews,
+        frame: SessionWidgetFrame,
+        inTitle: Boolean,
+    ): Boolean {
+        val root = views.apply(env.context, null)
+        val density = env.context.resources.displayMetrics.density
+        val scale = env.context.resources.configuration.fontScale.coerceAtLeast(1f)
+        val width = (frame.widthDp * density).toInt()
+        val height = (frame.effectiveHeightDp * scale * density).toInt()
+        if (width <= 0 || height <= 0) return false
+        root.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
+        )
+        root.layout(0, 0, width, height)
+        val text = root.findViewById<TextView>(if (inTitle) R.id.cv_title else R.id.cv_ask)
+        val layout = text.layout ?: return false
+        val visible = android.graphics.Rect()
+        return text.visibility == View.VISIBLE &&
+            text.getGlobalVisibleRect(visible) &&
+            visible.width() >= text.width &&
+            visible.height() >= text.height &&
+            text.height - text.compoundPaddingTop - text.compoundPaddingBottom >= layout.height &&
+            layout.lineCount > 0 &&
+            layout.getLineEnd(layout.lineCount - 1) == text.text.length &&
+            (0 until layout.lineCount).none { layout.getEllipsisCount(it) > 0 }
     }
 
     private fun paintChrome(v: RemoteViews) {
@@ -75,19 +124,24 @@ internal class ConversationsWidgetBinder(private val env: WidgetRowEnv, private 
         v.setInt(R.id.cv_divider, "setBackgroundColor", g.divider)
     }
 
-    /** "● Needs you · project · Run this command?", the command in mono, then the answers. A
-     * question without a command reads as the title instead. Returns the hero's height in dp. */
+    /**
+     * "● Needs you · project · Run this command?", the command in mono, then the answers. A
+     * question without a command reads as the title instead. Returns the hero's height in dp.
+     */
     private fun needs(v: RemoteViews, m: WidgetRowModel, innerDp: Float): Int {
         val (word, color) = needsWord(m)
         val question = m.ask?.optString("q").orEmpty().ifBlank { m.title }
         val command = m.ask?.optString("file").orEmpty()
-        val commandLines = if (command.isBlank()) 0
-            else ConversationsWidgetPlan.commandLines(command, innerDp - CODE_PADDING_DP, CODE_SP)
+        val commandLines =
+            if (command.isBlank()) 0
+            else ConversationsWidgetPlan.commandLines(env.context, command, innerDp)
         var height = META_DP
         if (command.isBlank()) {
             title(v, question, 2)
-            height += ConversationsWidgetPlan.titleHeight(
-                WidgetLayoutPolicy.estimateLines(question, innerDp, TITLE_SP, true, 2))
+            height +=
+                ConversationsWidgetPlan.titleHeight(
+                    WidgetLayoutPolicy.estimateLines(question, innerDp, TITLE_SP, true, 2)
+                )
             meta(v, if (color == g.amber) g.amber else null, word, color, m.project)
         } else {
             v.show(R.id.cv_title, false)
@@ -97,14 +151,17 @@ internal class ConversationsWidgetBinder(private val env: WidgetRowEnv, private 
         if (command.isNotBlank()) {
             v.setTextViewText(R.id.cv_ask, command)
             v.setInt(R.id.cv_ask, "setMaxLines", MAX_COMMAND_LINES)
-            height += ConversationsWidgetPlan.askHeight(commandLines.coerceAtMost(MAX_COMMAND_LINES))
+            height +=
+                ConversationsWidgetPlan.askHeight(commandLines.coerceAtMost(MAX_COMMAND_LINES))
         }
         answers(v, m, command.isBlank() || commandLines <= MAX_COMMAND_LINES)
         return height + BUTTONS_DP
     }
 
-    /** Allow (only what can be read whole here; a longer command is answered in the app) or the
-     * AI Team step, then Reply and Open. */
+    /**
+     * Allow (only what can be read whole here; a longer command is answered in the app) or the AI
+     * Team step, then Reply and Open.
+     */
     private fun answers(v: RemoteViews, m: WidgetRowModel, readable: Boolean) {
         val allow = m.request && readable && m.can("allowOnce")
         val team = m.teamAction.isNotBlank() && m.can(m.teamAction)
@@ -117,11 +174,16 @@ internal class ConversationsWidgetBinder(private val env: WidgetRowEnv, private 
             v.setContentDescription(R.id.cv_allow_hit, env.str(R.string.widget_allow_for, m.title))
             v.setOnClickPendingIntent(R.id.cv_allow_hit, env.action(m, "allowOnce"))
         } else if (team) {
-            val step = env.str(
-                if (m.teamAction == "approvePlan") R.string.widget_v2_approve else R.string.widget_v2_resume)
+            val step =
+                env.str(
+                    if (m.teamAction == "approvePlan") R.string.widget_v2_approve
+                    else R.string.widget_v2_resume
+                )
             v.setTextViewText(R.id.cv_allow, step)
-            v.setContentDescription(R.id.cv_allow_hit,
-                NativeStrings.get(env.context, R.string.widget_step_for, step, m.title))
+            v.setContentDescription(
+                R.id.cv_allow_hit,
+                NativeStrings.get(env.context, R.string.widget_step_for, step, m.title),
+            )
             v.setOnClickPendingIntent(R.id.cv_allow_hit, env.action(m, m.teamAction))
         }
         // Reply opens the conversation ready to type (composer focused, keyboard up), where the
@@ -155,11 +217,12 @@ internal class ConversationsWidgetBinder(private val env: WidgetRowEnv, private 
         v.show(R.id.cv_ask, false)
         v.show(R.id.cv_buttons, false)
         val since = WidgetElapsedPolicy.sinceUnit(System.currentTimeMillis(), m.startedAt)
-        val span = when {
-            since == null -> ""
-            since.first == "min" -> env.str(R.string.widget_v2_span_min, since.second)
-            else -> env.str(R.string.widget_v2_span_hour, since.second)
-        }
+        val span =
+            when {
+                since == null -> ""
+                since.first == "min" -> env.str(R.string.widget_v2_span_min, since.second)
+                else -> env.str(R.string.widget_v2_span_hour, since.second)
+            }
         val step = m.step.trim().removeSuffix("…").removeSuffix("...").trim()
         val dot = if (m.ticking) g.green else g.idle
         meta(v, dot, env.copy.working(), if (m.ticking) g.green else g.muted, m.project, step, span)
@@ -192,7 +255,12 @@ internal class ConversationsWidgetBinder(private val env: WidgetRowEnv, private 
         val line = SpannableStringBuilder()
         if (word.isNotBlank()) {
             line.append(word)
-            line.setSpan(ForegroundColorSpan(color), 0, line.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            line.setSpan(
+                ForegroundColorSpan(color),
+                0,
+                line.length,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
+            )
             line.setSpan(StyleSpan(Typeface.BOLD), 0, line.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         val tail = env.copy.join(*rest)
@@ -207,11 +275,15 @@ internal class ConversationsWidgetBinder(private val env: WidgetRowEnv, private 
     /** Nothing to show yet: one plain sentence; the + still starts a conversation. */
     private fun empty(v: RemoteViews, project: String) {
         val never = env.snapshot.optString("profileID").isBlank()
-        title(v, when {
-            never -> env.str(R.string.widget_v2_empty)
-            project.isNotBlank() -> env.str(R.string.widget_conversations_empty_in, project)
-            else -> env.str(R.string.widget_conversations_empty)
-        }, 2)
+        title(
+            v,
+            when {
+                never -> env.str(R.string.widget_v2_empty)
+                project.isNotBlank() -> env.str(R.string.widget_conversations_empty_in, project)
+                else -> env.str(R.string.widget_conversations_empty)
+            },
+            2,
+        )
         v.setTextColor(R.id.cv_title, g.subtle)
         v.show(R.id.cv_meta_row, false)
         v.show(R.id.cv_ask, false)
@@ -223,9 +295,7 @@ internal class ConversationsWidgetBinder(private val env: WidgetRowEnv, private 
 
     private companion object {
         const val SIDE_PADDING_DP = 32f
-        const val CODE_PADDING_DP = 18f
         const val TITLE_SP = 18f
-        const val CODE_SP = 13f
         const val MAX_COMMAND_LINES = 2
         const val META_DP = 20
         const val BUTTONS_DP = 51
@@ -243,22 +313,29 @@ internal class ConversationsWidgetRows(private val env: WidgetRowEnv) {
         for (session in others) v.addView(R.id.cv_rows, row(WidgetRowModel(env, session)))
     }
 
-    /** "Say hi            settings-demo · 16 min"; a row that needs you or works says so first. */
+    /** "Say hi settings-demo · 16 min"; a row that needs you or works says so first. */
     private fun row(m: WidgetRowModel): RemoteViews {
         val r = RemoteViews(env.context.packageName, R.layout.widget_conversations_row)
         r.setOnClickPendingIntent(R.id.cv_row, env.open(m.session))
         r.setTextViewText(R.id.cv_row_title, m.title)
         r.setTextColor(R.id.cv_row_title, g.text)
-        val (word, color) = when (m.lead) {
-            WidgetLayoutPolicy.Lead.NEEDS_YOU -> env.copy.needsYou() to g.amber
-            WidgetLayoutPolicy.Lead.WORKING -> if (m.ticking) env.copy.working() to g.green else "" to g.muted
-            else -> "" to g.muted
-        }
+        val (word, color) =
+            when (m.lead) {
+                WidgetLayoutPolicy.Lead.NEEDS_YOU -> env.copy.needsYou() to g.amber
+                WidgetLayoutPolicy.Lead.WORKING ->
+                    if (m.ticking) env.copy.working() to g.green else "" to g.muted
+                else -> "" to g.muted
+            }
         val age = if (word.isBlank()) ConversationsWidgetCopy.age(env, m.updatedAt) else ""
         val line = SpannableStringBuilder()
         if (word.isNotBlank()) {
             line.append(word)
-            line.setSpan(ForegroundColorSpan(color), 0, line.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            line.setSpan(
+                ForegroundColorSpan(color),
+                0,
+                line.length,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
+            )
         }
         val tail = env.copy.join(m.project, age)
         if (tail.isNotBlank()) {
@@ -274,20 +351,30 @@ internal class ConversationsWidgetRows(private val env: WidgetRowEnv) {
         private const val NEW_TASK_ACTION = "new_task"
 
         /** The + opens a new, empty conversation in the app. */
-        fun newConversation(env: WidgetRowEnv): PendingIntent = PendingIntent.getActivity(env.context, env.id,
-            Intent().setClassName(env.context, MainActivity.COMPONENT).apply {
-                action = Intent.ACTION_MAIN
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP
-                data = Uri.parse("opencode-widget://new-conversation/${env.id}")
-                putExtra(MainActivity.EXTRA_LAUNCH_ACTION, NEW_TASK_ACTION)
-            }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        fun newConversation(env: WidgetRowEnv): PendingIntent =
+            PendingIntent.getActivity(
+                env.context,
+                env.id,
+                Intent().setClassName(env.context, MainActivity.COMPONENT).apply {
+                    action = Intent.ACTION_MAIN
+                    flags =
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    data = Uri.parse("opencode-widget://new-conversation/${env.id}")
+                    putExtra(MainActivity.EXTRA_LAUNCH_ACTION, NEW_TASK_ACTION)
+                },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
     }
 }
 
 /** How the Conversations widget spends its height, in dp at font scale 1. */
 internal object ConversationsWidgetPlan {
-    /** Paddings (5 + 10), the header with its 48dp New conversation target (48) and the gap under it (2). */
+    /**
+     * Paddings (5 + 10), the header with its 48dp New conversation target (48) and the gap under it
+     * (2).
+     */
     private const val FIXED_DP = 5 + 10 + 48 + 2
     /** The hairline and the air above it. */
     private const val DIVIDER_DP = 11
@@ -297,17 +384,34 @@ internal object ConversationsWidgetPlan {
     private const val ASK_GAP_DP = 8
     private const val ASK_PADDING_DP = 10
     private const val ASK_LINE_DP = 17
-    private const val MONO_GLYPH_EM = 0.6f
 
     fun titleHeight(lines: Int): Int = lines.coerceAtLeast(1) * TITLE_LINE_DP
 
-    fun askHeight(lines: Int): Int = ASK_GAP_DP + ASK_PADDING_DP + lines.coerceAtLeast(1) * ASK_LINE_DP
+    fun askHeight(lines: Int): Int =
+        ASK_GAP_DP + ASK_PADDING_DP + lines.coerceAtLeast(1) * ASK_LINE_DP
 
-    /** Whole lines a command takes in monospace at [textSp] across [widthDp]. */
-    fun commandLines(command: String, widthDp: Float, textSp: Float): Int {
+    /**
+     * Measure the same TextView the host renders, including padding, font scale and explicit
+     * newlines. No ellipsis/maxLines while measuring: incomplete visibility must never authorize a
+     * command.
+     */
+    fun commandLines(context: Context, command: String, widthDp: Float): Int {
         if (command.isBlank()) return 0
-        val perLine = (widthDp / (textSp * MONO_GLYPH_EM)).toInt().coerceAtLeast(1)
-        return (command.length + perLine - 1) / perLine
+        val root = LayoutInflater.from(context).inflate(R.layout.widget_conversations, null)
+        val view = root.findViewById<TextView>(R.id.cv_ask)
+        view.text = command
+        view.maxLines = Int.MAX_VALUE
+        view.ellipsize = null
+        view.visibility = View.VISIBLE
+        val widthPx = (widthDp * context.resources.displayMetrics.density).toInt()
+        if (widthPx <= view.compoundPaddingLeft + view.compoundPaddingRight) return Int.MAX_VALUE
+        view.measure(
+            View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+        )
+        val layout = view.layout ?: return Int.MAX_VALUE
+        return if (layout.getLineEnd(layout.lineCount - 1) == command.length) layout.lineCount
+        else Int.MAX_VALUE
     }
 
     /** Whole rows under the top item: none when they would be cut. */

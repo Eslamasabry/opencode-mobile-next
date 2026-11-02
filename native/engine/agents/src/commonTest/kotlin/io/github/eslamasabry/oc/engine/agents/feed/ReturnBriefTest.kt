@@ -6,17 +6,25 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionTime
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 
-internal fun briefSession(id: String, idle: Long?, parent: String? = null, updated: Long = 1): Session =
+internal fun briefSession(
+    id: String,
+    idle: Long?,
+    parent: String? = null,
+    updated: Long = 1,
+): Session =
     Session(
         id = SessionId(id),
         title = "Chat $id",
@@ -69,20 +77,50 @@ class ReturnBriefTest {
 
     @Test
     fun `B-CHAT-093 the first-visit brief lists unreviewed identities, never an interval or outcome`() {
-        val b = brief(listOf(briefSession("old", 10), briefSession("new", 30), briefSession("seen", 20), briefSession("child", 40, parent = "new")), unread = setOf("old", "new", "child"))
+        val b =
+            brief(
+                listOf(
+                    briefSession("old", 10),
+                    briefSession("new", 30),
+                    briefSession("seen", 20),
+                    briefSession("child", 40, parent = "new"),
+                ),
+                unread = setOf("old", "new", "child"),
+            )
         assertEquals(listOf("new", "old"), b.unreviewed.map { it.session.id.raw })
         assertEquals(listOf(30L, 10L), b.unreviewed.map { it.idleAt })
-        // Equal or older idle sessions are not blanket-acknowledged: dismissing "new" leaves "old" new.
-        val ack = ReturnBrief.build(listOf(briefSession("new", 30)), true, false, { true }, { false }, { null }).acknowledgement(null)
-        val after = brief(listOf(briefSession("old", 10), briefSession("new", 30), briefSession("same", 30)), ack = ack)
+        // Equal or older idle sessions are not blanket-acknowledged: dismissing "new" leaves "old"
+        // new.
+        val ack =
+            ReturnBrief.build(
+                    listOf(briefSession("new", 30)),
+                    true,
+                    false,
+                    { true },
+                    { false },
+                    { null },
+                )
+                .acknowledgement(null)
+        val after =
+            brief(
+                listOf(briefSession("old", 10), briefSession("new", 30), briefSession("same", 30)),
+                ack = ack,
+            )
         assertEquals(listOf("same", "old"), after.unreviewed.map { it.session.id.raw })
         // A newer idle on a dismissed session is new again.
-        assertEquals(listOf("new"), brief(listOf(briefSession("new", 31)), ack = ack).unreviewed.map { it.session.id.raw })
+        assertEquals(
+            listOf("new"),
+            brief(listOf(briefSession("new", 31)), ack = ack).unreviewed.map { it.session.id.raw },
+        )
     }
 
     @Test
     fun `B-CHAT-094 dismissing acknowledges only the rows shown, by kind, session and id`() {
-        val sessions = (1..5).map { briefSession("s$it", it * 10L) } + briefSession("ask", 99) + briefSession("busy", 98) + briefSession("viewed", 97)
+        val sessions =
+            (1..5).map { briefSession("s$it", it * 10L) } +
+                briefSession("ask", 99) +
+                briefSession("busy", 98) +
+                briefSession("viewed", 97)
         val b =
             brief(
                 sessions,
@@ -96,13 +134,34 @@ class ReturnBriefTest {
         assertEquals(listOf("ask"), b.requests.map { it.session.id.raw })
 
         val ack = b.acknowledgement(null)
-        val next = brief(sessions, unread = sessions.map { it.id.raw }.toSet() - "viewed", busy = setOf("busy"), blocked = mapOf("ask" to (BriefBlocker.Permission to "perm-1")), ack = ack)
-        assertEquals(listOf("s2", "s1"), next.unreviewed.map { it.session.id.raw }, "overflow stays unacknowledged")
+        val next =
+            brief(
+                sessions,
+                unread = sessions.map { it.id.raw }.toSet() - "viewed",
+                busy = setOf("busy"),
+                blocked = mapOf("ask" to (BriefBlocker.Permission to "perm-1")),
+                ack = ack,
+            )
+        assertEquals(
+            listOf("s2", "s1"),
+            next.unreviewed.map { it.session.id.raw },
+            "overflow stays unacknowledged",
+        )
         assertTrue(next.requests.isEmpty())
         // The same session asking again with a new request id, or another kind, is new.
-        val again = brief(sessions, blocked = mapOf("ask" to (BriefBlocker.Question to "perm-1")), ack = ack)
+        val again =
+            brief(
+                sessions,
+                blocked = mapOf("ask" to (BriefBlocker.Question to "perm-1")),
+                ack = ack,
+            )
         assertEquals(listOf("ask"), again.requests.map { it.session.id.raw })
-        val newId = brief(sessions, blocked = mapOf("ask" to (BriefBlocker.Permission to "perm-2")), ack = ack)
+        val newId =
+            brief(
+                sessions,
+                blocked = mapOf("ask" to (BriefBlocker.Permission to "perm-2")),
+                ack = ack,
+            )
         assertEquals(listOf("ask"), newId.requests.map { it.session.id.raw })
     }
 
@@ -127,56 +186,154 @@ class ReturnBriefTest {
             val restarted = ReturnBriefStore(prefs)
             assertTrue(restarted.acknowledged(profile, location).coversRun(SessionId("a"), 10))
             assertFalse(restarted.acknowledged(profile, "other").coversRun(SessionId("a"), 10))
-            assertFalse(restarted.acknowledged(ProfileId("p2"), location).coversRun(SessionId("a"), 10))
+            assertFalse(
+                restarted.acknowledged(ProfileId("p2"), location).coversRun(SessionId("a"), 10)
+            )
             assertTrue(prefs.values.keys.single().startsWith("oc.returnBrief.p1"))
         }
 
     @Test
-    fun `B-STATE-082 a refused write stays unacknowledged`() =
-        runTest {
-            val prefs = MemoryPrefs().apply { refuse = true }
-            val store = ReturnBriefStore(prefs)
-            val result = store.acknowledge(profile, location, brief(listOf(briefSession("a", 10))))
-            assertEquals(Failure.StorageRefused(), (result as Outcome.Failed).failure)
-            assertFalse(store.acknowledged(profile, location).coversRun(SessionId("a"), 10))
-            assertFalse(ReturnBriefStore(prefs).acknowledged(profile, location).coversRun(SessionId("a"), 10))
-        }
+    fun `B-STATE-082 a refused write stays unacknowledged`() = runTest {
+        val prefs = MemoryPrefs().apply { refuse = true }
+        val store = ReturnBriefStore(prefs)
+        val result = store.acknowledge(profile, location, brief(listOf(briefSession("a", 10))))
+        assertEquals(Failure.StorageRefused(), (result as Outcome.Failed).failure)
+        assertFalse(store.acknowledged(profile, location).coversRun(SessionId("a"), 10))
+        assertFalse(
+            ReturnBriefStore(prefs).acknowledged(profile, location).coversRun(SessionId("a"), 10)
+        )
+    }
 
     @Test
-    fun `B-STATE-082 queued writes merge and new arrivals stay new`() =
-        runTest {
-            val prefs = MemoryPrefs().apply { gate = CompletableDeferred() }
-            val store = ReturnBriefStore(prefs)
-            val first = async { store.acknowledge(profile, location, brief(listOf(briefSession("a", 10)))) }
-            val second = async { store.acknowledge(profile, location, brief(listOf(briefSession("b", 20)))) }
-            testScheduler.runCurrent()
-            prefs.gate!!.complete(Unit)
-            first.await()
-            second.await()
-            val ack = ReturnBriefStore(prefs).acknowledged(profile, location)
-            assertTrue(ack.coversRun(SessionId("a"), 10))
-            assertTrue(ack.coversRun(SessionId("b"), 20))
-            assertFalse(ack.coversRun(SessionId("c"), 30), "a run that arrived during the save is still new")
+    fun `B-STATE-082 queued writes merge and new arrivals stay new`() = runTest {
+        val prefs = MemoryPrefs().apply { gate = CompletableDeferred() }
+        val store = ReturnBriefStore(prefs)
+        val first = async {
+            store.acknowledge(profile, location, brief(listOf(briefSession("a", 10))))
         }
+        val second = async {
+            store.acknowledge(profile, location, brief(listOf(briefSession("b", 20))))
+        }
+        testScheduler.runCurrent()
+        prefs.gate!!.complete(Unit)
+        first.await()
+        second.await()
+        val ack = ReturnBriefStore(prefs).acknowledged(profile, location)
+        assertTrue(ack.coversRun(SessionId("a"), 10))
+        assertTrue(ack.coversRun(SessionId("b"), 20))
+        assertFalse(
+            ack.coversRun(SessionId("c"), 30),
+            "a run that arrived during the save is still new",
+        )
+    }
 
     @Test
-    fun `B-STATE-082 corrupt or malformed entries start unacknowledged`() =
-        runTest {
-            val prefs = MemoryPrefs()
-            prefs.values[ReturnBriefStore.key(profile)] = "{not json"
-            assertEquals(ReturnBriefAck.Empty, ReturnBriefStore(prefs).acknowledged(profile, location))
-            val badRun = kotlinx.serialization.json.Json.parseToJsonElement("""{"runs":[["a",-1]],"requests":[]}""")
-            prefs.values[ReturnBriefStore.key(profile)] = kotlinx.serialization.json.JsonObject(mapOf(location to badRun)).toString()
-            assertEquals(ReturnBriefAck.Empty, ReturnBriefStore(prefs).acknowledged(profile, location))
-            assertNull(ReturnBriefAck.fromJson(kotlinx.serialization.json.JsonPrimitive(3)))
+    fun `B-STATE-082 finding 3 delayed reads serialize with dismissals and deletion`() = runTest {
+        val release = CompletableDeferred<Unit>()
+        val prefs =
+            object : BriefPreferences {
+                var value: String? = null
+                var reads = 0
+
+                override suspend fun read(key: String): String? {
+                    val captured = value
+                    if (++reads == 1) release.await()
+                    return captured
+                }
+
+                override suspend fun write(key: String, value: String): Boolean {
+                    this.value = value
+                    return true
+                }
+
+                override suspend fun remove(key: String) {
+                    value = null
+                }
+            }
+        val store = ReturnBriefStore(prefs)
+        val reading = async { store.acknowledged(profile, location) }
+        testScheduler.runCurrent()
+        val saving = async {
+            store.acknowledge(profile, location, brief(listOf(briefSession("a", 10))))
         }
+        testScheduler.runCurrent()
+        assertFalse(saving.isCompleted, "the old read must finish before the dismissal")
+        release.complete(Unit)
+        reading.await()
+        saving.await()
+        store.acknowledge(profile, location, brief(listOf(briefSession("b", 20))))
+        assertTrue(
+            ReturnBriefStore(prefs).acknowledged(profile, location).coversRun(SessionId("a"), 10)
+        )
+        store.deleteProfile(profile)
+        assertEquals(ReturnBriefAck.Empty, store.acknowledged(profile, location))
+    }
+
+    @Test
+    fun `B-STATE-082 finding 4 cancelled committed dismissal survives the next merge`() = runTest {
+        val release = CompletableDeferred<Unit>()
+        val prefs =
+            object : BriefPreferences {
+                var stored: String? = null
+
+                override suspend fun read(key: String): String? = stored
+
+                override suspend fun write(key: String, value: String): Boolean =
+                    withContext(NonCancellable + StandardTestDispatcher(testScheduler)) {
+                        release.await()
+                        stored = value
+                        true
+                    }
+
+                override suspend fun remove(key: String) {
+                    stored = null
+                }
+            }
+        val store = ReturnBriefStore(prefs)
+        // Load the old cache before the platform admits its non-cancellable commit.
+        store.acknowledged(profile, location)
+        val saving = async {
+            store.acknowledge(profile, location, brief(listOf(briefSession("a", 10))))
+        }
+        testScheduler.runCurrent()
+        saving.cancel()
+        release.complete(Unit)
+        saving.join()
+        assertTrue(
+            ReturnBriefStore(prefs).acknowledged(profile, location).coversRun(SessionId("a"), 10)
+        )
+        store.acknowledge(profile, location, brief(listOf(briefSession("b", 20))))
+        val ack = ReturnBriefStore(prefs).acknowledged(profile, location)
+        assertTrue(
+            ack.coversRun(SessionId("a"), 10),
+            "the second merge must retain the committed dismissal",
+        )
+        assertTrue(ack.coversRun(SessionId("b"), 20))
+    }
+
+    @Test
+    fun `B-STATE-082 corrupt or malformed entries start unacknowledged`() = runTest {
+        val prefs = MemoryPrefs()
+        prefs.values[ReturnBriefStore.key(profile)] = "{not json"
+        assertEquals(ReturnBriefAck.Empty, ReturnBriefStore(prefs).acknowledged(profile, location))
+        val badRun =
+            kotlinx.serialization.json.Json.parseToJsonElement(
+                """{"runs":[["a",-1]],"requests":[]}"""
+            )
+        prefs.values[ReturnBriefStore.key(profile)] =
+            kotlinx.serialization.json.JsonObject(mapOf(location to badRun)).toString()
+        assertEquals(ReturnBriefAck.Empty, ReturnBriefStore(prefs).acknowledged(profile, location))
+        assertNull(ReturnBriefAck.fromJson(kotlinx.serialization.json.JsonPrimitive(3)))
+    }
 
     @Test
     fun `B-STATE-083 deleting a profile drains pending dismissals and clears both copies`() =
         runTest {
             val prefs = MemoryPrefs().apply { gate = CompletableDeferred() }
             val store = ReturnBriefStore(prefs)
-            val pending = async { store.acknowledge(profile, location, brief(listOf(briefSession("a", 10)))) }
+            val pending = async {
+                store.acknowledge(profile, location, brief(listOf(briefSession("a", 10))))
+            }
             testScheduler.runCurrent()
             val deleting = async { store.deleteProfile(profile) }
             testScheduler.runCurrent()

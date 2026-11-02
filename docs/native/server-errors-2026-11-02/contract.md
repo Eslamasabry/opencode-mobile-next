@@ -1,0 +1,16 @@
+# Server connection failures — contract
+
+Finish line: a failed native preview connect shows the actual safe failure category plus a collapsed, credential-free stage diagnostic, so the owner can report the phone-only failure. Successful connect/send/restart remains functional. Non-goals: protocol speculation, automatic retries, new trust exceptions, Linux installation/adoption, owner-phone data changes.
+
+Use existing flat Failure and kit controls. Never display exception text or server prose as body text; diagnostic content consists only of known stage/kind enums and numeric HTTP status. No URLs, passwords, tokens, request bodies or prompts in diagnostics/logs. Distinguish network, timeout, certificate, incompatible/unreadable server reply, storage and Keystore failures. Preserve HTTP consent and no-resend behavior.
+
+Freeze APIs:
+- In engine/connection: `enum class ConnectionStage { StorageReady, ProfileRead, DraftRecovery, OpenGateway, SaveActiveProfile, LoadConversations, LoadActivity }`; `fun connectionFailure(failure: Failure, stage: ConnectionStage, redact: (String) -> Redacted): Failure`. It returns the SAME failure subtype and fields except details, which contain only generated stage + failure kind/enum reasons/status, replacing raw details. No new core Failure subtype or transport retry. No dependency addition; caller passes Redactor.details.
+- In feature/servers/presentation: `enum class ServerFailureKind { Network, Timeout, Certificate, SignIn, CleartextConsent, InvalidAddress, Incompatible, UnreadableReply, Server, Rejected, Storage, Secret, Other }`; `fun serverFailureKind(failure: Failure?): ServerFailureKind`. UI maps each to localized English/Arabic copy. Existing generic issue text remains the null/unknown fallback. Display details through KitErrorNotice with localized Details/Copy labels and supplied Failure; details are collapsed by default.
+- androidApp PreviewRuntime annotates failure stages at the boundaries above, injecting existing Redactor; PreviewStores credential source annotates credential/secret failures via OpenGateway category as needed without exposing values. No auth/persistence semantic changes.
+
+Ownership: GLM test writer owns new engine/connection + feature/servers tests and refusal stubs only; GLM connection builder owns new engine helper + androidApp wiring; GLM UI builder owns feature/servers production and unique new words files. Coordinator owns version, contract, tests/builds, emulator, review and final local commit. Shared modules remain one editor at a time. Workers never run Gradle/tests, install tooling or push. All model workers use OpenCode `zai-coding-plan/glm-5.3` in isolated VPS snapshots.
+
+Evidence: browser authenticated on phone; emulator exact URL/login + real response + cold reconnect passed at 7ff73263, so phone-only generic error is NOT evidence of a universal protocol bug. Phone Linux audit found no current cross-package discovery/credential contract; any proposed handoff is documentation/feasibility until authorized and implemented, preserving existing Linux/database and sandbox boundaries.
+
+Coordinator clarification: Other for a non-null typed failure uses neutral copy rather than guessing a network cause; null-failure issue fallback is unchanged. Storage copy must not assert that disk space is the cause.

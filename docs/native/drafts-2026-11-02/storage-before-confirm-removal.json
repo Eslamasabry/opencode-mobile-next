@@ -1,0 +1,12 @@
+{
+  "phase": "before-confirm-removal",
+  "draftCount": 1,
+  "entries": [
+    {
+      "profile": "b973a894-65c6-4898-89b0-f69c4bb8ba8e",
+      "session": "ses_e63164b38ffekmHDba0SRvgYHQ",
+      "exactProbe": false,
+      "textSha256": "89436709755162fde4f1cdf4e2936bd516a39b611c441bde134beb7a5c47e64d"
+    }
+  ]
+}

@@ -52,4 +52,6 @@
     <string name="agentsCancel">Отмена</string>
     <string name="chatsHomeOtherFolders">Другие папки</string>
     <string name="shellServerSwitching">Переключение…</string>
+    <string name="chatsReturnBriefUnknown">Не удаётся определить, что нового на этом сервере</string>
+    <string name="chatsReturnBriefMore">и ещё %1$d</string>
 </resources>

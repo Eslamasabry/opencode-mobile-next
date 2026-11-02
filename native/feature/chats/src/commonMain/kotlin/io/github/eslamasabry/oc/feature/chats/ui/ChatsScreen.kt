@@ -8,7 +8,6 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chats.presentation.BriefUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatPreviewActions
@@ -61,36 +60,42 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeShowAll
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeToday
+import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefMore
+import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefUnknown
 import io.github.eslamasabry.oc.ui.words.res.chats_all_filter
 import io.github.eslamasabry.oc.ui.words.res.chats_all_none
 import io.github.eslamasabry.oc.ui.words.res.chats_all_title
 import io.github.eslamasabry.oc.ui.words.res.chats_back
-import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSettings
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
+import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The Conversations home (07 §5 B01). Arranges kit parts only (Konsist K1). One list by urgency in Today / Earlier,
- * reading width; no bottom bar (B-NAV-037): New conversation and Settings are top-bar words, search sits under the bar.
+ * The Conversations home (07 §5 B01). Arranges kit parts only (Konsist K1). One list by urgency in
+ * Today / Earlier, reading width; no bottom bar (B-NAV-037): New conversation and Servers are
+ * top-bar words, search sits under the bar.
  */
 @Composable
 public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
     val newLabel = stringResource(Res.string.chatsHomeNewChat)
-    val settingsLabel = stringResource(Res.string.e7LocaleUiSettings)
-    val barActions =
-        buildList {
-            // Hidden while the empty state offers it (one way, not two).
-            if (state.phase != ChatsPhase.Empty) add(KitLineAction(newLabel, actions::newConversation))
-            if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings))
-        }
+    val settingsLabel = stringResource(Res.string.serversTitle)
+    val barActions = buildList {
+        // Hidden while the empty state offers it (one way, not two).
+        if (state.phase != ChatsPhase.Empty) add(KitLineAction(newLabel, actions::newConversation))
+        if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings))
+    }
     KitScreen(
-        topBar = { KitTopBar(title = stringResource(Res.string.chatsHomeTitle), actions = barActions) },
-        search = if (state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.Opening) null else ({ SearchField(actions) }),
+        topBar = {
+            KitTopBar(title = stringResource(Res.string.chatsHomeTitle), actions = barActions)
+        },
+        search =
+            if (state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.Opening) null
+            else ({ SearchField(actions) }),
         width = KitScreenWidth.Reading,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
@@ -100,7 +105,12 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
             }
             if (state.incomplete.isNotEmpty()) {
                 item(key = "incomplete") {
-                    KitNotice(stringResource(Res.string.chatsHomeIncompleteNamed, state.incomplete.joinToString(", ")))
+                    KitNotice(
+                        stringResource(
+                            Res.string.chatsHomeIncompleteNamed,
+                            state.incomplete.joinToString(", "),
+                        )
+                    )
                 }
             }
             when (state.phase) {
@@ -120,16 +130,24 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
                             kind = KitStateKind.Empty,
                             title = stringResource(Res.string.chatsHomeNoMatchTitle),
                             body = stringResource(Res.string.chatsHomeNoMatchBody),
-                            primary = KitAction(stringResource(Res.string.chatsHomeClearFilters), actions::clearFilters),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.chatsHomeClearFilters),
+                                    actions::clearFilters,
+                                ),
                         )
                     }
                 ChatsPhase.List -> {
                     if (state.today.isNotEmpty()) {
-                        item(key = "today") { KitSectionLabel(stringResource(Res.string.chatsHomeToday)) }
+                        item(key = "today") {
+                            KitSectionLabel(stringResource(Res.string.chatsHomeToday))
+                        }
                         items(state.today, key = { it.key }) { ConversationRow(it, actions) }
                     }
                     if (state.earlier.isNotEmpty()) {
-                        item(key = "earlier") { KitSectionLabel(stringResource(Res.string.chatsHomeEarlier)) }
+                        item(key = "earlier") {
+                            KitSectionLabel(stringResource(Res.string.chatsHomeEarlier))
+                        }
                         items(state.earlier, key = { it.key }) { ConversationRow(it, actions) }
                     }
                 }
@@ -152,7 +170,9 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
 private fun SearchField(actions: ChatsActions) {
     val field = rememberTextFieldState()
     // The first value is the empty field itself, not something the person typed.
-    LaunchedEffect(field) { snapshotFlow { field.text.toString() }.drop(1).collect { actions.search(it) } }
+    LaunchedEffect(field) {
+        snapshotFlow { field.text.toString() }.drop(1).collect { actions.search(it) }
+    }
     KitField(state = field, label = stringResource(Res.string.kitTopBarSearch))
 }
 
@@ -161,7 +181,12 @@ private fun Filters(state: ChatsUi, actions: ChatsActions) {
     KitChipWrap {
         if (state.needsYou > 0) {
             KitChip(
-                label = pluralStringResource(Res.plurals.notifStatusNeedsYou, state.needsYou, state.needsYou),
+                label =
+                    pluralStringResource(
+                        Res.plurals.notifStatusNeedsYou,
+                        state.needsYou,
+                        state.needsYou,
+                    ),
                 kind = KitChipKind.Action,
                 tone = KitChipTone.Attention,
                 selected = state.filters.needsYou,
@@ -191,16 +216,23 @@ private fun Filters(state: ChatsUi, actions: ChatsActions) {
 
 @Composable
 private fun BriefBlock(brief: BriefUi, actions: ChatsActions) {
-    // TODO(words): the brief's heading, "and N more" and "Can't tell what's new" lines wait for :ui:words keys
-    // (S2-CHATS report, words requests); the unknown state shows nothing until then.
-    if (brief.rows.isEmpty()) return
     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+        if (brief.unknown) KitNotice(stringResource(Res.string.chatsReturnBriefUnknown))
         brief.rows.forEach { ConversationRow(it, actions) }
-        KitButton(
-            label = stringResource(Res.string.returnBriefContinue),
-            onClick = actions::dismissBrief,
-            role = KitButtonRole.Tertiary,
-        )
+        if (brief.more > 0) {
+            KitButton(
+                label = stringResource(Res.string.chatsReturnBriefMore, brief.more),
+                onClick = { actions.showBriefOverflow(brief) },
+                role = KitButtonRole.Tertiary,
+            )
+        }
+        if (brief.rows.isNotEmpty()) {
+            KitButton(
+                label = stringResource(Res.string.returnBriefContinue),
+                onClick = { actions.dismissBrief(brief.acknowledgement) },
+                role = KitButtonRole.Tertiary,
+            )
+        }
     }
 }
 
@@ -209,7 +241,8 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions) {
     val title =
         when (val t = row.title) {
             is RowTitle.Text -> t.text
-            RowTitle.New, RowTitle.Untitled -> stringResource(Res.string.workspaceNewSession)
+            RowTitle.New,
+            RowTitle.Untitled -> stringResource(Res.string.workspaceNewSession)
         }
     val status =
         when (row.status) {

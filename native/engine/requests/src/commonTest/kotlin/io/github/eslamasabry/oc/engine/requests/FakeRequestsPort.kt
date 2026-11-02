@@ -36,6 +36,7 @@ internal class FakeRequestsPort : RequestsPort {
     var failNextReply: Failure? = null
     var failNextList: Failure? = null
     var replyGate: CompletableDeferred<Unit>? = null
+    var wakeGate: CompletableDeferred<Unit>? = null
     var listGate: CompletableDeferred<Unit>? = null
 
     /** Runs when a reply reaches the wire, before it answers (a settle racing the write). */
@@ -43,6 +44,7 @@ internal class FakeRequestsPort : RequestsPort {
 
     override suspend fun awaitActionTransport(): Outcome<Unit> {
         calls += "wake"
+        wakeGate?.await()
         return Unit.ok()
     }
 

@@ -48,8 +48,16 @@ if ((!dry)); then
     oc_check_jdk || { oc_status 2; exit 2; }
     oc_check_memory || { oc_status 2; exit 2; }
   else
-    oc_step sync "$OC_TOOL_DIR/vps_gradle.sh" --lock-file '~/.oc-native-t2.lock' --min-disk-gb "$min_disk" -- help -q ||
-      { oc_say "vps: sync, lock or disk check failed (see sync.log)"; oc_status 2; exit 2; }
+    batch="$OC_RUN_DIR/steps.tsv"
+    : >"$batch"
+    for line in "${lines[@]}"; do
+      name="${line%%$'\t'*}"
+      [[ -n "$only" && ",$only," != *",$name,"* ]] && continue
+      printf '%s\n' "$line" >>"$batch"
+    done
+    oc_step vps-ladder "$OC_TOOL_DIR/vps_gradle.sh" --lock-file '~/.oc-native-t2.lock' \
+      --min-disk-gb "$min_disk" --batch-file "$batch" --results-dir "$OC_RUN_DIR"
+    oc_status "$?"
   fi
 fi
 
@@ -60,12 +68,17 @@ for line in "${lines[@]}"; do
   ran=$((ran + 1))
   if ((dry)); then oc_say "step $name: ./gradlew $args_s (dry run)"; continue; fi
   if [[ "$where" == vps ]]; then
-    oc_step "$name" "$OC_TOOL_DIR/vps_gradle.sh" --no-sync --lock-file '~/.oc-native-t2.lock' --min-disk-gb "$min_disk" -- "${args[@]}"
+    if [[ -f "$OC_RUN_DIR/$name.status" ]]; then
+      rc="$(cat "$OC_RUN_DIR/$name.status")"
+    else
+      oc_say "vps: no completion for $name"; oc_status 2; continue
+    fi
   else
-    oc_step "$name" "$OC_TOOL_DIR/lib/gradlew.sh" "${args[@]}"
+    oc_step "$name" oc_with_lock "$(oc_build_lock_file)" "$OC_TOOL_DIR/lib/gradlew.sh" "${args[@]}"
+    rc=$?
   fi
-  rc=$?
   ((rc == 0)) && continue
+  if ((rc == 75)); then oc_say "lock: build slot busy"; oc_status 2; continue; fi
   m="$(oc_gradle_missing_tasks "$OC_RUN_DIR/$name.log")"
   if [[ -n "$m" ]]; then
     missing+=("$name"); oc_say "  MISSING: $m"; oc_status 1
@@ -82,6 +95,10 @@ if ((!dry)); then
   [[ -n "$fails" ]] && { oc_say "failing tests:"; sed 's/^/  /' <<<"$fails" | tee -a "$OC_SUMMARY"; }
   oc_say "tests run: $(oc_tests_count)"
   oc_report_paths | sed 's/^/report: /' | tee -a "$OC_SUMMARY"
+  if [[ "$(git -C "$top" rev-parse HEAD)" != "$sha" || -n "$(git -C "$top" status --porcelain)" ]]; then
+    oc_say "tree changed or dirty: LAST_GREEN withheld"
+    dirty="-dirty"
+  fi
   if ((OC_STATUS == 0)) && [[ -z "$only" && -z "$dirty" ]]; then
     oc_say "LAST_GREEN line: $sha $(date -u +%Y-%m-%d) build/native-t2/$(basename "$OC_RUN_DIR")/summary.txt parity=<from docs/native/parity.md>"
   fi

@@ -31,7 +31,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,6 +68,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitFieldChecking
 import io.github.eslamasabry.oc.ui.words.res.kitFieldCount
 import io.github.eslamasabry.oc.ui.words.res.kitFieldHideNamed
 import io.github.eslamasabry.oc.ui.words.res.kitFieldPaste
@@ -76,26 +76,44 @@ import io.github.eslamasabry.oc.ui.words.res.kitFieldReplace
 import io.github.eslamasabry.oc.ui.words.res.kitFieldSaved
 import io.github.eslamasabry.oc.ui.words.res.kitFieldShowNamed
 import io.github.eslamasabry.oc.ui.words.res.kitFieldStillChecking
-import io.github.eslamasabry.oc.ui.words.res.kitFieldChecking
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** Dart `KitFieldKind`: what the words are, which decides keyboard, font and direction. */
-public enum class KitFieldKind { Text, Multiline, Mono, Path, Url, Number, Secret }
-
-/** A secret field is never prefilled (16 SI-4): a saved secret shows "Saved · Replace" until the person replaces it. */
-public enum class SecretFieldPresence { Empty, Saved, Editing }
+public enum class KitFieldKind {
+    Text,
+    Multiline,
+    Mono,
+    Path,
+    Url,
+    Number,
+    Secret,
+}
 
 /**
- * Where a secret field reports every keystroke before the host hears it (plan 16 SI-4, B-SEC-204). The shell provides
- * one that registers the value with `:core:security`'s `Redactor`; the default does nothing (tests, previews).
+ * A secret field is never prefilled (16 SI-4): a saved secret shows "Saved · Replace" until the
+ * person replaces it.
+ */
+public enum class SecretFieldPresence {
+    Empty,
+    Saved,
+    Editing,
+}
+
+/**
+ * Where a secret field reports every keystroke before the host hears it (plan 16 SI-4, B-SEC-204).
+ * The shell provides one that synchronously registers the value with the app's `:core:security`
+ * `Redactor`. A missing provider is an error; tests and previews must explicitly supply a sink too.
  */
 public fun interface KitSecretSink {
     public fun register(value: String)
 }
 
-public val LocalKitSecretSink: ProvidableCompositionLocal<KitSecretSink> = staticCompositionLocalOf { KitSecretSink { } }
+public val LocalKitSecretSink: ProvidableCompositionLocal<KitSecretSink> =
+    staticCompositionLocalOf {
+        error("KitField(Secret) requires the app redactor's LocalKitSecretSink")
+    }
 
 /** The counter shows from 80 % of the limit (Dart `KitField`). */
 internal const val COUNTER_FROM: Float = 0.8f
@@ -106,12 +124,13 @@ internal const val CHECKING_ESCALATE_S: Int = 8
 /** Pure rules of [KitField] (unit-tested). */
 public object KitFieldRules {
     /** True when the counter line should show for [length] of [max]. */
-    public fun showCounter(length: Int, max: Int?): Boolean = max != null && max > 0 && length >= (max * COUNTER_FROM)
+    public fun showCounter(length: Int, max: Int?): Boolean =
+        max != null && max > 0 && length >= (max * COUNTER_FROM)
 
     /**
-     * Arabic-Indic (U+0660–0669) and Extended Arabic-Indic (U+06F0–06F9) digits become ASCII, the Arabic decimal
-     * separator (U+066B) becomes '.', and anything that is not a digit, '.', or a leading '-' is dropped (Dart
-     * `KitNumberFormatter`; B-L10N-012's input half).
+     * Arabic-Indic (U+0660–0669) and Extended Arabic-Indic (U+06F0–06F9) digits become ASCII, the
+     * Arabic decimal separator (U+066B) becomes '.', and anything that is not a digit, '.', or a
+     * leading '-' is dropped (Dart `KitNumberFormatter`; B-L10N-012's input half).
      */
     public fun normalizeNumber(raw: String): String {
         val out = StringBuilder()
@@ -119,7 +138,8 @@ public object KitFieldRules {
             when (c) {
                 in '٠'..'٩' -> out.append('0' + (c - '٠'))
                 in '۰'..'۹' -> out.append('0' + (c - '۰'))
-                '٫', '.' -> if ('.' !in out) out.append('.')
+                '٫',
+                '.' -> if ('.' !in out) out.append('.')
                 '-' -> if (out.isEmpty()) out.append('-')
                 in '0'..'9' -> out.append(c)
                 else -> Unit
@@ -138,19 +158,18 @@ private object NumberInput : InputTransformation {
 }
 
 /**
- * A text field (Dart `KitField`; plan 06 §7.5) on `BasicTextField(TextFieldState)`. The label sits above (never
- * floating); the helper or error line below is a polite live region; the counter shows from 80 % of [maxLength]. Kinds:
- * Mono, Path and Url are monospaced and read left to right; Url and Path never autocorrect; Number maps Arabic-Indic
- * digits to ASCII; Multiline grows; Secret is a `BasicSecureTextField` with reveal and Paste, no suggestions, value read
- * left to right, every keystroke reported to [LocalKitSecretSink] — and it is never prefilled: with
- * [SecretFieldPresence.Saved] it shows "Saved · Replace" and no input until Replace. [checking] shows "Checking…",
- * which escalates at 8 s.
+ * A text field (Dart `KitField`; plan 06 §7.5) on `BasicTextField(TextFieldState)`. The label sits
+ * above (never floating); the helper or error line below is a polite live region; the counter shows
+ * from 80 % of [maxLength]. Kinds: Mono, Path and Url are monospaced and read left to right; Url
+ * and Path never autocorrect; Number maps Arabic-Indic digits to ASCII; Multiline grows; Secret is
+ * a `BasicSecureTextField` with reveal and Paste, no suggestions, value read left to right, every
+ * keystroke reported to [LocalKitSecretSink] — and it is never prefilled: with
+ * [SecretFieldPresence.Saved] it shows "Saved · Replace" and no input until Replace. [checking]
+ * shows "Checking…", which escalates at 8 s.
  *
- * States: default, focused, error, disabled, checking, saved (secret)
- * Text: frame (label, helper), reading (value)
- * Cap: Field
- * Motion: none of its own
- * Replaces: KitField, KitNumberFormatter (lib/ui/kit/kit_field.dart)
+ * States: default, focused, error, disabled, checking, saved (secret) Text: frame (label, helper),
+ * reading (value) Cap: Field Motion: none of its own Replaces: KitField, KitNumberFormatter
+ * (lib/ui/kit/kit_field.dart)
  */
 @Composable
 public fun KitField(
@@ -169,9 +188,18 @@ public fun KitField(
     focusRequester: FocusRequester? = null,
     onSubmit: (() -> Unit)? = null,
     onReplaceSecret: (() -> Unit)? = null,
+    /**
+     * Accepted user edits only, after validation (and secret registration). Never mutate this field
+     * in the callback.
+     */
+    onTextChanged: ((String) -> Unit)? = null,
 ) {
     kitAssert(label.isNotBlank()) { "KitField: a field needs its label" }
-    kitAssert(kind != KitFieldKind.Secret || secretPresence != SecretFieldPresence.Saved || onReplaceSecret != null) {
+    kitAssert(
+        kind != KitFieldKind.Secret ||
+            secretPresence != SecretFieldPresence.Saved ||
+            onReplaceSecret != null
+    ) {
         "KitField: a saved secret needs onReplaceSecret"
     }
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
@@ -179,7 +207,19 @@ public fun KitField(
         if (kind == KitFieldKind.Secret && secretPresence == SecretFieldPresence.Saved) {
             SavedSecretLine(onReplace = { onReplaceSecret?.invoke() })
         } else {
-            FieldBox(state, label, kind, placeholder, error != null, maxLength, imeAction, enabled, focusRequester, onSubmit)
+            FieldBox(
+                state,
+                label,
+                kind,
+                placeholder,
+                error != null,
+                maxLength,
+                imeAction,
+                enabled,
+                focusRequester,
+                onSubmit,
+                onTextChanged,
+            )
         }
         val note = error ?: helper
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
@@ -225,6 +265,7 @@ private fun FieldBox(
     enabled: KitEnabled,
     focusRequester: FocusRequester?,
     onSubmit: (() -> Unit)?,
+    onTextChanged: ((String) -> Unit)?,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -232,7 +273,11 @@ private fun FieldBox(
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val on = enabled.isEnabled
-    val technical = kind == KitFieldKind.Mono || kind == KitFieldKind.Path || kind == KitFieldKind.Url || kind == KitFieldKind.Secret
+    val technical =
+        kind == KitFieldKind.Mono ||
+            kind == KitFieldKind.Path ||
+            kind == KitFieldKind.Url ||
+            kind == KitFieldKind.Secret
     val baseStyle = typography.style(if (technical) TypeRole.Mono else TypeRole.Body)
     val style =
         baseStyle.copy(
@@ -240,14 +285,18 @@ private fun FieldBox(
             textDirection = if (technical) TextDirection.Ltr else TextDirection.Content,
         )
     val shape = KitShapeId.Tile.toShape()
-    val edge = when {
-        hasError -> colors.text1
-        focused -> colors.accent
-        else -> colors.hairline
-    }
+    val edge =
+        when {
+            hasError -> colors.text1
+            focused -> colors.accent
+            else -> colors.hairline
+        }
     val keyboard =
         KeyboardOptions(
-            capitalization = if (kind == KitFieldKind.Text || kind == KitFieldKind.Multiline) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
+            capitalization =
+                if (kind == KitFieldKind.Text || kind == KitFieldKind.Multiline)
+                    KeyboardCapitalization.Sentences
+                else KeyboardCapitalization.None,
             autoCorrectEnabled = kind == KitFieldKind.Text || kind == KitFieldKind.Multiline,
             keyboardType =
                 when (kind) {
@@ -256,7 +305,10 @@ private fun FieldBox(
                     KitFieldKind.Secret -> KeyboardType.Password
                     else -> KeyboardType.Text
                 },
-            imeAction = if (kind == KitFieldKind.Multiline && imeAction == ImeAction.Default) ImeAction.Default else imeAction,
+            imeAction =
+                if (kind == KitFieldKind.Multiline && imeAction == ImeAction.Default)
+                    ImeAction.Default
+                else imeAction,
         )
     val limit = maxLength?.let { InputTransformation.maxLength(it) }
     val transformation: InputTransformation? =
@@ -265,9 +317,21 @@ private fun FieldBox(
             kind == KitFieldKind.Number -> NumberInput
             else -> limit
         }
+    val report =
+        remember(onTextChanged) {
+            onTextChanged?.let { callback ->
+                InputTransformation {
+                    val accepted = toString()
+                    if (accepted != originalText.toString()) callback(accepted)
+                }
+            }
+        }
+    val finalInput = if (report == null) transformation else transformation?.then(report) ?: report
     val submit = onSubmit?.let { KeyboardActionHandler { _ -> it() } }
     val box =
-        Modifier.then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+        Modifier.then(
+                if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier
+            )
             .fillMaxWidth()
             .heightIn(min = tokens.minTarget.dp)
             .clip(shape)
@@ -277,32 +341,55 @@ private fun FieldBox(
     val decorator: @Composable (inner: @Composable () -> Unit) -> Unit = { inner ->
         Box(Modifier.fillMaxWidth()) {
             if (state.text.isEmpty() && placeholder != null) {
-                KitText(placeholder, role = if (technical) TypeRole.Mono else TypeRole.Body, tone = TextTone.Tertiary, maxLines = 1)
+                KitText(
+                    placeholder,
+                    role = if (technical) TypeRole.Mono else TypeRole.Body,
+                    tone = TextTone.Tertiary,
+                    maxLines = 1,
+                )
             }
             inner()
         }
     }
     if (kind == KitFieldKind.Secret) {
         val sink = LocalKitSecretSink.current
-        LaunchedEffect(state, sink) { snapshotFlow { state.text.toString() }.collect { if (it.isNotEmpty()) sink.register(it) } }
+        // Runs after validation, inside the edit transaction and before TextFieldState publishes to
+        // any consumer.
+        val register =
+            remember(sink) {
+                InputTransformation {
+                    val accepted = toString()
+                    if (accepted.isNotEmpty() && accepted != originalText.toString())
+                        sink.register(accepted)
+                }
+            }
         var revealed by rememberSaveable { mutableStateOf(false) }
-        // The value is technical: left to right in an Arabic interface too, bidi-isolated by the LTR box.
+        // The value is technical: left to right in an Arabic interface too, bidi-isolated by the
+        // LTR box.
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             Row(box.padding(end = 0.dp), verticalAlignment = Alignment.CenterVertically) {
                 BasicSecureTextField(
                     state = state,
-                    modifier = Modifier.weight(1f).testTag("kit-field-secret").semantics { contentDescription = label },
+                    modifier =
+                        Modifier.weight(1f).testTag("kit-field-secret").semantics {
+                            contentDescription = label
+                        },
                     enabled = on,
-                    inputTransformation = transformation,
+                    inputTransformation =
+                        (transformation?.then(register) ?: register).let { secured ->
+                            if (report == null) secured else secured.then(report)
+                        },
                     textStyle = style,
                     keyboardOptions = keyboard,
                     onKeyboardAction = submit,
                     interactionSource = interactions,
                     cursorBrush = SolidColor(colors.accent),
-                    textObfuscationMode = if (revealed) TextObfuscationMode.Visible else TextObfuscationMode.RevealLastTyped,
+                    textObfuscationMode =
+                        if (revealed) TextObfuscationMode.Visible
+                        else TextObfuscationMode.RevealLastTyped,
                     decorator = { decorator(it) },
                 )
-                PasteButton(state, on)
+                PasteButton(state, on, maxLength, sink)
                 KitIconButton(
                     icon = if (revealed) KitPartGlyphs.EyeOff else KitPartGlyphs.Eye,
                     label =
@@ -317,13 +404,14 @@ private fun FieldBox(
         return
     }
     val lines =
-        if (kind == KitFieldKind.Multiline) TextFieldLineLimits.MultiLine(minHeightInLines = 3, maxHeightInLines = 8)
+        if (kind == KitFieldKind.Multiline)
+            TextFieldLineLimits.MultiLine(minHeightInLines = 3, maxHeightInLines = 8)
         else TextFieldLineLimits.SingleLine
     BasicTextField(
         state = state,
         modifier = box.semantics { contentDescription = label },
         enabled = on,
-        inputTransformation = transformation,
+        inputTransformation = finalInput,
         textStyle = style,
         keyboardOptions = keyboard,
         onKeyboardAction = submit,
@@ -334,12 +422,23 @@ private fun FieldBox(
     )
 }
 
-@Suppress("DEPRECATION") // LocalClipboard has no common plain-text read yet; LocalClipboardManager.getText() does.
+@Suppress(
+    "DEPRECATION"
+) // LocalClipboard has no common plain-text read yet; LocalClipboardManager.getText() does.
 @Composable
-private fun PasteButton(state: TextFieldState, on: Boolean) {
+private fun PasteButton(state: TextFieldState, on: Boolean, maxLength: Int?, sink: KitSecretSink) {
     val clipboard = LocalClipboardManager.current
     KitTappable(
-        onClick = { clipboard.getText()?.text?.let { pasted -> state.edit { replace(0, length, pasted) } } },
+        onClick = {
+            clipboard.getText()?.text?.let { pasted ->
+                if (maxLength == null || pasted.length <= maxLength) {
+                    state.edit {
+                        if (pasted.isNotEmpty() && pasted != toString()) sink.register(pasted)
+                        replace(0, length, pasted)
+                    }
+                }
+            }
+        },
         enabled = on,
         disabledReason = if (on) null else "",
         shape = KitShapeId.Pill,
@@ -362,8 +461,18 @@ private fun SavedSecretLine(onReplace: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
-        KitText(stringResource(Res.string.kitFieldSaved), Modifier.weight(1f), role = TypeRole.Body, tone = TextTone.Secondary, kind = KitTextKind.Frame)
-        KitTappable(onClick = onReplace, shape = KitShapeId.Pill, modifier = Modifier.testTag("kit-field-replace")) {
+        KitText(
+            stringResource(Res.string.kitFieldSaved),
+            Modifier.weight(1f),
+            role = TypeRole.Body,
+            tone = TextTone.Secondary,
+            kind = KitTextKind.Frame,
+        )
+        KitTappable(
+            onClick = onReplace,
+            shape = KitShapeId.Pill,
+            modifier = Modifier.testTag("kit-field-replace"),
+        ) {
             KitText(
                 stringResource(Res.string.kitFieldReplace),
                 Modifier.padding(horizontal = Space.S2.dp),
@@ -385,7 +494,8 @@ private fun CheckingLine() {
         }
     }
     val words =
-        if (seconds >= CHECKING_ESCALATE_S) stringResource(Res.string.kitFieldStillChecking, seconds)
+        if (seconds >= CHECKING_ESCALATE_S)
+            stringResource(Res.string.kitFieldStillChecking, seconds)
         else stringResource(Res.string.kitFieldChecking)
     KitText(
         words,

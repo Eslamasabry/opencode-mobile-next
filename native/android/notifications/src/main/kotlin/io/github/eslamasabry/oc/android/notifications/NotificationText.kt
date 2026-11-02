@@ -20,11 +20,11 @@ public object NotificationText {
             Regex("(?i)\\b(bearer|basic)\\s+[A-Za-z0-9._~+/=-]{6,}") to { m -> "${m.groupValues[1]} $MASK" },
             // key=value and key: value pairs that name a secret: the name stays.
             Regex(
-                "(?i)\\b((?:api[_-]?key|access[_-]?key|secret|token|passwd|password|pwd|authorization|auth)" +
+                "(?i)\\b((?:[A-Za-z0-9]+[_-])*(?:api[_-]?key|access[_-]?key|secret|token|passwd|password|pwd|authorization|auth)" +
                     "[A-Za-z0-9_-]*)\\s*[=:]\\s*(\"[^\"]*\"|'[^']*'|\\S+)",
             ) to { m -> "${m.groupValues[1]}=$MASK" },
             // Flags that carry a secret.
-            Regex("(?i)(--?(?:password|passwd|token|secret|api-key|apikey|key|auth))[ =]+(\"[^\"]*\"|\\S+)") to
+            Regex("(?i)(--?(?:password|passwd|token|secret|api-key|apikey|key|auth))[ =]+(\"[^\"]*\"|'[^']*'|\\S+)") to
                 { m -> "${m.groupValues[1]} $MASK" },
             // user:password@host (the host stays).
             Regex("(?<=://)[^/\\s:@]+:[^/\\s@]+(?=@)") to { _ -> MASK },

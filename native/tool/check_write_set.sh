@@ -82,7 +82,9 @@ regexes=()
 for g in "${globs[@]}"; do regexes+=("$(glob_to_regex "$g")"); done
 
 base="$(oc_resolve_base "$base_arg")" || oc_die2 "unknown base '${base_arg:-${OC_BASE:-native/main}}' (pass --base <ref>)"
-mapfile -t changed < <(cd "$top" && oc_changed_files "$base")
+changed_text="$(cd "$top" && oc_changed_files "$base")" || oc_die2 "cannot enumerate changed paths"
+changed=()
+[[ -z "$changed_text" ]] || mapfile -t changed <<<"$changed_text"
 
 echo "write set (${#globs[@]} globs): ${globs[*]}"
 echo "base: $base (merge-base $(git -C "$top" merge-base "$base" HEAD | cut -c1-12)); changed paths: ${#changed[@]}"

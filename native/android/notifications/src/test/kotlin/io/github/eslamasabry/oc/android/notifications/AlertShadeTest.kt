@@ -40,6 +40,26 @@ class AlertShadeTest {
     private fun posted(key: String): Notification = shadowOf(manager).getNotification(NotificationIds.alert(key))
 
     @Test
+    fun `B-SEC-106 notify finding 1 masks prefixed assignments and whole quoted values on rendered alerts`() {
+        // Deliberately synthetic words that match no provider-token pattern.
+        val fixtures = listOf(
+            "DB_PASSWORD=fixture deploy" to "DB_PASSWORD=••• deploy",
+            "OPENAI_API_KEY=fixture deploy" to "OPENAI_API_KEY=••• deploy",
+            "login --password 'fixture words'" to "login --password •••",
+            "login --password \"fixture words\"" to "login --password •••",
+        )
+        fixtures.forEach { (input, expected) ->
+            assertEquals(expected, NotificationText.redact(input))
+            for (kind in listOf(AlertKind.Permission, AlertKind.Complete)) {
+                val alert = permission().copy(kind = kind, detail = NotificationText.redact(input))
+                shade.show(alert, if (kind == AlertKind.Permission) needsYou else finished)
+                val text = posted(alert.key).extras.getCharSequence(Notification.EXTRA_TEXT).toString()
+                assertFalse("fixture" in text || "words" in text)
+            }
+        }
+    }
+
+    @Test
     fun `B-SEC-105 a permission shows the command on the shade only, never a secret, with server and project`() {
         val alert = permission()
         assertEquals(AlertShown.Shown, shade.show(alert, needsYou))

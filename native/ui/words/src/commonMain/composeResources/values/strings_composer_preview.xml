@@ -1,0 +1,20 @@
+<resources>
+    <string name="composerPreviewModelButton">Model</string>
+    <string name="composerPreviewModelDefault">Server default</string>
+    <string name="composerPreviewModelsTitle">Choose a model</string>
+    <string name="composerPreviewModelsLoading">Loading models…</string>
+    <string name="composerPreviewModelsEmpty">No models are available right now.</string>
+    <string name="composerPreviewModelsFailed">The model list could not be loaded.</string>
+    <string name="composerPreviewModelsRetry">Try again</string>
+    <string name="composerPreviewModelsClose">Close</string>
+    <string name="composerPreviewAttachFile">Attach file</string>
+    <string name="composerPreviewAttachNoPicker">This device cannot attach files here.</string>
+    <string name="composerPreviewAttachModelWithoutFiles">This model does not accept files. Choose one that does.</string>
+    <string name="composerPreviewAttachmentRemove">Remove</string>
+    <string name="composerPreviewAttachmentFailed">The file could not be attached.</string>
+    <string name="composerPreviewAttachmentTooLarge">This file is too large to attach.</string>
+    <string name="composerPreviewAttachmentUnsupported">This kind of file cannot be attached.</string>
+    <string name="composerPreviewAttachmentStorage">The file could not be saved on this device.</string>
+    <string name="composerPreviewAttachmentDismiss">Dismiss</string>
+    <string name="composerPreviewAttachmentRetry">Try again</string>
+</resources>

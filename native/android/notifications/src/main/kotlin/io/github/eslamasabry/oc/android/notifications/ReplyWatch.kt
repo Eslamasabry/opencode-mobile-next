@@ -6,9 +6,9 @@ import android.content.Context
 import android.content.pm.ServiceInfo
 import androidx.core.app.ServiceCompat
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -91,6 +91,9 @@ public object ReplyWatchPolicy {
         }
 }
 
+/** Stable moment identity, retained by the source until handled; separate turns may share an alert key. */
+public data class ReplyAlert(val id: String, val alert: CodingAlert)
+
 /**
  * What reply watch reads from the engines (`:engine:connection` run state, `:engine:attention` copy and policy).
  * Bound in the app graph; this module never reaches into a connection itself.
@@ -99,11 +102,20 @@ public interface ReplyRunSource {
     /** Some run is progressing (a run only waiting on a shown needs-you alert is not). */
     public val progressing: StateFlow<Boolean>
 
+    /** All runs covered by this watch, including a run settling or waiting on its shown alert. */
+    public val runs: StateFlow<Set<ReplyRun>>
+
     /** The row's words while watching (the "working" content of live mode); null = the module's fallback words. */
     public val status: StateFlow<StatusContent?>
 
-    /** Finished, stopped and needs-you alerts as runs settle or ask. */
-    public val alerts: Flow<CodingAlert>
+    /**
+     * Unhandled finished, stopped and needs-you moments, including those produced before service startup.
+     * A transient event flow is insufficient: keep each stable id until acknowledged, across watch restarts.
+     */
+    public val pendingAlerts: StateFlow<List<ReplyAlert>>
+
+    /** Atomically removes only this id; newer moments sharing the same chat key stay pending. */
+    public fun acknowledgeAlert(id: String)
 
     public val appVisible: StateFlow<Boolean>
 
@@ -127,6 +139,7 @@ public class ReplyWatchServiceBody(
     private val renderer: StatusRenderer,
     private val shade: AlertShade,
     private val source: ReplyRunSource,
+    private val owners: StatusOwners,
     private val scope: CoroutineScope,
     /** Monotonic milliseconds (`SystemClock::elapsedRealtime` in the app; virtual time in tests). */
     private val elapsedMs: () -> Long,
@@ -135,7 +148,8 @@ public class ReplyWatchServiceBody(
     private val manager: NotificationManager = context.getSystemService(NotificationManager::class.java)
     private val throttle = StatusThrottle()
     private val _ended = MutableStateFlow<ReplyWatchEnd?>(null)
-    private val dismissedRuns = mutableSetOf<String>()
+    private val dismissedRuns = mutableSetOf<ReplyRun>()
+    private var displayedRun: ReplyRun? = null
     private var job: Job? = null
     private var service: Service? = null
 
@@ -152,7 +166,7 @@ public class ReplyWatchServiceBody(
                 ServiceCompat.startForeground(
                     service,
                     NotificationIds.STATUS,
-                    renderer.build(currentContent(), ongoing = true, chip = chip(currentContent())),
+                    render(currentContent()),
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
                 )
                 true
@@ -163,15 +177,20 @@ public class ReplyWatchServiceBody(
                 false
             }
         if (!promised) {
+            service.stopSelf()
+            this.service = null
             finish(ReplyWatchEnd.StartRefused)
             return Service.START_NOT_STICKY
         }
+        owners.begin(StatusOwner.Reply, currentContent())
         watch(joined = false)
         return Service.START_NOT_STICKY
     }
 
     /** Joins the server-held row as owner `reply` (no foreground start, no budget spent). */
     public fun joinServerRow() {
+        if (!owners.has(StatusOwner.Server)) return
+        owners.begin(StatusOwner.Reply, currentContent())
         watch(joined = true)
     }
 
@@ -181,15 +200,18 @@ public class ReplyWatchServiceBody(
     }
 
     /** The person swiped the row away while `reply` was its only owner: the watch ends for that run only. */
-    public fun onRowDismissed(session: String) {
-        synchronized(dismissedRuns) { dismissedRuns += session }
-        if (active) finish(ReplyWatchEnd.Dismissed)
+    public fun onRowDismissed(run: ReplyRun) {
+        if (!active || !owners.isOnly(StatusOwner.Reply) || displayedRun != run || run !in source.runs.value) return
+        synchronized(dismissedRuns) { dismissedRuns += run }
+        // Keep collecting for the other runs, including ones in another profile with the same session id.
+        val remaining = synchronized(dismissedRuns) { source.runs.value - dismissedRuns }
+        if (remaining.isEmpty()) finish(ReplyWatchEnd.Dismissed)
     }
 
     public fun onDestroy() {
         job?.cancel()
         job = null
-        service = null
+        releaseRow()
     }
 
     private fun watch(joined: Boolean) {
@@ -197,39 +219,48 @@ public class ReplyWatchServiceBody(
         _ended.value = null
         throttle.reset()
         val startedAt = elapsedMs()
-        job =
-            scope.launch {
-                launch { source.alerts.collect { announce(it) } }
-                var idleSince: Long? = null
-                while (true) {
-                    val now = elapsedMs()
-                    val progressing = source.progressing.value
-                    idleSince = if (progressing) null else idleSince ?: now
-                    val end =
-                        ReplyWatchPolicy.end(
-                            ReplyWatchState(
-                                startedAtMs = startedAt,
-                                nowMs = now,
-                                progressing = progressing,
-                                idleSinceMs = idleSince,
-                                appVisible = source.appVisible.value,
-                                joined = joined,
-                                serverStillHoldsRow = source.serverHoldsRow.value,
-                            ),
-                        )
-                    if (end != null) {
-                        finish(end)
-                        break
+        val watchJob = Job(scope.coroutineContext[Job])
+        job = watchJob
+        scope.launch(watchJob, start = CoroutineStart.UNDISPATCHED) {
+            // Reconcile retained moments before returning watch readiness, then stay subscribed.
+            launch(start = CoroutineStart.UNDISPATCHED) {
+                source.pendingAlerts.collect { pending ->
+                    pending.forEach { moment ->
+                        if (announce(moment.alert)) source.acknowledgeAlert(moment.id)
                     }
-                    if (!joined) refreshRow(now)
-                    delay(tickMs)
                 }
             }
+            var idleSince: Long? = null
+            while (true) {
+                val now = elapsedMs()
+                val progressing = source.progressing.value
+                idleSince = if (progressing) null else idleSince ?: now
+                val end =
+                    ReplyWatchPolicy.end(
+                        ReplyWatchState(
+                            startedAtMs = startedAt,
+                            nowMs = now,
+                            progressing = progressing,
+                            idleSinceMs = idleSince,
+                            appVisible = source.appVisible.value,
+                            joined = joined,
+                            serverStillHoldsRow = source.serverHoldsRow.value,
+                        ),
+                    )
+                if (end != null) {
+                    finish(end)
+                    break
+                }
+                if (!joined) refreshRow(now)
+                delay(tickMs)
+            }
+        }
     }
 
-    private fun announce(alert: CodingAlert) {
+    private fun announce(alert: CodingAlert): Boolean {
         val route = AlertPolicy.route(alert, source.alertFacts(alert).copy(replyWatchActive = true))
-        if (route is AlertRoute.Post) shade.show(alert, route)
+        // Quiet-hours skips are consumed now, never queued to ring later. A blocked post stays unhandled.
+        return route is AlertRoute.Skip || (route is AlertRoute.Post && shade.show(alert, route) == AlertShown.Shown)
     }
 
     private fun refreshRow(now: Long) {
@@ -240,7 +271,7 @@ public class ReplyWatchServiceBody(
                 else -> throttle.due(now)
             } ?: return
         try {
-            manager.notify(NotificationIds.STATUS, renderer.build(next, ongoing = true, chip = chip(next)))
+            manager.notify(NotificationIds.STATUS, render(next))
         } catch (_: SecurityException) {
             // Permission revoked while watching: the alerts are blocked too; the end rules still apply.
         }
@@ -253,8 +284,13 @@ public class ReplyWatchServiceBody(
             publicTitle = words.text(R.string.notify_status_public_working),
         )
 
+    private fun render(content: StatusContent): android.app.Notification {
+        displayedRun = content.run
+        return renderer.build(content, ongoing = true, chip = chip(content))
+    }
+
     private fun chip(content: StatusContent): LiveChip? {
-        val dismissed = synchronized(dismissedRuns) { content.sessionId.isNotEmpty() && content.sessionId in dismissedRuns }
+        val dismissed = synchronized(dismissedRuns) { content.run in dismissedRuns }
         return LiveUpdatePolicy.chipFor(content, dismissedRun = dismissed)
     }
 
@@ -262,10 +298,32 @@ public class ReplyWatchServiceBody(
         _ended.value = reason
         val running = job
         job = null
-        service?.let { s ->
-            ServiceCompat.stopForeground(s, ServiceCompat.STOP_FOREGROUND_REMOVE)
-            s.stopSelf()
-        }
+        releaseRow()
         running?.cancel()
+    }
+
+    private fun releaseRow() {
+        val leavingService = service
+        service = null
+        owners.end(StatusOwner.Reply) { remaining ->
+            // Live mode and sign-in share BackgroundConnectionService with reply watch. They keep its
+            // foreground promise; the server alone has a separate service from which we may detach.
+            val sharedServiceNeeded = owners.has(StatusOwner.Live) || owners.has(StatusOwner.SignIn)
+            if (!sharedServiceNeeded) {
+                leavingService?.let { s ->
+                    ServiceCompat.stopForeground(s, if (remaining == null) ServiceCompat.STOP_FOREGROUND_REMOVE else ServiceCompat.STOP_FOREGROUND_DETACH)
+                    s.stopSelf()
+                }
+            }
+            if (remaining != null) {
+                try {
+                    manager.notify(NotificationIds.STATUS, renderer.build(remaining, ongoing = true, chip = null))
+                } catch (_: SecurityException) {
+                    // Another owner's service still holds the row even when updates are blocked.
+                }
+            } else if (leavingService == null) {
+                manager.cancel(NotificationIds.STATUS)
+            }
+        }
     }
 }

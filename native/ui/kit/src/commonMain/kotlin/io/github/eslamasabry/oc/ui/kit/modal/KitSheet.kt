@@ -142,6 +142,10 @@ public class KitSheetHostState internal constructor() {
         if (dialog === d) dialogShown.targetState = false
     }
 
+    internal fun releaseDialog(d: DialogEntry) {
+        if (dialog === d && dialogShown.isIdle && !isDialogShowing) dialog = null
+    }
+
     /** True while a sheet is up or animating (tests and `KitScreenAudit`). */
     public val isShowing: Boolean get() = shown.currentState || shown.targetState
 
@@ -259,7 +263,9 @@ private fun SheetLayer(state: KitSheetHostState) {
     val colors = LocalKitColors.current
     val specs = KitMotion.specs
     val still = ModalMotion(KitMotion.state.reduced)
-    val back = KitPredictiveBack(enabled = state.shown.targetState && entry.dismissible && state.dialog == null) { entry.requestDismiss() }
+    val back = KitPredictiveBack(enabled = state.isShowing && !state.isDialogShowing) {
+        if (state.shown.targetState) entry.requestDismiss()
+    }
     AnimatedVisibility(state.shown, enter = still.enter { fadeIn(specs.enter()) }, exit = still.exit { fadeOut(specs.exit()) }) {
         Box(
             Modifier.fillMaxSize()

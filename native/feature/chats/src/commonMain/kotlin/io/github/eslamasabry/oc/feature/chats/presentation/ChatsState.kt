@@ -1,12 +1,15 @@
 package io.github.eslamasabry.oc.feature.chats.presentation
 
+import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedFilter
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedRules
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 
 /** Pure: feed + brief + filters → [ChatsUi]. The ViewModel only combines flows into this. */
 public object ChatsState {
@@ -23,13 +26,24 @@ public object ChatsState {
         val roots = feed.items.filter { !it.isSubagent }
         val projects = ChatFeedRules.projects(roots)
         val recent = projects.take(RECENT_PROJECTS).toMutableList()
-        projects.firstOrNull { it.directory == filters.projectDirectory }?.let { if (it !in recent) recent += it }
-        val chips = recent.map { ProjectChipUi(it.directory, it.name, it.directory == filters.projectDirectory) }
+        projects
+            .firstOrNull { it.directory == filters.projectDirectory }
+            ?.let { if (it !in recent) recent += it }
+        val chips = recent.map {
+            ProjectChipUi(it.directory, it.name, it.directory == filters.projectDirectory)
+        }
 
         val visible =
-            ChatFeedFilter(projectDirectory = filters.projectDirectory, running = filters.running, needsYou = filters.needsYou)
+            ChatFeedFilter(
+                    projectDirectory = filters.projectDirectory,
+                    running = filters.running,
+                    needsYou = filters.needsYou,
+                )
                 .apply(roots)
-                .filter { matches(it, filters.query) }
+                .filter {
+                    matches(it, filters.query) &&
+                        (filters.identities == null || it.identity in filters.identities)
+                }
         val phase =
             when {
                 roots.isEmpty() && feed.loading -> ChatsPhase.Opening
@@ -46,7 +60,7 @@ public object ChatsState {
             running = roots.count { it.status == ChatStatus.Running },
             projects = chips.toImmutableList(),
             filters = filters,
-            brief = briefUi(brief, roots),
+            brief = if (filters.identities == null) briefUi(brief, roots) else null,
             incomplete = feed.incompleteSources,
             settingsAvailable = settingsAvailable,
         )
@@ -56,7 +70,8 @@ public object ChatsState {
         val q = query.trim()
         if (q.isEmpty()) return true
         val title = (SessionTitles.present(item.title) as? RowTitle.Text)?.text.orEmpty()
-        return title.contains(q, ignoreCase = true) || item.projectName.contains(q, ignoreCase = true)
+        return title.contains(q, ignoreCase = true) ||
+            item.projectName.contains(q, ignoreCase = true)
     }
 
     public fun row(item: ChatFeedItem): ConversationRowUi =
@@ -74,14 +89,58 @@ public object ChatsState {
                 },
         )
 
-    /** Brief rows are the feed rows of the sessions it names (same profile); nothing when it has nothing to say. */
+    /**
+     * Brief rows are the feed rows of the sessions it names (same profile); nothing when it has
+     * nothing to say.
+     */
     private fun briefUi(brief: ReturnBrief, roots: List<ChatFeedItem>): BriefUi? {
-        if (brief.isEmpty && !brief.unknown) return null
-        val bySession = roots.associateBy { it.sessionId }
+        if (brief.isEmpty && !brief.unknown && brief.hiddenUnreviewed + brief.hiddenRequests == 0)
+            return null
+        // A session id is local to a source and folder. Unknown scope or an ambiguous match fails
+        // closed.
+        fun match(session: Session): ChatFeedItem? {
+            val scope = brief.scope ?: return null
+            return roots.singleOrNull {
+                it.locationKey == scope.location &&
+                    it.profileId == scope.profileId &&
+                    it.sourceId == scope.sourceId &&
+                    it.sessionId == session.id &&
+                    it.directory == session.directory
+            }
+        }
+        val requests = brief.requests.filter { match(it.session) != null }
+        val runs = brief.unreviewed.filter { match(it.session) != null }
         val rows =
-            (brief.requests.map { it.session.id } + brief.unreviewed.map { it.session.id })
-                .mapNotNull { bySession[it] }
-                .map { row(it).let { r -> if (r.status == RowStatus.None) r.copy(status = RowStatus.Done) else r } }
-        return BriefUi(rows.toImmutableList(), more = brief.hiddenUnreviewed + brief.hiddenRequests, unknown = brief.unknown)
+            (requests.map { it.session } + runs.map { it.session })
+                .mapNotNull(::match)
+                .distinctBy { it.identity }
+                .map {
+                    row(it).let { r ->
+                        if (r.status == RowStatus.None) r.copy(status = RowStatus.Done) else r
+                    }
+                }
+        val overflowKeys =
+            (brief.overflowRequests.map { it.session } + brief.overflowRuns.map { it.session })
+                .mapNotNull(::match)
+                .map { it.identity }
+                .toImmutableSet()
+        return BriefUi(
+            rows = rows.toImmutableList(),
+            more = brief.hiddenUnreviewed + brief.hiddenRequests,
+            unknown =
+                brief.unknown ||
+                    requests.size != brief.requests.size ||
+                    runs.size != brief.unreviewed.size,
+            acknowledgement =
+                brief.copy(
+                    requests = requests.toImmutableList(),
+                    unreviewed = runs.toImmutableList(),
+                    hiddenRequests = 0,
+                    hiddenUnreviewed = 0,
+                    overflowRuns = persistentListOf(),
+                    overflowRequests = persistentListOf(),
+                ),
+            overflowKeys = overflowKeys,
+        )
     }
 }

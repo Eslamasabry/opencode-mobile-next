@@ -1,27 +1,35 @@
 package io.github.eslamasabry.oc.feature.chat.world
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
+import kotlin.coroutines.CoroutineContext
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.StateFlow
-import kotlin.coroutines.CoroutineContext
 
 /**
- * What one open conversation reads and does: the frozen surface the chat's ViewModels code against (plan 09 §6.2).
+ * What one open conversation reads and does: the frozen surface the chat's ViewModels code against
+ * (plan 09 §6.2).
  *
- * It is a seam, not an engine. Every flow is the engine's truth passed through: [transcript] is `:engine:transcript`'s
- * handle, [pending] and [send] are `:engine:delivery`'s (S2-DLV), [draft] is `:engine:composer`'s drafts (S3). Until
- * those land, [GraphChatWorld] binds them to the gateway with the plan's rules (bubble first, never resend on its
- * own); each binding names the unit that replaces it. The screen and its tests never see the difference.
+ * It is a seam, not an engine. Every flow is the engine's truth passed through: [transcript] is
+ * `:engine:transcript`'s handle, [pending] and [send] are `:engine:delivery`'s (S2-DLV), [draft] is
+ * `:engine:composer`'s drafts (S3). Until those land, [GraphChatWorld] binds them to the gateway
+ * with the plan's rules (bubble first, never resend on its own); each binding names the unit that
+ * replaces it. The screen and its tests never see the difference.
  *
  * One instance per open conversation, shared by the chat and its composer through [ChatWorlds].
  */
 public interface ChatWorld {
+    public val requests:
+        StateFlow<io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestsModel?>
+        get() = NoRequests
+
     public val ref: ConversationRef
 
     /** Newest-first rows, published at most every 50 ms by the engine (plan 09 §3.5). */
@@ -30,13 +38,21 @@ public interface ChatWorld {
     /** First load and reloads (plan 09 §6.5). */
     public val load: StateFlow<ChatLoad>
 
-    /** The conversation's title as the server names it; null until read. Server text, shown as is. */
+    /**
+     * The conversation's title as the server names it; null until read. Server text, shown as is.
+     */
     public val title: StateFlow<String?>
 
-    /** The conversation's own backend's flags (ADR §9.1: gate on capabilities, never on the backend kind). */
+    /**
+     * The conversation's own backend's flags (ADR §9.1: gate on capabilities, never on the backend
+     * kind).
+     */
     public val capabilities: StateFlow<ServerCapabilities>
 
-    /** This conversation's backend link (07 §10.1: a conversation page shows its own backend's condition). */
+    /**
+     * This conversation's backend link (07 §10.1: a conversation page shows its own backend's
+     * condition).
+     */
     public val link: StateFlow<ChatLink>
 
     /** Optimistic prompt bubbles not yet in the transcript, oldest first (plan 09 §4.6). */
@@ -46,19 +62,62 @@ public interface ChatWorld {
     public val draft: StateFlow<DraftFacts>
 
     /**
-     * Where the chat's pure work (find) runs: the connection's default lane, never the main thread (ADR §9.5). A
-     * feature cannot see `AppDispatchers` (K1), so the world hands its own context over.
+     * The models this conversation's server offers, safe for display; empty until [loadModels]
+     * succeeds. A selection lives in the server session, never in a local preference.
      */
+    public val models: StateFlow<ComposerModels>
+        get() = NoModels
+
+    /** True while the server offers an older history page. */
+    public val hasOlder: StateFlow<Boolean>
+        get() = NoOlder
+
+    public suspend fun loadOlder(): Outcome<Unit> = Outcome.Ok(Unit)
+
+    /** The connection's work context for pure search work off the main thread. */
     public val work: CoroutineContext
 
     /** The composer reports every change of its text (ADR §9.2 `onDraftChanged`). */
     public fun draftChanged(text: String)
 
-    /** Local-only save of the current draft. Refused while drafts are not stored (slice 2) or storage refuses. */
+    /**
+     * Local-only save of the current draft. Refused while drafts are not stored (slice 2) or
+     * storage refuses.
+     */
     public suspend fun saveDraft(): Outcome<Unit>
 
-    /** Bubble first, then one dispatch; a lost answer stays unconfirmed and is never resent on its own. */
+    /**
+     * Replaces the draft's attached files. Only the storage-acknowledged snapshot is published; a
+     * refusal keeps the previous chips and failure.
+     */
+    public suspend fun replaceAttachments(files: List<PromptAttachment>): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("draftAttachments")))
+
+    /** First read of the model catalog and the conversation's current selection. */
+    public suspend fun loadModels(): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("serverCatalog")))
+
+    /**
+     * Moves the conversation to [choice] in the server session itself; null asks for the catalog
+     * default. A choice is published only after the server acknowledged it, and a failed selection
+     * never replaces the previous one.
+     */
+    public suspend fun selectModel(choice: ComposerModel?): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
+
+    /**
+     * Bubble first, then one dispatch; a lost answer stays unconfirmed and is never resent on its
+     * own.
+     */
     public suspend fun send(text: String): Outcome<Unit>
+
+    /**
+     * Explicit repeat of this exact draft revision, permitted only for canonical-history ambiguity.
+     */
+    public suspend fun sendRepeated(text: String, expectedRevision: Long): Outcome<Unit> =
+        Outcome.Failed(
+            Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("draftRepeat"))
+        )
 
     /** The person's own Try again on a failed bubble: one new dispatch of the same words. */
     public suspend fun retrySend(localId: Long): Outcome<Unit>
@@ -72,14 +131,20 @@ public interface ChatWorld {
     /** A new conversation that starts from [from]; its id. */
     public suspend fun fork(from: MessageId): Outcome<SessionId>
 
-    /** Deletes one message on the server; on success the transcript drops it and reloads (plan 09 §6.6). */
+    /**
+     * Deletes one message on the server; on success the transcript drops it and reloads (plan 09
+     * §6.6).
+     */
     public suspend fun deleteMessage(id: MessageId): Outcome<Unit>
 
     /** The visible transcript was read at the live edge (plan 09 §6.7). */
     public fun markRead()
 }
 
-/** The conversation's load phase (plan 09 §3.1 `TranscriptPhase`, without the excerpt until S2-TX adds it). */
+/**
+ * The conversation's load phase (plan 09 §3.1 `TranscriptPhase`, without the excerpt until S2-TX
+ * adds it).
+ */
 public sealed interface ChatLoad {
     public data object Loading : ChatLoad
 
@@ -89,16 +154,28 @@ public sealed interface ChatLoad {
 }
 
 /** This conversation's backend, as one fact (07 §10.1). */
-public enum class ChatLink { Live, Connecting, Offline }
+public enum class ChatLink {
+    Live,
+    Connecting,
+    Offline,
+}
 
 /** A prompt the person sent that the transcript does not show yet. */
-public data class PendingSend(val localId: Long, val text: String, val state: PendingState, val failure: Failure? = null)
+public data class PendingSend(
+    val localId: Long,
+    val text: String,
+    val state: PendingState,
+    val failure: Failure? = null,
+)
 
 public enum class PendingState {
     /** On its way; the bubble shows at once (bubble first). */
     Sending,
 
-    /** The server did not confirm it; it may already be in the conversation. Never resent on its own. */
+    /**
+     * The server did not confirm it; it may already be in the conversation. Never resent on its
+     * own.
+     */
     Unconfirmed,
 
     /** It did not leave; Try again sends it once more. */
@@ -106,14 +183,47 @@ public enum class PendingState {
 }
 
 /** [text] is the composer's; [saved] is the last stored draft ("" when none). */
-public data class DraftFacts(val text: String = "", val saved: String = "") {
-    /** The Back guard is on only while there is something to lose (07 §3.4). Whitespace alone is nothing. */
-    public val unsaved: Boolean get() = text.trim() != saved.trim()
+public data class DraftFacts(
+    val text: String = "",
+    val saved: String = "",
+    val ready: Boolean = true,
+    val failure: Failure? = null,
+    val restoreRevision: Long = 0,
+    val sendBlocked: Boolean = false,
+    val editRevision: Long = 0,
+    val repeatAllowed: Boolean = false,
+    val attachments: List<PromptAttachment> = emptyList(),
+    val savedAttachments: List<PromptAttachment> = emptyList(),
+) {
+    /**
+     * The Back guard is on only while there is something to lose (07 §3.4). Whitespace without
+     * files is nothing; files alone are unsent work.
+     */
+    public val unsaved: Boolean
+        get() =
+            if (text.isBlank() && saved.isBlank() && attachments.isEmpty() && savedAttachments.isEmpty()) false
+            else text != saved || attachments != savedAttachments
+
+    override fun toString(): String =
+        "DraftFacts(ready=$ready, failed=${failure != null}, restoreRevision=$restoreRevision)"
 }
 
-/** Shares one [ChatWorld] per conversation between the chat entry and its composer (ref-counted). */
+/**
+ * Shares one [ChatWorld] per conversation between the chat entry and its composer (ref-counted).
+ */
 public interface ChatWorlds {
     public fun open(ref: ConversationRef): ChatWorld
 
     public fun release(world: ChatWorld)
 }
+
+private val NoRequests =
+    kotlinx.coroutines.flow.MutableStateFlow<
+        io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestsModel?
+    >(
+        null
+    )
+
+private val NoOlder = kotlinx.coroutines.flow.MutableStateFlow(false)
+
+private val NoModels = kotlinx.coroutines.flow.MutableStateFlow(ComposerModels())

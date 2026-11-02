@@ -6,8 +6,8 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.common.WireTag
 import io.github.eslamasabry.oc.core.common.failed
-import io.github.eslamasabry.oc.core.common.flatMap
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
@@ -74,7 +74,8 @@ public class RequestsEngine(
 
     init {
         scope.launch(lane) {
-            port.events.all.collect { envelope ->
+            // Pending-list snapshots cover the current project; other-project attention has its own owner.
+            port.events.project.collect { envelope ->
                 when (val event = envelope.event) {
                     GatewayEvent.Connected -> scope.launch(lane) { refresh() }
                     is GatewayEvent.PermissionAsked -> upsert(PendingRequest.Permission(event.request))
@@ -204,20 +205,66 @@ public class RequestsEngine(
     /** Sends a held answer if [held] is still its phase; null when someone else moved it first. */
     private suspend fun send(id: RequestId, held: AnswerPhase.Held): Outcome<Unit>? = claimAndWrite(id, held, held.answer)
 
-    /** Claims [expected] → Sending atomically, then writes. Null when the claim lost (the caller looks again). */
-    private suspend fun claimAndWrite(id: RequestId, expected: AnswerPhase, answer: RequestAnswer): Outcome<Unit>? {
-        val sending = AnswerPhase.Sending(answer, clock.now().toEpochMilliseconds(), CompletableDeferred())
-        var claimed = false
+    /**
+     * Claims and captures the entry together; the connection owns the write, callers only await its
+     * result.
+     */
+    private suspend fun claimAndWrite(
+        id: RequestId,
+        expected: AnswerPhase,
+        answer: RequestAnswer,
+    ): Outcome<Unit>? {
+        val sending =
+            AnswerPhase.Sending(answer, clock.now().toEpochMilliseconds(), CompletableDeferred())
+        var claimed: PendingRequest? = null
+        var refusal: Failure? = null
         state.update { list ->
-            claimed = false
-            list.mapEntry(id) { entry -> if (entry.phase === expected) entry.withPhase(sending).also { claimed = true } else entry }
+            claimed = null
+            refusal = null
+            list.mapEntry(id) { entry ->
+                if (entry.phase !== expected) entry
+                else {
+                    val invalid = admissible(entry, answer)
+                    refusal = invalid
+                    if (invalid != null) entry.withPhase(AnswerPhase.NotAccepted(answer, invalid))
+                    else entry.withPhase(sending).also { claimed = it }
+                }
+            }
         }
-        if (!claimed) return null
-        val entry = state.value.first { it.id == id }
-        val written = port.awaitActionTransport().flatMap { reply(entry, answer) }
-        val outcome = settleWrite(entry, sending, written)
-        sending.result.complete(outcome)
-        return outcome
+        refusal?.let { return it.failed() }
+        val entry = claimed ?: return null
+        val write =
+            scope.launch(lane) {
+                // Settlement can remove a claimed entry before this job starts or while the
+                // transport wakes.
+                val written =
+                    if (phaseOf(id) !== sending) Unit.ok()
+                    else {
+                        val transport = port.awaitActionTransport()
+                        when {
+                            phaseOf(id) !== sending -> Unit.ok()
+                            transport is Outcome.Failed -> transport
+                            else -> reply(entry, answer)
+                        }
+                    }
+                sending.result.complete(settleWrite(entry, sending, written))
+            }
+        // Also runs if the connection was cancelled before the job could start. Never replay an
+        // uncertain write.
+        write.invokeOnCompletion { cause ->
+            if (cause != null) {
+                val failure = Failure.Refused(RefusalReason.DispatchUncertain)
+                state.update { list ->
+                    list.mapEntry(id) {
+                        if (it.phase === sending)
+                            it.withPhase(AnswerPhase.NotAccepted(answer, failure))
+                        else it
+                    }
+                }
+                sending.result.complete(if (phaseOf(id) == null) Unit.ok() else failure.failed())
+            }
+        }
+        return sending.result.await()
     }
 
     private suspend fun reply(entry: PendingRequest, answer: RequestAnswer): Outcome<Unit> =
@@ -240,7 +287,7 @@ public class RequestsEngine(
         val failure = (written as Outcome.Failed).failure
         // The server timed the ask out (404 naming this request): the card leaves with no error (B-CHAT-076).
         // Anything else is checked against the server's own list: an ask resolved meanwhile shows no error (B-PROTO-048).
-        val resolved = timedOut(failure, id) || stillListed(entry) == false || phaseOf(id) == null
+        val resolved = timedOut(failure, entry) || stillListed(entry) == false || phaseOf(id) == null
         if (resolved) {
             withContext(lane) { remove(id) }
             return Unit.ok()
@@ -252,8 +299,14 @@ public class RequestsEngine(
         return written
     }
 
-    private fun timedOut(failure: Failure, id: RequestId): Boolean =
-        failure is Failure.NotFound && (failure.requestId == id || (failure.requestId == null && failure.tag?.raw in notFoundTags))
+    private fun timedOut(failure: Failure, entry: PendingRequest): Boolean {
+        val requestTag = when (entry) {
+            is PendingRequest.Permission -> "PermissionNotFoundError"
+            is PendingRequest.Question -> "QuestionNotFoundError"
+        }
+        return failure is Failure.NotFound && failure.tag?.raw == requestTag &&
+            (failure.requestId == null || failure.requestId == entry.id)
+    }
 
     /** Null when the list could not be read. */
     private suspend fun stillListed(entry: PendingRequest): Boolean? =
@@ -267,13 +320,43 @@ public class RequestsEngine(
             is PendingRequest.Permission ->
                 when {
                     answer is RequestAnswer.Question -> Failure.Unexpected()
-                    answer is RequestAnswer.Permission && answer.reply == PermissionReply.Always &&
-                        !(port.capabilities.value.persistentPermissionGrants && entry.request.canAlwaysAllow) ->
+                    answer is RequestAnswer.Permission &&
+                        answer.reply == PermissionReply.Always &&
+                        !(port.capabilities.value.persistentPermissionGrants &&
+                            entry.request.canAlwaysAllow) ->
                         Failure.Unavailable(FeatureId("persistentPermissionGrants"))
                     else -> null
                 }
-            is PendingRequest.Question -> if (answer is RequestAnswer.Permission) Failure.Unexpected() else null
+            is PendingRequest.Question ->
+                when {
+                    answer is RequestAnswer.Permission -> Failure.Unexpected()
+                    answer is RequestAnswer.Question && !validQuestionAnswer(entry, answer) ->
+                        Failure.Rejected(status = null, tag = WireTag("QUESTION_INVALID_ANSWER"))
+                    else -> null
+                }
         }
+
+    /**
+     * Validate wire-ready answers too: notifications and other callers do not pass through the
+     * sheet.
+     */
+    private fun validQuestionAnswer(
+        entry: PendingRequest.Question,
+        answer: RequestAnswer.Question,
+    ): Boolean {
+        val prompts = entry.question.prompts
+        if (answer.answers.size != prompts.size) return false
+        return prompts.indices.all { index ->
+            val prompt = prompts[index]
+            val values = answer.answers[index]
+            val offered = prompt.choices.map { it.label }
+            (prompt.optional || values.isNotEmpty()) &&
+                (prompt.multiple || values.size <= 1) &&
+                values.none { it.isBlank() } &&
+                values.distinct().size == values.size &&
+                (prompt.custom || values.all { it in offered })
+        }
+    }
 
     // ---- structure (lane only)
 
@@ -318,7 +401,6 @@ public class RequestsEngine(
 
         /** Dart keeps 64 first-seen times per connection. */
         const val SHOWN_KEPT = 64
-        val notFoundTags = setOf("PermissionNotFoundError", "QuestionNotFoundError", "NotFoundError")
     }
 }
 

@@ -30,8 +30,9 @@ import io.github.eslamasabry.oc.ui.words.res.openCode2MoveProgress
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The opening gate (07 §5 A01): drawn by the shell before the graph, on the first frame. Arranges kit parts only.
- * Fixed words, never an exception text; a slow wait escalates at 8 s inside the kit's state view.
+ * The opening gate (07 §5 A01): drawn by the shell before the graph, on the first frame. Arranges
+ * kit parts only. Fixed words, never an exception text; a slow wait escalates at 8 s inside the
+ * kit's state view.
  */
 @Composable
 public fun OpeningGateScreen(state: OpeningGateUi, actions: OpeningGateActions) {
@@ -42,9 +43,16 @@ public fun OpeningGateScreen(state: OpeningGateUi, actions: OpeningGateActions) 
             is OpeningGateUi.Waiting ->
                 KitStateView(
                     kind = KitStateKind.Loading,
-                    // TODO(words): "Updating your app…" (S2-CHATS words request); the move line stands in.
-                    title = stringResource(if (state.updating) Res.string.openCode2MoveProgress else Res.string.bootstrapOpeningTitle),
-                    body = if (state.updating) null else stringResource(Res.string.bootstrapOpeningBody),
+                    // TODO(words): "Updating your app…" (S2-CHATS words request); the move line
+                    // stands in.
+                    title =
+                        stringResource(
+                            if (state.updating) Res.string.openCode2MoveProgress
+                            else Res.string.bootstrapOpeningTitle
+                        ),
+                    body =
+                        if (state.updating) null
+                        else stringResource(Res.string.bootstrapOpeningBody),
                     since = state.since,
                     onSlow = listOf(KitAction(retry, actions::retry)),
                 )
@@ -54,22 +62,33 @@ public fun OpeningGateScreen(state: OpeningGateUi, actions: OpeningGateActions) 
                     title = stringResource(Res.string.bootstrapFailedTitle),
                     body = stringResource(Res.string.bootstrapFailedBody),
                     primary = KitAction(retry, actions::retry),
-                    secondary = KitAction(stringResource(Res.string.kitReportProblem), actions::reportProblem),
-                    tertiary = listOf(KitAction(stringResource(Res.string.bootstrapStartFresh), actions::askStartFresh)),
+                    secondary =
+                        KitAction(
+                            stringResource(Res.string.kitReportProblem),
+                            actions::reportProblem,
+                        ),
+                    tertiary =
+                        listOf(
+                            KitAction(
+                                stringResource(Res.string.bootstrapStartFresh),
+                                actions::askStartFresh,
+                            )
+                        ),
                 )
                 KitConfirm(
                     spec =
                         if (state.confirming) {
                             KitConfirmSpec(
                                 title = stringResource(Res.string.bootstrapStartFreshTitle),
-                                confirmLabel = stringResource(Res.string.bootstrapStartFreshConfirm),
+                                confirmLabel =
+                                    stringResource(Res.string.bootstrapStartFreshConfirm),
                                 kind = KitConfirmKind.Destructive,
                                 body = stringResource(Res.string.bootstrapStartFreshBody),
                             )
                         } else {
                             null
                         },
-                    onConfirm = actions::confirmStartFresh,
+                    onConfirm = { actions.confirmStartFresh(state.confirmationId) },
                     onCancel = actions::cancelStartFresh,
                 )
             }
@@ -85,7 +104,11 @@ public fun OpeningGateScreen(state: OpeningGateUi, actions: OpeningGateActions) 
                     title = stringResource(Res.string.bootstrapResetFailedTitle),
                     body = stringResource(Res.string.bootstrapResetFailedBody),
                     primary = KitAction(retry, actions::retry),
-                    secondary = KitAction(stringResource(Res.string.kitReportProblem), actions::reportProblem),
+                    secondary =
+                        KitAction(
+                            stringResource(Res.string.kitReportProblem),
+                            actions::reportProblem,
+                        ),
                 )
             OpeningGateUi.Open -> Unit
         }

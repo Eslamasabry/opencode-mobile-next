@@ -10,17 +10,17 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import dev.zacsweers.metrox.viewmodel.metroViewModel
-import io.github.eslamasabry.oc.feature.chats.presentation.ChatPreviewViewModel
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllViewModel
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsViewModel
-import io.github.eslamasabry.oc.feature.chats.ui.ChatPreviewScreen
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsAllScreen
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
-import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 
-/** The EntryInstaller; the ONLY file in the module that imports androidx.navigation3.runtime (Konsist K1). */
+/**
+ * The EntryInstaller; the ONLY file in the module that imports androidx.navigation3.runtime
+ * (Konsist K1).
+ */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class ChatsEntries : EntryInstaller {
@@ -31,15 +31,12 @@ public class ChatsEntries : EntryInstaller {
             ChatsScreen(state, vm)
         }
         entry<ChatsRoute.All> { route ->
-            val vm = assistedMetroViewModel<ChatsAllViewModel, ChatsAllViewModel.Factory> { create(route) }
+            val vm =
+                assistedMetroViewModel<ChatsAllViewModel, ChatsAllViewModel.Factory> {
+                    create(route)
+                }
             val state by vm.state.collectAsStateWithLifecycle()
             ChatsAllScreen(state, vm)
-        }
-        // P2: the page a conversation row grows into, until :feature:chat installs the real one.
-        entry<ChatRoute> { route ->
-            val vm = assistedMetroViewModel<ChatPreviewViewModel, ChatPreviewViewModel.Factory> { create(route) }
-            val state by vm.state.collectAsStateWithLifecycle()
-            ChatPreviewScreen(state, vm)
         }
     }
 }

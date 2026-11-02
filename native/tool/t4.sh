@@ -78,7 +78,8 @@ flock -w "${OC_LOCK_WAIT:-1800}" "$emufd" || { oc_say "lock: emulator lock busy"
 adb="${ADB:-${ANDROID_HOME:+$ANDROID_HOME/platform-tools/}adb}"
 [[ "$("$adb" -s "$serial" get-state 2>/dev/null)" == device ]] || { oc_say "device $serial not online"; oc_status 2; exit 2; }
 oc_step restore "$restore" --serial "$serial" || { oc_say "restore failed"; oc_status 2; exit 2; }
-trap '"$restore" --serial "$serial" >/dev/null 2>&1; oc_finish $?' EXIT
+oc_restore_perf() { "$restore" --serial "$serial" >/dev/null 2>&1; }
+OC_CLEANUP=oc_restore_perf
 
 oc_step install-app "$adb" -s "$serial" install -r "$app_apk" || { oc_status 2; exit 2; }
 oc_step install-bench "$adb" -s "$serial" install -r "$bench_apk" || { oc_status 2; exit 2; }

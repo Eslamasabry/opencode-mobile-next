@@ -1,0 +1,10 @@
+{
+  "model": "zai-coding-plan/glm-5.3",
+  "runner": "OpenCode 1.19.0",
+  "machine": "VPS",
+  "role": "independent draft persistence and deletion review",
+  "exit": 0,
+  "reportSha256": "bfb5a9ae4597b2db978750705f170f3adf831d2d8b0bfdf9280721557f4b8294",
+  "report": "GLM-DRAFT-REVIEW.md",
+  "sourceSnapshot": "early integration; findings triaged against completed implementation"
+}

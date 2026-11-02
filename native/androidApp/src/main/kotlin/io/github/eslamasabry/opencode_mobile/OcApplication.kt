@@ -14,8 +14,9 @@ import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
 
 /**
- * The ADR §9.7 order, slice-0 form: steps 1 (crash handler), 3 (crash-loop guard), 4 (Flutter backup) and 6–7
- * (migration runner, prefs warm-up) are P5's and slice 1's; the preview flavour never migrates.
+ * The ADR §9.7 order, slice-0 form: steps 1 (crash handler), 3 (crash-loop guard), 4 (Flutter
+ * backup) and 6–7 (migration runner, prefs warm-up) are P5's and slice 1's; the preview flavour
+ * never migrates.
  */
 class OcApplication : Application(), GraphOwner {
     override lateinit var appGraph: AndroidAppGraph
@@ -24,7 +25,10 @@ class OcApplication : Application(), GraphOwner {
     override fun onCreate() {
         super.onCreate()
         val redactor = Redactor() // 2. before any secret is read
-        AppLog.install(RedactingWriter(redactor, emptyList()), Severity.Info) // ring + logcat sinks: slice 1
+        AppLog.install(
+            RedactingWriter(redactor, emptyList()),
+            Severity.Info,
+        ) // ring + logcat sinks: slice 1
         val buildInfo =
             AppBuildInfo(
                 versionName = BuildConfig.VERSION_NAME,
@@ -32,7 +36,10 @@ class OcApplication : Application(), GraphOwner {
                 channel = Channel.Preview,
                 debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
             )
-        appGraph = createGraphFactory<AndroidAppGraph.Factory>().create(this, buildInfo, redactor, LaunchMode.Normal)
+        appGraph =
+            createGraphFactory<AndroidAppGraph.Factory>()
+                .create(this, buildInfo, redactor, LaunchMode.Normal)
+        appGraph.previewRuntime // warm stores, restore saved profile, connect
         AppLog.tagged("App").i { "graph ready ${buildInfo.versionName} (${buildInfo.versionCode})" }
     }
 }

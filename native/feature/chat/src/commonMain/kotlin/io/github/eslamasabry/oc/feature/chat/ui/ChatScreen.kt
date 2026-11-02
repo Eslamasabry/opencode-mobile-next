@@ -34,6 +34,9 @@ import io.github.eslamasabry.oc.feature.chat.presentation.MessageAction
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageMenuUi
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageOrder
 import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
+import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -45,11 +48,13 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
@@ -79,6 +84,7 @@ import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
+import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitCopy
 import io.github.eslamasabry.oc.ui.words.res.kitDiscardTitle
@@ -104,17 +110,28 @@ import io.github.eslamasabry.oc.ui.words.res.transcriptFindCount
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindHint
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindNext
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindNone
+import io.github.eslamasabry.oc.ui.words.res.transcriptFindPartial
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindPrevious
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The chat screen (plan 09 §6, §7): `ChatScreen(state, actions)` from kit parts only. Top to bottom: the bar, the one
- * status line, the find bar, the loading line, the transcript (or its skeleton or the could-not-load state), the
- * composer. The menu and the confirm are screen state, never routes (ADR §9.4).
+ * The chat screen (plan 09 §6, §7): `ChatScreen(state, actions)` from kit parts only. Top to
+ * bottom: the bar, the one status line, the find bar, the loading line, the transcript (or its
+ * skeleton or the could-not-load state), the composer. The menu and the confirm are screen state,
+ * never routes (ADR §9.4).
  */
 @Composable
-public fun ChatScreen(state: ChatUi, actions: ChatActions, composerHost: ComposerHost, modifier: Modifier = Modifier) {
+public fun ChatScreen(
+    state: ChatUi,
+    actions: ChatActions,
+    composerHost: ComposerHost,
+    modifier: Modifier = Modifier,
+    requests: RequestSlotUi = RequestSlotUi(),
+    requestActions: ChatRequestActions? = null,
+) {
+    KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
+    val requestState by rememberUpdatedState(requests)
     val words = rememberChatWords()
     val listWords =
         ChatListWords(
@@ -133,8 +150,11 @@ public fun ChatScreen(state: ChatUi, actions: ChatActions, composerHost: Compose
     val itemsBelowRows = (if (state.live != null) 1 else 0) + state.pending.size
 
     // Read acknowledgement follows the visible list (plan 09 §6.7).
-    LaunchedEffect(list) { snapshotFlow { list.atLiveEdge }.collect { actions.liveEdgeChanged(it) } }
-    // Find brings its current hit's row into view (plan 09 §6.6); a jump never animates across thousands of rows (§7.5).
+    LaunchedEffect(list) {
+        snapshotFlow { list.atLiveEdge }.collect { actions.liveEdgeChanged(it) }
+    }
+    // Find brings its current hit's row into view (plan 09 §6.6); a jump never animates across
+    // thousands of rows (§7.5).
     LaunchedEffect(state.find?.currentKey, state.find?.current) {
         val index = latest.find?.currentIndex ?: -1
         if (index >= 0) {
@@ -142,7 +162,8 @@ public fun ChatScreen(state: ChatUi, actions: ChatActions, composerHost: Compose
             list.lazy.scrollToItem(itemsBelowRows + index)
         }
     }
-    // Arrivals (07 §2.5): land once on the failure; "ready to type" is the composer's to acknowledge.
+    // Arrivals (07 §2.5): land once on the failure; "ready to type" is the composer's to
+    // acknowledge.
     LaunchedEffect(state.arrival?.id) {
         val arrival = latest.arrival ?: return@LaunchedEffect
         arrival.landOnIndex?.let {
@@ -156,7 +177,7 @@ public fun ChatScreen(state: ChatUi, actions: ChatActions, composerHost: Compose
         remember(actions) {
             ComposerChrome(
                 busy = { latest.live != null },
-                requestWaiting = { false }, // S2-REQ: the request card owns the composer while one waits
+                requestWaiting = { requestState.card != null },
                 onSent = { list.following = true },
                 pendingInsert = { null }, // agent ```choices arrive with cards (S5)
                 insertDone = {},
@@ -167,100 +188,138 @@ public fun ChatScreen(state: ChatUi, actions: ChatActions, composerHost: Compose
             )
         }
 
-    Box(modifier.fillMaxSize()) {
-        KitScreen(
-            modifier = Modifier.fillMaxSize(),
-            page = true,
-            topBar = {
-                KitTopBar(
-                    title = state.title ?: stringResource(Res.string.commandUntitledChat),
-                    exit = KitTopBarExit.Back,
-                    exitLabel = stringResource(Res.string.kitTopBarBack),
-                    onExit = actions::leaveRequested,
-                    actions = listOf(KitLineAction(stringResource(Res.string.kitTopBarSearch), { actions.find(state.find?.query ?: "") }, testTag = "chat-find-open")),
-                )
-            },
-            status = state.status?.let { statusLine(it, actions) },
-            search = state.find?.let { find -> @Composable { FindBar(find, actions) } },
-            loading = state.phase == ChatPhase.Loading,
-            loadingLabel = stringResource(Res.string.chatLoadingConversation),
-            bottom = {
-                composerHost.Composer(
-                    ComposerTarget(state.ref.profileId.raw, state.ref.sessionId.raw),
-                    chrome,
-                    Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-                )
-            },
-        ) {
-            when (val phase = state.phase) {
-                // First load: the skeleton under the loading line, never an empty-state text (plan 09 §6.5).
-                ChatPhase.Loading -> KitSkeletonRows(Modifier.testTag("chat-loading"), count = 6)
-                is ChatPhase.Failed ->
-                    KitStateView(
-                        kind = KitStateKind.Error,
-                        title = stringResource(Res.string.chatLoadFailedTitle),
-                        body = stringResource(Res.string.chatLoadFailedBody),
-                        failure = phase.failure,
-                        onRetry = actions::retryLoad,
-                        modifier = Modifier.testTag("chat-load-error"),
+    // The frame, its sibling menu and its confirmation share one modal layer. KitScreen
+    // reuses this ancestor rather than creating a host scoped only to its own content.
+    KitSheetHost(modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize()) {
+            KitScreen(
+                modifier = Modifier.fillMaxSize(),
+                page = true,
+                topBar = {
+                    KitTopBar(
+                        title = state.title ?: stringResource(Res.string.commandUntitledChat),
+                        exit = KitTopBarExit.Back,
+                        exitLabel = stringResource(Res.string.kitTopBarBack),
+                        onExit = actions::leaveRequested,
+                        actions =
+                            listOf(
+                                KitLineAction(
+                                    stringResource(Res.string.kitTopBarSearch),
+                                    { actions.find(state.find?.query ?: "") },
+                                    testTag = "chat-find-open",
+                                )
+                            ),
                     )
-                ChatPhase.Live ->
-                    Box(Modifier.fillMaxSize()) {
-                        ChatTranscriptList(
-                            rows = state.rows,
-                            live = state.live,
-                            pending = state.pending,
-                            words = words,
-                            listWords = listWords,
-                            list = list,
-                            reveal = reveal,
-                            motion = motion,
-                            onOpenMenu = actions::openMessageMenu,
-                            onRetrySend = actions::retrySend,
-                            modifier = Modifier.fillMaxSize(),
+                },
+                status = state.status?.let { statusLine(it, actions) },
+                search = state.find?.let { find -> @Composable { FindBar(find, actions) } },
+                loading = state.phase == ChatPhase.Loading,
+                loadingLabel = stringResource(Res.string.chatLoadingConversation),
+                bottom = {
+                    Column {
+                        if (requestActions != null)
+                            ChatRequestSlot(
+                                requests,
+                                requestActions,
+                                nowMs = null,
+                                modifier = Modifier.padding(horizontal = Space.S4.dp),
+                            )
+                        composerHost.Composer(
+                            ComposerTarget(state.ref.profileId.raw, state.ref.sessionId.raw),
+                            chrome,
+                            Modifier.fillMaxWidth()
+                                .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
                         )
-                        EarlierMessagesPill(state, list, itemsBelowRows, actions, Modifier.align(Alignment.TopCenter).padding(top = Space.S2.dp))
                     }
-            }
-        }
-
-        // The menu opens over the composer's end, where the action that opened it is under the thumb.
-        MessageMenu(state.menu, actions, Modifier.align(Alignment.BottomEnd))
-        KitConfirm(
-            spec = confirmSpec(state.confirm),
-            onConfirm = {
-                when (latest.confirm) {
-                    is ChatConfirm.DeleteMessage -> actions.confirmDelete()
-                    ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
-                    null -> Unit
+                },
+            ) {
+                when (val phase = state.phase) {
+                    // First load: the skeleton under the loading line, never an empty-state text
+                    // (plan 09 §6.5).
+                    ChatPhase.Loading ->
+                        KitSkeletonRows(Modifier.testTag("chat-loading"), count = 6)
+                    is ChatPhase.Failed ->
+                        KitStateView(
+                            kind = KitStateKind.Error,
+                            title = stringResource(Res.string.chatLoadFailedTitle),
+                            body = stringResource(Res.string.chatLoadFailedBody),
+                            failure = phase.failure,
+                            onRetry = actions::retryLoad,
+                            modifier = Modifier.testTag("chat-load-error"),
+                        )
+                    ChatPhase.Live ->
+                        Box(Modifier.fillMaxSize()) {
+                            ChatTranscriptList(
+                                rows = state.rows,
+                                live = state.live,
+                                pending = state.pending,
+                                words = words,
+                                listWords = listWords,
+                                list = list,
+                                reveal = reveal,
+                                motion = motion,
+                                onOpenMenu = actions::openMessageMenu,
+                                onRetrySend = actions::retrySend,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                            EarlierMessagesPill(
+                                state,
+                                list,
+                                itemsBelowRows,
+                                actions,
+                                Modifier.align(Alignment.TopCenter).padding(top = Space.S2.dp),
+                            )
+                        }
                 }
-            },
-            onCancel = actions::dismissConfirm,
-        )
+            }
+
+            // The menu opens over the composer's end, where the action that opened it is under the
+            // thumb.
+            MessageMenu(state.menu, actions, Modifier.align(Alignment.BottomEnd))
+            KitConfirm(
+                spec = confirmSpec(state.confirm),
+                onConfirm = {
+                    when (latest.confirm) {
+                        is ChatConfirm.DeleteMessage -> actions.confirmDelete()
+                        ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
+                        null -> Unit
+                    }
+                },
+                onCancel = actions::dismissConfirm,
+            )
+        }
     }
 }
 
 /**
- * The "N earlier messages" pill (plan 09 §7.3 rule 6). The count is a derivedStateOf over the list's layout, read
- * only here, so scrolling recomposes the pill only when the number changes. Message order is built once per rows
- * instance and only while the pill could show.
+ * The "N earlier messages" pill (plan 09 §7.3 rule 6). The count is a derivedStateOf over the
+ * list's layout, read only here, so scrolling recomposes the pill only when the number changes.
+ * Message order is built once per rows instance and only while the pill could show.
  */
 @Composable
-private fun EarlierMessagesPill(state: ChatUi, list: TranscriptListState, itemsBelowRows: Int, actions: ChatActions, modifier: Modifier) {
+private fun EarlierMessagesPill(
+    state: ChatUi,
+    list: TranscriptListState,
+    itemsBelowRows: Int,
+    actions: ChatActions,
+    modifier: Modifier,
+) {
     val rows = state.rows
     val order = remember(rows) { lazy { MessageOrder(rows) } }
-    val count by remember(order, itemsBelowRows) {
-        derivedStateOf {
-            if (!list.awayFromLatest) {
-                0
-            } else {
-                val oldest = list.lazy.layoutInfo.visibleItemsInfo.maxOfOrNull { it.index } ?: -1
-                val o = order.value
-                val earlier = o.earlierCount(oldest - itemsBelowRows)
-                if (MessageOrder.pillVisible(true, o.messageCount, earlier)) earlier else 0
+    val count by
+        remember(order, itemsBelowRows) {
+            derivedStateOf {
+                if (!list.awayFromLatest) {
+                    0
+                } else {
+                    val oldest =
+                        list.lazy.layoutInfo.visibleItemsInfo.maxOfOrNull { it.index } ?: -1
+                    val o = order.value
+                    val earlier = o.earlierCount(oldest - itemsBelowRows)
+                    if (MessageOrder.pillVisible(true, o.messageCount, earlier)) earlier else 0
+                }
             }
         }
-    }
     if (count > 0) {
         KitChip(
             label = pluralStringResource(Res.plurals.chatUiEarlierMessageCount, count, count),
@@ -274,41 +333,87 @@ private fun EarlierMessagesPill(state: ChatUi, list: TranscriptListState, itemsB
 private fun FindBar(find: FindUi, actions: ChatActions) {
     val field = rememberTextFieldState(find.query)
     val query by rememberUpdatedState(find.query)
-    LaunchedEffect(field) { snapshotFlow { field.text.toString() }.collect { if (it != query) actions.find(it) } }
-    Column(Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp).testTag("transcript-find-bar")) {
-        KitField(field, stringResource(Res.string.transcriptFindHint), Modifier.testTag("transcript-find-input"))
+    LaunchedEffect(field) {
+        snapshotFlow { field.text.toString() }.collect { if (it != query) actions.find(it) }
+    }
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp).testTag("transcript-find-bar")
+    ) {
+        KitField(
+            field,
+            stringResource(Res.string.transcriptFindHint),
+            Modifier.testTag("transcript-find-input"),
+        )
+        if (find.partial) {
+            KitText(stringResource(Res.string.transcriptFindPartial))
+            KitButton(
+                stringResource(Res.string.historyLoadOlder),
+                actions::loadOlder,
+                Modifier.testTag("chat-load-older"),
+                role = KitButtonRole.Tertiary,
+            )
+        }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             val count =
                 when {
                     find.query.isBlank() -> ""
                     find.count == 0 -> stringResource(Res.string.transcriptFindNone)
-                    else -> pluralStringResource(Res.plurals.transcriptFindCount, find.count, find.count, find.current + 1)
+                    else ->
+                        pluralStringResource(
+                            Res.plurals.transcriptFindCount,
+                            find.count,
+                            find.count,
+                            find.current + 1,
+                        )
                 }
             KitText(count, Modifier.weight(1f))
-            KitButton(stringResource(Res.string.transcriptFindPrevious), actions::findPrevious, Modifier.testTag("transcript-find-previous"), role = KitButtonRole.Tertiary)
-            KitButton(stringResource(Res.string.transcriptFindNext), actions::findNext, Modifier.testTag("transcript-find-next"), role = KitButtonRole.Tertiary)
-            KitButton(stringResource(Res.string.transcriptFindClose), { actions.find(null) }, role = KitButtonRole.Tertiary)
+            KitButton(
+                stringResource(Res.string.transcriptFindPrevious),
+                actions::findPrevious,
+                Modifier.testTag("transcript-find-previous"),
+                role = KitButtonRole.Tertiary,
+            )
+            KitButton(
+                stringResource(Res.string.transcriptFindNext),
+                actions::findNext,
+                Modifier.testTag("transcript-find-next"),
+                role = KitButtonRole.Tertiary,
+            )
+            KitButton(
+                stringResource(Res.string.transcriptFindClose),
+                { actions.find(null) },
+                role = KitButtonRole.Tertiary,
+            )
         }
     }
 }
 
-/** One action list per message (plan 09 §6.6). Copy waits for a kit copy part (request K-3): absent, never broken. */
+/**
+ * One action list per message (plan 09 §6.6). Copy waits for a kit copy part (request K-3): absent,
+ * never broken.
+ */
 @Composable
 private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Modifier) {
     val items =
-        menu?.actions.orEmpty().filter { it != MessageAction.Copy }.map { action ->
-            KitMenuItem(
-                label =
-                    when (action) {
-                        MessageAction.Copy -> stringResource(Res.string.kitCopy)
-                        MessageAction.SendAgain -> stringResource(Res.string.chatUiSendPromptAgain)
-                        MessageAction.Fork -> stringResource(Res.string.chatUiForkFromThisPrompt)
-                        MessageAction.Delete -> stringResource(Res.string.chatUiDeleteMessage)
-                    },
-                onSelect = { menu?.let { actions.messageAction(it.target, action) } },
-                destructive = action == MessageAction.Delete,
-            )
-        }
+        menu
+            ?.actions
+            .orEmpty()
+            .filter { it != MessageAction.Copy }
+            .map { action ->
+                KitMenuItem(
+                    label =
+                        when (action) {
+                            MessageAction.Copy -> stringResource(Res.string.kitCopy)
+                            MessageAction.SendAgain ->
+                                stringResource(Res.string.chatUiSendPromptAgain)
+                            MessageAction.Fork ->
+                                stringResource(Res.string.chatUiForkFromThisPrompt)
+                            MessageAction.Delete -> stringResource(Res.string.chatUiDeleteMessage)
+                        },
+                    onSelect = { menu?.let { actions.messageAction(it.target, action) } },
+                    destructive = action == MessageAction.Delete,
+                )
+            }
     KitMenu(
         expanded = menu != null,
         items = items,
@@ -338,21 +443,51 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
             )
     }
 
-/** The one status line's words (plan 09 §6.5). Only a finished action's failure may be dismissed (it changes nothing). */
+/**
+ * The one status line's words (plan 09 §6.5). Only a finished action's failure may be dismissed (it
+ * changes nothing).
+ */
 @Composable
 private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
     when (line.kind) {
-        ChatStatusKind.Offline -> KitStatus(KitStatusKind.Connection, stringResource(Res.string.chatUiNotConnectedToTheServerRightNow), id = "chat-status-${line.id}")
-        ChatStatusKind.Connecting -> KitStatus(KitStatusKind.Connection, stringResource(Res.string.chatUiOpenCodeIsReconnectingTryAgainShortly), id = "chat-status-${line.id}")
+        ChatStatusKind.Offline ->
+            KitStatus(
+                KitStatusKind.Connection,
+                stringResource(Res.string.chatUiNotConnectedToTheServerRightNow),
+                id = "chat-status-${line.id}",
+            )
+        ChatStatusKind.Connecting ->
+            KitStatus(
+                KitStatusKind.Connection,
+                stringResource(Res.string.chatUiOpenCodeIsReconnectingTryAgainShortly),
+                id = "chat-status-${line.id}",
+            )
         ChatStatusKind.SendFailed ->
             KitStatus(
                 KitStatusKind.Info,
                 stringResource(Res.string.chatSendFailed),
                 id = "chat-status-${line.id}",
-                action = line.localId?.let { id -> KitLineAction(stringResource(Res.string.commonRetry), { actions.retrySend(id) }, testTag = "chat-send-error-try-again") },
+                action =
+                    line.localId?.let { id ->
+                        KitLineAction(
+                            stringResource(Res.string.commonRetry),
+                            { actions.retrySend(id) },
+                            testTag = "chat-send-error-try-again",
+                        )
+                    },
             )
-        ChatStatusKind.SendUnconfirmed -> KitStatus(KitStatusKind.Info, stringResource(Res.string.queuedDiscardUnconfirmedMessage), id = "chat-status-${line.id}")
-        ChatStatusKind.RunFailed -> KitStatus(KitStatusKind.Info, stringResource(Res.string.chatUiPromptNotAnswered), id = "chat-status-${line.id}")
+        ChatStatusKind.SendUnconfirmed ->
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(Res.string.queuedDiscardUnconfirmedMessage),
+                id = "chat-status-${line.id}",
+            )
+        ChatStatusKind.RunFailed ->
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(Res.string.chatUiPromptNotAnswered),
+                id = "chat-status-${line.id}",
+            )
         ChatStatusKind.ActionFailed ->
             KitStatus(
                 KitStatusKind.Info,
@@ -378,7 +513,9 @@ internal fun rememberChatWords(): ChatTranscriptWords {
         object : ChatTranscriptWords {
             override val jumpToLatest: String = jump
 
-            /** Only the P3 overload calls this; the screen draws the plural through [workLineWords]. */
+            /**
+             * Only the P3 overload calls this; the screen draws the plural through [workLineWords].
+             */
             override fun workLine(calls: Int, failed: Int, state: WorkState): String =
                 when (state) {
                     WorkState.Running -> working
@@ -392,7 +529,8 @@ internal fun rememberChatWords(): ChatTranscriptWords {
                     NoticeKind.Compaction -> compacted
                     NoticeKind.InstructionsUpdated -> instructions
                     NoticeKind.SkillChanged -> skill
-                    NoticeKind.ShellChanged, NoticeKind.Other -> instructions
+                    NoticeKind.ShellChanged,
+                    NoticeKind.Other -> instructions
                 }
 
             override fun footer(failed: Boolean): String = if (failed) didntFinish else more
@@ -402,7 +540,9 @@ internal fun rememberChatWords(): ChatTranscriptWords {
     }
 }
 
-/** The work line: "3 steps · Working" (plural rules per language, so it is drawn in composition). */
+/**
+ * The work line: "3 steps · Working" (plural rules per language, so it is drawn in composition).
+ */
 @Composable
 internal fun workLineWords(calls: Int, state: WorkState): String {
     val steps = pluralStringResource(Res.plurals.kitWorkSteps, calls, calls)

@@ -163,6 +163,8 @@ public interface ChatActions {
     public fun findPrevious()
 
     /** The earlier-messages pill (plan 09 §7.3 rule 6). */
+    public fun loadOlder() {}
+
     public fun openTimeline()
 
     /** From a prompt (tap or long-press) or a reply's footer; the ViewModel resolves the message. */

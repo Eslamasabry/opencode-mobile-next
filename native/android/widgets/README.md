@@ -1,3 +1,29 @@
+# Review-fix integration (2026-11-01)
+
+The BLOCKER/MAJOR remediation supersedes the copy-only description below. Bind **one** `WidgetPersistence` after
+migration opens, using the app graph's existing `KeyValueStore`, `WriterLanes`, `ProfileScope`, coroutine scope and
+`Clock`; assign it to `WidgetFeed.persistence`. Do not create another adopted store in a widget component. Renderers
+read acknowledged logical keys, all writers suspend, profile writes use the profile lane, and snapshot patches use CAS.
+
+Construct `AndroidWidgetSurface(context, persistence)` and include `WidgetProfileCleaner(surface)` in the graph's
+`ProfileResourceCleaner` set. The cleaner cancels follow-up work and removes the embedded public snapshot using the app
+lane after the profile lane closes; private keys are also registered for the generic sweep.
+
+The service shell reads `WidgetActionExtras.read(intent)` and forwards the common request to its background body,
+which calls the common `WidgetActionIngress`. Bind a singleton `WidgetActionAdmission(context, foregroundWork)` to that
+interface. Existing foreground ownership is reused; a cold call obtains and ends only its own `WidgetAction` ticket.
+The unit no longer contains a service-bound controller or calls `startForeground`/`stopSelf`. The service body remains
+responsible for the Android foreground-service promise and its own live owner. Missing runner/store bindings fail closed.
+No app graph or service-shell wiring was added by this review patch.
+
+`testWidgetIngressConsumer` compiles `src/ingressConsumer` as a separate Kotlin module, without friend paths, against
+the actual Android compile artifacts. It is the public-boundary regression for widgets-MAJOR-6.
+
+The former copy-only text below describes the initial port. Storage, settlement, admission, runtime lifetime and
+approval measurement now deliberately diverge; see `docs/native/reviews/widgets-fixes.md`.
+
+---
+
 # :android:widgets
 
 The home-screen widgets (plan 11 §11; plan 15 S4-WIDGETS; unit WIDGETS, report `docs/native/units/WIDGETS.md`).

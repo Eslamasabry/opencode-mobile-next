@@ -15,6 +15,8 @@ public object ProfileKeys {
     public const val CLEARTEXT_OK: String = "oc.cleartextOk."
     public const val CERTIFICATE_PIN: String = "oc.certificatePin."
     public const val TAILSCALE: String = "oc.tailscale."
+    public const val TRANSACTION: String = "oc.profileTransaction."
+    public const val TRANSACTION_SECRET: String = "oc.profileTransactionSecret."
     public const val SECRET_REENTRY: String = "oc.secretReentry."
 
     /** The Linux keyring probe name (never on Android). */
@@ -56,6 +58,7 @@ public object ProfileKeys {
     public val SECRET_PREFIXES: Map<String, String> = linkedMapOf(
         // BYO identity first: its refusal keeps the server (Flutter ProfileStore.remove order).
         BYO_HOST_SECRETS to ":engine:integrations",
+        TRANSACTION_SECRET to OWNER,
         PASSWORD to OWNER,
         CODEX_TOKEN to OWNER,
         GITHUB_TOKEN to ":engine:project",
@@ -69,7 +72,7 @@ public object ProfileKeys {
 
     /** The sign-ins "Reset saved sign-ins" removes (Flutter `resetSavedSignIns.ownsKey`). */
     public val SIGN_IN_PREFIXES: List<String> = listOf(
-        PASSWORD, CODEX_TOKEN, TEAM_ENGINE_AUTH, QUOTA_TOKEN, GITHUB_TOKEN, AGENT_HOST_SECRET, BYO_HOST_SECRETS,
+        PASSWORD, CODEX_TOKEN, TRANSACTION_SECRET, TEAM_ENGINE_AUTH, QUOTA_TOKEN, GITHUB_TOKEN, AGENT_HOST_SECRET, BYO_HOST_SECRETS,
     )
 
     /** The key shapes this module owns (plan 05 Appendix A, A.4). */
@@ -79,6 +82,7 @@ public object ProfileKeys {
         KeyShape(CLEARTEXT_OK, KeyScope.Profile, PrefType.Str, OWNER, "cleartext consent: the exact origin"),
         KeyShape(CERTIFICATE_PIN, KeyScope.Profile, PrefType.Str, OWNER, "certificate pin {origin, sha256}"),
         KeyShape(TAILSCALE, KeyScope.Profile, PrefType.Bool, OWNER, "Tailscale guidance shown for the profile"),
+        KeyShape(TRANSACTION, KeyScope.Profile, PrefType.Str, OWNER, "profile cross-store recovery journal"),
         KeyShape(SECRET_REENTRY, KeyScope.Profile, PrefType.Str, OWNER, "secrets M2 could not copy (names only)"),
     )
 

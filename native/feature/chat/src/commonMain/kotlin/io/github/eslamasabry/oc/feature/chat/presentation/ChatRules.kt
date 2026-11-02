@@ -86,7 +86,7 @@ public object StatusPick {
 }
 
 /** One find hit: [start] until [end] in the row's own text. Hits are in reading order (oldest first). */
-public data class FindHit(val rowKey: String, val start: Int, val end: Int)
+public data class FindHit(val rowKey: String, val start: Int, val end: Int, val sourceId: String = rowKey)
 
 /**
  * Find over the loaded rows (plan 09 §6.6; port of Flutter `TranscriptSearchIndex.search`): literal, case-insensitive,
@@ -94,6 +94,24 @@ public data class FindHit(val rowKey: String, val start: Int, val end: Int)
  * O(rows); the ViewModel runs it off the main thread. S2-TX request: `handle.search` (B-CHAT-115) replaces it.
  */
 public object TranscriptFind {
+    public fun search(state: io.github.eslamasabry.oc.engine.transcript.state.TranscriptState, query: String): ImmutableList<FindHit> {
+        val q = query.trim()
+        if (q.isEmpty()) return persistentListOf()
+        val extra = state.searchText.groupBy { it.rowKey }
+        val hits = ArrayList<FindHit>()
+        for (row in state.rows.asReversed()) {
+            val sources = extra[row.key]
+            if (sources == null) hits += search(listOf(row), q) else for (source in sources) {
+                var at = source.text.indexOf(q, ignoreCase = true)
+                while (at >= 0) {
+                    hits += FindHit(row.key, at, at + q.length, source.sourceId)
+                    at = source.text.indexOf(q, at + q.length, ignoreCase = true)
+                }
+            }
+        }
+        return hits.toImmutableList()
+    }
+
     public fun search(rows: List<TranscriptRow>, query: String): ImmutableList<FindHit> {
         val q = query.trim()
         if (q.isEmpty()) return persistentListOf()

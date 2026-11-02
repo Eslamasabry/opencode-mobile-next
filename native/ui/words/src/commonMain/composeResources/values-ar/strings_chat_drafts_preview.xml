@@ -1,0 +1,7 @@
+<resources>
+    <string name="chatDraftRestoring">جارٍ فتح مسودتك المحفوظة…</string>
+    <string name="chatDraftAlreadySent">ربما أُرسل هذا النص بالفعل. تحقّق من المحادثة قبل إرساله مجددًا.</string>
+    <string name="chatDraftRepeatTitle">هل تريد إرسال هذا النص مجددًا؟</string>
+    <string name="chatDraftRepeatAction">إرسال مجددًا</string>
+    <string name="chatDraftRepeatBody">هذا النص موجود بالفعل في المحادثة. أرسله مجددًا فقط إذا كنت تريد ردًا جديدًا.</string>
+</resources>

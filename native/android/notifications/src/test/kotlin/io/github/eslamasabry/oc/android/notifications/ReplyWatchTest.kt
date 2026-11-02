@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.android.notifications
 
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+
+
 import android.app.Application
 import android.app.Notification
 import android.app.NotificationManager
@@ -13,7 +18,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -85,12 +89,28 @@ class ReplyWatchServiceTest {
     private val app: Application = RuntimeEnvironment.getApplication()
     private val manager = app.getSystemService(NotificationManager::class.java)
     private val words = NotifyWords(app) { "en" }
+    private val owners = StatusOwners()
     private val registry = ChannelRegistry(manager, words).also { it.ensure() }
 
+    private fun run(profile: String = "p1", session: String = "ses_1", turn: String = "turn_1") =
+        ReplyRun(ConversationRef(ProfileId(profile), SessionId(session)), turn)
+
+    private fun content(run: ReplyRun) = StatusContent(StatusKind.Working, "Working", conversation = run.conversation, turnId = run.turnId)
+
     private inner class Source : ReplyRunSource {
+        override val runs = MutableStateFlow(setOf(run()))
         override val progressing = MutableStateFlow(true)
-        override val status = MutableStateFlow<StatusContent?>(null)
-        override val alerts = MutableSharedFlow<CodingAlert>(extraBufferCapacity = 8)
+        override val status = MutableStateFlow<StatusContent?>(content(run()))
+        override val pendingAlerts = MutableStateFlow<List<ReplyAlert>>(emptyList())
+        private var nextMoment = 0
+
+        fun emit(alert: CodingAlert) {
+            pendingAlerts.value = pendingAlerts.value + ReplyAlert("moment_${nextMoment++}", alert)
+        }
+
+        override fun acknowledgeAlert(id: String) {
+            pendingAlerts.value = pendingAlerts.value.filterNot { it.id == id }
+        }
         override val appVisible = MutableStateFlow(false)
         override val serverHoldsRow = MutableStateFlow(false)
         var quiet = false
@@ -105,7 +125,7 @@ class ReplyWatchServiceTest {
     private fun TestScope.start(source: Source): Pair<ReplyWatchServiceBody, ShellService> {
         val body =
             ReplyWatchServiceBody(
-                app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source,
+                app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source, owners,
                 scope = backgroundScope, elapsedMs = { testScheduler.currentTime },
             )
         val service = Robolectric.buildService(ShellService::class.java).create().get()
@@ -117,9 +137,117 @@ class ReplyWatchServiceTest {
         CodingAlert(AlertKind.Complete, "ses_1", AlertKeys.status("p1", "ses_1"), profileId = "p1", chatTitle = "Fix login", detail = "Login works again.")
 
     @Test
+    fun `B-ANDR-040 notify finding 6 pending moments reconcile on startup and acknowledged moments never replay`() = runTest {
+        val source = Source()
+        source.emit(finished)
+        val (body, _) = start(source)
+        assertNotNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
+        assertTrue(source.pendingAlerts.value.isEmpty())
+        body.onDestroy()
+        manager.cancel(NotificationIds.alert(finished.key))
+        start(source)
+        runCurrent()
+        assertNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
+    }
+
+    @Test
+    fun `S11-9 notify finding 4 dismissal names a turn and preserves other runs and owners`() = runTest {
+        val first = run()
+        val next = run(turn = "turn_2")
+        val other = run(profile = "p2")
+        val source = Source().apply { runs.value = setOf(first, other) }
+        val (body, service) = start(source)
+        runCurrent()
+        val oldDelete = shadowOf(shadowOf(service).lastForegroundNotification.deleteIntent).savedIntent
+        body.onRowDismissed(first)
+        assertTrue(body.active)
+        source.status.value = content(other)
+        advanceTimeBy(2_500)
+        assertTrue(shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING))
+        source.status.value = content(first)
+        advanceTimeBy(2_500)
+        assertFalse(shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING))
+        source.runs.value = setOf(next)
+        source.status.value = content(next)
+        advanceTimeBy(2_500)
+        assertTrue(shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING))
+        assertEquals(first, oldDelete.statusRun())
+        body.onRowDismissed(first)
+        assertTrue(body.active)
+        owners.begin(StatusOwner.Live, StatusContent(StatusKind.Idle, "Live"))
+        body.onRowDismissed(next)
+        assertTrue(body.active)
+        owners.end(StatusOwner.Live) { }
+        body.onRowDismissed(next)
+        assertFalse(body.active)
+    }
+
+    @Test
+    fun `S11-4 notify finding 3 live and sign-in co-owners survive timeout and destruction`() = runTest {
+        for (owner in listOf(StatusOwner.Live, StatusOwner.SignIn)) {
+            val (body, sharedService) = start(Source())
+            runCurrent()
+            val remaining = StatusContent(StatusKind.Idle, owner.name)
+            owners.begin(owner, remaining)
+            body.onTimeout()
+            assertFalse(owners.has(StatusOwner.Reply))
+            assertFalse(shadowOf(sharedService).isStoppedBySelf)
+            assertFalse(shadowOf(sharedService).isForegroundStopped)
+            assertEquals(owner.name, shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+            owners.end(owner) { }
+
+            val (last, _) = start(Source())
+            runCurrent()
+            owners.begin(owner, remaining)
+            owners.end(owner) { }
+            last.onDestroy()
+            assertFalse(owners.has(StatusOwner.Reply))
+            assertNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
+        }
+    }
+
+    @Test
+    fun `S11-4 notify finding 3 a server arriving during watch retains its row after reply leaves`() = runTest {
+        val source = Source()
+        val (body, service) = start(source)
+        runCurrent()
+        source.serverHoldsRow.value = true
+        val remaining = StatusContent(StatusKind.Idle, "Server ready")
+        owners.begin(StatusOwner.Server, remaining)
+        manager.notify(NotificationIds.STATUS, StatusRenderer(app, words).build(remaining, true, null))
+        source.appVisible.value = true
+        advanceTimeBy(1_500)
+        assertFalse(body.active)
+        assertTrue(shadowOf(service).isForegroundStopped)
+        assertNotNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
+        assertEquals("Server ready", shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+    }
+
+    @Test
+    fun `S11-9 notify finding 4 an unrelated delayed dismissal preserves the current watch`() = runTest {
+        val source = Source().apply { status.value = StatusContent(StatusKind.Working, "Working", conversation = ConversationRef(ProfileId("p1"), SessionId("ses_1")), turnId = "turn_1") }
+        val (body, _) = start(source)
+        runCurrent()
+        body.onRowDismissed(run(session = "ses_9"))
+        assertTrue(body.active)
+        source.emit(finished)
+        runCurrent()
+        assertNotNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
+    }
+
+    @Test
+    fun `B-ANDR-040 notify finding 6 an immediate finished notice survives watch startup`() = runTest {
+        val source = Source()
+        start(source)
+        source.emit(finished)
+        runCurrent()
+        assertNotNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
+    }
+
+    @Test
     fun `plan 11 9_2 promise first - the status row is in the foreground before any watching`() =
         runTest {
-            val (_, service) = start(Source())
+            val (_, service) = start(Source().apply { status.value = null })
             val shadow = shadowOf(service)
             assertEquals(NotificationIds.STATUS, shadow.lastForegroundNotificationId)
             val row = shadow.lastForegroundNotification
@@ -133,10 +261,10 @@ class ReplyWatchServiceTest {
             val source = Source()
             val (body, service) = start(source)
             runCurrent()
-            source.status.value = StatusContent(StatusKind.Working, "Working on Fix login", sessionId = "ses_1")
+            source.status.value = StatusContent(StatusKind.Working, "Working on Fix login", conversation = ConversationRef(ProfileId("p1"), SessionId("ses_1")), turnId = "turn_1")
             advanceTimeBy(3_000)
             source.progressing.value = false
-            source.alerts.tryEmit(finished)
+            source.emit(finished)
             runCurrent()
             val alert = shadowOf(manager).getNotification(NotificationIds.alert(finished.key))
             assertNotNull(alert)
@@ -157,7 +285,7 @@ class ReplyWatchServiceTest {
             val (body, _) = start(source)
             runCurrent()
             // The engine marks a run waiting on a shown needs-you alert as not progressing.
-            source.alerts.tryEmit(CodingAlert(AlertKind.Permission, "ses_1", AlertKeys.input("p1", "ses_1"), requestId = "per_1", profileId = "p1"))
+            source.emit(CodingAlert(AlertKind.Permission, "ses_1", AlertKeys.input("p1", "ses_1"), requestId = "per_1", profileId = "p1"))
             source.progressing.value = false
             advanceTimeBy(11_500)
             assertEquals(ReplyWatchEnd.NoProgress, body.ended.value)
@@ -170,7 +298,7 @@ class ReplyWatchServiceTest {
             val source = Source().apply { quiet = true }
             start(source)
             runCurrent()
-            source.alerts.tryEmit(finished)
+            source.emit(finished)
             runCurrent()
             assertNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
         }
@@ -197,7 +325,7 @@ class ReplyWatchServiceTest {
 
             val (d, _) = start(Source())
             runCurrent()
-            d.onRowDismissed("ses_1")
+            d.onRowDismissed(run())
             assertEquals(ReplyWatchEnd.Dismissed, d.ended.value)
         }
 
@@ -207,14 +335,16 @@ class ReplyWatchServiceTest {
             val source = Source()
             val (body, _) = start(source)
             runCurrent()
-            body.onRowDismissed("ses_1")
-            source.status.value = StatusContent(StatusKind.Working, "Working on Fix login", sessionId = "ses_1")
+            body.onRowDismissed(run())
+            source.status.value = StatusContent(StatusKind.Working, "Working on Fix login", conversation = ConversationRef(ProfileId("p1"), SessionId("ses_1")), turnId = "turn_1")
             val again = Robolectric.buildService(ShellService::class.java).create().get()
             body.onStartCommand(again)
             assertFalse(shadowOf(again).lastForegroundNotification.extras.getBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING))
             // Another run is still promoted.
-            source.status.value = StatusContent(StatusKind.Working, "Working on Add tests", sessionId = "ses_2")
-            body.onRowDismissed("ses_9")
+            body.onDestroy()
+            source.runs.value = setOf(run(session = "ses_2"))
+            source.status.value = content(run(session = "ses_2"))
+            body.onRowDismissed(run(session = "ses_9"))
             val other = Robolectric.buildService(ShellService::class.java).create().get()
             body.onStartCommand(other)
             assertTrue(shadowOf(other).lastForegroundNotification.extras.getBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING))
@@ -226,12 +356,13 @@ class ReplyWatchServiceTest {
             val source = Source().apply { serverHoldsRow.value = true }
             val body =
                 ReplyWatchServiceBody(
-                    app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source,
+                    app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source, owners,
                     scope = backgroundScope, elapsedMs = { testScheduler.currentTime },
                 )
+            owners.begin(StatusOwner.Server, StatusContent(StatusKind.Idle, "Server ready"))
             body.joinServerRow()
             runCurrent()
-            source.alerts.tryEmit(finished)
+            source.emit(finished)
             runCurrent()
             assertNotNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
             assertNull(shadowOf(manager).getNotification(NotificationIds.STATUS))

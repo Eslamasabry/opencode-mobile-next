@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.android.notifications
 
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+
 /** Status situations (plan 11 §10.3). Wire names unchanged from `NotificationStatusKind.wireValue`. */
 public enum class StatusKind(public val wire: String) {
     NeedsYou("needs_you"),
@@ -33,6 +35,9 @@ public enum class StatusAction(public val wire: String) {
     }
 }
 
+/** A single turn, so a later reply in the same conversation has a different dismissal identity. */
+public data class ReplyRun(val conversation: ConversationRef, val turnId: String)
+
 /**
  * What the one status row (4747) shows, already worded by the status model (`:engine:attention`). Port of the Flutter
  * `StatusContent`: a malformed content is refused ([of] returns null) so a bad update never replaces a good one.
@@ -47,12 +52,19 @@ public data class StatusContent(
     val progress: Int? = null,
     val actions: List<StatusAction> = listOf(StatusAction.Open),
     /** The chat **Stop the reply** stops, and the run the row's dismissal ends watching. */
-    val sessionId: String = "",
+    val conversation: ConversationRef? = null,
+    /** Stable identity of this turn, distinct from the conversation. */
+    val turnId: String = "",
     /** The lock screen's version: counts only (B-ANDR-047). */
     val publicTitle: String = "OpenCode",
     /** How many chats work / need you; drives the Live Update chip plural. */
     val count: Int = 1,
 ) {
+    public val run: ReplyRun?
+        get() = conversation?.takeIf {
+            it.profileId.raw.isNotBlank() && it.sessionId.raw.isNotBlank() && turnId.isNotBlank()
+        }?.let { ReplyRun(it, turnId) }
+
     public companion object {
         public const val MAX_LINES: Int = 4
         public const val MAX_TEXT: Int = 240
@@ -68,7 +80,8 @@ public data class StatusContent(
             subText: String? = null,
             progress: Int? = null,
             actions: List<StatusAction> = emptyList(),
-            sessionId: String? = null,
+            conversation: ConversationRef? = null,
+            turnId: String = "",
             publicTitle: String? = null,
             count: Int = 1,
         ): StatusContent? {
@@ -82,7 +95,8 @@ public data class StatusContent(
                 subText = clip(subText).orEmpty(),
                 progress = progress?.coerceIn(0, MAX_PROGRESS),
                 actions = actions.distinct().take(MAX_ACTIONS).ifEmpty { listOf(StatusAction.Open) },
-                sessionId = clip(sessionId).orEmpty(),
+                conversation = conversation,
+                turnId = turnId,
                 publicTitle = clip(publicTitle)?.takeIf { it.isNotEmpty() } ?: "OpenCode",
                 count = count.coerceAtLeast(1),
             )

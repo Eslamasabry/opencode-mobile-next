@@ -37,8 +37,9 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /**
- * The words the transcript shows that are not server text. The P3 overload of [ChatTranscript] takes them as a
- * parameter (`:quality`'s P3 stream test drives it); the chat screen passes [rememberChatWords]' resources.
+ * The words the transcript shows that are not server text. The P3 overload of [ChatTranscript]
+ * takes them as a parameter (`:quality`'s P3 stream test drives it); the chat screen passes
+ * [rememberChatWords]' resources.
  */
 @Immutable
 public interface ChatTranscriptWords {
@@ -53,7 +54,10 @@ public interface ChatTranscriptWords {
     public fun thought(firstLine: String): String
 }
 
-/** The words of the slice-2 items the P3 interface does not cover (resolved once per composition of the screen). */
+/**
+ * The words of the slice-2 items the P3 interface does not cover (resolved once per composition of
+ * the screen).
+ */
 @Immutable
 internal class ChatListWords(
     val messageActions: String,
@@ -98,9 +102,10 @@ public fun ChatTranscript(
 }
 
 /**
- * The transcript (plan 09 §7.1): one reverse LazyColumn, newest first. Bottom to top: the live line (only while a
- * turn runs) → optimistic prompt bubbles → the engine's rows. String keys, the RowKind as contentType, kit parts only.
- * The list follows when the newest key changes and the person has not scrolled away (§7.3, in the kit).
+ * The transcript (plan 09 §7.1): one reverse LazyColumn, newest first. Bottom to top: the live line
+ * (only while a turn runs) → optimistic prompt bubbles → the engine's rows. String keys, the
+ * RowKind as contentType, kit parts only. The list follows when the newest key changes and the
+ * person has not scrolled away (§7.3, in the kit).
  */
 @Composable
 internal fun ChatTranscriptList(
@@ -132,15 +137,24 @@ internal fun ChatTranscriptList(
         if (live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
                 // No Stop here (plan 09 §4.4): Stop sits in the composer's row.
-                KitQuietLine(if (live.stopping) listWords.stopping else listWords.working, Modifier.testTag("chat-live-line"))
+                KitQuietLine(
+                    if (live.stopping) listWords.stopping else listWords.working,
+                    Modifier.testTag("chat-live-line"),
+                )
             }
         }
         if (listWords != null) {
-            items(pending, key = { ListKeys.pending(it.localId) }, contentType = { RowKind.Prompt }) { p ->
+            items(
+                pending,
+                key = { ListKeys.pending(it.localId) },
+                contentType = { RowKind.Prompt },
+            ) { p ->
                 PendingBubble(p, listWords, onRetry = { onRetrySend(p.localId) })
             }
         }
-        items(rows, key = { it.key }, contentType = { it.kind }) { row -> ChatRow(row, words, listWords, reveal, motion, onOpenMenu) }
+        items(rows, key = { it.key }, contentType = { it.kind }) { row ->
+            ChatRow(row, words, listWords, reveal, motion, onOpenMenu)
+        }
     }
 }
 
@@ -153,7 +167,12 @@ private fun PendingBubble(p: PendingSend, words: ChatListWords, onRetry: () -> U
             PendingState.Unconfirmed -> KitQuietLine(words.unconfirmed)
             PendingState.Failed -> {
                 KitQuietLine(words.notSent)
-                KitButton(words.tryAgain, onRetry, role = KitButtonRole.Tertiary, modifier = Modifier.testTag("chat-send-error-try-again"))
+                KitButton(
+                    words.tryAgain,
+                    onRetry,
+                    role = KitButtonRole.Tertiary,
+                    modifier = Modifier.testTag("chat-send-error-try-again"),
+                )
             }
         }
     }
@@ -179,22 +198,31 @@ private fun ChatRow(
                 revealGroup = row.key.substringBeforeLast(':'),
                 registry = reveal,
                 motion = motion,
+                continued = row.continued,
+                continues = row.continues,
             )
         is PromptRow ->
             if (onOpenMenu != null && listWords != null) {
-                // Tap is the visible way to the message's actions; long-press is the familiar hidden twin (06 §11.1).
+                // Tap is the visible way to the message's actions; long-press is the familiar
+                // hidden twin (06 §11.1).
                 KitTappable(
                     onClick = { onOpenMenu(row.key) },
                     onClickLabel = listWords.messageActions,
                     onLongClick = { onOpenMenu(row.key) },
                     onLongClickLabel = listWords.messageActions,
                     role = KitTappableRole.Row,
-                ) { KitPromptBubble(row.text) }
+                ) {
+                    KitPromptBubble(row.text)
+                }
             } else {
                 KitPromptBubble(row.text)
             }
         is ThoughtRow -> KitQuietLine(words.thought(row.firstLine))
-        is WorkLineRow -> KitQuietLine(if (listWords != null) workLineWords(row.calls, row.state) else words.workLine(row.calls, row.failed, row.state))
+        is WorkLineRow ->
+            KitQuietLine(
+                if (listWords != null) workLineWords(row.calls, row.state)
+                else words.workLine(row.calls, row.failed, row.state)
+            )
         is NoticeRow -> KitQuietLine(words.notice(row.notice))
         is FooterRow ->
             if (onOpenMenu != null && listWords != null) {
@@ -203,7 +231,9 @@ private fun ChatRow(
                     onClickLabel = listWords.messageActions,
                     role = KitTappableRole.Row,
                     modifier = Modifier.testTag("chat-turn-footer"),
-                ) { KitQuietLine(words.footer(row.failed)) }
+                ) {
+                    KitQuietLine(words.footer(row.failed))
+                }
             } else {
                 KitQuietLine(words.footer(row.failed))
             }

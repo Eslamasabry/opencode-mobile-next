@@ -4,62 +4,96 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Multibinds
 import dev.zacsweers.metro.SingleIn
+import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.ConnectionScope
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent as CoreEvent
-import io.github.eslamasabry.oc.core.model.OutgoingPrompt
-import io.github.eslamasabry.oc.core.model.PromptAdmission
-import io.github.eslamasabry.oc.core.model.PromptDelivery
+import io.github.eslamasabry.oc.core.domain.facet
+import io.github.eslamasabry.oc.core.model.ChatDefaults
+import io.github.eslamasabry.oc.core.model.ModelRef
+import io.github.eslamasabry.oc.core.model.ModelSelection
+import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
+import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
+import io.github.eslamasabry.oc.engine.composer.drafts.DraftSession
+import io.github.eslamasabry.oc.engine.composer.drafts.DraftSubmission
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.delivery.ConnectionDelivery
+import io.github.eslamasabry.oc.engine.delivery.LocalSendId
+import io.github.eslamasabry.oc.engine.delivery.SendOutcome
+import io.github.eslamasabry.oc.engine.delivery.SendPhase
+import io.github.eslamasabry.oc.engine.requests.ConnectionRequests
 import io.github.eslamasabry.oc.engine.transcript.TranscriptHandle
 import io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.engine.transcript.transcript
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestsModel
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestPlace
+import kotlin.coroutines.ContinuationInterceptor
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.coroutines.ContinuationInterceptor
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 /** The chat reads its conversation's gateways from that conversation's own graph (ADR §9.1). */
 @ContributesTo(ConnectionScope::class)
 public interface ChatGraphAccessors {
+    public val chatDelivery: ConnectionDelivery
+    public val chatRequests: ConnectionRequests
     public val chatGateway: ServerGateway
     public val chatOperations: ServerOperationsGateway
 }
 
 /**
- * One [ChatWorld] per open conversation, shared by the chat entry and its composer, released when the last holder
- * leaves (plan 09 §6.3: the App-scoped composer slot reaches Connection-scoped engines through the registry).
+ * Shares one world between the entry and composer. Pending recovery and unsaved drafts survive the
+ * last entry; their transport work belongs to the connection, while display collectors stop when
+ * the entry leaves.
  */
+@ContributesTo(AppScope::class)
+public interface ChatDraftBindings {
+    @Multibinds(allowEmpty = true) public val conversationDrafts: Set<ConversationDrafts>
+}
+
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class)
-public class GraphChatWorlds(private val registry: ConnectionRegistry) : ChatWorlds {
+public class GraphChatWorlds(
+    private val registry: ConnectionRegistry,
+    private val draftStores: Set<ConversationDrafts> = emptySet(),
+) : ChatWorlds {
+    init {
+        check(draftStores.size <= 1) { "multiple conversation draft stores" }
+    }
+
     private val open = HashMap<ConversationRef, Pair<GraphChatWorld, Int>>()
 
     override fun open(ref: ConversationRef): ChatWorld {
-        val (world, holders) = open[ref] ?: (GraphChatWorld(ref, registry) to 0)
+        val (world, holders) =
+            open[ref] ?: (GraphChatWorld(ref, registry, draftStores.singleOrNull()) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
         return world
@@ -69,8 +103,11 @@ public class GraphChatWorlds(private val registry: ConnectionRegistry) : ChatWor
         val (held, holders) = open[world.ref] ?: return
         if (held !== world) return
         if (holders <= 1) {
-            open.remove(world.ref)
             held.detach()
+            if (held.pending.value.isEmpty() && !held.draft.value.unsaved) {
+                held.disposeDraftDisplay()
+                open.remove(world.ref)
+            } else open[world.ref] = held to 0
         } else {
             open[world.ref] = held to holders - 1
         }
@@ -78,24 +115,42 @@ public class GraphChatWorlds(private val registry: ConnectionRegistry) : ChatWor
 }
 
 /**
- * The production [ChatWorld] for slice 2. The transcript is `:engine:transcript`'s handle; everything the plan gives
- * to engines that are still being built is bound here to the gateway with the plan's own rules, and each binding
- * names its replacement:
- * - history and events → the handle through [P3Bridge] (S2-TX: the handle reads them itself);
- * - [send], [pending], [retrySend] → bubble first, one dispatch, a lost answer is Unconfirmed and never resent on its
- *   own (S2-DLV `PromptDelivery`, with receipts, steering and the offline queue);
- * - [draft] / [saveDraft] → in memory, saving refused: slice 2 has no drafts (plan 09 §6.3; S3 `Drafts`);
- * - [markRead] → nothing to write yet (the connection engine's `ReadState`, B-CHAT-012).
- * Main-thread state; gateway calls suspend on the caller's dispatcher and the gateway moves its own I/O.
+ * The feature binding of connection-owned engines. Entry disposal stops display work, never
+ * accepted delivery. History merges against the reducer version captured before I/O; every mutation
+ * fences the registry generation. Draft saving remains unavailable until the adopted drafts store
+ * is connected; send admission requires storage.
  */
-internal class GraphChatWorld(override val ref: ConversationRef, private val registry: ConnectionRegistry) : ChatWorld {
+internal class GraphChatWorld(
+    override val ref: ConversationRef,
+    private val registry: ConnectionRegistry,
+    private val draftStore: ConversationDrafts? = null,
+) : ChatWorld {
+    private var draftSession = draftStore?.open(ref)
     private val mutableTranscript = MutableStateFlow(TranscriptState.Empty)
     private val mutableLoad = MutableStateFlow<ChatLoad>(ChatLoad.Loading)
     private val mutableTitle = MutableStateFlow<String?>(null)
     private val mutableCaps = MutableStateFlow(ServerCapabilities())
     private val mutableLink = MutableStateFlow(ChatLink.Connecting)
     private val mutablePending = MutableStateFlow<ImmutableList<PendingSend>>(persistentListOf())
-    private val mutableDraft = MutableStateFlow(DraftFacts())
+    private val mutableDraft = MutableStateFlow(DraftFacts(ready = draftSession == null))
+    private var protectedDraftText: String? = null
+    private var protectedByHistory = false
+    private var checkedRestoreRevision: Long? = null
+    private var historyReconciled = false
+    private val knownUserPrompts = HashSet<String>()
+    private val draftSubmissions = HashMap<Long, DraftSubmission>()
+    private val draftAcknowledgements = HashMap<Long, () -> Unit>()
+    private var stopDraftDisplay: (() -> Unit)? = null
+    private val mutableModels = MutableStateFlow(ComposerModels())
+    private var catalogDefaults: ChatDefaults? = null
+
+    /** The immutable files/model one bubble dispatched; a retry reuses exactly these. */
+    private class SentSnapshot(
+        val files: ImmutableList<PromptAttachment>,
+        val model: ModelSelection?,
+    )
+
+    private val sentSnapshots = HashMap<Long, SentSnapshot>()
 
     override val transcript: StateFlow<TranscriptState> = mutableTranscript.asStateFlow()
     override val load: StateFlow<ChatLoad> = mutableLoad.asStateFlow()
@@ -104,22 +159,231 @@ internal class GraphChatWorld(override val ref: ConversationRef, private val reg
     override val link: StateFlow<ChatLink> = mutableLink.asStateFlow()
     override val pending: StateFlow<ImmutableList<PendingSend>> = mutablePending.asStateFlow()
     override val draft: StateFlow<DraftFacts> = mutableDraft.asStateFlow()
+    override val models: StateFlow<ComposerModels> = mutableModels.asStateFlow()
 
     private var attached: Attached? = null
+    private var stopWatching: (() -> Unit)? = null
+    private val mutableOlder = MutableStateFlow(false)
+    override val hasOlder: StateFlow<Boolean> = mutableOlder
+    private var nextCursor: String? = null
+    private val baselines = HashMap<Long, Set<String>>()
+    private val canonical = HashMap<Long, String>()
+    private val admitted = HashSet<Long>()
+    private val settled = HashSet<String>()
     private var nextLocalId = 1L
+    private val deliveryIds = HashMap<Long, LocalSendId>()
+    private val recoveryIds = HashMap<String, Long>()
+    private val mutableRequests = MutableStateFlow<ChatRequestsModel?>(null)
+    override val requests: StateFlow<ChatRequestsModel?> = mutableRequests
 
     /** The handle, its graph and the collectors feeding it. Replaced as a whole on reload. */
-    private class Attached(val graph: ConnectionGraph, val gateway: ServerGateway, val handle: TranscriptHandle, val stop: () -> Unit)
+    private class Attached(
+        val graph: ConnectionGraph,
+        val gateway: ServerGateway,
+        val handle: TranscriptHandle,
+        val stop: () -> Unit,
+    )
 
     override val work: CoroutineContext
-        get() = attached?.graph?.scope?.coroutineContext?.get(ContinuationInterceptor) ?: EmptyCoroutineContext
+        get() =
+            attached?.graph?.scope?.coroutineContext?.get(ContinuationInterceptor)
+                ?: EmptyCoroutineContext
 
-    private val sid: SessionId get() = ref.sessionId
+    private val sid: SessionId
+        get() = ref.sessionId
 
-    /** Opens the transcript on the conversation's live graph, or reports that the connection is not live. */
+    init {
+        draftSession?.let(::observeDraftSession)
+    }
+
+    private fun observeDraftSession(session: DraftSession) {
+        stopDraftDisplay?.invoke()
+        val draftDisplayJob =
+            registry.appScope.launch(registry.mainContext) {
+                session.state.collect { saved ->
+                    mutableDraft.value =
+                        DraftFacts(
+                            saved.text,
+                            saved.saved,
+                            saved.ready,
+                            saved.failure,
+                            saved.restoreRevision,
+                            editRevision = saved.editRevision,
+                            attachments = saved.attachments,
+                            savedAttachments = saved.savedAttachments,
+                        )
+                    refreshDraftProtection()
+                }
+            }
+        stopDraftDisplay = { draftDisplayJob.cancel() }
+    }
+
+    internal fun disposeDraftDisplay() {
+        draftSession?.close()
+        stopDraftDisplay?.invoke()
+        stopDraftDisplay = null
+    }
+
+    private fun refreshDraftProtection() {
+        val current = mutableDraft.value
+        if (
+            current.ready && historyReconciled && checkedRestoreRevision != current.restoreRevision
+        ) {
+            checkedRestoreRevision = current.restoreRevision
+            val restored = current.text.trim()
+            val pendingTexts =
+                mutablePending.value
+                    .filter { it.state == PendingState.Unconfirmed }
+                    .map { it.text.trim() }
+            if (
+                restored.isNotEmpty() &&
+                    current.text == current.saved &&
+                    (restored in knownUserPrompts || restored in pendingTexts)
+            ) {
+                protectedDraftText = current.text
+                protectedByHistory = restored in knownUserPrompts && restored !in pendingTexts
+            }
+        }
+        if (
+            protectedDraftText?.trim()?.isNotEmpty() != true &&
+                current.text.trim().isEmpty() &&
+                current.text == current.saved &&
+                current.attachments.isNotEmpty() &&
+                unconfirmedFileOnly(current.attachments)
+        ) {
+            // A file-only draft equal to an unconfirmed dispatched send — here or after a restart —
+            // is one accidental tap from a duplicate; it has no text token to compare, so the file
+            // names decide. Removing or changing a file re-arms nothing.
+            protectedDraftText = current.text
+            protectedByHistory = false
+        }
+        val blocked = protectedDraftText?.let { it.trim() == current.text.trim() } == true
+        val repeat =
+            blocked &&
+                protectedByHistory &&
+                current.ready &&
+                current.failure == null &&
+                mutablePending.value.none { it.state == PendingState.Unconfirmed }
+        if (current.sendBlocked != blocked || current.repeatAllowed != repeat)
+            mutableDraft.value = current.copy(sendBlocked = blocked, repeatAllowed = repeat)
+    }
+
+    /** A blank-text unconfirmed bubble with the same file names as [files]. */
+    private fun unconfirmedFileOnly(files: List<PromptAttachment>): Boolean =
+        mutablePending.value.any { bubble ->
+            bubble.state == PendingState.Unconfirmed &&
+                bubble.text.isBlank() &&
+                sentSnapshots[bubble.localId]?.files?.map { it.filename } ==
+                    files.map { it.filename }
+        }
+
+    private fun acknowledgedDraft(localId: Long) {
+        val submitted = draftSubmissions.remove(localId) ?: return
+        val session = draftSession ?: return
+        registry.appScope.launch(registry.mainContext) {
+            if (session.clearAfterSend(submitted) is Outcome.Failed) {
+                protectedDraftText = submitted.text
+                protectedByHistory = false
+                refreshDraftProtection()
+            }
+        }
+    }
+
+    /** Acknowledgement lives beyond an entry, but every terminal outcome ends this collector. */
+    private fun watchDraftAcknowledgement(
+        localId: Long,
+        id: LocalSendId,
+        delivery: ConnectionDelivery,
+    ) {
+        if (localId !in draftSubmissions) return
+        val engine = delivery.engine ?: return
+        draftAcknowledgements.remove(localId)?.invoke()
+        val expectedGraph = registry.graphFor(ref)
+        var finished = false
+        var stop: (() -> Unit)? = null
+        val acknowledgement =
+            registry.appScope.launch(registry.mainContext) {
+                try {
+                    val accepted =
+                        combine(engine.pending, engine.outcomes, registry.live) {
+                                pending,
+                                outcomes,
+                                live ->
+                                when {
+                                    pending.any {
+                                        it.localId == id && it.phase == SendPhase.Accepted
+                                    } ||
+                                        outcomes.any {
+                                            it is SendOutcome.Accepted &&
+                                                it.ref == ref &&
+                                                it.localId == id
+                                        } -> true
+                                    outcomes.any {
+                                        it is SendOutcome.Unconfirmed &&
+                                            it.ref == ref &&
+                                            it.localId == id
+                                    } ||
+                                        outcomes.any {
+                                            it is SendOutcome.PutBack &&
+                                                it.ref == ref &&
+                                                it.localId == id
+                                        } -> false
+                                    live[ref.profileId] !== expectedGraph -> false
+                                    else -> null
+                                }
+                            }
+                            .first { it != null }
+                    if (accepted == true) acknowledgedDraft(localId)
+                } finally {
+                    finished = true
+                    if (draftAcknowledgements[localId] === stop)
+                        draftAcknowledgements.remove(localId)
+                }
+            }
+        val cancel = { acknowledgement.cancel() }
+        stop = cancel
+        if (!finished) draftAcknowledgements[localId] = cancel
+    }
+
+    /**
+     * Registry observation lives in app scope: a closed graph cannot cancel its own replacement
+     * observer.
+     */
     fun attach() {
-        detach()
-        val graph = registry.graphFor(ref)
+        if (stopWatching != null) return
+        draftStore?.open(ref)?.let { reopened ->
+            // Empty closed sessions can retire while this world remains for pending chat work.
+            if (reopened !== draftSession) {
+                draftSession = reopened
+                checkedRestoreRevision = null
+                observeDraftSession(reopened)
+            }
+        }
+        val watcher =
+            registry.appScope.launch(registry.mainContext) {
+                registry.live.collect {
+                    val graph = registry.graphFor(ref)
+                    if (
+                        graph !== attached?.graph ||
+                            (graph == null && mutableLink.value != ChatLink.Offline)
+                    )
+                        bind(graph)
+                }
+            }
+        stopWatching = { watcher.cancel() }
+    }
+
+    private fun bind(graph: ConnectionGraph?) {
+        unbind()
+        mutableCaps.value = ServerCapabilities()
+        // Another server owns another catalog and selection; a stale graph publishes nothing.
+        mutableModels.value = ComposerModels()
+        catalogDefaults = null
+        mutableTranscript.value = TranscriptState.Empty
+        nextCursor = null
+        mutableOlder.value = false
+        historyReconciled = false
+        knownUserPrompts.clear()
         if (graph == null) {
             mutableLink.value = ChatLink.Offline
             mutableLoad.value = ChatLoad.Failed(Failure.Network(NetworkWhy.Offline))
@@ -129,105 +393,488 @@ internal class GraphChatWorld(override val ref: ConversationRef, private val reg
         val handle = graph.transcript.open(sid.raw)
         val bridge = P3Bridge(sid.raw)
         val scope = graph.scope
-        var refreshes = handle.refreshRequests
+        val services = graph as ChatGraphAccessors
+        val delivery = services.chatDelivery
+        syncDelivery(delivery)
+        services.chatRequests.watching(true)
+        mutableRequests.value =
+            ChatRequestsModel(
+                services.chatRequests.engine,
+                sid,
+                gateway.capabilities,
+                MutableStateFlow(RequestPlace()),
+                scope,
+            )
+        // A restarted process shows durable possibly-sent markers, never replays them.
+        for (entry in
+            delivery.queue?.entries().orEmpty().filter {
+                it.profileId == ref.profileId && it.sessionId == sid && it.dispatchedAt != null
+            }) {
+            val active =
+                delivery.engine?.pending?.value.orEmpty().any {
+                    it.reviewId == entry.id && it.localId in deliveryIds.values
+                }
+            if (!active && entry.id !in recoveryIds) {
+                val id = nextLocalId++
+                recoveryIds[entry.id] = id
+                mutablePending.update {
+                    (it + PendingSend(id, entry.text, PendingState.Unconfirmed)).toImmutableList()
+                }
+                // The marker keeps its dispatched files and model, so an equal draft never
+                // duplicates and a settled retry needs nothing from the current composer.
+                sentSnapshots[id] =
+                    SentSnapshot(
+                        entry.attachments,
+                        entry.model?.let { ModelSelection(it, entry.variant) },
+                    )
+            }
+        }
+        var refreshes = handle.refreshes.value
         var connects = gateway.events.connects.value
         mutableLoad.value = ChatLoad.Loading
+        if (connects > 0) handle.submit(GatewayEvent.Connected)
+        val stops = ArrayList<() -> Unit>()
+        attached = Attached(graph, gateway, handle) { stops.forEach { it() } }
         val jobs =
             listOf(
-                scope.launch {
+                scope.launch(registry.mainContext) {
+                    services.chatRequests.engine.refresh()
+                },
+                scope.launch(registry.mainContext) {
+                    delivery.engine?.let { engine ->
+                        combine(engine.pending, engine.outcomes) { _, _ -> Unit }
+                            .collect { syncDelivery(delivery) }
+                    }
+                },
+                scope.launch(registry.mainContext) {
                     handle.state.collect { s ->
                         mutableTranscript.value = s
+                        knownUserPrompts +=
+                            s.rows.filterIsInstance<PromptRow>().map { it.text.trim() }
+                        refreshDraftProtection()
+                        delivery.running(ref, s.run.busy)
+                        syncDelivery(delivery)
                         settlePending(s)
-                        // The reducer asks for a re-read after a drop, a stale hint or an overflow (reconcile by refetch, R20).
-                        if (handle.refreshRequests != refreshes) {
-                            refreshes = handle.refreshRequests
+                    }
+                },
+                scope.launch(registry.mainContext) {
+                    handle.refreshes.collect { n ->
+                        if (n != refreshes) {
+                            refreshes = n
                             readHistory(gateway, handle, bridge)
                         }
                     }
                 },
-                scope.launch {
+                scope.launch(registry.mainContext) {
                     gateway.events.all.collect { envelope ->
                         val event = envelope.event
-                        if (event is CoreEvent.SessionChanged && event.sessionId == sid && event.title != null) mutableTitle.value = event.title
+                        if (
+                            event is CoreEvent.SessionChanged &&
+                                event.sessionId == sid &&
+                                event.title != null
+                        )
+                            mutableTitle.value = event.title
                         bridge.event(event)?.let(handle::submit)
                     }
                 },
-                scope.launch { gateway.events.status.collect { mutableLink.value = linkOf(it) } },
-                scope.launch {
+                scope.launch(registry.mainContext) {
+                    gateway.events.status.collect { mutableLink.value = linkOf(it) }
+                },
+                scope.launch(registry.mainContext) {
                     gateway.events.connects.collect { n ->
                         if (n > connects) handle.submit(GatewayEvent.Connected)
                         connects = n
                     }
                 },
-                scope.launch { gateway.capabilities.collect { mutableCaps.value = it } },
-                scope.launch {
-                    (gateway.session(sid) as? Outcome.Ok)?.value?.title?.let { mutableTitle.value = it }
-                    readHistory(gateway, handle, bridge)
+                scope.launch(registry.mainContext) {
+                    gateway.capabilities.collect { mutableCaps.value = it }
+                },
+                scope.launch(registry.mainContext) {
+                    (gateway.session(sid) as? Outcome.Ok)?.value?.title?.let {
+                        mutableTitle.value = it
+                    }
                     val statuses = gateway.sessionStatuses()
-                    if (statuses is Outcome.Ok && statuses.value[sid] == SessionStatus.Busy) handle.submit(GatewayEvent.RunStarted(sid.raw))
+                    if (statuses is Outcome.Ok && statuses.value[sid] == SessionStatus.Busy)
+                        handle.submit(GatewayEvent.RunStarted(sid.raw))
+                    readHistory(gateway, handle, bridge)
                 },
             )
-        attached = Attached(graph, gateway, handle) { jobs.forEach { it.cancel() } }
+        jobs.forEach { job -> stops += { job.cancel() } }
     }
 
     fun detach() {
+        stopWatching?.invoke()
+        stopWatching = null
+        unbind(flushHeld = true)
+        draftSession?.close()
+    }
+
+    private fun currentAttached(): Attached? = attached?.takeIf {
+        registry.graphFor(ref) === it.graph
+    }
+
+    private fun unbind(flushHeld: Boolean = false) {
         val a = attached ?: return
         attached = null
+        if (registry.graphFor(ref) !== a.graph) {
+            mutablePending.update { list ->
+                list
+                    .map {
+                        if (it.state == PendingState.Sending)
+                            it.copy(state = PendingState.Unconfirmed)
+                        else it
+                    }
+                    .toImmutableList()
+            }
+            deliveryIds.clear()
+            admitted.clear()
+            canonical.clear()
+        }
+        val services = a.graph as ChatGraphAccessors
+        val model = mutableRequests.value
+        mutableRequests.value = null
+        services.chatRequests.watching(false)
+        if (flushHeld && model != null) a.graph.scope.launch(registry.mainContext) { model.leave() }
         a.stop()
         a.handle.close()
     }
 
-    private suspend fun readHistory(gateway: ServerGateway, handle: TranscriptHandle, bridge: P3Bridge): Outcome<Unit> =
-        when (val page = gateway.messagePage(sid, limit = HISTORY_PAGE)) {
+    private suspend fun readHistory(
+        gateway: ServerGateway,
+        handle: TranscriptHandle,
+        bridge: P3Bridge,
+        cursor: String? = null,
+    ): Outcome<Unit> {
+        val version = handle.historyVersion()
+        return when (val page = gateway.messagePage(sid, cursor = cursor, limit = HISTORY_PAGE)) {
             is Outcome.Ok -> {
-                handle.loadHistory(page.value.items.map(bridge::message))
+                if (currentAttached()?.handle !== handle)
+                    return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+                handle.loadHistory(page.value.items.map(bridge::message), version)
+                nextCursor = page.value.nextCursor
+                mutableOlder.value = nextCursor != null
+                knownUserPrompts +=
+                    page.value.items
+                        .filter {
+                            it.info.role == io.github.eslamasabry.oc.core.model.transcript.Role.User
+                        }
+                        .map { message ->
+                            message.parts
+                                .filter {
+                                    it.type ==
+                                        io.github.eslamasabry.oc.core.model.transcript.PartType.Text
+                                }
+                                .joinToString("") { it.text.orEmpty() }
+                                .trim()
+                        }
+                historyReconciled = true
+                refreshDraftProtection()
                 mutableLoad.value = ChatLoad.Live
                 Outcome.Ok(Unit)
             }
             is Outcome.Failed -> {
-                if (mutableLoad.value !is ChatLoad.Live) mutableLoad.value = ChatLoad.Failed(page.failure)
+                if (currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live)
+                    mutableLoad.value = ChatLoad.Failed(page.failure)
                 page
             }
         }
-
-    // ---- Drafts (slice 2: none stored) ----
-
-    override fun draftChanged(text: String) {
-        mutableDraft.update { it.copy(text = text) }
     }
 
-    override suspend fun saveDraft(): Outcome<Unit> = Outcome.Failed(Failure.Unavailable(FeatureId("drafts")))
+    override suspend fun loadOlder(): Outcome<Unit> {
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val cursor = nextCursor ?: return Outcome.Ok(Unit)
+        return readHistory(a.gateway, a.handle, P3Bridge(sid.raw), cursor)
+    }
+
+    // ---- Drafts: one canonical, app-scoped text session per conversation ----
+
+    override fun draftChanged(text: String) {
+        if (protectedDraftText?.trim() != text.trim()) {
+            protectedDraftText = null
+            protectedByHistory = false
+        }
+        val session = draftSession
+        if (session == null)
+            mutableDraft.update { it.copy(text = text, editRevision = it.editRevision + 1) }
+        else {
+            session.changed(text)
+            // The input transaction reports synchronously, even if StateFlow coalesces B -> A
+            // edits.
+            val current = session.state.value
+            mutableDraft.value =
+                DraftFacts(
+                    current.text,
+                    current.saved,
+                    current.ready,
+                    current.failure,
+                    current.restoreRevision,
+                    editRevision = current.editRevision,
+                    attachments = current.attachments,
+                    savedAttachments = current.savedAttachments,
+                )
+        }
+        refreshDraftProtection()
+    }
+
+    override suspend fun saveDraft(): Outcome<Unit> =
+        draftSession?.flush() ?: Outcome.Failed(Failure.Unavailable(FeatureId("drafts")))
+
+    override suspend fun replaceAttachments(files: List<PromptAttachment>): Outcome<Unit> {
+        val session = draftSession
+            ?: return Outcome.Failed(Failure.Unavailable(FeatureId("draftAttachments")))
+        val previous = mutableDraft.value.attachments
+        val result = session.replaceAttachments(files)
+        // Publish only the acknowledged snapshot; failures and revisions pass through untouched.
+        val current = session.state.value
+        if (previous != current.attachments) {
+            // A different file set is a different send: the ambiguity guard re-arms.
+            protectedDraftText = null
+            protectedByHistory = false
+        }
+        mutableDraft.value =
+            DraftFacts(
+                current.text,
+                current.saved,
+                current.ready,
+                current.failure,
+                current.restoreRevision,
+                editRevision = current.editRevision,
+                attachments = current.attachments,
+                savedAttachments = current.savedAttachments,
+            )
+        refreshDraftProtection()
+        return result
+    }
+
+    // ---- Models: the server session is the only place a choice lives ----
+
+    override suspend fun loadModels(): Outcome<Unit> {
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        if (!a.gateway.capabilities.value.sessionModelProviderSwitching)
+            return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
+        mutableModels.value = mutableModels.value.copy(loading = true, failure = null)
+        val operations = (a.graph as ChatGraphAccessors).chatOperations
+        val catalog = operations.catalog()
+        if (currentAttached() !== a) return staleModels()
+        if (catalog is Outcome.Failed) {
+            mutableModels.value = mutableModels.value.copy(loading = false, failure = catalog.failure)
+            return catalog
+        }
+        val defaults = operations.chatDefaults()
+        if (currentAttached() !== a) return staleModels()
+        val readback = a.gateway.session(sid)
+        if (currentAttached() !== a) return staleModels()
+        val snapshot = (catalog as Outcome.Ok).value
+        val enabledProviders =
+            snapshot.providers.filter { it.enabled }.mapTo(HashSet()) { it.id }
+        val choices = ArrayList<ComposerModel>()
+        val seen = HashSet<Pair<String, String>>()
+        for (m in snapshot.models) {
+            if (!m.enabled || m.providerId !in enabledProviders) continue
+            if (!seen.add(m.providerId to m.id)) continue
+            // Safe display metadata only; raw provider config never leaves the catalog.
+            choices += ComposerModel(m.providerId, m.id, m.name.ifBlank { m.id }, m.attachments)
+        }
+        catalogDefaults = (defaults as? Outcome.Ok)?.value
+        // An absent session model means the server default; the catalog resolves which one.
+        val effective =
+            (readback as? Outcome.Ok)?.value?.selection?.model ?: catalogDefaults?.model
+        val selected =
+            effective?.let { ref ->
+                choices.firstOrNull { it.providerId == ref.providerId && it.modelId == ref.modelId }
+            }
+        mutableModels.value = ComposerModels(choices, selected)
+        return Outcome.Ok(Unit)
+    }
+
+    /** A graph swapped mid-load owns the next load; this one publishes nothing new. */
+    private fun staleModels(): Outcome<Unit> {
+        mutableModels.value = mutableModels.value.copy(loading = false)
+        return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+    }
+
+    override suspend fun selectModel(choice: ComposerModel?): Outcome<Unit> {
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        if (!a.gateway.capabilities.value.sessionModelProviderSwitching)
+            return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
+        val selection =
+            a.gateway.facet<SessionSelectionGateway>()
+                ?: return Outcome.Failed(
+                    Failure.Unavailable(FeatureId("sessionModelProviderSwitching"))
+                )
+        val catalog = mutableModels.value.choices
+        val target =
+            when (choice) {
+                // Null asks for the default; only a concrete catalog model may be set, there is no
+                // reset route.
+                null -> {
+                    val default = catalogDefaults?.model
+                        ?: return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelDefault")))
+                    catalog.firstOrNull {
+                        it.providerId == default.providerId && it.modelId == default.modelId
+                    } ?: return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelDefault")))
+                }
+                else ->
+                    catalog.firstOrNull {
+                        it.providerId == choice.providerId && it.modelId == choice.modelId
+                    } ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+            }
+        val targetRef = ModelRef(target.providerId, target.modelId)
+        return when (val set = selection.setSessionModel(sid, targetRef, "")) {
+            is Outcome.Failed -> set
+            is Outcome.Ok ->
+                if (currentAttached() !== a)
+                    Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+                else
+                    when (val back = a.gateway.session(sid)) {
+                        is Outcome.Failed -> back
+                        is Outcome.Ok ->
+                            if (back.value.selection?.model != targetRef)
+                                // Never acknowledged: the previous choice stays published.
+                                Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
+                            else {
+                                if (currentAttached() === a)
+                                    mutableModels.value = mutableModels.value.copy(selected = target)
+                                Outcome.Ok(Unit)
+                            }
+                    }
+        }
+    }
 
     // ---- Sends (bubble first, never twice) ----
 
     override suspend fun send(text: String): Outcome<Unit> {
         val id = nextLocalId++
-        mutablePending.update { (it + PendingSend(id, text, PendingState.Sending)).toImmutableList() }
-        return dispatch(id, text)
+        if (mutableLoad.value !is ChatLoad.Live)
+            return Outcome.Failed(Failure.Busy(BusyKind.Starting))
+        val draft = mutableDraft.value
+        if (!draft.ready) return Outcome.Failed(Failure.Busy(BusyKind.Starting))
+        if (draft.failure != null) return Outcome.Failed(draft.failure)
+        if (draft.sendBlocked)
+            return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
+        // The session captures text and files as one revision; the dispatch carries that snapshot.
+        val submission =
+            draftSession
+                ?.captureSubmission()
+                ?.takeIf { it.text.trim() == text.trim() }
+        val files = submission?.attachments ?: draft.attachments
+        if (text.isBlank() && files.isEmpty())
+            return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
+        submission?.let { draftSubmissions[id] = it }
+        val selection =
+            models.value.selected?.let { ModelSelection(ModelRef(it.providerId, it.modelId)) }
+        val snapshot = SentSnapshot(files.toImmutableList(), selection)
+        sentSnapshots[id] = snapshot
+        val expected = currentAttached()
+        baselines[id] = expected?.handle?.messageIds()?.mapTo(HashSet()) { "prompt:$it" }.orEmpty()
+        mutablePending.update {
+            (it + PendingSend(id, text, PendingState.Sending)).toImmutableList()
+        }
+        return dispatch(id, text, snapshot, expected)
+    }
+
+    override suspend fun sendRepeated(text: String, expectedRevision: Long): Outcome<Unit> {
+        val session =
+            draftSession ?: return Outcome.Failed(Failure.Unavailable(FeatureId("draftRepeat")))
+        val captured = session.state.value
+        if (
+            !captured.ready ||
+                !protectedByHistory ||
+                !mutableDraft.value.repeatAllowed ||
+                captured.editRevision != expectedRevision ||
+                captured.text != text ||
+                mutableDraft.value.failure != null ||
+                mutablePending.value.any { it.state == PendingState.Unconfirmed }
+        )
+            return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
+        protectedDraftText = null
+        protectedByHistory = false
+        refreshDraftProtection()
+        return try {
+            send(text.trim())
+        } finally {
+            // The confirmation admits one attempt, never an automatic retry or permanent bypass.
+            if (
+                session.state.value.editRevision == captured.editRevision &&
+                    session.state.value.text == captured.text
+            ) {
+                protectedDraftText = captured.text
+                protectedByHistory = true
+                refreshDraftProtection()
+            }
+        }
     }
 
     override suspend fun retrySend(localId: Long): Outcome<Unit> {
-        val bubble = mutablePending.value.firstOrNull { it.localId == localId && it.state == PendingState.Failed } ?: return Outcome.Ok(Unit)
+        val bubble =
+            mutablePending.value.firstOrNull {
+                it.localId == localId && it.state == PendingState.Failed
+            } ?: return Outcome.Ok(Unit)
+        val expected = currentAttached()
+        baselines[localId] =
+            expected?.handle?.messageIds()?.mapTo(HashSet()) { "prompt:$it" }.orEmpty()
         setPending(localId) { it.copy(state = PendingState.Sending, failure = null) }
-        return dispatch(localId, bubble.text)
+        // Try again sends the same words, files and model; the live composer is irrelevant.
+        val original = sentSnapshots[localId] ?: SentSnapshot(persistentListOf(), null)
+        return dispatch(localId, bubble.text, original, expected)
     }
 
-    private suspend fun dispatch(localId: Long, text: String): Outcome<Unit> {
-        val gateway = attached?.gateway ?: return fail(localId, Failure.Network(NetworkWhy.Offline))
-        // Steer, never queue, where steering exists (plan 09 §4.3): a send during a run joins it.
-        val steer = mutableTranscript.value.run.busy && mutableCaps.value.promptSteering
-        val prompt = OutgoingPrompt(text, delivery = if (steer) PromptDelivery.Steer else null)
-        return when (val r = gateway.prompt(sid, prompt)) {
-            is Outcome.Ok ->
-                when (r.value) {
-                    is PromptAdmission.Confirmed -> Outcome.Ok(Unit) // the bubble leaves when the prompt row arrives
-                    PromptAdmission.Uncertain -> {
-                        setPending(localId) { it.copy(state = PendingState.Unconfirmed) }
-                        Outcome.Ok(Unit)
+    private suspend fun dispatch(
+        localId: Long,
+        text: String,
+        sent: SentSnapshot,
+        expected: Attached?,
+    ): Outcome<Unit> {
+        val a = currentAttached() ?: return fail(localId, Failure.Network(NetworkWhy.Offline))
+        if (a !== expected) return fail(localId, Failure.Refused(RefusalReason.StaleScope))
+        val delivery = (a.graph as ChatGraphAccessors).chatDelivery
+        val result = delivery.send(ref, text, sent.files, sent.model)
+        return when (result) {
+            is Outcome.Failed -> fail(localId, result.failure)
+            is Outcome.Ok -> {
+                if (result.value.raw.startsWith("cmd-")) {
+                    mutablePending.update { list ->
+                        list.filterNot { it.localId == localId }.toImmutableList()
                     }
+                    sentSnapshots.remove(localId)
+                } else {
+                    deliveryIds[localId] = result.value
+                    watchDraftAcknowledgement(localId, result.value, delivery)
                 }
-            is Outcome.Failed -> fail(localId, r.failure)
+                syncDelivery(delivery)
+                Outcome.Ok(Unit)
+            }
         }
+    }
+
+    private fun syncDelivery(delivery: ConnectionDelivery) {
+        val engine = delivery.engine ?: return
+        for ((localId, id) in deliveryIds) {
+            val bubble = engine.pending.value.firstOrNull { it.localId == id }
+            bubble?.reviewId?.let { recoveryIds[it] = localId }
+            bubble?.dispatchedMessageId?.let { canonical[localId] = "prompt:${it.raw}" }
+            if (bubble?.phase == SendPhase.Accepted) {
+                admitted += localId
+                acknowledgedDraft(localId)
+            }
+            for (outcome in engine.outcomes.value.filter { it.ref == ref }) when (outcome) {
+                is SendOutcome.Accepted -> if (outcome.localId == id) acknowledgedDraft(localId)
+                is SendOutcome.Unconfirmed ->
+                    if (outcome.localId == id) {
+                        outcome.reviewId?.let { recoveryIds[it] = localId }
+                        setPending(localId) {
+                            it.copy(state = PendingState.Unconfirmed, failure = outcome.reason)
+                        }
+                    }
+                is SendOutcome.PutBack ->
+                    if (outcome.localId == id)
+                        setPending(localId) {
+                            it.copy(state = PendingState.Failed, failure = outcome.reason)
+                        }
+                else -> Unit
+            }
+        }
+        settlePending(mutableTranscript.value)
     }
 
     private fun fail(localId: Long, failure: Failure): Outcome<Unit> {
@@ -236,30 +883,62 @@ internal class GraphChatWorld(override val ref: ConversationRef, private val reg
     }
 
     private fun setPending(localId: Long, change: (PendingSend) -> PendingSend) {
-        mutablePending.update { list -> list.map { if (it.localId == localId) change(it) else it }.toImmutableList() }
+        mutablePending.update { list ->
+            list.map { if (it.localId == localId) change(it) else it }.toImmutableList()
+        }
+        // A bubble turning unconfirmed can make the still-attached files a duplicate risk.
+        refreshDraftProtection()
     }
 
-    /** A sending bubble is settled by the newest prompt row with its words (plan 09 §4.6, newest turn only). */
+    /** Canonical ids win; the fallback is post-dispatch, admitted and one-to-one. */
     private fun settlePending(s: TranscriptState) {
-        val sending = mutablePending.value
-        if (sending.isEmpty()) return
-        val newest = s.rows.firstOrNull { it is PromptRow } as? PromptRow ?: return
-        val match = sending.firstOrNull { it.state != PendingState.Failed && it.text.trim() == newest.text.trim() } ?: return
-        mutablePending.update { list -> list.filterNot { it.localId == match.localId }.toImmutableList() }
+        val prompts = s.rows.filterIsInstance<PromptRow>()
+        for (bubble in mutablePending.value) {
+            val id = canonical[bubble.localId]
+            if (bubble.state == PendingState.Failed) continue
+            if (bubble.localId !in admitted && (id == null || prompts.none { it.key == id }))
+                continue
+            val match =
+                prompts.firstOrNull { row ->
+                    row.key !in settled &&
+                        if (id != null) row.key == id
+                        else
+                            row.key !in baselines[bubble.localId].orEmpty() &&
+                                row.text.trim() == bubble.text.trim()
+                } ?: continue
+            settled += match.key
+            acknowledgedDraft(bubble.localId)
+            admitted -= bubble.localId
+            canonical.remove(bubble.localId)
+            baselines.remove(bubble.localId)
+            sentSnapshots.remove(bubble.localId)
+            deliveryIds.remove(bubble.localId)?.let {
+                (currentAttached()?.graph as? ChatGraphAccessors)
+                    ?.chatDelivery
+                    ?.engine
+                    ?.reconciled(it)
+            }
+            mutablePending.update { list ->
+                list.filterNot { it.localId == bubble.localId }.toImmutableList()
+            }
+        }
     }
 
     // ---- Commands ----
 
     override suspend fun stop(): Outcome<Unit> {
-        val gateway = attached?.gateway ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-        return when (val r = gateway.stop(sid)) {
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        (a.graph as ChatGraphAccessors).chatDelivery.engine?.let {
+            return it.stop(ref)
+        }
+        return when (val r = a.gateway.stop(sid)) {
             is Outcome.Ok -> Outcome.Ok(Unit)
             is Outcome.Failed -> r
         }
     }
 
     override suspend fun reload(): Outcome<Unit> {
-        attach()
+        bind(registry.graphFor(ref))
         return when (val l = mutableLoad.value) {
             is ChatLoad.Failed -> Outcome.Failed(l.failure)
             else -> Outcome.Ok(Unit)
@@ -267,25 +946,43 @@ internal class GraphChatWorld(override val ref: ConversationRef, private val reg
     }
 
     override suspend fun fork(from: MessageId): Outcome<SessionId> {
-        val graph = attached?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val graph =
+            currentAttached()?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         return (graph as ChatGraphAccessors).chatOperations.forkSession(sid, from)
     }
 
-    /** Plan 09 §6.6: delete on the server, then read the conversation again from scratch (P3 has no removeMessage). */
+    /**
+     * Plan 09 §6.6: delete on the server, then read the conversation again from scratch (P3 has no
+     * removeMessage).
+     */
     override suspend fun deleteMessage(id: MessageId): Outcome<Unit> {
-        val graph = attached?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val graph =
+            currentAttached()?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         val r = (graph as ChatGraphAccessors).chatOperations.deleteMessage(sid, id)
-        if (r is Outcome.Ok) attach()
+        if (r is Outcome.Ok && registry.graphFor(ref) === graph) bind(graph)
         return r
     }
 
-    override fun markRead(): Unit = Unit
+    override fun markRead() {
+        val a = currentAttached() ?: return
+        a.graph.scope.launch(registry.mainContext) {
+            val session = (a.gateway.session(sid) as? Outcome.Ok)?.value ?: return@launch
+            if (currentAttached() !== a) return@launch
+            val owner = a.graph.session.readState
+            owner.observe(session)
+            session.time?.idleMs?.let { owner.markRead(sid, it) }
+        }
+    }
 
     private fun linkOf(s: StreamStatus): ChatLink =
         when (s) {
             StreamStatus.Connected -> ChatLink.Live
-            StreamStatus.Connecting, is StreamStatus.Reconnecting, StreamStatus.Suspended -> ChatLink.Connecting
-            is StreamStatus.Disconnected, StreamStatus.WaitingForNetwork, is StreamStatus.Stopped -> ChatLink.Offline
+            StreamStatus.Connecting,
+            is StreamStatus.Reconnecting,
+            StreamStatus.Suspended -> ChatLink.Connecting
+            is StreamStatus.Disconnected,
+            StreamStatus.WaitingForNetwork,
+            is StreamStatus.Stopped -> ChatLink.Offline
         }
 
     private companion object {

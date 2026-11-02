@@ -34,21 +34,22 @@ class RecordedStreamTest {
     private val session: String get() = Oc2Sse.adapt(RecordedStream.recordingBody()).firstNotNullOf { it.event.sessionIdOrNull }
 
     @Test
-    fun `the Flutter OC2 recording reduces to prompt, notice, work line, two replies and one footer`() {
+    fun `the Flutter OC2 recording reconciles unknown notices without creating phantom messages`() {
         val events = Oc2Sse.adapt(RecordedStream.recordingBody())
         val model = TranscriptModel(session, TranscriptCounters())
         events.forEach { model.apply(it.event) }
         val s = model.derive(1)
         // Newest first: footer, the second step's words, the work line, the first step's words, the notice, the prompt.
-        assertEquals(6, s.rows.size, s.rows.joinToString { it.key })
+        assertEquals(5, s.rows.size, s.rows.joinToString { it.key })
         assertTrue(s.rows[0] is FooterRow)
         assertEquals("pong.", (s.rows[1] as BlockRow).text)
         val work = s.rows[2] as WorkLineRow
         assertEquals(1, work.calls)
         assertEquals(WorkState.Done, work.state)
         assertEquals("pong.", (s.rows[3] as BlockRow).text)
-        assertTrue(s.rows[4] is NoticeRow)
-        assertTrue((s.rows[5] as PromptRow).text.startsWith("Reply with exactly the word: pong."))
+        assertTrue(s.rows.none { it is NoticeRow })
+        assertEquals(1, model.refreshRequests)
+        assertTrue((s.rows[4] as PromptRow).text.startsWith("Reply with exactly the word: pong."))
         assertTrue(s.rows.filterIsInstance<BlockRow>().none { it.live })
         assertEquals(1, s.rows.map { it.turnId }.toSet().size) // the notice never started a turn
     }
@@ -107,7 +108,7 @@ class RecordedStreamTest {
             assertTrue(s.rows.filterIsInstance<BlockRow>().none { it.live })
             assertEquals(s.rows.size, s.rows.map { it.key }.toSet().size, "keys are unique")
             for (i in listOf(0, 1, s.rows.size / 2, s.rows.size - 1)) assertEquals(i, s.indexOf(s.rows[i].key))
-            assertEquals(0, handle.refreshRequests)
+            assertEquals(834, handle.refreshRequests)
 
             // Derive cost on the JVM: replay synchronously, deriving at each reference publish point.
             val timing = deriveTimings(sid, timed, groups, changing)

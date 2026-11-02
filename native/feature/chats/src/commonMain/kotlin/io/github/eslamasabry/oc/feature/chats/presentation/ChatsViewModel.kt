@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.engine.agents.feed.FeedDay
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,9 +21,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
 
-/** The Conversations home (07 §5 B01, B15). Plain screen ViewModel through Metro (plan 03 §13.7). */
+/**
+ * The Conversations home (07 §5 B01, B15). Plain screen ViewModel through Metro (plan 03 §13.7).
+ */
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
@@ -37,7 +39,9 @@ public class ChatsViewModel(
     private val filters = MutableStateFlow(ChatsFilters())
 
     public val state: StateFlow<ChatsUi> =
-        combine(feed.snapshot, briefs.brief, filters) { snapshot, brief, chosen -> build(snapshot, brief, chosen) }
+        combine(feed.snapshot, briefs.brief, filters) { snapshot, brief, chosen ->
+                build(snapshot, brief, chosen)
+            }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -63,18 +67,26 @@ public class ChatsViewModel(
 
     override fun search(query: String): Unit = filters.update { it.copy(query = query) }
 
-    override fun toggleRunning(): Unit = filters.update { it.copy(running = !it.running, needsYou = false) }
+    override fun toggleRunning(): Unit = filters.update {
+        it.copy(running = !it.running, needsYou = false)
+    }
 
-    override fun toggleNeedsYou(): Unit = filters.update { it.copy(needsYou = !it.needsYou, running = false) }
+    override fun toggleNeedsYou(): Unit = filters.update {
+        it.copy(needsYou = !it.needsYou, running = false)
+    }
 
-    override fun chooseProject(directory: String): Unit =
-        filters.update { it.copy(projectDirectory = if (it.projectDirectory == directory) null else directory) }
+    override fun chooseProject(directory: String): Unit = filters.update {
+        it.copy(projectDirectory = if (it.projectDirectory == directory) null else directory)
+    }
 
     override fun clearFilters(): Unit = filters.update { ChatsFilters() }
 
-    override fun dismissBrief() {
-        val shown = briefs.brief.value
+    override fun dismissBrief(shown: ReturnBrief) {
         viewModelScope.launch { briefs.dismiss(shown) }
+    }
+
+    override fun showBriefOverflow(shown: BriefUi) {
+        filters.value = ChatsFilters(identities = shown.overflowKeys)
     }
 
     override fun showAll(): Unit = nav.open(ChatsRoute.All(filter = null))
