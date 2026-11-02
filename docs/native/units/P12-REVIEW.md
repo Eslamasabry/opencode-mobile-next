@@ -161,3 +161,51 @@ These are not a red-first record: most tests were written alongside the code. Te
   "From what the agent's tools reported".
 - "Changes" on a reply always appears in its menu. A turn with no edits opens the page's empty state ("No changes")
   rather than hiding the item, since the chat presenter doesn't see tool parts.
+
+## Verified on the VPS (2026-11-02, branch `p12v/review`)
+
+Base: `origin/native/p12-review-2026-11-03` @ `03e35f49a` (already on `origin/native/m1-2026-11-03` @ `8a4eee69c`; no
+rebase). JDK 21, Android SDK, real Gradle (`-Dorg.gradle.workers.max=3 -Xmx3g`, `nice -n 5`).
+
+| Command | Result |
+|---|---|
+| `:engine:review:desktopTest` | 26 tests, 0 failures (25 original + `ReviewLifetimeTest`) |
+| `:feature:review:desktopTest` | 25 tests, 0 failures, after fixes 1 and 2 (`ReviewScreensTest` was 4/9 red on its first run) |
+| `:feature:chat:desktopTest` | test sources did not compile (base composer WIP); after base fix 4: 104 run, the unit's `ChatPresenterTest` 20/20 and `ChatRulesTest` 14/14 pass; 8 composer WIP tests fail (below) |
+| `:ui:routes:desktopTest`, `:ui:words:desktopTest` | 1 / 4 tests, 0 failures |
+| `:androidApp:assemblePreviewDebug` | green on the first compile (Metro graph with `ReviewHub`, `ReviewGraphAccessors`, `ReviewEntries`) |
+| `:androidApp:testPreviewDebugUnitTest` | 11 tests, 0 failures |
+| `:quality:test` | did not compile (base, fix 5); then 48 run, 2 failures, both base (below) |
+| `:protocol:oc2:desktopTest` with `P12-REVIEW-oc2-staged-revert.patch` applied temporarily | 96 tests, 0 failures; the patch was reverted afterwards and is **not** committed (protocol owner's call, checklist 4) |
+
+Fixes in the unit's write set:
+
+1. `ui/words/.../values/strings_review.xml`: `\'` → `'`. Compose resources do not unescape `\'` (every other words file
+   writes a plain apostrophe), so the screens showed a backslash: "This server can\'t undo from a prompt." The Arabic
+   file had none.
+2. `ReviewScreensTest`: file-name rows are found with `onNodeWithContentDescription(name)` instead of
+   `onNodeWithText(name)`. `KitRow(titleIsFileName = true)` draws `Main​.kt` with a zero-width break before the dot and
+   sets the plain name as the row's spoken description. Every assertion and click is the same; only the lookup changed.
+3. K1 (features import kit parts only): `ReviewHub` imported `kotlinx.coroutines.Job`, `SupervisorJob` and `cancel`.
+   New `engine/review/ReviewLifetime` (a child supervisor scope with `close()`, plus `ReviewLifetimeTest`). The hub uses it,
+   so its behaviour is unchanged: each review has its own child of the app scope on the main context, and evicting the
+   oldest of 6 stops only that review.
+
+Shared files outside the write set (needed to compile or pass the gates):
+
+4. `feature/chat` tests: cherry-picked `45708691c` from `p12v/files` (the same base composer-WIP compile fix: a
+   `filePickers` argument, two selection-fake members, `open class FakeChatWorld`, no assertion changed).
+5. `quality/.../ChatWorldReviewTest.kt`: `filePickers = emptySet()` (same base fix as `p12v/settings`/`p12v/files`).
+6. `MODULE_OWNERS`: rows for `:engine:review` (S, chat-lead) and `:feature:review` (F), so `ModuleOwnersTest` passes (checklist 2).
+   The coordinator should confirm the owners.
+
+Still red, not this unit's (the files verifier reproduced them on the bare base):
+
+- `:feature:chat:desktopTest`, 8 composer model/file WIP tests: `ComposerFilesViewModelTest` ×4,
+  `ComposerModelsFilesTest` ×3, `WorldComposerFilesModelsTest` B-CHAT-107 ×1.
+- `:quality:test` K1 on `feature/chat/.../composer/BasicComposerHost.kt` (base file).
+- `:quality:test` `p3/TranscriptStreamUiTest` 6,000-word stream: 1 min `runTest` timeout on the loaded shared VPS (load
+  average ~20 on 8 CPUs). It also failed on `p12v/settings`. It touches no review code.
+
+Not done: checklist 3 (`engineOrder` decision, left as core-only), checklist 4 (apply the OC2 patch), and checklist 5
+(emulator journeys; there is no emulator on the VPS).

@@ -1,13 +1,13 @@
 <resources>
     <!-- Change review (unit P12-REVIEW). Copy not in the Flutter catalog; every other review string is reused. -->
     <string name="reviewTurnTitle">Changes in this turn</string>
-    <string name="reviewOneFileUnavailable">Undoing one file at a time isn\'t available yet: this server can only undo from a prompt. Use Undo all, or Undo from here on a prompt.</string>
-    <string name="reviewNoDiff">The server didn\'t report the lines that changed in this file.</string>
-    <string name="reviewFileGone">This file isn\'t in these changes any more.</string>
-    <string name="reviewIncomplete">Older messages couldn\'t be read, so this list may be missing files.</string>
+    <string name="reviewOneFileUnavailable">Undoing one file at a time isn't available yet: this server can only undo from a prompt. Use Undo all, or Undo from here on a prompt.</string>
+    <string name="reviewNoDiff">The server didn't report the lines that changed in this file.</string>
+    <string name="reviewFileGone">This file isn't in these changes any more.</string>
+    <string name="reviewIncomplete">Older messages couldn't be read, so this list may be missing files.</string>
     <string name="reviewNoChangesBody">The agent reported no file edits here.</string>
     <string name="reviewWaiting">An undo is waiting for your review. Messages after its prompt are hidden until you choose.</string>
-    <string name="reviewUndoUnknown">Undo all needs the prompt these changes started from, and it couldn\'t be read.</string>
-    <string name="reviewUndoUnavailable">This server can\'t undo from a prompt.</string>
-    <string name="reviewToolEvidence">From what the agent\'s tools reported. Changes made by commands aren\'t listed.</string>
+    <string name="reviewUndoUnknown">Undo all needs the prompt these changes started from, and it couldn't be read.</string>
+    <string name="reviewUndoUnavailable">This server can't undo from a prompt.</string>
+    <string name="reviewToolEvidence">From what the agent's tools reported. Changes made by commands aren't listed.</string>
 </resources>

@@ -11,10 +11,7 @@ import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.review.ConversationReview
 import io.github.eslamasabry.oc.engine.review.ReviewGateways
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import io.github.eslamasabry.oc.engine.review.ReviewLifetime
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -34,24 +31,24 @@ public interface ReviewGraphAccessors {
 @SingleIn(AppScope::class)
 @Inject
 public class ReviewHub(private val registry: ConnectionRegistry) {
-    private val open = LinkedHashMap<ConversationRef, Pair<ConversationReview, Job>>()
+    private val open = LinkedHashMap<ConversationRef, Pair<ConversationReview, ReviewLifetime>>()
 
     public fun review(ref: ConversationRef): ConversationReview {
         open.remove(ref)?.let { kept ->
             open[ref] = kept // most recent last
             return kept.first
         }
-        val job = SupervisorJob(registry.appScope.coroutineContext[Job])
-        val scope = CoroutineScope(registry.appScope.coroutineContext + registry.mainContext + job)
+        val lifetime = ReviewLifetime(registry.appScope, registry.mainContext)
+        val scope = lifetime.scope
         val gateways =
             registry.live
                 .map { graphs -> (graphs[ref.profileId] as? ReviewGraphAccessors)?.let { ReviewGateways(it.reviewGateway, it.reviewOperations) } }
                 .stateIn(scope, SharingStarted.Eagerly, gatewaysOf(ref))
         val review = ConversationReview(ref.sessionId, gateways, scope)
-        open[ref] = review to job
+        open[ref] = review to lifetime
         while (open.size > KEEP) {
             val oldest = open.keys.first()
-            open.remove(oldest)?.second?.cancel()
+            open.remove(oldest)?.second?.close()
         }
         return review
     }

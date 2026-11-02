@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -36,7 +37,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.collections.immutable.persistentListOf
 
-/** The real review screens, found by the words a person sees (plan 14: tests assert behaviour, not widgets). */
+/**
+ * The real review screens, found by the words a person sees (plan 14: tests assert behaviour, not widgets).
+ * File-name rows are found by their spoken name: the kit draws a file name with a zero-width break before the dot
+ * (`titleIsFileName`), so its drawn text is not the plain name.
+ */
 @OptIn(ExperimentalTestApi::class)
 class ReviewScreensTest {
     private var previous: Locale = Locale.getDefault()
@@ -88,9 +93,9 @@ class ReviewScreensTest {
         val actions = Changes()
         setContent { Themed { ChangesScreen(ChangesUi(turn = true, load = ReviewLoad.Ready, files = files, undoAll = UndoAllUi.Offered), actions) } }
         onNodeWithText("Changes in this turn").assertIsDisplayed()
-        onNodeWithText("Main.kt").assertIsDisplayed()
-        onNodeWithText("README.md").assertIsDisplayed()
-        onNodeWithText("Main.kt").performClick()
+        onNodeWithContentDescription("Main.kt").assertIsDisplayed()
+        onNodeWithContentDescription("README.md").assertIsDisplayed()
+        onNodeWithContentDescription("Main.kt").performClick()
         onNodeWithText("Undo all").performClick()
         onNodeWithText("Looks good").performClick()
         assertEquals(listOf("file src/app/Main.kt", "undo", "keep"), actions.calls)
@@ -144,7 +149,7 @@ class ReviewScreensTest {
             }
         }
         onNodeWithText("Files the agent edited after it").assertIsDisplayed()
-        onNodeWithText("a.dart").assertIsDisplayed()
+        onNodeWithContentDescription("a.dart").assertIsDisplayed()
         onNodeWithText("Undo now").assertIsDisplayed()
     }
 
@@ -180,7 +185,7 @@ class ReviewScreensTest {
             }
         }
         onNodeWithText("This prompt and the 3 messages after it are hidden", substring = true).assertIsDisplayed()
-        onNodeWithText("a.kt").performClick()
+        onNodeWithContentDescription("a.kt").performClick()
         onNodeWithText("Put everything back").performClick()
         onNodeWithText("Delete the hidden messages").performClick()
         assertEquals(listOf("file src/a.kt", "putBack", "keep"), actions.calls)

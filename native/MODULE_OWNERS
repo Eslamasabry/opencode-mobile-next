@@ -43,6 +43,7 @@
 :engine:media	S	media-lead	slice-3
 :engine:requests	S	chat-lead	slice-2
 :engine:voice	S	media-lead	slice-4
+:engine:review	S	chat-lead (P12-REVIEW)	slice-4
 :feature:agents	F	S3-AGENTSUI (S3-TERMMIN sign-in)	slice-3
 :feature:chat-composer	F	(slice brief names the agent)	slice-3
 :feature:onboarding	F	(slice brief names the agent)	slice-2
@@ -50,3 +51,4 @@
 :feature:settings	F	(slice brief names the agent)	slice-4
 :ui:kit-content	S	content-kit-owner	slice-3
 :feature:servers	F	preview-servers-owner	slice-2
+:feature:review	F	(slice brief names the agent)	slice-4
