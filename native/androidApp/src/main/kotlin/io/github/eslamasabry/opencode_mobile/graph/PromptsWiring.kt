@@ -81,7 +81,7 @@ internal class PreviewShelfReady(
                 }
                 .filter { it.isNotEmpty() }
                 .toSet()
-        val liveIds = stores.profiles.profiles.value.map { it.toServerProfile().id.raw }
+        val liveIds = stores.profiles.profiles.value.map { it.id.raw }
         for (id in left) {
             // A dotted live id ("a.b") also starts with "a."; never touch a live server's records.
             val removed =
