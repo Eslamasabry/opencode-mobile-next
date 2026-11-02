@@ -4,7 +4,6 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.getOrNull
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
 import io.github.eslamasabry.oc.core.domain.GatewayPair
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
@@ -40,7 +39,7 @@ public class PaseoGatewayFactory(
     /** The phone helper's gateway keeps the helper-wide work inventory (plan 04 §8). */
     private val trackLocalWork: Boolean = false,
 ) : GatewayFactory {
-    override val kind: BackendKind = BackendKind.Paseo
+    override val backend: BackendKind = BackendKind.Paseo
 
     /** Validate → hello. Never sends the password to an address the rules refuse (B-SEC-124, B-PROTO-070). */
     override suspend fun probe(target: ProbeTarget): Outcome<ProbeResult> {
@@ -60,7 +59,7 @@ public class PaseoGatewayFactory(
                 scope = this,
                 lane = dispatchers.serial("paseo-probe"),
                 decodeDispatcher = dispatchers.default,
-                passwordSource = { target.credentials.password().getOrNull() },
+                passwordSource = { target.credentials?.secret },
             )
             try {
                 transport.connect()
@@ -70,7 +69,10 @@ public class PaseoGatewayFactory(
             }
     }
 
-    override fun open(spec: GatewaySpec, scope: ConnectionCoroutineScope): GatewayPair {
+    /** No I/O here: the transport says hello on first use, so a refused password surfaces on the first read. */
+    override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> = Outcome.Ok(open(spec, spec.scope))
+
+    private fun open(spec: GatewaySpec, scope: ConnectionCoroutineScope): GatewayPair {
         val lane = dispatchers.serial("paseo:${spec.profile.id.raw}")
         val transport = PaseoTransport(
             endpoint = spec.profile.origin.paseoUrl(),
@@ -79,7 +81,7 @@ public class PaseoGatewayFactory(
             lane = lane,
             decodeDispatcher = dispatchers.default,
             requestTimeoutMs = requestTimeoutMs,
-            passwordSource = { spec.credentials.password().getOrNull() },
+            passwordSource = { spec.credentials.secret },
         )
         val gateway = PaseoGateway(
             transport = transport,

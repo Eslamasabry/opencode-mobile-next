@@ -2,6 +2,8 @@
 
 package io.github.eslamasabry.oc.protocol.paseo
 
+import io.github.eslamasabry.oc.core.common.IncompatibleKind
+import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoPush
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
@@ -32,9 +34,9 @@ class PaseoHandshakeTest {
             assertEquals(reason, failure.reason)
             assertFalse("x1y2z3" in failure.toString())
             assertFalse(reason in failure.message.orEmpty())
-            val neutral = assertIs<Failure.Net.SignInNeeded>(failure.toFailure())
+            val neutral = assertIs<Failure.SignIn>(failure.toFailure())
             assertEquals(
-                if (reason == "password_required") Failure.Net.SignInNeeded.Why.PasswordMissing else Failure.Net.SignInNeeded.Why.PasswordRejected,
+                if (reason == "password_required") SignInWhy.PasswordMissing else SignInWhy.PasswordRejected,
                 neutral.why,
             )
             assertEquals(reason, neutral.details?.text)
@@ -46,7 +48,7 @@ class PaseoHandshakeTest {
         val failure = refusedWith("incompatible_protocol")
         assertEquals(PaseoFailureKind.IncompatibleProtocol, failure.kind)
         assertEquals("incompatible_protocol", failure.reason)
-        assertEquals(Failure.Net.Incompatible.Kind.ProtocolMismatch, assertIs<Failure.Net.Incompatible>(failure.toFailure()).kind)
+        assertEquals(IncompatibleKind.ProtocolMismatch, assertIs<Failure.Incompatible>(failure.toFailure()).kind)
     }
 
     @Test
@@ -150,6 +152,6 @@ class PaseoHandshakeTest {
         val sockets = FakeSockets(FakeDaemon()).apply { refuse = PaseoException(PaseoFailureKind.HostRefused) }
         val failure = assertFailsWith<PaseoException> { transport(sockets).connect() }
         assertEquals(PaseoFailureKind.HostRefused, failure.kind)
-        assertEquals(Failure.Net.SignInNeeded.Why.HostNotAllowed, assertIs<Failure.Net.SignInNeeded>(failure.toFailure()).why)
+        assertEquals(SignInWhy.HostNotAllowed, assertIs<Failure.SignIn>(failure.toFailure()).why)
     }
 }

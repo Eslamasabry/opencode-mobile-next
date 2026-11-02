@@ -5,7 +5,6 @@ package io.github.eslamasabry.oc.protocol.paseo.feed
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ServerPage
@@ -267,7 +266,7 @@ class PaseoChatFeedTest {
         assertIs<Outcome.Ok<Unit>>(bare.rememberLastUsedProject(FEED_DIR))
         val broken = feed(FakeFeedPort(), persist = { error("disk said no") })
         val failure = (broken.rememberLastUsedProject(FEED_DIR) as Outcome.Failed).failure
-        assertEquals(StorageProblem.WriteRefused, assertIs<Failure.Storage>(failure).problem)
+        assertIs<Failure.StorageRefused>(failure)
         assertNull(failure.details)
     }
 

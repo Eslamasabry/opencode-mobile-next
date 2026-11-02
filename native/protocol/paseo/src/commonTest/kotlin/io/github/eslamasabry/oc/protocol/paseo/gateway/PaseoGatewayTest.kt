@@ -472,7 +472,7 @@ class PaseoGatewayTest {
         advanceTimeBy(1_001)
         h.pump()
         val status = assertIs<StreamStatus.Stopped>(h.gateway.events.status.value)
-        assertIs<Failure.Net.SignInNeeded>(status.failure)
+        assertIs<Failure.SignIn>(status.failure)
         advanceTimeBy(60_000)
         h.pump()
         assertIs<StreamStatus.Stopped>(h.gateway.events.status.value)

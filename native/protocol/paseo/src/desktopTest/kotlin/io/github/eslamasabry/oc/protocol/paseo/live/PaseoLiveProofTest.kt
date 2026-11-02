@@ -116,7 +116,7 @@ class PaseoLiveProofTest {
         // 10: a wrong password is a sign-in failure (only when the daemon has one).
         if (password.isNotEmpty()) {
             val wrong = gateway(scope, lane, pw = "wrong-$password".take(64)).health()
-            step("10 a wrong password reads as sign-in needed", (wrong as? Outcome.Failed)?.failure is Failure.Net.SignInNeeded, wrong.toString().replace(password, "•••"))
+            step("10 a wrong password reads as sign-in needed", (wrong as? Outcome.Failed)?.failure is Failure.SignIn, wrong.toString().replace(password, "•••"))
         } else {
             step("10 a wrong password reads as sign-in needed", true, "skipped: daemon has no password")
         }

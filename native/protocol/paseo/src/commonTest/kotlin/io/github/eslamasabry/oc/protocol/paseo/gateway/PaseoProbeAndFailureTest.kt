@@ -2,6 +2,7 @@
 
 package io.github.eslamasabry.oc.protocol.paseo.gateway
 
+import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -61,12 +62,12 @@ class PaseoProbeAndFailureTest {
         assertIs<Failure.ComputerDidNotAnswer>(PaseoException(PaseoFailureKind.Disconnected).toFailure())
         val refused = assertIs<Failure.ComputerDidNotAnswer>(PaseoException(PaseoFailureKind.Unavailable, "fatal: not a git repository").toFailure())
         assertEquals("fatal: not a git repository", refused.details?.text)
-        assertIs<Failure.Net.UnreadableReply>(PaseoException(PaseoFailureKind.InvalidResponse).toFailure())
+        assertIs<Failure.UnreadableReply>(PaseoException(PaseoFailureKind.InvalidResponse).toFailure())
         assertEquals(RefusalReason.StaleScope, assertIs<Failure.Refused>(PaseoException(PaseoFailureKind.StaleRequest).toFailure()).reason)
         assertEquals(RefusalReason.DispatchUncertain, assertIs<Failure.Refused>(PaseoException(PaseoFailureKind.DeliveryUnknown).toFailure()).reason)
-        assertIs<Failure.Net.Conflict>(PaseoException(PaseoFailureKind.NewChatRequired).toFailure())
-        assertIs<Failure.Net.NotFound>(PaseoException(PaseoFailureKind.NotFound).toFailure())
-        assertEquals(Failure.Net.ServerBusy.Kind.Overloaded, assertIs<Failure.Net.ServerBusy>(PaseoException(PaseoFailureKind.Overloaded).toFailure()).kind)
+        assertIs<Failure.Conflict>(PaseoException(PaseoFailureKind.NewChatRequired).toFailure())
+        assertIs<Failure.NotFound>(PaseoException(PaseoFailureKind.NotFound).toFailure())
+        assertEquals(BusyKind.Overloaded, assertIs<Failure.Busy>(PaseoException(PaseoFailureKind.Overloaded).toFailure()).kind)
         // The exception message never carries the daemon's sentence.
         assertFalse("git" in PaseoException(PaseoFailureKind.Unavailable, "fatal: not a git repository").message.orEmpty())
     }

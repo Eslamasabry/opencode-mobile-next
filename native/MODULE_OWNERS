@@ -20,6 +20,7 @@
 :core:data	S	core-owner	slice-1
 :core:net	S	backend-owner	slice-1
 :protocol:oc2	F	backend-owner (S1-OC2)	slice-1
+:protocol:paseo	S	backend-owner	slice-3
 :engine:analytics	S	diagnostics-owner	slice-1
 :android:linux	S	runtime-owner	slice-1
 :tools:strings	S	l10n-owner	slice-1

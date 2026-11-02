@@ -5,7 +5,6 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.StorageProblem
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.ModelRef
@@ -326,7 +325,7 @@ public class PaseoChatFeed(
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            throw FeedFailure(Failure.Storage(StorageProblem.WriteRefused))
+            throw FeedFailure(Failure.StorageRefused())
         }
         if (!valid) return
         lastUsed = directory

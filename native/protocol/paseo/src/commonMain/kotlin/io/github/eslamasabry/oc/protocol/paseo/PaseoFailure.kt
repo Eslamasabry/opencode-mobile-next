@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.protocol.paseo
 
+import io.github.eslamasabry.oc.core.common.IncompatibleKind
+import io.github.eslamasabry.oc.core.common.BusyKind
+import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -48,22 +51,22 @@ public class PaseoException(
         return when (kind) {
             PaseoFailureKind.InvalidEndpoint -> Failure.Refused(RefusalReason.InvalidAddress, details)
             PaseoFailureKind.Authentication ->
-                Failure.Net.SignInNeeded(
-                    if (passwordMissing) Failure.Net.SignInNeeded.Why.PasswordMissing else Failure.Net.SignInNeeded.Why.PasswordRejected,
+                Failure.SignIn(
+                    if (passwordMissing) SignInWhy.PasswordMissing else SignInWhy.PasswordRejected,
                     details,
                 )
-            PaseoFailureKind.HostRefused -> Failure.Net.SignInNeeded(Failure.Net.SignInNeeded.Why.HostNotAllowed, details)
+            PaseoFailureKind.HostRefused -> Failure.SignIn(SignInWhy.HostNotAllowed, details)
             // An unanswered daemon is about the computer (B-AGENT-160): both a dropped link and a refusal.
             PaseoFailureKind.Disconnected, PaseoFailureKind.Unavailable -> Failure.ComputerDidNotAnswer(details)
-            PaseoFailureKind.InvalidResponse -> Failure.Net.UnreadableReply(details)
+            PaseoFailureKind.InvalidResponse -> Failure.UnreadableReply(details)
             // TODO(contract): a RefusalReason for "start a new chat" (contract request in the S3-PASEO report).
-            PaseoFailureKind.NewChatRequired -> Failure.Net.Conflict(tag, details = details)
-            PaseoFailureKind.Overloaded -> Failure.Net.ServerBusy(Failure.Net.ServerBusy.Kind.Overloaded, tag, details)
+            PaseoFailureKind.NewChatRequired -> Failure.Conflict(tag, details = details)
+            PaseoFailureKind.Overloaded -> Failure.Busy(BusyKind.Overloaded, tag, details)
             PaseoFailureKind.DeliveryUnknown -> Failure.Refused(RefusalReason.DispatchUncertain, details)
             PaseoFailureKind.StaleRequest, PaseoFailureKind.ScopeMismatch -> Failure.Refused(RefusalReason.StaleScope, details)
-            PaseoFailureKind.NotFound -> Failure.Net.NotFound(tag, details = details)
+            PaseoFailureKind.NotFound -> Failure.NotFound(tag, details = details)
             PaseoFailureKind.IncompatibleProtocol ->
-                Failure.Net.Incompatible(Failure.Net.Incompatible.Kind.ProtocolMismatch, details)
+                Failure.Incompatible(IncompatibleKind.ProtocolMismatch, details)
         }
     }
 
