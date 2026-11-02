@@ -95,6 +95,40 @@ public class PaseoGatewayFactory(
         )
         return GatewayPair(gateway, object : ServerOperationsGateway {})
     }
+    /**
+     * The pairing check (Dart `probePaseoConnection`): validates, says hello, reads one agent page in [directory] and
+     * the runtime list, then closes everything it opened. Nothing is saved.
+     */
+    public suspend fun checkConnection(baseUrl: String, password: String, directory: String): PaseoProbeResult =
+        kotlinx.coroutines.coroutineScope {
+            val scope = ConnectionCoroutineScope(
+                kotlinx.coroutines.SupervisorJob(coroutineContext[kotlinx.coroutines.Job]) + dispatchers.default,
+            )
+            try {
+                probePaseoConnection(baseUrl, password, directory) { url, pw, dir ->
+                    val lane = dispatchers.serial("paseo-check")
+                    PaseoGateway(
+                        transport = PaseoTransport(
+                            endpoint = url,
+                            socketFactory = sockets,
+                            scope = scope,
+                            lane = lane,
+                            decodeDispatcher = dispatchers.default,
+                            requestTimeoutMs = requestTimeoutMs,
+                            passwordSource = { pw },
+                        ),
+                        scope = scope,
+                        lane = lane,
+                        mapDispatcher = dispatchers.default,
+                        clock = clock,
+                        directory = dir,
+                        defaultProviderModes = defaultProviderModes,
+                    )
+                }
+            } finally {
+                scope.coroutineContext[kotlinx.coroutines.Job]?.cancel()
+            }
+        }
 }
 
 /** A profile origin as a daemon address (`ws://host:port`). */
