@@ -72,72 +72,92 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrProblemFailed
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrProblemJob
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrProblemSetup
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrProblemUnavailable
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /* The words of the Linux pages. Every sentence is a :ui:words string ported from the Flutter ARB (en + ar). */
 
-internal fun LinuxProblem.words(): StringResource =
-    when (this) {
-        LinuxProblem.Busy -> Res.string.linuxMgrProblemBusy
-        LinuxProblem.SetupRunning -> Res.string.linuxMgrProblemSetup
-        LinuxProblem.JobRunning -> Res.string.linuxMgrProblemJob
-        LinuxProblem.Unavailable -> Res.string.linuxMgrProblemUnavailable
-        LinuxProblem.Failed -> Res.string.linuxMgrProblemFailed
-    }
+@Composable
+internal fun LinuxProblem.words(): String =
+    stringResource(
+        when (this) {
+            LinuxProblem.Busy -> Res.string.linuxMgrProblemBusy
+            LinuxProblem.SetupRunning -> Res.string.linuxMgrProblemSetup
+            LinuxProblem.JobRunning -> Res.string.linuxMgrProblemJob
+            LinuxProblem.Unavailable -> Res.string.linuxMgrProblemUnavailable
+            LinuxProblem.Failed -> Res.string.linuxMgrProblemFailed
+        },
+    )
 
-internal fun LinuxProgramKind.words(): StringResource =
-    when (this) {
-        LinuxProgramKind.OpenCodeServer -> Res.string.linuxMgrKindServer
-        LinuxProgramKind.Paseo -> Res.string.linuxMgrKindPaseo
-        LinuxProgramKind.Agent -> Res.string.linuxMgrKindAgent
-        LinuxProgramKind.DevServer -> Res.string.linuxMgrKindDev
-        LinuxProgramKind.Other -> Res.string.linuxMgrKindOther
-    }
+@Composable
+internal fun LinuxProgramKind.words(): String =
+    stringResource(
+        when (this) {
+            LinuxProgramKind.OpenCodeServer -> Res.string.linuxMgrKindServer
+            LinuxProgramKind.Paseo -> Res.string.linuxMgrKindPaseo
+            LinuxProgramKind.Agent -> Res.string.linuxMgrKindAgent
+            LinuxProgramKind.DevServer -> Res.string.linuxMgrKindDev
+            LinuxProgramKind.Other -> Res.string.linuxMgrKindOther
+        },
+    )
 
-internal fun LinuxStorageCategory.title(): StringResource =
-    when (this) {
-        LinuxStorageCategory.Base -> Res.string.linuxMgrCatBase
-        LinuxStorageCategory.Packages -> Res.string.linuxMgrCatPackages
-        LinuxStorageCategory.Tools -> Res.string.linuxMgrCatTools
-        LinuxStorageCategory.Agents -> Res.string.linuxMgrCatAgents
-        LinuxStorageCategory.Projects -> Res.string.linuxMgrCatProjects
-        LinuxStorageCategory.Temp -> Res.string.linuxMgrCatTemp
-    }
+@Composable
+internal fun LinuxStorageCategory.title(): String =
+    stringResource(
+        when (this) {
+            LinuxStorageCategory.Base -> Res.string.linuxMgrCatBase
+            LinuxStorageCategory.Packages -> Res.string.linuxMgrCatPackages
+            LinuxStorageCategory.Tools -> Res.string.linuxMgrCatTools
+            LinuxStorageCategory.Agents -> Res.string.linuxMgrCatAgents
+            LinuxStorageCategory.Projects -> Res.string.linuxMgrCatProjects
+            LinuxStorageCategory.Temp -> Res.string.linuxMgrCatTemp
+        },
+    )
 
-internal fun LinuxStorageCategory.detail(): StringResource =
-    when (this) {
-        LinuxStorageCategory.Base -> Res.string.linuxMgrCatBaseDetail
-        LinuxStorageCategory.Packages -> Res.string.linuxMgrCatPackagesDetail
-        LinuxStorageCategory.Tools -> Res.string.linuxMgrCatToolsDetail
-        LinuxStorageCategory.Agents -> Res.string.linuxMgrCatAgentsDetail
-        LinuxStorageCategory.Projects -> Res.string.linuxMgrCatProjectsDetail
-        LinuxStorageCategory.Temp -> Res.string.linuxMgrCatTempDetail
-    }
+@Composable
+internal fun LinuxStorageCategory.detail(): String =
+    stringResource(
+        when (this) {
+            LinuxStorageCategory.Base -> Res.string.linuxMgrCatBaseDetail
+            LinuxStorageCategory.Packages -> Res.string.linuxMgrCatPackagesDetail
+            LinuxStorageCategory.Tools -> Res.string.linuxMgrCatToolsDetail
+            LinuxStorageCategory.Agents -> Res.string.linuxMgrCatAgentsDetail
+            LinuxStorageCategory.Projects -> Res.string.linuxMgrCatProjectsDetail
+            LinuxStorageCategory.Temp -> Res.string.linuxMgrCatTempDetail
+        },
+    )
 
-internal fun LinuxCleanupId.title(): StringResource =
-    when (this) {
-        LinuxCleanupId.AptCache -> Res.string.linuxMgrCleanApt
-        LinuxCleanupId.ToolCaches -> Res.string.linuxMgrCleanTools
-        LinuxCleanupId.TempFiles -> Res.string.linuxMgrCleanTemp
-        LinuxCleanupId.OldAgentVersions -> Res.string.linuxMgrCleanAgents
-    }
+@Composable
+internal fun LinuxCleanupId.title(): String =
+    stringResource(
+        when (this) {
+            LinuxCleanupId.AptCache -> Res.string.linuxMgrCleanApt
+            LinuxCleanupId.ToolCaches -> Res.string.linuxMgrCleanTools
+            LinuxCleanupId.TempFiles -> Res.string.linuxMgrCleanTemp
+            LinuxCleanupId.OldAgentVersions -> Res.string.linuxMgrCleanAgents
+        },
+    )
 
-internal fun LinuxCleanupId.detail(): StringResource =
-    when (this) {
-        LinuxCleanupId.AptCache -> Res.string.linuxMgrCleanAptDetail
-        LinuxCleanupId.ToolCaches -> Res.string.linuxMgrCleanToolsDetail
-        LinuxCleanupId.TempFiles -> Res.string.linuxMgrCleanTempDetail
-        LinuxCleanupId.OldAgentVersions -> Res.string.linuxMgrCleanAgentsDetail
-    }
+@Composable
+internal fun LinuxCleanupId.detail(): String =
+    stringResource(
+        when (this) {
+            LinuxCleanupId.AptCache -> Res.string.linuxMgrCleanAptDetail
+            LinuxCleanupId.ToolCaches -> Res.string.linuxMgrCleanToolsDetail
+            LinuxCleanupId.TempFiles -> Res.string.linuxMgrCleanTempDetail
+            LinuxCleanupId.OldAgentVersions -> Res.string.linuxMgrCleanAgentsDetail
+        },
+    )
 
-internal fun LinuxCleanupId.ask(): StringResource =
-    when (this) {
-        LinuxCleanupId.AptCache -> Res.string.linuxMgrCleanAptAsk
-        LinuxCleanupId.ToolCaches -> Res.string.linuxMgrCleanToolsAsk
-        LinuxCleanupId.TempFiles -> Res.string.linuxMgrCleanTempAsk
-        LinuxCleanupId.OldAgentVersions -> Res.string.linuxMgrCleanAgentsAsk
-    }
+@Composable
+internal fun LinuxCleanupId.ask(): String =
+    stringResource(
+        when (this) {
+            LinuxCleanupId.AptCache -> Res.string.linuxMgrCleanAptAsk
+            LinuxCleanupId.ToolCaches -> Res.string.linuxMgrCleanToolsAsk
+            LinuxCleanupId.TempFiles -> Res.string.linuxMgrCleanTempAsk
+            LinuxCleanupId.OldAgentVersions -> Res.string.linuxMgrCleanAgentsAsk
+        },
+    )
 
 /** A size in an LTR isolate, so Arabic text around it keeps its order. */
 internal fun size(bytes: Long): String = "⁦${LinuxSize.format(bytes)}⁩"

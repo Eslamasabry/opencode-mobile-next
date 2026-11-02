@@ -69,7 +69,7 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
             state.problem?.let { problem ->
                 KitErrorNotice(
                     title = stringResource(Res.string.linuxMgrLoadFailedTitle),
-                    message = stringResource(problem.words()),
+                    message = problem.words(),
                     retry = KitLineAction(stringResource(Res.string.commonRetry), actions::retry),
                 )
             }
@@ -79,13 +79,13 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                 CleanupResult.Nothing -> KitNotice(message = stringResource(Res.string.linuxMgrCleanNothing), dismiss = dismiss)
                 null -> Unit
             }
-            state.actProblem?.let { KitNotice(message = stringResource(it.words()), tone = StatusTone.Attention, dismiss = dismiss) }
+            state.actProblem?.let { KitNotice(message = it.words(), tone = StatusTone.Attention, dismiss = dismiss) }
             state.report?.let { report ->
                 KitRowGroup(label = stringResource(Res.string.linuxMgrStorageTotal, size(report.total))) {
                     LinuxStorageCategory.entries.forEach { category ->
                         KitRow(
-                            title = stringResource(category.title()),
-                            supporting = stringResource(category.detail()),
+                            title = category.title(),
+                            supporting = category.detail(),
                             supportingMaxLines = 2,
                             trailing = KitRowTrailing.Value(size(report.of(category)), chevron = false),
                         )
@@ -96,8 +96,8 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                         val bytes = state.cleanable[action.id]
                         val cleaning = state.cleaning == action.id
                         KitRow(
-                            title = stringResource(action.id.title()),
-                            supporting = stringResource(action.id.detail()),
+                            title = action.id.title(),
+                            supporting = action.id.detail(),
                             supportingMaxLines = 2,
                             trailing =
                                 when {
@@ -119,8 +119,8 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
         spec =
             ask?.let {
                 KitConfirmSpec(
-                    title = stringResource(it.id.ask()),
-                    confirmLabel = stringResource(it.id.title()),
+                    title = it.id.ask(),
+                    confirmLabel = it.id.title(),
                     kind = KitConfirmKind.Destructive,
                     body = stringResource(Res.string.linuxMgrCleanBody, size(it.bytes)),
                     consequences = listOf(stringResource(Res.string.linuxMgrCleanKept)),

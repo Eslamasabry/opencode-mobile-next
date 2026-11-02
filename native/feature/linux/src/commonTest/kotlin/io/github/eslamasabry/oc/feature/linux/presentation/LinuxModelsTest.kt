@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.feature.linux.manager.LinuxJobKind
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxJobStatus
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxManager
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxProblem
+import io.github.eslamasabry.oc.feature.linux.manager.VirtualRetryWait
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -177,7 +178,7 @@ class LinuxResetFlowTest {
 
 class LinuxHomeModelTest {
     private fun TestScope.home(host: FakeLinuxHost, life: Lifecycle = Lifecycle(), nav: Nav = Nav()): LinuxHomeModel {
-        val manager = LinuxManager(host)
+        val manager = LinuxManager(host, VirtualRetryWait)
         return LinuxHomeModel(manager, LinuxJobWatch(manager, notices), life, LinuxResetFlow(life, Marker(), FixedClock), nav, backgroundScope, Quiet)
     }
 
@@ -249,7 +250,7 @@ class LinuxPagesModelsTest {
         val opened = mutableListOf<String>()
         var opens = true
         val host = FakeLinuxHost(answer = { out("::open 4097\n::open 5173\n") })
-        val model = LinuxPortsModel(LinuxManager(host), { url -> opened += url; opens }, Nav(), backgroundScope)
+        val model = LinuxPortsModel(LinuxManager(host, VirtualRetryWait), { url -> opened += url; opens }, Nav(), backgroundScope)
         model.shown(true)
         settle()
         assertEquals(listOf(4097, 5173), model.state.value.ports.map { it.port })
@@ -266,7 +267,7 @@ class LinuxPagesModelsTest {
     fun `B-LINUX-092 a page whose first read failed says busy with try again`() = runTest {
         val host = FakeLinuxHost()
         repeat(3) { host.failures += FakeLinuxHost.ownership }
-        val model = LinuxPortsModel(LinuxManager(host), { true }, Nav(), backgroundScope)
+        val model = LinuxPortsModel(LinuxManager(host, VirtualRetryWait), { true }, Nav(), backgroundScope)
         model.shown(true)
         settle()
         assertEquals(LinuxProblem.Busy, model.state.value.problem)
@@ -286,7 +287,7 @@ class LinuxPagesModelsTest {
                     }
                 },
             )
-        val model = LinuxStorageModel(LinuxManager(host), Nav(), backgroundScope)
+        val model = LinuxStorageModel(LinuxManager(host, VirtualRetryWait), Nav(), backgroundScope)
         model.shown(true)
         settle()
         assertEquals(2048L * 1024, model.state.value.cleanable[LinuxCleanupId.AptCache])
@@ -298,7 +299,7 @@ class LinuxPagesModelsTest {
     }
 
     private fun TestScope.packages(host: FakeLinuxHost): LinuxPackagesModel {
-        val manager = LinuxManager(host)
+        val manager = LinuxManager(host, VirtualRetryWait)
         return LinuxPackagesModel(manager, LinuxJobWatch(manager, notices), Nav(), backgroundScope, Quiet)
     }
 

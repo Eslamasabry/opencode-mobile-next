@@ -6,6 +6,10 @@ import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.host.ShellRun
+import kotlinx.coroutines.delay
+
+/** The app graph's retry pause, on the test's virtual clock. */
+val VirtualRetryWait: LinuxRetryWait = LinuxRetryWait { delay(LinuxManager.RETRY_DELAY) }
 
 /** A scripted Linux: answers each run from [answer], records every script, and keeps one service table. */
 class FakeLinuxHost(

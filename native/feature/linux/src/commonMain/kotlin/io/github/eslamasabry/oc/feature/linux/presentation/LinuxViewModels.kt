@@ -15,6 +15,7 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxManager
+import io.github.eslamasabry.oc.feature.linux.manager.LinuxRetryWait
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.LinuxRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
@@ -33,7 +34,7 @@ import kotlin.time.Clock
 public object LinuxBindings {
     @Provides
     @SingleIn(AppScope::class)
-    public fun linuxManager(host: LinuxHost): LinuxManager = LinuxManager(host)
+    public fun linuxManager(host: LinuxHost, wait: LinuxRetryWait): LinuxManager = LinuxManager(host, wait)
 
     @Provides
     @SingleIn(AppScope::class)

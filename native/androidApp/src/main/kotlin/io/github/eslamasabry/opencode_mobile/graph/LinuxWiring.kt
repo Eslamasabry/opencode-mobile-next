@@ -26,6 +26,10 @@ import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.feature.linux.host.AbsentLinuxHost
 import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
+import io.github.eslamasabry.oc.feature.linux.manager.LinuxJobKind
+import io.github.eslamasabry.oc.feature.linux.manager.LinuxManager
+import io.github.eslamasabry.oc.feature.linux.manager.LinuxRetryWait
+import io.github.eslamasabry.oc.feature.linux.presentation.LinuxJobNotices
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifecycle
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxResetFlow
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxResetMarker
@@ -46,10 +50,18 @@ import io.github.eslamasabry.oc.feature.phone.presentation.ProcessReading
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.LinuxRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobBackingUp
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeInstall
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeRemove
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeUpdate
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobRestoring
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlin.time.Instant
+import org.jetbrains.compose.resources.getString
 
 /*
  * P12-LINUX: the Android bindings of :feature:linux and :feature:phone.
@@ -114,6 +126,28 @@ object LinuxWiring {
         }
 
     // ---- Real Android bindings
+
+    /** The pause between tries of a passing Linux failure (B-LINUX-092); features may not import delay (K1). */
+    @Provides fun linuxRetryWait(): LinuxRetryWait = LinuxRetryWait { delay(LinuxManager.RETRY_DELAY) }
+
+    /**
+     * The long job's foreground notice in the person's language (Flutter `linuxMgrJobNotice*`). It is read outside
+     * composition, so it lives here rather than in the feature (K1 allows features only stringResource).
+     */
+    @Provides
+    fun linuxJobNotices(): LinuxJobNotices =
+        object : LinuxJobNotices {
+            override suspend fun notice(kind: LinuxJobKind): String =
+                getString(
+                    when (kind) {
+                        LinuxJobKind.Install -> Res.string.linuxMgrJobNoticeInstall
+                        LinuxJobKind.Remove -> Res.string.linuxMgrJobNoticeRemove
+                        LinuxJobKind.Update -> Res.string.linuxMgrJobNoticeUpdate
+                        LinuxJobKind.Backup -> Res.string.linuxMgrJobBackingUp
+                        LinuxJobKind.Restore -> Res.string.linuxMgrJobRestoring
+                    },
+                )
+        }
 
     /** The device-wide reset marker `oc.linuxReset.pending` and the Reply speed reading it clears. */
     @Provides

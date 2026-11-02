@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
+    implementation(libs.compose.resources) // getString outside composition (LinuxWiring's job notice words).
     implementation(libs.metrox.viewmodel.compose)
     implementation(libs.kotlinx.io.core) // Real app-private draft payload vault.
     testImplementation(kotlin("test-junit"))

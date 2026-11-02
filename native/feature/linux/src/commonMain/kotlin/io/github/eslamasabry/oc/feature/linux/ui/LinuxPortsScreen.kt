@@ -66,7 +66,7 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
             state.problem?.let { problem ->
                 KitErrorNotice(
                     title = stringResource(Res.string.linuxMgrLoadFailedTitle),
-                    message = stringResource(problem.words()),
+                    message = problem.words(),
                     retry = KitLineAction(stringResource(Res.string.commonRetry), actions::retry),
                 )
             }
@@ -97,7 +97,7 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
 private fun PortRow(port: LinuxPort, actions: LinuxPortsActions) {
     val owner =
         port.owner?.name?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.linuxMgrPortUsedBy, "⁦$it⁩") }
-            ?: port.kind?.let { stringResource(it.words()) }
+            ?: port.kind?.let { it.words() }
             ?: stringResource(Res.string.linuxMgrPortUnknown)
     val reach =
         when (port.allInterfaces) {

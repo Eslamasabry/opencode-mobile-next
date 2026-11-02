@@ -88,7 +88,7 @@ public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
             val dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
             when (val notice = state.notice) {
                 null -> Unit
-                is LinuxHomeNotice.Problem -> KitNotice(message = stringResource(notice.problem.words()), tone = StatusTone.Attention, dismiss = dismiss)
+                is LinuxHomeNotice.Problem -> KitNotice(message = notice.problem.words(), tone = StatusTone.Attention, dismiss = dismiss)
                 LinuxHomeNotice.ResetNotErased ->
                     KitNotice(
                         title = stringResource(Res.string.linuxMgrResetNotErasedTitle),
@@ -123,10 +123,10 @@ public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
             LinuxJobPanel(state.job, actions::askStopJob, actions::dismissJob)
             if (state.ready) {
                 KitRowGroup {
-                    PageRow(Res.string.linuxMgrRunning, Res.string.linuxMgrRunningDetail) { actions.open(LinuxPage.Running) }
-                    PageRow(Res.string.linuxMgrPorts, Res.string.linuxMgrPortsDetail) { actions.open(LinuxPage.Ports) }
-                    PageRow(Res.string.linuxMgrStorage, Res.string.linuxMgrStorageDetail) { actions.open(LinuxPage.Storage) }
-                    PageRow(Res.string.linuxMgrPackages, Res.string.linuxMgrPackagesDetail) { actions.open(LinuxPage.Packages) }
+                    PageRow(stringResource(Res.string.linuxMgrRunning), stringResource(Res.string.linuxMgrRunningDetail)) { actions.open(LinuxPage.Running) }
+                    PageRow(stringResource(Res.string.linuxMgrPorts), stringResource(Res.string.linuxMgrPortsDetail)) { actions.open(LinuxPage.Ports) }
+                    PageRow(stringResource(Res.string.linuxMgrStorage), stringResource(Res.string.linuxMgrStorageDetail)) { actions.open(LinuxPage.Storage) }
+                    PageRow(stringResource(Res.string.linuxMgrPackages), stringResource(Res.string.linuxMgrPackagesDetail)) { actions.open(LinuxPage.Packages) }
                     KitRow(
                         title = stringResource(Res.string.linuxMgrRepair),
                         supporting = stringResource(Res.string.linuxMgrRepairDetail),
@@ -179,13 +179,13 @@ public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
 
 @Composable
 private fun PageRow(
-    title: org.jetbrains.compose.resources.StringResource,
-    detail: org.jetbrains.compose.resources.StringResource,
+    title: String,
+    detail: String,
     onClick: () -> Unit,
 ) {
     KitRow(
-        title = stringResource(title),
-        supporting = stringResource(detail),
+        title = title,
+        supporting = detail,
         supportingMaxLines = 2,
         trailing = KitRowTrailing.Chevron,
         onClick = onClick,

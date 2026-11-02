@@ -6,7 +6,6 @@ import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
-import kotlinx.coroutines.delay
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -41,6 +40,11 @@ public inline fun <T, R> LinuxAnswer<T>.then(next: (T) -> LinuxAnswer<R>): Linux
         is LinuxAnswer.Problem -> this
     }
 
+/** The pause before trying a passing failure again; bound by the app graph (a feature may not import delay, K1). */
+public fun interface LinuxRetryWait {
+    public suspend fun pause()
+}
+
 /**
  * The manager of the app's own Linux (port of lib/builtin/linux_manager/linux_manager.dart). Short work goes through
  * [LinuxHost.run], which takes the installer slot phone setup uses; long work runs as the service [JOB_SERVICE], which
@@ -48,7 +52,7 @@ public inline fun <T, R> LinuxAnswer<T>.then(next: (T) -> LinuxAnswer<R>): Linux
  */
 public class LinuxManager(
     private val host: LinuxHost,
-    private val retryDelay: Duration = 700.milliseconds,
+    private val retryWait: LinuxRetryWait,
 ) {
     public suspend fun presence(): LinuxPresence = host.presence()
 
@@ -70,7 +74,7 @@ public class LinuxManager(
                     val passing = passing(result.failure)
                     if (passing && attempt < ATTEMPTS) {
                         attempt++
-                        delay(retryDelay)
+                        retryWait.pause()
                         continue
                     }
                     return LinuxAnswer.Problem(if (passing) LinuxProblem.Busy else LinuxProblem.Unavailable, result.failure.details)
@@ -152,6 +156,9 @@ public class LinuxManager(
         public const val JOB_SERVICE: String = "linux-job"
         private const val JOB_LOG_TAIL = 24_576
         private const val ATTEMPTS = 3
+
+        /** How long [LinuxRetryWait] pauses between tries (Flutter linux_manager retry: 700 ms). */
+        public val RETRY_DELAY: Duration = 700.milliseconds
 
         internal fun passing(failure: Failure): Boolean =
             failure is Failure.Runtime &&

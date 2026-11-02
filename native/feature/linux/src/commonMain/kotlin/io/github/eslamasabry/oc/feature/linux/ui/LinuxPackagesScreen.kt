@@ -108,7 +108,7 @@ public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesAct
             state.problem?.let { problem ->
                 KitErrorNotice(
                     title = stringResource(Res.string.linuxMgrLoadFailedTitle),
-                    message = stringResource(problem.words()),
+                    message = problem.words(),
                     retry = KitLineAction(stringResource(Res.string.commonRetry), actions::retry),
                 )
             }
@@ -151,7 +151,7 @@ public fun LinuxPackagesScreen(state: LinuxPackagesUi, actions: LinuxPackagesAct
                 is PackagesNotice.AlreadyInstalled -> KitNotice(message = stringResource(Res.string.linuxMgrPkgAlready, names(listOf(notice.name))), dismiss = dismiss)
                 is PackagesNotice.Unknown -> KitNotice(message = stringResource(Res.string.linuxMgrPkgUnknown, names(listOf(notice.name))), tone = StatusTone.Attention, dismiss = dismiss)
                 is PackagesNotice.BlockedPlan -> KitNotice(message = stringResource(Res.string.linuxMgrPkgBlockedPlan, names(listOf(notice.needed))), tone = StatusTone.Attention, dismiss = dismiss)
-                is PackagesNotice.Problem -> KitNotice(message = stringResource(notice.problem.words()), tone = StatusTone.Attention, dismiss = dismiss)
+                is PackagesNotice.Problem -> KitNotice(message = notice.problem.words(), tone = StatusTone.Attention, dismiss = dismiss)
             }
             if (state.checking) KitNotice(message = stringResource(Res.string.linuxMgrPkgChecking), tone = StatusTone.Progress, liveRegion = false)
             if (state.packages.isNotEmpty()) {
