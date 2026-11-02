@@ -24,7 +24,7 @@ public object AndroidMigration {
      */
     public fun recoverBeforeOpen(context: Context, clock: Clock): Boolean {
         val dataDir = context.applicationContext.filesDir.parentFile ?: return false
-        return StartFreshTransaction(MigrationPaths(dataDir)) { clock.now().toEpochMilliseconds() }.recoverBeforeOpen()
+        return StartFreshTransaction(MigrationPaths(dataDir), now = { clock.now().toEpochMilliseconds() }).recoverBeforeOpen()
     }
 
     public fun create(
