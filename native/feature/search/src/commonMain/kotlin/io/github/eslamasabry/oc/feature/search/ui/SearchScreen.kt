@@ -6,9 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -169,7 +167,7 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFiel
                     item(key = "no-match") {
                         KitSearchNoMatch(
                             query = state.query,
-                            onClear = { field.clearText() },
+                            onClear = { field.edit { replace(0, length, "") } },
                             what = stringResource(Res.string.p12SearchConversationsWhat),
                         )
                     }
@@ -219,7 +217,12 @@ private fun LazyListScope.recent(
                     kind = KitChipKind.Removable,
                     removeLabel = stringResource(Res.string.p12SearchRecentRemove, query),
                     // Filling the field runs the search once typing settles, exactly as typed.
-                    onClick = { field.setTextAndPlaceCursorAtEnd(query) },
+                    onClick = {
+                        field.edit {
+                            replace(0, length, query)
+                            placeCursorBeforeCharAt(length)
+                        }
+                    },
                     onRemove = { actions.forgetRecent(query) },
                 )
             }

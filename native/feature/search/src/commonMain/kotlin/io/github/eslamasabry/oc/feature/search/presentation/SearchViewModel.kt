@@ -17,7 +17,6 @@ import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,8 +38,8 @@ public class SearchViewModel(
     private val local = MutableStateFlow(SearchUi(server = route.profile))
     public val state: StateFlow<SearchUi> = local.asStateFlow()
 
-    private var searchJob: Job? = null
-    private var moreJob: Job? = null
+    private var cancelSearch: () -> Unit = {}
+    private var cancelMore: () -> Unit = {}
     private var cursor: String? = null
     private var titlesDone = false
     private var generation = 0
@@ -97,7 +96,7 @@ public class SearchViewModel(
         if (!s.canLoadMore || s.loadingMore) return
         val mine = generation
         local.update { it.copy(loadingMore = true, loadMoreFailed = false) }
-        moreJob = viewModelScope.launch {
+        viewModelScope.launch {
             val page = source.conversations(server, s.query, next)
             if (mine != generation) return@launch
             when (page) {
@@ -114,7 +113,7 @@ public class SearchViewModel(
                     }
                 }
             }
-        }
+        }.also { job -> cancelMore = { job.cancel() } }
     }
 
     override fun open(hit: SearchHitUi) {
@@ -143,8 +142,8 @@ public class SearchViewModel(
     }
 
     private fun restart() {
-        searchJob?.cancel()
-        moreJob?.cancel()
+        cancelSearch()
+        cancelMore()
         generation++
         cursor = null
         titlesDone = false
@@ -173,10 +172,10 @@ public class SearchViewModel(
         local.value = cleared.copy(phase = SearchPhase.Searching)
         val mine = generation
         val query = s.query
-        searchJob = viewModelScope.launch {
+        viewModelScope.launch {
             titles(server, query, mine)
             if (inside && mine == generation) inside(server, query, mine)
-        }
+        }.also { job -> cancelSearch = { job.cancel() } }
     }
 
     private suspend fun titles(server: ProfileId, query: String, mine: Int) {
