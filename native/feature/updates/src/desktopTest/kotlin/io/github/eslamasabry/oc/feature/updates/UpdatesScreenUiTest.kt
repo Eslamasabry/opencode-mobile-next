@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertContentDescriptionContains
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -128,8 +130,10 @@ class UpdatesScreenUiTest {
     @Test
     fun `B-MIGR-012 downloading shows Cancel and the percent`() = runComposeUiTest {
         val actions = page(available.copy(phase = UpdatePhase.Downloading, progress = 0.425f))
-        onNodeWithText("Downloading version 2.2.0").assertExists()
-        assertTrue(shows("42% done"))
+        // The disabled Check now row repeats the line as its reason, so read it from the status itself.
+        onNodeWithTag("updates-state").assertTextContains("Downloading version 2.2.0")
+        // The kit draws the percent under the bar and reads it once, as the bar's label.
+        onNodeWithTag("kit-state-progress").assertContentDescriptionContains("42% done")
         onNodeWithText("Cancel").performClick()
         assertEquals(listOf("cancel"), actions.calls)
     }
