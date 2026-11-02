@@ -178,6 +178,12 @@ class WorldComposerFilesModelsTest {
             return Outcome.Ok(Unit)
         }
 
+        override suspend fun createSelectedSession(defaults: SessionSelection): Outcome<Session> =
+            Outcome.Failed(Failure.Unavailable(FeatureId("createSelectedSession")))
+
+        override suspend fun setSessionAgent(session: SessionId, agent: String): Outcome<Unit> =
+            Outcome.Failed(Failure.Unavailable(FeatureId("setSessionAgent")))
+
         override suspend fun session(id: SessionId): Outcome<Session> =
             when (val read = base.session(id)) {
                 is Outcome.Failed -> read
