@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P6 proof: copied verbatim from native/tools/arb2xml/build-sample (strings_os.xml). -->
+<resources>
+    <plurals name="notifStatusNeedsYou">
+        <item quantity="zero">%1$d طلب ينتظرك</item>
+        <item quantity="one">طلب واحد ينتظرك</item>
+        <item quantity="two">طلبان ينتظرانك</item>
+        <item quantity="few">%1$d طلبات تنتظرك</item>
+        <item quantity="many">%1$d طلبًا ينتظرك</item>
+        <item quantity="other">%1$d طلب ينتظرك</item>
+    </plurals>
+
+    <string name="notifStatusReconnectingGeneric">إعادة الاتصال</string>
+</resources>

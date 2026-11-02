@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
+    debugImplementation(libs.compose.resources) // P6 proof screen (debug only)
+    debugImplementation(libs.compose.foundation)
     implementation(libs.metrox.viewmodel.compose)
     implementation(libs.kotlinx.io.core) // Real app-private draft payload vault.
     testImplementation(kotlin("test-junit"))
