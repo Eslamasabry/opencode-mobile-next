@@ -158,7 +158,10 @@ public fun PairingScannerScreen(
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {
-                slot.Viewfinder(handle, accepts, actions::scanned, actions::rejected, Modifier.fillMaxSize().testTag("pairing-viewfinder"))
+                // The screen's tag sits on its own box so the slot's own semantics (and tags) stay intact.
+                Box(Modifier.fillMaxSize().testTag("pairing-viewfinder")) {
+                    slot.Viewfinder(handle, accepts, actions::scanned, actions::rejected, Modifier.fillMaxSize())
+                }
                 when (handle.stage) {
                     ScanStage.Denied ->
                         KitStateView(

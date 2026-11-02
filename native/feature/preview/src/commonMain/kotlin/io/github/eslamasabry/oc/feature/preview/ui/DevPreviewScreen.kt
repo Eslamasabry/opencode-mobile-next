@@ -136,7 +136,10 @@ public fun DevPreviewScreen(
                                 modifier = Modifier.align(Alignment.Center),
                             )
                         else -> if (origin != null && egress != null) {
-                            slot.Page(origin, egress, handle, events, Modifier.fillMaxSize().testTag("dev-preview-page"))
+                            // The screen's tag sits on its own box so the slot's own semantics (and tags) stay intact.
+                            Box(Modifier.fillMaxSize().testTag("dev-preview-page")) {
+                                slot.Page(origin, egress, handle, events, Modifier.fillMaxSize())
+                            }
                             if (state.phase == PagePhase.Failed) {
                                 KitStateView(
                                     kind = KitStateKind.Error,

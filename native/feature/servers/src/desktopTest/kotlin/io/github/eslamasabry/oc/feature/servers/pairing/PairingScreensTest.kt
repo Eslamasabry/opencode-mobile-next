@@ -11,6 +11,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -145,7 +146,7 @@ class PairingScreensTest {
         onNodeWithText("https://box.tail.ts.net:4096").assertExists()
         onNodeWithText("Pairing code").assertExists()
         onNodeWithText("Scan code").performClick()
-        onNodeWithText("Save and connect").performClick()
+        onNodeWithText("Save and connect").performScrollTo().performClick()
         assertEquals(listOf("scan", "save:https://box.tail.ts.net:4096:me:pw"), actions.calls)
     }
 
