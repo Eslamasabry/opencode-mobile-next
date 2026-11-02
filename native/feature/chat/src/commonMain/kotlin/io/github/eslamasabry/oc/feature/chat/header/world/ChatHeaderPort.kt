@@ -31,6 +31,14 @@ public interface ChatHeaderPort {
 
     public suspend fun delete(): Outcome<Unit>
 
+    /** Who is signed in and the catalog, for the free-model note (never logged: provider config can carry keys). */
+    public suspend fun freeModelFacts(): Outcome<io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModelFacts> =
+        Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("serverCatalog")))
+
+    /** The connection's permission asks for the approval chip; null where the host has no requests engine. */
+    public val approvals: io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalPort?
+        get() = null
+
     /** Stops watching the connection (the header's entry left). */
     public fun close() {}
 }
@@ -44,6 +52,7 @@ public data class HeaderFacts(
     val directory: String? = null,
     val shareUrl: String? = null,
     val model: String? = null,
+    val providerId: String? = null,
     val agent: String? = null,
     val contextTokens: Long? = null,
     val contextLimit: Long? = null,

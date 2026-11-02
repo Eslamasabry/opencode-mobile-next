@@ -26,7 +26,13 @@ import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderPresenter
+import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalCodec
+import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalPort
+import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalPresenter
+import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalStore
+import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
+import io.github.eslamasabry.oc.engine.requests.consent.SessionApproval
 import io.github.eslamasabry.oc.feature.chat.header.world.ChatHeaderPort
 import io.github.eslamasabry.oc.feature.chat.header.world.HeaderFacts
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatLauncher
@@ -81,7 +87,10 @@ class ChatHeaderUiTest {
         object : ComposerHost {
             @Composable
             override fun Composer(target: ComposerTarget, chrome: ComposerChrome, modifier: Modifier) {
-                KitText("Composer slot", modifier)
+                androidx.compose.foundation.layout.Row(modifier) {
+                    KitText("Composer slot")
+                    chrome.rowChips()
+                }
             }
         }
 
@@ -175,6 +184,29 @@ class ChatHeaderUiTest {
     private val nav = Nav()
     private val header = ChatHeaderPresenter(world, port, nav, immediate)
     private val chat = ChatPresenter(world, nav, immediate)
+    private val approvalStore =
+        object : ApprovalStore {
+            val raw = HashMap<String, String>()
+            override val revision = MutableStateFlow(0L)
+
+            override fun settings(profile: ProfileId) = ApprovalCodec.decode(raw[ApprovalCodec.key(profile)])
+
+            override suspend fun set(profile: ProfileId, session: String, setting: SessionApproval?): Outcome<Unit> {
+                val next = settings(profile).toMutableMap()
+                if (setting == null) next.remove(session) else next[session] = setting
+                raw[ApprovalCodec.key(profile)] = ApprovalCodec.encode(next)
+                revision.value += 1
+                return Outcome.Ok(Unit)
+            }
+        }
+    private val asks =
+        object : ApprovalPort {
+            override val waiting = MutableStateFlow<List<io.github.eslamasabry.oc.core.model.PermissionRequest>>(emptyList())
+
+            override suspend fun allowOnce(id: io.github.eslamasabry.oc.core.common.ids.RequestId): Outcome<Unit> = Outcome.Ok(Unit)
+        }
+    private val approvals =
+        ApprovalPresenter(ref, approvalStore, MutableStateFlow(ServerCapabilities(permissionRequests = true)), asks, immediate, io.github.eslamasabry.oc.core.testing.TestClock())
 
     @Composable
     private fun Screen(localeTag: String = "en") {
@@ -183,11 +215,13 @@ class ChatHeaderUiTest {
                 val scope = remember { CoroutineScope(Dispatchers.Unconfined) }
                 val flow = remember { header.states(scope, SharingStarted.Eagerly) }
                 val ui by flow.collectAsState()
+                val approvalFlow = remember { approvals.states(scope, SharingStarted.Eagerly) }
+                val approval by approvalFlow.collectAsState()
                 ChatScreen(
                     ChatUi.loading(ref).copy(title = world.title.value, phase = ChatPhase.Live),
                     chat,
                     composer,
-                    header = ChatHeaderSlot(ui, header),
+                    header = ChatHeaderSlot(ui, header, ApprovalChipSlot(approval, approvals)),
                 )
             }
         }
@@ -286,5 +320,26 @@ class ChatHeaderUiTest {
             } finally {
                 java.util.Locale.setDefault(before)
             }
+        }
+
+    @Test
+    fun `B-AGENT-225 the approval chip sits in the composer row and switches this conversation to auto-approve`() =
+        runComposeUiTest {
+            setContent { Screen() }
+            onNodeWithText("Ask first").assertIsDisplayed().performClick()
+            onNodeWithText("Auto-approve this conversation").performClick()
+            waitForIdle()
+            onNodeWithText("Auto-approve on").assertIsDisplayed()
+            assertEquals("""{"s1":{"mode":"autoOnce","inheritToChildren":false}}""", approvalStore.raw["oc.autoApprove.p1"])
+        }
+
+    @Test
+    fun `B-AGENT-225 approve everything asks first`() =
+        runComposeUiTest {
+            setContent { Screen() }
+            onNodeWithText("Ask first").performClick()
+            onAllNodesWithText("Approve everything")[0].performClick()
+            onNodeWithText("Approve everything?").assertIsDisplayed()
+            assertEquals(emptyMap(), approvalStore.raw)
         }
 }

@@ -5,6 +5,9 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
+import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModel
+import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModelFacts
+import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeNoteStore
 import io.github.eslamasabry.oc.feature.chat.header.world.ChatHeaderPort
 import io.github.eslamasabry.oc.feature.chat.header.world.HeaderFacts
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatLauncher
@@ -35,6 +38,8 @@ internal data class HeaderLocal(
     /** The server's title when [renamed] was acknowledged; once the server names it otherwise, the server wins. */
     val renamedOver: String? = null,
     val continueFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
+    val freeFacts: FreeModelFacts? = null,
+    val freeDismissed: Boolean = false,
 )
 
 internal enum class SheetKind { Details, ContinueWith }
@@ -48,6 +53,7 @@ public class ChatHeaderPresenter(
     private val port: ChatHeaderPort,
     private val nav: AppNavigator,
     private val launcher: ChatLauncher,
+    private val freeNotes: FreeNoteStore? = null,
 ) : ChatHeaderActions {
     private val local = MutableStateFlow(HeaderLocal())
     private var nextId = 1L
@@ -64,6 +70,27 @@ public class ChatHeaderPresenter(
             }
         return combine(serverSide, local) { s, l -> present(s.title, s.caps, s.facts, s.transcript, s.models, l) }
             .stateIn(scope, started, current())
+            .also { launcher.launch { loadFreeFacts() } }
+    }
+
+    private suspend fun loadFreeFacts() {
+        val facts = (port.freeModelFacts() as? Outcome.Ok)?.value ?: return
+        local.update { it.copy(freeFacts = facts) }
+    }
+
+    private fun freeNoteDue(facts: HeaderFacts, models: ComposerModels, l: HeaderLocal): Boolean {
+        val free = l.freeFacts ?: return false
+        if (l.freeDismissed) return false
+        val provider = models.selected?.providerId ?: facts.providerId
+        val model = models.selected?.modelId ?: facts.model
+        if (!FreeModel.uses(free.signedIn, provider, model, free.models)) return false
+        return freeNotes?.dismissed(world.ref.profileId, world.ref.sessionId.raw) != true
+    }
+
+    override fun dismissFreeNote() {
+        local.update { it.copy(freeDismissed = true) }
+        val store = freeNotes ?: return
+        launcher.launch { store.dismiss(world.ref.profileId, world.ref.sessionId.raw) }
     }
 
     private data class ServerSide(
@@ -121,6 +148,7 @@ public class ChatHeaderPresenter(
             failure = l.failure,
             clip = l.clip,
             renaming = l.renaming,
+            freeModelNote = freeNoteDue(facts, models, l),
         )
     }
 

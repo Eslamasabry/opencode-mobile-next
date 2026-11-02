@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
+import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChip
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
@@ -137,6 +138,7 @@ public fun ChatScreen(
 ) {
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
     val requestState by rememberUpdatedState(requests)
+    val headerState by rememberUpdatedState(header)
     val words = rememberChatWords()
     val listWords =
         ChatListWords(
@@ -190,6 +192,7 @@ public fun ChatScreen(
                 focusDone = actions::arrivalShown,
                 onStop = actions::stop,
                 stopping = { latest.live?.stopping == true },
+                rowChips = { headerState?.approval?.let { ApprovalChip(it) } },
             )
         }
 

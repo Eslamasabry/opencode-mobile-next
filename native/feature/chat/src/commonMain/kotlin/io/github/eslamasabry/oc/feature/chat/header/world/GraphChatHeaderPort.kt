@@ -15,8 +15,15 @@ import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.core.common.ids.RequestId
+import io.github.eslamasabry.oc.core.model.PermissionReply
+import io.github.eslamasabry.oc.core.model.PermissionRequest
+import io.github.eslamasabry.oc.engine.requests.AnswerPhase
+import io.github.eslamasabry.oc.engine.requests.PendingRequest
+import io.github.eslamasabry.oc.engine.requests.RequestAnswer
+import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalPort
+import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModelFacts
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,25 +45,39 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
     private val sid = SessionId(ref.sessionId.raw)
     private val mutableFacts = MutableStateFlow(HeaderFacts())
     override val facts: StateFlow<HeaderFacts> = mutableFacts.asStateFlow()
-    private var watcher: Job? = null
+    private var stopWatching: (() -> Unit)? = null
     private var bound: ConnectionGraph? = null
-    private var boundJobs: List<Job> = emptyList()
+    private var stops: List<() -> Unit> = emptyList()
+    private val waitingAsks = MutableStateFlow<List<PermissionRequest>>(emptyList())
+
+    override val approvals: ApprovalPort =
+        object : ApprovalPort {
+            override val waiting: StateFlow<List<PermissionRequest>> = waitingAsks.asStateFlow()
+
+            override suspend fun allowOnce(id: RequestId): Outcome<Unit> {
+                val graph = bound ?: return offline()
+                val engine = (graph as ChatGraphAccessors).chatRequests.engine
+                return engine.answerNow(id, RequestAnswer.Permission(PermissionReply.Once))
+            }
+        }
 
     fun attach() {
-        if (watcher != null) return
-        watcher =
+        if (stopWatching != null) return
+        val watcher =
             registry.appScope.launch(registry.mainContext) {
                 registry.live.collect {
                     val graph = registry.graphFor(ref)
                     if (graph !== bound) bind(graph)
                 }
             }
+        stopWatching = { watcher.cancel() }
     }
 
     private fun bind(graph: ConnectionGraph?) {
-        boundJobs.forEach { it.cancel() }
-        boundJobs = emptyList()
+        stops.forEach { it() }
+        stops = emptyList()
         bound = graph
+        waitingAsks.value = emptyList()
         if (graph == null) {
             mutableFacts.update { it.copy(connected = false) }
             return
@@ -64,9 +85,17 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
         val gateway = (graph as ChatGraphAccessors).chatGateway
         mutableFacts.value =
             HeaderFacts(serverName = graph.profile.name, directory = gateway.location.value.directory, connected = true)
-        boundJobs =
+        val jobs =
             listOf(
                 graph.scope.launch(registry.mainContext) { read(graph, gateway) },
+                graph.scope.launch(registry.mainContext) {
+                    (graph as ChatGraphAccessors).chatRequests.engine.pending.collect { all ->
+                        waitingAsks.value =
+                            all.filterIsInstance<PendingRequest.Permission>()
+                                .filter { it.phase == AnswerPhase.Waiting }
+                                .map { it.request }
+                    }
+                },
                 graph.scope.launch(registry.mainContext) {
                     gateway.events.all.collect { envelope ->
                         val event = envelope.event
@@ -76,6 +105,7 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
                     }
                 },
             )
+        stops = jobs.map { job -> { job.cancel() } }
     }
 
     private suspend fun read(graph: ConnectionGraph, gateway: ServerGateway): Outcome<Unit> =
@@ -92,6 +122,7 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
             directory = s.directory ?: f.directory,
             shareUrl = s.shareUrl,
             model = s.selection?.model?.modelId ?: s.model,
+            providerId = s.selection?.model?.providerId,
             agent = s.selection?.agent ?: s.agent,
             contextTokens = s.contextUse?.tokens,
             contextLimit = s.contextUse?.limit,
@@ -101,6 +132,22 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
     override suspend fun refresh(): Outcome<Unit> {
         val graph = bound ?: return offline()
         return read(graph, (graph as ChatGraphAccessors).chatGateway)
+    }
+
+    override suspend fun freeModelFacts(): Outcome<FreeModelFacts> {
+        val graph = bound ?: return offline()
+        val services = graph as ChatGraphAccessors
+        val catalog = services.chatOperations.catalog()
+        if (catalog is Outcome.Failed) return catalog
+        val providers = services.chatGateway.configuredProviders()
+        if (providers is Outcome.Failed) return providers
+        if (bound !== graph) return offline()
+        return Outcome.Ok(
+            FreeModelFacts(
+                signedIn = (providers as Outcome.Ok).value.providers.map { it.id },
+                models = (catalog as Outcome.Ok).value.models,
+            ),
+        )
     }
 
     override suspend fun rename(title: String): Outcome<Unit> =
@@ -140,10 +187,10 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
         }
 
     override fun close() {
-        watcher?.cancel()
-        watcher = null
-        boundJobs.forEach { it.cancel() }
-        boundJobs = emptyList()
+        stopWatching?.invoke()
+        stopWatching = null
+        stops.forEach { it() }
+        stops = emptyList()
         bound = null
     }
 

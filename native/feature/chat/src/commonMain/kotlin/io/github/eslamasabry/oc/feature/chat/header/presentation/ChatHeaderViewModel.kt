@@ -9,7 +9,16 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChipActions
+import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChipUi
+import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChoice
+import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalPresenter
+import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalStore
+import io.github.eslamasabry.oc.feature.chat.header.approval.NoApprovals
+import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeNoteStore
 import io.github.eslamasabry.oc.feature.chat.header.world.ChatHeaderPorts
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatLauncher
+import kotlin.time.Clock
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
@@ -27,12 +36,33 @@ public class ChatHeaderViewModel(
     private val worlds: ChatWorlds,
     ports: ChatHeaderPorts,
     nav: AppNavigator,
-) : ViewModel(), ChatHeaderActions {
+    approvalStores: Set<ApprovalStore>,
+    freeNoteStores: Set<FreeNoteStore>,
+    clock: Clock,
+) : ViewModel(), ChatHeaderActions, ApprovalChipActions {
     private val world = worlds.open(route.ref)
-    private val presenter =
-        ChatHeaderPresenter(world, ports.open(route.ref), nav, { block -> viewModelScope.launch { block() } })
+    private val port = ports.open(route.ref)
+    private val launcher = ChatLauncher { block -> viewModelScope.launch { block() } }
+    private val presenter = ChatHeaderPresenter(world, port, nav, launcher, freeNoteStores.singleOrNull())
+    private val approvals =
+        ApprovalPresenter(route.ref, approvalStores.singleOrNull(), world.capabilities, port.approvals ?: NoApprovals, launcher, clock)
 
     public val state: StateFlow<ChatHeaderUi> = presenter.states(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS))
+
+    /** The sweep must run while the chat is open even before the chip is drawn, so this one starts eagerly. */
+    public val approval: StateFlow<ApprovalChipUi> = approvals.states(viewModelScope, SharingStarted.Eagerly)
+
+    override fun openApprovalMenu(): Unit = approvals.openApprovalMenu()
+
+    override fun closeApprovalMenu(): Unit = approvals.closeApprovalMenu()
+
+    override fun chooseApproval(choice: ApprovalChoice): Unit = approvals.chooseApproval(choice)
+
+    override fun confirmEverything(): Unit = approvals.confirmEverything()
+
+    override fun cancelEverything(): Unit = approvals.cancelEverything()
+
+    override fun dismissApprovalFailure(): Unit = approvals.dismissApprovalFailure()
 
     override fun onCleared() {
         presenter.close()
@@ -65,6 +95,8 @@ public class ChatHeaderViewModel(
     override fun dismissFailure(): Unit = presenter.dismissFailure()
 
     override fun clipDone(id: Long): Unit = presenter.clipDone(id)
+
+    override fun dismissFreeNote(): Unit = presenter.dismissFreeNote()
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

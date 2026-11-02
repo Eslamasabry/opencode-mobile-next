@@ -18,6 +18,9 @@ import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderConfirm
 import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderRules
 import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderSheet
 import io.github.eslamasabry.oc.feature.chat.header.presentation.TranscriptWords
+import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModel
+import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModelFacts
+import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeNoteStore
 import io.github.eslamasabry.oc.feature.chat.header.world.ChatHeaderPort
 import io.github.eslamasabry.oc.feature.chat.header.world.HeaderFacts
 import io.github.eslamasabry.oc.feature.chat.prompt
@@ -282,5 +285,65 @@ class ChatHeaderPresenterTest {
         assertTrue(HeaderRules.needsPrompt(HeaderAction.Fork))
         world.transcript.value = stateOf(prompt("u1", "hi"))
         assertTrue(p.current().hasPrompt)
+    }
+
+    private fun freeCatalog() =
+        listOf(
+            io.github.eslamasabry.oc.core.model.CatalogModel(
+                id = "big-pickle", providerId = "opencode", name = "Big Pickle", family = null, enabled = true, status = "active",
+                contextLimit = 1000, outputLimit = 100, reasoning = false, attachments = false, tools = true,
+                variants = kotlinx.collections.immutable.persistentListOf(),
+                cost = io.github.eslamasabry.oc.core.model.ModelCost(0.0, 0.0, 0.0, 0.0), releasedAtMs = null,
+            ),
+        )
+
+    @Test
+    fun `B-CHAT-015 the free model is OpenCode's own free model with nothing else signed in`() {
+        val models = freeCatalog()
+        assertTrue(FreeModel.uses(listOf("opencode"), "opencode", "big-pickle", models))
+        assertTrue(FreeModel.uses(emptyList(), "opencode", "opencode/big-pickle".removePrefix("opencode/"), models))
+        assertFalse(FreeModel.uses(listOf("opencode", "anthropic"), "opencode", "big-pickle", models), "a signed-in provider")
+        assertFalse(FreeModel.uses(emptyList(), "anthropic", "big-pickle", models))
+        assertFalse(FreeModel.uses(emptyList(), "opencode", "unknown", models))
+    }
+
+    @Test
+    fun `B-CHAT-015 dismissals are stored per server bounded in count newest kept`() {
+        assertEquals("oc.freeModelNoteDismissed.p1", FreeModel.key(io.github.eslamasabry.oc.core.common.ids.ProfileId("p1")))
+        val many = (1..FreeModel.MAX_DISMISSALS).map { "s$it" }
+        val next = FreeModel.dismissed(many, "new")
+        assertEquals(FreeModel.MAX_DISMISSALS, next.size)
+        assertEquals("new", next.last())
+        assertFalse("s1" in next, "the oldest falls out")
+        assertEquals(listOf("b", "a"), FreeModel.dismissed(listOf("a", "b"), "a"), "a repeat moves to the newest end")
+    }
+
+    @Test
+    fun `B-CHAT-015 the note shows once per conversation and a dismissal is kept for this server`() {
+        val store =
+            object : FreeNoteStore {
+                val kept = mutableListOf<String>()
+
+                override fun dismissed(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId, session: String) = session in kept
+
+                override suspend fun dismiss(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId, session: String): Outcome<Unit> {
+                    kept += session
+                    return Outcome.Ok(Unit)
+                }
+            }
+        val freePort =
+            object : ChatHeaderPort by port {
+                override suspend fun freeModelFacts() = Outcome.Ok(FreeModelFacts(listOf("opencode"), freeCatalog()))
+            }
+        port.facts.value = port.facts.value.copy(providerId = "opencode", model = "big-pickle")
+        val presenter = ChatHeaderPresenter(world, freePort, nav, Immediate, store)
+        presenter.states(kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined), kotlinx.coroutines.flow.SharingStarted.Eagerly)
+        assertTrue(presenter.current().freeModelNote)
+        presenter.dismissFreeNote()
+        assertFalse(presenter.current().freeModelNote)
+        assertEquals(listOf("s1"), store.kept)
+        val again = ChatHeaderPresenter(world, freePort, nav, Immediate, store)
+        again.states(kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined), kotlinx.coroutines.flow.SharingStarted.Eagerly)
+        assertFalse(again.current().freeModelNote, "a dismissed conversation never shows it again")
     }
 }

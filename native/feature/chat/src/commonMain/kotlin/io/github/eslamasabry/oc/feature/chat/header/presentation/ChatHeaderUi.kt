@@ -28,6 +28,8 @@ public data class ChatHeaderUi(
     val failure: HeaderFailure? = null,
     /** Text the screen puts on the clipboard once, then acknowledges. */
     val clip: HeaderClip? = null,
+    /** "Free model, slower": once per conversation until dismissed (B-CHAT-015). */
+    val freeModelNote: Boolean = false,
     /** The rename dialog is open with this text. */
     val renaming: String? = null,
 )
@@ -113,4 +115,6 @@ public interface ChatHeaderActions {
     public fun dismissFailure()
 
     public fun clipDone(id: Long)
+
+    public fun dismissFreeNote() {}
 }

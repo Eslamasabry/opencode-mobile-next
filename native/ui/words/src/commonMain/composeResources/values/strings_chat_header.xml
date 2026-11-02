@@ -13,4 +13,5 @@
     <string name="chatHeaderArchiveFailed">Couldn't archive the conversation.</string>
     <string name="chatHeaderDeleteFailed">Couldn't delete the conversation.</string>
     <string name="chatHeaderFailureDetails">Details</string>
+    <string name="chatHeaderApprovalSaveFailed">Couldn't save the approval setting.</string>
 </resources>

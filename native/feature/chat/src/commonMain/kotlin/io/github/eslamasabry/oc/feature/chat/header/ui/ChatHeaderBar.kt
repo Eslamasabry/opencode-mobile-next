@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kitchat.header.KitChatMoreMenu
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatFreeModelNote
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderArchiveFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderContext
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderDeleteFailed
@@ -106,7 +107,11 @@ import org.jetbrains.compose.resources.stringResource
 
 /** What the chat screen hands its bar: the header's state and intents (plain values and an interface). */
 @Immutable
-public class ChatHeaderSlot(public val state: ChatHeaderUi, public val actions: ChatHeaderActions)
+public class ChatHeaderSlot(
+    public val state: ChatHeaderUi,
+    public val actions: ChatHeaderActions,
+    public val approval: ApprovalChipSlot? = null,
+)
 
 /**
  * The conversation's bar (Flutter chat_top_bar.dart): Back, the title (tap to rename), "server · project" under it,
@@ -156,6 +161,18 @@ public fun ChatHeaderTopBar(slot: ChatHeaderSlot, onBack: () -> Unit, onFind: ()
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
         },
+    )
+    // "Free model, slower": one quiet line, below every real status (it never outranks a failure).
+    KitStatusContribution(
+        if (!state.freeModelNote) null
+        else
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(Res.string.chatFreeModelNote),
+                id = "chat-free-model",
+                onDismiss = actions::dismissFreeNote,
+                dismissLabel = stringResource(Res.string.kitSheetDismiss),
+            ),
     )
     KitSheet(
         visible = failure != null && detailsOpen == failure.id,

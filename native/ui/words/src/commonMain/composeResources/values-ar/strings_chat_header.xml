@@ -13,4 +13,5 @@
     <string name="chatHeaderArchiveFailed">تعذّرت أرشفة المحادثة.</string>
     <string name="chatHeaderDeleteFailed">تعذّر حذف المحادثة.</string>
     <string name="chatHeaderFailureDetails">التفاصيل</string>
+    <string name="chatHeaderApprovalSaveFailed">تعذّر حفظ إعداد الموافقة.</string>
 </resources>
