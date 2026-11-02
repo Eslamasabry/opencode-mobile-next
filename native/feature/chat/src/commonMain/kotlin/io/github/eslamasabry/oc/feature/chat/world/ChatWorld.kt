@@ -68,6 +68,24 @@ public interface ChatWorld {
     public val models: StateFlow<ComposerModels>
         get() = NoModels
 
+    /** The server's own slash commands; empty until [loadCommands] succeeds. */
+    public val commands: StateFlow<List<ComposerCommand>>
+        get() = NoCommands
+
+    public suspend fun loadCommands(): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("slashCommands")))
+
+    /** Project files whose path matches [query] (the `@` list); paths relative to the project. */
+    public suspend fun findFiles(query: String): Outcome<List<String>> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
+
+    /**
+     * Stages the project file [path] the person picked from the `@` list; it is sent only while its
+     * `@path` stays in the words.
+     */
+    public suspend fun mentionFile(path: String): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
+
     /** True while the server offers an older history page. */
     public val hasOlder: StateFlow<Boolean>
         get() = NoOlder
@@ -102,8 +120,19 @@ public interface ChatWorld {
      * default. A choice is published only after the server acknowledged it, and a failed selection
      * never replaces the previous one.
      */
-    public suspend fun selectModel(choice: ComposerModel?): Outcome<Unit> =
+    public suspend fun selectModel(choice: ComposerModel?, variant: String = ""): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
+
+    /** Moves the conversation to the primary [agent] in the server session, verified by readback. */
+    public suspend fun selectAgent(agent: String): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("agentSelection")))
+
+    /**
+     * Changes whenever the draft's owner is replaced; a file pick that began under another
+     * generation writes nothing.
+     */
+    public val draftGeneration: Long
+        get() = 0
 
     /**
      * Bubble first, then one dispatch; a lost answer stays unconfirmed and is never resent on its
@@ -227,3 +256,5 @@ private val NoRequests =
 private val NoOlder = kotlinx.coroutines.flow.MutableStateFlow(false)
 
 private val NoModels = kotlinx.coroutines.flow.MutableStateFlow(ComposerModels())
+
+private val NoCommands = kotlinx.coroutines.flow.MutableStateFlow<List<ComposerCommand>>(emptyList())

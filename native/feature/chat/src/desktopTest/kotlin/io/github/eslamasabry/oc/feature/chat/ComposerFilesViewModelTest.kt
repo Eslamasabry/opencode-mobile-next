@@ -43,17 +43,18 @@ class ComposerFilesViewModelTest {
     /** The scripted world: only the frozen model/file members matter here. */
     private class FilesWorld : FakeChatWorld() {
         override val models = MutableStateFlow(ComposerModels())
-        val calls = mutableListOf<String>()
         var selectResult: Outcome<Unit> = Outcome.Ok(Unit)
         var selectGate: CompletableDeferred<Unit>? = null
         var replaceResult: Outcome<Unit> = Outcome.Ok(Unit)
+        var replaceGate: CompletableDeferred<Unit>? = null
+        override var draftGeneration: Long = 0
 
         override suspend fun loadModels(): Outcome<Unit> {
             calls += "loadModels"
             return Outcome.Ok(Unit)
         }
 
-        override suspend fun selectModel(choice: ComposerModel?): Outcome<Unit> {
+        override suspend fun selectModel(choice: ComposerModel?, variant: String): Outcome<Unit> {
             calls += "select <${choice?.label}>"
             selectGate?.await()
             return selectResult
@@ -61,6 +62,7 @@ class ComposerFilesViewModelTest {
 
         override suspend fun replaceAttachments(files: List<PromptAttachment>): Outcome<Unit> {
             calls += "replace ${files.map { it.filename }}"
+            replaceGate?.await()
             if (replaceResult is Outcome.Ok) draft.update { it.copy(attachments = files) }
             return replaceResult
         }
@@ -113,7 +115,7 @@ class ComposerFilesViewModelTest {
             vm.state.test {
                 awaitItem()
                 vm.attachFile()
-                val settled = awaitItem()
+                val settled = awaitUntil { !it.pickingFile && world.calls.any { c -> c.startsWith("replace") } }
                 assertNull(settled.attachmentFailure)
                 assertFalse(settled.pickingFile)
                 assertEquals(listOf("replace [during.txt, picked.txt]"), world.calls.filter { it.startsWith("replace") })
@@ -134,10 +136,10 @@ class ComposerFilesViewModelTest {
             vm.state.test {
                 awaitItem()
                 vm.attachFile()
-                val failed = awaitItem()
+                val failed = awaitUntil { it.attachmentFailure != null }
                 assertTrue(failed.attachmentFailure is Failure.StorageRefused)
                 vm.dismissAttachmentFailure()
-                assertNull((awaitItem()).attachmentFailure)
+                assertNull(awaitUntil { it.attachmentFailure == null }.attachmentFailure)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -157,7 +159,7 @@ class ComposerFilesViewModelTest {
         vm.state.test {
             awaitItem()
             vm.attachFile()
-            val failed = awaitItem()
+            val failed = awaitUntil { it.attachmentFailure != null }
             assertTrue(failed.attachmentFailure is Failure.Media)
             assertTrue(world.calls.none { it.startsWith("replace") })
             cancelAndIgnoreRemainingEvents()
@@ -175,9 +177,9 @@ class ComposerFilesViewModelTest {
         vm.state.test {
             awaitItem()
             world.draft.update { it.copy(failure = Failure.StorageRefused()) }
-            awaitItem()
+            awaitUntil { it.draft.failure != null }
             vm.attachFile()
-            val failed = awaitItem()
+            val failed = awaitUntil { it.attachmentFailure != null }
             assertTrue(failed.attachmentFailure != null, "the refusal reaches the person")
             assertTrue(world.calls.none { it.startsWith("replace") }, "no write through an unsafe draft")
             cancelAndIgnoreRemainingEvents()
@@ -301,5 +303,106 @@ class ComposerFilesViewModelTest {
                 ""
             )
         )
+    }
+
+    // ---- RUNBOOK §7 finding 3 (red against the GLM patch) ----
+
+    @Test
+    fun `B-STATE-103 finding 3 Send refuses at once while a pick starts, before any state publishes`() =
+        runTest {
+            val main = kotlinx.coroutines.test.StandardTestDispatcher(testScheduler)
+            Dispatchers.setMain(main)
+            val world = FilesWorld()
+            world.draft.update { it.copy(text = "hello") }
+            val gate = CompletableDeferred<PromptAttachment?>()
+            val vm = BasicComposerViewModel(
+                ComposerTarget("p1", "s1"),
+                Worlds(world),
+                setOf(PromptFilePicker { Outcome.Ok(gate.await()) }),
+            )
+            val collector = backgroundScope.launch { vm.state.collect {} }
+            testScheduler.runCurrent()
+            assertTrue(vm.state.value.available)
+            vm.attachFile()
+            assertFalse(vm.send("hello"), "the pick owns the composer until it ends")
+            assertTrue(world.calls.none { it.startsWith("send") })
+            gate.complete(null)
+            testScheduler.runCurrent()
+            collector.cancel()
+        }
+
+    @Test
+    fun `B-STATE-103 finding 3 Send refuses at once while a model change runs`() = runTest {
+        val main = kotlinx.coroutines.test.StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(main)
+        val world = FilesWorld()
+        world.draft.update { it.copy(text = "hello") }
+        val gate = CompletableDeferred<Unit>()
+        world.selectGate = gate
+        val vm = BasicComposerViewModel(ComposerTarget("p1", "s1"), Worlds(world), emptySet())
+        val collector = backgroundScope.launch { vm.state.collect {} }
+        testScheduler.runCurrent()
+        val selecting = launch(start = CoroutineStart.UNDISPATCHED) { vm.selectModel(mini) }
+        assertFalse(vm.send("hello"), "the prompt would race the model mutation")
+        gate.complete(Unit)
+        selecting.join()
+        collector.cancel()
+    }
+
+    @Test
+    fun `B-STATE-103 finding 3 a second removal waits for the first commit, never resurrecting a file`() =
+        runTest {
+            val world = FilesWorld().apply {
+                draft.update { it.copy(attachments = listOf(file("a.txt"), file("b.txt"), file("c.txt"))) }
+            }
+            val gate = CompletableDeferred<Unit>()
+            world.replaceGate = gate
+            val vm = BasicComposerViewModel(ComposerTarget("p1", "s1"), Worlds(world), emptySet())
+            vm.state.test {
+                awaitItem()
+                vm.removeAttachment(0)
+                vm.removeAttachment(0)
+                world.replaceGate = null
+                gate.complete(Unit)
+                cancelAndIgnoreRemainingEvents()
+            }
+            assertEquals(
+                listOf("replace [b.txt, c.txt]"),
+                world.calls.filter { it.startsWith("replace") },
+                "the tap during the commit is refused, not applied to a stale list",
+            )
+            assertEquals(listOf("b.txt", "c.txt"), world.draft.value.attachments.map { it.filename })
+        }
+
+    @Test
+    fun `B-STATE-103 finding 3 a pick that returns after the draft target changed writes nothing`() =
+        runTest {
+            val world = FilesWorld()
+            val vm = BasicComposerViewModel(
+                ComposerTarget("p1", "s1"),
+                Worlds(world),
+                setOf(
+                    PromptFilePicker {
+                        world.draftGeneration++ // the draft owner was replaced while the picker was up
+                        Outcome.Ok(file("late.txt"))
+                    }
+                ),
+            )
+            vm.state.test {
+                awaitItem()
+                vm.attachFile()
+                cancelAndIgnoreRemainingEvents()
+            }
+            assertTrue(world.calls.none { it.startsWith("replace") })
+            assertTrue(vm.state.value.attachmentFailure != null || world.calls.isEmpty())
+        }
+
+    private suspend fun app.cash.turbine.ReceiveTurbine<BasicComposerUi>.awaitUntil(
+        done: (BasicComposerUi) -> Boolean
+    ): BasicComposerUi {
+        while (true) {
+            val item = awaitItem()
+            if (done(item)) return item
+        }
     }
 }

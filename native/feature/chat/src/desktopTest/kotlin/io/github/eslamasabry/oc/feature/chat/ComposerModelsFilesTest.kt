@@ -51,7 +51,7 @@ class ComposerModelsFilesTest {
             calls += "loadModels"
         }
 
-        override suspend fun selectModel(choice: ComposerModel?): Boolean {
+        override suspend fun selectModel(choice: ComposerModel?, variant: String): Boolean {
             calls += "select <${choice?.label}>"
             return selectResult
         }
@@ -189,7 +189,8 @@ class ComposerModelsFilesTest {
             assertTrue(
                 onNodeWithTag("chat-attach-button")
                     .fetchSemanticsNode()
-                    .config[SemanticsProperties.ContentDescription]
+                    .config[SemanticsProperties.StateDescription]
+                    .let { listOf(it) }
                     .any { "does not accept files" in it },
                 "the disabled attach button must say why in plain words"
             )
@@ -200,7 +201,8 @@ class ComposerModelsFilesTest {
             assertTrue(
                 onNodeWithTag("chat-attach-button")
                     .fetchSemanticsNode()
-                    .config[SemanticsProperties.ContentDescription]
+                    .config[SemanticsProperties.StateDescription]
+                    .let { listOf(it) }
                     .any { "cannot attach files" in it }
             )
             runOnIdle { state.value = ui(models = ComposerModels(choices = listOf(mini, big), selected = mini)) }
@@ -249,7 +251,7 @@ class ComposerModelsFilesTest {
                         localeTag = "ar",
                     ) { BasicComposer(ui(), Actions(), chrome) }
                 }
-                onNodeWithContentDescription("نموذج").assertExists()
+                onNodeWithContentDescription("النموذج").assertExists()
                 onNodeWithText("الافتراضي من الخادم").assertIsDisplayed()
             } finally {
                 Locale.setDefault(before)

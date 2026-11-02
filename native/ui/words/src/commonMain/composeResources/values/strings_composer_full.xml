@@ -1,0 +1,20 @@
+<resources>
+    <string name="composerFullThinking">Thinking</string>
+    <string name="composerFullThinkingDefault">Default</string>
+    <string name="composerFullAgent">Agent</string>
+    <string name="composerFullModels">Models</string>
+    <string name="composerFullModelChangeFailed">Could not confirm the model choice. Check your selection and try again.</string>
+    <string name="composerFullAttach">Attach</string>
+    <string name="composerFullAddTitle">Add to prompt</string>
+    <string name="composerFullPhotoLibrary">Photo library</string>
+    <string name="composerFullTakePhoto">Take photo</string>
+    <string name="composerFullPasteImage">Paste image from clipboard</string>
+    <string name="composerFullPasteEmpty">There is no picture on the clipboard.</string>
+    <string name="composerFullDraftFull">Remove an attachment first. A draft holds up to 5 files and 20 MB in total.</string>
+    <string name="composerFullPhotoDenied">Photo access was denied. Allow camera or photo access in Android app settings, then try again.</string>
+    <string name="composerFullStale">The conversation changed while you were choosing. Try again.</string>
+    <string name="composerFullCommands">Commands</string>
+    <string name="composerFullFiles">Files from the project</string>
+    <string name="composerFullAttachmentsLocal">Attachments save with this draft on this device.</string>
+    <string name="composerFullSteerHint">Steer while it works…</string>
+</resources>
