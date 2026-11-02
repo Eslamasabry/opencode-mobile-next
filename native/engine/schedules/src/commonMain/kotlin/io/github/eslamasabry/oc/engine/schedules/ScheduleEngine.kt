@@ -208,6 +208,16 @@ public class ScheduleEngine(
         if (changed > 0) log.i { "migrated $changed scheduled prompts" }
     }
 
+    /** B-NAV-054: the destination of a tapped scheduled-run notification, or null to open nothing. */
+    public suspend fun resolveOpen(profileId: String, scheduleId: String, sessionId: String?): ScheduledOpen? {
+        if (!ScheduleIds.valid(profileId)) return null
+        return safely {
+            ScheduledOpen.resolve(
+                profileId, scheduleId, sessionId, profiles.fingerprint(profileId), store.load(profileId), store.history(profileId),
+            )
+        }
+    }
+
     // ---- Background runs (the OS worker calls these)
 
     /**

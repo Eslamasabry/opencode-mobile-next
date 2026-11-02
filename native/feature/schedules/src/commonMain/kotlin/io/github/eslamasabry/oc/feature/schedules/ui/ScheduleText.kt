@@ -5,9 +5,7 @@ import io.github.eslamasabry.oc.engine.schedules.RecurrenceKind
 import io.github.eslamasabry.oc.engine.schedules.RunStatus
 import io.github.eslamasabry.oc.feature.schedules.presentation.LastRunUi
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleRowUi
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Instant
+import io.github.eslamasabry.oc.engine.schedules.ScheduleTime
 
 // Pure text for the list rows (no Compose): repeat words, next run, last run.
 
@@ -45,18 +43,16 @@ internal fun lastLine(last: LastRunUi, nowMs: Long, words: ScheduleWords): Strin
     return if (last.late) "$line · ${words.late}" else line
 }
 
-/** "Today 09:00", "Tomorrow 07:30", "Fri 18:00" within a week, else the date. Device time zone. */
-internal fun moment(ms: Long, nowMs: Long, words: ScheduleWords, zone: TimeZone = TimeZone.currentSystemDefault()): String {
-    val at = Instant.fromEpochMilliseconds(ms).toLocalDateTime(zone)
-    val now = Instant.fromEpochMilliseconds(nowMs).toLocalDateTime(zone)
+/** "Today 09:00", "Tomorrow 07:30", "Fri 18:00" within a week, else the date. Device time zone unless [zoneId]. */
+internal fun moment(ms: Long, nowMs: Long, words: ScheduleWords, zoneId: String? = null): String {
+    val at = ScheduleTime.moment(ms, nowMs, zoneId)
     val clock = "${at.hour.toString().padStart(2, '0')}:${at.minute.toString().padStart(2, '0')}"
-    val days = (at.date.toEpochDays() - now.date.toEpochDays()).toLong()
     val day =
-        when {
-            days == 0L -> words.today
-            days == 1L -> words.tomorrow
-            days in 2L..6L -> words.weekdayNames[at.dayOfWeek.ordinal]
-            else -> at.date.toString()
+        when (at.dayOffset) {
+            0L -> words.today
+            1L -> words.tomorrow
+            in 2L..6L -> words.weekdayNames[at.weekday]
+            else -> at.date
         }
     return "$day $clock"
 }

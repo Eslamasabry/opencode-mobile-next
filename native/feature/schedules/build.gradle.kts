@@ -6,7 +6,6 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:schedules"))
-        implementation(libs.kotlinx.datetime) // local wall-clock words for the next run
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos) // skiko natives for the desktop UI tests

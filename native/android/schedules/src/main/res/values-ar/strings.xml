@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="oc_schedule_channel">الطلبات المجدولة</string>
+    <string name="oc_schedule_title">طلب مجدول</string>
+    <string name="oc_schedule_running">جارٍ تشغيل طلبك المجدول…</string>
+    <string name="oc_schedule_ran">أُرسل. الرد في المحادثة.</string>
+    <string name="oc_schedule_finished">انتهى. اضغط لقراءة الرد.</string>
+    <string name="oc_schedule_skipped">تم التخطي هذه المرة. اضغط لمعرفة السبب.</string>
+    <string name="oc_schedule_failed">لم يكتمل. اضغط لمعرفة السبب.</string>
+    <string name="oc_schedule_why_needs_you">ينتظر ردّك. افتح المحادثة للمتابعة.</string>
+    <string name="oc_schedule_why_sign_in">طلب الخادم تسجيل الدخول مجددًا.</string>
+    <string name="oc_schedule_why_agent">توقف الوكيل بخطأ.</string>
+    <string name="oc_schedule_why_timeout">لم يكتمل في الوقت المحدد. لم يُرسل مرة أخرى.</string>
+    <string name="oc_schedule_why_unavailable">تعذّر الوصول إلى الخادم.</string>
+    <string name="oc_schedule_digest_title">الطلبات المجدولة هذا الصباح</string>
+    <string name="oc_schedule_digest_body">%1$d تم الرد، %2$d لم يكتمل، %3$d تم التخطي</string>
+    <string name="oc_schedule_open">فتح</string>
+</resources>

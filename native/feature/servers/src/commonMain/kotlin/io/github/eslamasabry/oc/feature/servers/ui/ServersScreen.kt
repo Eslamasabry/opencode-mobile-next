@@ -17,6 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -160,6 +162,12 @@ public fun ServersScreen(state: ServersUi, actions: ServersActions) {
                             enabled = enabled,
                         )
                         KitButton(
+                            schedulesLabel(),
+                            { actions.openSchedules(server.id) },
+                            role = KitButtonRole.Secondary,
+                            enabled = enabled,
+                        )
+                        KitButton(
                             stringResource(Res.string.serversRemove),
                             { removing = server.id },
                             role = KitButtonRole.Tertiary,
@@ -259,3 +267,8 @@ private fun issueWords(issue: ServerIssue, failure: Failure?): String =
                     }
         }
     )
+
+// TODO(words): `serversSchedules` belongs in :ui:words (P12-SCHEDULES may not edit it); the l10n owner moves it.
+@Composable
+private fun schedulesLabel(): String =
+    if (LocalLayoutDirection.current == LayoutDirection.Rtl) "الطلبات المجدولة" else "Scheduled prompts"

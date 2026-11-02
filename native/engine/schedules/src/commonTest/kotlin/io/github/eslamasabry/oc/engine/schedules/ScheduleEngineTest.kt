@@ -247,3 +247,28 @@ class ScheduleEngineTest {
         assertEquals(listOf(P), h.alarms.cancelled)
     }
 }
+
+class ScheduledOpenTest {
+    private val h = Harness()
+
+    @Test
+    fun `B-NAV-054 a run notification opens its conversation if reached, else the history`() = runTest {
+        val saved = h.saved()
+        h.clock.now = T0 + HOUR
+        h.engine.runOccurrence(h.armed().first(), Long.MAX_VALUE / 2)
+        assertEquals(ScheduledOpen.Conversation(P, saved.id, "s1"), h.engine.resolveOpen(P, saved.id, "s1"))
+        assertEquals(ScheduledOpen.History(P, saved.id), h.engine.resolveOpen(P, saved.id, ""))
+        assertEquals(ScheduledOpen.History(P, saved.id), h.engine.resolveOpen(P, saved.id, "ses_unknown"))
+    }
+
+    @Test
+    fun `B-NAV-054 the morning summary opens history, a deleted schedule or changed server opens nothing`() = runTest {
+        val saved = h.saved()
+        assertEquals(ScheduledOpen.History(P, null), h.engine.resolveOpen(P, ScheduleIds.DIGEST, null))
+        h.profiles.fingerprints[P] = "n1:server-b"
+        assertNull(h.engine.resolveOpen(P, saved.id, null))
+        h.profiles.fingerprints[P] = "n1:server-a"
+        h.engine.delete(P, saved.id)
+        assertNull(h.engine.resolveOpen(P, saved.id, null))
+    }
+}

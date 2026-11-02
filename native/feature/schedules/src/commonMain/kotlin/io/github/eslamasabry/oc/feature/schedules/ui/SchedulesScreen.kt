@@ -7,7 +7,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleRowUi
 import io.github.eslamasabry.oc.feature.schedules.presentation.SchedulesActions
@@ -171,6 +172,10 @@ private fun ScheduleGroup(
     }
 }
 
-/** The words for the app's current language (Arabic or English; other languages fall back to English for now). */
+/**
+ * The words for the app's language: Arabic when the app is laid out right-to-left (the only RTL language the app ships),
+ * English otherwise. TODO(words): string resources replace this once the copy moves into `:ui:words`.
+ */
 @Composable
-public fun scheduleWords(): ScheduleWords = if (Locale.current.language == "ar") ScheduleWords.Arabic else ScheduleWords.English
+public fun scheduleWords(): ScheduleWords =
+    if (LocalLayoutDirection.current == LayoutDirection.Rtl) ScheduleWords.Arabic else ScheduleWords.English

@@ -38,4 +38,7 @@ public interface ServersActions {
     public fun create(id: ProfileId)
 
     public fun remove(id: ProfileId)
+
+    /** The server's scheduled prompts (:feature:schedules). */
+    public fun openSchedules(id: ProfileId) {}
 }

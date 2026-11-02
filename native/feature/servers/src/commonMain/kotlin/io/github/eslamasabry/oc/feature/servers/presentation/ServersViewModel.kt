@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -119,6 +120,10 @@ public class ServersViewModel(
             is Outcome.Ok -> Unit
             is Outcome.Failed -> failed(ServerIssue.RemoveFailed, result.failure)
         }
+    }
+
+    override fun openSchedules(id: ProfileId) {
+        nav.open(SchedulesRoute.List(id))
     }
 
     private fun operation(block: suspend () -> Unit) {

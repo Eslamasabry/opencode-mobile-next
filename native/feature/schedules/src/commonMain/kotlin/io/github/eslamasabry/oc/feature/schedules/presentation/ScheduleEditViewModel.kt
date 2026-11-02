@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.schedules.Recurrence
 import io.github.eslamasabry.oc.engine.schedules.RecurrenceKind
 import io.github.eslamasabry.oc.engine.schedules.ScheduleDraft
 import io.github.eslamasabry.oc.engine.schedules.ScheduleEngine
+import io.github.eslamasabry.oc.engine.schedules.ScheduleTime
 import io.github.eslamasabry.oc.engine.schedules.ScheduledPrompt
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
@@ -23,12 +24,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Instant
 
 /** Pure editor rules: typed fields → a recurrence, or the one plain issue to fix. */
 public object EditorRules {
@@ -41,14 +36,7 @@ public object EditorRules {
         return if (hour in 0..23 && minute in 0..59) hour to minute else null
     }
 
-    public fun date(text: String): LocalDate? =
-        try {
-            LocalDate.parse(text.trim())
-        } catch (e: IllegalArgumentException) {
-            null
-        }
-
-    public fun recurrence(fields: EditorFields, nowMs: Long, zone: TimeZone): Pair<Recurrence?, EditIssue?> {
+    public fun recurrence(fields: EditorFields, nowMs: Long, zoneId: String? = null): Pair<Recurrence?, EditIssue?> {
         if (fields.prompt.isBlank()) return null to EditIssue.PromptRequired
         if (fields.project.isBlank()) return null to EditIssue.ProjectRequired
         val (hour, minute) = time(fields.time) ?: return null to EditIssue.TimeInvalid
@@ -56,22 +44,20 @@ public object EditorRules {
             RecurrenceKind.Daily -> Recurrence.daily(hour, minute) to null
             RecurrenceKind.Weekdays -> Recurrence.weekdays(hour, minute) to null
             RecurrenceKind.Once -> {
-                val day = date(fields.date) ?: return null to EditIssue.DateInvalid
-                Recurrence.once(LocalDateTime(day.year, day.month, day.day, hour, minute).toInstant(zone).toEpochMilliseconds()) to null
+                val at = ScheduleTime.at(fields.date, hour, minute, zoneId) ?: return null to EditIssue.DateInvalid
+                Recurrence.once(at) to null
             }
             RecurrenceKind.Interval -> {
                 val hours = fields.hours.trim().toIntOrNull()?.takeIf { it in 1..168 } ?: return null to EditIssue.HoursInvalid
-                val today = Instant.fromEpochMilliseconds(nowMs).toLocalDateTime(zone).date
-                val anchor = LocalDateTime(today.year, today.month, today.day, hour, minute).toInstant(zone).toEpochMilliseconds()
-                Recurrence.interval(hours, anchor) to null
+                Recurrence.interval(hours, ScheduleTime.todayAt(nowMs, hour, minute, zoneId)) to null
             }
         }
     }
 
     /** The editor fields of a saved schedule. */
-    public fun fields(schedule: ScheduledPrompt, models: List<ModelChoice>, zone: TimeZone): EditorFields {
+    public fun fields(schedule: ScheduledPrompt, models: List<ModelChoice>, zoneId: String? = null): EditorFields {
         val rec = schedule.recurrence
-        val at = rec.atMs?.let { Instant.fromEpochMilliseconds(it).toLocalDateTime(zone) }
+        val at = rec.atMs?.let { ScheduleTime.moment(it, it, zoneId) }
         val hour = at?.hour ?: rec.hour
         val minute = at?.minute ?: rec.minute
         return EditorFields(
@@ -79,7 +65,7 @@ public object EditorRules {
             project = schedule.projectPath,
             kind = rec.kind,
             time = "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}",
-            date = if (rec.kind == RecurrenceKind.Once && at != null) at.date.toString() else "",
+            date = if (rec.kind == RecurrenceKind.Once && at != null) at.date else "",
             hours = rec.hours.toString(),
             missed = schedule.missedPolicy,
             model =
@@ -101,7 +87,6 @@ public class ScheduleEditViewModel(
     private val clock: kotlin.time.Clock,
 ) : ViewModel(), ScheduleEditActions {
     private val profile = route.profileId.raw
-    private val zone get() = TimeZone.currentSystemDefault()
     private val mutable = MutableStateFlow(ScheduleEditUi(editing = route.scheduleId != null))
     public val state: StateFlow<ScheduleEditUi> = mutable.asStateFlow()
     private var editing: ScheduledPrompt? = null
@@ -128,7 +113,7 @@ public class ScheduleEditViewModel(
                 sessionId = existing.sessionId
                 agent = existing.agent
                 workspace = existing.workspace
-                EditorRules.fields(existing, models, zone)
+                EditorRules.fields(existing, models)
             } else {
                 val from = route.from?.let { servers.conversation(it) }
                 if (from != null) sessionId = route.from?.sessionId?.raw
@@ -142,7 +127,7 @@ public class ScheduleEditViewModel(
                     }
                 EditorFields(
                     project = from?.directory ?: route.projectDir ?: target.recentProject.orEmpty(),
-                    date = Instant.fromEpochMilliseconds(clock.now().toEpochMilliseconds()).toLocalDateTime(zone).date.toString(),
+                    date = ScheduleTime.today(clock.now().toEpochMilliseconds()),
                     model = model,
                 )
             }
@@ -163,7 +148,7 @@ public class ScheduleEditViewModel(
 
     override fun save(input: EditorFields) {
         if (mutable.value.saving || mutable.value.phase != EditPhase.Ready) return
-        val (recurrence, issue) = EditorRules.recurrence(input, clock.now().toEpochMilliseconds(), zone)
+        val (recurrence, issue) = EditorRules.recurrence(input, clock.now().toEpochMilliseconds())
         if (recurrence == null) {
             mutable.update { it.copy(issue = issue, error = null) }
             return

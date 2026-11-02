@@ -153,7 +153,10 @@ public class ScheduleRunner(
                 dispatched = true
                 val created =
                     bounded {
-                        if (selection != null && (model != null || schedule.agent != null)) {
+                        // The selected-session call creates in the gateway's pinned project only; a borrowed gateway
+                        // pinned elsewhere creates by location and the model rides with the prompt instead.
+                        val pinnedHere = gateway.location.value.directory == schedule.projectPath
+                        if (selection != null && pinnedHere && (model != null || schedule.agent != null)) {
                             selection.createSelectedSession(
                                 SessionSelection(
                                     model, "", schedule.agent,

@@ -11,7 +11,6 @@ import io.github.eslamasabry.oc.feature.schedules.ui.moment
 import io.github.eslamasabry.oc.feature.schedules.ui.repeatWords
 import io.github.eslamasabry.oc.feature.schedules.ui.scheduleLine
 import io.github.eslamasabry.oc.engine.schedules.RecurrenceKind
-import kotlinx.datetime.TimeZone
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -40,7 +39,7 @@ class ScheduleWordsTest {
 
     @Test
     fun `next run words are relative to today in the device zone`() {
-        val utc = TimeZone.UTC
+        val utc = "UTC"
         assertEquals("Today 09:00", moment(t0 + hour, t0, en, utc))
         assertEquals("Tomorrow 09:00", moment(t0 + 25 * hour, t0, en, utc))
         assertEquals("Thu 09:00", moment(t0 + 73 * hour, t0, en, utc))
@@ -71,7 +70,7 @@ class ScheduleWordsTest {
 
     @Test
     fun `editor rules turn typed fields into a recurrence or one plain issue`() {
-        val utc = TimeZone.UTC
+        val utc = "UTC"
         val base = EditorFields(prompt = "Hi", project = "/w", time = "9:05")
         assertEquals(Recurrence.daily(9, 5), EditorRules.recurrence(base, t0, utc).first)
         assertEquals(EditIssue.ProjectRequired, EditorRules.recurrence(base.copy(project = ""), t0, utc).second)

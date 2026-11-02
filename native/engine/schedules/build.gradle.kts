@@ -10,6 +10,6 @@ kotlin {
         api(project(":core:model"))
         api(project(":core:domain"))
         api(project(":core:data"))
-        implementation(libs.kotlinx.datetime) // wall-clock daily/weekday times across zone and DST changes
+        api(libs.kotlinx.datetime) // TimeZone is in ScheduleEngine's constructor; wall-clock times across zone and DST changes
     }
 }
