@@ -52,6 +52,7 @@ dependencies {
             ":engine:analytics",
             ":engine:diagnostics",
             ":android:notifications",
+            ":engine:cards", // P12-CHAT-CARDS
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)
