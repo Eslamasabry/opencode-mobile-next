@@ -1,0 +1,28 @@
+# APK QA wave 1 — log (2026-11-03)
+- 01:00 worktree /home/eslam/Storage2/wt/apk-qa-wave1 at 27a04ad4c (501d3abf9 + docs-only ledger commit). Debug APK sha256 90f17190bd5945a3080b1ea9c0216447b63d540466414a1c2b375b99d7b8f65d, versionCode 10003.
+- 01:02 test server: opencode v2.2.5 serve :46400, PID 1982037, config/state/cache in apk-qa-wave1-server, default data dir (Z.AI Coding Plan present), project apk-qa-wave1-server/project.
+- 01:05 emu.lock was held 4h by an idle Codex persistent shell (pid 1424885, under flock 1424884) that had booted OC_NATIVE_PREVIEW_20261102 at ~20:52; app idle since 21:14, load 0. Stopped that emulator (adb emu kill) and SIGHUP'd the idle shell to release the lock. Rebooted AVD under my own flock (holder 1990222, qemu 1990223).
+- 01:07 uninstalled old preview 10002 (signature differs), installed debug 10003. First launch: title + "Connect to my computer" + "Settings" only (01-first-launch.png). Buttons run edge to edge with no side margin.
+- 01:09 Add server form: keyboard pushes the form so taps land on the wrong field; filled and saved OK (03-form-filled-masked.png, 04-http-on.png). Connected → Conversations (05-after-connect.png).
+- BUG B1: "QA PC couldn't load" shown though the list loaded. Cause: PreviewRuntime.refreshOne sets complete = nextCursor == null; server has >100 sessions (/api/session?limit=100 returns cursor), app never loads page 2 and calls it a failure. Row is not tappable, no way forward.
+- NOTE: header title truncated "Conversat…" next to "New conversation" + "Servers" text buttons.
+- 01:10 New conversation → "Saved servers" page with Start conversation (07). Chat screen opens bare: model chip + Attach + Message + Send; no empty-state (08).
+- BUG B2: first send in a new conversation ("Server default" model) never POSTed the prompt; "Your message wasn't sent" + Try again (09). On QA PC Try again after choosing GLM also failed with no prompt on the server. On the relay server the first send (after tapping a model chip) also made no POST; the second send and Try again did POST. Relay log: qa/relay.log.
+- BUG B3: Model picker = 372 unlabeled chips; same name repeats per provider (GLM-5.3-Flash ×3, Claude Fable 5.1 ×3) with no provider shown, no search (12). Picker highlights "GPT-6.1 Terra" while the chip says "Server default" (11). Keyboard stays open over the picker sheet.
+- BUG B4: first picker open on the relay server: "The model list could not be loaded" and no request was made; Try again loaded it (20).
+- BUG B5: a failed reply (provider error: API key expired / 401) shows only "Didn't finish" — no reason, no way forward (24).
+- BUG B6: keyboard open → transcript area collapses to ~1 line; you cannot read the conversation while typing (23, 25-stream-4).
+- 01:15 Logging relay (python, :46401 → :46400, request lines + POST bodies only) added as server "QA relay" to trace requests.
+- 01:21 Z.AI GLM-5.3-Flash chosen (wire: providerID zai-coding-plan). Short prompt streamed a reply; title became "Greeting" (25-stream-done). Thinking shown as unlabeled grey text.
+- Back from chat to Conversations works (system back).
+- Add-server form keeps the typed name/address after saving.
+- 01:22 Long reply (~1500 words, code block, 8-item list) streamed to the end in ~2 min, no stall seen; "Jump to latest" works. gfxinfo on this software-GPU emulator: 2773 frames, 15% janky, p50 28 ms, p90 38 ms, p99 61 ms (emulator, not a phone number).
+- BUG B7: Markdown is not rendered: "## Conclusion", **bold**, `code`, list markers and the ``` fences show raw; code block lines wrap instead of scrolling (26-long-28, 28-code-block, 29-tool-3).
+- BUG B8: while a reply runs, the message box shrinks to ~60 px; "Steer while it works…" wraps one or two letters per line; typed steer shows 2 letters (26-long-8, 38-steer-typed).
+- BUG B9: tool calls are invisible: "3 steps" line is plain text, not tappable, no tool rows (list/read) anywhere (32-steps-open).
+- BUG B10: Stop does nothing: two taps, no /interrupt request, "Working" stays until the reply ends on its own (33–36). Lead: GraphChatWorld.stop() goes to chatDelivery.engine.stop(ref) when an engine exists.
+- Steer: first "Add to this turn" tap made no request; second tap POSTed delivery:"steer" and the model switched to tunnels (41, 42). BUG B11: that delivered steer then shows "Your message wasn't sent" + Try again (false failure → duplicate risk) (43, 47).
+- Attach: Attach → Attach file → system picker → chip "qa-list.txt" (45). First Send failed with no request (46); Try again POSTed the file as data: URI and the model listed milk/eggs/bread (47). The top "Your message wasn't sent" banner has no details (48).
+- Draft survives force-stop + relaunch (50). Edge-swipe back from chat → Conversations (51).
+- After restart the list says "QA relay couldn't load" (same >100 page issue, B1).
+- 01:42 Verdict FAIL; release build skipped. Server PID 2000236 + relay 2025443 stopped, emulator stopped, emu.lock free.
