@@ -23126,6 +23126,48 @@ class AppLocalizationsZh extends AppLocalizations {
   String get phoneTeamWhyNotReady => '团队的引擎有响应，但表示目前无法运行工作。';
 
   @override
+  String phoneTeamProofSignal(int signal) {
+    return 'The safety test was closed by Android (signal $signal) before it could finish.';
+  }
+
+  @override
+  String phoneTeamProofCheckSignal(String check, int signal) {
+    return 'The safety check “$check” was closed by Android (signal $signal).';
+  }
+
+  @override
+  String phoneTeamProofNotBlocked(String check) {
+    return 'The safety check “$check” failed: this phone did not block it the way the team\'s sandbox needs.';
+  }
+
+  @override
+  String get phoneTeamProofSandbox =>
+      'The team\'s sandbox could not start on this phone.';
+
+  @override
+  String phoneTeamProofUbuntu(String check) {
+    return 'The Ubuntu step “$check” failed inside the team\'s sandbox.';
+  }
+
+  @override
+  String get phoneTeamProofFixture =>
+      'The safety check\'s private test files changed or could not be set up.';
+
+  @override
+  String get phoneTeamProofNoAnswer =>
+      'The safety test did not answer in time.';
+
+  @override
+  String phoneTeamProofProot(String check) {
+    return 'The proot safety check “$check” did not pass.';
+  }
+
+  @override
+  String phoneTeamProofOther(String check) {
+    return 'The safety check stopped at “$check”.';
+  }
+
+  @override
   String get phoneTeamOffTitle => 'AI Team 已关闭';
 
   @override

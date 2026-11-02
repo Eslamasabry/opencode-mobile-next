@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api2/gateway_mappers.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/builtin_server.dart';
+import 'package:opencode_mobile/diagnostics/app_diagnostics.dart';
 import 'package:opencode_mobile/domain/orchestration_gateway.dart';
 import 'package:opencode_mobile/domain/phone_project_engine.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
@@ -94,6 +95,9 @@ class _Phone extends ChangeNotifier implements PhoneTeamSetupPorts {
   PhoneTeamHostState host = const PhoneTeamHostState();
   PhoneEngineHealth started = _health();
   PhoneEngineHealth probed = _health();
+
+  /// When set, the engine start fails with this native code.
+  String? startFailure;
   String? serverFailure;
   bool restoreResult = true;
   bool on = false;
@@ -140,6 +144,8 @@ class _Phone extends ChangeNotifier implements PhoneTeamSetupPorts {
       throw const PhoneEngineException('engine_in_use');
     }
     engineRunning = true;
+    final failure = startFailure;
+    if (failure != null) throw PhoneEngineException(failure);
     return started;
   }
 
@@ -635,6 +641,43 @@ void main() {
       },
     );
 
+    test(
+      'issue #111: a failed proof names its step in Details and diagnostics',
+      () async {
+        final lines = <String>[];
+        final phone = _Phone()
+          ..startFailure = 'boundary_proof_failed:native.signal-31';
+        final flow = PhoneTeamSetupController(
+          phone,
+          delay: (_) async {},
+          readyAttempts: 2,
+          onFailure: lines.add,
+        );
+        await flow.run();
+        expect(flow.phase, PhoneTeamSetupPhase.failed);
+        expect(flow.failedStep, PhoneTeamSetupStep.check);
+        expect(flow.details, 'boundary_proof_failed:native.signal-31');
+        expect(phone.calls.last, 'stopEngine');
+        expect(lines, hasLength(1));
+        expect(lines.single, contains('step check'));
+        expect(lines.single, contains('code boundary_proof_failed'));
+        expect(lines.single, contains('step native signal-31'));
+        expect(lines.single, contains('kind signal'));
+        expect(lines.single, contains('signal 31'));
+        // The diagnostics export masks long tokens with digits: the step
+        // survives it, field by field.
+        final exported = AppDiagnosticsController().sanitize(lines.single);
+        expect(exported, contains('step native signal-31'));
+        final long = PhoneProofStep.parse(
+          'boundary_proof_failed:ubuntu.deny-proc-root-write.exit-1',
+        )!;
+        expect(
+          AppDiagnosticsController().sanitize(long.diagnostic),
+          contains('step ubuntu deny-proc-root-write exit-1'),
+        );
+      },
+    );
+
     test('a failed proof stays off, keeps reasons for Details', () async {
       final phone = _Phone()
         ..started = _health(boundary: false, reason: 'boundary_proof_failed');
@@ -850,6 +893,90 @@ void main() {
     );
   });
 
+  group('issue #111: proof step', () {
+    test('parses every step shape into a plain kind', () {
+      PhoneProofStep step(String code) =>
+          PhoneProofStep.parse('boundary_proof_failed:$code')!;
+      expect(step('native.signal-31').kind, PhoneProofStepKind.signal);
+      expect(step('native.signal-31').signal, 31);
+      final io = step('native.io-uring.signal-11');
+      expect(io.kind, PhoneProofStepKind.checkSignal);
+      expect(io.check, 'io-uring');
+      expect(io.signal, 11);
+      expect(step('native.chmod.errno-38').kind, PhoneProofStepKind.notBlocked);
+      expect(step('native.open-0-0.allowed').check, 'open-0-0');
+      expect(
+        step('native.sandbox.landlock_rule_failed').kind,
+        PhoneProofStepKind.sandbox,
+      );
+      expect(step('native.no-answer').kind, PhoneProofStepKind.noAnswer);
+      expect(
+        step('native.worker-write.errno-13').kind,
+        PhoneProofStepKind.other,
+      );
+      final git = step('ubuntu.git-commit.exit-128');
+      expect(git.kind, PhoneProofStepKind.ubuntu);
+      expect(git.check, 'git-commit');
+      expect(
+        step('ubuntu.git-init.no-answer').kind,
+        PhoneProofStepKind.noAnswer,
+      );
+      expect(step('fixture-changed').kind, PhoneProofStepKind.fixture);
+      expect(
+        step('setup.proof_fixture_unavailable').kind,
+        PhoneProofStepKind.fixture,
+      );
+      expect(
+        step('proot-tier.daemonProcDenied').kind,
+        PhoneProofStepKind.proot,
+      );
+      expect(step('setup.restart_required').check, 'restart_required');
+      // A cleanup suffix after the code does not leak into the step.
+      expect(
+        PhoneProofStep.parse(
+          'boundary_proof_failed:native.signal-31; engineStopFailed',
+        )!.code,
+        'native.signal-31',
+      );
+    });
+
+    test('a bare or unrelated code has no step; odd text is refused', () {
+      expect(PhoneProofStep.parse('boundary_proof_failed'), isNull);
+      expect(PhoneProofStep.parse('timeout:startEngine'), isNull);
+      expect(PhoneProofStep.parse(null), isNull);
+      expect(PhoneProofStep.parse('boundary_proof_failed:/data/x\'y'), isNull);
+    });
+
+    test('Details: plain sentence, the step in plain words, then the code', () {
+      final text = phoneTeamDetailsText(
+        _en,
+        PhoneTeamSetupProblem.engine,
+        'boundary_proof_failed:native.signal-31',
+      )!;
+      expect(text.split('\n'), [
+        _en.phoneTeamWhyUnsafe,
+        _en.phoneTeamProofSignal(31),
+        'boundary_proof_failed:native.signal-31',
+      ]);
+      expect(
+        phoneTeamProofStepText(
+          _en,
+          'boundary_proof_failed:ubuntu.git-commit.exit-128',
+        ),
+        _en.phoneTeamProofUbuntu('git-commit'),
+      );
+      // A failure with no step keeps its old two lines.
+      expect(
+        phoneTeamDetailsText(
+          _en,
+          PhoneTeamSetupProblem.engine,
+          'timeout:startEngine',
+        ),
+        '${_en.phoneTeamWhyEngine}\ntimeout:startEngine',
+      );
+    });
+  });
+
   group('the page', () {
     testWidgets('waiting for a reply, then the stop question, then ready', (
       tester,
@@ -877,6 +1004,35 @@ void main() {
       await _settle(tester);
       expect(find.text(_en.phoneTeamDoneTitle), findsOneWidget);
       expect(find.text(_en.teamProjectNew), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('issue #111: the failed check step says where it stopped', (
+      tester,
+    ) async {
+      _size(tester);
+      final connection = await _connection();
+      final phone = _Phone()
+        ..startFailure = 'boundary_proof_failed:native.io-uring.signal-11';
+      final flow = _flow(phone);
+      await tester.pumpWidget(
+        _app(TeamPhoneSetupScreen(connection: connection, controller: flow)),
+      );
+      await _settle(tester);
+      final plain = _en.phoneTeamProofCheckSignal('io-uring', 11);
+      // Under the failed step, in plain words; the code stays in Details.
+      expect(find.text(plain), findsOneWidget);
+      expect(
+        find.text('boundary_proof_failed:native.io-uring.signal-11'),
+        findsNothing,
+      );
+      await tester.tap(find.text('Details'));
+      await _settle(tester);
+      expect(find.textContaining(_en.phoneTeamWhyUnsafe), findsOneWidget);
+      expect(
+        find.textContaining('boundary_proof_failed:native.io-uring.signal-11'),
+        findsOneWidget,
+      );
       await tester.pumpWidget(const SizedBox.shrink());
     });
 

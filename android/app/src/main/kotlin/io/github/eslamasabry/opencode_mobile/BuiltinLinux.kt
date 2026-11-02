@@ -1397,9 +1397,13 @@ class BuiltinLinux(private val context: Context) {
             reader.join(2000)
             val unchanged = sentinel.readText() == "private-proot-control"
             val complete = finished && running.exitValue() == 0 && unchanged && labels.all { controls[it] == true }
+            val failedStep = if (complete) null else if (!unchanged) "proot-tier.fixture-changed"
+                else PhoneBoundaryProofSteps.prootTier(labels, controls, finished,
+                    if (finished) running.exitValue() else null)
             val report = labels.associateWith { controls[it] == true } + mapOf("tier" to "proot",
                 "nativeAttacksDenied" to false, "prootGitCompatible" to (controls["positiveWorkerClone"] == true),
-                "fixtureUnchanged" to unchanged, "complete" to complete)
+                "fixtureUnchanged" to unchanged, "complete" to complete) +
+                (if (failedStep != null) mapOf("failedStep" to failedStep) else emptyMap())
             latestBoundaryControls = report
             return report
         } finally {
@@ -1440,19 +1444,39 @@ class BuiltinLinux(private val context: Context) {
         sentinel.writeText("proof-only-canonical-state")
         Os.chmod(sentinel.absolutePath, 384)
         Os.symlink(protected.absolutePath, File(worker, "protected-alias").absolutePath)
-        fun runProbe(argv: List<String>, environment: Map<String, String> = emptyMap()): Boolean {
+        // Issue #111: the probe's static report used to go to /dev/null, so a
+        // failure could not say which check stopped. Keep a bounded copy of
+        // its lines; only static codes are ever read from them.
+        class ProbeRun(val exit: Int?, val out: List<String>, val err: List<String>) {
+            val ok get() = exit == 0
+        }
+        fun bounded(stream: java.io.InputStream): Pair<Thread, MutableList<String>> {
+            val lines = java.util.Collections.synchronizedList(mutableListOf<String>())
+            val thread = Thread {
+                try {
+                    stream.bufferedReader(Charsets.US_ASCII).useLines { all ->
+                        all.forEach { if (lines.size < 64) lines.add(it.take(160)) }
+                    }
+                } catch (_: Exception) { }
+            }.apply { isDaemon = true; start() }
+            return thread to lines
+        }
+        fun runProbe(argv: List<String>, environment: Map<String, String> = emptyMap(),
+            keepError: Boolean = false): ProbeRun {
             val process = ProcessBuilder(argv).apply {
                 environment().clear()
                 environment().putAll(environment)
-                redirectOutput(File("/dev/null"))
-                redirectError(File("/dev/null"))
+                if (!keepError) redirectError(File("/dev/null"))
             }.start()
             process.outputStream.close()
-            if (!process.waitFor(30, TimeUnit.SECONDS)) {
-                stopTree(process)
-                return false
-            }
-            return process.exitValue() == 0
+            val (outReader, out) = bounded(process.inputStream)
+            val (errReader, err) = if (keepError) bounded(process.errorStream)
+                else Pair<Thread?, MutableList<String>>(null, mutableListOf())
+            val finished = process.waitFor(30, TimeUnit.SECONDS)
+            if (!finished) stopTree(process)
+            outReader.join(2000)
+            errReader?.join(2000)
+            return ProbeRun(if (finished) process.exitValue() else null, out.toList(), err.toList())
         }
         return try {
             val preparation = ProcessBuilder(probe.absolutePath, "--prepare-git-fixture", protected.canonicalPath)
@@ -1476,46 +1500,73 @@ class BuiltinLinux(private val context: Context) {
             if (mainRef.readText().trim() != expectedMain || head.readText().trim() != "ref: refs/heads/main")
                 throw PhoneEngineNative.Failure("proof_fixture_unavailable")
             val configHash = PhoneEngineAttestation.hash(config)
-            val native = runProbe(protectedCommand(listOf(probe.absolutePath,
-                protected.absolutePath, worker.absolutePath, AndroidProcess.myPid().toString())))
+            val nativeRun = runProbe(protectedCommand(listOf(probe.absolutePath,
+                protected.absolutePath, worker.absolutePath, AndroidProcess.myPid().toString())),
+                keepError = true)
+            val native = nativeRun.ok
             val escapedRoot = protected.absolutePath.replace("'", "'\"'\"'")
             val guestWorker = "/root/projects/${worker.name}"
+            // Each `step` names the next check in the bounded report, so a
+            // stop under `set -e` says which one it was (issue #111).
             val script = """
                 set -eu
+                step() { printf 'proof-step:%s\n' "${'$'}1"; }
+                step enter-worker
                 cd '$guestWorker'
                 # Positive controls cover writes, real Git refs and commits.
+                step worker-write
                 printf 'worker\n' > positive-control
+                step git-init
                 git init -q positive-repo
+                step git-config
                 git -C positive-repo config user.name proof
                 git -C positive-repo config user.email proof@invalid.example
+                step git-add
                 printf 'change\n' > positive-repo/file
                 git -C positive-repo add file
+                step git-commit
                 git -C positive-repo commit -q -m proof
+                step git-update-ref
                 git -C positive-repo update-ref refs/heads/worker-proof HEAD
+                step git-show-ref
                 git -C positive-repo show-ref --verify --quiet refs/heads/worker-proof
                 # These are defence-in-depth view tests; the native raw probes
                 # above establish OS denial independently of proot rewriting.
+                step deny-sentinel-write
                 if (printf 'attack' > '$escapedRoot/sentinel') 2>/dev/null; then exit 1; fi
+                step deny-proc-root-write
                 if (printf 'attack' > '/proc/${AndroidProcess.myPid()}/root$escapedRoot/sentinel') 2>/dev/null; then exit 1; fi
+                step deny-parent-environ
                 if cat '/proc/${AndroidProcess.myPid()}/environ' >/dev/null 2>&1; then exit 1; fi
+                step deny-main-delete
                 if git -c core.hooksPath=/dev/null -C '$escapedRoot' update-ref -d refs/heads/main $expectedMain >/dev/null 2>&1; then exit 1; fi
                 if git -c core.hooksPath=/dev/null --git-dir='$escapedRoot/.git' update-ref -d refs/heads/main $expectedMain >/dev/null 2>&1; then exit 1; fi
+                step deny-config-write
                 if git --git-dir='$escapedRoot/.git' config core.hooksPath /dev/null >/dev/null 2>&1; then exit 1; fi
+                step deny-ref-write
                 if (printf 'attack' > '$escapedRoot/.git/refs/heads/main') 2>/dev/null; then exit 1; fi
+                step done
             """.trimIndent()
             val wasProtected = protectedProot
-            val proot = try {
+            val ubuntuRun = try {
                 protectedProot = true
                 runProbe(prootCommand(listOf("/bin/sh", "-c", script)), prootEnvironment())
             } finally { protectedProot = wasProtected }
+            val proot = ubuntuRun.ok
             val unchanged = sentinel.readText() == "proof-only-canonical-state" &&
                 (Os.lstat(sentinel.absolutePath).st_mode and 511) == 384 &&
                 mainRef.readText().trim() == expectedMain && head.readText().trim() == "ref: refs/heads/main" &&
                 PhoneEngineAttestation.hash(config) == configHash
-            mapOf("schemaVersion" to 1, "tier" to "landlock", "nativeAttacksDenied" to native,
+            val failedStep = if (!native) PhoneBoundaryProofSteps.native(nativeRun.out, nativeRun.err, nativeRun.exit)
+                else if (!proot) PhoneBoundaryProofSteps.ubuntu(ubuntuRun.out, ubuntuRun.exit)
+                else if (!unchanged) "fixture-changed" else null
+            val report = mapOf("schemaVersion" to 1, "tier" to "landlock", "nativeAttacksDenied" to native,
                 "prootGitCompatible" to proot, "fixtureUnchanged" to unchanged,
                 "complete" to (native && proot && unchanged),
-                "enablesExecution" to false, "boundaryReason" to "boundary_unverified")
+                "enablesExecution" to false, "boundaryReason" to "boundary_unverified") +
+                (if (failedStep != null) mapOf("failedStep" to failedStep) else emptyMap())
+            latestBoundaryControls = report
+            report
         } finally {
             // Fixture traversal never follows links into protected app state.
             fun erase(file: File) {
@@ -1597,18 +1648,27 @@ class BuiltinLinux(private val context: Context) {
             }
         protectedTier = tier
         var reason = if (blocked) "restart_required" else "boundary_unverified"
+        // The one step the proof stopped at, carried in the final failure
+        // code as `boundary_proof_failed:<step>` (static codes only, #111).
+        var proofStep: String? = null
         var controls: Map<String, Any?>? = if (tier == "landlock") try {
             runPhoneEngineBoundaryProbe().also {
-                if (it["complete"] != true) reason = "boundary_proof_failed"
+                if (it["complete"] != true) {
+                    reason = "boundary_proof_failed"
+                    proofStep = it["failedStep"] as? String
+                }
             }
         } catch (e: Exception) {
             reason = if (e is PhoneEngineNative.Failure) e.code else "boundary_proof_unavailable"
+            proofStep = "setup.${reason.takeIf { Regex("[a-z_]{1,48}").matches(it) } ?: "unexpected"}"
             null
         } else null
         val child = phoneEngine.start(profile, port, blocked, reason) { root ->
             if (tier == "proot") {
                 protectedTier = "proot"
-                controls = runProotTierProof(root)
+                controls = runProotTierProof(root).also {
+                    if (it["complete"] != true) proofStep = it["failedStep"] as? String
+                }
             }
             val verified = controls
             if (verified?.get("complete") != true || hasUnconfinedChildren()) {
@@ -1635,15 +1695,16 @@ class BuiltinLinux(private val context: Context) {
             val reasonCode = phoneEngine.status(profile)["boundaryReason"] as? String
             phoneEngine.stop(profile)
             throw PhoneEngineNative.Failure(reasonCode?.takeIf { it in listOf("boundary_signer_unavailable",
-                "boundary_probe_unavailable", "attestation_rejected") } ?: "boundary_proof_failed")
+                "boundary_probe_unavailable", "attestation_rejected") } ?: PhoneBoundaryProofSteps.code(proofStep))
         }
         if (tier == "proot") {
             val pid = pidOf(child) ?: throw PhoneEngineNative.Failure("boundary_probe_unavailable")
             prootMaskedPids.add(pid)
             val root = File(context.filesDir.canonicalFile, "oc.teamEngine.$profile")
             try {
-                if (runProotTierProof(root, pid)["complete"] != true)
-                    throw PhoneEngineNative.Failure("boundary_proof_failed")
+                val live = runProotTierProof(root, pid)
+                if (live["complete"] != true)
+                    throw PhoneEngineNative.Failure(PhoneBoundaryProofSteps.code(live["failedStep"] as? String))
             } catch (error: Exception) {
                 prootMaskedPids.remove(pid)
                 phoneEngine.stop(profile)

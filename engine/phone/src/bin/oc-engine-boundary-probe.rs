@@ -97,6 +97,10 @@ fn denied(control: &str, value: libc::c_long) -> bool {
     } else {
         0
     };
+    denied_with(control, value, errno)
+}
+
+fn denied_with(control: &str, value: libc::c_long, errno: i32) -> bool {
     // Landlock deliberately returns EXDEV when REFER/link rights would cross
     // the allowed hierarchy. Other attacks still require permission denial.
     let passed = value == -1
@@ -108,6 +112,148 @@ fn denied(control: &str, value: libc::c_long) -> bool {
         println!("boundary-control:{control}:result:{value}:errno:{errno}");
     }
     passed
+}
+
+/// How a disposable attack child ended.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Attempt {
+    /// The syscall returned; `(value, errno)`.
+    Returned(libc::c_long, i32),
+    /// The kernel killed the child with this signal before it could report.
+    Signaled(i32),
+    /// No report, no signal, or no answer within the deadline.
+    Lost,
+}
+
+/// Runs one raw attack syscall in a disposable child.
+///
+/// Android's app seccomp policy (bionic, inherited by every process the app
+/// starts) answers a syscall outside its allowlist with `SECCOMP_RET_TRAP`.
+/// The kernel applies the most restrictive action of all stacked filters,
+/// and TRAP outranks the sandbox's own `SECCOMP_RET_ERRNO`, so such a call
+/// raises SIGSYS instead of returning EPERM. Android 16 added Landlock to
+/// that allowlist (so a 6.12 kernel now takes the Landlock tier) but still
+/// traps `io_uring_setup`: in-process, that attack killed the whole probe and
+/// every Android 16 start failed with `boundary_proof_failed` (issue #111).
+///
+/// A SIGSYS death means the kernel refused the call before it ran; it is
+/// counted as denied in [`attack_denied`]. Every other outcome keeps its
+/// previous meaning. No allocation, lock or Rust destructor runs in the child.
+fn attempt(attack: &dyn Fn() -> libc::c_long) -> Attempt {
+    let mut pipe = [-1; 2];
+    if unsafe { libc::pipe2(pipe.as_mut_ptr(), libc::O_CLOEXEC) } != 0 {
+        return Attempt::Lost;
+    }
+    let pid = unsafe { libc::fork() };
+    if pid == 0 {
+        unsafe {
+            libc::close(pipe[0]);
+            // The kernel, not an inherited crash handler, must end a trapped
+            // child: no tombstone, no core dump of probe memory.
+            libc::signal(libc::SIGSYS, libc::SIG_DFL);
+            let limit = libc::rlimit {
+                rlim_cur: 0,
+                rlim_max: 0,
+            };
+            libc::setrlimit(libc::RLIMIT_CORE, &limit);
+            let value = attack() as i64;
+            let errno = if value == -1 {
+                std::io::Error::last_os_error().raw_os_error().unwrap_or(0)
+            } else {
+                0
+            };
+            let mut report = [0_u8; 12];
+            report[..8].copy_from_slice(&value.to_ne_bytes());
+            report[8..].copy_from_slice(&errno.to_ne_bytes());
+            let written = libc::write(pipe[1], report.as_ptr().cast(), report.len());
+            libc::_exit(if written == report.len() as isize {
+                0
+            } else {
+                1
+            });
+        }
+    }
+    unsafe { libc::close(pipe[1]) };
+    if pid < 0 {
+        unsafe { libc::close(pipe[0]) };
+        return Attempt::Lost;
+    }
+    let status = wait_child(pid, std::time::Duration::from_secs(5));
+    let mut report = [0_u8; 12];
+    let mut filled = 0;
+    while filled < report.len() {
+        let n = unsafe {
+            libc::read(
+                pipe[0],
+                report[filled..].as_mut_ptr().cast(),
+                report.len() - filled,
+            )
+        };
+        if n <= 0 {
+            break;
+        }
+        filled += n as usize;
+    }
+    unsafe { libc::close(pipe[0]) };
+    match status {
+        Some(status) if libc::WIFSIGNALED(status) => Attempt::Signaled(libc::WTERMSIG(status)),
+        Some(status)
+            if libc::WIFEXITED(status)
+                && libc::WEXITSTATUS(status) == 0
+                && filled == report.len() =>
+        {
+            let value = i64::from_ne_bytes(report[..8].try_into().unwrap_or([0; 8]));
+            let errno = i32::from_ne_bytes(report[8..].try_into().unwrap_or([0; 4]));
+            Attempt::Returned(value as libc::c_long, errno)
+        }
+        _ => Attempt::Lost,
+    }
+}
+
+/// Waits for the exact owned child; a hung or stopped one is killed and
+/// reaped at the deadline and reported as `None`.
+fn wait_child(pid: libc::pid_t, timeout: std::time::Duration) -> Option<i32> {
+    let deadline = std::time::Instant::now() + timeout;
+    loop {
+        let mut status = 0;
+        let waited = unsafe { libc::waitpid(pid, &mut status, libc::WNOHANG) };
+        if waited == pid {
+            return Some(status);
+        }
+        if waited < 0 && std::io::Error::last_os_error().raw_os_error() != Some(libc::EINTR) {
+            return None;
+        }
+        if std::time::Instant::now() >= deadline {
+            unsafe { libc::kill(pid, libc::SIGKILL) };
+            loop {
+                let waited = unsafe { libc::waitpid(pid, &mut status, 0) };
+                if waited >= 0
+                    || std::io::Error::last_os_error().raw_os_error() != Some(libc::EINTR)
+                {
+                    break;
+                }
+            }
+            return None;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(2));
+    }
+}
+
+/// The verdict for one isolated attack. Only a permission-style return or a
+/// seccomp SIGSYS (the syscall never executed) is a denial.
+fn attack_denied(control: &str, outcome: Attempt) -> bool {
+    match outcome {
+        Attempt::Returned(value, errno) => denied_with(control, value, errno),
+        Attempt::Signaled(signal) if signal == libc::SIGSYS => true,
+        Attempt::Signaled(signal) => {
+            println!("boundary-control:{control}:signal:{signal}");
+            false
+        }
+        Attempt::Lost => {
+            println!("boundary-control:{control}:no-answer");
+            false
+        }
+    }
 }
 
 fn path(value: &Path) -> CString {
@@ -254,17 +400,18 @@ fn check(root: &Path, worker: &Path, parent: i32) -> bool {
     .into_iter()
     .zip(attacks)
     {
-        if !denied(id, attack()) {
+        // Disposable child per attack: see `attempt` (Android 16 SIGSYS).
+        if !attack_denied(id, attempt(*attack)) {
             ok = false;
         }
     }
-    // Parent is an isolated proof process outside the Landlock domain.
-    let ptrace = unsafe { libc::ptrace(0x4206 as _, parent, 0, 0) };
-    if !denied("ptrace", ptrace as libc::c_long) {
+    // Parent is an isolated proof process outside the Landlock domain. A
+    // successful seize ends with the disposable child, which detaches it.
+    if !attack_denied(
+        "ptrace",
+        attempt(&|| unsafe { libc::ptrace(0x4206 as _, parent, 0, 0) } as libc::c_long),
+    ) {
         ok = false;
-        if ptrace == 0 {
-            unsafe { libc::ptrace(libc::PTRACE_DETACH, parent, 0, 0) };
-        }
     }
     let mut byte = 0_u8;
     let local = libc::iovec {
@@ -275,9 +422,12 @@ fn check(root: &Path, worker: &Path, parent: i32) -> bool {
         iov_base: std::ptr::null_mut(),
         iov_len: 1,
     };
-    if !denied("process-vm-read", unsafe {
-        libc::syscall(libc::SYS_process_vm_readv, parent, &local, 1, &remote, 1, 0)
-    }) {
+    if !attack_denied(
+        "process-vm-read",
+        attempt(&|| unsafe {
+            libc::syscall(libc::SYS_process_vm_readv, parent, &local, 1, &remote, 1, 0)
+        }),
+    ) {
         ok = false;
     }
     for (id, entry) in ["environ", "mem", "fd/0"].into_iter().enumerate() {
@@ -312,18 +462,20 @@ fn check(root: &Path, worker: &Path, parent: i32) -> bool {
         )
     };
     if fd >= 0 {
-        if !denied("namespace-setns", unsafe {
-            libc::syscall(libc::SYS_setns, fd as i32, 0)
-        }) {
+        if !attack_denied(
+            "namespace-setns",
+            attempt(&|| unsafe { libc::syscall(libc::SYS_setns, fd as i32, 0) }),
+        ) {
             ok = false;
         }
         unsafe { libc::close(fd as i32) };
     } else if !denied("namespace-open", fd) {
         ok = false;
     }
-    if !denied("namespace-unshare", unsafe {
-        libc::syscall(libc::SYS_unshare, libc::CLONE_NEWNS)
-    }) {
+    if !attack_denied(
+        "namespace-unshare",
+        attempt(&|| unsafe { libc::syscall(libc::SYS_unshare, libc::CLONE_NEWNS) }),
+    ) {
         ok = false;
     }
     // Ordinary worker writes must still work. A blanket deny policy is not proof.
@@ -388,6 +540,7 @@ fn main() {
     let mut ok = check(&root, &worker, parent);
     // exec and descendants must inherit exactly the same restrictions.
     if args.len() == 3 {
+        use std::os::unix::process::ExitStatusExt;
         let status = std::env::current_exe().ok().and_then(|exe| {
             std::process::Command::new(exe)
                 .args(&args)
@@ -397,6 +550,17 @@ fn main() {
         });
         let descendant = status.is_some_and(|s| s.success());
         if !descendant {
+            // Static shape only: how the confined descendant ended.
+            match status {
+                None => println!("boundary-control:descendant:spawn"),
+                Some(s) => match s.signal() {
+                    Some(signal) => println!("boundary-control:descendant:signal:{signal}"),
+                    None => println!(
+                        "boundary-control:descendant:exit:{}",
+                        s.code().unwrap_or(-1)
+                    ),
+                },
+            }
             println!("boundary-control:descendant:failed");
         }
         ok &= descendant;
@@ -411,5 +575,52 @@ fn main() {
     );
     if !ok {
         std::process::exit(1);
+    }
+}
+
+#[cfg(test)]
+mod isolated_attack_tests {
+    use super::*;
+
+    #[test]
+    fn seccomp_sigsys_in_the_disposable_child_is_a_denial_not_a_probe_crash() {
+        // Android's app policy traps unlisted syscalls: the kernel raises
+        // SIGSYS before the call runs. Simulated with the same signal.
+        let outcome = attempt(&|| unsafe { libc::raise(libc::SIGSYS) } as libc::c_long);
+        assert_eq!(outcome, Attempt::Signaled(libc::SIGSYS));
+        assert!(attack_denied("io-uring", outcome));
+    }
+
+    #[test]
+    fn only_permission_denial_or_sigsys_pass() {
+        let eperm = attempt(&|| unsafe {
+            *libc_errno() = libc::EPERM;
+            -1
+        });
+        assert_eq!(eperm, Attempt::Returned(-1, libc::EPERM));
+        assert!(attack_denied("chmod", eperm));
+        // A successful attack, an unrelated errno, another signal or a lost
+        // child are never accepted as proof.
+        assert!(!attack_denied("chmod", attempt(&|| 0)));
+        assert!(!attack_denied("chmod", Attempt::Returned(-1, libc::ENOSYS)));
+        let other = attempt(&|| unsafe { libc::raise(libc::SIGUSR1) } as libc::c_long);
+        assert_eq!(other, Attempt::Signaled(libc::SIGUSR1));
+        assert!(!attack_denied("chmod", other));
+        assert!(!attack_denied("chmod", Attempt::Lost));
+        // EXDEV stays accepted only for link/rename (Landlock REFER).
+        assert!(attack_denied("link", Attempt::Returned(-1, libc::EXDEV)));
+        assert!(!attack_denied(
+            "truncate",
+            Attempt::Returned(-1, libc::EXDEV)
+        ));
+    }
+
+    #[cfg(target_os = "android")]
+    unsafe fn libc_errno() -> *mut i32 {
+        libc::__errno()
+    }
+    #[cfg(not(target_os = "android"))]
+    unsafe fn libc_errno() -> *mut i32 {
+        libc::__errno_location()
     }
 }

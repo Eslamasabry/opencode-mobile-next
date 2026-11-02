@@ -24544,6 +24544,48 @@ class AppLocalizationsAr extends AppLocalizations {
       'استجاب محرك الفريق لكنه قال إنه لا يستطيع تشغيل العمل بعد.';
 
   @override
+  String phoneTeamProofSignal(int signal) {
+    return 'أغلق أندرويد اختبار الأمان (الإشارة $signal) قبل أن يكتمل.';
+  }
+
+  @override
+  String phoneTeamProofCheckSignal(String check, int signal) {
+    return 'أغلق أندرويد فحص الأمان «$check» (الإشارة $signal).';
+  }
+
+  @override
+  String phoneTeamProofNotBlocked(String check) {
+    return 'فشل فحص الأمان «$check»: لم يمنعه هذا الهاتف كما يحتاج صندوق الفريق المعزول.';
+  }
+
+  @override
+  String get phoneTeamProofSandbox =>
+      'تعذر تشغيل صندوق الفريق المعزول على هذا الهاتف.';
+
+  @override
+  String phoneTeamProofUbuntu(String check) {
+    return 'فشلت خطوة أوبونتو «$check» داخل صندوق الفريق المعزول.';
+  }
+
+  @override
+  String get phoneTeamProofFixture =>
+      'تغيرت ملفات الاختبار الخاصة بفحص الأمان أو تعذر إعدادها.';
+
+  @override
+  String get phoneTeamProofNoAnswer =>
+      'لم يستجب اختبار الأمان في الوقت المحدد.';
+
+  @override
+  String phoneTeamProofProot(String check) {
+    return 'لم ينجح فحص أمان proot «$check».';
+  }
+
+  @override
+  String phoneTeamProofOther(String check) {
+    return 'توقف فحص الأمان عند «$check».';
+  }
+
+  @override
   String get phoneTeamOffTitle => 'فريق الذكاء الاصطناعي متوقف';
 
   @override

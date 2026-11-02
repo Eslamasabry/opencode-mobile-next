@@ -28995,6 +28995,75 @@
   "@phoneTeamWhyNotReady": {
     "description": "Details: plain sentence before the code, engine not ready"
   },
+  "phoneTeamProofSignal": "The safety test was closed by Android (signal {signal}) before it could finish.",
+  "@phoneTeamProofSignal": {
+    "description": "Details: plain line naming where the phone safety check stopped: Android ended the test program",
+    "placeholders": {
+      "signal": {
+        "type": "int"
+      }
+    }
+  },
+  "phoneTeamProofCheckSignal": "The safety check “{check}” was closed by Android (signal {signal}).",
+  "@phoneTeamProofCheckSignal": {
+    "description": "Details: plain line, one named check was ended by Android. check is a short technical name",
+    "placeholders": {
+      "check": {
+        "type": "String"
+      },
+      "signal": {
+        "type": "int"
+      }
+    }
+  },
+  "phoneTeamProofNotBlocked": "The safety check “{check}” failed: this phone did not block it the way the team's sandbox needs.",
+  "@phoneTeamProofNotBlocked": {
+    "description": "Details: plain line, the phone allowed something the sandbox must block",
+    "placeholders": {
+      "check": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneTeamProofSandbox": "The team's sandbox could not start on this phone.",
+  "@phoneTeamProofSandbox": {
+    "description": "Details: plain line, the sandbox launcher refused to start"
+  },
+  "phoneTeamProofUbuntu": "The Ubuntu step “{check}” failed inside the team's sandbox.",
+  "@phoneTeamProofUbuntu": {
+    "description": "Details: plain line, a normal Ubuntu step (like a Git commit) failed inside the sandbox",
+    "placeholders": {
+      "check": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneTeamProofFixture": "The safety check's private test files changed or could not be set up.",
+  "@phoneTeamProofFixture": {
+    "description": "Details: plain line, the proof's test files were changed or missing"
+  },
+  "phoneTeamProofNoAnswer": "The safety test did not answer in time.",
+  "@phoneTeamProofNoAnswer": {
+    "description": "Details: plain line, the safety test timed out"
+  },
+  "phoneTeamProofProot": "The proot safety check “{check}” did not pass.",
+  "@phoneTeamProofProot": {
+    "description": "Details: plain line, a check of the proot protection tier failed",
+    "placeholders": {
+      "check": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneTeamProofOther": "The safety check stopped at “{check}”.",
+  "@phoneTeamProofOther": {
+    "description": "Details: plain line naming the step the safety check stopped at",
+    "placeholders": {
+      "check": {
+        "type": "String"
+      }
+    }
+  },
   "phoneTeamOffTitle": "AI Team is off",
   "@phoneTeamOffTitle": {
     "description": "Headline when the team was on but its engine is not answering"

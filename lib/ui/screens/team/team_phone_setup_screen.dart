@@ -108,21 +108,50 @@ String? phoneTeamProtectionText(AppLocalizations l, String tier) =>
       _ => null,
     };
 
+/// The plain line naming where a failed safety check stopped (issue #111),
+/// or null when the failure did not come from the check.
+String? phoneTeamProofStepText(AppLocalizations l, String? details) {
+  final step = PhoneProofStep.parse(details);
+  if (step == null) return null;
+  final check = step.check ?? step.code;
+  return switch (step.kind) {
+    PhoneProofStepKind.signal => l.phoneTeamProofSignal(step.signal ?? 0),
+    PhoneProofStepKind.checkSignal => l.phoneTeamProofCheckSignal(
+      check,
+      step.signal ?? 0,
+    ),
+    PhoneProofStepKind.notBlocked => l.phoneTeamProofNotBlocked(check),
+    PhoneProofStepKind.sandbox => l.phoneTeamProofSandbox,
+    PhoneProofStepKind.ubuntu => l.phoneTeamProofUbuntu(check),
+    PhoneProofStepKind.fixture => l.phoneTeamProofFixture,
+    PhoneProofStepKind.noAnswer => l.phoneTeamProofNoAnswer,
+    PhoneProofStepKind.proot => l.phoneTeamProofProot(check),
+    PhoneProofStepKind.other => l.phoneTeamProofOther(check),
+  };
+}
+
+/// Details: the plain sentence, the step a failed safety check stopped at
+/// (when it did), then the technical code.
 String? phoneTeamDetailsText(
   AppLocalizations l,
   PhoneTeamSetupProblem problem,
   String? code,
 ) {
   if (code == null || code.isEmpty) return null;
-  final sentence = switch (problem) {
-    PhoneTeamSetupProblem.unsafe => l.phoneTeamWhyUnsafe,
-    PhoneTeamSetupProblem.engine => l.phoneTeamWhyEngine,
-    PhoneTeamSetupProblem.stopFailed => l.phoneTeamWhyStop,
-    PhoneTeamSetupProblem.serverStart => l.phoneTeamWhyServer,
-    PhoneTeamSetupProblem.notReady => l.phoneTeamWhyNotReady,
-    PhoneTeamSetupProblem.declined || PhoneTeamSetupProblem.noServer => null,
-  };
-  return sentence == null ? code : '$sentence\n$code';
+  final proof = phoneTeamProofStepText(l, code);
+  // A failed safety check is not an engine crash: say which it was.
+  final sentence = proof != null
+      ? l.phoneTeamWhyUnsafe
+      : switch (problem) {
+          PhoneTeamSetupProblem.unsafe => l.phoneTeamWhyUnsafe,
+          PhoneTeamSetupProblem.engine => l.phoneTeamWhyEngine,
+          PhoneTeamSetupProblem.stopFailed => l.phoneTeamWhyStop,
+          PhoneTeamSetupProblem.serverStart => l.phoneTeamWhyServer,
+          PhoneTeamSetupProblem.notReady => l.phoneTeamWhyNotReady,
+          PhoneTeamSetupProblem.declined ||
+          PhoneTeamSetupProblem.noServer => null,
+        };
+  return [?sentence, ?proof, code].join('\n');
 }
 
 ({String title, String body}) _problemCopy(
@@ -190,6 +219,8 @@ List<KitStep> phoneTeamSetupSteps(
             c.problem == PhoneTeamSetupProblem.unsafe &&
             (c.details ?? '').contains('not_packaged')) {
           supporting = l.phoneTeamReasonNotPackaged;
+        } else if (step == PhoneTeamSetupStep.check) {
+          supporting = phoneTeamProofStepText(l, c.details);
         }
       } else if (took != null) {
         state = KitMarkState.done;
