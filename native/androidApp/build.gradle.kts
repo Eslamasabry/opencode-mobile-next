@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
+    implementation(libs.compose.resources) // P12-SETTINGS: ui:words strings (shareAppMessage) read in SettingsWiring.
     implementation(libs.metrox.viewmodel.compose)
     implementation(libs.kotlinx.io.core) // Real app-private draft payload vault.
     testImplementation(kotlin("test-junit"))

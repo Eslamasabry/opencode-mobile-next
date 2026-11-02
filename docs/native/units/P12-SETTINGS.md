@@ -139,3 +139,40 @@ yet), B-NAV-001 (about notice), B-STATE-123..129 (scope edit tokens; `SettingsSc
 - `PreferencesChoicesTest`: `InMemoryPrefsBackend.commit` override signature and `PrefsKeyValueStore` constructor
   (copied from `:engine:settings` `PrefsTestSupport`).
 - `KitStateView` inside a scrolling settings column on the Report page (Loading/Error states).
+
+## Verified on the VPS (2026-11-02, branch `p12v/settings`)
+
+Base: `origin/native/p12-settings-2026-11-03` @ `0eac8f3d3` (already on top of `origin/native/m1-2026-11-03` @ `8a4eee69c`; no
+rebase needed). JDK 21, Android SDK, real Gradle (`-Dorg.gradle.workers.max=3 -Xmx3g`, `nice -n 5`).
+
+| Command | Result |
+|---|---|
+| `:engine:settings:desktopTest` | 120 tests, 0 failures |
+| `:feature:settings:desktopTest` (incl. `PreferencesChoicesTest`, `SettingsParityTest`, `SettingsParityUiTest`, `SettingsGoldensTest`) | 66 tests, 0 failures; goldens matched without re-recording |
+| `:feature:onboarding:desktopTest` (incl. `FirstRunFlowTest`) | 17 tests, 0 failures |
+| `:ui:routes:desktopTest` | 1 test, 0 failures |
+| `:ui:shell:desktopTest` / `:ui:shell:testAndroidHostTest` | 22 / 14 tests, 0 failures |
+| `:androidApp:assemblePreviewDebug` | first run failed to compile, green after fix 1 (Metro graph validated) |
+| `:androidApp:testPreviewDebugUnitTest` | 11 tests, 0 failures |
+| `:quality:test` | did not compile on the base (fix 2); then 48 tests, 2 failures, both outside this unit (below) |
+
+Fixes:
+
+1. `androidApp/build.gradle.kts` (this unit's module list edit): add `implementation(libs.compose.resources)`. `SettingsWiring.kt`
+   calls `org.jetbrains.compose.resources.getString(Res.string.shareAppMessage, …)` from `:ui:words`, which keeps Compose
+   resources as an `implementation` dependency, so the app could not see `getString`/`StringResource`. (The `R as NotifyR`
+   names, the suspend reference and the `replaces` list the report worried about all compiled.)
+2. Shared file, outside the write set: `quality/.../ChatWorldReviewTest.kt` passes `filePickers = emptySet()` to
+   `BasicComposerViewModel`. The m1 composer WIP added that constructor parameter without updating this test, so
+   `:quality:test` could not compile at all. The test checks durable delivery admission, which has nothing to do with file
+   pickers, so its meaning is unchanged.
+
+Still failing in `:quality:test`, not caused by this unit (none of these files or their modules are in its diff):
+
+- `KonsistRulesTest` K1: `feature/chat/.../composer/BasicComposerHost.kt` (m1 composer WIP) imports a non-kit framework
+  part. The check is static, so it fails on the m1 base in the same way. Chat/composer owner to fix.
+- `p3/TranscriptStreamUiTest` "6,000-word reply streams at the live edge": `UncompletedCoroutinesError` after the 1 min
+  `runTest` timeout, both in the full run and when run alone, with load average ~20 on the 8-CPU shared VPS. It uses
+  only chat/transcript/kit-chat, none of which this unit touches. Most likely load-bound; rerun on an idle machine.
+
+Not done here: §5.5 (emulator journeys) — no emulator on the VPS.
