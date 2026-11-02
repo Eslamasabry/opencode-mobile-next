@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -134,7 +135,8 @@ class FilesScreensTest {
         val calls = FolderCalls()
         setContent { Themed { FolderScreen(root, calls) } }
         onNodeWithText("Project").assertExists()
-        onNodeWithText("README.md", substring = true).performClick()
+        // The kit breaks file names before the extension (a zero-width space); the row's spoken name stays exact.
+        onNodeWithContentDescription("README.md").performClick()
         onNodeWithText("lib", substring = true).performClick()
         assertEquals(listOf("README.md", "lib"), calls.opened.map { it.name })
     }
