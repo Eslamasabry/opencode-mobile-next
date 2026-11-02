@@ -21,11 +21,16 @@ import kotlinx.coroutines.launch
  * is [ChatPresenter]'s; this class only gives it the entry's scope (03 §14.3: WhileSubscribed(5 s)).
  */
 @AssistedInject
-public class ChatViewModel(@Assisted route: ChatRoute, private val worlds: ChatWorlds, nav: AppNavigator) :
+public class ChatViewModel(
+    @Assisted route: ChatRoute,
+    private val worlds: ChatWorlds,
+    nav: AppNavigator,
+    outside: ChatOutside,
+) :
     ViewModel(), ChatActions {
     private val world = worlds.open(route.ref)
     private val presenter =
-        ChatPresenter(world, nav, { block -> viewModelScope.launch { block() } }, focusComposer = route.focusComposer)
+        ChatPresenter(world, nav, { block -> viewModelScope.launch { block() } }, focusComposer = route.focusComposer, outside = outside)
 
     public val requests = world.requests
 
@@ -72,6 +77,18 @@ public class ChatViewModel(@Assisted route: ChatRoute, private val worlds: ChatW
     override fun retrySend(localId: Long): Unit = presenter.retrySend(localId)
 
     override fun dismissStatus(id: String): Unit = presenter.dismissStatus(id)
+
+    override fun openLink(url: String): Unit = presenter.openLink(url)
+
+    override fun confirmOpenLink(): Unit = presenter.confirmOpenLink()
+
+    override fun copyText(text: String): Unit = presenter.copyText(text)
+
+    override fun closeSelection(): Unit = presenter.closeSelection()
+
+    override fun insertDone(id: Long): Unit = presenter.insertDone(id)
+
+    override fun confirmUndo(): Unit = presenter.confirmUndo()
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

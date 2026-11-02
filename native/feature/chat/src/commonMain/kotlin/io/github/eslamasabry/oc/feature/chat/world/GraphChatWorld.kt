@@ -1144,6 +1144,14 @@ internal class GraphChatWorld(
         return r
     }
 
+    override suspend fun revertFrom(from: MessageId): Outcome<Unit> {
+        val graph =
+            currentAttached()?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val r = (graph as ChatGraphAccessors).chatOperations.revertSession(sid, from)
+        if (r is Outcome.Ok && registry.graphFor(ref) === graph) bind(graph)
+        return r
+    }
+
     override fun markRead() {
         val a = currentAttached() ?: return
         a.graph.scope.launch(registry.mainContext) {

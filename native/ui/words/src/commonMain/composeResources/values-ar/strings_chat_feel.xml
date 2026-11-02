@@ -1,0 +1,16 @@
+<resources>
+    <string name="chatFeelShare">مشاركة</string>
+    <string name="chatFeelSelectText">تحديد النص</string>
+    <string name="chatFeelEditAndResend">تعديل وإعادة الإرسال</string>
+    <string name="chatFeelOpenLinkTitle">فتح الرابط؟</string>
+    <string name="chatFeelOpenLinkBody">سيُفتح %1$s خارج التطبيق.</string>
+    <string name="chatFeelOpenLinkAction">فتح</string>
+    <string name="chatFeelLinkRefused">لا يمكن فتح هذا الرابط من هنا.</string>
+    <string name="chatFeelUndoTitle">التراجع بدءًا من هنا؟</string>
+    <string name="chatFeelUndoBody">سيتم التراجع عن هذا الطلب وكل ما بعده على الخادم.</string>
+    <string name="chatFeelUndoAction">تراجع</string>
+    <string name="chatFeelPicture">صورة</string>
+    <string name="chatFeelPictureOnServer">صورة على الخادم: %1$s</string>
+    <string name="chatFeelPictureOnWeb">صورة من %1$s. انقر لفتحها خارج التطبيق.</string>
+    <string name="chatFeelDone">تم</string>
+</resources>

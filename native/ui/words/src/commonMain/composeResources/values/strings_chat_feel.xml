@@ -1,0 +1,16 @@
+<resources>
+    <string name="chatFeelShare">Share</string>
+    <string name="chatFeelSelectText">Select text</string>
+    <string name="chatFeelEditAndResend">Edit and resend</string>
+    <string name="chatFeelOpenLinkTitle">Open link?</string>
+    <string name="chatFeelOpenLinkBody">This opens %1$s outside the app.</string>
+    <string name="chatFeelOpenLinkAction">Open</string>
+    <string name="chatFeelLinkRefused">This link can't be opened from here.</string>
+    <string name="chatFeelUndoTitle">Undo from here?</string>
+    <string name="chatFeelUndoBody">This prompt and everything after it are undone on the server.</string>
+    <string name="chatFeelUndoAction">Undo</string>
+    <string name="chatFeelPicture">Picture</string>
+    <string name="chatFeelPictureOnServer">Picture on the server: %1$s</string>
+    <string name="chatFeelPictureOnWeb">Picture from %1$s. Tap to open it outside the app.</string>
+    <string name="chatFeelDone">Done</string>
+</resources>

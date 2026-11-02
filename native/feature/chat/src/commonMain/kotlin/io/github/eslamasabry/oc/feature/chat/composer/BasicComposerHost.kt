@@ -182,6 +182,18 @@ public fun BasicComposer(
             chrome.focusDone(focusId)
         }
     }
+    // "Edit and resend" (P12-CHAT-FEEL): the prompt's words replace the field once, the cursor at their end, ready to
+    // change and send. Reported as the person's own edit so the draft owner keeps it.
+    val insert = chrome.pendingInsert()
+    LaunchedEffect(insert?.id, editorReady) {
+        if (insert != null && editorReady) {
+            field.edit { replace(0, length, insert.text) }
+            editor.lastReported = insert.text
+            actions.draftChanged(insert.text)
+            focus.requestFocus()
+            chrome.insertDone(insert.id)
+        }
+    }
     val busy = chrome.busy()
     val scope = rememberCoroutineScope()
     val send: () -> Unit = {

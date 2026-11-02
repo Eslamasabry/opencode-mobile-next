@@ -166,6 +166,13 @@ public interface ChatWorld {
      */
     public suspend fun deleteMessage(id: MessageId): Outcome<Unit>
 
+    /**
+     * P12-CHAT-FEEL "Undo from here" (B-CHAT-120, servers that undo directly): the prompt [from] and everything after
+     * it are undone on the server, then the conversation is read again.
+     */
+    public suspend fun revertFrom(from: MessageId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("sessionRevert")))
+
     /** The visible transcript was read at the live edge (plan 09 §6.7). */
     public fun markRead()
 }

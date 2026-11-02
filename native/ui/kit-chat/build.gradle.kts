@@ -17,6 +17,7 @@ kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":core:common"))
         implementation(project(":core:security")) // mono surfaces display Redactor.redact(source) (plan 09 §9.2, R18)
+        implementation(project(":core:markdown")) // P12-CHAT-FEEL: transcript rows parse into KitMdBlock (KitMdSource)
         implementation(project(":ui:design"))
         implementation(project(":ui:kit"))
         implementation(libs.compose.material3) // kit modules only (ExternalRules)

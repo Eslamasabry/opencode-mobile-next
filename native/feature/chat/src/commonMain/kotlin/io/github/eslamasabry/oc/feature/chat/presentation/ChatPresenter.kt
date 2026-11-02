@@ -50,6 +50,9 @@ internal data class ChatLocal(
     val atLiveEdge: Boolean = true,
     val stopping: Boolean = false,
     val leaving: Boolean = false,
+    val select: SelectTextUi? = null,
+    val insert: ClipUi? = null,
+    val linkRefused: Boolean = false,
 )
 
 internal data class PendingArrival(val id: Long, val focusComposer: Boolean, val landOnFailure: Boolean)
@@ -76,6 +79,7 @@ public class ChatPresenter(
     private val launcher: ChatLauncher,
     focusComposer: Boolean = false,
     landOnFailure: Boolean = false,
+    private val outside: ChatOutside? = null,
 ) : ChatActions {
     private var nextId = 1L
     private val local =
@@ -141,7 +145,7 @@ public class ChatPresenter(
             revision = ++revision,
             ref = world.ref,
             title = i.title,
-            status = StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure),
+            status = StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused),
             phase =
                 when (val load = i.load) {
                     ChatLoad.Loading -> ChatPhase.Loading
@@ -157,8 +161,10 @@ public class ChatPresenter(
             confirm = l.confirm,
             clip = l.clip,
             arrival = arrival,
-            capabilities = ChatCapabilitiesUi(fork = i.capabilities.sessionFork, deleteMessage = i.capabilities.messageDelete),
-            guardBack = BackOrder.handles(l.menu != null, l.confirm != null, l.findQuery != null, i.draft.unsaved),
+            capabilities = capsOf(i.capabilities),
+            guardBack = BackOrder.handles(l.menu != null || l.select != null, l.confirm != null, l.findQuery != null, i.draft.unsaved),
+            select = l.select,
+            insert = l.insert,
         )
     }
 
@@ -179,8 +185,8 @@ public class ChatPresenter(
 
     override fun leaveRequested() {
         val l = local.value
-        when (BackOrder.next(l.menu != null, l.confirm != null, l.findQuery != null, world.draft.value.unsaved)) {
-            BackStep.CloseMenu -> closeMessageMenu()
+        when (BackOrder.next(l.menu != null || l.select != null, l.confirm != null, l.findQuery != null, world.draft.value.unsaved)) {
+            BackStep.CloseMenu -> if (l.menu != null) closeMessageMenu() else closeSelection()
             BackStep.CloseConfirm -> dismissConfirm()
             BackStep.CloseFind -> find(null)
             BackStep.Leave -> nav.back()
@@ -227,7 +233,11 @@ public class ChatPresenter(
 
     override fun dismissStatus(id: String) {
         if (id == StatusPick.ACTION) local.update { it.copy(actionFailure = null) }
+        if (id == StatusPick.LINK) local.update { it.copy(linkRefused = false) }
     }
+
+    private fun capsOf(c: ServerCapabilities): ChatCapabilitiesUi =
+        ChatCapabilitiesUi(fork = c.sessionFork, deleteMessage = c.messageDelete, revert = c.sessionRevert)
 
     // ---- Find (plan 09 §6.6) ----
 
@@ -269,8 +279,7 @@ public class ChatPresenter(
             }
         val target = MessageTarget(row.turnId, rowKey, kind, messageId)
         val hasText = !textOf(t, target).isNullOrBlank()
-        val caps = world.capabilities.value
-        val actions = MessageActions.of(kind, ChatCapabilitiesUi(caps.sessionFork, caps.messageDelete), t.run.busy, messageId, hasText)
+        val actions = MessageActions.of(kind, capsOf(world.capabilities.value), t.run.busy, messageId, hasText, feel = outside != null)
         if (actions.isEmpty()) return
         local.update { it.copy(menu = MessageMenuUi(target, actions), actionFailure = null) }
     }
@@ -284,8 +293,21 @@ public class ChatPresenter(
         when (action) {
             MessageAction.Copy -> {
                 val text = textOf(world.transcript.value, target) ?: return
-                local.update { it.copy(clip = ClipUi(nextId++, text)) }
+                if (outside == null) local.update { it.copy(clip = ClipUi(nextId++, text)) } else copyText(text)
             }
+            MessageAction.Share -> {
+                val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
+                if (outside?.share(text) == false) local.update { it.copy(actionFailure = Failure.Unexpected()) }
+            }
+            MessageAction.SelectText -> {
+                val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
+                local.update { it.copy(select = SelectTextUi(nextId++, text)) }
+            }
+            MessageAction.EditAndResend -> {
+                val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
+                local.update { it.copy(insert = ClipUi(nextId++, text)) }
+            }
+            MessageAction.UndoFromHere -> if (target.messageId != null) local.update { it.copy(confirm = ChatConfirm.UndoFrom(target)) }
             MessageAction.SendAgain -> {
                 val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
                 launcher.launch { world.send(text) } // a failed send shows on its bubble (status line), not twice
@@ -311,6 +333,47 @@ public class ChatPresenter(
             val result = world.deleteMessage(MessageId(id))
             if (result is Outcome.Failed) local.update { it.copy(actionFailure = result.failure) }
         }
+    }
+
+    override fun confirmUndo() {
+        val target = (local.value.confirm as? ChatConfirm.UndoFrom)?.target ?: return
+        val id = target.messageId ?: return
+        local.update { it.copy(confirm = null) }
+        launcher.launch {
+            val result = world.revertFrom(MessageId(id))
+            if (result is Outcome.Failed) local.update { it.copy(actionFailure = result.failure) }
+        }
+    }
+
+    // ---- P12-CHAT-FEEL: links, copy, selection, edit and resend ----
+
+    override fun openLink(url: String) {
+        val out = outside ?: return
+        local.update { it.copy(linkRefused = false) }
+        when (val check = out.checkLink(url)) {
+            LinkCheck.Opened -> Unit
+            is LinkCheck.Ask -> local.update { it.copy(confirm = ChatConfirm.OpenLink(url, check.host)) }
+            LinkCheck.Refused -> local.update { it.copy(linkRefused = true) }
+        }
+    }
+
+    override fun confirmOpenLink() {
+        val link = local.value.confirm as? ChatConfirm.OpenLink ?: return
+        local.update { it.copy(confirm = null) }
+        if (outside?.openLink(link.url) != true) local.update { it.copy(linkRefused = true) }
+    }
+
+    override fun copyText(text: String) {
+        if (text.isEmpty()) return
+        if (outside?.copy(text) == false) local.update { it.copy(actionFailure = Failure.Unexpected()) }
+    }
+
+    override fun closeSelection() {
+        local.update { it.copy(select = null) }
+    }
+
+    override fun insertDone(id: Long) {
+        local.update { if (it.insert?.id == id) it.copy(insert = null) else it }
     }
 
     override fun clipDone(id: Long) {

@@ -76,6 +76,12 @@ public class KitMarkdownActions(
     public val onCopyCode: ((String) -> Unit)? = null,
     public val moreCodeLabel: ((hiddenLines: Int) -> String)? = null,
     public val onOpenCode: ((KitMdBlock.Code) -> Unit)? = null,
+    /** P12-CHAT-FEEL: a picture tile was tapped; null draws tiles that do nothing but name the picture. */
+    public val onPicture: ((KitPicture) -> Unit)? = null,
+    /** The tile's words for a picture (description or name are passed through; the caller adds its own word). */
+    public val pictureLabel: (KitPicture) -> String = { it.label ?: it.path ?: it.url ?: "" },
+    /** Whether [onPicture] can show a picture that lives on the server (a viewer is wired); web ones always open. */
+    public val openFilePictures: Boolean = false,
 )
 
 /**
@@ -153,6 +159,7 @@ public fun KitMarkdownBlock(
             is KitMdBlock.Quote -> KitMarkdownQuote(block, actions, modifier, live, caret, reveal)
             is KitMdBlock.Table -> KitMarkdownTable(block, actions, modifier)
             is KitMdBlock.Rule -> KitMarkdownRule(modifier)
+            is KitMdBlock.Pictures -> KitPictureTiles(block, actions, modifier)
             is KitMdBlock.Code ->
                 KitCodeBlock(
                     source = block.text,
