@@ -80,6 +80,7 @@ import io.github.eslamasabry.oc.ui.words.res.serversSignInFailed
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.serversUsername
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
+import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -159,6 +160,13 @@ public fun ServersScreen(state: ServersUi, actions: ServersActions) {
                             role = KitButtonRole.Secondary,
                             enabled = enabled,
                         )
+                        if (server.connected) {
+                            KitButton(
+                                stringResource(Res.string.usageTitle),
+                                { actions.openUsage(server.id) },
+                                role = KitButtonRole.Tertiary,
+                            )
+                        }
                         KitButton(
                             stringResource(Res.string.serversRemove),
                             { removing = server.id },

@@ -114,6 +114,9 @@ public interface ChatsActions {
     public fun showBriefOverflow(shown: BriefUi)
 
     public fun showAll()
+
+    /** Search conversations across the server (unit P12-SEARCH-USAGE). */
+    public fun openSearch() {}
 }
 
 public data class ChatsAllUi(val filter: String?)

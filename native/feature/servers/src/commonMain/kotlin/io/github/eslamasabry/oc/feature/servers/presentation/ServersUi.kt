@@ -38,4 +38,7 @@ public interface ServersActions {
     public fun create(id: ProfileId)
 
     public fun remove(id: ProfileId)
+
+    /** Usage and cost this connected server reports (unit P12-SEARCH-USAGE). */
+    public fun openUsage(id: ProfileId) {}
 }

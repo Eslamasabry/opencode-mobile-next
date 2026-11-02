@@ -67,6 +67,7 @@ import io.github.eslamasabry.oc.ui.words.res.chats_all_none
 import io.github.eslamasabry.oc.ui.words.res.chats_all_title
 import io.github.eslamasabry.oc.ui.words.res.chats_back
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
+import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
 import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
@@ -158,6 +159,13 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
                     KitButton(
                         label = stringResource(Res.string.chatsHomeShowAll),
                         onClick = actions::showAll,
+                        role = KitButtonRole.Tertiary,
+                    )
+                }
+                item(key = "search-all") {
+                    KitButton(
+                        label = stringResource(Res.string.p12SearchTitle),
+                        onClick = actions::openSearch,
                         role = KitButtonRole.Tertiary,
                     )
                 }
