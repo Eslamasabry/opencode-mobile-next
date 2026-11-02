@@ -1,15 +1,11 @@
 package io.github.eslamasabry.oc.feature.gate.ui
 
-import androidx.compose.animation.AnimatedContent
 import io.github.eslamasabry.oc.feature.gate.GateFailureScreen
 import io.github.eslamasabry.oc.feature.gate.GatePresenter
 import io.github.eslamasabry.oc.feature.gate.GateReentry
 import io.github.eslamasabry.oc.feature.gate.GateReentryKind
 import io.github.eslamasabry.oc.feature.gate.GateRow
 import io.github.eslamasabry.oc.feature.gate.GateUi
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +23,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
+import kotlin.reflect.KClass
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -43,7 +42,6 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
-import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.migration_close
 import io.github.eslamasabry.oc.ui.words.res.migration_deferred_notice
@@ -59,6 +57,7 @@ import io.github.eslamasabry.oc.ui.words.res.migration_reenter_row_github
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_row_password
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_row_token
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_title
+import io.github.eslamasabry.oc.ui.words.res.migration_reenter_unnamed
 import io.github.eslamasabry.oc.ui.words.res.migration_report_row
 import io.github.eslamasabry.oc.ui.words.res.migration_restore_confirm
 import io.github.eslamasabry.oc.ui.words.res.migration_restore_confirm_action
@@ -74,7 +73,6 @@ import io.github.eslamasabry.oc.ui.words.res.migration_start_fresh_row
 import io.github.eslamasabry.oc.ui.words.res.migration_still_updating
 import io.github.eslamasabry.oc.ui.words.res.migration_try_again
 import io.github.eslamasabry.oc.ui.words.res.migration_updating
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -111,29 +109,23 @@ public fun GateScreen(
     val draw: @Composable (GateUi) -> Unit = { state ->
         when (state) {
             is GateUi.Opening ->
-                WaitingScreen(if (state.wordless) null else Res.string.migration_opening, state.offerRetry, onRow)
-            is GateUi.Updating -> WaitingScreen(Res.string.migration_updating, state.offerRetry, onRow)
+                WaitingScreen(if (state.wordless) null else stringResource(Res.string.migration_opening), state.offerRetry, onRow)
+            is GateUi.Updating -> WaitingScreen(stringResource(Res.string.migration_updating), state.offerRetry, onRow)
             is GateUi.Failed -> FailedScreen(state, onRow, onConfirm, onCancelConfirm)
             is GateUi.Open -> OpenFrame(state, onReentry, onReentryLater, content)
         }
     }
-    // Reduced motion: nothing moves (05 §8.2), so no transition container at all.
-    if (KitMotion.state.reduced) {
-        draw(ui)
-        return
-    }
-    val specs = KitMotion.specs
-    AnimatedContent(
-        targetState = ui,
-        contentKey = { it::class },
-        transitionSpec = { fadeIn(specs.enter()) togetherWith fadeOut(specs.exit()) },
-    ) { state -> draw(state) }
+    // The kit's cross-fade between screens (instant under reduced motion, 05 §8.2). Keyed by the screen kind, so a
+    // step change inside one wait or a new row on the same screen does not fade; each kind draws its latest state.
+    val latest = remember { mutableMapOf<KClass<out GateUi>, GateUi>() }
+    latest[ui::class] = ui
+    KitSwap(target = ui::class, modifier = Modifier.fillMaxSize()) { kind -> draw(latest[kind] ?: ui) }
 }
 
 /** Opening / Updating. [title] null = the wordless mark: the ground only, so nothing reads in the wrong language. */
 @Composable
-private fun WaitingScreen(title: StringResource?, offerRetry: Boolean, onRow: (GateRow) -> Unit) {
-    KitScreen(title = title?.let { stringResource(it) } ?: "") {
+private fun WaitingScreen(title: String?, offerRetry: Boolean, onRow: (GateRow) -> Unit) {
+    KitScreen(title = title ?: "") {
         if (offerRetry) {
             KitText(
                 stringResource(Res.string.migration_still_updating),
@@ -171,7 +163,7 @@ private fun FailedScreen(state: GateUi.Failed, onRow: (GateRow) -> Unit, onConfi
         ) {
             KitText(body, role = TypeRole.Body, tone = TextTone.Secondary)
             state.rows.forEach { row ->
-                KitRow(title = stringResource(row.label()), supporting = null, onClick = { onRow(row) })
+                KitRow(title = row.label(), supporting = null, onClick = { onRow(row) })
             }
             if (state.detail != null) {
                 KitText(
@@ -183,28 +175,25 @@ private fun FailedScreen(state: GateUi.Failed, onRow: (GateRow) -> Unit, onConfi
             }
         }
         val confirming = state.confirming
-        val (confirmTitle, confirmBody, confirmAction) =
-            if (confirming == GateRow.StartFresh) {
-                Triple(
-                    Res.string.migration_start_fresh_confirm_title,
-                    Res.string.migration_start_fresh_confirm,
-                    Res.string.migration_start_fresh_confirm_action,
-                )
-            } else {
-                Triple(
-                    Res.string.migration_restore_confirm_title,
-                    Res.string.migration_restore_confirm,
-                    Res.string.migration_restore_confirm_action,
-                )
-            }
+        val fresh = confirming == GateRow.StartFresh
+        val confirmTitle =
+            stringResource(
+                if (fresh) Res.string.migration_start_fresh_confirm_title else Res.string.migration_restore_confirm_title,
+            )
+        val confirmBody =
+            stringResource(if (fresh) Res.string.migration_start_fresh_confirm else Res.string.migration_restore_confirm)
+        val confirmAction =
+            stringResource(
+                if (fresh) Res.string.migration_start_fresh_confirm_action else Res.string.migration_restore_confirm_action,
+            )
         KitSheet(
             visible = confirming != null,
             onDismissRequest = onCancel,
-            title = stringResource(confirmTitle),
+            title = confirmTitle,
             closeLabel = stringResource(Res.string.migration_close),
         ) {
-            KitText(stringResource(confirmBody), role = TypeRole.Body)
-            KitButton(stringResource(confirmAction), onClick = onConfirm, modifier = Modifier.fillMaxWidth())
+            KitText(confirmBody, role = TypeRole.Body)
+            KitButton(confirmAction, onClick = onConfirm, modifier = Modifier.fillMaxWidth())
         }
     }
 }
@@ -247,7 +236,7 @@ private fun OpenFrame(
             KitText(stringResource(Res.string.migration_reenter_body), role = TypeRole.Body, tone = TextTone.Secondary)
             state.reenter.forEach { item ->
                 KitRow(
-                    title = stringResource(item.kind.rowLabel(), item.targetName),
+                    title = item.kind.rowLabel(item.targetName ?: stringResource(Res.string.migration_reenter_unnamed)),
                     supporting = null,
                     onClick = { onReentry(item) },
                 )
@@ -257,19 +246,26 @@ private fun OpenFrame(
     }
 }
 
-private fun GateRow.label(): StringResource =
-    when (this) {
-        GateRow.TryAgain -> Res.string.migration_try_again
-        GateRow.OpenStorage -> Res.string.migration_open_storage_row
-        GateRow.Restore -> Res.string.migration_restore_row
-        GateRow.StartFresh -> Res.string.migration_start_fresh_row
-        GateRow.Report -> Res.string.migration_report_row
-    }
+@Composable
+private fun GateRow.label(): String =
+    stringResource(
+        when (this) {
+            GateRow.TryAgain -> Res.string.migration_try_again
+            GateRow.OpenStorage -> Res.string.migration_open_storage_row
+            GateRow.Restore -> Res.string.migration_restore_row
+            GateRow.StartFresh -> Res.string.migration_start_fresh_row
+            GateRow.Report -> Res.string.migration_report_row
+        },
+    )
 
-private fun GateReentryKind.rowLabel(): StringResource =
-    when (this) {
-        GateReentryKind.Password -> Res.string.migration_reenter_row_password
-        GateReentryKind.Token -> Res.string.migration_reenter_row_token
-        GateReentryKind.GitHubSignIn -> Res.string.migration_reenter_row_github
-        GateReentryKind.ByoSetup -> Res.string.migration_reenter_row_byo
-    }
+@Composable
+private fun GateReentryKind.rowLabel(target: String): String =
+    stringResource(
+        when (this) {
+            GateReentryKind.Password -> Res.string.migration_reenter_row_password
+            GateReentryKind.Token -> Res.string.migration_reenter_row_token
+            GateReentryKind.GitHubSignIn -> Res.string.migration_reenter_row_github
+            GateReentryKind.ByoSetup -> Res.string.migration_reenter_row_byo
+        },
+        target,
+    )

@@ -12,6 +12,7 @@
     <string name="migration_reenter_row_token">%1$s · Enter token</string>
     <string name="migration_reenter_row_github">%1$s · Sign in to GitHub again</string>
     <string name="migration_reenter_row_byo">%1$s · Set up again</string>
+    <string name="migration_reenter_unnamed">A saved server</string>
     <string name="migration_reenter_later">Sign in to these later</string>
     <string name="migration_failed_title">The update couldn't finish moving your data</string>
     <string name="migration_failed_body">Nothing was deleted. Your data from before the update is safe on this phone.</string>

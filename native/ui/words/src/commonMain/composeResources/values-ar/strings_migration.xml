@@ -11,6 +11,7 @@
     <string name="migration_reenter_row_token">%1$s · أدخل الرمز</string>
     <string name="migration_reenter_row_github">%1$s · سجّل الدخول إلى GitHub مجددًا</string>
     <string name="migration_reenter_row_byo">%1$s · أعِد الإعداد</string>
+    <string name="migration_reenter_unnamed">خادم محفوظ</string>
     <string name="migration_reenter_later">سجّل الدخول إلى هذه لاحقًا</string>
     <string name="migration_failed_title">تعذّر على التحديث إكمال نقل بياناتك</string>
     <string name="migration_failed_body">لم يُحذف شيء. بياناتك من قبل التحديث محفوظة بأمان على هذا الهاتف.</string>

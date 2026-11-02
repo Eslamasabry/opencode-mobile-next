@@ -1,19 +1,16 @@
 package io.github.eslamasabry.oc.feature.gate
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import io.github.eslamasabry.oc.engine.migration.slowAfter
 import kotlinx.coroutines.launch
 
 /**
@@ -29,7 +26,7 @@ import kotlinx.coroutines.launch
  *
  * [scope] is the owner's (the shell's ViewModel scope, or a test scope); time comes from its dispatcher.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 public class GatePresenter(
     private val input: StateFlow<GateInput>,
     private val actions: GateActions,
@@ -37,7 +34,7 @@ public class GatePresenter(
 ) {
     private val confirming = MutableStateFlow<GateRow?>(null)
     private val sheetClosed = MutableStateFlow(false)
-    private val running = mutableMapOf<Any, Job>()
+    private val running = mutableSetOf<Any>()
     private var noticeLatched = false
     private var noticeAcknowledged = false
 
@@ -49,11 +46,7 @@ public class GatePresenter(
                 if (!waiting) {
                     flowOf(false)
                 } else {
-                    flow {
-                        emit(false)
-                        delay(SLOW_MS)
-                        emit(true)
-                    }
+                    slowAfter(SLOW_MS)
                 }
             }.stateIn(scope, SharingStarted.Eagerly, false)
 
@@ -66,7 +59,7 @@ public class GatePresenter(
             is GateInput.Closed -> GateUi.Opening(wordless = !input.localeKnown && !slow, offerRetry = slow)
             is GateInput.Running -> GateUi.Updating(offerRetry = slow)
             is GateInput.Blocked -> {
-                val rows = rowsFor(input.reason, input.restoreAvailable)
+                val rows = rowsFor(input.reason, input.restoreAvailable, input.startFreshAvailable)
                 GateUi.Failed(
                     screen = screenFor(input.reason),
                     rows = rows,
@@ -131,8 +124,14 @@ public class GatePresenter(
     }
 
     private fun once(key: Any, block: suspend () -> Unit) {
-        if (running[key]?.isActive == true) return
-        running[key] = scope.launch { block() }
+        if (!running.add(key)) return
+        scope.launch {
+            try {
+                block()
+            } finally {
+                running.remove(key)
+            }
+        }
     }
 
     public companion object {
@@ -140,7 +139,13 @@ public class GatePresenter(
         public const val SLOW_MS: Long = 8_000
 
         /** Plan 05 §8.1 "Way out", in drawing order; Restore only while it is allowed (§9.4). */
-        public fun rowsFor(reason: GateBlockReason, restoreAvailable: Boolean): List<GateRow> {
+        public fun rowsFor(
+            reason: GateBlockReason,
+            restoreAvailable: Boolean,
+            startFreshAvailable: Boolean = true,
+        ): List<GateRow> = rowsWithAllWays(reason, restoreAvailable).filter { startFreshAvailable || it != GateRow.StartFresh }
+
+        private fun rowsWithAllWays(reason: GateBlockReason, restoreAvailable: Boolean): List<GateRow> {
             val rows =
                 when (reason) {
                     GateBlockReason.LowSpace -> listOf(GateRow.TryAgain, GateRow.OpenStorage, GateRow.Report)

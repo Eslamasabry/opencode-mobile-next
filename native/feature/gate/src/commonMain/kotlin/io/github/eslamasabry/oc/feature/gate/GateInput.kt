@@ -32,6 +32,8 @@ public sealed interface GateInput {
         val neededBytes: Long? = null,
         val restoreAvailable: Boolean = false,
         val detail: String? = null,
+        /** Start fresh (keeps a copy) can run now (P12: false until the runner offers it). */
+        val startFreshAvailable: Boolean = true,
     ) : GateInput
 }
 
@@ -45,9 +47,10 @@ public enum class GateReentryKind { Password, Token, GitHubSignIn, ByoSetup }
 
 /**
  * One row of the one-time re-enter sheet. [targetName] is the server's plain name (`plainServerName`) or the BYO
- * host's name, so every row names its target; [profileId] is null for app-wide items (GitHub).
+ * host's name, so every row names its target; null when the name could not be read (the screen then says "A saved
+ * server"). [profileId] is null for app-wide items (GitHub).
  */
-public data class GateReentry(val profileId: String?, val targetName: String, val kind: GateReentryKind)
+public data class GateReentry(val profileId: String?, val targetName: String?, val kind: GateReentryKind)
 
 /**
  * The gate's ways out (plan 05 §7.3 `MigrationActions`, plus the two the shell needs that are not migration logic).
