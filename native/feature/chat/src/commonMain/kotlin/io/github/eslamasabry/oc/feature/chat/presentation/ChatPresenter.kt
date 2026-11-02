@@ -88,11 +88,13 @@ public class ChatPresenter(
     private var lastHits: ImmutableList<FindHit> = persistentListOf()
     private var readAllowed = false
     private var readBusy = false
+    private var stopInFlight = false
 
     public val ref: ConversationRef get() = world.ref
 
     /** The present state from the world's current values (find computed in place). */
     public fun current(): ChatUi {
+        settleStop()
         val inputs = inputsNow()
         val l = local.value
         val hits = l.findQuery?.let { TranscriptFind.search(inputs.transcript, it) } ?: persistentListOf()
@@ -112,7 +114,10 @@ public class ChatPresenter(
             }.combine(world.pending) { f, p -> f to p }
                 .combine(world.draft) { (f, p), d -> ChatInputs(f.t, f.l, f.ti, f.c, f.k, p, d) }
         // Read acknowledgement follows the world, not the screen's composition (plan 09 §6.7).
-        combine(world.load, world.transcript, local) { _, _, _ -> syncRead() }.launchIn(scope)
+        combine(world.load, world.transcript, local) { _, _, _ ->
+            syncRead()
+            settleStop()
+        }.launchIn(scope)
         return combine(inputs, local, hits, world.hasOlder) { i, l, h, _ -> present(i, l, h) }
             .stateIn(scope, started, ChatUi.loading(world.ref))
     }
@@ -214,11 +219,21 @@ public class ChatPresenter(
 
     override fun stop() {
         if (local.value.stopping) return
+        stopInFlight = true
         local.update { it.copy(stopping = true, actionFailure = null) }
         launcher.launch {
             val result = world.stop()
-            local.update { it.copy(stopping = false, actionFailure = (result as? Outcome.Failed)?.failure) }
+            stopInFlight = false
+            // B10: an accepted Stop keeps "Stopping…" until the server ends the turn; a refused one says why.
+            val failure = (result as? Outcome.Failed)?.failure
+            local.update { it.copy(stopping = failure == null && world.transcript.value.run.busy, actionFailure = failure) }
         }
+    }
+
+    /** The turn ended after an accepted Stop: the stopping state settles (B10). */
+    internal fun settleStop() {
+        if (!stopInFlight && local.value.stopping && !world.transcript.value.run.busy)
+            local.update { it.copy(stopping = false) }
     }
 
     override fun retrySend(localId: Long) {

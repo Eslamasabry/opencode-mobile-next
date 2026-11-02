@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
@@ -18,12 +19,15 @@ import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.engine.transcript.state.WorkLineRow
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
+import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
@@ -35,6 +39,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * The words the transcript shows that are not server text. The P3 overload of [ChatTranscript]
@@ -67,7 +72,26 @@ internal class ChatListWords(
     val notSent: String,
     val unconfirmed: String,
     val tryAgain: String,
+    /** B5: the plain reason and next step of a failed reply, by kind. */
+    val replyFailed: (ReplyFailureKind) -> String = { "" },
+    /** B2/B5: the label and copy label of the Details fold under a failure. */
+    val details: String = "",
+    val copyDetails: String = "",
+    /** B2: why a send did not leave, in plain words. */
+    val sendFailure: (Failure) -> String = { "" },
 )
+
+/** B2: a short, safe code for a send failure (no server text, no address): what QA asked to see under Details. */
+internal fun failureCode(f: Failure): String =
+    when (f) {
+        is Failure.Refused -> "Refused.${f.reason.name}"
+        is Failure.Network -> "Network.${f.why.name}"
+        is Failure.Unavailable -> "Unavailable.${f.feature.name}"
+        is Failure.Busy -> "Busy"
+        is Failure.Server -> "Server.${f.status ?: "-"}"
+        is Failure.SignIn -> "SignIn.${f.why.name}"
+        else -> f::class.simpleName ?: "Failure"
+    }
 
 /** Keys of the two item kinds the feature adds above the engine rows (plan 09 §7.2). */
 internal object ListKeys {
@@ -121,11 +145,13 @@ internal fun ChatTranscriptList(
     onRetrySend: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // B0: a repeated key kills the whole screen (LazyColumn throws), so the list never sees one.
+    val unique = remember(rows) { rows.distinctKeys() }
     val newestKey =
         when {
             live != null -> ListKeys.LIVE
             pending.isNotEmpty() -> ListKeys.pending(pending.first().localId)
-            else -> rows.firstOrNull()?.key
+            else -> unique.firstOrNull()?.key
         }
     KitTranscriptList(
         state = list,
@@ -152,10 +178,18 @@ internal fun ChatTranscriptList(
                 PendingBubble(p, listWords, onRetry = { onRetrySend(p.localId) })
             }
         }
-        items(rows, key = { it.key }, contentType = { it.kind }) { row ->
+        items(unique, key = { it.key }, contentType = { it.kind }) { row ->
             ChatRow(row, words, listWords, reveal, motion, onOpenMenu)
         }
     }
+}
+
+/** [rows] without a second row of an already used key (the first, newest, wins); same list when unique. */
+internal fun ImmutableList<TranscriptRow>.distinctKeys(): ImmutableList<TranscriptRow> {
+    val seen = HashSet<String>(size * 2)
+    if (all { seen.add(it.key) }) return this
+    val kept = HashSet<String>(size * 2)
+    return filter { kept.add(it.key) }.toImmutableList()
 }
 
 @Composable
@@ -167,6 +201,17 @@ private fun PendingBubble(p: PendingSend, words: ChatListWords, onRetry: () -> U
             PendingState.Unconfirmed -> KitQuietLine(words.unconfirmed)
             PendingState.Failed -> {
                 KitQuietLine(words.notSent)
+                p.failure?.let { failure ->
+                    val line = words.sendFailure(failure)
+                    if (line.isNotEmpty()) KitQuietLine(line)
+                    if (words.details.isNotEmpty())
+                        KitDetailsFold(
+                            label = words.details,
+                            copyLabel = words.copyDetails,
+                            notes = listOf(failureCode(failure)),
+                            modifier = Modifier.testTag("chat-send-failure-details"),
+                        )
+                }
                 KitButton(
                     words.tryAgain,
                     onRetry,
@@ -225,7 +270,19 @@ private fun ChatRow(
             )
         is NoticeRow -> KitQuietLine(words.notice(row.notice))
         is FooterRow ->
-            if (onOpenMenu != null && listWords != null) {
+            if (row.failed && !row.reason.isNullOrBlank() && listWords != null && listWords.details.isNotEmpty()) {
+                val reason = row.reason.orEmpty()
+                // B5: why the reply failed and what to do next; the server's own words only under Details.
+                Column(Modifier.testTag("chat-reply-failed")) {
+                    KitQuietLine(words.footer(row.failed))
+                    KitQuietLine(listWords.replyFailed(ReplyFailureKind.of(reason)))
+                    KitDetailsFold(
+                        label = listWords.details,
+                        copyLabel = listWords.copyDetails,
+                        notes = listOf(reason),
+                    )
+                }
+            } else if (onOpenMenu != null && listWords != null) {
                 KitTappable(
                     onClick = { onOpenMenu(row.key) },
                     onClickLabel = listWords.messageActions,

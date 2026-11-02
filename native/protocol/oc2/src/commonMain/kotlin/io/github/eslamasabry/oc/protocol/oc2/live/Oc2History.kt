@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.core.model.transcript.*
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.protocol.oc2.adapter.Oc2CoreProjection
 import io.github.eslamasabry.oc.protocol.oc2.adapter.Oc2EventAdapter
+import io.github.eslamasabry.oc.protocol.oc2.adapter.noticePartId
 import io.github.eslamasabry.oc.protocol.oc2.events.Oc2Envelope
 import io.github.eslamasabry.oc.protocol.oc2.wire.*
 import kotlinx.collections.immutable.persistentMapOf
@@ -101,7 +102,7 @@ internal class Oc2History(private val redactor: Redactor) {
     private fun special(session: String, wire: Oc2Message): Part {
         fun notice(type: PartType, raw: String, kind: String, text: String = ""): Part =
             Part(
-                "v2-0",
+                noticePartId(wire.id),
                 wire.id,
                 session,
                 type,

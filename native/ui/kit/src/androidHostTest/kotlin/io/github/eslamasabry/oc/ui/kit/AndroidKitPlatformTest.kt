@@ -62,4 +62,15 @@ class AndroidKitPlatformTest {
         assertEquals(HapticFeedbackConstants.TOGGLE_ON, hapticConstant(KitHaptic.ToggleOn, 34))
         assertEquals(HapticFeedbackConstants.CLOCK_TICK, hapticConstant(KitHaptic.ToggleOff, 33))
     }
+
+    @Test
+    fun `B14 QA wave1 the window wears the app ground behind transparent system bars`() {
+        val activity = org.robolectric.Robolectric.buildActivity(androidx.activity.ComponentActivity::class.java).setup().get()
+        val ground = 0xFF0B0C0E.toInt()
+        io.github.eslamasabry.oc.ui.kit.platform.applySystemBars(activity.window, darkContent = false, ground = ground)
+        @Suppress("DEPRECATION")
+        assertEquals(android.graphics.Color.TRANSPARENT, activity.window.statusBarColor)
+        val background = activity.window.decorView.background as android.graphics.drawable.ColorDrawable
+        assertEquals(ground, background.color)
+    }
 }

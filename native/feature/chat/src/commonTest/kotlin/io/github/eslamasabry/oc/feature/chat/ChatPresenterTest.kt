@@ -273,6 +273,21 @@ class ChatPresenterTest {
     }
 
     @Test
+    fun `B10 QA wave1 an accepted Stop shows stopping until the turn ends, then settles`() {
+        world.transcript.value = stateOf(*turn(1).toTypedArray(), run = RunFacts(busy = true))
+        val p = presenter()
+        p.stop()
+        assertEquals(listOf("stop"), world.calls)
+        assertEquals(LiveTurnUi(stopping = true), p.current().live, "the server took the Stop: still stopping")
+        world.transcript.value = stateOf(*turn(1).toTypedArray())
+        assertNull(p.current().live)
+        world.transcript.value = stateOf(*turn(1).toTypedArray(), *turn(2).toTypedArray(), run = RunFacts(busy = true))
+        assertEquals(LiveTurnUi(stopping = false), p.current().live, "the next turn starts fresh")
+        p.stop()
+        assertEquals(listOf("stop", "stop"), world.calls, "a new turn can be stopped again")
+    }
+
+    @Test
     fun `09-4_6 pending bubbles show newest first and Try again resends only on the person's tap`() {
         world.pending.value = persistentListOf(PendingSend(1, "first", PendingState.Unconfirmed), PendingSend(2, "second", PendingState.Failed))
         val p = presenter()

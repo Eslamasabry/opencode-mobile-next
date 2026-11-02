@@ -194,6 +194,11 @@ public fun KitField(
      * in the callback.
      */
     onTextChanged: ((String) -> Unit)? = null,
+    /**
+     * Multiline only: the field's height in lines, from empty to its scroll point. A message box starts at one line
+     * (QA wave 1 B6: three empty lines left the conversation no room above the keyboard).
+     */
+    multilineLines: IntRange = 3..8,
 ) {
     kitAssert(label.isNotBlank()) { "KitField: a field needs its label" }
     kitAssert(
@@ -220,6 +225,7 @@ public fun KitField(
                 focusRequester,
                 onSubmit,
                 onTextChanged,
+                multilineLines,
             )
         }
         val note = error ?: helper
@@ -267,6 +273,7 @@ private fun FieldBox(
     focusRequester: FocusRequester?,
     onSubmit: (() -> Unit)?,
     onTextChanged: ((String) -> Unit)?,
+    multilineLines: IntRange,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -406,7 +413,10 @@ private fun FieldBox(
     }
     val lines =
         if (kind == KitFieldKind.Multiline)
-            TextFieldLineLimits.MultiLine(minHeightInLines = 3, maxHeightInLines = 8)
+            TextFieldLineLimits.MultiLine(
+                minHeightInLines = multilineLines.first.coerceAtLeast(1),
+                maxHeightInLines = multilineLines.last.coerceAtLeast(multilineLines.first.coerceAtLeast(1)),
+            )
         else TextFieldLineLimits.SingleLine
     BasicTextField(
         state = state,

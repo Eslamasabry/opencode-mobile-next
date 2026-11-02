@@ -60,7 +60,7 @@ class ChatsScreenTest {
         )
 
     @Test
-    fun `B-NAV-037 the home has no bottom bar, and the gear word opens Servers`() =
+    fun `B-NAV-037 B15 the home has no bottom bar, and the gear word says Settings and opens it`() =
         runComposeUiTest {
             val actions = RecordingChatsActions()
             setContent { Themed { ChatsScreen(ui(*rows), actions) } }
@@ -69,14 +69,15 @@ class ChatsScreenTest {
             listOf("Chats", "Work", "Files", "Inbox").forEach {
                 onAllNodesWithText(it).assertCountEquals(0)
             }
-            onNodeWithText("Servers").performClick()
+            onNodeWithText("Settings").performClick()
             assertEquals(listOf("settings"), actions.calls.filter { it == "settings" })
+            onAllNodesWithText("Servers").assertCountEquals(0)
         }
 
     @Test
     fun `B-NAV-037 without a server-management door there is no dead gear`() = runComposeUiTest {
         setContent { Themed { ChatsScreen(ui(*rows, settings = false), RecordingChatsActions()) } }
-        onAllNodesWithText("Servers").assertCountEquals(0)
+        onAllNodesWithText("Settings").assertCountEquals(0)
     }
 
     @Test
@@ -87,9 +88,9 @@ class ChatsScreenTest {
             onNodeWithText("Today").assertExists()
             onNodeWithText("Earlier").assertExists()
             onNodeWithText("Fix the reconnect loop").assertExists()
-            // The placeholder row reads "New conversation", beside the top-bar action of the same
-            // words.
-            onAllNodesWithText("New conversation").assertCountEquals(2)
+            // The placeholder row reads "New conversation"; the top-bar action says "New chat" (B15).
+            onAllNodesWithText("New conversation").assertCountEquals(1)
+            onAllNodesWithText("New chat").assertCountEquals(1)
             onAllNodesWithText("Needs you").assertCountEquals(1)
             onNodeWithText("Theme packs").performClick()
             assertTrue("open ask" in actions.calls)

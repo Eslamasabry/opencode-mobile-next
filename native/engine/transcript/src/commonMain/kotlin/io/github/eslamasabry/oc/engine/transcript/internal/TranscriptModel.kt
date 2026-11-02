@@ -500,10 +500,14 @@ internal class TranscriptModel(
         var running = false
         var hasAssistant = false
         var failed = false
+        var reason: String? = null
         for (m in members) {
             if (m.info.role == Role.Assistant) {
                 hasAssistant = true
-                if (m.info.errorText != null) failed = true
+                m.info.errorText?.let {
+                    failed = true
+                    if (it.isNotBlank()) reason = it.trim()
+                }
             }
             for (pe in m.parts.values) {
                 val p = pe.part
@@ -536,7 +540,12 @@ internal class TranscriptModel(
                     PartType.Notice,
                     PartType.Switch,
                     PartType.Compaction ->
-                        rows += reuse(NoticeRow("notice:${p.id}", turnId, noticeKindOf(p)))
+                        // B0: part ids are only unique inside one message (OC2 gives every notice
+                        // the same one), so the key names the message too, as ThoughtRow does.
+                        rows +=
+                            reuse(
+                                NoticeRow("notice:${p.messageId}/${p.id}", turnId, noticeKindOf(p))
+                            )
                     else -> Unit
                 }
             }
@@ -551,7 +560,7 @@ internal class TranscriptModel(
                 }
             rows.add(workAt, reuse(WorkLineRow("work:$turnId", turnId, calls, failedCalls, state)))
         }
-        if (finished && hasAssistant) rows += reuse(FooterRow("footer:$turnId", turnId, failed))
+        if (finished && hasAssistant) rows += reuse(FooterRow("footer:$turnId", turnId, failed, reason))
         return TurnEntry(turnId, members, LongArray(members.size) { members[it].version }, rows)
     }
 

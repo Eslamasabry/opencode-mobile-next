@@ -1,6 +1,12 @@
 package io.github.eslamasabry.oc.feature.onboarding.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.feature.onboarding.presentation.WelcomeActions
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -20,11 +26,14 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun WelcomeScreen(actions: WelcomeActions) {
     KitScreen(width = KitScreenWidth.Reading, page = true) {
-        KitStateView(
-            kind = KitStateKind.Calm,
-            title = stringResource(Res.string.appTitle),
-            primary = KitAction(stringResource(Res.string.welcomeComputerConnect), actions::connect),
-            secondary = KitAction(stringResource(Res.string.e7LocaleUiSettings), actions::openSettings),
-        )
+        // B15 (QA wave 1): the buttons keep the screen's side margin instead of touching its edges.
+        Box(Modifier.padding(horizontal = Space.S4.dp).testTag("welcome-body")) {
+            KitStateView(
+                kind = KitStateKind.Calm,
+                title = stringResource(Res.string.appTitle),
+                primary = KitAction(stringResource(Res.string.welcomeComputerConnect), actions::connect),
+                secondary = KitAction(stringResource(Res.string.e7LocaleUiSettings), actions::openSettings),
+            )
+        }
     }
 }

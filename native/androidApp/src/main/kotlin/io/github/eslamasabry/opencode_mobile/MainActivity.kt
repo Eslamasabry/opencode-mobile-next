@@ -20,8 +20,9 @@ import io.github.eslamasabry.opencode_mobile.graph.appGraph
 /** Frozen FQCN (ADR §9.9). EntryRouter and ActivityResults attach here in slice 2. */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // B14 (QA wave 1): after super.onCreate, so a recreate (language switch) keeps edge-to-edge too.
+        enableEdgeToEdge()
         val graph = appGraph
         graph.composerFiles.attach(this)
         // DecorView's DecorContext need not wrap this Activity; pass the actual window for

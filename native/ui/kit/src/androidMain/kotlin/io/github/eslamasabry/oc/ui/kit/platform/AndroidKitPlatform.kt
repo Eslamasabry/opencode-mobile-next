@@ -159,6 +159,9 @@ private tailrec fun Context.findWindow(): Window? =
 
 @Suppress("DEPRECATION")
 internal fun applySystemBars(window: Window, darkContent: Boolean, ground: Int) {
+    // B14 (QA wave 1): the window itself wears the app's ground, so a recreated Activity (language switch) never
+    // shows the platform theme's grey behind the status and navigation bars.
+    window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(ground))
     window.statusBarColor = android.graphics.Color.TRANSPARENT
     // Ignored from API 35 (edge-to-edge): KitScreen paints the ground under the navigation bar
     // there.

@@ -55,6 +55,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewChat
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewShort
+import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
@@ -70,7 +72,6 @@ import io.github.eslamasabry.oc.ui.words.res.chats_back
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
-import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.pluralStringResource
@@ -83,8 +84,9 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
-    val newLabel = stringResource(Res.string.chatsHomeNewChat)
-    val settingsLabel = stringResource(Res.string.serversTitle)
+    // B15 (QA wave 1): short words so "Conversations" is never cut, and the door says where it goes (Settings).
+    val newLabel = stringResource(Res.string.chatsHomeNewShort)
+    val settingsLabel = stringResource(Res.string.librarySettingsTitle)
     val barActions = buildList {
         // Hidden while the empty state offers it (one way, not two).
         if (state.phase != ChatsPhase.Empty) add(KitLineAction(newLabel, actions::newConversation))
@@ -122,7 +124,7 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
                             kind = KitStateKind.Calm,
                             title = stringResource(Res.string.chatsHomeEmptyTitle),
                             body = stringResource(Res.string.chatsHomeEmptyCalmBody),
-                            primary = KitAction(newLabel, actions::newConversation),
+                            primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation),
                         )
                     }
                 ChatsPhase.NoMatch ->

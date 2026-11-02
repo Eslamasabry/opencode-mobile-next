@@ -22,6 +22,13 @@ import kotlinx.coroutines.flow.StateFlow
  * identity check.
  */
 public interface SendLink {
+    /**
+     * The gateway epoch the fences compare. The instance by default; [GatewaySendLink] answers its gateway, so a
+     * stream flicker on the same connection (a new link instance over the same gateway) does not void a send or a
+     * Stop that is already under way (QA wave 1 B2/B10: those were refused with no request on the wire).
+     */
+    public val epoch: Any get() = this
+
     public val scope: DispatchScope
     public val capabilities: ServerCapabilities
 
