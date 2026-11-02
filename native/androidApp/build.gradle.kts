@@ -31,6 +31,9 @@ dependencies {
             ":engine:requests",
             ":ui:kit-chat",
             ":ui:kit-content",
+            ":feature:preview", // PREVIEW-QR
+            ":android:webview", // PREVIEW-QR
+            ":android:camera", // PREVIEW-QR (pairing scanner)
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)
@@ -38,6 +41,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.metrox.viewmodel.compose)
     implementation(libs.kotlinx.io.core) // Real app-private draft payload vault.
+    implementation(libs.camerax.core) // PREVIEW-QR: the scanner wiring hands CameraX's SurfaceRequest to a TextureView.
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)

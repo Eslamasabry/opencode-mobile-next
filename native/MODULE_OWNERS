@@ -50,3 +50,5 @@
 :feature:settings	F	(slice brief names the agent)	slice-4
 :ui:kit-content	S	content-kit-owner	slice-3
 :feature:servers	F	preview-servers-owner	slice-2
+:feature:preview	F	PREVIEW-QR (P12)	slice-5
+:android:webview	F	PREVIEW-QR (P12)	slice-5

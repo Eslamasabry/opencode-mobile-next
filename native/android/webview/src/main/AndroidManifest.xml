@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Unit PREVIEW-QR. The pairing scanner (app wiring, :android:camera) asks for the camera only while it is open; a
+     phone without a camera still installs the app (plan 10 §15.2). Merged into the app manifest. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+</manifest>

@@ -1,0 +1,10 @@
+<resources>
+    <string name="previewQrLeaveTitle">Open this link in your browser?</string>
+    <string name="previewQrPortLabel">Port number</string>
+    <string name="previewQrPortHelp">Or type the port a dev server is listening on.</string>
+    <string name="previewQrPortInvalid">Enter a port from 1 to 65535.</string>
+    <string name="previewQrPortOpen">Open port</string>
+    <string name="previewQrPairFilled">Filled in from the pairing code. Check it, then save.</string>
+    <string name="previewQrLinkFilled">Filled in the address from the link. Add the password, then save.</string>
+    <string name="previewQrScanRejected">That QR code is not a pairing code. Point the camera at the code opencode2 pair prints.</string>
+</resources>

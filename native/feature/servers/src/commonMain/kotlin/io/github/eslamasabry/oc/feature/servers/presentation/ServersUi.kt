@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.servers.presentation
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.SavedServer
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingFill
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingProblem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -15,6 +17,9 @@ public data class ServersUi(
     val issue: ServerIssue? = null,
     val failure: Failure? = null,
     val savedGeneration: Int = 0,
+    /** Ticks when a pairing code or share link waits in the inbox (PREVIEW-QR); the form takes it once. */
+    val pairingArrival: Int = 0,
+    val pairingProblem: PairingProblem? = null,
 )
 
 public enum class ServerIssue {
@@ -38,4 +43,13 @@ public interface ServersActions {
     public fun create(id: ProfileId)
 
     public fun remove(id: ProfileId)
+
+    /** Opens the pairing scanner (PREVIEW-QR). */
+    public fun scanPairing() {}
+
+    /** Pasted text: a pairing code or a share link fills the form; anything else is a plain problem. */
+    public fun pastePairing(text: String?) {}
+
+    /** The waiting pairing, once; it carries the password, so it never enters [ServersUi]. */
+    public fun takePairing(): PairingFill? = null
 }
