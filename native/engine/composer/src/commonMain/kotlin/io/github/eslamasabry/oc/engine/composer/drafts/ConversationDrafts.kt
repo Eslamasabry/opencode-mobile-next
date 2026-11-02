@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.model.PromptAttachment
+import io.github.eslamasabry.oc.engine.composer.vault.schemeOf
 import kotlin.concurrent.atomics.AtomicReference
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -51,6 +52,9 @@ public data class DraftSubmission(
     override fun toString(): String =
         "DraftSubmission(text=${text.length} chars, revision=$revision, attachments=${attachments.size})"
 }
+
+/** Internal marker: restoration waits for the conversation's location (never shown). */
+private val AWAITING_LOCATION = Failure.StorageRefused()
 
 private data class ProfileFence(val generation: Long = 0, val closing: Boolean = false)
 
@@ -177,6 +181,10 @@ private data class SessionSnapshot(
     val clearPending: Boolean = false,
     val fileCommitPending: Boolean = false,
     val submissions: List<DraftSubmission> = emptyList(),
+    /** Where this conversation lives; null until its connection names it. */
+    val location: DraftLocation? = null,
+    /** Restoration waits for [location]: the saved draft holds a `file:` reference. */
+    val awaitingLocation: Boolean = false,
 )
 
 /**
@@ -291,13 +299,18 @@ internal constructor(
                     // A draft that waits as an unconfirmed send keeps its files back too: putting
                     // them one tap away would invite a duplicate send.
                     val waiting = restored.text == null && !saved?.text.isNullOrEmpty()
+                    val place = snapshots.value.location
                     val files =
                         if (!waiting && saved?.attachments?.isNotEmpty() == true) {
+                            // A `file:` reference means something only where it was saved: wait for
+                            // the conversation's own location instead of guessing it.
+                            if (place == null && saved.attachments.any { schemeOf(it.url.orEmpty()) == "file" })
+                                return@attempt AWAITING_LOCATION.failed()
                             val recovery =
                                 drafts.restoreAttachments(
                                     ref.profileId.raw,
                                     ref.sessionId.raw,
-                                    DraftLocation(null, null),
+                                    place ?: DraftLocation(null, null),
                                 )
                             // A payload that cannot be recovered blocks the session: half a draft
                             // must never overwrite the saved one.
@@ -320,7 +333,12 @@ internal constructor(
             else
                 when (loaded) {
                     is Outcome.Failed ->
-                        before.copy(public = before.public.copy(failure = loaded.failure))
+                        if (loaded.failure === AWAITING_LOCATION) before.copy(awaitingLocation = true)
+                        else
+                            before.copy(
+                                public = before.public.copy(failure = loaded.failure),
+                                awaitingLocation = false,
+                            )
                     is Outcome.Ok ->
                         before.copy(
                             public =
@@ -334,9 +352,11 @@ internal constructor(
                                     editRevision = before.revision + 1,
                                 ),
                             revision = before.revision + 1,
+                            awaitingLocation = false,
                         )
                 }
         }
+        if (loaded is Outcome.Failed && loaded.failure === AWAITING_LOCATION) return unavailable()
         return if (snapshots.value.fenced || !owner.active(ref.profileId, generation)) deleted()
         else
             loaded.let {
@@ -345,6 +365,20 @@ internal constructor(
                     is Outcome.Failed -> it
                 }
             }
+    }
+
+    /**
+     * The conversation's directory/workspace as its connection names it. Whole-state writes record
+     * it; a draft holding a `file:` reference restores only once it is known, and only in the same
+     * place (elsewhere it fails closed and the saved draft is kept).
+     */
+    public fun bindLocation(location: DraftLocation) {
+        while (true) {
+            val before = snapshots.value
+            if (before.location == location) return
+            if (snapshots.compareAndSet(before, before.copy(location = location))) break
+        }
+        if (snapshots.value.awaitingLocation) scope.launch(serial) { restore() }
     }
 
     public fun changed(text: String) {
@@ -491,7 +525,13 @@ internal constructor(
             val text = before.public.text
             val result =
                 attempt({ Failure.StorageRefused() }) {
-                        drafts.saveRevision(ref.profileId.raw, ref.sessionId.raw, text, requested) {
+                        drafts.saveRevision(
+                            ref.profileId.raw,
+                            ref.sessionId.raw,
+                            text,
+                            requested,
+                            snapshots.value.location,
+                        ) {
                             !snapshots.value.fenced && owner.active(ref.profileId, generation)
                         }
                     }
@@ -624,7 +664,13 @@ internal constructor(
     private suspend fun writeClear(): Outcome<Unit> {
         val result =
             attempt({ Failure.StorageRefused() }) {
-                    drafts.saveRevision(ref.profileId.raw, ref.sessionId.raw, "", emptyList()) {
+                    drafts.saveRevision(
+                        ref.profileId.raw,
+                        ref.sessionId.raw,
+                        "",
+                        emptyList(),
+                        snapshots.value.location,
+                    ) {
                         !snapshots.value.fenced && owner.active(ref.profileId, generation)
                     }
                 }

@@ -34,9 +34,9 @@ class PromptDeliverySelectionTest {
             val gate = CompletableDeferred<Unit>()
             w.link.onSelection = { gate.await() }
             val d = w.delivery()
-            d.send(rich("read these"))
+            assertIs<Outcome.Ok<*>>(d.send(rich("read these")))
             testScheduler.runCurrent()
-            assertEquals(listOf(choice to "build"), w.link.selections, "the mutation began")
+            assertEquals<List<Pair<ModelSelection?, String?>>>(listOf(choice to "build"), w.link.selections, "the mutation began")
             assertTrue(w.link.attempts.isEmpty(), "nothing is admitted to the wire while the selection is in flight")
             assertEquals(files, d.pending.value.single().attachments, "the bubble holds the exact file snapshot")
             gate.complete(Unit)

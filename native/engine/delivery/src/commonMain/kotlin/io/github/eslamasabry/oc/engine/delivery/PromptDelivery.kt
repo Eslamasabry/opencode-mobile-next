@@ -247,6 +247,10 @@ public class PromptDelivery(
     private val reviewIds = LinkedHashMap<LocalSendId, String>()
     private val stopAfterDispatch = HashSet<LocalSendId>()
     private val lastSendAtMs = HashMap<ConversationRef, Long>()
+    private val selectionLocks = HashMap<ConversationRef, Mutex>()
+
+    /** Runs on the queue lane only (every dispatch does), so the map needs no lock of its own. */
+    private fun selectionLock(ref: ConversationRef): Mutex = selectionLocks.getOrPut(ref) { Mutex() }
     private var counter = 0L
 
     public fun acknowledge(id: SendOutcomeId) {
@@ -284,7 +288,11 @@ public class PromptDelivery(
     private suspend fun perform(request: SendRequest, putBack: Boolean): Outcome<LocalSendId> {
         val ref = request.ref
         // 1. Route by what the person typed.
-        val kind = TypedKind.of(request.typedText.trim())
+        // Files never ride the command path: with attachments, `/…` and `!…` go out as a prompt
+        // (Flutter chat_send.dart:293), so no file is dropped.
+        val kind =
+            if (request.attachments.isNotEmpty()) TypedKind.Prompt
+            else TypedKind.of(request.typedText.trim())
         // 2. A staged undo is resolved first.
         if (facts.undoUnresolved(ref)) return Failure.Refused(RefusalReason.UndoUnresolved).failed()
         // 4. Offline: wait for the transport (a send after a resume waits instead of queueing),
@@ -384,13 +392,36 @@ public class PromptDelivery(
         putBack: Boolean,
     ) {
         val ref = bubble.ref
-        // 7. Transport, then the epoch: a changed connection dispatches to neither server.
+        // 7. Transport, then the epoch: a changed connection dispatches to neither server, and the
+        // session's model is never mutated before both hold.
         val ready = link.awaitActionTransport()
+        if (ready is Outcome.Failed) return failed(bubble, request, putBack, ready.failure, left = false)
+        if (!sameTarget(link, origin))
+            return failed(bubble, request, putBack, Failure.Refused(RefusalReason.StaleScope), left = false)
+        // The model is session state on servers with session selection: a send's selection and its
+        // prompt's admission form one step, so another send's choice can never land in between.
+        // Only sends carrying a choice take the lock, and it spans one request, never a turn: plain
+        // sends and steers never wait (no invisible queue).
+        if (request.model == null && request.agent == null) admit(link, origin, bubble, request, putBack)
+        else selectionLock(ref).withLock { admit(link, origin, bubble, request, putBack) }
+    }
+
+    private suspend fun admit(
+        link: SendLink,
+        origin: DispatchScope,
+        bubble: PendingSend,
+        request: SendRequest,
+        putBack: Boolean,
+    ) {
+        val ref = bubble.ref
         // 7b. The conversation's intentional model/agent choice reaches the server before the prompt is
         // admitted to the wire — a choice is never silently dropped. A failed or stale selection sends
         // nothing and the words stay (never an unknown-prompt receipt); Stop may have called the send off
-        // during the mutation, and Stop itself already put the words back, so a vanished bubble just ends.
+        // while it waited, and Stop itself already put the words back, so a vanished bubble just ends.
+        if (mutablePending.value.none { it.localId == bubble.localId }) return
         if (request.model != null || request.agent != null) {
+            if (!sameTarget(link, origin))
+                return failed(bubble, request, putBack, Failure.Refused(RefusalReason.StaleScope), left = false)
             when (val applied = link.applySelection(ref.sessionId, request.model, request.agent)) {
                 is Outcome.Failed -> return failed(bubble, request, putBack, applied.failure, left = false)
                 is Outcome.Ok -> Unit
@@ -415,8 +446,7 @@ public class PromptDelivery(
                 mutablePending.value.firstOrNull { it.localId == bubble.localId }
                     ?: return@withLock null
             val stale =
-                ready is Outcome.Failed ||
-                    !sameTarget(link, origin) ||
+                !sameTarget(link, origin) ||
                     (bubble.reviewId != null && !queue.canDispatchOnline(bubble.reviewId))
             if (stale) return@withLock false
             update(current.copy(phase = SendPhase.OnWire, dispatchedMessageId = clientId))
@@ -429,8 +459,7 @@ public class PromptDelivery(
                     bubble,
                     request,
                     putBack,
-                    (ready as? Outcome.Failed)?.failure
-                        ?: Failure.Refused(RefusalReason.StaleScope),
+                    Failure.Refused(RefusalReason.StaleScope),
                     left = false,
                 )
             true -> Unit

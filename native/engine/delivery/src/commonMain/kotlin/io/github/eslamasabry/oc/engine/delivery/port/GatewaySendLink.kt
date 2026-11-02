@@ -68,8 +68,11 @@ public class GatewaySendLink(
             } else {
                 Unit.ok()
             }
+        // "default" is the server's own no-variant sentinel (B-PROTO-018): it is never sent as a variant
+        // and it matches the server's normalized empty readback.
+        val variant = model?.variant.orEmpty().trim().let { if (it == "default") "" else it }
         if (model != null) {
-            val applied = selection.setSessionModel(session, model.model, model.variant ?: "")
+            val applied = selection.setSessionModel(session, model.model, variant)
             if (applied is Outcome.Failed) return applied
         }
         if (agent != null) {
@@ -86,7 +89,7 @@ public class GatewaySendLink(
                             chosen.modelKnown &&
                             chosen.model?.providerId == model.model.providerId &&
                             chosen.model?.modelId == model.model.modelId &&
-                            chosen.variant.trim() == model.variant.orEmpty().trim()
+                            chosen.variant.trim().let { if (it == "default") "" else it } == variant
                     if (!matches) return Failure.Refused(RefusalReason.StaleScope).failed()
                 }
             }
