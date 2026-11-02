@@ -52,6 +52,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -242,7 +243,7 @@ public fun KitField(
             val length = state.text.length
             if (KitFieldRules.showCounter(length, maxLength)) {
                 KitText(
-                    pluralStringResource(Res.plurals.kitFieldCount, length, length, maxLength ?: 0),
+                    pluralStringResource(Res.plurals.kitFieldCount, length, Numbers.format(length), Numbers.format(maxLength ?: 0)),
                     Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                     role = TypeRole.Caption,
                     tone = TextTone.Secondary,

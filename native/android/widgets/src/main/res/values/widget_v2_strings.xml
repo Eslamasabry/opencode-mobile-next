@@ -9,8 +9,8 @@
     <string name="widget_v2_short_read">Read %1$s?</string>
     <string name="widget_v2_short_run">Run %1$s?</string>
     <string name="widget_v2_ago_now">just now</string>
-    <string name="widget_v2_ago_min">%1$d min ago</string>
-    <string name="widget_v2_ago_hour">%1$d h ago</string>
+    <string name="widget_v2_ago_min">%1$s min ago</string>
+    <string name="widget_v2_ago_hour">%1$s h ago</string>
     <string name="widget_v2_ago_yesterday">yesterday</string>
     <string name="widget_v2_offline_seen">Offline · last seen %1$s</string>
     <string name="widget_v2_offline_plain">Offline</string>
@@ -26,8 +26,8 @@
     <string name="widget_v2_resume">Resume</string>
     <string name="widget_v2_empty">Open the app to connect</string>
     <string name="widget_v2_voice">Voice</string>
-    <string name="widget_v2_span_min">%1$d min</string>
-    <string name="widget_v2_span_hour">%1$d h</string>
+    <string name="widget_v2_span_min">%1$s min</string>
+    <string name="widget_v2_span_hour">%1$s h</string>
     <string name="widget_preview_usage_p1">Codex</string>
     <string name="widget_preview_usage_p2">Claude</string>
     <string name="widget_preview_usage_5h">5h  62% left</string>
@@ -56,10 +56,10 @@
     <string name="widget_status_stopped">stopped</string>
     <string name="widget_status_tasks">Tasks</string>
     <string name="widget_status_tasks_none">none</string>
-    <string name="widget_status_tasks_running">%1$d running</string>
-    <string name="widget_status_span_day">%1$d d</string>
+    <string name="widget_status_tasks_running">%1$s running</string>
+    <string name="widget_status_span_day">%1$s d</string>
     <string name="widget_status_plan">%1$s · %2$s</string>
-    <string name="widget_status_left">%1$d%% left</string>
+    <string name="widget_status_left">%1$s%% left</string>
     <string name="widget_status_replace">Replace this widget: add Conversations or Status</string>
     <!-- Spoken names of the widget's answer buttons; they say which conversation they act on. -->
     <string name="widget_allow_for">Allow once: %1$s</string>

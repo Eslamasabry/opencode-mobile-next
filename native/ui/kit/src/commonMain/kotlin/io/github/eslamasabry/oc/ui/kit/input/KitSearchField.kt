@@ -47,6 +47,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -218,7 +219,7 @@ public fun KitSearchField(
                 query.isEmpty() || settled != query || resultCount == null -> null
                 partial -> stringResource(Res.string.kitSearchPartial, resultCount)
                 resultCount == 0 -> stringResource(Res.string.kitSearchResults__eq0)
-                else -> pluralStringResource(Res.plurals.kitSearchResults, resultCount, resultCount)
+                else -> pluralStringResource(Res.plurals.kitSearchResults, resultCount, Numbers.format(resultCount))
             }
         KitReveal(visible = countLine != null) {
             KitText(

@@ -27,6 +27,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -80,7 +81,7 @@ public object JumpPillRules {
 @Composable
 public fun kitJumpLatestLabel(newCount: Int = 0): String =
     if (newCount <= 0) stringResource(Res.string.kitJumpLatest)
-    else pluralStringResource(Res.plurals.kitJumpNewLatest, newCount, newCount)
+    else pluralStringResource(Res.plurals.kitJumpNewLatest, newCount, Numbers.format(newCount))
 
 /**
  * The floating "3 new · Jump to latest" pill (and its "Earlier messages" twin at the top) on transcripts, team output

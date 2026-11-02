@@ -55,20 +55,20 @@
     <string name="notify_status_public_ready">OpenCode · ready</string>
     <string name="notify_status_public_paused">OpenCode · paused</string>
     <plurals name="notify_chip_running">
-        <item quantity="one">%1$d running</item>
-        <item quantity="other">%1$d running</item>
+        <item quantity="one">%1$s running</item>
+        <item quantity="other">%1$s running</item>
     </plurals>
     <plurals name="notify_chip_pending">
-        <item quantity="one">%1$d needs you</item>
-        <item quantity="other">%1$d need you</item>
+        <item quantity="one">%1$s needs you</item>
+        <item quantity="other">%1$s need you</item>
     </plurals>
     <plurals name="notify_group_need_you">
-        <item quantity="one">%d needs you</item>
-        <item quantity="other">%d need you</item>
+        <item quantity="one">%s needs you</item>
+        <item quantity="other">%s need you</item>
     </plurals>
     <plurals name="notify_group_finished">
-        <item quantity="one">%d conversation finished</item>
-        <item quantity="other">%d conversations finished</item>
+        <item quantity="one">%s conversation finished</item>
+        <item quantity="other">%s conversations finished</item>
     </plurals>
     <!-- Added by the native app (NOTIFY). -->
     <string name="notify_answer_in_app">Open OpenCode to answer</string>

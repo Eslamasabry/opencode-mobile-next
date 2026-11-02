@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -129,9 +130,9 @@ public fun KitProgress.line(): String {
     ProgressRules.eta(eta)?.let { e ->
         parts +=
             when (e.unit) {
-                EtaWords.Unit.Seconds -> pluralStringResource(Res.plurals.kitProgressEtaSeconds, e.count, e.count)
-                EtaWords.Unit.Minutes -> pluralStringResource(Res.plurals.kitProgressEtaMinutes, e.count, e.count)
-                EtaWords.Unit.Hours -> pluralStringResource(Res.plurals.kitProgressEtaHours, e.count, e.count)
+                EtaWords.Unit.Seconds -> pluralStringResource(Res.plurals.kitProgressEtaSeconds, e.count, Numbers.format(e.count))
+                EtaWords.Unit.Minutes -> pluralStringResource(Res.plurals.kitProgressEtaMinutes, e.count, Numbers.format(e.count))
+                EtaWords.Unit.Hours -> pluralStringResource(Res.plurals.kitProgressEtaHours, e.count, Numbers.format(e.count))
             }
     }
     return parts.joinToString(" · ")

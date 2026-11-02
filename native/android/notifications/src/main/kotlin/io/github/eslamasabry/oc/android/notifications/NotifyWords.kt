@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.android.notifications
 
 import android.content.Context
 import android.content.res.Configuration
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import java.util.Locale
 
 /**
@@ -12,10 +13,10 @@ import java.util.Locale
  * [localeTag] is read on every call (null or an unsupported tag = the system language).
  */
 public class NotifyWords(private val base: Context, private val localeTag: () -> String?) {
-    public fun text(id: Int, vararg args: Any): String = localized().getString(id, *args)
+    public fun text(id: Int, vararg args: Any): String = localized().getString(id, *numbered(args))
 
     public fun plural(id: Int, count: Int, vararg args: Any): String =
-        localized().resources.getQuantityString(id, count, *args)
+        localized().resources.getQuantityString(id, count, *numbered(args))
 
     /** The context to build notifications with, so system-drawn parts follow the same language. */
     public fun localized(): Context {
@@ -27,6 +28,19 @@ public class NotifyWords(private val base: Context, private val localeTag: () ->
     }
 
     public companion object {
+        /**
+         * Whole numbers become text through the shared [Numbers] formatter (the phone's number setting, owner decision
+         * 2026-11-03), so the shade shows the digits the screens show; the templates take `%s`, never `%d`.
+         */
+        public fun numbered(args: Array<out Any>): Array<Any> =
+            Array(args.size) { i ->
+                when (val a = args[i]) {
+                    is Int -> Numbers.format(a)
+                    is Long -> Numbers.format(a)
+                    else -> a
+                }
+            }
+
         /** The seven app languages (plan 06 §13). */
         public val SUPPORTED: Set<String> = setOf("en", "ar", "es", "ja", "pt", "ru", "zh")
     }

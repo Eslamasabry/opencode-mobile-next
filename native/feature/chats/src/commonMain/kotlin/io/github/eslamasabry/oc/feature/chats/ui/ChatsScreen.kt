@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.chats.presentation.BriefUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatPreviewActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatPreviewUi
@@ -185,7 +186,7 @@ private fun Filters(state: ChatsUi, actions: ChatsActions) {
                     pluralStringResource(
                         Res.plurals.notifStatusNeedsYou,
                         state.needsYou,
-                        state.needsYou,
+                        Numbers.format(state.needsYou),
                     ),
                 kind = KitChipKind.Action,
                 tone = KitChipTone.Attention,

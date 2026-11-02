@@ -6,6 +6,7 @@ package io.github.eslamasabry.oc.android.widgets
 
 import android.content.Context
 import android.content.res.Configuration
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import java.util.Locale
 
 /**
@@ -20,10 +21,20 @@ object NativeStrings {
     private val appLanguages = setOf("en", "ar", "es", "ja", "pt", "ru", "zh")
 
     fun get(context: Context, id: Int, vararg args: Any): String =
-        localized(context).getString(id, *args)
+        localized(context).getString(id, *numbered(args))
 
     fun quantity(context: Context, id: Int, count: Int, vararg args: Any): String =
-        localized(context).resources.getQuantityString(id, count, *args)
+        localized(context).resources.getQuantityString(id, count, *numbered(args))
+
+    /** Whole numbers through the shared formatter (phone's number setting); templates take `%s`. */
+    private fun numbered(args: Array<out Any>): Array<Any> =
+        Array(args.size) { i ->
+            when (val a = args[i]) {
+                is Int -> Numbers.format(a)
+                is Long -> Numbers.format(a)
+                else -> a
+            }
+        }
 
     internal fun matches(context: Context, id: Int, value: CharSequence?): Boolean =
         supported.any { language ->

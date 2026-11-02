@@ -58,15 +58,15 @@
     <string name="notify_reply_watch_title">返信をまだ作成中です</string>
     <string name="notify_status_public_working">OpenCode · 作業中</string>
     <plurals name="notify_chip_running">
-        <item quantity="other">%1$d 件実行中</item>
+        <item quantity="other">%1$s 件実行中</item>
     </plurals>
     <plurals name="notify_chip_pending">
-        <item quantity="other">%1$d 件要対応</item>
+        <item quantity="other">%1$s 件要対応</item>
     </plurals>
     <plurals name="notify_group_need_you">
-        <item quantity="other">%d 件の対応待ち</item>
+        <item quantity="other">%s 件の対応待ち</item>
     </plurals>
     <plurals name="notify_group_finished">
-        <item quantity="other">%d 件の会話が完了</item>
+        <item quantity="other">%s 件の会話が完了</item>
     </plurals>
 </resources>

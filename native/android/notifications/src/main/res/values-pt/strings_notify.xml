@@ -58,23 +58,23 @@
     <string name="notify_reply_watch_title">Ainda trabalhando na sua resposta</string>
     <string name="notify_status_public_working">OpenCode · trabalhando</string>
     <plurals name="notify_chip_running">
-        <item quantity="one">%1$d em andamento</item>
-        <item quantity="many">%1$d em andamento</item>
-        <item quantity="other">%1$d em andamento</item>
+        <item quantity="one">%1$s em andamento</item>
+        <item quantity="many">%1$s em andamento</item>
+        <item quantity="other">%1$s em andamento</item>
     </plurals>
     <plurals name="notify_chip_pending">
-        <item quantity="one">%1$d precisa de você</item>
-        <item quantity="many">%1$d precisam de você</item>
-        <item quantity="other">%1$d precisam de você</item>
+        <item quantity="one">%1$s precisa de você</item>
+        <item quantity="many">%1$s precisam de você</item>
+        <item quantity="other">%1$s precisam de você</item>
     </plurals>
     <plurals name="notify_group_need_you">
-        <item quantity="one">%d precisa de você</item>
-        <item quantity="many">%d precisam de você</item>
-        <item quantity="other">%d precisam de você</item>
+        <item quantity="one">%s precisa de você</item>
+        <item quantity="many">%s precisam de você</item>
+        <item quantity="other">%s precisam de você</item>
     </plurals>
     <plurals name="notify_group_finished">
-        <item quantity="one">%d conversa concluída</item>
-        <item quantity="many">%d conversas concluídas</item>
-        <item quantity="other">%d conversas concluídas</item>
+        <item quantity="one">%s conversa concluída</item>
+        <item quantity="many">%s conversas concluídas</item>
+        <item quantity="other">%s conversas concluídas</item>
     </plurals>
 </resources>

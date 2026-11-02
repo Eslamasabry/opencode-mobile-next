@@ -9,8 +9,8 @@
     <string name="widget_v2_short_read">قراءة %1$s؟</string>
     <string name="widget_v2_short_run">تشغيل %1$s؟</string>
     <string name="widget_v2_ago_now">الآن</string>
-    <string name="widget_v2_ago_min">قبل %1$d د</string>
-    <string name="widget_v2_ago_hour">قبل %1$d س</string>
+    <string name="widget_v2_ago_min">قبل %1$s د</string>
+    <string name="widget_v2_ago_hour">قبل %1$s س</string>
     <string name="widget_v2_ago_yesterday">أمس</string>
     <string name="widget_v2_offline_seen">غير متصل · آخر ظهور %1$s</string>
     <string name="widget_v2_offline_plain">غير متصل</string>
@@ -26,8 +26,8 @@
     <string name="widget_v2_resume">متابعة</string>
     <string name="widget_v2_empty">افتح التطبيق للاتصال</string>
     <string name="widget_v2_voice">صوت</string>
-    <string name="widget_v2_span_min">%1$d د</string>
-    <string name="widget_v2_span_hour">%1$d س</string>
+    <string name="widget_v2_span_min">%1$s د</string>
+    <string name="widget_v2_span_hour">%1$s س</string>
     <string name="widget_preview_usage_p1">Codex</string>
     <string name="widget_preview_usage_p2">Claude</string>
     <string name="widget_preview_usage_5h">5 س  تبقّى 62%</string>
@@ -56,10 +56,10 @@
     <string name="widget_status_stopped">متوقف</string>
     <string name="widget_status_tasks">المهام</string>
     <string name="widget_status_tasks_none">لا شيء</string>
-    <string name="widget_status_tasks_running">%1$d قيد العمل</string>
-    <string name="widget_status_span_day">%1$d يوم</string>
+    <string name="widget_status_tasks_running">%1$s قيد العمل</string>
+    <string name="widget_status_span_day">%1$s يوم</string>
     <string name="widget_status_plan">%1$s · %2$s</string>
-    <string name="widget_status_left">متبقٍ %1$d%%</string>
+    <string name="widget_status_left">متبقٍ %1$s%%</string>
     <string name="widget_status_replace">استبدل هذه الأداة: أضف المحادثات أو الحالة</string>
     <string name="widget_allow_for">السماح مرة: %1$s</string>
     <string name="widget_reply_for">الرد على %1$s</string>

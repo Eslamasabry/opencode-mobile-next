@@ -58,27 +58,27 @@
     <string name="notify_reply_watch_title">Ответ всё ещё готовится</string>
     <string name="notify_status_public_working">OpenCode · работает</string>
     <plurals name="notify_chip_running">
-        <item quantity="one">%1$d в работе</item>
-        <item quantity="few">%1$d в работе</item>
-        <item quantity="many">%1$d в работе</item>
-        <item quantity="other">%1$d в работе</item>
+        <item quantity="one">%1$s в работе</item>
+        <item quantity="few">%1$s в работе</item>
+        <item quantity="many">%1$s в работе</item>
+        <item quantity="other">%1$s в работе</item>
     </plurals>
     <plurals name="notify_chip_pending">
-        <item quantity="one">%1$d ждёт вас</item>
-        <item quantity="few">%1$d ждут вас</item>
-        <item quantity="many">%1$d ждут вас</item>
-        <item quantity="other">%1$d ждут вас</item>
+        <item quantity="one">%1$s ждёт вас</item>
+        <item quantity="few">%1$s ждут вас</item>
+        <item quantity="many">%1$s ждут вас</item>
+        <item quantity="other">%1$s ждут вас</item>
     </plurals>
     <plurals name="notify_group_need_you">
-        <item quantity="one">%d запрос ждёт вас</item>
-        <item quantity="few">%d запроса ждут вас</item>
-        <item quantity="many">%d запросов ждут вас</item>
-        <item quantity="other">%d запроса ждут вас</item>
+        <item quantity="one">%s запрос ждёт вас</item>
+        <item quantity="few">%s запроса ждут вас</item>
+        <item quantity="many">%s запросов ждут вас</item>
+        <item quantity="other">%s запроса ждут вас</item>
     </plurals>
     <plurals name="notify_group_finished">
-        <item quantity="one">%d разговор завершён</item>
-        <item quantity="few">%d разговора завершены</item>
-        <item quantity="many">%d разговоров завершены</item>
-        <item quantity="other">%d разговора завершены</item>
+        <item quantity="one">%s разговор завершён</item>
+        <item quantity="few">%s разговора завершены</item>
+        <item quantity="many">%s разговоров завершены</item>
+        <item quantity="other">%s разговора завершены</item>
     </plurals>
 </resources>

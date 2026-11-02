@@ -20,6 +20,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -138,7 +139,7 @@ public fun <T> KitChoiceListMulti(
     Column(modifier.fillMaxWidth().semantics { contentDescription = semanticsLabel }) {
         if (showCount && !loading && choices.isNotEmpty()) {
             KitText(
-                pluralStringResource(Res.plurals.kitChoiceSelectedCount, selected.size, selected.size),
+                pluralStringResource(Res.plurals.kitChoiceSelectedCount, selected.size, Numbers.format(selected.size)),
                 Modifier.padding(bottom = Space.S1.dp),
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,

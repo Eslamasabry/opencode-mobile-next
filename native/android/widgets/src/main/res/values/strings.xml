@@ -5,9 +5,9 @@
     <string name="widget_description">The one thing that matters now: what needs you, what is working, or your last conversation.</string>
     <string name="native_team_working">Working</string>
     <string name="native_widget_now">now</string>
-    <string name="native_widget_minutes">%1$dm</string>
-    <string name="native_widget_hours">%1$dh</string>
-    <string name="native_widget_days">%1$dd</string>
+    <string name="native_widget_minutes">%1$sm</string>
+    <string name="native_widget_hours">%1$sh</string>
+    <string name="native_widget_days">%1$sd</string>
     <string name="usage_widget_title">Usage</string>
     <string name="usage_widget_description">What is left on each plan limit, and when it resets.</string>
     <string name="usage_widget_empty">No limit readings yet. Open Usage to connect a source.</string>
@@ -25,9 +25,9 @@
     <string name="usage_widget_provider_codex">Codex</string>
     <string name="usage_widget_provider_minimax">MiniMax</string>
     <string name="usage_widget_provider_glm">GLM</string>
-    <string name="usage_widget_column">%1$s  %2$d%% left</string>
-    <string name="usage_widget_short_hours">%1$dh</string>
-    <string name="usage_widget_short_days">%1$dd</string>
+    <string name="usage_widget_column">%1$s  %2$s%% left</string>
+    <string name="usage_widget_short_hours">%1$sh</string>
+    <string name="usage_widget_short_days">%1$sd</string>
     <string name="usage_widget_short_week">Week</string>
     <string name="usage_widget_short_month">Month</string>
     <string name="widget_label_wide">Conversations</string>

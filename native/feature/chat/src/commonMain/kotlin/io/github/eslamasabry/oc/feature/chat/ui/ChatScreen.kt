@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
@@ -322,7 +323,7 @@ private fun EarlierMessagesPill(
         }
     if (count > 0) {
         KitChip(
-            label = pluralStringResource(Res.plurals.chatUiEarlierMessageCount, count, count),
+            label = pluralStringResource(Res.plurals.chatUiEarlierMessageCount, count, Numbers.format(count)),
             onClick = actions::openTimeline,
             modifier = modifier.testTag("earlier-messages-pill"),
         )
@@ -362,7 +363,7 @@ private fun FindBar(find: FindUi, actions: ChatActions) {
                         pluralStringResource(
                             Res.plurals.transcriptFindCount,
                             find.count,
-                            find.count,
+                            Numbers.format(find.count),
                             find.current + 1,
                         )
                 }
@@ -545,7 +546,7 @@ internal fun rememberChatWords(): ChatTranscriptWords {
  */
 @Composable
 internal fun workLineWords(calls: Int, state: WorkState): String {
-    val steps = pluralStringResource(Res.plurals.kitWorkSteps, calls, calls)
+    val steps = pluralStringResource(Res.plurals.kitWorkSteps, calls, Numbers.format(calls))
     val word =
         when (state) {
             WorkState.Running -> stringResource(Res.string.kitWorkWorking)

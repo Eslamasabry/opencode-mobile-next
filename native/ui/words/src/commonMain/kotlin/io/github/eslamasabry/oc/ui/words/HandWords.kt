@@ -2,6 +2,7 @@
 package io.github.eslamasabry.oc.ui.words
 
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextMessageTitle__assistant
 import io.github.eslamasabry.oc.ui.words.res.activeContextMessageTitle__change
@@ -197,13 +198,13 @@ public object HandWords {
             0 -> stringResource(Res.string.e7SettingsStorageSummary__queued__eq0, queued)
             1 -> stringResource(Res.string.e7SettingsStorageSummary__queued__eq1, queued)
             2 -> stringResource(Res.string.e7SettingsStorageSummary__queued__eq2, queued)
-            else -> pluralStringResource(Res.plurals.e7SettingsStorageSummary__queued, queued, queued)
+            else -> pluralStringResource(Res.plurals.e7SettingsStorageSummary__queued, queued, Numbers.format(queued))
         }
         val draftsText = when (drafts) {
             0 -> stringResource(Res.string.e7SettingsStorageSummary__drafts__eq0, drafts)
             1 -> stringResource(Res.string.e7SettingsStorageSummary__drafts__eq1, drafts)
             2 -> stringResource(Res.string.e7SettingsStorageSummary__drafts__eq2, drafts)
-            else -> pluralStringResource(Res.plurals.e7SettingsStorageSummary__drafts, drafts, drafts)
+            else -> pluralStringResource(Res.plurals.e7SettingsStorageSummary__drafts, drafts, Numbers.format(drafts))
         }
         return stringResource(Res.string.e7SettingsStorageSummary, total, queuedText, queueBytes, draftsText, draftBytes, days)
     }
@@ -226,11 +227,11 @@ public object HandWords {
     public fun chatAttachmentSheetAttachedText(name: String, sheets: Int, rows: Int): String {
         val sheetsText = when (sheets) {
             1 -> stringResource(Res.string.chatAttachmentSheetAttached__sheets__eq1, sheets)
-            else -> pluralStringResource(Res.plurals.chatAttachmentSheetAttached__sheets, sheets, sheets)
+            else -> pluralStringResource(Res.plurals.chatAttachmentSheetAttached__sheets, sheets, Numbers.format(sheets))
         }
         val rowsText = when (rows) {
             1 -> stringResource(Res.string.chatAttachmentSheetAttached__rows__eq1, rows)
-            else -> pluralStringResource(Res.plurals.chatAttachmentSheetAttached__rows, rows, rows)
+            else -> pluralStringResource(Res.plurals.chatAttachmentSheetAttached__rows, rows, Numbers.format(rows))
         }
         return stringResource(Res.string.chatAttachmentSheetAttached, name, sheetsText, rowsText)
     }
@@ -245,8 +246,8 @@ public object HandWords {
     /** `teamProjectGoalStatus`: one sentence with 2 counts (milestones, repos); each count is its own plural. */
     @Composable
     public fun teamProjectGoalStatusText(age: String, milestones: Int, repos: Int): String {
-        val milestonesText = pluralStringResource(Res.plurals.teamProjectGoalStatus__milestones, milestones, milestones)
-        val reposText = pluralStringResource(Res.plurals.teamProjectGoalStatus__repos, repos, repos)
+        val milestonesText = pluralStringResource(Res.plurals.teamProjectGoalStatus__milestones, milestones, Numbers.format(milestones))
+        val reposText = pluralStringResource(Res.plurals.teamProjectGoalStatus__repos, repos, Numbers.format(repos))
         return stringResource(Res.string.teamProjectGoalStatus, age, milestonesText, reposText, milestones, repos)
     }
 
@@ -260,8 +261,8 @@ public object HandWords {
     /** `teamProjectGoalStatusDraft`: one sentence with 2 counts (milestones, repos); each count is its own plural. */
     @Composable
     public fun teamProjectGoalStatusDraftText(milestones: Int, repos: Int): String {
-        val milestonesText = pluralStringResource(Res.plurals.teamProjectGoalStatusDraft__milestones, milestones, milestones)
-        val reposText = pluralStringResource(Res.plurals.teamProjectGoalStatusDraft__repos, repos, repos)
+        val milestonesText = pluralStringResource(Res.plurals.teamProjectGoalStatusDraft__milestones, milestones, Numbers.format(milestones))
+        val reposText = pluralStringResource(Res.plurals.teamProjectGoalStatusDraft__repos, repos, Numbers.format(repos))
         return stringResource(Res.string.teamProjectGoalStatusDraft, milestonesText, reposText, milestones, repos)
     }
 
@@ -275,8 +276,8 @@ public object HandWords {
     /** `teamProjectBoardSummary`: one sentence with 2 counts (tasks, milestones); each count is its own plural. */
     @Composable
     public fun teamProjectBoardSummaryText(tasks: Int, milestones: Int): String {
-        val tasksText = pluralStringResource(Res.plurals.teamProjectBoardSummary__tasks, tasks, tasks)
-        val milestonesText = pluralStringResource(Res.plurals.teamProjectBoardSummary__milestones, milestones, milestones)
+        val tasksText = pluralStringResource(Res.plurals.teamProjectBoardSummary__tasks, tasks, Numbers.format(tasks))
+        val milestonesText = pluralStringResource(Res.plurals.teamProjectBoardSummary__milestones, milestones, Numbers.format(milestones))
         return stringResource(Res.string.teamProjectBoardSummary, tasksText, milestonesText)
     }
 
@@ -291,9 +292,9 @@ public object HandWords {
     /** `teamProjectPlanSummary`: one sentence with 3 counts (phases, tasks, repos); each count is its own plural. */
     @Composable
     public fun teamProjectPlanSummaryText(phases: Int, tasks: Int, repos: Int): String {
-        val phasesText = pluralStringResource(Res.plurals.teamProjectPlanSummary__phases, phases, phases)
-        val tasksText = pluralStringResource(Res.plurals.teamProjectPlanSummary__tasks, tasks, tasks)
-        val reposText = pluralStringResource(Res.plurals.teamProjectPlanSummary__repos, repos, repos)
+        val phasesText = pluralStringResource(Res.plurals.teamProjectPlanSummary__phases, phases, Numbers.format(phases))
+        val tasksText = pluralStringResource(Res.plurals.teamProjectPlanSummary__tasks, tasks, Numbers.format(tasks))
+        val reposText = pluralStringResource(Res.plurals.teamProjectPlanSummary__repos, repos, Numbers.format(repos))
         return stringResource(Res.string.teamProjectPlanSummary, phasesText, tasksText, reposText)
     }
 }

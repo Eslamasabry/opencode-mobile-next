@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.requests.ui
 
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.requests.ask.AlwaysGrant
 import io.github.eslamasabry.oc.engine.requests.ask.AskTarget
 import io.github.eslamasabry.oc.engine.requests.ask.AskVerb
@@ -75,19 +76,19 @@ internal fun askQuestion(ask: AskView): String {
             }
         AskVerb.Edit ->
             when {
-                ask.count > 1 -> pluralStringResource(Res.plurals.chatRequestAskEditFiles, ask.count, ask.count)
+                ask.count > 1 -> pluralStringResource(Res.plurals.chatRequestAskEditFiles, ask.count, Numbers.format(ask.count))
                 name != null -> stringResource(Res.string.chatRequestAskEditNamed, ltr(name))
                 else -> stringResource(Res.string.chatRequestAskEdit)
             }
         AskVerb.Create ->
             if (ask.count > 1 || name == null) {
-                pluralStringResource(Res.plurals.chatRequestAskCreateFiles, ask.count, ask.count)
+                pluralStringResource(Res.plurals.chatRequestAskCreateFiles, ask.count, Numbers.format(ask.count))
             } else {
                 stringResource(Res.string.chatRequestAskCreateNamed, ltr(name))
             }
         AskVerb.Delete ->
             if (ask.count > 1 || name == null) {
-                pluralStringResource(Res.plurals.chatRequestAskDeleteFiles, ask.count, ask.count)
+                pluralStringResource(Res.plurals.chatRequestAskDeleteFiles, ask.count, Numbers.format(ask.count))
             } else {
                 stringResource(Res.string.chatRequestAskDeleteNamed, ltr(name))
             }
@@ -166,8 +167,8 @@ internal fun answerWords(words: AnswerWords): String =
 internal fun waitedWords(waitedMs: Long): String {
     val seconds = (waitedMs / 1_000).coerceAtLeast(0).toInt()
     return if (seconds < 60) {
-        pluralStringResource(Res.plurals.kitToolTookSeconds, seconds, seconds)
+        pluralStringResource(Res.plurals.kitToolTookSeconds, seconds, Numbers.format(seconds))
     } else {
-        pluralStringResource(Res.plurals.kitToolTookMinutes, seconds / 60, seconds / 60)
+        pluralStringResource(Res.plurals.kitToolTookMinutes, seconds / 60, Numbers.format(seconds / 60))
     }
 }

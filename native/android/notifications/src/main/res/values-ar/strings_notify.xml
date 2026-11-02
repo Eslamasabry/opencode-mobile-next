@@ -58,33 +58,33 @@
         <item quantity="zero">لا عمل جارٍ</item>
         <item quantity="one">عمل واحد جارٍ</item>
         <item quantity="two">عملان جاريان</item>
-        <item quantity="few">%1$d أعمال جارية</item>
-        <item quantity="many">%1$d عملًا جاريًا</item>
-        <item quantity="other">%1$d عمل جارٍ</item>
+        <item quantity="few">%1$s أعمال جارية</item>
+        <item quantity="many">%1$s عملًا جاريًا</item>
+        <item quantity="other">%1$s عمل جارٍ</item>
     </plurals>
     <plurals name="notify_chip_pending">
         <item quantity="zero">لا شيء يحتاج إليك</item>
         <item quantity="one">طلب واحد يحتاج إليك</item>
         <item quantity="two">طلبان يحتاجان إليك</item>
-        <item quantity="few">%1$d طلبات تحتاج إليك</item>
-        <item quantity="many">%1$d طلبًا يحتاج إليك</item>
-        <item quantity="other">%1$d طلب يحتاج إليك</item>
+        <item quantity="few">%1$s طلبات تحتاج إليك</item>
+        <item quantity="many">%1$s طلبًا يحتاج إليك</item>
+        <item quantity="other">%1$s طلب يحتاج إليك</item>
     </plurals>
     <plurals name="notify_group_need_you">
-        <item quantity="zero">%d طلب ينتظرك</item>
+        <item quantity="zero">%s طلب ينتظرك</item>
         <item quantity="one">طلب واحد ينتظرك</item>
         <item quantity="two">طلبان ينتظرانك</item>
-        <item quantity="few">%d طلبات تنتظرك</item>
-        <item quantity="many">%d طلبًا ينتظرك</item>
-        <item quantity="other">%d طلب ينتظرك</item>
+        <item quantity="few">%s طلبات تنتظرك</item>
+        <item quantity="many">%s طلبًا ينتظرك</item>
+        <item quantity="other">%s طلب ينتظرك</item>
     </plurals>
     <plurals name="notify_group_finished">
         <item quantity="zero">لا محادثات مكتملة</item>
         <item quantity="one">اكتملت محادثة واحدة</item>
         <item quantity="two">اكتملت محادثتان</item>
-        <item quantity="few">اكتملت %d محادثات</item>
-        <item quantity="many">اكتملت %d محادثة</item>
-        <item quantity="other">اكتملت %d محادثة</item>
+        <item quantity="few">اكتملت %s محادثات</item>
+        <item quantity="many">اكتملت %s محادثة</item>
+        <item quantity="other">اكتملت %s محادثة</item>
     </plurals>
     <!-- Added by the native app (NOTIFY). -->
     <string name="notify_answer_in_app">افتح OpenCode للرد</string>
