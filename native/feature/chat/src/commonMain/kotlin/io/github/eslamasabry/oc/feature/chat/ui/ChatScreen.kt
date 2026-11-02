@@ -29,6 +29,10 @@ import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ChatPromptsDoor
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
+import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChip
+import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
+import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
+import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
@@ -142,10 +146,12 @@ public fun ChatScreen(
     prompts: ChatPromptsDoor? = null,
     facts: TurnFactsUi = TurnFactsUi.Empty,
     onOpenSession: ((String) -> Unit)? = null,
+    header: ChatHeaderSlot? = null,
 ) {
     var contextOpen by remember { mutableStateOf(false) }
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
     val requestState by rememberUpdatedState(requests)
+    val headerState by rememberUpdatedState(header)
     val words = rememberChatWords()
     val listWords =
         ChatListWords(
@@ -200,6 +206,7 @@ public fun ChatScreen(
                 focusDone = actions::arrivalShown,
                 onStop = actions::stop,
                 stopping = { latest.live?.stopping == true },
+                rowChips = { headerState?.approval?.let { ApprovalChip(it) } },
             )
         }
 
@@ -211,39 +218,52 @@ public fun ChatScreen(
                 modifier = Modifier.fillMaxSize(),
                 page = true,
                 topBar = {
-                    KitTopBar(
+                    // CHAT-TRANSCRIPT (B-CHAT-019): the context reading folds into the bar's actions.
+                    val context =
+                        facts.context?.let { context ->
+                            KitLineAction(
+                                stringResource(Res.string.kitContextRingSemantics, Numbers.format(context.percent)),
+                                { contextOpen = true },
+                                testTag = "chat-context-open",
+                            )
+                        }
+                    val unitActions =
+                        listOfNotNull(
+                            KitLineAction(
+                                stringResource(Res.string.gitSheetTitle),
+                                actions::openGit,
+                                testTag = "chat-git-chip",
+                            ),
+                            prompts?.let {
+                                KitLineAction(
+                                    stringResource(Res.string.promptStashTitle),
+                                    it::open,
+                                    testTag = "chat-saved-prompts-open",
+                                )
+                            },
+                        ) + extraActions
+                    if (header != null) {
+                        // CHAT-HEADER replaces the plain bar; Find lives in its ⋯ menu, the other units' actions stay.
+                        ChatHeaderTopBar(
+                            header,
+                            actions::leaveRequested,
+                            { actions.find(state.find?.query ?: "") },
+                            extraActions = listOfNotNull(context) + unitActions,
+                        )
+                    } else KitTopBar(
                         title = state.title ?: stringResource(Res.string.commandUntitledChat),
                         exit = KitTopBarExit.Back,
                         exitLabel = stringResource(Res.string.kitTopBarBack),
                         onExit = actions::leaveRequested,
                         actions =
                             listOfNotNull(
-                                // CHAT-TRANSCRIPT (B-CHAT-019): the context reading folds into the bar's actions.
-                                facts.context?.let { context ->
-                                    KitLineAction(
-                                        stringResource(Res.string.kitContextRingSemantics, Numbers.format(context.percent)),
-                                        { contextOpen = true },
-                                        testTag = "chat-context-open",
-                                    )
-                                },
+                                context,
                                 KitLineAction(
                                     stringResource(Res.string.kitTopBarSearch),
                                     { actions.find(state.find?.query ?: "") },
                                     testTag = "chat-find-open",
                                 ),
-                                KitLineAction(
-                                    stringResource(Res.string.gitSheetTitle),
-                                    actions::openGit,
-                                    testTag = "chat-git-chip",
-                                ),
-                                prompts?.let {
-                                    KitLineAction(
-                                        stringResource(Res.string.promptStashTitle),
-                                        it::open,
-                                        testTag = "chat-saved-prompts-open",
-                                    )
-                                },
-                            ) + extraActions,
+                            ) + unitActions,
                     )
                 },
                 status = state.status?.let { statusLine(it, actions) },
@@ -325,6 +345,7 @@ public fun ChatScreen(
                 },
                 onCancel = actions::dismissConfirm,
             )
+            header?.let { ChatHeaderOverlays(it) }
         }
     }
 }

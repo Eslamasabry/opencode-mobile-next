@@ -41,4 +41,6 @@ public class ComposerChrome(
     public val focusDone: (id: Long) -> Unit,
     public val onStop: () -> Unit,
     public val stopping: () -> Boolean,
+    /** Chips another part folds into the composer's own row (the approval mode; P12 CHAT-HEADER). Never a new bar. */
+    public val rowChips: @Composable () -> Unit = {},
 )

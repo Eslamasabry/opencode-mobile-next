@@ -17,6 +17,9 @@ import io.github.eslamasabry.oc.feature.chat.cards.ChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.LocalChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.ModelCardSlotHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
+import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
+import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
+import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
@@ -56,6 +59,9 @@ public class ChatEntries(
             val requests by vm.requests.collectAsStateWithLifecycle()
             val slot = requests?.state?.collectAsStateWithLifecycle()?.value ?: io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi()
             val facts by vm.facts.collectAsStateWithLifecycle()
+            val headerVm = assistedMetroViewModel<ChatHeaderViewModel, ChatHeaderViewModel.Factory> { create(route) }
+            val header by headerVm.state.collectAsStateWithLifecycle()
+            val approval by headerVm.approval.collectAsStateWithLifecycle()
             // PREVIEW-QR: the dev servers this conversation mentioned (rows are newest first; the scan wants oldest first).
             val preview =
                 KitLineAction(stringResource(Res.string.devPreviewMenu), {
@@ -87,6 +93,7 @@ public class ChatEntries(
                         prompts = prompts,
                         facts = facts,
                         onOpenSession = vm::openSession,
+                        header = ChatHeaderSlot(header, headerVm, ApprovalChipSlot(approval, headerVm)),
                     )
                 }
             }

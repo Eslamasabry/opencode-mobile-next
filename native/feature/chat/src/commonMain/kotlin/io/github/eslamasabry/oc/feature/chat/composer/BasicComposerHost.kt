@@ -306,6 +306,7 @@ public fun BasicComposer(
                 working = state.pickingFile,
                 modifier = Modifier.testTag("chat-attach-button"),
             )
+            chrome.rowChips()
         }
         if (state.draft.attachments.isNotEmpty()) {
             KitChipWrap(Modifier.fillMaxWidth().testTag("chat-attachments")) {
