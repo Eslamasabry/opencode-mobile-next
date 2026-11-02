@@ -1,0 +1,227 @@
+package io.github.eslamasabry.oc.feature.projects.ui
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.feature.projects.presentation.FolderRowUi
+import io.github.eslamasabry.oc.feature.projects.presentation.PathProblem
+import io.github.eslamasabry.oc.feature.projects.presentation.ProjectRules
+import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPhase
+import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerActions
+import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerUi
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
+import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatsFilterChatCount
+import io.github.eslamasabry.oc.ui.words.res.chatsFilterRunningCount
+import io.github.eslamasabry.oc.ui.words.res.e7ProjectProjectsEmpty
+import io.github.eslamasabry.oc.ui.words.res.e7ProjectProjectsEmptyDetail
+import io.github.eslamasabry.oc.ui.words.res.e7ProjectProjectsSearch
+import io.github.eslamasabry.oc.ui.words.res.folderBrowserGit
+import io.github.eslamasabry.oc.ui.words.res.folderBrowserHomeHere
+import io.github.eslamasabry.oc.ui.words.res.folderBrowserOpenedBefore
+import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
+import io.github.eslamasabry.oc.ui.words.res.p12NewProjectUnavailable
+import io.github.eslamasabry.oc.ui.words.res.p12NoServerBody
+import io.github.eslamasabry.oc.ui.words.res.p12NoServerTitle
+import io.github.eslamasabry.oc.ui.words.res.p12OpenFolder
+import io.github.eslamasabry.oc.ui.words.res.p12PathBadParts
+import io.github.eslamasabry.oc.ui.words.res.p12PathNotAbsolute
+import io.github.eslamasabry.oc.ui.words.res.p12PhoneFolder
+import io.github.eslamasabry.oc.ui.words.res.p12PhoneFolderUnavailable
+import io.github.eslamasabry.oc.ui.words.res.p12ProjectsLoadFailed
+import io.github.eslamasabry.oc.ui.words.res.p12ProjectsOnServer
+import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
+import io.github.eslamasabry.oc.ui.words.res.projectFolderNewProject
+import io.github.eslamasabry.oc.ui.words.res.projectFolderOpen
+import io.github.eslamasabry.oc.ui.words.res.projectFolderOpenAction
+import io.github.eslamasabry.oc.ui.words.res.projectFolderOpenSubtitle
+import io.github.eslamasabry.oc.ui.words.res.projectFolderPathLabel
+import io.github.eslamasabry.oc.ui.words.res.serversTitle
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+
+/**
+ * Projects (07 §5 D15/D16). Kit parts only (K1). The obvious options come first as visible rows (owner rule):
+ * New project, Open a folder on the server, Folder on this phone; then Opened before; then this server's projects.
+ * A row that can't run here says why in its own line, never a dead tap.
+ */
+@Composable
+public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
+    KitScreen(
+        topBar = {
+            KitTopBar(
+                title = stringResource(Res.string.p12ProjectsTitle),
+                exit = KitTopBarExit.Back,
+                exitLabel = stringResource(Res.string.kitTopBarBack),
+                onExit = actions::back,
+            )
+        },
+        search =
+            if (state.showSearch) {
+                { KitSearchField(label = stringResource(Res.string.e7ProjectProjectsSearch), onSearch = actions::search) }
+            } else {
+                null
+            },
+        width = KitScreenWidth.Reading,
+    ) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+            when (state.phase) {
+                ProjectsPhase.NoServer ->
+                    item(key = "no-server") {
+                        KitStateView(
+                            kind = KitStateKind.Calm,
+                            title = stringResource(Res.string.p12NoServerTitle),
+                            body = stringResource(Res.string.p12NoServerBody),
+                            primary = KitAction(stringResource(Res.string.serversTitle), actions::openServers),
+                        )
+                    }
+                ProjectsPhase.Ready -> {
+                    if (state.servers.isNotEmpty()) {
+                        item(key = "servers") {
+                            KitChipWrap {
+                                state.servers.forEach { server ->
+                                    KitChip(
+                                        label = server.name,
+                                        kind = KitChipKind.Action,
+                                        tone = if (server.selected) KitChipTone.Active else KitChipTone.Neutral,
+                                        selected = server.selected,
+                                        onClick = { actions.chooseServer(server.profile) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    item(key = "start") { StartRows(actions) }
+                    if (state.openedBefore.isNotEmpty()) {
+                        item(key = "opened") {
+                            KitRowGroup(label = stringResource(Res.string.folderBrowserOpenedBefore)) {
+                                state.openedBefore.forEach { folder ->
+                                    KitRow(
+                                        title = folder.name,
+                                        supporting = folder.directory,
+                                        trailing = KitRowTrailing.Chevron,
+                                        onClick = { actions.openProject(folder.directory) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    item(key = "projects") { ServerProjects(state, actions) }
+                }
+            }
+        }
+    }
+    val notAbsolute = stringResource(Res.string.p12PathNotAbsolute)
+    val badParts = stringResource(Res.string.p12PathBadParts)
+    val home = stringResource(Res.string.folderBrowserHomeHere)
+    KitInputDialog(
+        visible = state.askingPath,
+        title = stringResource(Res.string.projectFolderOpen),
+        fieldLabel = stringResource(Res.string.projectFolderPathLabel),
+        confirmLabel = stringResource(Res.string.projectFolderOpenAction),
+        initial = state.pathStart,
+        kind = KitFieldKind.Path,
+        validate = { typed ->
+            when (ProjectRules.pathProblem(typed)) {
+                PathProblem.NotAbsolute -> notAbsolute
+                PathProblem.BadParts -> badParts
+                PathProblem.HomeOrRoot -> home
+                null -> null
+            }
+        },
+        operationKey = "open-folder",
+        onResult = actions::finishPath,
+    )
+}
+
+@Composable
+private fun StartRows(actions: ProjectsPickerActions) {
+    KitRowGroup {
+        // OpenCode 2 has no folder-making call; Flutter offered New project only for servers it ran on the phone.
+        KitRow(
+            title = stringResource(Res.string.projectFolderNewProject),
+            enabled = false,
+            disabledReason = stringResource(Res.string.p12NewProjectUnavailable),
+            supportingMaxLines = 3,
+        )
+        KitRow(
+            title = stringResource(Res.string.p12OpenFolder),
+            supporting = stringResource(Res.string.projectFolderOpenSubtitle),
+            trailing = KitRowTrailing.Chevron,
+            onClick = actions::askPath,
+        )
+        KitRow(
+            title = stringResource(Res.string.p12PhoneFolder),
+            enabled = false,
+            disabledReason = stringResource(Res.string.p12PhoneFolderUnavailable),
+            supportingMaxLines = 2,
+        )
+    }
+}
+
+@Composable
+private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
+    KitRowGroup(label = stringResource(Res.string.p12ProjectsOnServer, state.serverName)) {
+        val failure = state.projectsFailure
+        when {
+            state.projectsLoading -> KitSkeletonRows(count = 3)
+            failure != null ->
+                KitErrorNotice(
+                    message = stringResource(Res.string.p12ProjectsLoadFailed),
+                    failure = failure,
+                    detailsLabel = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                    retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::retry),
+                )
+            state.projects.isEmpty() ->
+                KitStateView(
+                    kind = KitStateKind.Empty,
+                    title = stringResource(Res.string.e7ProjectProjectsEmpty),
+                    body = stringResource(Res.string.e7ProjectProjectsEmptyDetail),
+                )
+            else -> state.projects.forEach { ProjectRow(it, actions) }
+        }
+    }
+}
+
+@Composable
+private fun ProjectRow(project: FolderRowUi, actions: ProjectsPickerActions) {
+    val parts =
+        buildList {
+            add(pluralStringResource(Res.plurals.chatsFilterChatCount, project.conversations, project.conversations))
+            if (project.running > 0) add(stringResource(Res.string.chatsFilterRunningCount, project.running))
+            if (project.isGit == true) add(stringResource(Res.string.folderBrowserGit))
+            add(project.directory)
+        }
+    KitRow(
+        title = project.name,
+        supporting = parts.joinToString(" · "),
+        supportingMaxLines = 2,
+        trailing = KitRowTrailing.Chevron,
+        onClick = { actions.openProject(project.directory) },
+    )
+}
