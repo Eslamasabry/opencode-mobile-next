@@ -114,12 +114,9 @@ public interface ChatsActions {
     public fun showBriefOverflow(shown: BriefUi)
 
     public fun showAll()
-}
 
-public data class ChatsAllUi(val filter: String?)
-
-public interface ChatsAllActions {
-    public fun back()
+    /** The Projects page (P12): New project, Open a folder, Opened before, then the server's projects. */
+    public fun openProjects()
 }
 
 /** P2 proof page for ChatRoute until :feature:chat installs the real one. */

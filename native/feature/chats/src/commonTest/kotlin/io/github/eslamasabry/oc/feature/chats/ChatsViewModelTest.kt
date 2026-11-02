@@ -97,8 +97,14 @@ class ChatsViewModelTest {
     @Test
     fun `route argument reaches the assisted ViewModel and back goes through the navigator`() {
         val nav = RecordingNavigator()
-        val vm = ChatsAllViewModel(ChatsRoute.All("running"), nav)
-        assertEquals("running", vm.state.value.filter)
+        val vm =
+            ChatsAllViewModel(
+                ChatsRoute.All("running"),
+                nav,
+                io.github.eslamasabry.oc.feature.chats.presentation.NoConversationServers(),
+                io.github.eslamasabry.oc.core.common.AppCoroutineScope(UnconfinedTestDispatcher()),
+            )
+        assertTrue(vm.state.value.running)
         vm.back()
         assertEquals(listOf("back"), nav.calls)
     }
