@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -89,6 +90,8 @@ public fun KitMicButton(
                 onArmedChanged = { armed -> armedChanged(armed) },
             )
         }
+    // The mic left the screen mid-hold (a request card took the row): the hold ends as cancelled.
+    DisposableEffect(press) { onDispose { press.cancel() } }
     Box(
         modifier
             .sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
@@ -151,21 +154,26 @@ public fun KitMicButton(
                             }
                             // Phase 2: holding. Follow the finger until it lifts.
                             press.holdTimeReached()
-                            while (true) {
-                                val event = awaitPointerEvent()
-                                val change = event.changes.firstOrNull { it.id == down.id }
-                                if (change == null) {
-                                    press.cancel()
-                                    break
+                            try {
+                                while (true) {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.firstOrNull { it.id == down.id }
+                                    if (change == null) {
+                                        press.cancel()
+                                        break
+                                    }
+                                    change.consume()
+                                    if (!change.pressed) {
+                                        press.up()
+                                        break
+                                    }
+                                    press.move(with(density) { (change.position - origin).getDistance().toDp().value })
                                 }
-                                change.consume()
-                                if (!change.pressed) {
-                                    press.up()
-                                    break
-                                }
-                                press.move(with(density) { (change.position - origin).getDistance().toDp().value })
+                            } finally {
+                                // The gesture was cancelled (the mic was disabled mid-hold): never leave a hold running.
+                                if (press.phase != KitMicPress.Phase.Idle) press.cancel()
+                                interactions.tryEmit(PressInteraction.Release(pressed))
                             }
-                            interactions.tryEmit(PressInteraction.Release(pressed))
                         }
                     },
             ),

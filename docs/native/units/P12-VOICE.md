@@ -17,7 +17,7 @@ notification, the hold-mic teaching tip (see §6).
 | Implemented | yes: everything in §1 |
 | Enabled in the app | yes: `:engine:voice`, `:android:voice`, `:feature:voice` are in `androidApp/build.gradle.kts`; the slots are bound through Metro |
 | Verified by tests | the pure layer only (36 tests, §3), run in a scratch JVM build |
-| **Compiled as an Android/Compose build** | **NO.** This cloud session's network policy refuses `dl.google.com` (Android SDK packages, and Google Maven, which `maven.google.com` redirects to). Gradle cannot resolve AGP or androidx, so neither `:androidApp:assemblePreviewDebug` nor any module of this repo could build here. The Compose screens, the kit parts and `VoiceWiring.kt` were reviewed by hand (plus an independent read-through) against the repo's own kit signatures, but **the integrator must compile them first** (§5). |
+| **Compiled as an Android/Compose build** | **NO.** This cloud session's network policy refuses `dl.google.com` (Android SDK packages, and Google Maven, which `maven.google.com` redirects to). Gradle cannot resolve AGP or androidx, so neither `:androidApp:assemblePreviewDebug` nor any module of this repo could build here. The Compose screens, the kit parts and `VoiceWiring.kt` were reviewed by hand and by an independent read-through (no certain compile errors found; its runtime findings are fixed) against the repo's own kit signatures, but **the integrator must compile them first** (§5). |
 | Ran on a device | no |
 
 ## 1. Journeys now in the app
@@ -110,7 +110,7 @@ by visible text (no Compose build possible here).
   screen-reader tap), `KitVoicePill.kt` (pill + `KitLevelMeter` drawn in the draw phase, RTL-aware, polite live region,
   no animation under reduced motion), `KitMicPressTest.kt`.
 - New route file `ui/routes/VoiceRoute.kt`; new words files `strings_voice_native.xml` (English and Arabic).
-- App wiring: `graph/VoiceWiring.kt` (new), three module lines in `androidApp/build.gradle.kts`, and a
+- App wiring: `graph/VoiceWiring.kt` (new), one line in `OcApplication.kt`, three module lines in `androidApp/build.gradle.kts`, and a
   `<queries>` entry for `android.speech.RecognitionService` in `androidApp/src/main/AndroidManifest.xml` (Android 11+
   hides the recognizer without it; RECORD_AUDIO comes from `:android:voice`'s manifest).
 - Smallest reach edits in `:feature:chat` (single-owner library — the chat lead should look): `BasicComposerHost`
@@ -126,6 +126,9 @@ by visible text (no Compose build possible here).
 3. Settings: map `SettingsOutside.VoiceSetup` → `VoiceRoute.Settings` when `:feature:settings` is routed (its
    `VoiceSettings` port can then read `ModelPacksState` the same way `VoiceSettingsPresenter` does).
 4. `ChatEntries`' merge note still applies; my edits there are additive.
+6. `OcApplication.onCreate` gained one line (`appGraph.resumedActivities`): the mic permission needs the resumed
+   activity, so the tracker (a Metro-contributed accessor in `VoiceWiring.kt`) must start with the app, not with the
+   first composer (found by the independent review: otherwise the first request always answered "Denied").
 5. Offline engine: §1 "To switch to the offline engine".
 
 ## 6. Deviations and gaps

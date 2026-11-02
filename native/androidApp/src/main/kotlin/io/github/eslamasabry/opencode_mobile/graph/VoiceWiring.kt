@@ -19,6 +19,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.android.voice.AndroidVoiceComponents
@@ -91,6 +92,7 @@ class AndroidVoiceHub(
     private val clock: Clock,
     private val scope: AppCoroutineScope,
     private val stores: PreviewStores,
+    private val activities: ResumedActivities,
 ) : VoiceHub {
     private val building = Mutex()
     private var built: Outcome<VoiceParts>? = null
@@ -107,7 +109,7 @@ class AndroidVoiceHub(
 
     private fun build(): Outcome<VoiceParts> {
         val prefs = OfflineEngineAwarePrefs(KeyValueVoicePrefs(stores.prefs, stores.lanes.app), naturalVoiceRuns = false)
-        val permission = ActivityMicPermission(application, dispatchers.main)
+        val permission = ActivityMicPermission(application, activities, dispatchers.main)
         val hasMic = application.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)
         val components =
             AndroidVoiceComponents(
@@ -180,9 +182,53 @@ private object NoOfflineSpeechEngine : SherpaRuntime {
  * RECORD_AUDIO through the resumed activity's result registry (registered per request, so no launcher must exist before
  * STARTED). Denied twice (no rationale left) = only Android settings can allow it now.
  */
-private class ActivityMicPermission(private val app: Application, private val main: CoroutineDispatcher) : MicPermission {
-    private var resumed = WeakReference<ComponentActivity>(null)
+private class ActivityMicPermission(
+    private val app: Application,
+    private val activities: ResumedActivities,
+    private val main: CoroutineDispatcher,
+) : MicPermission {
     private val serial = AtomicInteger()
+
+    override suspend fun request(): MicPermissionStatus =
+        withContext(main) {
+            if (granted()) return@withContext MicPermissionStatus.Granted
+            val activity = activities.current ?: return@withContext MicPermissionStatus.Denied
+            val allowed =
+                suspendCancellableCoroutine<Boolean> { done ->
+                    val key = "oc.voice.mic.${serial.incrementAndGet()}"
+                    lateinit var launcher: ActivityResultLauncher<String>
+                    launcher =
+                        activity.activityResultRegistry.register(key, ActivityResultContracts.RequestPermission()) { ok ->
+                            launcher.unregister()
+                            if (done.isActive) done.resume(ok)
+                        }
+                    done.invokeOnCancellation { launcher.unregister() }
+                    launcher.launch(Manifest.permission.RECORD_AUDIO)
+                }
+            when {
+                allowed -> MicPermissionStatus.Granted
+                ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.RECORD_AUDIO) ->
+                    MicPermissionStatus.Denied
+                else -> MicPermissionStatus.PermanentlyDenied
+            }
+        }
+
+    private fun granted(): Boolean =
+        ContextCompat.checkSelfPermission(app, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+}
+
+/** The resumed activity, followed from app start (`OcApplication` touches it right after the graph is made). */
+@ContributesTo(AppScope::class)
+interface VoiceActivityGraph {
+    val resumedActivities: ResumedActivities
+}
+
+@SingleIn(AppScope::class)
+@Inject
+class ResumedActivities(app: Application) {
+    private var resumed = WeakReference<ComponentActivity>(null)
+
+    val current: ComponentActivity? get() = resumed.get()
 
     init {
         app.registerActivityLifecycleCallbacks(
@@ -207,33 +253,6 @@ private class ActivityMicPermission(private val app: Application, private val ma
             },
         )
     }
-
-    override suspend fun request(): MicPermissionStatus =
-        withContext(main) {
-            if (granted()) return@withContext MicPermissionStatus.Granted
-            val activity = resumed.get() ?: return@withContext MicPermissionStatus.Denied
-            val allowed =
-                suspendCancellableCoroutine { done ->
-                    val key = "oc.voice.mic.${serial.incrementAndGet()}"
-                    lateinit var launcher: ActivityResultLauncher<String>
-                    launcher =
-                        activity.activityResultRegistry.register(key, ActivityResultContracts.RequestPermission()) { ok ->
-                            launcher.unregister()
-                            if (done.isActive) done.resume(ok)
-                        }
-                    done.invokeOnCancellation { launcher.unregister() }
-                    launcher.launch(Manifest.permission.RECORD_AUDIO)
-                }
-            when {
-                allowed -> MicPermissionStatus.Granted
-                ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.RECORD_AUDIO) ->
-                    MicPermissionStatus.Denied
-                else -> MicPermissionStatus.PermanentlyDenied
-            }
-        }
-
-    private fun granted(): Boolean =
-        ContextCompat.checkSelfPermission(app, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
 }
 
 /**

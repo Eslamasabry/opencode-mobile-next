@@ -181,7 +181,7 @@ public fun BasicComposer(
         KitVoiceField(
             key = state.targetKey,
             text = { field.text.toString() },
-            selection = { field.selection.let { it.start..it.end } },
+            selection = { field.selection.let { it.min..it.max } },
             replace = { words ->
                 field.edit { replace(0, length, words) }
                 editor.userEditSerial += 1

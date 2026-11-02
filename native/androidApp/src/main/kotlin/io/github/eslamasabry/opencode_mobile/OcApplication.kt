@@ -40,6 +40,7 @@ class OcApplication : Application(), GraphOwner {
             createGraphFactory<AndroidAppGraph.Factory>()
                 .create(this, buildInfo, redactor, LaunchMode.Normal)
         appGraph.previewRuntime // warm stores, restore saved profile, connect
+        appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)
         AppLog.tagged("App").i { "graph ready ${buildInfo.versionName} (${buildInfo.versionCode})" }
     }
 }
