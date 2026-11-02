@@ -41,6 +41,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -188,6 +189,11 @@ public fun ServersScreen(state: ServersUi, actions: ServersActions) {
                     }
                 }
             }
+            KitButton(
+                stringResource(Res.string.agentsSectionTitle),
+                actions::openAgents,
+                role = KitButtonRole.Secondary,
+            )
             KitText(stringResource(Res.string.serversAdd))
             KitField(name, stringResource(Res.string.serversName), enabled = enabled)
             KitField(

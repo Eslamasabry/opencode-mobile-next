@@ -64,6 +64,8 @@ dependencies {
             ":android:migration",
             ":engine:migration",
             ":feature:gate",
+            ":protocol:paseo",
+            ":feature:agents",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)
