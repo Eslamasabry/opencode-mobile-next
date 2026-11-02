@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -102,6 +103,8 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
     // Back leaves select mode first (predictive back), then the page.
     KitBackGuard(enabled = state.selecting, onBack = actions::stopSelecting)
     val listed = state.phase == AllPhase.List || state.phase == AllPhase.NoMatch
+    // One text state for the page, so the field keeps its words when select mode hides and brings it back.
+    val searchText = rememberTextFieldState(state.query)
     val barActions =
         when {
             state.selecting -> listOf(KitLineAction(stringResource(Res.string.p12SelectCancel), actions::stopSelecting))
@@ -126,7 +129,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
         },
         search =
             if (listed && !state.selecting) {
-                { KitSearchField(label = stringResource(Res.string.globalSessionsSearchLabel), onSearch = actions::search) }
+                { KitSearchField(label = stringResource(Res.string.globalSessionsSearchLabel), onSearch = actions::search, state = searchText) }
             } else {
                 null
             },
@@ -135,8 +138,9 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
     ) {
         val list = rememberLazyListState()
         // Reaching the end asks for the next page; after a failure only the visible Try again does.
-        LaunchedEffect(list, state.canLoadMore, state.loadMoreFailure == null) {
-            if (!state.canLoadMore || state.loadMoreFailure != null) return@LaunchedEffect
+        val autoLoad = state.canLoadMore && state.loadMoreFailure == null && !state.selecting
+        LaunchedEffect(list, autoLoad, state.rows.size) {
+            if (!autoLoad) return@LaunchedEffect
             snapshotFlow {
                     val info = list.layoutInfo
                     val last = info.visibleItemsInfo.lastOrNull()?.index ?: 0
@@ -145,7 +149,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                 .collect { near -> if (near) actions.loadMore() }
         }
         LazyColumn(state = list, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-            if (listed && !state.selecting) item(key = "filters") { Filters(state, actions) }
+            if ((listed || state.hasArchived) && !state.selecting) item(key = "filters") { Filters(state, actions) }
             if (state.incomplete.isNotEmpty()) {
                 item(key = "incomplete") {
                     KitNotice(stringResource(Res.string.chatsHomeIncompleteNamed, state.incomplete.joinToString(", ")))

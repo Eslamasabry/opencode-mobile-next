@@ -121,6 +121,7 @@ class AllConversationsScreenTest {
                 list.copy(
                     selecting = true,
                     selectedCount = 1,
+                    canLoadMore = false,
                     rows = persistentListOf(row("a", "Fix the reconnect loop", selected = true), row("b", "Theme packs")),
                 )
             setContent { Themed { ChatsAllScreen(selecting, actions) } }

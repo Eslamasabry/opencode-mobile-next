@@ -27,7 +27,7 @@ class DesktopShellUiTest {
         onNodeWithText("Conversations").assertExists()
         onNodeWithText("Show all conversations").performClick()
         onNodeWithText("All conversations").assertExists()
-        onNodeWithText("Filter: No filter").assertExists()
+        onNodeWithText("No server connected").assertExists()
         onNodeWithContentDescription("Back").performClick()
         onNodeWithText("Conversations").assertExists()
     }

@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.feature.projects.presentation.SessionOpenedFolde
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
+import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -140,7 +141,7 @@ class ProjectsViewModelTest {
         val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), nav, Servers(emptyList()), SessionOpenedFolders())
         assertEquals(ProjectsPhase.NoServer, vm.state.value.phase)
         vm.openServers()
-        assertTrue(nav.calls.single().startsWith("open ServersRoute"), nav.calls.toString())
+        assertEquals(listOf("open ${ServersRoute.Home}"), nav.calls)
     }
 
     @Test

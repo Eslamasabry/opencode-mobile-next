@@ -80,7 +80,7 @@ class GraphSmokeTest {
         assertTrue(graph.shell.installers.any { it is ChatsEntries }, "ChatsEntries was not contributed")
         assertIs<ChatsViewModel>(graph.metroViewModelFactory.create(ChatsViewModel::class, CreationExtras.Empty))
         val allFactory = graph.metroViewModelFactory.createManuallyAssistedFactory(ChatsAllViewModel.Factory::class)
-        assertEquals("x", allFactory().create(ChatsRoute.All("x")).state.value.filter)
+        assertTrue(allFactory().create(ChatsRoute.All("running")).state.value.running)
         assertTrue(graph.viewModelProviders.keys.all { ViewModel::class.java.isAssignableFrom(it.java) })
     }
 

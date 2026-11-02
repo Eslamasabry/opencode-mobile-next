@@ -91,10 +91,12 @@ built-in folder browsing), worktrees/health/services (other units).
 1. Build and run, in order: `./gradlew :feature:chats:desktopTest :feature:projects:desktopTest :ui:routes:desktopTest`,
    `:quality:test`, `:androidApp:assemblePreviewDebug`, `:desktopApp:compileKotlin`. Fix whatever the compiler finds
    (a self-review against the real APIs was done, but it is no substitute).
-2. Add `:feature:projects	F	P12-PROJECTS	slice-5` to `native/MODULE_OWNERS` (coordinator file; `ModuleOwnersTest`
-   fails without it).
-3. `:desktopApp` does not include `:feature:projects`, so the home's "Projects" row has no destination there; add the
-   module to the desktop list or accept it as Android-only for now.
+2. Done here, review them: a `:feature:projects` row in `native/MODULE_OWNERS` (coordinator file; `ModuleOwnersTest`
+   needs it), `:feature:projects` in `desktopApp/build.gradle.kts` (the home's Projects row needs a destination there),
+   and two `:quality` tests that read the old stub (`GraphSmokeTest` now checks the route's running filter,
+   `DesktopShellUiTest` now expects "No server connected").
+3. Known small gaps: a rename/delete/archive problem notice has no dismiss of its own (it clears on the next action);
+   archive capability is read when the server list changes, not on a later capability change.
 4. Ask the `:protocol:oc2` owner for `listProjects` (`GET /project`), `listGlobalSessions` (server search,
    `rootsOnly`), and `listFiles` (folder probe/browse); the pages light up with no feature change.
 5. Device check: Conversations → Projects → Open a folder → New conversation here → reply arrives in the chat; All
