@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package io.github.eslamasabry.opencode_mobile.graph
 
 import android.Manifest
