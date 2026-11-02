@@ -1,0 +1,529 @@
+[
+ {
+  "name": "display",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "Example",
+   "body": []
+  }
+ },
+ {
+  "name": "all-node-types",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "Example",
+   "body": [
+    {
+     "type": "text",
+     "text": "Hello\nworld\t!"
+    },
+    {
+     "type": "keyValue",
+     "rows": [
+      {
+       "key": "Count",
+       "value": "42"
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "items": [
+      {
+       "text": "First",
+       "done": false
+      },
+      {
+       "text": "Second",
+       "done": true
+      }
+     ],
+     "style": "check"
+    },
+    {
+     "type": "table",
+     "columns": [
+      "A",
+      "B"
+     ],
+     "rows": [
+      [
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "chart",
+     "kind": "line",
+     "unit": "ms",
+     "labels": [
+      "A",
+      "B"
+     ],
+     "series": [
+      {
+       "name": "Latency",
+       "values": [
+        0,
+        1.7976931348623157e+308
+       ]
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "language": "dart",
+     "text": " print(\"ok\");\n"
+    },
+    {
+     "type": "diffStat",
+     "files": [
+      {
+       "path": "lib/file.dart",
+       "added": 9007199254740991,
+       "removed": 0
+      }
+     ]
+    },
+    {
+     "type": "progress",
+     "label": "Working",
+     "value": 0.25
+    },
+    {
+     "type": "callout",
+     "tone": "warning",
+     "text": "Caution"
+    },
+    {
+     "type": "link",
+     "label": "Docs",
+     "url": "https://example.com/docs?q=1#first"
+    }
+   ]
+  }
+ },
+ {
+  "name": "sanitized-presentation",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "A B",
+   "body": []
+  }
+ },
+ {
+  "name": "unicode-scalar-limit",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+   "body": []
+  }
+ },
+ {
+  "name": "unicode-scalar-over-limit",
+  "error": "badValue"
+ },
+ {
+  "name": "title-empty-after-clean",
+  "error": "badValue"
+ },
+ {
+  "name": "title-wrong-type",
+  "error": "badValue"
+ },
+ {
+  "name": "version-unknown",
+  "error": "version"
+ },
+ {
+  "name": "version-string",
+  "error": "version"
+ },
+ {
+  "name": "version-bool",
+  "error": "version"
+ },
+ {
+  "name": "unknown-root",
+  "error": "unknownKey"
+ },
+ {
+  "name": "id-newline",
+  "error": "badValue"
+ },
+ {
+  "name": "id-uppercase",
+  "error": "badValue"
+ },
+ {
+  "name": "null-ask",
+  "error": "badValue"
+ },
+ {
+  "name": "unsupported-file",
+  "error": "unsupportedAsk"
+ },
+ {
+  "name": "unsupported-voice",
+  "error": "unsupportedAsk"
+ },
+ {
+  "name": "unknown-ask",
+  "error": "badValue"
+ },
+ {
+  "name": "confirm-default",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "Example",
+   "body": [],
+   "ask": {
+    "kind": "confirm",
+    "tone": "normal"
+   }
+  }
+ },
+ {
+  "name": "confirm-labels",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "Example",
+   "body": [],
+   "ask": {
+    "kind": "confirm",
+    "confirmLabel": "Proceed",
+    "cancelLabel": "Stop",
+    "tone": "danger"
+   }
+  }
+ },
+ {
+  "name": "photo-default",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "Example",
+   "body": [],
+   "ask": {
+    "kind": "photo",
+    "purpose": "Show result",
+    "max": 1
+   }
+  }
+ },
+ {
+  "name": "photo-four",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "Example",
+   "body": [],
+   "ask": {
+    "kind": "photo",
+    "purpose": "Show result",
+    "max": 4
+   }
+  }
+ },
+ {
+  "name": "photo-over-limit",
+  "error": "badValue"
+ },
+ {
+  "name": "photo-fraction",
+  "error": "badValue"
+ },
+ {
+  "name": "choice-default",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "Example",
+   "body": [],
+   "ask": {
+    "kind": "choice",
+    "options": [
+     {
+      "id": "a",
+      "label": "Alpha"
+     },
+     {
+      "id": "b",
+      "label": "Beta",
+      "detail": "More"
+     }
+    ],
+    "multi": false
+   }
+  }
+ },
+ {
+  "name": "choice-multi",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "Example",
+   "body": [],
+   "ask": {
+    "kind": "choice",
+    "options": [
+     {
+      "id": "a",
+      "label": "Alpha"
+     },
+     {
+      "id": "b",
+      "label": "Beta",
+      "detail": "More"
+     }
+    ],
+    "multi": true
+   }
+  }
+ },
+ {
+  "name": "choice-duplicate",
+  "error": "badValue"
+ },
+ {
+  "name": "choice-secret",
+  "error": "secretField"
+ },
+ {
+  "name": "choice-null-detail",
+  "error": "badValue"
+ },
+ {
+  "name": "form-all-types",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "Example",
+   "body": [],
+   "ask": {
+    "kind": "form",
+    "fields": [
+     {
+      "id": "name",
+      "label": "Name",
+      "type": "text",
+      "required": true,
+      "default": "Ada"
+     },
+     {
+      "id": "notes",
+      "label": "Notes",
+      "type": "multiline",
+      "required": false,
+      "placeholder": "Details",
+      "default": "Text\nline"
+     },
+     {
+      "id": "count",
+      "label": "Count",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 10,
+      "default": 3
+     },
+     {
+      "id": "enabled",
+      "label": "Enabled",
+      "type": "toggle",
+      "required": true,
+      "default": false
+     },
+     {
+      "id": "color",
+      "label": "Color",
+      "type": "select",
+      "required": false,
+      "options": [
+       {
+        "id": "a",
+        "label": "Alpha"
+       },
+       {
+        "id": "b",
+        "label": "Beta",
+        "detail": "More"
+       }
+      ],
+      "default": "b"
+     },
+     {
+      "id": "date",
+      "label": "Date",
+      "type": "date",
+      "required": false,
+      "default": "2024-02-29"
+     }
+    ],
+    "submitLabel": "Save"
+   }
+  }
+ },
+ {
+  "name": "invalid-date",
+  "error": "badValue"
+ },
+ {
+  "name": "date-year-zero",
+  "error": "badValue"
+ },
+ {
+  "name": "blank-required",
+  "error": "badValue"
+ },
+ {
+  "name": "secret-label",
+  "error": "secretField"
+ },
+ {
+  "name": "text-range",
+  "error": "badValue"
+ },
+ {
+  "name": "number-range",
+  "error": "badValue"
+ },
+ {
+  "name": "number-default-range",
+  "error": "badValue"
+ },
+ {
+  "name": "select-missing",
+  "error": "badValue"
+ },
+ {
+  "name": "toggle-options",
+  "error": "badValue"
+ },
+ {
+  "name": "null-default",
+  "error": "badValue"
+ },
+ {
+  "name": "node-unknown-key-text",
+  "error": "unknownKey"
+ },
+ {
+  "name": "node-unknown-key-keyValue",
+  "error": "unknownKey"
+ },
+ {
+  "name": "node-unknown-key-list",
+  "error": "unknownKey"
+ },
+ {
+  "name": "node-unknown-key-table",
+  "error": "unknownKey"
+ },
+ {
+  "name": "node-unknown-key-chart",
+  "error": "unknownKey"
+ },
+ {
+  "name": "node-unknown-key-code",
+  "error": "unknownKey"
+ },
+ {
+  "name": "node-unknown-key-diffStat",
+  "error": "unknownKey"
+ },
+ {
+  "name": "node-unknown-key-progress",
+  "error": "unknownKey"
+ },
+ {
+  "name": "node-unknown-key-callout",
+  "error": "unknownKey"
+ },
+ {
+  "name": "node-unknown-key-link",
+  "error": "unknownKey"
+ },
+ {
+  "name": "table-width",
+  "error": "badValue"
+ },
+ {
+  "name": "chart-length",
+  "error": "badValue"
+ },
+ {
+  "name": "progress-over",
+  "error": "badValue"
+ },
+ {
+  "name": "diff-fraction",
+  "error": "badValue"
+ },
+ {
+  "name": "http-link",
+  "error": "badValue"
+ },
+ {
+  "name": "userinfo-link",
+  "error": "badValue"
+ },
+ {
+  "name": "empty-userinfo-link",
+  "error": "badValue"
+ },
+ {
+  "name": "space-link",
+  "error": "badValue"
+ },
+ {
+  "name": "backslash-link",
+  "error": "badValue"
+ },
+ {
+  "name": "too-many-nodes",
+  "error": "badValue"
+ },
+ {
+  "name": "byte-budget",
+  "error": "tooLarge"
+ },
+ {
+  "name": "deep-input",
+  "error": "tooLarge"
+ },
+ {
+  "name": "large-port",
+  "error": "badValue"
+ },
+ {
+  "name": "bidi-link",
+  "error": "badValue"
+ },
+ {
+  "name": "normalized-whole-double",
+  "value": {
+   "v": 1,
+   "id": "example",
+   "title": "Example",
+   "body": [
+    {
+     "type": "progress",
+     "label": "Done",
+     "value": 1
+    }
+   ]
+  }
+ },
+ {
+  "name": "value-count-bound",
+  "error": "tooLarge"
+ }
+]
