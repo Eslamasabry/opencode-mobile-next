@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.schedules.RunReport
 import io.github.eslamasabry.oc.engine.schedules.ScheduleAlarms
 import io.github.eslamasabry.oc.engine.schedules.ScheduleEngine
 import io.github.eslamasabry.oc.engine.schedules.SchedulePlatform
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /** The work request's routing data (only identifiers: never the prompt, a URL or a credential). */
@@ -57,12 +58,20 @@ public object ScheduleWorkPolicy {
     public suspend fun run(engine: ScheduleEngine, data: Data, nowMs: Long): RunReport? {
         val entry = ScheduleWorkInput.entry(data) ?: return null
         val deadline = nowMs + RUN_BUDGET_MS
-        return if (data.getBoolean(ScheduleWorkInput.MANUAL, false)) {
-            engine.runManual(entry.profileId, entry.scheduleId, entry.revision, deadline)
-        } else {
-            engine.runOccurrence(entry, deadline)
+        if (data.getBoolean(ScheduleWorkInput.MANUAL, false)) {
+            return engine.runManual(entry.profileId, entry.scheduleId, entry.revision, deadline)
+        }
+        // The run re-arms the schedule when it ends; that must not cancel this very work while it still finishes.
+        running.add(entry.workName)
+        try {
+            return engine.runOccurrence(entry, deadline)
+        } finally {
+            running.remove(entry.workName)
         }
     }
+
+    /** Unique work names running in this process; [WorkScheduleAlarms.replace] never cancels them. */
+    internal val running: MutableSet<String> = ConcurrentHashMap.newKeySet()
 }
 
 /**
@@ -86,7 +95,7 @@ public class WorkScheduleAlarms(
     override fun replace(profileId: String, entries: List<ArmedEntry>) {
         val names = entries.map { it.workName }.toSet()
         val before = armed.getStringSet(profileId, emptySet()).orEmpty()
-        (before - names).forEach { work.cancelUniqueWork(it) }
+        (before - names).filterNot { it in ScheduleWorkPolicy.running }.forEach { work.cancelUniqueWork(it) }
         for (entry in entries) {
             // A Flutter-era job of the same occurrence names a worker class that no longer exists: drop it.
             work.cancelUniqueWork("oc.schedule.${entry.profileId}.${entry.occurrence}")
@@ -97,7 +106,10 @@ public class WorkScheduleAlarms(
                     .addTag(TAG)
                     .addTag(profileTag(profileId))
                     .build()
-            work.enqueueUniqueWork(entry.workName, ExistingWorkPolicy.KEEP, request)
+            // The occurrence's own worker is still running (the clock moved back before it was due): queue the
+            // re-armed attempt after it instead of being swallowed by KEEP.
+            val policy = if (entry.workName in ScheduleWorkPolicy.running) ExistingWorkPolicy.APPEND_OR_REPLACE else ExistingWorkPolicy.KEEP
+            work.enqueueUniqueWork(entry.workName, policy, request)
         }
         armed.edit().putStringSet(profileId, names).apply()
     }
