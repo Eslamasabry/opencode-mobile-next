@@ -131,6 +131,8 @@ public fun ChatScreen(
     modifier: Modifier = Modifier,
     requests: RequestSlotUi = RequestSlotUi(),
     requestActions: ChatRequestActions? = null,
+    /** Bar actions other units contribute through the chat's entry (PREVIEW-QR: "Preview a running app"). */
+    extraActions: List<KitLineAction> = emptyList(),
 ) {
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
     val requestState by rememberUpdatedState(requests)
@@ -215,7 +217,7 @@ public fun ChatScreen(
                                     actions::openGit,
                                     testTag = "chat-git-chip",
                                 ),
-                            ),
+                            ) + extraActions,
                     )
                 },
                 status = state.status?.let { statusLine(it, actions) },

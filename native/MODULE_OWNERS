@@ -61,3 +61,5 @@
 :engine:updates	S	platform (P12-PLATFORM)	parity
 :feature:updates	F	platform (P12-PLATFORM)	parity
 :android:tiles	F	platform (P12-PLATFORM)	parity
+:feature:preview	F	PREVIEW-QR (P12)	slice-5
+:android:webview	F	PREVIEW-QR (P12)	slice-5

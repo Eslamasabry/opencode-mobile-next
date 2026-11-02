@@ -52,6 +52,9 @@ kover = "0.9.11"
 dependency-analysis = "3.20.1"
 # Desktop loop (optional trial, never required; ADR §4 row 16)
 hotreload = "1.2.0"
+# Pairing scanner adapters in :android:camera (QR-CAMERA §6; compile-verified there; PREVIEW-QR wires them)
+camerax = "1.6.2"
+zxing-cpp = "3.1.1"
 
 [libraries]
 # --- Kotlin
@@ -100,6 +103,10 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 junit4 = { module = "junit:junit", version.ref = "junit4" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
+camerax-core = { module = "androidx.camera:camera-core", version.ref = "camerax" }
+camerax-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+zxing-cpp = { module = "io.github.zxing-cpp:android", version.ref = "zxing-cpp" }
 # --- Gradle plugin artifacts (compileOnly in build-logic only)
 gradle-android = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 gradle-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }

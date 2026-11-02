@@ -75,6 +75,9 @@ dependencies {
             ":feature:updates", // P12-PLATFORM: Updates page
             ":android:tiles", // P12-PLATFORM: QS tiles, shortcuts, share, update installer
             ":android:widgets", // P12-PLATFORM: home-screen widgets
+            ":feature:preview", // PREVIEW-QR
+            ":android:webview", // PREVIEW-QR
+            ":android:camera", // PREVIEW-QR (pairing scanner)
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)
@@ -84,6 +87,7 @@ dependencies {
     debugImplementation(libs.compose.foundation) // P6 proof screen (debug only)
     implementation(libs.metrox.viewmodel.compose)
     implementation(libs.kotlinx.io.core) // Real app-private draft payload vault.
+    implementation(libs.camerax.core) // PREVIEW-QR: the scanner wiring hands CameraX's SurfaceRequest to a TextureView.
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)

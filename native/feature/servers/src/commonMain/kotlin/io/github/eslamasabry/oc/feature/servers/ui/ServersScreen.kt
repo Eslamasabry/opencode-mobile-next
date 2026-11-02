@@ -20,6 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
+import io.github.eslamasabry.oc.feature.servers.pairing.ShareLink
+import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerFailureKind
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerIssue
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersActions
@@ -46,6 +49,11 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
+import io.github.eslamasabry.oc.ui.words.res.addServerScan
+import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
+import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
+import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
+import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -105,12 +113,39 @@ public fun ServersScreen(
     // instance state.
     val password = remember { TextFieldState() }
     var removing by remember { mutableStateOf<ProfileId?>(null) }
+    // PREVIEW-QR: a scanned or pasted pairing code (or share link) fills the form once; the password is taken, not kept.
+    var filledFromLink by remember { mutableStateOf<Boolean?>(null) }
+    // A pairing code carries a password, so it goes in a secret field (the kit's Paste lives there too).
+    val code = remember { TextFieldState() }
+    LaunchedEffect(code) {
+        snapshotFlow { code.text.toString() }
+            .collect { text ->
+                if (PairingText.looksLikePayload(text) || ShareLink.origin(text) != null) {
+                    code.edit { replace(0, length, "") }
+                    actions.pastePairing(text)
+                }
+            }
+    }
+    LaunchedEffect(state.pairingArrival) {
+        val fill = actions.takePairing() ?: return@LaunchedEffect
+        address.edit { replace(0, length, fill.address) }
+        fill.username?.let { value -> username.edit { replace(0, length, value) } }
+        fill.takePassword()?.let { value -> password.edit { replace(0, length, value) } }
+        filledFromLink = fill.fromLink
+    }
     LaunchedEffect(state.savedGeneration) {
         if (state.savedGeneration > 0) password.edit { replace(0, length, "") }
     }
     LaunchedEffect(address) {
         snapshotFlow { address.text.toString() }
-            .collect { actions.allowCleartext(false, address.text.toString()) }
+            .collect { text ->
+                // A pairing code or share link pasted into the address field is read, never saved as an address.
+                if (PairingText.looksLikePayload(text) || ShareLink.origin(text) != null) {
+                    address.edit { replace(0, length, "") }
+                    actions.pastePairing(text)
+                }
+                actions.allowCleartext(false, address.text.toString())
+            }
     }
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
@@ -213,6 +248,28 @@ public fun ServersScreen(
                 role = KitButtonRole.Secondary,
             )
             KitText(stringResource(Res.string.serversAdd))
+            KitButton(
+                stringResource(Res.string.addServerScan),
+                actions::scanPairing,
+                role = KitButtonRole.Secondary,
+                enabled = enabled,
+            )
+            KitField(
+                code,
+                stringResource(Res.string.previewQrPairingCodeLabel),
+                kind = KitFieldKind.Secret,
+                helper = stringResource(Res.string.e7SetupPairingInstructions),
+                enabled = enabled,
+                onSubmit = {
+                    val text = code.text.toString()
+                    code.edit { replace(0, length, "") }
+                    actions.pastePairing(text)
+                },
+            )
+            state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
+            filledFromLink?.let { link ->
+                KitNotice(stringResource(if (link) Res.string.previewQrLinkFilled else Res.string.previewQrPairFilled))
+            }
             KitField(name, stringResource(Res.string.serversName), enabled = enabled)
             KitField(
                 address,

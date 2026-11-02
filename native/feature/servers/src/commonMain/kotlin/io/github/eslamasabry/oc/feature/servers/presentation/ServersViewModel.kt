@@ -14,8 +14,13 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingFill
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingInbox
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingRead
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.PairingRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,11 +37,12 @@ public class ServersViewModel(
     @Assisted private val route: ChatsRoute.New?,
     private val connections: ServerConnections,
     private val nav: AppNavigator,
+    private val pairing: PairingInbox = PairingInbox(),
 ) : ViewModel(), ServersActions {
     private val local = MutableStateFlow(ServersUi(newConversation = route != null))
     public val state: StateFlow<ServersUi> =
-        combine(local, connections.servers, connections.busy) { own, servers, busy ->
-                own.copy(servers = servers, busy = own.busy || busy)
+        combine(local, connections.servers, connections.busy, pairing.arrivals) { own, servers, busy, arrivals ->
+                own.copy(servers = servers, busy = own.busy || busy, pairingArrival = arrivals)
             }
             .stateIn(
                 viewModelScope,
@@ -44,6 +50,7 @@ public class ServersViewModel(
                 local.value.copy(
                     servers = connections.servers.value,
                     busy = connections.busy.value,
+                    pairingArrival = pairing.arrivals.value,
                 ),
             )
 
@@ -123,6 +130,21 @@ public class ServersViewModel(
             is Outcome.Failed -> failed(ServerIssue.RemoveFailed, result.failure)
         }
     }
+
+    override fun scanPairing(): Unit = nav.open(PairingRoute.Scanner)
+
+    override fun pastePairing(text: String?) {
+        val read = PairingText.read(text.orEmpty())
+        val fill = PairingFill.of(read)
+        if (fill == null) {
+            local.update { it.copy(pairingProblem = (read as? PairingRead.Problem)?.problem) }
+            return
+        }
+        local.update { it.copy(pairingProblem = null, issue = null, failure = null) }
+        pairing.put(fill)
+    }
+
+    override fun takePairing(): PairingFill? = pairing.take()
 
     private fun operation(block: suspend () -> Unit) {
         if (local.value.busy || connections.busy.value) return

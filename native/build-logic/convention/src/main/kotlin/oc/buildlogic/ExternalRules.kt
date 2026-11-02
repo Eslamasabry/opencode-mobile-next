@@ -15,8 +15,9 @@ internal object ExternalRules {
             "androidx.sqlite" to { p -> p == ":core:db" },
             "co.touchlab" to { p -> p == ":core:common" }, // Kermit stays behind AppLog (plan 03 §18)
             "com.github.termux.termux-app" to { p -> p == ":android:terminal" || p == ":ui:kit-content" },
-            "androidx.camera" to { p -> p == ":ui:kit-content" || p == ":android:media" },
-            "io.github.zxing-cpp" to { p -> p == ":ui:kit-content" || p == ":android:media" },
+            // :android:camera holds the CameraX + zxing-cpp adapters (QR-CAMERA §6); the app wiring renders its preview.
+            "androidx.camera" to { p -> p == ":ui:kit-content" || p == ":android:media" || p == ":android:camera" || p == ":androidApp" },
+            "io.github.zxing-cpp" to { p -> p == ":ui:kit-content" || p == ":android:media" || p == ":android:camera" },
             "com.k2fsa.sherpa.onnx" to { p -> p == ":android:media" },
             "org.jetbrains:markdown" to { p -> p == ":core:markdown" },
         )
