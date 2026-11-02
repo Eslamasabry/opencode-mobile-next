@@ -1,0 +1,58 @@
+<resources>
+    <!-- P12 PROJECTS: the projects picker, one project's page and All conversations. -->
+    <string name="p12ProjectsTitle">المشاريع</string>
+    <string name="p12OpenFolder">فتح مجلد على الخادم</string>
+    <string name="p12NewProjectUnavailable">لا يستطيع هذا الخادم إنشاء مجلدات من الهاتف. أنشئ المجلد على ذلك الحاسوب، ثم افتحه هنا.</string>
+    <string name="p12PhoneFolder">مجلد على هذا الهاتف</string>
+    <string name="p12PhoneFolderUnavailable">لم يُجهَّز OpenCode على هذا الهاتف في هذا الإصدار بعد.</string>
+    <string name="p12ProjectsOnServer">المشاريع على %1$s</string>
+    <string name="p12ProjectsLoadFailed">تعذّر تحميل مشاريع هذا الخادم.</string>
+    <string name="p12NoServerTitle">لا يوجد خادم متصل</string>
+    <string name="p12NoServerBody">اتصل بخادم لترى مشاريعه ومحادثاته.</string>
+    <string name="p12PathNotAbsolute">أدخل مسارًا كاملًا يبدأ بـ /.</string>
+    <string name="p12PathBadParts">لا يمكن أن يحتوي المسار على «..» أو فواصل أسطر.</string>
+    <string name="p12NewHere">محادثة جديدة هنا</string>
+    <string name="p12NewHereBody">تبدأ محادثة تعمل في %1$s.</string>
+    <string name="p12ProjectConversations">المحادثات في هذا المشروع</string>
+    <string name="p12ProjectNoConversations">لا محادثات في هذا المشروع بعد.</string>
+    <string name="p12ElsewhereTitle">في مشاريع أخرى</string>
+    <string name="p12CreateFailed">تعذّر بدء المحادثة.</string>
+    <string name="p12Select">تحديد</string>
+    <string name="p12SelectCancel">إلغاء التحديد</string>
+    <string name="p12Rename">إعادة تسمية</string>
+    <string name="p12RenameTitle">إعادة تسمية المحادثة</string>
+    <string name="p12RenameField">العنوان</string>
+    <string name="p12RenameEmpty">يحتاج العنوان إلى حرف واحد على الأقل.</string>
+    <string name="p12RenameFailed">تعذّرت إعادة تسمية المحادثة.</string>
+    <plurals name="p12DeleteSelected">
+        <item quantity="zero">حذف %1$d محادثات</item>
+        <item quantity="one">حذف محادثة واحدة</item>
+        <item quantity="two">حذف محادثتين</item>
+        <item quantity="few">حذف %1$d محادثات</item>
+        <item quantity="many">حذف %1$d محادثة</item>
+        <item quantity="other">حذف %1$d محادثة</item>
+    </plurals>
+    <plurals name="p12ArchiveSelected">
+        <item quantity="zero">أرشفة %1$d محادثات</item>
+        <item quantity="one">أرشفة محادثة واحدة</item>
+        <item quantity="two">أرشفة محادثتين</item>
+        <item quantity="few">أرشفة %1$d محادثات</item>
+        <item quantity="many">أرشفة %1$d محادثة</item>
+        <item quantity="other">أرشفة %1$d محادثة</item>
+    </plurals>
+    <string name="p12Deleted">حُذفت «%1$s»</string>
+    <plurals name="p12DeletedMany">
+        <item quantity="zero">حُذفت %1$d محادثات</item>
+        <item quantity="one">حُذفت محادثة واحدة</item>
+        <item quantity="two">حُذفت محادثتان</item>
+        <item quantity="few">حُذفت %1$d محادثات</item>
+        <item quantity="many">حُذفت %1$d محادثة</item>
+        <item quantity="other">حُذفت %1$d محادثة</item>
+    </plurals>
+    <string name="p12DeleteFailed">تعذّر حذف محادثة، فأُعيدت إلى القائمة.</string>
+    <string name="p12ArchiveUnavailable">لا يستطيع هذا الخادم أرشفة المحادثات.</string>
+    <string name="p12ArchiveFailed">تعذّرت أرشفة المحادثة.</string>
+    <string name="p12ArchivedFilter">المؤرشفة</string>
+    <string name="p12MoreFor">المزيد لـ %1$s</string>
+    <string name="p12OpenChat">فتح المحادثة</string>
+</resources>
