@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.engine.transcript.ledger.LedgerTurn
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.engine.transcript.ledger.factTicks
 import io.github.eslamasabry.oc.engine.transcript.ledger.turnWork
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.BackgroundTask
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ChangedFile
@@ -31,16 +32,10 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatLink
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -98,17 +93,8 @@ public class TurnFactsPresenter(private val clock: Clock) {
     private var lastProgress: Long? = null
     private var sessionKey = "turn"
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     public fun states(feed: Flow<TurnFeed>, waiting: Flow<Boolean>, scope: CoroutineScope, started: SharingStarted): StateFlow<TurnFactsUi> {
-        val ticks =
-            feed.map { ticking(it) }.distinctUntilChanged().flatMapLatest { on ->
-                if (on) flow {
-                    while (true) {
-                        emit(clock.now().toEpochMilliseconds())
-                        delay(TICK_MS)
-                    }
-                } else flowOf(clock.now().toEpochMilliseconds())
-            }
+        val ticks = factTicks(clock, feed.map { ticking(it) }, TICK_MS)
         return combine(feed, waiting, ticks) { f, w, now -> present(f, now, w) }
             .stateIn(scope, started, TurnFactsUi.Empty)
     }

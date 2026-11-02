@@ -5,8 +5,7 @@ import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import kotlin.time.Clock
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.SessionId
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flatMapLatest
+import io.github.eslamasabry.oc.engine.transcript.ledger.latest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import androidx.lifecycle.ViewModel
@@ -46,12 +45,11 @@ public class ChatViewModel(
     public val state: StateFlow<ChatUi> = presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(STOP_AFTER_MS))
 
     /** CHAT-TRANSCRIPT: steps, results, context, retry and stall beside the rows (side tables, never the rows). */
-    @OptIn(ExperimentalCoroutinesApi::class)
     public val facts: StateFlow<TurnFactsUi> =
         TurnFactsPresenter(clock)
             .states(
                 (world as? TurnFeedSource)?.turnFeed ?: flowOf(TurnFeed.Empty),
-                world.requests.flatMapLatest { model -> model?.state?.map { it.card != null } ?: flowOf(false) },
+                world.requests.latest { model -> model?.state?.map { it.card != null } ?: flowOf(false) },
                 viewModelScope,
                 SharingStarted.WhileSubscribed(STOP_AFTER_MS),
             )

@@ -40,8 +40,8 @@ public enum class RunOutcomeKind {
     NotReported,
 }
 
-/** Dart RunOutcome: [finish] is the raw server finish reason, [runErrorHeadline] the first meaningful error line. */
-public data class RunOutcomeFact(val kind: RunOutcomeKind, val finish: String? = null, val runErrorHeadline: String? = null)
+/** Dart RunOutcome: [finish] is the raw server finish reason, [errorHeadline] the first meaningful error line. */
+public data class RunOutcomeFact(val kind: RunOutcomeKind, val finish: String? = null, val errorHeadline: String? = null)
 
 public enum class RunFileChange { Edited, Written, Patched }
 
@@ -386,7 +386,7 @@ private fun runOutcomeOf(last: MessageInfo): RunOutcomeFact {
                     else -> RunOutcomeKind.Failed
                 },
             finish = last.finish,
-            runErrorHeadline = runErrorHeadline(errorText),
+            errorHeadline = runErrorHeadline(errorText),
         )
     }
     val completed = last.time?.completedMs
