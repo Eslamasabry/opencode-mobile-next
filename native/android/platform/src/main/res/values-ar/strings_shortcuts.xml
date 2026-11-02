@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shortcut_connect_short">اتصال</string>
+    <string name="shortcut_connect_long">اختر خادمًا للاتصال به</string>
+    <string name="shortcut_new_task_short">محادثة جديدة</string>
+    <string name="shortcut_new_task_long">ابدأ محادثة جديدة على الخادم الحالي</string>
+</resources>
