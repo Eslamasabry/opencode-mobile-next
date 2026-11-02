@@ -120,7 +120,7 @@ Command (installed APKs, run by hand to keep it on one device):
 
 **Seed, on `OC_API37`.**
 - `adb root`, install the Flutter APK, then add a server through the real UI with uiautomator: "Connect to my computer" →
-  "Enter the address instead" → `http://10.0.2.2:4123`, "Allow HTTP", password `fixture-pass-1`, "Save anyway".
+  "Enter the address instead" → the emulator host-alias address (port 4123), "Allow HTTP", password `fixture-pass-1`, "Save anyway".
 - That gave 10 `flutter.*` keys and one FSS entry `pw.<id>`, with markers in the namespaced config file.
 - A fixture rootfs `files/linux/ubuntu/…` (a 1 MiB binary, a symlink, `ubuntu.ready`) was planted with the app's uid and
   SELinux context.
