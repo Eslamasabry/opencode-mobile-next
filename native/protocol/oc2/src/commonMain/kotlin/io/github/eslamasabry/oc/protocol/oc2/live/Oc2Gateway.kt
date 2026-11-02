@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.protocol.oc2.send.Oc2ClientIds
 import io.github.eslamasabry.oc.protocol.oc2.send.Oc2PromptSend
 import io.github.eslamasabry.oc.protocol.oc2.wire.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import kotlin.io.encoding.Base64
@@ -684,17 +685,77 @@ internal class Oc2Gateway(
         return ChatDefaults(ref, null).ok()
     }
 
+    /** GET /fs/list (lib/api2/client.dart fsList): `{path, type}` entries, folders with a trailing `/`. */
     override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> =
-        unavailable("fileBrowsing")
+        read("/fs/list", query = locationQuery() + ("path" to path.ifEmpty { "." })) { reply ->
+            entries(reply).map { entry ->
+                val obj = entry as? JsonObject ?: return@read null
+                val raw = obj.str("path") ?: return@read null
+                val normal = raw.removeSuffix("/")
+                FileNode(
+                    name = normal.substringAfterLast('/'),
+                    path = normal,
+                    isDir = obj.str("type") == "directory" || raw.endsWith("/"),
+                )
+            }.toImmutableList()
+        }
 
-    override suspend fun fileContent(path: String): Outcome<FileContent> =
-        unavailable("fileBrowsing")
+    /**
+     * GET /fs/read/<path> (raw bytes, no JSON envelope). Text only when the bytes are strict UTF-8 without a NUL in
+     * the first 8 KiB; anything else stays exact as base64 (B-MEDIA-001).
+     */
+    override suspend fun fileContent(path: String): Outcome<FileContent> {
+        val bytes =
+            when (val reply = rawBytes("/fs/read/" + path.split('/').joinToString("/") { it.encodeURLPathPart() })) {
+                is Outcome.Failed -> return reply
+                is Outcome.Ok -> reply.value
+            }
+        val sniff = minOf(bytes.size, 8192)
+        var binary = false
+        for (i in 0 until sniff) if (bytes[i] == 0.toByte()) binary = true
+        val text =
+            if (binary) null
+            else
+                try {
+                    bytes.decodeToString(throwOnInvalidSequence = true)
+                } catch (_: CharacterCodingException) {
+                    null
+                }
+        return if (text != null) FileContent(text, "text", null, null).ok()
+        else FileContent(Base64.encode(bytes), "binary", "base64", null).ok()
+    }
 
+    /** GET /fs/find?type=file: a recursive fuzzy file-name search. */
     override suspend fun findFile(query: String): Outcome<ImmutableList<String>> =
-        unavailable("fileBrowsing")
+        read("/fs/find", query = locationQuery() + ("query" to query) + ("type" to "file")) { reply ->
+            entries(reply).map { entry ->
+                (entry as? JsonObject)?.str("path")?.removeSuffix("/") ?: return@read null
+            }.toImmutableList()
+        }
 
+    /** OpenCode 2 has no workspace text search (capability textSearch stays false, as in Dart). */
     override suspend fun findText(pattern: String): Outcome<ImmutableList<FindMatch>> =
-        unavailable("fileBrowsing")
+        unavailable("textSearch")
+
+    /** One GET whose body is raw bytes, through the same dialect routing as [json]. */
+    private suspend fun rawBytes(path: String): Outcome<ByteArray> {
+        if (dialect.value == null) {
+            when (val health = health()) {
+                is Outcome.Failed -> return health
+                is Outcome.Ok -> if (!health.value.healthy) return Failure.UnreadableReply().failed()
+            }
+        }
+        val settled = dialect.value ?: return Failure.UnreadableReply().failed()
+        val route = settled.route(path, HttpMethod.Get, null, locationQuery())
+        val response = net.exchange({ request(route.path, route.method, route.query) }) { reply -> reply.bodyAsBytes() }
+        if (response is Outcome.Failed) {
+            val failure = response.failure
+            if (auth == null && failure is Failure.SignIn && failure.why == SignInWhy.PasswordRejected) {
+                return Failure.SignIn(SignInWhy.PasswordMissing, failure.details).failed()
+            }
+        }
+        return response
+    }
 
     override suspend fun close() {
         try {
@@ -757,7 +818,7 @@ internal class Oc2Gateway(
                 promptAgentMentions = true,
                 promptSteering = true,
                 offlinePromptQueue = false,
-                fileBrowsing = false,
+                fileBrowsing = true,
                 terminal = false,
                 conversationShell = false,
                 projectManagement = false,
