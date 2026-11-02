@@ -33,8 +33,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 
 /**
@@ -162,13 +162,13 @@ public object SendGate {
 public class BasicComposerViewModel(
     @Assisted target: ComposerTarget,
     private val worlds: ChatWorlds,
-    private val filePickers: Set<PromptFilePicker>,
+    private val filePickers: Set<PromptFilePicker> = emptySet(),
     private val attachSources: Set<ComposerAttachSource> = emptySet(),
 ) : ViewModel(), BasicComposerActions {
     private val query = MutableStateFlow<ComposerQuery?>(null)
     private val fileMatches = MutableStateFlow<List<String>>(emptyList())
-    private var search: Job? = null
     private var commandsRequested = false
+
     private val world: ChatWorld? =
         target.sessionId?.let {
             worlds.open(ConversationRef(ProfileId(target.profileId), SessionId(it)))
@@ -273,6 +273,22 @@ public class BasicComposerViewModel(
                 ),
             )
 
+    init {
+        // One project-file search once typing settles; a newer `@` word cancels the older search.
+        world?.let { w ->
+            viewModelScope.launch {
+                @OptIn(kotlinx.coroutines.FlowPreview::class)
+                query.debounce(SEARCH_DEBOUNCE_MS).collectLatest { q ->
+                    if (q is ComposerQuery.File && q.query.isNotEmpty()) {
+                        val found = w.findFiles(q.query)
+                        if (query.value == q && found is Outcome.Ok)
+                            fileMatches.value = ComposerQuery.rankFiles(q.query, found.value)
+                    }
+                }
+            }
+        }
+    }
+
     override fun draftChanged(text: String) {
         world?.draftChanged(text)
         suggest(text)
@@ -284,7 +300,6 @@ public class BasicComposerViewModel(
         val next = ComposerQuery.of(text)
         if (next == query.value) return
         query.value = next
-        search?.cancel()
         when (next) {
             is ComposerQuery.Command ->
                 if (!commandsRequested) {
@@ -293,17 +308,7 @@ public class BasicComposerViewModel(
                         if (w.loadCommands() is Outcome.Failed) commandsRequested = false
                     }
                 }
-            is ComposerQuery.File -> {
-                fileMatches.value = emptyList()
-                if (next.query.isEmpty()) return
-                search =
-                    viewModelScope.launch {
-                        delay(SEARCH_DEBOUNCE_MS)
-                        val found = w.findFiles(next.query)
-                        if (query.value == next && found is Outcome.Ok)
-                            fileMatches.value = ComposerQuery.rankFiles(next.query, found.value)
-                    }
-            }
+            is ComposerQuery.File -> fileMatches.value = emptyList()
             null -> fileMatches.value = emptyList()
         }
     }
