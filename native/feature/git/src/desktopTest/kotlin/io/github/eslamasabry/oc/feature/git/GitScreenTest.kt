@@ -6,10 +6,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Redacted
@@ -121,11 +123,11 @@ class GitScreenTest {
         onNodeWithText("Get latest").assertExists()
         onNodeWithText("Send").assertExists()
         onNodeWithText("2 commits to push").assertExists()
-        onNodeWithText("src/app.kt").assertExists()
-        onNodeWithText("Modified · +3 −1").assertExists()
+        // The file row itself: its path and its kind/counts on one row (the Changes row also names the path).
+        onNode(hasText("src/app.kt") and hasText("Modified · +3 −1")).assertExists()
         onNodeWithText("Save 1 file").assertExists()
-        onNodeWithTag("git-push-row").performClick()
-        onNodeWithTag("git-diff-src/app.kt").performClick()
+        onNodeWithTag("git-push-row").performScrollTo().performClick()
+        onNodeWithTag("git-diff-src/app.kt").performScrollTo().performClick()
         assertTrue("push" in calls)
         assertTrue("diff src/app.kt" in calls)
     }
@@ -155,7 +157,7 @@ class GitScreenTest {
     @Test
     fun `B-SEC-084 GitHub sign-in is a visible row and the waiting code is shown`() = runComposeUiTest {
         setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedOut())) }
-        onNodeWithText("Sign in to GitHub").performClick()
+        onNodeWithText("Sign in to GitHub").performScrollTo().performClick()
         assertEquals("signIn", calls.last())
     }
 
