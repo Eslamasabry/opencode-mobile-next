@@ -125,7 +125,10 @@ internal class GraphChatWorld(
     override val ref: ConversationRef,
     private val registry: ConnectionRegistry,
     private val draftStore: ConversationDrafts? = null,
-) : ChatWorld {
+) : ChatWorld, TurnFeedSource {
+    // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results, context).
+    private val feedKeeper = TurnFeedKeeper(ref.sessionId.raw)
+    override val turnFeed: StateFlow<TurnFeed> = feedKeeper.feed
     private var draftSession = draftStore?.open(ref)
     private val mutableTranscript = MutableStateFlow(TranscriptState.Empty)
     private val mutableLoad = MutableStateFlow<ChatLoad>(ChatLoad.Loading)
@@ -405,6 +408,7 @@ internal class GraphChatWorld(
         mutableCommands.value = emptyList()
         catalogDefaults = null
         mutableTranscript.value = TranscriptState.Empty
+        feedKeeper.reset()
         nextCursor = null
         mutableOlder.value = false
         historyReconciled = false
@@ -513,11 +517,15 @@ internal class GraphChatWorld(
                                     io.github.eslamasabry.oc.core.model.transcript.Role.User
                         )
                             userMessageKeys += "prompt:${event.message.id}"
+                        feedKeeper.event(event, envelope.receivedAtMs)
                         bridge.event(event)?.let(handle::submit)
                     }
                 },
                 scope.launch(registry.mainContext) {
-                    gateway.events.status.collect { mutableLink.value = linkOf(it) }
+                    gateway.events.status.collect {
+                        mutableLink.value = linkOf(it)
+                        feedKeeper.link(mutableLink.value)
+                    }
                 },
                 scope.launch(registry.mainContext) {
                     gateway.events.connects.collect { n ->
@@ -533,9 +541,12 @@ internal class GraphChatWorld(
                         mutableTitle.value = it
                     }
                     val statuses = gateway.sessionStatuses()
-                    if (statuses is Outcome.Ok && statuses.value[sid] == SessionStatus.Busy)
+                    if (statuses is Outcome.Ok && statuses.value[sid] == SessionStatus.Busy) {
                         handle.submit(GatewayEvent.RunStarted(sid.raw))
+                        feedKeeper.running(null)
+                    }
                     readHistory(gateway, handle, bridge)
+                    feedKeeper.loadWindows { services.chatOperations.catalog() }
                 },
             )
         jobs.forEach { job -> stops += { job.cancel() } }
@@ -590,6 +601,7 @@ internal class GraphChatWorld(
                 if (currentAttached()?.handle !== handle)
                     return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
                 handle.loadHistory(page.value.items.map(bridge::message), version)
+                feedKeeper.history(page.value.items)
                 nextCursor = page.value.nextCursor
                 mutableOlder.value = nextCursor != null
                 page.value.items

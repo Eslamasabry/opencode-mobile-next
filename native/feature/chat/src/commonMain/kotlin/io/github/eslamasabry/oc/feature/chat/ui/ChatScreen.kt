@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
+import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -130,7 +134,9 @@ public fun ChatScreen(
     modifier: Modifier = Modifier,
     requests: RequestSlotUi = RequestSlotUi(),
     requestActions: ChatRequestActions? = null,
+    facts: TurnFactsUi = TurnFactsUi.Empty,
 ) {
+    var contextOpen by remember { mutableStateOf(false) }
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
     val requestState by rememberUpdatedState(requests)
     val words = rememberChatWords()
@@ -203,12 +209,20 @@ public fun ChatScreen(
                         exitLabel = stringResource(Res.string.kitTopBarBack),
                         onExit = actions::leaveRequested,
                         actions =
-                            listOf(
+                            listOfNotNull(
+                                // CHAT-TRANSCRIPT (B-CHAT-019): the context reading folds into the bar's actions.
+                                facts.context?.let { context ->
+                                    KitLineAction(
+                                        stringResource(Res.string.kitContextRingSemantics, Numbers.format(context.percent)),
+                                        { contextOpen = true },
+                                        testTag = "chat-context-open",
+                                    )
+                                },
                                 KitLineAction(
                                     stringResource(Res.string.kitTopBarSearch),
                                     { actions.find(state.find?.query ?: "") },
                                     testTag = "chat-find-open",
-                                )
+                                ),
                             ),
                     )
                 },
@@ -262,6 +276,7 @@ public fun ChatScreen(
                                 onOpenMenu = actions::openMessageMenu,
                                 onRetrySend = actions::retrySend,
                                 modifier = Modifier.fillMaxSize(),
+                                facts = facts,
                             )
                             EarlierMessagesPill(
                                 state,
@@ -277,6 +292,7 @@ public fun ChatScreen(
             // The menu opens over the composer's end, where the action that opened it is under the
             // thumb.
             MessageMenu(state.menu, actions, Modifier.align(Alignment.BottomEnd))
+            ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
             KitConfirm(
                 spec = confirmSpec(state.confirm),
                 onConfirm = {

@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.engine.transcript.state.WorkLineRow
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
+import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -73,6 +74,9 @@ internal class ChatListWords(
 internal object ListKeys {
     const val LIVE: String = "live"
 
+    /** CHAT-TRANSCRIPT: background work still running (B-CHAT-007), just above the live line. */
+    const val BACKGROUND: String = "background"
+
     fun pending(localId: Long): String = "pending:$localId"
 }
 
@@ -120,7 +124,9 @@ internal fun ChatTranscriptList(
     onOpenMenu: ((String) -> Unit)?,
     onRetrySend: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    facts: TurnFactsUi = TurnFactsUi.Empty,
 ) {
+    val folds = rememberTranscriptFolds()
     val newestKey =
         when {
             live != null -> ListKeys.LIVE
@@ -137,10 +143,21 @@ internal fun ChatTranscriptList(
         if (live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
                 // No Stop here (plan 09 §4.4): Stop sits in the composer's row.
+                // Retry, stall and shortening fold into the live line: no new bar (CHAT-TRANSCRIPT).
+                val notice = facts.live
                 KitQuietLine(
-                    if (live.stopping) listWords.stopping else listWords.working,
+                    when {
+                        live.stopping -> listWords.stopping
+                        notice != null -> liveNoticeWords(notice)
+                        else -> listWords.working
+                    },
                     Modifier.testTag("chat-live-line"),
                 )
+            }
+        }
+        if (facts.background.isNotEmpty() && listWords != null) {
+            item(key = ListKeys.BACKGROUND, contentType = "background") {
+                KitQuietLine(backgroundWords(facts.background, facts.nowMs), Modifier.testTag("chat-background-work"))
             }
         }
         if (listWords != null) {
@@ -153,7 +170,7 @@ internal fun ChatTranscriptList(
             }
         }
         items(rows, key = { it.key }, contentType = { it.kind }) { row ->
-            ChatRow(row, words, listWords, reveal, motion, onOpenMenu)
+            ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds)
         }
     }
 }
@@ -186,6 +203,8 @@ private fun ChatRow(
     reveal: RevealRegistry,
     motion: KitMotionLevel,
     onOpenMenu: ((String) -> Unit)?,
+    facts: TurnFactsUi = TurnFactsUi.Empty,
+    folds: TranscriptFolds? = null,
 ) {
     when (row) {
         is BlockRow ->
@@ -218,13 +237,16 @@ private fun ChatRow(
                 KitPromptBubble(row.text)
             }
         is ThoughtRow -> KitQuietLine(words.thought(row.firstLine))
-        is WorkLineRow ->
-            KitQuietLine(
+        is WorkLineRow -> {
+            val work = facts.work[row.turnId]
+            if (work != null && folds != null) TurnWorkLine(work, facts.nowMs, folds)
+            else KitQuietLine(
                 if (listWords != null) workLineWords(row.calls, row.state)
                 else words.workLine(row.calls, row.failed, row.state)
             )
+        }
         is NoticeRow -> KitQuietLine(words.notice(row.notice))
-        is FooterRow ->
+        is FooterRow -> Column {
             if (onOpenMenu != null && listWords != null) {
                 KitTappable(
                     onClick = { onOpenMenu(row.key) },
@@ -237,6 +259,9 @@ private fun ChatRow(
             } else {
                 KitQuietLine(words.footer(row.failed))
             }
+            val result = facts.results[row.turnId]
+            if (result != null && folds != null) TurnResultLine(row.turnId, result, folds)
+        }
     }
 }
 
