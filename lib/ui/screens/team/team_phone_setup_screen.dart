@@ -219,8 +219,6 @@ List<KitStep> phoneTeamSetupSteps(
             c.problem == PhoneTeamSetupProblem.unsafe &&
             (c.details ?? '').contains('not_packaged')) {
           supporting = l.phoneTeamReasonNotPackaged;
-        } else if (step == PhoneTeamSetupStep.check) {
-          supporting = phoneTeamProofStepText(l, c.details);
         }
       } else if (took != null) {
         state = KitMarkState.done;

@@ -160,8 +160,8 @@ path, argv, environment, sentinel content or OS message. The daemon config
 `PhoneProofStep.parse` reads the step. Details (and so Copy all) is now: the
 plain sentence (`phoneTeamWhyUnsafe`, since a failed check is not an engine
 crash), a plain line naming the step (nine new strings, English and Arabic),
-then the code. The failed "Checking this phone is safe" step shows the same
-plain line. Every failed run is recorded in the app diagnostics export
+then the code. The step names are technical (`io-uring`, `git-commit`), so
+the line stays inside Details, as the copy rules (COPY-11) ask. Every failed run is recorded in the app diagnostics export
 (source `aiteam-setup`) as short fields, e.g.
 `AI Team setup stopped; step check; problem engine; code boundary_proof_failed; step native signal-31; kind signal; signal 31`.
 Fields are split so the export's long-token mask cannot hide them.
@@ -180,7 +180,7 @@ Fields are split so the export's long-token mask cannot hide them.
 | `flutter test --concurrency=1 test/phone_team_setup_test.dart` (Flutter 3.47.8 / Dart 3.13.7) | 43/43 pass (5 new) |
 | `flutter test test/native_libs_page_alignment_test.dart` | 3/3 pass; a planted 4 KB-aligned `.so` fails it |
 | `flutter analyze` (changed Dart files, l10n) | no issues |
-| `tool/qa/preflight.sh` | see commit notes below |
+| `tool/qa/preflight.sh 7fcf9cf9` | commit rules + format OK, gen-l10n leaves no diff, full `flutter analyze` clean. QA tool tests: 1 error, repo-scanning tests: 17 failures; **all identical on the untouched base commit** (same messages byte for byte; e.g. glossary keys `connCheckAgain`, `reachSsh3`; the bb5 test needs the pinned Shorebird Dart path). None names a file or key this branch changes |
 
 Not run: `BuiltinLinux.kt` compile (`flutter build apk` needs the Android SDK
 and the rebuilt bundle), the full serial Flutter suite, any device.

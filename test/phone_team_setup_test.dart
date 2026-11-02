@@ -1007,7 +1007,7 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
-    testWidgets('issue #111: the failed check step says where it stopped', (
+    testWidgets('issue #111: Details says where the safety check stopped', (
       tester,
     ) async {
       _size(tester);
@@ -1020,15 +1020,16 @@ void main() {
       );
       await _settle(tester);
       final plain = _en.phoneTeamProofCheckSignal('io-uring', 11);
-      // Under the failed step, in plain words; the code stays in Details.
-      expect(find.text(plain), findsOneWidget);
+      // The step names technical checks, so it lives in Details (COPY-11).
+      expect(find.textContaining(plain), findsNothing);
       expect(
-        find.text('boundary_proof_failed:native.io-uring.signal-11'),
+        find.textContaining('boundary_proof_failed:native.io-uring.signal-11'),
         findsNothing,
       );
       await tester.tap(find.text('Details'));
       await _settle(tester);
       expect(find.textContaining(_en.phoneTeamWhyUnsafe), findsOneWidget);
+      expect(find.textContaining(plain), findsOneWidget);
       expect(
         find.textContaining('boundary_proof_failed:native.io-uring.signal-11'),
         findsOneWidget,
