@@ -1,0 +1,18 @@
+Verdict: FAIL — 0 BLOCKER, 4 MAJOR, 1 MINOR.
+
+1. **MAJOR — Migration retries can undo GitHub sign-out.** [PreviewStores.kt:37](/home/eslam/Storage2/wt/codex-review-p12/native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PreviewStores.kt:37)  
+   App secret writes/deletes bypass the migration credential ledger. If the initial GitHub import fails temporarily, its re-entry flag remains without a ledger record. The person can then sign in through Git and sign out; neither operation clears that flag or records a tombstone. On a subsequent launch, `retryFlagged()` can decrypt the old Flutter token and restore the account they signed out of. **Rows: B-MIGR-006, B-SEC-084.**
+
+2. **MAJOR — “Enter password” cannot repair the migrated server.** [MigrationWiring.kt:291](/home/eslam/Storage2/wt/codex-review-p12/native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/MigrationWiring.kt:291)  
+   Every re-entry action ignores both the profile ID and secret kind and opens `ServersRoute.Home`. That screen has no credential editor for an existing profile; saving creates a new UUID. An unreadable migrated password/token therefore cannot be repaired while retaining its profile-scoped drafts, schedules and other data. The sheet is nevertheless acknowledged permanently. GitHub and BYO recovery rows also open this unrelated destination. **Rows: B-MIGR-006, B-MIGR-007.**
+
+3. **MAJOR — Preference loading races the safety backup.** [PreviewStores.kt:36](/home/eslam/Storage2/wt/codex-review-p12/native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PreviewStores.kt:36)  
+   Constructing the store immediately calls `getSharedPreferences`; waiting in `warm()` happens afterward. With a Flutter `.xml.bak` present, Android’s loader can delete/rename the source files while S0 enumerates and copies them. S0 can consequently throw on a disappearing file or record an incorrect source length after copying an already-open `.bak`. The latter produces a published backup that fails verification. There is no startup fence protecting this operation. **Row: B-MIGR-010.**
+
+4. **MAJOR — Start fresh recovery can crash before the failure screen exists.** [MigrationWiring.kt:93](/home/eslam/Storage2/wt/codex-review-p12/native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/MigrationWiring.kt:93)  
+   Phase-two recovery runs synchronously during application graph construction, outside the engine’s guarded runner. If creating the replacement directory, moving a file or saving the journal fails—for example, storage fills after phase one—the exception escapes `Application.onCreate`. The pending transaction remains, so subsequent launches repeat the crash without exposing Try again, storage settings or Report. **Row: B-MIGR-010.**
+
+5. **MINOR — Background completion permanently suppresses the deferred-data notice.** [GatePresenter.kt:72](/home/eslam/Storage2/wt/codex-review-p12/native/feature/gate/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/gate/GatePresenter.kt:72)  
+   The notice requires `firstNativeLaunch`. If migration completes in a background process, or the process dies before its first UI launch, the runner has already persisted `firstOpenAt`. Later launches report `firstNativeLaunch = false`, so the unacknowledged AI Team/Memory notice never appears. **Row: B-MIGR-009.**
+
+Static review only; no builds/tests run and no files changed.
