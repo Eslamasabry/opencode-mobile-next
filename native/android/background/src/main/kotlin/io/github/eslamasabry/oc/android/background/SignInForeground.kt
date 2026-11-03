@@ -356,3 +356,19 @@ internal class SignInLease(private val owner: SignInForegroundState) : Foregroun
 
     override suspend fun release(): Outcome<Unit> = if (owner.release(this)) Unit.ok() else Outcome.Failed(Failure.Device())
 }
+
+/**
+ * The Details code a sign-in terminal shows under its failure words (Flutter `LocalTerminalSessions._signInFailure`):
+ * the step (`admission`: Android refused or never started the service; `lost`: it stopped while signing in) and the
+ * cause's own fixed code. Null when there is nothing to name (a typed reason other than unavailable, without a code).
+ * Never the platform's or the agent's text.
+ */
+public object SignInCodes {
+    public const val STEP_ADMISSION: String = "admission"
+    public const val STEP_LOST: String = "lost"
+
+    public fun detail(step: String, loss: ForegroundLoss): String? {
+        if (loss.reason != ForegroundFailure.Unavailable && loss.code == null) return null
+        return "sign-in-$step" + (loss.code?.let { "/$it" } ?: "")
+    }
+}

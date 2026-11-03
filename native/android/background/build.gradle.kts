@@ -3,7 +3,7 @@
 // from the Flutter app's lib/background/live_background.dart, signin_foreground.dart, lib/domain/background_pause.dart,
 // agent_sign_in_foreground.dart, lib/state/background_pause_notice.dart, first_reply_notify_offer.dart and the
 // Kotlin BackgroundPauseStore/BackgroundPauseReceipt. The notification half lives in :android:notifications; the
-// BackgroundConnectionService shell stays in :androidApp. See README.md for the wiring.
+// BackgroundConnectionService shell stays in :androidApp.
 plugins { id("oc.android.library") }
 
 android {
