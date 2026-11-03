@@ -1,12 +1,20 @@
 package io.github.eslamasabry.oc.feature.gate
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
+import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.feature.gate.ui.GateScreen
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -51,6 +59,8 @@ class GateScreenDesktopTest {
             onCancelConfirm = { taps += "cancel" },
             onReentry = { taps += "reentry:${it.targetName}" },
             onReentryLater = { taps += "later" },
+            onReentrySubmit = { taps += "submit:${it.length}" },
+            onReentryBack = { taps += "back" },
             content = { KitText("App content") },
         )
 
@@ -162,5 +172,28 @@ class GateScreenDesktopTest {
         setContent(ui("ar") { Gate(GateUi.Failed(GateFailureScreen.SaveFailed, rows)) })
         onNodeWithText("تعذّر الحفظ على هذا الهاتف").assertExists()
         onNodeWithText("فتح إعدادات التخزين").assertExists()
+    }
+
+    /** Migration proof 2026-11-03: the password is typed in the sheet, for the server the row names. */
+    @Test
+    fun `B-MIGR-006 a password row asks for the password in the sheet and never shows it`() = runComposeUiTest {
+        Locale.setDefault(Locale.ENGLISH)
+        val home = GateReentry("p1", "Home server", GateReentryKind.Password)
+        var state by mutableStateOf<GateUi>(GateUi.Open(listOf(home), deferredNotice = false, entry = GateEntry(home)))
+        val registered = mutableListOf<String>()
+        val sink = KitSecretSink { registered += it }
+        setContent(ui { CompositionLocalProvider(LocalKitSecretSink provides sink) { Gate(state) } })
+        waitForIdle()
+        onNodeWithText("Password for Home server").assertExists()
+        onNode(hasSetTextAction()).performTextInput("s3cret")
+        onNode(hasSetTextAction()).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Password)) // drawn as dots
+        assertEquals("s3cret", registered.last()) // the redactor knows it before anything could log it
+        onNodeWithText("Save").performClick()
+        onNodeWithText("Back to the list").performClick()
+        assertEquals(listOf("submit:6", "back"), taps)
+
+        state = GateUi.Open(listOf(home), deferredNotice = false, entry = GateEntry(home, failed = true))
+        waitForIdle()
+        onNodeWithText("Couldn't save it on this phone. Try again.").assertExists()
     }
 }

@@ -19,6 +19,9 @@ public interface GatePlatform {
     /** Opens where [item] is typed again (the saved server's sign-in, the Git page, …). */
     public fun openReentry(item: GateReentry)
 
+    /** Stores [secret] as [item]'s saved server's password or token (same server, same id). False when refused. */
+    public suspend fun saveSecret(item: GateReentry, secret: String): Boolean = false
+
     public companion object {
         public val None: GatePlatform = object : GatePlatform {
             override fun reportProblem(detail: String?) = Unit
@@ -78,6 +81,8 @@ public class EngineGateActions(private val engine: MigrationEngine, private val 
     override suspend fun openReentry(item: GateReentry): Unit = platform.openReentry(item)
 
     override suspend fun acknowledgeDeferredNotice(): Unit = engine.acknowledgeDeferredNotice()
+
+    override suspend fun saveReentry(item: GateReentry, secret: String): Boolean = platform.saveSecret(item, secret)
 }
 
 /** GitHub is a product name: the same in every language. */
