@@ -263,7 +263,9 @@ class AndroidSettingsHost(
                         motion = p.effects.motion.wire,
                         savedServers = servers.size,
                         connectedServers = servers.count { it.connected },
-                        errors = diagnosticsLog.errors.value.map { ReportError(it.at.toString(), it.source, it.message, it.occurrences) },
+                        errors =
+                            gitHubReports.keptErrors()?.map { (at, source, message) -> ReportError(at, source, message) }
+                                ?: diagnosticsLog.errors.value.map { ReportError(it.at.toString(), it.source, it.message, it.occurrences) },
                     )
                 return DiagnosticsReport.text(facts).ok()
             }

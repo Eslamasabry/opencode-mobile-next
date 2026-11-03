@@ -254,6 +254,15 @@ class GitHubProblemReporter(
     private val scope = CoroutineScope(appScope.coroutineContext)
     private val policy = ExternalLinkPolicy()
 
+    /**
+     * The errors Report a problem lists, oldest first: the persisted report's (they survive a restart, B-STATE-075),
+     * else null so the caller keeps this run's ring. Each is (time, source, message), already redacted.
+     */
+    fun keptErrors(): List<Triple<String, String, String>>? =
+        report.current?.report?.entries
+            ?.filter { it.kind.name == "Error" || it.kind.name == "AndroidExit" }
+            ?.map { Triple(it.at.toString(), it.source, it.message) }
+
     fun send(connection: String?) {
         scope.launch {
             val stored =
