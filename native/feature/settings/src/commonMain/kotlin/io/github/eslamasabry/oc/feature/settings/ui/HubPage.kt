@@ -11,9 +11,12 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPlaceEntry
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearchEntry
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
+import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsSupporting
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -39,6 +42,8 @@ internal fun HubPage(state: SettingsUi, actions: SettingsActions, modifier: Modi
     val hub = state.hub
     val entries = hub.searchable.map { SettingsSearchEntry(it, rowWords(it), aliasWords(it)) }
     LaunchedEffect(entries) { actions.onSearchEntries(entries) }
+    val placeEntries = hub.placesSearchable.map { SettingsPlaceEntry(it, placeWords(it), placeAliases(it)) }
+    LaunchedEffect(placeEntries) { actions.onPlaceEntries(placeEntries) }
     val field = rememberTextFieldState(hub.query)
     LaunchedEffect(field) { snapshotFlow { field.text.toString() }.collect { actions.onQuery(it) } }
     // Back clears the search in the presenter; the field follows.
@@ -63,7 +68,7 @@ internal fun HubPage(state: SettingsUi, actions: SettingsActions, modifier: Modi
                     )
                 }
             }
-        } else if (hub.results.isEmpty()) {
+        } else if (hub.nothingFound) {
             KitText(
                 stringResource(Res.string.kitSearchNoMatch, hub.query),
                 Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S4.dp),
@@ -78,7 +83,17 @@ internal fun HubPage(state: SettingsUi, actions: SettingsActions, modifier: Modi
                         modifier = Modifier.testTag(row.tag),
                         supporting = groupWords(row.group),
                         trailing = KitRowTrailing.Chevron,
-                        onClick = { actions.onRow(row) },
+                        onClick = { actions.onSearchResult(row) },
+                    )
+                }
+                // Places inside pages, each saying the page it sits on.
+                hub.places.forEach { place ->
+                    KitRow(
+                        title = placeWords(place),
+                        modifier = Modifier.testTag(place.tag),
+                        supporting = rowWords(place.parent),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = { actions.onPlace(place) },
                     )
                 }
             }
@@ -103,11 +118,16 @@ internal fun GroupPage(state: SettingsUi, actions: SettingsActions, page: Settin
                 val title = rowWords(row.id)
                 when (val door = row.door) {
                     is SettingsDoor.Switch ->
-                        KitSwitchRow(title = title, checked = door.on, modifier = Modifier.testTag(row.id.tag)) { actions.onRow(row.id) }
+                        KitSwitchRow(
+                            title = title,
+                            checked = door.on,
+                            modifier = Modifier.settingsAnchor(row.id.tag, state.focus),
+                            supporting = rowSupporting(row.id),
+                        ) { actions.onRow(row.id) }
                     else ->
                         KitRow(
                             title = title,
-                            modifier = Modifier.testTag(row.id.tag),
+                            modifier = Modifier.settingsAnchor(row.id.tag, state.focus),
                             trailing = KitRowTrailing.Chevron,
                             onClick = { actions.onRow(row.id) },
                         )
@@ -116,3 +136,11 @@ internal fun GroupPage(state: SettingsUi, actions: SettingsActions, page: Settin
         }
     }
 }
+
+/** The one supporting line a group row carries, where Flutter gives it one. */
+@Composable
+private fun rowSupporting(row: SettingsRowId): String? =
+    when (row) {
+        SettingsRowId.PhraseChips -> stringResource(Res.string.settingsPhraseChipsSupporting)
+        else -> null
+    }

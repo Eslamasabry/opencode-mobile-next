@@ -92,6 +92,13 @@ import io.github.eslamasabry.oc.ui.words.res.settingsV3Servers
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
 import io.github.eslamasabry.oc.ui.words.res.signalStyleName
 import io.github.eslamasabry.oc.ui.words.res.tipsTitle
+import io.github.eslamasabry.oc.ui.words.res.capabilityScreenAliases
+import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
+import io.github.eslamasabry.oc.ui.words.res.monitorBackgroundChecks
+import io.github.eslamasabry.oc.ui.words.res.settingsParityBackgroundAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsParityPhraseChipsAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsSupporting
+import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsTitle
 import org.jetbrains.compose.resources.stringResource
 
 /** Enum → `:ui:words` copy for the Settings pages. Lines `:ui:words` lacks are in [PendingWords]. */
@@ -119,6 +126,7 @@ internal fun rowWords(row: SettingsRowId): String =
         SettingsRowId.Agents -> Res.string.settingsV3AgentsOnPhone
         SettingsRowId.ShowReasoning -> Res.string.settingsHubShowReasoning
         SettingsRowId.ShowTimestamps -> Res.string.settingsHubShowTimestamps
+        SettingsRowId.PhraseChips -> Res.string.settingsPhraseChipsTitle
         SettingsRowId.DefaultShell -> Res.string.e7SettingsUi35
         SettingsRowId.Voice -> Res.string.settingsHubVoice
         SettingsRowId.Permissions -> Res.string.settingsV3Permissions
@@ -131,12 +139,21 @@ internal fun rowWords(row: SettingsRowId): String =
         SettingsRowId.Guide -> Res.string.onboardingSetupGuide
         SettingsRowId.Tips -> Res.string.tipsTitle
         SettingsRowId.ReportProblem -> Res.string.kitReportProblem
+        SettingsRowId.ServerCapabilities -> Res.string.capabilityScreenTitle
         SettingsRowId.About -> Res.string.aboutTitle
     })
 
 /** The freeze tip's acceptance words per row (bilingual where `:ui:words` has them); empty = the title only. */
 @Composable
 internal fun aliasWords(row: SettingsRowId): String {
+    // Rows with two alias lines (B-NAV-042, B-NAV-050).
+    when (row) {
+        SettingsRowId.PhraseChips ->
+            return stringResource(Res.string.settingsPhraseChipsSupporting) + " " + stringResource(Res.string.settingsParityPhraseChipsAliases)
+        SettingsRowId.Background ->
+            return stringResource(Res.string.monitorBackgroundChecks) + " " + stringResource(Res.string.settingsParityBackgroundAliases)
+        else -> Unit
+    }
     val key = when (row) {
         SettingsRowId.Servers -> Res.string.settingsHubSearchSavedServersAliases
         SettingsRowId.ThisPhone -> Res.string.settingsHubSearchPhoneAliases
@@ -156,7 +173,8 @@ internal fun aliasWords(row: SettingsRowId): String {
         SettingsRowId.Guide -> Res.string.settingsHubSearchGuideAliases
         SettingsRowId.ReportProblem -> Res.string.settingsHubSearchBugAliases
         SettingsRowId.About -> Res.string.settingsHubSearchAboutAliases
-        SettingsRowId.Agents, SettingsRowId.Background, SettingsRowId.Language, SettingsRowId.Tips -> null
+        SettingsRowId.ServerCapabilities -> Res.string.capabilityScreenAliases
+        SettingsRowId.Agents, SettingsRowId.Background, SettingsRowId.Language, SettingsRowId.Tips, SettingsRowId.PhraseChips -> null
     }
     return key?.let { stringResource(it) }.orEmpty()
 }

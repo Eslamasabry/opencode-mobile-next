@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
+import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
@@ -57,7 +58,7 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions, modifier:
         is SettingsPage.Group -> GroupPage(state, actions, page, modifier)
         SettingsPage.Appearance ->
             SettingsFrame(stringResource(Res.string.e7AppearanceTitle), back, state, actions, modifier) {
-                AppearanceBody(state.appearance, actions)
+                AppearanceBody(state.appearance, actions, state.focus)
             }
         SettingsPage.Voice ->
             SettingsFrame(stringResource(Res.string.settingsHubVoice), back, state, actions, modifier) {
@@ -65,7 +66,7 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions, modifier:
             }
         SettingsPage.Notifications ->
             SettingsFrame(stringResource(Res.string.settingsV3Notifications), back, state, actions, modifier) {
-                state.notifications?.let { NotificationsBody(it, actions) }
+                state.notifications?.let { NotificationsBody(it, actions, state.focus) }
             }
         SettingsPage.Updates ->
             SettingsFrame(stringResource(Res.string.appUpdatesTitle), back, state, actions, modifier) {
@@ -88,6 +89,10 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions, modifier:
         SettingsPage.ReportProblem ->
             SettingsFrame(stringResource(Res.string.kitReportProblem), back, state, actions, modifier) {
                 ReportBody(state.report, actions)
+            }
+        is SettingsPage.ServerCapabilities ->
+            SettingsFrame(stringResource(Res.string.capabilityScreenTitle), back, state, actions, modifier) {
+                state.capabilities?.let { CapabilitiesBody(it, actions) }
             }
         is SettingsPage.QuietTime ->
             SettingsFrame(

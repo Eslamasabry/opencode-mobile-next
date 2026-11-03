@@ -38,6 +38,12 @@ public sealed interface SettingsPage {
 
     /** Settings › This app › Notifications › Quiet hours start ([start]) or end: one check-mark choice per time. */
     public data class QuietTime(val start: Boolean) : SettingsPage
+
+    /**
+     * Settings › Help › Available on this server (Flutter `ServerCapabilitiesScreen`): why a row is missing. [focus] is
+     * the feature the person came about; it is listed first, whether this server has it or not.
+     */
+    public data class ServerCapabilities(val focus: ServerFeature? = null) : SettingsPage
 }
 
 /**
@@ -51,6 +57,9 @@ public enum class SettingsOutside {
     Guide, Tips, ReportProblem, WhatsNew, Notices, PrivacyPolicy, StarOnGitHub, ShareApp,
     VoiceSetup, VoiceNotices,
     AndroidNotificationSettings, UsageAlerts, QuietHours, ReleaseNotes,
+
+    /** Places only search leads to (inside other features' pages); absent unless the host opens them. */
+    RunningOnPhone, LinuxServices, AiSetup,
 }
 
 /** Opens a place another feature owns. */

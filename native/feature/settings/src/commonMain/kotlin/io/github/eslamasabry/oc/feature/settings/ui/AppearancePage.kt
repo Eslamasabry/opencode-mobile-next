@@ -3,7 +3,9 @@ package io.github.eslamasabry.oc.feature.settings.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -43,7 +45,7 @@ import org.jetbrains.compose.resources.stringResource
  * Text size is the last question (B-KIT-059). Fine-tune, accent, glow and the guided first visit are S4-APPEAR's.
  */
 @Composable
-internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions) {
+internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions, focus: String? = null) {
     val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
 
     KitSectionLabel(stringResource(Res.string.appearanceAskMode))
@@ -108,14 +110,16 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
     if (ui.systemMotionOff) KitGroupNote(stringResource(Res.string.effectsMotionSystemOff))
 
     // B-KIT-059: Default until chosen; applies at the app root at once, this page included.
-    KitSectionLabel(stringResource(Res.string.textSizeTitle))
-    Box(gutter) {
-        KitSegmented(
-            segments = AppTextSize.entries.map { KitSegment(it, textSizeWords(it)) },
-            selected = ui.textSize,
-            semanticsLabel = stringResource(Res.string.textSizeTitle),
-            modifier = Modifier.testTag("appearance-text-size"),
-            onChange = actions::onTextSize,
-        )
+    Column(Modifier.settingsAnchor(SettingsSection.AppearanceTextSize.tag, focus)) {
+        KitSectionLabel(stringResource(Res.string.textSizeTitle))
+        Box(gutter) {
+            KitSegmented(
+                segments = AppTextSize.entries.map { KitSegment(it, textSizeWords(it)) },
+                selected = ui.textSize,
+                semanticsLabel = stringResource(Res.string.textSizeTitle),
+                modifier = Modifier.testTag("appearance-text-size"),
+                onChange = actions::onTextSize,
+            )
+        }
     }
 }

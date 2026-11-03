@@ -1,0 +1,6 @@
+<resources>
+    <string name="settingsParityBackgroundAliases">background checks الفحوص في الخلفية فحوص مراقبة إبقاء التشغيل البقاء متصلاً البطارية خدمة</string>
+    <string name="settingsParityPhraseChipsAliases">phrase chips اقتراح العبارات عبارات سريعة اقتراحات</string>
+    <string name="settingsParityRunningAliases">processes running العمليات قيد التشغيل الذاكرة حرارة البطارية عالق إيقاف</string>
+    <string name="settingsParityServicesAliases">linux services لينكس الخدمات إبقاء التشغيل أمر خادم إعادة التشغيل</string>
+</resources>

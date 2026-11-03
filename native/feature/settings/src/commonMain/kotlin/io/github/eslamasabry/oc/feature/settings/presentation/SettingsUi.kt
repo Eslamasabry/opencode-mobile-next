@@ -26,6 +26,13 @@ public data class SettingsUi(
     val report: ReportUi? = null,
     /** One plain line about the last save that did not stick, if any. */
     val note: SettingsNote? = null,
+    /**
+     * The anchor (a row's or a section's tag) the page on top was opened at by a search result or a deep link: the
+     * page scrolls it into view once. Null after any other move.
+     */
+    val focus: String? = null,
+    /** Available on this server; null unless that page is open. */
+    val capabilities: CapabilitiesUi? = null,
 ) {
     val page: SettingsPage get() = stack.last()
 }
@@ -38,7 +45,14 @@ public data class HubUi(
     val results: ImmutableList<SettingsRowId> = persistentListOf(),
     /** Every row that exists now: the screen builds the search entries from these. */
     val searchable: ImmutableList<SettingsRowId> = persistentListOf(),
-)
+    /** Places inside pages matching [query], listed after [results]. */
+    val places: ImmutableList<SettingsPlaceId> = persistentListOf(),
+    /** Every place that exists now (the screen builds their search entries). */
+    val placesSearchable: ImmutableList<SettingsPlaceId> = persistentListOf(),
+) {
+    /** A query that matches neither a row nor a place. */
+    val nothingFound: Boolean get() = query.isNotBlank() && results.isEmpty() && places.isEmpty()
+}
 
 public data class GroupUi(val id: SettingsGroupId, val rows: ImmutableList<SettingsRowUi>)
 

@@ -24,6 +24,9 @@ public interface SettingsHost {
     public val updates: UpdateSettings?
     public val about: AboutFacts
     public val diagnostics: DiagnosticsExport?
+
+    /** The app-wide phrase suggestions switch; null where the host has no phrase store (the row is absent). */
+    public val phraseChips: PhraseChipsSetting? get() = null
 }
 
 /**
@@ -46,6 +49,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.updates,
             host.about,
             host.diagnostics,
+            host.phraseChips,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

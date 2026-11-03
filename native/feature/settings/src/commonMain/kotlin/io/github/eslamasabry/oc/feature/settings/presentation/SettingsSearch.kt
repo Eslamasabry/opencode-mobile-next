@@ -9,6 +9,9 @@ import kotlinx.collections.immutable.toImmutableList
  */
 public data class SettingsSearchEntry(val row: SettingsRowId, val title: String, val aliases: String = "")
 
+/** One searchable place inside a page ([SettingsPlaceId]), with its words in the person's language. */
+public data class SettingsPlaceEntry(val place: SettingsPlaceId, val title: String, val aliases: String = "")
+
 /**
  * Settings search (B-NAV-071, B-NAV-072). Literal matches (every query word is a prefix of, or inside, a word of the
  * title or aliases) rank above fuzzy ones (one edit, a swap counts as one, for words of four letters or more); ties
@@ -20,18 +23,25 @@ public data class SettingsSearchEntry(val row: SettingsRowId, val title: String,
 public object SettingsSearch {
     private const val FUZZY_FROM = 4
 
-    public fun find(query: String, entries: List<SettingsSearchEntry>): ImmutableList<SettingsRowId> {
-        val words = tokens(query)
-        if (words.isEmpty()) return emptyList<SettingsRowId>().toImmutableList()
-        val literal = mutableListOf<SettingsRowId>()
-        val fuzzy = mutableListOf<SettingsRowId>()
+    public fun find(query: String, entries: List<SettingsSearchEntry>): ImmutableList<SettingsRowId> =
+        rank(query, entries, { it.row }) { it.title + " " + it.aliases }
+
+    /** The same rules for places inside pages. */
+    public fun findPlaces(query: String, entries: List<SettingsPlaceEntry>): ImmutableList<SettingsPlaceId> =
+        rank(query, entries, { it.place }) { it.title + " " + it.aliases }
+
+    private fun <E, T> rank(query: String, entries: List<E>, id: (E) -> T, words: (E) -> String): ImmutableList<T> {
+        val asked = tokens(query)
+        if (asked.isEmpty()) return emptyList<T>().toImmutableList()
+        val literal = mutableListOf<T>()
+        val fuzzy = mutableListOf<T>()
         for (entry in entries) {
-            val text = (entry.title + " " + entry.aliases).lowercase()
+            val text = words(entry).lowercase()
             val hay = tokens(text)
             when {
-                words.all { w -> text.contains(w) || hay.any { it.startsWith(w) } } -> literal += entry.row
-                words.all { w -> hay.any { it.startsWith(w) } || (w.length >= FUZZY_FROM && hay.any { near(w, it) }) } ->
-                    fuzzy += entry.row
+                asked.all { w -> text.contains(w) || hay.any { it.startsWith(w) } } -> literal += id(entry)
+                asked.all { w -> hay.any { it.startsWith(w) } || (w.length >= FUZZY_FROM && hay.any { near(w, it) }) } ->
+                    fuzzy += id(entry)
             }
         }
         return (literal + fuzzy).distinct().toImmutableList()

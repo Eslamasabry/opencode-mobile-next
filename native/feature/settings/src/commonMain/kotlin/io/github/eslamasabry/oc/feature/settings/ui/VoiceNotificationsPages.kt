@@ -1,8 +1,10 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationChange
@@ -100,7 +102,7 @@ internal fun ColumnScope.VoiceBody(voice: VoiceFacts, actions: SettingsActions) 
  * only (defined once for every server), the test, and the background summary row that opens Keep running.
  */
 @Composable
-internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: SettingsActions) {
+internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: SettingsActions, focus: String? = null) {
     if (n.blocked) {
         KitNotice(
             stringResource(Res.string.notifyBlockedMessage),
@@ -134,44 +136,48 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
         }
     }
     // Flutter `_quietHours`: one switch that names itself; when on, its start and end (each opens its time page).
-    KitRowGroup {
-        val quiet = n.quietHours
-        KitSwitchRow(
-            title = stringResource(Res.string.monitorQuiet),
-            checked = quiet != null,
-            supporting = stringResource(Res.string.notifyQuietDetail),
-        ) { actions.onQuietHours(it) }
-        if (quiet != null) {
+    Box(Modifier.settingsAnchor(SettingsSection.NotificationsQuiet.tag, focus)) {
+        KitRowGroup {
+            val quiet = n.quietHours
+            KitSwitchRow(
+                title = stringResource(Res.string.monitorQuiet),
+                checked = quiet != null,
+                supporting = stringResource(Res.string.notifyQuietDetail),
+            ) { actions.onQuietHours(it) }
+            if (quiet != null) {
+                KitRow(
+                    title = stringResource(Res.string.monitorQuietStart),
+                    trailing = KitRowTrailing.Value(clock(quiet.start)),
+                    onClick = { actions.onOpen(SettingsPage.QuietTime(start = true)) },
+                )
+                KitRow(
+                    title = stringResource(Res.string.monitorQuietEnd),
+                    supporting = if (quiet.allDay) stringResource(Res.string.notifyQuietAllDay) else null,
+                    supportingMaxLines = 2,
+                    trailing = KitRowTrailing.Value(clock(quiet.end)),
+                    onClick = { actions.onOpen(SettingsPage.QuietTime(start = false)) },
+                )
+            }
+            KitSwitchRow(title = stringResource(Res.string.notifyWifiOnly), checked = n.wifiOnly) {
+                actions.onNotification(NotificationChange.WifiOnly(it))
+            }
             KitRow(
-                title = stringResource(Res.string.monitorQuietStart),
-                trailing = KitRowTrailing.Value(clock(quiet.start)),
-                onClick = { actions.onOpen(SettingsPage.QuietTime(start = true)) },
-            )
-            KitRow(
-                title = stringResource(Res.string.monitorQuietEnd),
-                supporting = if (quiet.allDay) stringResource(Res.string.notifyQuietAllDay) else null,
-                supportingMaxLines = 2,
-                trailing = KitRowTrailing.Value(clock(quiet.end)),
-                onClick = { actions.onOpen(SettingsPage.QuietTime(start = false)) },
+                title = stringResource(Res.string.notifySendTest),
+                supporting = stringResource(Res.string.notifySendTestDetail),
+                onClick = actions::onSendTestNotification,
             )
         }
-        KitSwitchRow(title = stringResource(Res.string.notifyWifiOnly), checked = n.wifiOnly) {
-            actions.onNotification(NotificationChange.WifiOnly(it))
-        }
-        KitRow(
-            title = stringResource(Res.string.notifySendTest),
-            supporting = stringResource(Res.string.notifySendTestDetail),
-            onClick = actions::onSendTestNotification,
-        )
     }
     n.background?.let { bg ->
-        KitRowGroup(label = stringResource(Res.string.notifySectionBackground)) {
-            KitRow(
-                title = stringResource(Res.string.e7SettingsUi25),
-                trailing = KitRowTrailing.Value(backgroundWords(bg)),
-                supportingMaxLines = 2,
-                onClick = { actions.onOutside(SettingsOutside.KeepRunning) },
-            )
+        Box(Modifier.settingsAnchor(SettingsSection.NotificationsBackground.tag, focus)) {
+            KitRowGroup(label = stringResource(Res.string.notifySectionBackground)) {
+                KitRow(
+                    title = stringResource(Res.string.e7SettingsUi25),
+                    trailing = KitRowTrailing.Value(backgroundWords(bg)),
+                    supportingMaxLines = 2,
+                    onClick = { actions.onOutside(SettingsOutside.KeepRunning) },
+                )
+            }
         }
     }
 }

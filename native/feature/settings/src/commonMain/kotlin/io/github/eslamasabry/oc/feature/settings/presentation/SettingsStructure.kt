@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
+import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -20,6 +21,9 @@ public enum class SettingsRowId(public val tag: String, public val group: Settin
 
     ShowReasoning("settings-show-reasoning", SettingsGroupId.Conversations),
     ShowTimestamps("settings-show-timestamps", SettingsGroupId.Conversations),
+
+    /** Phrase suggestions above the message box (Flutter `settings-phrase-chips`), a switch, app-wide. */
+    PhraseChips("settings-phrase-chips", SettingsGroupId.Conversations),
     DefaultShell("settings-default-shell", SettingsGroupId.Conversations),
     Voice("settings-voice", SettingsGroupId.Conversations),
     Permissions("settings-permissions", SettingsGroupId.Conversations),
@@ -34,6 +38,9 @@ public enum class SettingsRowId(public val tag: String, public val group: Settin
     Guide("settings-guide", SettingsGroupId.Help),
     Tips("settings-tips", SettingsGroupId.Help),
     ReportProblem("settings-report-problem", SettingsGroupId.Help),
+
+    /** Available on this server: what the connected server and this device can do (B-L10N-018). */
+    ServerCapabilities("settings-server-capabilities", SettingsGroupId.Help),
     About("settings-about", SettingsGroupId.Help),
 }
 
@@ -74,8 +81,23 @@ public data class SettingsFacts(
     val surfaceStyles: Boolean = true,
     /** The conversation shows reasoning and times as these switches say: the two switches exist only then. */
     val transcriptDisplay: Boolean = true,
+    /**
+     * What the connected server can do (rule 10: rows and search results gate on these flags, never on the backend).
+     * Null: the host does not report them; the rows keep the defaults and Available on this server is absent.
+     */
+    val capabilities: ServerCapabilities? = null,
+    /** Phrase suggestions on (true) or off; null where the host has no phrase store (the row is absent). */
+    val phraseChips: Boolean? = null,
+    /** The connected server reports usage statistics (Flutter `supportsUsageStatistics`). */
+    val usageStatistics: Boolean = false,
 ) {
     public fun canOpen(place: SettingsOutside): Boolean = opens?.contains(place) ?: true
+
+    /** The flags the gates read: the reported ones, or the defaults while none are reported. */
+    public val caps: ServerCapabilities get() = capabilities ?: ServerCapabilities.Unknown
+
+    /** The server runs in the phone's own Linux (Flutter `_inAppLinux`). */
+    public val inAppLinux: Boolean get() = platform.builtinLinux && server?.onPhone == true
 }
 
 /** Which rows exist (plan 07 §4.2, I01–I20). A row the platform or the server cannot serve is absent, never greyed. */
@@ -91,13 +113,19 @@ public object SettingsStructure {
                         SettingsRowId.Servers -> SettingsDoor.Outside(SettingsOutside.Servers)
                         SettingsRowId.ThisPhone -> SettingsDoor.Outside(SettingsOutside.ThisPhone).takeIf { p.builtinLinux }
                         SettingsRowId.ModelAndMode -> SettingsDoor.Outside(SettingsOutside.ModelAndMode).takeIf { connected }
-                        SettingsRowId.Providers -> SettingsDoor.Outside(SettingsOutside.Providers).takeIf { connected }
+                        // Providers is the catalogue's or the server account's door (Flutter `_catalog || _account`).
+                        SettingsRowId.Providers ->
+                            SettingsDoor.Outside(SettingsOutside.Providers)
+                                .takeIf { connected && (facts.caps.serverCatalog || facts.caps.agentAccount) }
                         SettingsRowId.Usage -> SettingsDoor.Outside(SettingsOutside.Usage)
-                        SettingsRowId.Tools -> SettingsDoor.Outside(SettingsOutside.Tools).takeIf { connected }
+                        SettingsRowId.Tools ->
+                            SettingsDoor.Outside(SettingsOutside.Tools).takeIf { connected && facts.caps.serverCatalog }
                         SettingsRowId.Agents -> SettingsDoor.Outside(SettingsOutside.Agents).takeIf { p.builtinLinux }
                         SettingsRowId.ShowReasoning -> SettingsDoor.Switch(reasoning).takeIf { facts.transcriptDisplay }
                         SettingsRowId.ShowTimestamps -> SettingsDoor.Switch(timestamps).takeIf { facts.transcriptDisplay }
-                        SettingsRowId.DefaultShell -> SettingsDoor.Outside(SettingsOutside.DefaultShell).takeIf { connected }
+                        SettingsRowId.PhraseChips -> facts.phraseChips?.let { SettingsDoor.Switch(it) }
+                        SettingsRowId.DefaultShell ->
+                            SettingsDoor.Outside(SettingsOutside.DefaultShell).takeIf { connected && facts.caps.shellSettings }
                         SettingsRowId.Voice -> SettingsDoor.Page(SettingsPage.Voice).takeIf { p.voice || p.readAloud }
                         SettingsRowId.Permissions -> SettingsDoor.Outside(SettingsOutside.Permissions)
                         SettingsRowId.Notifications -> SettingsDoor.Page(SettingsPage.Notifications).takeIf { p.notifications }
@@ -111,6 +139,8 @@ public object SettingsStructure {
                         SettingsRowId.ReportProblem ->
                             if (facts.diagnostics) SettingsDoor.Page(SettingsPage.ReportProblem)
                             else SettingsDoor.Outside(SettingsOutside.ReportProblem)
+                        SettingsRowId.ServerCapabilities ->
+                            SettingsDoor.Page(SettingsPage.ServerCapabilities()).takeIf { connected && facts.capabilities != null }
                         SettingsRowId.About -> SettingsDoor.Page(SettingsPage.About)
                     }
                 door?.takeIf { it !is SettingsDoor.Outside || facts.canOpen(it.place) }?.let { SettingsRowUi(id, it) }

@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.feature.settings
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -14,6 +18,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsViewModel
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
+import io.github.eslamasabry.oc.ui.routes.SettingsPlaceRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 
 /**
@@ -27,6 +32,18 @@ public class SettingsEntries : EntryInstaller {
         entry<SettingsRoute.Home> {
             val vm = metroViewModel<SettingsViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
+            KitBackGuard(enabled = state.page != SettingsPage.Hub || state.hub.query.isNotEmpty(), onBack = vm::back)
+            SettingsScreen(state, vm.actions, onExit = vm::exit)
+        }
+        // A deep link (B-NAV-070): the same screen, landed once at the row or place the link names.
+        entry<SettingsPlaceRoute> { key ->
+            val vm = metroViewModel<SettingsViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            var landed by rememberSaveable(key.tag) { mutableStateOf(false) }
+            LaunchedEffect(key.tag) {
+                if (!landed) vm.actions.onDeepLink(key.tag)
+                landed = true
+            }
             KitBackGuard(enabled = state.page != SettingsPage.Hub || state.hub.query.isNotEmpty(), onBack = vm::back)
             SettingsScreen(state, vm.actions, onExit = vm::exit)
         }

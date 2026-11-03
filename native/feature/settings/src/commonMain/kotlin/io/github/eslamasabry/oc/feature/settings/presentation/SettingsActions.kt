@@ -71,4 +71,18 @@ public interface SettingsActions {
 
     /** The screen is on screen again (back from Android's settings): re-read what may have changed outside. */
     public fun onResume() {}
+
+    /** The words of every place that exists, in the person's language (like [onSearchEntries]). */
+    public fun onPlaceEntries(entries: List<SettingsPlaceEntry>) {}
+
+    /** A row search result: opens like the row, except a switch, whose group opens arrived at it (never flipped). */
+    public fun onSearchResult(row: SettingsRowId) {
+        onRow(row)
+    }
+
+    /** A place search result: its page opens scrolled to it, or the host opens the place another feature owns. */
+    public fun onPlace(place: SettingsPlaceId) {}
+
+    /** A deep link (a row's or a place's tag): lands like the search result; an absent target leaves the hub. */
+    public fun onDeepLink(tag: String) {}
 }

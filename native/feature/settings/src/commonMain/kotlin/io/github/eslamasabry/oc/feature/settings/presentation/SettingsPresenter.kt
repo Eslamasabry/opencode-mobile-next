@@ -40,6 +40,7 @@ public class SettingsPresenter(
     private val updates: UpdateSettings? = null,
     private val about: AboutFacts = AboutFacts(),
     private val diagnostics: DiagnosticsExport? = null,
+    private val phraseChips: PhraseChipsSetting? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -49,6 +50,8 @@ public class SettingsPresenter(
         val note: SettingsNote? = null,
         val consentSaving: Boolean = false,
         val report: ReportUi? = null,
+        val placeEntries: List<SettingsPlaceEntry> = emptyList(),
+        val focus: String? = null,
     )
 
     private data class Engines(
@@ -59,7 +62,13 @@ public class SettingsPresenter(
     )
 
     private val local = MutableStateFlow(Local())
-    private val currentFacts = facts
+    private val hostFacts = facts
+
+    /** The host's facts with the phrase switch's acknowledged value laid over them (null: no phrase store). */
+    private val liveFacts =
+        combine(facts, phraseChips?.enabled ?: flowOf(null)) { f, on -> f.copy(phraseChips = on) }
+
+    private val currentFacts: SettingsFacts get() = hostFacts.value.copy(phraseChips = phraseChips?.enabled?.value)
     private val prefs = choices.value
 
     private val engines =
@@ -74,8 +83,8 @@ public class SettingsPresenter(
         Engines(analytics?.whatWeCollect?.value, voice?.facts?.value, notifications?.facts?.value, updates?.facts?.value)
 
     public val state: StateFlow<SettingsUi> =
-        combine(local, facts, prefs, engines) { l, f, p, e -> build(l, f, p, e) }
-            .stateIn(scope, SharingStarted.Eagerly, build(local.value, facts.value, prefs.value, engineNow()))
+        combine(local, liveFacts, prefs, engines) { l, f, p, e -> build(l, f, p, e) }
+            .stateIn(scope, SharingStarted.Eagerly, build(local.value, currentFacts, prefs.value, engineNow()))
 
     override fun onSearchEntries(entries: List<SettingsSearchEntry>) {
         local.update { it.copy(entries = entries) }
@@ -86,13 +95,18 @@ public class SettingsPresenter(
         val results =
             if (l.query.isBlank()) persistentListOf()
             else SettingsSearch.find(l.query, l.entries.filter { it.row in searchable })
+        val placesSearchable = SettingsPlaces.searchable(f)
+        val places =
+            if (l.query.isBlank()) persistentListOf()
+            else SettingsSearch.findPlaces(l.query, l.placeEntries.filter { it.place in placesSearchable })
+        val top = l.stack.last()
         val group =
             (l.stack.last() as? SettingsPage.Group)?.let { g ->
                 GroupUi(g.id, SettingsStructure.rows(g.id, f, p.reasoning, p.timestamps))
             }
         return SettingsUi(
             stack = l.stack,
-            hub = HubUi(SettingsStructure.groups(f), f.server, l.query, results, searchable),
+            hub = HubUi(SettingsStructure.groups(f), f.server, l.query, results, searchable, places, placesSearchable),
             group = group,
             appearance = appearance(p, f, l.allPacks),
             voice = e.voice,
@@ -103,6 +117,8 @@ public class SettingsPresenter(
             language = p.language,
             report = l.report,
             note = l.note,
+            focus = l.focus,
+            capabilities = (top as? SettingsPage.ServerCapabilities)?.let { CapabilitiesUi.of(f, it.focus) },
         )
     }
 
@@ -125,7 +141,14 @@ public class SettingsPresenter(
     }
 
     override fun onOpen(page: SettingsPage) {
-        local.update { if (it.stack.last() == page) it else it.copy(stack = (it.stack + page).toImmutableList()) }
+        open(page, focus = null)
+    }
+
+    private fun open(page: SettingsPage, focus: String?) {
+        local.update {
+            val stack = if (it.stack.last() == page) it.stack else (it.stack + page).toImmutableList()
+            it.copy(stack = stack, focus = focus)
+        }
         if (page == SettingsPage.ReportProblem) loadReport()
         if (page == SettingsPage.Notifications) notifications?.refresh()
     }
@@ -153,7 +176,7 @@ public class SettingsPresenter(
         val l = local.value
         return when {
             l.stack.size > 1 -> {
-                local.update { it.copy(stack = it.stack.dropLast(1).toImmutableList()) }
+                local.update { it.copy(stack = it.stack.dropLast(1).toImmutableList(), focus = null) }
                 true
             }
             l.query.isNotEmpty() -> {
@@ -167,7 +190,7 @@ public class SettingsPresenter(
     override fun onRow(row: SettingsRowId) {
         val p = prefs.value
         val door =
-            SettingsStructure.rows(row.group, currentFacts.value, p.reasoning, p.timestamps).firstOrNull { it.id == row }?.door
+            SettingsStructure.rows(row.group, currentFacts, p.reasoning, p.timestamps).firstOrNull { it.id == row }?.door
                 ?: return
         when (door) {
             is SettingsDoor.Page -> onOpen(door.page)
@@ -176,8 +199,43 @@ public class SettingsPresenter(
                 when (row) {
                     SettingsRowId.ShowReasoning -> write(PersonalChange.Reasoning(!door.on), SettingsNote.ChoiceNotSaved)
                     SettingsRowId.ShowTimestamps -> write(PersonalChange.Timestamps(!door.on), SettingsNote.ChoiceNotSaved)
+                    SettingsRowId.PhraseChips -> phraseChips?.let { port -> run(SettingsNote.ChoiceNotSaved) { port.setEnabled(!door.on) } }
                     else -> Unit
                 }
+        }
+    }
+
+    override fun onPlaceEntries(entries: List<SettingsPlaceEntry>) {
+        local.update { it.copy(placeEntries = entries) }
+    }
+
+    /** A row result opens like the row (its page, or its owner's place); a switch opens its group at it, unflipped. */
+    override fun onSearchResult(row: SettingsRowId) {
+        val p = prefs.value
+        val door = SettingsStructure.rows(row.group, currentFacts, p.reasoning, p.timestamps).firstOrNull { it.id == row }?.door
+        if (door is SettingsDoor.Switch) land(SettingsTarget.Row(row)) else onRow(row)
+    }
+
+    override fun onPlace(place: SettingsPlaceId) {
+        if (SettingsPlaces.available(place, currentFacts)) land(SettingsPlaces.target(place))
+    }
+
+    override fun onDeepLink(tag: String) {
+        SettingsPlaces.resolve(tag, currentFacts)?.let(::land)
+    }
+
+    /** Opens a target from the hub: the row's group arrived at the row, a page at its section, or the owner's place. */
+    private fun land(target: SettingsTarget) {
+        when (target) {
+            is SettingsTarget.Row -> {
+                local.update { it.copy(stack = persistentListOf(SettingsPage.Hub)) }
+                open(SettingsPage.Group(target.row.group), focus = target.row.tag)
+            }
+            is SettingsTarget.Page -> {
+                local.update { it.copy(stack = persistentListOf(SettingsPage.Hub)) }
+                open(target.page, focus = target.section?.tag)
+            }
+            is SettingsTarget.Outside -> openers.open(target.place)
         }
     }
 

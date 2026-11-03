@@ -104,3 +104,13 @@ public object NotificationKeys {
         if (start != null && end != null && start in 0 until DAY && end in 0 until DAY) QuietHours(start.toInt(), end.toInt())
         else null
 }
+
+/**
+ * Phrase suggestions above the message box, on or off for every server (Flutter `oc.phraseChips.enabled`; the composer
+ * engine's `PhraseChipStores.enabled` / `setEnabled`). [enabled] is the acknowledged value only.
+ */
+public interface PhraseChipsSetting {
+    public val enabled: StateFlow<Boolean>
+
+    public suspend fun setEnabled(on: Boolean): Outcome<Unit>
+}
