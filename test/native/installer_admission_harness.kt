@@ -112,10 +112,10 @@ private class BuiltinLinux(private val scenario: String) {
         return FixtureProcess(true).also { installerProcess = it }
     }
     private fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
-        agentUser: Boolean) = startQualifiedInstaller(script, targets, operation, agentUser)
+        agentUser: Boolean, stdin: String? = null) = startQualifiedInstaller(script, targets, operation, agentUser, stdin)
     fun attempt(): Process = if (scenario.startsWith("check") || scenario == "normal-check")
-        admitCheckProcess("fixed-check", 1_000, SystemClock.elapsedRealtime(), true)
-        else startQualifiedInstaller("fixed-install", setOf(InstallerTarget.CLAUDE), InstallerOperation.INSTALL, true)
+        admitCheckProcess("fixed-check", 1_000, SystemClock.elapsedRealtime(), true, null)
+        else startQualifiedInstaller("fixed-install", setOf(InstallerTarget.CLAUDE), InstallerOperation.INSTALL, true, null)
     fun coldReclaim() = reclaimDeadInstaller()
     fun hasTicket() = ticket != null
     fun cachedOwnerPresent() = installerProcess != null
