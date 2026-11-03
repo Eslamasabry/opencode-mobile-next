@@ -33,6 +33,16 @@ class GatePresenterTest {
         override suspend fun acknowledgeNotices() { calls += "ack" }
         override suspend fun openReentry(item: GateReentry) { calls += "open:${item.targetName}:${item.kind}" }
         override suspend fun acknowledgeDeferredNotice() { calls += "ackDeferred" }
+
+        var saveResult = true
+        var saveHold: CompletableDeferred<Unit>? = null
+
+        override suspend fun saveReentry(item: GateReentry, secret: String): Boolean {
+            // The secret itself is never recorded: only its length, to prove the typed value reached the store.
+            calls += "save:${item.targetName}:${secret.length}"
+            saveHold?.await()
+            return saveResult
+        }
     }
 
     private class Harness(scope: TestScope, initial: GateInput) {
@@ -169,13 +179,86 @@ class GatePresenterTest {
         val h = Harness(this, GateInput.Open(firstNativeLaunch = true, reenter = listOf(home, gh)))
         runCurrent()
         assertEquals(listOf(home, gh), assertIs<GateUi.Open>(h.ui).reenter)
-        h.presenter.onReentry(home)
+        h.presenter.onReentry(gh) // GitHub is signed in again on its own page: the sheet closes and opens it
         runCurrent()
         assertEquals(emptyList(), assertIs<GateUi.Open>(h.ui).reenter)
-        assertEquals(listOf("ack", "open:Home server:Password"), h.actions.calls)
+        assertEquals(listOf("ack", "open:GitHub:GitHubSignIn"), h.actions.calls)
         h.presenter.onReentryLater() // already closed: no second acknowledgement
         runCurrent()
         assertEquals(1, h.actions.calls.count { it == "ack" })
+    }
+
+    /**
+     * Migration proof 2026-11-03: a password row used to close the sheet and open the Servers page, which has no
+     * password field (the only way out was remove and re-add, which gives the server a new id and orphans its
+     * schedules and drafts). The row now asks for the password right in the sheet and saves it on the same server.
+     */
+    @Test
+    fun `B-MIGR-006 a password row asks for the password in the sheet and saves it on the same server`() = runTest {
+        val home = GateReentry("p1", "Home server", GateReentryKind.Password)
+        val work = GateReentry("p2", "Work", GateReentryKind.Token)
+        val h = Harness(this, GateInput.Open(firstNativeLaunch = true, reenter = listOf(home, work)))
+        runCurrent()
+        h.presenter.onReentry(home)
+        runCurrent()
+        val asking = assertIs<GateUi.Open>(h.ui)
+        assertEquals(GateEntry(home), asking.entry)
+        assertEquals(listOf(home, work), asking.reenter) // the sheet stays: nothing is acknowledged yet
+        assertEquals(emptyList(), h.actions.calls)
+
+        h.presenter.onReentrySubmit("") // an empty password is never saved
+        runCurrent()
+        assertEquals(emptyList(), h.actions.calls)
+
+        h.presenter.onReentrySubmit("s3cret")
+        runCurrent()
+        val saved = assertIs<GateUi.Open>(h.ui)
+        assertNull(saved.entry)
+        assertEquals(listOf(work), saved.reenter) // the saved row leaves; the other one is still asked
+        assertEquals(listOf("save:Home server:6"), h.actions.calls)
+
+        h.presenter.onReentry(work)
+        h.presenter.onReentrySubmit("tok")
+        runCurrent()
+        // The last row saved closes the sheet and records it, once.
+        assertEquals(GateUi.Open(emptyList(), deferredNotice = false), h.ui)
+        assertEquals(listOf("save:Home server:6", "save:Work:3", "ack"), h.actions.calls)
+    }
+
+    @Test
+    fun `B-MIGR-006 a refused save keeps the field open with a plain error, and Save is single-flight`() = runTest {
+        val home = GateReentry("p1", "Home server", GateReentryKind.Password)
+        val h = Harness(this, GateInput.Open(firstNativeLaunch = true, reenter = listOf(home)))
+        runCurrent()
+        h.presenter.onReentry(home)
+        h.actions.saveResult = false
+        h.actions.saveHold = CompletableDeferred()
+        h.presenter.onReentrySubmit("one")
+        runCurrent()
+        assertEquals(GateEntry(home, saving = true), assertIs<GateUi.Open>(h.ui).entry)
+        h.presenter.onReentrySubmit("two") // while the first save runs: nothing
+        runCurrent()
+        h.actions.saveHold!!.complete(Unit)
+        runCurrent()
+        assertEquals(GateEntry(home, failed = true), assertIs<GateUi.Open>(h.ui).entry)
+        assertEquals(listOf("save:Home server:3"), h.actions.calls)
+
+        h.presenter.onReentryBack() // back to the list; the row is still there
+        runCurrent()
+        assertEquals(GateUi.Open(listOf(home), deferredNotice = false), h.ui)
+        assertTrue("ack" !in h.actions.calls)
+    }
+
+    @Test
+    fun `B-MIGR-006 a row with no saved server behind it keeps opening its page`() = runTest {
+        val unnamed = GateReentry(null, null, GateReentryKind.Password)
+        val byo = GateReentry("p3", "Laptop", GateReentryKind.ByoSetup)
+        val h = Harness(this, GateInput.Open(firstNativeLaunch = true, reenter = listOf(unnamed, byo)))
+        runCurrent()
+        h.presenter.onReentry(byo) // a BYO host is set up again on its page, not with a typed secret
+        runCurrent()
+        assertNull(assertIs<GateUi.Open>(h.ui).entry)
+        assertEquals(listOf("ack", "open:Laptop:ByoSetup"), h.actions.calls)
     }
 
     @Test

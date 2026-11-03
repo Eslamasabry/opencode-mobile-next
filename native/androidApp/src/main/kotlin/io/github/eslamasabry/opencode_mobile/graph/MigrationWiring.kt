@@ -41,6 +41,7 @@ import io.github.eslamasabry.oc.engine.migration.ReentryItem
 import io.github.eslamasabry.oc.engine.migration.ReentryNames
 import io.github.eslamasabry.oc.engine.migration.ReentryNeed
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
+import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.feature.gate.GatePlatform
 import io.github.eslamasabry.oc.feature.gate.GateReentry
 import io.github.eslamasabry.oc.feature.gate.ui.MigrationGateHost
@@ -289,12 +290,33 @@ private class AndroidGatePlatform(private val application: Application, private 
     }
 
     override fun openReentry(item: GateReentry) {
-        // The saved server's page: its sign-in is typed again there (the Servers screen is where passwords live).
+        // GitHub and BYO set-up rows: the saved server's page. Passwords and tokens are typed in the sheet itself
+        // (saveSecret below): the Servers page has no password field.
         navigator.open(ServersRoute.Home)
+    }
+
+    /**
+     * Migration proof 2026-11-03: the typed password or token goes onto the SAME saved server (same id, so its
+     * schedules, drafts and choices stay its own; trust kept; the re-entry flag cleared by the store). Removing and
+     * adding the server again would give it a new id.
+     */
+    override suspend fun saveSecret(item: GateReentry, secret: String): Boolean {
+        val id = ProfileId(item.profileId ?: return false)
+        val store = application.appGraph.previewRuntime.profiles
+        val loaded =
+            store.profile(id)
+                ?: withTimeoutOrNull(PROFILE_WAIT_MS) { store.profiles.first { list -> list.any { it.id == id } } }
+                    ?.let { store.profile(id) }
+                ?: return false
+        return store.upsert(loaded.profile, SecretEdit.Set(secret)) is Outcome.Ok
     }
 
     private fun start(intent: Intent) {
         val launch = intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (launch.resolveActivity(application.packageManager) != null) application.startActivity(launch)
+    }
+
+    private companion object {
+        const val PROFILE_WAIT_MS = 5_000L
     }
 }

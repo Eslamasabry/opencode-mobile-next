@@ -13,6 +13,11 @@
     <string name="migration_reenter_row_byo">%1$s · أعِد الإعداد</string>
     <string name="migration_reenter_unnamed">خادم محفوظ</string>
     <string name="migration_reenter_later">سجّل الدخول إلى هذه لاحقًا</string>
+    <string name="migration_reenter_field_password">كلمة مرور %1$s</string>
+    <string name="migration_reenter_field_token">رمز %1$s</string>
+    <string name="migration_reenter_save">حفظ</string>
+    <string name="migration_reenter_save_failed">تعذّر حفظها على هذا الهاتف. حاول مرة أخرى.</string>
+    <string name="migration_reenter_back">العودة إلى القائمة</string>
     <string name="migration_failed_title">تعذّر على التحديث إكمال نقل بياناتك</string>
     <string name="migration_failed_body">لم يُحذف شيء. بياناتك من قبل التحديث محفوظة بأمان على هذا الهاتف.</string>
     <string name="migration_restore_row">استعادة البيانات من قبل التحديث</string>

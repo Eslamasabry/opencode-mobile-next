@@ -23,7 +23,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import io.github.eslamasabry.oc.feature.gate.GateEntry
+import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import kotlin.reflect.KClass
 import androidx.compose.ui.Modifier
@@ -50,7 +55,12 @@ import io.github.eslamasabry.oc.ui.words.res.migration_failed_body
 import io.github.eslamasabry.oc.ui.words.res.migration_failed_title
 import io.github.eslamasabry.oc.ui.words.res.migration_open_storage_row
 import io.github.eslamasabry.oc.ui.words.res.migration_opening
+import io.github.eslamasabry.oc.ui.words.res.migration_reenter_back
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_body
+import io.github.eslamasabry.oc.ui.words.res.migration_reenter_field_password
+import io.github.eslamasabry.oc.ui.words.res.migration_reenter_field_token
+import io.github.eslamasabry.oc.ui.words.res.migration_reenter_save
+import io.github.eslamasabry.oc.ui.words.res.migration_reenter_save_failed
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_later
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_row_byo
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_row_github
@@ -91,6 +101,8 @@ public fun UpdateGate(presenter: GatePresenter, content: @Composable () -> Unit)
         onCancelConfirm = presenter::onCancelConfirm,
         onReentry = presenter::onReentry,
         onReentryLater = presenter::onReentryLater,
+        onReentrySubmit = presenter::onReentrySubmit,
+        onReentryBack = presenter::onReentryBack,
         content = content,
     )
 }
@@ -104,6 +116,8 @@ public fun GateScreen(
     onCancelConfirm: () -> Unit,
     onReentry: (GateReentry) -> Unit,
     onReentryLater: () -> Unit,
+    onReentrySubmit: (String) -> Unit = {},
+    onReentryBack: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val draw: @Composable (GateUi) -> Unit = { state ->
@@ -112,7 +126,7 @@ public fun GateScreen(
                 WaitingScreen(if (state.wordless) null else stringResource(Res.string.migration_opening), state.offerRetry, onRow)
             is GateUi.Updating -> WaitingScreen(stringResource(Res.string.migration_updating), state.offerRetry, onRow)
             is GateUi.Failed -> FailedScreen(state, onRow, onConfirm, onCancelConfirm)
-            is GateUi.Open -> OpenFrame(state, onReentry, onReentryLater, content)
+            is GateUi.Open -> OpenFrame(state, onReentry, onReentryLater, onReentrySubmit, onReentryBack, content)
         }
     }
     // The kit's cross-fade between screens (instant under reduced motion, 05 §8.2). Keyed by the screen kind, so a
@@ -204,6 +218,8 @@ private fun OpenFrame(
     state: GateUi.Open,
     onReentry: (GateReentry) -> Unit,
     onLater: () -> Unit,
+    onSubmit: (String) -> Unit,
+    onBack: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     KitSheetHost(Modifier.fillMaxSize()) {
@@ -233,17 +249,55 @@ private fun OpenFrame(
             title = stringResource(Res.string.migration_reenter_title),
             closeLabel = stringResource(Res.string.migration_close),
         ) {
-            KitText(stringResource(Res.string.migration_reenter_body), role = TypeRole.Body, tone = TextTone.Secondary)
-            state.reenter.forEach { item ->
-                KitRow(
-                    title = item.kind.rowLabel(item.targetName ?: stringResource(Res.string.migration_reenter_unnamed)),
-                    supporting = null,
-                    onClick = { onReentry(item) },
+            val entry = state.entry
+            if (entry != null) {
+                key(entry.item) { EntryForm(entry, onSubmit, onBack) }
+            } else {
+                KitText(
+                    stringResource(Res.string.migration_reenter_body),
+                    role = TypeRole.Body,
+                    tone = TextTone.Secondary,
                 )
+                state.reenter.forEach { item ->
+                    val target = item.targetName ?: stringResource(Res.string.migration_reenter_unnamed)
+                    KitRow(
+                        title = item.kind.rowLabel(target),
+                        supporting = null,
+                        onClick = { onReentry(item) },
+                    )
+                }
+                KitRow(title = stringResource(Res.string.migration_reenter_later), supporting = null, onClick = onLater)
             }
-            KitRow(title = stringResource(Res.string.migration_reenter_later), supporting = null, onClick = onLater)
         }
     }
+}
+
+/** One row's password or token, typed in the sheet and saved on that same server. Never prefilled, never shown. */
+@Composable
+private fun EntryForm(entry: GateEntry, onSubmit: (String) -> Unit, onBack: () -> Unit) {
+    val field = rememberTextFieldState()
+    val target = entry.item.targetName ?: stringResource(Res.string.migration_reenter_unnamed)
+    val label =
+        stringResource(
+            if (entry.item.kind == GateReentryKind.Token) Res.string.migration_reenter_field_token
+            else Res.string.migration_reenter_field_password,
+            target,
+        )
+    val submit = { onSubmit(field.text.toString()) }
+    KitField(
+        state = field,
+        label = label,
+        kind = KitFieldKind.Secret,
+        error = if (entry.failed) stringResource(Res.string.migration_reenter_save_failed) else null,
+        onSubmit = submit,
+    )
+    KitButton(
+        stringResource(Res.string.migration_reenter_save),
+        onClick = submit,
+        modifier = Modifier.fillMaxWidth(),
+        working = entry.saving,
+    )
+    KitRow(title = stringResource(Res.string.migration_reenter_back), supporting = null, onClick = onBack)
 }
 
 @Composable
