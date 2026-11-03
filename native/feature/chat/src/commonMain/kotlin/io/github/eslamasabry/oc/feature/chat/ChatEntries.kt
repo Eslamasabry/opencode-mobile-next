@@ -33,8 +33,11 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
+import io.github.eslamasabry.oc.ui.routes.SessionToolsRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
+import io.github.eslamasabry.oc.ui.words.res.exportTitle
+import io.github.eslamasabry.oc.ui.words.res.sessionNoteTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -91,7 +94,13 @@ public class ChatEntries(
                         composerHost,
                         requests = slot,
                         requestActions = requests,
-                        extraActions = listOf(preview),
+                        extraActions =
+                            listOf(
+                                preview,
+                                // P12-BUILD-PROJECT-ENTRY-CHATS: Export conversation and the agent note (:feature:sessiontools).
+                                KitLineAction(stringResource(Res.string.exportTitle), { navigator.open(SessionToolsRoute.Export(route.ref)) }, testTag = "chat-export"),
+                                KitLineAction(stringResource(Res.string.sessionNoteTitle), { navigator.open(SessionToolsRoute.Notes(route.ref)) }, testTag = "chat-note"),
+                            ),
                         prompts = prompts,
                         facts = facts,
                         onOpenSession = vm::openSession,

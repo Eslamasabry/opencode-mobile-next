@@ -119,6 +119,7 @@ dependencies {
             ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its native libraries)
             ":engine:project", // P12-BUILD-PROJECT-ENTRY-CHATS
             ":feature:about", // P12-BUILD-PROJECT-ENTRY-CHATS: Clear storage guard page, Help › Tips, notices
+            ":feature:sessiontools", // P12-BUILD-PROJECT-ENTRY-CHATS: chat ⋯ › Export conversation, Note for the agent
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)
