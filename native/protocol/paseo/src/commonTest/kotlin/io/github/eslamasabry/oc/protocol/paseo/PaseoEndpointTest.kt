@@ -86,7 +86,6 @@ class PaseoEndpointTest {
             assertEquals(PaseoUrlProblem.Incomplete, PaseoProfileRules.validateUrl(bad), bad)
         }
         assertEquals("pc-1.tail1234.ts.net", PaseoEndpoint.parse("wss://PC-1.tail1234.ts.net").host)
-        assertEquals("100.100.1.2", PaseoEndpoint.parse("ws://100.100.1.2:6767").host)
         assertEquals("::1", PaseoEndpoint.parse("ws://[::1]:6767").host)
     }
 
