@@ -309,7 +309,12 @@ public fun BasicComposer(
                 label =
                     modelLabel(
                         state.models.selected?.label
-                            ?: stringResource(Res.string.composerPreviewModelDefault),
+                            // QA wave 4 B13: "Server default" only once the server said so; before the session is
+                            // read (after a restart) the chip claims nothing.
+                            ?: stringResource(
+                                if (state.models.usesDefault) Res.string.composerPreviewModelDefault
+                                else Res.string.composerPreviewModelButton
+                            ),
                         state.models.variant,
                         state.models.agent,
                     ),
@@ -320,7 +325,9 @@ public fun BasicComposer(
                 },
                 role = KitButtonRole.Secondary,
                 semanticsLabel = stringResource(Res.string.composerPreviewModelButton),
-                modifier = Modifier.testTag("chat-model-button"),
+                // QA wave 4 N2: a long model name shrinks first, so Attach and the approval chip keep their room.
+                modifier = Modifier.weight(1f, fill = false).testTag("chat-model-button"),
+                maxLines = 1,
             )
             val attachReason =
                 when {
@@ -405,6 +412,8 @@ public fun BasicComposer(
                 kind = KitFieldKind.Multiline,
                 // B6: one line when empty, so the conversation keeps its room above the keyboard.
                 multilineLines = 1..6,
+                // QA wave 4 B6: no "Message" row above the box; the words show inside it while it is empty.
+                labelShown = false,
                 focusRequester = focus,
                 enabled =
                     if (editorReady && state.draft.ready) KitEnabled.Enabled

@@ -115,7 +115,13 @@ internal class ChatListWords(
  * tap. Null (the P3 overload's default) keeps the plain stream-only drawing.
  */
 @Immutable
-internal class ReplyActions(val markdown: KitMarkdownActions, val copyLabel: String, val copy: (String) -> Unit)
+internal class ReplyActions(
+    val markdown: KitMarkdownActions,
+    val copyLabel: String,
+    val copy: (String) -> Unit,
+    /** QA wave 4 N9: the code block's Copy says so after a tap. */
+    val copiedLabel: String? = null,
+)
 
 /** B2: a short, safe code for a send failure (no server text, no address): what QA asked to see under Details. */
 internal fun failureCode(f: Failure): String =
@@ -440,6 +446,7 @@ private fun RichBlock(
                         maxLines = Int.MAX_VALUE,
                         copyLabel = reply.copyLabel,
                         onCopy = { copyCode(row.key) },
+                        copiedLabel = reply.copiedLabel,
                     )
                 }
             else ->
@@ -450,6 +457,7 @@ private fun RichBlock(
                     modifier = column,
                     copyLabel = reply.copyLabel,
                     onCopy = { copyCode(row.key) },
+                    copiedLabel = reply.copiedLabel,
                 )
         }
         return

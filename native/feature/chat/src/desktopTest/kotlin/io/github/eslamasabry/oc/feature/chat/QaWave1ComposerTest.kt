@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
@@ -116,6 +118,46 @@ class QaWave1ComposerTest {
         val composer = onNodeWithTag("chat-composer-field").fetchSemanticsNode().size.height
         val threeLines = onNodeWithTag("reference-field").fetchSemanticsNode().size.height
         assertTrue(composer < threeLines, "message box $composer px vs a 3-line field $threeLines px")
+    }
+
+    @Test
+    fun `B6 QA wave4 the message box has no label row above it and names itself inside`() = runComposeUiTest {
+        setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(steers = false), Actions(), chrome(busy = false)) } } }
+        // "Message" shows once, inside the empty box (placeholder), not as a row of its own above it.
+        val field = onNodeWithTag("chat-composer-field").fetchSemanticsNode().boundsInRoot
+        val words = onAllNodesWithText("Message", useUnmergedTree = true).fetchSemanticsNodes()
+        assertEquals(1, words.size)
+        assertTrue(words.single().boundsInRoot.top >= field.top, "the words sit inside the box")
+        onNodeWithContentDescription("Message", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun `N2 QA wave4 a long model name never pushes the approval chip off the row`() = runComposeUiTest {
+        val long = ComposerModel("zai-coding-plan", "glm-5.3-flash", "GLM-5.3-Flash Extended Thinking Preview", true)
+        val withChip =
+            ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }) {
+                io.github.eslamasabry.oc.ui.kit.KitText("Ask first", Modifier.testTag("approval-chip"))
+            }
+        setContent {
+            Theme {
+                Box(Modifier.width(360.dp)) {
+                    BasicComposer(ui(models = ComposerModels(choices = listOf(long), selected = long)), Actions(), withChip)
+                }
+            }
+        }
+        val row = onNodeWithTag("chat-composer-controls").fetchSemanticsNode().boundsInRoot
+        val chip = onNodeWithTag("approval-chip", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertTrue(chip.right <= row.right + 0.5f && chip.width > 20f, "chip $chip inside row $row")
+    }
+
+    @Test
+    fun `B13 QA wave4 before the session is read the chip never claims Server default`() = runComposeUiTest {
+        var models by androidx.compose.runtime.mutableStateOf(ComposerModels())
+        setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(models = models), Actions(), chrome(busy = false)) } } }
+        onAllNodesWithText("Server default", useUnmergedTree = true).assertCountEquals(0)
+        models = ComposerModels(usesDefault = true)
+        waitForIdle()
+        onNodeWithText("Server default", useUnmergedTree = true).assertExists()
     }
 
     @Test

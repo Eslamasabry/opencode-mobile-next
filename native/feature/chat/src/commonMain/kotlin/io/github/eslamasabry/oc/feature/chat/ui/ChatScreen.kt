@@ -127,6 +127,7 @@ import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
 import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
+import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitCopy
 import io.github.eslamasabry.oc.ui.words.res.voiceNativeReadAloud
 import io.github.eslamasabry.oc.ui.words.res.kitDiscardTitle
@@ -154,6 +155,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatSendFailedRefused
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSteps
 import io.github.eslamasabry.oc.ui.words.res.kitWorkStopped
+import io.github.eslamasabry.oc.ui.words.res.kitMessageThought
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWorking
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import io.github.eslamasabry.oc.ui.words.res.queuedDiscardUnconfirmedMessage
@@ -706,11 +708,13 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
 @Composable
 internal fun rememberReplyActions(actions: ChatActions): ReplyActions {
     val copy = stringResource(Res.string.kitCopy)
+    val copied = stringResource(Res.string.kitCopied)
     val picture = stringResource(Res.string.chatFeelPicture)
     val onServer = stringResource(Res.string.chatFeelPictureOnServer, "\u0000")
     val onWeb = stringResource(Res.string.chatFeelPictureOnWeb, "\u0000")
-    return remember(actions, copy, picture, onServer, onWeb) {
+    return remember(actions, copy, copied, picture, onServer, onWeb) {
         ReplyActions(
+            copiedLabel = copied,
             markdown =
                 KitMarkdownActions(
                     onLink = actions::openLink,
@@ -749,7 +753,9 @@ internal fun rememberChatWords(): ChatTranscriptWords {
     val skill = stringResource(Res.string.skillApplied)
     val working = stringResource(Res.string.kitWorkWorking)
     val stopped = stringResource(Res.string.kitWorkStopped)
-    return remember(jump, more, didntFinish, compacted, instructions, skill, working, stopped) {
+    val thoughtWord = stringResource(Res.string.kitMessageThought)
+    val separator = stringResource(Res.string.kitWorkSeparator)
+    return remember(jump, more, didntFinish, compacted, instructions, skill, working, stopped, thoughtWord, separator) {
         object : ChatTranscriptWords {
             override val jumpToLatest: String = jump
 
@@ -777,7 +783,8 @@ internal fun rememberChatWords(): ChatTranscriptWords {
 
             override fun stoppedFooter(): String = stopped
 
-            override fun thought(firstLine: String): String = firstLine
+            // QA wave 4 B15: the thinking line says what it is ("Thought · …"), not unlabeled grey text.
+            override fun thought(firstLine: String): String = thoughtWord + separator + firstLine
         }
     }
 }

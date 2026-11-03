@@ -116,6 +116,8 @@ public fun KitCodeBlock(
     wrap: Boolean = false,
     copyLabel: String? = null,
     onCopy: ((String) -> Unit)? = null,
+    /** Shown on Copy for a moment after a tap ("Copied"); null keeps [copyLabel]. */
+    copiedLabel: String? = null,
     moreLabel: ((hiddenLines: Int) -> String)? = null,
     onMore: (() -> Unit)? = null,
 ) {
@@ -178,16 +180,7 @@ public fun KitCodeBlock(
             Box(Modifier.fillMaxWidth()) {
                 val lines = if (copying) Modifier.padding(end = COPY_CLEARANCE.dp) else Modifier
                 if (wrap) Box(lines) { body() } else Row(lines.horizontalScroll(rememberScrollState())) { body() }
-                if (copying) {
-                    DisableSelection {
-                        KitTappable(
-                            onClick = { onCopy(display) },
-                            modifier = Modifier.align(Alignment.TopEnd).offset(x = Space.S3.dp, y = (-14).dp),
-                        ) {
-                            KitText(copyLabel, role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame)
-                        }
-                    }
-                }
+                if (copying) CopyCorner(copyLabel, copiedLabel) { onCopy(display) }
             }
             if (hidden > 0 && moreLabel != null && onMore != null) {
                 DisableSelection {

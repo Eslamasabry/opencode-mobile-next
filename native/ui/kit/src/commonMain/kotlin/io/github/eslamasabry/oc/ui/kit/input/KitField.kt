@@ -203,6 +203,11 @@ public fun KitField(
      * (QA wave 1 B6: three empty lines left the conversation no room above the keyboard).
      */
     multilineLines: IntRange = 3..8,
+    /**
+     * QA wave 4 B6: false draws no label row above the box; the label is then the empty field's placeholder (unless
+     * [placeholder] is given) and stays the field's accessible name. For a message box that must stay one row tall.
+     */
+    labelShown: Boolean = true,
 ) {
     kitAssert(label.isNotBlank()) { "KitField: a field needs its label" }
     kitAssert(
@@ -213,7 +218,7 @@ public fun KitField(
         "KitField: a saved secret needs onReplaceSecret"
     }
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-        KitText(label, role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+        if (labelShown) KitText(label, role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame)
         if (kind == KitFieldKind.Secret && secretPresence == SecretFieldPresence.Saved) {
             SavedSecretLine(onReplace = { onReplaceSecret?.invoke() })
         } else {
@@ -221,7 +226,7 @@ public fun KitField(
                 state,
                 label,
                 kind,
-                placeholder,
+                placeholder ?: label.takeIf { !labelShown },
                 error != null,
                 maxLength,
                 imeAction,

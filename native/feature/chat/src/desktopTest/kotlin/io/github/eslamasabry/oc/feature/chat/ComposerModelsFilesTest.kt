@@ -119,7 +119,8 @@ class ComposerModelsFilesTest {
     @Test
     fun `B-STATE-103 the model button names the server default until a verified model is chosen`() =
         runComposeUiTest {
-            setContent { Theme { BasicComposer(ui(), Actions(), chrome) } }
+            // QA wave 4 B13: once the server confirmed the session uses its default (before that the chip claims nothing).
+            setContent { Theme { BasicComposer(ui(models = ComposerModels(usesDefault = true)), Actions(), chrome) } }
             onNodeWithContentDescription("Model").assertExists()
             onNodeWithText("Server default").assertIsDisplayed()
         }
@@ -265,7 +266,7 @@ class ComposerModelsFilesTest {
                         appearance = KitAppearance(motion = MotionLevel.Off),
                         stillFrame = true,
                         localeTag = "ar",
-                    ) { BasicComposer(ui(), Actions(), chrome) }
+                    ) { BasicComposer(ui(models = ComposerModels(usesDefault = true)), Actions(), chrome) }
                 }
                 onNodeWithContentDescription("النموذج").assertExists()
                 onNodeWithText("الافتراضي من الخادم").assertIsDisplayed()
