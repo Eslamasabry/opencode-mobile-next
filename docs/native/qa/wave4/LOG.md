@@ -1,0 +1,25 @@
+# APK QA wave 4 — log (2026-11-03)
+- 06:11 worktree apk-qa-wave4 at c6d14e8d6 (= 030afe554 + one docs line). Debug APK sha256 2ce2c8f8332b5c6e0b10f9995af445ac85c3913b1de58bae4f4fd7b173c4038f. Server opencode2 :46400 PID 2294648 (own XDG config/state/cache, default data dir), relay :46401 PID 2294882. Waiting for issue-111 emulator (OC_API37, pid 2293779) to exit.
+- 08:10 issue-111 emulator gone, 6 GB free. Booted OC_NATIVE_PREVIEW_20261102 on :5584 under flock emu.lock (qemu 2415637 inherited the lock). Uninstalled old preview 10003 (from wave 1), installed the wave 4 debug APK.
+- 08:11 First launch: buttons have side margins now (01). Add-server form: Pairing code + Scan code added above the address form; password field text is readable in the accessibility tree (N6).
+- 08:12 Connected; Conversations has no "couldn't load" line (B1 fixed) (05).
+- 08:13 Opened READY (oc-bg-proof, 3 model-switched notices): no crash (B0 fixed) (06). Chat header title squeezed to "Q…" next to "Context 8 % used" (N1); approval chip clipped to ".." (N2).
+- 08:13 New chat → server page → Start conversation (07, 08). First send: "Your message wasn't sent", session created but no prompt on the server (09). B2 STILL BROKEN.
+- 08:14 Tailing serve.log printed the live one-run password into my transcript by mistake; restarted the server at once (old PID 2294648 stopped, new PID 2425724), removed and re-added the server in the app with the new password. Not in any file.
+- 08:16 Re-test first send on the fresh server: failed again (14). Try again → sent; Pulse Alpha Free reply failed and the footer now says why + Details (B5 fixed) (15, 16).
+- 08:17 Model picker: search, groups named by provider, "Current" (B3 fixed) (17–20). Chose Z.AI Coding Plan · GLM-5.3-Flash.
+- 08:18 Send right after the model pick: failed; bubble "The server can't be reached right now", Details = Network.Reset (22–24). Try again: first tap failed again, second worked (25, 26).
+- 08:20–08:23 Idle-gap test on the direct server: send after ~12 s idle → fail (twice); immediate retry → ok; after 25 s idle → ok; 5 s → ok.
+- 08:24 Added "QA relay" (:46401 → :46400, logs request lines/bodies + socket closes, no auth headers). Server closes every idle socket ~6 s after the last request (relay log).
+- 08:26–08:29 Long reply (~1500 words) streamed to the end in 1 min 07 s, no stall; Markdown headings/bold/lists render (B7 fixed); steer box keeps full width (B8 fixed) (34-*). gfxinfo: 3441 frames, 6.0% janky, p50 30 ms, p90 40 ms, p99 65 ms (software GPU). Code block: monospace, colours, sideways scroll, Copy (35–38); no copy confirmation seen.
+- 08:32 Tool prompt: send failed on the RELAY too, no request reached the relay; the socket the app reused had been closed by the server at 08:32:03 (40). Try again → work line "Read 2 files · searched once", tappable, opens tool rows; a row opens its output (B9 fixed) (41–43).
+- 08:34 Stop at 08:34:06 → POST /interrupt 200 at 08:34:08, reply stopped (B10 fixed) (44–46). But the footer says "Didn't finish — The reply stopped with an error. Send again, or pick another model." (N3) (47).
+- 08:35 Steer: first tap of "Add to this turn" POSTed delivery:"steer"; reply switched to tunnels; no false "wasn't sent" (B11 fixed) (48–50).
+- 08:36 Attach → Attach file → system picker → chip (53). An unexplained notification-permission dialog popped up on return (N4). Chip survived leaving the chat; the file went as a data: URI and the model read it (55).
+- 08:37 Draft survived force-stop + relaunch (56). Model chip "Server default" for >10 s after reopening while the server has GLM-5.3-Flash, then corrected (B13 partly) (57, 59). Edge-swipe back → Conversations (58).
+- 08:38 Keyboard open: ~95 dp of transcript visible; message field half width (B6 partly) (59).
+- 08:39 Appearance Light/Nord/Dark/Graphite live (62–65). Arabic: translated RTL UI, bars keep the app ground (B14 fixed) (67, 68). In Arabic, English assistant reply is LTR and Arabic reply RTL (B12 assistant part fixed) but the user bubble and thinking text are RTL with the full stop on the wrong side (69, 71); chat header shows no title at all. Back to English OK (72).
+- 08:41 Notifications page + test notification OK (73, 74). About: 3.0.0-dev+10003 (75). Settings › Server › Servers still three levels; "Connect" next to "Connected" (76, 77).
+- 08:42 pm clear of the PREVIEW package only; first-run Settings: Server "Not set up yet" (78).
+- 08:42 No crash in logcat -b crash; exit-info shows only my two force-stops. Socket probe from the PC: server closes an idle keep-alive socket after 6.0 s.
+- 08:43 Verdict FAIL (B2 S1 still broken). Release build skipped. Emulator stopped (adb emu kill, qemu gone), server PID 2425724 + relay PID 2455568 stopped by exact PID, ports 46400/46401 free.
