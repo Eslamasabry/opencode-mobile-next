@@ -7,8 +7,11 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.composer.stash.PromptShelf
+import io.github.eslamasabry.oc.engine.composer.store.ComposerPrefs
 import io.github.eslamasabry.oc.engine.composer.store.ComposerProfiles
 import io.github.eslamasabry.oc.engine.composer.store.MemoryComposerPrefs
+import io.github.eslamasabry.oc.engine.composer.store.PrefWrite
+import io.github.eslamasabry.oc.engine.composer.store.PrefsEdit
 import io.github.eslamasabry.oc.engine.composer.vault.AttachmentVault
 import io.github.eslamasabry.oc.engine.composer.vault.MemoryPayloadStore
 import io.github.eslamasabry.oc.feature.prompts.presentation.SavedPromptsIssue
@@ -25,11 +28,13 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +42,16 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+
+/** Throws (process death) on the first commit that writes a saved prompt record. */
+internal class DyingPrefs(private val inner: ComposerPrefs) : ComposerPrefs by inner {
+    override suspend fun commit(edit: PrefsEdit): Boolean {
+        if (edit.entries.any { (key, write) -> key.startsWith("oc.promptStash.") && write is PrefWrite.Str }) {
+            throw CancellationException("process died")
+        }
+        return inner.commit(edit)
+    }
+}
 
 internal class StepClock(var millis: Long = 1_760_000_000_000) : Clock {
     override fun now(): Instant = Instant.fromEpochMilliseconds(millis).also { millis += 1_000 }
@@ -173,6 +188,17 @@ class SavedPromptsTest {
         vm.submitEdit("new words")
         prefs.refuse = false
         assertEquals(SavedPromptsIssue.SaveFailed, vm.state.value.issue)
+        assertEquals(listOf("original words"), (store().list("p1") as Outcome.Ok).value.map { it.text })
+    }
+
+    @Test
+    fun `B-STATE-135 an edit interrupted before the new prompt is saved keeps the original`() = runTest {
+        store().save("p1", "original words")
+        val id = ((store().list("p1") as Outcome.Ok).value.single()).id
+        // The process dies on the write that saves the replacement.
+        val dying = DyingPrefs(prefs)
+        val shelf = ShelfSavedPrompts(PromptShelf(dying, AttachmentVault(payloads), profiles, Redactor()), { Unit.ok() }, clock)
+        assertFailsWith<CancellationException> { shelf.edit("p1", id, "new words") }
         assertEquals(listOf("original words"), (store().list("p1") as Outcome.Ok).value.map { it.text })
     }
 
