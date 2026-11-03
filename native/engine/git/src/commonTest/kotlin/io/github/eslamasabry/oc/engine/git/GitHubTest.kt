@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.secret.SecretStore
+import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
 import io.github.eslamasabry.oc.core.security.Redactor
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -243,5 +244,37 @@ class GitHubTest {
         assertTrue("oc.githubToken.kept" in secrets.values)
         assertFalse("oc.githubToken.gone" in secrets.values)
         assertTrue("pw.kept" in secrets.values)
+    }
+
+    @Test
+    fun `B-SEC-085 deleting a profile while its GitHub sign-in waits stores no token afterwards`() = runTest {
+        val secrets = MemorySecrets()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val scope = TestScope(dispatcher)
+        val services =
+            GitServices(
+                workspaces = { GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected) },
+                tokens = GitHubTokenStore(secrets, redactor),
+                flow = flow,
+                redactor = redactor,
+                links = ExternalLinkPolicy(),
+                opener = { Outcome.Ok(Unit) },
+                scope = scope,
+                nowMs = { now },
+            )
+        val acct = services.account(ProfileId("gone"))
+        acct.load()
+        github.answers += listOf(code(), token())
+        github.gate = CompletableDeferred()
+        github.gateAfter = 1
+        acct.startSignIn()
+        scope.testScheduler.runCurrent()
+        // The person approves in the browser after the server was removed: the token answer is held until then.
+        assertIs<GitHubSignIn.WaitingForUser>(acct.state.value)
+        services.forgetRemovedProfiles(emptySet())
+        github.gate!!.complete(Unit)
+        scope.testScheduler.advanceUntilIdle()
+        assertFalse("oc.githubToken.gone" in secrets.values)
+        assertEquals(GitHubSignIn.SignedOut(), acct.state.value)
     }
 }

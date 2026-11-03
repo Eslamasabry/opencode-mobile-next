@@ -53,8 +53,9 @@ class GitPageTest {
         assertEquals("app.kt", ready.snapshot.status.files.single().path)
         assertNull(p.state.value.busy)
 
+        // The shell is handed to the real resolver, so a command run on an unavailable workspace would show here.
         val shell = FakeShell.steps(*snapshotSteps)
-        val off = GitPage(ref) { GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected) }
+        val off = GitPage(ref) { resolveGitWorkspace(connected = false, directory = "/p", remoteShell = true) { shell } }
         off.refresh()
         off.pull()
         assertEquals(GitPageView.Unavailable(GitUnavailableReason.NotConnected), off.state.value.view)

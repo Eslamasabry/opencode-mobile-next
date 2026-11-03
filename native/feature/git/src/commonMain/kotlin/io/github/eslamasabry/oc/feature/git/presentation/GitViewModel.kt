@@ -49,6 +49,14 @@ public class GitViewModel(@Assisted route: GitRoute, services: GitServices, priv
 
     override fun openBranches(): Unit = presenter.openBranches()
 
+    override fun openRemotes(): Unit = presenter.openRemotes()
+
+    override fun openClone(): Unit = presenter.openClone()
+
+    override fun addRemote(name: String, url: String): Unit = presenter.addRemote(name, url)
+
+    override fun clone(url: String, folder: String): Unit = presenter.clone(url, folder)
+
     override fun closeSheet(): Unit = presenter.closeSheet()
 
     override fun switchBranch(name: String): Unit = presenter.switchBranch(name)

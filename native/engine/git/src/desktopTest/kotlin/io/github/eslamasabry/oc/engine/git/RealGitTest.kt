@@ -143,4 +143,63 @@ class RealGitTest {
         assertEquals(GitProblem.PushRejected, first.push().problem)
         assertEquals(GitProblem.CannotFastForward, first.pull().problem)
     }
+
+    private fun gitOut(dir: File, vararg args: String): String {
+        val p = ProcessBuilder(listOf("git") + args).directory(dir).redirectErrorStream(true)
+            .apply { environment()["HOME"] = root.absolutePath; environment()["GIT_CONFIG_NOSYSTEM"] = "1" }.start()
+        val out = p.inputStream.bufferedReader().readText()
+        p.waitFor()
+        return out
+    }
+
+    @Test
+    fun `B-BUILD-017 a rename saved with its old path leaves nothing staged and only the new file`() = runTest {
+        val dir = repo("rename")
+        File(dir, "old.kt").writeText("x\n")
+        git(dir, "add", "old.kt")
+        git(dir, "commit", "-q", "-m", "first")
+        git(dir, "mv", "old.kt", "new.kt")
+        val repo = GitRepository(shell, dir.absolutePath)
+        val file = assertIs<GitSnapshotResult.Ready>(repo.snapshot()).snapshot.status.files.single()
+        assertEquals("new.kt", file.path)
+        assertEquals("old.kt", file.originalPath)
+        // What the page saves for a ticked rename: both halves.
+        val saved = repo.commit(listOf(file.path), "rename", renamedFrom = listOfNotNull(file.originalPath))
+        assertTrue(saved.ok, "${saved.failure?.problem} ${saved.failure?.details}")
+        assertEquals("", gitOut(dir, "status", "--porcelain").trim())
+        assertEquals("new.kt", gitOut(dir, "ls-tree", "--name-only", "HEAD").trim())
+    }
+
+    @Test
+    fun `B-BUILD-014 add remote, clone beside the project and a quiet fetch`() = runTest {
+        val origin = repo("origin")
+        File(origin, "a.txt").writeText("a\n")
+        git(origin, "add", "a.txt")
+        git(origin, "commit", "-q", "-m", "first")
+        val work = repo("work")
+        val repo = GitRepository(shell, work.absolutePath)
+        assertEquals(GitProblem.RemoteAddressHasPassword, repo.addRemote("origin", "https://me:" + "pw@example.invalid/r.git").problem)
+        assertEquals(GitProblem.InvalidRemoteName, repo.addRemote("-x", origin.absolutePath).problem)
+        val added = repo.addRemote("origin", origin.absolutePath)
+        assertTrue(added.ok, added.failure?.details)
+        assertEquals(GitActionNote.RemoteAdded, added.note)
+        assertEquals("origin", assertIs<GitSnapshotResult.Ready>(repo.snapshot()).snapshot.remotes.single().name)
+        assertEquals(GitProblem.RemoteExists, repo.addRemote("origin", origin.absolutePath).problem)
+
+        val cloned = repo.clone(origin.absolutePath, "copy")
+        assertTrue(cloned.ok, cloned.failure?.details)
+        assertEquals(File(root, "copy").absolutePath, cloned.clonedTo)
+        assertTrue(File(root, "copy/a.txt").isFile)
+        assertEquals(GitProblem.FolderExists, repo.clone(origin.absolutePath, "copy").problem)
+
+        // The clone tracks origin/main: another computer pushes, a fetch makes "behind" true.
+        val copy = GitRepository(shell, File(root, "copy").absolutePath)
+        File(origin, "b.txt").writeText("b\n")
+        git(origin, "add", "b.txt")
+        git(origin, "commit", "-q", "-m", "second")
+        assertEquals(0, assertIs<GitSnapshotResult.Ready>(copy.snapshot()).snapshot.status.branch.behind)
+        assertTrue(copy.fetch().ok)
+        assertEquals(1, assertIs<GitSnapshotResult.Ready>(copy.snapshot()).snapshot.status.branch.behind)
+        assertEquals(GitProblem.NoUpstream, repo.fetch().problem)
+    }
 }

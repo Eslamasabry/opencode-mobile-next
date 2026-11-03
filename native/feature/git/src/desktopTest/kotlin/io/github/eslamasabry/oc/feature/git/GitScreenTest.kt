@@ -6,11 +6,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -31,6 +35,7 @@ import io.github.eslamasabry.oc.engine.git.GitSnapshot
 import io.github.eslamasabry.oc.engine.git.GitStatus
 import io.github.eslamasabry.oc.engine.git.GitUnavailableReason
 import io.github.eslamasabry.oc.feature.git.presentation.GitActions
+import io.github.eslamasabry.oc.feature.git.presentation.GitSheet
 import io.github.eslamasabry.oc.feature.git.presentation.GitUi
 import io.github.eslamasabry.oc.feature.git.ui.GitScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -75,6 +80,10 @@ class GitScreenTest {
             override fun commit(message: String) { calls += "commit $message" }
             override fun commitAndPush(message: String) { calls += "commitAndPush $message" }
             override fun openBranches() { calls += "branches" }
+            override fun openRemotes() { calls += "remotes" }
+            override fun openClone() { calls += "clone" }
+            override fun addRemote(name: String, url: String) { calls += "addRemote $name $url" }
+            override fun clone(url: String, folder: String) { calls += "clone $url $folder" }
             override fun closeSheet() {}
             override fun switchBranch(name: String) {}
             override fun createBranch(name: String) {}
@@ -156,7 +165,7 @@ class GitScreenTest {
 
     @Test
     fun `B-SEC-084 GitHub sign-in is a visible row and the waiting code is shown`() = runComposeUiTest {
-        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedOut())) }
+        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedOut(), offersGitHubSignIn = true)) }
         onNodeWithText("Sign in to GitHub").performScrollTo().performClick()
         assertEquals("signIn", calls.last())
     }
@@ -164,7 +173,13 @@ class GitScreenTest {
     @Test
     fun `B-SEC-084 while waiting the code and Open GitHub are shown`() = runComposeUiTest {
         setContent {
-            Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.WaitingForUser("WDJB-MJHT", "https://github.com/login/device", 0)))
+            Screen(
+                GitUi(
+                    view = GitPageView.Ready(snapshot),
+                    signIn = GitHubSignIn.WaitingForUser("WDJB-MJHT", "https://github.com/login/device", 0),
+                    offersGitHubSignIn = true,
+                ),
+            )
         }
         onNodeWithText("WDJB-MJHT").assertExists()
         onNodeWithText("Open GitHub").assertExists()
@@ -183,5 +198,33 @@ class GitScreenTest {
         }
         onNodeWithText("ليس مستودع Git").assertExists()
         onNodeWithText("Not a Git repository").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-SEC-082 a server workspace pushes with its own sign-in, so no GitHub sign-in is offered`() = runComposeUiTest {
+        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedOut(), placeName = "Home box")) }
+        onNodeWithText("Sign in to GitHub").assertDoesNotExist()
+        onNodeWithTag("github-sign-in").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-BUILD-014 a project without a remote reaches Remotes and Clone from visible rows`() = runComposeUiTest {
+        val bare = snapshot.copy(remotes = persistentListOf())
+        setContent { Screen(GitUi(view = GitPageView.Ready(bare), signIn = GitHubSignIn.SignedOut())) }
+        onNodeWithText("None yet").assertExists()
+        onNodeWithText("Remotes").performScrollTo().performClick()
+        onNodeWithText("Clone a repository").performScrollTo().performClick()
+        assertEquals(listOf("remotes", "clone"), calls)
+    }
+
+    @Test
+    fun `B-BUILD-014 the Remotes sheet lists remotes and refuses an address with a password before anything runs`() = runComposeUiTest {
+        setContent { Screen(GitUi(view = GitPageView.Ready(snapshot), signIn = GitHubSignIn.SignedOut(), sheet = GitSheet.Remotes)) }
+        onNodeWithTag("git-remote-origin").assertExists()
+        onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-remote-name"))).performTextInput("backup")
+        onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-remote-url"))).performTextInput("https://me:" + "pw@example.invalid/r.git")
+        waitForIdle()
+        onNodeWithText("Add remote").performClick()
+        assertTrue(calls.none { it.startsWith("addRemote") })
     }
 }

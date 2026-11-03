@@ -34,9 +34,14 @@ public class GitWorkspace(
     public val placeName: String? = null,
 ) {
     /** Pushes use the sign-in that environment already has (every host today). */
-    public val usesOwnGitSignIn: Boolean get() = host == GitHost.Server
+    public val usesOwnGitSignIn: Boolean get() = usesOwnGitSignIn(host)
 
     override fun toString(): String = "GitWorkspace($host)"
+
+    public companion object {
+        /** Pushes from [host] use the Git sign-in set up there; the app's GitHub sign-in is not offered (B-SEC-082). */
+        public fun usesOwnGitSignIn(host: GitHost): Boolean = host == GitHost.Server
+    }
 }
 
 public sealed interface GitWorkspaceResolution {
@@ -99,7 +104,10 @@ public sealed interface GitDiffView {
 }
 
 /** Save-and-send's two halves, so the busy line names each one (B-NAV-021). */
-public enum class GitBusy { Refresh, Pull, Push, Commit, SaveThenSend, SwitchBranch, CreateBranch, Discard, SetIdentity }
+public enum class GitBusy { Refresh, Pull, Push, Commit, SaveThenSend, SwitchBranch, CreateBranch, Discard, SetIdentity, AddRemote, Clone }
+
+/** The quiet look at the remote after the page opens ("behind" is only true after it). Never shown as busy. */
+public enum class GitCheck { Idle, Checking, Done, Failed }
 
 public data class GitPageState(
     val view: GitPageView = GitPageView.Loading,
@@ -114,6 +122,10 @@ public data class GitPageState(
     val diff: GitDiffView? = null,
     val host: GitHost? = null,
     val placeName: String? = null,
+    /** The project folder, once resolved. */
+    val directory: String? = null,
+    /** The quiet remote check (`git fetch`) after opening. */
+    val check: GitCheck = GitCheck.Idle,
     /** Bumped on every finished write, so the screen can clear its fields once. */
     val generation: Int = 0,
 ) {
@@ -149,17 +161,18 @@ public class GitPage(
 
     public suspend fun push(): Unit = write(GitBusy.Push) { it.push() }
 
-    public suspend fun commit(paths: List<String>, message: String): Unit = write(GitBusy.Commit) { it.commit(paths, message) }
+    public suspend fun commit(paths: List<String>, message: String, renamedFrom: List<String> = emptyList()): Unit =
+        write(GitBusy.Commit) { it.commit(paths, message, renamedFrom) }
 
     /**
      * Save-and-send in one tap (B-NAV-021): saves, then sends, then reads once, with the busy line naming each half. A
      * failed save stops there; a failed send keeps the save and says so.
      */
-    public suspend fun commitAndPush(paths: List<String>, message: String) {
+    public suspend fun commitAndPush(paths: List<String>, message: String, renamedFrom: List<String> = emptyList()) {
         val repo = repository ?: return
         if (!begin(GitBusy.Commit)) return
         try {
-            val saved = repo.commit(paths, message)
+            val saved = repo.commit(paths, message, renamedFrom)
             if (!saved.ok) {
                 finish(saved, savedNotSent = false)
                 return
@@ -171,6 +184,33 @@ public class GitPage(
         } finally {
             end()
         }
+    }
+
+    public suspend fun addRemote(name: String, url: String): Unit = write(GitBusy.AddRemote) { it.addRemote(name, url) }
+
+    public suspend fun clone(url: String, folder: String): Unit = write(GitBusy.Clone) { it.clone(url, folder) }
+
+    /**
+     * Looks at the remote quietly and rereads, so "Up to date" and new remote branches are true (Flutter
+     * `checkForUpdates`, run after the page opens). Not an action: it holds no button and never reports a failure as
+     * one; [GitPageState.check] says how it went. A branch with no upstream has nothing to check.
+     */
+    public suspend fun checkForUpdates() {
+        val repo = repository ?: return
+        val snapshot = state.value.snapshot ?: return
+        if (state.value.check == GitCheck.Checking) return
+        if (!snapshot.status.branch.hasUpstream) {
+            mutableState.update { it.copy(check = GitCheck.Idle) }
+            return
+        }
+        mutableState.update { it.copy(check = GitCheck.Checking) }
+        val fetched = repo.fetch()
+        if (!fetched.ok) {
+            mutableState.update { it.copy(check = GitCheck.Failed) }
+            return
+        }
+        mutableState.update { it.copy(check = GitCheck.Done) }
+        if (state.value.busy == null) read()
     }
 
     public suspend fun switchBranch(name: String): Unit = write(GitBusy.SwitchBranch) { it.switchBranch(name) }
@@ -228,7 +268,7 @@ public class GitPage(
                     is GitWorkspaceResolution.Available -> {
                         val made = GitRepository(found.workspace.shell, found.workspace.directory)
                         repository = made
-                        mutableState.update { it.copy(host = found.workspace.host, placeName = found.workspace.placeName) }
+                        mutableState.update { it.copy(host = found.workspace.host, placeName = found.workspace.placeName, directory = found.workspace.directory) }
                         made
                     }
                 }

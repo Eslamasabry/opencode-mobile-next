@@ -19,6 +19,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -107,5 +110,26 @@ class ServerGitShellTest {
             }
         assertEquals(GitShellFailure.TimedOut, assertIs<GitShellReply.Failed>(sh.run("sleep 99", 1_000)).failure)
         assertTrue(calls.last().startsWith("DELETE"))
+    }
+
+    @Test
+    fun `B-BUILD-013 leaving the page mid-command still drops the server's copy`() = runTest {
+        val polled = CompletableDeferred<Unit>()
+        val sh =
+            shell { request ->
+                when (request.method) {
+                    HttpMethod.Post -> json("""{"data":{"id":"sh_9","status":"running"}}""")
+                    HttpMethod.Delete -> json("""{"data":true}""")
+                    else -> {
+                        if (calls.count { it == "GET /api/shell/sh_9" } >= 2) polled.complete(Unit)
+                        json("""{"data":{"id":"sh_9","status":"running"}}""")
+                    }
+                }
+            }
+        val job = launch { sh.run("sleep 100", 600_000) }
+        // Let it start and poll, then leave the page (its scope is cancelled).
+        polled.await()
+        job.cancelAndJoin()
+        assertEquals("DELETE /api/shell/sh_9", calls.last())
     }
 }
