@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.model.FileNode
 import io.github.eslamasabry.oc.engine.files.FileBody
 import io.github.eslamasabry.oc.feature.files.presentation.FileActions
+import io.github.eslamasabry.oc.feature.files.presentation.FileNotice
 import io.github.eslamasabry.oc.feature.files.presentation.FilePhase
 import io.github.eslamasabry.oc.feature.files.presentation.FileUi
 import io.github.eslamasabry.oc.feature.files.presentation.FolderActions
@@ -91,6 +92,10 @@ class FilesScreensTest {
 
         override fun openWith() {
             calls += "openWith"
+        }
+
+        override fun save() {
+            calls += "save"
         }
 
         override fun shareOnWifi() {
@@ -221,5 +226,21 @@ class FilesScreensTest {
         val binary = readme.copy(path = "app.bin", body = FileBody.Binary("application/octet-stream", 2048), sizeBytes = 2048)
         setContent { Themed { FileScreen(binary, calls) } }
         onNodeWithText("Can't show this file").assertExists()
+    }
+
+    @Test
+    fun `B-MEDIA-001 Save is a visible action and a saved file says so`() = runComposeUiTest {
+        val calls = FileCalls()
+        setContent { Themed { FileScreen(readme.copy(canSave = true, notice = FileNotice.Saved), calls) } }
+        onNodeWithText("README.md saved to your device.").assertExists()
+        onNodeWithText("Save").performClick()
+        assertEquals(listOf("save"), calls.calls)
+    }
+
+    @Test
+    fun `B-MEDIA-001 a file longer than the viewer shows says only part of it is shown`() = runComposeUiTest {
+        val long = readme.copy(path = "big.txt", body = FileBody.Text("first line", truncated = true))
+        setContent { Themed { FileScreen(long, FileCalls()) } }
+        onNodeWithText("Showing part of this file").assertExists()
     }
 }

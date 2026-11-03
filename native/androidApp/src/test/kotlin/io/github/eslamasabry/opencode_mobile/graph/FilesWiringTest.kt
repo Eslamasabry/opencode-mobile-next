@@ -5,8 +5,10 @@ import io.github.eslamasabry.oc.engine.files.ShareHandler
 import io.github.eslamasabry.oc.engine.files.WifiShareRules
 import java.net.HttpURLConnection
 import java.net.InetAddress
+import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.ServerSocket
+import java.net.Socket
 import java.net.URL
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -56,6 +58,50 @@ class FilesWiringTest {
         assertEquals(1, served)
         server.close()
         assertFailsWith<java.io.IOException> { withContext(Dispatchers.IO) { get("/$token/report%20final.txt") } }
+        scope.cancel()
+    }
+
+    @Test
+    fun `B-MEDIA-034 Stop sharing also ends a download that is already running`() = runTest {
+        val size = 64 * 1024 * 1024
+        val data = FileData("big.bin", "application/octet-stream", ByteArray(size))
+        val token = "tok"
+        val handler = object : ShareHandler {
+            override fun reply(method: String, rawPath: String) = WifiShareRules.reply(method, rawPath, token, "big.bin", data)
+            override fun served() {}
+        }
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        val server = SocketShareServer(ServerSocket(0, 8, InetAddress.getByName("127.0.0.1")), handler, scope)
+        server.start()
+        val received = withContext(Dispatchers.IO) {
+            Socket(Proxy.NO_PROXY).use { client ->
+                client.connect(InetSocketAddress("127.0.0.1", server.port))
+                client.soTimeout = 5_000
+                client.getOutputStream().write("GET /$token/big.bin HTTP/1.1\r\nHost: x\r\n\r\n".toByteArray())
+                val input = client.getInputStream()
+                val buffer = ByteArray(64 * 1024)
+                var total = 0L
+                // The download has started: the first bytes arrived.
+                while (total < 128 * 1024) {
+                    val n = input.read(buffer)
+                    if (n < 0) break
+                    total += n
+                }
+                server.close()
+                Thread.sleep(200)
+                try {
+                    while (true) {
+                        val n = input.read(buffer)
+                        if (n < 0) break
+                        total += n
+                    }
+                } catch (_: java.io.IOException) {
+                    // A reset also ends it.
+                }
+                total
+            }
+        }
+        assertTrue(received < size, "the download kept running after Stop ($received of $size bytes)")
         scope.cancel()
     }
 }

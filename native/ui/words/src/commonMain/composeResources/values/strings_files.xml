@@ -12,4 +12,5 @@
     <string name="filesFolderLabel">Folder %1$s</string>
     <string name="filesUp">Up one folder</string>
     <string name="filesShareStarting">Starting the share…</string>
+    <string name="filesSaveFailed">Couldn't save the file. Try again.</string>
 </resources>

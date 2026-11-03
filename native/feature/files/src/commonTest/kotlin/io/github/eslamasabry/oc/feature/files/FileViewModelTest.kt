@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.model.FileContent
 import io.github.eslamasabry.oc.engine.files.FileBody
 import io.github.eslamasabry.oc.engine.files.FileData
 import io.github.eslamasabry.oc.engine.files.FileHandoff
+import io.github.eslamasabry.oc.engine.files.FileSaver
 import io.github.eslamasabry.oc.engine.files.PdfDocument
 import io.github.eslamasabry.oc.engine.files.PdfPages
 import io.github.eslamasabry.oc.engine.files.ShareHandler
@@ -100,6 +101,8 @@ class FileViewModelTest {
         val handoff: Handoff? = Handoff(),
         val pdf: PdfPages? = null,
         val connections: FakeConnections = FakeConnections(FakeFileGateway(contents = files)),
+        val saver: FileSaver? = null,
+        shared: WifiShare? = null,
     ) {
         val nav =
             StackNavigator(
@@ -109,7 +112,7 @@ class FileViewModelTest {
                 FilesRoute.File(conversation, path, line),
             )
         val mentions = FakeMentions()
-        val share = WifiShare(host, clock, scope.backgroundScope)
+        val share = shared ?: WifiShare(host, clock, scope.backgroundScope)
         val vm =
             FileViewModel(
                 FilesRoute.File(conversation, path, line),
@@ -120,6 +123,7 @@ class FileViewModelTest {
                 setOfNotNull(pdf),
                 nav,
                 AppCoroutineScope(scope.backgroundScope.coroutineContext),
+                setOfNotNull(saver),
             )
     }
 
@@ -252,5 +256,71 @@ class FileViewModelTest {
         val ui = Setup(this, "doc.pdf", pdf = null).vm.state.value
         assertEquals(Failure.Media(MediaProblem.PdfNeedsAndroid10), ui.pdfFailure)
         assertTrue(ui.canOpenWith)
+    }
+
+    @Test
+    fun `B-MEDIA-034 a second viewer's share is never adopted or stopped by the first`() = runTest {
+        val host = Host()
+        val shared = WifiShare(host, clock, backgroundScope)
+        val a = Setup(this, "README.md", shared = shared)
+        val b = Setup(this, "src/App.kt", shared = shared)
+        a.vm.shareOnWifi()
+        b.vm.shareOnWifi()
+        val bRunning = b.vm.state.value.share as ShareSheetUi.Running
+        assertTrue(bRunning.url.endsWith("/App.kt"))
+        // A's share was replaced: A shows it ended, never B's link.
+        assertEquals(ShareSheetUi.Ended, a.vm.state.value.share)
+        a.vm.closeShare()
+        a.vm.stopSharing()
+        assertEquals(bRunning.url, shared.state.value?.url, "closing A ended B's share")
+        b.vm.stopSharing()
+        assertNull(shared.state.value)
+    }
+
+    @Test
+    fun `B-MEDIA-001 Save hands over the exact original bytes and says where they went`() = runTest {
+        val saved = mutableListOf<FileData>()
+        var answer: Outcome<Boolean> = Outcome.Ok(true)
+        val setup = Setup(this, "logo.png", saver = FileSaver { saved += it; answer })
+        assertTrue(setup.vm.state.value.canSave)
+        setup.vm.save()
+        assertContentEquals(byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47), saved.single().bytes)
+        assertEquals(FileNotice.Saved, setup.vm.state.value.notice)
+        answer = Outcome.Ok(false) // cancelled in the picker
+        setup.vm.save()
+        assertNull(setup.vm.state.value.notice)
+        answer = Outcome.Failed(Failure.Media(MediaProblem.SaveFailed))
+        setup.vm.save()
+        assertEquals(FileNotice.SaveFailed, setup.vm.state.value.notice)
+        assertFalse(Setup(this, "logo.png").vm.state.value.canSave)
+    }
+
+    @Test
+    fun `B-MEDIA-001 PDF pages far from the one shown are released and render again when reached`() = runTest {
+        val rendered = mutableListOf<Int>()
+        val pages =
+            PdfPages {
+                Outcome.Ok(
+                    object : PdfDocument {
+                        override val pageCount: Int = 40
+
+                        override suspend fun renderPage(index: Int, width: Int): Outcome<ByteArray> {
+                            rendered += index
+                            return Outcome.Ok(ByteArray(1024))
+                        }
+
+                        override suspend fun close() {}
+                    }
+                )
+            }
+        val setup = Setup(this, "doc.pdf", pdf = pages)
+        for (i in 0 until 40) setup.vm.pdfPage(i)
+        val ready = setup.vm.state.value.pdfPages.filterValues { it is PdfPageUi.Ready }.keys
+        assertTrue(ready.size <= 7, "kept $ready")
+        assertTrue(39 in ready)
+        assertTrue(0 !in ready)
+        setup.vm.pdfPage(0)
+        assertEquals(41, rendered.size)
+        assertIs<PdfPageUi.Ready>(setup.vm.state.value.pdfPages[0])
     }
 }
