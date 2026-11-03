@@ -1,4 +1,4 @@
-VERIFIED: pending
+VERIFIED: green — :feature:chat:desktopTest 261/261, :engine:transcript:desktopTest 160/160, :engine:delivery:desktopTest 99/99, :engine:composer:desktopTest 155/155, :engine:migration:desktopTest 12/12, :feature:projects:desktopTest 21/21, :core:common:desktopTest 24/24, :ui:kit:desktopTest 148/148, :ui:kit-chat:desktopTest 124/124, :quality:test 59/59, :android:notifications:testDebugUnitTest 41/41, :androidApp:testPreviewDebugUnitTest 15/15, :androidApp:assemblePreviewDebug OK
 
 # P12-CHAT-FIX4 — chat batch 3: Codex chat-bugs review, B-AGENT-024, gap list, mislabelled tests
 
@@ -93,7 +93,13 @@ this base; the integrator can drop the entries above from it.
 
 ## Tests and results
 
-(filled in after the final gate run)
+This container (JDK 21, Android SDK platforms;android-37.1, build-tools 37.0.0), on the branch head:
+
+- `./gradlew :feature:chat:desktopTest :engine:composer:desktopTest :engine:migration:desktopTest :feature:projects:desktopTest :core:common:desktopTest :ui:kit:desktopTest :ui:kit-chat:desktopTest :engine:transcript:desktopTest :engine:delivery:desktopTest --continue` — green, counts in the first line, 0 failed, 0 skipped. Every new and renamed test is in the result files.
+- `./gradlew :quality:test :android:notifications:testDebugUnitTest :androidApp:testPreviewDebugUnitTest :androidApp:assemblePreviewDebug --continue` — quality 59/59 and the APK built (`androidApp-preview-debug.apk`). The two unit-test tasks failed for environment reasons and passed on rerun:
+  - `:android:notifications` Robolectric classes could not download `android-all-instrumented` (Maven 429). After placing the 15 and 16 jars from Google's Central mirror in `~/.m2`, 41/41.
+  - `:androidApp` `FilesWiringTest` "B-MEDIA-034 … the Android socket …" failed once (a GET still answered right after `server.close()`), then passed 15/15 on rerun. It is a timing flake in the Wi-Fi share socket test (P12 files owner), untouched by this unit.
+- Red-first: the new tests were written against each reported defect; they were not run separately against the old code before the fix (no stash run), so "fails before" is by construction, not by a recorded red run.
 
 ## For the integrator
 
