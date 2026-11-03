@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
@@ -27,6 +28,8 @@ import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
+import io.github.eslamasabry.oc.ui.words.res.monitorQuietEnd
+import io.github.eslamasabry.oc.ui.words.res.monitorQuietStart
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.notifyDismiss
@@ -44,6 +47,11 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun SettingsScreen(state: SettingsUi, actions: SettingsActions, modifier: Modifier = Modifier, onExit: (() -> Unit)? = null) {
     val back: () -> Unit = { actions.onBack() }
+    // Back from Android's notification settings: the blocked notice must say what is true now (Flutter: on resume).
+    LifecycleResumeEffect(actions) {
+        actions.onResume()
+        onPauseOrDispose {}
+    }
     when (val page = state.page) {
         SettingsPage.Hub -> HubPage(state, actions, modifier, onExit)
         is SettingsPage.Group -> GroupPage(state, actions, page, modifier)
@@ -80,6 +88,13 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions, modifier:
         SettingsPage.ReportProblem ->
             SettingsFrame(stringResource(Res.string.kitReportProblem), back, state, actions, modifier) {
                 ReportBody(state.report, actions)
+            }
+        is SettingsPage.QuietTime ->
+            SettingsFrame(
+                stringResource(if (page.start) Res.string.monitorQuietStart else Res.string.monitorQuietEnd),
+                back, state, actions, modifier,
+            ) {
+                QuietTimeBody(page.start, state.notifications, actions)
             }
     }
 }

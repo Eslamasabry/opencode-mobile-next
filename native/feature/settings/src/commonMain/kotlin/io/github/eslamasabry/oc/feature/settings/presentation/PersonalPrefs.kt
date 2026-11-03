@@ -50,11 +50,17 @@ public sealed interface PersonalChange {
 }
 
 /**
- * The languages the Language page offers: the two the native app ships words for, plus the phone's own. [tag] is the
- * BCP 47 tag the theme and the words use; null follows the phone.
+ * The languages the Language page offers, in Flutter's picker order (`AppLocaleStore.pickerLanguages`): every language
+ * the app ships words for (`:ui:words` values-*), plus the phone's own. [tag] is the BCP 47 tag the theme and the words
+ * use; null follows the phone. A saved choice is always one of these, so it is shown and can be cleared (B-L10N-008).
  */
 public enum class AppLanguage(public val tag: String?) {
     System(null),
     English("en"),
     Arabic("ar"),
+    Spanish("es"),
+    Japanese("ja"),
+    Portuguese("pt"),
+    Russian("ru"),
+    Chinese("zh"),
 }

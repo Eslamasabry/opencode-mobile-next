@@ -35,6 +35,9 @@ public sealed interface SettingsPage {
 
     /** Settings › Help › Report a problem: the safe diagnostics report, previewed, then copied or shared. */
     public data object ReportProblem : SettingsPage
+
+    /** Settings › This app › Notifications › Quiet hours start ([start]) or end: one check-mark choice per time. */
+    public data class QuietTime(val start: Boolean) : SettingsPage
 }
 
 /**

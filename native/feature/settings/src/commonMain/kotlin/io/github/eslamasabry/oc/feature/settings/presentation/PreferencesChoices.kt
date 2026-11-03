@@ -107,10 +107,7 @@ public object PreferenceMapping {
     private fun textSize(size: TextSize): AppTextSize =
         AppTextSize.entries.firstOrNull { it.storageName == size.wire } ?: AppTextSize.Normal
 
+    /** Every stored language has its own choice, so a saved override never reads as System (B-L10N-008). */
     private fun language(choice: LocaleChoice): AppLanguage =
-        when (choice) {
-            LocaleChoice.En -> AppLanguage.English
-            LocaleChoice.Ar -> AppLanguage.Arabic
-            else -> AppLanguage.System
-        }
+        AppLanguage.entries.firstOrNull { it.tag == choice.code } ?: AppLanguage.System
 }

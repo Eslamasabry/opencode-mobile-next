@@ -62,4 +62,13 @@ public interface SettingsActions {
 
     /** Report a problem: build the report again after it could not be read. */
     public fun onRetryReport() {}
+
+    /** Notifications › Quiet hours switch: on starts at 22:00–08:00, off clears both times. */
+    public fun onQuietHours(on: Boolean) {}
+
+    /** Quiet hours start ([start]) or end page: one tap saves [minutes] and returns to Notifications. */
+    public fun onQuietTime(start: Boolean, minutes: Int) {}
+
+    /** The screen is on screen again (back from Android's settings): re-read what may have changed outside. */
+    public fun onResume() {}
 }

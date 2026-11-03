@@ -28,6 +28,8 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Channel
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.LogEntry
+import io.github.eslamasabry.oc.core.common.LogSink
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.attempt
@@ -43,6 +45,7 @@ import io.github.eslamasabry.oc.engine.analytics.NoOpSink
 import io.github.eslamasabry.oc.engine.analytics.OsFamily
 import io.github.eslamasabry.oc.engine.analytics.ReleaseChannel
 import io.github.eslamasabry.oc.engine.analytics.SystemProps
+import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
 import io.github.eslamasabry.oc.engine.settings.prefs.DevicePreferences
@@ -57,8 +60,10 @@ import io.github.eslamasabry.oc.feature.settings.presentation.AnalyticsChoices
 import io.github.eslamasabry.oc.feature.settings.presentation.DiagnosticsExport
 import io.github.eslamasabry.oc.feature.settings.presentation.DiagnosticsReport
 import io.github.eslamasabry.oc.feature.settings.presentation.EngineAnalyticsChoices
+import io.github.eslamasabry.oc.feature.settings.presentation.HandledErrors
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationChange
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationFacts
+import io.github.eslamasabry.oc.feature.settings.presentation.NotificationKeys
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationSettings
 import io.github.eslamasabry.oc.feature.settings.presentation.PersonalChoices
 import io.github.eslamasabry.oc.feature.settings.presentation.PreferenceMapping
@@ -84,6 +89,10 @@ import java.util.Locale
 import kotlin.time.Clock
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
@@ -194,12 +203,17 @@ class AndroidSettingsHost(
                     systemMotionOff = scale == 0f,
                     diagnostics = true,
                     opens = OPENS,
+                    surfaceStyles = false,
+                    transcriptDisplay = false,
                 )
             }
             .stateIn(
                 scope,
                 SharingStarted.Eagerly,
-                SettingsFacts(platform = shipped, dynamicColour = Build.VERSION.SDK_INT >= 31, diagnostics = true, opens = OPENS),
+                SettingsFacts(
+                    platform = shipped, dynamicColour = Build.VERSION.SDK_INT >= 31, diagnostics = true, opens = OPENS,
+                    surfaceStyles = false, transcriptDisplay = false,
+                ),
             )
 
     override val choices: PersonalChoices = PreferencesChoices(prefs::preferences, prefs.value, scope)
@@ -312,22 +326,40 @@ class AndroidNotificationSettings(
     private fun read(): NotificationFacts {
         fun flag(key: String, fallback: Boolean): Boolean =
             readOrNull { (stores.prefs.get(key) as? PrefValue.Bool)?.value } ?: fallback
+        fun minute(key: String): Long? = readOrNull { (stores.prefs.get(key) as? PrefValue.Int64)?.value }
         return NotificationFacts(
             blocked = !manager.areNotificationsEnabled(),
-            finishedWork = flag(FINISHED, true),
-            questions = flag(REQUESTS, true),
-            wifiOnly = flag(WIFI_ONLY, false),
+            finishedWork = flag(NotificationKeys.FINISHED, true),
+            questions = flag(NotificationKeys.REQUESTS, true),
+            quietHours = NotificationKeys.quiet(minute(NotificationKeys.QUIET_START), minute(NotificationKeys.QUIET_END)),
+            wifiOnly = flag(NotificationKeys.WIFI_ONLY, false),
         )
     }
 
+    /** Android's on/off can change outside the app (its settings, a long-press on a notification). */
+    override fun refresh() {
+        mutable.value = read()
+    }
+
     override suspend fun set(change: NotificationChange): Outcome<Unit> {
-        val (key, on) =
-            when (change) {
-                is NotificationChange.FinishedWork -> FINISHED to change.on
-                is NotificationChange.Questions -> REQUESTS to change.on
-                is NotificationChange.WifiOnly -> WIFI_ONLY to change.on
+        val result =
+            stores.prefs.commit(stores.lanes.app) {
+                when (change) {
+                    is NotificationChange.FinishedWork -> putBool(NotificationKeys.FINISHED, change.on)
+                    is NotificationChange.Questions -> putBool(NotificationKeys.REQUESTS, change.on)
+                    is NotificationChange.WifiOnly -> putBool(NotificationKeys.WIFI_ONLY, change.on)
+                    is NotificationChange.Quiet -> {
+                        val hours = change.hours
+                        if (hours == null) {
+                            remove(NotificationKeys.QUIET_START)
+                            remove(NotificationKeys.QUIET_END)
+                        } else {
+                            putLong(NotificationKeys.QUIET_START, hours.start.toLong())
+                            putLong(NotificationKeys.QUIET_END, hours.end.toLong())
+                        }
+                    }
+                }
             }
-        val result = stores.prefs.commit(stores.lanes.app) { putBool(key, on) }
         mutable.value = read()
         return result
     }
@@ -356,9 +388,6 @@ class AndroidNotificationSettings(
         }
 
     private companion object {
-        const val FINISHED = "oc.notify.finishedRuns"
-        const val REQUESTS = "oc.notify.requests"
-        const val WIFI_ONLY = "oc.notify.wifiOnly"
         const val TEST_ID = 0x7E57
     }
 }
@@ -413,9 +442,64 @@ object SettingsBindings {
             appScope.launch { it.openGate() }
         }
 
+    /** The one error list Report a problem reads; the app's warnings and errors reach it from the log root at once. */
     @Provides
     @SingleIn(AppScope::class)
-    fun diagnostics(redactor: Redactor, clock: Clock): Diagnostics = Diagnostics(redactor, clock)
+    fun diagnostics(redactor: Redactor, clock: Clock): Diagnostics =
+        Diagnostics(redactor, clock).also { DiagnosticsLogSink.target = it }
+}
+
+/**
+ * The redacting log root's delegate (OcApplication): warnings and errors the app logs become Report a problem's
+ * handled errors once the graph has built [Diagnostics]. Entries arrive already redacted; Diagnostics sanitises again.
+ */
+object DiagnosticsLogSink : LogSink {
+    @Volatile
+    var target: Diagnostics? = null
+
+    override fun write(entry: LogEntry) {
+        val error = HandledErrors.fromLog(entry) ?: return
+        target?.record(error.source, error.message)
+    }
+}
+
+/**
+ * Feeds Report a problem from the connections (Flutter feeds handled connection errors into its report): a saved
+ * server's stream stopping or dropping is recorded by its failure kind, never its address. Started once with first run.
+ */
+@SingleIn(AppScope::class)
+@Inject
+class DiagnosticsFeed(
+    private val registry: ConnectionRegistry,
+    private val diagnostics: Diagnostics,
+    appScope: AppCoroutineScope,
+) {
+    private val scope = CoroutineScope(appScope.coroutineContext)
+    private var started = false
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun start() {
+        if (started) return
+        started = true
+        scope.launch {
+            registry.live
+                .flatMapLatest { live ->
+                    if (live.isEmpty()) emptyFlow()
+                    else live.values.map { graph -> graph.session.status.withPrevious() }.merge()
+                }
+                .collect { (previous, next) ->
+                    HandledErrors.fromStream(previous, next)?.let { diagnostics.record(it.source, it.message) }
+                }
+        }
+    }
+
+    private fun <T> Flow<T>.withPrevious(): Flow<Pair<T?, T>> = flow {
+        var previous: T? = null
+        collect { next ->
+            emit(previous to next)
+            previous = next
+        }
+    }
 }
 
 /** The analytics document in app-private storage (plan 16 §5.6); the engine wraps every call. */
@@ -441,6 +525,7 @@ private class FileAnalyticsStore(private val file: File) : AnalyticsStore {
 @SingleIn(AppScope::class)
 @Inject
 class FirstRunStarter(
+    private val diagnosticsFeed: DiagnosticsFeed,
     private val stores: PreviewStores,
     private val connections: ServerConnections,
     private val nav: AppNavigator,
@@ -467,6 +552,7 @@ class FirstRunStarter(
     fun start() {
         if (started) return
         started = true
+        diagnosticsFeed.start() // Report a problem's connection errors, from the first connect on
         scope.launch {
             if (stores.warm() is Outcome.Failed) return@launch
             val saved = stores.profiles.profiles.value.map { it.id }.toSet()
