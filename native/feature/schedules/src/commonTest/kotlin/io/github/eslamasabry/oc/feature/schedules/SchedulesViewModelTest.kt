@@ -251,6 +251,23 @@ class SchedulesViewModelTest {
     }
 
     @Test
+    fun `B-STATE-024 typed editor fields survive recreation and the prompt comes back after leaving`() = runTest {
+        val edit = editor()
+        val seed = edit.state.value.seed
+        edit.edited(daily("Summarise the open issues").copy(time = "07:15"))
+        // Rotation: the screen is rebuilt from the view model's fields, with the same seed.
+        assertEquals(seed, edit.state.value.seed)
+        assertEquals("Summarise the open issues", edit.state.value.fields.prompt)
+        assertEquals("07:15", edit.state.value.fields.time)
+        // Leaving the editor and opening it again: the typed prompt is back.
+        val again = editor()
+        assertEquals("Summarise the open issues", again.state.value.fields.prompt)
+        // Saved: the draft is forgotten.
+        again.save(daily("Summarise the open issues"))
+        assertEquals("", editor().state.value.fields.prompt)
+    }
+
+    @Test
     fun `the editor names the one thing to fix and keeps what was typed`() = runTest {
         val edit = editor()
         edit.save(daily(prompt = " "))

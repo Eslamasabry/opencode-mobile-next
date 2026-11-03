@@ -5,6 +5,8 @@
 // :engine:schedules.
 plugins { id("oc.android.library") }
 
+android { testOptions { unitTests.isReturnDefaultValues = false } }
+
 // TODO(catalog): work-runtime is the Flutter app's pin (android/app/build.gradle.kts), as :android:widgets uses it.
 fun catalogOr(alias: String, fallback: String): Any =
     extensions
@@ -22,4 +24,5 @@ dependencies {
     api(catalogOr("androidx-work-runtime", "androidx.work:work-runtime:2.12.0"))
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.junit4)
+    testImplementation(libs.robolectric) // ScheduleExactAlarmsTest (AlarmManager shadow)
 }

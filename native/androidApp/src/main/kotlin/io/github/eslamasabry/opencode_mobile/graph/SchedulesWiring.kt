@@ -20,11 +20,15 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
+import io.github.eslamasabry.oc.android.schedules.ScheduleExactAlarms
 import io.github.eslamasabry.oc.android.schedules.ScheduleNotifications
 import io.github.eslamasabry.oc.android.schedules.ScheduleWorkPolicy
 import io.github.eslamasabry.oc.android.schedules.WorkScheduleAlarms
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppLog
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -33,8 +37,16 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.common.supervisedContext
+import io.github.eslamasabry.oc.core.common.dart.DartJson
+import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
+import io.github.eslamasabry.oc.core.domain.GatewayFactory
+import io.github.eslamasabry.oc.core.domain.GatewaySpec
 import io.github.eslamasabry.oc.core.domain.ServerGateway
+import io.github.eslamasabry.oc.core.model.ServerLocation
+import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.profiles.StoredProfileJson
 import io.github.eslamasabry.oc.engine.schedules.PrefsScheduleBackend
 import io.github.eslamasabry.oc.engine.schedules.ScheduleConnection
 import io.github.eslamasabry.oc.engine.schedules.ScheduleEngine
@@ -48,15 +60,18 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
 import io.github.eslamasabry.opencode_mobile.MainActivity
+import io.github.eslamasabry.opencode_mobile.ScheduledPromptReceiver as FlutterScheduleReceiver
 import kotlin.time.Clock
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 
 /*
  * P12-SCHEDULES Android wiring: the engine's ports over the preview stores and connection registry, the WorkManager
  * worker, the notification trampoline and the start-up re-arm. Everything else lives in :engine:schedules,
- * :android:schedules and :feature:schedules. Frozen-name note: the Flutter worker is
- * `io.github.eslamasabry.opencode_mobile.ScheduledPromptWorker`; native work uses new unique names (`oc.nschedule.*`)
- * and cancels the Flutter ones, so the class may stay here until the production package switch.
+ * :android:schedules and :feature:schedules. Frozen-name note: the Flutter worker and receiver
+ * (`io.github.eslamasabry.opencode_mobile.ScheduledPromptWorker` / `ScheduledPromptReceiver`) exist again in
+ * FlutterSchedules.kt and only re-arm; native work uses new unique names (`oc.nschedule.*`).
  */
 
 /** What OS components (worker, trampoline) need from the graph; Metro merges it into AndroidAppGraph. */
@@ -65,6 +80,7 @@ interface SchedulesGraphAccess {
     val schedules: ScheduleEngine
     val schedulesNavigator: AppNavigator
     val schedulesClock: Clock
+    val scheduleAlarms: WorkScheduleAlarms
 }
 
 @BindingContainer
@@ -72,12 +88,28 @@ interface SchedulesGraphAccess {
 object SchedulesBindings {
     @Provides
     @SingleIn(AppScope::class)
-    fun engine(application: Application, stores: PreviewStores, profiles: AppScheduleProfiles, clock: Clock): ScheduleEngine {
+    fun alarms(application: Application, clock: Clock): WorkScheduleAlarms =
+        WorkScheduleAlarms(
+            application,
+            ScheduledPromptWorker::class.java,
+            { clock.now().toEpochMilliseconds() },
+            ScheduleExactAlarms(application, FlutterScheduleReceiver::class.java),
+        )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun engine(
+        application: Application,
+        stores: PreviewStores,
+        profiles: AppScheduleProfiles,
+        clock: Clock,
+        alarms: WorkScheduleAlarms,
+    ): ScheduleEngine {
         val now = { clock.now().toEpochMilliseconds() }
         return ScheduleEngine(
             backend = PrefsScheduleBackend(stores.prefs, stores.lanes),
             profiles = profiles,
-            alarms = WorkScheduleAlarms(application, ScheduledPromptWorker::class.java, now),
+            alarms = alarms,
             notices = ScheduleNotifications(application, ScheduleOpenActivity::class.java),
             nowMs = now,
         )
@@ -87,7 +119,14 @@ object SchedulesBindings {
 /** Saved servers as schedules need them: the server identity fingerprint and a gateway for one run. */
 @SingleIn(AppScope::class)
 @Inject
-class AppScheduleProfiles(private val stores: PreviewStores, private val registry: ConnectionRegistry) : ScheduleProfiles {
+class AppScheduleProfiles(
+    private val stores: PreviewStores,
+    private val registry: ConnectionRegistry,
+    private val factories: Set<GatewayFactory>,
+    private val credentialSources: Set<ConnectionCredentialSource>,
+    private val appScope: AppCoroutineScope,
+    private val dispatchers: AppDispatchers,
+) : ScheduleProfiles {
     override suspend fun ids(): List<String> {
         stores.warm()
         return stores.profiles.profiles.value.map { it.id.raw }
@@ -105,12 +144,50 @@ class AppScheduleProfiles(private val stores: PreviewStores, private val registr
         )
     }
 
-    override suspend fun open(profileId: String, projectPath: String, workspace: String?): Outcome<ScheduleConnection> =
-        when (val gateway = gateway(ProfileId(profileId))) {
-            // A graph the app holds is borrowed, never closed: the person may be using it.
-            is Outcome.Ok -> ScheduleConnection(gateway.value).ok()
-            is Outcome.Failed -> gateway
+    /** Flutter `scheduledProfileFingerprint`: SHA-256 of the Dart `toJson()` of the saved profile without `name`. */
+    override suspend fun legacyFingerprint(profileId: String): String? {
+        stores.warm()
+        val stored = stores.profiles.profile(ProfileId(profileId))?.profile ?: return null
+        val row = StoredProfileJson.encode(stored).apply { remove("name") }
+        return DartJson.sha256Hex(DartJson.encode(row))
+    }
+
+    /**
+     * A private connection pinned to the schedule's project (Flutter `ScheduledAgentConnection`; B-AGENT-216/218): the
+     * app's own connection may be looking at another project, and Paseo creates conversations in the pinned one. The
+     * run closes exactly this connection; the person's connection is never touched.
+     */
+    override suspend fun open(profileId: String, projectPath: String, workspace: String?): Outcome<ScheduleConnection> {
+        stores.warm()
+        val loaded = stores.profiles.profile(ProfileId(profileId)) ?: return Failure.Refused(RefusalReason.ProfileDeleted).failed()
+        if (loaded.cleartextUnconfirmed) return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
+        val server = loaded.toServerProfile() ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val factory =
+            factories.firstOrNull { it.backend == server.backend }
+                ?: return Failure.Unavailable(FeatureId("backend.${server.backend}")).failed()
+        val credentials =
+            when (val read = credentialSources.singleOrNull()?.resolve(server)) {
+                null -> ConnectionCredentials(null, null)
+                is Outcome.Ok -> read.value
+                is Outcome.Failed -> return read
+            }
+        val scope = ConnectionCoroutineScope(supervisedContext(appScope.coroutineContext[Job], dispatchers.default, "schedule-run"))
+        val location = ServerLocation(projectPath, workspace)
+        return when (val pair = factory.connect(GatewaySpec(server, credentials, scope, location))) {
+            is Outcome.Failed -> {
+                scope.coroutineContext[Job]?.cancelAndJoin()
+                pair
+            }
+            is Outcome.Ok -> {
+                val gateway = pair.value.live
+                if (gateway.location.value != location) gateway.setLocation(location)
+                ScheduleConnection(gateway) {
+                    gateway.close()
+                    scope.coroutineContext[Job]?.cancelAndJoin()
+                }.ok()
+            }
         }
+    }
 
     internal suspend fun gateway(id: ProfileId): Outcome<ServerGateway> {
         stores.warm()

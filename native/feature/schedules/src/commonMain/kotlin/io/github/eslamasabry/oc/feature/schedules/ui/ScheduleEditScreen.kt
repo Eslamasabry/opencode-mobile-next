@@ -10,10 +10,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.schedules.MissedRunPolicy
@@ -44,10 +46,11 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import kotlinx.coroutines.flow.drop
 
 /**
  * K02 as a page: the prompt, project, repeat, time, missed-run choice and model, with one main action. The typed
- * fields live only in this composition and survive a refused save (the view model hands them back).
+ * fields are reported to the view model as they change (rotation keeps them; the prompt is kept as a draft).
  * TODO(kit): the K4 date and time wheels do not exist yet; time and date are typed fields with plain examples.
  */
 @Composable
@@ -55,6 +58,8 @@ public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditAction
     val words = scheduleWords()
     // Re-seeded only when the view model loads new starting values, never on recomposition.
     val draft = remember(state.seed) { EditorDraft(state.fields) }
+    // Every change goes to the view model, so rotation or leaving the editor never loses it (B-STATE-024).
+    LaunchedEffect(draft) { snapshotFlow { draft.fields() }.drop(1).collect(actions::edited) }
     KitScreen(
         topBar = {
             KitTopBar(

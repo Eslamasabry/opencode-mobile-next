@@ -176,6 +176,8 @@ public class ScheduleRunner(
             val target = SessionId(sessionId!!)
             checkProfile()
             val session = read { gateway.session(target) }
+            // B-AGENT-218: a conversation the server made in another project never receives the prompt.
+            if (session.directory != null && session.directory != schedule.projectPath) throw Stop("wrong_project", skip = false)
             if (busy(gateway, target.raw)) return result(RunStatus.Skipped, "busy")
             if (existing != null && selection != null) {
                 // These calls patch only the named field: never write back a whole stale session.

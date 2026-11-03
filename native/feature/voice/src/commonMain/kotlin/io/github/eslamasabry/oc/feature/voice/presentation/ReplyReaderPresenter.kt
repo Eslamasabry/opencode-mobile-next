@@ -170,19 +170,31 @@ public object SpeechProse {
     private val inlineCode = Regex("""`([^`]*)`""")
     private val emphasis = Regex("""(\*\*|__|\*|_|~~)(?=\S)(.+?)(?<=\S)\1""")
     private val lineMark = Regex("""^\s{0,3}(#{1,6}\s+|>\s?|[-*+]\s+|\d+[.)]\s+)""")
+    private val fenceRun = Regex("""^ {0,3}(`{3,}|~{3,})(.*)$""")
     private val tableRule = Regex("""^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$""")
 
     public fun of(markdown: String): String {
         val out = StringBuilder()
-        var inFence = false
+        // The open fence's character and length: only a run of the same character at least as long, with nothing
+        // after it, closes it (CommonMark), so a ```` example holding a ``` block is skipped whole (B-CHAT-060).
+        var fence: String? = null
         var lastMarked = false
         for (raw in markdown.lines()) {
             val trimmed = raw.trim()
-            if (trimmed.startsWith("```") || trimmed.startsWith("~~~")) {
-                inFence = !inFence
+            val run = fenceRun.find(raw)
+            val open = fence
+            if (open == null) {
+                if (run != null && !(run.groupValues[1][0] == '`' && '`' in run.groupValues[2])) {
+                    fence = run.groupValues[1]
+                    continue
+                }
+            } else {
+                val closes =
+                    run != null && run.groupValues[1][0] == open[0] && run.groupValues[1].length >= open.length &&
+                        run.groupValues[2].isBlank()
+                if (closes) fence = null
                 continue
             }
-            if (inFence) continue
             if (trimmed.startsWith("|") || tableRule.matches(trimmed)) continue
             val marked = lineMark.containsMatchIn(raw)
             var line = raw.replace(lineMark, "")

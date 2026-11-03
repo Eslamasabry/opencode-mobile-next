@@ -22,6 +22,8 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -94,8 +96,14 @@ public class ScheduleEditViewModel(
     private var agent: String? = null
     private var workspace: String? = null
 
+    /** The typed prompt to keep as a draft; written one at a time, the newest winning (B-STATE-024). */
+    private val typedPrompt = MutableStateFlow<String?>(null)
+
     init {
         viewModelScope.launch { seed() }
+        viewModelScope.launch {
+            typedPrompt.filterNotNull().collectLatest { engine.setPromptDraft(profile, route.scheduleId, it) }
+        }
     }
 
     private suspend fun seed() {
@@ -132,10 +140,12 @@ public class ScheduleEditViewModel(
                 )
             }
         val title = if (sessionId != null) route.from?.let { servers.conversation(it)?.title } else null
+        // The prompt typed last time and never saved comes back (Flutter KitDraft `schedule.<id|new>`).
+        val kept = engine.promptDraft(profile, route.scheduleId)?.takeIf { it.isNotBlank() }
         mutable.update {
             it.copy(
                 phase = if (route.scheduleId != null && existing == null) EditPhase.Unavailable else EditPhase.Ready,
-                fields = fields,
+                fields = if (kept != null) fields.copy(prompt = kept) else fields,
                 seed = it.seed + 1,
                 models = models.toImmutableList(),
                 continuesConversation = sessionId != null,
@@ -145,6 +155,14 @@ public class ScheduleEditViewModel(
     }
 
     override fun back(): Unit = nav.back()
+
+    override fun edited(input: EditorFields) {
+        if (mutable.value.phase != EditPhase.Ready) return
+        val before = mutable.value.fields.prompt
+        // The seed stays: the open form is not rebuilt, but a recreated one starts from these fields.
+        mutable.update { it.copy(fields = input) }
+        if (input.prompt != before) typedPrompt.value = input.prompt
+    }
 
     override fun save(input: EditorFields) {
         if (mutable.value.saving || mutable.value.phase != EditPhase.Ready) return
@@ -170,6 +188,8 @@ public class ScheduleEditViewModel(
             when (engine.save(profile, draft, editing)) {
                 is Outcome.Ok -> {
                     mutable.update { it.copy(saving = false) }
+                    typedPrompt.value = ""
+                    engine.setPromptDraft(profile, route.scheduleId, "")
                     nav.back()
                 }
                 is Outcome.Failed ->

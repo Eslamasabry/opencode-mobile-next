@@ -131,9 +131,30 @@ public class SavedPromptsViewModel(
         val current = local.value
         if (current.busy || current.editor != null) return
         val prompt = current.prompts.firstOrNull { it.id == id } ?: return
+        if (prompt.attachments > 0 || prompt.references > 0) {
+            // The composer takes words only for now: never drop the files silently (Codex prompts #2).
+            local.update {
+                it.copy(issue = SavedPromptsIssue.FilesStay, failure = null, wordsOnly = id.takeIf { prompt.text.isNotBlank() })
+            }
+            return
+        }
         if (prompt.text.isBlank()) return
         inbox.offer(ComposerInbox.target(profile, route.ref.sessionId.raw), prompt.text)
         nav.returnToChat()
+    }
+
+    override fun insertWordsOnly(id: String) {
+        val current = local.value
+        if (current.busy || current.editor != null) return
+        val prompt = current.prompts.firstOrNull { it.id == id } ?: return
+        if (prompt.text.isBlank()) return
+        local.update { it.copy(issue = null, wordsOnly = null) }
+        inbox.offer(ComposerInbox.target(profile, route.ref.sessionId.raw), prompt.text)
+        nav.returnToChat()
+    }
+
+    override fun editorChanged(text: String) {
+        local.update { ui -> ui.editor?.let { ui.copy(editor = it.copy(initial = text)) } ?: ui }
     }
 
     override fun delete(id: String) {
@@ -158,7 +179,7 @@ public class SavedPromptsViewModel(
         operation {
             when (val put = pending.undo()) {
                 is Outcome.Failed -> {
-                    local.update { it.copy(undo = null) }
+                    // B-STATE-085: the Undo stays offered, so the person can try again (Flutter's Try again).
                     failed(SavedPromptsIssue.UndoFailed, put.failure)
                 }
                 is Outcome.Ok -> {

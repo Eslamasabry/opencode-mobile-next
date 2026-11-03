@@ -64,6 +64,9 @@ public class ScheduleEngine(
     public val claims: ScheduleClaims = ScheduleClaims(backend, nowMs)
     private val runner = ScheduleRunner(profiles, nowMs, pollMs)
     private val runLane = Mutex()
+
+    /** B-STATE-089/096: one sync at a time, each reading the store inside the lane, so an older read never wins. */
+    private val syncLane = Mutex()
     private val states = AtomicReference<PersistentMap<String, MutableStateFlow<SchedulesState>>>(persistentHashMapOf())
     private val log = AppLog.tagged("Schedules")
 
@@ -151,6 +154,22 @@ public class ScheduleEngine(
             sync(profileId)
         }
 
+    /** B-STATE-024: the editor's unsaved prompt for [scheduleId] (null = a new schedule); kept until it is saved. */
+    public suspend fun promptDraft(profileId: String, scheduleId: String?): String? =
+        if (!ScheduleIds.valid(profileId)) null else safely { backend.read(ScheduleKeys.draft(profileId, scheduleId)) }
+
+    /** Saves (or, when empty, forgets) the editor's typed prompt. Best effort: the editor keeps working either way. */
+    public suspend fun setPromptDraft(profileId: String, scheduleId: String?, text: String) {
+        if (!ScheduleIds.valid(profileId)) return
+        val key = ScheduleKeys.draft(profileId, scheduleId)
+        val value = text.ifEmpty { null }
+        repeat(DRAFT_ATTEMPTS) {
+            val raw = safely { backend.read(key) }
+            if (raw == value) return
+            if (safely { backend.compareAndSet(key, raw, value) } == true) return
+        }
+    }
+
     /** Runs the saved schedule once, now, in the background. The next scheduled time is kept. */
     public suspend fun runNow(profileId: String, id: String): Outcome<Unit> =
         guarded(profileId) {
@@ -185,7 +204,9 @@ public class ScheduleEngine(
         }
     }
 
-    private suspend fun sync(profileId: String) {
+    private suspend fun sync(profileId: String): Unit = syncLane.withLock { syncNow(profileId) }
+
+    private suspend fun syncNow(profileId: String) {
         val schedules = store.load(profileId)
         val digest = store.digest(profileId)
         val entries =
@@ -199,12 +220,15 @@ public class ScheduleEngine(
 
     /**
      * Flutter-era schedules carry the Flutter fingerprint (a bare SHA-256 of the Dart profile JSON). After the update
-     * the same saved server is re-stamped once with the native fingerprint, keeping id, revision and claims, so they
-     * keep firing; a profile that is gone keeps its schedules refused.
+     * a schedule whose legacy fingerprint still names the same saved server is re-stamped once with the native
+     * fingerprint, keeping id, revision and claims, so it keeps firing. One made for a server the profile no longer
+     * names (an edited address or account) keeps its legacy stamp and stays refused, as in Flutter (B-AGENT-218); a
+     * profile that is gone keeps its schedules refused.
      */
     private suspend fun migrate(profileId: String) {
         val fingerprint = profiles.fingerprint(profileId) ?: return
-        val changed = store.restamp(profileId, { !it.startsWith(FINGERPRINT_PREFIX) && LEGACY_FINGERPRINT.matches(it) }, fingerprint)
+        val legacy = profiles.legacyFingerprint(profileId)?.takeIf { LEGACY_FINGERPRINT.matches(it) } ?: return
+        val changed = store.restamp(profileId, { it == legacy }, fingerprint)
         if (changed > 0) log.i { "migrated $changed scheduled prompts" }
     }
 
@@ -233,7 +257,14 @@ public class ScheduleEngine(
                 return@withLock null
             }
             val claim = safely { claims.claim(entry) } ?: return@withLock null
-            if (claim == Claim.Stale || claim == Claim.Duplicate) return@withLock null
+            if (claim == Claim.Duplicate) {
+                // B-STATE-090: the last attempt settled this occurrence but may have died (or failed a write) before
+                // it advanced the schedule or re-armed the next run. Finish that, never run it again.
+                if (!entry.digest) safely { advanceSettled(entry) }
+                safely { sync(entry.profileId) }
+                return@withLock null
+            }
+            if (claim == Claim.Stale) return@withLock null
             if (claim == Claim.New && !entry.digest) notices.started(entry)
             val report =
                 try {
@@ -249,16 +280,42 @@ public class ScheduleEngine(
             report.also { if (it.quiet) notices.clear(entry) else notices.finished(entry, it) }
         }
 
-    /** A person's "Run now": no claim and no settlement, so no scheduled time moves. */
-    public suspend fun runManual(profileId: String, scheduleId: String, revision: Int, deadlineMs: Long): RunReport? =
+    /** Moves a settled occurrence's schedule past it when the attempt that settled it could not. */
+    private suspend fun advanceSettled(entry: ArmedEntry) {
+        val schedule = store.load(entry.profileId).firstOrNull { it.id == entry.scheduleId } ?: return
+        if (!schedule.enabled || schedule.revision != entry.revision || schedule.nextRunAtMs != entry.dueAtMs) return
+        val due = schedule.due(nowMs(), zone()) ?: return
+        store.advanceOccurrence(schedule, due.nextRunAtMs)
+    }
+
+    /**
+     * A person's "Run now": no occurrence claim and no settlement, so no scheduled time moves. [requestedAtMs] is the
+     * tap's time carried in the work request, so a worker the OS restarts after process death is the same run: its
+     * in-flight record (written before the prompt) is then closed as "interrupted" and never sent again (B-AGENT-215).
+     */
+    public suspend fun runManual(
+        profileId: String,
+        scheduleId: String,
+        revision: Int,
+        deadlineMs: Long,
+        requestedAtMs: Long = nowMs(),
+    ): RunReport? =
         runLane.withLock {
             if (profiles.fingerprint(profileId) == null) return@withLock null
             val schedule =
                 safely { store.load(profileId) }?.firstOrNull { it.id == scheduleId }?.takeIf { it.revision == revision }
                     ?: return@withLock null
             val admittedAt = nowMs()
-            val entry = ArmedEntry(profileId, scheduleId, revision, admittedAt)
-            val runId = ScheduleIds.occurrence(schedule, admittedAt)
+            val entry = ArmedEntry(profileId, scheduleId, revision, requestedAtMs)
+            val runId = ScheduleIds.occurrence(schedule, requestedAtMs)
+            val earlier = safely { store.history(profileId) }?.firstOrNull { it.id == runId }
+            if (earlier != null) {
+                if (earlier.status != RunStatus.Running) return@withLock null // this request already ended
+                val interrupted = earlier.copy(finishedAtMs = admittedAt, status = RunStatus.Failed, errorCode = "interrupted")
+                safely { store.recordRun(profileId, interrupted) }
+                publishAfterRun(profileId)
+                return@withLock report(interrupted).also { notices.finished(entry, it) }
+            }
             val running = ScheduledRun(runId, schedule.id, admittedAt, admittedAt, RunStatus.Running)
             val report =
                 try {
@@ -417,6 +474,7 @@ public class ScheduleEngine(
         public const val FINGERPRINT_PREFIX: String = "n1:"
         private val LEGACY_FINGERPRINT = Regex("^[0-9a-f]{64}$")
         private const val DAY_MS = 86_400_000L
+        private const val DRAFT_ATTEMPTS = 5
 
         /** The native profile fingerprint over the server identity fields, without the display name. */
         public fun fingerprint(identity: List<String?>): String = FINGERPRINT_PREFIX + DartJson.sha256Hex(DartJson.encode(identity))

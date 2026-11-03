@@ -17,8 +17,7 @@ public fun interface ShelfReady {
 /**
  * [SavedPromptsStore] over the composer engine's [PromptShelf]: the same `oc.promptStash.<profile>.<id>` records and
  * stash vault the Flutter app writes, so a migrated shelf reads unchanged. Edit keeps the record's date, files and
- * references; it deletes the old record first (so a full shelf can still be edited) and puts it back if the new one
- * cannot be saved.
+ * references; it saves the new record before removing the old one, so an interrupted edit never loses the prompt.
  */
 public class ShelfSavedPrompts(
     private val shelf: PromptShelf,
@@ -74,11 +73,9 @@ public class ShelfSavedPrompts(
                 is Outcome.Ok -> r.value
             }
         if (files.unavailable.isNotEmpty()) return@whenReady Failure.StorageRefused().failed()
-        val undo =
-            when (val removed = shelf.deleteWithUndo(profile, id)) {
-                is Outcome.Failed -> return@whenReady removed
-                is Outcome.Ok -> removed.value
-            }
+        // B-STATE-135: the replacement is saved before the original goes, so a refused write, a cancelled edit or
+        // process death in between leaves the original (at worst both, never neither). A full shelf refuses the
+        // edit plainly instead of deleting first.
         val replacement =
             original.copy(
                 id = nextId(),
@@ -87,10 +84,15 @@ public class ShelfSavedPrompts(
                 attachmentRefs = emptyList(),
             )
         when (val saved = shelf.stash(profile, replacement)) {
-            is Outcome.Ok -> saved
+            is Outcome.Failed -> return@whenReady saved
+            is Outcome.Ok -> Unit
+        }
+        when (val removed = shelf.remove(profile, id)) {
+            is Outcome.Ok -> removed
             is Outcome.Failed -> {
-                undo.undo()
-                saved
+                // The original stays; take the copy back out so the list does not show the prompt twice.
+                shelf.remove(profile, replacement.id)
+                removed
             }
         }
     }

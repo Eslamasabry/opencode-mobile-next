@@ -1,0 +1,4 @@
+<resources>
+    <string name="promptFixFilesStay">يحتوي هذا الطلب على ملفات أو ملاحظات مراجعة لا يمكن إضافتها إلى الرسالة في هذا الإصدار. ستبقى محفوظة هنا.</string>
+    <string name="promptFixWordsOnly">أضف الكلمات فقط</string>
+</resources>

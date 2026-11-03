@@ -24,6 +24,13 @@ public interface ScheduleProfiles {
      */
     public suspend fun fingerprint(profileId: String): String?
 
+    /**
+     * The Flutter-era fingerprint of the profile as it is saved now (Flutter `scheduledProfileFingerprint`: SHA-256 of
+     * the Dart `toJson()` without `name`). Only a schedule whose stored legacy fingerprint equals this is migrated; null
+     * (unknown) migrates nothing, so a schedule made for another server stays refused (B-AGENT-218).
+     */
+    public suspend fun legacyFingerprint(profileId: String): String? = null
+
     /** Opens a gateway for the profile pinned to [projectPath]. Credentials are resolved inside, never stored. */
     public suspend fun open(profileId: String, projectPath: String, workspace: String?): Outcome<ScheduleConnection>
 }

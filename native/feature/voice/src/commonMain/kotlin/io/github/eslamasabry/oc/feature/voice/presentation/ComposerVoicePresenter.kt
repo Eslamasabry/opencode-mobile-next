@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.voice.dictation.AutoSendCountdown
 import io.github.eslamasabry.oc.engine.voice.dictation.DraftMerge
 import io.github.eslamasabry.oc.engine.voice.dictation.VoiceStart
+import io.github.eslamasabry.oc.engine.voice.dictation.mayAutoSend
 import io.github.eslamasabry.oc.engine.voice.dictation.stopsOnSilence
 import io.github.eslamasabry.oc.engine.voice.state.VoiceEnd
 import io.github.eslamasabry.oc.engine.voice.state.VoiceHost
@@ -356,7 +357,10 @@ public class ComposerVoicePresenter(
         }
         val merged = merge(words) ?: return endUi(null)
         if (endedBy == VoiceEnd.Silence && mode == VoiceMode.Tap) {
-            val counted = AutoSendCountdown.startIfAllowed(merged, stoppedBySilence = true, now = clock.now())
+            // B-MEDIA-016: the spoken words must be sendable by themselves (Flutter `mayAutoSend(voice.draft)`); a
+            // rejected transcript never sends a draft that was already in the box.
+            val counted =
+                if (mayAutoSend(words)) AutoSendCountdown.startIfAllowed(merged, stoppedBySilence = true, now = clock.now()) else null
             if (counted != null) {
                 startCountdown(counted)
                 return

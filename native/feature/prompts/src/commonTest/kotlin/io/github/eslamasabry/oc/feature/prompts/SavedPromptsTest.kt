@@ -7,8 +7,11 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.composer.stash.PromptShelf
+import io.github.eslamasabry.oc.engine.composer.store.ComposerPrefs
 import io.github.eslamasabry.oc.engine.composer.store.ComposerProfiles
 import io.github.eslamasabry.oc.engine.composer.store.MemoryComposerPrefs
+import io.github.eslamasabry.oc.engine.composer.store.PrefWrite
+import io.github.eslamasabry.oc.engine.composer.store.PrefsEdit
 import io.github.eslamasabry.oc.engine.composer.vault.AttachmentVault
 import io.github.eslamasabry.oc.engine.composer.vault.MemoryPayloadStore
 import io.github.eslamasabry.oc.feature.prompts.presentation.SavedPromptsIssue
@@ -25,11 +28,13 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +42,16 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+
+/** Throws (process death) on the first commit that writes a saved prompt record. */
+internal class DyingPrefs(private val inner: ComposerPrefs) : ComposerPrefs by inner {
+    override suspend fun commit(edit: PrefsEdit): Boolean {
+        if (edit.entries.any { (key, write) -> key.startsWith("oc.promptStash.") && write is PrefWrite.Str }) {
+            throw CancellationException("process died")
+        }
+        return inner.commit(edit)
+    }
+}
 
 internal class StepClock(var millis: Long = 1_760_000_000_000) : Clock {
     override fun now(): Instant = Instant.fromEpochMilliseconds(millis).also { millis += 1_000 }
@@ -177,6 +192,17 @@ class SavedPromptsTest {
     }
 
     @Test
+    fun `B-STATE-135 an edit interrupted before the new prompt is saved keeps the original`() = runTest {
+        store().save("p1", "original words")
+        val id = ((store().list("p1") as Outcome.Ok).value.single()).id
+        // The process dies on the write that saves the replacement.
+        val dying = DyingPrefs(prefs)
+        val shelf = ShelfSavedPrompts(PromptShelf(dying, AttachmentVault(payloads), profiles, Redactor()), { Unit.ok() }, clock)
+        assertFailsWith<CancellationException> { shelf.edit("p1", id, "new words") }
+        assertEquals(listOf("original words"), (store().list("p1") as Outcome.Ok).value.map { it.text })
+    }
+
+    @Test
     fun `B-STATE-085 an edit keeps the prompt's date and place in the list`() = runTest {
         val seed = store()
         seed.save("p1", "older")
@@ -189,6 +215,49 @@ class SavedPromptsTest {
         val after = vm.state.value.prompts
         assertEquals(listOf("newer", "older, edited"), after.map { it.text })
         assertEquals(older.createdAt, after.last().createdAt)
+    }
+
+    @Test
+    fun `B-STATE-085 a failed Undo keeps Undo offered so it can be tried again`() = runTest {
+        store().save("p1", "keep me")
+        val vm = vm()
+        vm.delete(vm.state.value.prompts.single().id)
+        prefs.refuse = true
+        vm.undo()
+        prefs.refuse = false
+        assertEquals(SavedPromptsIssue.UndoFailed, vm.state.value.issue)
+        assertTrue(vm.state.value.undo != null)
+        vm.undo()
+        assertNull(vm.state.value.undo)
+        assertEquals(listOf("keep me"), vm.state.value.prompts.map { it.text })
+    }
+
+    @Test
+    fun `B-CHAT-088 a prompt with files never drops them silently and its words can still be added`() = runTest {
+        val shelf = PromptShelf(prefs, AttachmentVault(payloads), profiles, Redactor())
+        val file = io.github.eslamasabry.oc.core.model.PromptAttachment(mime = "text/plain", filename = "a.txt", url = "data:text/plain;base64,aGk=")
+        shelf.stash("p1", io.github.eslamasabry.oc.engine.composer.stash.StashedPrompt(id = "9", text = "Look at this", createdAt = 1, attachments = listOf(file)))
+        val inbox = ComposerInbox()
+        val nav = StackNavigator(ChatRoute(ref), PromptsRoute.Saved(ref))
+        val vm = vm(inbox = inbox, nav = nav)
+        vm.insert("9")
+        assertEquals(SavedPromptsIssue.FilesStay, vm.state.value.issue)
+        assertNull(inbox.pendingFor(target))
+        assertIs<PromptsRoute.Saved>(nav.top.value)
+        vm.insertWordsOnly("9")
+        assertEquals("Look at this", inbox.pendingFor(target)?.text)
+        assertIs<ChatRoute>(nav.top.value)
+        assertEquals(1, (store().list("p1") as Outcome.Ok).value.single().attachments) // the files stay saved
+    }
+
+    @Test
+    fun `typed editor words survive the page being recreated`() = runTest {
+        val vm = vm()
+        vm.newPrompt()
+        val generation = vm.state.value.editor!!.generation
+        vm.editorChanged("half-written prompt")
+        assertEquals("half-written prompt", vm.state.value.editor?.initial)
+        assertEquals(generation, vm.state.value.editor?.generation) // the open field is not reset
     }
 
     @Test

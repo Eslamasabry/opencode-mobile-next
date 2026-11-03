@@ -38,6 +38,7 @@ class PreviewRuntime(
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
     private val draftOwners: Set<ConversationDrafts>,
+    private val cleaners: Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
 ) : ServerConnections {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -346,7 +347,7 @@ class PreviewRuntime(
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
             }
-        when (val result = ProfileDeletion(profiles, scoped, stores.lanes).delete(id)) {
+        when (val result = ProfileDeletion(profiles, scoped, stores.lanes, cleaners = cleaners).delete(id)) {
             is Outcome.Failed -> result
             is Outcome.Ok ->
                 if (result.value.complete) {

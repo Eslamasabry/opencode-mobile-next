@@ -153,7 +153,15 @@ public class AndroidSystemTts(
                 initializing = false
                 return media(MediaProblem.SpeechEngineUnavailable)
             }
-        val ok = withTimeoutOrNull(8.seconds) { ready.await() } ?: false
+        val ok =
+            try {
+                withTimeoutOrNull(8.seconds) { ready.await() } ?: false
+            } catch (e: CancellationException) {
+                // B-MEDIA-009: leaving the app during the start must not leave "initializing" set for good.
+                initializing = false
+                created.shutdown()
+                throw e
+            }
         initializing = false
         if (!ok) {
             created.shutdown()

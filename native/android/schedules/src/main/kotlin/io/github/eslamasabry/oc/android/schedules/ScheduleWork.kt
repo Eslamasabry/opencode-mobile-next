@@ -59,7 +59,8 @@ public object ScheduleWorkPolicy {
         val entry = ScheduleWorkInput.entry(data) ?: return null
         val deadline = nowMs + RUN_BUDGET_MS
         if (data.getBoolean(ScheduleWorkInput.MANUAL, false)) {
-            return engine.runManual(entry.profileId, entry.scheduleId, entry.revision, deadline)
+            // The tap's time (fixed in the request) names the run, so a restarted worker never sends it twice.
+            return engine.runManual(entry.profileId, entry.scheduleId, entry.revision, deadline, requestedAtMs = entry.dueAtMs)
         }
         // The run re-arms the schedule when it ends; that must not cancel this very work while it still finishes.
         running.add(entry.workName)
@@ -83,6 +84,8 @@ public class WorkScheduleAlarms(
     context: Context,
     private val worker: Class<out ListenableWorker>,
     private val nowMs: () -> Long,
+    /** Exact alarms where the phone allows them (Doze); null = WorkManager only. */
+    private val exact: ScheduleExactAlarms? = null,
 ) : ScheduleAlarms {
     private val app = context.applicationContext
     private val armed = app.getSharedPreferences(ARMED_FILE, Context.MODE_PRIVATE)
@@ -95,7 +98,11 @@ public class WorkScheduleAlarms(
     override fun replace(profileId: String, entries: List<ArmedEntry>) {
         val names = entries.map { it.workName }.toSet()
         val before = armed.getStringSet(profileId, emptySet()).orEmpty()
-        (before - names).filterNot { it in ScheduleWorkPolicy.running }.forEach { work.cancelUniqueWork(it) }
+        (before - names).filterNot { it in ScheduleWorkPolicy.running }.forEach {
+            work.cancelUniqueWork(it)
+            work.cancelUniqueWork(it + ALARM_SUFFIX)
+        }
+        exact?.cancel(before - names)
         for (entry in entries) {
             // A Flutter-era job of the same occurrence names a worker class that no longer exists: drop it.
             work.cancelUniqueWork("oc.schedule.${entry.profileId}.${entry.occurrence}")
@@ -112,6 +119,18 @@ public class WorkScheduleAlarms(
             work.enqueueUniqueWork(entry.workName, policy, request)
         }
         armed.edit().putStringSet(profileId, names).apply()
+        exact?.arm(entries, nowMs())
+    }
+
+    /** A native exact alarm fired: start that occurrence's worker now (its own name; the claim keeps it to one send). */
+    public fun enqueueFromAlarm(entry: ArmedEntry) {
+        val builder =
+            OneTimeWorkRequest.Builder(worker)
+                .setInputData(ScheduleWorkInput.of(entry))
+                .addTag(TAG)
+                .addTag(profileTag(entry.profileId))
+        if (Build.VERSION.SDK_INT >= EXPEDITED_MIN_SDK) builder.setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+        work.enqueueUniqueWork(entry.workName + ALARM_SUFFIX, ExistingWorkPolicy.KEEP, builder.build())
     }
 
     override fun runNow(profileId: String, scheduleId: String, revision: Int) {
@@ -130,6 +149,7 @@ public class WorkScheduleAlarms(
 
     @Synchronized
     override fun cancelProfile(profileId: String) {
+        exact?.cancel(armed.getStringSet(profileId, emptySet()).orEmpty())
         work.cancelAllWorkByTag(profileTag(profileId))
         armed.edit().remove(profileId).apply()
     }
@@ -140,5 +160,6 @@ public class WorkScheduleAlarms(
         const val TAG = "oc.nschedule"
         const val ARMED_FILE = "oc_schedules_armed"
         const val EXPEDITED_MIN_SDK = 31
+        const val ALARM_SUFFIX = ".alarm"
     }
 }

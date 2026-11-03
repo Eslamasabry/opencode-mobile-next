@@ -31,7 +31,13 @@ internal class MemoryBackend(initial: Map<String, String> = emptyMap()) : Schedu
     var refuseWrites = false
     var writes = 0
 
-    override suspend fun read(key: String): String? = values[key]
+    /** Holds the next read of an armed index until completed (an older sync suspended mid-way). */
+    var holdIndexRead: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
+    override suspend fun read(key: String): String? {
+        if (key.startsWith(ScheduleKeys.INDEX_PREFIX)) holdIndexRead?.let { holdIndexRead = null; it.await() }
+        return values[key]
+    }
 
     override suspend fun compareAndSet(key: String, expected: String?, value: String?): Boolean {
         if (refuseWrites || values[key] != expected) return false
@@ -95,6 +101,7 @@ internal class ScriptedGateway(val base: FakeServerGateway = FakeServerGateway()
 
 internal class FakeProfiles(var gateway: ScriptedGateway = ScriptedGateway()) : ScheduleProfiles {
     val fingerprints = mutableMapOf(P to "n1:server-a")
+    val legacyFingerprints = mutableMapOf(P to "ab".repeat(32))
     var opens = 0
     var closes = 0
     var openFailure: io.github.eslamasabry.oc.core.common.Failure? = null
@@ -102,6 +109,8 @@ internal class FakeProfiles(var gateway: ScriptedGateway = ScriptedGateway()) : 
     override suspend fun ids(): List<String> = fingerprints.keys.toList()
 
     override suspend fun fingerprint(profileId: String): String? = fingerprints[profileId]
+
+    override suspend fun legacyFingerprint(profileId: String): String? = legacyFingerprints[profileId]
 
     override suspend fun open(profileId: String, projectPath: String, workspace: String?): Outcome<ScheduleConnection> {
         openFailure?.let { return Outcome.Failed(it) }

@@ -1,0 +1,4 @@
+<resources>
+    <string name="promptFixFilesStay">This prompt has files or review notes that can't go into the message in this version. They stay saved here.</string>
+    <string name="promptFixWordsOnly">Add only the words</string>
+</resources>

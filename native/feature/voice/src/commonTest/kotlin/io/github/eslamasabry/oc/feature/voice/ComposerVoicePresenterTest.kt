@@ -189,6 +189,24 @@ class ComposerVoicePresenterTest {
     }
 
     @Test
+    fun `B-MEDIA-016 a rejected transcript never auto-sends the draft already in the box`() = runTest {
+        val rig = Rig(this, autoSend = true)
+        rig.field.value = "Please refactor the parser"
+        runCurrent()
+        rig.presenter.tapMic()
+        runCurrent()
+        rig.listening("a")
+        runCurrent()
+        rig.dictation.state.value = VoiceState.Done("a", VoiceEnd.Silence)
+        runCurrent()
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertTrue(rig.field.sent.isEmpty())
+        assertEquals(null, rig.presenter.state.value.secondsLeft)
+        assertEquals(VoiceNote.StoppedAfterPause, rig.presenter.state.value.note)
+    }
+
+    @Test
     fun `B-MEDIA-023 sliding away and letting go of a held mic throws the words away`() = runTest {
         val rig = Rig(this)
         rig.field.value = "draft"
