@@ -39,7 +39,12 @@ public class DevPreviewViewModel(
 ) : ViewModel(), DevPreviewActions {
     private val target =
         DevPreviewTarget.resolve(
-            PreviewLink(route.port, route.https),
+            PreviewLink(
+                route.port,
+                route.https,
+                route.path.substringBefore('?').takeIf { it.startsWith("/") } ?: "/",
+                route.path.substringAfter('?', "").ifEmpty { null },
+            ),
             serverAddressFor(route.ref, connections.servers.value),
         )
     private val egress: PreviewEgress? =
@@ -136,7 +141,7 @@ public class PortsViewModel(
                 PortsUi(
                     rows =
                         route.mentioned.map { port ->
-                            PortRow(port.port, port.https, (probe as? DevPreviewTarget.Remote)?.host)
+                            PortRow(port.port, port.https, (probe as? DevPreviewTarget.Remote)?.host, port.path)
                         }.toImmutableList(),
                     blocked = (probe as? DevPreviewTarget.Blocked)?.why,
                 )
@@ -148,7 +153,7 @@ public class PortsViewModel(
 
     override fun open(port: PreviewPort) {
         mutable.update { it.copy(invalidPort = false) }
-        nav.open(PreviewRoute.Page(port.port, port.https, route.ref))
+        nav.open(PreviewRoute.Page(port.port, port.https, route.ref, port.path))
     }
 
     override fun openTyped(text: String) {

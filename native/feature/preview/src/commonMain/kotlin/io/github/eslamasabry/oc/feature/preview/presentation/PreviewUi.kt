@@ -63,7 +63,7 @@ public interface DevPreviewActions {
 }
 
 /** One mentioned port, with where it opens. [host] null = on this phone. */
-public data class PortRow(val port: Int, val https: Boolean, val host: String?)
+public data class PortRow(val port: Int, val https: Boolean, val host: String?, val path: String = "/")
 
 /** "Preview a running app" (Flutter chat dev-preview sheet). */
 public data class PortsUi(

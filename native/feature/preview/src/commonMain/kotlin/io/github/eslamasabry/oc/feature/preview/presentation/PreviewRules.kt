@@ -91,8 +91,9 @@ public sealed interface DevPreviewTarget {
 
 /**
  * The preview's egress rules (B-SEC-058; plan 16 hardened egress). The Android web view asks these for every request.
- * Only the origin the preview was opened for may load: same host and port, http(s), never with credentials. Only GET
- * and HEAD leave. Page documents carry [documentPolicy], which refuses frames, websockets, workers, plugins and
+ * Only the origin the preview was opened for may load: same host and port, http(s), never with credentials. On that
+ * origin the app's ordinary requests work, writes included (a login form, `POST /api/...`, as in Flutter); CONNECT and
+ * TRACE never leave. Page documents carry [documentPolicy], which refuses frames, websockets, workers, plugins and
  * connections to any other address.
  */
 public class PreviewEgress(public val origin: WebOrigin) {
@@ -121,6 +122,6 @@ public class PreviewEgress(public val origin: WebOrigin) {
         }
 
     private companion object {
-        val ALLOWED_METHODS = setOf("GET", "HEAD")
+        val ALLOWED_METHODS = setOf("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
     }
 }

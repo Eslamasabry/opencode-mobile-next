@@ -142,6 +142,15 @@ public object PairingText {
         return if (preferLoopback) loopback + routable else routable + loopback
     }
 
+    /**
+     * True when dialing [url] needs nothing from the person first: HTTPS, or plain HTTP to this device's own loopback.
+     * Plain HTTP anywhere else waits for the per-address consent switch and is never probed (B-SEC-124).
+     */
+    public fun mayProbe(url: String): Boolean {
+        val scheme = Regex("""^([A-Za-z][A-Za-z0-9+.-]*)://""").find(url.trim())?.groupValues?.get(1)?.lowercase()
+        return scheme == "https" || (scheme == "http" && hostOf(url)?.let(::isLoopbackHost) == true)
+    }
+
     /** `scheme://host:port` of [value] for display, or `<invalid address>`: never credentials, a path or a query. */
     public fun safeOrigin(value: String): String {
         val text = value.trim()

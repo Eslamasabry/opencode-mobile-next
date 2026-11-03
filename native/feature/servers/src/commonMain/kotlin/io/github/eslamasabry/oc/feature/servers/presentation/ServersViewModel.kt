@@ -14,8 +14,11 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingChoice
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingFill
+import io.github.eslamasabry.oc.feature.servers.pairing.NoPairingProbe
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingInbox
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingProbe
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingRead
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
@@ -40,21 +43,42 @@ public class ServersViewModel(
     private val connections: ServerConnections,
     private val nav: AppNavigator,
     private val pairing: PairingInbox = PairingInbox(),
+    /** Picks among a code's addresses (B-PROTO-068); without one, the best-ordered address is used. */
+    private val probe: PairingProbe = NoPairingProbe,
 ) : ViewModel(), ServersActions {
     private val local = MutableStateFlow(ServersUi(newConversation = route != null))
     public val state: StateFlow<ServersUi> =
-        combine(local, connections.servers, connections.busy, pairing.arrivals) { own, servers, busy, arrivals ->
-                own.copy(servers = servers, busy = own.busy || busy, pairingArrival = arrivals)
+        combine(local, connections.servers, connections.busy) { own, servers, busy ->
+                own.copy(servers = servers, busy = own.busy || busy)
             }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
-                local.value.copy(
-                    servers = connections.servers.value,
-                    busy = connections.busy.value,
-                    pairingArrival = pairing.arrivals.value,
-                ),
+                local.value.copy(servers = connections.servers.value, busy = connections.busy.value),
             )
+
+    /** The fill the form takes next: the inbox's code, once its address is chosen. Memory only. */
+    private var ready: PairingFill? = null
+    private var choosing = 0
+
+    init {
+        // A code from the scanner or a paste lands in the inbox; its address is picked here before the form fills.
+        viewModelScope.launch { pairing.arrivals.collect { pairing.take()?.let(::choose) } }
+    }
+
+    private fun choose(fill: PairingFill) {
+        val generation = ++choosing
+        if (probe === NoPairingProbe || fill.candidates.size < 2) return publish(fill)
+        viewModelScope.launch {
+            val chosen = PairingChoice.choose(fill.candidates, probe)
+            if (generation == choosing) publish(if (chosen == null || chosen == fill.address) fill else fill.at(chosen))
+        }
+    }
+
+    private fun publish(fill: PairingFill) {
+        ready = fill
+        local.update { it.copy(pairingArrival = it.pairingArrival + 1) }
+    }
 
     override fun back(): Unit = nav.back()
 
@@ -147,7 +171,16 @@ public class ServersViewModel(
         pairing.put(fill)
     }
 
-    override fun takePairing(): PairingFill? = pairing.take()
+    override fun takePairing(): PairingFill? = ready.also { ready = null }
+
+    /** The form's unsaved password while a page is on top of it: memory only, gone with the ViewModel. */
+    private var draftPassword = ""
+
+    override fun holdPassword(text: String) {
+        draftPassword = text
+    }
+
+    override fun heldPassword(): String = draftPassword
 
     override fun openSchedules(id: ProfileId) {
         nav.open(SchedulesRoute.List(id))

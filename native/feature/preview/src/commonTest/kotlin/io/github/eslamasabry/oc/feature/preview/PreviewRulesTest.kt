@@ -67,9 +67,11 @@ class PreviewRulesTest {
     }
 
     @Test
-    fun `B-CHAT-026 the ports route carries only ports and schemes`() {
-        val route = PreviewRoute.Ports.from(null, listOf("see http://localhost:3000/secret?token=x and https://127.0.0.1:8443"))
-        assertEquals(listOf(PreviewPort(8443, https = true), PreviewPort(3000)), route.mentioned)
+    fun `B-CHAT-025 the ports route keeps each link's path and query, and its text form leaves them out`() {
+        val route = PreviewRoute.Ports.from(null, listOf("see http://localhost:5173/app?mode=demo and https://127.0.0.1:8443"))
+        assertEquals(listOf(PreviewPort(8443, https = true), PreviewPort(5173, path = "/app?mode=demo")), route.mentioned)
+        assertFalse("mode=demo" in route.mentioned.toString(), "a query never reaches a log line")
+        assertFalse("mode=demo" in PreviewRoute.Page(5173, path = "/app?mode=demo").toString())
     }
 
     @Test
@@ -122,11 +124,11 @@ class PreviewRulesTest {
     }
 
     @Test
-    fun `B-SEC-058 posts never leave and documents refuse frames websockets and other origins`() {
+    fun `B-SEC-058 the app's own requests work on its origin and documents refuse frames websockets and other origins`() {
         val egress = PreviewEgress(WebOrigin.of("http://127.0.0.1:3000/")!!)
-        assertTrue(egress.methodAllowed("GET"))
-        assertTrue(egress.methodAllowed("head"))
-        listOf("POST", "PUT", "PATCH", "DELETE", "OPTIONS").forEach { assertFalse(egress.methodAllowed(it), it) }
+        // Flutter lets a same-origin login form or `POST /api/...` through: the boundary is the destination, not the verb.
+        listOf("GET", "head", "POST", "PUT", "PATCH", "DELETE", "OPTIONS").forEach { assertTrue(egress.methodAllowed(it), it) }
+        listOf("CONNECT", "TRACE", "").forEach { assertFalse(egress.methodAllowed(it), it) }
         val policy = egress.documentPolicy
         assertTrue("frame-src 'none'" in policy)
         assertTrue("child-src 'none'" in policy)

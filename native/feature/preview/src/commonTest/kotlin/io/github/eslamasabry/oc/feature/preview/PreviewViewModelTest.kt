@@ -120,6 +120,16 @@ class PreviewViewModelTest {
     }
 
     @Test
+    fun `B-CHAT-025 a mentioned link opens at its own path and query, not at the root`() {
+        val nav = Navigator()
+        val ports = PortsViewModel(PreviewRoute.Ports.from(ref, listOf("open http://localhost:5173/app?mode=demo")), Connections(phone), nav)
+        ports.open(ports.state.value.rows.single().let { PreviewPort(it.port, it.https, it.path) })
+        val opened = nav.top.value as PreviewRoute.Page
+        assertEquals("/app?mode=demo", opened.path)
+        assertEquals(DevPreviewTarget.Phone("http://127.0.0.1:5173/app?mode=demo"), page(opened, phone).state.value.target)
+    }
+
+    @Test
     fun `B-CHAT-027 with no server the page is blocked with a reason and offers nothing to load`() {
         val vm = page(PreviewRoute.Page(3000))
         assertEquals(PreviewBlock.NoServer, vm.state.value.blocked)
