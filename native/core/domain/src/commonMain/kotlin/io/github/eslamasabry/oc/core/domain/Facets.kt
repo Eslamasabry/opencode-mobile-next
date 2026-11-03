@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.core.domain
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.model.FileDiff
 import io.github.eslamasabry.oc.core.model.IntegrationAuthLaunch
 import io.github.eslamasabry.oc.core.model.IntegrationAuthStatus
 import io.github.eslamasabry.oc.core.model.MidTurnPrompt
@@ -12,6 +13,7 @@ import io.github.eslamasabry.oc.core.model.PromptAdmission
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionRetryState
 import io.github.eslamasabry.oc.core.model.SessionRevert
+import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.SessionSelection
 import io.github.eslamasabry.oc.core.model.WebSearchProvider
 import io.github.eslamasabry.oc.core.model.WebSearchResponse
@@ -115,4 +117,17 @@ public interface WebSearchGateway {
     public suspend fun webSearchProviders(): Outcome<ImmutableList<WebSearchProvider>>
 
     public suspend fun searchWeb(query: String, providerId: String): Outcome<WebSearchResponse>
+}
+
+/**
+ * Project files of one conversation's own folder, whatever the gateway's shared location is (P12 fix B-NAV-026:
+ * Flutter reads a conversation's tree from that conversation's directory). Each call carries [location] itself.
+ */
+public interface LocatedFileGateway {
+    public fun filesAt(location: ServerLocation): FileGateway
+}
+
+/** The uncommitted changes of one conversation's folder (OC2 `GET /vcs/diff?mode=working` with its location). */
+public interface LocatedVcsGateway {
+    public suspend fun workingTreeAt(location: ServerLocation): Outcome<ImmutableList<FileDiff>>
 }

@@ -458,4 +458,70 @@ class Oc2LiveGatewayTest {
             assertNull(page.items.single().agent)
             gateway.close()
         }
+
+    @Test
+    fun `B-PROTO-031 staging returns the fixed preview at once, with the files choice`() = runTest {
+        val seen = mutableListOf<String>()
+        val engine = MockEngine { request ->
+            seen += "${request.method.value} ${request.url.encodedPath} ${(request.body as? TextContent)?.text}"
+            respond(
+                """{"data":{"messageID":"msg_1","snapshot":"snap","files":[{"file":"a.kt","patch":"@@ -1 +1 @@","additions":1,"deletions":2,"status":"modified"}]}}""",
+                HttpStatusCode.OK,
+            )
+        }
+        val gateway = gateway(engine)
+        val revert = (gateway.stageSessionRevert(SessionId("s"), MessageId("msg_1"), applyFiles = false) as Outcome.Ok).value
+        assertEquals(listOf("""POST /api/session/s/revert/stage {"messageID":"msg_1","files":false}"""), seen)
+        assertEquals("snap", revert.snapshot)
+        assertEquals(FileDiff("a.kt", null, null, "@@ -1 +1 @@", 1, 2, "modified"), revert.files?.single())
+        gateway.close()
+    }
+
+    @Test
+    fun `B-PROTO-031 commit and clear use distinct endpoints, stable clears with DELETE`() = runTest {
+        val seen = mutableListOf<String>()
+        val engine = MockEngine { request ->
+            seen += "${request.method.value} ${request.url.encodedPath}"
+            respond("", HttpStatusCode.NoContent)
+        }
+        val beta = gateway(engine)
+        assertEquals(Outcome.Ok(Unit), beta.clearSessionRevert(SessionId("s")))
+        assertEquals(Outcome.Ok(Unit), beta.commitSessionRevert(SessionId("s")))
+        beta.close()
+        val stable = gateway(engine, Oc2Dialect.Stable)
+        assertEquals(Outcome.Ok(Unit), stable.clearSessionRevert(SessionId("s")))
+        stable.close()
+        assertEquals(
+            listOf("POST /api/session/s/revert/clear", "POST /api/session/s/revert/commit", "DELETE /api/session/s/revert"),
+            seen,
+        )
+    }
+
+    @Test
+    fun `B-PROTO-031 a session read carries its staged revert and the capability is on`() = runTest {
+        val engine = MockEngine {
+            respond("""{"data":{"id":"s","revert":{"messageID":"m","files":[{"file":"b.kt"}]}}}""", HttpStatusCode.OK)
+        }
+        val gateway = gateway(engine)
+        val session = (gateway.session(SessionId("s")) as Outcome.Ok).value
+        assertTrue(session.reverted)
+        assertEquals(MessageId("m"), session.stagedRevert?.messageId)
+        assertEquals(listOf("b.kt"), session.stagedRevert?.files?.map { it.file })
+        assertTrue(gateway.capabilities.value.sessionRevert)
+        gateway.close()
+    }
+
+    @Test
+    fun `B-CHAT-104 the revert prompt is a user message's words, null for a reply`() = runTest {
+        val engine = MockEngine { request ->
+            when (request.url.encodedPath) {
+                "/api/session/s/message/u" -> respond("""{"data":{"id":"u","type":"user","text":"make it blue"}}""", HttpStatusCode.OK)
+                else -> respond("""{"data":{"id":"a","type":"assistant","content":[{"type":"text","text":"done"}]}}""", HttpStatusCode.OK)
+            }
+        }
+        val gateway = gateway(engine)
+        assertEquals("make it blue", (gateway.sessionRevertPrompt(SessionId("s"), MessageId("u")) as Outcome.Ok).value)
+        assertNull((gateway.sessionRevertPrompt(SessionId("s"), MessageId("a")) as Outcome.Ok).value)
+        gateway.close()
+    }
 }

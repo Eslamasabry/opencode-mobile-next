@@ -25,6 +25,8 @@ internal enum class Oc2Dialect {
             val id = session.groupValues[1]
             val rest = session.groupValues[2]
             if (rest == "rename") return Oc2Route("/session/$id", HttpMethod.Patch, body, query)
+            // dialect.dart: stable clears a staged revert with DELETE .../revert.
+            if (rest == "revert/clear") return Oc2Route("/session/$id/revert", HttpMethod.Delete, null, query)
             if (rest == "interrupt" && "continue" in query) {
                 return Oc2Route(
                     path,
