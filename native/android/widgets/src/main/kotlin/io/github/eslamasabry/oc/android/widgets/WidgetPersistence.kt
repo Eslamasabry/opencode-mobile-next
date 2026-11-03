@@ -36,6 +36,7 @@ public class WidgetPersistence(
                 "oc.widgetStyle.",
                 "oc.widgetActions.",
                 "oc.widgetFollowup.",
+                "oc.widgetUsage.",
             )) {
             profiles.register(
                 KeyShape(
@@ -80,6 +81,7 @@ public class WidgetPersistence(
                     "oc.widgetActions.",
                     "oc.widgetTarget.",
                     "oc.widgetFollowup.",
+                    "oc.widgetUsage.",
                 )) {
                 remove(prefix + profile)
             }

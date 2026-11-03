@@ -61,6 +61,7 @@ class WidgetPersistenceTest {
                 "oc.widgetStyle.",
                 "oc.widgetActions.",
                 "oc.widgetFollowup.",
+                "oc.widgetUsage.",
                 "oc.widgetSessions",
             ),
             profiles.shapes().map { it.prefix }.toSet(),
