@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.feature.chat.header.presentation
 
+import io.github.eslamasabry.oc.core.model.transcript.Role
+import io.github.eslamasabry.oc.core.model.transcript.PartType
+import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
@@ -63,6 +66,10 @@ public data class TranscriptWords(
     val assistant: String,
     val reasoning: String,
     val partial: String,
+    val attachment: String = "Attachment",
+    val file: String = "file",
+    val tool: String = "Tool",
+    val error: String = "Error",
 )
 
 /**
@@ -83,6 +90,7 @@ public object TranscriptCopy {
         if (partial) out.append("\n> ").append(words.partial).append('\n')
         var lastSpeaker: String? = null
         var lastTurn: String? = null
+        val block = StringBuilder()
         for (row in rows.asReversed()) {
             when (row) {
                 is PromptRow -> {
@@ -92,15 +100,22 @@ public object TranscriptCopy {
                     lastTurn = row.turnId
                 }
                 is BlockRow -> {
-                    if (row.text.isBlank()) continue
+                    if (block.isEmpty() && row.text.isBlank()) continue
                     if (lastSpeaker != words.assistant || lastTurn != row.turnId) {
                         out.append("\n## ").append(words.assistant).append("\n\n")
                         lastSpeaker = words.assistant
                         lastTurn = row.turnId
                     }
-                    // Chunks of one block join without a seam (STREAM-FIX rows).
-                    out.append(mask(row.text))
-                    if (!row.continues) out.append(if (row.text.endsWith("\n")) "\n" else "\n\n")
+                    // Codex chat-header #7: a chunk's text drops its boundary newline, so chunks join with one.
+                    // Codex chat-header #3: one block is masked as a whole (a key split across chunks is still a key).
+                    if (block.isNotEmpty()) block.append('\n')
+                    block.append(row.text)
+                    if (!row.continues) {
+                        val text = block.toString()
+                        block.clear()
+                        out.append(mask(text))
+                        out.append(if (text.endsWith("\n")) "\n" else "\n\n")
+                    }
                 }
                 is ThoughtRow -> {
                     if (row.firstLine.isBlank()) continue
@@ -109,6 +124,54 @@ public object TranscriptCopy {
                 }
                 else -> Unit
             }
+        }
+        if (block.isNotEmpty()) out.append(mask(block.toString()))
+        return out.toString().trimEnd()
+    }
+
+    /**
+     * Codex chat-header #6 (Flutter `_transcriptMarkdown`): the copy is built from the loaded messages, not the display
+     * rows, so tool headings and output, attachments, full reasoning and errors are all there. Each part is masked as
+     * a whole; only the person's own, non-synthetic words stay verbatim. [messages] are oldest first.
+     */
+    public fun markdownOf(
+        title: String?,
+        messages: List<MessageWithParts>,
+        words: TranscriptWords,
+        partial: Boolean,
+        mask: (String) -> String,
+    ): String {
+        val out = StringBuilder()
+        fun put(text: String) {
+            out.append(mask(text))
+        }
+        put("# ${title?.takeIf { it.isNotBlank() } ?: words.untitled}\n")
+        if (partial) out.append("\n> ").append(words.partial).append('\n')
+        for (message in messages) {
+            if (message.info.id.startsWith("local-")) continue
+            val own = message.info.role == Role.User
+            out.append("\n## ").append(if (own) words.user else words.assistant).append("\n\n")
+            for (part in message.parts) {
+                when (part.type) {
+                    PartType.Text ->
+                        if (part.text.isNotBlank()) {
+                            if (own && !part.synthetic) out.append(part.text.trim()).append("\n\n")
+                            else put("${part.text.trim()}\n\n")
+                        }
+                    PartType.Reasoning ->
+                        if (part.text.isNotBlank())
+                            put("<details><summary>${words.reasoning}</summary>\n\n${part.text.trim()}\n\n</details>\n\n")
+                    PartType.File -> put("- ${words.attachment}: ${part.filename ?: part.url ?: words.file}\n")
+                    PartType.Tool -> {
+                        val name = part.tool?.title?.takeIf { it.isNotBlank() } ?: part.toolName.orEmpty()
+                        put("### ${words.tool}: $name\n\n")
+                        val output = part.tool?.output?.trim()
+                        if (!output.isNullOrEmpty()) put("```text\n$output\n```\n\n")
+                    }
+                    else -> Unit
+                }
+            }
+            message.info.errorText?.let { put("> ${words.error}: $it\n") }
         }
         return out.toString().trimEnd()
     }

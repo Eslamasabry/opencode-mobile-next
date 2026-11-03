@@ -435,10 +435,8 @@ internal class Oc2Gateway(
     ): Outcome<PromptAdmission> {
         if (prompt.delivery == PromptDelivery.Queue)
             return Failure.Unavailable(FeatureId("queue")).failed()
-        val before = this.session(session)
-        if (before is Outcome.Failed) return before
-        if ((before as Outcome.Ok).value.reverted)
-            return Failure.Refused(RefusalReason.UndoUnresolved).failed()
+        val prepared = preparePermissions(session)
+        if (prepared is Outcome.Failed) return prepared
         if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
         return when (
             val result =
@@ -466,6 +464,60 @@ internal class Oc2Gateway(
                     PromptAdmission.Confirmed(receipt.id).ok()
                 else PromptAdmission.Uncertain.ok()
             }
+        }
+    }
+
+    /**
+     * Codex chat-header BLOCKER 1 (Flutter `_prepareSessionDispatch`): before a prompt, command or shell can run, the
+     * session's permission layer turns every allow into an ask ("Ask first": no tool runs without a card), and it is
+     * read back. A failed or unconfirmed install sends nothing. A staged revert refuses too (the server would commit
+     * it on admission).
+     */
+    private suspend fun preparePermissions(session: SessionId): Outcome<Unit> {
+        val path = "/session/${sid(session)}"
+        val read = json(path)
+        if (read is Outcome.Failed) return read
+        val policy =
+            Oc2PermissionPolicy.fromSession((read as Outcome.Ok).value, session.raw)
+                ?: return Failure.Refused(RefusalReason.ConsentMissing).failed()
+        if (policy.reverted) return Failure.Refused(RefusalReason.UndoUnresolved).failed()
+        val agentData =
+            when (val agent = policy.agent) {
+                null ->
+                    when (val list = json("/agent", query = locationQuery())) {
+                        is Outcome.Failed -> return list
+                        is Outcome.Ok -> Oc2PermissionPolicy.defaultAgent(list.value)
+                    }
+                else ->
+                    when (val one = readAgent(agent)) {
+                        is Outcome.Failed -> return one
+                        is Outcome.Ok -> data(one.value) as? JsonObject
+                    }
+            } ?: return Failure.Refused(RefusalReason.ConsentMissing).failed()
+        val update =
+            policy.updateForAgent(agentData, serverRuns = false)
+                ?: return Failure.Refused(RefusalReason.ConsentMissing).failed()
+        if (policy.confirms(update)) return Outcome.Ok(Unit)
+        val patched = json(path, HttpMethod.Patch, update)
+        if (patched is Outcome.Failed) return patched
+        // A successful PATCH alone does not establish the mode: it is read back before anything can run.
+        val back = json(path)
+        if (back is Outcome.Failed) return back
+        val confirmed = Oc2PermissionPolicy.fromSession((back as Outcome.Ok).value, session.raw)
+        if (confirmed == null || confirmed.agent != policy.agent || !confirmed.confirms(update))
+            return Failure.Refused(RefusalReason.ConsentMissing).failed()
+        if (confirmed.reverted) return Failure.Refused(RefusalReason.UndoUnresolved).failed()
+        return Outcome.Ok(Unit)
+    }
+
+    /** The server answers 404 for an existing agent for a moment after an idle restart; a short retry rides it. */
+    private suspend fun readAgent(agent: String): Outcome<JsonElement> {
+        var attempt = 0
+        while (true) {
+            val result = json("/agent/${agent.encodeURLPathPart()}", query = locationQuery())
+            if (result !is Outcome.Failed || result.failure !is Failure.NotFound || attempt >= 2) return result
+            attempt++
+            kotlinx.coroutines.delay(AGENT_BOOT_RETRY_MS)
         }
     }
 
@@ -499,12 +551,15 @@ internal class Oc2Gateway(
         command: String,
         agent: String,
         model: ModelSelection?,
-    ): Outcome<Unit> =
-        unit(
+    ): Outcome<Unit> {
+        val prepared = preparePermissions(session)
+        if (prepared is Outcome.Failed) return prepared
+        return unit(
             "/session/${sid(session)}/shell",
             HttpMethod.Post,
             buildJsonObject { put("command", command) },
         )
+    }
 
     /**
      * `POST /session/{id}/command {command, text}` (Flutter `Api2Gateway.slashCommand`). The model is
@@ -515,8 +570,10 @@ internal class Oc2Gateway(
         command: String,
         args: String,
         model: ModelSelection?,
-    ): Outcome<Unit> =
-        unit(
+    ): Outcome<Unit> {
+        val prepared = preparePermissions(session)
+        if (prepared is Outcome.Failed) return prepared
+        return unit(
             "/session/${sid(session)}/command",
             HttpMethod.Post,
             buildJsonObject {
@@ -524,6 +581,7 @@ internal class Oc2Gateway(
                 put("text", args)
             },
         )
+    }
 
     /** `GET /command`: the server's own slash commands, name order (Flutter chat_commands.dart). */
     override suspend fun commands(): Outcome<ImmutableList<CommandInfo>> =
@@ -922,3 +980,5 @@ internal class Oc2Gateway(
             )
     }
 }
+
+private const val AGENT_BOOT_RETRY_MS = 500L

@@ -289,6 +289,33 @@ class ChatHeaderPresenterTest {
     }
 
     @Test
+    fun `B-CHAT-019 Codex header 8 Details reads the context from the replies when the session has none`() {
+        val reply =
+            io.github.eslamasabry.oc.core.model.transcript.MessageWithParts(
+                io.github.eslamasabry.oc.core.model.transcript.MessageInfo(
+                    "a1", "s", io.github.eslamasabry.oc.core.model.transcript.Role.Assistant,
+                    providerId = "openai", modelId = "gpt-5",
+                    tokens = io.github.eslamasabry.oc.core.model.transcript.Tokens(input = 400, output = 100),
+                ),
+                kotlinx.collections.immutable.persistentListOf(),
+            )
+        val fed = object : FakeChatWorld(), io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource {
+            override val turnFeed =
+                MutableStateFlow(
+                    io.github.eslamasabry.oc.feature.chat.world.TurnFeed(
+                        ledger = io.github.eslamasabry.oc.engine.transcript.ledger.LedgerSnapshot(1, listOf(reply), emptyList()),
+                        windows = mapOf("openai/gpt-5" to 1000L),
+                    ),
+                )
+        }
+        val presenter = ChatHeaderPresenter(fed, port, nav, Immediate)
+        presenter.choose(HeaderAction.Details)
+        val d = assertIs<HeaderSheet.Details>(presenter.current().sheet).facts
+        assertEquals(50, d.contextPercent)
+        assertEquals(500L, d.totalTokens)
+    }
+
+    @Test
     fun `fork waits for the first prompt`() {
         assertFalse(p.current().hasPrompt)
         assertTrue(HeaderRules.needsPrompt(HeaderAction.Fork))

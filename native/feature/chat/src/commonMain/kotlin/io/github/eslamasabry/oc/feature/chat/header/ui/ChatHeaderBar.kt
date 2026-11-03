@@ -59,6 +59,10 @@ import io.github.eslamasabry.oc.ui.words.res.chatHeaderTokens
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderUnshareFailed
 import io.github.eslamasabry.oc.ui.words.res.chatRenameEmpty
 import io.github.eslamasabry.oc.ui.words.res.chatUiAgent
+import io.github.eslamasabry.oc.ui.words.res.chatUiError
+import io.github.eslamasabry.oc.ui.words.res.chatUiTool
+import io.github.eslamasabry.oc.ui.words.res.chatUiFile
+import io.github.eslamasabry.oc.ui.words.res.chatUiAttachment
 import io.github.eslamasabry.oc.ui.words.res.chatUiAssistant
 import io.github.eslamasabry.oc.ui.words.res.chatUiCopyTranscript
 import io.github.eslamasabry.oc.ui.words.res.chatUiForkSession
@@ -402,5 +406,11 @@ private fun transcriptWords(): TranscriptWords {
     val assistant = stringResource(Res.string.chatUiAssistant)
     val reasoning = stringResource(Res.string.transcriptFindReasoning)
     val partial = stringResource(Res.string.historyLoadedOnly)
-    return remember(untitled, user, assistant, reasoning, partial) { TranscriptWords(untitled, user, assistant, reasoning, partial) }
+    val attachment = stringResource(Res.string.chatUiAttachment)
+    val file = stringResource(Res.string.chatUiFile)
+    val tool = stringResource(Res.string.chatUiTool)
+    val error = stringResource(Res.string.chatUiError)
+    return remember(untitled, user, assistant, reasoning, partial, attachment, file, tool, error) {
+        TranscriptWords(untitled, user, assistant, reasoning, partial, attachment, file, tool, error)
+    }
 }

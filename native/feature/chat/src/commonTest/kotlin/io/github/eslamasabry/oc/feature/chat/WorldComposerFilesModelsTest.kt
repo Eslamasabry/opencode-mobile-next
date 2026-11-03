@@ -794,7 +794,69 @@ class WorldComposerFilesModelsTest {
             assertTrue(f.base.calls.any { it.startsWith("slashCommand") })
         }
 
+    // ---- Codex chat-header review ----
+
+    @Test
+    fun `B-AGENT-223 Codex header 2 the production port knows a child's parent before its ask is offered`() = runTest {
+        val f = Fixture(this)
+        val child = SessionId("child")
+        f.base.sessionList = (f.base.sessionList + Session(child, parentId = ref.sessionId)).toImmutableList()
+        f.open()
+        val port = io.github.eslamasabry.oc.feature.chat.header.world.GraphChatHeaderPort(ref, f.registry)
+        port.attach()
+        runCurrent()
+        f.base.events.emit(
+            GatewayEvent.PermissionAsked(
+                io.github.eslamasabry.oc.core.model.PermissionRequest(
+                    io.github.eslamasabry.oc.core.common.ids.RequestId("r1"), child, "bash", persistentListOf(),
+                    kotlinx.serialization.json.JsonObject(emptyMap()), persistentListOf(), null, false, null,
+                )
+            )
+        )
+        runCurrent()
+        assertEquals(listOf("r1"), port.approvals.waiting.value.map { it.id.raw })
+        assertEquals(ref.sessionId, port.approvals.parentOf(child), "inheritance sees the real parent")
+        assertNull(port.approvals.parentOf(ref.sessionId), "the conversation itself is top level")
+    }
+
     // ---- QA wave 4 / Codex composer review ----
+
+    @Test
+    fun `Codex composer 6 an at-mention of a sub-agent rides the prompt`() = runTest {
+        val f = Fixture(this, selection = ModelRef("prov", "m1"))
+        f.operations.catalog =
+            Outcome.Ok(
+                snapshot(catalogModel("m1")).copy(
+                    agents = persistentListOf(
+                        io.github.eslamasabry.oc.core.model.CatalogAgent("build", "primary", null, false, null, null, null),
+                        io.github.eslamasabry.oc.core.model.CatalogAgent("helper", "subagent", null, false, null, null, null),
+                    ),
+                ),
+            )
+        f.open()
+        assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+        f.world.draftChanged("@helper look at this")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("@helper look at this"))
+        advanceTimeBy(60)
+        runCurrent()
+        val mentions = f.base.sentPrompts.single().second.mentions
+        assertEquals(listOf("helper"), mentions.map { it.name })
+        assertEquals(0, mentions.single().start)
+    }
+
+    @Test
+    fun `B-STATE-118 Codex composer 4 a model changed by another client becomes the chip's choice`() = runTest {
+        val f = Fixture(this, selection = ModelRef("prov", "m1"))
+        f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
+        f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+        f.open()
+        assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+        assertEquals("m1", f.world.models.value.selected?.modelId)
+        f.base.events.emit(GatewayEvent.SessionSelection(ref.sessionId, ModelRef("prov", "m2"), "plan"))
+        runCurrent()
+        assertEquals("m2", f.world.models.value.selected?.modelId)
+        assertEquals("plan", f.world.models.value.agent)
+    }
 
     @Test
     fun `B-STATE-041 Codex composer 1 a second Send before the server answers sends nothing`() = runTest {
