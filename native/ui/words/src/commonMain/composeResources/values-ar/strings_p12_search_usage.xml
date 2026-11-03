@@ -1,0 +1,36 @@
+<resources>
+    <string name="p12SearchTitle">البحث في المحادثات</string>
+    <string name="p12SearchField">ابحث في المحادثات</string>
+    <string name="p12SearchServer">الخادم</string>
+    <string name="p12SearchRecent">عمليات البحث الأخيرة</string>
+    <string name="p12SearchRecentEmpty">تظهر هنا عمليات البحث التي أجريتها على هذا الهاتف.</string>
+    <string name="p12SearchRecentClear">مسح عمليات البحث الأخيرة</string>
+    <string name="p12SearchRecentRemove">إزالة %1$s</string>
+    <string name="p12SearchRecentFailed">تعذّر تحديث عمليات البحث الأخيرة. البحث ما زال يعمل.</string>
+    <string name="p12SearchInside">ابحث أيضًا داخل المحادثات الأخيرة</string>
+    <string name="p12SearchInsideHelp">يقرأ أحدث الرسائل في آخر 20 محادثة لك على هذا الخادم.</string>
+    <string name="p12SearchTitles">العناوين</string>
+    <string name="p12SearchInsideSection">داخل المحادثات</string>
+    <string name="p12SearchInsideReading">جارٍ قراءة المحادثات الأخيرة…</string>
+    <string name="p12SearchInsideFailed">تعذّرت قراءة المحادثات الأخيرة. نتائج العناوين ما زالت ظاهرة.</string>
+    <string name="p12SearchFromYou">أنت: %1$s</string>
+    <string name="p12SearchFromAgent">الرد: %1$s</string>
+    <string name="p12SearchOneProject">يُبحث في المشروع الحالي لهذا الخادم فقط.</string>
+    <string name="p12SearchSearching">جارٍ البحث…</string>
+    <string name="p12SearchFailed">تعذّر البحث في المحادثات.</string>
+    <string name="p12SearchTryAgain">حاول مرة أخرى</string>
+    <string name="p12SearchNoServerTitle">لا يوجد خادم متصل</string>
+    <string name="p12SearchNoServerBody">اتصل بخادم للبحث في محادثاته.</string>
+    <string name="p12SearchOpenServers">افتح الخوادم</string>
+    <string name="p12SearchConversationsWhat">المحادثات</string>
+    <string name="p12UsageCost">التكلفة التقديرية</string>
+    <string name="p12UsageRange">النطاق الزمني</string>
+    <string name="p12UsageActivity">النشاط حسب اليوم</string>
+    <string name="p12UsageDay">%1$s · خطوات: %2$s</string>
+    <string name="p12UsageProjectsFailed">تعذّر عرض المشاريع. خيار كل المشاريع ما زال يعمل.</string>
+    <string name="p12UsageNoServerBody">اتصل بخادم لترى استخدامه وتكلفته.</string>
+    <string name="p12UsageFailed">تعذّر تحميل الاستخدام.</string>
+    <string name="p12UsageTryAgain">حاول مرة أخرى</string>
+    <string name="p12UsageCounts">النشاط</string>
+    <string name="p12UsageServer">الخادم</string>
+</resources>

@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.PairingRoute
 import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
+import io.github.eslamasabry.oc.ui.routes.UsageRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -58,6 +59,7 @@ public class ServersViewModel(
     override fun back(): Unit = nav.back()
 
     override fun openAgents(): Unit = nav.open(AgentsRoute.Home)
+    override fun openUsage(id: ProfileId): Unit = nav.open(UsageRoute.Hub(id))
 
     private var consentAddress: String? = null
 

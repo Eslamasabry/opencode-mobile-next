@@ -56,4 +56,6 @@ public interface ServersActions {
     public fun takePairing(): PairingFill? = null
     /** The server's scheduled prompts (:feature:schedules). */
     public fun openSchedules(id: ProfileId) {}
+    /** Usage and cost this connected server reports (unit P12-SEARCH-USAGE). */
+    public fun openUsage(id: ProfileId) {}
 }

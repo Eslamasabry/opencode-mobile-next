@@ -70,3 +70,6 @@
 :engine:cards	F	P12-CHAT-CARDS	slice-5
 :engine:files	F	P12-FILES	slice-5
 :feature:files	F	P12-FILES	slice-5
+:feature:search	F	P12-SEARCH-USAGE	slice-5
+:feature:usage	F	P12-SEARCH-USAGE	slice-5
+:engine:usage	S	P12-SEARCH-USAGE (calendar for :feature:usage)	slice-5

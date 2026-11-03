@@ -85,6 +85,8 @@ dependencies {
             ":engine:cards", // P12-CHAT-CARDS
             ":engine:files",
             ":feature:files",
+            ":feature:search",
+            ":feature:usage",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

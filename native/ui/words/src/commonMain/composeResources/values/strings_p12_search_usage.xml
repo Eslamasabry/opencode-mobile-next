@@ -1,0 +1,36 @@
+<resources>
+    <string name="p12SearchTitle">Search conversations</string>
+    <string name="p12SearchField">Search conversations</string>
+    <string name="p12SearchServer">Server</string>
+    <string name="p12SearchRecent">Recent searches</string>
+    <string name="p12SearchRecentEmpty">Your searches on this phone appear here.</string>
+    <string name="p12SearchRecentClear">Clear recent searches</string>
+    <string name="p12SearchRecentRemove">Remove %1$s</string>
+    <string name="p12SearchRecentFailed">Couldn't update recent searches. Search still works.</string>
+    <string name="p12SearchInside">Also search inside recent conversations</string>
+    <string name="p12SearchInsideHelp">Reads the newest messages of your 20 most recent conversations on this server.</string>
+    <string name="p12SearchTitles">Titles</string>
+    <string name="p12SearchInsideSection">Inside conversations</string>
+    <string name="p12SearchInsideReading">Reading recent conversations…</string>
+    <string name="p12SearchInsideFailed">Couldn't read recent conversations. Title results still show.</string>
+    <string name="p12SearchFromYou">You: %1$s</string>
+    <string name="p12SearchFromAgent">Reply: %1$s</string>
+    <string name="p12SearchOneProject">Only this server's current project is searched.</string>
+    <string name="p12SearchSearching">Searching…</string>
+    <string name="p12SearchFailed">Couldn't search conversations.</string>
+    <string name="p12SearchTryAgain">Try again</string>
+    <string name="p12SearchNoServerTitle">No server connected</string>
+    <string name="p12SearchNoServerBody">Connect a server to search its conversations.</string>
+    <string name="p12SearchOpenServers">Open Servers</string>
+    <string name="p12SearchConversationsWhat">conversations</string>
+    <string name="p12UsageCost">Estimated cost</string>
+    <string name="p12UsageRange">Date range</string>
+    <string name="p12UsageActivity">Activity by day</string>
+    <string name="p12UsageDay">%1$s · %2$s steps</string>
+    <string name="p12UsageProjectsFailed">Projects couldn't be listed. All projects still works.</string>
+    <string name="p12UsageNoServerBody">Connect a server to see its usage and cost.</string>
+    <string name="p12UsageFailed">Couldn't load usage.</string>
+    <string name="p12UsageTryAgain">Try again</string>
+    <string name="p12UsageCounts">Activity</string>
+    <string name="p12UsageServer">Server</string>
+</resources>
