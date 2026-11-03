@@ -1,4 +1,4 @@
-VERIFIED: PENDING
+VERIFIED: green
 
 # P12-FIX-SETTINGS-PREVIEWQR — Codex second-eye findings on SETTINGS and PREVIEW-QR
 
@@ -51,7 +51,40 @@ chat/transcript); settings #2 needs a kit renderer. For #2 and #5 the dead choic
 
 ## 3. Tests and results
 
-PENDING
+Run in this cloud container on 2026-11-03 (JDK 21, Android SDK platforms 37.1/36, build-tools 37.0.0), on the
+committed tree, one Gradle invocation:
+
+```
+./gradlew :feature:settings:desktopTest :feature:servers:desktopTest :feature:preview:desktopTest :ui:routes:desktopTest \
+  :feature:onboarding:desktopTest :engine:settings:desktopTest :android:webview:testDebugUnitTest \
+  :androidApp:testPreviewDebugUnitTest :quality:test :androidApp:assemblePreviewDebug      → BUILD SUCCESSFUL
+```
+
+| Task | Tests | Failures |
+|---|---|---|
+| `:feature:settings:desktopTest` (incl. `P12FixSettingsTest` 11, `P12FixSettingsUiTest` 3, goldens) | 80 | 0 |
+| `:feature:servers:desktopTest` (incl. `P12FixPairingTest` 7, `P12FixFormDraftTest` 1) | 68 | 0 |
+| `:feature:preview:desktopTest` | 30 | 0 |
+| `:ui:routes:desktopTest` (incl. `PreviewClaimTest` 2) | 3 | 0 |
+| `:feature:onboarding:desktopTest` | 18 | 0 |
+| `:engine:settings:desktopTest` | 120 | 0 |
+| `:android:webview:testDebugUnitTest` (`PreviewNavigationTest`, new) | 2 | 0 |
+| `:androidApp:testPreviewDebugUnitTest` | 15 | 0 |
+| `:quality:test` (Konsist, module rules, graph smoke) | 59 | 0 |
+| `:androidApp:assemblePreviewDebug` (Metro graph incl. `GatewayPairingProbe`, `DiagnosticsFeed`, `PlatformHub(AppPreferences)`) | — | green |
+| `:desktopApp:compileKotlin` | — | green |
+
+Goldens: `notifications-{light-en,dark-en,dark-ar}.png` were re-recorded after looking at them: the only change is the
+Quiet hours switch with its start/end rows (finding #4), RTL correct in Arabic.
+
+Red first: most new tests need the new API (`AppLanguage.Spanish`, `NotificationChange.Quiet`, `PairingProbe`,
+`PreviewRoute.Page.path`, `holdPassword`), so on the old code they do not compile; the two old tests that encoded
+the defects (`PreviewRulesTest` "route carries only ports", "posts never leave") were replaced by their catalog rows.
+They were not separately executed against the old code.
+
+Not run: the emulator journeys (no emulator here). On a phone: Settings › This app › Language › Español → System;
+Notifications › Quiet hours on, start 23:30; Servers › Scan code → close → draft still there; paste a code with an
+unreachable first address; a reply's `http://localhost:5173/app` link → preview at `/app`.
 
 ## 4. Deviations and notes for the integrator
 
