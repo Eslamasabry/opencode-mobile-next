@@ -92,7 +92,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
-    implementation(libs.compose.resources) // getString outside composition (LinuxWiring's job notice words); P6's proof screen too.
+    // getString outside composition: LinuxWiring's job notice words, SettingsWiring's shareAppMessage; P6's proof too.
+    implementation(libs.compose.resources)
     debugImplementation(libs.compose.foundation) // P6 proof screen (debug only)
     implementation(libs.metrox.viewmodel.compose)
     implementation(libs.kotlinx.io.core) // Real app-private draft payload vault.
