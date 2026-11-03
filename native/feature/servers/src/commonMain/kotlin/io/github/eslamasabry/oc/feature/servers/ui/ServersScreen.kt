@@ -54,6 +54,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
+import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
@@ -275,6 +276,11 @@ public fun ServersScreen(
             KitButton(
                 stringResource(Res.string.agentsSectionTitle),
                 actions::openAgents,
+                role = KitButtonRole.Secondary,
+            )
+            KitButton(
+                stringResource(Res.string.usageTabPlans),
+                actions::openPlans,
                 role = KitButtonRole.Secondary,
             )
             KitText(stringResource(Res.string.serversAdd))
