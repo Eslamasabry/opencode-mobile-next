@@ -10,9 +10,13 @@ import io.github.eslamasabry.oc.feature.settings.presentation.NotificationFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.QuietHours
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SpeechModel
 import io.github.eslamasabry.oc.feature.settings.presentation.VoiceFacts
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -25,6 +29,11 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi25
 import io.github.eslamasabry.oc.ui.words.res.kitVoiceReadAloud
 import io.github.eslamasabry.oc.ui.words.res.monitorQuiet
+import io.github.eslamasabry.oc.ui.words.res.monitorQuietEnd
+import io.github.eslamasabry.oc.ui.words.res.monitorQuietStart
+import io.github.eslamasabry.oc.ui.words.res.notifyQuietAllDay
+import io.github.eslamasabry.oc.ui.words.res.notifyQuietEndPicker
+import io.github.eslamasabry.oc.ui.words.res.notifyQuietStartPicker
 import io.github.eslamasabry.oc.ui.words.res.notifyBlockedMessage
 import io.github.eslamasabry.oc.ui.words.res.notifyBlockedTitle
 import io.github.eslamasabry.oc.ui.words.res.notifyFinishedRuns
@@ -41,7 +50,6 @@ import io.github.eslamasabry.oc.ui.words.res.notifySendTestDetail
 import io.github.eslamasabry.oc.ui.words.res.notifyTurnOnInAndroid
 import io.github.eslamasabry.oc.ui.words.res.notifyWifiOnly
 import io.github.eslamasabry.oc.ui.words.res.readAloudConsentHeard
-import io.github.eslamasabry.oc.ui.words.res.settingsV3Off
 import io.github.eslamasabry.oc.ui.words.res.settingsV3VoiceTyping
 import io.github.eslamasabry.oc.ui.words.res.voiceNoticesTitle
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupDownloadingPack
@@ -125,13 +133,28 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             )
         }
     }
+    // Flutter `_quietHours`: one switch that names itself; when on, its start and end (each opens its time page).
     KitRowGroup {
-        KitRow(
+        val quiet = n.quietHours
+        KitSwitchRow(
             title = stringResource(Res.string.monitorQuiet),
+            checked = quiet != null,
             supporting = stringResource(Res.string.notifyQuietDetail),
-            trailing = KitRowTrailing.Value(n.quietHours?.let(::quietText) ?: stringResource(Res.string.settingsV3Off)),
-            onClick = { actions.onOutside(SettingsOutside.QuietHours) },
-        )
+        ) { actions.onQuietHours(it) }
+        if (quiet != null) {
+            KitRow(
+                title = stringResource(Res.string.monitorQuietStart),
+                trailing = KitRowTrailing.Value(clock(quiet.start)),
+                onClick = { actions.onOpen(SettingsPage.QuietTime(start = true)) },
+            )
+            KitRow(
+                title = stringResource(Res.string.monitorQuietEnd),
+                supporting = if (quiet.allDay) stringResource(Res.string.notifyQuietAllDay) else null,
+                supportingMaxLines = 2,
+                trailing = KitRowTrailing.Value(clock(quiet.end)),
+                onClick = { actions.onOpen(SettingsPage.QuietTime(start = false)) },
+            )
+        }
         KitSwitchRow(title = stringResource(Res.string.notifyWifiOnly), checked = n.wifiOnly) {
             actions.onNotification(NotificationChange.WifiOnly(it))
         }
@@ -153,8 +176,25 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
     }
 }
 
+/**
+ * Notifications › Quiet hours start or end (Flutter's time picker, as a kit check-mark list): every half hour, plus
+ * the saved time when it is between them. One tap saves and returns.
+ */
+@Composable
+internal fun ColumnScope.QuietTimeBody(start: Boolean, n: NotificationFacts?, actions: SettingsActions) {
+    val quiet = n?.quietHours ?: QuietHours.Default
+    val current = if (start) quiet.start else quiet.end
+    KitChoiceList(
+        choices = QuietHours.choices(current).map { KitChoice(it, clock(it)) },
+        selected = current,
+        semanticsLabel = stringResource(if (start) Res.string.notifyQuietStartPicker else Res.string.notifyQuietEndPicker),
+        modifier = Modifier.testTag("quiet-time-choices"),
+        onSelect = { actions.onQuietTime(start, it) },
+    )
+}
+
 /** 24-hour "22:00–08:00": numbers, not copy (the platform's time format arrives with the quiet-hours sheet). */
 internal fun quietText(q: QuietHours): String = "${clock(q.start)}–${clock(q.end)}"
 
-private fun clock(minutes: Int): String =
+internal fun clock(minutes: Int): String =
     "${(minutes / 60).toString().padStart(2, '0')}:${(minutes % 60).toString().padStart(2, '0')}"

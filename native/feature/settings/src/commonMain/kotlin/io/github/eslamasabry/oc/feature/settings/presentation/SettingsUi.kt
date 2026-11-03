@@ -53,6 +53,8 @@ public data class AppearanceUi(
     val style: SurfaceStyle = SurfaceStyle.Solid,
     val motion: MotionLevel = MotionLevel.Full,
     val textSize: AppTextSize = AppTextSize.Normal,
+    /** The five styles are listed only where the app draws them ([SettingsFacts.surfaceStyles]). */
+    val styles: Boolean = true,
     /** Saver holds Style and Motion (B-KIT-008): shown, not changeable, with the reason. */
     val heldBySaver: Boolean = false,
     val systemMotionOff: Boolean = false,
@@ -76,8 +78,18 @@ public data class VoiceFacts(
     val readAloudOn: Boolean = false,
 )
 
-/** Minutes after midnight, local. */
-public data class QuietHours(val start: Int, val end: Int)
+/** Minutes after midnight, local. The same start and end mean quiet all day (Flutter `SharedNotifyRules`). */
+public data class QuietHours(val start: Int, val end: Int) {
+    val allDay: Boolean get() = start == end
+
+    public companion object {
+        /** What turning quiet hours on starts with (Flutter `defaultQuietStart` / `defaultQuietEnd`). */
+        public val Default: QuietHours = QuietHours(22 * 60, 8 * 60)
+
+        /** The times the start and end pages offer: every half hour, plus [current] when it is between them. */
+        public fun choices(current: Int): List<Int> = ((0 until 24 * 60 step 30) + current).distinct().sorted()
+    }
+}
 
 public enum class BackgroundState { Off, Running, StoppedByAndroid }
 
@@ -98,6 +110,9 @@ public sealed interface NotificationChange {
     public data class Questions(val on: Boolean) : NotificationChange
 
     public data class WifiOnly(val on: Boolean) : NotificationChange
+
+    /** Quiet hours for every server (`oc.notify.quietStart` / `quietEnd`, minutes after midnight); null turns them off. */
+    public data class Quiet(val hours: QuietHours?) : NotificationChange
 }
 
 public enum class UpdateFailure { Network, NoFile, Checksum, Signer, Package, Version, Storage, Installer }

@@ -19,9 +19,14 @@ public class PairingFill(
     /** The code listed this many addresses; [address] is the one a phone should try first. */
     public val addresses: Int,
     public val fromLink: Boolean,
+    /** Every address of the code in the order a phone tries them ([address] first); probing picks among them. */
+    public val candidates: List<String> = listOf(address),
 ) {
     /** The password, once. */
     public fun takePassword(): String? = secret.also { secret = null }
+
+    /** The same fill pointing at [chosen] (one of [candidates]); the password moves over and leaves this one. */
+    public fun at(chosen: String): PairingFill = PairingFill(chosen, username, takePassword(), addresses, fromLink, candidates)
 
     override fun toString(): String = "PairingFill(address=${PairingText.safeOrigin(address)}, fromLink=$fromLink)"
 
@@ -31,8 +36,8 @@ public class PairingFill(
             when (read) {
                 is PairingRead.Code -> {
                     val payload = read.payload
-                    val first = PairingText.orderCandidates(payload.urls, preferLoopback).first()
-                    PairingFill(first, payload.username, payload.password(), payload.urls.size, fromLink = false)
+                    val ordered = PairingText.orderCandidates(payload.urls, preferLoopback)
+                    PairingFill(ordered.first(), payload.username, payload.password(), payload.urls.size, fromLink = false, ordered)
                         .also { payload.consume() }
                 }
                 is PairingRead.Link -> PairingFill(read.origin, null, null, 1, fromLink = true)

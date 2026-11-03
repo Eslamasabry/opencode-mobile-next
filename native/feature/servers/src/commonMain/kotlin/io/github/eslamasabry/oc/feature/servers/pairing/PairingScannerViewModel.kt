@@ -43,16 +43,32 @@ public class PairingScannerViewModel(private val inbox: PairingInbox, private va
     /** Pure; called on the scanner's thread for every decoded QR. */
     public fun accepts(text: String): Boolean = PairingText.read(text) !is PairingRead.Problem
 
-    override fun close(): Unit = nav.back()
+    /**
+     * Set once the page has left (Close, a delivered code, or the page going away): a camera result posted to the main
+     * thread before that must not write the inbox or step Back a second time, which would close the server form too.
+     */
+    private var finished = false
+
+    override fun close() {
+        if (finished) return
+        finished = true
+        nav.back()
+    }
 
     override fun scanned(text: String) {
+        if (finished) return
         deliver(PairingText.read(text))
     }
 
     override fun rejected(): Unit = mutable.update { it.copy(rejected = true) }
 
     override fun pasted(text: String?) {
+        if (finished) return
         deliver(PairingText.read(text.orEmpty()))
+    }
+
+    override fun onCleared() {
+        finished = true
     }
 
     private fun deliver(read: PairingRead) {
@@ -61,6 +77,7 @@ public class PairingScannerViewModel(private val inbox: PairingInbox, private va
             mutable.update { it.copy(problem = (read as? PairingRead.Problem)?.problem ?: PairingProblem.NotJson) }
             return
         }
+        finished = true
         inbox.put(fill)
         nav.back()
     }

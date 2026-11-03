@@ -118,6 +118,7 @@ public class SettingsPresenter(
             style = p.style,
             motion = p.motion,
             textSize = p.textSize,
+            styles = f.surfaceStyles,
             heldBySaver = p.saver,
             systemMotionOff = f.systemMotionOff,
         )
@@ -126,6 +127,26 @@ public class SettingsPresenter(
     override fun onOpen(page: SettingsPage) {
         local.update { if (it.stack.last() == page) it else it.copy(stack = (it.stack + page).toImmutableList()) }
         if (page == SettingsPage.ReportProblem) loadReport()
+        if (page == SettingsPage.Notifications) notifications?.refresh()
+    }
+
+    override fun onResume() {
+        if (local.value.stack.last() == SettingsPage.Notifications) notifications?.refresh()
+    }
+
+    override fun onQuietHours(on: Boolean) {
+        val port = notifications ?: return
+        if ((port.facts.value.quietHours != null) == on) return
+        run(SettingsNote.ChoiceNotSaved) { port.set(NotificationChange.Quiet(if (on) QuietHours.Default else null)) }
+    }
+
+    override fun onQuietTime(start: Boolean, minutes: Int) {
+        val port = notifications ?: return
+        val current = port.facts.value.quietHours ?: QuietHours.Default
+        val next = if (start) current.copy(start = minutes) else current.copy(end = minutes)
+        if (local.value.stack.last() is SettingsPage.QuietTime) onBack()
+        if (next == port.facts.value.quietHours) return
+        run(SettingsNote.ChoiceNotSaved) { port.set(NotificationChange.Quiet(next)) }
     }
 
     override fun onBack(): Boolean {

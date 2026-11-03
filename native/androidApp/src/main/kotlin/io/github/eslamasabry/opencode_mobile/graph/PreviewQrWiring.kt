@@ -49,6 +49,10 @@ import io.github.eslamasabry.oc.android.webview.PreviewGuard
 import io.github.eslamasabry.oc.android.webview.PreviewPhase
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.domain.GatewayFactory
+import io.github.eslamasabry.oc.core.domain.ProbeTarget
+import io.github.eslamasabry.oc.core.model.BackendKind
+import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.core.security.ApprovedLink
 import io.github.eslamasabry.oc.core.security.ExternalLinkOpener
 import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
@@ -64,11 +68,15 @@ import io.github.eslamasabry.oc.feature.preview.ui.WebPreviewEvents
 import io.github.eslamasabry.oc.feature.preview.ui.WebPreviewHandle
 import io.github.eslamasabry.oc.feature.preview.ui.WebPreviewSlot
 import io.github.eslamasabry.oc.feature.servers.pairing.NoQrScannerSlot
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingAnswer
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingProbe
 import io.github.eslamasabry.oc.feature.servers.pairing.QrScannerHandle
 import io.github.eslamasabry.oc.feature.servers.pairing.QrScannerSlot
 import io.github.eslamasabry.oc.feature.servers.pairing.ScanStage
 import java.util.concurrent.Executor
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.withTimeoutOrNull
 
 /*
  * Unit PREVIEW-QR: the Android halves of the dev preview and the pairing scanner, and the one Android
@@ -332,4 +340,34 @@ private fun fit(view: TextureView, size: Size) {
     val frameH = (if (portrait) size.width else size.height).toFloat()
     val scale = maxOf(width / frameW, height / frameH)
     view.setTransform(Matrix().apply { setScale(frameW * scale / width, frameH * scale / height, width / 2f, height / 2f) })
+}
+
+/**
+ * P12-FIX-PREVIEWQR: a pairing code's addresses are asked in turn with the protocol's own health/version probe, which
+ * never sends a credential to an origin that is not trusted yet (B-SEC-124); the form then fills the one that works,
+ * or that at least answered (B-PROTO-068). A probe that does not finish in time counts as no answer.
+ */
+@ContributesBinding(AppScope::class)
+@Inject
+class GatewayPairingProbe(private val factories: Set<GatewayFactory>) : PairingProbe {
+    override suspend fun check(address: String): PairingAnswer {
+        val origin = (AddressRules.normalize(address) as? Outcome.Ok)?.value ?: return PairingAnswer.NoAnswer
+        val factory =
+            factories.firstOrNull { it.backend == BackendKind.OpenCode2 } ?: factories.firstOrNull() ?: return PairingAnswer.NoAnswer
+        val result = withTimeoutOrNull(PROBE_TIMEOUT) { factory.probe(ProbeTarget(origin, credentials = null)) }
+        return when (result) {
+            null -> PairingAnswer.NoAnswer
+            is Outcome.Ok -> PairingAnswer.Works
+            is Outcome.Failed ->
+                when (result.failure) {
+                    is Failure.SignIn, is Failure.Server, is Failure.Incompatible, is Failure.Rejected, is Failure.NotFound ->
+                        PairingAnswer.Answers
+                    else -> PairingAnswer.NoAnswer
+                }
+        }
+    }
+
+    private companion object {
+        val PROBE_TIMEOUT = 8.seconds
+    }
 }

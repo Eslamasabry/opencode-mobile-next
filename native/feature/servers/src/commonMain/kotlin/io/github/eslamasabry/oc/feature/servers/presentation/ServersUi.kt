@@ -54,6 +54,12 @@ public interface ServersActions {
 
     /** The waiting pairing, once; it carries the password, so it never enters [ServersUi]. */
     public fun takePairing(): PairingFill? = null
+
+    /** The unsaved password, kept in memory only while the form is under another page (never saved state). */
+    public fun holdPassword(text: String) {}
+
+    /** What [holdPassword] kept; empty when nothing was typed. */
+    public fun heldPassword(): String = ""
     /** The server's scheduled prompts (:feature:schedules). */
     public fun openSchedules(id: ProfileId) {}
     /** Usage and cost this connected server reports (unit P12-SEARCH-USAGE). */

@@ -18,6 +18,9 @@ import io.github.eslamasabry.oc.core.security.LinkOrigin
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatOutside
 import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
 import io.github.eslamasabry.oc.feature.chat.presentation.NoChatOutside
+import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.ChatRoute
+import io.github.eslamasabry.oc.ui.routes.PreviewRoute
 
 /*
  * P12-CHAT-FEEL: the Android half of the chat's clipboard, share sheet and links. Every reply link goes
@@ -33,6 +36,7 @@ class AndroidChatOutside(
     private val policy: ExternalLinkPolicy,
     // The app's one opener (PreviewQrWiring's AndroidExternalLinkOpener binding).
     private val opener: ExternalLinkOpener,
+    private val navigator: AppNavigator,
 ) : ChatOutside {
 
     /** Links the policy approved and the person is being asked about (one at a time on the screen). */
@@ -63,8 +67,14 @@ class AndroidChatOutside(
             false
         }
 
-    override fun checkLink(url: String): LinkCheck =
-        when (val decision = policy.check(url, LinkOrigin.Markdown)) {
+    override fun checkLink(url: String): LinkCheck {
+        // P12-FIX-PREVIEWQR: `http://localhost:5173` in a reply is the conversation's dev server, not the phone's:
+        // it opens in the in-app preview against that conversation's server (Flutter claims these links).
+        PreviewRoute.Page.claim(url, (navigator.top.value as? ChatRoute)?.ref)?.let { page ->
+            navigator.open(page)
+            return LinkCheck.Opened
+        }
+        return when (val decision = policy.check(url, LinkOrigin.Markdown)) {
             is LinkDecision.Open -> if (opener.open(decision.link) is Outcome.Ok) LinkCheck.Opened else LinkCheck.Refused
             is LinkDecision.AskFirst -> {
                 if (asked.size >= MAX_ASKED) asked.remove(asked.keys.first())
@@ -73,6 +83,7 @@ class AndroidChatOutside(
             }
             is LinkDecision.Refuse -> LinkCheck.Refused
         }
+    }
 
     override fun openLink(url: String): Boolean {
         val link = asked.remove(url) ?: return false

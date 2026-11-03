@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -96,6 +99,7 @@ import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.serversUsername
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
+import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -109,15 +113,17 @@ public fun ServersScreen(
     /** Opens This phone (the phone's own server and Linux); null where the platform has no built-in Linux. */
     onThisPhone: (() -> Unit)? = null,
 ) {
-    val name = remember { TextFieldState() }
-    val address = remember { TextFieldState() }
-    val username = remember { TextFieldState("opencode") }
-    // Do not use rememberTextFieldState/rememberSaveable here: a password must never enter saved
-    // instance state.
-    val password = remember { TextFieldState() }
+    // The unsaved draft survives a page on top (Scan code) and the form leaving composition: the plain fields are
+    // saveable, the password is held in memory by the ViewModel only (never saved instance state).
+    val name = rememberTextFieldState()
+    val address = rememberTextFieldState()
+    val username = rememberTextFieldState("opencode")
+    val password = remember { TextFieldState(actions.heldPassword()) }
+    LaunchedEffect(password) { snapshotFlow { password.text.toString() }.collect { actions.holdPassword(it) } }
     var removing by remember { mutableStateOf<ProfileId?>(null) }
     // PREVIEW-QR: a scanned or pasted pairing code (or share link) fills the form once; the password is taken, not kept.
-    var filledFromLink by remember { mutableStateOf<Boolean?>(null) }
+    var filledFromLink by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var clearedGeneration by rememberSaveable { mutableIntStateOf(0) }
     // A pairing code carries a password, so it goes in a secret field (the kit's Paste lives there too).
     val code = remember { TextFieldState() }
     LaunchedEffect(code) {
@@ -137,10 +143,15 @@ public fun ServersScreen(
         filledFromLink = fill.fromLink
     }
     LaunchedEffect(state.savedGeneration) {
-        if (state.savedGeneration > 0) password.edit { replace(0, length, "") }
+        if (state.savedGeneration > clearedGeneration) {
+            clearedGeneration = state.savedGeneration
+            password.edit { replace(0, length, "") }
+        }
     }
     LaunchedEffect(address) {
+        // The first value is the field as it is (a restored draft keeps its consent); only a change is acted on.
         snapshotFlow { address.text.toString() }
+            .drop(1)
             .collect { text ->
                 // A pairing code or share link pasted into the address field is read, never saved as an address.
                 if (PairingText.looksLikePayload(text) || ShareLink.origin(text) != null) {

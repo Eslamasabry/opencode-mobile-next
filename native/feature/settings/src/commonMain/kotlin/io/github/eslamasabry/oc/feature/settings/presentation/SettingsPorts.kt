@@ -56,6 +56,9 @@ public interface NotificationSettings {
     public suspend fun set(change: NotificationChange): Outcome<Unit>
 
     public suspend fun sendTest(): Outcome<Unit>
+
+    /** Reads Android's own on/off again (the person may have changed it in Android's settings meanwhile). */
+    public fun refresh() {}
 }
 
 /** The in-app updater (plan 07 I20, plan 16 CR16-10). */
@@ -81,4 +84,23 @@ public interface DiagnosticsExport {
     public suspend fun copy(text: String): Outcome<Unit>
 
     public suspend fun share(text: String): Outcome<Unit>
+}
+
+/**
+ * The notification choices' Flutter keys (`NotificationPreferences`), shared by every server; a migrated install keeps
+ * them (B-MIGR-005), and the notification engine reads the same values.
+ */
+public object NotificationKeys {
+    public const val FINISHED: String = "oc.notify.finishedRuns"
+    public const val REQUESTS: String = "oc.notify.requests"
+    public const val WIFI_ONLY: String = "oc.notify.wifiOnly"
+    public const val QUIET_START: String = "oc.notify.quietStart"
+    public const val QUIET_END: String = "oc.notify.quietEnd"
+
+    private const val DAY = 24 * 60
+
+    /** Quiet hours from the stored minutes; off unless both are a minute of the day (Flutter `shared.minute`). */
+    public fun quiet(start: Long?, end: Long?): QuietHours? =
+        if (start != null && end != null && start in 0 until DAY && end in 0 until DAY) QuietHours(start.toInt(), end.toInt())
+        else null
 }

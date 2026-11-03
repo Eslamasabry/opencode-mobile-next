@@ -10,3 +10,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 }
+
+dependencies {
+    // P12-FIX-PREVIEWQR: the pure navigation decisions (PreviewNavigationTest), plain JVM.
+    testImplementation(kotlin("test-junit"))
+    testImplementation(libs.junit4)
+}

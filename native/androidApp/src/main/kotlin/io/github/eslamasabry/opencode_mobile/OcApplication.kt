@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.core.common.Severity
 import io.github.eslamasabry.oc.core.security.RedactingWriter
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
+import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsLogSink
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
 import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
 
@@ -27,7 +28,7 @@ class OcApplication : Application(), GraphOwner {
         super.onCreate()
         val redactor = Redactor() // 2. before any secret is read
         AppLog.install(
-            RedactingWriter(redactor, emptyList()),
+            RedactingWriter(redactor, listOf(DiagnosticsLogSink)), // P12: warnings/errors feed Report a problem
             Severity.Info,
         ) // ring + logcat sinks: slice 1
         val buildInfo =

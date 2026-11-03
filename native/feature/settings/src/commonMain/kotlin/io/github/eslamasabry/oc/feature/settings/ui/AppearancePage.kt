@@ -79,16 +79,19 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         )
     }
 
-    KitSectionLabel(stringResource(Res.string.appearanceAskStyle))
-    val styleHeld = if (ui.heldBySaver) KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle)) else KitEnabled.Enabled
-    KitChoiceList(
-        choices = SurfaceStyle.entries.map { KitChoice(it, styleWords(it), enabled = if (it == ui.style) KitEnabled.Enabled else styleHeld) },
-        selected = ui.style,
-        semanticsLabel = stringResource(Res.string.appearanceAskStyle),
-        modifier = Modifier.testTag("appearance-styles"),
-        onSelect = actions::onStyle,
-    )
-    if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
+    // A style the app does not draw would be a choice that changes nothing: listed only where it is drawn.
+    if (ui.styles) {
+        KitSectionLabel(stringResource(Res.string.appearanceAskStyle))
+        val styleHeld = if (ui.heldBySaver) KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle)) else KitEnabled.Enabled
+        KitChoiceList(
+            choices = SurfaceStyle.entries.map { KitChoice(it, styleWords(it), enabled = if (it == ui.style) KitEnabled.Enabled else styleHeld) },
+            selected = ui.style,
+            semanticsLabel = stringResource(Res.string.appearanceAskStyle),
+            modifier = Modifier.testTag("appearance-styles"),
+            onSelect = actions::onStyle,
+        )
+        if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
+    }
 
     KitSectionLabel(stringResource(Res.string.appearanceAskMotion))
     Box(gutter) {

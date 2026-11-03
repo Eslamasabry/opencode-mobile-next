@@ -224,10 +224,12 @@ class PlatformHub(
     private val stores: PreviewStores,
     private val navigator: AppNavigator,
     private val draftOwners: Set<ConversationDrafts>,
+    private val appPreferences: AppPreferences,
 ) {
     private val log = AppLog.tagged("Platform")
     private val prefs = application.getSharedPreferences("oc_platform", Context.MODE_PRIVATE)
-    private val words = NotifyWords(application) { null }
+    // P12-FIX-SETTINGS: alerts speak the language chosen in Settings, not only the phone's (B-L10N-013).
+    private val words = NotifyWords(application) { appPreferences.localeTag.value }
     private val channels = ChannelRegistry(application.getSystemService(NotificationManager::class.java), words)
     val shade = AndroidAlertShade(application, words, channels)
     private val widgetPersistence =
@@ -273,6 +275,8 @@ class PlatformHub(
         if (started++ > 0) return
         WidgetFeed.persistence = widgetPersistence
         channels.ensure()
+        // B-L10N-002: channel names follow an acknowledged language save (the stored value, never an attempt).
+        appScope.launch { appPreferences.storedLocaleTag.collect { channels.relocalize() } }
         application.registerActivityLifecycleCallbacks(Visibility())
         appScope.launch { updates.start() }
         appScope.launch { watchFeed() }

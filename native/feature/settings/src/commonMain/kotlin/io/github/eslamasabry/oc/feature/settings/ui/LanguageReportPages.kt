@@ -26,8 +26,13 @@ import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.diagnosticsReportShare
 import io.github.eslamasabry.oc.ui.words.res.diagnosticsUnavailable
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiArabic
+import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiChinese
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiEnglish
+import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiJapanese
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiLanguage
+import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiPortuguese
+import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiRussian
+import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSpanish
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSystem
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.reportProblemCopyShort
@@ -57,6 +62,11 @@ internal fun languageWords(language: AppLanguage): String =
             AppLanguage.System -> Res.string.e7LocaleUiSystem
             AppLanguage.English -> Res.string.e7LocaleUiEnglish
             AppLanguage.Arabic -> Res.string.e7LocaleUiArabic
+            AppLanguage.Spanish -> Res.string.e7LocaleUiSpanish
+            AppLanguage.Japanese -> Res.string.e7LocaleUiJapanese
+            AppLanguage.Portuguese -> Res.string.e7LocaleUiPortuguese
+            AppLanguage.Russian -> Res.string.e7LocaleUiRussian
+            AppLanguage.Chinese -> Res.string.e7LocaleUiChinese
         },
     )
 

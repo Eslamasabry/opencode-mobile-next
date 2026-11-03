@@ -70,6 +70,10 @@ public data class SettingsFacts(
      * (a host with every feature routed).
      */
     val opens: Set<SettingsOutside>? = null,
+    /** The app draws the five surface styles: the Style choice is offered only then (a choice must change something). */
+    val surfaceStyles: Boolean = true,
+    /** The conversation shows reasoning and times as these switches say: the two switches exist only then. */
+    val transcriptDisplay: Boolean = true,
 ) {
     public fun canOpen(place: SettingsOutside): Boolean = opens?.contains(place) ?: true
 }
@@ -91,8 +95,8 @@ public object SettingsStructure {
                         SettingsRowId.Usage -> SettingsDoor.Outside(SettingsOutside.Usage)
                         SettingsRowId.Tools -> SettingsDoor.Outside(SettingsOutside.Tools).takeIf { connected }
                         SettingsRowId.Agents -> SettingsDoor.Outside(SettingsOutside.Agents).takeIf { p.builtinLinux }
-                        SettingsRowId.ShowReasoning -> SettingsDoor.Switch(reasoning)
-                        SettingsRowId.ShowTimestamps -> SettingsDoor.Switch(timestamps)
+                        SettingsRowId.ShowReasoning -> SettingsDoor.Switch(reasoning).takeIf { facts.transcriptDisplay }
+                        SettingsRowId.ShowTimestamps -> SettingsDoor.Switch(timestamps).takeIf { facts.transcriptDisplay }
                         SettingsRowId.DefaultShell -> SettingsDoor.Outside(SettingsOutside.DefaultShell).takeIf { connected }
                         SettingsRowId.Voice -> SettingsDoor.Page(SettingsPage.Voice).takeIf { p.voice || p.readAloud }
                         SettingsRowId.Permissions -> SettingsDoor.Outside(SettingsOutside.Permissions)

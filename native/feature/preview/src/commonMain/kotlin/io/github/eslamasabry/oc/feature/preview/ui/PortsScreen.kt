@@ -90,7 +90,7 @@ public fun PortsScreen(state: PortsUi, actions: PortsActions, modifier: Modifier
                     title = stringResource(Res.string.devPreviewPortTitle, row.port.toString()),
                     supporting = row.host?.let { stringResource(Res.string.devPreviewOnServer, it) } ?: onPhone,
                     trailing = KitRowTrailing.Chevron,
-                    onClick = { actions.open(PreviewPort(row.port, row.https)) },
+                    onClick = { actions.open(PreviewPort(row.port, row.https, row.path)) },
                 )
             }
             KitField(

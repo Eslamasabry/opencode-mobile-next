@@ -33,7 +33,7 @@ public interface PreviewGuard {
     /** True when [url] is the preview's own origin over http(s) without credentials: it may load here. */
     public fun mayLoad(url: String): Boolean
 
-    /** True for the request methods the preview lets through (GET and HEAD); a form POST never leaves. */
+    /** True for the request methods the preview lets through to its own origin (CONNECT and TRACE never leave). */
     public fun methodAllowed(method: String): Boolean
 
     /** The `Content-Security-Policy` set on every page document: no frames, no websockets, no other origins. */
@@ -58,9 +58,11 @@ public interface PreviewEvents {
  * - it loads [origin] and nothing else: a request for any other address, scheme or a URL with credentials is answered
  *   here with an empty refusal and never reaches the network; a person's tap on such a link goes to [PreviewEvents.leave]
  *   (the screen sends it through the external link policy);
- * - only GET and HEAD leave the phone, so a form cannot POST anywhere;
+ * - on that origin the page's own requests work, form posts and API writes included (the destination is the boundary);
  * - every page document is fetched here and served with [PreviewGuard.documentPolicy], so frames, websockets, workers
- *   and other-origin connections are refused by the page's own engine; a redirect to another origin is not followed;
+ *   and other-origin connections are refused by the page's own engine; a redirect to another origin is not followed,
+ *   and a redirect within the origin loads the new address itself, so relative links resolve against it;
+ * - only a person's tap (a gesture) can ask to leave: script navigations and redirects elsewhere are refused silently;
  * - no JavaScript bridge is ever added; file and content access, geolocation, camera and microphone are off; pop-ups
  *   and mixed content are refused;
  * - cookies, cache and storage are cleared when the preview opens and when it closes, and third-party cookies refused.
@@ -139,10 +141,13 @@ public class KitWebPreview(
     private inner class Client : WebViewClient() {
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
             val url = request.url.toString()
-            if (guard.mayLoad(url)) return false
-            // Only a person's top-level navigation leaves; a frame or a script asking for another address just doesn't load.
-            if (request.isForMainFrame) events.leave(url)
-            return true
+            // Only a person's top-level tap may ask to leave (plan 16 §1.8.5); a frame, a script's `location.href` or a
+            // redirect asking for another address just doesn't load, without a prompt the page could repeat at will.
+            return when (PreviewNavigation.navigate(guard.mayLoad(url), request.isForMainFrame, request.hasGesture())) {
+                PreviewNavigation.Navigate.LoadHere -> false
+                PreviewNavigation.Navigate.AskToLeave -> true.also { events.leave(url) }
+                PreviewNavigation.Navigate.Refuse -> true
+            }
         }
 
         override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
@@ -150,7 +155,7 @@ public class KitWebPreview(
             if (!guard.mayLoad(url)) return refusal(403, "Forbidden")
             if (!guard.methodAllowed(request.method)) return refusal(405, "Method Not Allowed")
             if (!request.isForMainFrame || !request.method.equals("GET", ignoreCase = true)) return null
-            return document(url, request.requestHeaders.orEmpty())
+            return document(url, request.requestHeaders.orEmpty(), request.hasGesture())
         }
 
         override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
@@ -189,7 +194,7 @@ public class KitWebPreview(
      * the origin (at most [MAX_REDIRECTS]); one to elsewhere is handed to [PreviewEvents.leave]. Runs on WebView's
      * request thread.
      */
-    private fun document(start: String, requestHeaders: Map<String, String>): WebResourceResponse {
+    private fun document(start: String, requestHeaders: Map<String, String>, gesture: Boolean): WebResourceResponse {
         var url = start
         repeat(MAX_REDIRECTS + 1) {
             val connection =
@@ -218,11 +223,21 @@ public class KitWebPreview(
                     connection.disconnect()
                     if (next == null) return refusal(502, "Bad Gateway")
                     if (!guard.mayLoad(next)) {
-                        onMain { events.leave(next) }
+                        if (PreviewNavigation.navigate(false, mainFrame = true, gesture) == PreviewNavigation.Navigate.AskToLeave) {
+                            onMain { events.leave(next) }
+                        }
                         return refusal(403, "Forbidden")
                     }
                     url = next
                     return@repeat
+                }
+                PreviewNavigation.reloadAt(start, url)?.let { target ->
+                    // A redirect within the origin (`/` → `/app/`): the page must live at the new address, or its
+                    // relative links and the shown address would resolve against the old one. The old navigation
+                    // ends with no content (no history entry) and the new address loads, served like any document.
+                    connection.disconnect()
+                    onMain { view.loadUrl(target) }
+                    return WebResourceResponse("text/plain", "utf-8", 204, "No Content", emptyMap(), empty())
                 }
                 val body: InputStream = (if (code >= 400) connection.errorStream else connection.inputStream) ?: empty()
                 val type = connection.contentType.orEmpty()

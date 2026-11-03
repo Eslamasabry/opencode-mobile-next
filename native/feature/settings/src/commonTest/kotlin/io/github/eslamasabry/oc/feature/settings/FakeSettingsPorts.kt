@@ -110,8 +110,18 @@ class FakeNotifications(initial: NotificationFacts = NotificationFacts()) : Noti
                 is NotificationChange.FinishedWork -> v.copy(finishedWork = change.on)
                 is NotificationChange.Questions -> v.copy(questions = change.on)
                 is NotificationChange.WifiOnly -> v.copy(wifiOnly = change.on)
+                is NotificationChange.Quiet -> v.copy(quietHours = change.hours)
             }
         return Outcome.Ok(Unit)
+    }
+
+    /** What Android says now, once a test sets it; [refresh] re-reads it, like the app's settings port. */
+    var androidBlocked: Boolean? = null
+    var refreshes = 0
+
+    override fun refresh() {
+        refreshes++
+        androidBlocked?.let { flow.value = flow.value.copy(blocked = it) }
     }
 
     override suspend fun sendTest(): Outcome<Unit> {
