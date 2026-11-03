@@ -15,7 +15,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.time.Instant
 
 /** The Background page's rules as plain data (Flutter notifications_settings_screen background section). */
 class BackgroundUiTest {
@@ -67,7 +66,7 @@ class BackgroundUiTest {
 
     @Test
     fun `B-ANDR-018 a pause shows with its reason, and a resume in flight replaces it with the resuming line`() {
-        val pause = PauseFacts(PauseReason.TimeLimit, Instant.fromEpochSeconds(1_000))
+        val pause = PauseFacts(PauseReason.TimeLimit, clock = "13:10")
         val ui = backgroundUi(BackgroundLiveFacts(supported = true, pause = pause))
         assertEquals(pause, ui.pause)
         assertFalse(ui.resuming)

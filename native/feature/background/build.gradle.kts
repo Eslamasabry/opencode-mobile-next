@@ -6,9 +6,6 @@ plugins { id("oc.kmp.feature") }
 // lib/ui/widgets/background_pause_notice.dart. BackgroundLive is bound by :androidApp (graph/BackgroundWiring.kt) over
 // :android:background.
 kotlin {
-    sourceSets.commonMain.dependencies {
-        implementation(libs.kotlinx.datetime)
-    }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(libs.compose.desktop.currentos) // skiko natives for the desktop UI tests
     }

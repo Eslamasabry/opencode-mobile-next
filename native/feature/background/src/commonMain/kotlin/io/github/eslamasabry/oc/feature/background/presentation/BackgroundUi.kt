@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.background.presentation
 
 import io.github.eslamasabry.oc.core.common.Outcome
 import kotlinx.coroutines.flow.StateFlow
-import kotlin.time.Instant
 
 /** Why Android stopped the background connection (Flutter `BackgroundPauseReason`). */
 public enum class PauseReason { TimeLimit, BatteryRestricted, UserStopped, DeviceRestarted, AppUpdated, Interrupted }
@@ -10,7 +9,10 @@ public enum class PauseReason { TimeLimit, BatteryRestricted, UserStopped, Devic
 /** A durable pause the person has not dismissed yet (Flutter `BackgroundPauseNoticeState`). */
 public data class PauseFacts(
     val reason: PauseReason,
-    val at: Instant,
+    /** The stop time in the phone's own clock words ("3:10 PM"), formatted by the host. */
+    val clock: String,
+    /** The short day ("Sep 25") when the pause is not from today; null = today. */
+    val day: String? = null,
     /** A Resume for this very pause was accepted but Android did not confirm the start (B-ANDR-016 resumeFailed). */
     val resumeFailed: Boolean = false,
 )

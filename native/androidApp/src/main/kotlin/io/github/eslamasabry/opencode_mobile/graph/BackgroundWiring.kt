@@ -55,7 +55,10 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
 
 /**
  * Unit BUILD-ANDROID-BG-PLATFORM: the live background connection made real in the app. One [LiveModeController] per
@@ -133,9 +136,14 @@ class BackgroundHub(
             batteryUnrestricted = s.batteryOptimizationIgnored,
             pause =
                 n?.let {
+                    val at = java.time.Instant.ofEpochMilli(it.atMs).atZone(ZoneId.systemDefault())
+                    val today = java.time.Instant.ofEpochMilli(clock.now().toEpochMilliseconds()).atZone(ZoneId.systemDefault())
                     PauseFacts(
                         reason = reasonOf(it.reason),
-                        at = Instant.fromEpochMilliseconds(it.atMs),
+                        clock = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).format(at),
+                        day =
+                            if (at.toLocalDate() == today.toLocalDate()) null
+                            else DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()).format(at),
                         resumeFailed = it.phase == PauseNoticePhase.Failed,
                     )
                 },

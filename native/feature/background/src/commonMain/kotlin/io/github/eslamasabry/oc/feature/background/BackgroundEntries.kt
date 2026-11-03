@@ -13,17 +13,16 @@ import io.github.eslamasabry.oc.feature.background.presentation.BackgroundViewMo
 import io.github.eslamasabry.oc.feature.background.ui.BackgroundScreen
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
-import kotlin.time.Clock
 
 /** The EntryInstaller; the only file in the module that imports androidx.navigation3.runtime (Konsist K1). */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class BackgroundEntries(private val clock: Clock) : EntryInstaller {
+public class BackgroundEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<BackgroundRoute.Home> {
             val vm = metroViewModel<BackgroundViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
-            BackgroundScreen(state, vm, now = clock.now())
+            BackgroundScreen(state, vm)
         }
     }
 }

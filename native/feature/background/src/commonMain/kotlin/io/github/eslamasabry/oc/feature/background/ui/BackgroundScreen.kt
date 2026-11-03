@@ -64,10 +64,7 @@ import io.github.eslamasabry.oc.ui.words.res.notifyRestartBackground
 import io.github.eslamasabry.oc.ui.words.res.quotaBudgetOff
 import io.github.eslamasabry.oc.ui.words.res.settingsBackgroundOffFailed
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Background
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
-import kotlin.time.Instant
 
 /**
  * Settings › Notifications › Background (the background section of Flutter's `NotificationsSettingsScreen` plus the
@@ -79,8 +76,6 @@ import kotlin.time.Instant
 public fun BackgroundScreen(
     state: BackgroundUi,
     actions: BackgroundActions,
-    now: Instant,
-    zone: TimeZone = TimeZone.currentSystemDefault(),
 ) {
     KitScreen(
         topBar = {
@@ -105,7 +100,7 @@ public fun BackgroundScreen(
                     modifier = Modifier.testTag("background-timeout-notice"),
                 )
             }
-            state.pause?.let { pause -> PauseNotice(pause, state.resuming, actions, now, zone) }
+            state.pause?.let { pause -> PauseNotice(pause, state.resuming, actions) }
             KitRowGroup {
                 KitSwitchRow(
                     title = stringResource(Res.string.e7SettingsUi25),
@@ -156,7 +151,7 @@ public fun BackgroundScreen(
 }
 
 @Composable
-private fun PauseNotice(pause: PauseFacts, resuming: Boolean, actions: BackgroundActions, now: Instant, zone: TimeZone) {
+private fun PauseNotice(pause: PauseFacts, resuming: Boolean, actions: BackgroundActions) {
     if (resuming) {
         KitNotice(
             message = stringResource(Res.string.backgroundPauseResuming),
@@ -165,7 +160,7 @@ private fun PauseNotice(pause: PauseFacts, resuming: Boolean, actions: Backgroun
         )
         return
     }
-    val at = atWords(pause.at, now, zone)
+    val at = atWords(pause)
     val message =
         when (pause.reason) {
             PauseReason.TimeLimit -> stringResource(Res.string.backgroundPauseTimeLimit, at)
@@ -192,18 +187,11 @@ private fun PauseNotice(pause: PauseFacts, resuming: Boolean, actions: Backgroun
     )
 }
 
-/** "at 3:10 PM" today, "on 25 Sep at 8:19 PM" otherwise (Flutter `appExitTimeText`), in 24-hour digits. */
+/** "at 3:10 PM" today, "on Sep 25 at 8:19 PM" otherwise (Flutter `appExitTimeText`). */
 @Composable
-private fun atWords(at: Instant, now: Instant, zone: TimeZone): String {
-    val local = at.toLocalDateTime(zone)
-    val today = now.toLocalDateTime(zone)
-    val clock = "${local.hour.toString().padStart(2, '0')}:${local.minute.toString().padStart(2, '0')}"
-    return if (local.date == today.date) {
-        stringResource(Res.string.appExitAtTime, clock)
-    } else {
-        stringResource(Res.string.appExitOnDay, "${local.day}/${local.month.ordinal + 1}", clock)
-    }
-}
+private fun atWords(pause: PauseFacts): String =
+    pause.day?.let { stringResource(Res.string.appExitOnDay, it, pause.clock) }
+        ?: stringResource(Res.string.appExitAtTime, pause.clock)
 
 private fun statusTitle(status: LiveStatusLine) =
     when (status) {
