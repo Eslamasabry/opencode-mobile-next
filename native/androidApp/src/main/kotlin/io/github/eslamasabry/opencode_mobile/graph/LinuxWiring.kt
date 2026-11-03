@@ -227,7 +227,8 @@ object LinuxWiring {
                     when (page) {
                         PhonePage.Running -> PhoneRoute.Running
                         PhonePage.KeepRunning -> PhoneRoute.KeepRunning
-                        PhonePage.Linux, PhonePage.SetupStart, PhonePage.SetupProgress -> LinuxRoute.Home
+                        PhonePage.Linux -> LinuxRoute.Home
+                        PhonePage.SetupStart, PhonePage.SetupProgress -> io.github.eslamasabry.oc.ui.routes.SetupRoute.Phone // BUILD-RUNTIME-B
                     },
                 )
             }
