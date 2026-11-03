@@ -174,6 +174,7 @@ class AndroidSettingsHost(
     analyticsEngine: AnalyticsEngine,
     private val dispatchers: AppDispatchers,
     private val diagnosticsLog: Diagnostics,
+    updateSettings: AppUpdateSettings, // P12-FIX-PLATFORM-GIT: Settings › Updates on the real updater
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
@@ -181,7 +182,7 @@ class AndroidSettingsHost(
     private val shipped =
         platform.copy(
             builtinLinux = false, voice = false, readAloud = false, backgroundService = false,
-            inAppUpdater = false, desktopReleaseCheck = false,
+            inAppUpdater = true, desktopReleaseCheck = false,
         )
 
     override val facts: StateFlow<SettingsFacts> =
@@ -220,7 +221,7 @@ class AndroidSettingsHost(
     override val analytics: AnalyticsChoices = EngineAnalyticsChoices(analyticsEngine)
     override val voice: VoiceSettings? = null
     override val notifications: NotificationSettings = AndroidNotificationSettings(application, stores, prefs, scope)
-    override val updates: UpdateSettings? = null
+    override val updates: UpdateSettings? = updateSettings
     override val about: AboutFacts =
         AboutFacts(version = buildInfo.versionName, build = buildInfo.versionCode.toString(), whatsNew = true, notices = false)
 

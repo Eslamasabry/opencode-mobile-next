@@ -155,10 +155,29 @@ public class AppUpdates(
         return check()
     }
 
+    /**
+     * Takes the one update lane: moves to [phase] only if nothing else is checking, downloading or installing, in one
+     * atomic step, so two quick taps never both pass (commands run on the parallel app scope). Returns the phase it
+     * replaced, or null when another command holds the lane.
+     */
+    private fun admit(phase: UpdatePhase): UpdatePhase? {
+        var before: UpdatePhase? = null
+        mutable.update {
+            if (it.busy) {
+                before = null
+                it
+            } else {
+                before = it.phase
+                it.copy(phase = phase, failure = null, detail = null)
+            }
+        }
+        return before
+    }
+
     private suspend fun check(): Outcome<Unit> {
-        val before = s.phase
+        val before = admit(UpdatePhase.Checking) ?: return Unit.ok()
         val app = s.installed ?: platform.installed()
-        set { it.copy(phase = UpdatePhase.Checking, failure = null, detail = null, installed = app) }
+        set { it.copy(installed = app) }
         val body = feed.latest()
         if (body is Outcome.Failed) {
             // Look again sooner than six hours, but not on every resume. A failed check is not a failed update.
@@ -223,9 +242,12 @@ public class AppUpdates(
     public suspend fun updateNow(): Outcome<Unit> {
         val release = s.release
         if (!s.supported || release == null || s.busy) return Unit.ok()
-        set { it.copy(failure = null, detail = null, progress = null, receivedBytes = null) }
         val kept = verifiedPath
-        if (kept != null && platform.exists(kept)) return install(kept)
+        val reuse = kept != null && platform.exists(kept)
+        // One download and one install session at a time: a second Update tap while this one runs does nothing.
+        admit(if (reuse) UpdatePhase.Installing else UpdatePhase.Downloading) ?: return Unit.ok()
+        set { it.copy(progress = null, receivedBytes = null) }
+        if (reuse && kept != null) return install(kept)
         verifiedPath = null
         var outcome: Outcome<Unit> = Unit.ok()
         coroutineScope {

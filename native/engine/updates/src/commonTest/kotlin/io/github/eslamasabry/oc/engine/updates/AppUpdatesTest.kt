@@ -220,6 +220,22 @@ class AppUpdatesTest {
     }
 
     @Test
+    fun `B-MIGR-012 two quick Update taps download and install once`() = runTest {
+        feed.hold = CompletableDeferred()
+        val c = make()
+        c.start()
+        val first = async { c.updateNow() }
+        val second = async { c.updateNow() }
+        runCurrent()
+        assertEquals(1, feed.downloads)
+        feed.hold!!.complete(Unit)
+        first.await()
+        second.await()
+        assertEquals(1, feed.downloads)
+        assertEquals(1, platform.installs.size)
+    }
+
+    @Test
     fun `B-MIGR-012 cancelling a download goes back to available`() = runTest {
         feed.hold = CompletableDeferred()
         val c = make()
