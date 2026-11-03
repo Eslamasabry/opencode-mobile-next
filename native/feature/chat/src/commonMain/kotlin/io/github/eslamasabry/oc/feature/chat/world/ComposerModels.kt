@@ -10,7 +10,23 @@ public data class ComposerModel(
     val supportsAttachments: Boolean,
     /** The model's thinking levels (catalog variant ids, disabled ones left out). */
     val variants: List<String> = emptyList(),
+    /** B3 (QA wave 1): the provider's display name, so equal model names can be told apart. */
+    val providerName: String = "",
 )
+
+/** B3: the models picked lately in this app run, newest first, per server (memory only, never a preference). */
+public class RecentModels(private val max: Int = 5) {
+    private val byProfile = HashMap<String, ArrayDeque<Pair<String, String>>>()
+
+    public fun record(profile: String, providerId: String, modelId: String) {
+        val list = byProfile.getOrPut(profile) { ArrayDeque() }
+        list.remove(providerId to modelId)
+        list.addFirst(providerId to modelId)
+        while (list.size > max) list.removeLast()
+    }
+
+    public fun of(profile: String): List<Pair<String, String>> = byProfile[profile]?.toList().orEmpty()
+}
 
 /** A primary agent the conversation can run as (hidden agents and subagents are left out). */
 public data class ComposerAgent(val id: String, val description: String? = null)
@@ -27,6 +43,8 @@ public data class ComposerModels(
     val agent: String? = null,
     /** The session names no model: the server default applies. */
     val usesDefault: Boolean = false,
+    /** B3: models picked lately on this server, newest first (from [choices]). */
+    val recent: List<ComposerModel> = emptyList(),
 )
 
 /** One server slash command, safe for display. */

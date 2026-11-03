@@ -107,6 +107,7 @@ dependencies {
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(project(":core:testing")) // P12-CHAT-BUGS: FakeServerGateway for the B1 paging test
     implementation(libs.androidx.profileinstaller) // installs a baseline profile on sideloaded builds (start-up proof)
     // P3 stream proof screen (benchmark build type only)
     listOf(":feature:chat", ":ui:kit-chat").forEach { "benchmarkImplementation"(project(it)) }

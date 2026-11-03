@@ -232,7 +232,7 @@ class PreviewRuntime(
                 ?: return Failure.Refused(RefusalReason.StaleScope)
                     .failed()
                     .atStage(ConnectionStage.LoadConversations)
-        when (val page = graph.session.server.sessionPage()) {
+        when (val page = readSessionPages(graph.session.server)) {
             is Outcome.Failed -> {
                 listing.value = listing.value.copy(loading = false, failed = true)
                 return page.atStage(ConnectionStage.LoadConversations)
@@ -245,9 +245,10 @@ class PreviewRuntime(
                 val statuses = graph.session.server.sessionStatuses()
                 listing.value =
                     OpenCodeListing(
-                        sessions = page.value.items,
+                        sessions = page.value.sessions,
                         statuses = (statuses as? Outcome.Ok)?.value ?: listing.value.statuses,
-                        complete = page.value.nextCursor == null,
+                        // B1: more pages on the server is not "couldn't load".
+                        complete = page.value.complete,
                         failed = statuses is Outcome.Failed,
                         acrossProjects =
                             graph.session.server.capabilities.value.globalSessionSearch,

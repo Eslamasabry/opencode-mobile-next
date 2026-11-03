@@ -786,4 +786,64 @@ class WorldComposerFilesModelsTest {
             assertTrue(f.base.sentPrompts.isEmpty(), "a command never goes out as a prompt")
             assertTrue(f.base.calls.any { it.startsWith("slashCommand") })
         }
+
+    // ---- QA wave 1 ----
+
+    @Test
+    fun `B11 QA wave1 a delivered resend retires the earlier not-sent bubble of the same words`() =
+        runTest {
+            val f = Fixture(this)
+            f.open()
+            f.world.draftChanged("Actually make it about tunnels instead")
+            f.gateway.failNextPrompt = true
+            assertIs<Outcome.Ok<Unit>>(f.world.send("Actually make it about tunnels instead"))
+            runCurrent()
+            assertEquals(PendingState.Failed, f.world.pending.value.single().state)
+            // The person taps again with the same words; this time the server takes them.
+            f.world.draftChanged("Actually make it about tunnels instead")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("Actually make it about tunnels instead"))
+            runCurrent()
+            assertEquals(1, f.base.sentPrompts.size, "delivered once")
+            assertTrue(
+                f.world.pending.value.none { it.state == PendingState.Failed },
+                "no 'wasn't sent' with Try again for words the server has: ${f.world.pending.value}",
+            )
+            f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("u9", ref.sessionId.raw, Role.User)))
+            f.base.events.emit(
+                GatewayEvent.PartUpserted(
+                    Part("t9", "u9", ref.sessionId.raw, PartType.Text, "text", "Actually make it about tunnels instead")
+                )
+            )
+            advanceTimeBy(60)
+            runCurrent()
+            assertTrue(f.world.pending.value.isEmpty(), "the delivered bubble settles on the server's copy")
+            assertEquals(1, f.base.sentPrompts.size, "never resent")
+        }
+
+    @Test
+    fun `B13 QA wave1 the chip names the session's model on open without opening the picker`() = runTest {
+        val f = Fixture(this, selection = ModelRef("prov", "m1"))
+        f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1", name = "GLM-5.3-Flash"), catalogModel("m2")))
+        f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m2"), null))
+        f.open()
+        assertNull(f.world.models.value.selected, "nothing is read before the server's flags are known")
+        f.base.capabilities.value =
+            io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities(promptSteering = true)
+        runCurrent()
+        assertEquals("m1", f.world.models.value.selected?.modelId, "after a restart the chip says the real model")
+        assertFalse(f.world.models.value.usesDefault)
+        assertEquals("Prov", f.world.models.value.selected?.providerName, "B3: the provider's name rides along")
+    }
+
+    @Test
+    fun `B3 QA wave1 a verified pick becomes the first recent model`() = runTest {
+        val f = Fixture(this, selection = ModelRef("prov", "m1"))
+        f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
+        f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+        f.open()
+        assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+        val m2 = f.world.models.value.choices.single { it.modelId == "m2" }
+        assertIs<Outcome.Ok<Unit>>(f.world.selectModel(m2))
+        assertEquals(listOf("m2"), f.world.models.value.recent.map { it.modelId })
+    }
 }

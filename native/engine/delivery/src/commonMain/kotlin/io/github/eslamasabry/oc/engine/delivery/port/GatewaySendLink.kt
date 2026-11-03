@@ -35,6 +35,9 @@ public class GatewaySendLink(
     private val baseUrl: String,
     private val gateway: ServerGateway,
 ) : SendLink {
+    /** One gateway is one connection epoch; a status-change wrapper over it is the same target. */
+    override val epoch: Any get() = gateway
+
     override val scope: DispatchScope
         get() = gateway.location.value.let { DispatchScope(profile, baseUrl, it.directory, it.workspace) }
 

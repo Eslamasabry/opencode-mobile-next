@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P12-CHAT-BUGS (QA wave 1). A new file so parallel chat units never edit the same lines. -->
+<resources>
+    <!-- B5: a failed reply says why in plain words and what to do next; the server's text is under Details. -->
+    <string name="chatReplyFailedSignIn">The model's provider didn't accept the sign-in. Sign in to that provider again, or pick another model.</string>
+    <string name="chatReplyFailedModel">This model isn't available. Pick another model and send again.</string>
+    <string name="chatReplyFailedBusy">The model's provider is busy or out of quota. Wait a moment, or pick another model.</string>
+    <string name="chatReplyFailedOther">The reply stopped with an error. Send again, or pick another model.</string>
+    <string name="chatReplyFailedDetails">Details</string>
+    <string name="chatReplyFailedCopy">Copy details</string>
+    <!-- B2: the reason a send did not leave, under Details. -->
+    <string name="chatSendFailedOffline">The server can't be reached right now.</string>
+    <string name="chatSendFailedChanged">The connection changed while sending. Nothing was sent.</string>
+    <string name="chatSendFailedRefused">The server didn't take the message. Nothing was sent.</string>
+    <!-- B3: the model picker. -->
+    <string name="chatModelsSearch">Find a model</string>
+    <string name="chatModelsRecent">Recent</string>
+    <string name="chatModelsCurrent">Current</string>
+    <string name="chatModelsNoMatch">No model matches</string>
+    <!-- B15: the Conversations header's short New action. -->
+    <string name="chatsHomeNewShort">New chat</string>
+</resources>

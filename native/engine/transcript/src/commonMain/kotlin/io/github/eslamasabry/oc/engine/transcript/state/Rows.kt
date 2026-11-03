@@ -119,6 +119,8 @@ public data class FooterRow(
     override val key: String,
     override val turnId: String,
     val failed: Boolean,
+    /** The server's (already redacted) error text of a failed reply; shown only under Details (QA wave 1 B5). */
+    val reason: String? = null,
 ) : TranscriptRow {
     override val kind: RowKind
         get() = RowKind.Footer

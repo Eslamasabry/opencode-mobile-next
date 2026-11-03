@@ -1,5 +1,14 @@
 package io.github.eslamasabry.oc.feature.chat.composer
 
+import androidx.compose.ui.platform.LocalFocusManager
+import io.github.eslamasabry.oc.feature.chat.composer.presentation.ModelPicker
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.words.res.chatModelsCurrent
+import io.github.eslamasabry.oc.ui.words.res.chatModelsNoMatch
+import io.github.eslamasabry.oc.ui.words.res.chatModelsRecent
+import io.github.eslamasabry.oc.ui.words.res.chatModelsSearch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -234,6 +243,7 @@ public fun BasicComposer(
             canSend = { canSend },
         )
     var modelsOpen by remember(state.targetKey) { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
     val selectAndClose: (ComposerModel?) -> Unit = { choice ->
         scope.launch { if (actions.selectModel(choice)) modelsOpen = false }
@@ -303,7 +313,11 @@ public fun BasicComposer(
                         state.models.variant,
                         state.models.agent,
                     ),
-                onClick = { modelsOpen = true },
+                onClick = {
+                    // B3: the keyboard never stays open over the picker.
+                    focusManager.clearFocus()
+                    modelsOpen = true
+                },
                 role = KitButtonRole.Secondary,
                 semanticsLabel = stringResource(Res.string.composerPreviewModelButton),
                 modifier = Modifier.testTag("chat-model-button"),
@@ -376,47 +390,48 @@ public fun BasicComposer(
                 }
             }
         }
-        Row(
-            Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        ) {
-            if (!chrome.requestWaiting())
-                KitField(
-                    state = field,
-                    // While a reply runs on a steering server the words join it (B-PROTO-025).
-                    label =
-                        stringResource(
-                            if (busy && state.steers) Res.string.composerFullSteerHint
-                            else Res.string.kitComposerField
-                        ),
-                    kind = KitFieldKind.Multiline,
-                    focusRequester = focus,
-                    enabled =
-                        if (editorReady && state.draft.ready) KitEnabled.Enabled
-                        else KitEnabled.Disabled(stringResource(Res.string.chatDraftRestoring)),
-                    onTextChanged = { accepted ->
-                        editor.userEditSerial += 1
-                        editor.lastReported = accepted
-                        repeatRevision = null
-                        actions.draftChanged(accepted)
-                    },
-                    modifier = Modifier.weight(1f).testTag("chat-composer-field"),
-                )
-            if (!chrome.requestWaiting()) voice?.Mic(voiceField, Modifier)
-            if (busy || chrome.requestWaiting()) {
-                KitButton(
-                    label =
-                        stringResource(
-                            if (chrome.stopping()) Res.string.phoneServerCardStopping
-                            else Res.string.kitTurnLiveStopShort
-                        ),
-                    onClick = chrome.onStop,
-                    role = KitButtonRole.Secondary,
-                    working = chrome.stopping(),
-                    modifier = Modifier.testTag("chat-stop-button"),
-                )
-            }
+        // B8 (QA wave 1): while a reply runs, Stop and "Add to this turn" sit on their own row under a full-width
+        // field, so the message box never shrinks to a sliver.
+        val stopShown = busy || chrome.requestWaiting()
+        val fieldPart: @Composable (Modifier) -> Unit = { fieldModifier ->
+            KitField(
+                state = field,
+                // While a reply runs on a steering server the words join it (B-PROTO-025).
+                label =
+                    stringResource(
+                        if (busy && state.steers) Res.string.composerFullSteerHint
+                        else Res.string.kitComposerField
+                    ),
+                kind = KitFieldKind.Multiline,
+                // B6: one line when empty, so the conversation keeps its room above the keyboard.
+                multilineLines = 1..6,
+                focusRequester = focus,
+                enabled =
+                    if (editorReady && state.draft.ready) KitEnabled.Enabled
+                    else KitEnabled.Disabled(stringResource(Res.string.chatDraftRestoring)),
+                onTextChanged = { accepted ->
+                    editor.userEditSerial += 1
+                    editor.lastReported = accepted
+                    repeatRevision = null
+                    actions.draftChanged(accepted)
+                },
+                modifier = fieldModifier.testTag("chat-composer-field"),
+            )
+        }
+        val stopPart: @Composable () -> Unit = {
+            KitButton(
+                label =
+                    stringResource(
+                        if (chrome.stopping()) Res.string.phoneServerCardStopping
+                        else Res.string.kitTurnLiveStopShort
+                    ),
+                onClick = chrome.onStop,
+                role = KitButtonRole.Secondary,
+                working = chrome.stopping(),
+                modifier = Modifier.testTag("chat-stop-button"),
+            )
+        }
+        val sendPart: @Composable () -> Unit = {
             val label =
                 when {
                     state.sending -> Res.string.kitComposerSending
@@ -443,6 +458,28 @@ public fun BasicComposer(
                     haptic = KitHaptic.Send,
                     modifier = Modifier.testTag("chat-send-button"),
                 )
+        }
+        if (stopShown) {
+            if (!chrome.requestWaiting()) fieldPart(Modifier.fillMaxWidth())
+            Row(
+                Modifier.fillMaxWidth().testTag("chat-composer-turn-controls"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.End),
+            ) {
+                if (!chrome.requestWaiting()) voice?.Mic(voiceField, Modifier) // P12-VOICE
+                stopPart()
+                sendPart()
+            }
+        } else {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            ) {
+                fieldPart(Modifier.weight(1f))
+                voice?.Mic(voiceField, Modifier) // P12-VOICE
+                sendPart()
+            }
         }
     }
     // The model list loads when the sheet opens empty; a retry after failure is the person's own
@@ -485,23 +522,39 @@ public fun BasicComposer(
                         message = stringResource(Res.string.composerFullModelChangeFailed),
                         tone = StatusTone.Failure,
                     )
-                KitSectionLabel(stringResource(Res.string.composerFullModels))
-                KitChipWrap(Modifier.fillMaxWidth().testTag("chat-model-choices")) {
-                    if (models.selected != null) {
-                        KitChip(
-                            label = stringResource(Res.string.composerPreviewModelDefault),
-                            kind = KitChipKind.Action,
+                // B3 (QA wave 1): a searchable list grouped by provider, recent picks first, the current one marked.
+                var modelQuery by remember(state.targetKey) { mutableStateOf("") }
+                KitSearchField(
+                    label = stringResource(Res.string.chatModelsSearch),
+                    onSearch = { modelQuery = it },
+                    modifier = Modifier.fillMaxWidth().testTag("chat-model-search"),
+                )
+                val currentTag = stringResource(Res.string.chatModelsCurrent)
+                val sections = remember(models, modelQuery) { ModelPicker.sections(models, modelQuery) }
+                Column(Modifier.fillMaxWidth().testTag("chat-model-choices")) {
+                    if (models.selected != null && modelQuery.isBlank()) {
+                        KitChoiceRow(
+                            title = stringResource(Res.string.composerPreviewModelDefault),
+                            selected = models.usesDefault,
+                            tag = if (models.usesDefault) currentTag else null,
                             onClick = { selectAndClose(null) },
                         )
                     }
-                    models.choices.forEach { choice ->
-                        KitChip(
-                            label = choice.label,
-                            kind = KitChipKind.Action,
-                            selected = choice == models.selected,
-                            onClick = { selectAndClose(choice) },
-                            modifier = Modifier.testTag("chat-model-choice"),
-                        )
+                    if (sections.isEmpty()) KitText(stringResource(Res.string.chatModelsNoMatch))
+                    sections.forEach { section ->
+                        KitRowGroup(label = section.providerName ?: stringResource(Res.string.chatModelsRecent)) {
+                            section.rows.forEach { pick ->
+                                KitChoiceRow(
+                                    title = pick.model.label,
+                                    selected = pick.current,
+                                    // In "Recent" the provider tells equal names apart.
+                                    supporting = if (section.providerName == null) pick.model.providerName else null,
+                                    tag = if (pick.current) currentTag else null,
+                                    onClick = { selectAndClose(pick.model) },
+                                    modifier = Modifier.testTag("chat-model-choice"),
+                                )
+                            }
+                        }
                     }
                 }
                 val selected = models.selected

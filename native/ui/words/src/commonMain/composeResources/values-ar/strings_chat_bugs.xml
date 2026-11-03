@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P12-CHAT-BUGS (QA wave 1). -->
+<resources>
+    <string name="chatReplyFailedSignIn">لم يقبل مزوّد النموذج تسجيل الدخول. سجّل الدخول إلى هذا المزوّد مرة أخرى، أو اختر نموذجًا آخر.</string>
+    <string name="chatReplyFailedModel">هذا النموذج غير متاح. اختر نموذجًا آخر وأرسل مرة أخرى.</string>
+    <string name="chatReplyFailedBusy">مزوّد النموذج مشغول أو نفدت حصته. انتظر قليلًا، أو اختر نموذجًا آخر.</string>
+    <string name="chatReplyFailedOther">توقف الرد بسبب خطأ. أرسل مرة أخرى، أو اختر نموذجًا آخر.</string>
+    <string name="chatReplyFailedDetails">التفاصيل</string>
+    <string name="chatReplyFailedCopy">نسخ التفاصيل</string>
+    <string name="chatSendFailedOffline">لا يمكن الوصول إلى الخادم الآن.</string>
+    <string name="chatSendFailedChanged">تغيّر الاتصال أثناء الإرسال. لم يُرسَل شيء.</string>
+    <string name="chatSendFailedRefused">لم يقبل الخادم الرسالة. لم يُرسَل شيء.</string>
+    <string name="chatModelsSearch">ابحث عن نموذج</string>
+    <string name="chatModelsRecent">الأخيرة</string>
+    <string name="chatModelsCurrent">الحالي</string>
+    <string name="chatModelsNoMatch">لا يوجد نموذج مطابق</string>
+    <!-- B15: the Conversations header's short New action. -->
+    <string name="chatsHomeNewShort">محادثة جديدة</string>
+</resources>

@@ -16,6 +16,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -139,6 +142,15 @@ import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.kitWorkDidntFinish
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedBusy
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedCopy
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedDetails
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedModel
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedOther
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedSignIn
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailedChanged
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailedOffline
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailedRefused
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSteps
 import io.github.eslamasabry.oc.ui.words.res.kitWorkStopped
@@ -194,6 +206,10 @@ public fun ChatScreen(
             notSent = stringResource(Res.string.chatSendFailed),
             unconfirmed = stringResource(Res.string.queuedDiscardUnconfirmedMessage),
             tryAgain = stringResource(Res.string.commonRetry),
+            replyFailed = rememberReplyFailedWords(),
+            details = stringResource(Res.string.chatReplyFailedDetails),
+            copyDetails = stringResource(Res.string.chatReplyFailedCopy),
+            sendFailure = rememberSendFailureWords(),
         )
     val list = rememberTranscriptListState()
     val reveal = rememberRevealRegistry()
@@ -788,3 +804,39 @@ private fun kitChatMotion(): KitMotionLevel =
         MotionLevel.Calm -> KitMotionLevel.Calm
         MotionLevel.Off -> KitMotionLevel.Off
     }
+
+/** B5: the plain line for each kind of failed reply (resolved once per composition). */
+@Composable
+private fun rememberReplyFailedWords(): (ReplyFailureKind) -> String {
+    val signIn = stringResource(Res.string.chatReplyFailedSignIn)
+    val model = stringResource(Res.string.chatReplyFailedModel)
+    val busy = stringResource(Res.string.chatReplyFailedBusy)
+    val other = stringResource(Res.string.chatReplyFailedOther)
+    return remember(signIn, model, busy, other) {
+        { kind ->
+            when (kind) {
+                ReplyFailureKind.SignIn -> signIn
+                ReplyFailureKind.Model -> model
+                ReplyFailureKind.Busy -> busy
+                ReplyFailureKind.Other -> other
+            }
+        }
+    }
+}
+
+/** B2: why a send did not leave, in plain words (the code goes under Details). */
+@Composable
+private fun rememberSendFailureWords(): (Failure) -> String {
+    val offline = stringResource(Res.string.chatSendFailedOffline)
+    val changed = stringResource(Res.string.chatSendFailedChanged)
+    val refused = stringResource(Res.string.chatSendFailedRefused)
+    return remember(offline, changed, refused) {
+        { failure ->
+            when {
+                failure is Failure.Network || failure is Failure.TimedOut -> offline
+                failure is Failure.Refused && failure.reason == RefusalReason.StaleScope -> changed
+                else -> refused
+            }
+        }
+    }
+}

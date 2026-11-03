@@ -765,7 +765,7 @@ public class PromptDelivery(
         facts.running(ref) || mutableLocalTurns.value[ref] != null
 
     private fun sameTarget(link: SendLink, origin: DispatchScope): Boolean =
-        connection.link.value === link &&
+        connection.link.value?.epoch === link.epoch &&
             link.scope == origin &&
             connection.activeProfile.value == origin.profileId
 

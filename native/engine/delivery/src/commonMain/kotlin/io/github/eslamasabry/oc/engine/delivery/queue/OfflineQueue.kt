@@ -400,7 +400,7 @@ public class OfflineQueue(
         val commandId = CommandReceipt.queueCommandId(id)
         val receipts = (journal.read() as? Outcome.Ok)?.value ?: return false
         if (receipts.none { it.commandId == commandId && it.scope == origin.receiptScope }) return false
-        fun same(): Boolean = connection.link.value === link && link.scope == origin
+        fun same(): Boolean = connection.link.value?.epoch === link.epoch && link.scope == origin
         val checked = CommandReceiptController(journal).retry(commandId) { receipt ->
             val found = link.lookupAdmission(SessionId(receipt.sessionId), MessageId(receipt.receiptId))
             same() && found is Outcome.Ok && found.value
@@ -463,7 +463,7 @@ public class OfflineQueue(
                 if (!eligible(entry)) continue
                 val explicit = entry.id in explicitResends
                 fun allowed(): Boolean =
-                    connection.link.value === link && link.scope == origin && profile !in closedProfiles &&
+                    connection.link.value?.epoch === link.epoch && link.scope == origin && profile !in closedProfiles &&
                         (explicit || policy.allowsQueuedSends(profile))
                 if (!allowed()) break
                 val transport = link.awaitActionTransport()

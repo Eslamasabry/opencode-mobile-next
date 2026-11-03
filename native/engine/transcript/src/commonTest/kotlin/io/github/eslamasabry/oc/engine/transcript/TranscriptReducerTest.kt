@@ -50,7 +50,7 @@ class TranscriptReducerTest {
         apply(Ev.prompt("u2", "Again"))
         val s = derive()
         assertEquals(
-            listOf("prompt:u2", "footer:u1", "work:u1", "b:a1/t1:0", "notice:n1-p", "prompt:u1"),
+            listOf("prompt:u2", "footer:u1", "work:u1", "b:a1/t1:0", "notice:n1/n1-p", "prompt:u1"),
             s.keys(),
         )
         assertTrue(s.rows.all { it.turnId == "u1" || it.turnId == "u2" })
@@ -59,6 +59,30 @@ class TranscriptReducerTest {
         assertEquals(0, s.indexOf("prompt:u2"))
         assertEquals(5, s.indexOf("prompt:u1"))
         assertEquals(-1, s.indexOf("nope"))
+    }
+
+    @Test
+    fun `B5 QA wave1 a failed reply keeps the server's reason on its footer`() {
+        apply(Ev.prompt("u1", "Hello"))
+        apply(GatewayEvent.RunStarted(S), Ev.assistant("a1", completed = 5, error = "API key expired (401)"))
+        apply(GatewayEvent.RunEnded(S, RunOutcome.Failed("ProviderAuth")))
+        val footer = derive().rows.filterIsInstance<FooterRow>().single()
+        assertTrue(footer.failed)
+        assertEquals("API key expired (401)", footer.reason)
+    }
+
+    @Test
+    fun `B0 QA wave1 two notices that share a part id get distinct row keys`() {
+        // OpenCode 2 gives every notice part the id "v2-0" (one per model-switched message): the
+        // conversation with three of them crashed the list with a duplicate key.
+        apply(Ev.prompt("u1", "Hello"))
+        for (n in listOf("m1", "m2", "m3")) {
+            apply(GatewayEvent.MessageUpserted(io.github.eslamasabry.oc.engine.transcript.state.MessageInfo(n, S, io.github.eslamasabry.oc.engine.transcript.state.Role.User)))
+            apply(GatewayEvent.Notice(S, n, "v2-0", NoticeKind.Other))
+        }
+        val keys = derive().keys()
+        assertEquals(keys.size, keys.toSet().size, "every row key is unique: $keys")
+        assertEquals(3, keys.count { it.startsWith("notice:") })
     }
 
     @Test

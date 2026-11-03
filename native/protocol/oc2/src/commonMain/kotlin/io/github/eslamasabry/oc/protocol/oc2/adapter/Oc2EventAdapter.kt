@@ -26,6 +26,12 @@ import kotlinx.serialization.json.JsonPrimitive
 
 internal enum class Oc2MessageRole { User, Assistant }
 
+/**
+ * B0 (QA wave 1): a notice's part id names its message, so two notices never share an id (the
+ * live adapter and the refetch mapper both use this; it stays stable across refetches).
+ */
+internal fun noticePartId(messageId: String): String = "notice-$messageId"
+
 /** Error words for Details. [message] is null when the server sent none: the UI words it from [type] and [status]. */
 internal data class Oc2StepError(public val message: String?, public val type: String?, public val status: Int?)
 
@@ -71,7 +77,7 @@ internal enum class Oc2PartKind { Text, Reasoning, Tool, Notice }
 
 internal enum class Oc2NoticeKind { InstructionsUpdated, SkillChanged, ShellChanged }
 
-/** Oc2AdaptedPart ids match the refetch mapper: `text-<n>`, `reasoning-<n>`, the call id for tools, `v2-0` for notices. */
+/** Oc2AdaptedPart ids match the refetch mapper: `text-<n>`, `reasoning-<n>`, the call id for tools, `notice-<messageId>` for notices. */
 internal data class Oc2AdaptedPart(
     public val sessionId: String,
     public val messageId: String,
@@ -360,7 +366,7 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
         if (e.text != null && messageId != null) {
             out += Oc2Adapted.MessageUpserted(Oc2AdaptedMessage(messageId, e.sessionID, Oc2MessageRole.User, created))
             out += Oc2Adapted.PartUpserted(
-                Oc2AdaptedPart(e.sessionID, messageId, "v2-0", Oc2PartKind.Notice, notice = Oc2NoticeKind.InstructionsUpdated),
+                Oc2AdaptedPart(e.sessionID, messageId, noticePartId(messageId), Oc2PartKind.Notice, notice = Oc2NoticeKind.InstructionsUpdated),
             )
         }
         return out

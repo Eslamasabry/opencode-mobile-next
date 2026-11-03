@@ -285,6 +285,27 @@ class Oc2LiveGatewayTest {
     }
 
     @Test
+    fun `B0 QA wave1 every notice message gets its own part id`() {
+        val history = Oc2History(Redactor())
+        val ids =
+            listOf("m1", "m2", "m3").map { id ->
+                history
+                    .message(
+                        "s",
+                        requireNotNull(
+                            io.github.eslamasabry.oc.protocol.oc2.wire.Oc2Wire.parse(
+                                """{"id":"$id","type":"model-switched","model":{"id":"glm","providerID":"zai"}}"""
+                            )
+                        ),
+                    )!!
+                    .parts
+                    .single()
+                    .id
+            }
+        assertEquals(3, ids.toSet().size, "notice part ids: $ids")
+    }
+
+    @Test
     fun `B-PROTO-039 health negotiates beta and stable before permission and interrupt mutations`() =
         runTest {
             for (stable in listOf(false, true)) {
