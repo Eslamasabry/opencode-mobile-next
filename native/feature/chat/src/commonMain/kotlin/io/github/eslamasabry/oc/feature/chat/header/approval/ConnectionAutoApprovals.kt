@@ -11,9 +11,14 @@ import io.github.eslamasabry.oc.engine.requests.RequestAnswer
 import io.github.eslamasabry.oc.engine.requests.consent.ApprovalModes
 import io.github.eslamasabry.oc.engine.requests.consent.AutoApprovalSweep
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 
@@ -30,18 +35,19 @@ public class ConnectionAutoApprovals(
 ) {
     private var started = false
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     public fun start() {
         if (started) return
         started = true
         registry.appScope.launch(registry.mainContext) {
-            registry.live.collectLatest { graphs ->
-                coroutineScope { for (graph in graphs.values) launch { sweep(graph) } }
-            }
+            registry.live
+                .flatMapLatest { graphs -> merge(*graphs.values.map(::sweep).toTypedArray()) }
+                .collect()
         }
     }
 
-    private suspend fun sweep(graph: ConnectionGraph) {
-        val services = graph as? ChatGraphAccessors ?: return
+    private fun sweep(graph: ConnectionGraph): Flow<Unit> {
+        val services = graph as? ChatGraphAccessors ?: return emptyFlow()
         val engine = services.chatRequests.engine
         val gateway = services.chatGateway
         val profile = graph.profile.id
@@ -54,8 +60,8 @@ public class ConnectionAutoApprovals(
                 reply = { request -> engine.answerNow(request.id, RequestAnswer.Permission(PermissionReply.Once)) },
                 clock = clock,
             )
-        combine(engine.pending, store.revision) { all, _ -> all }.collect { all ->
-            if (!gateway.capabilities.value.permissionRequests) return@collect
+        return combine(engine.pending, store.revision) { all, _ -> all }.onEach { all ->
+            if (!gateway.capabilities.value.permissionRequests) return@onEach
             val asks =
                 all.filterIsInstance<PendingRequest.Permission>()
                     .filter { it.phase == AnswerPhase.Waiting }
@@ -73,6 +79,6 @@ public class ConnectionAutoApprovals(
                 }
             }
             sweep.sweep(asks)
-        }
+        }.map { }
     }
 }
