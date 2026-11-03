@@ -43,6 +43,9 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kit.theme.MaterialBridge
 import io.github.eslamasabry.oc.ui.kit.theme.rememberKitFonts
 import io.github.eslamasabry.oc.ui.kit.theme.toKitColors
+import io.github.eslamasabry.oc.ui.kit.style.KitStyleState
+import io.github.eslamasabry.oc.ui.kit.style.KitStyles
+import io.github.eslamasabry.oc.ui.kit.style.LocalKitStyle
 
 /**
  * The theme root (plan 06 §5.1). It resolves motion from the system signals, resolves the roles (the pack — Material
@@ -72,9 +75,11 @@ public fun KitTheme(
         }
     // Called once per composition of the theme, and only for Material You (plan 06 §5.5).
     val dynamic = if (appearance.pack == PackId.Dynamic) remember(platform, dark) { platform.dynamicSource() } else null
+    // The Style in force (Saver: Solid; high contrast: Soft turns Solid) and its own ground (hook H6, B-KIT-046).
+    val style = remember(appearance, signals.highContrast) { KitStyleState.of(appearance, signals.highContrast) }
     val roles =
-        remember(appearance.pack, appearance.accent, dark, appearance.saver, dynamic) {
-            ThemeResolver.roles(appearance.pack, appearance.accent, dark, appearance.saver, dynamic)
+        remember(appearance.pack, appearance.accent, dark, appearance.saver, dynamic, style.style) {
+            KitStyles.restyled(ThemeResolver.roles(appearance.pack, appearance.accent, dark, appearance.saver, dynamic), style.style)
         }
     val colors = remember(roles) { roles.toKitColors() }
     val arabic = isArabic(localeTag)
@@ -104,6 +109,7 @@ public fun KitTheme(
     CompositionLocalProvider(
         LocalKitPlatform provides platform,
         LocalKitAppearance provides appearance,
+        LocalKitStyle provides style,
         LocalKitColors provides colors,
         LocalKitTypography provides typography,
         LocalKitTokens provides tokens,
@@ -116,7 +122,7 @@ public fun KitTheme(
         LocalRippleConfiguration provides ripple,
         LocalTextSelectionColors provides selection,
     ) {
-        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes, content = content)
+        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes(style), content = content)
     }
 }
 

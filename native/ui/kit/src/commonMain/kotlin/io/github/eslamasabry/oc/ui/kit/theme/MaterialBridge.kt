@@ -10,6 +10,9 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.color.Roles
 import io.github.eslamasabry.oc.ui.design.color.lerp
 import io.github.eslamasabry.oc.ui.design.color.over
+import io.github.eslamasabry.oc.ui.design.effects.KitCorners
+import io.github.eslamasabry.oc.ui.kit.style.KitStyleState
+import io.github.eslamasabry.oc.ui.kit.style.KitStyles
 
 /**
  * Dart `schemeFromRoles` (`lib/ui/theme_roles.dart`), slot for slot (plan 06 §5.4). Only the M3 parts the kit wraps
@@ -52,4 +55,23 @@ internal object MaterialBridge {
             large = RoundedCornerShape(22.dp),
             extraLarge = RoundedCornerShape(30.dp),
         )
+
+    /** The radii behind [shapes] (tile, button/field/popover, panel, card, sheet), for Corners to reshape. */
+    val radii: List<Int> = listOf(9, 14, 18, 22, 30)
+
+    /**
+     * [shapes] under the Style's Corners (Dart `AppTheme.shaped`, B-KIT-005): Round is [shapes] itself; Soft takes
+     * about 60 %; Sharp squares every one to the style's sharp radius (Paper 0, Signal 4, the rest 2).
+     */
+    fun shapes(style: KitStyleState): Shapes {
+        if (style.knobs.corners == KitCorners.Round) return shapes
+        val r = radii.map { KitStyles.corner(it.toFloat(), style.knobs.corners, style.spec.tokens.sharpRadius).dp }
+        return Shapes(
+            extraSmall = RoundedCornerShape(r[0]),
+            small = RoundedCornerShape(r[1]),
+            medium = RoundedCornerShape(r[2]),
+            large = RoundedCornerShape(r[3]),
+            extraLarge = RoundedCornerShape(r[4]),
+        )
+    }
 }

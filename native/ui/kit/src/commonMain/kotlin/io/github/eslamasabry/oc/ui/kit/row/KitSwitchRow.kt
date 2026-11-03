@@ -25,8 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.compositeOver
-import io.github.eslamasabry.oc.ui.design.tokens.Alphas
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -43,6 +41,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.toShape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.style.KitSwitchLook
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -173,16 +172,9 @@ public fun KitSwitchRow(
 internal fun KitSwitchTrack(checked: Boolean, active: Boolean) {
     val colors = LocalKitColors.current
     val specs = KitMotion.specs
-    val track by animateColorAsState(
-        when {
-            checked && active -> colors.accent
-            checked -> colors.accent.copy(alpha = Alphas.DISABLED).compositeOver(colors.surface3) // on, but fixed
-            else -> colors.surface3
-        },
-        specs.quick(),
-        label = "switch-track",
-    )
-    val thumbColor = if (checked) colors.onAccent else colors.text2
+    val look = KitSwitchLook.of(colors, checked, active)
+    val track by animateColorAsState(look.track, specs.quick(), label = "switch-track")
+    val thumbColor = look.thumb
     val x by animateDpAsState(if (checked) (TRACK_W - THUMB - 4).dp else 4.dp, specs.quick(), label = "switch-thumb")
     Box(Modifier.size(TRACK_W.dp, TRACK_H.dp).clip(KitShapeId.Pill.toShape()).background(track)) {
         Box(Modifier.offset(x = x, y = ((TRACK_H - THUMB) / 2).dp).size(THUMB.dp).clip(KitShapeId.Circle.toShape()).background(thumbColor))

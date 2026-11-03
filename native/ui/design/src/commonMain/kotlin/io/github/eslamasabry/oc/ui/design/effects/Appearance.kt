@@ -24,8 +24,22 @@ public data class KitAppearance(
     val haptics: Boolean = true,
     val density: Density = Density.Comfortable,
     val frost: FrostStrength = FrostStrength.Balanced,
+    /** `oc.effectsSurfaceStyle` (Settings › Appearance › Style); Solid by default. Saver always draws Solid. */
+    val style: KitSurfaceStyle = KitSurfaceStyle.Solid,
+    /** Fine-tune › Corners; null = the style's own. [density] is Fine-tune › Spacing. */
+    val corners: KitCorners? = null,
 ) {
     public val saver: Boolean get() = mode == AppearanceMode.Saver
+
+    /**
+     * The person's Fine-tune choices as the style resolver reads them (Dart `KitEffects.fineTune`). Saver resets them,
+     * as it resets the style (Dart `KitEffects.underSaver`).
+     */
+    public val fineTune: KitFineTune
+        get() = if (saver) KitFineTune.None else KitFineTune(corners = corners, density = density.takeIf { it == Density.Compact })
+
+    /** The style in force before high contrast: Solid under Saver. */
+    public val surfaceStyle: KitSurfaceStyle get() = if (saver) KitSurfaceStyle.Solid else style
 
     public companion object {
         public val Default: KitAppearance = KitAppearance()
