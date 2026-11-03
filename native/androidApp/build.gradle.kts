@@ -90,6 +90,9 @@ dependencies {
             ":feature:projects",
             ":engine:review",
             ":feature:review",
+            ":engine:voice",
+            ":android:voice",
+            ":feature:voice",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

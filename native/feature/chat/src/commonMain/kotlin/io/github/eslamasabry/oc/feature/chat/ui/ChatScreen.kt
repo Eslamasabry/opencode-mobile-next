@@ -100,6 +100,8 @@ import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitReadRequest
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedBody
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedTitle
@@ -123,6 +125,7 @@ import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
 import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitCopy
+import io.github.eslamasabry.oc.ui.words.res.voiceNativeReadAloud
 import io.github.eslamasabry.oc.ui.words.res.kitDiscardTitle
 import io.github.eslamasabry.oc.ui.words.res.kitJumpLatest
 import io.github.eslamasabry.oc.ui.words.res.kitMessageActions
@@ -175,6 +178,7 @@ public fun ChatScreen(
     facts: TurnFactsUi = TurnFactsUi.Empty,
     onOpenSession: ((String) -> Unit)? = null,
     header: ChatHeaderSlot? = null,
+    replyReader: KitReplyReader? = null,
 ) {
     var contextOpen by remember { mutableStateOf(false) }
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
@@ -311,6 +315,12 @@ public fun ChatScreen(
                 loadingLabel = stringResource(Res.string.chatLoadingConversation),
                 bottom = {
                     Column {
+                        // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone consent.
+                        replyReader?.Reader(
+                            state.readAloud?.let { KitReadRequest(it.id, it.rowKey, it.text) },
+                            actions::readAloudDone,
+                            Modifier.padding(horizontal = Space.S4.dp),
+                        )
                         if (requestActions != null)
                             ChatRequestSlot(
                                 requests,
@@ -372,7 +382,7 @@ public fun ChatScreen(
 
             // The menu opens over the composer's end, where the action that opened it is under the
             // thumb.
-            MessageMenu(state.menu, actions, Modifier.align(Alignment.BottomEnd))
+            MessageMenu(state.menu, actions, Modifier.align(Alignment.BottomEnd), reads = replyReader != null)
             ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
             SelectTextSheet(state.select, actions)
             PictureSheet(state.picture, actions)
@@ -496,13 +506,13 @@ private fun FindBar(find: FindUi, actions: ChatActions) {
  * leave the app through the chat's `ChatOutside`; a list without a platform (slice 2) has no Copy.
  */
 @Composable
-private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Modifier) {
+private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Modifier, reads: Boolean = false) {
     val feel = menu?.actions?.contains(MessageAction.Share) == true
     val items =
         menu
             ?.actions
             .orEmpty()
-            .filter { feel || it != MessageAction.Copy }
+            .filter { (feel || it != MessageAction.Copy) && (reads || it != MessageAction.ReadAloud) }
             .map { action ->
                 KitMenuItem(
                     label =
@@ -511,6 +521,7 @@ private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Mo
                             MessageAction.Share -> stringResource(Res.string.chatFeelShare)
                             MessageAction.SelectText -> stringResource(Res.string.chatFeelSelectText)
                             MessageAction.EditAndResend -> stringResource(Res.string.chatFeelEditAndResend)
+                            MessageAction.ReadAloud -> stringResource(Res.string.voiceNativeReadAloud)
                             MessageAction.SendAgain ->
                                 stringResource(Res.string.chatUiSendPromptAgain)
                             MessageAction.Fork ->

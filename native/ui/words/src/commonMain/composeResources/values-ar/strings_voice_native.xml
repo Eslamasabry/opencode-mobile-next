@@ -1,0 +1,12 @@
+<resources>
+    <string name="voiceNativeSendNow">أرسل الآن</string>
+    <string name="voiceNativeDetect">تعرّف على اللغة من الكلام</string>
+    <string name="voiceNativeSizeMb">%1$d ميغابايت</string>
+    <string name="voiceNativePhoneEngine">تستخدم الكتابة بالصوت ميزة التعرّف على الكلام في هاتفك. بحسب الهاتف، قد يُرسل الصوت إلى خدمة الكلام الخاصة به. النماذج أدناه مخصّصة للمحرّك دون اتصال، وهو غير متوفر في هذا الإصدار بعد.</string>
+    <string name="voiceNativeNaturalNeedsEngine">يحتاج إلى محرّك الكلام دون اتصال، وهو غير متوفر في هذا الإصدار بعد.</string>
+    <string name="voiceNativeSettingsAction">إعدادات الصوت</string>
+    <string name="voiceNativeStoppedAfterPause">توقف التسجيل بعد فترة صمت. كلماتك في المربع.</string>
+    <string name="voiceNativeNoRecognizer">لا توجد خدمة للتعرّف على الكلام في هذا الهاتف. فعّل واحدة من إعدادات Android ثم حاول مرة أخرى.</string>
+    <string name="voiceNativeReadAloud">اقرأ بصوت عالٍ</string>
+    <string name="voiceNativePartial">تم تنزيل %1$s من %2$s</string>
+</resources>

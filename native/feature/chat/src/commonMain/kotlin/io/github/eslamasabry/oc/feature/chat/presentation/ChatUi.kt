@@ -44,6 +44,8 @@ public data class ChatUi(
     val insert: ClipUi? = null,
     /** P12-CHAT-FEEL: the picture viewer over the chat; null = closed. */
     val picture: PictureUi? = null,
+    /** A reply the person asked to hear (P12-VOICE): the screen hands it to the reader once, then acknowledges. */
+    val readAloud: ReadAloudUi? = null,
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -132,6 +134,8 @@ public enum class MessageAction {
     Copy,
     Share,
     SelectText,
+    /** P12-VOICE: hear a reply (shown only where the app has a reply reader). */
+    ReadAloud,
     EditAndResend,
     SendAgain,
     Fork,
@@ -165,6 +169,8 @@ public class PictureUi(public val id: Long, public val name: String, public val 
 public data class SelectTextUi(val id: Long, val text: String)
 
 public data class ClipUi(val id: Long, val text: String)
+
+public data class ReadAloudUi(val id: Long, val rowKey: String, val text: String)
 
 /**
  * One-time details the chat was opened with, acknowledged through [ChatActions.arrivalShown] (07 §2.5).
@@ -226,6 +232,9 @@ public interface ChatActions {
     public fun confirmDelete()
 
     public fun clipDone(id: Long)
+
+    /** The reader took the reply ([ChatUi.readAloud]). */
+    public fun readAloudDone(id: Long) {}
 
     public fun arrivalShown(id: Long)
 

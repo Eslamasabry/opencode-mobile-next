@@ -6,6 +6,13 @@
     <!-- Settings › Notifications: Android 13+ lets the app notify only with this declared (P12-SETTINGS). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- P12-VOICE: voice typing uses the phone's speech recognizer; Android 11+ hides the service without this. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
     <application
         android:name=".OcApplication"
         android:allowBackup="false"

@@ -76,3 +76,4 @@
 :engine:usage	S	P12-SEARCH-USAGE (calendar for :feature:usage)	slice-5
 :feature:projects	F	P12-PROJECTS	slice-5
 :feature:review	F	(slice brief names the agent)	slice-4
+:feature:voice	F	(slice brief names the agent)	slice-12

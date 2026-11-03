@@ -103,6 +103,8 @@ public class ChatViewModel(
 
     override fun clipDone(id: Long): Unit = presenter.clipDone(id)
 
+    override fun readAloudDone(id: Long): Unit = presenter.readAloudDone(id)
+
     override fun arrivalShown(id: Long): Unit = presenter.arrivalShown(id)
 
     override fun liveEdgeChanged(atLiveEdge: Boolean): Unit = presenter.liveEdgeChanged(atLiveEdge)

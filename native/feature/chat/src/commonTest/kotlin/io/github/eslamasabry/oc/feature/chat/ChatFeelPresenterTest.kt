@@ -78,7 +78,10 @@ class ChatFeelPresenterTest {
         )
         p.openMessageMenu("footer:u1")
         assertEquals(
-            listOf(MessageAction.Copy, MessageAction.Share, MessageAction.SelectText, MessageAction.Changes, MessageAction.Delete),
+            listOf(
+                MessageAction.Copy, MessageAction.Share, MessageAction.SelectText, MessageAction.ReadAloud,
+                MessageAction.Changes, MessageAction.Delete,
+            ),
             p.current().menu!!.actions,
             "a reply has no prompt-only actions; its turn's changed files are P12-REVIEW's",
         )

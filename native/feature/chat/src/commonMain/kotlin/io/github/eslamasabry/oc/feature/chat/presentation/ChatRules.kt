@@ -176,6 +176,7 @@ public object MessageActions {
         if (hasText) out += MessageAction.Copy
         if (feel && hasText) out += MessageAction.Share
         if (feel && hasText) out += MessageAction.SelectText
+        if (kind == TargetKind.Reply && hasText) out += MessageAction.ReadAloud
         if (feel && prompt && hasText) out += MessageAction.EditAndResend
         if (prompt && hasText && !busy) out += MessageAction.SendAgain
         if (prompt && caps.fork && messageId != null) out += MessageAction.Fork

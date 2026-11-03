@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
 import io.github.eslamasabry.oc.ui.kitchat.composer.ComposerInbox
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
@@ -51,6 +52,7 @@ public class ChatEntries(
     private val inbox: ComposerInbox,
     private val cards: ChatCards,
     private val navigator: AppNavigator,
+    private val readers: Set<KitReplyReader>,
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ChatRoute> { route ->
@@ -94,6 +96,7 @@ public class ChatEntries(
                         facts = facts,
                         onOpenSession = vm::openSession,
                         header = ChatHeaderSlot(header, headerVm, ApprovalChipSlot(approval, headerVm)),
+                        replyReader = readers.firstOrNull(),
                     )
                 }
             }
