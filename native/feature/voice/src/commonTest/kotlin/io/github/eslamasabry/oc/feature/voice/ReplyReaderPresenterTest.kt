@@ -73,6 +73,14 @@ class ReplyReaderPresenterTest {
     }
 
     @Test
+    fun `B-CHAT-060 a four-backtick example holding a three-backtick block is skipped whole`() {
+        val markdown = "Here is how to quote code:\n\n````markdown\n```bash\nexport TOKEN=secret\n```\nstill inside\n````\n\nDone."
+        val spoken = SpeechProse.of(markdown)
+        assertEquals("Here is how to quote code:\nDone.", spoken)
+        assertTrue("TOKEN" !in spoken && "still inside" !in spoken)
+    }
+
+    @Test
     fun `B-CHAT-060 speech prose drops fences, tables and link targets`() {
         val markdown =
             """

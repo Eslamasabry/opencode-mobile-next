@@ -76,6 +76,7 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
+import io.github.eslamasabry.oc.ui.routes.VoiceRoute
 import io.github.eslamasabry.oc.ui.shell.nav.SystemMotion
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.shareAppMessage
@@ -174,13 +175,14 @@ class AndroidSettingsHost(
     analyticsEngine: AnalyticsEngine,
     private val dispatchers: AppDispatchers,
     private val diagnosticsLog: Diagnostics,
+    private val voiceSettings: AndroidVoiceSettings,
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
     /** Rows whose page or engine is not in this build are absent (02 §3.7), never dead. */
     private val shipped =
         platform.copy(
-            builtinLinux = false, voice = false, readAloud = false, backgroundService = false,
+            builtinLinux = false, voice = voiceSettings.offered, readAloud = false, backgroundService = false,
             inAppUpdater = false, desktopReleaseCheck = false,
         )
 
@@ -213,12 +215,14 @@ class AndroidSettingsHost(
                 application.view(if (prefs.localeTag.value == "ar") "$REPO/blob/master/assets/l10n/PRIVACY.ar.md" else "$REPO/blob/master/PRIVACY.md")
             SettingsOutside.ShareApp -> scope.launch { shareApp() }
             SettingsOutside.AndroidNotificationSettings -> openNotificationSettings()
+            SettingsOutside.VoiceSetup -> nav.open(VoiceRoute.Settings)
+            SettingsOutside.VoiceNotices -> application.view("$REPO/blob/master/THIRD_PARTY_NOTICES.md")
             else -> Unit // Absent rows: OPENS keeps them off screen.
         }
     }
 
     override val analytics: AnalyticsChoices = EngineAnalyticsChoices(analyticsEngine)
-    override val voice: VoiceSettings? = null
+    override val voice: VoiceSettings? = voiceSettings.takeIf { it.offered }
     override val notifications: NotificationSettings = AndroidNotificationSettings(application, stores, prefs, scope)
     override val updates: UpdateSettings? = null
     override val about: AboutFacts =
@@ -279,7 +283,7 @@ class AndroidSettingsHost(
             setOf(
                 SettingsOutside.Servers, SettingsOutside.StarOnGitHub, SettingsOutside.WhatsNew,
                 SettingsOutside.ReleaseNotes, SettingsOutside.PrivacyPolicy, SettingsOutside.ShareApp,
-                SettingsOutside.AndroidNotificationSettings,
+                SettingsOutside.AndroidNotificationSettings, SettingsOutside.VoiceSetup, SettingsOutside.VoiceNotices,
             )
     }
 }

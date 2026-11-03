@@ -2,11 +2,12 @@
     <string name="voiceNativeSendNow">Send now</string>
     <string name="voiceNativeDetect">Detect from speech</string>
     <string name="voiceNativeSizeMb">%1$d MB</string>
-    <string name="voiceNativePhoneEngine">Voice typing uses your phone's speech recognition. Depending on the phone, the audio may go to its speech service. The models below are for the offline engine, which this version does not include yet.</string>
+    <string name="voiceNativePhoneEngine">Voice typing uses your phone's on-device speech recognition, so the audio stays on this phone. Phones without it don't offer the mic. The models below are for the offline engine, which this version does not include yet.</string>
     <string name="voiceNativeNaturalNeedsEngine">Needs the offline speech engine, which this version does not include yet.</string>
     <string name="voiceNativeSettingsAction">Voice settings</string>
     <string name="voiceNativeStoppedAfterPause">Stopped after a pause. Your words are in the box.</string>
     <string name="voiceNativeNoRecognizer">This phone has no speech recognition service. Turn one on in Android settings, then try again.</string>
     <string name="voiceNativeReadAloud">Read aloud</string>
     <string name="voiceNativePartial">Downloaded %1$s of %2$s</string>
+    <string name="voiceNativePhoneRecognizer">Phone speech recognition</string>
 </resources>
