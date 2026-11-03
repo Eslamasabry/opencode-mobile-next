@@ -87,6 +87,8 @@ internal fun gitBusyText(busy: GitBusy): String =
             GitBusy.CreateBranch -> Res.string.gitBusyCreateBranch
             GitBusy.Discard -> Res.string.gitBusyDiscard
             GitBusy.SetIdentity -> Res.string.gitBusySaveIdentity
+            GitBusy.AddRemote -> Res.string.gitBusyAddRemote
+            GitBusy.Clone -> Res.string.gitBusyClone
         },
     )
 
@@ -105,6 +107,8 @@ internal fun gitDoneText(result: GitActionResult): String {
         GitActionNote.Created -> stringResource(Res.string.gitDoneCreated)
         GitActionNote.Discarded -> stringResource(Res.string.gitDoneDiscarded)
         GitActionNote.IdentitySaved -> stringResource(Res.string.gitDoneIdentitySaved)
+        GitActionNote.RemoteAdded -> stringResource(Res.string.gitDoneRemoteAdded)
+        GitActionNote.Cloned -> stringResource(Res.string.gitDoneCloned, result.clonedTo.orEmpty())
         null -> ""
     }
 }

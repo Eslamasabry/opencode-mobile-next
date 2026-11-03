@@ -15,7 +15,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.engine.git.GitAction
+import io.github.eslamasabry.oc.engine.git.GitActionNote
 import io.github.eslamasabry.oc.engine.git.GitBusy
+import io.github.eslamasabry.oc.engine.git.GitCheck
+import io.github.eslamasabry.oc.engine.git.gitCloneTarget
+import io.github.eslamasabry.oc.engine.git.gitRemoteAddressProblem
+import io.github.eslamasabry.oc.engine.git.isValidGitFolderName
+import io.github.eslamasabry.oc.engine.git.isValidGitRemoteName
+import io.github.eslamasabry.oc.engine.git.suggestGitCloneFolder
 import io.github.eslamasabry.oc.engine.git.GitDiffView
 import io.github.eslamasabry.oc.engine.git.GitHubSignIn
 import io.github.eslamasabry.oc.engine.git.GitPageView
@@ -138,9 +146,12 @@ public fun GitScreen(state: GitUi, actions: GitActions) {
                     }
                 is GitPageView.Ready -> Ready(view.snapshot, state, actions, enabled, message)
             }
-            if (state.view !is GitPageView.Loading) GitHubSection(state, actions)
+            // The app's GitHub sign-in only where a push would use it; servers push with their own (B-SEC-082).
+            if (state.view !is GitPageView.Loading && state.offersGitHubSignIn) GitHubSection(state, actions)
         }
         BranchSheet(state, actions)
+        RemotesSheet(state, actions)
+        CloneSheet(state, actions)
         DiffSheet(state, actions, enabled)
         KitConfirm(confirmSpec(state.confirm), onConfirm = actions::confirm, onCancel = actions::dismissConfirm)
     }
@@ -219,6 +230,9 @@ private fun Ready(snapshot: GitSnapshot, state: GitUi, actions: GitActions, enab
                     !branch.hasUpstream -> stringResource(Res.string.gitPullNotOnRemote)
                     branch.behind > 0 ->
                         pluralStringResource(Res.plurals.gitGetNewFrom, branch.behind, branch.behind, placeOf(state, snapshot), branch.upstream.orEmpty())
+                    // "Up to date" only after the quiet look at the remote (Flutter checkForUpdates).
+                    state.check == GitCheck.Checking -> stringResource(Res.string.gitChecking)
+                    state.check == GitCheck.Failed -> stringResource(Res.string.gitCheckFailed)
                     else -> stringResource(Res.string.gitStateUpToDate)
                 },
             enabled = enabled.isEnabled && snapshot.hasRemote && branch.hasUpstream,
@@ -239,6 +253,29 @@ private fun Ready(snapshot: GitSnapshot, state: GitUi, actions: GitActions, enab
             disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
             onClick = actions::push,
             modifier = Modifier.testTag("git-push-row"),
+        )
+    }
+    // Remotes and Clone: visible rows, so a project without a remote can get one (B-BUILD-014).
+    KitRowGroup {
+        KitRow(
+            title = stringResource(Res.string.gitRemotesRow),
+            supporting =
+                if (snapshot.remotes.isEmpty()) stringResource(Res.string.gitRemotesRowNone)
+                else snapshot.remotes.joinToString(", ") { it.name },
+            trailing = KitRowTrailing.Chevron,
+            enabled = enabled.isEnabled,
+            disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+            onClick = actions::openRemotes,
+            modifier = Modifier.testTag("git-remotes-row"),
+        )
+        KitRow(
+            title = stringResource(Res.string.gitCloneRow),
+            supporting = stringResource(Res.string.gitCloneRowHint),
+            trailing = KitRowTrailing.Chevron,
+            enabled = enabled.isEnabled,
+            disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+            onClick = actions::openClone,
+            modifier = Modifier.testTag("git-clone-row"),
         )
     }
     // Every host today pushes with the Git sign-in set up where the project lives (the app never hands over its token).
@@ -456,6 +493,152 @@ private fun BranchSheet(state: GitUi, actions: GitActions) {
                 modifier = Modifier.testTag("git-new-branch"),
             )
         }
+    }
+}
+
+@Composable
+private fun RemotesSheet(state: GitUi, actions: GitActions) {
+    val snapshot = state.snapshot
+    val name = remember { TextFieldState() }
+    val url = remember { TextFieldState() }
+    val busyReason = state.busy?.let { gitBusyText(it) }
+    val remotes = snapshot?.remotes.orEmpty()
+    val typedName = name.text.toString().trim()
+    val typedUrl = url.text.toString().trim()
+    val nameProblem = if (typedName.isEmpty() || isValidGitRemoteName(typedName)) null else GitProblem.InvalidRemoteName
+    val urlProblem = if (typedUrl.isEmpty()) null else gitRemoteAddressProblem(typedUrl)
+    val ready = typedName.isNotEmpty() && typedUrl.isNotEmpty() && nameProblem == null && urlProblem == null
+    // A remote that was just added clears the fields once (the new one shows in the list above).
+    LaunchedEffect(state.generation) {
+        if (state.result?.note == GitActionNote.RemoteAdded) {
+            name.edit { replace(0, length, "") }
+            url.edit { replace(0, length, "") }
+        }
+    }
+    KitSheet(
+        visible = state.sheet == GitSheet.Remotes && snapshot != null,
+        onDismissRequest = actions::closeSheet,
+        title = stringResource(Res.string.gitRemotesTitle),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+        height = KitSheetHeight.Half,
+        primary =
+            KitAction(
+                stringResource(Res.string.gitActionAddRemote),
+                { actions.addRemote(typedName, typedUrl) },
+                enabled =
+                    when {
+                        busyReason != null -> KitEnabled.Disabled(busyReason)
+                        !ready -> KitEnabled.Disabled(stringResource(Res.string.gitRemoteAddressLabel))
+                        else -> KitEnabled.Enabled
+                    },
+            ),
+    ) {
+        SheetResult(state, actions, GitAction.AddRemote)
+        if (remotes.isEmpty()) {
+            Gutter { KitText(stringResource(Res.string.gitRemotesEmpty), role = KitTextRole.Supporting) }
+        } else {
+            KitRowGroup {
+                for (remote in remotes) {
+                    KitRow(title = remote.name, supporting = remote.address, supportingMaxLines = 3, modifier = Modifier.testTag("git-remote-${remote.name}"))
+                }
+            }
+        }
+        Gutter {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                KitText(stringResource(Res.string.gitRemoteAddTitle), role = KitTextRole.Title)
+                KitField(
+                    name,
+                    stringResource(Res.string.gitRemoteNameLabel),
+                    placeholder = if (remotes.isEmpty()) "origin" else null,
+                    error = nameProblem?.let { gitProblemText(it) },
+                    modifier = Modifier.testTag("git-remote-name"),
+                )
+                KitField(
+                    url,
+                    stringResource(Res.string.gitRemoteAddressLabel),
+                    kind = KitFieldKind.Url,
+                    placeholder = "https://github.com/owner/name",
+                    error = urlProblem?.let { gitProblemText(it) },
+                    modifier = Modifier.testTag("git-remote-url"),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CloneSheet(state: GitUi, actions: GitActions) {
+    val url = remember { TextFieldState() }
+    val folder = remember { TextFieldState() }
+    val busyReason = state.busy?.let { gitBusyText(it) }
+    val typedUrl = url.text.toString().trim()
+    // The folder takes its name from the address until the person types one.
+    val typedFolder = folder.text.toString().trim().ifEmpty { suggestGitCloneFolder(typedUrl) }
+    val urlProblem = if (typedUrl.isEmpty()) null else gitRemoteAddressProblem(typedUrl)
+    val folderProblem = if (typedFolder.isEmpty() || isValidGitFolderName(typedFolder)) null else GitProblem.InvalidFolderName
+    val ready = typedUrl.isNotEmpty() && urlProblem == null && typedFolder.isNotEmpty() && folderProblem == null
+    LaunchedEffect(state.generation) {
+        if (state.result?.note == GitActionNote.Cloned) {
+            url.edit { replace(0, length, "") }
+            folder.edit { replace(0, length, "") }
+        }
+    }
+    KitSheet(
+        visible = state.sheet == GitSheet.Clone && state.snapshot != null,
+        onDismissRequest = actions::closeSheet,
+        title = stringResource(Res.string.gitCloneRow),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+        height = KitSheetHeight.Half,
+        primary =
+            KitAction(
+                stringResource(Res.string.gitCloneButton),
+                { actions.clone(typedUrl, typedFolder) },
+                enabled =
+                    when {
+                        busyReason != null -> KitEnabled.Disabled(busyReason)
+                        !ready -> KitEnabled.Disabled(stringResource(Res.string.gitCloneAddressLabel))
+                        else -> KitEnabled.Enabled
+                    },
+            ),
+    ) {
+        SheetResult(state, actions, GitAction.Clone)
+        Gutter {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                KitField(
+                    url,
+                    stringResource(Res.string.gitCloneAddressLabel),
+                    kind = KitFieldKind.Url,
+                    placeholder = "https://github.com/owner/name",
+                    error = urlProblem?.let { gitProblemText(it) },
+                    modifier = Modifier.testTag("git-clone-url"),
+                )
+                KitField(
+                    folder,
+                    stringResource(Res.string.gitCloneFolderLabel),
+                    placeholder = suggestGitCloneFolder(typedUrl).ifEmpty { null },
+                    error = folderProblem?.let { gitProblemText(it) },
+                    helper =
+                        if (typedFolder.isEmpty()) null
+                        else stringResource(Res.string.gitCloneInto, gitCloneTarget(state.directory ?: "/", typedFolder)),
+                    modifier = Modifier.testTag("git-clone-folder"),
+                )
+            }
+        }
+    }
+}
+
+/** A failed add-remote or clone, said inside its own sheet (plain words, Git's text under Details). */
+@Composable
+private fun SheetResult(state: GitUi, actions: GitActions, action: GitAction) {
+    val failed = state.result?.takeIf { it.action == action }?.failure ?: return
+    Gutter {
+        KitErrorNotice(
+            gitProblemText(failed.problem),
+            details = state.resultDetails,
+            detailsLabel = stringResource(Res.string.kitDetails),
+            copyLabel = stringResource(Res.string.kitCopyDetails),
+            retry = KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissResult),
+        )
     }
 }
 

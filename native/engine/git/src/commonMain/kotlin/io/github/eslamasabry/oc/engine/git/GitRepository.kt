@@ -3,10 +3,12 @@ package io.github.eslamasabry.oc.engine.git
 import kotlinx.collections.immutable.toImmutableList
 
 /** Every action the page offers; also the page's busy state. */
-public enum class GitAction { Refresh, Pull, Push, Commit, SwitchBranch, CreateBranch, Discard, SetIdentity, Diff }
+public enum class GitAction { Refresh, Pull, Push, Commit, SwitchBranch, CreateBranch, Discard, SetIdentity, Diff, AddRemote, Clone }
 
 /** Something worth saying about an action that worked. */
-public enum class GitActionNote { UpToDate, Pulled, Pushed, PushedAndTracking, Committed, Switched, Created, Discarded, IdentitySaved }
+public enum class GitActionNote {
+    UpToDate, Pulled, Pushed, PushedAndTracking, Committed, Switched, Created, Discarded, IdentitySaved, RemoteAdded, Cloned,
+}
 
 public data class GitActionResult(
     val action: GitAction,
@@ -18,6 +20,8 @@ public data class GitActionResult(
     val count: Int? = null,
     /** The remote branch a push went to or a pull came from (`origin/main`). */
     val target: String? = null,
+    /** The folder a clone made (`/srv/other`). */
+    val clonedTo: String? = null,
 ) {
     val ok: Boolean get() = failure == null
     val problem: GitProblem? get() = failure?.problem
@@ -29,7 +33,8 @@ public data class GitActionResult(
             commit: String? = null,
             count: Int? = null,
             target: String? = null,
-        ): GitActionResult = GitActionResult(action, note, null, commit, count, target)
+            clonedTo: String? = null,
+        ): GitActionResult = GitActionResult(action, note, null, commit, count, target, clonedTo)
 
         public fun failure(action: GitAction, failure: GitFailure): GitActionResult = GitActionResult(action, failure = failure)
     }
@@ -68,6 +73,61 @@ public fun isValidGitBranchName(name: String): Boolean {
         if (part.isEmpty() || part.startsWith(".") || part.endsWith(".lock")) return false
     }
     return true
+}
+
+private val SIMPLE_NAME = Regex("^[A-Za-z0-9_][A-Za-z0-9._-]{0,99}$")
+
+/** True when [name] can be a remote's name (`origin`). */
+public fun isValidGitRemoteName(name: String): Boolean = SIMPLE_NAME.matches(name)
+
+/** True when [name] can be the folder a clone makes beside the project. */
+public fun isValidGitFolderName(name: String): Boolean = SIMPLE_NAME.matches(name) && !name.endsWith(".lock")
+
+private val SCHEME = Regex("^([A-Za-z][A-Za-z0-9+.-]*)://")
+private val CONTROL = Regex("[\\s\\x00-\\x1f\\x7f]")
+
+/**
+ * Why [url] cannot be a remote's address, or null when it can (port of `gitRemoteAddressProblem`). Checked before any
+ * command runs: `https://`, `http://`, `ssh://`, `git://` and `file://` addresses, `user@host:path` and a folder path
+ * are accepted; one that carries a password or token is refused, so a credential is never saved in the repository.
+ */
+public fun gitRemoteAddressProblem(url: String): GitProblem? {
+    val value = url.trim()
+    if (value.isEmpty() || value.startsWith("-") || CONTROL.containsMatchIn(value)) return GitProblem.InvalidRemoteUrl
+    val scheme = SCHEME.find(value) ?: return null
+    val name = scheme.groupValues[1].lowercase()
+    if (name !in setOf("https", "http", "ssh", "git", "file")) return GitProblem.InvalidRemoteUrl
+    val rest = value.substring(scheme.value.length)
+    val authority = rest.substringBefore('/').substringBefore('?').substringBefore('#')
+    val userInfo = if ('@' in authority) authority.substringBeforeLast('@') else ""
+    val host = authority.substringAfterLast('@').substringBefore(':').removePrefix("[").substringBefore(']')
+    if (name != "file" && host.isEmpty()) return GitProblem.InvalidRemoteUrl
+    if (':' in userInfo && name in setOf("https", "http", "git")) return GitProblem.RemoteAddressHasPassword
+    return null
+}
+
+/** The folder name a clone of [url] would get (`https://github.com/o/app.git` → `app`); empty when none fits. */
+public fun suggestGitCloneFolder(url: String): String {
+    val value = url.trim().trimEnd('/')
+    val cut = value.indexOfLast { it == '/' || it == ':' }
+    var name = if (cut < 0) value else value.substring(cut + 1)
+    if (name.endsWith(".git")) name = name.dropLast(4)
+    return if (isValidGitFolderName(name)) name else ""
+}
+
+/** The folder holding [path] (`/` for a top-level folder): where a clone beside the project lands. */
+public fun gitParentFolder(path: String): String {
+    var value = path
+    while (value.length > 1 && value.endsWith("/")) value = value.dropLast(1)
+    val cut = value.lastIndexOf('/')
+    if (cut < 0) return "."
+    return if (cut == 0) "/" else value.substring(0, cut)
+}
+
+/** Where a clone of [folder] beside [directory] lands. */
+public fun gitCloneTarget(directory: String, folder: String): String {
+    val parent = gitParentFolder(directory)
+    return if (parent.endsWith("/")) parent + folder else "$parent/$folder"
 }
 
 /**
@@ -268,11 +328,14 @@ public class GitRepository(
     }
 
     /**
-     * Commits exactly [paths] (staging them first, untracked ones included) with [message]; other staged changes stay
-     * staged and uncommitted. Nothing chosen or an empty message runs nothing.
+     * Commits exactly [paths] (staging them first, untracked ones included) with [message], plus [renamedFrom], the old
+     * paths of ticked renames; other staged changes stay staged and uncommitted. Nothing chosen or an empty message runs nothing.
      */
-    public suspend fun commit(paths: List<String>, message: String): GitActionResult {
+    public suspend fun commit(paths: List<String>, message: String, renamedFrom: List<String> = emptyList()): GitActionResult {
         val selected = paths.filter { it.isNotEmpty() }.distinct()
+        // The old half of a ticked rename: committed with it (else its deletion stays staged and the saved tree keeps
+        // both files), but not staged again (`git add` refuses a path already gone from the index and the disk).
+        val also = renamedFrom.filter { it.isNotEmpty() && it !in selected }.distinct()
         if (selected.isEmpty()) return GitActionResult.failure(GitAction.Commit, GitFailure(GitProblem.NothingSelected))
         if (message.isBlank()) return GitActionResult.failure(GitAction.Commit, GitFailure(GitProblem.EmptyMessage))
         val envelope =
@@ -283,7 +346,7 @@ public class GitRepository(
                             directory,
                             listOf(
                                 GitStep("add", GIT + listOf("add", "-A", "--") + selected, stopOnFailure = true),
-                                GitStep("commit", GIT + listOf("commit", "-m", message, "--") + selected, stopOnFailure = true),
+                                GitStep("commit", GIT + listOf("commit", "-m", message, "--") + selected + also, stopOnFailure = true),
                                 GitStep("id", GIT + listOf("rev-parse", "--short", "HEAD")),
                                 GitStep("files", GIT + listOf("diff-tree", "--root", "--no-commit-id", "--name-only", "-r", "-M", "HEAD"), optional = true),
                             ),
@@ -392,6 +455,61 @@ public class GitRepository(
             }
         }
         return GitActionResult.success(GitAction.SetIdentity, GitActionNote.IdentitySaved)
+    }
+
+    /**
+     * Looks at the remote quietly (`git fetch`), so "behind" and new remote branches are true on the next read. Says
+     * [GitProblem.NoUpstream] when the branch tracks nothing (nothing to check).
+     */
+    public suspend fun fetch(): GitActionResult {
+        val envelope =
+            when (
+                val run =
+                    run(
+                        GitScript(
+                            directory,
+                            listOf(
+                                GitStep("upstream", GIT + listOf("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"), stopOnFailure = true),
+                                GitStep("fetch", GIT + listOf("fetch", "--quiet")),
+                            ),
+                        ),
+                        networkTimeoutMs,
+                    )
+            ) {
+                is Run.Failed -> return GitActionResult.failure(GitAction.Refresh, run.failure)
+                is Run.Done -> run.envelope
+            }
+        val upstream = envelope["upstream"]!!
+        if (!upstream.ok) return fail(GitAction.Refresh, GitProblem.NoUpstream, upstream)
+        val step = envelope["fetch"]!!
+        if (!step.ok) return fail(GitAction.Refresh, null, step)
+        return GitActionResult.success(GitAction.Refresh, GitActionNote.UpToDate)
+    }
+
+    /** `git remote add <name> <url>`, both checked first; an address with a password is refused before anything runs. */
+    public suspend fun addRemote(name: String, url: String): GitActionResult {
+        val cleanName = name.trim()
+        val cleanUrl = url.trim()
+        if (!isValidGitRemoteName(cleanName)) return GitActionResult.failure(GitAction.AddRemote, GitFailure(GitProblem.InvalidRemoteName))
+        gitRemoteAddressProblem(cleanUrl)?.let { return GitActionResult.failure(GitAction.AddRemote, GitFailure(it)) }
+        return single(GitAction.AddRemote, GIT + listOf("remote", "add", cleanName, cleanUrl), GitActionNote.RemoteAdded)
+    }
+
+    /** Clones [url] into a new folder [folderName] beside this project (in its parent folder). */
+    public suspend fun clone(url: String, folderName: String): GitActionResult {
+        val cleanUrl = url.trim()
+        gitRemoteAddressProblem(cleanUrl)?.let { return GitActionResult.failure(GitAction.Clone, GitFailure(it)) }
+        val folder = folderName.trim()
+        if (!isValidGitFolderName(folder)) return GitActionResult.failure(GitAction.Clone, GitFailure(GitProblem.InvalidFolderName))
+        val parent = gitParentFolder(directory)
+        val envelope =
+            when (val run = run(GitScript(parent, listOf(GitStep("clone", GIT + listOf("clone", "--", cleanUrl, folder)))), networkTimeoutMs)) {
+                is Run.Failed -> return GitActionResult.failure(GitAction.Clone, run.failure)
+                is Run.Done -> run.envelope
+            }
+        val step = envelope["clone"]!!
+        if (!step.ok) return fail(GitAction.Clone, null, step)
+        return GitActionResult.success(GitAction.Clone, GitActionNote.Cloned, clonedTo = gitCloneTarget(directory, folder))
     }
 
     // -------------------------------------------------------------- helpers

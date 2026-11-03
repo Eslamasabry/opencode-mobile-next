@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
+import io.github.eslamasabry.oc.android.widgets.BackgroundConnectionService
 import io.github.eslamasabry.oc.android.widgets.R
 import java.io.File
 import kotlin.math.roundToInt
@@ -234,6 +235,19 @@ class TwoWidgetsRenderTest {
         val shadowOpen = org.robolectric.Shadows.shadowOf(open).savedIntent
         assertTrue(shadowReply.getBooleanExtra(SessionWidgetIntents.EXTRA_REPLY, false))
         assertTrue(!shadowOpen.getBooleanExtra(SessionWidgetIntents.EXTRA_REPLY, false))
+    }
+
+    @Test
+    fun `B-ANDR-116 a row of another server opens that server's conversation`() {
+        val ctx = context()
+        val snapshot = JSONObject().put("profileID", "server-a").put("sessions", JSONArray())
+        val other = JSONObject().put("id", "ses_b1").put("profileID", "server-b").put("title", "B work")
+        val own = JSONObject().put("id", "ses_a1").put("title", "A work")
+        val openB = org.robolectric.Shadows.shadowOf(SessionWidgetIntents.chatIntent(ctx, 7, snapshot, other)).savedIntent
+        assertEquals("server-b", openB.getStringExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_PROFILE_ID))
+        assertEquals("ses_b1", openB.getStringExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_SESSION_ID))
+        val openA = org.robolectric.Shadows.shadowOf(SessionWidgetIntents.chatIntent(ctx, 8, snapshot, own)).savedIntent
+        assertEquals("server-a", openA.getStringExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_PROFILE_ID))
     }
 
     @Test

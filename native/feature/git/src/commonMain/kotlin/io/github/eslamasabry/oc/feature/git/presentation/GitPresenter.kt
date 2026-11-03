@@ -8,6 +8,8 @@ import io.github.eslamasabry.oc.engine.git.GitPage
 import io.github.eslamasabry.oc.engine.git.GitPageState
 import io.github.eslamasabry.oc.engine.git.GitPageView
 import io.github.eslamasabry.oc.engine.git.GitServices
+import io.github.eslamasabry.oc.engine.git.GitWorkspace
+import io.github.eslamasabry.oc.engine.git.suggestGitCloneFolder
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,7 +54,11 @@ public class GitPresenter(
     public fun initial(): GitUi = build(page.state.value, account.state.value, local.value)
 
     public fun start() {
-        launch { page.refresh() }
+        launch {
+            page.refresh()
+            // Then look at the remote quietly, so "Up to date" is true (Flutter checkForUpdates after opening).
+            page.checkForUpdates()
+        }
         launch { account.load() }
     }
 
@@ -73,6 +79,9 @@ public class GitPresenter(
             signIn = a,
             signInDetails = (a as? GitHubSignIn.SignedOut)?.details?.let(ports.signInDetails),
             placeName = p.placeName,
+            offersGitHubSignIn = p.host?.let { !GitWorkspace.usesOwnGitSignIn(it) } ?: false,
+            check = p.check,
+            directory = p.directory,
             sheet = l.sheet,
             confirm = l.confirm,
             generation = p.generation,
@@ -99,13 +108,28 @@ public class GitPresenter(
         local.update { if (path in it.unticked) it.copy(unticked = it.unticked - path) else it.copy(unticked = it.unticked + path) }
     }
 
+    /** The old paths of ticked renames, so both halves are saved together (Flutter `_commit`; B-BUILD-019). */
+    private fun renamedFrom(now: GitUi): List<String> {
+        val byPath = now.snapshot?.status?.files.orEmpty().associateBy { it.path }
+        return now.selected.mapNotNull { byPath[it]?.originalPath }
+    }
+
+    /** The ticks reset only after a save that worked; a failed save keeps what the person left out (B-BUILD-019). */
+    private fun clearTicksIfSaved(before: Int) {
+        val after = page.state.value
+        val saved = after.generation != before && (after.result?.ok == true || after.savedNotSent)
+        if (saved) local.update { it.copy(unticked = emptySet()) }
+    }
+
     public fun commit(message: String) {
         val now = current()
         if (now.working) return
         val paths = now.selected.toList()
+        val renamed = renamedFrom(now)
         launch {
-            page.commit(paths, message)
-            local.update { it.copy(unticked = emptySet()) }
+            val before = page.state.value.generation
+            page.commit(paths, message, renamed)
+            clearTicksIfSaved(before)
         }
     }
 
@@ -113,9 +137,37 @@ public class GitPresenter(
         val now = current()
         if (now.working) return
         val paths = now.selected.toList()
+        val renamed = renamedFrom(now)
         launch {
-            page.commitAndPush(paths, message)
-            local.update { it.copy(unticked = emptySet()) }
+            val before = page.state.value.generation
+            page.commitAndPush(paths, message, renamed)
+            clearTicksIfSaved(before)
+        }
+    }
+
+    public fun openRemotes() {
+        local.update { it.copy(sheet = GitSheet.Remotes) }
+    }
+
+    public fun openClone() {
+        local.update { it.copy(sheet = GitSheet.Clone) }
+    }
+
+    /** Adds a remote; the sheet stays open so the new remote shows in its list. */
+    public fun addRemote(name: String, url: String) {
+        if (current().working) return
+        launch { page.addRemote(name.trim(), url.trim()) }
+    }
+
+    /** Clones beside the project; on success the sheet closes and the status line says where it went. */
+    public fun clone(url: String, folder: String) {
+        if (current().working) return
+        val into = folder.trim().ifEmpty { suggestGitCloneFolder(url) }
+        launch {
+            val before = page.state.value.generation
+            page.clone(url.trim(), into)
+            val after = page.state.value
+            if (after.generation != before && after.result?.ok == true) local.update { it.copy(sheet = null) }
         }
     }
 

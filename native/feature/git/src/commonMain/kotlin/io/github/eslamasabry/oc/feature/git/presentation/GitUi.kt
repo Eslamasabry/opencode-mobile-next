@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.git.presentation
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.engine.git.GitActionResult
 import io.github.eslamasabry.oc.engine.git.GitBusy
+import io.github.eslamasabry.oc.engine.git.GitCheck
 import io.github.eslamasabry.oc.engine.git.GitDiffView
 import io.github.eslamasabry.oc.engine.git.GitFailure
 import io.github.eslamasabry.oc.engine.git.GitFileChange
@@ -13,7 +14,7 @@ import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
 
 /** A sheet of the Git page (screen state, never a route: plan 07 §2.2). */
-public enum class GitSheet { Branches }
+public enum class GitSheet { Branches, Remotes, Clone }
 
 /** A question the page asks before an act that cannot be undone. */
 public sealed interface GitConfirm {
@@ -43,6 +44,15 @@ public data class GitUi(
     val signInDetails: Redacted? = null,
     /** The server's saved name, for "uses the Git sign-in set up on …". */
     val placeName: String? = null,
+    /**
+     * True only where the app's own GitHub sign-in is used for a push. Every host today (the connected server) pushes
+     * with its own Git sign-in, so the GitHub section is not offered (Flutter `offersGitHubSignIn`; B-SEC-082).
+     */
+    val offersGitHubSignIn: Boolean = false,
+    /** The quiet remote check after opening. */
+    val check: GitCheck = GitCheck.Idle,
+    /** The project folder, for "Clones into …". */
+    val directory: String? = null,
     val sheet: GitSheet? = null,
     val confirm: GitConfirm? = null,
     /** Bumped when a write finished: the screen clears its message field once. */
@@ -75,6 +85,17 @@ public interface GitActions {
     public fun commitAndPush(message: String)
 
     public fun openBranches()
+
+    /** The Remotes sheet: the list, and Add remote. */
+    public fun openRemotes()
+
+    /** The Clone sheet: copy a repository next to this project. */
+    public fun openClone()
+
+    public fun addRemote(name: String, url: String)
+
+    /** Clones [url] into [folder] beside the project; a blank folder takes the name from the address. */
+    public fun clone(url: String, folder: String)
 
     public fun closeSheet()
 

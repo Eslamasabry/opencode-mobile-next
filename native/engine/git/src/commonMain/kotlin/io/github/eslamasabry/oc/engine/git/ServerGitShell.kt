@@ -13,7 +13,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -80,8 +82,10 @@ public class ServerGitShell(
             val output = readOutput(id, query) ?: return GitShellReply.Failed(GitShellFailure.Unavailable)
             return GitShellReply.Output(output)
         } finally {
-            // Drop the server's copy of the output; a failure here only leaves it for the server's own cleanup.
-            exchange(HttpMethod.Delete, "/shell/$id", query)
+            // Drop the server's copy of the output, even when the page was left mid-command (its scope is cancelled
+            // then): cancellation-independent, bounded by the client's connect / inactivity timeouts. A failure here
+            // only leaves it for the server's own cleanup.
+            withContext(NonCancellable) { exchange(HttpMethod.Delete, "/shell/$id", query) }
         }
     }
 

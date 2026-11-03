@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -215,6 +216,17 @@ public class GitHubAccount(
         val deleted = tokens.delete(profile)
         if (deleted is Outcome.Ok) mutableState.value = GitHubSignIn.SignedOut()
         return deleted
+    }
+
+    /**
+     * The profile was deleted: a sign-in still waiting must never write a token afterwards (B-SEC-085). Waits for the
+     * attempt to stop, so a sweep that follows sees every write it could make.
+     */
+    public suspend fun forget() {
+        attempt++
+        job?.cancelAndJoin()
+        job = null
+        mutableState.value = GitHubSignIn.SignedOut()
     }
 
     /** GitHub refused the stored token: forget it and say so. */

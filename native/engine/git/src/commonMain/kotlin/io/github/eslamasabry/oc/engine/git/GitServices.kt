@@ -61,8 +61,11 @@ public class GitServices(
 
     /** A removed server's GitHub sign-in goes with it (B-SEC-085). */
     public suspend fun forgetRemovedProfiles(existing: Set<ProfileId>) {
-        tokens.sweep(existing)
+        // Stop a removed profile's waiting sign-in first, so it cannot write its token after the sweep.
+        val gone = accounts.filterKeys { it !in existing }
+        for (account in gone.values) account.forget()
         accounts.keys.retainAll(existing)
+        tokens.sweep(existing)
     }
 
     override fun toString(): String = "GitServices"
