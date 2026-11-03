@@ -148,12 +148,52 @@ exit 0
 """
     }
 
-    /** The ports found by [script]. A listener the kernel shows but the probe could not reach is not offered. */
-    public fun parse(output: String): List<LinuxPort> {
+    /** First line of [PROCESS_SCRIPT]. */
+    public const val PROCESS_MARK: String = "# oc-linux-procs"
+
+    /**
+     * Every Linux process's command line (`::c <pid> <cmdline>`), read before the probe (Flutter scans all processes
+     * first, B-LINUX-085): a launcher such as `sh start-server.sh 12345` names the port its child listens on even when
+     * the child's own command, environment and logs do not. Printable characters only, 240 per line, 400 processes.
+     */
+    public val PROCESS_SCRIPT: String = $$"""$$PROCESS_MARK
+oc_k=0
+for oc_d in /proc/[0-9]*; do
+  [ "$oc_k" -lt 400 ] || break
+  oc_c=$(tr '\000' ' ' <"$oc_d/cmdline" 2>/dev/null | tr -cd '[:print:]' | cut -c1-240)
+  [ -n "$oc_c" ] || continue
+  printf '::c %s %s\n' "${oc_d#/proc/}" "$oc_c"
+  oc_k=$((oc_k + 1))
+done
+exit 0
+"""
+
+    /** `::c <pid> <cmdline>` lines of [output] (from [PROCESS_SCRIPT] or [script]). */
+    public fun parseCommands(output: String): Map<Int, String> {
+        val cmds = mutableMapOf<Int, String>()
+        for (line in output.split('\n')) {
+            if (!line.startsWith("::c ")) continue
+            val rest = line.substring(4)
+            val space = rest.indexOf(' ')
+            if (space <= 0) continue
+            val pid = rest.substring(0, space).toIntOrNull() ?: continue
+            cmds[pid] = rest.substring(space + 1).trim()
+        }
+        return cmds
+    }
+
+    /** The ports every command in [cmds] names, to probe along with the usual ones (Flutter `scanPorts`). */
+    public fun candidates(cmds: Map<Int, String>): Set<Int> = cmds.values.flatMap { portsNamedIn(it) }.distinct().sorted().take(64).toSet()
+
+    /**
+     * The ports found by [script]. A listener the kernel shows but the probe could not reach is not offered. [processes]
+     * are the command lines of every process (from [PROCESS_SCRIPT]); the probe's own `::c` lines win for their pids.
+     */
+    public fun parse(output: String, processes: Map<Int, String> = emptyMap()): List<LinuxPort> {
         val open = mutableSetOf<Int>()
         val wide = mutableMapOf<Int, Boolean>()
         val named = mutableMapOf<Int, MutableSet<Int>>()
-        val cmds = mutableMapOf<Int, String>()
+        val cmds = processes.toMutableMap()
         val zeros = Regex("^0+$")
         for (line in output.split('\n')) {
             when {
