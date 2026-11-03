@@ -77,7 +77,7 @@ class PhoneSetupRegistryTest {
     }
 
     @Test
-    fun `B-LINUX-114 Node downloads the pinned artifact per ABI and only the pinned Node passes its check`() {
+    fun `B-LINUX-200 the registry's Node component downloads the pinned artifact per ABI and only the pinned Node passes its check`() {
         val node = all.single { it.id == SetupComponentIds.NODE }
         assertTrue(node.checkScript.contains("[ \"\$(node --version)\" = 'v24.21.0' ]"))
         assertTrue(node.installScript.contains("aarch64|arm64) node_arch=arm64; node_sha=724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5 ;;"))
