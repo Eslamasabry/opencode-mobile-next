@@ -43,7 +43,7 @@ public object CardCodec {
         ) {
             return null
         }
-        return fromInput(CardJson.tree(tool.input), scope, sessionId, messageId, part.callId!!)
+        return fromInput(CardJson.validatorTree(tool.input), scope, sessionId, messageId, part.callId!!)
     }
 
     /** Validation of an already-decoded input tree (the corpus and the cycle tests reach the validator here). */
@@ -150,7 +150,7 @@ public object CardCodec {
             val summary = match.groupValues[2]
             if (CardValidator.scalars(summary) > 240 || '\t' in summary || CardValidator.text(summary) != summary) return null
             if (CardValidator.utf8Length(lines[1]) > 32768) return null
-            val decoded = CardJson.parse(lines[1])
+            val decoded = CardJson.parseForValidator(lines[1])
             CardValidator.bounded(decoded)
             val keys = listOf("v", "cardId", "callId", "value")
             val envelope = CardValidator.obj(decoded, keys, keys)
