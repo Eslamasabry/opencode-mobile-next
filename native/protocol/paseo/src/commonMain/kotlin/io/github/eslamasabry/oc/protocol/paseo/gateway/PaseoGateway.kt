@@ -167,6 +167,9 @@ public class PaseoGateway(
     internal val liveAgentSessions = HashSet<String>()
     internal val uncertain = HashSet<String>()
 
+    /** A draft's first send whose create answer was lost (B-AGENT-188): what a read needs to settle it. */
+    internal val uncertainStarts = HashMap<String, PaseoUncertainStart>()
+
     /** Prompt accepted, turn not started yet: a spawn-time idle snapshot must not end it. */
     internal val awaitingTurn = HashSet<String>()
 
@@ -312,6 +315,7 @@ public class PaseoGateway(
         draftVariants.clear()
         liveAgentSessions.clear()
         uncertain.clear()
+        uncertainStarts.clear()
         awaitingTurn.clear()
         turnActive.clear()
         live.clear()
@@ -484,7 +488,7 @@ public class PaseoGateway(
     }
 
     internal suspend fun readMessages(id: String): ImmutableList<MessageWithParts> {
-        if (id in drafts) return persistentListOf()
+        if (id in drafts && !draftStarted(id)) return persistentListOf()
         val scope = scopeDir
         val epoch = locationEpoch
         val agent = fetchAgent(id)
@@ -626,7 +630,7 @@ public class PaseoGateway(
             paseoFail(PaseoFailureKind.InvalidResponse)
         }
         if (prompt.mentions.isNotEmpty() || prompt.delivery != null) paseoFail(PaseoFailureKind.Unavailable)
-        if (sessionId in uncertain) paseoFail(PaseoFailureKind.DeliveryUnknown)
+        if (sendIsUncertain(sessionId)) paseoFail(PaseoFailureKind.DeliveryUnknown)
         val scope = scopeDir
         val epoch = locationEpoch
         val text = paseoString(prompt.text, max = 1024 * 1024, empty = true)
@@ -697,6 +701,7 @@ public class PaseoGateway(
         }
         val sendMode = mode != null && (mode in modes || (modes.isEmpty() && defaultProviderModes[provider] == mode))
         val title = sessions[id]?.title
+        val sentAt = nowMs()
         creating++
         val result = try {
             transport.request(
@@ -722,6 +727,9 @@ public class PaseoGateway(
                     fence()
                 },
             )
+        } catch (e: PaseoException) {
+            if (e.kind == PaseoFailureKind.DeliveryUnknown) uncertainStarts[id] = PaseoUncertainStart(messageId, provider, sentAt)
+            throw e
         } finally {
             creating--
             if (creating == 0 && closed) heldEvents.clear()
@@ -1138,6 +1146,7 @@ public class PaseoGateway(
         draftVariants.remove(id)
         liveAgentSessions.remove(id)
         uncertain.remove(id)
+        uncertainStarts.remove(id)
         awaitingTurn.remove(id)
         turnActive.remove(id)
         live.remove(id)
