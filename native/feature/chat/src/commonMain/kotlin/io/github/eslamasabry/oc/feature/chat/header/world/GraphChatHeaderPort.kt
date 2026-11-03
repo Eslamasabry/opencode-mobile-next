@@ -146,6 +146,7 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
     private fun publish(f: HeaderFacts, s: Session): HeaderFacts =
         f.copy(
             directory = s.directory ?: f.directory,
+            workspaceId = s.workspaceId?.raw,
             shareUrl = s.shareUrl,
             model = s.selection?.model?.modelId ?: s.model,
             providerId = s.selection?.model?.providerId,

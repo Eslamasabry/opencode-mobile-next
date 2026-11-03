@@ -88,6 +88,8 @@ public class ChatHeaderViewModel(
 
     override fun retryContinueWith(): Unit = presenter.retryContinueWith()
 
+    override fun copyResumeCommand(): Unit = presenter.copyResumeCommand()
+
     override fun confirm(): Unit = presenter.confirm()
 
     override fun dismissConfirm(): Unit = presenter.dismissConfirm()

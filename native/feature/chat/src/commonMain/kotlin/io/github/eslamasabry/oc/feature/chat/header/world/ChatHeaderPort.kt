@@ -50,6 +50,8 @@ public interface ChatHeaderPort {
 public data class HeaderFacts(
     val serverName: String? = null,
     val directory: String? = null,
+    /** The OpenCode 2 managed workspace the conversation runs in, if any (no resume command then). */
+    val workspaceId: String? = null,
     val shareUrl: String? = null,
     val model: String? = null,
     val providerId: String? = null,
