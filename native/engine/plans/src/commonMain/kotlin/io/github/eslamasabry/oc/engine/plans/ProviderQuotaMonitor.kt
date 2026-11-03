@@ -19,7 +19,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 
-public enum class QuotaMonitorStatus { Disabled, Waiting, Checking, Current, Paused, WifiRequired, Unavailable, SourceChanged }
+public enum class QuotaMonitorStatus {
+    Disabled, Waiting, Checking, Current, Paused, WifiRequired, Unavailable, SourceChanged,
+}
 
 public data class QuotaMonitorTarget(val profileId: String, val provider: QuotaProvider)
 
@@ -311,7 +313,8 @@ public class ProviderQuotaMonitor(
         )
     }
 
-    public suspend fun disable(id: String, provider: QuotaProvider): Boolean = save(id, provider, null, reauthorize = true)
+    public suspend fun disable(id: String, provider: QuotaProvider): Boolean =
+        save(id, provider, null, reauthorize = true)
 
     private suspend fun save(
         id: String,
@@ -324,7 +327,8 @@ public class ProviderQuotaMonitor(
         val targetId = id(id, provider)
         if (!readable(id) || (targetId in retiredCredentials && !reauthorize)) return false
         if (rules == null) pausedSources += targetId
-        if (rules != null && QuotaMonitorRules.fromJson(DartJson.decode(DartJson.encode(rules.toJson())) as Map<*, *>) == null) {
+        val roundTrip = rules?.let { DartJson.decode(DartJson.encode(it.toJson())) as Map<*, *> }
+        if (roundTrip != null && QuotaMonitorRules.fromJson(roundTrip) == null) {
             return false
         }
         val epoch = (epochs[id] ?: 0) + 1
@@ -553,7 +557,9 @@ public class ProviderQuotaMonitor(
             gateway = opened
             readingProfile = id
             val result: Outcome<ProviderQuotaSnapshot> =
-                withTimeoutOrNull(timeoutMs) { guarded { opened.readSnapshot() } ?: Outcome.Failed(Failure.Unexpected()) }
+                withTimeoutOrNull(timeoutMs) {
+                    guarded { opened.readSnapshot() } ?: Outcome.Failed(Failure.Unexpected())
+                }
                     ?: Outcome.Failed(Failure.TimedOut())
             if (!current()) return
             val snapshot =
@@ -639,7 +645,8 @@ public class ProviderQuotaMonitor(
             update(id, mapOf(provider.id to rules.toJson()), current)
             return
         }
-        val shown = guarded { sink.alert(id, alertKey(id, provider), rules.token) } ?: Outcome.Failed(Failure.Unexpected())
+        val shown =
+            guarded { sink.alert(id, alertKey(id, provider), rules.token) } ?: Outcome.Failed(Failure.Unexpected())
         if (shown is Outcome.Failed) {
             // The marker is a claim, not proof of delivery. Roll it back so a later refresh can retry.
             if (current() && fresh(snapshot)) update(id, mapOf(provider.id to rules.toJson()), current)

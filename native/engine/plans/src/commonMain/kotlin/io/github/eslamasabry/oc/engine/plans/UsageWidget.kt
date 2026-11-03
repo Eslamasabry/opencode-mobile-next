@@ -28,7 +28,8 @@ public data class UsageWidgetSettings(
             return UsageWidgetSettings(
                 hiddenKeys = hidden.filterIsInstance<String>().filter { it.length <= 160 }.toSet(),
                 showSetupRows = data["setup"] != false,
-                windows = UsageWidgetWindows.entries.firstOrNull { it.wire == data["windows"] } ?: UsageWidgetWindows.Both,
+                windows =
+                    UsageWidgetWindows.entries.firstOrNull { it.wire == data["windows"] } ?: UsageWidgetWindows.Both,
             )
         }
     }
@@ -170,7 +171,7 @@ public class UsageWidgetSnapshot(
     public suspend fun markAuthNeeded(profileId: String, profileName: String, provider: QuotaProvider) {
         if (!host.supported || profileId.isEmpty() || !quotaCollectionAvailable(provider)) return
         mutate(profileId, profileName) { rows ->
-            val row = rows.getOrPut(provider.id) { linkedMapOf("fetchedAt" to clock.nowMs(), "windows" to emptyList<Any?>()) }
+            val row = rows.getOrPut(provider.id) { emptyRow() }
             row["state"] = "auth"
             row["action"] = actionFor(provider.id)
         }
@@ -186,7 +187,7 @@ public class UsageWidgetSnapshot(
     ) {
         if (!host.supported || profileId.isEmpty() || !validProviderId(providerId)) return
         mutate(profileId, profileName, local = thisPhone) { rows ->
-            val row = rows.getOrPut(providerId) { linkedMapOf("fetchedAt" to clock.nowMs(), "windows" to emptyList<Any?>()) }
+            val row = rows.getOrPut(providerId) { emptyRow() }
             val windows = row["windows"]
             if (windows is List<*> && windows.isNotEmpty()) return@mutate
             row["state"] = "signin"
@@ -194,6 +195,9 @@ public class UsageWidgetSnapshot(
             if (displayName.isNotEmpty()) row["name"] = displayName
         }
     }
+
+    private fun emptyRow(): MutableMap<String, Any?> =
+        linkedMapOf("fetchedAt" to clock.nowMs(), "windows" to emptyList<Any?>())
 
     /** Monitoring of this provider ended (consent withdrawn, source changed). */
     public suspend fun removeProvider(profileId: String, provider: QuotaProvider) {
@@ -224,7 +228,8 @@ public class UsageWidgetSnapshot(
                 if (name.isEmpty()) name = decoded["name"]?.toString() ?: ""
                 (decoded["rows"] as? Map<*, *>)?.forEach { (k, v) ->
                     if (v is Map<*, *>) {
-                        rows[k.toString()] = LinkedHashMap<String, Any?>().apply { v.forEach { (a, b) -> put(a.toString(), b) } }
+                        rows[k.toString()] =
+                            LinkedHashMap<String, Any?>().apply { v.forEach { (a, b) -> put(a.toString(), b) } }
                     }
                 }
             }

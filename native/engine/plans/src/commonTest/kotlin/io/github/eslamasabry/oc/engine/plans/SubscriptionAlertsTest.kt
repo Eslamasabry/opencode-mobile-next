@@ -89,7 +89,8 @@ private class AlertRig(private val scope: CoroutineScope, val prefs: MemoryPrefs
         status = UsageReadingStatus.Ok,
         fetchedAt = clock.now - age,
         method = SignInMethod.Plan,
-        windows = listOf(UsageWindow("primary", used, durationSeconds = 18000, resetsAt = clock.now + resetHours * HOUR)),
+        windows =
+            listOf(UsageWindow("primary", used, durationSeconds = 18000, resetsAt = clock.now + resetHours * HOUR)),
     )
 
     suspend fun read(list: List<UsageReading>, foreground: Boolean = false) {

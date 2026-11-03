@@ -70,7 +70,8 @@ public data class UsageSignInDestination(
     }
 }
 
-private val openCodeProviderIds = mapOf("codex" to "openai", "glm" to "zai-coding-plan", "minimax" to "minimax-coding-plan")
+private val openCodeProviderIds =
+    mapOf("codex" to "openai", "glm" to "zai-coding-plan", "minimax" to "minimax-coding-plan")
 
 /**
  * Maps a widget row's [target] to a screen. [profileId]/[profileIsOpenCode] describe the saved server the target names

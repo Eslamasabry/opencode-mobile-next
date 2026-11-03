@@ -359,7 +359,12 @@ class ProviderQuotaMonitorTest {
         )
         assertNull(
             QuotaAlertRoutes.openFromPlatform(
-                mapOf("kind" to "quota", "sessionID" to "quota", "profileID" to "profile", "monitorToken" to "A".repeat(64)),
+                mapOf(
+                    "kind" to "quota",
+                    "sessionID" to "quota",
+                    "profileID" to "profile",
+                    "monitorToken" to "A".repeat(64),
+                ),
             ),
         )
         assertFalse(QuotaAlertRoutes.actionAllowed("quota"))

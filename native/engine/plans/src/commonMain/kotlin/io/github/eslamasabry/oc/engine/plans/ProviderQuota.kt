@@ -24,7 +24,9 @@ public enum class QuotaProvider(public val id: String) {
  */
 public fun quotaCollectionAvailable(provider: QuotaProvider): Boolean = provider != QuotaProvider.Claude
 
-public enum class ProviderQuotaStatus { Ok, Unconfigured, Unsupported, AuthRequired, RateLimited, Unavailable, InvalidResponse }
+public enum class ProviderQuotaStatus {
+    Ok, Unconfigured, Unsupported, AuthRequired, RateLimited, Unavailable, InvalidResponse,
+}
 
 public enum class QuotaAccountStatus { Matched, Unverified, Mismatch, SourceBound }
 

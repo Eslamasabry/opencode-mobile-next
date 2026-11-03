@@ -92,7 +92,10 @@ class UsageSubscriptionsTest {
     fun `B-AGENT-315 Claude via the phone host or a PC is one card each`() {
         val s =
             merge(
-                listOf(reading("claude", UsageConnection.PHONE_ID), reading("claude", "pc", windows = both(five = 30.0))),
+                listOf(
+                    reading("claude", UsageConnection.PHONE_ID),
+                    reading("claude", "pc", windows = both(five = 30.0)),
+                ),
                 connections = listOf(PHONE, PC),
             )
         assertEquals(2, s.subscriptions.size)

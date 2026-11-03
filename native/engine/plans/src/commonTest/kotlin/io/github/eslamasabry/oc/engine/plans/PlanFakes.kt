@@ -40,7 +40,9 @@ internal class FakeWidgetHost : UsageWidgetHost {
     }
 }
 
-internal class FakeQuotaGateway(private val result: suspend () -> Outcome<ProviderQuotaSnapshot>) : ProviderQuotaGateway {
+internal class FakeQuotaGateway(
+    private val result: suspend () -> Outcome<ProviderQuotaSnapshot>,
+) : ProviderQuotaGateway {
     var closed = 0
 
     override suspend fun readSnapshot(): Outcome<ProviderQuotaSnapshot> = result()
@@ -72,7 +74,8 @@ internal fun quotaSample(
         account =
             ProviderQuotaAccount(
                 ref = account.repeat(64),
-                status = if (provider == QuotaProvider.Codex) QuotaAccountStatus.Matched else QuotaAccountStatus.SourceBound,
+                status =
+                    if (provider == QuotaProvider.Codex) QuotaAccountStatus.Matched else QuotaAccountStatus.SourceBound,
                 plan = if (provider == QuotaProvider.Codex) "plus" else null,
             ),
         ordinaryUsageAllowed = if (provider == QuotaProvider.Codex) true else null,
@@ -94,7 +97,7 @@ internal fun quotaSample(
     )
 
 internal fun profile(id: String, stamp: String = "private-fixture-password") =
-    QuotaProfile(id = id, name = "Synthetic", baseUrl = "https://$id.example", username = "fixture", credentialStamp = stamp)
+    QuotaProfile(id, name = "Synthetic", baseUrl = "https://$id.example", username = "fixture", credentialStamp = stamp)
 
 /** The monitor rig of provider_quota_monitor_test.dart. */
 internal class MonitorRig(start: Long) {

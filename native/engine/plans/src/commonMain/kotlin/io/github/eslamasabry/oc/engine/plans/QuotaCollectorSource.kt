@@ -14,7 +14,12 @@ public fun usageQuotaName(provider: QuotaProvider): String =
     }
 
 /** A reading that says only how the sign-in stands, with no numbers. */
-public fun usageBareReading(connectionId: String, provider: QuotaProvider, status: UsageReadingStatus, now: Long): UsageReading =
+public fun usageBareReading(
+    connectionId: String,
+    provider: QuotaProvider,
+    status: UsageReadingStatus,
+    now: Long,
+): UsageReading =
     UsageReading(
         providerId = provider.id,
         displayName = usageQuotaName(provider),
@@ -25,7 +30,11 @@ public fun usageBareReading(connectionId: String, provider: QuotaProvider, statu
     )
 
 /** The display numbers of a quota snapshot as one connection's reading. */
-public fun usageReadingFromSnapshot(connectionId: String, provider: QuotaProvider, snapshot: ProviderQuotaSnapshot): UsageReading {
+public fun usageReadingFromSnapshot(
+    connectionId: String,
+    provider: QuotaProvider,
+    snapshot: ProviderQuotaSnapshot,
+): UsageReading {
     val windows =
         snapshot.windows.mapNotNull { w ->
             w.usedPercent?.let { UsageWindow(w.id, it, durationSeconds = w.durationSeconds, resetsAt = w.resetsAt) }
@@ -97,13 +106,17 @@ public class QuotaCollectorSource(
                     when (result) {
                         null -> {
                             // A time-out or a socket error: the host did not answer.
-                            if (isInApp(profile)) failures += UsageFailure(profile.id, id, UsageProblem.Broken) else unreached += profile.id
+                            if (isInApp(profile)) {
+                                failures += UsageFailure(profile.id, id, UsageProblem.Broken)
+                            } else {
+                                unreached += profile.id
+                            }
                             continue
                         }
                         is Outcome.Failed -> {
                             when (quotaFailureKind(result.failure)) {
                                 QuotaFailureKind.CollectorAuth ->
-                                    readings += usageBareReading(profile.id, provider, UsageReadingStatus.AuthRequired, context.now)
+                                    readings += bare(profile.id, provider, UsageReadingStatus.AuthRequired, context)
                                 QuotaFailureKind.Unavailable ->
                                     if (isInApp(profile)) {
                                         failures += UsageFailure(profile.id, id, UsageProblem.Broken)
@@ -125,11 +138,11 @@ public class QuotaCollectorSource(
                     snapshot.status == ProviderQuotaStatus.Unconfigured -> {
                         // Only a provider that was signed in here before stays listed.
                         if (context.lastReading?.invoke(profile.id, id) != null) {
-                            readings += usageBareReading(profile.id, provider, UsageReadingStatus.NotSignedIn, context.now)
+                            readings += bare(profile.id, provider, UsageReadingStatus.NotSignedIn, context)
                         }
                     }
                     snapshot.status == ProviderQuotaStatus.AuthRequired ->
-                        readings += usageBareReading(profile.id, provider, UsageReadingStatus.AuthRequired, context.now)
+                        readings += bare(profile.id, provider, UsageReadingStatus.AuthRequired, context)
                     snapshot.status == ProviderQuotaStatus.RateLimited ->
                         failures += UsageFailure(profile.id, id, UsageProblem.RateLimited)
                     else -> failures += UsageFailure(profile.id, id, UsageProblem.Broken)
@@ -138,6 +151,9 @@ public class QuotaCollectorSource(
         }
         return UsageSourceResult(readings = readings, failures = failures, unreached = unreached)
     }
+
+    private fun bare(id: String, provider: QuotaProvider, status: UsageReadingStatus, context: UsageReadContext) =
+        usageBareReading(id, provider, status, context.now)
 
     /** The monitor alerts for a collector reading whose rule exists (or, for In-app Ubuntu, is created next). */
     override fun covers(connectionId: String, providerId: String): Boolean {

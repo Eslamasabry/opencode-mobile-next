@@ -86,7 +86,11 @@ class QuotaAnswersTest {
         val from = utc(2026, 9, 1)
         val to = utc(2026, 9, 27, 10)
         val period =
-            SpentPeriod.fromUsage(UsageQuery(from = from, to = to, timezone = "UTC"), stats(from, to), UsageRange.ThirtyDays)
+            SpentPeriod.fromUsage(
+                UsageQuery(from = from, to = to, timezone = "UTC"),
+                stats(from, to),
+                UsageRange.ThirtyDays,
+            )
         assertTrue(period.matchesRequestedRange)
         assertEquals(from, period.from)
         assertEquals(to, period.to)
