@@ -5,7 +5,12 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /** What went wrong, in the screen's own words (never the failure's text). */
-public enum class SavedPromptsIssue { ReadFailed, SaveFailed, DeleteFailed, Full, UndoFailed }
+public enum class SavedPromptsIssue {
+    ReadFailed, SaveFailed, DeleteFailed, Full, UndoFailed,
+
+    /** The prompt has files or review notes the composer cannot take back yet; only its words can go (Codex #2). */
+    FilesStay,
+}
 
 /** A short confirmation line after an action. */
 public enum class SavedPromptsNote { Saved, Edited }
@@ -28,6 +33,8 @@ public data class SavedPromptsUi(
     val editor: PromptEditor? = null,
     val busy: Boolean = false,
     val undo: SavedPromptsUndo? = null,
+    /** With [SavedPromptsIssue.FilesStay]: the prompt whose words alone may be added. */
+    val wordsOnly: String? = null,
 ) {
     /** The rows the search keeps, newest first (Flutter `_matches`: text, case-insensitive). */
     val visible: List<SavedPromptItem>
@@ -68,6 +75,12 @@ public interface SavedPromptsActions {
 
     /** Puts the prompt's words into the conversation's composer and goes back there. The saved prompt stays. */
     public fun insert(id: String)
+
+    /** After [SavedPromptsIssue.FilesStay]: adds only the prompt's words; its files and notes stay saved here. */
+    public fun insertWordsOnly(id: String) {}
+
+    /** The open editor's text changed: kept so a recreated page shows it again. */
+    public fun editorChanged(text: String) {}
 
     public fun delete(id: String)
 

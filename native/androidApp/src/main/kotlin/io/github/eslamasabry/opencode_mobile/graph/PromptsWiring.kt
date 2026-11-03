@@ -3,18 +3,27 @@ package io.github.eslamasabry.opencode_mobile.graph
 import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
+import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.composer.stash.PromptShelf
+import io.github.eslamasabry.oc.engine.composer.store.ComposerPrefs
 import io.github.eslamasabry.oc.engine.composer.vault.AttachmentVault
 import io.github.eslamasabry.oc.engine.composer.vault.FilePayloadStore
 import io.github.eslamasabry.oc.engine.composer.vault.PayloadStore
+import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
+import io.github.eslamasabry.oc.engine.profiles.DeletionStep
+import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
 import io.github.eslamasabry.oc.feature.prompts.presentation.SavedPromptsStore
 import io.github.eslamasabry.oc.feature.prompts.presentation.ShelfReady
 import io.github.eslamasabry.oc.feature.prompts.presentation.ShelfSavedPrompts
@@ -45,12 +54,58 @@ object PromptsBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun promptShelf(stores: PreviewStores, files: StashPayloads, redactor: Redactor): PromptShelf =
-        PromptShelf(PreviewComposerPrefs(stores), AttachmentVault(files.store), PreviewComposerProfiles(stores), redactor)
+        PromptShelf(ShelfPrefs(PreviewComposerPrefs(stores)), AttachmentVault(files.store), PreviewComposerProfiles(stores), redactor)
 
     @Provides
     @SingleIn(AppScope::class)
     fun savedPrompts(stores: PreviewStores, shelf: PromptShelf, files: StashPayloads, clock: Clock): SavedPromptsStore =
         ShelfSavedPrompts(shelf, PreviewShelfReady(stores, shelf, files.store), clock)
+}
+
+/**
+ * Profile deletion, step 6 (plan 05 §3.5; B-SEC-172, B-STATE-140): the removed server's saved prompts, their attachment
+ * files and the owner marker go before the generic sweep. If anything cannot be deleted the server is kept (the sweep
+ * is guarded, so the marker that finds orphan files stays) and its shelf opens again.
+ */
+@ContributesIntoSet(AppScope::class, binding = binding<ProfileResourceCleaner>())
+@Inject
+class StashDeletionCleaner(private val shelf: PromptShelf) : ProfileResourceCleaner {
+    override val owner: String = ":engine:composer (saved prompts)"
+    override val order: Int = DeletionStep.STASH
+    override val guardsSweep: Boolean = true
+
+    override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> {
+        if (shelf.clearForProfile(profileId.raw)) return 1.ok()
+        shelf.reopenProfile(profileId.raw)
+        return Failure.StorageRefused().failed()
+    }
+}
+
+/**
+ * The shelf's view of the preference file: an adopted shelf record of the wrong type (a Boolean where Flutter wrote
+ * JSON text) reads as an unreadable shelf, named on the page with Retry, instead of throwing out of the page's load
+ * (Codex prompts #7; Flutter catches the read failure). Other keys behave exactly as [inner].
+ */
+internal class ShelfPrefs(private val inner: ComposerPrefs) : ComposerPrefs by inner {
+    override fun string(key: String): String? =
+        try {
+            inner.string(key)
+        } catch (e: IllegalStateException) {
+            if (SHELF_PREFIXES.none { key.startsWith(it) }) throw e
+            UNREADABLE // not JSON: the shelf's own parser reports the record unreadable
+        }
+
+    override fun bool(key: String): Boolean? =
+        try {
+            inner.bool(key)
+        } catch (e: IllegalStateException) {
+            if (SHELF_PREFIXES.none { key.startsWith(it) }) throw e
+            null
+        }
+
+    private companion object {
+        const val UNREADABLE = "\u0000"
+    }
 }
 
 /** The stash vault's file store, typed so it is never confused with the draft vault's. */

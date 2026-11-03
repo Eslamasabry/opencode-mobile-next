@@ -67,6 +67,8 @@ import io.github.eslamasabry.oc.ui.words.res.promptStashEmptyTitle
 import io.github.eslamasabry.oc.ui.words.res.promptStashFull
 import io.github.eslamasabry.oc.ui.words.res.promptStashIntro
 import io.github.eslamasabry.oc.ui.words.res.promptStashReadFailed
+import io.github.eslamasabry.oc.ui.words.res.promptFixFilesStay
+import io.github.eslamasabry.oc.ui.words.res.promptFixWordsOnly
 import io.github.eslamasabry.oc.ui.words.res.promptStashRestoreFailed
 import io.github.eslamasabry.oc.ui.words.res.promptStashRestoreToDraft
 import io.github.eslamasabry.oc.ui.words.res.promptStashSaveFailed
@@ -75,6 +77,7 @@ import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.promptStashed
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import kotlinx.coroutines.flow.drop
 
 /**
  * Saved prompts (Flutter `_PromptStashSheet`), as a page opened from the chat. Obvious actions are visible rows and
@@ -169,10 +172,22 @@ private fun Issue(state: SavedPromptsUi, actions: SavedPromptsActions) {
                 SavedPromptsIssue.DeleteFailed -> Res.string.promptStashDeleteFailed
                 SavedPromptsIssue.Full -> Res.string.promptStashFull
                 SavedPromptsIssue.UndoFailed -> Res.string.promptStashRestoreFailed
+                SavedPromptsIssue.FilesStay -> Res.string.promptFixFilesStay
             }
         )
     if (issue == SavedPromptsIssue.Full) {
         KitNotice(words, tone = StatusTone.Attention)
+        return
+    }
+    if (issue == SavedPromptsIssue.FilesStay) {
+        val id = state.wordsOnly
+        KitNotice(
+            words,
+            tone = StatusTone.Attention,
+            actions =
+                if (id == null) emptyList()
+                else listOf(KitLineAction(stringResource(Res.string.promptFixWordsOnly), { actions.insertWordsOnly(id) })),
+        )
         return
     }
     KitErrorNotice(
@@ -181,18 +196,21 @@ private fun Issue(state: SavedPromptsUi, actions: SavedPromptsActions) {
         detailsLabel = stringResource(Res.string.kitDetails),
         copyLabel = stringResource(Res.string.kitCopyDetails),
         retry =
-            if (issue == SavedPromptsIssue.ReadFailed)
-                KitLineAction(
-                    stringResource(Res.string.commonRetry),
-                    actions::retry,
-                )
-            else null,
+            when (issue) {
+                SavedPromptsIssue.ReadFailed -> KitLineAction(stringResource(Res.string.commonRetry), actions::retry)
+                // A failed Undo can be tried again while the deleted prompt is still held (B-STATE-085).
+                SavedPromptsIssue.UndoFailed ->
+                    if (state.undo != null) KitLineAction(stringResource(Res.string.commonRetry), actions::undo) else null
+                else -> null
+            },
     )
 }
 
 @Composable
 private fun Editor(editor: PromptEditor, busy: Boolean, enabled: KitEnabled, actions: SavedPromptsActions) {
     val field = remember(editor.generation) { TextFieldState(editor.initial) }
+    // Typed words go to the view model, so a recreated page (rotation) opens with them.
+    LaunchedEffect(field) { snapshotFlow { field.text.toString() }.drop(1).collect(actions::editorChanged) }
     KitField(
         field,
         stringResource(Res.string.promptEditorFieldLabel),

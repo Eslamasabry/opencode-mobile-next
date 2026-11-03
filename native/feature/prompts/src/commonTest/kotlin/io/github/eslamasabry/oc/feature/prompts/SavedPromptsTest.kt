@@ -218,6 +218,49 @@ class SavedPromptsTest {
     }
 
     @Test
+    fun `B-STATE-085 a failed Undo keeps Undo offered so it can be tried again`() = runTest {
+        store().save("p1", "keep me")
+        val vm = vm()
+        vm.delete(vm.state.value.prompts.single().id)
+        prefs.refuse = true
+        vm.undo()
+        prefs.refuse = false
+        assertEquals(SavedPromptsIssue.UndoFailed, vm.state.value.issue)
+        assertTrue(vm.state.value.undo != null)
+        vm.undo()
+        assertNull(vm.state.value.undo)
+        assertEquals(listOf("keep me"), vm.state.value.prompts.map { it.text })
+    }
+
+    @Test
+    fun `B-CHAT-088 a prompt with files never drops them silently and its words can still be added`() = runTest {
+        val shelf = PromptShelf(prefs, AttachmentVault(payloads), profiles, Redactor())
+        val file = io.github.eslamasabry.oc.core.model.PromptAttachment(mime = "text/plain", filename = "a.txt", url = "data:text/plain;base64,aGk=")
+        shelf.stash("p1", io.github.eslamasabry.oc.engine.composer.stash.StashedPrompt(id = "9", text = "Look at this", createdAt = 1, attachments = listOf(file)))
+        val inbox = ComposerInbox()
+        val nav = StackNavigator(ChatRoute(ref), PromptsRoute.Saved(ref))
+        val vm = vm(inbox = inbox, nav = nav)
+        vm.insert("9")
+        assertEquals(SavedPromptsIssue.FilesStay, vm.state.value.issue)
+        assertNull(inbox.pendingFor(target))
+        assertIs<PromptsRoute.Saved>(nav.top.value)
+        vm.insertWordsOnly("9")
+        assertEquals("Look at this", inbox.pendingFor(target)?.text)
+        assertIs<ChatRoute>(nav.top.value)
+        assertEquals(1, (store().list("p1") as Outcome.Ok).value.single().attachments) // the files stay saved
+    }
+
+    @Test
+    fun `typed editor words survive the page being recreated`() = runTest {
+        val vm = vm()
+        vm.newPrompt()
+        val generation = vm.state.value.editor!!.generation
+        vm.editorChanged("half-written prompt")
+        assertEquals("half-written prompt", vm.state.value.editor?.initial)
+        assertEquals(generation, vm.state.value.editor?.generation) // the open field is not reset
+    }
+
+    @Test
     fun `B-STATE-141 a removed server's shelf refuses new prompts`() = runTest {
         val vm = vm()
         profiles.ids -= "p1"
