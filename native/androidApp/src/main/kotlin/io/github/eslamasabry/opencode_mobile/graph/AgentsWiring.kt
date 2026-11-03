@@ -57,6 +57,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -85,8 +86,14 @@ class OkHttpPaseoSockets(private val maxMessageBytes: Int = PaseoTransport.MAX_F
             .build()
 
     override suspend fun open(endpoint: PaseoEndpoint, password: String): PaseoSocket {
+        // B-SEC-113: the password goes only to the host the rules checked. If OkHttp reads the address as another
+        // host (an authority it ends earlier than our parser did), refuse before any header is attached.
+        val url = endpoint.httpUrl.toHttpUrlOrNull()
+        if (url == null || url.host.lowercase() != endpoint.host.lowercase()) {
+            throw PaseoException(PaseoFailureKind.InvalidEndpoint)
+        }
         val request =
-            Request.Builder().url(endpoint.httpUrl).apply {
+            Request.Builder().url(url).apply {
                 if (password.isNotEmpty()) {
                     header("Sec-WebSocket-Protocol", "paseo.bearer.$password")
                     header("Authorization", "Bearer $password")

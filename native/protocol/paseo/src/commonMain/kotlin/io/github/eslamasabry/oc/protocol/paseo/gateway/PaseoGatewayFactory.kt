@@ -69,8 +69,16 @@ public class PaseoGatewayFactory(
             }
     }
 
-    /** No I/O here: the transport says hello on first use, so a refused password surfaces on the first read. */
-    override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> = Outcome.Ok(open(spec, spec.scope))
+    /**
+     * The pair starts listening at once (Dart `openEventChannel().start()`, as the OC2 factory starts its stream): the
+     * stream status reaches Connected, sends are admitted and a dropped socket reconnects (B-AGENT-163, 164). The
+     * hello runs on the gateway's lane, so a refused password surfaces as a Stopped stream and on the first read.
+     */
+    override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> {
+        val pair = open(spec, spec.scope)
+        (pair.live as PaseoGateway).startListening()
+        return Outcome.Ok(pair)
+    }
 
     private fun open(spec: GatewaySpec, scope: ConnectionCoroutineScope): GatewayPair {
         val lane = dispatchers.serial("paseo:${spec.profile.id.raw}")
