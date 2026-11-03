@@ -12,6 +12,8 @@ import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.ServerPage
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionStatus
@@ -39,6 +41,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -323,5 +326,67 @@ class AllConversationsViewModelTest {
         val vm = vm(Nav(), server(p1, gateway), filter = "/work/web")
         assertEquals(listOf("b"), vm.state.value.rows.map { it.ref.sessionId.raw })
         assertEquals(listOf("/work/api", "/work/web"), vm.state.value.projects.map { it.directory })
+    }
+
+    /** First pages wait for [gate], as a slow replacement connection does. */
+    private class Gated(val inner: FakeServerGateway) : ServerGateway by inner {
+        val gate = CompletableDeferred<Unit>()
+
+        override suspend fun sessionPage(cursor: String?, limit: Int): Outcome<ServerPage<Session>> {
+            gate.await()
+            return inner.sessionPage(cursor, limit)
+        }
+    }
+
+    @Test
+    fun `SCREENS-NAV-34 Running follows live run events, so the indicator and the Running filter stay true`() {
+        val gateway = FakeServerGateway(listOf(session("a", 2), session("b", 1)))
+        val vm = vm(Nav(), server(p1, gateway))
+        assertEquals(listOf(false, false), vm.state.value.rows.map { it.running })
+        gateway.events.emit(GatewayEvent.RunStarted(SessionId("a")))
+        assertEquals(listOf(true, false), vm.state.value.rows.map { it.running })
+        vm.toggleRunning()
+        assertEquals(listOf("a"), vm.state.value.rows.map { it.ref.sessionId.raw })
+        gateway.events.emit(GatewayEvent.RunEnded(SessionId("a"), RunOutcome.Succeeded))
+        assertEquals(AllPhase.NoMatch, vm.state.value.phase)
+        // After a reconnect the statuses are read again, never replayed.
+        gateway.statuses = persistentMapOf(SessionId("b") to SessionStatus.Busy)
+        gateway.events.connect()
+        assertEquals(listOf("b"), vm.state.value.rows.map { it.ref.sessionId.raw })
+    }
+
+    @Test
+    fun `B-AGENT-264 the AI Team's own conversations stay out of All conversations and its bulk acts`() {
+        val gateway =
+            FakeServerGateway(
+                listOf(
+                    session("mine", 5, dir = "/root/projects/my-app"),
+                    session("home", 4, dir = "/root/aiteam/city"),
+                    session("gc", 3, dir = "/work/city/.gc/worktrees/my-app/polecat"),
+                    session("termux", 2, dir = "/data/data/com.termux/files/home/.oc/aiteam/rig"),
+                    session("dots", 1, dir = "/root/projects/../aiteam"),
+                )
+            )
+        val vm = vm(Nav(), server(p1, gateway))
+        assertEquals(listOf("mine"), vm.state.value.rows.map { it.ref.sessionId.raw })
+        assertEquals(listOf("/root/projects/my-app"), vm.state.value.projects.map { it.directory })
+        vm.startSelecting()
+        vm.tapRow("p1/home")
+        assertEquals(0, vm.state.value.selectedCount)
+    }
+
+    @Test
+    fun `SCREENS-NAV-34 a reload inside the undo window still sends the delete to the row's server`() {
+        val first = FakeServerGateway(listOf(session("a", 2, "Gone soon"), session("b", 1)))
+        val servers = Servers(listOf(server(p1, first)))
+        val vm = ChatsAllViewModel(ChatsRoute.All(null), Nav(), servers, AppCoroutineScope(UnconfinedTestDispatcher()))
+        vm.delete("p1/a")
+        val replacement = Gated(FakeServerGateway(listOf(session("a", 2, "Gone soon"), session("b", 1))))
+        servers.servers.value = listOf(server(p1, replacement)).toImmutableList()
+        assertEquals(RowTitle.Text("Gone soon"), vm.state.value.undo?.title)
+        vm.commitDelete()
+        assertEquals(listOf("deleteSession a"), replacement.inner.calls.filter { it.startsWith("deleteSession") })
+        replacement.gate.complete(Unit)
+        assertEquals(listOf("p1/b"), vm.state.value.rows.map { it.key })
     }
 }

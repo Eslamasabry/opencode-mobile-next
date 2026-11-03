@@ -137,9 +137,10 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
         width = KitScreenWidth.Reading,
     ) {
         val list = rememberLazyListState()
-        // Reaching the end asks for the next page; after a failure only the visible Try again does.
+        // Reaching the end asks for the next page; after a failure only the visible Try again does. Keyed on the pages
+        // read, so a page that brings no matching row (search, Running, Archived) still leads to the next one.
         val autoLoad = state.canLoadMore && state.loadMoreFailure == null && !state.selecting
-        LaunchedEffect(list, autoLoad, state.rows.size) {
+        LaunchedEffect(list, autoLoad, state.loadedPages) {
             if (!autoLoad) return@LaunchedEffect
             snapshotFlow {
                     val info = list.layoutInfo
@@ -211,7 +212,8 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                     }
                 AllPhase.List -> items(state.rows, key = { it.key }) { row -> AllRow(row, state.selecting, actions) }
             }
-            if (state.phase == AllPhase.List && state.canLoadMore) {
+            // Under a filter with no loaded match, older pages may still hold one: Load more and its Try again stay.
+            if (listed && state.canLoadMore) {
                 item(key = "more") {
                     val failed = state.loadMoreFailure
                     if (failed != null) {

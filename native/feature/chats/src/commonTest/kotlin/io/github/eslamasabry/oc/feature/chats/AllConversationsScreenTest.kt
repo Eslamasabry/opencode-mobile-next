@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.feature.chats
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
@@ -166,4 +169,42 @@ class AllConversationsScreenTest {
         onNodeWithText("Servers").performClick()
         assertEquals(listOf("servers"), actions.calls)
     }
+
+    private val noMatch =
+        AllConversationsUi(phase = AllPhase.NoMatch, query = "theme", canLoadMore = true, loadedPages = 1)
+
+    @Test
+    fun `SCREENS-NAV-34 a search with no loaded match still offers Load more while older pages remain`() =
+        runComposeUiTest {
+            val actions = Recording()
+            setContent { Themed { ChatsAllScreen(noMatch.copy(loadingMore = true), actions) } }
+            onNodeWithText("No matching conversations").assertExists()
+            onNodeWithText("Load more conversations").assertExists()
+        }
+
+    @Test
+    fun `SCREENS-NAV-34 a failed older page under a filter with no match keeps its Try again`() = runComposeUiTest {
+        val actions = Recording()
+        setContent {
+            Themed { ChatsAllScreen(noMatch.copy(loadMoreFailure = Failure.Network(NetworkWhy.Offline)), actions) }
+        }
+        onNodeWithText("Could not load more conversations").assertExists()
+        onNodeWithText("Try again").performClick()
+        assertEquals(listOf("more"), actions.calls)
+    }
+
+    @Test
+    fun `SCREENS-NAV-34 reaching the end keeps asking for older pages as each one arrives without a match`() =
+        runComposeUiTest {
+            val actions = Recording()
+            var state by mutableStateOf(noMatch)
+            setContent { Themed { ChatsAllScreen(state, actions) } }
+            waitForIdle()
+            assertEquals(listOf("more"), actions.calls)
+            state = noMatch.copy(loadingMore = true)
+            waitForIdle()
+            state = noMatch.copy(loadedPages = 2) // the cursor moved on; still no row matches
+            waitForIdle()
+            assertEquals(listOf("more", "more"), actions.calls)
+        }
 }

@@ -13,10 +13,13 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,6 +49,7 @@ public class ChatsAllViewModel(
         )
     private var servers: List<ConversationServer> = emptyList()
     private var generation = 0
+    private var watchers: List<Job> = emptyList()
 
     public val state: StateFlow<AllConversationsUi> =
         model
@@ -76,7 +80,38 @@ public class ChatsAllViewModel(
     private fun reload() {
         val run = ++generation
         model.update { it.copy(sources = emptyMap(), loadingMore = false) }
+        watchers.forEach { it.cancel() }
+        watchers = servers.map { server -> viewModelScope.launch { follow(server, run) } }
         servers.forEach { server -> viewModelScope.launch { firstPage(server, run) } }
+    }
+
+    /**
+     * Running follows the server's live run events (Flutter rebuilds on controller changes). The stream is volatile:
+     * after every (re)connect the statuses are read again, never replayed.
+     */
+    private suspend fun follow(server: ConversationServer, run: Int) {
+        server.gateway.events.all.collect { envelope ->
+            if (run != generation) return@collect
+            when (val event = envelope.event) {
+                is GatewayEvent.RunStarted -> setRunning(server.profile) { it + event.sessionId }
+                is GatewayEvent.RunRetrying -> setRunning(server.profile) { it + event.sessionId }
+                is GatewayEvent.RunEnded -> setRunning(server.profile) { it - event.sessionId }
+                GatewayEvent.Connected -> {
+                    val statuses = server.gateway.sessionStatuses()
+                    if (run != generation || statuses !is Outcome.Ok) return@collect
+                    val running = statuses.value.filterValues(AllConversationsRules::isRunning).keys
+                    setRunning(server.profile) { running }
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    private fun setRunning(profile: ProfileId, change: (Set<SessionId>) -> Set<SessionId>) {
+        model.update { cur ->
+            val src = cur.sources[profile] ?: return@update cur
+            cur.copy(sources = cur.sources + (profile to src.copy(running = change(src.running))))
+        }
     }
 
     private suspend fun firstPage(server: ConversationServer, run: Int) {
@@ -118,7 +153,8 @@ public class ChatsAllViewModel(
                             // The cursor stays, so Try again asks for the same page (visible Try again, B12).
                             is Outcome.Failed -> old.copy(moreFailure = page.failure)
                         }
-                    cur.copy(sources = cur.sources + (server.profile to next))
+                    val read = if (page is Outcome.Ok) 1 else 0
+                    cur.copy(sources = cur.sources + (server.profile to next), loadedPages = cur.loadedPages + read)
                 }
             }
             if (run == generation) model.update { it.copy(loadingMore = false) }
@@ -201,9 +237,13 @@ public class ChatsAllViewModel(
     /** One undo offer at a time: a new delete sends the earlier one first (B-KIT undo: a new offer replaces). */
     private fun hide(keys: List<String>) {
         commitDelete()
+        // Each row keeps its own session, so a reload inside the window cannot lose what the DELETE needs.
+        val doomed =
+            keys.mapNotNull { k -> AllConversationsRules.find(model.value, k)?.let { (_, s) -> PendingDelete(k, s) } }
+        if (doomed.isEmpty()) return
         model.update {
             it.copy(
-                pending = keys,
+                pending = doomed,
                 undoId = it.undoId + 1,
                 selecting = false,
                 selected = emptySet(),
@@ -215,16 +255,13 @@ public class ChatsAllViewModel(
     override fun undoDelete(): Unit = model.update { it.copy(pending = emptyList()) }
 
     override fun commitDelete() {
-        val keys = model.value.pending
-        if (keys.isEmpty()) return
-        val targets =
-            keys.mapNotNull { k ->
-                val server = serverOf(k) ?: return@mapNotNull null
-                val session = AllConversationsRules.find(model.value, k)?.second ?: return@mapNotNull null
-                Triple(k, server, session.id)
-            }
+        val doomed = model.value.pending
+        if (doomed.isEmpty()) return
+        // The row's server as it is now (a reconnect may have replaced its gateway); a server that is gone has no
+        // rows left to hide, so nothing stays hidden without its DELETE.
+        val targets = doomed.mapNotNull { p -> serverOf(p.key)?.let { Triple(p.key, it, p.session.id) } }
         // The rows stay hidden while the deletes are sent; a refused one comes back with its reason.
-        model.update { it.copy(pending = emptyList(), hiddenSent = it.hiddenSent + keys) }
+        model.update { it.copy(pending = emptyList(), hiddenSent = it.hiddenSent + targets.map { t -> t.first }) }
         // The app scope, so leaving the page inside the window still sends what the person deleted.
         appScope.launch {
             targets.forEach { (k, server, id) ->

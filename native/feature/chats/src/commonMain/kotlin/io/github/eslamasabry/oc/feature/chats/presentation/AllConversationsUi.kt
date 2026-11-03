@@ -97,6 +97,8 @@ public data class AllConversationsUi(
     val archiveAvailable: Boolean = false,
     val canLoadMore: Boolean = false,
     val loadingMore: Boolean = false,
+    /** Older pages read so far; it moves on with the cursor, so reaching the end asks again after each one. */
+    val loadedPages: Int = 0,
     val loadMoreFailure: Failure? = null,
     /** The first-page failure when every server failed. */
     val failure: Failure? = null,
