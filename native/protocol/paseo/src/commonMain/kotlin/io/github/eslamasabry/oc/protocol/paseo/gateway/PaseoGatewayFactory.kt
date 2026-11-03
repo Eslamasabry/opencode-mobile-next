@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
 import io.github.eslamasabry.oc.core.domain.GatewayPair
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
@@ -38,6 +39,11 @@ public class PaseoGatewayFactory(
     private val defaultProviderModes: Map<String, String> = emptyMap(),
     /** The phone helper's gateway keeps the helper-wide work inventory (plan 04 §8). */
     private val trackLocalWork: Boolean = false,
+    /**
+     * The titles the app saved per server (`oc.conversationTitles.<profileId>`, B-AGENT-181): installed on each
+     * connected gateway before it lists anything, so an untitled record shows its saved title.
+     */
+    private val savedTitles: ((ProfileId, String) -> String?)? = null,
 ) : GatewayFactory {
     override val backend: BackendKind = BackendKind.Paseo
 
@@ -101,6 +107,7 @@ public class PaseoGatewayFactory(
             defaultProviderModes = defaultProviderModes,
             trackLocalWork = trackLocalWork,
         )
+        savedTitles?.let { lookup -> gateway.savedTitle = { key -> lookup(spec.profile.id, key) } }
         return GatewayPair(gateway, object : ServerOperationsGateway {})
     }
     /**

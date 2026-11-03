@@ -77,4 +77,55 @@ class PaseoCheckConnectionTest {
             scope.coroutineContext[kotlinx.coroutines.Job]?.cancel()
         }
     }
+
+    @Test
+    fun `B-AGENT-181 a connected computer shows the title saved for an untitled conversation`() = runTest {
+        val daemon = FakeDaemon().seedDefaults().apply {
+            handlers["fetch_agents_request"] = {
+                "fetch_agents_response" to io.github.eslamasabry.oc.protocol.paseo.jsonOf(
+                    "entries" to listOf(mapOf("agent" to agentJson("u1", title = null))),
+                    "pageInfo" to mapOf("hasMore" to false),
+                )
+            }
+        }
+        val asked = mutableListOf<Pair<String, String>>()
+        val factory = PaseoGatewayFactory(
+            FakeSockets(daemon),
+            TestDispatchers(UnconfinedTestDispatcher(testScheduler)),
+            TestClock(),
+            savedTitles = { profile, key ->
+                asked += profile.raw to key
+                if (profile.raw == "p1" && key == "claude:native-u1") "Fix the login page" else null
+            },
+        )
+        val scope = io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope(
+            kotlinx.coroutines.SupervisorJob() + UnconfinedTestDispatcher(testScheduler),
+        )
+        try {
+            val spec = io.github.eslamasabry.oc.core.domain.GatewaySpec(
+                profile = io.github.eslamasabry.oc.core.model.ServerProfile(
+                    io.github.eslamasabry.oc.core.common.ids.ProfileId("p1"),
+                    "Laptop",
+                    io.github.eslamasabry.oc.core.model.BackendKind.Paseo,
+                    io.github.eslamasabry.oc.core.model.ServerOrigin("ws", "127.0.0.1", 6767),
+                    io.github.eslamasabry.oc.core.model.ProfileTrust(null, null),
+                    managedOnPhone = false,
+                    username = null,
+                ),
+                credentials = io.github.eslamasabry.oc.core.domain.ConnectionCredentials.None,
+                scope = scope,
+                location = io.github.eslamasabry.oc.core.model.ServerLocation(directory = DIR),
+            )
+            val pair = assertIs<io.github.eslamasabry.oc.core.common.Outcome.Ok<io.github.eslamasabry.oc.core.domain.GatewayPair>>(
+                factory.connect(spec),
+            ).value
+            val page = assertIs<io.github.eslamasabry.oc.core.common.Outcome.Ok<io.github.eslamasabry.oc.core.model.ServerPage<io.github.eslamasabry.oc.core.model.Session>>>(
+                pair.live.sessionPage(null, 20),
+            ).value
+            assertEquals("Fix the login page", page.items.single().title)
+            assertTrue(("p1" to "claude:native-u1") in asked)
+        } finally {
+            scope.coroutineContext[kotlinx.coroutines.Job]?.cancel()
+        }
+    }
 }

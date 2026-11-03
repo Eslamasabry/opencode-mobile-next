@@ -15,6 +15,9 @@ import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import io.github.eslamasabry.oc.core.data.lane.WriterLane
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
 import io.github.eslamasabry.oc.core.domain.GatewayPair
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
@@ -22,6 +25,9 @@ import io.github.eslamasabry.oc.core.domain.ProbeResult
 import io.github.eslamasabry.oc.core.domain.ProbeTarget
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ServerLocation
+import io.github.eslamasabry.oc.engine.agents.memory.ConversationTitleMemory
+import io.github.eslamasabry.oc.engine.agents.store.AgentPrefs
+import io.github.eslamasabry.oc.engine.agents.store.AgentPrefsEdit
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
@@ -52,6 +58,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -190,8 +197,18 @@ class AppPaseoGatewayFactory(
     dispatchers: AppDispatchers,
     clock: Clock,
     private val profiles: ProfileStore,
+    stores: PreviewStores,
 ) : GatewayFactory {
-    val paseo = PaseoGatewayFactory(OkHttpPaseoSockets(), dispatchers, clock)
+    /** B-AGENT-181: titles the app saved per server (`oc.conversationTitles.<id>`, carried over from Flutter). */
+    private val titles = ConversationTitleMemory(KvAgentPrefs(stores.prefs, stores.lanes.app))
+
+    val paseo =
+        PaseoGatewayFactory(
+            OkHttpPaseoSockets(),
+            dispatchers,
+            clock,
+            savedTitles = { profile, key -> runCatching { titles.read(profile, key) }.getOrNull() },
+        )
 
     override val backend: BackendKind = BackendKind.Paseo
 
@@ -205,6 +222,33 @@ class AppPaseoGatewayFactory(
             else spec
         return paseo.connect(pinned)
     }
+}
+
+/** The agents engine's preferences port over the app's one key-value store (the Flutter file on the real package). */
+class KvAgentPrefs(private val store: KeyValueStore, private val lane: WriterLane) : AgentPrefs {
+    override fun string(key: String): String? = (store.get(key) as? PrefValue.Str)?.value
+
+    override fun bool(key: String): Boolean? = (store.get(key) as? PrefValue.Bool)?.value
+
+    override fun stringList(key: String): List<String>? = (store.get(key) as? PrefValue.StrList)?.value
+
+    override fun keys(prefix: String): Set<String> = store.keys(prefix)
+
+    override val changes: Flow<Set<String>> get() = store.changes
+
+    override suspend fun commit(edit: AgentPrefsEdit.() -> Unit): Outcome<Unit> =
+        store.commit(lane) {
+            val target = this
+            object : AgentPrefsEdit {
+                override fun putString(key: String, value: String) = target.putString(key, value)
+
+                override fun putBool(key: String, value: Boolean) = target.putBool(key, value)
+
+                override fun putStringList(key: String, value: List<String>) = target.putStringList(key, value)
+
+                override fun remove(key: String) = target.remove(key)
+            }.edit()
+        }
 }
 
 /** The Agents hub's computers: the saved Paseo profiles, checked, saved and connected through the real graph. */
