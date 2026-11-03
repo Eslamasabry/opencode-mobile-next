@@ -48,6 +48,10 @@ import io.github.eslamasabry.oc.android.tiles.updates.PrefsUpdateStore
 import io.github.eslamasabry.oc.android.widgets.AndroidWidgetSurface
 import io.github.eslamasabry.oc.android.widgets.WidgetFeed
 import io.github.eslamasabry.oc.android.widgets.WidgetPersistence
+import io.github.eslamasabry.oc.android.widgets.snapshot.WidgetSnapshotBuilder
+import io.github.eslamasabry.oc.android.widgets.snapshot.WidgetSnapshotPublisher
+import io.github.eslamasabry.oc.android.widgets.snapshot.WidgetSnapshotWords
+import io.github.eslamasabry.oc.android.widgets.snapshot.WidgetText
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
@@ -61,6 +65,8 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
+import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.core.security.ApprovedLink
 import io.github.eslamasabry.oc.core.security.ExternalLinkOpener
 import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
@@ -118,8 +124,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import org.json.JSONArray
-import org.json.JSONObject
 
 /*
  * Unit P12-PLATFORM: the Android platform pieces made live in the preview app. Notifications (channels, permission /
@@ -225,6 +229,8 @@ class PlatformHub(
     private val navigator: AppNavigator,
     private val draftOwners: Set<ConversationDrafts>,
     private val appPreferences: AppPreferences,
+    private val redactor: Redactor,
+    capabilities: PlatformCapabilities,
 ) {
     private val log = AppLog.tagged("Platform")
     private val prefs = application.getSharedPreferences("oc_platform", Context.MODE_PRIVATE)
@@ -241,6 +247,15 @@ class PlatformHub(
             clock,
         )
     private val widgets = AndroidWidgetSurface(application, widgetPersistence)
+    // BUILD-WIDGETS-KIT-SETTINGS A1: the snapshot is built by :android:widgets' builder (Flutter rules) and written
+    // only when its content changes (B-ANDR-117).
+    private val widgetText = WidgetText(redactor)
+    private val widgetPublisher =
+        WidgetSnapshotPublisher(capabilities, { json, profile -> widgets.publish(json, profile, null) }) {
+            clock.now().toEpochMilliseconds()
+        }
+    private var widgetWords: Pair<String?, WidgetSnapshotWords>? = null
+    private val offlineSince = mutableMapOf<ProfileId, Long>()
 
     @Volatile private var started = 0
     private val visible = MutableStateFlow(0)
@@ -250,9 +265,6 @@ class PlatformHub(
     private val statusPosted = mutableSetOf<String>() // finished / stopped alerts still in the shade
     private var knownProfiles: Set<ProfileId> = emptySet()
     private val share = ShareSeed()
-    private var widgetModel: WidgetModel? = null
-    private var widgetStampMs = 0L
-    private val serverSince = mutableMapOf<String, Pair<Boolean, Long>>()
     private var publishedPins: Pair<String, List<PinnedSession>>? = null
 
     /** Answers a shade tap on the exact pending request of the live connection (plan 11 §10.6). */
@@ -437,53 +449,15 @@ class PlatformHub(
     private suspend fun publishWidgets(feed: ChatFeedSnapshot, waiting: List<Waiting>) {
         val profile = stores.profiles.activeId.value ?: return
         val names = stores.profiles.profiles.value.associate { it.id to it.profile.name }
-        val model = PlatformRules.widgetModel(feed, waiting, profile, names, registry.live.value.keys)
-        // Unchanged content is not rewritten or redrawn: clock stamps move only when the content does (B-ANDR-117).
-        if (model == widgetModel) return
-        widgetModel = model
-        widgetStampMs = clock.now().toEpochMilliseconds()
-        widgets.publish(widgetJson(model, widgetStampMs), profile.raw, null)
-    }
-
-    private fun widgetJson(model: WidgetModel, now: Long): String {
-        val sessions = JSONArray()
-        for (row in model.rows) {
-            sessions.put(
-                JSONObject()
-                    .put("id", row.id)
-                    .put("profileID", row.profile)
-                    .put("title", row.title)
-                    .put("project", row.project)
-                    .put("server", row.server)
-                    .put("busy", row.busy)
-                    .put("needsYou", row.needsYou)
-                    .put("requestID", row.requestId)
-                    .put("updatedAt", row.updatedAt),
+        val tag = appPreferences.localeTag.value
+        val words = widgetWords?.takeIf { it.first == tag }?.second ?: WidgetSnapshotWords.load(application, tag)
+        widgetWords = tag to words
+        val input =
+            WidgetSnapshotWiring.input(
+                feed, waiting, profile, names, registry.live.value.keys, offlineSince,
+                clock.now().toEpochMilliseconds(), widgetText, words,
             )
-        }
-        val servers = JSONArray()
-        for (server in model.servers) {
-            val since = serverSince[server.name]?.takeIf { it.first == server.online }?.second ?: now
-            serverSince[server.name] = server.online to since
-            servers.put(
-                JSONObject()
-                    .put("name", server.name)
-                    .put("state", if (server.online) "online" else "offline")
-                    .put("since", since)
-                    .put("phone", false),
-            )
-        }
-        return JSONObject()
-            .put("version", 2)
-            .put("profileID", model.profile)
-            .put("connected", model.connected)
-            .put("updatedAt", now)
-            .put("lastSeenAt", now)
-            .put("runningCount", model.running)
-            .put("pendingCount", model.pending)
-            .put("sessions", sessions)
-            .put("servers", servers)
-            .toString()
+        widgetPublisher.publish(WidgetSnapshotBuilder(redactor, words).build(input), profile.raw)
     }
 
     /** Launcher shortcuts for the active server's pinned conversations (B-ANDR-030/-053), republished on change. */

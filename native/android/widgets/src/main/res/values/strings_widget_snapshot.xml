@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Words the widget snapshot writes for the launcher (Flutter app_en.arb keys in comments). -->
+<resources>
+    <!-- workspaceNewSession -->
+    <string name="widget_snapshot_new_conversation">New conversation</string>
+    <!-- chatRequestAskOutsideWrite / Read / Run, chatRequestAskDirectory -->
+    <string name="widget_snapshot_ask_outside_write">Write outside this project?</string>
+    <string name="widget_snapshot_ask_outside_read">Read outside this project?</string>
+    <string name="widget_snapshot_ask_outside_run">Run a command outside this project?</string>
+    <string name="widget_snapshot_ask_directory">Work outside this project?</string>
+    <!-- chatRequestAskCommand / Read / Edit -->
+    <string name="widget_snapshot_ask_command">Run this command?</string>
+    <string name="widget_snapshot_ask_read">Read this file?</string>
+    <string name="widget_snapshot_ask_edit">Edit this file?</string>
+    <!-- e7PermissionAction7 -->
+    <string name="widget_snapshot_use_permission" formatted="false">Use %1$s</string>
+    <!-- liveTool* -->
+    <string name="widget_snapshot_tool_command">Running a command…</string>
+    <string name="widget_snapshot_tool_edit">Editing files…</string>
+    <string name="widget_snapshot_tool_read">Reading files…</string>
+    <string name="widget_snapshot_tool_search">Searching files…</string>
+    <string name="widget_snapshot_tool_web">Browsing the web…</string>
+    <string name="widget_snapshot_tool_subagent">Running a subagent…</string>
+    <string name="widget_snapshot_tool_plan">Planning…</string>
+    <string name="widget_snapshot_tool_working">Working…</string>
+    <string name="widget_snapshot_tool_card">Showing a card…</string>
+    <string name="widget_snapshot_tool_background_task">Checking a background task…</string>
+    <string name="widget_snapshot_tool_other" formatted="false">Running %1$s…</string>
+</resources>
