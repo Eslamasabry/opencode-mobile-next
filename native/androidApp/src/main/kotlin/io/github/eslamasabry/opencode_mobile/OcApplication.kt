@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
 import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsLogSink
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
+import io.github.eslamasabry.opencode_mobile.graph.LinuxAccessors
 import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
 
 /**
@@ -45,6 +46,7 @@ class OcApplication : Application(), GraphOwner {
         (appGraph as PlatformAccessors).platform.start() // P12-PLATFORM: channels, widgets feed, alerts, update check
         appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)
         appGraph.builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone server comes back
+        (appGraph as LinuxAccessors).linuxStartup.start() // P12-FIX: finish an interrupted Reset Linux (B-LINUX-093)
         AppLog.tagged("App").i { "graph ready ${buildInfo.versionName} (${buildInfo.versionCode})" }
     }
 }

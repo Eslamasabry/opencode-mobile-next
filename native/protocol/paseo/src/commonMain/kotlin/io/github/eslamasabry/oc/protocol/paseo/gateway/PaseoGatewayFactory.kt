@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
 import io.github.eslamasabry.oc.core.domain.GatewayPair
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
@@ -38,6 +39,11 @@ public class PaseoGatewayFactory(
     private val defaultProviderModes: Map<String, String> = emptyMap(),
     /** The phone helper's gateway keeps the helper-wide work inventory (plan 04 §8). */
     private val trackLocalWork: Boolean = false,
+    /**
+     * The titles the app saved per server (`oc.conversationTitles.<profileId>`, B-AGENT-181): installed on each
+     * connected gateway before it lists anything, so an untitled record shows its saved title.
+     */
+    private val savedTitles: ((ProfileId, String) -> String?)? = null,
 ) : GatewayFactory {
     override val backend: BackendKind = BackendKind.Paseo
 
@@ -69,8 +75,16 @@ public class PaseoGatewayFactory(
             }
     }
 
-    /** No I/O here: the transport says hello on first use, so a refused password surfaces on the first read. */
-    override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> = Outcome.Ok(open(spec, spec.scope))
+    /**
+     * The pair starts listening at once (Dart `openEventChannel().start()`, as the OC2 factory starts its stream): the
+     * stream status reaches Connected, sends are admitted and a dropped socket reconnects (B-AGENT-163, 164). The
+     * hello runs on the gateway's lane, so a refused password surfaces as a Stopped stream and on the first read.
+     */
+    override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> {
+        val pair = open(spec, spec.scope)
+        (pair.live as PaseoGateway).startListening()
+        return Outcome.Ok(pair)
+    }
 
     private fun open(spec: GatewaySpec, scope: ConnectionCoroutineScope): GatewayPair {
         val lane = dispatchers.serial("paseo:${spec.profile.id.raw}")
@@ -93,6 +107,7 @@ public class PaseoGatewayFactory(
             defaultProviderModes = defaultProviderModes,
             trackLocalWork = trackLocalWork,
         )
+        savedTitles?.let { lookup -> gateway.savedTitle = { key -> lookup(spec.profile.id, key) } }
         return GatewayPair(gateway, object : ServerOperationsGateway {})
     }
     /**

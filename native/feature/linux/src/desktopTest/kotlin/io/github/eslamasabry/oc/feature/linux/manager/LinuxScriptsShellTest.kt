@@ -25,6 +25,7 @@ class LinuxScriptsShellTest {
                 listOf(
                     LinuxStorage.script,
                     LinuxPortScan.script(listOf(5173)),
+                    LinuxPortScan.PROCESS_SCRIPT,
                     LinuxPackages.LIST_SCRIPT,
                     LinuxPackages.checkScript(listOf("git")),
                     LinuxPackages.removePlanScript(listOf("git")),

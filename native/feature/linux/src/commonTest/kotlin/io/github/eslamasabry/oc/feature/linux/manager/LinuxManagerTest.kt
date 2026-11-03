@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.feature.linux.manager.FakeLinuxHost.Companion.bu
 import io.github.eslamasabry.oc.feature.linux.manager.FakeLinuxHost.Companion.notInstalled
 import io.github.eslamasabry.oc.feature.linux.manager.FakeLinuxHost.Companion.out
 import io.github.eslamasabry.oc.feature.linux.manager.FakeLinuxHost.Companion.ownership
+import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import io.github.eslamasabry.oc.feature.linux.host.ShellRun
 import io.github.eslamasabry.oc.core.common.Outcome
 import kotlinx.coroutines.test.runTest
@@ -20,7 +21,9 @@ class LinuxManagerTest {
         host.failures += listOf(ownership, busySlot)
         val ports = LinuxManager(host, VirtualRetryWait).scanPorts()
         assertEquals(listOf(5173), assertIs<LinuxAnswer.Ok<List<LinuxPort>>>(ports).value.map { it.port })
-        assertEquals(3, host.scripts.size)
+        // Three tries of the process read (two passing failures, then it comes), then the probe.
+        assertEquals(List(3) { LinuxPortScan.PROCESS_SCRIPT }, host.scripts.take(3))
+        assertEquals(4, host.scripts.size)
     }
 
     @Test
@@ -83,5 +86,50 @@ class LinuxManagerTest {
         manager.stopJob()
         host.logs[LinuxManager.JOB_SERVICE] = "::oc job install\n::oc names htop\n::oc job-exit 0\n"
         assertEquals(LinuxJobStatus.Done, manager.readJob().status)
+    }
+
+    @Test
+    fun `B-LINUX-091 a job that ends between the two reads is never read as interrupted`() = runTest {
+        // The job writes its exit marker and stops right after its log is read (Flutter reads status first).
+        val before = "::oc job install\n::oc names htop\n::oc percent 90\n"
+        val host =
+            object : LinuxHost by FakeLinuxHost() {
+                var running = true
+                var log = before
+
+                override suspend fun serviceRunning(name: String): Boolean = running
+
+                override suspend fun serviceLog(name: String, tailBytes: Int): String =
+                    log.also {
+                        log = before + "::oc job-exit 0\n"
+                        running = false
+                    }
+            }
+        val manager = LinuxManager(host, VirtualRetryWait)
+        val first = manager.readJob().status
+        assertTrue(first != LinuxJobStatus.Interrupted, "read as $first")
+        assertEquals(LinuxJobStatus.Done, manager.readJob().status)
+    }
+
+    @Test
+    fun `B-LINUX-085 a port only a launcher's command names is probed and listed with that launcher`() = runTest {
+        // `sh start-server.sh 12345` starts a `node server.js` child whose own command, environment and logs name no port.
+        val host =
+            FakeLinuxHost(
+                answer = { script ->
+                    when {
+                        script.startsWith(LinuxPortScan.PROCESS_MARK) ->
+                            out("::c 300 sh start-server.sh 12345\n::c 301 node server.js\n")
+                        script.startsWith("# oc-linux-ports") ->
+                            out(if (Regex("""(^| )12345( |$)""").containsMatchIn(script.lineSequence().first { "/dev/tcp" in it })) "::open 12345\n" else "")
+                        else -> out("")
+                    }
+                },
+            )
+        val ports = assertIs<LinuxAnswer.Ok<List<LinuxPort>>>(LinuxManager(host, VirtualRetryWait).scanPorts()).value
+        val port = ports.single()
+        assertEquals(12345, port.port)
+        assertEquals(PortOwner(300, "sh start-server.sh 12345"), port.owner)
+        assertTrue(port.canPreview)
     }
 }

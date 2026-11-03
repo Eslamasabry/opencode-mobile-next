@@ -120,7 +120,15 @@ internal class PaseoUrl(
                 portText.all(Char::isDigit) && portText.length <= 5 -> portText.toInt().takeIf { it in 0..65535 } ?: return null
                 else -> return null
             }
+            // B-SEC-113: only plain hostname/IP characters. Anything else (`\`, `%`, `;`, spaces…) can make a socket
+            // library end the authority earlier than this splitter did and reach a different host with the password.
+            val bracketed = hostPort.startsWith("[")
+            if (host.isNotEmpty() && !(if (bracketed) IPV6_HOST.matches(host) else NAME_HOST.matches(host))) return null
             return PaseoUrl(scheme, userInfo?.takeIf { it.isNotEmpty() }, host.lowercase(), port, path, query, fragment)
         }
+
+        /** Dot-separated labels of letters, digits, `-` and `_`; one trailing dot allowed. */
+        private val NAME_HOST = Regex("""^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*\.?$""")
+        private val IPV6_HOST = Regex("""^[0-9A-Fa-f:.]+$""")
     }
 }

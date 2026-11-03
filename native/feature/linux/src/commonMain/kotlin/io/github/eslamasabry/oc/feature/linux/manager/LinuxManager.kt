@@ -93,7 +93,15 @@ public class LinuxManager(
 
     // --- Ports
 
-    public suspend fun scanPorts(): LinuxAnswer<List<LinuxPort>> = run(LinuxPortScan.script()).then { LinuxAnswer.Ok(LinuxPortScan.parse(it)) }
+    /**
+     * Every process's command first, then the probe with the ports they name (Flutter `scanPorts(scan)`): a port only
+     * a launcher's command names is still tried, and its owner can be that launcher (B-LINUX-085).
+     */
+    public suspend fun scanPorts(): LinuxAnswer<List<LinuxPort>> =
+        run(LinuxPortScan.PROCESS_SCRIPT).then { procs ->
+            val cmds = LinuxPortScan.parseCommands(procs)
+            run(LinuxPortScan.script(LinuxPortScan.candidates(cmds))).then { LinuxAnswer.Ok(LinuxPortScan.parse(it, cmds)) }
+        }
 
     // --- Storage
 
@@ -148,8 +156,14 @@ public class LinuxManager(
             is Outcome.Failed -> LinuxAnswer.Problem(LinuxProblem.Failed, stopped.failure.details)
         }
 
-    public suspend fun readJob(): LinuxJobState =
-        LinuxJobState.fromLog(host.serviceLog(JOB_SERVICE, JOB_LOG_TAIL), running = host.serviceRunning(JOB_SERVICE))
+    /**
+     * Status first, then the log (as Flutter reads them): a job that writes its exit marker and stops between the two
+     * reads is then read as still running, so the next poll reads its result instead of "interrupted" (B-LINUX-091).
+     */
+    public suspend fun readJob(): LinuxJobState {
+        val running = host.serviceRunning(JOB_SERVICE)
+        return LinuxJobState.fromLog(host.serviceLog(JOB_SERVICE, JOB_LOG_TAIL), running = running)
+    }
 
     public companion object {
         /** The Android service name of the long job (frozen: the Flutter app's `linux-job`). */

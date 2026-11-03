@@ -69,6 +69,27 @@ class PaseoEndpointTest {
     }
 
     @Test
+    fun `B-SEC-113 a host with characters a socket library reads as an authority end is refused`() {
+        // A tailnet-looking suffix after `\` (or other non-hostname characters) must not pass: OkHttp ends the
+        // authority at `\` and would send the password to the public host before it.
+        for (bad in listOf(
+            "wss://attacker.example\\.tail1234.ts.net",
+            "ws://attacker.example\\.tail1234.ts.net:6767",
+            "wss://attacker.example%5c.tail1234.ts.net",
+            "wss://attacker.example;.tail1234.ts.net",
+            "wss://attacker.example .tail1234.ts.net",
+            "wss://attacker.example\t.tail1234.ts.net",
+            "ws://[::1\\x]:6767",
+            "wss://..tail1234.ts.net",
+        )) {
+            assertFailsWith<PaseoException>(bad) { PaseoEndpoint.parse(bad) }
+            assertEquals(PaseoUrlProblem.Incomplete, PaseoProfileRules.validateUrl(bad), bad)
+        }
+        assertEquals("pc-1.tail1234.ts.net", PaseoEndpoint.parse("wss://PC-1.tail1234.ts.net").host)
+        assertEquals("::1", PaseoEndpoint.parse("ws://[::1]:6767").host)
+    }
+
+    @Test
     fun `B-SEC-113 daemon reasons are tidied and capped for Details`() {
         assertNull(tidyPaseoReason("  \n "))
         assertEquals("a b c", tidyPaseoReason(" a\n b\t c "))

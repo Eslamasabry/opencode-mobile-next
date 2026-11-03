@@ -11,8 +11,11 @@ import android.provider.Settings
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
@@ -49,10 +52,39 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeInstall
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeRemove
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeUpdate
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobRestoring
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.time.Instant
 import org.jetbrains.compose.resources.getString
+
+/**
+ * App start (Flutter `root.dart _finishLinuxReset`, B-LINUX-093): a Reset Linux the app did not finish (killed while
+ * erasing, or before setup started) is finished now, so Linux is never left erased with no setup on the way. Called
+ * once from OcApplication; a failure is logged by type only and the marker stays for the next start.
+ */
+@SingleIn(AppScope::class)
+@Inject
+class LinuxStartup(private val reset: LinuxResetFlow, private val scope: AppCoroutineScope) {
+    fun start() {
+        scope.launch {
+            try {
+                reset.resumeIfPending()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                AppLog.tagged("Linux").w { "reset resume ${e::class.simpleName}" }
+            }
+        }
+    }
+}
+
+/** The application reaches the Linux start-up work through the graph. */
+@ContributesTo(AppScope::class)
+interface LinuxAccessors {
+    val linuxStartup: LinuxStartup
+}
 
 /*
  * P12-LINUX: the Android bindings of :feature:linux and :feature:phone. (P12-FIX-LINUX-VOICE: the built-in Linux
