@@ -1,4 +1,4 @@
-VERIFIED: PENDING
+VERIFIED: green
 
 # P12-CHAT-GAPS — two native chat gaps (B-CHAT-029, B-CHAT-057)
 
@@ -78,7 +78,18 @@ level shows in the chat header's ⋯ → Details ("Context") and in the context 
 
 ## Verification
 
-PENDING
+Run in this cloud container (JDK 21, Android SDK platforms;android-37.1 + build-tools 37.0.0), on candidate
+`a9bfcc1d` (base `c6d14e8d` + the two code commits); report-only commits follow.
+
+| Command | Result |
+|---|---|
+| `./gradlew :engine:cards:desktopTest` (before the fix, with the new tests) | 48 tests, **3 failed** (StackOverflowError) — the red run |
+| `./gradlew :engine:cards:desktopTest` | 48 tests, 0 failures, 0 skipped |
+| `./gradlew :feature:chat:desktopTest :engine:transcript:desktopTest` | feature:chat 216 / engine:transcript 152 tests, 0 failures, 0 skipped |
+| `./gradlew :quality:test :androidApp:testPreviewDebugUnitTest :androidApp:assemblePreviewDebug` | BUILD SUCCESSFUL; quality 59 tests, androidApp 15 tests, 0 failures; `androidApp-preview-debug.apk` built |
+| `tool/check_commits.sh`, `OC_BASE=origin/native/p12-integrate-2026-11-03 tool/scan_push.sh` | OK / clean |
+
+Not run: emulator flows (no device here; neither change alters a screen).
 
 ## For the integrator
 
