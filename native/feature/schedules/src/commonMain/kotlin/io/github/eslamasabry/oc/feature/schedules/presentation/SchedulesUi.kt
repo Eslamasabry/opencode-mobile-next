@@ -141,4 +141,7 @@ public interface ScheduleEditActions {
     public fun back()
 
     public fun save(input: EditorFields)
+
+    /** The typed fields changed: kept by the view model (rotation) and the prompt as a draft (B-STATE-024). */
+    public fun edited(input: EditorFields) {}
 }

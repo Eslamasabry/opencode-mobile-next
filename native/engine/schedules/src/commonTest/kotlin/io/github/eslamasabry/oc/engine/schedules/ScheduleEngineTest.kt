@@ -8,6 +8,10 @@ import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -165,6 +169,16 @@ class ScheduleEngineTest {
     }
 
     @Test
+    fun `B-AGENT-218 a new conversation the server made in another project never gets the prompt`() = runTest {
+        h.saved()
+        h.gateway.directory = "/elsewhere" // e.g. a Paseo gateway pinned to another project
+        val report = fire()!!
+        assertEquals("failed", report.status)
+        assertEquals("wrong_project", report.errorCode)
+        assertTrue(h.gateway.prompts.isEmpty())
+    }
+
+    @Test
     fun `B-AGENT-216 a busy conversation is skipped, never steered`() = runTest {
         h.gateway.base.sessionList = persistentListOf(Session(SessionId("ses_x"), directory = PROJECT))
         h.gateway.base.statuses = persistentMapOf(SessionId("ses_x") to SessionStatus.Busy)
@@ -216,6 +230,57 @@ class ScheduleEngineTest {
     }
 
     @Test
+    fun `B-AGENT-215 a Run now worker restarted after process death never sends again`() = runTest {
+        val saved = h.saved()
+        val tapped = T0 + 5 * MIN
+        h.clock.now = tapped
+        // The first attempt wrote its in-flight record, the server accepted the prompt, then the process died.
+        h.engine.store.recordRun(P, ScheduledRun(ScheduleIds.occurrence(saved, tapped), saved.id, tapped, tapped, RunStatus.Running))
+        h.clock.now = tapped + MIN
+        val report = h.engine.runManual(P, saved.id, 1, far, requestedAtMs = tapped)!!
+        assertEquals("failed", report.status)
+        assertEquals("interrupted", report.errorCode)
+        assertTrue(h.gateway.prompts.isEmpty())
+        // A third start of the same request does nothing at all.
+        assertNull(h.engine.runManual(P, saved.id, 1, far, requestedAtMs = tapped))
+        assertTrue(h.gateway.prompts.isEmpty())
+        // A new tap is a new run.
+        assertEquals("ran", h.engine.runManual(P, saved.id, 1, far, requestedAtMs = tapped + 2 * MIN)!!.status)
+    }
+
+    @Test
+    fun `B-STATE-090 a run that died after settling still advances and re-arms the next occurrence`() = runTest {
+        h.saved()
+        val entry = h.armed().single()
+        h.clock.now = entry.dueAtMs
+        // The dead attempt claimed and settled the occurrence, but never advanced the schedule or re-armed it.
+        h.engine.claims.claim(entry)
+        h.engine.claims.settle(entry)
+        assertNull(h.engine.runOccurrence(entry, far))
+        assertTrue(h.gateway.prompts.isEmpty())
+        val next = h.engine.store.load(P).single().nextRunAtMs!!
+        assertTrue(next > entry.dueAtMs)
+        assertEquals(listOf(ArmedEntry(P, entry.scheduleId, 1, next)), h.armed())
+    }
+
+    @Test
+    fun `B-STATE-096 a sync that read an older revision never overwrites a newer one`() = runTest {
+        val saved = h.saved()
+        // An older sync (opening the list) read revision 1 and is held before it writes the armed index.
+        val hold = CompletableDeferred<Unit>()
+        h.backend.holdIndexRead = hold
+        val older = launch { h.engine.load(P) }
+        runCurrent()
+        val edit = async { h.engine.save(P, h.draft(Recurrence.daily(10, 30)), editing = saved) }
+        runCurrent()
+        hold.complete(Unit)
+        older.join()
+        edit.await()
+        assertEquals(2, h.armed().single().revision)
+        assertEquals(listOf(2), h.engine.claims.index(P).map { it.revision })
+    }
+
+    @Test
     fun `B-STATE-091 the morning digest counts only completed runs in its window and claims once`() = runTest {
         h.saved()
         fire()
@@ -238,6 +303,29 @@ class ScheduleEngineTest {
         assertEquals(1, h.engine.store.load(P).single().revision) // claims and identity unchanged
         assertEquals(listOf(ArmedEntry(P, "a1", 1, T0 + HOUR)), h.armed())
         assertEquals("ran", fire()!!.status)
+    }
+
+    @Test
+    fun `B-AGENT-218 a Flutter schedule made for another server is not migrated onto the edited profile`() = runTest {
+        // Made for server A ("ab"…); the profile now names server B, whose Flutter fingerprint is "cd"….
+        val legacy = prompt(next = T0 + HOUR).copy(profileFingerprint = "ab".repeat(32))
+        h.profiles.legacyFingerprints[P] = "cd".repeat(32)
+        h.backend.values["oc.scheduledPrompts.p1"] = ScheduleCodec.encodeEnvelope(ScheduleCodec.Envelope(listOf(legacy)))
+        h.engine.restoreAll()
+        assertEquals("ab".repeat(32), h.engine.store.load(P).single().profileFingerprint)
+        h.clock.now = T0 + HOUR
+        val report = h.engine.runOccurrence(ArmedEntry(P, "a1", 1, T0 + HOUR), far)
+        assertTrue(report == null || report.status != "ran")
+        assertTrue(h.profiles.gateway.prompts.isEmpty())
+    }
+
+    @Test
+    fun `B-MIGR-013 without a known Flutter fingerprint nothing is migrated`() = runTest {
+        val legacy = prompt(next = T0 + HOUR).copy(profileFingerprint = "ab".repeat(32))
+        h.profiles.legacyFingerprints.clear()
+        h.backend.values["oc.scheduledPrompts.p1"] = ScheduleCodec.encodeEnvelope(ScheduleCodec.Envelope(listOf(legacy)))
+        h.engine.restoreAll()
+        assertEquals("ab".repeat(32), h.engine.store.load(P).single().profileFingerprint)
     }
 
     @Test

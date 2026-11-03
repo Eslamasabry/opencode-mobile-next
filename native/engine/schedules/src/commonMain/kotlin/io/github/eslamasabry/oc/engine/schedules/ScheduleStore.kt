@@ -46,9 +46,19 @@ public object ScheduleKeys {
 
     public fun index(profileId: String): String = INDEX_PREFIX + checked(profileId)
 
+    /** The editor's typed prompt (Flutter `KitDraft` target `schedule.<id|new>`), swept with the profile (`oc.draft.`). */
+    public const val DRAFT_PREFIX: String = "oc.draft.schedule."
+
+    public fun draft(profileId: String, scheduleId: String?): String =
+        DRAFT_PREFIX + (scheduleId ?: "new") + "." + checked(profileId)
+
     internal fun profileOf(key: String): String? =
-        listOf(STORE_PREFIX, CLAIMS_PREFIX, INDEX_PREFIX).firstOrNull { key.startsWith(it) }?.let { key.removePrefix(it) }
-            ?.takeIf(ScheduleIds::valid)
+        if (key.startsWith(DRAFT_PREFIX)) {
+            key.substringAfterLast('.').takeIf(ScheduleIds::valid)
+        } else {
+            listOf(STORE_PREFIX, CLAIMS_PREFIX, INDEX_PREFIX).firstOrNull { key.startsWith(it) }?.let { key.removePrefix(it) }
+                ?.takeIf(ScheduleIds::valid)
+        }
 
     private fun checked(profileId: String): String {
         if (!ScheduleIds.valid(profileId)) throw ScheduleStoreException(ScheduleCode.InvalidProfile)
