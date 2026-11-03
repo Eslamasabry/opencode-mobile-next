@@ -66,7 +66,10 @@ class SetupPlannerTest {
             assertEquals(listOf("permission", "bash"), reply.edits.single().path)
             assertEquals(str(effect), reply.edits.single().value)
         }
-        val invalid = listOf(mapOf("tool" to "anything", "effect" to "allow"), mapOf("tool" to "bash", "effect" to "forever"))
+        val invalid = listOf(
+            mapOf("tool" to "anything", "effect" to "allow"),
+            mapOf("tool" to "bash", "effect" to "forever"),
+        )
         for (inputs in invalid) {
             val reply = planner.start(SetupIntent.Permission, inputs = inputs)
             assertTrue(reply.edits.isEmpty())

@@ -435,7 +435,12 @@ public class SetupController(
                 else -> SetupPhase.Error
             }
             emit(
-                SetupSnapshot(phase = phase, config = snapshot.config, servers = snapshot.servers, reason = stop.reason),
+                SetupSnapshot(
+                    phase = phase,
+                    config = snapshot.config,
+                    servers = snapshot.servers,
+                    reason = stop.reason,
+                ),
             )
             return Outcome.Failed(stop.failure)
         } finally {
