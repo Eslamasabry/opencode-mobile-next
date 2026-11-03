@@ -15,6 +15,7 @@ import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsLogSink
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
 import io.github.eslamasabry.opencode_mobile.graph.LinuxAccessors
 import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
+import io.github.eslamasabry.opencode_mobile.graph.WidgetRunnerAccessors
 
 /**
  * The ADR §9.7 order, slice-0 form: steps 1 (crash handler), 3 (crash-loop guard), 4 (Flutter
@@ -44,6 +45,7 @@ class OcApplication : Application(), GraphOwner {
                 .create(this, buildInfo, redactor, LaunchMode.Normal)
         appGraph.previewRuntime // warm stores, restore saved profile, connect
         (appGraph as PlatformAccessors).platform.start() // P12-PLATFORM: channels, widgets feed, alerts, update check
+        (appGraph as WidgetRunnerAccessors).widgetRunners.start() // widget taps and status checks reach the server
         appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)
         appGraph.builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone server comes back
         (appGraph as LinuxAccessors).linuxStartup.start() // P12-FIX: finish an interrupted Reset Linux (B-LINUX-093)

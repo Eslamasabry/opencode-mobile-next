@@ -7,10 +7,13 @@ import io.github.eslamasabry.oc.android.widgets.snapshot.WidgetSession
 import io.github.eslamasabry.oc.android.widgets.snapshot.WidgetSnapshotInput
 import io.github.eslamasabry.oc.android.widgets.snapshot.WidgetSnapshotWords
 import io.github.eslamasabry.oc.android.widgets.snapshot.WidgetText
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
 
 /*
@@ -111,5 +114,270 @@ internal object WidgetSnapshotWiring {
             tool = if (command != null) "bash" else null,
             target = command ?: file,
         )
+    }
+}
+
+// ---- A2: widget action and status runners (B-ANDR-103..107, B-ANDR-118/119/121, B-SEC-180/183, B-AGENT-317) -----------
+
+/** Started from OcApplication right after the platform hub (which binds WidgetFeed.persistence). */
+@dev.zacsweers.metro.ContributesTo(dev.zacsweers.metro.AppScope::class)
+interface WidgetRunnerAccessors {
+    val widgetRunners: WidgetRunnerWiring
+}
+
+/**
+ * Binds `WidgetFeed.backgroundRunner` (a cold tap or a scheduled status check opens its own private OpenCode 2
+ * connection through the protocol-neutral gateway) and `WidgetFeed.liveDispatcher` (a tap while the tapped server is
+ * live is answered by that live connection), and forwards whether the active server is live to `WidgetFeed`.
+ */
+@dev.zacsweers.metro.SingleIn(dev.zacsweers.metro.AppScope::class)
+@dev.zacsweers.metro.Inject
+class WidgetRunnerWiring(
+    private val application: android.app.Application,
+    private val stores: PreviewStores,
+    private val registry: io.github.eslamasabry.oc.engine.connection.ConnectionRegistry,
+    private val runtime: PreviewRuntime,
+    private val factories: Set<io.github.eslamasabry.oc.core.domain.GatewayFactory>,
+    private val credentialSources: Set<io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource>,
+    private val appScope: io.github.eslamasabry.oc.core.common.AppCoroutineScope,
+    private val dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers,
+    private val clock: kotlin.time.Clock,
+    private val redactor: io.github.eslamasabry.oc.core.security.Redactor,
+) {
+    private val log = io.github.eslamasabry.oc.core.common.AppLog.tagged("WidgetRunners")
+    @Volatile private var started = false
+
+    fun start() {
+        if (started) return
+        val persistence = io.github.eslamasabry.oc.android.widgets.WidgetFeed.persistence ?: return
+        started = true
+        val now = { clock.now().toEpochMilliseconds() }
+        io.github.eslamasabry.oc.android.widgets.WidgetFeed.backgroundRunner =
+            io.github.eslamasabry.oc.android.widgets.runner.WidgetRunnerHost(
+                appScope,
+                persistence,
+                ::profile,
+                ::open,
+                io.github.eslamasabry.oc.android.widgets.runner.WidgetRunPreview(redactor::redact)::of,
+                now,
+            )
+        io.github.eslamasabry.oc.android.widgets.WidgetFeed.liveDispatcher =
+            io.github.eslamasabry.oc.android.widgets.runner.WidgetLiveHost(
+                appScope,
+                io.github.eslamasabry.oc.android.widgets.runner.WidgetLiveActions(
+                    AppWidgetLiveWorld(stores, registry, runtime)
+                ),
+            )
+        appScope.launch {
+            kotlinx.coroutines.flow
+                .combine(registry.live, stores.profiles.activeId) { live, active -> active != null && active in live }
+                .distinctUntilChanged()
+                .collect { live ->
+                    io.github.eslamasabry.oc.android.widgets.WidgetFeed.onConnection(application, live)
+                }
+        }
+    }
+
+    /** Metadata fingerprint of a saved profile; never a secret. */
+    private suspend fun profile(id: String): io.github.eslamasabry.oc.android.widgets.runner.WidgetRunProfile? {
+        if (stores.warm() is Outcome.Failed) return null
+        val loaded = stores.profiles.profile(ProfileId(id)) ?: return null
+        return io.github.eslamasabry.oc.android.widgets.runner.WidgetRunProfile(
+            id,
+            io.github.eslamasabry.oc.android.widgets.runner.widgetProfileFingerprint(loaded.profile),
+            loaded.profile.transientTransport,
+        )
+    }
+
+    /**
+     * A private cold connection pinned to the target's location (Flutter `createWidgetActionTransport`). OpenCode 2
+     * only; a profile that needs migration, a password re-entry or cleartext consent is unsupported. The connection
+     * opens no live event stream (its scope is already closed, so the stream never starts): a tap reads and answers,
+     * it never subscribes. The person's own live connection is never touched.
+     */
+    private suspend fun open(
+        id: String,
+        directory: String?,
+        workspace: String?,
+    ): io.github.eslamasabry.oc.android.widgets.runner.WidgetOpen {
+        val unsupported =
+            io.github.eslamasabry.oc.android.widgets.runner.WidgetOpen.Refused(
+                io.github.eslamasabry.oc.android.widgets.runner.WidgetOpenRefusal.Unsupported
+            )
+        val unavailable =
+            io.github.eslamasabry.oc.android.widgets.runner.WidgetOpen.Refused(
+                io.github.eslamasabry.oc.android.widgets.runner.WidgetOpenRefusal.Unavailable
+            )
+        if (stores.warm() is Outcome.Failed) return unavailable
+        val loaded = stores.profiles.profile(ProfileId(id)) ?: return unavailable
+        val stored = loaded.profile
+        if (
+            stored.backend != io.github.eslamasabry.oc.core.model.BackendKind.OpenCode2 ||
+                stored.requiresOpenCode2Migration ||
+                stored.transientTransport ||
+                loaded.reentry.password ||
+                loaded.cleartextUnconfirmed
+        )
+            return unsupported
+        val server = loaded.toServerProfile() ?: return unsupported
+        val factory = factories.firstOrNull { it.backend == server.backend } ?: return unsupported
+        val credentials =
+            when (val read = credentialSources.singleOrNull()?.resolve(server)) {
+                null -> io.github.eslamasabry.oc.core.domain.ConnectionCredentials.None
+                is Outcome.Ok -> read.value
+                is Outcome.Failed -> return unavailable
+            }
+        val location = io.github.eslamasabry.oc.core.model.ServerLocation(directory, workspace)
+        val opened = widgetColdOpen(factory, server, credentials, location, dispatchers)
+        if (opened is io.github.eslamasabry.oc.android.widgets.runner.WidgetOpen.Refused) log.i { "widget run: no connection" }
+        return opened
+    }
+}
+
+/**
+ * One private, cold OpenCode 2 connection for a widget run (shared with its HTTP test). The scope handed to the
+ * gateway is already closed, so the live event stream never starts; reconnecting is off. Closing the transport
+ * closes the gateway.
+ */
+internal suspend fun widgetColdOpen(
+    factory: io.github.eslamasabry.oc.core.domain.GatewayFactory,
+    server: io.github.eslamasabry.oc.core.model.ServerProfile,
+    credentials: io.github.eslamasabry.oc.core.domain.ConnectionCredentials,
+    location: io.github.eslamasabry.oc.core.model.ServerLocation,
+    dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers,
+): io.github.eslamasabry.oc.android.widgets.runner.WidgetOpen {
+    val closed = kotlinx.coroutines.Job().apply { cancel() }
+    val scope = io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope(closed + dispatchers.default)
+    val spec =
+        io.github.eslamasabry.oc.core.domain.GatewaySpec(
+            server,
+            credentials,
+            scope,
+            location,
+            reconnectAllowed = kotlinx.coroutines.flow.MutableStateFlow(false),
+        )
+    return when (val pair = factory.connect(spec)) {
+        is Outcome.Failed ->
+            io.github.eslamasabry.oc.android.widgets.runner.WidgetOpen.Refused(
+                io.github.eslamasabry.oc.android.widgets.runner.WidgetOpenRefusal.Unavailable
+            )
+        is Outcome.Ok -> {
+            val gateway = pair.value.live
+            if (gateway.location.value != location) gateway.setLocation(location)
+            io.github.eslamasabry.oc.android.widgets.runner.WidgetOpen.Opened(
+                io.github.eslamasabry.oc.android.widgets.runner.GatewayRunTransport(gateway)
+            )
+        }
+    }
+}
+
+/**
+ * The live connection's view for widget taps: the active server's live graph (its request engine and gateway), the
+ * conversation feed for running state and the published widget snapshot for the scope and run start the tap carries.
+ */
+internal class AppWidgetLiveWorld(
+    private val stores: PreviewStores,
+    private val registry: io.github.eslamasabry.oc.engine.connection.ConnectionRegistry,
+    private val runtime: PreviewRuntime,
+) : io.github.eslamasabry.oc.android.widgets.runner.WidgetLiveWorld {
+    private fun active(): ProfileId? = stores.profiles.activeId.value
+
+    private fun graph() = active()?.let { registry.live.value[it] }
+
+    private fun gateway(): io.github.eslamasabry.oc.core.domain.ServerGateway? = graph()?.session?.server
+
+    private fun engine() =
+        (graph() as? io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors)?.chatRequests?.engine
+
+    private fun snapshot(): Map<*, *>? =
+        try {
+            (stores.prefs.get("oc.widgetSessions") as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)
+                ?.value
+                ?.let { io.github.eslamasabry.oc.core.common.dart.DartJson.decodeOrNull(it) as? Map<*, *> }
+        } catch (_: IllegalStateException) {
+            null // preferences not warm yet: nothing is current
+        }
+
+    override fun isCurrent(tap: io.github.eslamasabry.oc.android.widgets.runner.WidgetTap): Boolean {
+        val snapshot = snapshot() ?: return false
+        return active()?.raw == tap.profileId &&
+            graph() != null &&
+            snapshot["profileID"] == tap.profileId &&
+            snapshot["scopeToken"] == tap.scopeToken
+    }
+
+    override fun pendingPermission(requestId: String): io.github.eslamasabry.oc.android.widgets.runner.WidgetPendingAsk? {
+        val entry =
+            engine()?.pending?.value?.firstOrNull {
+                it is PendingRequest.Permission &&
+                    it.id.raw == requestId &&
+                    (it.phase is io.github.eslamasabry.oc.engine.requests.AnswerPhase.Waiting ||
+                        it.phase is io.github.eslamasabry.oc.engine.requests.AnswerPhase.NotAccepted)
+            } ?: return null
+        return io.github.eslamasabry.oc.android.widgets.runner.WidgetPendingAsk(entry.id.raw, entry.sessionId.raw)
+    }
+
+    override fun startedAt(session: String): Long {
+        val profile = active() ?: return 0
+        val running =
+            runtime.snapshot.value.items.any {
+                it.profileId == profile && it.sessionId.raw == session && it.status == ChatStatus.Running
+            }
+        if (!running) return 0
+        val rows = (snapshot()?.get("sessions") as? List<*>)?.filterIsInstance<Map<*, *>>().orEmpty()
+        return (rows.firstOrNull { it["id"] == session }?.get("startedAt") as? Number)?.toLong() ?: 0
+    }
+
+    override fun steerMode(session: String): String {
+        val gateway = gateway() ?: return "unknown"
+        if (gateway.capabilities.value.promptSteering) return "steer"
+        val midTurn = gateway as? io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway ?: return "afterReply"
+        return when (midTurn.midTurnPrompt(io.github.eslamasabry.oc.core.common.ids.SessionId(session))) {
+            io.github.eslamasabry.oc.core.model.MidTurnPrompt.JoinsTurn -> "steer"
+            io.github.eslamasabry.oc.core.model.MidTurnPrompt.RestartsTurn -> "restart"
+            null -> "unknown"
+        }
+    }
+
+    override val promptSteering: Boolean
+        get() = gateway()?.capabilities?.value?.promptSteering == true
+
+    override suspend fun answer(session: String, request: String, allowOnce: Boolean): Outcome<Unit> {
+        val engine = engine() ?: return Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Unexpected())
+        val reply =
+            if (allowOnce) io.github.eslamasabry.oc.core.model.PermissionReply.Once
+            else io.github.eslamasabry.oc.core.model.PermissionReply.Reject
+        return engine.answerNow(
+            io.github.eslamasabry.oc.core.common.ids.RequestId(request),
+            io.github.eslamasabry.oc.engine.requests.RequestAnswer.Permission(reply),
+        )
+    }
+
+    override suspend fun stop(session: String): Outcome<Unit> {
+        val gateway = gateway() ?: return Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Unexpected())
+        return when (val stopped = gateway.stop(io.github.eslamasabry.oc.core.common.ids.SessionId(session))) {
+            is Outcome.Ok -> Outcome.Ok(Unit)
+            is Outcome.Failed -> stopped
+        }
+    }
+
+    override suspend fun send(
+        session: String,
+        text: String,
+        delivery: io.github.eslamasabry.oc.core.model.PromptDelivery?,
+    ): Outcome<Unit> {
+        val gateway = gateway() ?: return Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Unexpected())
+        val sent =
+            gateway.prompt(
+                io.github.eslamasabry.oc.core.common.ids.SessionId(session),
+                io.github.eslamasabry.oc.core.model.OutgoingPrompt(text, delivery = delivery),
+            )
+        return when {
+            sent is Outcome.Ok && sent.value is io.github.eslamasabry.oc.core.model.PromptAdmission.Confirmed ->
+                Outcome.Ok(Unit)
+            // A lost response is uncertain: the caller reports it and never resends.
+            sent is Outcome.Failed -> sent
+            else -> Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Unexpected())
+        }
     }
 }
