@@ -12,6 +12,8 @@ import io.github.eslamasabry.oc.ui.design.color.Packs
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
+import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyphs
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.words.res.diagnosticsReportShareFailed
 import io.github.eslamasabry.oc.ui.words.res.reportProblemCopied
 import io.github.eslamasabry.oc.ui.words.res.textSizeDefault
@@ -253,3 +255,40 @@ internal fun textSizeWords(size: AppTextSize): String =
             AppTextSize.Large -> Res.string.textSizeLarge
         },
     )
+
+/** Each group's glyph on the hub (Flutter `hub_rows.dart`). */
+internal fun groupGlyph(group: SettingsGroupId): KitRowLeading =
+    KitRowLeading.Glyph(when (group) {
+        SettingsGroupId.Server -> KitGlyphs.Server
+        SettingsGroupId.Agent -> KitGlyphs.Agent
+        SettingsGroupId.Conversations -> KitGlyphs.Chat
+        SettingsGroupId.ThisApp -> KitGlyphs.Phone
+        SettingsGroupId.Help -> KitGlyphs.Question
+    })
+
+/** Each row's glyph (Flutter `hub_rows.dart`, the same `AppIconography` names). */
+internal fun rowGlyph(row: SettingsRowId): KitRowLeading =
+    KitRowLeading.Glyph(when (row) {
+        SettingsRowId.Servers -> KitGlyphs.Server
+        SettingsRowId.ThisPhone -> KitGlyphs.Phone
+        SettingsRowId.ModelAndMode -> KitGlyphs.Model
+        SettingsRowId.Providers -> KitGlyphs.Cloud
+        SettingsRowId.Usage -> KitGlyphs.Usage
+        SettingsRowId.Tools -> KitGlyphs.Tools
+        SettingsRowId.Agents -> KitGlyphs.Terminal
+        SettingsRowId.ShowReasoning -> KitGlyphs.Idea
+        SettingsRowId.ShowTimestamps -> KitGlyphs.Clock
+        SettingsRowId.DefaultShell -> KitGlyphs.Terminal
+        SettingsRowId.Voice -> KitGlyphs.Mic
+        SettingsRowId.Permissions -> KitGlyphs.Permissions
+        SettingsRowId.Notifications -> KitGlyphs.Bell
+        SettingsRowId.Background -> KitGlyphs.Sync
+        SettingsRowId.Appearance -> KitGlyphs.Appearance
+        SettingsRowId.Language -> KitGlyphs.Globe
+        SettingsRowId.Privacy -> KitGlyphs.Privacy
+        SettingsRowId.Updates -> KitGlyphs.Download
+        SettingsRowId.Guide -> KitGlyphs.Guide
+        SettingsRowId.Tips -> KitGlyphs.Idea
+        SettingsRowId.ReportProblem -> KitGlyphs.Bug
+        SettingsRowId.About -> KitGlyphs.Info
+    })

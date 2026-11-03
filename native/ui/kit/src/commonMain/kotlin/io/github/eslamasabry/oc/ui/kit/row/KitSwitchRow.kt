@@ -97,6 +97,8 @@ public fun KitSwitchRow(
     risk: String? = null,
     locked: Boolean = false,
     enabled: KitEnabled = KitEnabled.Enabled,
+    /** The row's glyph tile, as [KitRow] draws it (Dart `KitSwitchRow.icon`); null = none. */
+    leading: KitRowLeading? = null,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -130,6 +132,7 @@ public fun KitSwitchRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
+            leading?.let { RowLeadingTile(it, dim = !on) }
             Column(Modifier.weight(1f)) {
                 KitText(title, role = TypeRole.RowTitle, tone = if (on) TextTone.Primary else TextTone.Tertiary)
                 (enabled.reason ?: supporting)?.let {

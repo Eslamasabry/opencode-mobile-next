@@ -47,7 +47,13 @@ class SettingsParityCaptureTest {
         ui.copy(hub = hub, stack = persistentListOf(SettingsPage.Hub, page))
 
     private fun group(id: SettingsGroupId): SettingsUi =
-        on(SettingsPage.Group(id), SettingsUi(group = GroupUi(id, SettingsStructure.rows(id, facts, reasoning = true, timestamps = false))))
+        on(
+            SettingsPage.Group(id),
+            SettingsUi(
+                group = GroupUi(id, SettingsStructure.rows(id, facts, reasoning = true, timestamps = false)),
+                notifications = NotificationFacts(background = BackgroundState.Off),
+            ),
+        )
 
     private fun scene(screen: String, state: SettingsUi, english: List<String>, tags: List<String> = emptyList()) =
         ParityCapture.capture(
