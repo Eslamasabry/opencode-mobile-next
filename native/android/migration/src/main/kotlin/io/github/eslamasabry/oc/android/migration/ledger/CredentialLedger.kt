@@ -52,6 +52,9 @@ internal class CredentialLedger(private val file: File, private val faults: Faul
         return all === UNREADABLE || name in all
     }
 
+    /** Every name with a record, or null when the ledger file exists but does not parse. */
+    fun knownOrNull(): Set<String>? = all().takeUnless { it === UNREADABLE }?.keys
+
     /** M2: the native value now equals the FSS copy with ciphertext digest [legacyDigest]. Never overwrites a record. */
     fun recordMigrated(name: String, legacyDigest: String) {
         val all = all()

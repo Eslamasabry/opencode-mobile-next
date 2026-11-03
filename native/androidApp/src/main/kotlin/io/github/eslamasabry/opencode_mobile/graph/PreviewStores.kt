@@ -32,9 +32,10 @@ class PreviewStores(
     dispatchers: AppDispatchers,
     redactor: Redactor,
     private val gate: MigrationGate,
+    migration: MigrationWiring,
 ) {
     val prefs = AndroidDataStores.flutterPrefs(application, gate, dispatchers.io)
-    val secrets = AndroidDataStores.secrets(application, gate, redactor, dispatchers.io)
+    val secrets = migration.ledgered(AndroidDataStores.secrets(application, gate, redactor, dispatchers.io))
     val lanes = DefaultWriterLanes()
     val profiles = ProfileStore(prefs, secrets, lanes, redactor)
     private val warming = Mutex()

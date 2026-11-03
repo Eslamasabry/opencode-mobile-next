@@ -29,10 +29,18 @@ internal class LedgeredSecretWriter(
     suspend fun delete(name: String): Boolean = invalidateThen(name, deleted = true) { sink.delete(name) }
 
     private suspend fun invalidateThen(name: String, deleted: Boolean, change: suspend () -> Boolean): Boolean {
+        if (!prepare(name, deleted)) return false
+        return change()
+    }
+
+    /**
+     * Steps 1 and 2 only, for a store that makes the change itself (the app's secret store, Codex review
+     * p12/migration #1). False when the stale marker could not be committed: the caller must not change the store.
+     */
+    fun prepare(name: String, deleted: Boolean): Boolean {
         val queued = name in fssNames()
         ledger.invalidate(name, deleted, queued)
-        if (queued && !queueStale(name)) return false
-        return change()
+        return !queued || queueStale(name)
     }
 
     private fun queueStale(name: String): Boolean {

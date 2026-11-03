@@ -34,6 +34,20 @@ internal class StartFreshTransaction(
         return true
     }
 
+    /**
+     * [recoverBeforeOpen] for the app's start (Codex review p12/migration #4): it runs during `Application.onCreate`,
+     * so a failed rename or journal write (storage filled up after phase 1) must not escape and crash every start.
+     * The transaction stays pending; the runner then shows a failure screen whose Try again restarts the app.
+     */
+    fun recoverSafely(): Recovery =
+        try {
+            if (recoverBeforeOpen()) Recovery.Finished else Recovery.NothingPending
+        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+            Recovery.Failed
+        }
+
+    enum class Recovery { Finished, NothingPending, Failed }
+
     /** True when a Start fresh finished now. Call before anything opens a prefs file (StartupFence step 5a). */
     fun recoverBeforeOpen(): Boolean {
         val j = (store.load() as? JournalStore.Loaded.Ok)?.journal ?: return false

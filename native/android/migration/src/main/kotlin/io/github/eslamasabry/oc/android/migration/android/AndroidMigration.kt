@@ -20,11 +20,13 @@ public object AndroidMigration {
     /**
      * Start fresh, phase 2 (plan 05 §9.4): finishes a requested Start fresh by moving the old prefs and native secret
      * files aside (kept, never deleted). Call once per process BEFORE anything opens a prefs file or the secret store.
-     * Returns true when a Start fresh finished now.
+     * Returns true when a Start fresh finished now. Never throws (Codex review p12/migration #4): a failure leaves the
+     * request pending and the runner shows it as a failure screen with Try again.
      */
     public fun recoverBeforeOpen(context: Context, clock: Clock): Boolean {
         val dataDir = context.applicationContext.filesDir.parentFile ?: return false
-        return StartFreshTransaction(MigrationPaths(dataDir), now = { clock.now().toEpochMilliseconds() }).recoverBeforeOpen()
+        val fresh = StartFreshTransaction(MigrationPaths(dataDir), now = { clock.now().toEpochMilliseconds() })
+        return fresh.recoverSafely() == StartFreshTransaction.Recovery.Finished
     }
 
     public fun create(

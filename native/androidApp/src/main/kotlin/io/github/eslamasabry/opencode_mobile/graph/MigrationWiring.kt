@@ -25,7 +25,10 @@ import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.AppLog
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.android.AndroidDataStores
 import io.github.eslamasabry.oc.core.data.migration.MigrationGate
@@ -44,11 +47,13 @@ import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.feature.gate.GatePlatform
 import io.github.eslamasabry.oc.feature.gate.GateReentry
+import io.github.eslamasabry.oc.feature.gate.GateReentryKind
 import io.github.eslamasabry.oc.feature.gate.ui.MigrationGateHost
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.opencode_mobile.MainActivity
 import kotlin.time.Clock
@@ -97,24 +102,28 @@ class MigrationWiring(
     }
 
     @OptIn(MigrationOnly::class)
-    private val runner: MigrationRunnerPort =
+    private val migrationRunner: MigrationRunner? =
         if (adoptsFlutterData) {
-            RunnerPort(
-                application,
-                AndroidMigration.create(
-                    context = application,
-                    secrets = SecretSink(AndroidDataStores.secretsForMigration(application, redactor, dispatchers.io)),
-                    redactor = redactor,
-                    signals = LoggedSignals,
-                    nativeVersionCode = buildInfo.versionCode.toLong(),
-                    clock = clock,
-                    io = dispatchers.io,
-                ),
-                scope,
-            )
+            AndroidMigration.create(
+                context = application,
+                secrets = SecretSink(AndroidDataStores.secretsForMigration(application, redactor, dispatchers.io)),
+                redactor = redactor,
+                signals = LoggedSignals,
+                nativeVersionCode = buildInfo.versionCode.toLong(),
+                clock = clock,
+                io = dispatchers.io,
+            ).also {
+                // StartupFence (plan 05 §7.1, Codex review p12/migration #3): the S0 byte backup is taken here, before
+                // this wiring hands out the gate, so no store can open (and Android's loader rename) the Flutter
+                // prefs file while it is copied. A few small files, once; it never throws.
+                it.backupBeforeOpen()
+            }
         } else {
-            MigrationRunnerPort.Nothing
+            null
         }
+
+    private val runner: MigrationRunnerPort =
+        migrationRunner?.let { RunnerPort(application, it, scope) } ?: MigrationRunnerPort.Nothing
 
     /** Started at graph creation (ADR §9.7 step 5, off the main thread); the stores wait on its gate. */
     val engine: MigrationEngine =
@@ -122,7 +131,14 @@ class MigrationWiring(
         MigrationEngine(runner, ReentryNames { id -> nameOf(application.appGraph.previewRuntime.profiles, id) }, scope)
             .also { it.start() }
 
-    /** The gate's platform ways out; [navigator] opens the Servers page for a re-enter row. */
+    /**
+     * The app's secret store with the credential ledger in front (plan 05 §4.4 rule 1, Codex review p12/migration #1):
+     * every native write or delete is recorded first, so the M2 retry and the R1 rollback build never bring back a
+     * sign-in the person changed or removed. On the preview package there is nothing to guard.
+     */
+    fun ledgered(store: SecretStore): SecretStore = migrationRunner?.let { LedgeredSecretStore(store, it, engine.gate) } ?: store
+
+    /** The gate's platform ways out; [navigator] opens the chats (GitHub) or the Servers page for a re-enter row. */
     fun gatePlatform(navigator: AppNavigator): GatePlatform = AndroidGatePlatform(application, navigator)
 
     private suspend fun nameOf(store: ProfileStore, id: String): String? {
@@ -175,7 +191,9 @@ private class RunnerPort(
     }
 
     override suspend fun retry() {
-        runner.retry()
+        // A Start fresh whose second phase failed (Codex review p12/migration #4) finishes only in a new process,
+        // before anything opens the prefs file: Try again restarts the app, as Start fresh itself does.
+        if (runner.startFreshPending()) restart() else runner.retry()
     }
 
     override suspend fun acknowledgeNotices() = runner.acknowledgeNotices()
@@ -186,10 +204,14 @@ private class RunnerPort(
      */
     override suspend fun startFresh(): Boolean {
         if (!runner.requestStartFresh()) return false
+        restart()
+        return true
+    }
+
+    private fun restart() {
         val restart = Intent.makeRestartActivityTask(ComponentName(application, MainActivity::class.java))
         application.startActivity(restart)
         android.os.Process.killProcess(android.os.Process.myPid())
-        return true
     }
 
     /** R2 needs the RestoreTransaction (plan 05 §9.4, staged copy + outbound hold), not built yet: not offered. */
@@ -258,6 +280,33 @@ private class SecretSink(private val store: SecretStore) : MigrationSecretSink {
 }
 
 /**
+ * [store] with the runner's ledger step before every write and delete. The gate is awaited first, so a record never
+ * races M2's own; a ledger that cannot be saved refuses the change (one "Enter password" later, never a resurrected
+ * credential). Reads and listings pass through.
+ */
+private class LedgeredSecretStore(
+    private val store: SecretStore,
+    private val runner: MigrationRunner,
+    private val gate: MigrationGate,
+) : SecretStore {
+    override suspend fun read(name: String): Outcome<String?> = store.read(name)
+
+    override suspend fun names(prefix: String): Outcome<Set<String>> = store.names(prefix)
+
+    override suspend fun write(name: String, value: String): Outcome<Unit> =
+        if (recorded(name, deleted = false)) store.write(name, value) else Failure.StorageRefused().failed()
+
+    override suspend fun delete(name: String): Outcome<Unit> =
+        if (recorded(name, deleted = true)) store.delete(name) else Failure.StorageRefused().failed()
+
+    private suspend fun recorded(name: String, deleted: Boolean): Boolean {
+        gate.awaitOpen()
+        val ok = attempt({ Failure.StorageRefused() }) { runner.beforeNativeChange(name, deleted) }
+        return (ok as? Outcome.Ok)?.value == true
+    }
+}
+
+/**
  * The runner's events (plan 16 §5.3): enums and buckets only. They go to the redacted app log until the analytics
  * engine is in the app graph (the integrator binds it there; see the P12 report).
  */
@@ -290,9 +339,14 @@ private class AndroidGatePlatform(private val application: Application, private 
     }
 
     override fun openReentry(item: GateReentry) {
-        // GitHub and BYO set-up rows: the saved server's page. Passwords and tokens are typed in the sheet itself
-        // (saveSecret below): the Servers page has no password field.
-        navigator.open(ServersRoute.Home)
+        // GitHub is signed in again from a chat's Git page, so its row opens the chats (Codex review p12/migration #2).
+        // Passwords and tokens are typed in the sheet itself (saveSecret below); BYO set-up opens nothing (not in this
+        // version). Only a password row with no saved server behind it reaches here otherwise: the servers.
+        when (item.kind) {
+            GateReentryKind.GitHubSignIn -> navigator.open(ChatsRoute.Home)
+            GateReentryKind.ByoSetup -> Unit
+            GateReentryKind.Password, GateReentryKind.Token -> navigator.open(ServersRoute.Home)
+        }
     }
 
     /**

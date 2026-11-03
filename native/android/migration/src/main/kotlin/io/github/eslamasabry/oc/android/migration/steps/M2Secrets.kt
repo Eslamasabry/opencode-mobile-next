@@ -178,6 +178,25 @@ internal class M2Secrets(
         return edit.isEmpty || prefs.commit(edit.changes)
     }
 
+    /**
+     * Drops flag names whose secret the native app has since changed (the credential ledger holds a record: typed
+     * again, signed in through Git, signed out, reset). The re-enter sheet then stops asking for them (Codex review
+     * p12/migration #2). An unreadable ledger resolves nothing. Returns false when the commit was refused.
+     */
+    fun resolveChanged(): Boolean {
+        val known = ledger.knownOrNull() ?: return true
+        val logical = LogicalPrefs(prefs.live())
+        val edit = PrefsEdit()
+        for (key in logical.keys(LogicalPrefs.SECRET_REENTRY)) {
+            val record = ReentryRecord.parse(logical.string(key)) ?: continue
+            val id = key.removePrefix(LogicalPrefs.SECRET_REENTRY)
+            val keep = record.names.filter { flag -> SecretKind.nameFor(flag, id)?.let { it in known } != true }
+            if (keep.size == record.names.size) continue
+            if (keep.isEmpty()) edit.remove(key) else edit.putString(key, record.copy(names = keep).encode())
+        }
+        return edit.isEmpty || prefs.commit(edit.changes)
+    }
+
     /** Stores one plaintext unless native already has a value; returns null on success. */
     private suspend fun copy(name: String, value: String, cipher: RawPref?): M2Failure? {
         val digest = (cipher as? RawPref.Str)?.value?.let(CredentialLedger::ciphertextDigest)

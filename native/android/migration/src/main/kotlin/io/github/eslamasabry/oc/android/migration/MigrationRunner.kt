@@ -96,9 +96,11 @@ public class MigrationRunner internal constructor(
      */
     public suspend fun retry(): RunnerState {
         flight.withLock { inFlight }?.let { return it.await() }
+        fenceFailed = false // the prefs file finished loading long ago: S0 may run here now
         withContext(io) {
             val loaded = store.load() as? JournalStore.Loaded.Ok ?: return@withContext
             val j = loaded.journal
+            if (j.pendingSwap != null) return@withContext // only a new start can finish it (phase 2 before any open)
             if (j.blocked != null) {
                 j.blocked = null
                 j.resetUnfinishedSteps()
@@ -127,6 +129,42 @@ public class MigrationRunner internal constructor(
      */
     public suspend fun requestStartFresh(): Boolean = withContext(io) { StartFreshTransaction(paths, now).request() }
 
+    /**
+     * Ledger first, then the R1 stale marker (plan 05 §4.4 rule 1), for a secret store that then makes the change
+     * itself: the app's store calls this before EVERY native write or delete (Codex review p12/migration #1). Without
+     * it a sign-in and sign-out through Git left no record, and the M2 retry could bring the old Flutter token back.
+     * False when the marker could not be saved: the store must then refuse the change.
+     */
+    public suspend fun beforeNativeChange(name: String, deleted: Boolean): Boolean =
+        withContext(io) { LedgeredSecretWriter(ledger, prefs, sink) { fssNames() }.prepare(name, deleted) }
+
+    /**
+     * S0 ahead of everything else (the StartupFence, plan 05 §7.1): call once, synchronously, before anything can open
+     * `FlutterSharedPreferences` (Codex review p12/migration #3). Android's loader deletes the `.xml` and renames a
+     * `.bak` twin while it loads, so a copy taken while a store is loading can throw or record the wrong size, which
+     * makes a published backup fail verification for good. Plain file copies of a few small files, no suspension.
+     *
+     * Never throws: a failure here is kept for this process and shown as `Blocked(StepCrashed)` with Try again (the
+     * attempt is journaled, so three failed starts end in the same block as any crashing step).
+     */
+    public fun backupBeforeOpen() {
+        try {
+            val j = (store.load() as? JournalStore.Loaded.Ok)?.journal ?: return
+            if (j.v1Complete || j.blocked != null || j.pendingSwap != null || j.schema > MigrationJournal.SCHEMA) return
+            if (j.foundAt == null) j.putSource("foundAt", now())
+            step(j, "S0") { runS0(j, S0Backup(paths, interrupter, freeBytes, nativeVersionCode, now)) }
+        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+            if (e is io.github.eslamasabry.oc.android.migration.readers.migration.SimulatedCrash) throw e // a test "kill"
+            fenceFailed = true
+        }
+    }
+
+    /** True while a requested Start fresh has not finished (its phase 2 failed): Try again restarts the app. */
+    public fun startFreshPending(): Boolean =
+        (store.load() as? JournalStore.Loaded.Ok)?.journal?.pendingSwap?.kind == PendingSwap.START_FRESH
+
+    @Volatile private var fenceFailed = false
+
     /** The writer engines use for every native secret change after the gate opens (plan 05 §4.4 rule 1). */
     public fun secretChanges(): NativeSecretChanges {
         val writer = LedgeredSecretWriter(ledger, prefs, sink) { fssNames() }
@@ -152,9 +190,18 @@ public class MigrationRunner internal constructor(
             // Only reachable through a downgrade, which Android refuses: honour what is recorded, write nothing.
             return publish(if (j.v1Complete) open(j, write = false) else blockedState(j, BlockReason.StepCrashed, "journal", null))
         }
+        if (j.pendingSwap?.kind == PendingSwap.START_FRESH) {
+            // Phase 2 failed before this process opened anything (storage full, a refused rename): the old data is
+            // where it was or in the kept copy. Not journaled: Try again restarts the app and phase 2 runs again.
+            val full = (interrupter.freeBytesOverride() ?: freeBytes()) < FRESH_MARGIN_BYTES
+            return publish(blockedState(j, if (full) BlockReason.LowSpace else BlockReason.WriteRefused, FRESH_STEP, null))
+        }
         j.blocked?.let { b ->
             val reason = BlockReason.entries.firstOrNull { it.name == b.reason } ?: BlockReason.StepCrashed
             return publish(blockedState(j, reason, b.step, b.neededBytes))
+        }
+        if (fenceFailed && j.stepState("S0") != StepState.Done) {
+            return publish(blockedState(j, BlockReason.StepCrashed, "S0", null))
         }
         if (!j.v1Complete) {
             val blocked = runV1(j)
@@ -166,6 +213,11 @@ public class MigrationRunner internal constructor(
     /** Null when v1 completed; else the Blocked state (already journaled). */
     private suspend fun runV1(j: MigrationJournal): RunnerState.Blocked? {
         if (j.foundAt == null) j.putSource("foundAt", now())
+        val wait = interrupter.delayMs() // qa only: lets the Updating screen be filmed (S0 may already be done)
+        if (wait > 0) {
+            mutableState.value = RunnerState.Running(if (j.stepState("S0") == StepState.Done) "M1" else "S0")
+            delay(wait)
+        }
         val s0 = S0Backup(paths, interrupter, freeBytes, nativeVersionCode, now)
         step(j, "S0") { runS0(j, s0) }?.let { return it }
         if (j.sourceKind != "flutter") {
@@ -204,9 +256,7 @@ public class MigrationRunner internal constructor(
         return null
     }
 
-    private suspend fun runS0(j: MigrationJournal, s0: S0Backup): StepOutcome {
-        val wait = interrupter.delayMs()
-        if (wait > 0) delay(wait)
+    private fun runS0(j: MigrationJournal, s0: S0Backup): StepOutcome {
         return when (val r = s0.run()) {
             is S0Backup.Result.Published -> {
                 j.sourceKind = "flutter"
@@ -286,7 +336,8 @@ public class MigrationRunner internal constructor(
         return LogicalPrefs(prefs.live()).bool(LogicalPrefs.BARRIER) == value
     }
 
-    private suspend fun step(j: MigrationJournal, id: String, body: suspend () -> StepOutcome): RunnerState.Blocked? {
+    /** Inline so the S0 fence can run it without suspending; the steps' suspending bodies inline into [runV1]. */
+    private inline fun step(j: MigrationJournal, id: String, body: () -> StepOutcome): RunnerState.Blocked? {
         if (j.stepState(id) == StepState.Done) return null
         val attempts = j.attempts(id)
         if (attempts >= MAX_ATTEMPTS) {
@@ -335,6 +386,8 @@ public class MigrationRunner internal constructor(
         val firstOpen = j.firstOpenAt == null
         val live = LogicalPrefs(prefs.live())
         if (write) {
+            // A flagged sign-in the person changed natively (signed in again, signed out, reset) is answered.
+            M2Secrets(paths, prefs, unwrapper, sink, redactor, ledger, interrupter, now).resolveChanged()
             if (j.secretRetriesRemaining > 0 && !firstOpen) {
                 j.secretRetriesRemaining -= 1 // counted before the retry runs, so a crash counts too
                 store.save(j)
@@ -391,5 +444,7 @@ public class MigrationRunner internal constructor(
         const val MAX_ATTEMPTS = 3
         const val SECRET_RETRIES = 3
         const val FLUTTER_PREFS = "FlutterSharedPreferences"
+        const val FRESH_STEP = "fresh"
+        const val FRESH_MARGIN_BYTES = 16L * 1024 * 1024
     }
 }
