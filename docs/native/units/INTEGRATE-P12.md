@@ -75,3 +75,4 @@ An unverified `p12v/projects` merge was in progress at hand-over; it was aborted
 | 1 | 2026-11-02 22:01 | `~/wt/p12-apks/p12-wave1-501d3abf9-preview-debug.apk` (25.1 MB) | P12-COMPOSER |
 | 2 | 2026-11-02 23:55 | `~/wt/p12-apks/p12-wave2-021be255a-preview-debug.apk` (34.9 MB) | migration, agents, linux, git, platform, previewqr |
 | 3 | 2026-11-03 01:51 | `~/wt/p12-apks/p12-wave3-8bef896c6-preview-debug.apk` (36 MB) | prompts, schedules, chat-cards, chat-transcript, chat-header, chat-feel, files, search, settings |
+| 4 | 2026-11-03 02:58 | `~/wt/p12-apks/p12-wave4-030afe554-preview-debug.apk` (36 MB) | projects, review, voice, chat-bugs |
