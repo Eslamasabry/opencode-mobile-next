@@ -126,7 +126,7 @@ internal class SignInForegroundState(private val controller: LiveModeController)
         if (read.active) {
             // Keep ownership if an earlier admitted lease owns this service; a running service is borrowed only.
             controller.pause = read
-            controller.setActive(true)
+            controller.markActive(true)
         } else {
             startedHere = !controller.enabled
             if (startedHere) owned = true
@@ -152,7 +152,7 @@ internal class SignInForegroundState(private val controller: LiveModeController)
                 return
             }
             controller.pause = receipt
-            controller.setActive(true)
+            controller.markActive(true)
             controller.notificationGranted = status.notificationGranted
             controller.batteryOptimizationIgnored = status.batteryOptimizationIgnored
             controller.stoppedByAndroidTimeout = false
@@ -201,7 +201,7 @@ internal class SignInForegroundState(private val controller: LiveModeController)
                 val stopped = controller.call { controller.port.disable() }
                 if (stopped is ServiceReply.Ok && !stopped.value.active) {
                     owned = false
-                    controller.setActive(false)
+                    controller.markActive(false)
                 }
                 // A failed stop retains ownership for a later cleanup attempt.
                 return ServiceReply.Ok(reply.value.copy(active = false))
@@ -296,7 +296,7 @@ internal class SignInForegroundState(private val controller: LiveModeController)
         // Never claim Android stopped the owned service without an inactive receipt; ownership stays for a retry.
         if (reply !is ServiceReply.Ok || reply.value.active) return false
         owned = false
-        controller.setActive(false)
+        controller.markActive(false)
         controller.pause = PauseState.Off
         controller.publish()
         return true

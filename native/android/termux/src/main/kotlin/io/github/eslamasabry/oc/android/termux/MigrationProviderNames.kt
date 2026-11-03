@@ -63,7 +63,7 @@ public fun readMigrationProviderNames(verifiedConfigExport: Path): List<String> 
     for (relative in CONFIG_PATHS) {
         try {
             if (!regularFileInsideExport(root, relative)) continue
-            val bytes = Files.newByteChannel(root.resolve(relative), setOf(StandardOpenOption.READ), *NO_FOLLOW).use { input ->
+            val bytes = Files.newByteChannel(root.resolve(relative), StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS).use { input ->
                 if (input.size() > MAXIMUM_CONFIG_BYTES) null else readAtMost(input, MAXIMUM_CONFIG_BYTES + 1)
             } ?: continue
             if (bytes.size > MAXIMUM_CONFIG_BYTES || !regularFileInsideExport(root, relative)) continue

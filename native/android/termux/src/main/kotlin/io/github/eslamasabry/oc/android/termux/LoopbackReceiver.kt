@@ -94,7 +94,7 @@ internal class LoopbackReceiver(
                 completion != null && !completion.isCompleted &&
                 values("authorization") == listOf("Bearer $token") &&
                 values("x-offset") == listOf(offset.toString())
-            if (!authorized || completion == null || !accepting.compareAndSet(false, true)) {
+            if (!authorized || !accepting.compareAndSet(false, true)) {
                 respond(socket, "403 Forbidden")
                 return
             }
@@ -135,7 +135,9 @@ internal class LoopbackReceiver(
                 while (true) {
                     val size = readLine(input).substringBefore(';').trim().toLong(16)
                     if (size == 0L) {
-                        while (readLine(input).isNotEmpty()) Unit
+                        while (readLine(input).isNotEmpty()) {
+                            // Trailers are ignored.
+                        }
                         break
                     }
                     if (bytes + size > expected) throw IllegalStateException()

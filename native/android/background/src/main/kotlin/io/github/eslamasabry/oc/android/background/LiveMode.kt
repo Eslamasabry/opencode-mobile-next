@@ -36,7 +36,13 @@ public data class LiveModeState(
      * Not an error: nothing can be retried right now.
      */
     val stoppedByAndroidTimeout: Boolean = false,
-)
+) {
+    /**
+     * A coding alert may be posted only while live mode is on and Android lets the app notify (Flutter
+     * `showCodingAlert`'s gate). A test notification ignores this gate, never the platform permission.
+     */
+    val codingAlertsAllowed: Boolean get() = enabled && notificationGranted
+}
 
 /**
  * Owns the explicit, person-controlled live mode (port of the Flutter `BackgroundLiveController`, minus the alert and
@@ -226,7 +232,7 @@ public class LiveModeController(
             is Outcome.Failed -> ServiceReply.Refused(ServiceRefusal(ServiceRefusal.UNKNOWN))
         }
 
-    internal fun setActive(value: Boolean) {
+    internal fun markActive(value: Boolean) {
         val wasActive = active
         active = value
         // A status read found the service gone (Android stopped it).
@@ -234,7 +240,7 @@ public class LiveModeController(
     }
 
     internal fun applyStatus(status: ServiceStatus) {
-        setActive(status.active)
+        markActive(status.active)
         notificationGranted = status.notificationGranted
         batteryOptimizationIgnored = status.batteryOptimizationIgnored
         if (status.enabled != null && !signIn.preservesUserClaim) enabled = status.enabled
@@ -249,7 +255,7 @@ public class LiveModeController(
 
     internal fun applyPauseState(state: PauseState) {
         pause = state
-        setActive(state.active)
+        markActive(state.active)
         stoppedByAndroidTimeout = state.paused && state.reason == PauseReason.TimeLimit
         if (!state.supported || state.paused) {
             signIn.serviceStopped(
