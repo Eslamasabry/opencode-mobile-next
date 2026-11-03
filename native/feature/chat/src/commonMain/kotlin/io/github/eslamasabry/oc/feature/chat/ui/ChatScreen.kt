@@ -132,6 +132,7 @@ import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSending
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
+import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.kitWorkDidntFinish
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
@@ -259,6 +260,11 @@ public fun ChatScreen(
                                 stringResource(Res.string.gitSheetTitle),
                                 actions::openGit,
                                 testTag = "chat-git-chip",
+                            ),
+                            KitLineAction(
+                                stringResource(Res.string.chatUiFiles),
+                                actions::openFiles,
+                                testTag = "chat-files-open",
                             ),
                             prompts?.let {
                                 KitLineAction(

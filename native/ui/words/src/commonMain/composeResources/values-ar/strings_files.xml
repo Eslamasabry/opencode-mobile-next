@@ -1,0 +1,14 @@
+<resources>
+    <string name="filesProjectRoot">المشروع</string>
+    <string name="filesOpenWith">فتح باستخدام</string>
+    <string name="filesOpenWithNone">لا يوجد تطبيق على هذا الهاتف يمكنه فتح هذا الملف.</string>
+    <string name="filesOpenWithFailed">تعذّر تسليم هذا الملف إلى تطبيق آخر. حاول مرة أخرى.</string>
+    <string name="filesUnavailable">لا يسمح هذا الخادم للتطبيق بتصفح ملفاته.</string>
+    <string name="filesNotConnected">خادم هذه المحادثة غير متصل. ارجع إلى المحادثة وحاول مرة أخرى.</string>
+    <string name="filesHideHidden">إخفاء الملفات المخفية</string>
+    <string name="filesOpenFailed">تعذّر فتح هذا الملف. حاول مرة أخرى.</string>
+    <string name="filesMentionFailed">تعذّرت إضافة هذا الملف إلى رسالتك. حاول مرة أخرى.</string>
+    <string name="filesFolderLabel">المجلد %1$s</string>
+    <string name="filesUp">مجلد واحد للأعلى</string>
+    <string name="filesShareStarting">جارٍ بدء المشاركة…</string>
+</resources>

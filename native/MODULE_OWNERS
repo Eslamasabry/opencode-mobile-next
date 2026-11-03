@@ -68,3 +68,5 @@
 :android:schedules	F	P12-SCHEDULES	slice-4
 :feature:schedules	F	P12-SCHEDULES	slice-4
 :engine:cards	F	P12-CHAT-CARDS	slice-5
+:engine:files	F	P12-FILES	slice-5
+:feature:files	F	P12-FILES	slice-5

@@ -42,5 +42,15 @@
         <receiver
             android:name=".StatusActionReceiver"
             android:exported="false" />
+        <!-- P12-FILES Open with: read-only grants to the private cache copy of one opened project file. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/oc_files_paths" />
+        </provider>
     </application>
 </manifest>

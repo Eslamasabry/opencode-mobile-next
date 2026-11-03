@@ -1,0 +1,15 @@
+<resources>
+    <!-- P12-FILES (native): the few lines the Flutter ARB had no key for. The rest reuse readerUi*/files*/fileShare*. -->
+    <string name="filesProjectRoot">Project</string>
+    <string name="filesOpenWith">Open with</string>
+    <string name="filesOpenWithNone">No app on this phone can open this file.</string>
+    <string name="filesOpenWithFailed">Couldn't hand this file to another app. Try again.</string>
+    <string name="filesUnavailable">This server doesn't let the app browse its files.</string>
+    <string name="filesNotConnected">The server for this conversation isn't connected. Go back to the conversation and try again.</string>
+    <string name="filesHideHidden">Hide hidden files</string>
+    <string name="filesOpenFailed">Couldn't open this file. Try again.</string>
+    <string name="filesMentionFailed">Couldn't add this file to your message. Try again.</string>
+    <string name="filesFolderLabel">Folder %1$s</string>
+    <string name="filesUp">Up one folder</string>
+    <string name="filesShareStarting">Starting the share…</string>
+</resources>
