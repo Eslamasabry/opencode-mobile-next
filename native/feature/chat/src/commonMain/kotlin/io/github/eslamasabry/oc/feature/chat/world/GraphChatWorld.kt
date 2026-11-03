@@ -78,7 +78,12 @@ public interface ChatGraphAccessors {
 @ContributesTo(AppScope::class)
 public interface ChatDraftBindings {
     @Multibinds(allowEmpty = true) public val conversationDrafts: Set<ConversationDrafts>
+
+    @Multibinds(allowEmpty = true) public val recentModelsBackings: Set<RecentModelsBacking>
 }
+
+/** Flutter `ModelLibrary.recentLimit`. */
+private const val SAVED_RECENT_MODELS = 8
 
 @SingleIn(AppScope::class)
 @Inject
@@ -86,12 +91,15 @@ public interface ChatDraftBindings {
 public class GraphChatWorlds(
     private val registry: ConnectionRegistry,
     private val draftStores: Set<ConversationDrafts> = emptySet(),
+    private val recentBackings: Set<RecentModelsBacking> = emptySet(),
 ) : ChatWorlds {
-    /** B3: shared by every conversation of the app run. */
-    private val recentModels = RecentModels()
+    /** B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest) when the app binds a store. */
+    private val recentModels =
+        recentBackings.singleOrNull()?.let { RecentModels(max = SAVED_RECENT_MODELS, backing = it) } ?: RecentModels()
 
     init {
         check(draftStores.size <= 1) { "multiple conversation draft stores" }
+        check(recentBackings.size <= 1) { "multiple recent model stores" }
     }
 
     private val open = HashMap<ConversationRef, Pair<GraphChatWorld, Int>>()
