@@ -1,8 +1,28 @@
 package io.github.eslamasabry.oc.feature.servers.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.engine.connection.SavedServer
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyphs
+import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.words.res.activeContextRowMenu
+import io.github.eslamasabry.oc.ui.words.res.e7SetupAddServer
+import io.github.eslamasabry.oc.ui.words.res.serversRemoveBody
+import io.github.eslamasabry.oc.ui.words.res.serversRemoveServerKeeps
+import io.github.eslamasabry.oc.ui.words.res.e7SetupRemoveServer
+import io.github.eslamasabry.oc.ui.words.res.settingsV3NotConnected
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -89,7 +109,6 @@ import io.github.eslamasabry.oc.ui.words.res.serversName
 import io.github.eslamasabry.oc.ui.words.res.serversNewTitle
 import io.github.eslamasabry.oc.ui.words.res.serversPassword
 import io.github.eslamasabry.oc.ui.words.res.serversRemove
-import io.github.eslamasabry.oc.ui.words.res.serversRemoveConfirm
 import io.github.eslamasabry.oc.ui.words.res.serversRemoveFailed
 import io.github.eslamasabry.oc.ui.words.res.serversSave
 import io.github.eslamasabry.oc.ui.words.res.serversSaveFailed
@@ -121,6 +140,9 @@ public fun ServersScreen(
     val password = remember { TextFieldState(actions.heldPassword()) }
     LaunchedEffect(password) { snapshotFlow { password.text.toString() }.collect { actions.holdPassword(it) } }
     var removing by remember { mutableStateOf<ProfileId?>(null) }
+    // The add form opens from the Add server button (or by itself when nothing is saved yet, or a code arrives).
+    var adding by rememberSaveable { mutableStateOf(false) }
+    val showForm = adding || state.servers.isEmpty()
     // PREVIEW-QR: a scanned or pasted pairing code (or share link) fills the form once; the password is taken, not kept.
     var filledFromLink by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var clearedGeneration by rememberSaveable { mutableIntStateOf(0) }
@@ -141,11 +163,13 @@ public fun ServersScreen(
         fill.username?.let { value -> username.edit { replace(0, length, value) } }
         fill.takePassword()?.let { value -> password.edit { replace(0, length, value) } }
         filledFromLink = fill.fromLink
+        adding = true
     }
     LaunchedEffect(state.savedGeneration) {
         if (state.savedGeneration > clearedGeneration) {
             clearedGeneration = state.savedGeneration
             password.edit { replace(0, length, "") }
+            adding = false
         }
     }
     LaunchedEffect(address) {
@@ -164,29 +188,69 @@ public fun ServersScreen(
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else KitEnabled.Enabled
+    val closeForm = adding && state.servers.isNotEmpty()
+    KitBackGuard(enabled = closeForm) { adding = false }
     KitScreen(
         topBar = {
             KitTopBar(
                 title =
                     stringResource(
-                        if (state.newConversation) Res.string.serversNewTitle
-                        else Res.string.serversTitle
+                        when {
+                            closeForm -> Res.string.e7SetupAddServer
+                            state.newConversation -> Res.string.serversNewTitle
+                            else -> Res.string.serversTitle
+                        }
                     ),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
-                onExit = actions::back,
+                onExit = { if (closeForm) adding = false else actions.back() },
             )
         },
+        bottom =
+            if (showForm) null
+            else ({
+                KitButton(
+                    stringResource(Res.string.e7SetupAddServer),
+                    { adding = true },
+                    Modifier.fillMaxWidth().padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
+                    icon = KitGlyphs.Add,
+                    enabled = enabled,
+                )
+            }),
         width = KitScreenWidth.Reading,
     ) {
+        // Kit dialogs need the screen's sheet host, so the confirmation lives inside the frame.
+        removing?.let { id ->
+            val name = state.servers.firstOrNull { it.id == id }?.name
+            KitConfirm(
+                spec =
+                    name?.let {
+                        KitConfirmSpec(
+                            title = stringResource(Res.string.e7SetupRemoveServer, it),
+                            confirmLabel = stringResource(Res.string.serversRemove),
+                            kind = KitConfirmKind.Destructive,
+                            body = stringResource(Res.string.serversRemoveBody),
+                            consequences = listOf(stringResource(Res.string.serversRemoveServerKeeps)),
+                            cancelLabel = stringResource(Res.string.serversCancel),
+                        )
+                    },
+                onConfirm = {
+                    removing = null
+                    actions.remove(id)
+                },
+                onCancel = { removing = null },
+            )
+        }
+        // Rows bring their own gutter; everything else (notices, words, fields, buttons) takes the screen's.
+        val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
         Column(
             Modifier.fillMaxSize()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
+                .padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
-            state.issue?.let { issue ->
+            state.issue?.let { issue -> Column(gutter) {
                 val words = issueWords(issue, state.failure)
                 if (issue == ServerIssue.Connected) {
                     KitNotice(words)
@@ -198,85 +262,41 @@ public fun ServersScreen(
                         copyLabel = stringResource(Res.string.kitCopyDetails),
                     )
                 }
-            }
-            onThisPhone?.let {
+            } }
+            onThisPhone?.takeIf { !closeForm }?.let {
                 KitRow(
                     title = stringResource(Res.string.settingsV3ThisPhone),
+                    leading = KitRowLeading.Glyph(KitGlyphs.Phone),
                     supporting = stringResource(Res.string.linuxMgrRowDetail),
                     supportingMaxLines = 2,
                     trailing = KitRowTrailing.Chevron,
                     onClick = it,
                 )
             }
-            if (state.servers.isEmpty()) KitText(stringResource(Res.string.serversEmpty))
-            else KitText(stringResource(Res.string.serversSaved))
-            for (server in state.servers) {
-                Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    KitText(server.name)
-                    KitText(server.address)
-                    if (server.connected) KitText(stringResource(Res.string.serversConnected))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                        KitButton(
-                            stringResource(Res.string.serversCreate),
-                            { actions.create(server.id) },
-                            enabled = enabled,
+            if (state.servers.isEmpty()) KitText(stringResource(Res.string.serversEmpty), gutter)
+            // Flutter parity (servers_servers_loaded): one row per server — its glyph, name, status · address —
+            // with the row's own act on tap and the rest in its ⋯ menu; removing asks first (KitConfirm).
+            if (state.servers.isNotEmpty() && !closeForm) {
+                KitRowGroup {
+                    for (server in state.servers) {
+                        ServerRow(
+                            server = server,
+                            newConversation = state.newConversation,
+                            enabled = !state.busy,
+                            actions = actions,
+                            onRemove = { removing = server.id },
                         )
-                        // QA wave 4 B15: a connected server says Connected; Connect is offered only when it is not.
-                        if (!server.connected) {
-                            KitButton(
-                                stringResource(Res.string.serversConnect),
-                                { actions.connect(server.id) },
-                                role = KitButtonRole.Secondary,
-                                enabled = enabled,
-                            )
-                        }
-                        if (server.connected) {
-                            KitButton(
-                                stringResource(Res.string.usageTitle),
-                                { actions.openUsage(server.id) },
-                                role = KitButtonRole.Tertiary,
-                            )
-                        }
-                        KitButton(
-                            schedulesLabel(),
-                            { actions.openSchedules(server.id) },
-                            role = KitButtonRole.Secondary,
-                            enabled = enabled,
-                        )
-                        KitButton(
-                            stringResource(Res.string.serversRemove),
-                            { removing = server.id },
-                            role = KitButtonRole.Tertiary,
-                            destructive = true,
-                            enabled = enabled,
-                        )
-                    }
-                    if (removing == server.id) {
-                        KitNotice(stringResource(Res.string.serversRemoveConfirm, server.name))
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                            KitButton(
-                                stringResource(Res.string.serversRemove),
-                                {
-                                    removing = null
-                                    actions.remove(server.id)
-                                },
-                                destructive = true,
-                                enabled = enabled,
-                            )
-                            KitButton(
-                                stringResource(Res.string.serversCancel),
-                                { removing = null },
-                                role = KitButtonRole.Tertiary,
-                            )
-                        }
                     }
                 }
+                KitRow(
+                    title = stringResource(Res.string.agentsSectionTitle),
+                    leading = KitRowLeading.Glyph(KitGlyphs.Terminal),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openAgents,
+                )
             }
-            KitButton(
-                stringResource(Res.string.agentsSectionTitle),
-                actions::openAgents,
-                role = KitButtonRole.Secondary,
-            )
+            if (!showForm) return@Column
+            Column(gutter, verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             KitText(stringResource(Res.string.serversAdd))
             KitButton(
                 stringResource(Res.string.addServerScan),
@@ -315,6 +335,7 @@ public fun ServersScreen(
                 kind = KitFieldKind.Secret,
                 enabled = enabled,
             )
+            }
             KitSwitchRow(
                 title = stringResource(Res.string.serversCleartext),
                 supporting = stringResource(Res.string.serversCleartextHelp),
@@ -334,6 +355,7 @@ public fun ServersScreen(
                         password.text.toString(),
                     )
                 },
+                gutter,
                 enabled = enabled,
                 working = state.busy,
             )
@@ -375,3 +397,50 @@ private fun issueWords(issue: ServerIssue, failure: Failure?): String =
 @Composable
 private fun schedulesLabel(): String =
     if (LocalLayoutDirection.current == LayoutDirection.Rtl) "الطلبات المجدولة" else "Scheduled prompts"
+
+/**
+ * One saved server (Flutter `ServerRow`): tapping it does its obvious act — Connect when it is not connected, Start
+ * conversation when it is — and its ⋯ menu names every other act on that server.
+ */
+@Composable
+private fun ServerRow(
+    server: SavedServer,
+    newConversation: Boolean,
+    enabled: Boolean,
+    actions: ServersActions,
+    onRemove: () -> Unit,
+) {
+    var menu by remember { mutableStateOf(false) }
+    val status = stringResource(if (server.connected) Res.string.serversConnected else Res.string.settingsV3NotConnected)
+    val connect = stringResource(Res.string.serversConnect)
+    val create = stringResource(Res.string.serversCreate)
+    val working = stringResource(Res.string.serversWorking)
+    val items = buildList {
+        add(KitMenuItem(create, { actions.create(server.id) }, icon = KitGlyphs.Chat))
+        if (!server.connected) add(KitMenuItem(connect, { actions.connect(server.id) }, icon = KitGlyphs.Sync))
+        if (server.connected) add(KitMenuItem(stringResource(Res.string.usageTitle), { actions.openUsage(server.id) }, icon = KitGlyphs.Usage))
+        add(KitMenuItem(schedulesLabel(), { actions.openSchedules(server.id) }, icon = KitGlyphs.Clock))
+        add(KitMenuItem(stringResource(Res.string.serversRemove), onRemove, destructive = true))
+    }
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        val opensChat = server.connected || newConversation
+        KitRow(
+            title = server.name,
+            modifier = Modifier.weight(1f).testTag("server-row-${server.id.raw}"),
+            supporting = "$status · ${server.address}",
+            leading = KitRowLeading.Glyph(KitGlyphs.Server),
+            enabled = enabled,
+            disabledReason = if (enabled) null else working,
+            onClickLabel = if (opensChat) create else connect,
+            onClick = { if (opensChat) actions.create(server.id) else actions.connect(server.id) },
+        )
+        KitMenu(expanded = menu, items = items, onDismissRequest = { menu = false }, title = server.name) {
+            KitIconButton(
+                KitGlyphs.More,
+                stringResource(Res.string.activeContextRowMenu, server.name),
+                { menu = true },
+                enabled = if (enabled) KitEnabled.Enabled else KitEnabled.Disabled(working),
+            )
+        }
+    }
+}

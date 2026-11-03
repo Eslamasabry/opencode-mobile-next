@@ -71,11 +71,11 @@ internal object ParityCapture {
                     arrange(variant)
                     mainClock.advanceTimeBy(1_000)
                     waitForIdle()
-                    check(variant)
                     out?.let { dir ->
                         dir.mkdirs()
                         ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(dir, "$screen-${variant.name}.png"))
                     }
+                    check(variant)
                 }
             }
         } finally {

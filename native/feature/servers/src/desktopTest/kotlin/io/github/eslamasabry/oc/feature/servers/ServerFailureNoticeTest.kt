@@ -144,8 +144,13 @@ class ServerFailureNoticeTest {
                 }
             }
         }
-        onAllNodesWithText("Connected").assertCountEquals(1)
-        onAllNodesWithText("Connect").assertCountEquals(1) // only for Work
+        // UI parity: each server is one row whose line says its state; the row's tap is its obvious act.
+        onAllNodesWithText("Connected · https://home.test").assertCountEquals(1)
+        onAllNodesWithText("Not connected · https://work.test").assertCountEquals(1)
+        onNodeWithContentDescription("Actions for Home").performClick()
+        waitForIdle()
+        onAllNodesWithText("Connect").assertCountEquals(0) // Home is connected: its menu has no Connect
+        onAllNodesWithText("Start conversation").assertCountEquals(1)
     }
 }
 
