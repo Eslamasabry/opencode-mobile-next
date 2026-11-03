@@ -14,6 +14,11 @@
     <string name="migration_reenter_row_byo">%1$s · Set up again</string>
     <string name="migration_reenter_unnamed">A saved server</string>
     <string name="migration_reenter_later">Sign in to these later</string>
+    <string name="migration_reenter_field_password">Password for %1$s</string>
+    <string name="migration_reenter_field_token">Token for %1$s</string>
+    <string name="migration_reenter_save">Save</string>
+    <string name="migration_reenter_save_failed">Couldn't save it on this phone. Try again.</string>
+    <string name="migration_reenter_back">Back to the list</string>
     <string name="migration_failed_title">The update couldn't finish moving your data</string>
     <string name="migration_failed_body">Nothing was deleted. Your data from before the update is safe on this phone.</string>
     <string name="migration_restore_row">Restore data from before the update</string>

@@ -105,4 +105,33 @@ class GateBindingTest {
         assertEquals(listOf<String?>("M3 · WriteRefused"), shared)
         assertFalse(shared.single()!!.contains("/"), "no path")
     }
+
+    /** Migration proof 2026-11-03: the typed sign-in goes to the platform for the row's own server, nothing else. */
+    @Test
+    fun `B-MIGR-006 a typed sign-in is saved through the platform for that row only`() = runTest {
+        val runner = object : MigrationRunnerPort {
+            override val progress = MutableStateFlow<MigrationProgress>(MigrationProgress.Waiting)
+            override suspend fun run() = Unit
+            override suspend fun retry() = Unit
+            override suspend fun acknowledgeNotices() = Unit
+            override suspend fun startFresh() = false
+            override suspend fun restorePreUpdateData() = false
+        }
+        val engine = MigrationEngine(runner, { null }, backgroundScope)
+        val saved = mutableListOf<Pair<String?, Int>>()
+        val platform = object : GatePlatform {
+            override fun reportProblem(detail: String?) = Unit
+            override fun openStorageSettings() = Unit
+            override fun openReentry(item: GateReentry) = Unit
+            override suspend fun saveSecret(item: GateReentry, secret: String): Boolean {
+                saved += item.profileId to secret.length
+                return item.profileId == "p1"
+            }
+        }
+        val actions = EngineGateActions(engine, platform)
+        assertTrue(actions.saveReentry(GateReentry("p1", "Home", GateReentryKind.Password), "pw-123"))
+        assertFalse(actions.saveReentry(GateReentry("p2", "Work", GateReentryKind.Token), "tok"))
+        assertEquals(listOf<Pair<String?, Int>>("p1" to 6, "p2" to 3), saved)
+        assertFalse(GatePlatform.None.saveSecret(GateReentry("p1", "Home", GateReentryKind.Password), "x"))
+    }
 }

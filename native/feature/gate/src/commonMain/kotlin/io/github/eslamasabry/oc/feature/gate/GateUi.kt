@@ -22,10 +22,21 @@ public sealed interface GateUi {
 
     /**
      * The app shows. [reenter] non-empty → the one-time sheet; [deferredNotice] → the one status-line notice
-     * (02 §3.7 item 4).
+     * (02 §3.7 item 4). [entry] → the sheet asks for one row's password or token in place of the list.
      */
-    public data class Open(val reenter: List<GateReentry>, val deferredNotice: Boolean) : GateUi
+    public data class Open(
+        val reenter: List<GateReentry>,
+        val deferredNotice: Boolean,
+        val entry: GateEntry? = null,
+    ) : GateUi
 }
+
+/**
+ * The re-enter sheet asking for [item]'s password or token (migration proof 2026-11-03: the Servers page has no
+ * password field, so the sheet is where it is typed). [saving] while the store writes it; [failed] after a refused
+ * save. The typed value is never part of the state.
+ */
+public data class GateEntry(val item: GateReentry, val saving: Boolean = false, val failed: Boolean = false)
 
 /** Which failure screen (plan 05 §8.1 "What the person sees"). */
 public enum class GateFailureScreen { Failed, LowSpace, SaveFailed }

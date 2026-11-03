@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.gate
 
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,8 +22,10 @@ import kotlinx.coroutines.launch
  *   step change inside one run does not hide Try again.
  * - Every action is single-flight on this side too: a second tap while its call is running does nothing. In the
  *   runner, Try again during a run keeps waiting on the same run (§8.2).
- * - The re-enter sheet is asked once: closing it, choosing Later or opening a row acknowledges it, and it does not
- *   come back. The deferred-features notice is acknowledged the first time it shows.
+ * - The re-enter sheet is asked once: closing it, choosing Later, opening a row's page or saving its last row
+ *   acknowledges it, and it does not come back. A password or token row of a saved server asks for it in the sheet
+ *   and saves it on that same server; the other rows open their page. The deferred-features notice is acknowledged
+ *   the first time it shows.
  *
  * [scope] is the owner's (the shell's ViewModel scope, or a test scope); time comes from its dispatcher.
  */
@@ -33,7 +36,7 @@ public class GatePresenter(
     private val scope: CoroutineScope,
 ) {
     private val confirming = MutableStateFlow<GateRow?>(null)
-    private val sheetClosed = MutableStateFlow(false)
+    private val sheet = MutableStateFlow(SheetState())
     private val running = mutableSetOf<Any>()
     private var noticeLatched = false
     private var noticeAcknowledged = false
@@ -51,10 +54,10 @@ public class GatePresenter(
             }.stateIn(scope, SharingStarted.Eagerly, false)
 
     public val ui: StateFlow<GateUi> =
-        combine(input, slow, confirming, sheetClosed) { i, s, c, closed -> reduce(i, s, c, closed) }
-            .stateIn(scope, SharingStarted.Eagerly, reduce(input.value, false, null, false))
+        combine(input, slow, confirming, sheet) { i, s, c, sh -> reduce(i, s, c, sh) }
+            .stateIn(scope, SharingStarted.Eagerly, reduce(input.value, false, null, SheetState()))
 
-    private fun reduce(input: GateInput, slow: Boolean, confirming: GateRow?, sheetClosed: Boolean): GateUi =
+    private fun reduce(input: GateInput, slow: Boolean, confirming: GateRow?, sheet: SheetState): GateUi =
         when (input) {
             is GateInput.Closed -> GateUi.Opening(wordless = !input.localeKnown && !slow, offerRetry = slow)
             is GateInput.Running -> GateUi.Updating(offerRetry = slow)
@@ -70,7 +73,11 @@ public class GatePresenter(
             }
             is GateInput.Open -> {
                 if (input.firstNativeLaunch && input.deferredDataFound) latchNotice()
-                GateUi.Open(reenter = if (sheetClosed) emptyList() else input.reenter, deferredNotice = noticeLatched)
+                if (sheet.closed) {
+                    GateUi.Open(reenter = emptyList(), deferredNotice = noticeLatched)
+                } else {
+                    GateUi.Open(input.reenter - sheet.saved, deferredNotice = noticeLatched, entry = sheet.entry)
+                }
             }
         }
 
@@ -106,10 +113,52 @@ public class GatePresenter(
         confirming.value = null
     }
 
-    /** A re-enter row: closes the sheet (asked once) and opens what the row names. */
+    /**
+     * A re-enter row. A saved server's password or token is asked for right here (the sheet stays open); any other
+     * row closes the sheet (asked once) and opens what it names.
+     */
     public fun onReentry(item: GateReentry) {
+        if (sheet.value.closed) return
+        if (item.typedHere()) {
+            sheet.value = sheet.value.copy(entry = GateEntry(item))
+            return
+        }
         closeSheet()
         once("reentry") { actions.openReentry(item) }
+    }
+
+    /** Save on the asking sheet. Empty input saves nothing; single-flight while a save runs. */
+    public fun onReentrySubmit(secret: String) {
+        val entry = sheet.value.entry ?: return
+        if (secret.isEmpty() || entry.saving) return
+        sheet.value = sheet.value.copy(entry = entry.copy(saving = true, failed = false))
+        once("save") {
+            val ok =
+                try {
+                    actions.saveReentry(entry.item, secret)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    false // a store that throws is a refused save: the field stays with its plain error
+                }
+            val now = sheet.value
+            if (now.entry?.item != entry.item) return@once
+            if (!ok) {
+                sheet.value = now.copy(entry = entry.copy(saving = false, failed = true))
+                return@once
+            }
+            val saved = now.saved + entry.item
+            sheet.value = now.copy(entry = null, saved = saved)
+            val left = (input.value as? GateInput.Open)?.reenter.orEmpty() - saved
+            if (left.isEmpty()) closeSheet()
+        }
+    }
+
+    /** "Back to the list" on the asking sheet: the row stays, nothing is recorded. */
+    public fun onReentryBack() {
+        val now = sheet.value
+        if (now.entry?.saving == true) return
+        sheet.value = now.copy(entry = null)
     }
 
     /** "Sign in to these later", Close or the scrim. */
@@ -118,10 +167,21 @@ public class GatePresenter(
     }
 
     private fun closeSheet() {
-        if (sheetClosed.value) return
-        sheetClosed.value = true
+        if (sheet.value.closed) return
+        sheet.value = SheetState(closed = true)
         once("ack") { actions.acknowledgeNotices() }
     }
+
+    /** The re-enter sheet: closed for good, the row being typed, the rows already saved. */
+    private data class SheetState(
+        val closed: Boolean = false,
+        val entry: GateEntry? = null,
+        val saved: Set<GateReentry> = emptySet(),
+    )
+
+    /** A password or token of a saved server is typed in the sheet; GitHub and BYO set-up have their own pages. */
+    private fun GateReentry.typedHere(): Boolean =
+        profileId != null && (kind == GateReentryKind.Password || kind == GateReentryKind.Token)
 
     private fun once(key: Any, block: suspend () -> Unit) {
         if (!running.add(key)) return

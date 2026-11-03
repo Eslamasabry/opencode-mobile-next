@@ -77,4 +77,10 @@ public interface GateActions {
 
     /** Records that the deferred-features notice was shown (02 §3.7 item 4: once, never again). */
     public suspend fun acknowledgeDeferredNotice()
+
+    /**
+     * Saves the password or token typed for [item] on that same saved server (its id, trust and data unchanged) and
+     * clears its re-entry flag. True when the store kept it. [secret] is held only for the call.
+     */
+    public suspend fun saveReentry(item: GateReentry, secret: String): Boolean = false
 }
