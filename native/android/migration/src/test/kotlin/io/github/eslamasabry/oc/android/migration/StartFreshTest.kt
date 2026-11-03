@@ -101,4 +101,32 @@ class StartFreshTest {
         assertFalse(w.runner(io()).requestStartFresh(), "the gate opened: engines may have written")
         assertFalse(StartFreshTransaction(w.paths, { w.nowMs }).recoverBeforeOpen())
     }
+
+    /**
+     * Codex review p12/migration #4: phase 2 runs in `Application.onCreate`. A failed rename or journal write (storage
+     * filled up after phase 1) escaped it, and every later start repeated the crash with no way out on screen.
+     */
+    @Test
+    fun `B-MIGR-010 a Start fresh that cannot finish never crashes the start and offers Try again`() = runTest {
+        val w = blockedPhone()
+        assertTrue(w.runner(io()).requestStartFresh())
+        val full = FaultPoints { if (it == "fresh:move:oc_secrets_v1.xml") throw java.io.IOException("No space left on device") }
+
+        assertEquals(StartFreshTransaction.Recovery.Failed, StartFreshTransaction(w.paths, { w.nowMs }, full).recoverSafely())
+
+        val runner = w.runner(io())
+        val blocked = assertIs<RunnerState.Blocked>(runner.run())
+        assertEquals(BlockReason.WriteRefused, blocked.reason)
+        assertEquals("fresh", blocked.step)
+        assertTrue(runner.startFreshPending(), "Try again restarts the app so phase 2 runs again")
+        assertIs<RunnerState.Blocked>(runner.retry()) // never resets the steps under a pending Start fresh
+        w.freeBytes = 1_000
+        assertEquals(BlockReason.LowSpace, assertIs<RunnerState.Blocked>(w.runner(io()).run()).reason)
+        w.freeBytes = 1L shl 40
+
+        assertEquals(StartFreshTransaction.Recovery.Finished, StartFreshTransaction(w.paths, { w.nowMs }).recoverSafely())
+        assertIs<RunnerState.Open>(w.runner(io()).run())
+        assertTrue(w.logical().isEmpty())
+        assertFalse(w.runner(io()).startFreshPending())
+    }
 }

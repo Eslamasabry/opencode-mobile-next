@@ -266,4 +266,51 @@ class MigrationRunnerTest {
         val w = world().apply { Seed.phone(this) }
         assertEquals(emptySet(), assertIs<RunnerState.Open>(w.runner(io()).run()).notices.deferredFeatures)
     }
+
+    /**
+     * Codex review p12/migration #3: the app's prefs store opened `FlutterSharedPreferences` while S0 was still
+     * copying it. Android's loader deletes the `.xml` and renames a `.bak` twin as it loads, so S0 could throw on a
+     * vanished file or record a wrong size and publish a backup that never verifies. S0 now runs as a fence before
+     * any store exists; the loader (simulated here by a store opening the file) comes after it.
+     */
+    @Test
+    fun `B-MIGR-010 the safety backup is complete before any store opens the prefs file`() = runTest {
+        val w = world().apply { Seed.phone(this) }
+        val xml = File(w.paths.sharedPrefs, "FlutterSharedPreferences.xml")
+        val bak = File(w.paths.sharedPrefs, "FlutterSharedPreferences.xml.bak")
+        xml.copyTo(bak)
+        xml.appendText("<!-- half-written by a commit that died -->")
+        val before = mapOf(xml.name to xml.readBytes().toList(), bak.name to bak.readBytes().toList())
+
+        val runner = w.runner(io())
+        runner.backupBeforeOpen()
+        FakeFlutterPrefs(w.paths.sharedPrefs).live() // a store opens the file: the .bak replaces the .xml
+
+        assertIs<RunnerState.Open>(runner.run())
+        val files = assertNotNull(S0Backup(w.paths, StepInterrupter.None, { 1L shl 40 }, 1, { 0 }).verifyPublished())
+            .filter { it.name.startsWith("FlutterSharedPreferences") }
+        assertEquals(setOf(xml.name, bak.name), files.map { it.name }.toSet())
+        assertEquals(before, files.associate { it.name to File(w.paths.backup, it.name).readBytes().toList() })
+        assertTrue(files.single { it.name == bak.name }.authoritative)
+    }
+
+    /** Codex review p12/migration #3: a fence that fails is a failure screen with Try again, never a crash. */
+    @Test
+    fun `B-MIGR-010 a backup fence that fails shows Try again and the retry finishes`() = runTest {
+        val w = world().apply { Seed.phone(this) }
+        var fail = true
+        val flaky = object : StepInterrupter {
+            override fun reached(point: String) {
+                if (point == "S0:partialCreated" && fail) throw java.io.IOException("I/O error")
+            }
+        }
+        val runner = w.runner(io(), flaky)
+        runner.backupBeforeOpen() // does not throw
+        val blocked = assertIs<RunnerState.Blocked>(runner.run())
+        assertEquals(BlockReason.StepCrashed, blocked.reason)
+        assertEquals("S0", blocked.step)
+        fail = false
+        assertIs<RunnerState.Open>(runner.retry())
+        assertNotNull(S0Backup(w.paths, StepInterrupter.None, { 1L shl 40 }, 1, { 0 }).verifyPublished())
+    }
 }

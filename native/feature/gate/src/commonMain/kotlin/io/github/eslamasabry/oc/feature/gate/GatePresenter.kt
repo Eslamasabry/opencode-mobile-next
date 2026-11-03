@@ -22,10 +22,11 @@ import kotlinx.coroutines.launch
  *   step change inside one run does not hide Try again.
  * - Every action is single-flight on this side too: a second tap while its call is running does nothing. In the
  *   runner, Try again during a run keeps waiting on the same run (§8.2).
- * - The re-enter sheet is asked once: closing it, choosing Later, opening a row's page or saving its last row
- *   acknowledges it, and it does not come back. A password or token row of a saved server asks for it in the sheet
- *   and saves it on that same server; the other rows open their page. The deferred-features notice is acknowledged
- *   the first time it shows.
+ * - The re-enter sheet is asked once: closing it, choosing Later or saving its last row acknowledges it, and it does
+ *   not come back. A password or token row of a saved server asks for it in the sheet and saves it on that same
+ *   server. A GitHub row says where GitHub is signed in again (a chat's Git page) and "Open chats" goes there without
+ *   answering the sheet; a BYO set-up row says this version cannot set it up. The deferred-features notice is
+ *   acknowledged the first time it shows.
  *
  * [scope] is the owner's (the shell's ViewModel scope, or a test scope); time comes from its dispatcher.
  */
@@ -72,7 +73,10 @@ public class GatePresenter(
                 )
             }
             is GateInput.Open -> {
-                if (input.firstNativeLaunch && input.deferredDataFound) latchNotice()
+                // The runner keeps the deferred set only until it is acknowledged, so the set alone means "not shown
+                // yet". `firstNativeLaunch` is not asked: a migration finished in a background start (a widget, a
+                // scheduled prompt) records the first open before any screen (Codex review p12/migration #5).
+                if (input.deferredDataFound) latchNotice()
                 if (sheet.closed) {
                     GateUi.Open(reenter = emptyList(), deferredNotice = noticeLatched)
                 } else {
@@ -114,16 +118,28 @@ public class GatePresenter(
     }
 
     /**
-     * A re-enter row. A saved server's password or token is asked for right here (the sheet stays open); any other
-     * row closes the sheet (asked once) and opens what it names.
+     * A re-enter row. A saved server's password or token is asked for right here; a GitHub or BYO row explains itself
+     * here (the sheet stays open). Only a password or token row with no saved server behind it closes the sheet
+     * (asked once) and opens the servers.
      */
     public fun onReentry(item: GateReentry) {
         if (sheet.value.closed) return
-        if (item.typedHere()) {
+        if (item.typedHere() || item.kind == GateReentryKind.GitHubSignIn || item.kind == GateReentryKind.ByoSetup) {
             sheet.value = sheet.value.copy(entry = GateEntry(item))
             return
         }
         closeSheet()
+        once("reentry") { actions.openReentry(item) }
+    }
+
+    /**
+     * "Open chats" on a GitHub row: GitHub is signed in again from a chat's Git page. The sheet closes for now but is
+     * not recorded as answered, so it comes back at the next start until the sign-in is done or Later is picked.
+     */
+    public fun onReentryOpen() {
+        val item = sheet.value.entry?.item ?: return
+        if (item.kind != GateReentryKind.GitHubSignIn) return
+        sheet.value = SheetState(closed = true)
         once("reentry") { actions.openReentry(item) }
     }
 

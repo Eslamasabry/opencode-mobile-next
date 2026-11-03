@@ -232,4 +232,32 @@ class SecretsMigrationTest {
         assertEquals(Seed.PASSWORD, w.secrets.values["pw.$REMOTE"])
         assertTrue(w.secrets.values.keys.none { it.startsWith("x") })
     }
+
+    /**
+     * Codex review p12/migration #1: the app's own secret store bypassed the ledger. A GitHub import that failed only
+     * for the moment kept its flag with no record; signing in and out through Git then left no trace, and the next
+     * launch's retry decrypted the old Flutter token and signed the person back in.
+     */
+    @Test
+    fun `B-SEC-084 a GitHub sign-out after the update is never undone by the retry`() = runTest {
+        val w = phone()
+        val name = "oc.githubToken.$REMOTE"
+        w.secrets.unavailable = { it == name } // the first import fails for the moment
+        w.runner(io()).run()
+        assertTrue(w.reentryRecord(REMOTE)!!.contains("githubToken"))
+        w.secrets.unavailable = { false }
+
+        // The app (gate open) signs in through Git, then signs out: each change asks the runner first.
+        val app = w.runner(io())
+        assertTrue(app.beforeNativeChange(name, deleted = false))
+        w.secrets.values[name] = """{"accessToken":"gho_typedAfterUpdate","refreshToken":null}"""
+        assertTrue(app.beforeNativeChange(name, deleted = true))
+        w.secrets.values.remove(name)
+
+        val open = assertIs<RunnerState.Open>(w.runner(io()).run())
+
+        assertNull(w.secrets.values[name], "the signed-out account is not restored from the Flutter copy")
+        assertEquals(CredentialLedger.State.Deleted, CredentialLedger(w.paths.credentialLedger).all().getValue(name).state)
+        assertTrue(open.notices.reenter.none { it.kind == ReentryKind.GitHubSignIn }, "answered natively: not asked again")
+    }
 }

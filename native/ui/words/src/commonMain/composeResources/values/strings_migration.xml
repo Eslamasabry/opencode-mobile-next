@@ -19,6 +19,9 @@
     <string name="migration_reenter_save">Save</string>
     <string name="migration_reenter_save_failed">Couldn't save it on this phone. Try again.</string>
     <string name="migration_reenter_back">Back to the list</string>
+    <string name="migration_reenter_github_where">To sign in to GitHub again for %1$s, open one of its chats, then Git.</string>
+    <string name="migration_reenter_open_chats">Open chats</string>
+    <string name="migration_reenter_byo_absent">Setting up %1$s again isn't in this version yet. Its saved details stay on this phone.</string>
     <string name="migration_failed_title">The update couldn't finish moving your data</string>
     <string name="migration_failed_body">Nothing was deleted. Your data from before the update is safe on this phone.</string>
     <string name="migration_restore_row">Restore data from before the update</string>
