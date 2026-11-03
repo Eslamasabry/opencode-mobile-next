@@ -39,6 +39,7 @@ class PreviewRuntime(
     dispatchers: AppDispatchers,
     private val draftOwners: Set<ConversationDrafts>,
     private val cleaners: Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
+    private val inventory: SessionInventoryWiring, // P12-BUILD-CITED: last-known labels at a cold start (B-STATE-103)
 ) : ServerConnections {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -64,7 +65,18 @@ class PreviewRuntime(
             if (result is Outcome.Ok) {
                 publishServers()
                 val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
-                if (active != null) command { connectNow(active) }
+                if (active != null) {
+                    // B-STATE-103: paint this profile's saved labels at once; the server's answer replaces them.
+                    inventory.preview(active)?.let { saved ->
+                        order.withLock {
+                            if (!listings.containsKey(active)) {
+                                listings[active] = MutableStateFlow(OpenCodeListing(sessions = saved, loading = true))
+                                rebuildFeed()
+                            }
+                        }
+                    }
+                    command { connectNow(active) }
+                }
             }
         }
         scope.launch { profiles.profiles.collect { if (ready.isCompleted) publishServers() } }
@@ -180,9 +192,11 @@ class PreviewRuntime(
                 val saved = profiles.setActive(id)
                 if (saved is Outcome.Failed) return saved.atStage(ConnectionStage.SaveActiveProfile)
                 val graph = opened.value
-                if (!listings.containsKey(id)) {
-                    listings[id] = MutableStateFlow(OpenCodeListing(loading = true))
-                    rebuildFeed()
+                if (!eventJobs.containsKey(id)) {
+                    if (!listings.containsKey(id)) {
+                        listings[id] = MutableStateFlow(OpenCodeListing(loading = true))
+                        rebuildFeed()
+                    }
                     eventJobs[id] = scope.launch {
                         graph.session.server.events.all.collect { envelope ->
                             when (envelope.event) {
@@ -254,6 +268,8 @@ class PreviewRuntime(
                         acrossProjects =
                             graph.session.server.capabilities.value.globalSessionSearch,
                     )
+                // B-STATE-104: keep the labels for the next cold start; a removed profile is never written back.
+                inventory.remember(id, page.value.sessions) { registry.live.value[id] === graph && listings[id] === listing }
                 return statuses.map { Unit }.atStage(ConnectionStage.LoadActivity)
             }
         }
