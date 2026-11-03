@@ -175,17 +175,59 @@ class GatePresenterTest {
     @Test
     fun `B-MIGR-006 the re-enter sheet is asked once, then each item keeps its own state`() = runTest {
         val home = GateReentry("p1", "Home server", GateReentryKind.Password)
-        val gh = GateReentry(null, "GitHub", GateReentryKind.GitHubSignIn)
+        val gh = GateReentry("p1", "Home server", GateReentryKind.GitHubSignIn)
         val h = Harness(this, GateInput.Open(firstNativeLaunch = true, reenter = listOf(home, gh)))
         runCurrent()
         assertEquals(listOf(home, gh), assertIs<GateUi.Open>(h.ui).reenter)
-        h.presenter.onReentry(gh) // GitHub is signed in again on its own page: the sheet closes and opens it
+        h.presenter.onReentryLater()
         runCurrent()
         assertEquals(emptyList(), assertIs<GateUi.Open>(h.ui).reenter)
-        assertEquals(listOf("ack", "open:GitHub:GitHubSignIn"), h.actions.calls)
         h.presenter.onReentryLater() // already closed: no second acknowledgement
         runCurrent()
-        assertEquals(1, h.actions.calls.count { it == "ack" })
+        assertEquals(listOf("ack"), h.actions.calls)
+    }
+
+    /**
+     * Codex review p12/migration #2: the GitHub row closed the sheet for good and opened the Servers page, which has
+     * no GitHub sign-in. GitHub is signed in from a chat's Git page, so the row now says where, in the sheet, and
+     * "Open chats" goes there without recording the sheet as answered (it comes back until the sign-in is done or the
+     * person picks Later).
+     */
+    @Test
+    fun `B-MIGR-006 a GitHub row says where to sign in again and opens the chats without answering the sheet`() = runTest {
+        val gh = GateReentry("p1", "Home server", GateReentryKind.GitHubSignIn)
+        val h = Harness(this, GateInput.Open(firstNativeLaunch = true, reenter = listOf(gh)))
+        runCurrent()
+        h.presenter.onReentry(gh)
+        runCurrent()
+        val guide = assertIs<GateUi.Open>(h.ui)
+        assertEquals(GateEntry(gh), guide.entry)
+        assertEquals(emptyList(), h.actions.calls)
+
+        h.presenter.onReentryOpen()
+        runCurrent()
+        assertEquals(GateUi.Open(emptyList(), deferredNotice = false), h.ui)
+        assertEquals(listOf("open:Home server:GitHubSignIn"), h.actions.calls) // no "ack": asked again next start
+    }
+
+    /**
+     * Codex review p12/migration #2: the BYO set-up row opened the Servers page, which cannot set a BYO host up. This
+     * version has no BYO set-up page, so the row says so plainly and the person goes back to the list.
+     */
+    @Test
+    fun `B-MIGR-007 a BYO set-up row says plainly it is not in this version and opens nothing`() = runTest {
+        val unnamed = GateReentry(null, null, GateReentryKind.Password)
+        val byo = GateReentry("p3", "Laptop", GateReentryKind.ByoSetup)
+        val h = Harness(this, GateInput.Open(firstNativeLaunch = true, reenter = listOf(unnamed, byo)))
+        runCurrent()
+        h.presenter.onReentry(byo)
+        runCurrent()
+        assertEquals(GateEntry(byo), assertIs<GateUi.Open>(h.ui).entry)
+        h.presenter.onReentryOpen() // nothing to open for a BYO row
+        h.presenter.onReentryBack()
+        runCurrent()
+        assertEquals(GateUi.Open(listOf(unnamed, byo), deferredNotice = false), h.ui)
+        assertEquals(emptyList(), h.actions.calls)
     }
 
     /**
@@ -250,18 +292,6 @@ class GatePresenterTest {
     }
 
     @Test
-    fun `B-MIGR-006 a row with no saved server behind it keeps opening its page`() = runTest {
-        val unnamed = GateReentry(null, null, GateReentryKind.Password)
-        val byo = GateReentry("p3", "Laptop", GateReentryKind.ByoSetup)
-        val h = Harness(this, GateInput.Open(firstNativeLaunch = true, reenter = listOf(unnamed, byo)))
-        runCurrent()
-        h.presenter.onReentry(byo) // a BYO host is set up again on its page, not with a typed secret
-        runCurrent()
-        assertNull(assertIs<GateUi.Open>(h.ui).entry)
-        assertEquals(listOf("ack", "open:Laptop:ByoSetup"), h.actions.calls)
-    }
-
-    @Test
     fun `B-MIGR-006 Later closes the sheet and records it, with no item opened`() = runTest {
         val h = Harness(this, GateInput.Open(true, listOf(GateReentry("p2", "Work", GateReentryKind.Token))))
         runCurrent()
@@ -273,7 +303,7 @@ class GatePresenterTest {
 
     /** No catalog row yet (02 §3.7 item 4; S2-GATEUI report, catalog requests). */
     @Test
-    fun `02-3_7-4 the deferred-features notice shows on the first native launch only and is recorded once`() = runTest {
+    fun `02-3_7-4 the deferred-features notice shows while it is unacknowledged and is recorded once`() = runTest {
         val h = Harness(this, GateInput.Running("M6"))
         h.input.value = GateInput.Open(firstNativeLaunch = true, deferredDataFound = true)
         runCurrent()
@@ -282,12 +312,22 @@ class GatePresenterTest {
         runCurrent()
         assertEquals(1, h.actions.calls.count { it == "ackDeferred" })
 
-        val later = Harness(this, GateInput.Open(firstNativeLaunch = false, deferredDataFound = true))
-        runCurrent()
-        assertFalse(assertIs<GateUi.Open>(later.ui).deferredNotice)
         val none = Harness(this, GateInput.Open(firstNativeLaunch = true, deferredDataFound = false))
         runCurrent()
         assertFalse(assertIs<GateUi.Open>(none.ui).deferredNotice)
-        assertEquals(emptyList(), later.actions.calls + none.actions.calls)
+        assertEquals(emptyList(), none.actions.calls)
+    }
+
+    /**
+     * Codex review p12/migration #5: the migration can finish in a background process (a widget or a scheduled
+     * prompt started the app), which records the first open. The notice used to need `firstNativeLaunch`, so it never
+     * showed. The runner keeps the deferred set only until it is acknowledged, so that set alone decides.
+     */
+    @Test
+    fun `B-MIGR-009 the deferred-features notice still shows when the migration finished in a background start`() = runTest {
+        val later = Harness(this, GateInput.Open(firstNativeLaunch = false, deferredDataFound = true))
+        runCurrent()
+        assertTrue(assertIs<GateUi.Open>(later.ui).deferredNotice)
+        assertEquals(listOf("ackDeferred"), later.actions.calls)
     }
 }

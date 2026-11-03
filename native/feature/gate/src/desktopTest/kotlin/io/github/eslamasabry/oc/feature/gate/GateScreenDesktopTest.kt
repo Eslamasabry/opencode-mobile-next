@@ -61,6 +61,7 @@ class GateScreenDesktopTest {
             onReentryLater = { taps += "later" },
             onReentrySubmit = { taps += "submit:${it.length}" },
             onReentryBack = { taps += "back" },
+            onReentryOpen = { taps += "open" },
             content = { KitText("App content") },
         )
 
@@ -195,5 +196,31 @@ class GateScreenDesktopTest {
         state = GateUi.Open(listOf(home), deferredNotice = false, entry = GateEntry(home, failed = true))
         waitForIdle()
         onNodeWithText("Couldn't save it on this phone. Try again.").assertExists()
+    }
+
+    /** Codex review p12/migration #2: the GitHub row says where the sign-in is, and goes there. */
+    @Test
+    fun `B-MIGR-006 a GitHub row says where to sign in again and offers the chats`() = runComposeUiTest {
+        Locale.setDefault(Locale.ENGLISH)
+        val gh = GateReentry("p1", "Home server", GateReentryKind.GitHubSignIn)
+        setContent(ui { Gate(GateUi.Open(listOf(gh), deferredNotice = false, entry = GateEntry(gh))) })
+        waitForIdle()
+        onNodeWithText("To sign in to GitHub again for Home server, open one of its chats, then Git.").assertExists()
+        onNodeWithText("Open chats").performClick()
+        onNodeWithText("Back to the list").performClick()
+        assertEquals(listOf("open", "back"), taps)
+    }
+
+    /** Codex review p12/migration #2: there is no BYO set-up page in this version; the row says so, in Arabic too. */
+    @Test
+    fun `B-MIGR-007 a BYO set-up row says plainly it is not in this version`() = runComposeUiTest {
+        Locale.setDefault(Locale.forLanguageTag("ar"))
+        val byo = GateReentry("p3", "Laptop", GateReentryKind.ByoSetup)
+        setContent(ui("ar") { Gate(GateUi.Open(listOf(byo), deferredNotice = false, entry = GateEntry(byo))) })
+        waitForIdle()
+        onNodeWithText("لا يمكن إعداد Laptop مجددًا في هذا الإصدار بعد. تبقى تفاصيله المحفوظة على هذا الهاتف.").assertExists()
+        onNodeWithText("Open chats").assertDoesNotExist()
+        onNodeWithText("العودة إلى القائمة").performClick()
+        assertEquals(listOf("back"), taps)
     }
 }

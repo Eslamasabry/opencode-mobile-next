@@ -57,6 +57,9 @@ import io.github.eslamasabry.oc.ui.words.res.migration_open_storage_row
 import io.github.eslamasabry.oc.ui.words.res.migration_opening
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_back
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_body
+import io.github.eslamasabry.oc.ui.words.res.migration_reenter_byo_absent
+import io.github.eslamasabry.oc.ui.words.res.migration_reenter_github_where
+import io.github.eslamasabry.oc.ui.words.res.migration_reenter_open_chats
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_field_password
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_field_token
 import io.github.eslamasabry.oc.ui.words.res.migration_reenter_save
@@ -103,6 +106,7 @@ public fun UpdateGate(presenter: GatePresenter, content: @Composable () -> Unit)
         onReentryLater = presenter::onReentryLater,
         onReentrySubmit = presenter::onReentrySubmit,
         onReentryBack = presenter::onReentryBack,
+        onReentryOpen = presenter::onReentryOpen,
         content = content,
     )
 }
@@ -118,6 +122,7 @@ public fun GateScreen(
     onReentryLater: () -> Unit,
     onReentrySubmit: (String) -> Unit = {},
     onReentryBack: () -> Unit = {},
+    onReentryOpen: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val draw: @Composable (GateUi) -> Unit = { state ->
@@ -126,7 +131,7 @@ public fun GateScreen(
                 WaitingScreen(if (state.wordless) null else stringResource(Res.string.migration_opening), state.offerRetry, onRow)
             is GateUi.Updating -> WaitingScreen(stringResource(Res.string.migration_updating), state.offerRetry, onRow)
             is GateUi.Failed -> FailedScreen(state, onRow, onConfirm, onCancelConfirm)
-            is GateUi.Open -> OpenFrame(state, onReentry, onReentryLater, onReentrySubmit, onReentryBack, content)
+            is GateUi.Open -> OpenFrame(state, onReentry, onReentryLater, onReentrySubmit, onReentryBack, onReentryOpen, content)
         }
     }
     // The kit's cross-fade between screens (instant under reduced motion, 05 §8.2). Keyed by the screen kind, so a
@@ -220,6 +225,7 @@ private fun OpenFrame(
     onLater: () -> Unit,
     onSubmit: (String) -> Unit,
     onBack: () -> Unit,
+    onOpen: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     KitSheetHost(Modifier.fillMaxSize()) {
@@ -251,7 +257,12 @@ private fun OpenFrame(
         ) {
             val entry = state.entry
             if (entry != null) {
-                key(entry.item) { EntryForm(entry, onSubmit, onBack) }
+                key(entry.item) {
+                    when (entry.item.kind) {
+                        GateReentryKind.Password, GateReentryKind.Token -> EntryForm(entry, onSubmit, onBack)
+                        GateReentryKind.GitHubSignIn, GateReentryKind.ByoSetup -> EntryGuide(entry.item, onOpen, onBack)
+                    }
+                }
             } else {
                 KitText(
                     stringResource(Res.string.migration_reenter_body),
@@ -297,6 +308,22 @@ private fun EntryForm(entry: GateEntry, onSubmit: (String) -> Unit, onBack: () -
         modifier = Modifier.fillMaxWidth(),
         working = entry.saving,
     )
+    KitRow(title = stringResource(Res.string.migration_reenter_back), supporting = null, onClick = onBack)
+}
+
+/**
+ * A row that is not typed in the sheet (Codex review p12/migration #2): GitHub says where it is signed in again and
+ * opens the chats; BYO set-up says this version cannot do it. Both keep "Back to the list".
+ */
+@Composable
+private fun EntryGuide(item: GateReentry, onOpen: () -> Unit, onBack: () -> Unit) {
+    val target = item.targetName ?: stringResource(Res.string.migration_reenter_unnamed)
+    val github = item.kind == GateReentryKind.GitHubSignIn
+    KitText(
+        stringResource(if (github) Res.string.migration_reenter_github_where else Res.string.migration_reenter_byo_absent, target),
+        role = TypeRole.Body,
+    )
+    if (github) KitButton(stringResource(Res.string.migration_reenter_open_chats), onClick = onOpen, modifier = Modifier.fillMaxWidth())
     KitRow(title = stringResource(Res.string.migration_reenter_back), supporting = null, onClick = onBack)
 }
 

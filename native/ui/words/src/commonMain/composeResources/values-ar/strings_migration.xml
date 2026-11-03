@@ -18,6 +18,9 @@
     <string name="migration_reenter_save">حفظ</string>
     <string name="migration_reenter_save_failed">تعذّر حفظها على هذا الهاتف. حاول مرة أخرى.</string>
     <string name="migration_reenter_back">العودة إلى القائمة</string>
+    <string name="migration_reenter_github_where">لتسجيل الدخول إلى GitHub مجددًا لـ %1$s، افتح إحدى محادثاته، ثم Git.</string>
+    <string name="migration_reenter_open_chats">فتح المحادثات</string>
+    <string name="migration_reenter_byo_absent">لا يمكن إعداد %1$s مجددًا في هذا الإصدار بعد. تبقى تفاصيله المحفوظة على هذا الهاتف.</string>
     <string name="migration_failed_title">تعذّر على التحديث إكمال نقل بياناتك</string>
     <string name="migration_failed_body">لم يُحذف شيء. بياناتك من قبل التحديث محفوظة بأمان على هذا الهاتف.</string>
     <string name="migration_restore_row">استعادة البيانات من قبل التحديث</string>
