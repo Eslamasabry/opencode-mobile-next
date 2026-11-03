@@ -216,7 +216,7 @@ void main() {
     });
 
     test('the password script is only ever labelled generically', () {
-      final script = BuiltinLinux.writePasswordScript('hunter2-secret');
+      final script = BuiltinLinux.writePasswordScript;
       expect(BuiltinLinux.scriptLabel(script), 'write-password');
       expect(
         BuiltinLinux.scriptLabel(BuiltinLinux.folderExistsScript('/p/secret')),

@@ -24,6 +24,7 @@ class _OwnershipLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async => const BuiltinLinuxRunResult(exitCode: 0, output: '');
   @override
   Future<void> startServer(

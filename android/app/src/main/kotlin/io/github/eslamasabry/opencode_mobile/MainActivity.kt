@@ -319,7 +319,8 @@ class MainActivity : FlutterFragmentActivity() {
                 }
                 val timeout = (call.argument<Int>("timeoutSeconds") ?: 600).toLong()
                 inBackground {
-                    val run = linux.run(script, timeout, agentUser = call.argument<Boolean>("agentUser") == true)
+                    val run = linux.run(script, timeout, agentUser = call.argument<Boolean>("agentUser") == true,
+                        stdin = call.argument<String>("stdin"))
                     mapOf("exitCode" to run.exitCode, "output" to run.output)
                 }
             }
@@ -479,6 +480,14 @@ class MainActivity : FlutterFragmentActivity() {
                 null
             }
             "projectStorage" -> inBackground { linux.projectStorage() }
+            "createProject" -> {
+                val path = call.argument<String>("path")
+                if (path == null) {
+                    result.error("builtin_linux", "No folder to make", null)
+                    return
+                }
+                inBackground { linux.createProject(path) }
+            }
             "setSharedProjects" -> inBackground {
                 linux.setSharedProjectRoots(call.argument<List<String>>("roots") ?: emptyList())
                 null

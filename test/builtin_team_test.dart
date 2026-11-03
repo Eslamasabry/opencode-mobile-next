@@ -121,6 +121,90 @@ void main() {
       );
     });
 
+    // Issue #112: on an OpenCode 2 phone the only `opencode` is the agents'
+    // wrapper, and gc init refuses to make the store without it on PATH
+    // (three tries, then "the team store could not be made"). It also
+    // needs Dolt's author identity.
+    group('the store script in a real shell', () {
+      late Directory dir;
+      late String script;
+      late String bin;
+      late String agentBin;
+
+      void exe(String path, String body) {
+        File(path).writeAsStringSync(body);
+        Process.runSync('chmod', ['755', path]);
+      }
+
+      setUp(() {
+        dir = Directory.systemTemp.createTempSync('oc-team-city');
+        bin = '${dir.path}/bin';
+        agentBin = '${dir.path}/agent-bin';
+        Directory(bin).createSync();
+        Directory(agentBin).createSync();
+        Directory('${dir.path}/root').createSync();
+        // gc 1.4.1's own checks, in its own words.
+        exe('$bin/gc', '''#!/bin/sh
+echo "gc \$*" >> "\$HOME/calls.log"
+[ "\$1" = init ] || exit 0
+command -v opencode >/dev/null || { echo 'gc init: provider "opencode": provider not found in PATH'; exit 1; }
+dolt config --global --get user.email >/dev/null || { echo 'gc init: city created, but startup is blocked by Dolt author identity'; exit 1; }
+mkdir -p city/.gc
+''');
+        exe('$bin/dolt', '''#!/bin/sh
+f="\$HOME/dolt-config"
+touch "\$f"
+case "\$3" in
+  --get) grep -q "^\$4=" "\$f" ;;
+  --add) echo "\$4=\$5" >> "\$f"; echo "dolt add \$4" >> "\$HOME/calls.log" ;;
+esac
+''');
+        // cityScript stops leftover Dolt by pattern: never on this machine.
+        exe('$bin/pkill', '#!/bin/sh\nexit 0\n');
+        exe('$bin/sleep', '#!/bin/sh\nexit 0\n');
+        script = BuiltinTeam.cityScript
+            .replaceAll(AiTeamScripts.agentBin, agentBin)
+            .replaceAll('/root', '${dir.path}/root');
+      });
+      tearDown(() => dir.deleteSync(recursive: true));
+
+      Future<ProcessResult> run() => Process.run(
+        'sh',
+        ['-c', script],
+        environment: {'PATH': '$bin:/usr/bin:/bin'},
+        includeParentEnvironment: false,
+      );
+      String calls() {
+        final log = File('${dir.path}/root/calls.log');
+        return log.existsSync() ? log.readAsStringSync() : '';
+      }
+
+      test('finds the agents\' opencode and sets the Dolt identity', () async {
+        exe('$agentBin/opencode', '#!/bin/sh\nexit 0\n');
+        final result = await run();
+        expect(result.exitCode, 0, reason: '${result.stdout}${result.stderr}');
+        expect(result.stdout, contains('city-ready'));
+        expect(calls(), contains('dolt add user.name'));
+        expect(calls(), contains('dolt add user.email'));
+        expect(calls(), contains('gc init'));
+        // An identity the person set is kept.
+        File('${dir.path}/root/aiteam/city.ready').deleteSync();
+        File('${dir.path}/root/calls.log').deleteSync();
+        expect((await run()).exitCode, 0);
+        expect(calls(), isNot(contains('dolt add')));
+      });
+
+      test('without the wrapper it says so and does not try gc init', () async {
+        final result = await run();
+        expect(result.exitCode, 70);
+        expect(
+          result.stderr,
+          contains("[oc] The team's opencode is missing ($agentBin/opencode)"),
+        );
+        expect(calls(), isNot(contains('gc init')));
+      });
+    });
+
     test('installed means the component check passes, every line', () async {
       final dir = await Directory.systemTemp.createTemp('oc-team-bin');
       addTearDown(() => dir.delete(recursive: true));

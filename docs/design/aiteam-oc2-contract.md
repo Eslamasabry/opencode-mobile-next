@@ -5,6 +5,17 @@ probe, and the Rust driver and Dart integration are implemented. Emulator and
 owner-phone qualification remain outstanding. OpenCode **2.0.28 is not enabled**:
 only the exact server version proven in this job is admitted.
 
+Update, 2026-11-03 (issue #111): the exact pin is now a range,
+`2.0.29+`, `2.1.x` and `2.2.x` (`SUPPORTED` in `engine/phone/src/opencode2.rs`).
+Setup installs 2.2.5 on the current line and 2.1.1 in the 2.1.0 release, so the
+2.0.29-only gate refused every fresh install. 2.1.1 and 2.2.5 both passed the
+live driver proof `engine/phone/tests/oc2_live.rs` (planner answers, worker
+writes a file, abort confirms). The OpenAPI contract check still runs on every
+server. A new minor line is added only after that live run. Stable OC2 sends no
+`session.status` frames on any of these versions (busy is
+`session.execution.*`, without a location), so chat admission keeps polling
+`/api/session/active`.
+
 Finish line: the Rust phone engine drives AI Team lanes on OC2 with the existing
 safety guarantees and the app accepts a supported in-app OC2 profile.
 Update, 2026-10-15: OC1 support has been removed by owner decision.

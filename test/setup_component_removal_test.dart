@@ -76,6 +76,7 @@ class _Linux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     calls.add(script);
     if (throwingProbes.contains(script)) {
@@ -662,6 +663,7 @@ class _SizedLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     ran.add(script);
     return BuiltinLinuxRunResult(exitCode: exit, output: outputs[script] ?? '');

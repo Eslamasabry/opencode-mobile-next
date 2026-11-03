@@ -5,6 +5,16 @@ internal object NativeInstallerAdmission {
     /** The installer ticket read first, and whether the cached owner is still alive. */
     data class Claim(val ticket: InstallerTicket?, val ownerLive: Boolean)
 
+    /**
+     * A failed launch may drop its own ticket only when no permit byte was sent
+     * (so no workload ever ran), its drain finished, its root process exited and
+     * no newer installer took the slot. Anything else keeps the ticket.
+     */
+    fun unpermittedLaunchMayClear(
+        stored: InstallerTicket?, launchId: String, permitSent: Boolean, drained: Boolean,
+        rootExited: Boolean, slotFree: Boolean,
+    ): Boolean = stored != null && stored.id == launchId && !permitSent && drained && rootExited && slotFree
+
     fun reclaim(
         claim: Claim,
         ownerCurrent: () -> Boolean,

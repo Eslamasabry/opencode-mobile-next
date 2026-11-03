@@ -208,20 +208,19 @@ fn worker_directory(root: &str, directory: &str) -> bool {
 }
 
 pub async fn reconcile_busy(e: &Engine) {
-    let (dirs, revision, needed) = {
+    let (revision, needed) = {
         let ledger = e.chat.read().await;
-        (
-            ledger.directories(),
-            ledger.observation_revision(),
-            ledger.needs_reconciliation(),
-        )
+        (ledger.observation_revision(), ledger.needs_reconciliation())
     };
     if !needed || !observer_connected(e) {
         return;
     }
+    // OC2's active list covers the whole server, so no known chat folder is
+    // needed. Requiring one left a stream drop before the person opened any
+    // chat project "unknown" forever (issue #111/#112 Run A).
     let snapshot = e
         .server
-        .person_directory_status(&dirs, &crate::daemon::team_sessions(e))
+        .server_idle_except(&crate::daemon::team_sessions(e))
         .await
         .map_err(|_| ());
     // A malformed frame, disconnect, or a newer status event increments the

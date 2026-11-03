@@ -25,6 +25,7 @@ class _StoppedLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     calls.add(script);
     if (script == BuiltinLinux.listProjectsScript()) {

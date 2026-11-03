@@ -435,7 +435,7 @@ printf opencode2 > "$RUNTIME_FILE"
       contains("opencode2) health_path='/api/info /api/health' ;;"),
     );
     expect(manager, contains(r'for path in $OC_HEALTH_PATH; do'));
-    expect(manager, contains(r'''[ "$unauth $auth" != '401 200' ] || break'''));
+    expect(manager, contains(r'''[ "$unauth $auth" != "401 200" ] || break'''));
   });
 
   test(
@@ -1132,6 +1132,53 @@ wait
         ),
       ),
     );
+  });
+
+  // Found with issue #112: a project made while turning on AI Team was an
+  // empty folder, and the team refused it ("not a git repository").
+  test('a new project folder is a git project with a first commit', () async {
+    final dir = await Directory.systemTemp.createTemp('oc-termux-new');
+    addTearDown(() => dir.delete(recursive: true));
+    final bin = Directory('${dir.path}/bin')..createSync();
+    final home = Directory('${dir.path}/home')..createSync();
+    final projects = '${dir.path}/projects';
+    File('${bin.path}/proot-distro').writeAsStringSync(
+      '#!/bin/sh\nwhile [ "\$1" != -- ]; do shift; done; shift; exec "\$@"\n',
+    );
+    Process.runSync('chmod', ['755', '${bin.path}/proot-distro']);
+    Future<ProcessResult> create(String name) => Process.run(
+      'sh',
+      [
+        '-c',
+        TermuxBridge.createProjectFolderScript(
+          name,
+        ).replaceAll('/root/projects', projects),
+      ],
+      environment: {
+        'PATH': '${bin.path}:/usr/bin:/bin',
+        'HOME': home.path,
+        'GIT_CONFIG_NOSYSTEM': '1',
+      },
+      includeParentEnvironment: false,
+      workingDirectory: dir.path,
+    );
+    final made = await create('my-app');
+    expect(made.exitCode, 0, reason: '${made.stdout}${made.stderr}');
+    expect((made.stdout as String).trim().split('\n').last, '$projects/my-app');
+    final log = Process.runSync(
+      'git',
+      ['-C', '$projects/my-app', 'log', '--format=%an <%ae> %s'],
+      environment: {'HOME': home.path, 'GIT_CONFIG_NOSYSTEM': '1'},
+    );
+    expect(
+      (log.stdout as String).trim(),
+      'AI Team <aiteam@localhost> First commit',
+    );
+    // A folder that is there already is left alone.
+    Directory('$projects/old').createSync();
+    final kept = await create('old');
+    expect(kept.exitCode, 0);
+    expect(Directory('$projects/old/.git').existsSync(), isFalse);
   });
 
   test('Ubuntu setup bypasses registries and verifies Canonical archives', () {

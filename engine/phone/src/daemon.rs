@@ -2854,6 +2854,91 @@ mod tests {
         assert_eq!(replay["accepted"], true);
         assert_eq!(replay["replayed"], true);
     }
+    /// Issue #111/#112 Run A: the status stream dropped (OpenCode's
+    /// protected restart) before the person opened any chat project, so the
+    /// engine knew no chat folder. Reconciling needed one, so admission
+    /// stayed "chat status unknown" even under a fresh, known, idle
+    /// heartbeat from the app, until a chat project was opened.
+    #[tokio::test]
+    async fn busy_evidence_reconciles_with_no_chat_folder_known() {
+        use crate::chat::ChatAdmission;
+        use axum::{response::IntoResponse, routing::get};
+        let spec: Value = serde_json::from_str(include_str!(
+            "../tests/fixtures/oc2-2.0.29-driver-openapi.json"
+        ))
+        .unwrap();
+        let active = Arc::new(Mutex::new(json!({"data":{}})));
+        let served = active.clone();
+        let app = Router::new()
+            .route(
+                "/api/info",
+                get(|| async {
+                    Json(json!({"version":"2.1.1","pid":7,"urls":[],"paths":{"tmp":"/tmp"}}))
+                }),
+            )
+            .route(
+                "/openapi.json",
+                get(move || {
+                    let spec = spec.clone();
+                    async move { Json(spec).into_response() }
+                }),
+            )
+            .route(
+                "/api/session/active",
+                get(move || {
+                    let active = served.lock().unwrap().clone();
+                    async move { Json(active) }
+                }),
+            );
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let task = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let temp = tempfile::tempdir().unwrap();
+        let mut shared = fixture(temp.path());
+        Arc::get_mut(&mut shared).unwrap().server =
+            OpenCodeClient::new(&format!("http://{address}"), "opencode", "fixture-only").unwrap();
+        let e = shared;
+        e.chat.write().await.observation_unknown();
+        *e.observer_connected.lock().unwrap() = true;
+        let now = crate::admission::now_ms();
+        let heartbeat = |sequence| crate::chat::ChatHeartbeat {
+            until: crate::admission::now_ms() + 20_000,
+            session_ids: vec![],
+            directories: vec![],
+            known: true,
+            app_instance: "app-one".into(),
+            sequence,
+        };
+        e.chat.write().await.accept(heartbeat(1), now).unwrap();
+        assert_eq!(
+            e.chat.read().await.admission(now, Some(true), &[]),
+            ChatAdmission::Unknown
+        );
+        // A person's reply running anywhere on the server keeps it busy.
+        *active.lock().unwrap() = json!({"data":{"ses_person":{"type":"running"}}});
+        crate::admission::reconcile_busy(&e).await;
+        assert_eq!(
+            e.chat.read().await.admission(now, Some(true), &[]),
+            ChatAdmission::Busy
+        );
+        *active.lock().unwrap() = json!({"data":{}});
+        crate::admission::reconcile_busy(&e).await;
+        let now = crate::admission::now_ms();
+        e.chat.write().await.accept(heartbeat(2), now).unwrap();
+        assert_eq!(
+            e.chat.read().await.admission(now, Some(true), &[]),
+            ChatAdmission::Idle
+        );
+        // Evidence alone never admits: an unknown app heartbeat stays unknown.
+        let mut unknown = heartbeat(3);
+        unknown.known = false;
+        e.chat.write().await.accept(unknown, now).unwrap();
+        assert_eq!(
+            e.chat.read().await.admission(now, Some(true), &[]),
+            ChatAdmission::Unknown
+        );
+        task.abort();
+    }
     fn fixture(path: &std::path::Path) -> Shared {
         let private = path.join("private");
         let worker = path.join("worker");

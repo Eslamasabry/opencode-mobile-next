@@ -154,8 +154,11 @@ void main() {
           loseSecond = false;
           throw const TermuxBridgeException('connection lost');
         }
+        // The bearer reaches curl as a private config file, never argv.
+        expect(script, isNot(contains("--header 'Authorization")));
+        expect(script, contains('-K "\$oc_curl_cfg"'));
         final token = RegExp(
-          r"Authorization: Bearer ([A-Za-z0-9_=-]+)'",
+          "Authorization: Bearer %s\"\\\\n' '([A-Za-z0-9_=-]+)'",
         ).firstMatch(script)![1]!;
         final url = RegExp(
           r"'(http://127\.0\.0\.1:\d+/archive)'",

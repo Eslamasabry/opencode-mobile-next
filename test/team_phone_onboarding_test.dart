@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/diagnostics/failed_job_report.dart';
 import 'package:opencode_mobile/domain/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/builtin/setup/components.dart';
@@ -809,6 +810,37 @@ void main() {
         findsOneWidget,
       );
       expect(controller.orchestration, isNotNull);
+      await teardown(tester, controller);
+    });
+
+    // Issue #112: the report said "the output above says why" and carried
+    // no output. It now carries aiteam.sh's last lines, gc's own words.
+    testWidgets('a failed store reports what gc said', (tester) async {
+      turnOnSucceeds();
+      runtime.results['init'] = _status(
+        TeamRuntimePhase.failed,
+        rawPhase: 'failed:gc-init',
+        reason: 'gc-init',
+        verb: 'init',
+        lastError:
+            'Gas City could not make the team store; the output above says why',
+      );
+      runtime.log =
+          '[aiteam] creating-city: Preparing the team store (at 3s)\n'
+          'gc init: provider "opencode": provider not found in PATH\n'
+          '[oc] The team store could not be made\n';
+      final (controller, _) = await pumpReady(tester);
+      expect(find.text(l10n.teamUiPhoneFailedCity), findsOneWidget);
+      final report = FailedJobReport.teamSetup(teamPhoneTermuxJob)!;
+      expect(report.logExcerpt, contains('aiteam.sh init: failed:gc-init'));
+      expect(
+        report.logExcerpt,
+        contains('gc init: provider "opencode": provider not found in PATH'),
+      );
+      expect(
+        report.logExcerpt,
+        contains('[oc] The team store could not be made'),
+      );
       await teardown(tester, controller);
     });
 

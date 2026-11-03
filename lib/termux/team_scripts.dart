@@ -1071,7 +1071,10 @@ agents_count() {
   if command -v jq >/dev/null 2>&1; then
     printf '%s' "$body" | jq -r '(.items // []) | length' 2>/dev/null || true
   else
-    printf '%s' "$body" | grep -o '"id":' | wc -l | tr -d ' '
+    # Termux has no jq. grep finds nothing while the city lists no agents
+    # yet, and under pipefail that failed the whole status read with no
+    # output (issue #112: the start step "failed" while start said ready).
+    { printf '%s' "$body" | grep -o '"id":' || true; } | wc -l | tr -d ' '
   fi
 }
 

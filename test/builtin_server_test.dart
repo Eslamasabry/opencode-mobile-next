@@ -15,10 +15,21 @@ class _FakeLinux extends BuiltinLinux {
   bool serverDies = false;
   int statusReads = 0;
   final scripts = <String>[];
+  final inputs = <String?>[];
   final started = <String>[];
   final restorationRecipes = <BuiltinServerRestoreRecipe?>[];
   BuiltinLinuxException? startError;
   BuiltinLinuxRunResult Function(String script)? runAnswer;
+  final createdNatively = <String>[];
+  String createAnswer = 'created';
+  BuiltinLinuxException? createError;
+
+  @override
+  Future<String> createProjectFolder(String path) async {
+    if (createError != null) throw createError!;
+    createdNatively.add(path);
+    return createAnswer;
+  }
 
   @override
   Future<BuiltinLinuxStatus> status() async {
@@ -34,8 +45,10 @@ class _FakeLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     scripts.add(script);
+    inputs.add(input);
     return runAnswer?.call(script) ??
         const BuiltinLinuxRunResult(exitCode: 0, output: '');
   }
@@ -100,7 +113,9 @@ void main() {
         pollInterval: Duration.zero,
       );
       expect(failure, isNull);
-      expect(linux.scripts.single, BuiltinLinux.writePasswordScript('secret'));
+      expect(linux.scripts.single, BuiltinLinux.writePasswordScript);
+      expect(linux.scripts.single, isNot(contains('secret')));
+      expect(linux.inputs.single, 'secret');
       expect(linux.started.single, contains('opencode2 serve'));
       expect(linux.restorationRecipes.single?.toMap(), {
         'version': 1,
@@ -297,31 +312,66 @@ void main() {
   });
 
   group('BuiltinProjectFolders', () {
-    test('create reports whether the folder is new', () async {
+    test(
+      'a folder in /root/projects is made by the app, never by a shell '
+      'git init in Ubuntu (issue #111: the sandbox denies its chmod)',
+      () async {
+        final folders = BuiltinProjectFolders(linux);
+        linux.createAnswer = 'created';
+        expect(await folders.create('/root/projects/hello'), (
+          path: '/root/projects/hello',
+          created: true,
+        ));
+        expect(linux.createdNatively, ['/root/projects/hello']);
+        expect(linux.scripts, isEmpty, reason: 'no script runs in Ubuntu');
+        linux.createAnswer = 'exists';
+        expect((await folders.create('/root/projects/hello')).created, isFalse);
+        linux.createError = const BuiltinLinuxException('denied');
+        await expectLater(
+          folders.create('/root/projects/hello'),
+          throwsA(isA<BuiltinLinuxException>()),
+        );
+        expect(linux.scripts, isEmpty);
+      },
+    );
+
+    test('other folders still go through the script', () async {
       final folders = BuiltinProjectFolders(linux);
       linux.runAnswer = (_) => const BuiltinLinuxRunResult(
         exitCode: 0,
-        output: 'created /root/projects/hello\n',
+        output: 'created /root/projects/work/api\n',
       );
-      expect(await folders.create('/root/projects/hello'), (
-        path: '/root/projects/hello',
+      expect(await folders.create('/root/projects/work/api'), (
+        path: '/root/projects/work/api',
         created: true,
       ));
       expect(
-        linux.scripts.last,
-        BuiltinLinux.createFolderScript('/root/projects/hello'),
+        linux.scripts.single,
+        BuiltinLinux.createFolderScript('/root/projects/work/api'),
       );
-      linux.runAnswer = (_) => const BuiltinLinuxRunResult(
-        exitCode: 0,
-        output: 'exists /root/projects/hello\n',
-      );
-      expect((await folders.create('/root/projects/hello')).created, isFalse);
+      expect(linux.createdNatively, isEmpty);
       linux.runAnswer = (_) =>
           const BuiltinLinuxRunResult(exitCode: 1, output: 'mkdir: denied');
       await expectLater(
-        folders.create('/root/projects/hello'),
+        folders.create('/sdcard/Code/x'),
         throwsA(isA<BuiltinLinuxException>()),
       );
+    });
+
+    test('managedProjectName takes only a direct child of /root/projects', () {
+      expect(BuiltinLinux.managedProjectName('/root/projects/a b'), 'a b');
+      for (final path in [
+        '/root/projects/',
+        '/root/projects/.',
+        '/root/projects/..',
+        '/root/projects/a/b',
+        '/root/projectsx',
+        '/sdcard/a',
+        'root/projects/a',
+        '/root/projects/a\nb',
+      ]) {
+        expect(BuiltinLinux.managedProjectName(path), isNull, reason: path);
+      }
     });
 
     test(

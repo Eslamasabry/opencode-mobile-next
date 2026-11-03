@@ -5,6 +5,13 @@ import 'script_support.dart';
 /// Shell that creates `/root/projects/<name>` inside the managed container
 /// and prints its absolute path. [name] must already pass
 /// `projectFolderNameProblem`, so it is a single safe path segment.
+///
+/// A new folder becomes a git project with one empty first commit, as the
+/// in-app server's new projects are (BuiltinLinux.createFolderScript): AI
+/// Team refuses a folder that is not a git repository, so a project made
+/// while turning it on failed at once ("not a git repository", found with
+/// issue #112). Best effort: the folder exists either way. A folder that
+/// is there already is left as it is.
 String termuxCreateProjectFolderScript(String name) =>
     '''
 set -eu
@@ -13,7 +20,14 @@ set -eu
 name="\$1"
 case "\$name" in ""|.|..|*/*|.*) echo "invalid-folder-name" >&2; exit 64 ;; esac
 dir="$managedProjectsDirectory/\$name"
-mkdir -p "\$dir"
+if [ ! -e "\$dir" ]; then
+  mkdir -p "\$dir"
+  if command -v git >/dev/null 2>&1 && git init -q "\$dir"; then
+    gname=\$(git config user.name || echo "AI Team")
+    gmail=\$(git config user.email || echo "aiteam@localhost")
+    (cd "\$dir" && git -c user.name="\$gname" -c user.email="\$gmail" commit -q --allow-empty -m "First commit") || true
+  fi
+fi
 test -d "\$dir"
 printf "%s\\n" "\$dir"
 ' -- '$name'

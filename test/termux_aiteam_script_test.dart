@@ -67,6 +67,11 @@ case "${1:-}" in
   version) echo '1.4.1'; exit 0 ;;
   init)
     echo "init $*" >> "$calls"
+    # gc 1.4.1 makes no store when its provider's command is not on PATH.
+    if ! command -v opencode >/dev/null; then
+      echo 'gc init: provider "opencode": provider not found in PATH: provider "opencode" command "opencode"'
+      exit 1
+    fi
     mkdir -p city/.gc
     cp ./city.toml city/city.toml
     exit 0 ;;
@@ -196,6 +201,28 @@ class _Fixture {
 
   bool get supervisorUp => File('$team/supervisor.marker').existsSync();
 
+  /// The agents the fake supervisor lists for the city.
+  var agentIds = ['gastown.polecat', 'gastown.refinery'];
+
+  /// A PATH like the fixture's with no `jq` on it, as on Termux, where only
+  /// the Ubuntu inside has it: every other program is linked in one folder.
+  String pathWithoutJq() {
+    final dir = Directory('${root.path}/nojq-bin')..createSync();
+    for (final entry in (Platform.environment['PATH'] ?? '').split(':')) {
+      final folder = Directory(entry);
+      if (entry.isEmpty || !folder.existsSync()) continue;
+      for (final file in folder.listSync()) {
+        final name = file.uri.pathSegments.last;
+        if (name == 'jq' || name.isEmpty) continue;
+        final link = Link('${dir.path}/$name');
+        if (!link.existsSync() && !File(link.path).existsSync()) {
+          link.createSync(file.path);
+        }
+      }
+    }
+    return '$bin:$stubs:${dir.path}';
+  }
+
   static Future<_Fixture> create() async {
     final root = Directory.systemTemp.createTempSync('oc-aiteam-termux-');
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -221,7 +248,9 @@ class _Fixture {
       ('apt-get', _aptStub),
       ('dpkg', _dpkgStub),
       ('pkill', _pkillStub),
-      ('opencode', '#!/bin/sh\necho opencode "\$@"\n'),
+      // An OpenCode 2 phone: `opencode2` only, no OpenCode 1 `opencode`
+      // (issue #112: gc init needs the agents' wrapper on PATH).
+      ('opencode2', '#!/bin/sh\necho opencode2 "\$@"\n'),
     ]) {
       _executable('${fixture.rootfs}/usr/local/bin/$name', body);
     }
@@ -359,8 +388,7 @@ class _Fixture {
     } else if (RegExp(r'^/v0/city/[^/]+/agents$').hasMatch(path)) {
       _json(response, {
         'items': [
-          {'id': 'gastown.polecat'},
-          {'id': 'gastown.refinery'},
+          for (final id in agentIds) {'id': id},
         ],
       });
     } else {
@@ -427,8 +455,8 @@ class _Fixture {
         command,
       ], environment: environment);
 
-  Future<TeamRuntimeStatus> status() async {
-    final result = await verb(['status']);
+  Future<TeamRuntimeStatus> status({Map<String, String> env = const {}}) async {
+    final result = await verb(['status'], env: env);
     expect(result.exitCode, 0, reason: '${result.stdout}${result.stderr}');
     return TeamRuntimeStatus.parse(result.stdout as String);
   }
@@ -999,6 +1027,23 @@ void main() {
       // An origin of the project's own is kept, without the team's hook.
       expect(Directory('${fx.team}/origins').existsSync(), isFalse);
       expect(File('$bare/hooks/post-receive').existsSync(), isFalse);
+    });
+
+    scenario('status on a phone without jq reads a running team that lists '
+        'no agents yet (issue #112: the start step failed while the verb '
+        'said ready)', (fx) async {
+      await fx.install();
+      await fx.init();
+      await fx.start();
+      final noJq = {'PATH': fx.pathWithoutJq()};
+      expect((await fx.status(env: noJq)).agents, 2);
+      // Right after a start that found the supervisor running, the city
+      // lists nobody yet. The status read must still answer.
+      fx.agentIds = [];
+      final status = await fx.status(env: noJq);
+      expect(status.phase, TeamRuntimePhase.ready, reason: fx.log);
+      expect(status.isReady, isTrue);
+      expect(status.agents, 0);
     });
 
     scenario('start runs the supervisor in its own Ubuntu login, registers and '

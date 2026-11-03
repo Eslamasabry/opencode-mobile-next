@@ -197,6 +197,25 @@ void main() {
     },
   );
 
+  // Found with issue #112: AI Team refuses a folder that is not a git
+  // repository, so a project made while turning it on failed at once.
+  test('a new folder is a git project with one empty first commit', () async {
+    final path = '${temp.path}/team-app';
+    expect(await folders().create(path), (path: path, created: true));
+    final log = Process.runSync('git', [
+      '-C',
+      path,
+      'log',
+      '--format=%s',
+    ], workingDirectory: temp.path);
+    expect(log.exitCode, 0, reason: '${log.stderr}');
+    expect((log.stdout as String).trim(), 'First commit');
+    // An existing folder is never made a repository.
+    final old = Directory('${temp.path}/old')..createSync();
+    expect(await folders().create(old.path), (path: old.path, created: false));
+    expect(Directory('${old.path}/.git').existsSync(), isFalse);
+  });
+
   test('parsing ignores noise and refuses unsafe names', () {
     const out =
         'proot warning: can\'t sanitize binding "/proc/self/fd/1"\n'

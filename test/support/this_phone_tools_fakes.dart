@@ -72,6 +72,7 @@ class ToolsLinux extends PhoneLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     ran.add(script);
     final parts = script.split(':');

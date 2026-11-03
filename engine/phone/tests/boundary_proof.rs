@@ -89,6 +89,99 @@ fn unsupported_or_unproven_kernel_never_executes_a_tool() {
     assert!(!marker.exists());
 }
 
+/// Installs, before exec, the shape of Android's app seccomp policy for the
+/// given syscalls: bionic answers a syscall outside its allowlist with
+/// `SECCOMP_RET_TRAP` (SIGSYS). Android 16 allowlists Landlock but not
+/// `io_uring_setup` (bionic android16-release, SECCOMP_ALLOWLIST_COMMON.TXT).
+fn with_android_app_trap(command: &mut Command, trapped: &'static [u32]) {
+    use std::os::unix::process::CommandExt;
+    unsafe {
+        command.pre_exec(move || {
+            // No allocation in this pre-exec child: a fixed-size program.
+            const ALLOW: u32 = 0x7fff0000;
+            const TRAP: u32 = 0x00030000;
+            let mut filter = [libc::sock_filter {
+                code: 0x06,
+                jt: 0,
+                jf: 0,
+                k: ALLOW,
+            }; 16];
+            filter[0] = libc::sock_filter {
+                code: 0x20,
+                jt: 0,
+                jf: 0,
+                k: 0,
+            };
+            let mut len = 1;
+            for nr in trapped {
+                filter[len] = libc::sock_filter {
+                    code: 0x15,
+                    jt: 0,
+                    jf: 1,
+                    k: *nr,
+                };
+                filter[len + 1] = libc::sock_filter {
+                    code: 0x06,
+                    jt: 0,
+                    jf: 0,
+                    k: TRAP,
+                };
+                len += 2;
+            }
+            len += 1; // Final ALLOW (already in place).
+            let program = libc::sock_fprog {
+                len: len as u16,
+                filter: filter.as_mut_ptr(),
+            };
+            if libc::prctl(libc::PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0
+                || libc::prctl(libc::PR_SET_SECCOMP, 2, &program, 0, 0) != 0
+            {
+                return Err(std::io::Error::last_os_error());
+            }
+            Ok(())
+        });
+    }
+}
+
+#[test]
+#[ignore = "OS boundary proof requires Landlock ABI6 and a non-root user; explicitly run on a capable kernel"]
+fn android16_app_seccomp_trap_on_io_uring_counts_as_denied_not_a_probe_crash() {
+    // Issue #111: on Android 16 the inherited app policy traps io_uring_setup.
+    // The probe must survive that and still require every other denial.
+    let temp = fixture();
+    let protected = git_fixture(temp.path());
+    let worker = temp.path().join("worker");
+    std::fs::create_dir_all(&worker).unwrap();
+    assert!(prepare(&protected).status.success());
+    symlink(&protected, worker.join("protected-alias")).unwrap();
+    let probe = std::path::Path::new(env!("CARGO_BIN_EXE_oc-engine-boundary-probe"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_oc-engine-sandbox"));
+    command
+        .args(["--read-only"])
+        .arg(probe.parent().unwrap())
+        .args(["--read-only", "/usr", "--read-only", "/lib"])
+        .args(["--read-only", "/lib64", "--read-only", "/proc"])
+        .arg("--read-write")
+        .arg(&worker)
+        .arg("--")
+        .arg(probe)
+        .arg(&protected)
+        .arg(&worker)
+        .arg(std::process::id().to_string());
+    with_android_app_trap(&mut command, &[libc::SYS_io_uring_setup as u32]);
+    let output = command.output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "probe must pass when Android traps io_uring_setup; got {stdout}"
+    );
+    assert!(stdout.contains("native-boundary-probes-passed"));
+    assert_eq!(
+        std::fs::read(protected.join("sentinel")).unwrap(),
+        b"proof-only-canonical-state"
+    );
+}
+
 #[test]
 #[ignore = "OS boundary proof requires Landlock ABI6; explicitly run on a capable kernel"]
 fn raw_syscalls_proc_aliases_metadata_and_descendants_cannot_reach_private_state() {

@@ -99,6 +99,18 @@ extension _ConnectionControllerPhoneChatImpl on ConnectionController {
   bool _isPersonsSession(String sessionId) =>
       !isAiTeamDirectory(sessionsById[sessionId]?.directory);
 
+  /// Chat status can be observed now: the stream is up, the app in front
+  /// and no location switch half done. An open project is not needed:
+  /// eligibility means OpenCode 2, whose `GET /api/session/active` lists
+  /// every running session of the whole server, so one read is the complete
+  /// answer wherever the person's chats are. Requiring an open folder left a
+  /// person who turned on AI Team before opening any chat project with
+  /// planning waiting forever on "chat status" (issue #111 FIX-4 Run A).
+  bool get _phoneChatObservable =>
+      status == StreamStatus.connected &&
+      !_lifecycleSuspended &&
+      !locationLoading;
+
   bool _phoneChatEligible(String id) {
     final owner = _connectedProfile;
     return !_disposed &&
@@ -140,10 +152,7 @@ extension _ConnectionControllerPhoneChatImpl on ConnectionController {
               (_connectedProfile?.id, directory, workspace) &&
           _phoneChatObservationAge != null &&
           _phoneChatObservationAge!.elapsed <= _phoneChatObservationLimit &&
-          status == StreamStatus.connected &&
-          !_lifecycleSuspended &&
-          !locationLoading &&
-          directory?.isNotEmpty == true,
+          _phoneChatObservable,
       sessionIds: sessions.toList()..sort(),
       directories: dirs.toList()..sort(),
     );

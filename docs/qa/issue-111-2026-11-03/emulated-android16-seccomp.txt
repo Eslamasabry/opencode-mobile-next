@@ -1,0 +1,20 @@
+# Emulated Android 16 app seccomp policy (bionic android16-release), x86_64 host, uid nobody, Linux 6.18.44-fc-v185, Landlock ABI 7
+
+## probe-old (sandbox = fixed build; probe = probe-old)
+run2.sh: line 8: 16056 Bad system call         ${TRACE:-} env -i python3 -I <fixture>/android_seccomp.py $B/sandbox-new --read-only $B --read-only /usr --read-only /lib --read-only /lib64 --read-only /proc --read-write $P/w -- $B/$PROBE $F/protected $P/w $$
+exit=159 sentinel=proof-only-canonical-state
+seccomp traps seen (strace):
+      1 +++ killed by SIGSYS +++
+      1 --- SIGSYS {si_signo=SIGSYS, si_code=SYS_SECCOMP, si_syscall=__NR_io_uring_setup, si_arch=AUDIT_ARCH_X86_64} ---
+
+## probe-new (sandbox = fixed build; probe = probe-new)
+native-boundary-probes-passed
+native-boundary-probes-passed
+exit=0 sentinel=proof-only-canonical-state
+seccomp traps seen (strace):
+      2 +++ killed by SIGSYS +++
+      2 --- SIGSYS {si_signo=SIGSYS, si_code=SYS_SECCOMP, si_syscall=__NR_io_uring_setup, si_arch=AUDIT_ARCH_X86_64} ---
+
+## JVM harness (verbatim BuiltinLinux.runProbe + PhoneBoundaryProofSteps)
+probe-old: exit=159 ok=false lines=0 step=native.signal-31 code=boundary_proof_failed:native.signal-31
+probe-new: exit=0 ok=true lines=2 step=null code=boundary_proof_failed

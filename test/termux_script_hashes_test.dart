@@ -13,7 +13,10 @@ import 'package:opencode_mobile/termux/bridge.dart';
 /// repair fallback to apt's offered version (fresh-setup-2026-10-16):
 /// aiteamVerbScript embeds aiteamScript, whose packages part uses
 /// withSetupPrelude. BC2 storage admission and BC3 Paseo checks do not change
-/// these Termux payloads. Unrelated script hashes retain the original snapshot.
+/// these Termux payloads. The 2026-11-03 manager snapshot reads the server
+/// password on stdin inside Ubuntu (runner and readiness check), so every
+/// script embedding the manager moved with it. Unrelated script hashes retain
+/// the original snapshot.
 /// Refresh only after reviewing intentional changes, including shared helpers;
 /// byte drift otherwise fails here, even when the bridge itself is unchanged.
 Map<String, String> _scripts() => {

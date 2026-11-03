@@ -56333,6 +56333,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop {agent}'**
   String stopRowSemantics(String agent);
+
+  /// Details: plain line naming where the phone safety check stopped: Android ended the test program
+  ///
+  /// In en, this message translates to:
+  /// **'The safety test was closed by Android (signal {signal}) before it could finish.'**
+  String phoneTeamProofSignal(int signal);
+
+  /// Details: plain line, one named check was ended by Android. check is a short technical name
+  ///
+  /// In en, this message translates to:
+  /// **'The safety check “{check}” was closed by Android (signal {signal}).'**
+  String phoneTeamProofCheckSignal(String check, int signal);
+
+  /// Details: plain line, the phone allowed something the sandbox must block
+  ///
+  /// In en, this message translates to:
+  /// **'The safety check “{check}” failed: this phone did not block it the way the team\'s sandbox needs.'**
+  String phoneTeamProofNotBlocked(String check);
+
+  /// Details: plain line, the sandbox launcher refused to start
+  ///
+  /// In en, this message translates to:
+  /// **'The team\'s sandbox could not start on this phone.'**
+  String get phoneTeamProofSandbox;
+
+  /// Details: plain line, a normal Ubuntu step (like a Git commit) failed inside the sandbox
+  ///
+  /// In en, this message translates to:
+  /// **'The Ubuntu step “{check}” failed inside the team\'s sandbox.'**
+  String phoneTeamProofUbuntu(String check);
+
+  /// Details: plain line, the proof's test files were changed or missing
+  ///
+  /// In en, this message translates to:
+  /// **'The safety check\'s private test files changed or could not be set up.'**
+  String get phoneTeamProofFixture;
+
+  /// Details: plain line, the safety test timed out
+  ///
+  /// In en, this message translates to:
+  /// **'The safety test did not answer in time.'**
+  String get phoneTeamProofNoAnswer;
+
+  /// Details: plain line, a check of the proot protection tier failed
+  ///
+  /// In en, this message translates to:
+  /// **'The proot safety check “{check}” did not pass.'**
+  String phoneTeamProofProot(String check);
+
+  /// Details: plain line naming the step the safety check stopped at
+  ///
+  /// In en, this message translates to:
+  /// **'The safety check stopped at “{check}”.'**
+  String phoneTeamProofOther(String check);
 }
 
 class _AppLocalizationsDelegate

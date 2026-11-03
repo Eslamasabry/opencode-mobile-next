@@ -696,19 +696,50 @@ class BuiltinLinux {
   /// Starts the download and unpack; returns at once. Poll [status].
   Future<void> installUbuntu() => _invoke<void>('installUbuntu');
 
+  /// Runs [script] with `/bin/sh -c` inside Ubuntu. The script is a process
+  /// argument there, so it must never hold a secret: pass one as [input],
+  /// which reaches the script on stdin.
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     final raw = await _invoke<Map<Object?, Object?>>('run', {
       'script': script,
       'timeoutSeconds': timeout.inSeconds,
+      'stdin': ?input,
     });
     final exitCode = raw?['exitCode'];
     return BuiltinLinuxRunResult(
       exitCode: exitCode is num ? exitCode.toInt() : -1,
       output: (raw?['output'] ?? '').toString(),
     );
+  }
+
+  /// Makes `/root/projects/<name>` a new git project from the app itself,
+  /// never through a shell inside Ubuntu: once AI Team is on, the sandbox
+  /// denies the chmod `git init` needs (issue #111). Answers `created` or
+  /// `exists`. Only for a direct child of [projectsDir] ([managedProjectName]).
+  Future<String> createProjectFolder(String path) async {
+    final answer = await _invoke<String>('createProject', {'path': path});
+    if (answer == 'created' || answer == 'exists') return answer!;
+    throw const BuiltinLinuxException(
+      'The folder could not be created.',
+      code: 'create_project',
+    );
+  }
+
+  /// The folder name when [path] is a direct child of [projectsDir]: the
+  /// folders [createProjectFolder] makes. Null for any other path.
+  static String? managedProjectName(String path) {
+    const prefix = '$projectsDir/';
+    if (!path.startsWith(prefix)) return null;
+    final name = path.substring(prefix.length);
+    if (name.isEmpty || name == '.' || name == '..' || name.length > 255) {
+      return null;
+    }
+    if (RegExp('[/\x00\n\r]').hasMatch(name)) return null;
+    return name;
   }
 
   /// Setup checks in the fixed oc view. Never use for credentials or sign-in.
@@ -1433,15 +1464,29 @@ fi
   }
 
   /// Saves the server password inside Ubuntu, readable by its root only.
-  static String writePasswordScript(String password) {
+  /// The password travels on stdin: the script is a `/bin/sh -c` argument,
+  /// which every process of this app's user could read.
+  Future<BuiltinLinuxRunResult> writeServerPassword(
+    String password, {
+    Duration timeout = const Duration(seconds: 60),
+  }) {
     if (password.isEmpty) {
       throw ArgumentError.value(password, 'password', 'Must not be empty.');
     }
+    return run(writePasswordScript, timeout: timeout, input: password);
+  }
+
+  /// Writes stdin to [passwordFile] (0600 in a 0700 folder); an empty
+  /// stdin fails and leaves the old file alone. No chmod: the protected
+  /// sandbox denies chmod for every process, and umask 077 already creates
+  /// the folder 0700 and the file 0600.
+  static String get writePasswordScript {
     final dir = passwordFile.substring(0, passwordFile.lastIndexOf('/'));
     return 'set -eu\n'
         'umask 077\n'
         'mkdir -p $dir\n'
-        "printf '%s' ${_quote(password)} > $passwordFile.tmp\n"
+        'cat > $passwordFile.tmp\n'
+        '[ -s $passwordFile.tmp ] || { rm -f $passwordFile.tmp; exit 78; }\n'
         'mv $passwordFile.tmp $passwordFile\n';
   }
 

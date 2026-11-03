@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class _Linux extends BuiltinLinux {
   final scripts = <String>[];
+  final inputs = <String?>[];
   var running = false;
 
   @override
@@ -21,8 +22,10 @@ class _Linux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     scripts.add(script);
+    inputs.add(input);
     return const BuiltinLinuxRunResult(exitCode: 0, output: '');
   }
 
@@ -113,7 +116,9 @@ void main() {
       expect(profile.requiresPasswordReentry, isFalse);
       expect(probedWith, profile.password);
       expect(secure['pw.builtin'], profile.password);
-      expect(linux.scripts.any((s) => s.contains(profile.password)), isTrue);
+      // The renewed password is written over stdin, never inside a script.
+      expect(linux.inputs, contains(profile.password));
+      expect(linux.scripts.any((s) => s.contains(profile.password)), isFalse);
       starter.dispose();
     },
   );

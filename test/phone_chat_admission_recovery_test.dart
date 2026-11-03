@@ -230,7 +230,10 @@ void main() {
     );
   });
 
-  Future<_Phone> boot(WidgetTester tester) async {
+  Future<_Phone> boot(
+    WidgetTester tester, {
+    String? directory = '/root/projects/person',
+  }) async {
     final profile = ServerProfile(
       id: 'phone',
       name: 'Phone',
@@ -270,7 +273,7 @@ void main() {
     // holding health so unrelated catalog/session loading never runs.
     final connecting = connection.connect(profile, redetectOnFailure: false);
     await tester.pump();
-    connection.directory = '/root/projects/person';
+    connection.directory = directory;
     api.setLocation(directory: connection.directory);
     connection.status = StreamStatus.connected;
     final phone = _Phone(tester, connection, api, connecting, beats);
@@ -309,6 +312,31 @@ void main() {
       expect(phone.heartbeats.last['sessionIds'], isEmpty);
     },
   );
+
+  // Issue #111 FIX-4 Run A: AI Team turned on before any chat project was
+  // opened left the heartbeat unknown, so team planning waited forever on
+  // "chat status". OC2's active list is server-wide: no folder is needed.
+  phoneTest('no chat project open: the polling lane still makes status known', (
+    tester,
+  ) async {
+    final phone = await boot(tester, directory: null);
+    expect((await phone.heartbeat())['known'], isFalse);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump();
+    expect(phone.api.statusReads, greaterThanOrEqualTo(1));
+    expect((await phone.heartbeat())['known'], isTrue);
+    expect(phone.heartbeats.last['sessionIds'], isEmpty);
+    // A person's reply running anywhere on the server still blocks.
+    phone.api.statuses = {'ses_other_folder': 'busy'};
+    await phone.connection.reconcileBusySessionsForTesting();
+    final busy = await phone.heartbeat();
+    expect(busy['known'], isTrue);
+    expect(busy['sessionIds'], contains('ses_other_folder'));
+    // A failed read is unknown again, never idle.
+    phone.api.failStatus = true;
+    await phone.connection.reconcileBusySessionsForTesting();
+    expect((await phone.heartbeat())['known'], isFalse);
+  });
 
   phoneTest('OC2 lifecycle disconnect rejects an old idle snapshot', (
     tester,

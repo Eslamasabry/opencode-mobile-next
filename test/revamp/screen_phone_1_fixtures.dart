@@ -71,6 +71,7 @@ class PhoneLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async => openCode
       ? const BuiltinLinuxRunResult(exitCode: 0, output: '1.18.29\n')
       : const BuiltinLinuxRunResult(exitCode: 1, output: '');

@@ -60,7 +60,15 @@ class TermuxSetupHost extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) => _translate(() async {
+    // Setup scripts never carry secrets; refuse rather than drop the input.
+    if (input != null) {
+      throw const BuiltinLinuxException(
+        'This step is not available here.',
+        code: 'termux_input_unsupported',
+      );
+    }
     final result = await TermuxBridge.setupRun(script, timeout: timeout);
     // A failed check is distinct from Termux failing to execute any command.
     if (result.errorCode != -1) {

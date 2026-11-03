@@ -410,12 +410,14 @@ void main() {
       }
     });
 
-    test('the password is quoted and never in the server script', () {
-      final write = BuiltinLinux.writePasswordScript("it's-secret");
+    test('the password is in neither the write nor the server script', () {
+      // Both run as `/bin/sh -c <script>`: a process argument.
+      final write = BuiltinLinux.writePasswordScript;
       expect(write, contains('umask 077'));
-      expect(write, contains("'it'\"'\"'s-secret'"));
+      expect(write, contains('cat > ${BuiltinLinux.passwordFile}.tmp'));
+      expect(write, isNot(contains('printf')));
       expect(BuiltinLinux.serverScript(), isNot(contains('secret')));
-      expect(() => BuiltinLinux.writePasswordScript(''), throwsArgumentError);
+      expect(() => BuiltinLinux().writeServerPassword(''), throwsArgumentError);
     });
 
     test('versions are read the way the Termux manager trims them', () {
@@ -436,7 +438,7 @@ void main() {
         ),
         'server1': BuiltinLinux.serverScript(runtime: TermuxRuntime.openCode2),
         'server2': BuiltinLinux.serverScript(runtime: TermuxRuntime.openCode2),
-        'password': BuiltinLinux.writePasswordScript('pw'),
+        'password': BuiltinLinux.writePasswordScript,
         'version': BuiltinLinux.versionScript(TermuxRuntime.openCode2),
         'list': BuiltinLinux.listProjectsScript(),
         'exists': BuiltinLinux.folderExistsScript('/root/projects/a b'),
@@ -556,9 +558,9 @@ void main() {
         );
         return;
       }
-      const reviewedLength = 56249;
+      const reviewedLength = 57338;
       const reviewedHash =
-          '2136b3927c9b35f61f89f960991554aae07b53da39a5bb9f9298796493b968f8';
+          '68028c9dc4ba2f28a27f340a2c93c138f0631ed19946198bc4a4a53bbce42eab';
       expect(script.length, reviewedLength);
       expect(sha256.convert(utf8.encode(script)).toString(), reviewedHash);
     });

@@ -10919,5 +10919,14 @@
   "frostGlassHeldMotion": "تقليل الحركة مفعّل، لذا يبقى مربع الرسالة والرأس مصمتين.",
   "frostGlassHeldContrast": "التباين العالي مفعّل، لذا يبقى مربع الرسالة والرأس مصمتين.",
   "frostGlassHeldStyle": "لهذا النمط مظهره الخاص، لذا يبقى مربع الرسالة والرأس مصمتين.",
-  "stopRowSemantics": "إيقاف {agent}"
+  "stopRowSemantics": "إيقاف {agent}",
+  "phoneTeamProofSignal": "أغلق أندرويد اختبار الأمان (الإشارة {signal}) قبل أن يكتمل.",
+  "phoneTeamProofCheckSignal": "أغلق أندرويد فحص الأمان «{check}» (الإشارة {signal}).",
+  "phoneTeamProofNotBlocked": "فشل فحص الأمان «{check}»: لم يمنعه هذا الهاتف كما يحتاج صندوق الفريق المعزول.",
+  "phoneTeamProofSandbox": "تعذر تشغيل صندوق الفريق المعزول على هذا الهاتف.",
+  "phoneTeamProofUbuntu": "فشلت خطوة أوبونتو «{check}» داخل صندوق الفريق المعزول.",
+  "phoneTeamProofFixture": "تغيرت ملفات الاختبار الخاصة بفحص الأمان أو تعذر إعدادها.",
+  "phoneTeamProofNoAnswer": "لم يستجب اختبار الأمان في الوقت المحدد.",
+  "phoneTeamProofProot": "لم ينجح فحص أمان proot «{check}».",
+  "phoneTeamProofOther": "توقف فحص الأمان عند «{check}»."
 }

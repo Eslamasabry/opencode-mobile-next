@@ -74,6 +74,135 @@ enum PhoneTeamServerState {
   stillOff,
 }
 
+/// The plain kinds of place a phone safety check can stop at.
+enum PhoneProofStepKind {
+  /// Android ended the test program before it could report.
+  signal,
+
+  /// One named check was ended by Android (a signal).
+  checkSignal,
+
+  /// The phone did not block something the sandbox must block.
+  notBlocked,
+
+  /// The team's sandbox launcher itself could not start.
+  sandbox,
+
+  /// A normal Ubuntu step failed inside the protected sandbox.
+  ubuntu,
+
+  /// The private test files changed or could not be set up.
+  fixture,
+
+  /// The test did not answer in time.
+  noAnswer,
+
+  /// A proot-tier check did not pass.
+  proot,
+
+  /// Any other named step.
+  other,
+}
+
+/// The step a boundary proof stopped at (issue #111).
+///
+/// The native side reports a failed proof as `boundary_proof_failed:<step>`,
+/// where `<step>` is a short static code such as `native.signal-31`,
+/// `native.io-uring.signal-11`, `ubuntu.git-commit.exit-128` or
+/// `proot-tier.daemonProcDenied`. It never holds a path or secret.
+@immutable
+class PhoneProofStep {
+  const PhoneProofStep(this.code, this.kind, {this.check, this.signal});
+
+  /// The raw step code, e.g. `native.signal-31`.
+  final String code;
+  final PhoneProofStepKind kind;
+
+  /// The named check, when there is one (`io-uring`, `git-commit`).
+  final String? check;
+
+  /// The signal number that ended the test, when one did.
+  final int? signal;
+
+  static const _prefix = 'boundary_proof_failed:';
+  static final _safe = RegExp(r'^[A-Za-z0-9._-]{1,120}$');
+
+  /// Reads the step out of a failure's details, or null when it has none.
+  static PhoneProofStep? parse(String? details) {
+    if (details == null) return null;
+    final at = details.indexOf(_prefix);
+    if (at < 0) return null;
+    var code = details.substring(at + _prefix.length);
+    final end = code.indexOf(RegExp(r'[\s;]'));
+    if (end >= 0) code = code.substring(0, end);
+    if (!_safe.hasMatch(code)) return null;
+    final parts = code.split('.');
+    int? signalOf(String? part) {
+      final m = RegExp(r'^signal-(\d{1,3})$').firstMatch(part ?? '');
+      return m == null ? null : int.parse(m.group(1)!);
+    }
+
+    final leg = parts.first;
+    final second = parts.length > 1 ? parts[1] : null;
+    final last = parts.length > 1 ? parts.last : null;
+    if (code == 'fixture-changed' ||
+        code == 'proot-tier.fixture-changed' ||
+        code == 'setup.proof_fixture_unavailable') {
+      return PhoneProofStep(code, PhoneProofStepKind.fixture);
+    }
+    if (last == 'no-answer') {
+      return PhoneProofStep(code, PhoneProofStepKind.noAnswer);
+    }
+    switch (leg) {
+      case 'native':
+        if (second == null) break;
+        final whole = signalOf(second);
+        if (whole != null) {
+          return PhoneProofStep(code, PhoneProofStepKind.signal, signal: whole);
+        }
+        if (second == 'sandbox') {
+          return PhoneProofStep(code, PhoneProofStepKind.sandbox);
+        }
+        if (second.startsWith('exit-')) break;
+        final signal = parts.length > 2 ? signalOf(parts[2]) : null;
+        if (signal != null) {
+          return PhoneProofStep(
+            code,
+            PhoneProofStepKind.checkSignal,
+            check: second,
+            signal: signal,
+          );
+        }
+        return PhoneProofStep(
+          code,
+          second == 'worker-write' || second == 'worker-rename'
+              ? PhoneProofStepKind.other
+              : PhoneProofStepKind.notBlocked,
+          check: second,
+        );
+      case 'ubuntu':
+        if (second == null) break;
+        return PhoneProofStep(code, PhoneProofStepKind.ubuntu, check: second);
+      case 'proot-tier':
+        if (second == null) break;
+        return PhoneProofStep(code, PhoneProofStepKind.proot, check: second);
+      case 'setup':
+        if (second == null) break;
+        return PhoneProofStep(code, PhoneProofStepKind.other, check: second);
+    }
+    return PhoneProofStep(code, PhoneProofStepKind.other, check: code);
+  }
+
+  /// Short space-separated fields for the diagnostics export. Each field
+  /// stays short so the export's long-token mask never hides it.
+  String get diagnostic => [
+    'step ${code.split('.').join(' ')}',
+    'kind ${kind.name}',
+    if (check != null) 'check $check',
+    if (signal != null) 'signal $signal',
+  ].join('; ');
+}
+
 /// What the phone is running right now.
 class PhoneTeamHostState {
   const PhoneTeamHostState({
@@ -274,6 +403,14 @@ class BuiltinPhoneTeamSetupPorts implements PhoneTeamSetupPorts {
   }
 }
 
+/// One failed setup run as a diagnostics entry: safe codes only.
+class PhoneTeamSetupFailure implements Exception {
+  const PhoneTeamSetupFailure(this.line);
+  final String line;
+  @override
+  String toString() => line;
+}
+
 class _StepTimeout implements Exception {
   _StepTimeout(this.tag, this.problem);
   final String tag;
@@ -290,6 +427,7 @@ class PhoneTeamSetupController extends ChangeNotifier {
     this.readyGap = const Duration(seconds: 2),
     this.replyWait = const Duration(minutes: 3),
     this.stepWait = const Duration(seconds: 90),
+    this.onFailure,
   }) : _now = now ?? DateTime.now,
        _delay = delay ?? Future<void>.delayed;
 
@@ -306,6 +444,10 @@ class PhoneTeamSetupController extends ChangeNotifier {
   /// The longest any one call to the phone may take before the run ends in
   /// a failure with a reason, instead of an endless hourglass.
   final Duration stepWait;
+
+  /// Told every failure as one safe line (codes only), for the app's
+  /// diagnostics export (issue #111: a failed safety check names its step).
+  final void Function(String line)? onFailure;
 
   PhoneTeamSetupPhase _phase = PhoneTeamSetupPhase.idle;
   PhoneTeamSetupProblem? _problem;
@@ -400,6 +542,20 @@ class PhoneTeamSetupController extends ChangeNotifier {
     _failedStep = step;
     _details = KitRedact.text(details);
     _phase = PhoneTeamSetupPhase.failed;
+    final proof = PhoneProofStep.parse(_details);
+    try {
+      onFailure?.call(
+        [
+          'AI Team setup stopped',
+          'step ${step.name}',
+          'problem ${problem.name}',
+          'code ${proof != null ? 'boundary_proof_failed' : _details}',
+          if (proof != null) proof.diagnostic,
+        ].join('; '),
+      );
+    } catch (_) {
+      // Diagnostics never change the outcome the person sees.
+    }
     _emit();
   }
 
@@ -752,6 +908,13 @@ class PhoneTeamSetup {
         notice: copy?.aiteamComponentNotice ?? 'AI Team is running',
       );
     }
-    return _shared[connection] = PhoneTeamSetupController(ports);
+    return _shared[connection] = PhoneTeamSetupController(
+      ports,
+      onFailure: (line) => connection.diagnostics.record(
+        PhoneTeamSetupFailure(line),
+        null,
+        source: 'aiteam-setup',
+      ),
+    );
   }
 }

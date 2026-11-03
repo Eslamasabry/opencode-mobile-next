@@ -292,19 +292,40 @@ const teamPhoneReadyRouteName = 'team-phone-ready';
 
 /// A Termux step that did not reach the phase it should have.
 class _TermuxTeamFailure implements Exception {
-  const _TermuxTeamFailure(this.status);
+  const _TermuxTeamFailure(this.status, {this.output = ''});
 
   final TeamRuntimeStatus status;
 
+  /// The last lines `aiteam.sh` printed (its `aiteam.log`), where the
+  /// programs say what went wrong: the status alone only says "the output
+  /// above says why" (issue #112).
+  final String output;
+
   /// What a failure report carries: the step and why, in the runtime's own
-  /// words (the report redacts it).
+  /// words, then the output (the report redacts it).
   @override
   String toString() => [
     'aiteam.sh ${status.verb}: ${status.rawPhase}',
     if (status.reason case final reason? when reason.isNotEmpty) reason,
     if (status.lastError case final error? when error.isNotEmpty) error,
+    if (output.trim().isNotEmpty) ...['', 'Output:', output.trimRight()],
   ].join('\n');
 }
+
+/// How many lines of `aiteam.log` a turn-on failure carries: the whole
+/// `init` of a store that failed three times fits, and the report keeps
+/// its last 120 lines.
+const _termuxFailureLogLines = 80;
+
+/// A [_TermuxTeamFailure] for [status] with the log's last lines; a log
+/// that cannot be read leaves just the status.
+Future<_TermuxTeamFailure> _termuxFailure(
+  TermuxTeamRuntime runtime,
+  TeamRuntimeStatus status,
+) async => _TermuxTeamFailure(
+  status,
+  output: await runtime.logTail(lines: _termuxFailureLogLines),
+);
 
 /// The turn-on of the Termux team, one at a time, kept outside the page so
 /// it goes on when the person leaves (the in-app one is
@@ -325,16 +346,16 @@ Future<void> _turnOnTermux(
   onStage(BuiltinTeamStage.preparing);
   var status = await runtime.install();
   if (status.phase != TeamRuntimePhase.installed) {
-    throw _TermuxTeamFailure(status);
+    throw await _termuxFailure(runtime, status);
   }
   onStage(BuiltinTeamStage.addingProject);
   status = await runtime.init(project);
   if (status.phase != TeamRuntimePhase.cityReady) {
-    throw _TermuxTeamFailure(status);
+    throw await _termuxFailure(runtime, status);
   }
   onStage(BuiltinTeamStage.starting);
   status = await runtime.start();
-  if (!status.isReady) throw _TermuxTeamFailure(status);
+  if (!status.isReady) throw await _termuxFailure(runtime, status);
   onStage(BuiltinTeamStage.waiting);
   await teamPhoneEnable(connection, profile, runtime, status);
 }

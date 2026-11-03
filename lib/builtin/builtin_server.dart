@@ -265,10 +265,7 @@ Future<BuiltinServerStartFailure?> startBuiltinServer({
         );
       }
     }
-    final written = await linux.run(
-      BuiltinLinux.writePasswordScript(profile.password),
-      timeout: const Duration(seconds: 60),
-    );
+    final written = await linux.writeServerPassword(profile.password);
     if (!written.ok) {
       return const BuiltinServerStartFailure.detail(
         'The server password could not be saved.',
@@ -638,7 +635,14 @@ class BuiltinProjectFolders {
 
   /// Makes [path] a git project unless it already is a folder. `created` is
   /// false for a folder that was already there.
+  ///
+  /// A folder right in /root/projects is made by the app, not by `git init`
+  /// in Ubuntu, so it works the same before and after AI Team is on.
   Future<({String path, bool created})> create(String path) async {
+    if (BuiltinLinux.managedProjectName(path) != null) {
+      final answer = await linux.createProjectFolder(path);
+      return (path: path, created: answer == 'created');
+    }
     final result = await linux.run(
       BuiltinLinux.createFolderScript(path),
       timeout: const Duration(seconds: 60),

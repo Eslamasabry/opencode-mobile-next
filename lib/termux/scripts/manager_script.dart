@@ -172,12 +172,29 @@ if [ "${#runtime_env[@]}" -gt 0 ]; then
     openCode1HistoryCopyScript +
     r'''OC_HISTORY_COPY
 fi
+# The password never becomes a process argument on either side of proot:
+# the launcher inside Ubuntu reads it from stdin (the 0600 password file),
+# exports it, and execs the server. A missing or empty file stops the start;
+# the server never runs without its password.
+if [ ! -s "$password_file" ] || [ ! -r "$password_file" ]; then
+  printf '[oc] The local server password is missing; the server was not started\n' |
+    "$manager" write-log server
+  "$manager" server-exited "$port" "$$" 78 >/dev/null 2>&1 || true
+  exit 78
+fi
 proot-distro login --work-dir /root/projects opencode-ubuntu -- env \
   "${runtime_env[@]}" \
   OPENCODE_SERVER_USERNAME=opencode \
-  OPENCODE_SERVER_PASSWORD="$(cat "$password_file")" \
-  OPENCODE_PASSWORD="$(cat "$password_file")" \
-  "$binary" serve --hostname 127.0.0.1 --port "$port" \
+  bash -c '
+IFS= read -r oc_pw || [ -n "${oc_pw:-}" ] || oc_pw=
+if [ -z "$oc_pw" ]; then
+  echo "[oc] The local server password could not be read; the server was not started" >&2
+  exit 78
+fi
+export OPENCODE_SERVER_PASSWORD="$oc_pw" OPENCODE_PASSWORD="$oc_pw"
+unset oc_pw
+exec "$1" serve --hostname 127.0.0.1 --port "$2" < /dev/null
+' oc-server "$binary" "$port" < "$password_file" \
   2>&1 | "$manager" write-log server
 code="${PIPESTATUS[0]}"
 "$manager" server-exited "$port" "$$" "$code" >/dev/null 2>&1 || true
@@ -789,7 +806,6 @@ setup() {
 start_server() {
   local installed_version="$1"
   local starting_phase="${2:-starting_server}"
-  local password
   local runtime health_path
   runtime=$(managed_runtime) || return 64
   case "$runtime" in
@@ -801,7 +817,7 @@ start_server() {
   if [ -n "${CURRENT_RECOVERY:-}" ]; then
     recovery_permitted "$CURRENT_RECOVERY" || fail_setup 'Automatic recovery was disabled' "$CURRENT_PORT"
   fi
-  password=$(cat "$PASSWORD_FILE")
+  [ -s "$PASSWORD_FILE" ] || fail_setup 'The local server password is missing' "$CURRENT_PORT"
   install_server_runner
   : > "$SERVER_LOG_ACTIVE"
   if [ "$starting_phase" = restarting ]; then
@@ -837,20 +853,25 @@ start_server() {
       exec 3>&-
       exec 3<&-
       local auth_codes
+      # The password reaches curl through its config on stdin (printf is a
+      # builtin), never through an argument list.
       auth_codes=$(proot-distro login "$PROOT_NAME" -- env \
-        OC_PORT="$CURRENT_PORT" OC_PASSWORD="$password" OC_HEALTH_PATH="$health_path" bash -s <<'OC_AUTH_CHECK'
+        OC_PORT="$CURRENT_PORT" OC_HEALTH_PATH="$health_path" bash -c '
+IFS= read -r oc_pw || [ -n "${oc_pw:-}" ] || oc_pw=
+[ -n "$oc_pw" ] || { printf "000 000"; exit 0; }
+oc_pw=${oc_pw//\\/\\\\}
+oc_pw=${oc_pw//\"/\\\"}
 unauth=000
 auth=000
 for path in $OC_HEALTH_PATH; do
-  unauth=$(curl --max-time 2 -s -o /dev/null -w '%{http_code}' \
+  unauth=$(curl --max-time 2 -s -o /dev/null -w "%{http_code}" \
+    "http://127.0.0.1:$OC_PORT$path" < /dev/null || true)
+  auth=$(printf "user = \"opencode:%s\"\n" "$oc_pw" | curl -K - --max-time 2 -s -o /dev/null -w "%{http_code}" \
     "http://127.0.0.1:$OC_PORT$path" || true)
-  auth=$(curl --max-time 2 -s -o /dev/null -w '%{http_code}' \
-    -u "opencode:$OC_PASSWORD" "http://127.0.0.1:$OC_PORT$path" || true)
-  [ "$unauth $auth" != '401 200' ] || break
+  [ "$unauth $auth" != "401 200" ] || break
 done
-printf '%s %s' "$unauth" "$auth"
-OC_AUTH_CHECK
-)
+printf "%s %s" "$unauth" "$auth"
+' oc-auth-check < "$PASSWORD_FILE")
       if [ "$auth_codes" = '401 200' ]; then
         write_state ready 'OpenCode is ready' "$CURRENT_PORT" proot "$installed_version" "$server_pid" "${CURRENT_OPERATION:+completed}"
         printf '[oc] authenticated server ready on 127.0.0.1:%s\n' "$CURRENT_PORT"

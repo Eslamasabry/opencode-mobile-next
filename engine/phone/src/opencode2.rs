@@ -1,4 +1,5 @@
-//! Pinned OC2 stable driver. Mutations are never retried, even after uncertainty.
+//! OC2 stable driver for the proven version range. Mutations are never
+//! retried, even after uncertainty.
 use crate::opencode::{
     known_directories, model_selection, validate_directory, validate_prompt, validate_session_id,
     validate_team_ids, GlobalStatusObservation, ProtocolError,
@@ -11,8 +12,31 @@ use std::{
     sync::Mutex,
     time::{Duration, Instant},
 };
-use tokio::sync::OnceCell;
-const VERSION: &str = "2.0.29";
+/// Stable OC2 lines whose wire contract this driver was run against end to
+/// end (`tests/oc2_live.rs`): 2.0.29, 2.1.1 and 2.2.5. A minor line is only
+/// added after that live run; the OpenAPI check in [`validate_openapi`] still
+/// gates every server inside the range. 2.0 releases before 2.0.29 are out:
+/// their `/api/info` and permission contract were never verified.
+const SUPPORTED: &[(u64, u64)] = &[(0, 29), (1, 0), (2, 0)];
+
+/// `2.<minor>.<patch>` with plain decimal parts, inside [`SUPPORTED`].
+/// Pre-release and build suffixes (betas, local builds) are refused.
+pub(crate) fn supported_version(version: &str) -> bool {
+    let mut parts = version.split('.');
+    let mut number = || {
+        parts
+            .next()
+            .filter(|p| !p.is_empty() && p.len() <= 6 && p.bytes().all(|b| b.is_ascii_digit()))
+            .and_then(|p| p.parse::<u64>().ok())
+    };
+    let (Some(2), Some(minor), Some(patch)) = (number(), number(), number()) else {
+        return false;
+    };
+    parts.next().is_none()
+        && SUPPORTED
+            .iter()
+            .any(|&(line, first)| line == minor && patch >= first)
+}
 const MAX_RESPONSE: usize = 8 * 1024 * 1024;
 const FRESHNESS: Duration = Duration::from_secs(30);
 
@@ -22,11 +46,25 @@ pub struct OpenCode2Client {
     base: Url,
     username: String,
     password: String,
-    schema: OnceCell<u64>,
+    identity: tokio::sync::Mutex<Option<ServerIdentity>>,
     accepted: Mutex<BTreeMap<String, String>>,
+    /// Sessions this client made on the server, with their directory: the
+    /// proof that a restarted server is still the same session store.
+    sessions: Mutex<BTreeMap<String, String>>,
 }
+
+/// The server this client proved once: its process and where it keeps its
+/// files. A new process is the same server only when [OpenCode2Client::ready]
+/// proves it again (see there).
+struct ServerIdentity {
+    pid: u64,
+    paths: Value,
+}
+
+/// How many of this client's own sessions a restarted server is asked for.
+const RESTART_SESSION_PROBES: usize = 3;
 pub(crate) fn validate_info(info: &Value) -> Result<(), ProtocolError> {
-    if info["version"] != VERSION
+    if !info["version"].as_str().is_some_and(supported_version)
         || !info["pid"].is_u64()
         || !info["urls"].is_array()
         || !info.pointer("/paths/tmp").is_some_and(Value::is_string)
@@ -71,8 +109,9 @@ impl OpenCode2Client {
             base,
             username: username.into(),
             password: password.into(),
-            schema: OnceCell::new(),
+            identity: tokio::sync::Mutex::new(None),
             accepted: Mutex::new(BTreeMap::new()),
+            sessions: Mutex::new(BTreeMap::new()),
         })
     }
     async fn request(
@@ -141,7 +180,19 @@ impl OpenCode2Client {
             })
         })
     }
-    async fn ready(&self) -> Result<(), ProtocolError> {
+    /// Returns the server's version once its identity and schema are proven.
+    ///
+    /// The first answer pins the server: its pid and its `paths`, after the
+    /// OpenAPI check. A later answer from another pid is a restart (the app
+    /// restarting OpenCode from Settings, or relaunching it after a crash)
+    /// only if it proves to be the same server again: it took this client's
+    /// password (OpenCode 2 always checks one, and only the app has it), it
+    /// passes the version and OpenAPI checks again, it keeps its files in
+    /// the same `paths`, and, once this client made sessions, it still holds
+    /// at least one of them in their own folder. Then the new pid is pinned.
+    /// Anything else is another server: `server_identity_changed`, and the
+    /// old pin stays, so the real server coming back is accepted again.
+    async fn ready(&self) -> Result<String, ProtocolError> {
         let info = self
             .request(Method::GET, "/api/info", None, &[], None)
             .await?;
@@ -149,26 +200,63 @@ impl OpenCode2Client {
         let pid = info["pid"]
             .as_u64()
             .ok_or(ProtocolError("invalid_response"))?;
-        let verified_pid = self
-            .schema
-            .get_or_try_init(|| async {
-                validate_openapi(
-                    &self
-                        .request(Method::GET, "/openapi.json", None, &[], None)
-                        .await?,
-                )?;
-                Ok::<u64, ProtocolError>(pid)
-            })
-            .await?;
-        if *verified_pid != pid {
-            return Err(ProtocolError("server_identity_changed"));
+        let version = info["version"].as_str().unwrap_or_default().to_owned();
+        let mut identity = self.identity.lock().await;
+        match identity.as_ref() {
+            Some(known) if known.pid == pid => return Ok(version),
+            Some(known) => {
+                if known.paths != info["paths"] {
+                    return Err(ProtocolError("server_identity_changed"));
+                }
+                self.validate_schema().await?;
+                if !self.holds_own_sessions().await? {
+                    return Err(ProtocolError("server_identity_changed"));
+                }
+            }
+            None => self.validate_schema().await?,
         }
-        Ok(())
+        *identity = Some(ServerIdentity {
+            pid,
+            paths: info["paths"].clone(),
+        });
+        Ok(version)
+    }
+    async fn validate_schema(&self) -> Result<(), ProtocolError> {
+        validate_openapi(
+            &self
+                .request(Method::GET, "/openapi.json", None, &[], None)
+                .await?,
+        )
+    }
+    /// Whether the server still has one of this client's newest sessions
+    /// (true when it made none). A missing session is a different store; a
+    /// failed read is not a proof either way and fails the check.
+    async fn holds_own_sessions(&self) -> Result<bool, ProtocolError> {
+        let probes = self
+            .sessions
+            .lock()
+            .map_err(|_| ProtocolError("server_identity_changed"))?
+            .iter()
+            // Session IDs sort newest first.
+            .take(RESTART_SESSION_PROBES)
+            .map(|(id, dir)| (id.clone(), dir.clone()))
+            .collect::<Vec<_>>();
+        if probes.is_empty() {
+            return Ok(true);
+        }
+        for (id, directory) in probes {
+            match self.session(&directory, &id).await {
+                Ok(_) => return Ok(true),
+                Err(ProtocolError("protocol_unavailable" | "session_scope_mismatch")) => {}
+                Err(error) => return Err(error),
+            }
+        }
+        Ok(false)
     }
     pub async fn verify(&self) -> Result<Value, ProtocolError> {
-        self.ready().await?;
+        let version = self.ready().await?;
         Ok(
-            json!({"healthy":true,"version":VERSION,"pinnedVersion":true,"openapiVerified":true,
+            json!({"healthy":true,"version":version,"pinnedVersion":true,"openapiVerified":true,
             "capabilities":{"sessionDriver":true,"readOnlyPermissions":true,"executionDriver":true,
             "knownPersonDirectoryStatus":true,"globalStatusObserver":true,"globalAdmissionAuthority":false,
             "chatAdmission":false,"execution":false,"oc2":true},"blockers":["global_status_unavailable"]}),
@@ -237,6 +325,10 @@ impl OpenCode2Client {
         validate_session_id(id).map_err(|_| ProtocolError("transport_uncertain"))?;
         let session = self.session(directory, id).await?;
         confirm_policy(&session, &rules)?;
+        self.sessions
+            .lock()
+            .map_err(|_| ProtocolError("transport_uncertain"))?
+            .insert(id.into(), directory.into());
         Ok(id.into())
     }
     pub async fn prompt(
@@ -362,10 +454,16 @@ impl OpenCode2Client {
         ids: &[String],
     ) -> Result<bool, ProtocolError> {
         known_directories(dirs)?;
+        self.server_idle_except(ids).await
+    }
+    /// Whether nothing but the team's sessions [ids] runs anywhere on the
+    /// server. OC2's active list is process-wide, so this needs no folder:
+    /// it reconciles busy evidence before the person opened any chat
+    /// project. It is evidence only, never admission authority by itself.
+    pub async fn server_idle_except(&self, ids: &[String]) -> Result<bool, ProtocolError> {
         validate_team_ids(ids)?;
         self.ready().await?;
-        // OC2 active is process-wide. Conservatively block on ANY non-team work;
-        // never claim broader admission authority from this snapshot alone.
+        // Conservatively block on ANY non-team work.
         Ok(active(&self.active().await?)?
             .iter()
             .all(|id| ids.contains(id)))
@@ -1153,6 +1251,55 @@ mod tests {
         assert!(validate_openapi(&changed).is_err());
     }
     #[test]
+    fn installed_stable_lines_are_accepted_and_unproven_versions_refused() {
+        // Setup installs 2.2.5 (this line) and 2.1.1 (the 2.1.0 release);
+        // both ran the live driver proof in tests/oc2_live.rs.
+        for version in [
+            "2.0.29", "2.0.30", "2.1.0", "2.1.1", "2.2.0", "2.2.5", "2.2.17",
+        ] {
+            let mut accepted = info();
+            accepted["version"] = json!(version);
+            assert!(validate_info(&accepted).is_ok(), "{version}");
+        }
+        for version in [
+            "2.0.28",
+            "2.0.4",
+            "2.3.0",
+            "3.0.0",
+            "1.9.9",
+            "2.2",
+            "2.2.5.1",
+            "2.2.5-beta.1",
+            "2.2.5+local",
+            "0.0.0-beta-18600",
+            "v2.2.5",
+            "2..5",
+            "2.02.5x",
+            "",
+            " 2.2.5",
+        ] {
+            let mut refused = info();
+            refused["version"] = json!(version);
+            assert!(validate_info(&refused).is_err(), "{version:?}");
+        }
+        let mut number = info();
+        number["version"] = json!(2.2);
+        assert!(validate_info(&number).is_err());
+    }
+    #[test]
+    fn captured_2_2_5_schema_passes_the_driver_contract() {
+        let doc: Value = serde_json::from_str(include_str!(
+            "../tests/fixtures/oc2-2.2.5-driver-openapi.json"
+        ))
+        .unwrap();
+        assert!(validate_openapi(&doc).is_ok());
+        for (path, method, _) in OPERATIONS {
+            let mut changed = doc.clone();
+            changed["paths"][path][method]["operationId"] = json!("changed");
+            assert!(validate_openapi(&changed).is_err(), "{path}");
+        }
+    }
+    #[test]
     fn policy_is_exact_replacement_and_shell_is_oc2_action() {
         let readonly = role_permissions(true);
         let worker = role_permissions(false);
@@ -1577,6 +1724,164 @@ mod tests {
                 .count(),
             0
         );
+        task.abort();
+    }
+
+    /// A fake OpenCode 2 whose process can be restarted, crash-relaunched or
+    /// replaced by another server on the same port.
+    struct Restartable {
+        pid: std::sync::atomic::AtomicU64,
+        tmp: Mutex<String>,
+        sessions: Mutex<BTreeSet<String>>,
+        schema_ok: std::sync::atomic::AtomicBool,
+        password: Mutex<String>,
+        schema_reads: std::sync::atomic::AtomicUsize,
+    }
+    async fn restartable() -> (
+        OpenCode2Client,
+        std::sync::Arc<Restartable>,
+        tokio::task::JoinHandle<()>,
+    ) {
+        use axum::{extract::Request, response::IntoResponse, Router};
+        use std::sync::{atomic::Ordering, Arc};
+        let state = Arc::new(Restartable {
+            pid: 100.into(),
+            tmp: Mutex::new("/data/oc/tmp".into()),
+            sessions: Mutex::new(BTreeSet::new()),
+            schema_ok: true.into(),
+            password: Mutex::new("fixture-only".into()),
+            schema_reads: 0.into(),
+        });
+        let shared = state.clone();
+        let router = Router::new().fallback(move |request: Request| {
+            let state = shared.clone();
+            async move {
+                let expected = if state.password.lock().unwrap().as_str() == "fixture-only" {
+                    "Basic b3BlbmNvZGU6Zml4dHVyZS1vbmx5"
+                } else {
+                    "Basic refuses-every-client"
+                };
+                if request
+                    .headers()
+                    .get("authorization")
+                    .and_then(|v| v.to_str().ok())
+                    != Some(expected)
+                {
+                    return StatusCode::UNAUTHORIZED.into_response();
+                }
+                let path = request.uri().path().to_owned();
+                let directory = Url::parse(&format!("http://fixture{}", request.uri()))
+                    .unwrap()
+                    .query_pairs()
+                    .find(|(k, _)| k == "location[directory]")
+                    .map(|(_, v)| v.into_owned())
+                    .unwrap_or_default();
+                let body = match (request.method().as_str(), path.as_str()) {
+                    ("GET", "/api/info") => json!({"version":"2.1.1",
+                        "pid":state.pid.load(Ordering::SeqCst),"urls":[],
+                        "paths":{"tmp":*state.tmp.lock().unwrap()}}),
+                    ("GET", "/openapi.json") => {
+                        state.schema_reads.fetch_add(1, Ordering::SeqCst);
+                        let mut doc = spec();
+                        if !state.schema_ok.load(Ordering::SeqCst) {
+                            doc["paths"]["/api/session/active"]["get"]["operationId"] =
+                                json!("changed");
+                        }
+                        doc
+                    }
+                    ("GET", "/api/session/active") => json!({"data":{}}),
+                    ("POST", "/api/session") => {
+                        state.sessions.lock().unwrap().insert("ses_team".into());
+                        json!({"data":{"id":"ses_team"}})
+                    }
+                    ("GET", p) if p.starts_with("/api/session/ses_") => {
+                        let id = p.trim_start_matches("/api/session/");
+                        if !state.sessions.lock().unwrap().contains(id) {
+                            return StatusCode::NOT_FOUND.into_response();
+                        }
+                        json!({"data":{"id":id,"location":{"directory":directory},
+                            "permissions":deny_all()}})
+                    }
+                    _ => return StatusCode::NOT_FOUND.into_response(),
+                };
+                axum::Json(body).into_response()
+            }
+        });
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let task = tokio::spawn(async move { axum::serve(listener, router).await.unwrap() });
+        let client =
+            OpenCode2Client::new(&format!("http://{addr}"), "opencode", "fixture-only").unwrap();
+        (client, state, task)
+    }
+
+    #[tokio::test]
+    async fn an_app_restart_of_the_same_server_is_proven_again_and_accepted() {
+        use std::sync::atomic::Ordering;
+        let (client, server, task) = restartable().await;
+        client.verify().await.unwrap();
+        assert_eq!(server.schema_reads.load(Ordering::SeqCst), 1);
+        // Settings › This phone › restart: same files, new process.
+        server.pid.store(200, Ordering::SeqCst);
+        client.verify().await.unwrap();
+        assert_eq!(server.schema_reads.load(Ordering::SeqCst), 2);
+        // The new process is pinned: no third proof for it.
+        client.verify().await.unwrap();
+        assert!(client.server_idle_except(&[]).await.unwrap());
+        assert_eq!(server.schema_reads.load(Ordering::SeqCst), 2);
+        task.abort();
+    }
+
+    #[tokio::test]
+    async fn a_relaunch_after_a_crash_must_still_hold_the_teams_sessions() {
+        use std::sync::atomic::Ordering;
+        let (client, server, task) = restartable().await;
+        assert_eq!(
+            client.create_session("/repo", "planner").await.unwrap(),
+            "ses_team"
+        );
+        server.pid.store(300, Ordering::SeqCst);
+        client.verify().await.unwrap();
+        // Relaunched over an empty session store: not the same server.
+        server.pid.store(301, Ordering::SeqCst);
+        server.sessions.lock().unwrap().clear();
+        assert_eq!(
+            client.verify().await.unwrap_err().code(),
+            "server_identity_changed"
+        );
+        task.abort();
+    }
+
+    #[tokio::test]
+    async fn a_foreign_server_on_the_port_never_takes_over() {
+        use std::sync::atomic::Ordering;
+        let (client, server, task) = restartable().await;
+        client.verify().await.unwrap();
+        // Another OpenCode 2 with its own files answers on the same port.
+        server.pid.store(400, Ordering::SeqCst);
+        *server.tmp.lock().unwrap() = "/elsewhere/tmp".into();
+        for _ in 0..2 {
+            assert_eq!(
+                client.verify().await.unwrap_err().code(),
+                "server_identity_changed"
+            );
+            assert!(client.server_idle_except(&[]).await.is_err());
+        }
+        // One that does not take the app's password is refused outright.
+        *server.tmp.lock().unwrap() = "/data/oc/tmp".into();
+        *server.password.lock().unwrap() = "someone-else".into();
+        assert_eq!(
+            client.verify().await.unwrap_err().code(),
+            "authentication_failed"
+        );
+        // One whose schema the driver was not proven against is refused.
+        *server.password.lock().unwrap() = "fixture-only".into();
+        server.schema_ok.store(false, Ordering::SeqCst);
+        assert!(client.verify().await.is_err());
+        // The real server coming back (its pid, its files) is accepted.
+        server.schema_ok.store(true, Ordering::SeqCst);
+        server.pid.store(100, Ordering::SeqCst);
+        client.verify().await.unwrap();
         task.abort();
     }
 }

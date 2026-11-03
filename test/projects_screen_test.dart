@@ -562,6 +562,7 @@ class _InAppLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     scripts.add(script);
     if (script == BuiltinLinux.listProjectsScript()) {
@@ -588,5 +589,14 @@ class _InAppLinux extends BuiltinLinux {
       return BuiltinLinuxRunResult(exitCode: 0, output: 'created $path\n');
     }
     return const BuiltinLinuxRunResult(exitCode: 127, output: 'unexpected');
+  }
+
+  // The app makes /root/projects folders natively (createProject); this fake
+  // keeps answering through its script handler below.
+  @override
+  Future<String> createProjectFolder(String path) async {
+    final result = await run(BuiltinLinux.createFolderScript(path));
+    if (result.exitCode != 0) throw BuiltinLinuxException(result.output);
+    return result.output.trim().split('\n').last.split(' ').first;
   }
 }

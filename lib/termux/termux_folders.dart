@@ -143,13 +143,23 @@ for entry in "$prefix"/*; do
 done
 ''';
 
-  /// Makes the folder with `mkdir -p`, refusing a link in its place.
+  /// Makes the folder with `mkdir -p`, refusing a link in its place. A new one becomes a git project with one empty
+  /// first commit, as the in-app server's new projects are: AI Team refuses
+  /// a folder that is not a git repository, so a project made while turning
+  /// it on failed at once (found with issue #112). Best effort: the folder
+  /// is made either way, and an existing one is never touched.
   static const createInnerScript =
       'set -u\n$_decodePath'
       r'''
 if [ -L "$path" ]; then echo oc-folder-linked; exit 0; fi
 if [ -d "$path" ]; then echo oc-folder-exists; exit 0; fi
-mkdir -p -- "$path" && [ -d "$path" ] && echo oc-folder-created
+mkdir -p -- "$path" && [ -d "$path" ] || exit 0
+if command -v git >/dev/null 2>&1 && git init -q "$path" 2>/dev/null; then
+  gname=$(git config user.name || echo "AI Team")
+  gmail=$(git config user.email || echo "aiteam@localhost")
+  (cd "$path" && git -c user.name="$gname" -c user.email="$gmail" commit -q --allow-empty -m "First commit") >/dev/null 2>&1 || true
+fi
+echo oc-folder-created
 ''';
 
   /// The script Termux runs (`bash -s`) to list [path]'s folders.

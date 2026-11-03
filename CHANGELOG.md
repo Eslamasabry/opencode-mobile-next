@@ -2,6 +2,16 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
+## 2.1.1+58 — 2026-11-04
+
+AI Team on Android 16 and newer (#111, #112): the safety check passes, OpenCode
+starts again inside the protection, a team runs on the OpenCode version the
+app installs, and new projects can be made after AI Team is on. Nothing the
+check requires was loosened. Full notes:
+[docs/releases/v2.1.1+58.md](docs/releases/v2.1.1+58.md).
+- Fixed: adding a project to a team on Termux (#112); a team starts before any chat is opened and continues after an OpenCode restart.
+- Security: the phone's local OpenCode server password no longer appears in the process list, and the server refuses to start without it.
+
 ## 2.1.0+57 — 2026-10-31
 
 Two home-screen widgets (Conversations and Status), Git inside the
