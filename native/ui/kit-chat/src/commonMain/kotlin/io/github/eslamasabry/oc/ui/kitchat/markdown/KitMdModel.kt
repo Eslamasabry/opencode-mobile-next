@@ -76,7 +76,18 @@ public sealed interface KitMdBlock {
     ) : KitMdBlock
 
     public data class Rule(override val key: String) : KitMdBlock
+
+    /** P12-CHAT-FEEL: a line of only pictures (B-CHAT-059), drawn as tiles the person taps to open. */
+    public data class Pictures(override val key: String, val pictures: ImmutableList<KitPicture>) : KitMdBlock
 }
+
+/**
+ * One Markdown picture (B-CHAT-059). [url] is set for a web picture (never fetched: a tap goes through the link
+ * policy), [path] for a file on the server (the chat may read it for its viewer). [label] is what names it: the
+ * description, else the file name, else null (the caller's own word).
+ */
+@Immutable
+public data class KitPicture(val label: String?, val url: String? = null, val path: String? = null, val host: String? = null)
 
 /** Whether a block ends in text a caret can follow (a reply ending in code, a table or a rule shows no caret). */
 public val KitMdBlock.takesCaret: Boolean

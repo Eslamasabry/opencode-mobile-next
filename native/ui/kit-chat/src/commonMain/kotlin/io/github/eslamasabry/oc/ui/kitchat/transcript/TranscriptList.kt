@@ -20,6 +20,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
@@ -50,10 +51,14 @@ import kotlinx.coroutines.launch
 @Stable
 public class TranscriptListState internal constructor(
     public val lazy: LazyListState,
-    following: Boolean,
+    followingState: MutableState<Boolean>,
     private val density: Density,
 ) {
-    public var following: Boolean by mutableStateOf(following)
+    /**
+     * P12-CHAT-FEEL: backed by the saveable state itself, so rotation and coming back restore the reader's choice as it
+     * is now (a copy synced on recomposition went stale and pulled a reader back to the bottom).
+     */
+    public var following: Boolean by followingState
 
     /** Index 0 (the newest row) is at the bottom, within the 48 dp follow slack (plan 08 §5.1). */
     public val atLiveEdge: Boolean by derivedStateOf {
@@ -76,9 +81,7 @@ public fun rememberTranscriptListState(): TranscriptListState {
     val lazy = rememberLazyListState()
     val following = rememberSaveable { mutableStateOf(true) }
     val density = LocalDensity.current
-    val state = remember(lazy, density) { TranscriptListState(lazy, following.value, density) }
-    SideEffect { following.value = state.following }
-    return state
+    return remember(lazy, following, density) { TranscriptListState(lazy, following, density) }
 }
 
 /**

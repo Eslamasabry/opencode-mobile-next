@@ -50,6 +50,7 @@ public object StatusPick {
         run: RunFacts,
         rows: List<TranscriptRow>,
         actionFailure: Failure?,
+        linkRefused: Boolean = false,
     ): ChatStatusUi? {
         when (link) {
             ChatLink.Offline -> return ChatStatusUi(CONNECTION, ChatStatusKind.Offline)
@@ -67,6 +68,7 @@ public object StatusPick {
             return ChatStatusUi(RUN, ChatStatusKind.RunFailed)
         }
         if (actionFailure != null) return ChatStatusUi(ACTION, ChatStatusKind.ActionFailed, actionFailure)
+        if (linkRefused) return ChatStatusUi(LINK, ChatStatusKind.LinkRefused)
         return null
     }
 
@@ -83,6 +85,7 @@ public object StatusPick {
     public const val CONNECTION: String = "connection"
     public const val RUN: String = "run"
     public const val ACTION: String = "action"
+    public const val LINK: String = "link"
 }
 
 /** One find hit: [start] until [end] in the row's own text. Hits are in reading order (oldest first). */
@@ -152,11 +155,31 @@ public object TranscriptFind {
 
 /** One action list per message for every way in (plan 09 §6.6), in menu order, destructive last. */
 public object MessageActions {
-    public fun of(kind: TargetKind, caps: ChatCapabilitiesUi, busy: Boolean, messageId: String?, hasText: Boolean): ImmutableList<MessageAction> {
-        val out = ArrayList<MessageAction>(4)
+    public fun of(kind: TargetKind, caps: ChatCapabilitiesUi, busy: Boolean, messageId: String?, hasText: Boolean): ImmutableList<MessageAction> =
+        of(kind, caps, busy, messageId, hasText, feel = false)
+
+    /**
+     * P12-CHAT-FEEL, Flutter `_messageContextActions` order: Copy, Share, Select text, Edit and resend (prompt), Send
+     * again (prompt, not while a reply runs: steer, never queue), Fork (prompt), Undo from here (a saved prompt, the
+     * server undoes, not while a reply runs), Delete last. [feel] = false keeps the slice-2 list.
+     */
+    public fun of(
+        kind: TargetKind,
+        caps: ChatCapabilitiesUi,
+        busy: Boolean,
+        messageId: String?,
+        hasText: Boolean,
+        feel: Boolean,
+    ): ImmutableList<MessageAction> {
+        val out = ArrayList<MessageAction>(8)
+        val prompt = kind == TargetKind.Prompt
         if (hasText) out += MessageAction.Copy
-        if (kind == TargetKind.Prompt && hasText && !busy) out += MessageAction.SendAgain
-        if (kind == TargetKind.Prompt && caps.fork && messageId != null) out += MessageAction.Fork
+        if (feel && hasText) out += MessageAction.Share
+        if (feel && hasText) out += MessageAction.SelectText
+        if (feel && prompt && hasText) out += MessageAction.EditAndResend
+        if (prompt && hasText && !busy) out += MessageAction.SendAgain
+        if (prompt && caps.fork && messageId != null) out += MessageAction.Fork
+        if (feel && prompt && caps.revert && messageId != null && !busy) out += MessageAction.UndoFromHere
         if (caps.deleteMessage && messageId != null) out += MessageAction.Delete
         return out.toImmutableList()
     }
@@ -234,6 +257,51 @@ public object Landing {
 
 /** Who owns Back, top wins (07 §3.3): menu, dialog, the find bar, then the page's own guard (§3.4), then Nav3. */
 public enum class BackStep { CloseMenu, CloseConfirm, CloseFind, SaveDraftThenLeave, Leave }
+
+/** P12-CHAT-FEEL: a code block split into chunk rows (STREAM-FIX) copies as one block. */
+public object CodeCopy {
+    /**
+     * The whole fence [rowKey] belongs to, without its fence lines: walks the adjacent chunk rows of the same part
+     * (`continued`/`continues`). O(chunks of one block).
+     */
+    public fun of(rows: List<TranscriptRow>, index: Int): String? {
+        val row = rows.getOrNull(index) as? BlockRow ?: return null
+        if (row.kind != RowKind.Code) return null
+        var newest = index
+        while ((rows[newest] as BlockRow).continues) {
+            val next = rows.getOrNull(newest - 1) as? BlockRow ?: break
+            if (next.partId != row.partId || !next.continued) break
+            newest--
+        }
+        var oldest = index
+        while ((rows[oldest] as BlockRow).continued) {
+            val prev = rows.getOrNull(oldest + 1) as? BlockRow ?: break
+            if (prev.partId != row.partId || !prev.continues) break
+            oldest++
+        }
+        val joined = (oldest downTo newest).joinToString("\n") { (rows[it] as BlockRow).text }
+        return FenceText.body(joined)
+    }
+}
+
+/** The body of a fenced block's source: the opening ``` line and a closing fence line dropped. */
+public object FenceText {
+    public fun body(source: String): String {
+        var lines = source.split('\n')
+        if (lines.firstOrNull()?.trimStart()?.startsWith("```") == true) lines = lines.drop(1)
+        if (lines.isNotEmpty() && lines.last().trim().startsWith("```") && lines.last().trim().trim('`').isEmpty()) {
+            lines = lines.dropLast(1)
+        }
+        return lines.joinToString("\n")
+    }
+
+    /** The language word after the opening fence, or null. */
+    public fun info(source: String): String? {
+        val first = source.substringBefore('\n').trimStart()
+        if (!first.startsWith("```")) return null
+        return first.trimStart('`').trim().substringBefore(' ').ifEmpty { null }
+    }
+}
 
 public object BackOrder {
     public fun next(menuOpen: Boolean, confirmOpen: Boolean, findOpen: Boolean, draftUnsaved: Boolean): BackStep =

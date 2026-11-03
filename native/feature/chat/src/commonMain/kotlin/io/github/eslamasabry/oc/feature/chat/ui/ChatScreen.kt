@@ -33,6 +33,13 @@ import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChip
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
+import io.github.eslamasabry.oc.feature.chat.composer.InsertRequest
+import io.github.eslamasabry.oc.feature.chat.presentation.PictureUi
+import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
+import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureContent
+import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureView
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureFailed
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureLoading
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
@@ -64,7 +71,25 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownSelection
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPicture
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnServer
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnWeb
+import io.github.eslamasabry.oc.ui.words.res.chatFeelDone
+import io.github.eslamasabry.oc.ui.words.res.chatFeelEditAndResend
+import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
+import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
+import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkBody
+import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkTitle
+import io.github.eslamasabry.oc.ui.words.res.chatFeelSelectText
+import io.github.eslamasabry.oc.ui.words.res.chatFeelShare
+import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
+import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
+import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoTitle
+import io.github.eslamasabry.oc.ui.words.res.revertFromHere
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
@@ -199,9 +224,10 @@ public fun ChatScreen(
                 busy = { latest.live != null },
                 requestWaiting = { requestState.card != null },
                 onSent = { list.following = true },
-                // Saved prompts and slash commands (P12-PROMPTS); agent ```choices arrive with cards (S5).
-                pendingInsert = { prompts?.pending() },
-                insertDone = { prompts?.done(it) },
+                // "Edit and resend" (P12-CHAT-FEEL) first, then saved prompts and slash commands (P12-PROMPTS); each
+                // acknowledgement goes back to the side that offered it. Agent ```choices arrive with cards (S5).
+                pendingInsert = { latest.insert?.let { InsertRequest(it.id, it.text, replace = true) } ?: prompts?.pending() },
+                insertDone = { id -> if (latest.insert?.id == id) actions.insertDone(id) else prompts?.done(id) },
                 focusRequest = { latest.arrival?.takeIf { it.focusComposer }?.id },
                 focusDone = actions::arrivalShown,
                 onStop = actions::stop,
@@ -318,6 +344,7 @@ public fun ChatScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 facts = facts,
                                 onOpenSession = onOpenSession,
+                                reply = rememberReplyActions(actions),
                             )
                             EarlierMessagesPill(
                                 state,
@@ -334,12 +361,16 @@ public fun ChatScreen(
             // thumb.
             MessageMenu(state.menu, actions, Modifier.align(Alignment.BottomEnd))
             ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
+            SelectTextSheet(state.select, actions)
+            PictureSheet(state.picture, actions)
             KitConfirm(
                 spec = confirmSpec(state.confirm),
                 onConfirm = {
                     when (latest.confirm) {
                         is ChatConfirm.DeleteMessage -> actions.confirmDelete()
                         ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
+                        is ChatConfirm.UndoFrom -> actions.confirmUndo()
+                        is ChatConfirm.OpenLink -> actions.confirmOpenLink()
                         null -> Unit
                     }
                 },
@@ -448,25 +479,30 @@ private fun FindBar(find: FindUi, actions: ChatActions) {
 }
 
 /**
- * One action list per message (plan 09 §6.6). Copy waits for a kit copy part (request K-3): absent,
- * never broken.
+ * One action list per message (plan 09 §6.6, Flutter `_messageContextActions`). Copy, Share and Select text
+ * leave the app through the chat's `ChatOutside`; a list without a platform (slice 2) has no Copy.
  */
 @Composable
 private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Modifier) {
+    val feel = menu?.actions?.contains(MessageAction.Share) == true
     val items =
         menu
             ?.actions
             .orEmpty()
-            .filter { it != MessageAction.Copy }
+            .filter { feel || it != MessageAction.Copy }
             .map { action ->
                 KitMenuItem(
                     label =
                         when (action) {
                             MessageAction.Copy -> stringResource(Res.string.kitCopy)
+                            MessageAction.Share -> stringResource(Res.string.chatFeelShare)
+                            MessageAction.SelectText -> stringResource(Res.string.chatFeelSelectText)
+                            MessageAction.EditAndResend -> stringResource(Res.string.chatFeelEditAndResend)
                             MessageAction.SendAgain ->
                                 stringResource(Res.string.chatUiSendPromptAgain)
                             MessageAction.Fork ->
                                 stringResource(Res.string.chatUiForkFromThisPrompt)
+                            MessageAction.UndoFromHere -> stringResource(Res.string.revertFromHere)
                             MessageAction.Delete -> stringResource(Res.string.chatUiDeleteMessage)
                         },
                     onSelect = { menu?.let { actions.messageAction(it.target, action) } },
@@ -480,6 +516,50 @@ private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Mo
         title = stringResource(Res.string.kitMessageActions),
         modifier = modifier.testTag("message-menu"),
     ) {}
+}
+
+/**
+ * "Select text" (P12-CHAT-FEEL): the message's words in a sheet, selectable in full with the transcript's filtered
+ * menu (Copy and Select all only, R17).
+ */
+@Composable
+private fun SelectTextSheet(select: SelectTextUi?, actions: ChatActions) {
+    KitSheet(
+        visible = select != null,
+        onDismissRequest = actions::closeSelection,
+        title = stringResource(Res.string.chatFeelSelectText),
+        closeLabel = stringResource(Res.string.chatFeelDone),
+    ) {
+        if (select != null) {
+            KitMarkdownSelection(Modifier.fillMaxWidth().testTag("chat-select-text")) { KitText(select.text) }
+        }
+    }
+}
+
+/** P12-CHAT-FEEL: a reply's server picture, pinch to zoom; Back or Done closes it. */
+@Composable
+private fun PictureSheet(picture: PictureUi?, actions: ChatActions) {
+    KitSheet(
+        visible = picture != null,
+        onDismissRequest = actions::closePicture,
+        title = picture?.name ?: stringResource(Res.string.chatFeelPicture),
+        closeLabel = stringResource(Res.string.chatFeelDone),
+        height = io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight.Full,
+    ) {
+        if (picture != null) {
+            KitPictureView(
+                content =
+                    when {
+                        picture.failed -> KitPictureContent.Unavailable
+                        picture.bytes == null -> KitPictureContent.Loading
+                        else -> KitPictureContent.Bytes(picture.bytes)
+                    },
+                description = picture.name,
+                loadingLabel = stringResource(Res.string.chatFeelPictureLoading),
+                failedLabel = stringResource(Res.string.chatFeelPictureFailed),
+            )
+        }
+    }
 }
 
 @Composable
@@ -499,6 +579,19 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
                 confirmLabel = stringResource(Res.string.draftLeaveAction),
                 kind = KitConfirmKind.Discard,
                 body = stringResource(Res.string.draftLeaveMessage),
+            )
+        is ChatConfirm.UndoFrom ->
+            KitConfirmSpec(
+                title = stringResource(Res.string.chatFeelUndoTitle),
+                confirmLabel = stringResource(Res.string.chatFeelUndoAction),
+                kind = KitConfirmKind.Destructive,
+                body = stringResource(Res.string.chatFeelUndoBody),
+            )
+        is ChatConfirm.OpenLink ->
+            KitConfirmSpec(
+                title = stringResource(Res.string.chatFeelOpenLinkTitle),
+                confirmLabel = stringResource(Res.string.chatFeelOpenLinkAction),
+                body = stringResource(Res.string.chatFeelOpenLinkBody, confirm.host),
             )
     }
 
@@ -555,7 +648,54 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                 onDismiss = { actions.dismissStatus(StatusPick.ACTION) },
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
+        ChatStatusKind.LinkRefused ->
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(Res.string.chatFeelLinkRefused),
+                id = "chat-status-${line.id}",
+                onDismiss = { actions.dismissStatus(StatusPick.LINK) },
+                dismissLabel = stringResource(Res.string.kitSheetDismiss),
+            )
     }
+
+/**
+ * P12-CHAT-FEEL: what a reply's parts do. Links and web pictures go to [ChatActions.openLink] (the link policy, then
+ * the one external opener); a code block's Copy copies its whole source verbatim.
+ */
+@Composable
+internal fun rememberReplyActions(actions: ChatActions): ReplyActions {
+    val copy = stringResource(Res.string.kitCopy)
+    val picture = stringResource(Res.string.chatFeelPicture)
+    val onServer = stringResource(Res.string.chatFeelPictureOnServer, "\u0000")
+    val onWeb = stringResource(Res.string.chatFeelPictureOnWeb, "\u0000")
+    return remember(actions, copy, picture, onServer, onWeb) {
+        ReplyActions(
+            markdown =
+                KitMarkdownActions(
+                    onLink = actions::openLink,
+                    copyCodeLabel = copy,
+                    onCopyCode = actions::copyText,
+                    onPicture = { p ->
+                        val url = p.url
+                        val path = p.path
+                        when {
+                            url != null -> actions.openLink(url)
+                            path != null -> actions.openPicture(path, p.label ?: path.substringAfterLast('/'))
+                        }
+                    },
+                    openFilePictures = true,
+                    pictureLabel = { p ->
+                        p.label
+                            ?: p.path?.let { onServer.replace("\u0000", it) }
+                            ?: p.host?.let { onWeb.replace("\u0000", it) }
+                            ?: picture
+                    },
+                ),
+            copyLabel = copy,
+            copy = actions::copyText,
+        )
+    }
+}
 
 /** The words the transcript shows that are not server text, from `:ui:words`. */
 @Composable

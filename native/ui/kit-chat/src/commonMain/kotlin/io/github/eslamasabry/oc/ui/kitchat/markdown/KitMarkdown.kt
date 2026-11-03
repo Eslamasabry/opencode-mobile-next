@@ -76,6 +76,12 @@ public class KitMarkdownActions(
     public val onCopyCode: ((String) -> Unit)? = null,
     public val moreCodeLabel: ((hiddenLines: Int) -> String)? = null,
     public val onOpenCode: ((KitMdBlock.Code) -> Unit)? = null,
+    /** P12-CHAT-FEEL: a picture tile was tapped; null draws tiles that do nothing but name the picture. */
+    public val onPicture: ((KitPicture) -> Unit)? = null,
+    /** The tile's words for a picture (description or name are passed through; the caller adds its own word). */
+    public val pictureLabel: (KitPicture) -> String = { it.label ?: it.path ?: it.url ?: "" },
+    /** Whether [onPicture] can show a picture that lives on the server (a viewer is wired); web ones always open. */
+    public val openFilePictures: Boolean = false,
 )
 
 /**
@@ -153,6 +159,7 @@ public fun KitMarkdownBlock(
             is KitMdBlock.Quote -> KitMarkdownQuote(block, actions, modifier, live, caret, reveal)
             is KitMdBlock.Table -> KitMarkdownTable(block, actions, modifier)
             is KitMdBlock.Rule -> KitMarkdownRule(modifier)
+            is KitMdBlock.Pictures -> KitPictureTiles(block, actions, modifier)
             is KitMdBlock.Code ->
                 KitCodeBlock(
                     source = block.text,
@@ -167,7 +174,32 @@ public fun KitMarkdownBlock(
                 )
         }
     }
+    // P12-CHAT-FEEL: a streaming block can change kind as it grows (a line of text that turns out to be a table, a
+    // rule or a picture). Those kinds draw at once, so a reveal begun under the same key is finished here, never left
+    // half way (holding up the blocks after it in its part).
+    if (reveal != null && reveal.streamed && !block.reveals) {
+        SideEffect { reveal.registry.settle(block.key, reveal.group) }
+    }
     if (live) DisableSelection { body() } else body()
+}
+
+/** The kinds drawn through the word-by-word reveal. */
+private val KitMdBlock.reveals: Boolean
+    get() = this is KitMdBlock.Prose || this is KitMdBlock.Heading || this is KitMdBlock.ListItem || this is KitMdBlock.Quote
+
+/**
+ * A block that was drawn under [key] is gone (a growing row re-parsed into fewer blocks): its reveal is finished where it
+ * stands, so it never holds up the blocks after it.
+ */
+public fun KitMdReveal.settle(key: String) {
+    registry.settle(key, group)
+}
+
+/** Finishes [key]'s reveal where it stands (a block of the same key now draws at full length). */
+private fun RevealRegistry.settle(key: String, group: String) {
+    val state = stateFor(key, group, live = false, length = 0)
+    if (state.targetLength != state.shown) state.targetLength = state.shown
+    if (state.runs.isNotEmpty()) state.runs.clear()
 }
 
 @Composable

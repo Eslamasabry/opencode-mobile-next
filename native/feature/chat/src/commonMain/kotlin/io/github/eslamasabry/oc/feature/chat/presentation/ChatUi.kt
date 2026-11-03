@@ -38,6 +38,12 @@ public data class ChatUi(
     val capabilities: ChatCapabilitiesUi,
     /** The Back guard is enabled (07 §3.4): the system's predictive preview is off only while this is true. */
     val guardBack: Boolean,
+    /** P12-CHAT-FEEL: the "Select text" sheet over one message's words; null = closed. */
+    val select: SelectTextUi? = null,
+    /** P12-CHAT-FEEL: words "Edit and resend" puts in the composer once, then acknowledged ([ChatActions.insertDone]). */
+    val insert: ClipUi? = null,
+    /** P12-CHAT-FEEL: the picture viewer over the chat; null = closed. */
+    val picture: PictureUi? = null,
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -94,6 +100,9 @@ public enum class ChatStatusKind {
 
     /** A message action (fork, delete, stop) did not finish. */
     ActionFailed,
+
+    /** P12-CHAT-FEEL: a link in a reply the app's link policy will not open. */
+    LinkRefused,
 }
 
 /** The live line while a turn runs (plan 09 §4.1, trimmed: no step count until S2-DLV's `ConversationActivity`). */
@@ -119,7 +128,7 @@ public data class MessageTarget(val turnId: String, val rowKey: String, val kind
 public enum class TargetKind { Prompt, Reply }
 
 /** One action list per message for every way in (plan 09 §6.6). Order is the menu's order; destructive last. */
-public enum class MessageAction { Copy, SendAgain, Fork, Delete }
+public enum class MessageAction { Copy, Share, SelectText, EditAndResend, SendAgain, Fork, UndoFromHere, Delete }
 
 public data class MessageMenuUi(val target: MessageTarget, val actions: ImmutableList<MessageAction>)
 
@@ -129,7 +138,19 @@ public sealed interface ChatConfirm {
 
     /** The draft could not be saved on Back (07 §3.4): leave without saving, or keep editing. */
     public data object LeaveUnsaved : ChatConfirm
+
+    /** "Undo from here?" (Flutter `revertFromHere`, B-CHAT-120): the prompt and everything after it go. */
+    public data class UndoFrom(val target: MessageTarget) : ChatConfirm
+
+    /** A link from a reply asks first, naming where it goes (R17: policy → opener, never straight to the platform). */
+    public data class OpenLink(val url: String, val host: String) : ChatConfirm
 }
+
+/** A reply's server picture in the viewer. [bytes] null while loading; [failed] when it could not be read. */
+public class PictureUi(public val id: Long, public val name: String, public val bytes: ByteArray?, public val failed: Boolean)
+
+/** One message's words in a sheet where any part of them can be selected (Flutter's selectable message). */
+public data class SelectTextUi(val id: Long, val text: String)
 
 public data class ClipUi(val id: Long, val text: String)
 
@@ -140,7 +161,7 @@ public data class ClipUi(val id: Long, val text: String)
 public data class ChatArrivalUi(val id: Long, val focusComposer: Boolean, val landOnIndex: Int?)
 
 /** The flags the screen reads, never the backend kind (ADR §9.1). */
-public data class ChatCapabilitiesUi(val fork: Boolean = false, val deleteMessage: Boolean = false)
+public data class ChatCapabilitiesUi(val fork: Boolean = false, val deleteMessage: Boolean = false, val revert: Boolean = false)
 
 /** Intents, named after what the person wants (ADR §9.1), never after widgets. */
 public interface ChatActions {
@@ -190,4 +211,28 @@ public interface ChatActions {
 
     /** Only a line whose dismissal changes nothing real (a finished action's failure) can be dismissed. */
     public fun dismissStatus(id: String)
+
+    // ---- P12-CHAT-FEEL (defaults keep other implementers compiling) ----
+
+    /** A link tapped in a reply (or a picture that lives on the web): checked by the app's link policy first. */
+    public fun openLink(url: String) {}
+
+    /** The person said yes to the "Open link?" confirm. */
+    public fun confirmOpenLink() {}
+
+    /** Copy from inside a reply (a code block's Copy): the given words, verbatim. */
+    public fun copyText(text: String) {}
+
+    public fun closeSelection() {}
+
+    /** The composer took the "Edit and resend" words. */
+    public fun insertDone(id: Long) {}
+
+    /** The person confirmed "Undo from here". */
+    public fun confirmUndo() {}
+
+    /** A picture tile that names a file on the server: read it and show it in the viewer. */
+    public fun openPicture(path: String, name: String) {}
+
+    public fun closePicture() {}
 }

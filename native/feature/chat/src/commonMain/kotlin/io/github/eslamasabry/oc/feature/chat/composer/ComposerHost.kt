@@ -21,9 +21,12 @@ public interface ComposerHost {
 @Immutable
 public data class ComposerTarget(val profileId: String, val sessionId: String?)
 
-/** An agent ```choices tap waiting for the composer (state, never a one-shot flow; ADR §9.1). */
+/**
+ * Words waiting for the composer (state, never a one-shot flow; ADR §9.1): a saved prompt, a slash command or an
+ * agent ```choices tap go after the person's words; [replace] (P12-CHAT-FEEL "Edit and resend") takes the field whole.
+ */
 @Immutable
-public data class InsertRequest(val id: Long, val text: String)
+public data class InsertRequest(val id: Long, val text: String, val replace: Boolean = false)
 
 /**
  * What the chat hands the composer. Every getter is read in draw, layout or an effect, so a change never recomposes

@@ -1,6 +1,29 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.feature.chat.presentation.CodeCopy
+import io.github.eslamasabry.oc.feature.chat.presentation.FenceText
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeChunk
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
+import io.github.eslamasabry.oc.ui.kitchat.code.KitStandaloneRedaction
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownBlock
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdReveal
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
+import io.github.eslamasabry.oc.ui.kitchat.markdown.settle
+import io.github.eslamasabry.oc.ui.kitchat.markdown.takesCaret
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -72,6 +95,13 @@ internal class ChatListWords(
     val tryAgain: String,
 )
 
+/**
+ * P12-CHAT-FEEL: what a reply's own parts do — links through the chat's link policy, a code block's Copy, a picture's
+ * tap. Null (the P3 overload's default) keeps the plain stream-only drawing.
+ */
+@Immutable
+internal class ReplyActions(val markdown: KitMarkdownActions, val copyLabel: String, val copy: (String) -> Unit)
+
 /** Keys of the two item kinds the feature adds above the engine rows (plan 09 §7.2). */
 internal object ListKeys {
     const val LIVE: String = "live"
@@ -82,7 +112,11 @@ internal object ListKeys {
     fun pending(localId: Long): String = "pending:$localId"
 }
 
-/** The P3 transcript: the engine's rows only (kept for `:quality`'s P3 stream test). */
+/**
+ * The P3 transcript: the engine's rows only (kept for `:quality`'s P3 stream test). P12-CHAT-FEEL: it draws replies the
+ * way the chat screen does (Markdown, code with Copy), so the frame test measures the shipping path; links and Copy do
+ * nothing here.
+ */
 @Composable
 public fun ChatTranscript(
     state: TranscriptState,
@@ -92,6 +126,9 @@ public fun ChatTranscript(
     motion: KitMotionLevel,
     modifier: Modifier = Modifier,
 ) {
+    val reply = remember { ReplyActions(KitMarkdownActions(onLink = {}), copyLabel = "Copy", copy = {}) }
+    // Its callers (the P3 test, the benchmark proof screen) run without the app graph: a pattern-masking redactor.
+    KitStandaloneRedaction {
     ChatTranscriptList(
         rows = state.rows,
         live = null,
@@ -104,7 +141,9 @@ public fun ChatTranscript(
         onOpenMenu = null,
         onRetrySend = {},
         modifier = modifier,
+        reply = reply,
     )
+    }
 }
 
 /**
@@ -128,8 +167,17 @@ internal fun ChatTranscriptList(
     modifier: Modifier = Modifier,
     facts: TurnFactsUi = TurnFactsUi.Empty,
     onOpenSession: ((String) -> Unit)? = null,
+    reply: ReplyActions? = null,
 ) {
     val folds = rememberTranscriptFolds()
+    val currentRows by rememberUpdatedState(rows)
+    val copyCode: (String) -> Unit =
+        remember(reply) {
+            { key ->
+                val r = currentRows
+                CodeCopy.of(r, r.indexOfFirst { it.key == key })?.let { reply?.copy?.invoke(it) }
+            }
+        }
     val newestKey =
         when {
             live != null -> ListKeys.LIVE
@@ -173,7 +221,7 @@ internal fun ChatTranscriptList(
             }
         }
         items(rows, key = { it.key }, contentType = { it.kind }) { row ->
-            ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession)
+            ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession, reply, copyCode)
         }
     }
 }
@@ -209,9 +257,13 @@ private fun ChatRow(
     facts: TurnFactsUi = TurnFactsUi.Empty,
     folds: TranscriptFolds? = null,
     onOpenSession: ((String) -> Unit)? = null,
+    reply: ReplyActions? = null,
+    copyCode: (String) -> Unit = {},
 ) {
     when (row) {
         is BlockRow ->
+            if (reply != null) RichBlock(row, reveal, motion, reply, copyCode)
+            else
             KitReplyBlock(
                 text = row.text,
                 kind = row.kind.toKit(),
@@ -268,6 +320,96 @@ private fun ChatRow(
             }
             val result = facts.results[row.turnId]
             if (result != null && folds != null) TurnResultLine(row.turnId, result, folds)
+        }
+    }
+}
+
+/** Plan 09 R13 column (as the kit's reply block): 700 dp cap, the row gap only where the block does not continue. */
+private fun Modifier.replyColumn(continued: Boolean, continues: Boolean): Modifier =
+    fillMaxWidth()
+        .widthIn(max = 700.dp)
+        .padding(
+            start = Space.S4.dp,
+            end = Space.S4.dp,
+            top = if (continued) 0.dp else Space.S1.dp,
+            bottom = if (continues) 0.dp else Space.S1.dp,
+        )
+
+/**
+ * P12-CHAT-FEEL: a reply block drawn as Markdown (Flutter `KitMarkdown`): bold, links (through the link policy), inline
+ * code, lists, tables and pictures, revealed word by word while it streams (the same registry as the plain block).
+ * Code: a streaming fence keeps the stream-tuned block (fence lines hidden); a settled one gets Copy and sideways
+ * scroll, coloured when it is one row, seamless across STREAM-FIX chunks otherwise.
+ */
+@Composable
+private fun RichBlock(
+    row: BlockRow,
+    reveal: RevealRegistry,
+    motion: KitMotionLevel,
+    reply: ReplyActions,
+    copyCode: (String) -> Unit,
+) {
+    val column = Modifier.replyColumn(row.continued, row.continues)
+    if (row.kind == RowKind.Code) {
+        val body = remember(row.text) { FenceText.body(row.text) }
+        val streamed = row.origin == Origin.Streamed
+        // A streamed fence keeps the stream-tuned block until its words have all landed and faded: the settled view
+        // takes over only then, so its reveal never stops half way (and never holds up the blocks after it).
+        val revealing =
+            streamed && reveal.stateFor(row.key, row.key.substringBeforeLast(':'), row.live, body.length).active
+        when {
+            row.live || row.open || revealing ->
+                KitReplyBlock(
+                    text = body,
+                    kind = KitBlockKind.Code,
+                    live = row.live,
+                    streamed = streamed,
+                    revealKey = row.key,
+                    revealGroup = row.key.substringBeforeLast(':'),
+                    registry = reveal,
+                    motion = motion,
+                    continued = row.continued,
+                    continues = row.continues,
+                )
+            !row.continued && !row.continues ->
+                Box(column) {
+                    KitCodeBlock(
+                        source = body,
+                        kind = KitCodeKind.Code,
+                        language = CodeLanguage.of(FenceText.info(row.text)),
+                        maxLines = Int.MAX_VALUE,
+                        copyLabel = reply.copyLabel,
+                        onCopy = { copyCode(row.key) },
+                    )
+                }
+            else ->
+                KitCodeChunk(
+                    source = body,
+                    continued = row.continued,
+                    continues = row.continues,
+                    modifier = column,
+                    copyLabel = reply.copyLabel,
+                    onCopy = { copyCode(row.key) },
+                )
+        }
+        return
+    }
+    val blocks = remember(row.key, row.text, row.live) { KitMdSource.blocks(row.key, row.text, row.live) }
+    val streamed = row.origin == Origin.Streamed
+    val md = remember(reveal, motion, streamed, row.key) { KitMdReveal(reveal, row.key.substringBeforeLast(':'), motion, streamed) }
+    // A growing row can re-parse into fewer blocks; the reveal of a block that went away is finished, not orphaned.
+    val drawn = remember(row.key) { IntArray(1) }
+    SideEffect {
+        for (i in blocks.size until drawn[0]) md.settle("${row.key}#$i")
+        drawn[0] = blocks.size
+    }
+    Column(column) {
+        val last = blocks.lastIndex
+        blocks.forEachIndexed { i, block ->
+            androidx.compose.runtime.key(block.key) {
+                val tail = row.live && i == last
+                KitMarkdownBlock(block, reply.markdown, live = tail, caret = tail && block.takesCaret, reveal = md)
+            }
         }
     }
 }

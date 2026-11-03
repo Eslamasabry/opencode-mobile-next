@@ -35,11 +35,12 @@ public class ChatViewModel(
     private val worlds: ChatWorlds,
     private val nav: AppNavigator,
     clock: Clock,
+    outside: ChatOutside,
 ) :
     ViewModel(), ChatActions {
     private val world = worlds.open(route.ref)
     private val presenter =
-        ChatPresenter(world, nav, { block -> viewModelScope.launch { block() } }, focusComposer = route.focusComposer)
+        ChatPresenter(world, nav, { block -> viewModelScope.launch { block() } }, focusComposer = route.focusComposer, outside = outside)
 
     public val requests = world.requests
 
@@ -103,6 +104,22 @@ public class ChatViewModel(
     override fun retrySend(localId: Long): Unit = presenter.retrySend(localId)
 
     override fun dismissStatus(id: String): Unit = presenter.dismissStatus(id)
+
+    override fun openLink(url: String): Unit = presenter.openLink(url)
+
+    override fun confirmOpenLink(): Unit = presenter.confirmOpenLink()
+
+    override fun copyText(text: String): Unit = presenter.copyText(text)
+
+    override fun closeSelection(): Unit = presenter.closeSelection()
+
+    override fun insertDone(id: Long): Unit = presenter.insertDone(id)
+
+    override fun confirmUndo(): Unit = presenter.confirmUndo()
+
+    override fun openPicture(path: String, name: String): Unit = presenter.openPicture(path, name)
+
+    override fun closePicture(): Unit = presenter.closePicture()
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

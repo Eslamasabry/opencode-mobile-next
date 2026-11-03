@@ -182,19 +182,22 @@ public fun BasicComposer(
             chrome.focusDone(focusId)
         }
     }
-    // Saved prompts and slash commands (P12-PROMPTS): each offer lands once, after the draft is
-    // restored; an empty field takes it whole, otherwise it goes on a new line after the words.
+    // One composer insert at a time, after the draft is restored. Saved prompts and slash commands (P12-PROMPTS): an
+    // empty field takes the words whole, otherwise they go on a new line after the words. "Edit and resend"
+    // (P12-CHAT-FEEL, [InsertRequest.replace]): the prompt's words replace the field, focused, ready to change and send.
+    // Reported as the person's own edit so the draft owner keeps it.
     val insert = chrome.pendingInsert()
-    LaunchedEffect(insert?.id, editorReady, state.draft.ready) {
+    LaunchedEffect(insert, editorReady, state.draft.ready) {
         val request = insert ?: return@LaunchedEffect
         if (!editorReady || !state.draft.ready) return@LaunchedEffect
         val current = field.text.toString()
-        val next = if (current.isBlank()) request.text else current.trimEnd() + "\n" + request.text
+        val next = if (request.replace || current.isBlank()) request.text else current.trimEnd() + "\n" + request.text
         field.edit { replace(0, length, next) }
         editor.userEditSerial += 1
         editor.lastReported = next
         repeatRevision = null
         actions.draftChanged(next)
+        if (request.replace) focus.requestFocus()
         chrome.insertDone(request.id)
     }
     val busy = chrome.busy()
