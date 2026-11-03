@@ -116,6 +116,7 @@ class _Linux extends PhoneLinux {
   @override
   Future<BuiltinLinuxRunResult> run(
     String script, {
+    String? input,
     Duration timeout = const Duration(minutes: 2),
   }) async {
     if (!script.contains('oc-linux-scan')) return super.run(script);

@@ -30,6 +30,7 @@ class _FakeLinux extends BuiltinLinux {
   @override
   Future<BuiltinLinuxRunResult> run(
     String script, {
+    String? input,
     Duration timeout = const Duration(minutes: 2),
   }) async => const BuiltinLinuxRunResult(exitCode: 0, output: '2.1.1\n');
 

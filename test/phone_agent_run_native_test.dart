@@ -56,7 +56,7 @@ class BuiltinLinux(private val process: RunProcess) {
     private fun reclaimDeadInstaller(): Boolean = false
     fun start(script: String, log: File?, agentUser: Boolean): Process = process
     fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
-                       agentUser: Boolean): Process {
+                       agentUser: Boolean, stdin: String? = null): Process {
         installerProcess = process
         return start(script, null, agentUser)
     }

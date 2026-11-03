@@ -236,6 +236,7 @@ class _CensusLinux extends BuiltinLinux {
   @override
   Future<BuiltinLinuxRunResult> run(
     String script, {
+    String? input,
     Duration timeout = const Duration(minutes: 2),
   }) async {
     if (script == BuiltinLinux.versionScript(TermuxRuntime.openCode2)) {
