@@ -79,3 +79,4 @@
 :feature:voice	F	(slice brief names the agent)	slice-12
 :engine:integrations-usage	F	build-integrations-b	parity-p12
 :engine:integrations-quota	F	build-integrations-b	parity-p12
+:engine:integrations-catalog	F	build-integrations-b	parity-p12
