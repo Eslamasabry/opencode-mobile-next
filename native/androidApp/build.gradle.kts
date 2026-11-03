@@ -12,6 +12,14 @@ android {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "benchmark-rules.pro")
         }
+        // Migration proof (docs/native/qa/migration-proof-2026-11-03): the release build with :android:migration's
+        // `qa` StepInterrupter (files/native/qa-kill-after, qa-delay-ms, qa-free-bytes) for the J2 kill points.
+        // Emulator/lab only: signed with the build machine's debug key, never delivered.
+        create("qa") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
     }
     // Slice-0 P5 + P12-MIGRATION: the same-package build. `switch` has no applicationIdSuffix, so it is
     // io.github.eslamasabry.opencode_mobile and installs OVER the Flutter app (adb install -r) when signed with the
