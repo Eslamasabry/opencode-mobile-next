@@ -1,0 +1,27 @@
+<resources>
+    <string name="intaConnectorsTitle">Tools and connectors</string>
+    <string name="intaConnectorsSection">MCP servers</string>
+    <string name="intaConnectorsRefresh">Refresh</string>
+    <string name="intaConnectorsLoading">Loading MCP servers…</string>
+    <string name="intaConnectorsEmpty">No MCP servers on this server</string>
+    <string name="intaConnectorsEmptyBody">Add them in the server's configuration on the computer; they then show here.</string>
+    <string name="intaConnectorsUnsupported">This server can't list MCP servers</string>
+    <string name="intaConnectorsUnsupportedBody">Update OpenCode on the computer to see and switch its MCP servers here.</string>
+    <string name="intaConnectorsFailed">Could not refresh MCP data. Try again.</string>
+    <string name="intaConnectorsNoServer">Connect to a server first</string>
+    <string name="intaConnectorsNoServerBody">MCP servers belong to a server. Open Servers to connect one.</string>
+    <string name="intaConnectorsOpenServers">Open servers</string>
+    <string name="intaConnectorsTryAgain">Try again</string>
+    <string name="intaConnectorsHelp">Switches act on this project until OpenCode restarts.</string>
+    <string name="intaStateConnected">Connected</string>
+    <string name="intaStateStarting">Connecting…</string>
+    <string name="intaStateOff">Turned off</string>
+    <string name="intaStateNeedsSignIn">Needs sign-in on the computer</string>
+    <string name="intaStateFailed">Couldn't start</string>
+    <string name="intaStateUnknown">Status unknown</string>
+    <string name="intaStateBusy">Changing…</string>
+    <string name="intaTurnOnFailed">Couldn't turn on %1$s</string>
+    <string name="intaTurnOffFailed">Couldn't turn off %1$s</string>
+    <string name="intaToggleFailedBody">The list shows what the server reports now.</string>
+    <string name="intaDismiss">OK</string>
+</resources>

@@ -1,0 +1,27 @@
+<resources>
+    <string name="intaConnectorsTitle">الأدوات والموصلات</string>
+    <string name="intaConnectorsSection">خوادم MCP</string>
+    <string name="intaConnectorsRefresh">تحديث</string>
+    <string name="intaConnectorsLoading">جارٍ تحميل خوادم MCP…</string>
+    <string name="intaConnectorsEmpty">لا توجد خوادم MCP على هذا الخادم</string>
+    <string name="intaConnectorsEmptyBody">أضفها في إعدادات الخادم على الحاسوب، وستظهر هنا بعدها.</string>
+    <string name="intaConnectorsUnsupported">لا يستطيع هذا الخادم عرض خوادم MCP</string>
+    <string name="intaConnectorsUnsupportedBody">حدّث OpenCode على الحاسوب لترى خوادم MCP وتبدّلها من هنا.</string>
+    <string name="intaConnectorsFailed">تعذّر تحديث بيانات MCP. حاول مرة أخرى.</string>
+    <string name="intaConnectorsNoServer">اتصل بخادم أولًا</string>
+    <string name="intaConnectorsNoServerBody">خوادم MCP تابعة لخادم. افتح الخوادم لتتصل بأحدها.</string>
+    <string name="intaConnectorsOpenServers">فتح الخوادم</string>
+    <string name="intaConnectorsTryAgain">حاول مرة أخرى</string>
+    <string name="intaConnectorsHelp">تعمل المفاتيح على هذا المشروع حتى يُعاد تشغيل OpenCode.</string>
+    <string name="intaStateConnected">متصل</string>
+    <string name="intaStateStarting">جارٍ الاتصال…</string>
+    <string name="intaStateOff">متوقف</string>
+    <string name="intaStateNeedsSignIn">يحتاج إلى تسجيل الدخول على الحاسوب</string>
+    <string name="intaStateFailed">تعذّر التشغيل</string>
+    <string name="intaStateUnknown">الحالة غير معروفة</string>
+    <string name="intaStateBusy">جارٍ التغيير…</string>
+    <string name="intaTurnOnFailed">تعذّر تشغيل %1$s</string>
+    <string name="intaTurnOffFailed">تعذّر إيقاف %1$s</string>
+    <string name="intaToggleFailedBody">تعرض القائمة ما يُبلغ عنه الخادم الآن.</string>
+    <string name="intaDismiss">حسنًا</string>
+</resources>

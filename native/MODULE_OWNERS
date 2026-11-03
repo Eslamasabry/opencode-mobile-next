@@ -77,3 +77,10 @@
 :feature:projects	F	P12-PROJECTS	slice-5
 :feature:review	F	(slice brief names the agent)	slice-4
 :feature:voice	F	(slice brief names the agent)	slice-12
+:engine:byohost	F	build-integrations-a	parity-p12
+:engine:usagereaders	F	build-integrations-a	parity-p12
+:engine:plans	F	build-integrations-a	parity-p12
+:engine:connectors	F	build-integrations-a	parity-p12
+:engine:aisetup	F	build-integrations-a	parity-p12
+:engine:providerlogos	F	build-integrations-a	parity-p12
+:feature:integrations	F	build-integrations-a	parity-p12
