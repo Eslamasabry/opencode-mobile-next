@@ -35,8 +35,8 @@ import kotlinx.serialization.json.*
 
 /** Every mutation makes exactly one request. An uncertain prompt receipt is never replayed. */
 internal class Oc2Gateway(
-    private val net: NetClient,
-    private val origin: ServerOrigin,
+    internal val net: NetClient,
+    internal val origin: ServerOrigin,
     private val credentials: ConnectionCredentials,
     private val clock: Clock,
     private val redactor: Redactor,
@@ -44,7 +44,7 @@ internal class Oc2Gateway(
     random: Random = Random.Default,
     initialDialect: Oc2Dialect? = null,
 ) : ServerGateway, ServerOperationsGateway, CorrelatedPromptGateway, SessionSelectionGateway, StagedRevertGateway,
-    LocatedFileGateway, LocatedVcsGateway {
+    LocatedFileGateway, LocatedVcsGateway, WebSearchGateway {
     private val ids = Oc2ClientIds(clock, random)
     private val dialect = MutableStateFlow(initialDialect)
     private val negotiation = Mutex()
@@ -63,7 +63,7 @@ internal class Oc2Gateway(
         credentials.secret?.let(redactor::registerSecret)
     }
 
-    private val auth =
+    internal val auth =
         credentials.secret?.let {
             val token =
                 Base64.encode("${credentials.username ?: "opencode"}:$it".encodeToByteArray())
@@ -169,7 +169,9 @@ internal class Oc2Gateway(
         }
         val settled = dialect.value ?: return Failure.UnreadableReply().failed()
         val route = settled.route(path, verb, body, query)
-        return rawJson(route.path, route.method, route.body, route.query)
+        // dialect.dart Api2RemovedInStable: fail clearly, nothing is sent.
+        route.removed?.let { return Failure.Unavailable(FeatureId(it)).failed() }
+        return rawJson(route.path, route.method, route.body, route.query).map { settled.response(verb, path, it) }
     }
 
     private suspend fun rawJson(
@@ -253,27 +255,31 @@ internal class Oc2Gateway(
             fromInfo = true
             response = rawJson("/info")
         }
+        // B-PROTO-021 (Flutter unexpectedHealthShapeTag): an answer that is not an OpenCode 2 health shape (no
+        // version, an OpenCode 1 version, an HTML page) is the re-detection signal, not a plain unreadable reply.
+        val mismatch = Failure.Incompatible(IncompatibleKind.ProtocolMismatch)
         when (val result = response) {
-            is Outcome.Failed -> result
+            is Outcome.Failed ->
+                if (result.failure is Failure.UnreadableReply) mismatch.failed() else result
             is Outcome.Ok -> {
                 val obj =
                     data(result.value) as? JsonObject
-                        ?: return@withLock Failure.UnreadableReply().failed()
+                        ?: return@withLock mismatch.failed()
                 val version = obj.str("version")
                 val detected =
                     Oc2Dialect.ofVersion(version)
-                        ?: return@withLock Failure.UnreadableReply().failed()
+                        ?: return@withLock mismatch.failed()
                 if (fromInfo && detected != Oc2Dialect.Stable)
-                    return@withLock Failure.UnreadableReply().failed()
+                    return@withLock mismatch.failed()
                 val healthy =
                     if (fromInfo) true
                     else
                         (obj["healthy"] as? JsonPrimitive)?.booleanOrNull
-                            ?: return@withLock Failure.UnreadableReply().failed()
+                            ?: return@withLock mismatch.failed()
                 // A changed generation is not silently installed under an already pinned
                 // connection.
                 if (known != null && known != detected)
-                    return@withLock Failure.UnreadableReply().failed()
+                    return@withLock mismatch.failed()
                 if (healthy) dialect.value = detected
                 Health(healthy, version).ok()
             }
@@ -930,6 +936,7 @@ internal class Oc2Gateway(
         }
         val settled = dialect.value ?: return Failure.UnreadableReply().failed()
         val route = settled.route(path, HttpMethod.Get, null, locationQuery(at))
+        route.removed?.let { return Failure.Unavailable(FeatureId(it)).failed() }
         val response = net.exchange({ request(route.path, route.method, route.query) }) { reply -> reply.bodyAsBytes() }
         if (response is Outcome.Failed) {
             val failure = response.failure
@@ -939,6 +946,45 @@ internal class Oc2Gateway(
         }
         return response
     }
+
+    // ---- Stable-line features and operations (new files Oc2Operations / Oc2WebSearch / Oc2HistoryMigration /
+    // Oc2Terminal; Flutter lib/api2/gateway_operations). Each delegates; the request shapes live there.
+
+    override suspend fun initializeGitRepository(): Outcome<Unit> = gitInit()
+
+    override suspend fun createWorktree(projectDirectory: String, name: String?): Outcome<WorktreeInfo> =
+        worktreeCreate(projectDirectory, name)
+
+    override suspend fun terminalShellSettings(): Outcome<TerminalShellSettings> = shellSettings()
+
+    override suspend fun selectTerminalShell(value: String): Outcome<Unit> = selectShell(value)
+
+    override suspend fun startManagedShell(command: String, directory: String, ownerToken: String): Outcome<ManagedShell> =
+        startShell(command, directory, ownerToken)
+
+    override suspend fun runningShells(): Outcome<ManagedShellList> = shells()
+
+    override suspend fun managedShell(id: String): Outcome<ManagedShell?> = managedShellRead(id)
+
+    override suspend fun managedShellOutput(id: String, cursor: Long, limit: Int): Outcome<ManagedShellOutput> =
+        shellOutput(id, cursor, limit)
+
+    override suspend fun stopManagedShell(id: String): Outcome<Unit> = stopShell(id)
+
+    override suspend fun setManagedShellTimeout(id: String, timeout: kotlin.time.Duration?): Outcome<ManagedShell> =
+        shellTimeout(id, timeout)
+
+    override suspend fun managedShellServerIdentity(): Outcome<String?> = shellServerIdentity()
+
+    override suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome<Unit> = mcpAdd(draft, scope)
+
+    override suspend fun webSearchProviders(): Outcome<ImmutableList<WebSearchProvider>> = searchProviders()
+
+    override suspend fun searchWeb(query: String, providerId: String): Outcome<WebSearchResponse> =
+        search(query, providerId)
+
+    /** B-PROTO-063: `GET /experimental/migration/v1`; null when the server has nothing to report. */
+    suspend fun historyMigrationStatus(): Outcome<HistoryMigrationStatus?> = historyMigrationStatusRead()
 
     override suspend fun close() {
         try {
@@ -1031,12 +1077,12 @@ internal class Oc2Gateway(
                 mcpChatOAuth = false,
                 mcpChatToolRefresh = false,
                 mcpConfigWrites = false,
-                mcpRuntimeAdds = false,
+                mcpRuntimeAdds = true,
                 mcpRuntimeRemovals = false,
                 integrationCredentials = false,
                 integrationCommandAuth = false,
                 pluginInventory = false,
-                webSearch = false,
+                webSearch = true,
                 sessionShare = false,
                 sessionArchive = false,
                 sessionDelete = false,
@@ -1048,16 +1094,16 @@ internal class Oc2Gateway(
                 formatterStatus = false,
                 toolInventory = false,
                 experimentalCapabilities = false,
-                shellSettings = false,
-                developmentServices = false,
+                shellSettings = true,
+                developmentServices = true,
                 remoteUpgrade = false,
                 clientDiagnostics = false,
-                gitInit = false,
+                gitInit = true,
                 providerRuntimeRefresh = false,
                 configuredProviderFallback = false,
-                globalEventStream = false,
+                globalEventStream = true,
                 worktreeReset = false,
-                worktreeCreate = false,
+                worktreeCreate = true,
                 worktreeBrowsing = false,
                 legacyQuestionRequests = false,
                 forms = false,
