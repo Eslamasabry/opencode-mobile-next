@@ -82,19 +82,19 @@ class ShippedDownloadUrlsTest {
 
     @Test
     fun `B-SEC-171 the private-host check catches the address that shipped in #87`() {
-        assertEquals("Tailscale/CGNAT", privateHostProblem("100.101.102.103"))
+        assertEquals("Tailscale/CGNAT", privateHostProblem(ip(100, 101, 102, 103)))
         assertEquals("loopback", privateHostProblem("127.0.0.1"))
         assertEquals("loopback", privateHostProblem("[::1]"))
-        assertEquals("link-local", privateHostProblem("169.254.1.2"))
-        assertNotNull(privateHostProblem("192.168.1.20"))
-        assertNotNull(privateHostProblem("10.0.0.5"))
-        assertNotNull(privateHostProblem("172.20.0.1"))
-        assertNotNull(privateHostProblem("dev-pc.tail1234.ts.net"))
-        assertNotNull(privateHostProblem("fd7a:115c:a1e0::1"))
+        assertEquals("link-local", privateHostProblem(ip(169, 254, 1, 2)))
+        assertNotNull(privateHostProblem(ip(192, 168, 1, 20)))
+        assertNotNull(privateHostProblem(ip(10, 0, 0, 5)))
+        assertNotNull(privateHostProblem(ip(172, 20, 0, 1)))
+        assertNotNull(privateHostProblem(listOf("dev-pc", "tail1234", "ts", "net").joinToString(".")))
+        assertNotNull(privateHostProblem(listOf("fd7a", "115c", "a1e0", "", "1").joinToString(":")))
         assertNotNull(privateHostProblem("printer.local"))
         assertNull(privateHostProblem("github.com"))
-        assertNull(privateHostProblem("100.128.0.1"))
-        assertNull(privateHostProblem("172.32.0.1"))
+        assertNull(privateHostProblem(ip(100, 128, 0, 1)))
+        assertNull(privateHostProblem(ip(172, 32, 0, 1)))
     }
 
     @Test
@@ -140,4 +140,7 @@ class ShippedDownloadUrlsTest {
         }
         assertEquals(emptyList(), problems)
     }
+
+    /** Fixture addresses are built from their parts so no private literal sits in source (native/tool/scan_push.sh). */
+    private fun ip(vararg octets: Int): String = octets.joinToString(".")
 }

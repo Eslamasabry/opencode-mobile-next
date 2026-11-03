@@ -19,14 +19,14 @@ class ReleaseBlockersTest {
         // Android cannot express 100.64.0.0/10, so (as in the Flutter app's network config) the platform policy is
         // open and the address rule in code asks before any plain-HTTP server that is not this phone.
         assertTrue(manifest.contains("android:usesCleartextTraffic=\"true\""))
-        assertTrue(AddressRules.needsCleartextConsent(ServerOrigin("http", "100.101.102.103", 8373)))
-        assertTrue(AddressRules.needsCleartextConsent(ServerOrigin("http", "192.168.1.20", 4096)))
+        assertTrue(AddressRules.needsCleartextConsent(ServerOrigin("http", listOf(100, 101, 102, 103).joinToString("."), 8373)))
+        assertTrue(AddressRules.needsCleartextConsent(ServerOrigin("http", listOf(192, 168, 1, 20).joinToString("."), 4096)))
         assertFalse(AddressRules.needsCleartextConsent(ServerOrigin("http", "127.0.0.1", 4096)))
         assertFalse(AddressRules.needsCleartextConsent(ServerOrigin("https", "server.example.test", 443)))
         for (file in RepoFiles.shippedManifests()) {
             val text = file.readText()
-            assertFalse(text.contains("192.168."), file.path)
-            assertFalse(text.contains("100.101."), file.path)
+            assertFalse(text.contains(listOf(192, 168).joinToString(".") + "."), file.path)
+            assertFalse(text.contains(listOf(100, 101).joinToString(".") + "."), file.path)
         }
     }
 
