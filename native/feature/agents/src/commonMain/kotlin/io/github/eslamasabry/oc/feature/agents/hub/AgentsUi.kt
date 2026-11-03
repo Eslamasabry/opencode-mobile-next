@@ -38,4 +38,7 @@ public interface AgentsActions {
     public fun readAgents(id: ProfileId)
 
     public fun newConversation(id: ProfileId)
+
+    /** BUILD-PROTOCOLS: opens the computer's page (update its agents, import Claude Code conversations). */
+    public fun openComputer(id: ProfileId) {}
 }

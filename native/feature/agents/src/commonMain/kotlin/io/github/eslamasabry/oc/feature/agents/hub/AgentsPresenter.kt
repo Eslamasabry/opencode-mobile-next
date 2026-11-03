@@ -25,6 +25,7 @@ public class AgentsPresenter(
     phone: PhoneAgents,
     private val onBack: () -> Unit,
     private val openChat: (ConversationRef) -> Unit,
+    private val openComputerPage: (ProfileId) -> Unit = {},
 ) : AgentsActions {
     private val local = MutableStateFlow(AgentsUi())
 
@@ -91,6 +92,8 @@ public class AgentsPresenter(
             is Outcome.Failed -> failed(AgentsIssue.StartFailed, result.failure)
         }
     }
+
+    override fun openComputer(id: ProfileId): Unit = openComputerPage(id)
 
     private fun operation(block: suspend () -> Unit) {
         if (local.value.busy) return

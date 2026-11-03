@@ -9,6 +9,7 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.ComputerRoute
 import kotlinx.coroutines.flow.StateFlow
 
 /** `AgentsRoute.Home`. All logic is in [AgentsPresenter]; this only gives it a lifecycle scope and navigation. */
@@ -21,7 +22,14 @@ public class AgentsViewModel(
     nav: AppNavigator,
 ) : ViewModel(), AgentsActions {
     private val presenter =
-        AgentsPresenter(viewModelScope, computers, phone, onBack = nav::back, openChat = { nav.openChat(it, focusComposer = true) })
+        AgentsPresenter(
+            viewModelScope,
+            computers,
+            phone,
+            onBack = nav::back,
+            openChat = { nav.openChat(it, focusComposer = true) },
+            openComputerPage = { nav.open(ComputerRoute(it)) },
+        )
 
     public val state: StateFlow<AgentsUi> = presenter.state
 
@@ -41,4 +49,6 @@ public class AgentsViewModel(
     override fun readAgents(id: ProfileId): Unit = presenter.readAgents(id)
 
     override fun newConversation(id: ProfileId): Unit = presenter.newConversation(id)
+
+    override fun openComputer(id: ProfileId): Unit = presenter.openComputer(id)
 }

@@ -88,6 +88,8 @@ dependencies {
             ":engine:migration",
             ":feature:gate",
             ":protocol:paseo",
+            ":protocol:codex", // BUILD-PROTOCOLS: Codex app-server backend
+            ":feature:computer", // BUILD-PROTOCOLS: Settings › Agents › a computer (update, import)
             ":feature:agents",
             ":engine:runtime",
             ":feature:phone",

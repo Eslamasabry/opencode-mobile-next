@@ -77,3 +77,5 @@
 :feature:projects	F	P12-PROJECTS	slice-5
 :feature:review	F	(slice brief names the agent)	slice-4
 :feature:voice	F	(slice brief names the agent)	slice-12
+:protocol:codex	F	build-protocols	parity-p12
+:feature:computer	F	build-protocols	parity-p12
