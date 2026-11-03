@@ -1,0 +1,3 @@
+# Vendored binaries are fetched by tools/vendor/fetch.sh (hash-pinned in SHA256SUMS), never committed.
+*.aar
+*.part

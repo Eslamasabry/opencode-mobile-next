@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import io.github.eslamasabry.opencode_mobile.LinuxBuildConfig as BuildConfig
 import android.app.Activity
 import android.app.Instrumentation
 import android.os.Bundle
@@ -215,7 +216,7 @@ internal class BuiltinRestoreAcceptance(
             val thread = type.getDeclaredMethod("currentActivityThread").invoke(null)
             val records = type.getDeclaredField("mActivities").apply { isAccessible = true }.get(thread) as Map<*, *>
             result = records.values.mapNotNull { record -> record?.javaClass?.getDeclaredField("activity")
-                ?.apply { isAccessible = true }?.get(record) as? MainActivity }.filter { !it.isDestroyed }
+                ?.apply { isAccessible = true }?.get(record) as? Activity }.filter { it.javaClass.name == AppComponents.MAIN_ACTIVITY && !it.isDestroyed }
         }
         return result
     }

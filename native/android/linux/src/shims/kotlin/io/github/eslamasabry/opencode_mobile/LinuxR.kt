@@ -1,4 +1,4 @@
-// S1-LINUX shim (native-authored, not a twin). TODO(S3-RTSPLIT): delete when the copies import the module R.
+// S1-LINUX shim (native-authored, not a twin). P12-FIX-LINUX-VOICE: renamed from R so it never clashes with the app R; the copies import it `as R`.
 @file:Suppress("ClassName", "ObjectPropertyName")
 
 package io.github.eslamasabry.opencode_mobile
@@ -8,7 +8,7 @@ package io.github.eslamasabry.opencode_mobile
  * `io.github.eslamasabry.oc.android.linux.R` (its namespace), so this object forwards each name the copies read to that class. Resource names and
  * text are the Flutter app's, copied verbatim into src/main/res.
  */
-internal object R {
+internal object LinuxR {
     object string {
         val native_live_channel: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_live_channel
         val native_live_description: Int get() = io.github.eslamasabry.oc.android.linux.R.string.native_live_description

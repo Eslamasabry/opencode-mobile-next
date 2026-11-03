@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import io.github.eslamasabry.opencode_mobile.LinuxR as R
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -18,7 +19,7 @@ internal object NativeIdleReturnNotificationHost {
     private fun post(context: Context): Boolean {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (!manager.areNotificationsEnabled() || !channelOpen(manager, context)) return false
-        val intent = Intent(context, MainActivity::class.java).apply {
+        val intent = AppComponents.mainActivity(context).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val open = PendingIntent.getActivity(context, ID, intent,

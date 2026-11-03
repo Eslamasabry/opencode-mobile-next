@@ -1,0 +1,27 @@
+Verdict: FAIL — 1 BLOCKER, 7 MAJOR, 0 MINOR.
+
+1. **BLOCKER — Migration can send a private prompt to a different server.** [ScheduleEngine.kt:207](/home/eslam/Storage2/wt/codex-review-p12/native/engine/schedules/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/schedules/ScheduleEngine.kt:207)  
+   Every legacy SHA-256 fingerprint is replaced with the current profile fingerprint without checking its original identity. Create a schedule for server A, change that profile to server B in Flutter, then upgrade: migration authorizes the old prompt against B. Flutter refuses this mismatch. **Rows: B-AGENT-218, B-MIGR-013.**
+
+2. **MAJOR — Scheduled Paseo prompts can run in the wrong project.** [SchedulesWiring.kt:108](/home/eslam/Storage2/wt/codex-review-p12/native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SchedulesWiring.kt:108)  
+   `open()` ignores `projectPath` and `workspace`, returning the profile’s shared gateway. If that gateway is viewing project B while a schedule targets A, Paseo’s `createSession()` ignores `NewSession.location` and creates in B. The runner never validates a newly created session’s directory before sending. Flutter opens a private connection pinned to A. A cold, unpinned Paseo gateway instead fails the scheduled run. **Rows: B-AGENT-216, B-AGENT-218.**
+
+3. **MAJOR — “Run now” can resend after process death.** [ScheduleEngine.kt:259](/home/eslam/Storage2/wt/codex-review-p12/native/engine/schedules/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/schedules/ScheduleEngine.kt:259)  
+   Manual execution derives a fresh occurrence ID from the current time and takes no durable claim. Kill the process after the server accepts the prompt but before the worker completes. WorkManager restarts the same request; `runManual()` creates another occurrence and sends again. `KEEP` prevents concurrent enqueueing, not replay of that worker. **Row: B-AGENT-215.**
+
+4. **MAJOR — A completion crash can stop subsequent scheduled runs.** [ScheduleEngine.kt:236](/home/eslam/Storage2/wt/codex-review-p12/native/engine/schedules/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/schedules/ScheduleEngine.kt:236)  
+   After advancing the stored schedule, `runOccurrence()` settles its claim before rearming. Kill the process between settlement and `sync()`: the next occurrence exists only in storage. On restart, the old worker sees `Claim.Duplicate`, returns immediately, and reports success without rearming. Subsequent runs remain absent until the UI restores them. Similarly, an advancement write failure is caught and followed by settlement, permanently fencing the still-current occurrence. **Rows: B-STATE-090, B-AGENT-215.**
+
+5. **MAJOR — Concurrent synchronization can cancel the latest schedule.** [ScheduleEngine.kt:188](/home/eslam/Storage2/wt/codex-review-p12/native/engine/schedules/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/schedules/ScheduleEngine.kt:188)  
+   `load()`, saves and background completion can execute `sync()` concurrently; `runLane` covers only workers. An older sync can read revision 1, suspend, then overwrite the index and alarms after an edit has successfully armed revision 2. `replace()` cancels revision 2’s work. If revision 1 was due later, the newly selected earlier time passes without execution. CAS protects individual writes, not this operation’s ordering. **Rows: B-STATE-089, B-STATE-096.**
+
+6. **MAJOR — Flutter schedules stop across an unopened install-over update.** [SchedulesWiring.kt:190](/home/eslam/Storage2/wt/codex-review-p12/native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SchedulesWiring.kt:190)  
+   Persisted Flutter work names `io.github.eslamasabry.opencode_mobile.ScheduledPromptWorker`; only the new `.graph.ScheduledPromptWorker` exists, with no compatibility factory. Rearming is attached to the UI’s `EntryInstaller`, and there is no schedule update receiver. Update without opening the app: existing work cannot instantiate its worker, and replacement work is never scheduled. **Row: B-MIGR-013.**
+
+7. **MAJOR — Unsaved editor input is lost on rotation or leaving the editor.** [ScheduleEditScreen.kt:57](/home/eslam/Storage2/wt/codex-review-p12/native/feature/schedules/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/schedules/ui/ScheduleEditScreen.kt:57)  
+   All edits live in an ordinary `remember` holder. Typing does not update the ViewModel or persist a draft. Rotate the activity, or close and reopen the editor: the prompt and other unsaved changes revert to their seed values. Flutter explicitly persists this editor’s prompt through `KitDraft`, including across dismissal and restart. **Row: B-STATE-024.**
+
+8. **MAJOR — WorkManager-only timing loses skip-missed runs during Doze.** [ScheduleWork.kt:104](/home/eslam/Storage2/wt/codex-review-p12/native/android/schedules/src/main/kotlin/io/github/eslamasabry/oc/android/schedules/ScheduleWork.kt:104)  
+   Timed runs use only an ordinary delayed WorkManager request; the AlarmManager path required by binding plan/01 is absent. With exact-alarm permission available, Flutter can wake for the occurrence, while native work remains deferred during Doze. Once delayed beyond 15 minutes, a skip-missed schedule advances without sending. **Rows: B-STATE-089, B-STATE-094.**
+
+Read-only inspection; no files changed or builds/tests run.

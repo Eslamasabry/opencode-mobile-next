@@ -1,3 +1,7 @@
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.util.zip.ZipFile
+
 plugins { id("oc.android.application") }
 
 android {
@@ -25,6 +29,17 @@ android {
     // io.github.eslamasabry.opencode_mobile and installs OVER the Flutter app (adb install -r) when signed with the
     // same key; on first launch MigrationWiring runs the day-1 migration behind the update gate. See
     // docs/native/units/P12-MIGRATION.md "Building the same-package APK" for the signing step.
+    // P12-FIX-LINUX-VOICE, as the Flutter app (android/app/build.gradle.kts): proot, its loader and the phone engine are
+    // run as programs from the native library folder, so the libraries must be extracted real files (legacy packaging).
+    // The phone engine's hashes are checked at run time, so the strip step must leave libaiteam_* untouched.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+            keepDebugSymbols += "**/libaiteam_*.so"
+            // The Kotlin API loads only libsherpa-onnx-jni.so + libonnxruntime.so (plan 10 §2.3).
+            excludes += listOf("**/libsherpa-onnx-c-api.so", "**/libsherpa-onnx-cxx-api.so")
+        }
+    }
     productFlavors {
         create("switch") {
             dimension = "channel"
@@ -101,6 +116,7 @@ dependencies {
             ":engine:voice",
             ":android:voice",
             ":feature:voice",
+            ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its native libraries)
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)
@@ -121,4 +137,64 @@ dependencies {
     listOf(":feature:chat", ":ui:kit-chat").forEach { "benchmarkImplementation"(project(it)) }
     "benchmarkImplementation"(libs.compose.foundation)
     "benchmarkImplementation"(libs.kotlinx.serialization.json)
+}
+
+// P12-FIX-LINUX-VOICE ship gate: every preview and switch APK must carry the built-in Linux and the offline speech
+// engine, for both 64-bit ABIs, as extracted, 16 KB-aligned ELF files. A missing library (a dropped module, a lost
+// jniLibs folder, no tools/vendor/fetch.sh) fails `assemble` instead of shipping an app that says "not on this phone".
+abstract class VerifyNativeLibraries : DefaultTask() {
+    @get:InputFiles abstract val apkDir: DirectoryProperty
+
+    @TaskAction
+    fun verify() {
+        val required =
+            listOf(
+                "libproot.so", "libproot-loader.so", "libtalloc.so", "libandroid-shmem.so",
+                "libaiteam_engine.so", "libaiteam_sandbox.so", "libaiteam_boundary_probe.so",
+                "libsherpa-onnx-jni.so", "libonnxruntime.so",
+            )
+        val apks = apkDir.get().asFile.walkTopDown().filter { it.extension == "apk" }.toList()
+        check(apks.isNotEmpty()) { "No APK to check in ${apkDir.get().asFile}" }
+        val problems = mutableListOf<String>()
+        for (apk in apks) {
+            ZipFile(apk).use { zip ->
+                if (zip.getEntry("assets/aiteam-engine-manifest.json") == null) problems += "${apk.name}: assets/aiteam-engine-manifest.json missing"
+                for (abi in listOf("arm64-v8a", "x86_64")) for (name in required) {
+                    val entry = zip.getEntry("lib/$abi/$name")
+                    if (entry == null) {
+                        problems += "${apk.name}: lib/$abi/$name missing"
+                        continue
+                    }
+                    val bytes = zip.getInputStream(entry).use { it.readBytes() }
+                    val align = minLoadAlign(bytes)
+                    if (align == null || align < 0x4000 || align % 0x4000 != 0L) problems += "${apk.name}: lib/$abi/$name LOAD align ${align?.let { "0x" + it.toString(16) }} (needs 16 KB)"
+                }
+            }
+        }
+        check(problems.isEmpty()) { "Native libraries missing or misaligned:\n" + problems.joinToString("\n") }
+    }
+
+    /** The smallest p_align of the PT_LOAD segments of a 64-bit little-endian ELF, or null when it is not one. */
+    private fun minLoadAlign(b: ByteArray): Long? {
+        if (b.size < 64 || b[0] != 0x7f.toByte() || b[1] != 'E'.code.toByte() || b[4] != 2.toByte() || b[5] != 1.toByte()) return null
+        val buf = ByteBuffer.wrap(b).order(ByteOrder.LITTLE_ENDIAN)
+        val phoff = buf.getLong(0x20).toInt()
+        val phentsize = buf.getShort(0x36).toInt() and 0xffff
+        val phnum = buf.getShort(0x38).toInt() and 0xffff
+        return (0 until phnum).mapNotNull { i ->
+            val at = phoff + i * phentsize
+            if (at + 56 > b.size) null else if (buf.getInt(at) == 1) buf.getLong(at + 48) else null
+        }.minOrNull()
+    }
+}
+
+androidComponents.onVariants { variant ->
+    if (variant.flavorName !in setOf("preview", "switch")) return@onVariants
+    val name = variant.name.replaceFirstChar { it.uppercaseChar() }
+    val verify = tasks.register<VerifyNativeLibraries>("verify${name}NativeLibraries") {
+        group = "verification"
+        description = "Fails when the APK lacks the built-in Linux or sherpa-onnx native libraries (P12-FIX-LINUX-VOICE)."
+        apkDir.set(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK))
+    }
+    tasks.matching { it.name == "assemble$name" }.configureEach { finalizedBy(verify) }
 }

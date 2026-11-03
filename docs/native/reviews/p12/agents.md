@@ -1,0 +1,21 @@
+Verdict: FAIL — 1 BLOCKER, 4 MAJOR, 1 MINOR.
+
+1. **BLOCKER — Pairing can send the daemon password to a public attacker host.** [PaseoEndpoint.kt:114](/home/eslam/Storage2/wt/codex-review-p12/native/protocol/paseo/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/paseo/PaseoEndpoint.kt:114)  
+   Enter `wss://attacker.example\.tail1234.ts.net` and a password, then check the connection. The custom parser accepts the entire authority as a host ending in `.ts.net`. OkHttp treats `\` as an authority terminator, connecting to `attacker.example`; [AgentsWiring.kt:89](/home/eslam/Storage2/wt/codex-review-p12/native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AgentsWiring.kt:89) attaches both password-bearing headers. The password leaks before any daemon handshake. **Rows: B-SEC-113, B-PROTO-070.**
+
+2. **MAJOR — Production never starts the Paseo gateway lifecycle, preventing chat sends.** [PaseoGatewayFactory.kt:96](/home/eslam/Storage2/wt/codex-review-p12/native/protocol/paseo/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/paseo/gateway/PaseoGatewayFactory.kt:96)  
+   Add a reachable computer and start a conversation. Listing requests can succeed, but no production caller invokes `startListening()`. Gateway event status therefore remains `Connecting`. `GatewaySendLink.connected` stays false, and `PromptDelivery` rejects sending as offline because Paseo disables the offline queue. Socket loss also receives no automatic recovery. **Rows: B-AGENT-163, B-AGENT-164.**
+
+3. **MAJOR — An uncertain first send permanently strands its draft.** [PaseoGateway.kt:629](/home/eslam/Storage2/wt/codex-review-p12/native/protocol/paseo/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/paseo/gateway/PaseoGateway.kt:629)  
+   Lose the create response or exceed its timeout. The draft enters `uncertain`, and every subsequent send immediately refuses. Reloading cannot settle it: `readMessages()` returns empty immediately for drafts at line 487. Flutter reconciles using the first message’s ID, adopting the created agent or allowing another send when nothing started; native implements neither path. **Row: B-AGENT-188.**
+
+4. **MAJOR — Sending bypasses the explicit ACP resume safeguard.** [PaseoGateway.kt:645](/home/eslam/Storage2/wt/codex-review-p12/native/protocol/paseo/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/paseo/gateway/PaseoGateway.kt:645)  
+   Reopen an unloaded ACP conversation with unverified restoration or a missing persistence handle, then send. Native proceeds directly to selection changes and `send_agent_message_request`. Its `hostAgentContinuation()` check is never consulted. Flutter refuses this send and requires an acknowledged new conversation with a different ID, preventing silent continuation with lost context. **Row: B-AGENT-144.**
+
+5. **MAJOR — Phone-agent management has no production wiring.** [AgentsWiring.kt:282](/home/eslam/Storage2/wt/codex-review-p12/native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AgentsWiring.kt:282)  
+   Opening Agents always receives `NoPhoneAgents` with an empty, unavailable state. No installed-agent inventory or account probe is consulted, and `AgentsEntries` installs only Home, leaving the implemented sign-in screen unreachable. Flutter’s built-in-server journey exposes agent readiness and sign-in actions. This is an acknowledged implementation gap, but remains a concrete parity failure. **Rows: B-AGENT-111, B-AGENT-027.**
+
+6. **MINOR — Saved conversation titles are never restored in production.** [PaseoGateway.kt:186](/home/eslam/Storage2/wt/codex-review-p12/native/protocol/paseo/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/paseo/gateway/PaseoGateway.kt:186)  
+   With a saved `oc.conversationTitles.<profileId>` entry and an untitled daemon record, native shows the fallback title. `savedTitle` remains null in production; only tests assign it, and `ConversationTitleMemory` has no production consumer. Flutter restores the saved title. **Row: B-AGENT-181.**
+
+Static review only; no files changed and no tests run.

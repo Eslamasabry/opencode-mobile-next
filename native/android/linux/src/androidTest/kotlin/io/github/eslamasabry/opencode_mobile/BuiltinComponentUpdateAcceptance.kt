@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import io.github.eslamasabry.opencode_mobile.LinuxBuildConfig as BuildConfig
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.Instrumentation

@@ -22,15 +22,10 @@ import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
 import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
-import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
-import io.github.eslamasabry.oc.feature.linux.host.AbsentLinuxHost
-import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
-import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxJobKind
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxManager
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxRetryWait
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxJobNotices
-import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifecycle
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxResetFlow
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxResetMarker
 import io.github.eslamasabry.oc.feature.linux.presentation.PortPreviewOpener
@@ -44,8 +39,6 @@ import io.github.eslamasabry.oc.feature.phone.presentation.KeepAliveSettings
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneNavigator
 import io.github.eslamasabry.oc.feature.phone.presentation.PhonePage
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneProcessSource
-import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
-import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessReading
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.LinuxRoute
@@ -58,13 +51,12 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeUpdate
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobRestoring
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlin.time.Instant
 import org.jetbrains.compose.resources.getString
 
 /*
- * P12-LINUX: the Android bindings of :feature:linux and :feature:phone.
+ * P12-LINUX: the Android bindings of :feature:linux and :feature:phone. (P12-FIX-LINUX-VOICE: the built-in Linux
+ * itself is now real and bound in LinuxRuntimeWiring; the history below describes the state before that.)
  *
  * The built-in Linux itself (`:android:linux`, BuiltinLinux) cannot join this APK yet: its S1 shims declare
  * io.github.eslamasabry.opencode_mobile.MainActivity / R / BuildConfig, the same FQCNs as this app (S1-LINUX report P1,
@@ -80,41 +72,8 @@ object LinuxWiring {
 
     private fun prefs(app: Application) = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    // ---- The built-in Linux (swap point: an adapter over BuiltinLinux once :android:linux is on this classpath)
-
-    @Provides @SingleIn(AppScope::class) fun linuxHost(): LinuxHost = AbsentLinuxHost(LinuxPresence.NotOnThisBuild)
-
-    @Provides
-    @SingleIn(AppScope::class)
-    fun linuxLifecycle(): LinuxLifecycle =
-        object : LinuxLifecycle {
-            override suspend fun installed(): Boolean? = false
-
-            override suspend fun erase(): Outcome<Unit> = Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
-
-            override suspend fun startSetup(): Outcome<Boolean> = Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
-
-            override suspend fun repair(): Outcome<Unit> = Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
-        }
-
-    @Provides
-    @SingleIn(AppScope::class)
-    fun phoneServerSource(): PhoneServerSource =
-        object : PhoneServerSource {
-            private val notInstalled = Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
-            override val facts: StateFlow<PhoneServerFacts> =
-                MutableStateFlow(PhoneServerFacts(status = RuntimeStatus(installed = false))).asStateFlow()
-
-            override suspend fun refresh() = Unit
-
-            override suspend fun start(): Outcome<Unit> = notInstalled
-
-            override suspend fun stop(): Outcome<Unit> = notInstalled
-
-            override suspend fun restart(): Outcome<Unit> = notInstalled
-
-            override suspend fun updateOpenCode(): Outcome<Unit> = notInstalled
-        }
+    // ---- The built-in Linux: LinuxHost, LinuxLifecycle and PhoneServerSource are the real BuiltinLinux bindings in
+    // LinuxRuntimeWiring (P12-FIX-LINUX-VOICE).
 
     /** Nothing of the app's own runs without the built-in Linux: an honest empty reading. */
     @Provides

@@ -17,7 +17,22 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // P12-FIX-LINUX-VOICE (plan 03 §0 settings, plan 10 §2.2): vendored, hash-pinned artifacts. Only the sherpa-onnx
+        // group resolves here; tools/vendor/fetch.sh fills it and third_party/SHA256SUMS pins it.
+        exclusiveContent {
+            forRepository {
+                maven {
+                    url = settingsDir.resolve("third_party/maven").toURI()
+                    metadataSources { mavenPom(); artifact() }
+                }
+            }
+            filter { includeGroup("com.k2fsa.sherpa.onnx") }
+        }
     }
+}
+
+if (!settingsDir.resolve("third_party/maven/com/k2fsa/sherpa/onnx/sherpa-onnx-android/2.0.1/sherpa-onnx-android-2.0.1.aar").isFile) {
+    logger.warn("sherpa-onnx 2.0.1 is missing: run native/tools/vendor/fetch.sh (the app build needs it for offline voice).")
 }
 
 rootProject.name = "opencode-mobile-native"
