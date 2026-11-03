@@ -122,4 +122,51 @@ class ProjectRulesTest {
         assertEquals(ChatTitle.New, ChatTitles.present("New session - 2026-09-02T14:47:06Z"))
         assertEquals(ChatTitle.Untitled, ChatTitles.present("  "))
     }
+
+    @Test
+    fun `B-NAV-011 projects with no date, zero or below, keep the server's order after the dated ones`() {
+        val ordered =
+            ProjectRules.order(
+                listOf(project("negative", "/w/n", -1), project("zero", "/w/z", 0), project("dated", "/w/d", 5))
+            )
+        assertEquals(listOf("dated", "negative", "zero"), ordered.map { it.id })
+    }
+
+    @Test
+    fun `B-NAV-067 half-cut markers and embedded stamps leave project conversation titles like every other list`() {
+        assertEquals(ChatTitle.Text("prime the merge queue."), ChatTitles.present("prime the merge queue.<tool_ca…"))
+        assertEquals(ChatTitle.Text("prime the merge queue."), ChatTitles.present("prime the merge queue. <fu..."))
+        assertEquals(ChatTitle.Text("Fix login"), ChatTitles.present("Fix login 2026-09-28T10:00:00.000Z"))
+        assertEquals(ChatTitle.Untitled, ChatTitles.present("<tool_call><fu…"))
+        assertEquals(ChatTitle.Text("Use <f"), ChatTitles.present("Use <f"))
+    }
+
+    @Test
+    fun `B-AGENT-264 the AI Team's folders are not projects, a person's project the team works on is`() {
+        val summaries =
+            ProjectRules.fromServer(
+                listOf(
+                    project("mine", "/root/projects/my-app", 10),
+                    project("home", "/root/aiteam", 20),
+                    project("gc", "/srv/city/.gc/worktrees/my-app/mayor", 30),
+                    project("termux", "/data/data/com.termux/files/home/.oc/aiteam", 40),
+                ),
+                emptyList(),
+                emptySet(),
+            )
+        assertEquals(listOf("/root/projects/my-app"), summaries.map { it.directory })
+        val fromChats =
+            ProjectRules.fromSessions(
+                listOf(session("a", "/root/aiteam/city/rig", 9), session("b", "/root/projects/my-app", 1)),
+                emptySet(),
+            )
+        assertEquals(listOf("/root/projects/my-app"), fromChats.map { it.directory })
+        val elsewhere =
+            ProjectRules.elsewhere(
+                listOf(session("t", "/root/aiteam/city", 9), session("p", "/work/site", 1)),
+                emptySet(),
+                "/work/app",
+            )
+        assertEquals(listOf("p"), elsewhere.map { it.id.raw })
+    }
 }
