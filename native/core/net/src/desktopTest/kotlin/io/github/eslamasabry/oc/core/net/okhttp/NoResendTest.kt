@@ -144,6 +144,8 @@ internal sealed interface Reply {
 internal class CountingServer(
     private val socket: ServerSocket = ServerSocket(0, 50, InetAddress.getLoopbackAddress()),
     private val scheme: String = "http",
+    /** Like the OpenCode 2 server (6 s): a connection idle this long between requests is closed. 0 = never. */
+    private val idleCloseMs: Int = 0,
 ) : AutoCloseable {
     val port: Int = socket.localPort
     val requests: MutableList<SeenRequest> = Collections.synchronizedList(mutableListOf())
@@ -167,7 +169,9 @@ internal class CountingServer(
         val input = BufferedInputStream(s.getInputStream())
         val out = s.getOutputStream()
         while (true) {
-            val head = readHead(input) ?: return
+            s.soTimeout = idleCloseMs
+            val head = try { readHead(input) } catch (_: java.net.SocketTimeoutException) { null } ?: return
+            s.soTimeout = 0
             val (method, path) = head.first().split(" ").let { it[0] to it[1] }
             val length = head.drop(1).firstOrNull { it.startsWith("content-length:", ignoreCase = true) }
                 ?.substringAfter(':')?.trim()?.toInt() ?: 0
