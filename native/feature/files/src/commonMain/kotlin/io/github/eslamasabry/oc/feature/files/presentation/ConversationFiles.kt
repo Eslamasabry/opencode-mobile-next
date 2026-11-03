@@ -10,8 +10,8 @@ import io.github.eslamasabry.oc.core.model.FileNode
 import io.github.eslamasabry.oc.core.model.FindMatch
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 
 /**
  * One conversation's project files (B-NAV-026). Every conversation of a server shares one gateway, so its shared
@@ -20,27 +20,36 @@ import kotlinx.coroutines.sync.withLock
  * back to another project's tree.
  */
 public class ConversationFiles(private val gateway: ServerGateway, private val session: SessionId) : FileGateway {
-    private val lock = Mutex()
+    /** One read of the conversation at a time (features hold no coroutine locks, K1). */
+    private val busy = MutableStateFlow(false)
     private var resolved: Pair<FileGateway, String?>? = null
 
-    private suspend fun target(): Outcome<Pair<FileGateway, String?>> =
-        lock.withLock {
-            resolved?.let { return@withLock Outcome.Ok(it) }
-            val read = gateway.session(session)
-            if (read is Outcome.Failed) return@withLock read
-            val conversation = (read as Outcome.Ok).value
-            val directory = conversation.directory?.takeIf { it.isNotEmpty() }
-            val located = gateway as? LocatedFileGateway
-            val files =
-                if (directory != null && located != null) {
-                    located.filesAt(ServerLocation(directory, conversation.workspaceId?.raw))
-                } else {
-                    gateway
-                }
-            val pair = files to (directory ?: gateway.location.value.directory)
-            resolved = pair
-            Outcome.Ok(pair)
+    private suspend fun target(): Outcome<Pair<FileGateway, String?>> {
+        while (!busy.compareAndSet(expect = false, update = true)) busy.first { !it }
+        try {
+            return resolve()
+        } finally {
+            busy.value = false
         }
+    }
+
+    private suspend fun resolve(): Outcome<Pair<FileGateway, String?>> {
+        resolved?.let { return Outcome.Ok(it) }
+        val read = gateway.session(session)
+        if (read is Outcome.Failed) return read
+        val conversation = (read as Outcome.Ok).value
+        val directory = conversation.directory?.takeIf { it.isNotEmpty() }
+        val located = gateway as? LocatedFileGateway
+        val files =
+            if (directory != null && located != null) {
+                located.filesAt(ServerLocation(directory, conversation.workspaceId?.raw))
+            } else {
+                gateway
+            }
+        val pair = files to (directory ?: gateway.location.value.directory)
+        resolved = pair
+        return Outcome.Ok(pair)
+    }
 
     /** The conversation's own folder (for the file mention), or the gateway's when the conversation has none. */
     public suspend fun directory(): String? = (target() as? Outcome.Ok)?.value?.second

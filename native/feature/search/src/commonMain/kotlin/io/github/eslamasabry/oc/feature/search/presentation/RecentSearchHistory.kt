@@ -8,9 +8,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 /**
  * Recent searches over one saved string list, for the app runtime to back with its preferences. [warm] waits for the
@@ -24,18 +23,28 @@ public class RecentSearchHistory(
     private val load: () -> List<String>,
     private val save: suspend (List<String>) -> Outcome<Unit>,
 ) : RecentSearchStore {
-    private val order = Mutex()
+    /** One at a time (features hold no coroutine locks, K1): taken by compare-and-set, waited for as a flow. */
+    private val busy = MutableStateFlow(false)
     private val mutable = MutableStateFlow<ImmutableList<String>>(persistentListOf())
     override val recent: StateFlow<ImmutableList<String>> = mutable.asStateFlow()
 
-    /** Whether the saved list has been read into [mutable]; guarded by [order]. */
+    /** Whether the saved list has been read into [mutable]; guarded by [busy]. */
     private var restored = false
 
     init {
-        scope.launch { order.withLock { restore() } }
+        scope.launch { serial { restore() } }
     }
 
-    /** Reads the saved list once; call under [order]. */
+    private suspend fun <T> serial(block: suspend () -> T): T {
+        while (!busy.compareAndSet(expect = false, update = true)) busy.first { !it }
+        try {
+            return block()
+        } finally {
+            busy.value = false
+        }
+    }
+
+    /** Reads the saved list once; call under [serial]. */
     private suspend fun restore(): Outcome<Unit> {
         if (restored) return Outcome.Ok(Unit)
         when (val ready = warm()) {
@@ -53,9 +62,9 @@ public class RecentSearchHistory(
 
     override suspend fun clear(): Outcome<Unit> = write { emptyList() }
 
-    private suspend fun write(change: (List<String>) -> List<String>): Outcome<Unit> = order.withLock {
+    private suspend fun write(change: (List<String>) -> List<String>): Outcome<Unit> = serial {
         when (val ready = restore()) {
-            is Outcome.Failed -> return@withLock ready
+            is Outcome.Failed -> return@serial ready
             is Outcome.Ok -> Unit
         }
         val next = change(mutable.value)

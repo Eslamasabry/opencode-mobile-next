@@ -19,10 +19,13 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -49,7 +52,8 @@ public class ChatsAllViewModel(
         )
     private var servers: List<ConversationServer> = emptyList()
     private var generation = 0
-    private var watchers: List<Job> = emptyList()
+    /** The servers whose live runs this page follows, per reload; a new value stops following the old ones. */
+    private val followed = MutableStateFlow<Pair<Int, List<ConversationServer>>>(0 to emptyList())
 
     public val state: StateFlow<AllConversationsUi> =
         model
@@ -58,6 +62,9 @@ public class ChatsAllViewModel(
 
     init {
         viewModelScope.launch { connections.servers.collect { adopt(it) } }
+        viewModelScope.launch {
+            followed.collectLatest { (run, list) -> list.map { server -> flow<Unit> { follow(server, run) } }.merge().collect() }
+        }
     }
 
     private fun adopt(live: ImmutableList<ConversationServer>) {
@@ -80,8 +87,7 @@ public class ChatsAllViewModel(
     private fun reload() {
         val run = ++generation
         model.update { it.copy(sources = emptyMap(), loadingMore = false) }
-        watchers.forEach { it.cancel() }
-        watchers = servers.map { server -> viewModelScope.launch { follow(server, run) } }
+        followed.value = run to servers
         servers.forEach { server -> viewModelScope.launch { firstPage(server, run) } }
     }
 
