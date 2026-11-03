@@ -14,6 +14,8 @@ import io.github.eslamasabry.oc.engine.settings.prefs.ThemePack
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.effects.KitCorners
+import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.design.tokens.Density
 import kotlinx.coroutines.CoroutineScope
@@ -92,6 +94,9 @@ public object PreferenceMapping {
             motion = motion(p.effects.motion),
             density = p.effects.fineTune.density?.let { d -> Density.entries.firstOrNull { it.name == d.name } } ?: Density.Comfortable,
             frost = KitFrost.fromStorage(p.frost.wire),
+            // The Style and Fine-tune › Corners reach KitTheme (B-KIT-037, B-KIT-005).
+            style = KitSurfaceStyle.fromStorage(p.effects.surfaceStyle.wire),
+            corners = p.effects.fineTune.corners?.let { c -> KitCorners.entries.first { it.name == c.name } },
         )
 
     /** The chosen language's tag, or null to follow the phone. A stored language the native app has no words for still
