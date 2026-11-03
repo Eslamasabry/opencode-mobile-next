@@ -62,8 +62,26 @@ public object KitMdSource {
                 KitMdBlock.Code(b.key, b.type.info, b.items.joinToString("\n") { it.text }, open = false)
         }
 
-    /** Pictures inside a sentence keep their place (U+FFFC); a web one becomes a link to its address. */
+    /**
+     * Pictures inside a sentence keep their place (U+FFFC, drawn as a frame glyph); a web one becomes a link to its
+     * address. A server file one (B-CHAT-059) keeps its words after the glyph and becomes a [KitSpanKind.Picture]
+     * the caller opens in its viewer, so `See ![Screenshot](/tmp/result.png) here` reads "See ▣ Screenshot here".
+     */
     private fun inlines(i: Inlines): KitInlines {
+        // Words added after a file picture's glyph: (offset in the source text, words).
+        val inserts = ArrayList<Pair<Int, String>>()
+        for (s in i.spans) {
+            val k = s.kind as? SpanKind.Picture ?: continue
+            if (k.picture.kind != PictureKind.File || k.picture.path == null) continue
+            val words = label(k.picture) ?: continue
+            inserts += s.end to " $words"
+        }
+        inserts.sortBy { it.first }
+        fun shift(x: Int): Int {
+            var out = x
+            for ((at, words) in inserts) if (at <= x) out += words.length else break
+            return out
+        }
         val spans =
             i.spans.mapNotNull { s ->
                 val kind =
@@ -74,12 +92,27 @@ public object KitMdSource {
                         SpanKind.Code -> KitSpanKind.Code
                         is SpanKind.Link -> KitSpanKind.Link(k.url)
                         is SpanKind.PathCandidate -> KitSpanKind.Path(k.path, k.line)
-                        is SpanKind.Picture -> k.picture.url?.let { KitSpanKind.Link(it) }
+                        is SpanKind.Picture -> {
+                            val pic = k.picture
+                            val path = pic.path
+                            if (pic.kind == PictureKind.File && path != null) KitSpanKind.Picture(path, label(pic))
+                            else pic.url?.let { KitSpanKind.Link(it) }
+                        }
                     } ?: return@mapNotNull null
-                KitSpan(s.start, s.end, kind)
+                KitSpan(shift(s.start), shift(s.end), kind)
             }
         // The placeholder is drawn as a small frame glyph, so a sentence never shows an empty box.
-        return KitInlines(i.text.replace(PLACEHOLDER, FRAME), spans.toImmutableList())
+        val text = i.text.replace(PLACEHOLDER, FRAME)
+        if (inserts.isEmpty()) return KitInlines(text, spans.toImmutableList())
+        val out = StringBuilder(text.length + inserts.sumOf { it.second.length })
+        var next = 0
+        for ((at, words) in inserts) {
+            val cut = at.coerceIn(next, text.length)
+            out.append(text, next, cut).append(words)
+            next = cut
+        }
+        out.append(text, next, text.length)
+        return KitInlines(out.toString(), spans.toImmutableList())
     }
 
     private fun picture(p: MarkdownPicture): KitPicture? =

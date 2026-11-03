@@ -92,6 +92,15 @@ public fun inlineAnnotated(
                     from,
                     to,
                 )
+            is KitSpanKind.Picture ->
+                builder.addLink(
+                    LinkAnnotation.Clickable(
+                        tag = kind.path,
+                        styles = TextLinkStyles(SpanStyle(color = style.link, textDecoration = TextDecoration.Underline)),
+                    ) { sink.open(kind) },
+                    from,
+                    to,
+                )
             is KitSpanKind.Path -> {
                 builder.addStyle(SpanStyle(fontFamily = style.mono, background = style.pathFill), from, to)
                 if (confirmed(kind.path)) {

@@ -16,7 +16,10 @@ import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,6 +59,7 @@ internal data class ChatLocal(
     val insert: ClipUi? = null,
     val linkRefused: Boolean = false,
     val picture: PictureUi? = null,
+    val confirmedPaths: PersistentSet<String> = persistentSetOf(),
 )
 
 internal data class PendingArrival(val id: Long, val focusComposer: Boolean, val landOnFailure: Boolean)
@@ -175,6 +179,7 @@ public class ChatPresenter(
             insert = l.insert,
             picture = l.picture,
             readAloud = l.readAloud,
+            confirmedPaths = l.confirmedPaths,
         )
     }
 
@@ -419,6 +424,40 @@ public class ChatPresenter(
         }
     }
 
+    /** path → the transcript revision its last miss was seen at; [CHECKING] while a check runs. */
+    private val pathChecks = LinkedHashMap<String, Long>()
+
+    override fun checkPaths(paths: List<String>) {
+        if (!world.capabilities.value.fileBrowsing) return
+        val transcript = world.transcript.value
+        for (path in paths) {
+            if (path in local.value.confirmedPaths) continue
+            val seen = pathChecks[path]
+            // A miss is checked again only after the conversation moved on and is idle (Flutter: agents name a file
+            // moments before they create it), never once per streamed word.
+            if (seen != null && (seen == CHECKING || seen == transcript.revision || transcript.run.busy)) continue
+            if (pathChecks.size >= MAX_PATH_CHECKS) pathChecks.remove(pathChecks.keys.first())
+            pathChecks[path] = CHECKING
+            launcher.launch {
+                val found = (world.fileExists(path) as? Outcome.Ok)?.value == true
+                if (found) {
+                    pathChecks.remove(path)
+                    local.update { it.copy(confirmedPaths = it.confirmedPaths.add(path)) }
+                } else {
+                    pathChecks[path] = world.transcript.value.revision
+                }
+            }
+        }
+    }
+
+    override fun openPath(path: String, line: Int?) {
+        val clean = path.trim()
+        if (clean.isEmpty() || !world.capabilities.value.fileBrowsing) return
+        val name = clean.substringAfterLast('/')
+        if (PICTURE_NAME.containsMatchIn(name)) openPicture(clean, name)
+        else nav.open(FilesRoute.File(world.ref, clean, line))
+    }
+
     override fun closePicture() {
         local.update { it.copy(picture = null) }
     }
@@ -464,3 +503,9 @@ public class ChatPresenter(
         return null
     }
 }
+
+private const val CHECKING = -1L
+private const val MAX_PATH_CHECKS = 256
+
+/** Flutter `_drawablePictureName`: the files the picture viewer draws. */
+private val PICTURE_NAME = Regex("\\.(png|jpe?g|gif|webp|bmp)$", RegexOption.IGNORE_CASE)

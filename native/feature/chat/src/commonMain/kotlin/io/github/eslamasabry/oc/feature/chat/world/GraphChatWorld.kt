@@ -1249,6 +1249,19 @@ internal class GraphChatWorld(
         }
     }
 
+    override suspend fun fileExists(path: String): Outcome<Boolean> {
+        val slash = path.lastIndexOf('/')
+        val name = if (slash >= 0) path.substring(slash + 1) else ""
+        if (name.isEmpty()) return Outcome.Ok(false)
+        val dir = if (slash == 0) "/" else path.substring(0, slash)
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        if (!a.gateway.capabilities.value.fileBrowsing) return Outcome.Ok(false)
+        val listed = a.gateway.listFiles(dir)
+        if (currentAttached() !== a) return Outcome.Failed(STALE)
+        val nodes = (listed as? Outcome.Ok)?.value ?: return listed as Outcome.Failed
+        return Outcome.Ok(nodes.any { !it.isDir && it.name == name })
+    }
+
     override fun markRead() {
         val a = currentAttached() ?: return
         a.graph.scope.launch(registry.mainContext) {

@@ -238,4 +238,36 @@ class ChatFeelScreenTest {
                 assertTrue(onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty(), "menu shows $label")
             }
         }
+
+    @Test
+    fun `B-CHAT-064 a path the server has opens its file from the reply`() =
+        runComposeUiTest {
+            val world = FakeChatWorld()
+            world.serverFiles += "lib/main.dart"
+            world.transcript.value = stateOf(prompt("u1", "where"), block("u1", "a1", "p", 0, "See `lib/main.dart:12` and `lib/gone.dart`."), footer("u1"))
+            val nav = RecordingNavigator()
+            val p = ChatPresenter(world, nav, Immediate, outside = Outside())
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, p, composer) }
+            }
+            waitForIdle()
+            assertEquals(setOf("lib/main.dart"), p.current().confirmedPaths, "checked on the server from the drawn reply")
+            assertTrue(world.calls.contains("exists lib/gone.dart"))
+        }
+
+    @Test
+    fun `B-CHAT-059 a server picture inside a sentence reads its words`() =
+        runComposeUiTest {
+            val (p, _) = screen(prompt("u1", "show"), block("u1", "a1", "p", 0, "See ![Screenshot](/tmp/result.png) here"), footer("u1"))
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, p, composer) }
+            }
+            onNodeWithText("Screenshot", substring = true).assertIsDisplayed()
+        }
 }

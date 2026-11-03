@@ -186,6 +186,13 @@ public interface ChatWorld {
     public suspend fun readPicture(path: String): Outcome<ByteArray> =
         Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
 
+    /**
+     * B-CHAT-064: whether [path] names a file on the server (Flutter `_checkPathLink`: its folder is listed and the
+     * name found). A bare name without a folder is never checked.
+     */
+    public suspend fun fileExists(path: String): Outcome<Boolean> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
+
     /** The visible transcript was read at the live edge (plan 09 §6.7). */
     public fun markRead()
 }

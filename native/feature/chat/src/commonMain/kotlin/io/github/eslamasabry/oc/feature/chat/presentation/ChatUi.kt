@@ -5,7 +5,9 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 
 /*
  * The chat screen's state and intents (plan 09 §6.1). No Compose, no copy: ids, enums, Failure and the person's or
@@ -46,6 +48,8 @@ public data class ChatUi(
     val picture: PictureUi? = null,
     /** A reply the person asked to hear (P12-VOICE): the screen hands it to the reader once, then acknowledges. */
     val readAloud: ReadAloudUi? = null,
+    /** B-CHAT-064: file paths in replies the server confirmed exist; only these become tappable. */
+    val confirmedPaths: ImmutableSet<String> = persistentSetOf(),
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -267,6 +271,15 @@ public interface ChatActions {
 
     /** A picture tile that names a file on the server: read it and show it in the viewer. */
     public fun openPicture(path: String, name: String) {}
+
+    /**
+     * B-CHAT-064 / B-CHAT-114: a file a reply names (a confirmed path) or a step produced: a picture opens in the
+     * viewer, any other file in the file viewer (which offers Open with and Share).
+     */
+    public fun openPath(path: String, line: Int?) {}
+
+    /** B-CHAT-064: the path-like text a reply shows; the ones that exist on the server become tappable. */
+    public fun checkPaths(paths: List<String>) {}
 
     public fun closePicture() {}
 }

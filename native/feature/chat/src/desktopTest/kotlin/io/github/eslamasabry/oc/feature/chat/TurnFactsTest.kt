@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.filterToOne
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.onChildren
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -437,6 +438,29 @@ class TurnFactsTest {
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
             onNodeWithText("curl -H 'Authorization:", substring = true).assertIsDisplayed()
             onAllNodesWithText(bearerTail, substring = true).assertCountEquals(0)
+        }
+
+    @Test
+    fun `B-CHAT-114 a file a step produced is a visible action that opens it`() =
+        runComposeUiTest {
+            val k = keeper()
+            val write =
+                tool(
+                    "t5", "m2", "screenshot", ToolStatus.Completed, emptyMap(), 2_000, 3_000,
+                    metadata = JsonObject(mapOf("filePath" to JsonPrimitive("/p/out/report.pdf"))),
+                ).let { it.copy(tool = it.tool!!.copy(outputValue = JsonObject(mapOf("filePath" to JsonPrimitive("/p/out/report.pdf"))))) }
+            k.history(listOf(prompt, msg(info("m2", Role.Assistant, 2_000, done = 4_000, finish = "stop"), write, text("x", "m2", "ok"))))
+            val facts = TurnFactsPresenter(FixedClock).present(k.feed.value, 5_000)
+            val world = FakeChatWorld()
+            val nav = RecordingNavigator()
+            val actions = ChatPresenter(world, nav, Immediate)
+            setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
+            onAllNodes(hasClickAction() and androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("chat-work-line")))
+                .onFirst()
+                .performClick()
+            onNodeWithTag("chat-step-t5").performClick()
+            onNodeWithText("report.pdf").assertIsDisplayed().performClick()
+            assertEquals(listOf<io.github.eslamasabry.oc.ui.routes.AppRoute>(io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "/p/out/report.pdf")), nav.opened)
         }
 
     @Test

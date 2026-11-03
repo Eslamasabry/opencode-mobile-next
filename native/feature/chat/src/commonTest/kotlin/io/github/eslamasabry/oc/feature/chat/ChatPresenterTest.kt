@@ -390,4 +390,40 @@ class ChatPresenterTest {
         p.openChanges()
         assertEquals(listOf("open", "open", "open"), nav.calls)
     }
+
+    @Test
+    fun `B-CHAT-064 only paths the server confirms become tappable, and a miss is not re-checked while nothing changed`() {
+        world.transcript.value = stateOf(*turn(1).toTypedArray())
+        world.serverFiles += "lib/main.dart"
+        val p = presenter()
+        p.checkPaths(listOf("lib/main.dart", "lib/gone.dart"))
+        assertEquals(setOf("lib/main.dart"), p.current().confirmedPaths)
+        p.checkPaths(listOf("lib/main.dart", "lib/gone.dart"))
+        assertEquals(listOf("exists lib/main.dart", "exists lib/gone.dart"), world.calls.filter { it.startsWith("exists") })
+        // The conversation moved on (the agent may have made the file): the miss is checked again.
+        world.serverFiles += "lib/gone.dart"
+        world.transcript.value = stateOf(*turn(1).toTypedArray(), revision = 2)
+        p.checkPaths(listOf("lib/gone.dart"))
+        assertEquals(setOf("lib/main.dart", "lib/gone.dart"), p.current().confirmedPaths)
+    }
+
+    @Test
+    fun `B-CHAT-064 B-CHAT-114 a file opens in the file viewer at its line, a picture in the picture viewer`() {
+        world.transcript.value = stateOf(*turn(1).toTypedArray())
+        val p = presenter()
+        p.openPath("lib/main.dart", 12)
+        assertEquals(listOf<io.github.eslamasabry.oc.ui.routes.AppRoute>(io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "lib/main.dart", 12)), nav.opened)
+        p.openPath("/tmp/shot.PNG", null)
+        assertEquals("shot.PNG", p.current().picture?.name)
+    }
+
+    @Test
+    fun `B-CHAT-064 nothing is checked or opened where the server has no file browsing`() {
+        world.capabilities.value = io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities(fileBrowsing = false)
+        val p = presenter()
+        p.checkPaths(listOf("lib/main.dart"))
+        p.openPath("lib/main.dart", null)
+        assertTrue(world.calls.none { it.startsWith("exists") })
+        assertTrue(nav.opened.isEmpty())
+    }
 }
