@@ -5,13 +5,16 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Multibinds
 import dev.zacsweers.metro.SingleIn
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.SessionStatus
+import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.Part
@@ -21,6 +24,12 @@ import io.github.eslamasabry.oc.engine.cards.CardAnswer
 import io.github.eslamasabry.oc.engine.cards.CardAnswerSender
 import io.github.eslamasabry.oc.engine.cards.CardBoard
 import io.github.eslamasabry.oc.engine.cards.CardBoardState
+import io.github.eslamasabry.oc.engine.cards.CardDispatchCheck
+import io.github.eslamasabry.oc.engine.cards.CardJournal
+import io.github.eslamasabry.oc.engine.cards.CardJournalStore
+import io.github.eslamasabry.oc.engine.cards.CardRefusal
+import io.github.eslamasabry.oc.engine.cards.MemoryCardJournal
+import io.github.eslamasabry.oc.engine.cards.StoredCardJournal
 import io.github.eslamasabry.oc.engine.cards.CardHistory
 import io.github.eslamasabry.oc.engine.cards.CardHistoryPage
 import io.github.eslamasabry.oc.engine.cards.CardHistorySource
@@ -33,6 +42,7 @@ import io.github.eslamasabry.oc.engine.cards.CardsStatus
 import io.github.eslamasabry.oc.engine.cards.CardsVerdict
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.delivery.SendRoute
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -53,12 +63,8 @@ import kotlinx.coroutines.launch
 public interface ChatCardsBindings {
     @Multibinds(allowEmpty = true) public val cardsPrefs: Set<CardsPrefs>
 
-    @Multibinds(allowEmpty = true) public val cardLinkOpeners: Set<CardLinkOpener>
-}
-
-/** Opens a card's link after the tap, only through the app's ExternalLinkPolicy (AGENTS.md rule 8). */
-public fun interface CardLinkOpener {
-    public fun open(url: String)
+    /** Where answers that may have left are remembered (`oc.genui.journal.<profileId>`, B-CHAT-051). */
+    @Multibinds(allowEmpty = true) public val cardJournalStores: Set<CardJournalStore>
 }
 
 /** In-memory prefs where the app binds none (desktop preview, tests): cards stay off after a restart. */
@@ -86,20 +92,10 @@ public class GraphCardsQualifier(private val registry: ConnectionRegistry) : Car
     override suspend fun verify(profileId: String): Outcome<CardsVerdict> {
         val graph = registry.live.value.entries.firstOrNull { it.key.raw == profileId }?.value
         val here = agentsHere(profileId)
-        if (graph == null) return Outcome.Ok(CardsVerdict(emptyList(), CardsProblem.NotQualified, here))
-        return when (val servers = (graph as ChatGraphAccessors).chatOperations.mcpServers()) {
-            is Outcome.Failed -> Outcome.Ok(CardsVerdict(emptyList(), CardsProblem.NotQualified, here))
-            is Outcome.Ok ->
-                if (servers.value.any { it.name == HELPER && it.status.equals("connected", ignoreCase = true) }) {
-                    Outcome.Ok(CardsVerdict(here))
-                } else {
-                    Outcome.Ok(CardsVerdict(emptyList(), CardsProblem.NotQualified, here))
-                }
+        if (graph == null || !CardsQualification.OPEN_CODE_2_QUALIFIED) {
+            return Outcome.Ok(CardsVerdict(emptyList(), CardsProblem.NotQualified, here))
         }
-    }
-
-    private companion object {
-        const val HELPER = "oc-ui"
+        return Outcome.Ok(CardsQualification.verdict((graph as ChatGraphAccessors).chatOperations.mcpServers(), here))
     }
 }
 
@@ -109,12 +105,12 @@ public class GraphCardsQualifier(private val registry: ConnectionRegistry) : Car
 public class ChatCards(
     private val registry: ConnectionRegistry,
     prefs: Set<CardsPrefs> = emptySet(),
-    links: Set<CardLinkOpener> = emptySet(),
+    journals: Set<CardJournalStore> = emptySet(),
 ) {
     public val setup: CardsSetup = CardsSetup(prefs.firstOrNull() ?: MemoryCardsPrefs(), GraphCardsQualifier(registry))
-    internal val linkOpener: CardLinkOpener? = links.firstOrNull()
+    private val journal: CardJournal = journals.firstOrNull()?.let(::StoredCardJournal) ?: MemoryCardJournal()
 
-    public fun open(ref: ConversationRef): ChatCardsModel = ChatCardsModel(ref, registry, setup).also { it.attach() }
+    public fun open(ref: ConversationRef): ChatCardsModel = ChatCardsModel(ref, registry, setup, journal).also { it.attach() }
 
     /** The Cards row: what is true now. */
     public fun status(profileId: String): CardsStatus = setup.status(profileId)
@@ -130,6 +126,7 @@ public class ChatCardsModel internal constructor(
     public val ref: ConversationRef,
     private val registry: ConnectionRegistry,
     private val setup: CardsSetup,
+    private val journal: CardJournal = MemoryCardJournal(),
 ) {
     private val mutable = MutableStateFlow(CardBoardState())
     public val state: StateFlow<CardBoardState> = mutable.asStateFlow()
@@ -138,8 +135,7 @@ public class ChatCardsModel internal constructor(
     private var bound: ConnectionGraph? = null
     private val stops = ArrayList<() -> Unit>()
     private var stopWatching: (() -> Unit)? = null
-    private val messages = LinkedHashMap<String, MessageWithParts>()
-    private var complete = false
+    private val transcript = CardTranscript()
     private var cardScope: CardScope? = null
     private val sid: SessionId get() = ref.sessionId
 
@@ -173,8 +169,7 @@ public class ChatCardsModel internal constructor(
         board?.close()
         board = null
         bound = null
-        messages.clear()
-        complete = false
+        transcript.clear()
         mutable.value = CardBoardState()
     }
 
@@ -184,13 +179,41 @@ public class ChatCardsModel internal constructor(
         if (graph == null) return
         val services = graph as ChatGraphAccessors
         val gateway = services.chatGateway
+        val delivery = services.chatDelivery
         val sender = CardAnswerSender { _, text, photos ->
-            when (val sent = services.chatDelivery.send(ref, text, photos.toImmutableList())) {
-                is Outcome.Ok -> Outcome.Ok(Unit)
+            when (val sent = delivery.send(ref, text, photos.toImmutableList())) {
+                // The id comes back before the request leaves: wait for this send's own result (B-CHAT-050).
+                is Outcome.Ok -> {
+                    val engine = delivery.engine
+                    if (engine == null) Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
+                    else awaitCardSend(sent.value, engine.outcomes, engine.pending)
+                }
                 is Outcome.Failed -> sent
             }
         }
-        val b = CardBoard(graph.scope, sender, photosAllowed = { gateway.capabilities.value.promptAttachments })
+        // B-CHAT-039/050/052 (Flutter `_send`): a fresh read, then an explicit idle check, right before sending. A
+        // card answer is never queued for later and never steered into a running turn.
+        val check = CardDispatchCheck { card ->
+            if (bound !== graph || card.sessionId != sid.raw) return@CardDispatchCheck CardRefusal.Changed
+            if (gateway.events.status.value != StreamStatus.Connected) return@CardDispatchCheck CardRefusal.Changed
+            if (!read(gateway)) return@CardDispatchCheck CardRefusal.Changed
+            val idle =
+                when (val statuses = gateway.sessionStatuses()) {
+                    is Outcome.Failed -> false
+                    is Outcome.Ok -> statuses.value[sid].let { it == null || it == SessionStatus.Idle }
+                }
+            if (bound !== graph) return@CardDispatchCheck CardRefusal.Changed
+            board?.setBusy(!idle)
+            if (!idle || delivery.engine?.routeFor(ref) != SendRoute.Plain) CardRefusal.Busy else null
+        }
+        val b =
+            CardBoard(
+                graph.scope,
+                sender,
+                photosAllowed = { gateway.capabilities.value.promptAttachments },
+                check = check,
+                journal = journal,
+            )
         board = b
         val location = gateway.location.value
         cardScope = CardScope(ref.profileId.raw, SOURCE, location.directory ?: GLOBAL, location.workspace)
@@ -231,48 +254,46 @@ public class ChatCardsModel internal constructor(
         stops += { job.cancel() }
     }
 
-    private suspend fun read(gateway: ServerGateway) {
+    /** One bounded read; true when it was applied (a failed or overtaken read leaves the cards as they were). */
+    private suspend fun read(gateway: ServerGateway): Boolean {
         val source = CardHistorySource { session, cursor, limit ->
             when (val page = gateway.messagePage(SessionId(session), cursor = cursor, limit = limit)) {
                 is Outcome.Ok -> Outcome.Ok(CardHistoryPage(page.value.items, page.value.nextCursor, page.value.nextCursor != null))
                 is Outcome.Failed -> page
             }
         }
-        val tail = CardHistory.readTail(source, sid.raw)
-        if (tail !is Outcome.Ok) return // a failed read leaves the cards as they were (read-only stays read-only)
-        // A newer view never loses messages the events already brought.
-        val live = messages.values.toList()
-        messages.clear()
-        tail.value.messages.forEach { messages[it.info.id] = it }
-        live.filter { it.info.id !in messages }.forEach { messages[it.info.id] = it }
-        complete = tail.value.complete
-        publish()
+        // A live event during the read means the read is older than what is shown: read again, a few times at most.
+        repeat(READ_ATTEMPTS) {
+            val mark = transcript.mark()
+            val tail = CardHistory.readTail(source, sid.raw)
+            if (tail !is Outcome.Ok) return false // read-only stays read-only
+            if (transcript.applyRead(mark, tail.value)) {
+                publish()
+                return true
+            }
+        }
+        return false
     }
 
     private fun upsert(info: MessageInfo) {
-        val old = messages[info.id]
-        messages[info.id] = MessageWithParts(info, old?.parts ?: kotlinx.collections.immutable.persistentListOf())
+        transcript.upsert(info)
         publish()
     }
 
     private fun upsert(part: Part) {
-        val old = messages[part.messageId] ?: return // its message arrives first; a later read reconciles
-        val parts = old.parts.toMutableList()
-        val at = parts.indexOfFirst { it.id == part.id }
-        if (at >= 0) parts[at] = part else parts += part
-        messages[part.messageId] = old.copy(parts = parts.toImmutableList())
-        publish()
+        if (transcript.upsert(part)) publish() // its message arrives first; a later read reconciles
     }
 
     private fun publish() {
         val scope = cardScope ?: return
-        board?.observe(scope, sid.raw, messages.values.toList(), complete)
+        board?.observe(scope, sid.raw, transcript.list(), transcript.complete)
     }
 
     private companion object {
         /** Flutter `_openCodeSourceId`. */
         const val SOURCE = "opencode"
         const val GLOBAL = "global"
+        const val READ_ATTEMPTS = 3
     }
 }
 

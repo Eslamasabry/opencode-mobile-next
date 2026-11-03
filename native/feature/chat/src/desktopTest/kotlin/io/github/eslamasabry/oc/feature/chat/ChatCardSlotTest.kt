@@ -6,6 +6,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -267,5 +268,22 @@ class ChatCardSlotTest {
             }
         setContent { Root(Host(entry(card(input(choice))))) { CardsSettingsScreen(ui, actions) } }
         onNodeWithText("Not available. OpenCode 2 hasn't been checked to work with cards yet.").assertIsDisplayed()
+    }
+
+    @Test
+    fun `B-CHAT-054 every chart series is drawn and the summary names kind, series, points and the highest value`() = runComposeUiTest {
+        val chart =
+            mapOf(
+                "type" to "chart",
+                "kind" to "line",
+                "unit" to "ms",
+                "labels" to listOf("Jan", "Feb"),
+                "series" to listOf(mapOf("name" to "api", "values" to listOf(1L, 2L)), mapOf("name" to "web", "values" to listOf(3L, 5L))),
+            )
+        val host = Host(entry(card(input(null, body = listOf(chart), title = "Latency"))))
+        setContent { Root(host) { ChatTurnCards("t1") } }
+        onNodeWithText("api").assertIsDisplayed()
+        onNodeWithText("web").assertIsDisplayed()
+        onNodeWithContentDescription("Line chart, 2 series, 2 points; highest web, Feb: 5 ms").assertExists()
     }
 }

@@ -5,10 +5,15 @@ import io.github.eslamasabry.oc.core.common.Outcome
 
 /** Persistence for the card dispatch journal (`oc.genui.journal.<profileId>`): one JSON string per profile. */
 public interface CardJournalStore {
-    /** The stored text; throws nothing (an unopened store reads as null). */
+    /** The stored text, null when there is none. Throws nothing: a store that cannot be read returns [UNREADABLE]. */
     public fun read(profileId: String): String?
 
     public suspend fun write(profileId: String, json: String?): Outcome<Unit>
+
+    public companion object {
+        /** Reads as a corrupt record, so the journal fails closed (never "nothing was sent"). */
+        public const val UNREADABLE: String = "\u0000unreadable"
+    }
 }
 
 /**

@@ -82,7 +82,7 @@ public class ChatEntries(
             val cardModel = remember(route.ref) { cards.open(route.ref) }
             DisposableEffect(cardModel) { onDispose { cardModel.close() } }
             val cardSlot =
-                remember(cardModel) { ModelCardSlotHost(cardModel, cards.linkOpener, { navigator.open(CardsSettingsRoute) }) }
+                remember(cardModel) { ModelCardSlotHost(cardModel, vm::openLink, { navigator.open(CardsSettingsRoute) }) }
             CompositionLocalProvider(LocalChatCards provides cardSlot) {
                 environment.Provide {
                     ChatScreen(
