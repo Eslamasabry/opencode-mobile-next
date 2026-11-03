@@ -116,6 +116,7 @@ dependencies {
             ":engine:voice",
             ":android:voice",
             ":feature:voice",
+            ":feature:diagnostics", // BUILD-DIAGNOSTICS-ATTENTION
             ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its native libraries)
         )
         .forEach { implementation(project(it)) }
