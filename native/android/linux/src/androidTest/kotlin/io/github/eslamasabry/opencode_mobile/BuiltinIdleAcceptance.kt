@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import io.github.eslamasabry.opencode_mobile.LinuxBuildConfig as BuildConfig
 import android.app.Activity
 import android.app.Instrumentation
 import android.app.Notification
@@ -322,7 +323,7 @@ internal class BuiltinIdleAcceptance(
 
     private fun foreground(linux: BuiltinLinux) {
         instrumentation.runOnMainSync {
-            context.startActivity(Intent(context, MainActivity::class.java)
+            context.startActivity(AppComponents.mainActivity(context)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
         }
         await(5_000L, "bb5_real_foreground_unavailable") { existingActivity() != null && resumed(linux) }
@@ -335,7 +336,7 @@ internal class BuiltinIdleAcceptance(
             val thread = type.getDeclaredMethod("currentActivityThread").invoke(null)
             val records = type.getDeclaredField("mActivities").apply { isAccessible = true }.get(thread) as Map<*, *>
             activity = records.values.mapNotNull { record -> record?.javaClass?.getDeclaredField("activity")
-                ?.apply { isAccessible = true }?.get(record) as? MainActivity }.singleOrNull { !it.isDestroyed }
+                ?.apply { isAccessible = true }?.get(record) as? Activity }.singleOrNull { it.javaClass.name == AppComponents.MAIN_ACTIVITY && !it.isDestroyed }
         }
         return activity
     }

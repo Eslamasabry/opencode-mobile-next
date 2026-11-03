@@ -43,6 +43,7 @@ class OcApplication : Application(), GraphOwner {
         appGraph.previewRuntime // warm stores, restore saved profile, connect
         (appGraph as PlatformAccessors).platform.start() // P12-PLATFORM: channels, widgets feed, alerts, update check
         appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)
+        appGraph.builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone server comes back
         AppLog.tagged("App").i { "graph ready ${buildInfo.versionName} (${buildInfo.versionCode})" }
     }
 }

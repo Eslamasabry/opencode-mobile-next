@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import io.github.eslamasabry.opencode_mobile.LinuxR as R
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
@@ -17,9 +18,9 @@ internal object StatusNotificationRenderer {
         PendingIntent.getActivity(
             context,
             requestCode,
-            Intent(context, MainActivity::class.java).apply {
+            AppComponents.mainActivity(context).apply {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                if (launch != null) putExtra(MainActivity.EXTRA_LAUNCH_ACTION, launch)
+                if (launch != null) putExtra(AppComponents.EXTRA_LAUNCH_ACTION, launch)
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -89,7 +90,7 @@ internal object StatusNotificationRenderer {
                 PendingIntent.getBroadcast(
                     context,
                     STOP_REPLY_REQUEST,
-                    Intent(context, StatusActionReceiver::class.java).apply {
+                    AppComponents.statusAction(context).apply {
                         this.action = StatusNotification.ACTION_STATUS
                         data = android.net.Uri.parse("opencode://status/stop_reply")
                         putExtra(StatusNotification.EXTRA_STATUS_ACTION, StatusAction.STOP_REPLY.wire)

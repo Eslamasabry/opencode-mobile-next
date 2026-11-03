@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P12-FIX-LINUX-VOICE: the built-in Linux components, copied from the Flutter app's manifest with the same frozen
+     FQCNs (io.github.eslamasabry.opencode_mobile.*) so a phone server or setup started before the update is the same
+     component after it. Merged into :androidApp. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- The OpenCode server running inside the app (BuiltinServerService) and phone setup (SetupService). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application>
+        <service
+            android:name="io.github.eslamasabry.opencode_mobile.BuiltinServerService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Runs the user's own coding-agent server (OpenCode) inside the app, on this device only, while they use other apps." />
+        </service>
+        <service
+            android:name="io.github.eslamasabry.opencode_mobile.SetupService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Installs the user's own coding agent (OpenCode) inside the app, on this device only, and keeps the install going while they use other apps." />
+        </service>
+        <receiver
+            android:name="io.github.eslamasabry.opencode_mobile.BuiltinRestoreReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="io.github.eslamasabry.opencode_mobile.BuiltinIdleReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

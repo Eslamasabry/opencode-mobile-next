@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import io.github.eslamasabry.opencode_mobile.LinuxBuildConfig as BuildConfig
 import android.app.ActivityManager
 import android.app.Activity
 import android.app.Instrumentation
@@ -172,8 +173,7 @@ internal class BuiltinRuntimeReclaimAcceptance(
             .putString(policy,
             QA_POLICY_ENABLED)
             .commit(), "bb3_fixture_save_failed")
-        val activity = existingMainActivity() ?: instrumentation.startActivitySync(Intent(context,
-            MainActivity::class.java)
+        val activity = existingMainActivity() ?: instrumentation.startActivitySync(AppComponents.mainActivity(context)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         try {
             linux.startService(BOOTSTRAP, "sleep 180", null, null)
@@ -359,8 +359,8 @@ internal class BuiltinRuntimeReclaimAcceptance(
             val records = type.getDeclaredField("mActivities").apply { isAccessible = true }.get(thread) as Map<*, *>
             activity = records.values.mapNotNull { record ->
                 record?.javaClass?.getDeclaredField("activity")?.apply { isAccessible = true }
-                    ?.get(record) as? MainActivity
-            }.singleOrNull { !it.isDestroyed }
+                    ?.get(record) as? Activity
+            }.singleOrNull { it.javaClass.name == AppComponents.MAIN_ACTIVITY && !it.isDestroyed }
         }
         return activity
     }

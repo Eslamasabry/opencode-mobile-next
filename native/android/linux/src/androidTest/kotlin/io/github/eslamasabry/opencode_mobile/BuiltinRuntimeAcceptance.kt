@@ -96,7 +96,7 @@ class BuiltinRuntimeAcceptance : Instrumentation() {
             requireSafe(flutterPrefs.edit().putString(marker, "{\"version\":2,\"nativeAuthority\":true}")
                 .putString(policy,
                 QA_POLICY_ENABLED).commit(), "qa_marker_write_failed")
-            activity = startActivitySync(Intent(targetContext, MainActivity::class.java)
+            activity = startActivitySync(AppComponents.mainActivity(targetContext)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             phase = "bootstrap_launch"
             // Establish our temporary FGS child while foreground. The Flutter
@@ -189,7 +189,7 @@ class BuiltinRuntimeAcceptance : Instrumentation() {
     private fun diagnostics(linux: BuiltinLinux) {
         requireSafe(FIXTURE !in linux.runningServices(), "fixture_already_running")
         // The real activity must be visible before Android admits foreground work.
-        activity = startActivitySync(Intent(targetContext, MainActivity::class.java)
+        activity = startActivitySync(AppComponents.mainActivity(targetContext)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         linux.startService(FIXTURE, "sleep 2; exit 137", null, null)
         val first = awaitStopped(linux, 137)
@@ -396,7 +396,7 @@ class BuiltinRuntimeAcceptance : Instrumentation() {
         // A person's healthy Start resets the count even with automation disabled.
         requireSafe(flutterPrefs.edit().putString(policy,
             QA_POLICY_DISABLED).commit(), "qa_policy_disable_failed")
-        activity = startActivitySync(Intent(targetContext, MainActivity::class.java)
+        activity = startActivitySync(AppComponents.mainActivity(targetContext)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         linux.setActivityResumed(true)
         linux.startServer(script, 4097)

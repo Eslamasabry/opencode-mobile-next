@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import io.github.eslamasabry.opencode_mobile.LinuxR as R
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager

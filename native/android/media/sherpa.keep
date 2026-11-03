@@ -1,0 +1,2 @@
+# sherpa-onnx: JNI reads config fields and calls the callback by name; the AAR ships an empty proguard.txt.
+-keep class com.k2fsa.sherpa.onnx.** { *; }

@@ -17,6 +17,17 @@ android {
     // io.github.eslamasabry.opencode_mobile and installs OVER the Flutter app (adb install -r) when signed with the
     // same key; on first launch MigrationWiring runs the day-1 migration behind the update gate. See
     // docs/native/units/P12-MIGRATION.md "Building the same-package APK" for the signing step.
+    // P12-FIX-LINUX-VOICE, as the Flutter app (android/app/build.gradle.kts): proot, its loader and the phone engine are
+    // run as programs from the native library folder, so the libraries must be extracted real files (legacy packaging).
+    // The phone engine's hashes are checked at run time, so the strip step must leave libaiteam_* untouched.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+            keepDebugSymbols += "**/libaiteam_*.so"
+            // The Kotlin API loads only libsherpa-onnx-jni.so + libonnxruntime.so (plan 10 §2.3).
+            excludes += listOf("**/libsherpa-onnx-c-api.so", "**/libsherpa-onnx-cxx-api.so")
+        }
+    }
     productFlavors {
         create("switch") {
             dimension = "channel"
@@ -93,6 +104,7 @@ dependencies {
             ":engine:voice",
             ":android:voice",
             ":feature:voice",
+            ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its native libraries)
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile
 
+import io.github.eslamasabry.opencode_mobile.LinuxR as R
 import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -214,9 +215,9 @@ class SetupService : Service() {
             val open = PendingIntent.getActivity(
                 context,
                 if (action == LAUNCH_ACTION_DONE) 3 else 2,
-                Intent(context, MainActivity::class.java)
+                AppComponents.mainActivity(context)
                     .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    .putExtra(MainActivity.EXTRA_LAUNCH_ACTION, action),
+                    .putExtra(AppComponents.EXTRA_LAUNCH_ACTION, action),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
             val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
