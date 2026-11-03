@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P12-CHAT-FIX4. -->
+<resources>
+    <string name="chatReplyFailedNoCredit">لا يملك حساب مزوّد النموذج رصيدًا لهذا النموذج. أضف رصيدًا لدى هذا المزوّد، أو اختر نموذجًا آخر.</string>
+    <string name="chatReplyFailedConnectionLost">انقطع الاتصال بمزوّد النموذج، فتوقّف الرد. اطلب منه المتابعة، أو أرسل مرة أخرى.</string>
+</resources>

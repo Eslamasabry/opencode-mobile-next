@@ -9,9 +9,9 @@ import io.github.eslamasabry.oc.core.model.transcript.Role
 // the assistant error card (assistant_error_row.dart, non-agent-run path) and the unanswered prompt
 // (transcript_turns.dart _unansweredTurn). Words stay in the feature.
 
-// ---- Recognised error causes (lib/domain/agent_error_text.dart classifyAgentError), file-private ----
+// ---- Recognised error causes (lib/domain/agent_error_text.dart classifyAgentError), module-internal ----
 
-private enum class Cause {
+internal enum class Cause {
     RequestTooLarge, FreeTierLimit, UsageLimit, OutOfCredit, RateLimited, ProviderAuth, ProviderBusy,
     ServerDiskFull, TimedOut, ProviderUnreachable, ConnectionDropped,
 }
@@ -54,7 +54,7 @@ private val CAUSE_RULES: List<Pair<Regex, Cause>> =
         ) to Cause.ConnectionDropped,
     )
 
-private fun causeOf(raw: String): Cause? {
+internal fun causeOf(raw: String): Cause? {
     if (raw.isBlank()) return null
     return CAUSE_RULES.firstOrNull { (pattern, _) -> pattern.containsMatchIn(raw) }?.second
 }

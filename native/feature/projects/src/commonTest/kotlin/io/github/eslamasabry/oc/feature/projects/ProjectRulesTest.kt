@@ -103,7 +103,7 @@ class ProjectRulesTest {
     }
 
     @Test
-    fun `B-STATE-158 a typed folder must be a full path, never the root, a home, dot-dot or a line break`() {
+    fun `B-STATE-157 a typed folder must be a full path, never the root, a home, dot-dot or a line break`() {
         assertNull(ProjectRules.pathProblem("/root/projects/my-app"))
         assertNull(ProjectRules.pathProblem("  /home/me/code/site/ "))
         assertNull(ProjectRules.pathProblem("C:/Users/me/code"))

@@ -8,7 +8,7 @@ class NumbersTest {
     private val persian = NumberSymbols(zeroDigit = '۰', grouping = '٬', decimal = '٫')
 
     @Test
-    fun `B-L10N-012 whole numbers use the phone's digits and thousands separator`() {
+    fun `06-12_1-8 whole numbers use the phone's digits and thousands separator`() {
         assertEquals("0", Numbers.format(0, NumberSymbols.Latin))
         assertEquals("12,345", Numbers.format(12345, NumberSymbols.Latin))
         assertEquals("١٢٬٣٤٥", Numbers.format(12345, arabic))
@@ -20,7 +20,7 @@ class NumbersTest {
     }
 
     @Test
-    fun `B-L10N-012 decimals round half up and keep the phone's separator`() {
+    fun `06-12_1-8 decimals round half up and keep the phone's separator`() {
         assertEquals("1.50", Numbers.decimal(1.5, 2, NumberSymbols.Latin))
         assertEquals("١٫٥٠", Numbers.decimal(1.5, 2, arabic))
         assertEquals("1,234.57", Numbers.decimal(1234.567, 2, NumberSymbols.Latin))
@@ -30,7 +30,7 @@ class NumbersTest {
     }
 
     @Test
-    fun `B-L10N-012 digits in built text follow the phone and other characters stay`() {
+    fun `06-12_1-8 digits in built text follow the phone and other characters stay`() {
         assertEquals("١٢:٣٠", Numbers.digits("12:30", arabic))
         assertEquals("v2.1", Numbers.digits("v2.1", NumberSymbols.Latin))
     }

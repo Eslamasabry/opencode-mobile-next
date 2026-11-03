@@ -16,7 +16,7 @@ class NumberDigitsTest {
     @AfterTest fun unpin() { Numbers.pinned = null }
 
     @Test
-    fun `B-L10N-012 a screen count uses the phone's digits, the same text the shade gets`() = runComposeUiTest {
+    fun `06-12_1-8 a screen count uses the phone's digits, the same text the shade gets`() = runComposeUiTest {
         Numbers.pinned = NumberSymbols(zeroDigit = '٠', grouping = '٬', decimal = '٫')
         var label = ""
         setContent { label = kitJumpLatestLabel(newCount = 3) }

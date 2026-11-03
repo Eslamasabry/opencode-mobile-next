@@ -129,6 +129,7 @@ import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitCopy
+import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
 import io.github.eslamasabry.oc.ui.words.res.voiceNativeReadAloud
 import io.github.eslamasabry.oc.ui.words.res.kitDiscardTitle
 import io.github.eslamasabry.oc.ui.words.res.kitJumpLatest
@@ -144,9 +145,11 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.kitWorkDidntFinish
 import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedBusy
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedConnectionLost
 import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedCopy
 import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedDetails
 import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedModel
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedNoCredit
 import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedOther
 import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedSignIn
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailedChanged
@@ -716,7 +719,8 @@ internal fun rememberReplyActions(
     val picture = stringResource(Res.string.chatFeelPicture)
     val onServer = stringResource(Res.string.chatFeelPictureOnServer, "\u0000")
     val onWeb = stringResource(Res.string.chatFeelPictureOnWeb, "\u0000")
-    return remember(actions, copy, copied, picture, onServer, onWeb, confirmedPaths) {
+    val continueLabel = stringResource(Res.string.returnBriefContinue)
+    return remember(actions, copy, copied, picture, onServer, onWeb, confirmedPaths, continueLabel) {
         ReplyActions(
             copiedLabel = copied,
             markdown =
@@ -746,6 +750,8 @@ internal fun rememberReplyActions(
             copyLabel = copy,
             copy = actions::copyText,
             checkPaths = actions::checkPaths,
+            continueLabel = continueLabel,
+            onContinue = actions::continueReply,
         )
     }
 }
@@ -843,12 +849,16 @@ private fun rememberReplyFailedWords(): (ReplyFailureKind) -> String {
     val model = stringResource(Res.string.chatReplyFailedModel)
     val busy = stringResource(Res.string.chatReplyFailedBusy)
     val other = stringResource(Res.string.chatReplyFailedOther)
-    return remember(signIn, model, busy, other) {
+    val noCredit = stringResource(Res.string.chatReplyFailedNoCredit)
+    val lost = stringResource(Res.string.chatReplyFailedConnectionLost)
+    return remember(signIn, model, busy, other, noCredit, lost) {
         { kind ->
             when (kind) {
                 ReplyFailureKind.SignIn -> signIn
+                ReplyFailureKind.NoCredit -> noCredit
                 ReplyFailureKind.Model -> model
                 ReplyFailureKind.Busy -> busy
+                ReplyFailureKind.ConnectionLost -> lost
                 ReplyFailureKind.Other -> other
             }
         }

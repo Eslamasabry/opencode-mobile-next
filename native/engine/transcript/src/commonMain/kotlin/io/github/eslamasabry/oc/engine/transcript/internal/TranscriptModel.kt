@@ -505,15 +505,12 @@ internal class TranscriptModel(
         for (m in members) {
             if (m.info.role == Role.Assistant) {
                 hasAssistant = true
-                m.info.errorText?.let {
-                    // QA wave 4 N3: a reply the user stopped ("Step interrupted", an abort) is not a failure.
-                    if (isStopError(it)) {
-                        stopped = true
-                    } else {
-                        failed = true
-                        if (it.isNotBlank()) reason = it.trim()
-                    }
-                }
+                // B-CHAT-101: the turn's outcome is its newest assistant step's (Flutter). A step that failed and
+                // was followed by one that finished is not a failed turn: each step resets what the last one said.
+                val error = m.info.errorText
+                stopped = error != null && isStopError(error)
+                failed = error != null && !stopped
+                reason = if (failed && error!!.isNotBlank()) error.trim() else null
             }
             for (pe in m.parts.values) {
                 val p = pe.part

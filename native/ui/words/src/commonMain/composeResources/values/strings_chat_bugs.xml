@@ -4,7 +4,7 @@
     <!-- B5: a failed reply says why in plain words and what to do next; the server's text is under Details. -->
     <string name="chatReplyFailedSignIn">The model's provider didn't accept the sign-in. Sign in to that provider again, or pick another model.</string>
     <string name="chatReplyFailedModel">This model isn't available. Pick another model and send again.</string>
-    <string name="chatReplyFailedBusy">The model's provider is busy or out of quota. Wait a moment, or pick another model.</string>
+    <string name="chatReplyFailedBusy">The model's provider is busy right now. Wait a moment, or pick another model.</string>
     <string name="chatReplyFailedOther">The reply stopped with an error. Send again, or pick another model.</string>
     <string name="chatReplyFailedDetails">Details</string>
     <string name="chatReplyFailedCopy">Copy details</string>

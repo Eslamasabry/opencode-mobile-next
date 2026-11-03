@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- P12-CHAT-FIX4. A new file so parallel chat units never edit the same lines. -->
+<resources>
+    <!-- B-AGENT-024: no credit is not "busy"; waiting cannot fix it (Flutter chatSendFailureNoCredit). -->
+    <string name="chatReplyFailedNoCredit">The model's provider account has no credit for this model. Add credit with that provider, or pick another model.</string>
+    <!-- B-AGENT-024: the reply stopped where it was; asking to continue picks up (Flutter chatAgentTurnLostConnection). -->
+    <string name="chatReplyFailedConnectionLost">The connection to the model's provider was lost, so the reply stopped. Ask it to continue, or send again.</string>
+</resources>

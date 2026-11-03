@@ -5,6 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -237,6 +238,80 @@ class ChatFeelScreenTest {
             for (label in listOf("Copy", "Share", "Select text")) {
                 assertTrue(onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty(), "menu shows $label")
             }
+        }
+
+    @Test
+    fun `B-SEC-014 B-SEC-133 a failed reply's Details never show a key or an Authorization header`() =
+        runComposeUiTest {
+            // Codex chat-bugs 1: an OC2 failed step with credentials in its error text reached Details unmasked.
+            val secret = "FIX4Pk6BearerSecret" + "9Z8Y7X6W5V"
+            val (p, _) =
+                screen(
+                    prompt("u1", "go"),
+                    io.github.eslamasabry.oc.engine.transcript.state.FooterRow(
+                        "footer:u1",
+                        "u1",
+                        failed = true,
+                        reason = "401 from provider: Authorization: Bearer $secret",
+                    ),
+                )
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, p, composer) }
+            }
+            onNodeWithText("Details").performClick()
+            waitForIdle()
+            onNodeWithText("401 from provider", substring = true).assertExists()
+            onAllNodesWithText(secret, substring = true).assertCountEquals(0)
+        }
+
+    @Test
+    fun `B-AGENT-024 a reply that lost its provider connection says so and offers Continue, which sends only Continue`() =
+        runComposeUiTest {
+            val world = FakeChatWorld()
+            world.draft.value = world.draft.value.copy(text = "my unsent draft")
+            world.transcript.value =
+                stateOf(
+                    prompt("u1", "go"),
+                    io.github.eslamasabry.oc.engine.transcript.state.FooterRow(
+                        "footer:u1", "u1", failed = true, reason = "API Error: Connection error. (ECONNRESET)",
+                    ),
+                )
+            val p = ChatPresenter(world, RecordingNavigator(), Immediate, outside = Outside())
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, p, composer) }
+            }
+            onNodeWithText("The connection to the model's provider was lost", substring = true).assertExists()
+            onNodeWithText("Continue").performClick()
+            waitForIdle()
+            assertEquals(listOf("sendAgain Continue"), world.calls.filter { it.startsWith("send") })
+            assertEquals("my unsent draft", world.draft.value.text, "the draft stays as it is")
+        }
+
+    @Test
+    fun `B-AGENT-024 no credit reads as no credit, not busy, and offers no Continue`() =
+        runComposeUiTest {
+            val (p, _) =
+                screen(
+                    prompt("u1", "go"),
+                    io.github.eslamasabry.oc.engine.transcript.state.FooterRow(
+                        "footer:u1", "u1", failed = true, reason = "Insufficient credits for this request",
+                    ),
+                )
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, p, composer) }
+            }
+            onNodeWithText("has no credit for this model", substring = true).assertExists()
+            onAllNodesWithText("busy", substring = true).assertCountEquals(0)
+            onAllNodesWithText("Continue").assertCountEquals(0)
         }
 
     @Test

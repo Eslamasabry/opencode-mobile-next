@@ -149,6 +149,15 @@ open class FakeChatWorld(override val ref: ConversationRef = Ref) : ChatWorld {
         return stopResult
     }
 
+    /** False = a tap the guard after a send ignored (the server was asked nothing). */
+    var stopAsked: Boolean = true
+
+    override suspend fun stopTurn(): Outcome<Boolean> =
+        when (val r = stop()) {
+            is Outcome.Ok -> Outcome.Ok(stopAsked)
+            is Outcome.Failed -> r
+        }
+
     override suspend fun reload(): Outcome<Unit> {
         calls += "reload"
         return Outcome.Ok(Unit)

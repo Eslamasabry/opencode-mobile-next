@@ -39,6 +39,18 @@ class ModelPickerTest {
     }
 
     @Test
+    fun `B-NAV-034 the current model leads its provider's group, before its alphabetical siblings`() {
+        // Codex chat-bugs 5: with a large provider catalog the current model must be on screen when the picker opens.
+        val siblings = (1..40).map { m("openai", "GPT-A$it") }
+        val zed = m("openai", "Zed Turbo", providerName = "OPENAI")
+        val sections = ModelPicker.sections(ComposerModels(choices = siblings + zed, selected = zed))
+        val group = sections.single { it.providerName == "OPENAI" }
+        assertEquals(zed, group.rows.first().model)
+        assertTrue(group.rows.first().current)
+        assertEquals(siblings.map { it.label }.sortedBy { it.lowercase() }, group.rows.drop(1).map { it.model.label })
+    }
+
+    @Test
     fun `B3 QA wave1 with the server default nothing else is marked current`() {
         val sections = ModelPicker.sections(ComposerModels(choices = all, selected = terra, usesDefault = true))
         assertTrue(sections.flatMap { it.rows }.none { it.current })

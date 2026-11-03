@@ -127,6 +127,9 @@ internal class ReplyActions(
     val copiedLabel: String? = null,
     /** B-CHAT-064: the paths a drawn block shows, to be checked on the server. */
     val checkPaths: (List<String>) -> Unit = {},
+    /** B-AGENT-024: the Continue next step of a reply that lost its provider connection (null = not offered). */
+    val continueLabel: String? = null,
+    val onContinue: (String) -> Unit = {},
 )
 
 /** B2: a short, safe code for a send failure (no server text, no address): what QA asked to see under Details. */
@@ -380,6 +383,9 @@ private fun ChatRow(
         is FooterRow -> Column {
             if (row.failed && !row.reason.isNullOrBlank() && listWords != null && listWords.details.isNotEmpty()) {
                 val reason = row.reason.orEmpty()
+                // B-SEC-014/B-SEC-133: the server's text may carry a key or an Authorization header; Details shows
+                // (and copies) it masked by the app's one redactor, as Flutter redacts notes before display.
+                val mask = rememberKitMask()
                 // B5: why the reply failed and what to do next; the server's own words only under Details.
                 Column(Modifier.testTag("chat-reply-failed")) {
                     // A failed reply keeps its actions (Copy, Share, Select text, Delete), as Flutter's does.
@@ -393,11 +399,20 @@ private fun ChatRow(
                             KitQuietLine(words.footer(row.failed))
                         }
                     else KitQuietLine(words.footer(row.failed))
-                    KitQuietLine(listWords.replyFailed(ReplyFailureKind.of(reason)))
+                    val kind = ReplyFailureKind.of(reason)
+                    KitQuietLine(listWords.replyFailed(kind))
+                    // B-AGENT-024: a lost connection's next step is a visible Continue (the turn picks up there).
+                    val continueLabel = reply?.continueLabel
+                    if (kind == ReplyFailureKind.ConnectionLost && !continueLabel.isNullOrBlank())
+                        KitButton(
+                            label = continueLabel,
+                            onClick = { reply.onContinue(continueLabel) },
+                            role = KitButtonRole.Secondary,
+                        )
                     KitDetailsFold(
                         label = listWords.details,
                         copyLabel = listWords.copyDetails,
-                        notes = listOf(reason),
+                        notes = listOf(mask(reason)),
                     )
                 }
             } else if (onOpenMenu != null && listWords != null) {

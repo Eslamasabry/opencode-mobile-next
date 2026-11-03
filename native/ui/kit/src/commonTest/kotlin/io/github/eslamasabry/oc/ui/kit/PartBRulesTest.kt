@@ -272,7 +272,7 @@ class PartBRulesTest {
     // KitField (G37 input half of B-L10N-012; counter rule).
 
     @Test
-    fun `B-L10N-012 a number field maps Arabic-Indic digits and the Arabic decimal separator to ASCII`() {
+    fun `06-12_1-9 a number field maps Arabic-Indic digits and the Arabic decimal separator to ASCII`() {
         assertEquals("123.45", KitFieldRules.normalizeNumber("١٢٣٫٤٥"))
         assertEquals("789", KitFieldRules.normalizeNumber("۷۸۹"))
         assertEquals("-12.50", KitFieldRules.normalizeNumber("-1a2.5.0"), "letters and a second separator drop out")

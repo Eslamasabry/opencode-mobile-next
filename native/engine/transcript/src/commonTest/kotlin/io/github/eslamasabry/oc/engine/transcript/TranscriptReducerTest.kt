@@ -93,6 +93,29 @@ class TranscriptReducerTest {
     }
 
     @Test
+    fun `B-CHAT-101 a step that failed and a later step that finished leave a finished turn, not a failed one`() {
+        // Codex chat-bugs 3: Flutter takes the outcome from the newest assistant step; an earlier error is not it.
+        apply(Ev.prompt("u1", "Hello"))
+        apply(GatewayEvent.RunStarted(S), Ev.assistant("a1", completed = 5, error = "overloaded_error: Overloaded"))
+        apply(Ev.assistant("a2", completed = 9), Ev.text("a2", "t"), Ev.delta("a2", "t", "Done."))
+        apply(GatewayEvent.RunEnded(S, RunOutcome.Succeeded))
+        val footer = derive().rows.filterIsInstance<FooterRow>().single()
+        assertFalse(footer.failed)
+        assertEquals(null, footer.reason)
+    }
+
+    @Test
+    fun `B-CHAT-101 a newest step that failed after a finished one is still a failed turn`() {
+        apply(Ev.prompt("u1", "Hello"))
+        apply(GatewayEvent.RunStarted(S), Ev.assistant("a1", completed = 5))
+        apply(Ev.assistant("a2", completed = 9, error = "Rate limit reached"))
+        apply(GatewayEvent.RunEnded(S, RunOutcome.Failed("Busy")))
+        val footer = derive().rows.filterIsInstance<FooterRow>().single()
+        assertTrue(footer.failed)
+        assertEquals("Rate limit reached", footer.reason)
+    }
+
+    @Test
     fun `B0 QA wave1 two notices that share a part id get distinct row keys`() {
         // OpenCode 2 gives every notice part the id "v2-0" (one per model-switched message): the
         // conversation with three of them crashed the list with a duplicate key.

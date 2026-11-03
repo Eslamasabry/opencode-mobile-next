@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
 
 class DlvChipTest {
     @Test
-    fun `B-AGENT-243 DLV-9 Stop never restores a waiting chip to the draft`() = runTest {
+    fun `09-4_4 DLV-9 Stop never restores a waiting chip to the draft`() = runTest {
         val w = World(Disk(), this)
         val ready = CompletableDeferred<Unit>()
         w.link.transport = { ready.await(); Unit.ok() }
