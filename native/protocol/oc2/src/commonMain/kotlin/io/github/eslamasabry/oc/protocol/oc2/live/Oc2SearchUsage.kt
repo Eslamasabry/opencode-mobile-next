@@ -62,9 +62,52 @@ public object Oc2SearchUsage {
                         if (!includeArchived && wire.archived) null
                         else GlobalSessionResult(session(wire), projectName = null, projectDirectory = wire.directory)
                     }
-                ServerPage(items.toImmutableList(), next(root)?.takeIf { it.isNotEmpty() && rows.size >= limit }).ok()
+                ServerPage(items.toImmutableList(), next(root)?.takeIf { it.isNotEmpty() }).ok()
             }
         }
+    }
+
+    /**
+     * Projects the server knows, for the usage project filter: the gateway's current project first (Flutter resolves it
+     * directly before sending its id), then those of the newest root conversations (archived ones too). Each is an id
+     * and the directory it was seen in. A current project that cannot be read leaves the conversation projects.
+     */
+    public suspend fun projectChoices(gateway: ServerGateway, limit: Int = 100): Outcome<List<Oc2ProjectChoice>>? {
+        val page = searchSessions(gateway, null, null, limit, includeArchived = true) ?: return null
+        return when (page) {
+            is Outcome.Failed -> page
+            is Outcome.Ok -> {
+                val seen =
+                    page.value.items.mapNotNull { row ->
+                        val id = row.session.projectId?.raw?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                        Oc2ProjectChoice(id, row.projectDirectory)
+                    }
+                (listOfNotNull((gateway as? Oc2Gateway)?.let { currentProject(it) }) + seen).distinctBy { it.id }.ok()
+            }
+        }
+    }
+
+    /**
+     * The project of the gateway's location: `GET /location` (`{directory, project:{id, directory}}`), or the older
+     * `GET /project/current` (a bare or `data`-wrapped project) where `/location` is absent. Null when neither answers.
+     */
+    private suspend fun currentProject(gateway: Oc2Gateway): Oc2ProjectChoice? {
+        val here = gateway.location.value
+        val query = mapOf("location[directory]" to here.directory, "location[workspace]" to here.workspace)
+        val located = gateway.json("/location", query = query)
+        val project =
+            when {
+                located is Outcome.Ok -> (data(located.value) as? JsonObject)?.get("project") as? JsonObject
+                located is Outcome.Failed && located.failure is Failure.NotFound ->
+                    (gateway.json("/project/current", query = query) as? Outcome.Ok)
+                        ?.value
+                        ?.let { data(it) as? JsonObject }
+                else -> null
+            } ?: return null
+        fun text(key: String): String? =
+            (project[key] as? JsonPrimitive)?.takeIf { it.isString }?.content?.takeIf { it.isNotBlank() }
+        val id = text("id") ?: return null
+        return Oc2ProjectChoice(id, text("directory") ?: text("worktree"))
     }
 
     /**
@@ -129,3 +172,6 @@ public object Oc2SearchUsage {
             model = wire.model?.let { "${it.providerID}/${it.id}" },
         )
 }
+
+/** One project the usage filter can offer: the server's project id and a directory it lives in, when known. */
+public data class Oc2ProjectChoice(val id: String, val directory: String?)

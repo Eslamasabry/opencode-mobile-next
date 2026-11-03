@@ -43,7 +43,8 @@ internal class Oc2Gateway(
     initialLocation: ServerLocation = ServerLocation.Default,
     random: Random = Random.Default,
     initialDialect: Oc2Dialect? = null,
-) : ServerGateway, ServerOperationsGateway, CorrelatedPromptGateway, SessionSelectionGateway {
+) : ServerGateway, ServerOperationsGateway, CorrelatedPromptGateway, SessionSelectionGateway, StagedRevertGateway,
+    LocatedFileGateway, LocatedVcsGateway {
     private val ids = Oc2ClientIds(clock, random)
     private val dialect = MutableStateFlow(initialDialect)
     private val negotiation = Mutex()
@@ -602,6 +603,59 @@ internal class Oc2Gateway(
     override suspend fun diff(id: SessionId): Outcome<ImmutableList<FileDiff>> =
         unavailable("sessionDiff")
 
+    // ---- Staged revert (P12-REVIEW; lib/api2/gateway_operations/ops_sessions.dart, protocol notes "Revert") ----
+    // POST .../revert/stage {messageID, files} → {"data": Revert}; POST .../revert/clear (stable: DELETE
+    // .../revert) and POST .../revert/commit, both 204, 409 SessionBusyError while running. One request each.
+
+    override suspend fun sessionRevertPrompt(session: SessionId, message: MessageId): Outcome<String?> =
+        when (val read = json("/session/${sid(session)}/message/${message.raw.encodeURLPathPart()}")) {
+            is Outcome.Failed -> read
+            is Outcome.Ok -> {
+                val row = Oc2History(redactor).message(session.raw, data(read.value))
+                if (row == null || row.info.id != message.raw || row.info.role != Role.User) {
+                    Outcome.Ok(null)
+                } else {
+                    val text =
+                        row.parts.filter { it.type == PartType.Text && !it.synthetic }.joinToString("\n") { it.text }
+                    Outcome.Ok(
+                        text.ifEmpty {
+                            row.parts.filter { it.type == PartType.File }.mapNotNull { it.filename?.takeIf(String::isNotEmpty) }.joinToString(", ")
+                        }
+                    )
+                }
+            }
+        }
+
+    override suspend fun stageSessionRevert(session: SessionId, message: MessageId, applyFiles: Boolean): Outcome<SessionRevert> =
+        read(
+            "/session/${sid(session)}/revert/stage",
+            HttpMethod.Post,
+            buildJsonObject {
+                put("messageID", message.raw)
+                put("files", applyFiles)
+            },
+        ) { root -> Oc2SessionRevert.fromJson(data(root))?.let(::revertOf) }
+
+    override suspend fun clearSessionRevert(session: SessionId): Outcome<Unit> =
+        unit("/session/${sid(session)}/revert/clear", HttpMethod.Post)
+
+    override suspend fun commitSessionRevert(session: SessionId): Outcome<Unit> =
+        unit("/session/${sid(session)}/revert/commit", HttpMethod.Post)
+
+    private fun revertOf(wire: Oc2SessionRevert): SessionRevert =
+        SessionRevert(
+            MessageId(wire.messageID),
+            wire.partID?.let(::PartId),
+            wire.snapshot,
+            wire.files?.mapNotNull { file ->
+                val path = (file["file"] ?: file["path"])?.let { (it as? JsonPrimitive)?.contentOrNull }?.takeIf(String::isNotEmpty)
+                    ?: return@mapNotNull null
+                fun text(key: String) = (file[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
+                fun count(key: String) = (file[key] as? JsonPrimitive)?.takeIf { !it.isString }?.intOrNull?.takeIf { it >= 0 }
+                FileDiff(path, text("before"), text("after"), text("patch"), count("additions"), count("deletions"), text("status"))
+            }?.toImmutableList(),
+        )
+
     override suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>> =
         read("/permission/request", query = locationQuery()) { root ->
             val rows = data(root) as? JsonArray ?: return@read null
@@ -641,10 +695,10 @@ internal class Oc2Gateway(
             },
         )
 
-    private fun locationQuery(): Map<String, String?> =
+    private fun locationQuery(at: ServerLocation = location.value): Map<String, String?> =
         mapOf(
-            "location[directory]" to location.value.directory,
-            "location[workspace]" to location.value.workspace,
+            "location[directory]" to at.directory,
+            "location[workspace]" to at.workspace,
         )
 
     override suspend fun providers(): Outcome<ProvidersResponse> {
@@ -775,8 +829,22 @@ internal class Oc2Gateway(
     }
 
     /** GET /fs/list (lib/api2/client.dart fsList): `{path, type}` entries, folders with a trailing `/`. */
-    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> =
-        read("/fs/list", query = locationQuery() + ("path" to path.ifEmpty { "." })) { reply ->
+    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> = listFiles(path, location.value)
+
+    /** The files of one conversation's folder: every request carries [at], never the shared location. */
+    override fun filesAt(location: ServerLocation): FileGateway =
+        object : FileGateway {
+            override suspend fun listFiles(path: String) = listFiles(path, location)
+
+            override suspend fun fileContent(path: String) = fileContent(path, location)
+
+            override suspend fun findFile(query: String) = findFile(query, location)
+
+            override suspend fun findText(pattern: String) = this@Oc2Gateway.findText(pattern)
+        }
+
+    private suspend fun listFiles(path: String, at: ServerLocation): Outcome<ImmutableList<FileNode>> =
+        read("/fs/list", query = locationQuery(at) + ("path" to path.ifEmpty { "." })) { reply ->
             entries(reply).map { entry ->
                 val obj = entry as? JsonObject ?: return@read null
                 val raw = obj.str("path") ?: return@read null
@@ -793,9 +861,11 @@ internal class Oc2Gateway(
      * GET /fs/read/<path> (raw bytes, no JSON envelope). Text only when the bytes are strict UTF-8 without a NUL in
      * the first 8 KiB; anything else stays exact as base64 (B-MEDIA-001).
      */
-    override suspend fun fileContent(path: String): Outcome<FileContent> {
+    override suspend fun fileContent(path: String): Outcome<FileContent> = fileContent(path, location.value)
+
+    private suspend fun fileContent(path: String, at: ServerLocation): Outcome<FileContent> {
         val bytes =
-            when (val reply = rawBytes("/fs/read/" + path.split('/').joinToString("/") { it.encodeURLPathPart() })) {
+            when (val reply = rawBytes("/fs/read/" + path.split('/').joinToString("/") { it.encodeURLPathPart() }, at)) {
                 is Outcome.Failed -> return reply
                 is Outcome.Ok -> reply.value
             }
@@ -815,10 +885,12 @@ internal class Oc2Gateway(
     }
 
     /** `GET /fs/find?query=&type=file` (Flutter `Api2Gateway.findFile`): project-relative paths. */
-    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> =
+    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> = findFile(query, location.value)
+
+    private suspend fun findFile(query: String, at: ServerLocation): Outcome<ImmutableList<String>> =
         read(
             "/fs/find",
-            query = locationQuery() + mapOf("query" to query, "type" to "file"),
+            query = locationQuery(at) + mapOf("query" to query, "type" to "file"),
         ) { root ->
             entries(root)
                 .mapNotNull { value ->
@@ -828,12 +900,28 @@ internal class Oc2Gateway(
                 .toImmutableList()
         }
 
+    /**
+     * `GET /vcs/diff?mode=working` (protocol notes "VCS"): the folder's uncommitted changes vs HEAD,
+     * `{file, patch, additions, deletions, status}` per file, for the conversation's own [location].
+     */
+    override suspend fun workingTreeAt(location: ServerLocation): Outcome<ImmutableList<FileDiff>> =
+        read("/vcs/diff", query = locationQuery(location) + ("mode" to "working")) { root ->
+            entries(root)
+                .mapNotNull { value ->
+                    val obj = value as? JsonObject ?: return@mapNotNull null
+                    val path = (obj.str("file") ?: obj.str("path"))?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+                    fun count(key: String) = (obj[key] as? JsonPrimitive)?.takeIf { !it.isString }?.intOrNull?.takeIf { it >= 0 }
+                    FileDiff(path, null, null, obj.str("patch"), count("additions"), count("deletions"), obj.str("status"))
+                }
+                .toImmutableList()
+        }
+
     /** OpenCode 2 has no workspace text search (capability textSearch stays false, as in Dart). */
     override suspend fun findText(pattern: String): Outcome<ImmutableList<FindMatch>> =
         unavailable("textSearch")
 
     /** One GET whose body is raw bytes, through the same dialect routing as [json]. */
-    private suspend fun rawBytes(path: String): Outcome<ByteArray> {
+    private suspend fun rawBytes(path: String, at: ServerLocation = location.value): Outcome<ByteArray> {
         if (dialect.value == null) {
             when (val health = health()) {
                 is Outcome.Failed -> return health
@@ -841,7 +929,7 @@ internal class Oc2Gateway(
             }
         }
         val settled = dialect.value ?: return Failure.UnreadableReply().failed()
-        val route = settled.route(path, HttpMethod.Get, null, locationQuery())
+        val route = settled.route(path, HttpMethod.Get, null, locationQuery(at))
         val response = net.exchange({ request(route.path, route.method, route.query) }) { reply -> reply.bodyAsBytes() }
         if (response is Outcome.Failed) {
             val failure = response.failure
@@ -872,6 +960,7 @@ internal class Oc2Gateway(
             workspaceId = wire.location?.workspaceID?.let(::WorkspaceId),
             path = wire.subpath,
             reverted = wire.reverted,
+            stagedRevert = wire.revert?.let(::revertOf),
             time =
                 SessionTime(
                     wire.time.created,
@@ -925,7 +1014,7 @@ internal class Oc2Gateway(
                 permissionRequests = true,
                 savedPermissionList = false,
                 messageCompletionEndsRun = false,
-                sessionRevert = false,
+                sessionRevert = true,
                 sessionImportExport = false,
                 sessionNotes = false,
                 serverCatalog = true,

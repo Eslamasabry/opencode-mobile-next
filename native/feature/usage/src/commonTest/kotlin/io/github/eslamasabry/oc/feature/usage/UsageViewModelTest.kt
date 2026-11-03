@@ -99,6 +99,27 @@ class UsageViewModelTest {
         UsageViewModel(UsageRoute.Hub(profile), source, UsageTimeZone { zone }, clock, nav)
 
     @Test
+    fun `B-NAV-078 a failed refresh after the time zone changed never relabels the old totals with the new zone`() = runTest {
+        val source = Source()
+        var zone = "Africa/Cairo"
+        val vm = UsageViewModel(UsageRoute.Hub(null), source, UsageTimeZone { zone }, clock, Navigator())
+        assertEquals(1.0, vm.state.value.report?.cost)
+        zone = "Asia/Tokyo"
+        val slow = CompletableDeferred<Unit>()
+        source.gate = slow
+        source.next = Outcome.Failed(Failure.Network(NetworkWhy.Refused))
+        vm.refresh()
+        assertEquals(UsagePhase.Loading, vm.state.value.phase)
+        assertNull(vm.state.value.report)
+        slow.complete(Unit)
+        val s = vm.state.value
+        assertEquals(UsagePhase.Failed, s.phase)
+        assertEquals("Asia/Tokyo", s.timezone)
+        assertNull(s.report)
+        assertFalse(s.previous)
+    }
+
+    @Test
     fun `B-PROTO-122 opening reads the active server for 30 days across all projects in the device time zone`() = runTest {
         val source = Source()
         val vm = vm(source)

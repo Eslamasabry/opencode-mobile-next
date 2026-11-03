@@ -56,7 +56,24 @@ public class ProjectsPickerViewModel(
                 if (changed) load()
             }
         }
+        // Back from a project page: that page remembered its folder, so Opened before is read again (B-ANDR-078).
+        viewModelScope.launch { nav.top.collect { if (it == route) rereadOpened() } }
     }
+
+    private fun rereadOpened() {
+        val server = current() ?: return
+        if (state.value.phase != ProjectsPhase.Ready) return
+        val before = ProjectRules.openedBefore(opened.recent(server.profile))
+        mutable.update { ui ->
+            ui.copy(
+                openedBefore = before.map { FolderRowUi(it, ProjectRules.name(it)) }.toImmutableList(),
+                pathStart = ui.pathStart.ifEmpty { pathStart(before) },
+            )
+        }
+    }
+
+    private fun pathStart(before: List<String>): String =
+        before.firstOrNull()?.substringBeforeLast('/', "")?.ifEmpty { null }?.plus("/").orEmpty()
 
     private fun current(): ProjectServer? = servers.firstOrNull { it.profile == chosen }
 
@@ -76,7 +93,7 @@ public class ProjectsPickerViewModel(
                 serverName = server.name,
                 openedBefore = before.map { FolderRowUi(it, ProjectRules.name(it)) }.toImmutableList(),
                 projectsLoading = true,
-                pathStart = before.firstOrNull()?.substringBeforeLast('/', "")?.ifEmpty { null }?.plus("/").orEmpty(),
+                pathStart = pathStart(before),
             )
         viewModelScope.launch {
             val read = readProjects(server)

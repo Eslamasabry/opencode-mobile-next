@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.engine.files.FileBody
 import io.github.eslamasabry.oc.engine.files.FileData
 import io.github.eslamasabry.oc.engine.files.FileHandoff
 import io.github.eslamasabry.oc.engine.files.FilePaths
+import io.github.eslamasabry.oc.engine.files.FileSaver
 import io.github.eslamasabry.oc.engine.files.PdfDocument
 import io.github.eslamasabry.oc.engine.files.PdfLimits
 import io.github.eslamasabry.oc.engine.files.PdfPages
@@ -50,7 +51,7 @@ public sealed interface ShareSheetUi {
     public data object Ended : ShareSheetUi
 }
 
-public enum class FileNotice { OpenWithNone, OpenWithFailed, MentionFailed }
+public enum class FileNotice { OpenWithNone, OpenWithFailed, MentionFailed, Saved, SaveFailed }
 
 public sealed interface PdfPageUi {
     public data object Loading : PdfPageUi
@@ -70,6 +71,9 @@ public data class FileUi(
     val sizeBytes: Long? = null,
     val canShare: Boolean = false,
     val canOpenWith: Boolean = false,
+    /** Save the exact original bytes (B-MEDIA-001), where the platform can. */
+    val canSave: Boolean = false,
+    val saving: Boolean = false,
     val asking: Boolean = false,
     val opening: Boolean = false,
     val share: ShareSheetUi? = null,
@@ -95,6 +99,9 @@ public interface FileActions {
     public fun ask()
 
     public fun openWith()
+
+    /** Save the original bytes to a place the person picks. */
+    public fun save()
 
     public fun shareOnWifi()
 
@@ -123,6 +130,7 @@ public class FileViewModel(
     private val pdfPages: Set<PdfPages>,
     private val nav: AppNavigator,
     private val appScope: AppCoroutineScope,
+    private val savers: Set<FileSaver>,
 ) : ViewModel(), FileActions {
     private val local =
         MutableStateFlow(
@@ -131,6 +139,7 @@ public class FileViewModel(
                 route.line,
                 canShare = share.supported,
                 canOpenWith = handoffs.isNotEmpty(),
+                canSave = savers.isNotEmpty(),
             )
         )
     public val state: StateFlow<FileUi> = local.asStateFlow()
@@ -139,6 +148,9 @@ public class FileViewModel(
     private var loads = 0
     private var shareWanted = false
 
+    /** The share this viewer started; another viewer's share is never adopted or stopped here. */
+    private var shareId: Long? = null
+
     init {
         load()
         viewModelScope.launch {
@@ -146,7 +158,7 @@ public class FileViewModel(
                 if (!shareWanted) return@collect
                 local.update { ui ->
                     when {
-                        running != null ->
+                        running != null && running.id == shareId ->
                             ui.copy(
                                 share =
                                     ShareSheetUi.Running(
@@ -241,8 +253,26 @@ public class FileViewModel(
                     is Outcome.Ok -> PdfPageUi.Ready(rendered.value)
                     is Outcome.Failed -> PdfPageUi.Failed
                 }
-            local.update { it.copy(pdfPages = it.pdfPages.toPersistentMap().putting(index, page)) }
+            local.update { it.copy(pdfPages = keepNear(it.pdfPages.toPersistentMap().putting(index, page), index)) }
         }
+    }
+
+    /**
+     * Rendered pages stay only near the page just shown (Flutter frees off-screen pages): at most [PDF_WINDOW] pages
+     * each side and [PDF_BUDGET_BYTES] of PNGs, farthest first. A dropped page renders again when it is reached.
+     */
+    private fun keepNear(pages: Map<Int, PdfPageUi>, center: Int): ImmutableMap<Int, PdfPageUi> {
+        val near = pages.filter { (i, page) -> page !is PdfPageUi.Ready || kotlin.math.abs(i - center) <= PDF_WINDOW }
+        var bytes = near.values.sumOf { (it as? PdfPageUi.Ready)?.png?.size?.toLong() ?: 0L }
+        if (bytes <= PDF_BUDGET_BYTES) return near.toPersistentMap()
+        val kept = near.toMutableMap()
+        for (i in near.keys.sortedByDescending { kotlin.math.abs(it - center) }) {
+            if (bytes <= PDF_BUDGET_BYTES || i == center) break
+            val page = kept[i] as? PdfPageUi.Ready ?: continue
+            kept.remove(i)
+            bytes -= page.png.size
+        }
+        return kept.toPersistentMap()
     }
 
     override fun ask() {
@@ -287,6 +317,26 @@ public class FileViewModel(
         }
     }
 
+    override fun save() {
+        val file = data ?: return
+        val saver = savers.firstOrNull() ?: return
+        if (local.value.saving) return
+        local.update { it.copy(saving = true, notice = null) }
+        viewModelScope.launch {
+            val result = saver.save(file)
+            local.update {
+                it.copy(
+                    saving = false,
+                    notice =
+                        when (result) {
+                            is Outcome.Ok -> if (result.value) FileNotice.Saved else null
+                            is Outcome.Failed -> FileNotice.SaveFailed
+                        },
+                )
+            }
+        }
+    }
+
     override fun shareOnWifi() {
         val file = data ?: return
         if (local.value.share == ShareSheetUi.Starting) return
@@ -295,7 +345,13 @@ public class FileViewModel(
         viewModelScope.launch {
             when (val started = share.start(file)) {
                 is Outcome.Failed -> local.update { it.copy(share = ShareSheetUi.Refused(started.failure)) }
-                is Outcome.Ok ->
+                is Outcome.Ok -> {
+                    shareId = started.value.id
+                    // The sheet was closed while the server was starting: end the share it no longer shows.
+                    if (!shareWanted) {
+                        share.stop(started.value.id)
+                        return@launch
+                    }
                     local.update {
                         it.copy(
                             share =
@@ -307,13 +363,14 @@ public class FileViewModel(
                                 )
                         )
                     }
+                }
             }
         }
     }
 
     override fun stopSharing() {
         viewModelScope.launch {
-            share.stop()
+            shareId?.let { share.stop(it) }
             local.update { it.copy(share = ShareSheetUi.Ended) }
         }
     }
@@ -322,14 +379,16 @@ public class FileViewModel(
         val wasSharing = shareWanted
         shareWanted = false
         local.update { it.copy(share = null) }
-        if (wasSharing) viewModelScope.launch { share.stop() }
+        val id = shareId
+        if (wasSharing && id != null) viewModelScope.launch { share.stop(id) }
     }
 
     override fun dismissNotice(): Unit = local.update { it.copy(notice = null) }
 
     override fun onCleared() {
         // Leaving the file ends its share (the sheet cannot outlive the viewer) and frees the PDF renderer.
-        if (shareWanted) share.stopLater()
+        val id = shareId
+        if (shareWanted && id != null) share.stopLater(id)
         val doc = pdf
         pdf = null
         if (doc != null) appScope.launch { doc.close() }
@@ -344,6 +403,8 @@ public class FileViewModel(
 
     private companion object {
         const val PDF_WIDTH_PX = 1440
+        const val PDF_WINDOW = 3
+        const val PDF_BUDGET_BYTES = 24L * 1024 * 1024
         const val MAX_POPS = 64
     }
 }

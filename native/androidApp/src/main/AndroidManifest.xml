@@ -49,6 +49,12 @@
         <receiver
             android:name=".StatusActionReceiver"
             android:exported="false" />
+        <!-- P12 fix (Codex files #3, plan 10 §11.6 S4): untrusted PDFs are parsed only in this isolated process. -->
+        <service
+            android:name=".LocalPdfService"
+            android:exported="false"
+            android:isolatedProcess="true"
+            android:process=":local_pdf" />
         <!-- P12-FILES Open with: read-only grants to the private cache copy of one opened project file. -->
         <provider
             android:name="androidx.core.content.FileProvider"

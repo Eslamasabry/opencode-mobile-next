@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.review.presentation
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.model.FileDiff
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -16,8 +17,19 @@ public interface ReviewNavigation {
     /** One file's diff: from the page's change set, or from the staged undo's preview. */
     public fun openFile(path: String, staged: Boolean)
 
+    /** One file of the conversation folder's uncommitted changes. */
+    public fun openWorkingTreeFile(path: String): Unit = openFile(path, staged = false)
+
     /** "Review the undo". */
     public fun openStaged()
+}
+
+/**
+ * "Send back with a note" (Flutter `review_workspace.dart` `_sendBack`): the formatted review reference goes into
+ * this conversation's message, then the person is back in the chat to send it. Nothing is sent from here.
+ */
+public fun interface ReviewSendBack {
+    public suspend fun send(text: String): Outcome<Unit>
 }
 
 /** A page's read: loading, failed (a plain line + Details) or ready. */
@@ -74,6 +86,17 @@ public data class ChangesUi(
     val confirming: Boolean = false,
     /** The last Undo all did not finish. */
     val actionFailure: Failure? = null,
+    /**
+     * The tools reported no changes, so the page shows the conversation folder's uncommitted changes instead (Flutter:
+     * "review opens the view that has changes", said once).
+     */
+    val workingTree: Boolean = false,
+    /** "Send back with a note" is offered (a conversation's message can take it). */
+    val canSendBack: Boolean = false,
+    /** The note field is open. */
+    val noting: Boolean = false,
+    /** The note could not be put into the message. */
+    val sendBackFailure: Failure? = null,
 )
 
 /** One file's diff page. [diff] is null with [noDiff] when the tools reported no lines for it. */

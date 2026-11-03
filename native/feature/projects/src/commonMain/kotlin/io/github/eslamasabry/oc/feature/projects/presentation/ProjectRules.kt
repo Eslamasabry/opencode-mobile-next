@@ -59,24 +59,48 @@ public object ProjectRules {
 
     public fun updatedAt(session: Session): Long = session.time?.updatedMs ?: session.time?.createdMs ?: 0L
 
-    /** B-NAV-011: newest first, ties keep the server's order, unknown dates last. */
+    /** B-NAV-011: newest first, ties keep the server's order, unknown dates (zero or below) last in the server's order. */
     public fun order(projects: List<WorkspaceProject>): List<WorkspaceProject> =
         projects
             .withIndex()
             .sortedWith(
                 compareBy<IndexedValue<WorkspaceProject>>(
                     { if (it.value.updatedAtMs <= 0L) 1 else 0 },
-                    { -it.value.updatedAtMs },
+                    { if (it.value.updatedAtMs <= 0L) 0L else -it.value.updatedAtMs },
                     { it.index },
                 )
             )
             .map { it.value }
 
+    /**
+     * The AI Team's own folders, never the person's projects (Dart `isAiTeamDirectory`, team_directories.dart): the
+     * team's home `/root/aiteam` and below, anything inside `.gc`, anything inside `.oc/aiteam`; `.` dropped, `..` applied.
+     */
+    public fun isTeamFolder(directory: String?): Boolean {
+        val value = directory?.trim()?.replace('\\', '/')
+        if (value.isNullOrEmpty()) return false
+        val segments = ArrayList<String>()
+        value.split('/').forEach { part ->
+            when (part) {
+                "", "." -> Unit
+                ".." -> if (segments.isNotEmpty()) segments.removeAt(segments.lastIndex)
+                else -> segments += part
+            }
+        }
+        if (segments.isEmpty()) return false
+        if (segments.size >= 2 && segments[0] == "root" && segments[1] == "aiteam") return true
+        return segments.indices.any { i ->
+            segments[i] == ".gc" || (segments[i] == ".oc" && segments.getOrNull(i + 1) == "aiteam")
+        }
+    }
+
     /** A project's name: its own name, else its folder's last segment. */
     public fun name(directory: String, given: String? = null): String =
         given?.takeIf { it.isNotBlank() } ?: FeedFolders.folderName(directory)
 
-    private fun roots(sessions: List<Session>): List<Session> = sessions.filter { it.parentId == null }
+    /** Root conversations of the person: subagents stay with their parent, the AI Team's work on its own screen. */
+    private fun roots(sessions: List<Session>): List<Session> =
+        sessions.filter { it.parentId == null && !isTeamFolder(it.directory) }
 
     private fun belongs(session: Session, directories: Set<String>): Boolean =
         session.directory?.let { normalize(it) in directories } == true
@@ -88,7 +112,7 @@ public object ProjectRules {
         running: Set<SessionId>,
     ): List<ProjectSummary> =
         order(projects)
-            .filterNot { FeedFolders.isOtherFolder(it.directory) }
+            .filterNot { FeedFolders.isOtherFolder(it.directory) || isTeamFolder(it.directory) }
             .map { p ->
                 val dirs = (listOf(p.directory) + p.worktrees).map(::normalize).toSet()
                 val mine = roots(sessions).filter { belongs(it, dirs) }
@@ -164,6 +188,7 @@ public sealed interface ChatTitle {
  */
 public object ChatTitles {
     private val markers = listOf("<tool_call", "</tool_call", "<tool_use", "<function", "</function", "<|")
+    private val truncatedMarker = Regex("""(<[A-Za-z_|/]*)\s*(?:…|\.\.\.)\s*$""")
     private val placeholder =
         Regex(
             """^(?:(?:New|Child)\s+session|Fork(?:ed)?(?:\s+session)?)?\s*[-:–]?\s*""" +
@@ -171,15 +196,42 @@ public object ChatTitles {
             RegexOption.IGNORE_CASE,
         )
     private val trailingEllipsis = Regex("""[\s…]*(?:\.\.\.)?[\s…]*$""")
+    private val isoStamp = Regex("""\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?""")
+
+    /** Leaked markup cut off, a half-cut marker and its ellipsis too (Dart `displaySessionTitleText`). */
+    private fun text(raw: String?): String {
+        var value = raw?.trim().orEmpty()
+        if (value.isEmpty()) return value
+        val lower = value.lowercase()
+        val at = markers.map { lower.indexOf(it) }.filter { it >= 0 }.minOrNull()
+        var cut = false
+        if (at != null) {
+            value = value.substring(0, at)
+            cut = true
+        } else {
+            val tail = truncatedMarker.find(value)
+            if (tail != null) {
+                val fragment = tail.groupValues[1].lowercase()
+                if (markers.any { it.startsWith(fragment) }) {
+                    value = value.substring(0, tail.range.first)
+                    cut = true
+                }
+            }
+        }
+        if (cut) value = trailingEllipsis.replaceFirst(value, "")
+        return value.trim()
+    }
 
     public fun present(raw: String?): ChatTitle {
-        var value = raw?.trim().orEmpty()
-        val at = markers.map { value.lowercase().indexOf(it) }.filter { it >= 0 }.minOrNull()
-        if (at != null) value = trailingEllipsis.replaceFirst(value.substring(0, at), "").trim()
-        return when {
-            value.isEmpty() -> ChatTitle.Untitled
-            placeholder.matches(value) -> ChatTitle.New
-            else -> ChatTitle.Text(value)
-        }
+        val value = text(raw)
+        if (value.isEmpty()) return ChatTitle.Untitled
+        if (placeholder.matches(value)) return ChatTitle.New
+        // Embedded stamps go too (Dart `stripIsoStamp`).
+        val plain =
+            value.replace(isoStamp, "")
+                .replace(Regex("""\s*[-:–]\s*$"""), "")
+                .replace(Regex("""\s{2,}"""), " ")
+                .trim()
+        return if (plain.isEmpty()) ChatTitle.New else ChatTitle.Text(plain)
     }
 }

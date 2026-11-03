@@ -11,6 +11,14 @@ public fun interface FileHandoff {
     public suspend fun openWith(data: FileData): Outcome<Unit>
 }
 
+/**
+ * Save (B-MEDIA-001, files_viewer.dart `_download`): the exact original bytes to a place the person picks.
+ * `Ok(true)` saved, `Ok(false)` the person cancelled the picker.
+ */
+public fun interface FileSaver {
+    public suspend fun save(data: FileData): Outcome<Boolean>
+}
+
 /** One opened PDF. Pages render one at a time as PNG bytes, at most [width] pixels wide. */
 public interface PdfDocument {
     public val pageCount: Int

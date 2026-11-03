@@ -11,4 +11,5 @@
     <string name="filesFolderLabel">المجلد %1$s</string>
     <string name="filesUp">مجلد واحد للأعلى</string>
     <string name="filesShareStarting">جارٍ بدء المشاركة…</string>
+    <string name="filesSaveFailed">تعذّر حفظ الملف. حاول مرة أخرى.</string>
 </resources>

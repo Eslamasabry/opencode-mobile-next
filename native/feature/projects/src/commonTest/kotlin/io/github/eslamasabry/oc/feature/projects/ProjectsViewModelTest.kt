@@ -50,7 +50,7 @@ import kotlinx.coroutines.test.setMain
 class ProjectsViewModelTest {
     private class Nav : AppNavigator {
         val calls = mutableListOf<String>()
-        override val top: StateFlow<AppRoute?> = MutableStateFlow(null)
+        override val top: MutableStateFlow<AppRoute?> = MutableStateFlow(null)
 
         override fun open(route: AppRoute) {
             calls += "open $route"
@@ -205,5 +205,36 @@ class ProjectsViewModelTest {
     fun `the project page without its server says so instead of loading forever`() {
         val vm = ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/app"), Nav(), Servers(emptyList()), SessionOpenedFolders())
         assertEquals(ProjectPagePhase.NoServer, vm.state.value.phase)
+    }
+
+    @Test
+    fun `B-ANDR-078 coming back from a project page shows that folder under Opened before at once`() {
+        val nav = Nav()
+        val folders = SessionOpenedFolders()
+        val servers = Servers(listOf(ProjectServer(p1, "one", FakeServerGateway(), null)))
+        val route = ProjectsRoute.Picker()
+        nav.top.value = route
+        val picker = ProjectsPickerViewModel(route, nav, servers, folders)
+        assertTrue(picker.state.value.openedBefore.isEmpty())
+        picker.openProject("/work/site")
+        nav.top.value = ProjectsRoute.Project(p1, "/work/site")
+        ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/site"), nav, servers, folders)
+        nav.top.value = route // Back
+        assertEquals(listOf("site"), picker.state.value.openedBefore.map { it.name })
+    }
+
+    @Test
+    fun `B-AGENT-264 the AI Team's own folders are never offered as projects`() {
+        val gateway =
+            FakeServerGateway(
+                listOf(
+                    session("a", "/root/projects/my-app", 30),
+                    session("b", "/root/aiteam/city", 20),
+                    session("c", "/work/city/.gc/worktrees/my-app/polecat", 10),
+                )
+            )
+        gateway.capabilities.value = ServerCapabilities(projectManagement = false)
+        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "srv", gateway, null))), SessionOpenedFolders())
+        assertEquals(listOf("my-app"), vm.state.value.projects.map { it.name })
     }
 }

@@ -84,6 +84,19 @@ private class Fake(val base: FakeServerGateway = FakeServerGateway(listOf(Sessio
     override suspend fun commitSessionRevert(session: SessionId): Outcome<Unit> = Unit.ok().also { calls += "commit"; staged = null }
 }
 
+/** A server with the folder's uncommitted changes (OC2 `/vcs/diff`), on top of [Fake]. */
+private class VcsFake(val inner: Fake, var tree: List<FileDiff>) :
+    ServerGateway by inner, StagedRevertGateway by inner, io.github.eslamasabry.oc.core.domain.LocatedVcsGateway {
+    val at = mutableListOf<io.github.eslamasabry.oc.core.model.ServerLocation>()
+
+    override suspend fun session(id: SessionId) = Session(id, directory = "/work/a").ok()
+
+    override suspend fun workingTreeAt(location: io.github.eslamasabry.oc.core.model.ServerLocation): Outcome<kotlinx.collections.immutable.ImmutableList<FileDiff>> {
+        at += location
+        return tree.toImmutableList().ok()
+    }
+}
+
 private class Nav : ReviewNavigation {
     val went = mutableListOf<String>()
 
@@ -97,6 +110,10 @@ private class Nav : ReviewNavigation {
 
     override fun openStaged() {
         went += "staged"
+    }
+
+    override fun openWorkingTreeFile(path: String) {
+        went += "working $path"
     }
 }
 
@@ -275,5 +292,87 @@ class ReviewPresenterTest {
     @Test
     fun `B-CHAT-103 nothing staged says so instead of an empty review`() = runTest(UnconfinedTestDispatcher()) {
         assertEquals(StagedPhase.None, StagedPresenter(review(), nav, backgroundScope).state.value.phase)
+    }
+
+    @Test
+    fun `B-CHAT-105 another client staging while Undo from here is open makes it stale and sends nothing`() = runTest(UnconfinedTestDispatcher()) {
+        val p = UndoFromHerePresenter(review(), "u2", nav, backgroundScope)
+        assertNull(p.state.value.block)
+        fake.staged = SessionRevert(MessageId("u1"), null, null, null)
+        fake.base.events.emit(GatewayEvent.RevertChanged(S, RevertKind.Staged))
+        runCurrent()
+        assertEquals(UndoBlock.Stale, p.state.value.block)
+        p.confirm()
+        assertTrue(fake.calls.none { it.startsWith("stage") })
+    }
+
+    @Test
+    fun `B-CHAT-105 a missed remote stage is caught by the read before dispatch`() = runTest(UnconfinedTestDispatcher()) {
+        val p = UndoFromHerePresenter(review(), "u2", nav, backgroundScope)
+        fake.staged = SessionRevert(MessageId("u1"), null, null, null) // no event reaches this phone
+        p.confirm()
+        assertTrue(fake.calls.none { it.startsWith("stage") })
+        assertEquals(UndoBlock.Stale, p.state.value.block)
+        assertNull(p.state.value.failure)
+        assertTrue(nav.went.isEmpty())
+    }
+
+    @Test
+    fun `B-CHAT-098 Send back with a note puts a review comment into the conversation's message and returns`() = runTest(UnconfinedTestDispatcher()) {
+        val sent = mutableListOf<String>()
+        val p = ChangesPresenter(review(), null, nav, backgroundScope, ReviewSendBack { sent += it; Outcome.Ok(Unit) })
+        assertTrue(p.state.value.canSendBack)
+        p.sendBack()
+        assertTrue(p.state.value.noting)
+        p.sendBackNote("  please keep the old name  ")
+        val text = sent.single()
+        assertTrue(text.startsWith("Reference:"), text)
+        assertTrue("`src/a.kt`" in text, text)
+        assertTrue("please keep the old name" in text, text)
+        assertEquals(listOf("back"), nav.went)
+        assertTrue(fake.calls.isEmpty(), "nothing is sent to the server from here")
+    }
+
+    @Test
+    fun `B-CHAT-098 a blank or cancelled note sends nothing, a failed one stays with the reason`() = runTest(UnconfinedTestDispatcher()) {
+        var answer: Outcome<Unit> = Outcome.Ok(Unit)
+        var sends = 0
+        val p = ChangesPresenter(review(), null, nav, backgroundScope, ReviewSendBack { sends++; answer })
+        p.sendBack()
+        p.sendBackNote(null)
+        p.sendBack()
+        p.sendBackNote("   ")
+        assertEquals(0, sends)
+        answer = Outcome.Failed(Failure.StorageRefused())
+        p.sendBack()
+        p.sendBackNote("look again")
+        assertEquals(Failure.StorageRefused(), p.state.value.sendBackFailure)
+        assertTrue(nav.went.isEmpty())
+        assertFalse(ChangesPresenter(review(), null, nav, backgroundScope).state.value.canSendBack)
+    }
+
+    @Test
+    fun `B-NAV-053 a conversation whose agent changed files by command shows the folder's uncommitted changes`() = runTest(UnconfinedTestDispatcher()) {
+        fake.history = listOf(prompt("u1", 1), reply("a1", 2)) // no edit tools: the agent used a command
+        val vcs = VcsFake(fake, listOf(FileDiff("lib/x.kt", patch = "@@ -1 +1 @@\n-a\n+b", additions = 1, deletions = 1)))
+        gateways.value = ReviewGateways(vcs, FakeOperationsGateway())
+        val p = ChangesPresenter(review(), null, nav, backgroundScope)
+        val ui = p.state.value
+        assertTrue(ui.workingTree)
+        assertEquals(listOf("lib/x.kt"), ui.files.map { it.path })
+        assertEquals("/work/a", vcs.at.single().directory)
+        p.openFile("lib/x.kt")
+        assertEquals(listOf("working lib/x.kt"), nav.went)
+        val file = FileDiffPresenter(review(), "lib/x.kt", null, staged = false, scope = backgroundScope, workingTree = true)
+        assertEquals("lib/x.kt", file.state.value.diff?.file)
+    }
+
+    @Test
+    fun `B-NAV-053 tool changes stay the view when there are any`() = runTest(UnconfinedTestDispatcher()) {
+        val vcs = VcsFake(fake, listOf(FileDiff("other.kt", patch = "x")))
+        gateways.value = ReviewGateways(vcs, FakeOperationsGateway())
+        val ui = ChangesPresenter(review(), null, nav, backgroundScope).state.value
+        assertFalse(ui.workingTree)
+        assertTrue(vcs.at.isEmpty())
     }
 }

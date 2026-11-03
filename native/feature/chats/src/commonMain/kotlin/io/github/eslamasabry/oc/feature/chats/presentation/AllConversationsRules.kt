@@ -19,6 +19,9 @@ public data class SourcePages(
     val running: Set<SessionId> = emptySet(),
 )
 
+/** A row deleted inside the undo window, with what its DELETE needs: kept apart from the pages, which a reload clears. */
+public data class PendingDelete(val key: String, val session: Session)
+
 /** Everything the page knows; [AllConversationsRules.build] turns it into what it shows. */
 public data class AllModel(
     val servers: List<ServerName> = emptyList(),
@@ -31,13 +34,15 @@ public data class AllModel(
     val selecting: Boolean = false,
     val selected: Set<String> = emptySet(),
     /** Rows deleted inside the undo window: hidden, not yet sent. */
-    val pending: List<String> = emptyList(),
+    val pending: List<PendingDelete> = emptyList(),
     /** Rows whose delete was sent and has not answered yet: still hidden; a refusal brings them back. */
     val hiddenSent: Set<String> = emptySet(),
     val undoId: Int = 0,
     val titles: Map<String, String> = emptyMap(),
     val archivedNow: Set<String> = emptySet(),
     val loadingMore: Boolean = false,
+    /** Older pages read so far, across servers. */
+    val loadedPages: Int = 0,
     val problem: AllProblem? = null,
     val renaming: RenameUi? = null,
     val archiveCapable: Set<ProfileId> = emptySet(),
@@ -90,13 +95,15 @@ public object AllConversationsRules {
         }
         val names = model.servers.associate { it.profile to it.name }
         val many = model.servers.size > 1
-        val hidden = model.pending.toSet() + model.hiddenSent
-        // Subagent sessions belong to their parent's page, never this list (Dart rootsOnly: true).
+        val hidden = model.pending.map { it.key }.toSet() + model.hiddenSent
+        // Subagent sessions belong to their parent's page, never this list (Dart rootsOnly: true); the AI Team's own
+        // conversations belong to the AI Team screen (Dart isAiTeamConversation).
         val entries =
             model.servers.flatMap { server ->
                 val source = model.sources[server.profile] ?: return@flatMap emptyList()
                 source.sessions
                     .filter { it.parentId == null }
+                    .filterNot { TeamFolders.isTeamFolder(it.directory) }
                     .filterNot { key(server.profile, it.id) in hidden }
                     .map { Entry(server.profile, it, it.id in source.running) }
             }
@@ -164,6 +171,7 @@ public object AllConversationsRules {
                     selectedKeys.all { profileOf(it) in model.archiveCapable },
             canLoadMore = allLoaded && !allFailed && sources.any { it.cursor != null },
             loadingMore = model.loadingMore,
+            loadedPages = model.loadedPages,
             loadMoreFailure = sources.firstNotNullOfOrNull { it.moreFailure },
             failure = if (allFailed) sources.firstNotNullOfOrNull { it.failure } else null,
             incomplete =
@@ -179,9 +187,7 @@ public object AllConversationsRules {
                     DeleteUndoUi(
                         model.undoId,
                         model.pending.size,
-                        model.pending.singleOrNull()?.let { k ->
-                            find(model, k)?.let { (_, s) -> SessionTitles.present(model.titles[k] ?: s.title) }
-                        },
+                        model.pending.singleOrNull()?.let { p -> SessionTitles.present(model.titles[p.key] ?: p.session.title) },
                     ),
         )
     }
@@ -195,5 +201,37 @@ public object AllConversationsRules {
         val id = key.substringAfterLast('/')
         val session = model.sources[profile]?.sessions?.firstOrNull { it.id.raw == id } ?: return null
         return profile to session
+    }
+}
+
+/**
+ * The AI Team's own folders (Dart `isAiTeamDirectory`, lib/domain/team_directories.dart): the team's home
+ * `/root/aiteam` and below, anything inside a Gas City state folder `.gc`, and anything inside `.oc/aiteam`. A
+ * person's project the team works on matches none of these. `.` is dropped and `..` applied first.
+ */
+public object TeamFolders {
+    private val home = listOf("root", "aiteam")
+
+    public fun isTeamFolder(directory: String?): Boolean {
+        val segments = segments(directory) ?: return false
+        if (segments.isEmpty()) return false
+        if (segments.size >= home.size && home.indices.all { segments[it] == home[it] }) return true
+        return segments.indices.any { i ->
+            segments[i] == ".gc" || (segments[i] == ".oc" && segments.getOrNull(i + 1) == "aiteam")
+        }
+    }
+
+    private fun segments(directory: String?): List<String>? {
+        val value = directory?.trim()?.replace('\\', '/')
+        if (value.isNullOrEmpty()) return null
+        val out = ArrayList<String>()
+        value.split('/').forEach { part ->
+            when (part) {
+                "", "." -> Unit
+                ".." -> if (out.isNotEmpty()) out.removeAt(out.lastIndex)
+                else -> out += part
+            }
+        }
+        return out
     }
 }

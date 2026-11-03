@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.feature.search.presentation.ConversationSearchSource
+import io.github.eslamasabry.oc.feature.search.presentation.RecentSearchHistory
 import io.github.eslamasabry.oc.feature.search.presentation.RecentSearchStore
 import io.github.eslamasabry.oc.feature.search.presentation.SearchConversation
 import io.github.eslamasabry.oc.feature.search.presentation.SearchConversationPage
@@ -44,15 +45,10 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 /*
  * Unit P12-SEARCH-USAGE: the Android side of Search conversations and Usage and cost. Everything here reads the live
@@ -157,48 +153,26 @@ class AndroidConversationSearch(private val shared: SearchUsageServers, appScope
         SearchConversation(session.id, session.title, directory, session.time?.updatedMs)
 }
 
-/** App-wide recent searches (`oc.search.recent`, a string list). Not per server: the words are the person's own. */
+/**
+ * App-wide recent searches (`oc.search.recent`, a string list). Not per server: the words are the person's own.
+ * Start-up restoration and every change share one lock ([RecentSearchHistory]), so no history is lost to a race.
+ */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<RecentSearchStore>())
 @Inject
-class AndroidRecentSearches(private val stores: PreviewStores, appScope: AppCoroutineScope, dispatchers: AppDispatchers) :
-    RecentSearchStore {
-    private val scope = CoroutineScope(appScope.coroutineContext + dispatchers.serial("recent-searches"))
-    private val order = Mutex()
-    private val mutable = MutableStateFlow<ImmutableList<String>>(persistentListOf())
-    override val recent: StateFlow<ImmutableList<String>> = mutable.asStateFlow()
-
-    init {
-        scope.launch {
-            if (stores.warm() is Outcome.Ok) {
-                mutable.value = ((stores.prefs.get(KEY) as? PrefValue.StrList)?.value ?: emptyList())
-                    .take(RecentSearchStore.RECENT_LIMIT)
-                    .toImmutableList()
+class AndroidRecentSearches(stores: PreviewStores, appScope: AppCoroutineScope, dispatchers: AppDispatchers) :
+    RecentSearchStore by RecentSearchHistory(
+        CoroutineScope(appScope.coroutineContext + dispatchers.serial("recent-searches")),
+        warm = { stores.warm() },
+        load = { (stores.prefs.get(RECENT_KEY) as? PrefValue.StrList)?.value ?: emptyList() },
+        save = { next ->
+            stores.prefs.commit(stores.lanes.app) {
+                if (next.isEmpty()) remove(RECENT_KEY) else putStringList(RECENT_KEY, next)
             }
-        }
-    }
+        },
+    )
 
-    override suspend fun remember(query: String): Outcome<Unit> = write { SearchMatch.remember(it, query) }
-
-    override suspend fun forget(query: String): Outcome<Unit> = write { list -> list.filterNot { it == query } }
-
-    override suspend fun clear(): Outcome<Unit> = write { emptyList() }
-
-    private suspend fun write(change: (List<String>) -> List<String>): Outcome<Unit> = order.withLock {
-        when (val ready = stores.warm()) {
-            is Outcome.Failed -> return@withLock ready
-            is Outcome.Ok -> Unit
-        }
-        val next = change(mutable.value)
-        val saved = stores.prefs.commit(stores.lanes.app) { if (next.isEmpty()) remove(KEY) else putStringList(KEY, next) }
-        if (saved is Outcome.Ok) mutable.value = next.toImmutableList()
-        saved
-    }
-
-    private companion object {
-        const val KEY = "oc.search.recent"
-    }
-}
+private const val RECENT_KEY = "oc.search.recent"
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<UsageSource>())
@@ -215,19 +189,20 @@ class AndroidUsageSource(private val shared: SearchUsageServers, appScope: AppCo
 
     override suspend fun projects(profile: ProfileId): Outcome<ImmutableList<UsageProject>> {
         val gateway = shared.gateway(profile) ?: return stale()
-        val sessions: List<Pair<Session, String?>> =
-            when (val global = Oc2SearchUsage.searchSessions(gateway, null, null, 100, includeArchived = true)) {
-                is Outcome.Ok -> global.value.items.map { it.session to it.projectDirectory }
-                is Outcome.Failed -> return global
+        // OC2: the current project first, then those of recent conversations (Oc2SearchUsage.projectChoices).
+        val seen: List<Pair<String?, String?>> =
+            when (val choices = Oc2SearchUsage.projectChoices(gateway, 100)) {
+                is Outcome.Ok -> choices.value.map { it.id to it.directory }
+                is Outcome.Failed -> return choices
                 null ->
                     when (val page = gateway.sessionPage(null, 100)) {
                         is Outcome.Failed -> return page
-                        is Outcome.Ok -> page.value.items.map { it to it.directory }
+                        is Outcome.Ok -> page.value.items.map { it.projectId?.raw to it.directory }
                     }
             }
-        return sessions
-            .mapNotNull { (session, directory) ->
-                val id = session.projectId?.raw?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+        return seen
+            .mapNotNull { (raw, directory) ->
+                val id = raw?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
                 UsageProject(id, SearchMatch.projectName(directory) ?: id)
             }
             .distinctBy { it.id }

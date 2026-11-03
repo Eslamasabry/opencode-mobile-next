@@ -10,6 +10,7 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.feature.review.ReviewDrafts
 import io.github.eslamasabry.oc.feature.review.ReviewHub
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
@@ -21,13 +22,27 @@ private class RouteNavigation(private val nav: AppNavigator, private val ref: Co
 
     override fun openFile(path: String, staged: Boolean): Unit = nav.open(ReviewRoute.File(ref, path, messageId, staged))
 
+    override fun openWorkingTreeFile(path: String): Unit = nav.open(ReviewRoute.File(ref, path, messageId, workingTree = true))
+
     override fun openStaged(): Unit = nav.open(ReviewRoute.Staged(ref))
 }
 
 /** "Changes": one per entry; all behaviour is [ChangesPresenter]'s. */
 @AssistedInject
-public class ChangesViewModel(@Assisted route: ReviewRoute.Changes, hub: ReviewHub, nav: AppNavigator) : ViewModel(), ChangesActions {
-    private val presenter = ChangesPresenter(hub.review(route.ref), route.messageId, RouteNavigation(nav, route.ref, route.messageId), viewModelScope)
+public class ChangesViewModel(
+    @Assisted route: ReviewRoute.Changes,
+    hub: ReviewHub,
+    nav: AppNavigator,
+    drafts: ReviewDrafts,
+) : ViewModel(), ChangesActions {
+    private val presenter =
+        ChangesPresenter(
+            hub.review(route.ref),
+            route.messageId,
+            RouteNavigation(nav, route.ref, route.messageId),
+            viewModelScope,
+            drafts.sendBack(route.ref),
+        )
     public val state: StateFlow<ChangesUi> = presenter.state
 
     override fun back(): Unit = presenter.back()
@@ -46,6 +61,10 @@ public class ChangesViewModel(@Assisted route: ReviewRoute.Changes, hub: ReviewH
 
     override fun openStaged(): Unit = presenter.openStaged()
 
+    override fun sendBack(): Unit = presenter.sendBack()
+
+    override fun sendBackNote(note: String?): Unit = presenter.sendBackNote(note)
+
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)
@@ -57,7 +76,8 @@ public class ChangesViewModel(@Assisted route: ReviewRoute.Changes, hub: ReviewH
 /** One file's diff. */
 @AssistedInject
 public class FileDiffViewModel(@Assisted route: ReviewRoute.File, hub: ReviewHub, private val nav: AppNavigator) : ViewModel() {
-    private val presenter = FileDiffPresenter(hub.review(route.ref), route.path, route.messageId, route.staged, viewModelScope)
+    private val presenter =
+        FileDiffPresenter(hub.review(route.ref), route.path, route.messageId, route.staged, viewModelScope, route.workingTree)
     public val state: StateFlow<FileDiffUi> = presenter.state
 
     public fun back(): Unit = nav.back()

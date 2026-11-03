@@ -20,10 +20,12 @@ import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.composer.input.Mentions
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.files.FileHandoff
+import io.github.eslamasabry.oc.engine.files.FileSaver
 import io.github.eslamasabry.oc.engine.files.PdfPages
 import io.github.eslamasabry.oc.engine.files.ShareHost
 import io.github.eslamasabry.oc.engine.files.WifiShare
 import io.github.eslamasabry.oc.feature.files.presentation.ComposerMentions
+import io.github.eslamasabry.oc.feature.files.presentation.ConversationFiles
 import io.github.eslamasabry.oc.feature.files.presentation.FilesConnections
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.first
@@ -42,6 +44,8 @@ public interface FilesPlatformBindings {
     @Multibinds(allowEmpty = true) public val fileHandoffs: Set<FileHandoff>
 
     @Multibinds(allowEmpty = true) public val pdfPages: Set<PdfPages>
+
+    @Multibinds(allowEmpty = true) public val fileSavers: Set<FileSaver>
 }
 
 @BindingContainer
@@ -62,14 +66,14 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
     private fun live(ref: ConversationRef): ServerGateway? =
         (registry.graphFor(ref) as? FilesGraphAccessors)?.filesGateway
 
-    override fun gateway(ref: ConversationRef): FileGateway? = live(ref)
+    // Each screen reads its conversation's own folder (B-NAV-026), never the gateway's shared location.
+    override fun gateway(ref: ConversationRef): FileGateway? = live(ref)?.let { ConversationFiles(it, ref.sessionId) }
 
     override fun canBrowse(ref: ConversationRef): Boolean = live(ref)?.capabilities?.value?.fileBrowsing == true
 
     override suspend fun directory(ref: ConversationRef): String? {
         val gateway = live(ref) ?: return null
-        gateway.location.value.directory?.let { return it }
-        return (gateway.session(ref.sessionId) as? Outcome.Ok)?.value?.directory
+        return ConversationFiles(gateway, ref.sessionId).directory()
     }
 }
 

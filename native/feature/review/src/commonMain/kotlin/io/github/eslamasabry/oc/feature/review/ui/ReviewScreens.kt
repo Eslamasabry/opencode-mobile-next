@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -78,7 +79,14 @@ import io.github.eslamasabry.oc.ui.words.res.revertReviewChanged
 import io.github.eslamasabry.oc.ui.words.res.revertReviewLatest
 import io.github.eslamasabry.oc.ui.words.res.reviewFileGone
 import io.github.eslamasabry.oc.ui.words.res.reviewIncomplete
+import io.github.eslamasabry.oc.ui.words.res.defaultReviewScopeNotice
+import io.github.eslamasabry.oc.ui.words.res.kitRequestSendBack
+import io.github.eslamasabry.oc.ui.words.res.readerUiWorkingTree
 import io.github.eslamasabry.oc.ui.words.res.reviewLooksGood
+import io.github.eslamasabry.oc.ui.words.res.reviewSendBackFailed
+import io.github.eslamasabry.oc.ui.words.res.reviewSendBackWithNote
+import io.github.eslamasabry.oc.ui.words.res.reviewWorkspaceCommentEmpty
+import io.github.eslamasabry.oc.ui.words.res.reviewWorkspaceCommentLabel
 import io.github.eslamasabry.oc.ui.words.res.reviewNoChangesBody
 import io.github.eslamasabry.oc.ui.words.res.reviewNoDiff
 import io.github.eslamasabry.oc.ui.words.res.reviewOneFileUnavailable
@@ -206,6 +214,10 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                 UndoAllUi.Waiting -> KitAction(stringResource(Res.string.reviewRevertScreenTitle), actions::openStaged)
                                 else -> null
                             },
+                        // Flutter: "Send back" is a note in the chat's box, offered beside Looks good / Undo all.
+                        tertiary =
+                            if (state.canSendBack) listOf(KitAction(stringResource(Res.string.reviewSendBackWithNote), actions::sendBack))
+                            else emptyList(),
                     )
                 }
             } else null,
@@ -233,10 +245,15 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                 role = TypeRole.Title,
                             )
                         }
-                        KitText(stringResource(Res.string.reviewToolEvidence), role = TypeRole.Body, tone = TextTone.Secondary)
+                        if (state.workingTree) {
+                            KitNotice(stringResource(Res.string.defaultReviewScopeNotice, stringResource(Res.string.readerUiWorkingTree)))
+                        } else {
+                            KitText(stringResource(Res.string.reviewToolEvidence), role = TypeRole.Body, tone = TextTone.Secondary)
+                        }
                         if (state.undoAll == UndoAllUi.Waiting) KitNotice(stringResource(Res.string.reviewWaiting))
                         if (!state.complete) KitNotice(stringResource(Res.string.reviewIncomplete))
                         state.actionFailure?.let { FailedNotice(stringResource(Res.string.reviewRevertStageFailed), it) }
+                        state.sendBackFailure?.let { FailedNotice(stringResource(Res.string.reviewSendBackFailed), it) }
                         KitRowGroup(Modifier.testTag("review-files")) {
                             state.files.forEach { row -> ChangeRow(row, actions) }
                         }
@@ -255,6 +272,15 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                 }
         }
     }
+    val emptyNote = stringResource(Res.string.reviewWorkspaceCommentEmpty)
+    KitInputDialog(
+        visible = state.noting,
+        title = stringResource(Res.string.reviewSendBackWithNote),
+        fieldLabel = stringResource(Res.string.reviewWorkspaceCommentLabel),
+        confirmLabel = stringResource(Res.string.kitRequestSendBack),
+        validate = { if (it.isBlank()) emptyNote else null },
+        onResult = actions::sendBackNote,
+    )
     KitConfirm(
         if (state.confirming) {
             KitConfirmSpec(

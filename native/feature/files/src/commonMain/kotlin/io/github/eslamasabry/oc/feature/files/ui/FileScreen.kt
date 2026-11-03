@@ -38,7 +38,11 @@ import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerFrame
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerImageBody
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerTextBody
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.fileSave
 import io.github.eslamasabry.oc.ui.words.res.fileShareAction
+import io.github.eslamasabry.oc.ui.words.res.filesSaveFailed
+import io.github.eslamasabry.oc.ui.words.res.kitViewerPartial
+import io.github.eslamasabry.oc.ui.words.res.readerUiSavedDevice
 import io.github.eslamasabry.oc.ui.words.res.filePdfEncrypted
 import io.github.eslamasabry.oc.ui.words.res.filePdfFailed
 import io.github.eslamasabry.oc.ui.words.res.filePdfLimit
@@ -88,7 +92,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                 }
                 state.notice?.let { notice ->
                     KitNotice(
-                        noticeWords(notice),
+                        noticeWords(notice, state.name),
                         Modifier.padding(horizontal = Space.S4.dp),
                         dismiss = KitLineAction(stringResource(Res.string.kitTopBarClose), actions::dismissNotice),
                     )
@@ -100,6 +104,16 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                         Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
                         role = KitButtonRole.Tertiary,
                         working = state.opening,
+                        enabled = KitEnabled.Enabled,
+                    )
+                }
+                if (ready && state.canSave) {
+                    KitButton(
+                        stringResource(Res.string.fileSave),
+                        actions::save,
+                        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
+                        role = KitButtonRole.Tertiary,
+                        working = state.saving,
                         enabled = KitEnabled.Enabled,
                     )
                 }
@@ -132,14 +146,27 @@ private fun Body(state: FileUi, actions: FileActions) {
         FilePhase.Ready ->
             when (val body = state.body) {
                 null -> KitSkeletonRows()
-                is FileBody.Text -> KitViewerTextBody(body.text, wrap = true)
-                is FileBody.Markdown -> KitViewerTextBody(body.text, wrap = true)
-                is FileBody.Code -> KitViewerCodeBody(body.text, initialLine = body.line)
+                is FileBody.Text -> Partial(body.truncated) { KitViewerTextBody(body.text, wrap = true) }
+                is FileBody.Markdown -> Partial(body.truncated) { KitViewerTextBody(body.text, wrap = true) }
+                is FileBody.Code -> Partial(body.truncated) { KitViewerCodeBody(body.text, initialLine = body.line) }
                 is FileBody.Image ->
                     KitViewerImageBody(body.bytes, state.name) { Binary(state, actions, mime = null) }
                 is FileBody.Pdf -> Pdf(state, actions)
                 is FileBody.Binary -> Binary(state, actions, body.mime)
             }
+    }
+}
+
+/** A file longer than the viewer shows says so above its text (Flutter's partial-file notice). */
+@Composable
+private fun Partial(truncated: Boolean, body: @Composable () -> Unit) {
+    if (!truncated) {
+        body()
+        return
+    }
+    Column(Modifier.fillMaxSize()) {
+        KitNotice(stringResource(Res.string.kitViewerPartial), Modifier.padding(horizontal = Space.S4.dp))
+        Box(Modifier.weight(1f)) { body() }
     }
 }
 
@@ -197,11 +224,11 @@ private fun pdfWords(failure: Failure): String =
     )
 
 @Composable
-private fun noticeWords(notice: FileNotice): String =
-    stringResource(
-        when (notice) {
-            FileNotice.OpenWithNone -> Res.string.filesOpenWithNone
-            FileNotice.OpenWithFailed -> Res.string.filesOpenWithFailed
-            FileNotice.MentionFailed -> Res.string.filesMentionFailed
-        }
-    )
+private fun noticeWords(notice: FileNotice, name: String): String =
+    when (notice) {
+        FileNotice.OpenWithNone -> stringResource(Res.string.filesOpenWithNone)
+        FileNotice.OpenWithFailed -> stringResource(Res.string.filesOpenWithFailed)
+        FileNotice.MentionFailed -> stringResource(Res.string.filesMentionFailed)
+        FileNotice.Saved -> stringResource(Res.string.readerUiSavedDevice, name)
+        FileNotice.SaveFailed -> stringResource(Res.string.filesSaveFailed)
+    }

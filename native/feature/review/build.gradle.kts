@@ -9,6 +9,7 @@ kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:review"))
         implementation(project(":engine:connection")) // the conversation's own connection graph (ReviewHub)
+        implementation(project(":engine:composer")) // Send back with a note: the conversation's draft
         implementation(project(":ui:kit-chat")) // KitDiffView, DiffModel and the chat environment's redactor
         implementation(libs.kotlinx.collections.immutable)
     }

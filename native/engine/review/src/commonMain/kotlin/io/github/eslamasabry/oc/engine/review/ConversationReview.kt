@@ -9,11 +9,13 @@ import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.domain.LocatedVcsGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.StagedRevertGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.FileDiff
+import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.SessionRevert
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.VcsDiffMode
@@ -64,8 +66,11 @@ public data class ReviewState(
     val title: String? = null,
 )
 
-/** A point-in-time review of the staged undo: actions on it are refused once it is not current. */
-public data class StagedReview(val revert: SessionRevert, val revision: Long)
+/**
+ * A point-in-time review of the staged undo: actions on it are refused once it is not current. [connection] is the
+ * connection it was read on: a review never authorises an act through a replacement connection (B-CHAT-104).
+ */
+public data class StagedReview(val revert: SessionRevert, val revision: Long, val connection: ReviewGateways? = null)
 
 /** History, oldest first; [complete] is false when the page budget ran out before the start. */
 public data class HistoryRead(val messages: ImmutableList<MessageWithParts>, val complete: Boolean)
@@ -99,6 +104,13 @@ public class ConversationReview(
 
     init {
         scope.launch {
+            // A replaced connection makes every earlier review stale (B-CHAT-104).
+            var first = true
+            gateways.collect {
+                if (first) first = false else mutable.update { s -> s.copy(revision = s.revision + 1) }
+            }
+        }
+        scope.launch {
             gateways.flatMapLatest { it?.live?.events?.all ?: emptyFlow() }.collect { envelope ->
                 when (val event = envelope.event) {
                     is GatewayEvent.RevertChanged ->
@@ -129,13 +141,17 @@ public class ConversationReview(
         }
     }
 
-    /** The server shows a diff of the uncommitted working tree. */
-    public fun workingTreeAvailable(): Boolean = gateways.value?.live?.capabilities?.value?.sessionDiff == true
+    /** The server shows a diff of the uncommitted working tree (of this conversation's folder, where it can). */
+    public fun workingTreeAvailable(): Boolean =
+        gateways.value?.let { g -> g.live is LocatedVcsGateway || g.live.capabilities.value.sessionDiff } == true
 
     /** The current review, or null when nothing is staged. */
-    public fun review(): StagedReview? = mutable.value.let { s -> s.staged?.let { StagedReview(it, s.revision) } }
+    public fun review(): StagedReview? =
+        mutable.value.let { s -> s.staged?.let { StagedReview(it, s.revision, gateways.value) } }
 
-    public fun isCurrent(review: StagedReview): Boolean = mutable.value.let { it.revision == review.revision && it.staged == review.revert }
+    public fun isCurrent(review: StagedReview): Boolean =
+        mutable.value.let { it.revision == review.revision && it.staged == review.revert } &&
+            gateways.value != null && gateways.value === review.connection
 
     /** Reads the conversation's staged boundary (and whether it runs) again. */
     public suspend fun refresh(): Outcome<Unit> {
@@ -196,6 +212,17 @@ public class ConversationReview(
     /** The working-tree diff as the server computes it, where it can (`sessionDiff`). */
     public suspend fun workingTree(): Outcome<ImmutableList<FileDiff>> {
         val g = gateways.value ?: return notConnected()
+        val located = g.live as? LocatedVcsGateway
+        if (located != null) {
+            // The conversation's own folder (B-NAV-053), never the gateway's shared location.
+            return when (val read = g.live.session(session)) {
+                is Outcome.Failed -> read
+                is Outcome.Ok -> {
+                    val dir = read.value.directory?.takeIf { it.isNotEmpty() }
+                    located.workingTreeAt(if (dir == null) g.live.location.value else ServerLocation(dir, read.value.workspaceId?.raw))
+                }
+            }
+        }
         if (!g.live.capabilities.value.sessionDiff) return Failure.Unavailable(FeatureId("sessionDiff")).failed()
         return g.operations.listVcsDiffs(VcsDiffMode.WorkingTree)
     }
@@ -246,22 +273,42 @@ public class ConversationReview(
     private fun countNewer(items: List<MessageWithParts>, at: Int): Int {
         val pivot = items[at].info.time?.createdMs
         return if (pivot != null && items.all { it.info.time?.createdMs != null }) {
-            items.withIndex().count { (i, m) -> i != at && (m.info.time!!.createdMs!! > pivot || (m.info.time!!.createdMs == pivot && i < at)) }
+            // Equal times keep the page's chronological order: a row after the prompt is newer (B-CHAT-103).
+            items.withIndex().count { (i, m) -> i != at && (m.info.time!!.createdMs!! > pivot || (m.info.time!!.createdMs == pivot && i > at)) }
         } else {
             items.size - 1 - at // chronological: everything after it is newer
         }
     }
 
-    /** Stages an undo from the prompt [promptId] (with files back when [applyFiles]); the preview comes back at once. */
-    public suspend fun stage(promptId: String, applyFiles: Boolean): Outcome<StagedReview> =
-        exclusive { g ->
+    /** The undo boundary a page read: [stage] refuses once the server's boundary moved on from it (B-CHAT-105). */
+    public fun basis(): Long = mutable.value.revision
+
+    /**
+     * Stages an undo from the prompt [promptId] (with files back when [applyFiles]); the preview comes back at once.
+     * With [reviewed] (a [basis] the page showed), the server is read first and a moved boundary is refused as stale
+     * before anything is sent.
+     */
+    public suspend fun stage(promptId: String, applyFiles: Boolean, reviewed: Long? = null): Outcome<StagedReview> =
+        exclusive(beforeDispatch = { g ->
+            if (reviewed == null) {
+                Unit.ok()
+            } else {
+                when (val read = g.live.session(session)) {
+                    is Outcome.Failed -> read
+                    is Outcome.Ok -> {
+                        adopt(read.value.stagedRevert)
+                        if (mutable.value.revision != reviewed) Failure.Refused(RefusalReason.StaleScope).failed() else Unit.ok()
+                    }
+                }
+            }
+        }) { g ->
             val staged = (g.live as? StagedRevertGateway) ?: (g.operations as? StagedRevertGateway)
                 ?: return@exclusive Failure.Unavailable(FeatureId("sessionRevert")).failed()
             when (val result = staged.stageSessionRevert(session, MessageId(promptId), applyFiles)) {
                 is Outcome.Failed -> result
                 is Outcome.Ok -> {
                     mutable.update { it.copy(staged = result.value, revision = it.revision + 1, loaded = true) }
-                    StagedReview(result.value, mutable.value.revision).ok()
+                    StagedReview(result.value, mutable.value.revision, g).ok()
                 }
             }
         }

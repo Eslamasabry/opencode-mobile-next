@@ -24,7 +24,14 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /** A running share: the one link that works, until [expiresAtMs]. */
-public data class WifiShareState(val url: String, val name: String, val expiresAtMs: Long, val downloads: Int = 0) {
+public data class WifiShareState(
+    val url: String,
+    val name: String,
+    val expiresAtMs: Long,
+    val downloads: Int = 0,
+    /** Which start made this share: only its owner may stop it ([WifiShare.stop] with this id). */
+    val id: Long = 0,
+) {
     public fun remainingMs(nowMs: Long): Long = (expiresAtMs - nowMs).coerceAtLeast(0)
 
     override fun toString(): String = "WifiShareState(downloads=$downloads)" // the link holds the secret token
@@ -208,6 +215,11 @@ public class WifiShare(
         scope.launch { stop() }
     }
 
+    /** [stopLater] for one owner: a newer share started by someone else keeps running. */
+    public fun stopLater(id: Long) {
+        scope.launch { stop(id) }
+    }
+
     /** False where the platform cannot run the download server. */
     public val supported: Boolean
         get() = host != null
@@ -245,6 +257,7 @@ public class WifiShare(
                 WifiShareRules.url(address, opened.port, token, name),
                 name,
                 clock.now().toEpochMilliseconds() + lifetimeMs,
+                id = mine,
             )
         mutableState.value = started
         expiry =
@@ -257,6 +270,9 @@ public class WifiShare(
 
     /** Ends the share now. Safe when nothing is shared. */
     public suspend fun stop(): Unit = lane.withLock { stopLocked() }
+
+    /** Ends the share only while it is still the one [id] started (two viewers never stop each other's share). */
+    public suspend fun stop(id: Long): Unit = lane.withLock { if (generation.load() == id && server != null) stopLocked() }
 
     private suspend fun stopLocked() {
         generation.incrementAndFetch()

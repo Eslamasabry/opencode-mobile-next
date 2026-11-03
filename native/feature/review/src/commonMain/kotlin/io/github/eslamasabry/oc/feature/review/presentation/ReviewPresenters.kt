@@ -1,6 +1,11 @@
 package io.github.eslamasabry.oc.feature.review.presentation
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.engine.composer.references.ReviewReference
+import io.github.eslamasabry.oc.engine.composer.references.ReviewReferenceKind
+import io.github.eslamasabry.oc.engine.composer.references.ReviewReferenceScope
 import io.github.eslamasabry.oc.engine.review.ChangeSet
 import io.github.eslamasabry.oc.engine.review.ConversationReview
 import io.github.eslamasabry.oc.engine.review.StagedReview
@@ -35,6 +40,12 @@ public interface ChangesActions {
 
     /** An undo is waiting: review it. */
     public fun openStaged()
+
+    /** "Send back with a note": opens the note field. */
+    public fun sendBack()
+
+    /** The note field closed with [note] (null: cancelled). */
+    public fun sendBackNote(note: String?)
 }
 
 /**
@@ -47,10 +58,14 @@ public class ChangesPresenter(
     private val messageId: String?,
     private val nav: ReviewNavigation,
     private val scope: CoroutineScope,
+    private val sendBack: ReviewSendBack? = null,
 ) : ChangesActions {
-    private val mutable = MutableStateFlow(ChangesUi(turn = messageId != null))
+    private val mutable = MutableStateFlow(ChangesUi(turn = messageId != null, canSendBack = sendBack != null))
     public val state: StateFlow<ChangesUi> = mutable.asStateFlow()
     private var set: ChangeSet = ConversationReview.Empty
+
+    /** The undo boundary the rows were read against: Undo all refuses once it moved (B-CHAT-105). */
+    private var basis: Long? = null
 
     init {
         scope.launch { review.state.collect { s -> mutable.update { it.copy(busy = s.running || s.working, undoAll = undoAll(it.load)) } } }
@@ -65,10 +80,22 @@ public class ChangesPresenter(
                 is Outcome.Failed -> mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
                 is Outcome.Ok -> {
                     set = read.value
-                    val rows = set.files.map { ChangeRowUi(it.path, it.name, it.folder, it.added, it.removed, it.hasDiff) }
+                    basis = review.basis()
+                    var rows = set.files.map { ChangeRowUi(it.path, it.name, it.folder, it.added, it.removed, it.hasDiff) }
+                    // Nothing from the tools (an agent may edit through commands): the conversation's view gives way
+                    // to the folder's uncommitted changes, where the server has them (B-NAV-053).
+                    var working = false
+                    if (rows.isEmpty() && messageId == null && review.workingTreeAvailable()) {
+                        val tree = (review.workingTree() as? Outcome.Ok)?.value.orEmpty()
+                        if (tree.isNotEmpty()) {
+                            working = true
+                            rows = tree.map { d -> workingRow(d.file, d.additions, d.deletions, !d.patch.isNullOrBlank()) }
+                        }
+                    }
                     mutable.update {
                         it.copy(
                             load = ReviewLoad.Ready,
+                            workingTree = working,
                             files = rows.toImmutableList(),
                             complete = set.complete,
                             added = rows.sumOrNull { r -> r.added },
@@ -94,7 +121,15 @@ public class ChangesPresenter(
     override fun retry(): Unit = load()
 
     override fun openFile(path: String) {
-        if (state.value.files.any { it.path == path && it.hasDiff }) nav.openFile(path, staged = false)
+        val s = state.value
+        if (s.files.none { it.path == path && it.hasDiff }) return
+        if (s.workingTree) nav.openWorkingTreeFile(path) else nav.openFile(path, staged = false)
+    }
+
+    private fun workingRow(path: String, added: Int?, removed: Int?, hasDiff: Boolean): ChangeRowUi {
+        val name = path.split('/').lastOrNull { it.isNotEmpty() } ?: path
+        val folder = path.substringBeforeLast('/', "").takeIf { it.isNotEmpty() }
+        return ChangeRowUi(path, name, folder, added, removed, hasDiff)
     }
 
     override fun keepAll(): Unit = nav.back()
@@ -113,7 +148,7 @@ public class ChangesPresenter(
         if (state.value.working) return
         mutable.update { it.copy(working = true) }
         scope.launch {
-            val result = review.stage(from, applyFiles = true)
+            val result = review.stage(from, applyFiles = true, reviewed = basis)
             mutable.update { it.copy(working = false, confirming = false, actionFailure = (result as? Outcome.Failed)?.failure) }
             if (result is Outcome.Ok) {
                 nav.back()
@@ -123,6 +158,40 @@ public class ChangesPresenter(
     }
 
     override fun openStaged(): Unit = nav.openStaged()
+
+    override fun sendBack() {
+        val s = state.value
+        if (sendBack != null && s.load == ReviewLoad.Ready && s.files.isNotEmpty() && !s.working) {
+            mutable.update { it.copy(noting = true, sendBackFailure = null) }
+        }
+    }
+
+    override fun sendBackNote(note: String?) {
+        val port = sendBack
+        val text = note?.trim().orEmpty()
+        if (port == null || text.isEmpty()) {
+            mutable.update { it.copy(noting = false) }
+            return
+        }
+        // The note is about these changes: a review comment on the first changed file (Flutter's default file).
+        val first = set.files.firstOrNull() ?: return mutable.update { it.copy(noting = false) }
+        val reference =
+            ReviewReference(
+                id = "comment-1",
+                kind = ReviewReferenceKind.Comment,
+                path = first.path,
+                scope = ReviewReferenceScope.Session,
+                comment = text,
+                added = first.added,
+                removed = first.removed,
+            )
+        mutable.update { it.copy(noting = false, working = true) }
+        scope.launch {
+            val result = port.send(ReviewReference.format(listOf(reference)))
+            mutable.update { it.copy(working = false, sendBackFailure = (result as? Outcome.Failed)?.failure) }
+            if (result is Outcome.Ok) nav.back()
+        }
+    }
 }
 
 /** One file's diff, read again from the turn's records or the staged preview (routes carry ids only). */
@@ -132,6 +201,7 @@ public class FileDiffPresenter(
     private val messageId: String?,
     private val staged: Boolean,
     private val scope: CoroutineScope,
+    private val workingTree: Boolean = false,
 ) {
     private val mutable = MutableStateFlow(FileDiffUi(path))
     public val state: StateFlow<FileDiffUi> = mutable.asStateFlow()
@@ -145,7 +215,17 @@ public class FileDiffPresenter(
     private fun load() {
         mutable.update { it.copy(load = ReviewLoad.Loading) }
         scope.launch {
-            if (staged) {
+            if (workingTree) {
+                when (val read = review.workingTree()) {
+                    is Outcome.Failed -> mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
+                    is Outcome.Ok -> {
+                        val file = read.value.firstOrNull { it.file == path }
+                        mutable.update {
+                            it.copy(load = ReviewLoad.Ready, diff = file, missing = file == null, noDiff = file != null && file.patch.isNullOrBlank())
+                        }
+                    }
+                }
+            } else if (staged) {
                 when (val read = review.refresh()) {
                     is Outcome.Failed -> mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
                     is Outcome.Ok -> {
@@ -198,13 +278,28 @@ public class UndoFromHerePresenter(
     private val mutable = MutableStateFlow(UndoFromHereUi(staged = shape == UndoShape.Staged, available = shape != UndoShape.Unavailable))
     public val state: StateFlow<UndoFromHereUi> = mutable.asStateFlow()
 
+    /** The undo boundary this page read; another client moving it makes the page stale (B-CHAT-105). */
+    @kotlin.concurrent.Volatile private var basis: Long? = null
+
     init {
-        scope.launch { review.state.collect { s -> mutable.update { it.copy(block = if (s.running || (s.working && !it.working)) UndoBlock.Busy else null) } } }
+        scope.launch { review.state.collect { s -> mutable.update { it.copy(block = block(s.running, s.working && !it.working, s.revision, it.block)) } } }
         if (shape != UndoShape.Unavailable) load() else mutable.update { it.copy(load = ReviewLoad.Ready) }
     }
 
+    private fun block(running: Boolean, othersWorking: Boolean, revision: Long, was: UndoBlock?): UndoBlock? =
+        when {
+            running || othersWorking -> UndoBlock.Busy
+            was == UndoBlock.Stale -> UndoBlock.Stale
+            basis.let { it != null && it != revision } && !state.value.working -> UndoBlock.Stale
+            else -> null
+        }
+
     private fun load() {
         scope.launch {
+            if (shape == UndoShape.Staged) {
+                review.refresh() // the boundary this page is about; a failed read leaves it as it was
+                basis = review.basis()
+            }
             when (val prompt = review.prompt(promptId)) {
                 is Outcome.Failed -> mutable.update { it.copy(load = ReviewLoad.Ready, promptUnavailable = true) }
                 is Outcome.Ok -> mutable.update { it.copy(load = ReviewLoad.Ready, prompt = prompt.value, promptUnavailable = prompt.value == null) }
@@ -228,8 +323,15 @@ public class UndoFromHerePresenter(
         if (s.working || s.block != null || !s.available || s.promptUnavailable) return
         mutable.update { it.copy(working = true, failure = null) }
         scope.launch {
-            val result: Outcome<*> = if (s.staged) review.stage(promptId, s.applyFiles) else review.undoNow(promptId)
-            mutable.update { it.copy(working = false, failure = (result as? Outcome.Failed)?.failure) }
+            val result: Outcome<*> = if (s.staged) review.stage(promptId, s.applyFiles, reviewed = basis) else review.undoNow(promptId)
+            val stale = ((result as? Outcome.Failed)?.failure as? Failure.Refused)?.reason == RefusalReason.StaleScope
+            mutable.update {
+                it.copy(
+                    working = false,
+                    failure = if (stale) null else (result as? Outcome.Failed)?.failure,
+                    block = if (stale) UndoBlock.Stale else it.block,
+                )
+            }
             if (result is Outcome.Ok) {
                 nav.back()
                 if (s.staged) nav.openStaged()

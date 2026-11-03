@@ -10,4 +10,5 @@
     <string name="reviewUndoUnknown">Undo all needs the prompt these changes started from, and it couldn't be read.</string>
     <string name="reviewUndoUnavailable">This server can't undo from a prompt.</string>
     <string name="reviewToolEvidence">From what the agent's tools reported. Changes made by commands aren't listed.</string>
+    <string name="reviewSendBackFailed">Couldn't put your note into the message. Try again.</string>
 </resources>
