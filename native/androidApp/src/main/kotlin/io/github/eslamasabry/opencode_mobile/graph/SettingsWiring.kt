@@ -186,6 +186,8 @@ class AndroidSettingsHost(
     private val diagnosticsLog: Diagnostics,
     updateSettings: AppUpdateSettings, // P12-FIX-PLATFORM-GIT: Settings › Updates on the real updater
     private val voiceSettings: AndroidVoiceSettings,
+    liveServers: SettingsLiveServers, // worker D: capabilities, on-phone and usage facts of the live servers
+    phrases: AndroidPhraseChipsSetting,
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
@@ -197,11 +199,14 @@ class AndroidSettingsHost(
         )
 
     override val facts: StateFlow<SettingsFacts> =
-        combine(connections.servers, stores.profiles.activeId, motion.animatorScale) { servers, active, scale ->
+        combine(connections.servers, stores.profiles.activeId, motion.animatorScale, liveServers.byProfile) { servers, active, scale, facts ->
                 val live = servers.firstOrNull { it.id == active && it.connected } ?: servers.firstOrNull { it.connected }
+                val reported = live?.let { facts[it.id] }
                 SettingsFacts(
                     platform = shipped,
-                    server = live?.let { ServerLine(it.name, onPhone = false) },
+                    server = live?.let { ServerLine(it.name, onPhone = reported?.onPhone == true) },
+                    capabilities = reported?.capabilities,
+                    usageStatistics = reported?.usageStatistics == true,
                     dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                     systemMotionOff = scale == 0f,
                     diagnostics = true,
@@ -240,6 +245,7 @@ class AndroidSettingsHost(
     override val voice: VoiceSettings? = voiceSettings.takeIf { it.offered }
     override val notifications: NotificationSettings = AndroidNotificationSettings(application, stores, prefs, scope)
     override val updates: UpdateSettings? = updateSettings
+    override val phraseChips: io.github.eslamasabry.oc.feature.settings.presentation.PhraseChipsSetting = phrases
     override val about: AboutFacts =
         AboutFacts(version = buildInfo.versionName, build = buildInfo.versionCode.toString(), whatsNew = true, notices = false)
 

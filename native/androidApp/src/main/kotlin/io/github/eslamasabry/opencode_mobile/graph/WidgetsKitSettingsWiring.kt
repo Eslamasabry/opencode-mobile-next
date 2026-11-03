@@ -13,6 +13,9 @@ import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -485,5 +488,88 @@ internal fun widgetSteerMode(gateway: io.github.eslamasabry.oc.core.domain.Serve
         io.github.eslamasabry.oc.core.model.MidTurnPrompt.JoinsTurn -> "steer"
         io.github.eslamasabry.oc.core.model.MidTurnPrompt.RestartsTurn -> "restart"
         null -> "unknown"
+    }
+}
+
+// ---- D: Settings parity (B-NAV-042, B-NAV-058, B-L10N-018) --------------------------------------------------------------
+
+/** What Settings reads from one live server: its reported capabilities, where it runs and its usage statistics facet. */
+data class SettingsLiveServer(
+    val capabilities: io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities,
+    val onPhone: Boolean,
+    val usageStatistics: Boolean,
+)
+
+/**
+ * The live servers' facts for Settings, by profile, following each connection's capability flow (they arrive after the
+ * gateway's first read). [SettingsLiveServer.onPhone] is the profile's own `managedOnPhone`; usage statistics is whether
+ * the server has the stats reader the Usage screen uses (Flutter's `UsageStatisticsGateway` facet check).
+ */
+@dev.zacsweers.metro.SingleIn(dev.zacsweers.metro.AppScope::class)
+@dev.zacsweers.metro.Inject
+class SettingsLiveServers(
+    registry: io.github.eslamasabry.oc.engine.connection.ConnectionRegistry,
+    appScope: io.github.eslamasabry.oc.core.common.AppCoroutineScope,
+) {
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val byProfile: kotlinx.coroutines.flow.StateFlow<Map<ProfileId, SettingsLiveServer>> =
+        registry.live
+            .flatMapLatest { live ->
+                if (live.isEmpty()) kotlinx.coroutines.flow.flowOf(emptyMap())
+                else
+                    kotlinx.coroutines.flow.combine(
+                        live.map { (id, graph) ->
+                            val session = graph.session
+                            session.capabilities.map { caps ->
+                                id to
+                                    SettingsLiveServer(
+                                        caps,
+                                        onPhone = session.profile.managedOnPhone,
+                                        // The only stats reader is the OpenCode 2 one (Oc2SearchUsage.usageStatistics, whose
+                                        // gateway class is internal): the adapter maps the protocol to the facet here, the
+                                        // UI reads only the flag.
+                                        usageStatistics =
+                                            session.profile.backend == io.github.eslamasabry.oc.core.model.BackendKind.OpenCode2,
+                                    )
+                            }
+                        },
+                    ) { pairs -> pairs.toMap() }
+            }
+            .stateIn(
+                kotlinx.coroutines.CoroutineScope(appScope.coroutineContext),
+                kotlinx.coroutines.flow.SharingStarted.Eagerly,
+                emptyMap(),
+            )
+}
+
+/**
+ * Settings › Conversations › Phrase suggestions over the composer engine's [PhraseChipStores] (`oc.phraseChips.enabled`,
+ * app-wide). The switch shows the stored value once the stores are warm and changes only after the store acknowledged.
+ */
+@dev.zacsweers.metro.SingleIn(dev.zacsweers.metro.AppScope::class)
+@dev.zacsweers.metro.Inject
+class AndroidPhraseChipsSetting(
+    private val stores: PreviewStores,
+    clock: kotlin.time.Clock,
+    redactor: io.github.eslamasabry.oc.core.security.Redactor,
+    appScope: io.github.eslamasabry.oc.core.common.AppCoroutineScope,
+) : io.github.eslamasabry.oc.feature.settings.presentation.PhraseChipsSetting {
+    private val prefs = PreviewComposerPrefs(stores)
+    private val phrases = io.github.eslamasabry.oc.engine.composer.phrases.PhraseChipStores(prefs, clock, redactor)
+    private val flow = kotlinx.coroutines.flow.MutableStateFlow(true)
+    override val enabled: kotlinx.coroutines.flow.StateFlow<Boolean> = flow
+
+    init {
+        kotlinx.coroutines.CoroutineScope(appScope.coroutineContext).launch {
+            if (stores.warm() is Outcome.Ok) flow.value = phrases.enabled()
+        }
+    }
+
+    override suspend fun setEnabled(on: Boolean): Outcome<Unit> {
+        val warm = stores.warm()
+        if (warm is Outcome.Failed) return warm
+        if (!phrases.setEnabled(on)) return Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.StorageRefused())
+        flow.value = phrases.enabled()
+        return Outcome.Ok(Unit)
     }
 }
