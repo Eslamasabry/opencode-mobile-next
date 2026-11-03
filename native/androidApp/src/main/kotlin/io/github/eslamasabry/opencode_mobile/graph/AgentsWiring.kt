@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.data.kv.GateNotOpen
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLane
@@ -207,7 +208,14 @@ class AppPaseoGatewayFactory(
             OkHttpPaseoSockets(),
             dispatchers,
             clock,
-            savedTitles = { profile, key -> runCatching { titles.read(profile, key) }.getOrNull() },
+            savedTitles = { profile, key ->
+                // Before the migration gate opens the store refuses reads: no saved title then.
+                try {
+                    titles.read(profile, key)
+                } catch (e: GateNotOpen) {
+                    null
+                }
+            },
         )
 
     override val backend: BackendKind = BackendKind.Paseo
