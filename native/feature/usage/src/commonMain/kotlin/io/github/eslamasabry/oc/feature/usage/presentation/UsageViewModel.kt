@@ -47,7 +47,8 @@ public class UsageViewModel(
     /** The last good reading and the filters it answers. */
     private var lastGood: Pair<Filters, UsageReport>? = null
 
-    private data class Filters(val server: ProfileId, val range: UsageRange, val scope: UsageScope)
+    /** What a reading answers; the time zone sets its day boundaries, so a reading never stands in for another zone. */
+    private data class Filters(val server: ProfileId, val range: UsageRange, val scope: UsageScope, val timezone: String)
 
     init {
         viewModelScope.launch {
@@ -118,7 +119,6 @@ public class UsageViewModel(
             local.update { it.copy(phase = UsagePhase.NoServer, report = null, previous = false, refreshing = false, failure = null) }
             return
         }
-        val filters = Filters(server, s.range, s.scope)
         val timezone = zone.id()
         val project = (s.scope as? UsageScope.Project)?.id
         val query = UsageQuery.forRange(s.range, clock.now(), timezone, project)
@@ -128,6 +128,9 @@ public class UsageViewModel(
             }
             return
         }
+        val filters = Filters(server, s.range, s.scope, query.timezone)
+        // A reading for other filters (another zone included) is dropped, never relabelled.
+        if (lastGood?.first != filters) lastGood = null
         val kept = lastGood?.takeIf { it.first == filters }?.second
         local.update {
             it.copy(
