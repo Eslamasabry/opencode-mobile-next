@@ -77,3 +77,5 @@
 :feature:projects	F	P12-PROJECTS	slice-5
 :feature:review	F	(slice brief names the agent)	slice-4
 :feature:voice	F	(slice brief names the agent)	slice-12
+:engine:integrations-usage	F	build-integrations-b	parity-p12
+:engine:integrations-quota	F	build-integrations-b	parity-p12
