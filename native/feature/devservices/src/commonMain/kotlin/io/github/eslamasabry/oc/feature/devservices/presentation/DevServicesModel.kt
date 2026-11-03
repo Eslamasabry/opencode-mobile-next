@@ -13,10 +13,10 @@ import io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServiceStore
 import io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServices
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -66,7 +66,7 @@ public class DevServicesModel(
 
     private var visible = false
     private var ticks = 0
-    private var polling: Job? = null
+    private val shownFlow = MutableStateFlow(false)
 
     init {
         if (services != null && detected != null && context != null) {
@@ -78,6 +78,8 @@ public class DevServicesModel(
                 services.reload()
                 ui.update { it.copy(loading = false) }
             }
+            // The refresh timer runs only while the page is shown; hiding it cancels the ticks.
+            scope.launch { shownFlow.collectLatest { shown -> if (shown) pacer.ticks(DevServicesTimers.refresh).collect { tick() } } }
         }
     }
 
@@ -134,14 +136,13 @@ public class DevServicesModel(
 
     override fun shown(visible: Boolean) {
         this.visible = visible
-        polling?.cancel()
+        shownFlow.value = visible
         if (!visible) {
             services?.invalidateRuntime()
             detected?.invalidate()
             return
         }
         refresh()
-        polling = scope.launch { pacer.ticks(DevServicesTimers.refresh).collect { tick() } }
     }
 
     private suspend fun tick() {
@@ -312,7 +313,7 @@ public class DevServicesModel(
     override fun back(): Unit = onBack()
 
     public fun close() {
-        polling?.cancel()
+        shownFlow.value = false
         services?.close()
         detected?.close()
     }

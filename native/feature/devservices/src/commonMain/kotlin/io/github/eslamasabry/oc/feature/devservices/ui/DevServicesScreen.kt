@@ -6,10 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -81,7 +79,6 @@ import io.github.eslamasabry.oc.ui.words.res.servicesNotStarted
 import io.github.eslamasabry.oc.ui.words.res.servicesOffline
 import io.github.eslamasabry.oc.ui.words.res.servicesPreviewPort
 import io.github.eslamasabry.oc.ui.words.res.servicesProjectFolder
-import io.github.eslamasabry.oc.ui.words.res.servicesRefresh
 import io.github.eslamasabry.oc.ui.words.res.servicesRemove
 import io.github.eslamasabry.oc.ui.words.res.servicesRemoveRunningHint
 import io.github.eslamasabry.oc.ui.words.res.servicesRemoveTitle
@@ -315,17 +312,11 @@ private fun FoundRow(row: FoundRowUi, actions: DevServicesActions) {
 
 @Composable
 private fun Editor(editor: EditorUi?, actions: DevServicesActions) {
-    val name = remember { TextFieldState() }
-    val command = remember { TextFieldState() }
-    val url = remember { TextFieldState() }
     val open = editor != null
-    LaunchedEffect(open) {
-        if (open && editor != null) {
-            name.setTextAndPlaceCursorAtEnd(editor.name)
-            command.setTextAndPlaceCursorAtEnd(editor.command)
-            url.setTextAndPlaceCursorAtEnd(editor.url)
-        }
-    }
+    // A fresh form each time it opens, filled from what opened it (a found server's command, or empty).
+    val name = remember(open) { TextFieldState(editor?.name.orEmpty()) }
+    val command = remember(open) { TextFieldState(editor?.command.orEmpty()) }
+    val url = remember(open) { TextFieldState(editor?.url.orEmpty()) }
     val save = {
         actions.edit(name.text.toString(), command.text.toString(), url.text.toString())
         actions.save()
@@ -406,6 +397,3 @@ private fun spec(ask: DevServicesAsk): KitConfirmSpec =
                 body = stringResource(Res.string.servicesStopFoundHint),
             )
     }
-
-@Composable
-private fun refreshLabel(): String = stringResource(Res.string.servicesRefresh)
