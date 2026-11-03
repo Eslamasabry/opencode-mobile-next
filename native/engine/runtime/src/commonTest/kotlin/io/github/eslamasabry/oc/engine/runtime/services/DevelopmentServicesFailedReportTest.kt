@@ -26,7 +26,7 @@ class DevelopmentServicesFailedReportTest {
             name = "Shopfront preview",
             command = "npm run dev",
             directory = "/work/shopfront",
-            url = "http://192.168.1.20:5173",
+            url = "http://devbox.test:5173",
         )
 
     /** The server side (Dart `ServiceRepository`). */
