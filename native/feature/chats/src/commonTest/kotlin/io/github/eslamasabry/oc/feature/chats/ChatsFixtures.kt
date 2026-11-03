@@ -100,6 +100,10 @@ internal class RecordingChatsActions : ChatsActions {
     override fun showAll() {
         calls += "all"
     }
+
+    override fun openProjects() {
+        calls += "projects"
+    }
 }
 
 /** Plan 06 §6's fake platform (kit's own copy is test-internal there). */

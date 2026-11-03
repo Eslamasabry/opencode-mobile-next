@@ -73,3 +73,4 @@
 :feature:search	F	P12-SEARCH-USAGE	slice-5
 :feature:usage	F	P12-SEARCH-USAGE	slice-5
 :engine:usage	S	P12-SEARCH-USAGE (calendar for :feature:usage)	slice-5
+:feature:projects	F	P12-PROJECTS	slice-5

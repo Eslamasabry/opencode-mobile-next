@@ -1,0 +1,46 @@
+<resources>
+    <!-- P12 PROJECTS: the projects picker, one project's page and All conversations. -->
+    <string name="p12ProjectsTitle">Projects</string>
+    <string name="p12OpenFolder">Open a folder on the server</string>
+    <string name="p12NewProjectUnavailable">This server can’t make folders from the phone. Make the folder on that computer, then open it here.</string>
+    <string name="p12PhoneFolder">Folder on this phone</string>
+    <string name="p12PhoneFolderUnavailable">OpenCode on this phone isn’t set up in this version yet.</string>
+    <string name="p12ProjectsOnServer">Projects on %1$s</string>
+    <string name="p12ProjectsLoadFailed">Couldn’t load this server’s projects.</string>
+    <string name="p12NoServerTitle">No server connected</string>
+    <string name="p12NoServerBody">Connect a server to see its projects and conversations.</string>
+    <string name="p12PathNotAbsolute">Enter a full path that starts with /.</string>
+    <string name="p12PathBadParts">A path can’t contain “..” or line breaks.</string>
+    <string name="p12NewHere">New conversation here</string>
+    <string name="p12NewHereBody">Starts a conversation that works in %1$s.</string>
+    <string name="p12ProjectConversations">Conversations in this project</string>
+    <string name="p12ProjectNoConversations">No conversations in this project yet.</string>
+    <string name="p12ElsewhereTitle">In other projects</string>
+    <string name="p12CreateFailed">Couldn’t start the conversation.</string>
+    <string name="p12Select">Select</string>
+    <string name="p12SelectCancel">Cancel selection</string>
+    <string name="p12Rename">Rename</string>
+    <string name="p12RenameTitle">Rename conversation</string>
+    <string name="p12RenameField">Title</string>
+    <string name="p12RenameEmpty">A title needs at least one letter.</string>
+    <string name="p12RenameFailed">Couldn’t rename the conversation.</string>
+    <plurals name="p12DeleteSelected">
+        <item quantity="one">Delete 1 conversation</item>
+        <item quantity="other">Delete %1$d conversations</item>
+    </plurals>
+    <plurals name="p12ArchiveSelected">
+        <item quantity="one">Archive 1 conversation</item>
+        <item quantity="other">Archive %1$d conversations</item>
+    </plurals>
+    <string name="p12Deleted">Deleted “%1$s”</string>
+    <plurals name="p12DeletedMany">
+        <item quantity="one">1 conversation deleted</item>
+        <item quantity="other">%1$d conversations deleted</item>
+    </plurals>
+    <string name="p12DeleteFailed">Couldn’t delete a conversation, so it is back in the list.</string>
+    <string name="p12ArchiveUnavailable">This server can’t archive conversations.</string>
+    <string name="p12ArchiveFailed">Couldn’t archive the conversation.</string>
+    <string name="p12ArchivedFilter">Archived</string>
+    <string name="p12MoreFor">More for %1$s</string>
+    <string name="p12OpenChat">Open conversation</string>
+</resources>

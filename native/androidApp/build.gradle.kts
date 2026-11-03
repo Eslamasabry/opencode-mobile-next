@@ -87,6 +87,7 @@ dependencies {
             ":feature:files",
             ":feature:search",
             ":feature:usage",
+            ":feature:projects",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

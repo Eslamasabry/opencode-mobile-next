@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
+import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -97,4 +98,5 @@ public class ChatsViewModel(
     override fun showAll(): Unit = nav.open(ChatsRoute.All(filter = null))
 
     override fun openSearch(): Unit = nav.open(SearchRoute.Conversations())
+    override fun openProjects(): Unit = nav.open(ProjectsRoute.Picker())
 }

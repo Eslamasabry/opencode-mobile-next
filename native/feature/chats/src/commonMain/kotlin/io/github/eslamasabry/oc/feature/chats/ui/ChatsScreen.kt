@@ -14,8 +14,6 @@ import io.github.eslamasabry.oc.feature.chats.presentation.BriefUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatPreviewActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatPreviewUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsActions
-import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllActions
-import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
@@ -64,13 +62,11 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeToday
 import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefMore
 import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefUnknown
-import io.github.eslamasabry.oc.ui.words.res.chats_all_filter
-import io.github.eslamasabry.oc.ui.words.res.chats_all_none
-import io.github.eslamasabry.oc.ui.words.res.chats_all_title
 import io.github.eslamasabry.oc.ui.words.res.chats_back
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
 import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
+import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
@@ -170,6 +166,14 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
                     KitButton(
                         label = stringResource(Res.string.p12SearchTitle),
                         onClick = actions::openSearch,
+                        role = KitButtonRole.Tertiary,
+                    )
+                }
+                // Projects (P12): New project, Open a folder, Opened before, as visible rows there.
+                item(key = "projects") {
+                    KitButton(
+                        label = stringResource(Res.string.p12ProjectsTitle),
+                        onClick = actions::openProjects,
                         role = KitButtonRole.Tertiary,
                     )
                 }
@@ -285,17 +289,5 @@ public fun ChatPreviewScreen(state: ChatPreviewUi, actions: ChatPreviewActions) 
         ) {
             state.lines.forEach { KitText(it, KitTextRole.Body) }
         }
-    }
-}
-
-@Composable
-public fun ChatsAllScreen(state: ChatsAllUi, actions: ChatsAllActions) {
-    KitScreen(
-        title = stringResource(Res.string.chats_all_title),
-        backLabel = stringResource(Res.string.chats_back),
-        onBack = actions::back,
-    ) {
-        val filter = state.filter ?: stringResource(Res.string.chats_all_none)
-        KitText(stringResource(Res.string.chats_all_filter, filter), KitTextRole.Supporting)
     }
 }
