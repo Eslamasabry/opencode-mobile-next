@@ -80,3 +80,4 @@
 :engine:integrations-usage	F	build-integrations-b	parity-p12
 :engine:integrations-quota	F	build-integrations-b	parity-p12
 :engine:integrations-catalog	F	build-integrations-b	parity-p12
+:engine:integrations-host	F	build-integrations-b	parity-p12
