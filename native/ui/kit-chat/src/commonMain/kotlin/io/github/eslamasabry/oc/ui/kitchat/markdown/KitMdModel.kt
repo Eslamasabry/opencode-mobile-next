@@ -37,6 +37,12 @@ public sealed interface KitSpanKind {
 
     /** Text that looks like a file path (B-CHAT-064); a chip, and a link only once the caller confirmed the file. */
     public data class Path(val path: String, val line: Int?) : KitSpanKind
+
+    /**
+     * A picture inside a sentence that names a file on the server (B-CHAT-059): its frame glyph and its words
+     * ([label]), tappable to the caller's picture viewer (`onPicture`).
+     */
+    public data class Picture(val path: String, val label: String?) : KitSpanKind
 }
 
 /** Column alignment of a table. */

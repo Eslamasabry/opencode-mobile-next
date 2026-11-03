@@ -385,7 +385,8 @@ public fun ChatScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 facts = facts,
                                 onOpenSession = onOpenSession,
-                                reply = rememberReplyActions(actions),
+                                reply = rememberReplyActions(actions, state.confirmedPaths),
+                                onOpenFile = { file -> openArtifact(actions, file) },
                             )
                             EarlierMessagesPill(
                                 state,
@@ -706,18 +707,24 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
  * the one external opener); a code block's Copy copies its whole source verbatim.
  */
 @Composable
-internal fun rememberReplyActions(actions: ChatActions): ReplyActions {
+internal fun rememberReplyActions(
+    actions: ChatActions,
+    confirmedPaths: kotlinx.collections.immutable.ImmutableSet<String> = kotlinx.collections.immutable.persistentSetOf(),
+): ReplyActions {
     val copy = stringResource(Res.string.kitCopy)
     val copied = stringResource(Res.string.kitCopied)
     val picture = stringResource(Res.string.chatFeelPicture)
     val onServer = stringResource(Res.string.chatFeelPictureOnServer, "\u0000")
     val onWeb = stringResource(Res.string.chatFeelPictureOnWeb, "\u0000")
-    return remember(actions, copy, copied, picture, onServer, onWeb) {
+    return remember(actions, copy, copied, picture, onServer, onWeb, confirmedPaths) {
         ReplyActions(
             copiedLabel = copied,
             markdown =
                 KitMarkdownActions(
                     onLink = actions::openLink,
+                    // B-CHAT-064: a path the server confirmed opens its file (a picture in the viewer).
+                    onPath = actions::openPath,
+                    confirmedPaths = confirmedPaths,
                     copyCodeLabel = copy,
                     onCopyCode = actions::copyText,
                     onPicture = { p ->
@@ -738,9 +745,24 @@ internal fun rememberReplyActions(actions: ChatActions): ReplyActions {
                 ),
             copyLabel = copy,
             copy = actions::copyText,
+            checkPaths = actions::checkPaths,
         )
     }
 }
+
+/** B-CHAT-114: a file a step produced opens in the file viewer; a web address goes through the link policy. */
+internal fun openArtifact(actions: ChatActions, file: io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) {
+    val path = file.path
+    val url = file.url
+    when {
+        path != null -> actions.openPath(path, null)
+        url != null && (url.startsWith("https://") || url.startsWith("http://")) -> actions.openLink(url)
+    }
+}
+
+/** Whether [openArtifact] can open [file]. */
+internal fun canOpenArtifact(file: io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact): Boolean =
+    file.path != null || file.url?.let { it.startsWith("https://") || it.startsWith("http://") } == true
 
 /** The words the transcript shows that are not server text, from `:ui:words`. */
 @Composable

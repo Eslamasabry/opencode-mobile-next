@@ -32,6 +32,18 @@ class KitMdSourceTest {
     }
 
     @Test
+    fun `B-CHAT-059 a server picture inside a sentence keeps its words and opens the viewer`() {
+        val b = KitMdSource.blocks("r", "See ![Screenshot](/tmp/result.png) and **this** here", false)
+        val inl = assertIs<KitMdBlock.Prose>(b.single()).inlines
+        assertEquals("See ▣ Screenshot and this here", inl.text)
+        val pic = inl.spans.single { it.kind is KitSpanKind.Picture }
+        assertEquals(KitSpanKind.Picture("/tmp/result.png", "Screenshot"), pic.kind)
+        assertEquals("▣ Screenshot", inl.text.substring(pic.start, pic.end))
+        val bold = inl.spans.single { it.kind == KitSpanKind.Bold }
+        assertEquals("this", inl.text.substring(bold.start, bold.end), "spans after the picture move with its words")
+    }
+
+    @Test
     fun `B-CHAT-060 headings, list items, quotes and code keep their kinds`() {
         assertIs<KitMdBlock.Heading>(KitMdSource.blocks("r", "## Title", false).single())
         assertIs<KitMdBlock.ListItem>(KitMdSource.blocks("r", "- item", false).single())

@@ -189,6 +189,25 @@ class ChatRulesTest {
         assertNull(ReplyText.of(stateOf(prompt("u9", "only a prompt")).rows, "u9"))
     }
 
+    @Test
+    fun `09-6_6 copy reply joins the chunks of one long block with its own newline, not a blank line`() {
+        fun chunk(start: Int, text: String, continued: Boolean, continues: Boolean) =
+            io.github.eslamasabry.oc.engine.transcript.state.BlockRow(
+                "b:a2/p:$start", "u2", io.github.eslamasabry.oc.engine.transcript.state.RowKind.Code, "p", start, text,
+                false, false, io.github.eslamasabry.oc.engine.transcript.state.Origin.Loaded,
+                continued = continued, continues = continues,
+            )
+        val s =
+            stateOf(
+                prompt("u2", "go"),
+                block("u2", "a2", "p", 0, "Run this:"),
+                chunk(10, "```py\nx = 1 + \\", continued = false, continues = true),
+                chunk(30, "    2\n```", continued = true, continues = false),
+                footer("u2"),
+            )
+        assertEquals("Run this:\n\n```py\nx = 1 + \\\n    2\n```", ReplyText.of(s.rows, "u2"))
+    }
+
     // ---- The earlier-messages pill (plan 09 §7.3 rule 6) ----
 
     @Test

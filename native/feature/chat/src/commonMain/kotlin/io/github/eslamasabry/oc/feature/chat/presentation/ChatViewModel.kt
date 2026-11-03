@@ -129,6 +129,10 @@ public class ChatViewModel(
 
     override fun closePicture(): Unit = presenter.closePicture()
 
+    override fun openPath(path: String, line: Int?): Unit = presenter.openPath(path, line)
+
+    override fun checkPaths(paths: List<String>): Unit = presenter.checkPaths(paths)
+
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)

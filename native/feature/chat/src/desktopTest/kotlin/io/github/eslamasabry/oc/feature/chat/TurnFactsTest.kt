@@ -6,7 +6,13 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.filterToOne
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.onChildren
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -250,6 +256,46 @@ class TurnFactsTest {
         assertTrue(TurnFactsPresenter(FixedClock).present(k.feed.value, 60_000).background.isEmpty())
     }
 
+    @Test
+    fun `B-CHAT-016 an OpenCode 2 retry reads its reason from the details, so an overload is not a rate limit`() {
+        val k = keeper()
+        k.history(listOf(prompt))
+        k.event(GatewayEvent.RunStarted(SessionId(sid)), 1_000)
+        val details = io.github.eslamasabry.oc.core.security.Redactor().details("Overloaded")
+        k.event(GatewayEvent.RunRetrying(SessionId(sid), 2, 31_000, null, details), 1_000)
+        assertEquals(false, assertIs<LiveNoticeUi.Retry>(TurnFactsPresenter(FixedClock).present(k.feed.value, 1_000).live).facts.rateLimited)
+        val reset = io.github.eslamasabry.oc.core.security.Redactor().details("ECONNRESET")
+        k.event(GatewayEvent.RunRetrying(SessionId(sid), 3, 31_000, null, reset), 2_000)
+        assertEquals(false, assertIs<LiveNoticeUi.Retry>(TurnFactsPresenter(FixedClock).present(k.feed.value, 2_000).live).facts.rateLimited)
+        val limit = io.github.eslamasabry.oc.core.security.Redactor().details("429 Too Many Requests")
+        k.event(GatewayEvent.RunRetrying(SessionId(sid), 4, 31_000, null, limit), 3_000)
+        assertTrue(assertIs<LiveNoticeUi.Retry>(TurnFactsPresenter(FixedClock).present(k.feed.value, 3_000).live).facts.rateLimited)
+    }
+
+    @Test
+    fun `B-CHAT-118 a model-slow diagnosis does not survive losing the connection`() {
+        val k = keeper()
+        k.history(listOf(prompt))
+        k.link(ChatLink.Live)
+        k.event(GatewayEvent.RunStarted(SessionId(sid)), 0)
+        val p = TurnFactsPresenter(FixedClock)
+        assertEquals(LiveNoticeUi.Stall(TurnStallNotice.ModelSlow), p.present(k.feed.value, 60_000).live)
+        // The connection drops with no further progress.
+        k.link(ChatLink.Offline)
+        assertEquals(LiveNoticeUi.Stall(TurnStallNotice.ConnectionLost), p.present(k.feed.value, 61_000).live)
+    }
+
+    @Test
+    fun `B-CHAT-007 background work keeps the clock ticking after its turn ends`() {
+        val k = keeper()
+        val marker = JsonObject(mapOf("backgroundTask" to JsonObject(emptyMap())))
+        val started = tool("t1", "m2", "bash", ToolStatus.Completed, mapOf("command" to "./serve.sh"), 0, 100, metadata = marker)
+        k.history(listOf(prompt, msg(info("m2", Role.Assistant, 0, done = 200), started)))
+        assertEquals(false, k.feed.value.busy)
+        assertTrue(TurnFactsPresenter(FixedClock).ticking(k.feed.value), "a quiet chat with background work still ticks")
+        assertEquals(false, TurnFactsPresenter(FixedClock).ticking(keeper().also { it.history(finishedTurn()) }.feed.value))
+    }
+
     // ---- The real chat screen, by visible text ----
 
     private val composer =
@@ -353,6 +399,68 @@ class TurnFactsTest {
             onNodeWithTag("chat-step-t9").performClick()
             onNodeWithText("Open its conversation").assertIsDisplayed().performClick()
             assertEquals(listOf("child-1"), opened)
+        }
+
+    private val bearerTail = "FIX3Pk6BearerSecret" + "3H4I5J6K7L"
+
+    @Test
+    fun `B-SEC-094 a finished turn's command and a running step's label never show a bearer token`() =
+        runComposeUiTest {
+            val command = "curl -H 'Authorization: Bearer $bearerTail' https://example.test"
+            val k = keeper()
+            k.history(
+                listOf(
+                    prompt,
+                    msg(
+                        info("m2", Role.Assistant, 2_000, done = 4_000, finish = "stop"),
+                        tool("t1", "m2", "bash", ToolStatus.Completed, mapOf("command" to command), 2_000, 3_000, output = "ok"),
+                        text("x", "m2", "done"),
+                    ),
+                )
+            )
+            val facts = TurnFactsPresenter(FixedClock).present(k.feed.value, 5_000)
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
+            onNodeWithTag("chat-turn-result").onChildren().filterToOne(hasClickAction()).performClick()
+            onNodeWithText("$ curl -H 'Authorization:", substring = true).assertIsDisplayed()
+            onAllNodesWithText(bearerTail, substring = true).assertCountEquals(0)
+        }
+
+    @Test
+    fun `B-SEC-094 the folded running work line names the command redacted`() =
+        runComposeUiTest {
+            val command = "curl -H 'Authorization: Bearer $bearerTail' https://example.test"
+            val k = keeper()
+            k.history(listOf(prompt, msg(info("m2", Role.Assistant, 2_000), tool("t1", "m2", "bash", ToolStatus.Running, mapOf("command" to command), 2_000))))
+            k.event(GatewayEvent.RunStarted(SessionId(sid)), 2_000)
+            val facts = TurnFactsPresenter(FixedClock).present(k.feed.value, 3_000)
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
+            onNodeWithText("curl -H 'Authorization:", substring = true).assertIsDisplayed()
+            onAllNodesWithText(bearerTail, substring = true).assertCountEquals(0)
+        }
+
+    @Test
+    fun `B-CHAT-114 a file a step produced is a visible action that opens it`() =
+        runComposeUiTest {
+            val k = keeper()
+            val write =
+                tool(
+                    "t5", "m2", "screenshot", ToolStatus.Completed, emptyMap(), 2_000, 3_000,
+                    metadata = JsonObject(mapOf("filePath" to JsonPrimitive("/p/out/report.pdf"))),
+                ).let { it.copy(tool = it.tool!!.copy(outputValue = JsonObject(mapOf("filePath" to JsonPrimitive("/p/out/report.pdf"))))) }
+            k.history(listOf(prompt, msg(info("m2", Role.Assistant, 2_000, done = 4_000, finish = "stop"), write, text("x", "m2", "ok"))))
+            val facts = TurnFactsPresenter(FixedClock).present(k.feed.value, 5_000)
+            val world = FakeChatWorld()
+            val nav = RecordingNavigator()
+            val actions = ChatPresenter(world, nav, Immediate)
+            setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
+            onAllNodes(hasClickAction() and androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("chat-work-line")))
+                .onFirst()
+                .performClick()
+            onNodeWithTag("chat-step-t5").performClick()
+            onNodeWithText("report.pdf").assertIsDisplayed().performClick()
+            assertEquals(listOf<io.github.eslamasabry.oc.ui.routes.AppRoute>(io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "/p/out/report.pdf")), nav.opened)
         }
 
     @Test

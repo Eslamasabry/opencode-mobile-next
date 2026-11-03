@@ -69,6 +69,9 @@ internal data class Oc2AdaptedTool(
     public val attachments: List<Oc2ToolAttachment> = emptyList(),
     public val metadata: JsonObject? = null,
     public val executed: Boolean? = null,
+    /** B-CHAT-109: when the call started running (`time.ran`, else `time.created`) and finished (`time.completed`). */
+    public val startedAtMs: Long? = null,
+    public val completedAtMs: Long? = null,
 )
 
 internal enum class Oc2SettleReason { StepMovedOn, StepFailed, RunFailed, RunInterrupted }
@@ -326,14 +329,20 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
             is Oc2Event.SessionToolCalled -> {
                 val key = callKey(e.assistantMessageID, e.callID)
                 remember(toolCalls, key, ToolCall(e.sessionID, toolCalls[key]?.name ?: "", e.input))
-                listOf(toolPart(e.sessionID, e.assistantMessageID, Oc2AdaptedTool(e.callID, null, Oc2ToolStatus.Running, input = e.input)))
+                // B-CHAT-109: a live call is timed from when it was seen running, so a running step counts up.
+                listOf(
+                    toolPart(
+                        e.sessionID, e.assistantMessageID,
+                        Oc2AdaptedTool(e.callID, null, Oc2ToolStatus.Running, input = e.input, startedAtMs = created),
+                    )
+                )
             }
             is Oc2Event.SessionToolProgress -> {
                 val call = toolCalls[callKey(e.assistantMessageID, e.callID)]
                 val state = Oc2AdaptedTool(e.callID, null, Oc2ToolStatus.Running, input = call?.input ?: EmptyJson, metadata = e.metadata)
                 listOf(toolPart(e.sessionID, e.assistantMessageID, state))
             }
-            is Oc2Event.SessionToolResult -> toolResult(e)
+            is Oc2Event.SessionToolResult -> toolResult(e, created)
             is Oc2Event.SessionMessageContentUpdated -> contentUpdated(e)
             is Oc2Event.PermissionAsked -> listOf(Oc2Adapted.PermissionAsked(e.request, e.request.source?.id))
             is Oc2Event.PermissionReplied -> listOf(Oc2Adapted.PermissionSettled(e.sessionID, e.requestID, e.reply))
@@ -485,7 +494,7 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
             else -> emptyList()
         }
 
-    private fun toolResult(e: Oc2Event.SessionToolResult): List<Oc2Adapted> {
+    private fun toolResult(e: Oc2Event.SessionToolResult, created: Long): List<Oc2Adapted> {
         val call = toolCalls.remove(callKey(e.assistantMessageID, e.callID))
         val text = e.content.filterIsInstance<Oc2ToolResultItem.Text>().map { it.text }.filter { it.isNotEmpty() }.joinToString("\n")
         val attachments = e.content.filterIsInstance<Oc2ToolResultItem.File>().map { Oc2ToolAttachment(it.uri, it.mime, it.name) }
@@ -500,6 +509,7 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
                 attachments = attachments,
                 metadata = e.metadata,
                 executed = e.executed,
+                completedAtMs = created,
             )
         // A call that started before this stream (a reconnect): its name and input are not here, so reread.
         return listOfNotNull(
@@ -526,16 +536,20 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
         }
     }
 
-    private fun rawToolState(item: Oc2AssistantContent.Tool): Oc2AdaptedTool =
-        when (val s = item.state) {
-            is Oc2ToolState.Streaming -> Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Pending, raw = s.rawInput)
-            is Oc2ToolState.Running -> Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Running, input = s.input, metadata = s.metadata)
-            is Oc2ToolState.Completed ->
-                Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Completed, input = s.input, output = s.textOutput, metadata = s.metadata)
-            is Oc2ToolState.Error ->
-                Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Error, input = s.input, error = s.error?.message, metadata = s.metadata)
-            is Oc2ToolState.Unknown -> Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Pending)
-        }
+    private fun rawToolState(item: Oc2AssistantContent.Tool): Oc2AdaptedTool {
+        val state =
+            when (val s = item.state) {
+                is Oc2ToolState.Streaming -> Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Pending, raw = s.rawInput)
+                is Oc2ToolState.Running -> Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Running, input = s.input, metadata = s.metadata)
+                is Oc2ToolState.Completed ->
+                    Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Completed, input = s.input, output = s.textOutput, metadata = s.metadata)
+                is Oc2ToolState.Error ->
+                    Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Error, input = s.input, error = s.error?.message, metadata = s.metadata)
+                is Oc2ToolState.Unknown -> Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Pending)
+            }
+        // B-CHAT-109 (Dart v1ToolTimeJson): start prefers `ran` (execution start) over `created` (call emitted).
+        return state.copy(startedAtMs = item.time.ran ?: item.time.created, completedAtMs = item.time.completed)
+    }
 
     private fun refresh(topic: String, data: JsonObject): List<Oc2Adapted> {
         val kind =

@@ -194,4 +194,40 @@ class TurnWorkTest {
         assertTrue(turnWork(LedgerSnapshot(0, emptyList(), emptyList()), busy = false).isEmpty())
         assertEquals(persistentListOf<Part>(), persistentListOf())
     }
+
+    @Test
+    fun `B-CHAT-112 B-CHAT-117 a history page that left before a live result never overwrites it`() {
+        val ledger = TurnLedger(S)
+        val running = msg(info("m2", Role.Assistant, 2), tool("t1", "m2", "bash", ToolStatus.Running, start = 2))
+        ledger.load(listOf(prompt, running))
+        val fence = ledger.historyVersion()
+        // While the page is on its way, the call finishes live.
+        ledger.apply(GatewayEvent.PartUpserted(tool("t1", "m2", "bash", ToolStatus.Completed, start = 2, end = 5, output = "BUILD OK")))
+        ledger.apply(GatewayEvent.MessageUpserted(info("m2", Role.Assistant, 2, done = 6)))
+        // The page still says running (its snapshot is older).
+        ledger.load(listOf(prompt, running), fence)
+        val m2 = ledger.snapshot().messages.single { it.info.id == "m2" }
+        val call = m2.parts.single().tool!!
+        assertEquals(ToolStatus.Completed, call.status)
+        assertEquals("BUILD OK", call.output)
+        assertEquals(6L, m2.info.time?.completedMs)
+        // A page read after the change wins again.
+        ledger.load(listOf(prompt, msg(info("m2", Role.Assistant, 2, done = 7), tool("t1", "m2", "bash", ToolStatus.Completed, output = "x"))), ledger.historyVersion())
+        assertEquals(7L, ledger.snapshot().messages.single { it.info.id == "m2" }.info.time?.completedMs)
+    }
+
+    @Test
+    fun `B-CHAT-100 equal timestamps keep the server's order so the work stays in its turn`() {
+        val ledger = TurnLedger(S)
+        ledger.load(
+            listOf(
+                msg(info("z-user", Role.User, 100), text("p", "z-user", "go")),
+                msg(info("x-step", Role.Assistant, 100), tool("t1", "x-step", "bash", ToolStatus.Completed, mapOf("command" to "ls"), 100, 101)),
+                msg(info("a-final", Role.Assistant, 100, done = 102), text("f", "a-final", "done")),
+            )
+        )
+        val snapshot = ledger.snapshot()
+        assertEquals(listOf("z-user", "x-step", "a-final"), snapshot.messages.map { it.info.id })
+        assertEquals(listOf("z-user"), snapshot.turns.map { it.turnId })
+    }
 }

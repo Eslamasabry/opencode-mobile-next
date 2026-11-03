@@ -399,6 +399,8 @@ private fun rememberSink(actions: KitMarkdownActions): KitMdLinkSink {
             when (target) {
                 is KitSpanKind.Link -> latest.onLink(target.url)
                 is KitSpanKind.Path -> latest.onPath(target.path, target.line)
+                is KitSpanKind.Picture ->
+                    if (latest.openFilePictures) latest.onPicture?.invoke(KitPicture(target.label, path = target.path))
                 else -> Unit
             }
         }

@@ -196,6 +196,7 @@ public object ReplyText {
     public fun of(rows: List<TranscriptRow>, turnId: String): String? {
         val parts = ArrayList<String>()
         var part: String? = null
+        var previous: BlockRow? = null
         val sb = StringBuilder()
         for (i in rows.indices.reversed()) {
             val row = rows[i] as? BlockRow ?: continue
@@ -203,10 +204,15 @@ public object ReplyText {
             if (part != row.partId && sb.isNotEmpty()) {
                 parts += sb.toString()
                 sb.clear()
+                previous = null
             }
             part = row.partId
-            if (sb.isNotEmpty()) sb.append("\n\n")
+            // Chunks of one long block were cut at a line end: they join with that one newline, so a fence or a
+            // line continuation pastes back exactly as written. Separate blocks keep their blank line.
+            val sameBlock = previous != null && previous.continues && row.continued
+            if (sb.isNotEmpty()) sb.append(if (sameBlock) "\n" else "\n\n")
             sb.append(row.text)
+            previous = row
         }
         if (sb.isNotEmpty()) parts += sb.toString()
         return parts.joinToString("\n\n").takeIf { it.isNotBlank() }
@@ -283,6 +289,55 @@ public object CodeCopy {
         }
         val joined = (oldest downTo newest).joinToString("\n") { (rows[it] as BlockRow).text }
         return FenceText.body(joined)
+    }
+}
+
+/**
+ * A Markdown table longer than one STREAM-FIX chunk (plan 09 §9.1; Flutter parses the whole table): only the first
+ * chunk has the header and delimiter lines, so each chunk parsed alone turned the later rows into pipe-filled prose.
+ * [of] maps the rows of each such block: its first chunk's key to the whole block's text (drawn there, as one table),
+ * and every later chunk's key to null (drawn empty). Other rows are absent. O(rows), once per rows instance.
+ */
+public object LongTable {
+    private val DELIMITER = Regex("^\\s*\\|?\\s*:?-+:?\\s*(\\|\\s*:?-+:?\\s*)*\\|?\\s*$")
+
+    public fun of(rows: List<TranscriptRow>): Map<String, String?> {
+        var out: HashMap<String, String?>? = null
+        var i = rows.lastIndex
+        // Rows are newest first: a block's first chunk is its oldest (highest index).
+        while (i >= 0) {
+            val head = rows[i] as? BlockRow
+            if (head == null) {
+                i--
+                continue
+            }
+            if (head.kind == RowKind.Code || head.continued || !head.continues || !opensTable(head.text)) {
+                i--
+                continue
+            }
+            val sb = StringBuilder(head.text)
+            val tails = ArrayList<String>()
+            var j = i - 1
+            var previous: BlockRow = head
+            while (j >= 0 && previous.continues) {
+                val next = rows[j] as? BlockRow ?: break
+                if (next.partId != head.partId || !next.continued) break
+                sb.append('\n').append(next.text)
+                tails += next.key
+                previous = next
+                j--
+            }
+            val map = out ?: HashMap<String, String?>().also { out = it }
+            map[head.key] = sb.toString()
+            for (key in tails) map[key] = null
+            i = j
+        }
+        return out ?: emptyMap()
+    }
+
+    private fun opensTable(text: String): Boolean {
+        val lines = text.lineSequence().dropWhile { it.isBlank() }.take(2).toList()
+        return lines.size == 2 && '|' in lines[0] && '|' in lines[1] && DELIMITER.matches(lines[1])
     }
 }
 

@@ -141,6 +141,12 @@ public interface ChatWorld {
     public suspend fun send(text: String): Outcome<Unit>
 
     /**
+     * Send again (plan 09 §6.6): an earlier prompt's [text] alone. The draft's files never ride along and the draft
+     * stays as it is (Flutter `_sendInsteadOfDraft` sets the draft's attachments aside).
+     */
+    public suspend fun sendAgain(text: String): Outcome<Unit> = send(text)
+
+    /**
      * Explicit repeat of this exact draft revision, permitted only for canonical-history ambiguity.
      */
     public suspend fun sendRepeated(text: String, expectedRevision: Long): Outcome<Unit> =
@@ -178,6 +184,13 @@ public interface ChatWorld {
      * Read through the conversation's own file transport; never a web fetch.
      */
     public suspend fun readPicture(path: String): Outcome<ByteArray> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
+
+    /**
+     * B-CHAT-064: whether [path] names a file on the server (Flutter `_checkPathLink`: its folder is listed and the
+     * name found). A bare name without a folder is never checked.
+     */
+    public suspend fun fileExists(path: String): Outcome<Boolean> =
         Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
 
     /** The visible transcript was read at the live edge (plan 09 §6.7). */

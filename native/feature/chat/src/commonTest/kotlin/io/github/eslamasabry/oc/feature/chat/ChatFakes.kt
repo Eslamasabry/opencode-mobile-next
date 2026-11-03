@@ -113,6 +113,14 @@ open class FakeChatWorld(override val ref: ConversationRef = Ref) : ChatWorld {
     var stopResult: Outcome<Unit> = Outcome.Ok(Unit)
     var reads = 0
 
+    /** Files [fileExists] finds on the "server"; each check is recorded. */
+    val serverFiles = mutableSetOf<String>()
+
+    override suspend fun fileExists(path: String): Outcome<Boolean> {
+        calls += "exists $path"
+        return Outcome.Ok(path in serverFiles)
+    }
+
     override fun draftChanged(text: String) = draft.update { it.copy(text = text) }
 
     override suspend fun saveDraft(): Outcome<Unit> {
@@ -123,6 +131,11 @@ open class FakeChatWorld(override val ref: ConversationRef = Ref) : ChatWorld {
 
     override suspend fun send(text: String): Outcome<Unit> {
         calls += "send $text"
+        return Outcome.Ok(Unit)
+    }
+
+    override suspend fun sendAgain(text: String): Outcome<Unit> {
+        calls += "sendAgain $text"
         return Outcome.Ok(Unit)
     }
 

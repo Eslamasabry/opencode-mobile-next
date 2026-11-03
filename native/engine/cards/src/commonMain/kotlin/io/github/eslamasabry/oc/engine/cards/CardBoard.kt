@@ -72,6 +72,10 @@ public class CardBoard(
     private val sender: CardAnswerSender,
     private val photosAllowed: () -> Boolean = { false },
     private val holdMillis: Long = HOLD_MILLIS,
+    /** The fresh read and idle proof right before the answer leaves (B-CHAT-039/050/052). */
+    private val check: CardDispatchCheck = CardDispatchCheck { null },
+    /** Answers that may have left, kept across a reopen or a restart (B-CHAT-051). */
+    private val journal: CardJournal = MemoryCardJournal(),
 ) {
     private val mutable = MutableStateFlow(CardBoardState())
     public val state: StateFlow<CardBoardState> = mutable.asStateFlow()
@@ -168,7 +172,7 @@ public class CardBoard(
         val s = mutable.value
         if (!s.available || stateOf(card) != CardState.Waiting) return CardRefusal.Changed
         if (s.busy) return CardRefusal.Busy
-        if (delivery[card.identity] == CardDelivery.DeliveryUnknown) return CardRefusal.CheckFirst
+        if (delivery[card.identity] == CardDelivery.DeliveryUnknown || journaled(card.identity)) return CardRefusal.CheckFirst
         try {
             CardCodec.answerText(card, answer)
         } catch (e: CardAnswerInvalid) {
@@ -195,29 +199,50 @@ public class CardBoard(
         val identity = card.identity
         heldWords.remove(identity)
         // Re-check after the hold: the card may have changed, the agent may be running, cards may be off.
-        val again = admit(card, answer, photos)
-        if (again != null) {
-            delivery.remove(identity)
-            refusals[identity] = again
-            publish()
-            return
-        }
-        val text = CardCodec.answerText(card, answer)
+        if (refuse(identity, admit(card, answer, photos))) return
         sending += identity
         delivery[identity] = CardDelivery.Sending
         publish()
+        // Then a fresh read and idle proof (Flutter `_send`): another client may have answered or started a turn
+        // while the events were away. The board sees the read through [observe], so admission runs once more.
+        val verified = check.verify(card)
+        if (closed) return
+        if (refuse(identity, verified ?: admit(card, answer, photos))) return
+        val text = CardCodec.answerText(card, answer)
+        val profile = card.scope.profileId
+        // The journal entry goes first: an answer that may leave is never forgotten by a reopen or restart.
+        if (journal.put(profile, identity) is Outcome.Failed) {
+            sending -= identity
+            delivery[identity] = CardDelivery.Failed
+            publish()
+            return
+        }
         val result = sender.send(card.sessionId, text, photos)
         sending -= identity
+        val uncertain =
+            result is Outcome.Ok || (result as Outcome.Failed).failure.let { (it as? Failure.Refused)?.reason == RefusalReason.DispatchUncertain }
+        // Nothing left the phone: the journal lets go so the person may try again.
+        if (!uncertain) journal.remove(profile, identity)
         if (closed) return
-        delivery[identity] =
-            when (result) {
-                // Only the authoritative echo settles the card; until then the answer is "not confirmed".
-                is Outcome.Ok -> CardDelivery.DeliveryUnknown
-                is Outcome.Failed ->
-                    if ((result.failure as? Failure.Refused)?.reason == RefusalReason.DispatchUncertain) CardDelivery.DeliveryUnknown
-                    else CardDelivery.Failed
-            }
+        // Only the authoritative echo settles the card; until then the answer is "not confirmed".
+        delivery[identity] = if (uncertain) CardDelivery.DeliveryUnknown else CardDelivery.Failed
         publish()
+    }
+
+    /** Applies a refusal found after the hold: nothing is sent and the controls come back with the reason. */
+    private fun refuse(identity: String, refusal: CardRefusal?): Boolean {
+        if (refusal == null) return false
+        sending -= identity
+        delivery.remove(identity)
+        refusals[identity] = refusal
+        publish()
+        return true
+    }
+
+    private fun journaled(identity: String): Boolean {
+        val profile = cardScope?.profileId ?: return false
+        val set = journal.dispatched(profile) ?: return true // unreadable: fail closed
+        return identity in set
     }
 
     private fun stateOf(card: AgentCard): CardState =
@@ -243,12 +268,20 @@ public class CardBoard(
                             else -> CardCodec.stateFor(card, messages, tailComplete)
                         }
                     var d = identity?.let { delivery[it] } ?: CardDelivery.Idle
-                    if (identity != null && (st == CardState.Answered || st == CardState.PassedOver) && d != CardDelivery.Held) {
+                    val settled = st == CardState.Answered || st == CardState.PassedOver
+                    if (identity != null && settled && d != CardDelivery.Held) {
                         // Settled: the receipt is the truth now.
                         delivery.remove(identity)
                         drafts.remove(identity)
                         refusals.remove(identity)
                         d = CardDelivery.Idle
+                        if (identity !in sending && journal.dispatched(scope.profileId)?.contains(identity) == true) {
+                            val profile = scope.profileId
+                            this.scope.launch { journal.remove(profile, identity) }
+                        }
+                    } else if (identity != null && !settled && (d == CardDelivery.Idle || d == CardDelivery.Failed) && journaled(identity)) {
+                        // A reopened chat or a restarted app still knows the answer may have left (B-CHAT-051).
+                        d = CardDelivery.DeliveryUnknown
                     }
                     val summary =
                         when {

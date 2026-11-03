@@ -205,7 +205,7 @@ class ChatPresenterTest {
     }
 
     @Test
-    fun `09-6_6 send again sends the prompt's words once, and fork opens the new conversation`() {
+    fun `09-6_6 send again sends the prompt's words once without the draft's files, and fork opens the new conversation`() {
         world.transcript.value = stateOf(*turn(1, ask = "try again please").toTypedArray())
         val p = presenter()
         p.openMessageMenu("prompt:u1")
@@ -216,7 +216,9 @@ class ChatPresenterTest {
         )
         p.messageAction(target, MessageAction.SendAgain)
         p.messageAction(target, MessageAction.Fork)
-        assertEquals(listOf("send try again please", "fork u1"), world.calls)
+        // sendAgain, never send: the draft's attached files never ride along with an older prompt (Flutter
+        // `_sendInsteadOfDraft`).
+        assertEquals(listOf("sendAgain try again please", "fork u1"), world.calls)
         assertEquals(listOf("openChat s2"), nav.calls)
     }
 
@@ -387,5 +389,41 @@ class ChatPresenterTest {
         p.messageAction(p.current().menu!!.target, MessageAction.Changes)
         p.openChanges()
         assertEquals(listOf("open", "open", "open"), nav.calls)
+    }
+
+    @Test
+    fun `B-CHAT-064 only paths the server confirms become tappable, and a miss is not re-checked while nothing changed`() {
+        world.transcript.value = stateOf(*turn(1).toTypedArray())
+        world.serverFiles += "lib/main.dart"
+        val p = presenter()
+        p.checkPaths(listOf("lib/main.dart", "lib/gone.dart"))
+        assertEquals(setOf("lib/main.dart"), p.current().confirmedPaths)
+        p.checkPaths(listOf("lib/main.dart", "lib/gone.dart"))
+        assertEquals(listOf("exists lib/main.dart", "exists lib/gone.dart"), world.calls.filter { it.startsWith("exists") })
+        // The conversation moved on (the agent may have made the file): the miss is checked again.
+        world.serverFiles += "lib/gone.dart"
+        world.transcript.value = stateOf(*turn(1).toTypedArray(), revision = 2)
+        p.checkPaths(listOf("lib/gone.dart"))
+        assertEquals(setOf("lib/main.dart", "lib/gone.dart"), p.current().confirmedPaths)
+    }
+
+    @Test
+    fun `B-CHAT-064 B-CHAT-114 a file opens in the file viewer at its line, a picture in the picture viewer`() {
+        world.transcript.value = stateOf(*turn(1).toTypedArray())
+        val p = presenter()
+        p.openPath("lib/main.dart", 12)
+        assertEquals(listOf<io.github.eslamasabry.oc.ui.routes.AppRoute>(io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "lib/main.dart", 12)), nav.opened)
+        p.openPath("/tmp/shot.PNG", null)
+        assertEquals("shot.PNG", p.current().picture?.name)
+    }
+
+    @Test
+    fun `B-CHAT-064 nothing is checked or opened where the server has no file browsing`() {
+        world.capabilities.value = io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities(fileBrowsing = false)
+        val p = presenter()
+        p.checkPaths(listOf("lib/main.dart"))
+        p.openPath("lib/main.dart", null)
+        assertTrue(world.calls.none { it.startsWith("exists") })
+        assertTrue(nav.opened.isEmpty())
     }
 }

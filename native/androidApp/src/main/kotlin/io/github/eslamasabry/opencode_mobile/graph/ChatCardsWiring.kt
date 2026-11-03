@@ -1,8 +1,5 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
-import android.app.Application
-import android.content.Intent
-import android.net.Uri
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
@@ -12,16 +9,14 @@ import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
-import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
-import io.github.eslamasabry.oc.core.security.LinkDecision
-import io.github.eslamasabry.oc.core.security.LinkOrigin
+import io.github.eslamasabry.oc.engine.cards.CardJournalStore
 import io.github.eslamasabry.oc.engine.cards.CardsPrefs
-import io.github.eslamasabry.oc.feature.chat.cards.CardLinkOpener
 
 /**
  * P12-CHAT-CARDS Android bindings: the "Cards from agents" choice under the Flutter key `oc.genui.enabled.<profileId>`
- * (off when absent, so a migrated install keeps the person's choice), and card links opened only after the
- * ExternalLinkPolicy check with the agent-card origin (AGENTS.md rule 8; the card already shows the host).
+ * (off when absent, so a migrated install keeps the person's choice) and the card dispatch journal under
+ * `oc.genui.journal.<profileId>` (B-CHAT-051; the `oc.<what>.<profileId>` shape is swept with the profile). Card links
+ * have no binding here: they take the chat's own ask-first link flow (B-SEC-065, AGENTS.md rule 8).
  */
 internal class PreviewCardsPrefs(private val stores: PreviewStores) : CardsPrefs {
     override fun enabled(profileId: String): Boolean? =
@@ -37,21 +32,18 @@ internal class PreviewCardsPrefs(private val stores: PreviewStores) : CardsPrefs
     }
 }
 
-internal class AndroidCardLinkOpener(private val application: Application) : CardLinkOpener {
-    private val policy = ExternalLinkPolicy()
-
-    override fun open(url: String) {
-        val link =
-            when (val decision = policy.check(url, LinkOrigin.AgentCard)) {
-                is LinkDecision.Open -> decision.link
-                is LinkDecision.AskFirst -> decision.link // the card's button already names the host it opens
-                is LinkDecision.Refuse -> return
-            }
+internal class PreviewCardJournalStore(private val stores: PreviewStores) : CardJournalStore {
+    override fun read(profileId: String): String? =
         try {
-            application.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link.uri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        } catch (e: android.content.ActivityNotFoundException) {
-            // No browser: nothing opens; the card stays as it was.
+            (stores.prefs.get(CardsPrefs.journalKey(profileId)) as? PrefValue.Str)?.value
+        } catch (e: RuntimeException) {
+            CardJournalStore.UNREADABLE // the store is not open yet: fail closed until it is
         }
+
+    override suspend fun write(profileId: String, json: String?): Outcome<Unit> {
+        if (stores.warm() is Outcome.Failed) return Outcome.Failed(Failure.StorageRefused())
+        val key = CardsPrefs.journalKey(profileId)
+        return stores.prefs.commit(stores.lanes.app) { if (json == null) remove(key) else putString(key, json) }
     }
 }
 
@@ -66,5 +58,5 @@ object ChatCardsAndroidBindings {
     @Provides
     @IntoSet
     @SingleIn(AppScope::class)
-    fun cardLinks(application: Application): CardLinkOpener = AndroidCardLinkOpener(application)
+    fun cardJournal(stores: PreviewStores): CardJournalStore = PreviewCardJournalStore(stores)
 }

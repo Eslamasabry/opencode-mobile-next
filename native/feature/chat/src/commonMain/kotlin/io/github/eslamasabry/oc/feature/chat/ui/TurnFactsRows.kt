@@ -24,11 +24,14 @@ import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolOutput
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
+import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KIT_WORK_STEP_CAP
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
+import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
 import io.github.eslamasabry.oc.ui.words.res.kitCodeShowAll
 import io.github.eslamasabry.oc.ui.words.res.kitToolFailed
 import io.github.eslamasabry.oc.ui.words.res.kitToolOpenConversation
@@ -67,7 +70,13 @@ private fun WorkLineState.toKit(): KitWorkState =
  * by itself until the person folds it.
  */
 @Composable
-internal fun TurnWorkLine(work: TurnWork, nowMs: Long, folds: TranscriptFolds, onOpenSession: ((String) -> Unit)? = null) {
+internal fun TurnWorkLine(
+    work: TurnWork,
+    nowMs: Long,
+    folds: TranscriptFolds,
+    onOpenSession: ((String) -> Unit)? = null,
+    onOpenFile: ((ToolArtifact) -> Unit)? = null,
+) {
     val key = "work:${work.turnId}"
     val kitState = work.state.toKit()
     val expanded = folds.open[key] ?: kitState.opensByDefault
@@ -91,7 +100,7 @@ internal fun TurnWorkLine(work: TurnWork, nowMs: Long, folds: TranscriptFolds, o
         earlier = earlier,
         modifier = Modifier.testTag("chat-work-line"),
     ) {
-        for (step in work.steps.drop(hidden)) StepRow(step, nowMs, folds, onOpenSession)
+        for (step in work.steps.drop(hidden)) StepRow(step, nowMs, folds, onOpenSession, onOpenFile)
     }
 }
 
@@ -99,11 +108,19 @@ internal fun TurnWorkLine(work: TurnWork, nowMs: Long, folds: TranscriptFolds, o
 private fun nowWords(step: TurnStep): String {
     val title = stepTitle(step.facts)
     val subject = step.facts.subject
-    return if (subject.isNullOrBlank()) title else "$title · $subject"
+    // B-SEC-094 / R18: the subject is a command or path the agent wrote; it reads redacted like every mono surface.
+    val mask = rememberKitMask()
+    return if (subject.isNullOrBlank()) title else "$title · ${mask(subject)}"
 }
 
 @Composable
-private fun StepRow(step: TurnStep, nowMs: Long, folds: TranscriptFolds, onOpenSession: ((String) -> Unit)?) {
+private fun StepRow(
+    step: TurnStep,
+    nowMs: Long,
+    folds: TranscriptFolds,
+    onOpenSession: ((String) -> Unit)?,
+    onOpenFile: ((ToolArtifact) -> Unit)?,
+) {
     val key = "step:${step.partId}"
     val f = step.facts
     val runningFor = if (step.state == StepState.Running) step.startedAtMs?.let { (nowMs - it).coerceAtLeast(0) } else null
@@ -124,7 +141,9 @@ private fun StepRow(step: TurnStep, nowMs: Long, folds: TranscriptFolds, onOpenS
     val text = out.text.takeIf { it.isNotEmpty() }
     val shell = f.kind == ToolKind.Shell
     val child = f.childSessionId?.takeIf { onOpenSession != null }
-    val hasBody = text != null || (shell && !f.subject.isNullOrBlank()) || child != null
+    // B-CHAT-114: an explicit file the step produced (an attachment, a `filePath` output) is a visible action.
+    val files = if (onOpenFile == null) emptyList() else out.artifacts.filter(::canOpenArtifact)
+    val hasBody = text != null || (shell && !f.subject.isNullOrBlank()) || child != null || files.isNotEmpty()
     val full = folds.full[key] == true
     val lines = text?.lines()?.size ?: 0
     val more = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines)
@@ -143,6 +162,13 @@ private fun StepRow(step: TurnStep, nowMs: Long, folds: TranscriptFolds, onOpenS
                             { onOpenSession(child) },
                             role = KitButtonRole.Tertiary,
                             modifier = Modifier.testTag("chat-step-open-session"),
+                        )
+                    for ((i, file) in files.withIndex())
+                        KitButton(
+                            file.displayName ?: stringResource(Res.string.chatUiGeneratedFile),
+                            { onOpenFile?.invoke(file) },
+                            role = KitButtonRole.Tertiary,
+                            modifier = Modifier.testTag("chat-step-file-$i"),
                         )
                     if (shell)
                         KitCommandBox(
@@ -180,6 +206,8 @@ internal fun TurnResultLine(turnId: String, result: TurnResultUi, folds: Transcr
         return
     }
     val key = "result:$turnId"
+    // B-SEC-094 / R18: a command line is server text; a key it carries never reaches the screen.
+    val mask = rememberKitMask()
     Column(Modifier.testTag("chat-turn-result")) {
         KitExpandRow(
             title = summary,
@@ -187,12 +215,13 @@ internal fun TurnResultLine(turnId: String, result: TurnResultUi, folds: Transcr
             supporting = timing,
             onExpandedChange = { folds.open[key] = it },
         ) {
-            for (file in result.files) KitQuietLine(fileLine(file.path, file.added, file.removed))
+            for (file in result.files) KitQuietLine(fileLine(mask(file.path), file.added, file.removed))
             for (command in result.commands) {
                 val exit = command.exitCode
+                val line = mask(command.command)
                 KitQuietLine(
-                    if (exit == null) "$ ${command.command}"
-                    else "$ ${command.command}  ·  " + stepStatus(if (exit == 0) StepState.Done else StepState.Failed, exit)
+                    if (exit == null) "$ $line"
+                    else "$ $line  ·  " + stepStatus(if (exit == 0) StepState.Done else StepState.Failed, exit)
                 )
             }
         }

@@ -626,12 +626,13 @@ internal class GraphChatWorld(
         cursor: String? = null,
     ): Outcome<Unit> {
         val version = handle.historyVersion()
+        val feedVersion = feedKeeper.historyVersion()
         return when (val page = gateway.messagePage(sid, cursor = cursor, limit = HISTORY_PAGE)) {
             is Outcome.Ok -> {
                 if (currentAttached()?.handle !== handle)
                     return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
                 handle.loadHistory(page.value.items.map(bridge::message), version)
-                feedKeeper.history(page.value.items)
+                feedKeeper.history(page.value.items, feedVersion)
                 nextCursor = page.value.nextCursor
                 mutableOlder.value = nextCursor != null
                 page.value.items
@@ -985,7 +986,11 @@ internal class GraphChatWorld(
 
     // ---- Sends (bubble first, never twice) ----
 
-    override suspend fun send(text: String): Outcome<Unit> {
+    override suspend fun send(text: String): Outcome<Unit> = send(text, draftFiles = true)
+
+    override suspend fun sendAgain(text: String): Outcome<Unit> = send(text, draftFiles = false)
+
+    private suspend fun send(text: String, draftFiles: Boolean): Outcome<Unit> {
         val id = nextLocalId++
         if (mutableLoad.value !is ChatLoad.Live)
             return Outcome.Failed(Failure.Busy(BusyKind.Starting))
@@ -996,10 +1001,12 @@ internal class GraphChatWorld(
             return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
         // The session captures text and files as one revision; the dispatch carries that snapshot.
         val submission =
-            draftSession
-                ?.captureSubmission()
-                ?.takeIf { it.text.trim() == text.trim() }
-        val files = submission?.attachments ?: draft.attachments
+            if (!draftFiles) null
+            else
+                draftSession
+                    ?.captureSubmission()
+                    ?.takeIf { it.text.trim() == text.trim() }
+        val files = if (!draftFiles) emptyList() else submission?.attachments ?: draft.attachments
         if (text.isBlank() && files.isEmpty())
             return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
         submission?.let { draftSubmissions[id] = it }
@@ -1295,6 +1302,19 @@ internal class GraphChatWorld(
         } catch (_: IllegalArgumentException) {
             Outcome.Failed(Failure.Unexpected())
         }
+    }
+
+    override suspend fun fileExists(path: String): Outcome<Boolean> {
+        val slash = path.lastIndexOf('/')
+        val name = if (slash >= 0) path.substring(slash + 1) else ""
+        if (name.isEmpty()) return Outcome.Ok(false)
+        val dir = if (slash == 0) "/" else path.substring(0, slash)
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        if (!a.gateway.capabilities.value.fileBrowsing) return Outcome.Ok(false)
+        val listed = a.gateway.listFiles(dir)
+        if (currentAttached() !== a) return Outcome.Failed(STALE)
+        val nodes = (listed as? Outcome.Ok)?.value ?: return listed as Outcome.Failed
+        return Outcome.Ok(nodes.any { !it.isDir && it.name == name })
     }
 
     override fun markRead() {

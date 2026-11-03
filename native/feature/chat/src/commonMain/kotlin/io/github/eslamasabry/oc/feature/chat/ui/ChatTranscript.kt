@@ -5,12 +5,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.presentation.CodeCopy
+import io.github.eslamasabry.oc.feature.chat.presentation.LongTable
+import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.feature.chat.presentation.FenceText
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
@@ -21,6 +24,7 @@ import io.github.eslamasabry.oc.ui.kitchat.code.KitStandaloneRedaction
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdReveal
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
 import io.github.eslamasabry.oc.ui.kitchat.markdown.settle
 import io.github.eslamasabry.oc.ui.kitchat.markdown.takesCaret
@@ -121,6 +125,8 @@ internal class ReplyActions(
     val copy: (String) -> Unit,
     /** QA wave 4 N9: the code block's Copy says so after a tap. */
     val copiedLabel: String? = null,
+    /** B-CHAT-064: the paths a drawn block shows, to be checked on the server. */
+    val checkPaths: (List<String>) -> Unit = {},
 )
 
 /** B2: a short, safe code for a send failure (no server text, no address): what QA asked to see under Details. */
@@ -201,18 +207,22 @@ internal fun ChatTranscriptList(
     facts: TurnFactsUi = TurnFactsUi.Empty,
     onOpenSession: ((String) -> Unit)? = null,
     reply: ReplyActions? = null,
+    onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -> Unit)? = null,
 ) {
     val folds = rememberTranscriptFolds()
     val currentRows by rememberUpdatedState(rows)
-    val copyCode: (String) -> Unit =
+    // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the raw fence; only
+    // Copy reply copies the reply as written (plan 09 §6.6).
+    val copyCode: (String, (String) -> String) -> Unit =
         remember(reply) {
-            { key ->
+            { key, mask ->
                 val r = currentRows
-                CodeCopy.of(r, r.indexOfFirst { it.key == key })?.let { reply?.copy?.invoke(it) }
+                CodeCopy.of(r, r.indexOfFirst { it.key == key })?.let { reply?.copy?.invoke(mask(it)) }
             }
         }
     // B0: a repeated key kills the whole screen (LazyColumn throws), so the list never sees one.
     val unique = remember(rows) { rows.distinctKeys() }
+    val tables = remember(unique) { LongTable.of(unique) }
     val newestKey =
         when {
             live != null -> ListKeys.LIVE
@@ -256,7 +266,14 @@ internal fun ChatTranscriptList(
             }
         }
         items(unique, key = { it.key }, contentType = { it.kind }) { row ->
-            ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession, reply, copyCode)
+            // A table longer than one chunk is drawn whole by its first chunk; its later chunks draw nothing.
+            if (reply != null && row is BlockRow && row.key in tables) {
+                val whole = tables[row.key]
+                if (whole != null)
+                    ChatRow(row.copy(text = whole, continues = false), words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession, reply, copyCode, onOpenFile)
+            } else {
+                ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession, reply, copyCode, onOpenFile)
+            }
         }
     }
 }
@@ -312,7 +329,8 @@ private fun ChatRow(
     folds: TranscriptFolds? = null,
     onOpenSession: ((String) -> Unit)? = null,
     reply: ReplyActions? = null,
-    copyCode: (String) -> Unit = {},
+    copyCode: (String, (String) -> String) -> Unit = { _, _ -> },
+    onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -> Unit)? = null,
 ) {
     when (row) {
         is BlockRow ->
@@ -351,7 +369,7 @@ private fun ChatRow(
             // P12-CHAT-CARDS: a turn's agent cards stand right under its work line, in the reply (never folded in).
             Column {
                 val work = facts.work[row.turnId]
-                if (work != null && folds != null) TurnWorkLine(work, facts.nowMs, folds, onOpenSession)
+                if (work != null && folds != null) TurnWorkLine(work, facts.nowMs, folds, onOpenSession, onOpenFile)
                 else KitQuietLine(
                     if (listWords != null) workLineWords(row.calls, row.state)
                     else words.workLine(row.calls, row.failed, row.state)
@@ -364,7 +382,17 @@ private fun ChatRow(
                 val reason = row.reason.orEmpty()
                 // B5: why the reply failed and what to do next; the server's own words only under Details.
                 Column(Modifier.testTag("chat-reply-failed")) {
-                    KitQuietLine(words.footer(row.failed))
+                    // A failed reply keeps its actions (Copy, Share, Select text, Delete), as Flutter's does.
+                    if (onOpenMenu != null)
+                        KitTappable(
+                            onClick = { onOpenMenu(row.key) },
+                            onClickLabel = listWords.messageActions,
+                            role = KitTappableRole.Row,
+                            modifier = Modifier.testTag("chat-turn-footer"),
+                        ) {
+                            KitQuietLine(words.footer(row.failed))
+                        }
+                    else KitQuietLine(words.footer(row.failed))
                     KitQuietLine(listWords.replyFailed(ReplyFailureKind.of(reason)))
                     KitDetailsFold(
                         label = listWords.details,
@@ -413,11 +441,12 @@ private fun RichBlock(
     reveal: RevealRegistry,
     motion: KitMotionLevel,
     reply: ReplyActions,
-    copyCode: (String) -> Unit,
+    copyCode: (String, (String) -> String) -> Unit,
 ) {
     val column = Modifier.replyColumn(row.continued, row.continues)
     if (row.kind == RowKind.Code) {
         val body = remember(row.text) { FenceText.body(row.text) }
+        val mask = rememberKitMask()
         val streamed = row.origin == Origin.Streamed
         // A streamed fence keeps the stream-tuned block until its words have all landed and faded: the settled view
         // takes over only then, so its reveal never stops half way (and never holds up the blocks after it).
@@ -445,7 +474,7 @@ private fun RichBlock(
                         language = CodeLanguage.of(FenceText.info(row.text)),
                         maxLines = Int.MAX_VALUE,
                         copyLabel = reply.copyLabel,
-                        onCopy = { copyCode(row.key) },
+                        onCopy = { copyCode(row.key, mask) },
                         copiedLabel = reply.copiedLabel,
                     )
                 }
@@ -456,13 +485,16 @@ private fun RichBlock(
                     continues = row.continues,
                     modifier = column,
                     copyLabel = reply.copyLabel,
-                    onCopy = { copyCode(row.key) },
+                    onCopy = { copyCode(row.key, mask) },
                     copiedLabel = reply.copiedLabel,
                 )
         }
         return
     }
     val blocks = remember(row.key, row.text, row.live) { KitMdSource.blocks(row.key, row.text, row.live) }
+    // B-CHAT-064: the paths this block shows are checked once per settled text; confirmed ones become tappable.
+    val paths = remember(blocks) { pathsOf(blocks) }
+    if (paths.isNotEmpty() && !row.live) LaunchedEffect(paths) { reply.checkPaths(paths) }
     val streamed = row.origin == Origin.Streamed
     val md = remember(reveal, motion, streamed, row.key) { KitMdReveal(reveal, row.key.substringBeforeLast(':'), motion, streamed) }
     // A growing row can re-parse into fewer blocks; the reveal of a block that went away is finished, not orphaned.
@@ -490,3 +522,26 @@ private fun RowKind.toKit(): KitBlockKind =
         RowKind.Code -> KitBlockKind.Code
         else -> KitBlockKind.Prose
     }
+
+/** The file paths (B-CHAT-064 path spans) the blocks show, in order, each once. */
+internal fun pathsOf(blocks: List<KitMdBlock>): List<String> {
+    val out = LinkedHashSet<String>()
+    fun scan(inlines: io.github.eslamasabry.oc.ui.kitchat.markdown.KitInlines) {
+        for (span in inlines.spans) (span.kind as? io.github.eslamasabry.oc.ui.kitchat.markdown.KitSpanKind.Path)?.let { out += it.path }
+    }
+    fun walk(b: KitMdBlock) {
+        when (b) {
+            is KitMdBlock.Prose -> scan(b.inlines)
+            is KitMdBlock.Heading -> scan(b.inlines)
+            is KitMdBlock.ListItem -> scan(b.inlines)
+            is KitMdBlock.Quote -> b.children.forEach(::walk)
+            is KitMdBlock.Table -> {
+                b.header.forEach(::scan)
+                b.rows.forEach { r -> r.forEach(::scan) }
+            }
+            else -> Unit
+        }
+    }
+    blocks.forEach(::walk)
+    return out.toList()
+}

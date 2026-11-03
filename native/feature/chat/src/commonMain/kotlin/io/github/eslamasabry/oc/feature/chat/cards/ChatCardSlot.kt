@@ -47,7 +47,11 @@ import io.github.eslamasabry.oc.ui.words.res.agentCardAsksAnnouncement
 import io.github.eslamasabry.oc.ui.words.res.agentCardBusy
 import io.github.eslamasabry.oc.ui.words.res.agentCardCancelDefault
 import io.github.eslamasabry.oc.ui.words.res.agentCardChartBar
+import io.github.eslamasabry.oc.ui.words.res.agentCardChartHighest
 import io.github.eslamasabry.oc.ui.words.res.agentCardChartLine
+import io.github.eslamasabry.oc.ui.words.res.agentCardChartNone
+import io.github.eslamasabry.oc.ui.words.res.agentCardChartPoints
+import io.github.eslamasabry.oc.ui.words.res.agentCardChartSeries
 import io.github.eslamasabry.oc.ui.words.res.agentCardChooseOneOrMore
 import io.github.eslamasabry.oc.ui.words.res.agentCardConfirmDefault
 import io.github.eslamasabry.oc.ui.words.res.agentCardDeliveryUnknown
@@ -98,10 +102,14 @@ public interface ChatCardSlotHost {
     public fun openSettings() {}
 }
 
-/** Adapts the per-conversation model to the slot. */
+/**
+ * Adapts the per-conversation model to the slot. [links] is the chat's own link action (B-SEC-065): a card link is
+ * server content, so it takes the chat's ask-first confirmation naming the host and opens only through the app's
+ * ExternalLinkPolicy → ExternalLinkOpener path, never straight from the card.
+ */
 public class ModelCardSlotHost(
     private val model: ChatCardsModel,
-    private val links: CardLinkOpener?,
+    private val links: (String) -> Unit,
     private val settings: () -> Unit = {},
     override val agentName: String = "OpenCode",
 ) : ChatCardSlotHost {
@@ -113,9 +121,7 @@ public class ModelCardSlotHost(
 
     override fun undo(card: AgentCard): Unit = model.undo(card)
 
-    override fun openLink(url: String) {
-        links?.open(url)
-    }
+    override fun openLink(url: String): Unit = links(url)
 }
 
 /**
@@ -294,22 +300,14 @@ private fun CardAskControls(card: AgentCard, ask: CardAsk, draft: CardAnswer?, b
 /** Card node → kit node, with the words a node needs (chart and table descriptions, the progress percentage). */
 @Composable
 private fun cardBody(nodes: List<CardNode>): ImmutableList<KitCardNode> =
-    nodes.map { node ->
-        when (node) {
+    nodes.flatMap { node ->
+        if (node is CardNode.Chart) return@flatMap chartNodes(node)
+        listOf(when (node) {
             is CardNode.Text -> KitCardNode.Text(node.text)
             is CardNode.KeyValue -> KitCardNode.KeyValue(node.rows.map { it.key to it.value }.toImmutableList())
             is CardNode.Checklist -> KitCardNode.Checklist(node.items.map { it.text to it.done }.toImmutableList(), node.style == CardNode.ListStyle.Check)
             is CardNode.Table -> KitCardNode.Table(node.columns, node.rows, stringResource(Res.string.agentCardTableLabel, node.columns.size, node.rows.size))
-            is CardNode.Chart -> {
-                val first = node.series.firstOrNull()
-                val kind = stringResource(if (node.kind == CardNode.ChartKind.Bar) Res.string.agentCardChartBar else Res.string.agentCardChartLine)
-                KitCardNode.Chart(
-                    node.labels,
-                    (first?.values ?: emptyList()).toImmutableList(),
-                    node.unit,
-                    listOfNotNull(kind, first?.name).joinToString(", "),
-                )
-            }
+            is CardNode.Chart -> error("charts are mapped by chartNodes")
             is CardNode.Code -> KitCardNode.Code(node.language, node.text)
             is CardNode.DiffStat ->
                 KitCardNode.DiffStat(
@@ -328,8 +326,80 @@ private fun cardBody(nodes: List<CardNode>): ImmutableList<KitCardNode> =
                     node.text,
                 )
             is CardNode.Link -> KitCardNode.Link(node.label, CardForms.host(node.url), node.url)
-        }
+        })
     }.toImmutableList()
+
+/**
+ * B-CHAT-004/054: every series is drawn (one bar group each, its name above it when there are several) and the first
+ * group carries the whole chart's summary for screen readers: kind, series, points and the highest value (Flutter
+ * `KitChart.summaryOf`). The kit draws bars only, so a line chart is announced as a line chart but drawn as bars.
+ */
+@Composable
+private fun chartNodes(node: CardNode.Chart): List<KitCardNode> {
+    val facts = CardCharts.facts(node)
+    val kind = stringResource(if (node.kind == CardNode.ChartKind.Bar) Res.string.agentCardChartBar else Res.string.agentCardChartLine)
+    val head =
+        "$kind, ${pluralStringResource(Res.plurals.agentCardChartSeries, node.series.size, node.series.size)}, " +
+            pluralStringResource(Res.plurals.agentCardChartPoints, facts.points, facts.points)
+    val tail =
+        if (facts.highest == null) stringResource(Res.string.agentCardChartNone)
+        else stringResource(Res.string.agentCardChartHighest, facts.where, CardCharts.shown(facts.highest, node.unit))
+    val summary = "$head; $tail"
+    val labels = node.labels.take(CardCharts.MAX_POINTS).toImmutableList()
+    if (node.series.isEmpty()) return listOf(KitCardNode.Chart(labels, kotlinx.collections.immutable.persistentListOf(), node.unit, summary))
+    val several = node.series.size > 1
+    return node.series.flatMapIndexed { i, series ->
+        listOfNotNull(
+            if (several) KitCardNode.Text(series.name) else null,
+            KitCardNode.Chart(labels, series.values.take(CardCharts.MAX_POINTS).toImmutableList(), node.unit, if (i == 0) summary else series.name),
+        )
+    }
+}
+
+/** The numbers of a chart's spoken summary (Flutter `KitChart.summaryOf`, `_pointsOf`, `_plain`). */
+internal object CardCharts {
+    const val MAX_POINTS: Int = 30
+
+    data class Facts(val points: Int, val where: String, val highest: Double?)
+
+    fun facts(node: CardNode.Chart): Facts {
+        var n = node.labels.size
+        node.series.forEach { n = maxOf(n, it.values.size) }
+        var best: Double? = null
+        var where = ""
+        for (s in node.series) {
+            for (i in 0 until minOf(s.values.size, MAX_POINTS)) {
+                val v = s.values[i]
+                if (!v.isFinite()) continue
+                if (best == null || v > best) {
+                    best = v
+                    val label = node.labels.getOrNull(i) ?: "${i + 1}"
+                    where = if (node.series.size > 1) "${s.name}, $label" else label
+                }
+            }
+        }
+        return Facts(minOf(n, MAX_POINTS), where, best)
+    }
+
+    /** "42 ms", "12%", "3.5": whole numbers bare, else at most two decimals without trailing zeros. */
+    fun shown(v: Double, unit: String?): String {
+        val value = plain(v)
+        return when {
+            unit.isNullOrEmpty() -> value
+            unit == "%" -> "$value%"
+            else -> "$value $unit"
+        }
+    }
+
+    fun plain(v: Double): String {
+        if (kotlin.math.abs(v) >= 1e15) return v.toString()
+        if (v == kotlin.math.round(v)) return kotlin.math.round(v).toLong().toString()
+        val scaled = kotlin.math.round(v * 100) / 100
+        var text = scaled.toString()
+        if ('.' in text) text = text.trimEnd('0').trimEnd('.')
+        return text
+    }
+}
 
 /** Form ask ↔ kit form, and the answer the values make (null = Send is held: a required field is empty or invalid). */
 internal object CardForms {
@@ -354,7 +424,8 @@ internal object CardForms {
 
     fun initial(ask: CardAsk.Form, draft: CardAnswer.Form?): Map<String, KitFormValue> =
         ask.fields.mapNotNull { f ->
-            val v = draft?.values?.get(f.id) ?: f.defaultValue
+            // A draft is what the person had: a field they cleared stays empty, never the agent's default (B-CHAT-004).
+            val v = if (draft != null) draft.values[f.id] else f.defaultValue
             val value =
                 when (f.type) {
                     CardFieldType.Toggle -> KitFormValue.Toggle(v as? Boolean ?: false)
