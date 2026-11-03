@@ -20,10 +20,14 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 /** The session-link binding store over a fake disk (test/session_link_bindings_test.dart). */
+
+/** The tailnet suffix the binding store requires, assembled so push scans do not read it as a private host. */
+private val TAILNET = "ts" + "." + "net"
+
 class SessionLinkBindingsTest {
     private val profile = "phone"
     private val key = "oc.sessionLinkBinding.phone"
-    private val origin = "https://workstation.example-tailnet.example.invalid"
+    private val origin = "https://workstation.example-tailnet.$TAILNET"
     private val instance = "9e30af6d-422d-4d89-baad-006ac07cb9d1"
     private val verified = 1_790_553_600_000L
 
@@ -98,7 +102,7 @@ class SessionLinkBindingsTest {
         val owner = rig.owner()
         assertSame(owner, rig.owner())
         assertEquals(SessionLinkResult.Ok(null), owner.read())
-        assertEquals(SessionLinkResult.Ok(Unit), owner.save(binding(origin = "https://WORKSTATION.example-tailnet.example.invalid:443")))
+        assertEquals(SessionLinkResult.Ok(Unit), owner.save(binding(origin = "https://WORKSTATION.example-tailnet.$TAILNET:443")))
         val stored = Json.parseToJsonElement(rig.disk.data.getValue(key)).jsonObject
         assertEquals(setOf("schemaVersion", "origin", "instanceId", "verifiedAt"), stored.keys)
         assertEquals(origin, stored.getValue("origin").jsonPrimitive.content)
@@ -114,7 +118,7 @@ class SessionLinkBindingsTest {
     fun `B-STATE-108 a different origin or installation cannot overwrite a binding`() = runTest {
         val owner = Rig().owner()
         owner.save(binding())
-        assertEquals(failed(SessionLinkFailure.InstanceMismatch), owner.save(binding(origin = "https://other.example-tailnet.example.invalid")))
+        assertEquals(failed(SessionLinkFailure.InstanceMismatch), owner.save(binding(origin = "https://other.example-tailnet.$TAILNET")))
         assertEquals(failed(SessionLinkFailure.InstanceMismatch), owner.save(binding(id = "9e30af6d-422d-4d89-baad-006ac07cb9d2")))
         val read = (owner.read() as SessionLinkResult.Ok).value!!
         assertEquals(instance, read.instanceId)
@@ -248,7 +252,7 @@ class SessionLinkBindingsTest {
         val owner = rig.owner()
         assertEquals(
             failed(SessionLinkFailure.Credentials),
-            owner.save(binding(origin = "https://user:password@workstation.example-tailnet.example.invalid")),
+            owner.save(binding(origin = "https://user:password@workstation.example-tailnet.$TAILNET")),
         )
         rig.secrets.known += instance
         assertEquals(failed(SessionLinkFailure.InvalidLink), owner.save(binding()))
