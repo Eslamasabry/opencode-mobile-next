@@ -81,3 +81,4 @@
 :engine:integrations-quota	F	build-integrations-b	parity-p12
 :engine:integrations-catalog	F	build-integrations-b	parity-p12
 :engine:integrations-host	F	build-integrations-b	parity-p12
+:feature:plans	F	build-integrations-b	parity-p12
