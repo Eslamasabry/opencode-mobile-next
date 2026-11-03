@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -110,7 +111,20 @@ public fun KitTopBar(
                 titleBlock()
             }
         }
-        shown.forEach { KitInlineAction(it) }
+        // QA wave 4 N1: the inline actions never take more than [ACTIONS_SHARE] of the bar, so the title always keeps
+        // room (a "Context 34 % used" action once squeezed it to 2 px). Labels wrap or end in "…" inside that share.
+        if (shown.isNotEmpty()) {
+            Row(
+                Modifier.layout { measurable, constraints ->
+                    val cap = (constraints.maxWidth * ACTIONS_SHARE).toInt().coerceAtLeast(constraints.minWidth)
+                    val placeable = measurable.measure(constraints.copy(maxWidth = cap))
+                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                shown.forEach { KitInlineAction(it, Modifier.weight(1f, fill = false)) }
+            }
+        }
         if (hidden.isNotEmpty() || more != null) more?.invoke(hidden)
         if (exit == KitTopBarExit.Close && onExit != null) ExitButton(ExitGlyph.Close, exitLabel.orEmpty(), onExit, 1f)
     }
@@ -126,3 +140,6 @@ private fun ExitButton(glyph: ExitGlyph, label: String, onExit: () -> Unit, orde
         KitExitGlyph(glyph, LocalKitColors.current.text1)
     }
 }
+
+/** The most of the bar's free width the inline actions may take (QA wave 4 N1). */
+private const val ACTIONS_SHARE = 0.35f

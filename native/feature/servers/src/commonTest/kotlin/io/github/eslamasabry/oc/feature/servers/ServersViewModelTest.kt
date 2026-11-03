@@ -103,6 +103,29 @@ class ServersViewModelTest {
     @AfterTest fun reset() = Dispatchers.resetMain()
 
     @Test
+    fun `N7 QA wave4 New chat with one saved server opens a new chat at once`() = runTest {
+        val connections = Connections()
+        connections.servers.value = persistentListOf(SavedServer(id, "Home", "https://example.test", connected = true))
+        val nav = Navigator()
+        ServersViewModel(ChatsRoute.New(null), connections, nav)
+        assertEquals(1, connections.creates)
+        assertEquals(listOf(ref), nav.chats)
+    }
+
+    @Test
+    fun `N7 QA wave4 New chat with two servers and none named asks which one`() = runTest {
+        val connections = Connections()
+        connections.servers.value = persistentListOf(
+            SavedServer(id, "Home", "https://a.test", connected = true),
+            SavedServer(ProfileId("work"), "Work", "https://b.test", connected = true),
+        )
+        val nav = Navigator()
+        ServersViewModel(ChatsRoute.New(null), connections, nav)
+        assertEquals(0, connections.creates)
+        assertTrue(nav.chats.isEmpty())
+    }
+
+    @Test
     fun `B-SEC-124 save passes only the explicit HTTP choice and resets it after saving`() =
         runTest {
             val connections = Connections()

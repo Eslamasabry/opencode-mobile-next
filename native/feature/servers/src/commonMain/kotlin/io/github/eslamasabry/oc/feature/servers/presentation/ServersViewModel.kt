@@ -56,6 +56,18 @@ public class ServersViewModel(
                 ),
             )
 
+    init {
+        // QA wave 4 N7: "New chat" opens a new chat. When the server is known (named by the route, or the only saved
+        // one, or the only connected one), the conversation is created at once; this page shows only to choose.
+        if (route != null) {
+            val saved = connections.servers.value
+            val target = route.profile
+                ?: saved.singleOrNull()?.id
+                ?: saved.singleOrNull { it.connected }?.id
+            if (target != null) create(target)
+        }
+    }
+
     override fun back(): Unit = nav.back()
 
     override fun openAgents(): Unit = nav.open(AgentsRoute.Home)
@@ -122,7 +134,11 @@ public class ServersViewModel(
 
     private suspend fun createNow(id: ProfileId) {
         when (val result = connections.createConversation(id)) {
-            is Outcome.Ok -> nav.openChat(result.value, focusComposer = true)
+            is Outcome.Ok -> {
+                // The chooser is done: Back from the new chat returns to where New chat was tapped.
+                if (route != null && nav.top.value == route) nav.back()
+                nav.openChat(result.value, focusComposer = true)
+            }
             is Outcome.Failed -> failed(ServerIssue.CreateFailed, result.failure)
         }
     }

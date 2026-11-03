@@ -284,8 +284,19 @@ internal class GraphChatWorld(
             protectedFiles = current.attachments
             protectedByHistory = false
         }
+        // Codex composer #1 / QA wave 4 N5: while a bubble with exactly these words and files is on its way or
+        // unconfirmed, a second Send would dispatch the same message again. (A not-sent twin is retired when the box
+        // sends it again, so a Failed bubble never blocks.)
+        val pendingTwin =
+            (current.text.isNotBlank() || current.attachments.isNotEmpty()) &&
+                mutablePending.value.any {
+                    it.state != PendingState.Failed &&
+                        it.text.trim() == current.text.trim() &&
+                        sentFiles(it.localId) == current.attachments
+                }
         val blocked =
-            protectedDraftText?.let { it.trim() == current.text.trim() } == true &&
+            pendingTwin ||
+                protectedDraftText?.let { it.trim() == current.text.trim() } == true &&
                 protectedFiles.let { it == null || it == current.attachments }
         val repeat =
             blocked &&
@@ -970,6 +981,10 @@ internal class GraphChatWorld(
         mutablePending.update {
             (it + PendingSend(id, text, PendingState.Sending)).toImmutableList()
         }
+        // QA wave 4 N5: the words left the box again, so their not-sent bubble (and its Try again) goes now; one copy
+        // of the message stays on screen and only one can be sent.
+        retireFailedTwins(id)
+        refreshDraftProtection()
         return dispatch(id, text, snapshot, expected)
     }
 
@@ -1042,6 +1057,9 @@ internal class GraphChatWorld(
                         list.filterNot { it.localId == localId }.toImmutableList()
                     }
                     sentSnapshots.remove(localId)
+                    // Codex composer #2: a command that ran is done; its words leave the box (Flutter clears them).
+                    acknowledgedDraft(localId)
+                    refreshDraftProtection()
                 } else {
                     deliveryIds[localId] = result.value
                     watchDraftAcknowledgement(localId, result.value, delivery)

@@ -775,6 +775,8 @@ internal fun rememberChatWords(): ChatTranscriptWords {
 
             override fun footer(failed: Boolean): String = if (failed) didntFinish else more
 
+            override fun stoppedFooter(): String = stopped
+
             override fun thought(firstLine: String): String = firstLine
         }
     }

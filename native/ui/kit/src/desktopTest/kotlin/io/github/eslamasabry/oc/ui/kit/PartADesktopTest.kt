@@ -345,6 +345,31 @@ class PartADesktopTest {
     }
 
     @Test
+    fun `N1 B-KIT-029 the title keeps room next to long actions on a phone`() = runComposeUiTest {
+        // QA wave 4 N1: "Context 34 % used" + "Git" squeezed the conversation title to 2 px on a 360 dp phone.
+        setContent {
+            Themed {
+                InWindow(360, 800) {
+                    KitTopBar(
+                        "Quarterly planning notes",
+                        subtitle = "Home server · project",
+                        exit = KitTopBarExit.Back,
+                        exitLabel = "Back",
+                        onExit = {},
+                        onTitleTap = {},
+                        titleTapLabel = "Rename",
+                        actions = listOf(KitLineAction("Context 34 % used", {}), KitLineAction("Git changes", {})),
+                        more = { KitText("more", Modifier.testTag("more")) },
+                    )
+                }
+            }
+        }
+        val title = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true).fetchSemanticsNode().size.width / density.density
+        assertTrue(title >= 90f, "title is $title dp wide")
+        onNodeWithText("Context 34 % used").assertExists()
+    }
+
+    @Test
     fun `B-KIT-029 hidden actions without an overflow break the bar's rule`() = runComposeUiTest {
         assertFailsWith<KitRuleBroken> {
             setContent { Themed { InWindow(412, 800) { KitTopBar(w.conversations, actions = (1..3).map { KitLineAction("A$it", {}) }) } } }

@@ -46,6 +46,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.semantics.inputText
+import androidx.compose.ui.semantics.editableText
+import androidx.compose.ui.semantics.password
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -381,6 +385,14 @@ private fun FieldBox(
                     modifier =
                         Modifier.weight(1f).testTag("kit-field-secret").semantics {
                             contentDescription = label
+                            // QA wave 4 N6: the accessibility tree gets dots, never the value (any accessibility
+                            // service could read it); the password flag makes TalkBack say "password".
+                            password()
+                            val exposed =
+                                if (revealed) AnnotatedString(state.text.toString())
+                                else AnnotatedString(SECRET_DOT.repeat(state.text.length))
+                            editableText = exposed
+                            inputText = exposed
                         },
                     enabled = on,
                     inputTransformation =
@@ -516,3 +528,5 @@ private fun CheckingLine() {
         kind = KitTextKind.Frame,
     )
 }
+
+private const val SECRET_DOT = "\u2022"

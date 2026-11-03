@@ -72,6 +72,27 @@ class TranscriptReducerTest {
     }
 
     @Test
+    fun `N3 QA wave4 a reply the user stopped is Stopped, not a failure`() {
+        apply(Ev.prompt("u1", "Hello"))
+        apply(GatewayEvent.RunStarted(S), Ev.assistant("a1", completed = 5, error = "Step interrupted"))
+        apply(GatewayEvent.RunEnded(S, RunOutcome.Interrupted("user")))
+        val footer = derive().rows.filterIsInstance<FooterRow>().single()
+        assertFalse(footer.failed)
+        assertTrue(footer.stopped)
+        assertEquals(null, footer.reason)
+    }
+
+    @Test
+    fun `N3 QA wave4 a real error is still a failure`() {
+        apply(Ev.prompt("u1", "Hello"))
+        apply(GatewayEvent.RunStarted(S), Ev.assistant("a1", completed = 5, error = "Rate limit: the request was interrupted by quota"))
+        apply(GatewayEvent.RunEnded(S, RunOutcome.Failed("Busy")))
+        val footer = derive().rows.filterIsInstance<FooterRow>().single()
+        assertTrue(footer.failed)
+        assertFalse(footer.stopped)
+    }
+
+    @Test
     fun `B0 QA wave1 two notices that share a part id get distinct row keys`() {
         // OpenCode 2 gives every notice part the id "v2-0" (one per model-switched message): the
         // conversation with three of them crashed the list with a duplicate key.

@@ -82,6 +82,9 @@ public interface ChatTranscriptWords {
 
     public fun footer(failed: Boolean): String
 
+    /** QA wave 4 N3: the footer of a reply the user stopped ("Stopped"), never an error line. */
+    public fun stoppedFooter(): String = footer(false)
+
     public fun thought(firstLine: String): String
 }
 
@@ -370,10 +373,10 @@ private fun ChatRow(
                     role = KitTappableRole.Row,
                     modifier = Modifier.testTag("chat-turn-footer"),
                 ) {
-                    KitQuietLine(words.footer(row.failed))
+                    KitQuietLine(if (row.stopped) words.stoppedFooter() else words.footer(row.failed))
                 }
             } else {
-                KitQuietLine(words.footer(row.failed))
+                KitQuietLine(if (row.stopped) words.stoppedFooter() else words.footer(row.failed))
             }
             val result = facts.results[row.turnId]
             if (result != null && folds != null) TurnResultLine(row.turnId, result, folds)

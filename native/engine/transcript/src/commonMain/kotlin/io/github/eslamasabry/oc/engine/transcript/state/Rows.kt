@@ -121,6 +121,8 @@ public data class FooterRow(
     val failed: Boolean,
     /** The server's (already redacted) error text of a failed reply; shown only under Details (QA wave 1 B5). */
     val reason: String? = null,
+    /** QA wave 4 N3: the user (or another client) stopped this reply; shown as "Stopped", never as an error. */
+    val stopped: Boolean = false,
 ) : TranscriptRow {
     override val kind: RowKind
         get() = RowKind.Footer

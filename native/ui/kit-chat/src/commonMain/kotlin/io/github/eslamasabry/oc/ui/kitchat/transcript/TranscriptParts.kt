@@ -19,6 +19,7 @@ import androidx.compose.ui.FrameRateCategory
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.preferredFrameRate
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -178,8 +179,11 @@ public fun KitPromptBubble(text: String, modifier: Modifier = Modifier) {
         BasicText(
             text = text,
             style =
+                // QA wave 4 B12: the person's own words read in their own direction (an English prompt in an
+                // Arabic interface is left to right, its full stop at the end).
                 MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    textDirection = TextDirection.Content,
                 ),
             modifier =
                 Modifier.fillMaxWidth(0.85f)
@@ -200,7 +204,8 @@ public fun KitQuietLine(text: String, modifier: Modifier = Modifier) {
             text,
             style =
                 MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textDirection = TextDirection.Content, // B12: a thought in the reply's language
                 ),
         )
     }

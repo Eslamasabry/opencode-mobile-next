@@ -173,6 +173,9 @@ class WorldComposerFilesModelsTest {
         var acknowledge: Boolean = true
         var failNextPrompt: Boolean = false
 
+        /** Holds the next prompt POST before it answers (a slow server). */
+        var holdNextPrompt: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
         override suspend fun setSessionModel(
             session: SessionId,
             model: ModelRef,
@@ -222,6 +225,10 @@ class WorldComposerFilesModelsTest {
             prompt: io.github.eslamasabry.oc.core.model.OutgoingPrompt,
             commandId: String?,
         ): Outcome<PromptAdmission> {
+            holdNextPrompt?.let {
+                holdNextPrompt = null
+                it.await()
+            }
             if (failNextPrompt) {
                 failNextPrompt = false
                 // A refusal proves nothing left (a network failure may have: that stays unconfirmed).
@@ -786,6 +793,63 @@ class WorldComposerFilesModelsTest {
             assertTrue(f.base.sentPrompts.isEmpty(), "a command never goes out as a prompt")
             assertTrue(f.base.calls.any { it.startsWith("slashCommand") })
         }
+
+    // ---- QA wave 4 / Codex composer review ----
+
+    @Test
+    fun `B-STATE-041 Codex composer 1 a second Send before the server answers sends nothing`() = runTest {
+        val f = Fixture(this)
+        f.open()
+        val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+        f.gateway.holdNextPrompt = hold
+        f.world.draftChanged("only once please")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("only once please"))
+        runCurrent()
+        assertTrue(f.world.draft.value.sendBlocked, "the same words cannot go out while the first send is on its way")
+        assertIs<Outcome.Failed>(f.world.send("only once please"))
+        hold.complete(Unit)
+        advanceTimeBy(60)
+        runCurrent()
+        assertEquals(1, f.base.sentPrompts.size)
+    }
+
+    @Test
+    fun `N5 QA wave4 sending again from the box retires the not-sent bubble so it cannot be sent twice`() = runTest {
+        val f = Fixture(this)
+        f.open()
+        f.world.draftChanged("send me once")
+        f.gateway.failNextPrompt = true
+        assertIs<Outcome.Ok<Unit>>(f.world.send("send me once"))
+        runCurrent()
+        val failed = f.world.pending.value.single()
+        assertEquals(PendingState.Failed, failed.state)
+        val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+        f.gateway.holdNextPrompt = hold
+        assertIs<Outcome.Ok<Unit>>(f.world.send("send me once"))
+        runCurrent()
+        assertTrue(f.world.pending.value.none { it.localId == failed.localId }, "one copy on screen")
+        // Its Try again is gone with it: tapping it sends nothing.
+        assertIs<Outcome.Ok<Unit>>(f.world.retrySend(failed.localId))
+        hold.complete(Unit)
+        advanceTimeBy(60)
+        runCurrent()
+        assertEquals(1, f.base.sentPrompts.size)
+    }
+
+    @Test
+    fun `B-NAV-051 Codex composer 2 a command that ran leaves the box empty`() = runTest {
+        val f = Fixture(this)
+        f.operations.commands =
+            Outcome.Ok(persistentListOf(io.github.eslamasabry.oc.core.model.CommandInfo("review", "Review", null, false)))
+        f.open()
+        assertIs<Outcome.Ok<Unit>>(f.world.loadCommands())
+        f.world.draftChanged("/review now")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("/review now"))
+        advanceTimeBy(60)
+        runCurrent()
+        assertTrue(f.base.calls.any { it.startsWith("slashCommand") })
+        assertEquals("", f.world.draft.value.text, "the words of a command that ran never wait to run again")
+    }
 
     // ---- QA wave 1 ----
 
