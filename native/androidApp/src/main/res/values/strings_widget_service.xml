@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The short foreground notice while a home-screen widget button reaches the server (Flutter native_team_working). -->
+<resources>
+    <string name="widget_service_working">Working</string>
+    <string name="widget_service_channel">Live connection</string>
+</resources>

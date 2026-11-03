@@ -251,10 +251,13 @@ class PlatformHub(
     // only when its content changes (B-ANDR-117).
     private val widgetText = WidgetText(redactor)
     private val widgetPublisher =
-        WidgetSnapshotPublisher(capabilities, { json, profile -> widgets.publish(json, profile, null) }) {
+        WidgetSnapshotPublisher(capabilities, { json, profile -> widgets.publish(json, profile, widgetTarget) }) {
             clock.now().toEpochMilliseconds()
         }
     private var widgetWords: Pair<String?, WidgetSnapshotWords>? = null
+    // A2: the on-demand identity the widget runners check, and the private target published with the snapshot.
+    private val widgetOnDemand = WidgetOnDemandWiring(stores, registry) { clock.now().toEpochMilliseconds() }
+    @Volatile private var widgetTarget: String? = null
     private val offlineSince = mutableMapOf<ProfileId, Long>()
 
     @Volatile private var started = 0
@@ -457,7 +460,9 @@ class PlatformHub(
                 feed, waiting, profile, names, registry.live.value.keys, offlineSince,
                 clock.now().toEpochMilliseconds(), widgetText, words,
             )
-        widgetPublisher.publish(WidgetSnapshotBuilder(redactor, words).build(input), profile.raw)
+        val (decorated, target) = widgetOnDemand.decorate(input, profile)
+        widgetTarget = target
+        widgetPublisher.publish(WidgetSnapshotBuilder(redactor, words).build(decorated), profile.raw)
     }
 
     /** Launcher shortcuts for the active server's pinned conversations (B-ANDR-030/-053), republished on change. */

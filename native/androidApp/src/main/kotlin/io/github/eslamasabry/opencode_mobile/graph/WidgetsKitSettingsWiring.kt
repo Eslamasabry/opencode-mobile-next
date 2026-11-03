@@ -147,6 +147,17 @@ class WidgetRunnerWiring(
     private val log = io.github.eslamasabry.oc.core.common.AppLog.tagged("WidgetRunners")
     @Volatile private var started = false
 
+    /** Where the service shell runs one admitted tap. */
+    val scope: kotlinx.coroutines.CoroutineScope get() = appScope
+
+    /** One admission (one process lease) for every widget tap; the service shell holds the foreground. */
+    val admission: io.github.eslamasabry.oc.android.widgets.WidgetActionAdmission by lazy {
+        io.github.eslamasabry.oc.android.widgets.WidgetActionAdmission(
+            application,
+            io.github.eslamasabry.opencode_mobile.WidgetServiceForeground,
+        )
+    }
+
     fun start() {
         if (started) return
         val persistence = io.github.eslamasabry.oc.android.widgets.WidgetFeed.persistence ?: return
@@ -328,16 +339,7 @@ internal class AppWidgetLiveWorld(
         return (rows.firstOrNull { it["id"] == session }?.get("startedAt") as? Number)?.toLong() ?: 0
     }
 
-    override fun steerMode(session: String): String {
-        val gateway = gateway() ?: return "unknown"
-        if (gateway.capabilities.value.promptSteering) return "steer"
-        val midTurn = gateway as? io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway ?: return "afterReply"
-        return when (midTurn.midTurnPrompt(io.github.eslamasabry.oc.core.common.ids.SessionId(session))) {
-            io.github.eslamasabry.oc.core.model.MidTurnPrompt.JoinsTurn -> "steer"
-            io.github.eslamasabry.oc.core.model.MidTurnPrompt.RestartsTurn -> "restart"
-            null -> "unknown"
-        }
-    }
+    override fun steerMode(session: String): String = gateway()?.let { widgetSteerMode(it, session) } ?: "unknown"
 
     override val promptSteering: Boolean
         get() = gateway()?.capabilities?.value?.promptSteering == true
@@ -379,5 +381,109 @@ internal class AppWidgetLiveWorld(
             sent is Outcome.Failed -> sent
             else -> Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Unexpected())
         }
+    }
+}
+
+/**
+ * Adds the on-demand identity the runners check to each published widget snapshot (Flutter `_currentWidgetScope`,
+ * `_widgetOnDemandActions`, `_widgetRunMarkers`, `_widgetStartedAt`, `_widgetSteerMode` and the private target): a
+ * scope token that changes with the connection or its location, the profile's metadata fingerprint, per row the
+ * buttons (allow once / reject for a pending permission, stop for a running turn whose user message was seen), the
+ * run marker, a stable run start and the steer mode. The directory and workspace go only to the private target.
+ * Without a live, supported connection the snapshot carries no buttons.
+ */
+internal class WidgetOnDemandWiring(
+    private val stores: PreviewStores,
+    private val registry: io.github.eslamasabry.oc.engine.connection.ConnectionRegistry,
+    private val now: () -> Long,
+) {
+    private val scope =
+        io.github.eslamasabry.oc.android.widgets.runner.WidgetActionScope { size ->
+            ByteArray(size).also { java.security.SecureRandom().nextBytes(it) }
+        }
+    private val watched = java.util.Collections.newSetFromMap(java.util.WeakHashMap<Any, Boolean>())
+    private val markers = java.util.concurrent.ConcurrentHashMap<String, String>() // "profile|session" -> message id
+    private val started = java.util.concurrent.ConcurrentHashMap<String, Long>()
+
+    /** The snapshot input with on-demand identity, and the private target to publish with it (null: none). */
+    fun decorate(
+        input: io.github.eslamasabry.oc.android.widgets.snapshot.WidgetSnapshotInput,
+        profile: ProfileId,
+    ): Pair<io.github.eslamasabry.oc.android.widgets.snapshot.WidgetSnapshotInput, String?> {
+        val graph = registry.live.value[profile] ?: return input to null
+        watch(profile, graph)
+        val loaded = stores.profiles.profile(profile) ?: return input to null
+        val stored = loaded.profile
+        val supported =
+            stored.backend == io.github.eslamasabry.oc.core.model.BackendKind.OpenCode2 &&
+                !stored.requiresOpenCode2Migration &&
+                !stored.transientTransport &&
+                !loaded.reentry.password &&
+                !loaded.cleartextUnconfirmed
+        val gateway = graph.session.server
+        val location = gateway.location.value
+        val token = scope.token(listOf(profile.raw, System.identityHashCode(graph), location.directory, location.workspace))
+        val fingerprint = io.github.eslamasabry.oc.android.widgets.runner.widgetProfileFingerprint(stored)
+        val time = now()
+        val details =
+            input.sessions.associate { session ->
+                val id = session.id
+                val key = "${profile.raw}|$id"
+                val busy = id in input.busy
+                val startedAt = if (busy) started.getOrPut(key) { time } else 0L.also { started.remove(key) }
+                val base = input.details[id] ?: io.github.eslamasabry.oc.android.widgets.snapshot.WidgetRowDetails()
+                val marker = markers[key]
+                id to
+                    base.copy(
+                        startedAt = if (busy) startedAt else base.startedAt,
+                        runMarker = marker,
+                        steerMode = widgetSteerMode(gateway, id),
+                        onDemandActions =
+                            io.github.eslamasabry.oc.android.widgets.runner.WidgetActionScope.actions(
+                                supported,
+                                permission = !base.requestId.isNullOrEmpty(),
+                                busy = busy,
+                                runMarker = marker,
+                            ),
+                    )
+            }
+        val target =
+            io.github.eslamasabry.oc.android.widgets.runner.WidgetActionScope.target(
+                profile.raw,
+                token,
+                fingerprint,
+                location.directory,
+                location.workspace,
+            )
+        return input.copy(scopeToken = token, onDemandFingerprint = fingerprint, details = input.details + details) to
+            target
+    }
+
+    /** The server user-message identity of each conversation, from the live stream (never its text). */
+    private fun watch(profile: ProfileId, graph: io.github.eslamasabry.oc.engine.connection.ConnectionGraph) {
+        if (!synchronized(watched) { watched.add(graph) }) return
+        graph.scope.launch {
+            graph.session.server.events.all.collect { envelope ->
+                val event = envelope.event
+                if (
+                    event is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.MessageUpserted &&
+                        event.message.role == io.github.eslamasabry.oc.core.model.transcript.Role.User &&
+                        event.message.id.isNotEmpty()
+                ) {
+                    markers["${profile.raw}|${event.message.sessionId}"] = event.message.id
+                }
+            }
+        }
+    }
+}
+
+/** Flutter `_widgetSteerMode`: steer where the server steers, else after-reply; unknown / restart never send. */
+internal fun widgetSteerMode(gateway: io.github.eslamasabry.oc.core.domain.ServerGateway, session: String): String {
+    if (gateway.capabilities.value.promptSteering) return "steer"
+    val midTurn = gateway as? io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway ?: return "afterReply"
+    return when (midTurn.midTurnPrompt(io.github.eslamasabry.oc.core.common.ids.SessionId(session))) {
+        io.github.eslamasabry.oc.core.model.MidTurnPrompt.JoinsTurn -> "steer"
+        io.github.eslamasabry.oc.core.model.MidTurnPrompt.RestartsTurn -> "restart"
+        null -> "unknown"
     }
 }

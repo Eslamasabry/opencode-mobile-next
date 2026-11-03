@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Settings › Notifications: Android 13+ lets the app notify only with this declared (P12-SETTINGS). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Home-screen widget buttons: a short foreground run per tap (shortService on 14+, dataSync before). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <!-- P12-VOICE: voice typing uses the phone's speech recognizer; Android 11+ hides the service without this. -->
     <queries>
@@ -49,6 +52,11 @@
         <receiver
             android:name=".StatusActionReceiver"
             android:exported="false" />
+        <!-- Frozen Flutter FQCN: widget buttons start it; it stops as soon as the action settles. -->
+        <service
+            android:name=".BackgroundConnectionService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync|shortService" />
         <!-- P12 fix (Codex files #3, plan 10 §11.6 S4): untrusted PDFs are parsed only in this isolated process. -->
         <service
             android:name=".LocalPdfService"
