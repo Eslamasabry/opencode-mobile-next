@@ -7,12 +7,16 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.engine.requests.consent.SessionApproval
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalCodec
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalStore
+import io.github.eslamasabry.oc.feature.chat.header.approval.ConnectionAutoApprovals
+import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import kotlin.time.Clock
 import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModel
 import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeNoteStore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,11 +49,14 @@ internal class PrefsApprovalStore(private val stores: PreviewStores) : ApprovalS
     override suspend fun set(profile: ProfileId, session: String, setting: SessionApproval?): Outcome<Unit> =
         writes.withLock {
             if (session.isEmpty()) return@withLock Outcome.Failed(Failure.StorageRefused())
+            // Codex chat-header #5: a write after the server was removed must not bring its key back.
+            if (stores.profiles.profile(profile) == null)
+                return@withLock Outcome.Failed(Failure.Refused(RefusalReason.ProfileDeleted))
             val next = settings(profile).toMutableMap()
             if (setting == null) next.remove(session) else next[session] = setting
             val key = ApprovalCodec.key(profile)
             val result =
-                stores.prefs.commit(stores.lanes.app) {
+                stores.prefs.commit(stores.lanes.forProfile(profile)) {
                     if (next.isEmpty()) remove(key) else putString(key, ApprovalCodec.encode(next))
                 }
             if (result is Outcome.Ok) revisions.value += 1
@@ -63,7 +70,10 @@ object ChatHeaderBindings {
     @Provides
     @IntoSet
     @SingleIn(AppScope::class)
-    fun approvals(stores: PreviewStores): ApprovalStore = PrefsApprovalStore(stores)
+    fun approvals(stores: PreviewStores, registry: ConnectionRegistry, clock: Clock): ApprovalStore =
+        // Codex chat-header #4: saved automatic approval runs at connection scope from the store's first use on,
+        // not only while a chat is open.
+        PrefsApprovalStore(stores).also { ConnectionAutoApprovals(registry, it, clock).start() }
 
     @Provides
     @IntoSet
@@ -87,7 +97,9 @@ internal class PrefsFreeNoteStore(private val stores: PreviewStores) : FreeNoteS
 
     override suspend fun dismiss(profile: ProfileId, session: String): Outcome<Unit> =
         writes.withLock {
+            if (stores.profiles.profile(profile) == null)
+                return@withLock Outcome.Failed(Failure.Refused(RefusalReason.ProfileDeleted))
             val next = FreeModel.dismissed(kept(profile), session)
-            stores.prefs.commit(stores.lanes.app) { putStringList(FreeModel.key(profile), next) }
+            stores.prefs.commit(stores.lanes.forProfile(profile)) { putStringList(FreeModel.key(profile), next) }
         }
 }

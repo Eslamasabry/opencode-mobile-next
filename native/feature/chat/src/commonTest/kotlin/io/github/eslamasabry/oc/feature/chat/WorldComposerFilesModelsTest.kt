@@ -173,6 +173,9 @@ class WorldComposerFilesModelsTest {
         var acknowledge: Boolean = true
         var failNextPrompt: Boolean = false
 
+        /** Holds the next prompt POST before it answers (a slow server). */
+        var holdNextPrompt: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
         override suspend fun setSessionModel(
             session: SessionId,
             model: ModelRef,
@@ -222,6 +225,10 @@ class WorldComposerFilesModelsTest {
             prompt: io.github.eslamasabry.oc.core.model.OutgoingPrompt,
             commandId: String?,
         ): Outcome<PromptAdmission> {
+            holdNextPrompt?.let {
+                holdNextPrompt = null
+                it.await()
+            }
             if (failNextPrompt) {
                 failNextPrompt = false
                 // A refusal proves nothing left (a network failure may have: that stays unconfirmed).
@@ -786,6 +793,154 @@ class WorldComposerFilesModelsTest {
             assertTrue(f.base.sentPrompts.isEmpty(), "a command never goes out as a prompt")
             assertTrue(f.base.calls.any { it.startsWith("slashCommand") })
         }
+
+    // ---- Codex chat-header review ----
+
+    @Test
+    fun `B-AGENT-223 Codex header 2 the production port knows a child's parent before its ask is offered`() = runTest {
+        val f = Fixture(this)
+        val child = SessionId("child")
+        f.base.sessionList = (f.base.sessionList + Session(child, parentId = ref.sessionId)).toImmutableList()
+        f.open()
+        val port = io.github.eslamasabry.oc.feature.chat.header.world.GraphChatHeaderPort(ref, f.registry)
+        port.attach()
+        runCurrent()
+        f.base.events.emit(
+            GatewayEvent.PermissionAsked(
+                io.github.eslamasabry.oc.core.model.PermissionRequest(
+                    io.github.eslamasabry.oc.core.common.ids.RequestId("r1"), child, "bash", persistentListOf(),
+                    kotlinx.serialization.json.JsonObject(emptyMap()), persistentListOf(), null, false, null,
+                )
+            )
+        )
+        runCurrent()
+        assertEquals(listOf("r1"), port.approvals.waiting.value.map { it.id.raw })
+        assertEquals(ref.sessionId, port.approvals.parentOf(child), "inheritance sees the real parent")
+        assertNull(port.approvals.parentOf(ref.sessionId), "the conversation itself is top level")
+    }
+
+    @Test
+    fun `B-AGENT-225 Codex header 4 saved auto-approval answers with no chat open`() = runTest {
+        val f = Fixture(this)
+        f.base.capabilities.value = f.base.capabilities.value.copy(permissionRequests = true)
+        val store = io.github.eslamasabry.oc.feature.chat.header.MemoryApprovalStore()
+        store.set(
+            ref.profileId,
+            ref.sessionId.raw,
+            io.github.eslamasabry.oc.engine.requests.consent.SessionApproval(
+                io.github.eslamasabry.oc.engine.requests.consent.ApprovalMode.AutoOnce
+            ),
+        )
+        io.github.eslamasabry.oc.feature.chat.header.approval.ConnectionAutoApprovals(f.registry, store, TestClock()).start()
+        // The server is connected; no conversation is open.
+        f.base.events.connect()
+        f.registry.open(profile)
+        runCurrent()
+        f.base.events.emit(
+            GatewayEvent.PermissionAsked(
+                io.github.eslamasabry.oc.core.model.PermissionRequest(
+                    io.github.eslamasabry.oc.core.common.ids.RequestId("r1"), ref.sessionId, "bash", persistentListOf(),
+                    kotlinx.serialization.json.JsonObject(emptyMap()), persistentListOf(), null, false, null,
+                )
+            )
+        )
+        runCurrent()
+        assertTrue(f.base.calls.any { it.startsWith("replyPermission r1") }, "${f.base.calls}")
+    }
+
+    // ---- QA wave 4 / Codex composer review ----
+
+    @Test
+    fun `Codex composer 6 an at-mention of a sub-agent rides the prompt`() = runTest {
+        val f = Fixture(this, selection = ModelRef("prov", "m1"))
+        f.operations.catalog =
+            Outcome.Ok(
+                snapshot(catalogModel("m1")).copy(
+                    agents = persistentListOf(
+                        io.github.eslamasabry.oc.core.model.CatalogAgent("build", "primary", null, false, null, null, null),
+                        io.github.eslamasabry.oc.core.model.CatalogAgent("helper", "subagent", null, false, null, null, null),
+                    ),
+                ),
+            )
+        f.open()
+        assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+        f.world.draftChanged("@helper look at this")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("@helper look at this"))
+        advanceTimeBy(60)
+        runCurrent()
+        val mentions = f.base.sentPrompts.single().second.mentions
+        assertEquals(listOf("helper"), mentions.map { it.name })
+        assertEquals(0, mentions.single().start)
+    }
+
+    @Test
+    fun `B-STATE-118 Codex composer 4 a model changed by another client becomes the chip's choice`() = runTest {
+        val f = Fixture(this, selection = ModelRef("prov", "m1"))
+        f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1"), catalogModel("m2")))
+        f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+        f.open()
+        assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+        assertEquals("m1", f.world.models.value.selected?.modelId)
+        f.base.events.emit(GatewayEvent.SessionSelection(ref.sessionId, ModelRef("prov", "m2"), "plan"))
+        runCurrent()
+        assertEquals("m2", f.world.models.value.selected?.modelId)
+        assertEquals("plan", f.world.models.value.agent)
+    }
+
+    @Test
+    fun `B-STATE-041 Codex composer 1 a second Send before the server answers sends nothing`() = runTest {
+        val f = Fixture(this)
+        f.open()
+        val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+        f.gateway.holdNextPrompt = hold
+        f.world.draftChanged("only once please")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("only once please"))
+        runCurrent()
+        assertTrue(f.world.draft.value.sendBlocked, "the same words cannot go out while the first send is on its way")
+        assertIs<Outcome.Failed>(f.world.send("only once please"))
+        hold.complete(Unit)
+        advanceTimeBy(60)
+        runCurrent()
+        assertEquals(1, f.base.sentPrompts.size)
+    }
+
+    @Test
+    fun `N5 QA wave4 sending again from the box retires the not-sent bubble so it cannot be sent twice`() = runTest {
+        val f = Fixture(this)
+        f.open()
+        f.world.draftChanged("send me once")
+        f.gateway.failNextPrompt = true
+        assertIs<Outcome.Ok<Unit>>(f.world.send("send me once"))
+        runCurrent()
+        val failed = f.world.pending.value.single()
+        assertEquals(PendingState.Failed, failed.state)
+        val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+        f.gateway.holdNextPrompt = hold
+        assertIs<Outcome.Ok<Unit>>(f.world.send("send me once"))
+        runCurrent()
+        assertTrue(f.world.pending.value.none { it.localId == failed.localId }, "one copy on screen")
+        // Its Try again is gone with it: tapping it sends nothing.
+        assertIs<Outcome.Ok<Unit>>(f.world.retrySend(failed.localId))
+        hold.complete(Unit)
+        advanceTimeBy(60)
+        runCurrent()
+        assertEquals(1, f.base.sentPrompts.size)
+    }
+
+    @Test
+    fun `B-NAV-051 Codex composer 2 a command that ran leaves the box empty`() = runTest {
+        val f = Fixture(this)
+        f.operations.commands =
+            Outcome.Ok(persistentListOf(io.github.eslamasabry.oc.core.model.CommandInfo("review", "Review", null, false)))
+        f.open()
+        assertIs<Outcome.Ok<Unit>>(f.world.loadCommands())
+        f.world.draftChanged("/review now")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("/review now"))
+        advanceTimeBy(60)
+        runCurrent()
+        assertTrue(f.base.calls.any { it.startsWith("slashCommand") })
+        assertEquals("", f.world.draft.value.text, "the words of a command that ran never wait to run again")
+    }
 
     // ---- QA wave 1 ----
 

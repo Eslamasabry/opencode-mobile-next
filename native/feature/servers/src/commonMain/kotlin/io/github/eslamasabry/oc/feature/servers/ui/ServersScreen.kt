@@ -210,12 +210,15 @@ public fun ServersScreen(
                             { actions.create(server.id) },
                             enabled = enabled,
                         )
-                        KitButton(
-                            stringResource(Res.string.serversConnect),
-                            { actions.connect(server.id) },
-                            role = KitButtonRole.Secondary,
-                            enabled = enabled,
-                        )
+                        // QA wave 4 B15: a connected server says Connected; Connect is offered only when it is not.
+                        if (!server.connected) {
+                            KitButton(
+                                stringResource(Res.string.serversConnect),
+                                { actions.connect(server.id) },
+                                role = KitButtonRole.Secondary,
+                                enabled = enabled,
+                            )
+                        }
                         if (server.connected) {
                             KitButton(
                                 stringResource(Res.string.usageTitle),

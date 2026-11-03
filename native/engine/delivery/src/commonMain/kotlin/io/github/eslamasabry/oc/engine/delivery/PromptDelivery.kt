@@ -253,6 +253,16 @@ public class PromptDelivery(
     private fun selectionLock(ref: ConversationRef): Mutex = selectionLocks.getOrPut(ref) { Mutex() }
     private var counter = 0L
 
+    /**
+     * Codex composer #3 (B-STATE-118/119): a picker change takes the same per-conversation lock as a send's
+     * select-then-prompt step, so a choice made while a send is between its selection check and its prompt can't
+     * land in between (OC2's prompt carries no model: the session's model at admission is what runs).
+     */
+    public suspend fun <T> withSelection(ref: ConversationRef, block: suspend () -> T): T {
+        val lock = withContext(queue.lane) { selectionLock(ref) }
+        return lock.withLock { block() }
+    }
+
     public fun acknowledge(id: SendOutcomeId) {
         mutableOutcomes.value = mutableOutcomes.value.filter { it.id != id }.toImmutableList()
     }

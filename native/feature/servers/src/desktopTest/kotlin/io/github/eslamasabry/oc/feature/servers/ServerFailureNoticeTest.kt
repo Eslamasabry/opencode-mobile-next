@@ -124,6 +124,29 @@ class ServerFailureNoticeTest {
         onNodeWithText("Could not connect. Check the server address and network, then try again.")
             .assertDoesNotExist()
     }
+
+    @Test
+    fun `B15 QA wave4 a connected server offers no Connect next to Connected`() = runComposeUiTest {
+        val saved =
+            kotlinx.collections.immutable.persistentListOf(
+                io.github.eslamasabry.oc.engine.connection.SavedServer(ProfileId("a"), "Home", "https://home.test", connected = true),
+                io.github.eslamasabry.oc.engine.connection.SavedServer(ProfileId("b"), "Work", "https://work.test", connected = false),
+            )
+        setContent {
+            CompositionLocalProvider(LocalKitSecretSink provides KitSecretSink {}) {
+                KitTheme(
+                    platform = DesktopKitPlatform(),
+                    appearance = KitAppearance(motion = MotionLevel.Off),
+                    localeTag = "en",
+                    stillFrame = true,
+                ) {
+                    Box(Modifier.width(412.dp)) { ServersScreen(ServersUi(servers = saved), actions) }
+                }
+            }
+        }
+        onAllNodesWithText("Connected").assertCountEquals(1)
+        onAllNodesWithText("Connect").assertCountEquals(1) // only for Work
+    }
 }
 
 @OptIn(RedactorApi::class) private fun testDetails(text: String): Redacted = Redacted(text)

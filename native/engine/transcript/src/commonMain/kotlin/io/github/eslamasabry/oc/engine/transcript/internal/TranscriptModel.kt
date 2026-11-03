@@ -500,13 +500,19 @@ internal class TranscriptModel(
         var running = false
         var hasAssistant = false
         var failed = false
+        var stopped = false
         var reason: String? = null
         for (m in members) {
             if (m.info.role == Role.Assistant) {
                 hasAssistant = true
                 m.info.errorText?.let {
-                    failed = true
-                    if (it.isNotBlank()) reason = it.trim()
+                    // QA wave 4 N3: a reply the user stopped ("Step interrupted", an abort) is not a failure.
+                    if (isStopError(it)) {
+                        stopped = true
+                    } else {
+                        failed = true
+                        if (it.isNotBlank()) reason = it.trim()
+                    }
                 }
             }
             for (pe in m.parts.values) {
@@ -560,7 +566,9 @@ internal class TranscriptModel(
                 }
             rows.add(workAt, reuse(WorkLineRow("work:$turnId", turnId, calls, failedCalls, state)))
         }
-        if (finished && hasAssistant) rows += reuse(FooterRow("footer:$turnId", turnId, failed, reason))
+        if (finished && hasAssistant) {
+            rows += reuse(FooterRow("footer:$turnId", turnId, failed, reason, stopped = stopped && !failed))
+        }
         return TurnEntry(turnId, members, LongArray(members.size) { members[it].version }, rows)
     }
 
@@ -663,3 +671,11 @@ internal class TranscriptModel(
         const val MAX_DEFERRED_CHARS = 1 shl 20
     }
 }
+
+/** QA wave 4 N3: the error a stopped step carries (OC2 `Step interrupted`, OC1 `MessageAbortedError`). */
+internal fun isStopError(text: String): Boolean = STOP_TEXT.containsMatchIn(text)
+
+private val STOP_TEXT = Regex(
+    "^\\s*(the )?(step|run|tool execution|operation|request)?\\s*(was )?(interrupted|aborted)\\b|MessageAbortedError",
+    RegexOption.IGNORE_CASE,
+)

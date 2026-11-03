@@ -4,6 +4,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -68,6 +69,36 @@ class KitCodeBlockTest {
             }
             onNodeWithText("Copy command").performClick()
             assertEquals(source, copied)
+        }
+
+    @Test
+    fun `N9 QA wave4 Copy says Copied for a moment and a one-line block stays one line tall`() =
+        runComposeUiTest {
+            mainClock.autoAdvance = false
+            setContent {
+                ChatTestTheme {
+                    androidx.compose.foundation.layout.Column {
+                        KitCodeBlock(
+                            source = "print(1)", kind = KitCodeKind.Code,
+                            modifier = androidx.compose.ui.Modifier.testTag("one"),
+                            copyLabel = "Copy", onCopy = {}, copiedLabel = "Copied",
+                        )
+                        KitCodeBlock(
+                            source = "print(1)", kind = KitCodeKind.Code,
+                            modifier = androidx.compose.ui.Modifier.testTag("plain"),
+                        )
+                    }
+                }
+            }
+            mainClock.advanceTimeBy(100)
+            val withCopy = onNode(androidx.compose.ui.test.hasTestTag("one")).fetchSemanticsNode().size.height
+            val without = onNode(androidx.compose.ui.test.hasTestTag("plain")).fetchSemanticsNode().size.height
+            assertEquals(without, withCopy, "Copy adds no empty space under the line")
+            onNodeWithText("Copy").performClick()
+            mainClock.advanceTimeBy(100)
+            onNodeWithText("Copied").assertExists()
+            mainClock.advanceTimeBy(COPIED_MS + 500)
+            onNodeWithText("Copy").assertExists()
         }
 
     @Test

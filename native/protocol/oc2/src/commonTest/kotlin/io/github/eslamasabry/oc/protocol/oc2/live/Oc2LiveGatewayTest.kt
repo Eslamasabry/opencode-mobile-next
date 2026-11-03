@@ -55,12 +55,13 @@ class Oc2LiveGatewayTest {
     @Test
     fun `B-PROTO-042 mismatched prompt receipt is uncertain without a retry`() = runTest {
         var sends = 0
+        val permissions = PermissionServer()
         val engine = MockEngine { request ->
             assertEquals(
                 "Basic b3BlbmNvZGU6dGVzdC1zZWNyZXQ=",
                 request.headers[HttpHeaders.Authorization],
             )
-            if (request.method == HttpMethod.Get)
+            with(permissions) { answer(request) { request -> if (request.method == HttpMethod.Get)
                 respond("""{"data":{"id":"s","title":"Test"}}""", HttpStatusCode.OK)
             else {
                 sends++
@@ -70,7 +71,7 @@ class Oc2LiveGatewayTest {
                     """{"data":{"id":"other","sessionID":"s","type":"user"}}""",
                     HttpStatusCode.OK,
                 )
-            }
+            } } }
         }
         val gateway = gateway(engine)
         assertEquals(
@@ -140,11 +141,11 @@ class Oc2LiveGatewayTest {
 
     @Test
     fun `B-PROTO-043 stale scope after preflight refuses prompt without dispatch`() = runTest {
-        var checks = 0
+        var posts = 0
+        val permissions = PermissionServer()
         val engine = MockEngine { request ->
-            assertEquals(HttpMethod.Get, request.method)
-            checks++
-            respond("""{"data":{"id":"s"}}""", HttpStatusCode.OK)
+            if (request.method == HttpMethod.Post) posts++
+            with(permissions) { answer(request) { respond("""{"data":{"id":"s"}}""", HttpStatusCode.OK) } }
         }
         val gateway = gateway(engine)
         val result =
@@ -152,7 +153,7 @@ class Oc2LiveGatewayTest {
                 false
             }
         assertEquals(Failure.Refused(RefusalReason.StaleScope), (result as Outcome.Failed).failure)
-        assertEquals(1, checks)
+        assertEquals(0, posts, "the preflight (ask-first policy included) ran; nothing was dispatched")
         gateway.close()
     }
 
@@ -160,12 +161,17 @@ class Oc2LiveGatewayTest {
     fun `B-PROTO-042 unreadable response after prompt remains uncertain and sends once`() =
         runTest {
             var sends = 0
+            val permissions = PermissionServer()
             val engine = MockEngine { request ->
-                if (request.method == HttpMethod.Get)
-                    respond("""{"data":{"id":"s"}}""", HttpStatusCode.OK)
-                else {
-                    sends++
-                    respond("not json", HttpStatusCode.OK)
+                with(permissions) {
+                    answer(request) { request ->
+                        if (request.method == HttpMethod.Get)
+                            respond("""{"data":{"id":"s"}}""", HttpStatusCode.OK)
+                        else {
+                            sends++
+                            respond("not json", HttpStatusCode.OK)
+                        }
+                    }
                 }
             }
             val gateway = gateway(engine)

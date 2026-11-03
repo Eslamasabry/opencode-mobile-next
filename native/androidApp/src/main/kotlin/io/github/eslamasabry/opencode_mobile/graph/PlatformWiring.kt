@@ -302,6 +302,9 @@ class PlatformHub(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         if (prefs.getBoolean(ASKED_NOTIFY, false)) return
         if (stores.profiles.profiles.value.isEmpty()) return // nothing to tell yet
+        // QA wave 4 N4: never mid-task (it popped up on the way back from the file picker into a chat); the calm
+        // place is the conversation list, where the alerts it enables are about.
+        if (navigator.top.value != ChatsRoute.Home) return
         if (activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
         prefs.edit().putBoolean(ASKED_NOTIFY, true).apply()
         activity.requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFY)

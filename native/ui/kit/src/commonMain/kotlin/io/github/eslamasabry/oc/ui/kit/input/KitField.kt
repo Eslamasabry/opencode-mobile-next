@@ -46,6 +46,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.semantics.inputText
+import androidx.compose.ui.semantics.editableText
+import androidx.compose.ui.semantics.password
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -199,6 +203,11 @@ public fun KitField(
      * (QA wave 1 B6: three empty lines left the conversation no room above the keyboard).
      */
     multilineLines: IntRange = 3..8,
+    /**
+     * QA wave 4 B6: false draws no label row above the box; the label is then the empty field's placeholder (unless
+     * [placeholder] is given) and stays the field's accessible name. For a message box that must stay one row tall.
+     */
+    labelShown: Boolean = true,
 ) {
     kitAssert(label.isNotBlank()) { "KitField: a field needs its label" }
     kitAssert(
@@ -209,7 +218,7 @@ public fun KitField(
         "KitField: a saved secret needs onReplaceSecret"
     }
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-        KitText(label, role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+        if (labelShown) KitText(label, role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame)
         if (kind == KitFieldKind.Secret && secretPresence == SecretFieldPresence.Saved) {
             SavedSecretLine(onReplace = { onReplaceSecret?.invoke() })
         } else {
@@ -217,7 +226,7 @@ public fun KitField(
                 state,
                 label,
                 kind,
-                placeholder,
+                placeholder ?: label.takeIf { !labelShown },
                 error != null,
                 maxLength,
                 imeAction,
@@ -381,6 +390,14 @@ private fun FieldBox(
                     modifier =
                         Modifier.weight(1f).testTag("kit-field-secret").semantics {
                             contentDescription = label
+                            // QA wave 4 N6: the accessibility tree gets dots, never the value (any accessibility
+                            // service could read it); the password flag makes TalkBack say "password".
+                            password()
+                            val exposed =
+                                if (revealed) AnnotatedString(state.text.toString())
+                                else AnnotatedString(SECRET_DOT.repeat(state.text.length))
+                            editableText = exposed
+                            inputText = exposed
                         },
                     enabled = on,
                     inputTransformation =
@@ -516,3 +533,5 @@ private fun CheckingLine() {
         kind = KitTextKind.Frame,
     )
 }
+
+private const val SECRET_DOT = "\u2022"

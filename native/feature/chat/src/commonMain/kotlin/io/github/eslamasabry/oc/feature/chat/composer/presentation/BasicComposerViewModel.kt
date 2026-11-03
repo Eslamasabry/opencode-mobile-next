@@ -164,7 +164,9 @@ public class BasicComposerViewModel(
     private val worlds: ChatWorlds,
     private val filePickers: Set<PromptFilePicker> = emptySet(),
     private val attachSources: Set<ComposerAttachSource> = emptySet(),
+    private val appCommands: Set<ComposerAppCommands> = emptySet(),
 ) : ViewModel(), BasicComposerActions {
+    private val profileId = ProfileId(target.profileId)
     private val query = MutableStateFlow<ComposerQuery?>(null)
     private val fileMatches = MutableStateFlow<List<String>>(emptyList())
     private var commandsRequested = false
@@ -379,6 +381,13 @@ public class BasicComposerViewModel(
         val w = world ?: return false
         if (busy()) return false
         if (!SendGate.accepts(state.value.copy(sending = sending.value), text)) return false
+        // Codex composer #5: the app's own commands run here and leave the box; nothing goes to the server.
+        AppCommands.of(text)?.let { command ->
+            val runner = appCommands.firstOrNull() ?: return@let
+            w.draftChanged("")
+            runner.run(command, profileId)
+            return true
+        }
         w.draftChanged(
             text
         ) // capture exact editor whitespace before the dispatch text is normalized

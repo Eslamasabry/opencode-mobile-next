@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.feature.chat.header.presentation
 
+import io.github.eslamasabry.oc.core.model.transcript.Role
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.contextReading
+import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
+import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
@@ -115,7 +119,16 @@ public class ChatHeaderPresenter(
             when (l.sheet) {
                 null -> null
                 SheetKind.Details -> {
-                    val percent = HeaderRules.contextPercent(facts.contextTokens, facts.contextLimit)
+                    // Codex chat-header #8: OC2 sessions carry no context reading; the replies' own tokens against
+                    // their model's window do (Flutter derives it the same way, as the transcript's context action).
+                    val feed = (world as? TurnFeedSource)?.turnFeed?.value
+                    val reading =
+                        if (facts.contextTokens != null || feed == null) null
+                        else contextReading(feed.ledger.messages) { p, m -> feed.windows[TurnFeed.windowKey(p, m)] }
+                    val percent =
+                        HeaderRules.contextPercent(facts.contextTokens ?: reading?.tokens, facts.contextLimit ?: reading?.limit)
+                    val replyTokens =
+                        feed?.ledger?.messages?.filter { it.info.role == Role.Assistant }?.sumOf { it.info.tokens.total }
                     HeaderSheet.Details(
                         DetailsUi(
                             serverName = facts.serverName,
@@ -124,7 +137,7 @@ public class ChatHeaderPresenter(
                             agent = models.agent ?: facts.agent,
                             contextPercent = percent,
                             contextLevel = HeaderRules.contextLevel(percent),
-                            totalTokens = facts.totalTokens?.takeIf { it > 0 },
+                            totalTokens = (facts.totalTokens ?: replyTokens)?.takeIf { it > 0 },
                         ),
                     )
                 }
@@ -218,14 +231,18 @@ public class ChatHeaderPresenter(
     /** Copy transcript with the person's own words for the headings. */
     override fun copyTranscript(words: TranscriptWords, mask: (String) -> String) {
         local.update { it.copy(menuOpen = false) }
+        val messages = (world as? TurnFeedSource)?.turnFeed?.value?.ledger?.messages.orEmpty()
         val text =
-            TranscriptCopy.markdown(
-                title = titleNow(),
-                rows = world.transcript.value.rows,
-                words = words,
-                partial = world.hasOlder.value,
-                mask = mask,
-            )
+            if (messages.isNotEmpty())
+                TranscriptCopy.markdownOf(titleNow(), messages, words, world.hasOlder.value, mask)
+            else
+                TranscriptCopy.markdown(
+                    title = titleNow(),
+                    rows = world.transcript.value.rows,
+                    words = words,
+                    partial = world.hasOlder.value,
+                    mask = mask,
+                )
         local.update { it.copy(clip = HeaderClip(nextId++, text, ClipKind.Transcript)) }
     }
 

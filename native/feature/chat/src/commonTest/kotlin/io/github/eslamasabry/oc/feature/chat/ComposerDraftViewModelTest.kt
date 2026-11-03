@@ -60,6 +60,30 @@ class ComposerDraftViewModelTest {
         }
 
     @Test
+    fun `B-NAV-051 Codex composer 5 slash new and slash sessions are the app's own commands`() = runTest {
+        val ran = mutableListOf<String>()
+        val commands =
+            object : io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerAppCommands {
+                override fun run(
+                    command: io.github.eslamasabry.oc.feature.chat.composer.presentation.AppCommand,
+                    profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+                ) {
+                    ran += "${command.name} ${profile.raw}"
+                }
+            }
+        val vm = BasicComposerViewModel(ComposerTarget("p1", "s1"), worlds, appCommands = setOf(commands))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        assertTrue(vm.send("/new"))
+        assertTrue(vm.send("/resume"))
+        assertEquals(listOf("NewConversation p1", "Conversations p1"), ran)
+        assertTrue(base.calls.none { it.startsWith("send ") }, "nothing went to the server: ${base.calls}")
+        assertEquals("", base.draft.value.text)
+        // With words after it, it is a message (or a server command), not the app's.
+        assertTrue(vm.send("/new idea for the release"))
+        assertEquals(listOf("send /new idea for the release"), base.calls.filter { it.startsWith("send ") })
+    }
+
+    @Test
     fun `B-STATE-100 dispatch normalizes its text while exact draft whitespace is preserved`() =
         runTest {
             val vm = vm()

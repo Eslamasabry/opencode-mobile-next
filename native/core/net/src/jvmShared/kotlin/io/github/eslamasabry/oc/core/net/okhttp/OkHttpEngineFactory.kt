@@ -10,18 +10,22 @@ import io.github.eslamasabry.oc.core.net.TrustRefusal
 import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import okhttp3.Call
+import okhttp3.Connection
 import okhttp3.ConnectionPool
 import okhttp3.Dispatcher
 import okhttp3.Interceptor
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import okhttp3.RequestBody
 import okhttp3.Response
 import okio.BufferedSink
 import java.io.IOException
+import java.io.InterruptedIOException
 import java.net.ConnectException
 import java.net.NoRouteToHostException
 import java.net.Proxy
+import java.net.Socket
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.Collections
@@ -48,7 +52,9 @@ public class OkHttpEngineFactory(
     private val base: (TransportSpec) -> OkHttpClient = ::hardenedBaseClient,
 ) : EngineFactory {
     override fun create(spec: TransportSpec): HttpClientEngine {
-        val client = LiveCalls.install(TrustEnforcement.install(MutationGuard.install(base(spec)), spec))
+        val client = LiveCalls.install(
+            TrustEnforcement.install(StaleConnectionRetry.install(MutationGuard.install(base(spec))), spec),
+        )
         return OkHttp.create {
             preconfigured = client
             config {
@@ -84,7 +90,9 @@ public class OkHttpEngineFactory(
 /** Plan 04 §3.2's settings; the trust parts (gate, pin) are added by [OkHttpEngineFactory.create] on top of any base. */
 public fun hardenedBaseClient(spec: TransportSpec): OkHttpClient =
     OkHttpClient.Builder()
-        .connectionPool(ConnectionPool(5, 15, TimeUnit.SECONDS)) // Flutter: 15 s idle keep-alive
+        // QA wave 4 B2: the OpenCode 2 server closes an idle keep-alive socket after 6 s, so a pooled socket must be
+        // dropped before that (Flutter's 15 s reused sockets the server had already closed).
+        .connectionPool(ConnectionPool(5, IDLE_KEEP_ALIVE_MS, TimeUnit.MILLISECONDS))
         .dispatcher(Dispatcher().apply { maxRequests = 64; maxRequestsPerHost = 10 })
         .proxy(Proxy.NO_PROXY) // Flutter: findProxy = DIRECT
         .retryOnConnectionFailure(false) // never resend a POST
@@ -94,6 +102,91 @@ public fun hardenedBaseClient(spec: TransportSpec): OkHttpClient =
         .readTimeout(spec.readTimeoutMs, TimeUnit.MILLISECONDS) // per read: inactivity, not a total
         .writeTimeout(spec.readTimeoutMs, TimeUnit.MILLISECONDS)
         .build()
+
+/** Idle keep-alive of the pool: below the OpenCode 2 server's 6 s idle close (QA wave 4 B2). */
+public const val IDLE_KEEP_ALIVE_MS: Long = 4_000
+
+/**
+ * QA wave 4 B2: the OpenCode 2 server closes an idle socket after 6 s, and OkHttp only health-checks a pooled socket
+ * idle for 10 s or more, so a request 6–10 s after the last one was written into a dead socket. Two rules, each
+ * retrying at most once:
+ * 1. Before anything is written on a **reused** HTTP/1.1 connection, the socket is probed (1 ms read): if the server
+ *    already closed it, the attempt stops with [StaleSocketException] — provably nothing was sent — and the call is
+ *    tried once more on a fresh connection. This holds for a mutation too: the probe runs before the
+ *    [MutationGuard]'s attempt counter, so the retry is still the mutation's first network attempt.
+ * 2. A read (GET/HEAD/OPTIONS) that fails with an I/O error on a reused connection is tried once more (a read is
+ *    safe to repeat). A mutation that failed after its bytes may have left is never retried.
+ * A fresh connection's failure, a timeout or a cancelled call is not retried.
+ */
+internal object StaleConnectionRetry {
+    private class Trace {
+        @Volatile var reusedConnection = false
+    }
+
+    /** The pooled socket was closed by the server before this request wrote a byte. */
+    class StaleSocketException : IOException("the pooled connection was already closed; nothing was sent")
+
+    private val served: MutableSet<Connection> =
+        Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
+
+    private val observe = Interceptor { chain ->
+        val trace = chain.request().tag(Trace::class.java)
+        val connection = chain.connection()
+        if (trace != null && connection != null) {
+            val reused = !served.add(connection)
+            trace.reusedConnection = reused
+            if (reused && connection.protocol() == Protocol.HTTP_1_1 && closedByPeer(connection.socket())) {
+                throw StaleSocketException()
+            }
+        }
+        chain.proceed(chain.request())
+    }
+
+    /** An idle HTTP/1.1 socket has nothing to read: end of stream (or stray bytes) means it is unusable. */
+    private fun closedByPeer(socket: Socket): Boolean {
+        if (socket.isClosed || socket.isInputShutdown) return true
+        val before = socket.soTimeout
+        return try {
+            socket.soTimeout = 1
+            socket.getInputStream().read() // returns: -1 = closed by the server; a byte = a broken exchange
+            true
+        } catch (_: SocketTimeoutException) {
+            false // nothing to read: alive
+        } catch (_: IOException) {
+            true
+        } finally {
+            try { socket.soTimeout = before } catch (_: IOException) { }
+        }
+    }
+
+    private class Retry(private val pool: ConnectionPool) : Interceptor {
+        override fun intercept(chain: Interceptor.Chain): Response {
+            val request = chain.request()
+            val first = Trace()
+            try {
+                return chain.proceed(request.newBuilder().tag(Trace::class.java, first).build())
+            } catch (error: IOException) {
+                val neverSent = error is StaleSocketException
+                val staleRead = !MutationGuard.isMutation(request.method) && first.reusedConnection &&
+                    error !is InterruptedIOException && error !is ResendRefusedException && error !is TrustRefusal
+                if (!(neverSent || staleRead) || chain.call().isCanceled()) throw error
+                // The other idle sockets are as old as the dead one; a retry must not pick one of them.
+                pool.evictAll()
+                return chain.proceed(request.newBuilder().tag(Trace::class.java, Trace()).build())
+            }
+        }
+    }
+
+    fun install(client: OkHttpClient): OkHttpClient {
+        if (client.interceptors.any { it is Retry }) return client
+        val builder = client.newBuilder()
+        // After the MutationGuard's sealing interceptor, so a mutation keeps its one attempt counter.
+        val at = builder.interceptors().indexOfFirst { it === MutationGuard.sealer } + 1
+        builder.interceptors().add(at, Retry(client.connectionPool))
+        builder.networkInterceptors().add(0, observe)
+        return builder.build()
+    }
+}
 
 /**
  * Remembers every call of one client (weakly) so [OkHttpEngineFactory.release] can cancel a call whose body is still
@@ -142,7 +235,7 @@ public object MutationGuard {
 
     public fun isMutation(method: String): Boolean = method.uppercase() !in readMethods
 
-    private val tagAndSeal = Interceptor { chain ->
+    internal val sealer: Interceptor = Interceptor { chain ->
         val request = chain.request()
         if (!isMutation(request.method)) return@Interceptor chain.proceed(request)
         val sealed = request.newBuilder()
@@ -160,9 +253,9 @@ public object MutationGuard {
 
     /** Puts the guard first among application interceptors and last among network interceptors. */
     public fun install(client: OkHttpClient): OkHttpClient {
-        if (client.interceptors.firstOrNull() === tagAndSeal) return client
+        if (client.interceptors.firstOrNull() === sealer) return client
         val builder = client.newBuilder()
-        builder.interceptors().add(0, tagAndSeal)
+        builder.interceptors().add(0, sealer)
         builder.networkInterceptors().add(countAttempts)
         return builder.build()
     }

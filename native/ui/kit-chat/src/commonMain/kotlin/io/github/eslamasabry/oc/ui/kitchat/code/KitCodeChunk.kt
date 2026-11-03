@@ -45,6 +45,7 @@ public fun KitCodeChunk(
     modifier: Modifier = Modifier,
     copyLabel: String? = null,
     onCopy: (() -> Unit)? = null,
+    copiedLabel: String? = null,
 ) {
     val redactor = LocalKitRedactor.current
     val display = remember(source, redactor) { redactor.redact(source) }
@@ -73,16 +74,7 @@ public fun KitCodeChunk(
             ) {
                 BasicText(display, style = mono.copy(color = colors.text1, textDirection = TextDirection.Ltr), softWrap = false)
             }
-            if (copying) {
-                DisableSelection {
-                    KitTappable(
-                        onClick = onCopy!!,
-                        modifier = Modifier.align(Alignment.TopEnd).offset(x = Space.S3.dp, y = (-14).dp),
-                    ) {
-                        KitText(copyLabel!!, role = TypeRole.Label, tone = TextTone.Secondary, kind = KitTextKind.Frame)
-                    }
-                }
-            }
+            if (copying) CopyCorner(copyLabel!!, copiedLabel) { onCopy!!() }
         }
     }
 }

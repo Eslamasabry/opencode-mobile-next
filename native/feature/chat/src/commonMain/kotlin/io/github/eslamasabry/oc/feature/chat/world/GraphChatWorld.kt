@@ -170,6 +170,9 @@ internal class GraphChatWorld(
 
     private val sentSnapshots = HashMap<Long, SentSnapshot>()
 
+    /** Visible sub-agents of the loaded catalog: an `@name` of one rides the prompt as a mention (Codex composer #6). */
+    private var subagentNames: List<String> = emptyList()
+
     override val transcript: StateFlow<TranscriptState> = mutableTranscript.asStateFlow()
     override val load: StateFlow<ChatLoad> = mutableLoad.asStateFlow()
     override val title: StateFlow<String?> = mutableTitle.asStateFlow()
@@ -284,8 +287,19 @@ internal class GraphChatWorld(
             protectedFiles = current.attachments
             protectedByHistory = false
         }
+        // Codex composer #1 / QA wave 4 N5: while a bubble with exactly these words and files is on its way or
+        // unconfirmed, a second Send would dispatch the same message again. (A not-sent twin is retired when the box
+        // sends it again, so a Failed bubble never blocks.)
+        val pendingTwin =
+            (current.text.isNotBlank() || current.attachments.isNotEmpty()) &&
+                mutablePending.value.any {
+                    it.state != PendingState.Failed &&
+                        it.text.trim() == current.text.trim() &&
+                        sentFiles(it.localId) == current.attachments
+                }
         val blocked =
-            protectedDraftText?.let { it.trim() == current.text.trim() } == true &&
+            pendingTwin ||
+                protectedDraftText?.let { it.trim() == current.text.trim() } == true &&
                 protectedFiles.let { it == null || it == current.attachments }
         val repeat =
             blocked &&
@@ -523,6 +537,7 @@ internal class GraphChatWorld(
                                     io.github.eslamasabry.oc.core.model.transcript.Role.User
                         )
                             userMessageKeys += "prompt:${event.message.id}"
+                        if (event is CoreEvent.SessionSelection && event.sessionId == sid) adoptRemoteSelection(event)
                         feedKeeper.event(event, envelope.receivedAtMs)
                         bridge.event(event)?.let(handle::submit)
                     }
@@ -761,6 +776,7 @@ internal class GraphChatWorld(
             snapshot.agents
                 .filter { !it.hidden && it.mode != "subagent" }
                 .map { ComposerAgent(it.id, it.description) }
+        subagentNames = snapshot.agents.filter { !it.hidden && it.mode == "subagent" }.map { it.id }
         // What the session holds; an absent model means the server default. A failed read (of the
         // session, or of the default it falls back on) leaves the choice unknown, never guessed.
         val session = (readback as? Outcome.Ok)?.value?.selection
@@ -800,8 +816,39 @@ internal class GraphChatWorld(
         return Outcome.Failed(STALE)
     }
 
+    /**
+     * Codex composer #4 (B-STATE-118): another client changed this session's model or agent; the chip follows the
+     * server, so the next send never re-applies a stale choice. A pick of our own in flight wins (its read-back
+     * publishes the server's answer).
+     */
+    private fun adoptRemoteSelection(event: CoreEvent.SessionSelection) {
+        if (localSelections > 0) return
+        val now = mutableModels.value
+        val model = event.model?.let { m -> now.choices.firstOrNull { it.providerId == m.providerId && it.modelId == m.modelId } }
+        val modelChanged = model != null && model != now.selected
+        val agentChanged = event.agent != null && event.agent != now.agent
+        if (!modelChanged && !agentChanged) return
+        selectionEpoch++
+        mutableModels.value =
+            now.copy(
+                selected = if (modelChanged) model else now.selected,
+                usesDefault = if (modelChanged) false else now.usesDefault,
+                agent = if (agentChanged) event.agent else now.agent,
+            )
+    }
+
+    private var localSelections = 0
+
     override suspend fun selectModel(choice: ComposerModel?, variant: String): Outcome<Unit> {
-        val result = applyModel(choice, variant)
+        localSelections++
+        val result =
+            try {
+                val delivery = (currentAttached()?.graph as? ChatGraphAccessors)?.chatDelivery
+                if (delivery == null) applyModel(choice, variant)
+                else delivery.withSelection(ref) { applyModel(choice, variant) }
+            } finally {
+                localSelections--
+            }
         if (result is Outcome.Failed && result.failure != STALE)
             // The previous choice stays; the person is told this one did not take.
             mutableModels.value = mutableModels.value.copy(failure = result.failure)
@@ -970,6 +1017,10 @@ internal class GraphChatWorld(
         mutablePending.update {
             (it + PendingSend(id, text, PendingState.Sending)).toImmutableList()
         }
+        // QA wave 4 N5: the words left the box again, so their not-sent bubble (and its Try again) goes now; one copy
+        // of the message stays on screen and only one can be sent.
+        retireFailedTwins(id)
+        refreshDraftProtection()
         return dispatch(id, text, snapshot, expected)
     }
 
@@ -1033,7 +1084,8 @@ internal class GraphChatWorld(
         // A file picked from the `@` list rides only while its `@path` is still in the words, with
         // its range (B-CHAT-087); other files pass through untouched.
         val files = Mentions.resolveFileMentions(text, sent.files).toImmutableList()
-        val result = delivery.send(ref, text, files, sent.model)
+        val mentions = Mentions.agentMentions(text, subagentNames).toImmutableList()
+        val result = delivery.send(ref, text, files, sent.model, mentions)
         return when (result) {
             is Outcome.Failed -> fail(localId, result.failure)
             is Outcome.Ok -> {
@@ -1042,6 +1094,9 @@ internal class GraphChatWorld(
                         list.filterNot { it.localId == localId }.toImmutableList()
                     }
                     sentSnapshots.remove(localId)
+                    // Codex composer #2: a command that ran is done; its words leave the box (Flutter clears them).
+                    acknowledgedDraft(localId)
+                    refreshDraftProtection()
                 } else {
                     deliveryIds[localId] = result.value
                     watchDraftAcknowledgement(localId, result.value, delivery)

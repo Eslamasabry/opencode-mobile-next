@@ -24,6 +24,7 @@ import kotlinx.coroutines.test.runTest
 /** Slash commands, shell lines and @-file search on OC2 (Flutter `Api2Gateway` endpoints). */
 class ComposerCommandsFilesTest {
     private val requests = mutableListOf<HttpRequestData>()
+    private val permissions = PermissionServer("s1")
 
     private fun gateway(body: (HttpRequestData) -> String): Oc2Gateway =
         Oc2Gateway(
@@ -31,7 +32,8 @@ class ComposerCommandsFilesTest {
                 HttpClient(
                     MockEngine { request ->
                         requests += request
-                        respond(body(request), HttpStatusCode.OK)
+                        // Codex chat-header BLOCKER 1: a command or shell line installs Ask first before it runs.
+                        with(permissions) { answer(request) { respond(body(it), HttpStatusCode.OK) } }
                     }
                 ) {
                     expectSuccess = false

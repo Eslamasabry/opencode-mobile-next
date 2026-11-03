@@ -59,7 +59,29 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
                 val engine = (graph as ChatGraphAccessors).chatRequests.engine
                 return engine.answerNow(id, RequestAnswer.Permission(PermissionReply.Once))
             }
+
+            // Codex chat-header BLOCKER 2: sub-agent inheritance needs the real parent; an ask is published only after
+            // its session's parents are known (see [resolveParents]), so a child never falls back to the server mode.
+            override fun parentOf(session: SessionId): SessionId? = parents[session]
         }
+
+    /** Session → its parent (`null` = a known top-level session), read from the server. */
+    private val parents = HashMap<SessionId, SessionId?>()
+
+    /** Reads the parent chain of every session in [asks] the port does not know yet (bounded depth). */
+    private suspend fun resolveParents(gateway: ServerGateway, asks: List<PermissionRequest>) {
+        for (ask in asks) {
+            var current: SessionId? = ask.sessionId
+            var depth = 0
+            while (current != null && current !in parents && depth < MAX_PARENT_DEPTH) {
+                val read = gateway.session(current)
+                if (read !is Outcome.Ok) break // unknown stays unknown: the presenter falls back to Ask for it
+                parents[current] = read.value.parentId
+                current = read.value.parentId
+                depth++
+            }
+        }
+    }
 
     fun attach() {
         if (stopWatching != null) return
@@ -78,6 +100,7 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
         stops = emptyList()
         bound = graph
         waitingAsks.value = emptyList()
+        parents.clear()
         if (graph == null) {
             mutableFacts.update { it.copy(connected = false) }
             return
@@ -90,10 +113,12 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
                 graph.scope.launch(registry.mainContext) { read(graph, gateway) },
                 graph.scope.launch(registry.mainContext) {
                     (graph as ChatGraphAccessors).chatRequests.engine.pending.collect { all ->
-                        waitingAsks.value =
+                        val asks =
                             all.filterIsInstance<PendingRequest.Permission>()
                                 .filter { it.phase == AnswerPhase.Waiting }
                                 .map { it.request }
+                        resolveParents(gateway, asks)
+                        if (bound === graph) waitingAsks.value = asks
                     }
                 },
                 graph.scope.launch(registry.mainContext) {
@@ -111,6 +136,7 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
     private suspend fun read(graph: ConnectionGraph, gateway: ServerGateway): Outcome<Unit> =
         when (val s = gateway.session(sid)) {
             is Outcome.Ok -> {
+                if (bound === graph) parents[sid] = s.value.parentId
                 if (bound === graph) mutableFacts.update { publish(it, s.value) }
                 Outcome.Ok(Unit)
             }
@@ -212,3 +238,5 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
 
     private fun unavailable(name: String): Outcome<Nothing> = Outcome.Failed(Failure.Unavailable(FeatureId(name)))
 }
+
+private const val MAX_PARENT_DEPTH = 8

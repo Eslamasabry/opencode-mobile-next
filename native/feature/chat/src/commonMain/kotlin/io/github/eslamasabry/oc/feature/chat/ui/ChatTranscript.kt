@@ -82,6 +82,9 @@ public interface ChatTranscriptWords {
 
     public fun footer(failed: Boolean): String
 
+    /** QA wave 4 N3: the footer of a reply the user stopped ("Stopped"), never an error line. */
+    public fun stoppedFooter(): String = footer(false)
+
     public fun thought(firstLine: String): String
 }
 
@@ -112,7 +115,13 @@ internal class ChatListWords(
  * tap. Null (the P3 overload's default) keeps the plain stream-only drawing.
  */
 @Immutable
-internal class ReplyActions(val markdown: KitMarkdownActions, val copyLabel: String, val copy: (String) -> Unit)
+internal class ReplyActions(
+    val markdown: KitMarkdownActions,
+    val copyLabel: String,
+    val copy: (String) -> Unit,
+    /** QA wave 4 N9: the code block's Copy says so after a tap. */
+    val copiedLabel: String? = null,
+)
 
 /** B2: a short, safe code for a send failure (no server text, no address): what QA asked to see under Details. */
 internal fun failureCode(f: Failure): String =
@@ -370,10 +379,10 @@ private fun ChatRow(
                     role = KitTappableRole.Row,
                     modifier = Modifier.testTag("chat-turn-footer"),
                 ) {
-                    KitQuietLine(words.footer(row.failed))
+                    KitQuietLine(if (row.stopped) words.stoppedFooter() else words.footer(row.failed))
                 }
             } else {
-                KitQuietLine(words.footer(row.failed))
+                KitQuietLine(if (row.stopped) words.stoppedFooter() else words.footer(row.failed))
             }
             val result = facts.results[row.turnId]
             if (result != null && folds != null) TurnResultLine(row.turnId, result, folds)
@@ -437,6 +446,7 @@ private fun RichBlock(
                         maxLines = Int.MAX_VALUE,
                         copyLabel = reply.copyLabel,
                         onCopy = { copyCode(row.key) },
+                        copiedLabel = reply.copiedLabel,
                     )
                 }
             else ->
@@ -447,6 +457,7 @@ private fun RichBlock(
                     modifier = column,
                     copyLabel = reply.copyLabel,
                     onCopy = { copyCode(row.key) },
+                    copiedLabel = reply.copiedLabel,
                 )
         }
         return
