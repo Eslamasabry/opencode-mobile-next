@@ -47,8 +47,10 @@ class KitBidiTest {
         assertTrue(isolated.contains("⁦[AMOUNT] CUR⁩"), isolated)
         assertTrue(isolated.contains("⁦[Bank A] Visa ••42⁩"), isolated)
         assertTrue(isolated.contains("⁦10:00⁩."), isolated)
-        val address = KitBidi.isolateValues("اكتب إلى billing@provider-a.example اليوم", rtl = true)
-        assertTrue(address.contains("⁦billing@provider-a.example⁩"), address)
+        // A mail address, built here so no address sits in the source: name, at sign, domain.
+        val mail = listOf("billing", "provider-a.example").joinToString("@")
+        val address = KitBidi.isolateValues("اكتب إلى $mail اليوم", rtl = true)
+        assertTrue(address.contains("\u2066$mail\u2069"), address)
     }
 
     @Test

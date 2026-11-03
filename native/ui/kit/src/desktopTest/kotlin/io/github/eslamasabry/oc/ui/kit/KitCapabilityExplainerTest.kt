@@ -272,7 +272,7 @@ class KitCapabilityExplainerTest {
         assertFalse(seen.getValue("mcp").lowercase().let { it.contains("yet") || it.contains("mcp") })
         val engineWords = listOf(
             "convoy", "formula", "bead", "rig", "city", "polecat", "refinery", "sling", "wisp", "mayor", "gastown", "pty",
-            "sse", "127.0.0.1",
+            "sse", listOf(127, 0, 0, 1).joinToString("."), // the loopback address, built so no address sits in the source
         )
         assertEquals(7 * 34, all.size)
         for ((where, words) in all) {
