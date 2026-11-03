@@ -1,4 +1,4 @@
-VERIFIED: pending
+VERIFIED: green
 
 # P12-FIX-MIGRATION — Codex findings on the day-1 migration (2026-11-03)
 
@@ -53,7 +53,17 @@ Commands run on this cloud container (JDK 21, Android SDK platforms 36 and 37.1,
 
 (The `:android:migration` host tests run on the `qa` build type: `testQaUnitTest`, not `testDebugUnitTest`.)
 
-RESULTS_PLACEHOLDER
+| Task | Result |
+|---|---|
+| `:android:migration:testQaUnitTest` | 68 tests, 0 failed, 0 skipped (4 new) |
+| `:feature:gate:desktopTest` | 33 tests, 0 failed (4 new, 2 rewritten, 1 removed) |
+| `:engine:migration:desktopTest` | 12 tests, 0 failed |
+| `:ui:words:desktopTest` | 4 tests, 0 failed |
+| `:quality:test` (architecture rules, Konsist, graph smoke) | 59 tests, 0 failed |
+| `:androidApp:assemblePreviewDebug` | built `androidApp-preview-debug.apk` |
+
+Red before: the two mutants above (ledger hook as a no-op; the old `firstNativeLaunch` condition) each fail their new
+test; the other new tests did not compile before the fix (new APIs/words).
 
 Environment notes (not committed): Maven Central answered 429 to this container, so a Gradle init script in
 `~/.gradle/init.d` puts Google's Maven Central mirror first, and Robolectric gets
