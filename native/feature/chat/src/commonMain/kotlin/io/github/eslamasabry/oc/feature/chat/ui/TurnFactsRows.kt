@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolOutput
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
+import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KIT_WORK_STEP_CAP
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkLine
@@ -99,7 +100,9 @@ internal fun TurnWorkLine(work: TurnWork, nowMs: Long, folds: TranscriptFolds, o
 private fun nowWords(step: TurnStep): String {
     val title = stepTitle(step.facts)
     val subject = step.facts.subject
-    return if (subject.isNullOrBlank()) title else "$title · $subject"
+    // B-SEC-094 / R18: the subject is a command or path the agent wrote; it reads redacted like every mono surface.
+    val mask = rememberKitMask()
+    return if (subject.isNullOrBlank()) title else "$title · ${mask(subject)}"
 }
 
 @Composable
@@ -180,6 +183,8 @@ internal fun TurnResultLine(turnId: String, result: TurnResultUi, folds: Transcr
         return
     }
     val key = "result:$turnId"
+    // B-SEC-094 / R18: a command line is server text; a key it carries never reaches the screen.
+    val mask = rememberKitMask()
     Column(Modifier.testTag("chat-turn-result")) {
         KitExpandRow(
             title = summary,
@@ -187,12 +192,13 @@ internal fun TurnResultLine(turnId: String, result: TurnResultUi, folds: Transcr
             supporting = timing,
             onExpandedChange = { folds.open[key] = it },
         ) {
-            for (file in result.files) KitQuietLine(fileLine(file.path, file.added, file.removed))
+            for (file in result.files) KitQuietLine(fileLine(mask(file.path), file.added, file.removed))
             for (command in result.commands) {
                 val exit = command.exitCode
+                val line = mask(command.command)
                 KitQuietLine(
-                    if (exit == null) "$ ${command.command}"
-                    else "$ ${command.command}  ·  " + stepStatus(if (exit == 0) StepState.Done else StepState.Failed, exit)
+                    if (exit == null) "$ $line"
+                    else "$ $line  ·  " + stepStatus(if (exit == 0) StepState.Done else StepState.Failed, exit)
                 )
             }
         }

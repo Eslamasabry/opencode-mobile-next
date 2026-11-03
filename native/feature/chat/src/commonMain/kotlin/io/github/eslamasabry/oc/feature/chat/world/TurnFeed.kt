@@ -72,8 +72,11 @@ internal class TurnFeedKeeper(private val sessionId: String) {
         if (state.value.link != link) state.value = state.value.copy(link = link)
     }
 
-    fun history(page: List<MessageWithParts>) {
-        ledger.load(page)
+    /** The fence for a history read that starts now (B-CHAT-112/117): pass it back to [history] with the page. */
+    fun historyVersion(): Long = ledger.historyVersion()
+
+    fun history(page: List<MessageWithParts>, beforeVersion: Long = Long.MAX_VALUE) {
+        ledger.load(page, beforeVersion)
         state.value = state.value.copy(ledger = ledger.snapshot())
     }
 
@@ -102,7 +105,9 @@ internal class TurnFeedKeeper(private val sessionId: String) {
                     state.value =
                         s.copy(
                             busy = true,
-                            retry = RunRetry(event.attempt, event.nextAtMs, event.tag?.raw, atMs),
+                            // B-CHAT-016: OpenCode 2 sends no tag; its reason is in the (redacted) details, and only that tells
+                            // a rate limit from an overload or a dropped connection.
+                            retry = RunRetry(event.attempt, event.nextAtMs, event.tag?.raw ?: event.details?.text, atMs),
                             lastProgressAtMs = atMs,
                         )
             is GatewayEvent.RunEnded ->

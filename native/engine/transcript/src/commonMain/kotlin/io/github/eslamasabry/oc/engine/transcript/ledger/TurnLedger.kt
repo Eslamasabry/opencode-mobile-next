@@ -33,8 +33,11 @@ public data class LedgerSnapshot(val version: Long, val messages: List<MessageWi
  * Single-threaded: the chat world calls it from its one collector context.
  */
 public class TurnLedger(private val sessionId: String) {
-    private class Entry(var info: MessageInfo) {
+    private class Entry(var info: MessageInfo, var stamp: Long) {
         val parts = LinkedHashMap<String, Part>()
+
+        /** When each part last changed (the ledger's [version] at that change): the history fence reads it. */
+        val partStamps = HashMap<String, Long>()
     }
 
     private val messages = LinkedHashMap<String, Entry>()
@@ -66,6 +69,7 @@ public class TurnLedger(private val sessionId: String) {
                         false
                     } else {
                         entry.parts[part.id] = part.copy(text = event.delta)
+                        entry.partStamps[part.id] = version + 1
                         changed()
                     }
                 }
@@ -73,14 +77,49 @@ public class TurnLedger(private val sessionId: String) {
             else -> false
         }
 
-    /** A history page (oldest first): its messages replace what the ledger knew of them. */
-    public fun load(page: List<MessageWithParts>) {
+    /** The version to pass to [load] for a history read that starts now. */
+    public fun historyVersion(): Long = version
+
+    /**
+     * A history page (oldest first): its messages replace what the ledger knew of them, except what changed after
+     * [beforeVersion] (the [historyVersion] read when the request started, B-CHAT-112/117): a live event that arrived
+     * while the page was on its way is newer than the page, so its message info and parts are kept as they are.
+     */
+    public fun load(page: List<MessageWithParts>, beforeVersion: Long = Long.MAX_VALUE) {
+        val stamp = version + 1
         for (m in page) {
             if (m.info.sessionId != sessionId) continue
-            val entry = messages.getOrPut(m.info.id) { Entry(m.info) }
-            entry.info = m.info
-            entry.parts.clear()
-            for (p in m.parts) entry.parts[p.id] = p
+            val existing = messages[m.info.id]
+            if (existing == null) {
+                val entry = Entry(m.info, stamp)
+                for (p in m.parts) {
+                    entry.parts[p.id] = p
+                    entry.partStamps[p.id] = stamp
+                }
+                messages[m.info.id] = entry
+                continue
+            }
+            if (existing.stamp <= beforeVersion) {
+                existing.info = m.info
+                existing.stamp = stamp
+            }
+            val pageIds = m.parts.mapTo(HashSet()) { it.id }
+            // Parts the page no longer has are gone, unless they arrived live after the request started.
+            existing.parts.keys.retainAll { it in pageIds || (existing.partStamps[it] ?: 0) > beforeVersion }
+            existing.partStamps.keys.retainAll(existing.parts.keys)
+            val kept = LinkedHashMap<String, Part>()
+            for (p in m.parts) {
+                val live = existing.parts[p.id]
+                if (live != null && (existing.partStamps[p.id] ?: 0) > beforeVersion) {
+                    kept[p.id] = live
+                } else {
+                    kept[p.id] = p
+                    existing.partStamps[p.id] = stamp
+                }
+            }
+            for ((id, p) in existing.parts) if (id !in kept) kept[id] = p
+            existing.parts.clear()
+            existing.parts.putAll(kept)
         }
         changed()
     }
@@ -88,10 +127,11 @@ public class TurnLedger(private val sessionId: String) {
     /** The current snapshot; built once per change. */
     public fun snapshot(): LedgerSnapshot {
         if (cached.version == version) return cached
-        // Server order: OpenCode message ids ascend in creation order; a stable sort keeps arrival order for equals.
+        // Server order (B-CHAT-100): by creation time; a stable sort keeps the order the server gave equal times in
+        // (history pages and live arrivals both insert in server order). Ids are not compared: they need not ascend.
         val ordered =
             messages.values
-                .sortedWith(compareBy({ it.info.time?.createdMs ?: Long.MAX_VALUE }, { it.info.id }))
+                .sortedWith(compareBy { it.info.time?.createdMs ?: Long.MAX_VALUE })
                 .map { MessageWithParts(it.info, it.parts.values.toImmutableList()) }
         cached = LedgerSnapshot(version, ordered, group(ordered))
         return cached
@@ -100,10 +140,11 @@ public class TurnLedger(private val sessionId: String) {
     private fun upsertInfo(info: MessageInfo): Boolean {
         val entry = messages[info.id]
         if (entry == null) {
-            messages[info.id] = Entry(info)
+            messages[info.id] = Entry(info, version + 1)
         } else {
             if (entry.info == info) return false
             entry.info = info
+            entry.stamp = version + 1
         }
         return changed()
     }
@@ -119,10 +160,15 @@ public class TurnLedger(private val sessionId: String) {
         val after = next.tool
         if (before != null && after != null) {
             val status = settledToolStatus(before.status, after.status)
-            if (status != after.status) next = next.copy(tool = after.copy(status = status))
+            // B-CHAT-109: a later report without times (a progress or result event) keeps the times already known.
+            val start = after.startedAtMs ?: before.startedAtMs
+            val end = after.completedAtMs ?: before.completedAtMs.takeIf { status == before.status }
+            if (status != after.status || start != after.startedAtMs || end != after.completedAtMs)
+                next = next.copy(tool = after.copy(status = status, startedAtMs = start, completedAtMs = end))
         }
         if (old == next) return false
         entry.parts[part.id] = next
+        entry.partStamps[part.id] = version + 1
         return changed()
     }
 

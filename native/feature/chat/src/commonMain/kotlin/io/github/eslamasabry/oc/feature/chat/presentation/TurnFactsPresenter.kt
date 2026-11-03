@@ -92,6 +92,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
     private val stall = TurnStallTracker()
     private var lastProgress: Long? = null
     private var sessionKey = "turn"
+    private var lastLink: ChatLink? = null
 
     public fun states(feed: Flow<TurnFeed>, waiting: Flow<Boolean>, scope: CoroutineScope, started: SharingStarted): StateFlow<TurnFactsUi> {
         val ticks = factTicks(clock, feed.map { ticking(it) }, TICK_MS)
@@ -99,7 +100,12 @@ public class TurnFactsPresenter(private val clock: Clock) {
             .stateIn(scope, started, TurnFactsUi.Empty)
     }
 
-    private fun ticking(f: TurnFeed): Boolean = f.busy || f.retry != null
+    /**
+     * Whether the clock must tick: a run, a retry countdown, or background work still believed running after its turn
+     * ended (B-CHAT-007: its elapsed time keeps counting and the six-hour cutoff applies in a quiet chat).
+     */
+    internal fun ticking(f: TurnFeed): Boolean =
+        f.busy || f.retry != null || runningBackgroundTasks(f.ledger.messages, clock.now().toEpochMilliseconds()).isNotEmpty()
 
     /** The facts at [nowMs]. [waitingForYou]: a request card waits for the person (no stall, no spinner). */
     public fun present(feed: TurnFeed, nowMs: Long, waitingForYou: Boolean = false): TurnFactsUi {
@@ -158,12 +164,17 @@ public class TurnFactsPresenter(private val clock: Clock) {
         if (!feed.busy) {
             stall.finish(sessionKey)
             lastProgress = null
+            lastLink = null
             return null
         }
         feed.retry?.let { r -> return LiveNoticeUi.Retry(retryBannerFacts(r.attempt, r.nextAtMs, r.tag, nowMs)) }
         if (compacting) return LiveNoticeUi.Compacting
         // B-CHAT-118: silence per turn, reset by progress, suppressed while a request waits or a step runs.
         stall.begin(sessionKey, feed.runStartedAtMs ?: nowMs)
+        // A changed connection makes the last diagnosis stale (Flutter invalidates evidence on transport changes):
+        // check again without counting it as progress.
+        if (lastLink != null && lastLink != feed.link) stall.invalidateEvidence(sessionKey)
+        lastLink = feed.link
         val progress = feed.lastProgressAtMs
         if (progress != null && progress != lastProgress) {
             lastProgress = progress

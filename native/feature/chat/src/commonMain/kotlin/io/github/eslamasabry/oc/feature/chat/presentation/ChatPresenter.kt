@@ -338,7 +338,8 @@ public class ChatPresenter(
             }
             MessageAction.SendAgain -> {
                 val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
-                launcher.launch { world.send(text) } // a failed send shows on its bubble (status line), not twice
+                // Only its words: the draft's files stay with the draft. A failed send shows on its bubble, not twice.
+                launcher.launch { world.sendAgain(text) }
             }
             MessageAction.Fork -> {
                 val id = target.messageId ?: return

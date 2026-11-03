@@ -285,6 +285,25 @@ class Oc2LiveGatewayTest {
     }
 
     @Test
+    fun `B-CHAT-109 a history tool keeps its server times so its duration shows`() {
+        val history = Oc2History(Redactor())
+        val message =
+            history.message(
+                "s",
+                requireNotNull(
+                    io.github.eslamasabry.oc.protocol.oc2.wire.Oc2Wire.parse(
+                        """{"id":"a","type":"assistant","time":{"created":1000,"completed":9000},"content":[""" +
+                            """{"type":"tool","id":"c1","name":"bash","state":{"status":"completed","input":{"command":"npm test"},"content":[{"type":"text","text":"ok"}]},"time":{"created":3000,"ran":4000,"completed":8200}},""" +
+                            """{"type":"tool","id":"c2","name":"bash","state":{"status":"running","input":{"command":"ls"}},"time":{"created":8500}}]}"""
+                    )
+                ),
+            )!!
+        val tools = message.parts.mapNotNull { it.tool }
+        assertEquals(listOf(4000L, 8500L), tools.map { it.startedAtMs })
+        assertEquals(listOf(8200L, null), tools.map { it.completedAtMs })
+    }
+
+    @Test
     fun `B0 QA wave1 every notice message gets its own part id`() {
         val history = Oc2History(Redactor())
         val ids =

@@ -255,6 +255,8 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
             metadata = metadata,
             outputFiles = attachments.map { ToolOutputFile(path = null, filename = it.name, mime = it.mime, url = it.url) }.toImmutableList(),
             executedFlag = executed ?: true,
+            startedAtMs = startedAtMs,
+            completedAtMs = completedAtMs,
         )
 
     private fun Oc2NoticeKind.toCore(): NoticeKind =

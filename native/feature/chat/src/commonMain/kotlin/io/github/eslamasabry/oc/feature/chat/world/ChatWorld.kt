@@ -141,6 +141,12 @@ public interface ChatWorld {
     public suspend fun send(text: String): Outcome<Unit>
 
     /**
+     * Send again (plan 09 §6.6): an earlier prompt's [text] alone. The draft's files never ride along and the draft
+     * stays as it is (Flutter `_sendInsteadOfDraft` sets the draft's attachments aside).
+     */
+    public suspend fun sendAgain(text: String): Outcome<Unit> = send(text)
+
+    /**
      * Explicit repeat of this exact draft revision, permitted only for canonical-history ambiguity.
      */
     public suspend fun sendRepeated(text: String, expectedRevision: Long): Outcome<Unit> =

@@ -11,6 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.presentation.CodeCopy
+import io.github.eslamasabry.oc.feature.chat.presentation.LongTable
+import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.feature.chat.presentation.FenceText
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
@@ -195,15 +197,18 @@ internal fun ChatTranscriptList(
 ) {
     val folds = rememberTranscriptFolds()
     val currentRows by rememberUpdatedState(rows)
-    val copyCode: (String) -> Unit =
+    // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the raw fence; only
+    // Copy reply copies the reply as written (plan 09 §6.6).
+    val copyCode: (String, (String) -> String) -> Unit =
         remember(reply) {
-            { key ->
+            { key, mask ->
                 val r = currentRows
-                CodeCopy.of(r, r.indexOfFirst { it.key == key })?.let { reply?.copy?.invoke(it) }
+                CodeCopy.of(r, r.indexOfFirst { it.key == key })?.let { reply?.copy?.invoke(mask(it)) }
             }
         }
     // B0: a repeated key kills the whole screen (LazyColumn throws), so the list never sees one.
     val unique = remember(rows) { rows.distinctKeys() }
+    val tables = remember(unique) { LongTable.of(unique) }
     val newestKey =
         when {
             live != null -> ListKeys.LIVE
@@ -247,7 +252,14 @@ internal fun ChatTranscriptList(
             }
         }
         items(unique, key = { it.key }, contentType = { it.kind }) { row ->
-            ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession, reply, copyCode)
+            // A table longer than one chunk is drawn whole by its first chunk; its later chunks draw nothing.
+            if (reply != null && row is BlockRow && row.key in tables) {
+                val whole = tables[row.key]
+                if (whole != null)
+                    ChatRow(row.copy(text = whole, continues = false), words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession, reply, copyCode)
+            } else {
+                ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession, reply, copyCode)
+            }
         }
     }
 }
@@ -303,7 +315,7 @@ private fun ChatRow(
     folds: TranscriptFolds? = null,
     onOpenSession: ((String) -> Unit)? = null,
     reply: ReplyActions? = null,
-    copyCode: (String) -> Unit = {},
+    copyCode: (String, (String) -> String) -> Unit = { _, _ -> },
 ) {
     when (row) {
         is BlockRow ->
@@ -355,7 +367,17 @@ private fun ChatRow(
                 val reason = row.reason.orEmpty()
                 // B5: why the reply failed and what to do next; the server's own words only under Details.
                 Column(Modifier.testTag("chat-reply-failed")) {
-                    KitQuietLine(words.footer(row.failed))
+                    // A failed reply keeps its actions (Copy, Share, Select text, Delete), as Flutter's does.
+                    if (onOpenMenu != null)
+                        KitTappable(
+                            onClick = { onOpenMenu(row.key) },
+                            onClickLabel = listWords.messageActions,
+                            role = KitTappableRole.Row,
+                            modifier = Modifier.testTag("chat-turn-footer"),
+                        ) {
+                            KitQuietLine(words.footer(row.failed))
+                        }
+                    else KitQuietLine(words.footer(row.failed))
                     KitQuietLine(listWords.replyFailed(ReplyFailureKind.of(reason)))
                     KitDetailsFold(
                         label = listWords.details,
@@ -404,11 +426,12 @@ private fun RichBlock(
     reveal: RevealRegistry,
     motion: KitMotionLevel,
     reply: ReplyActions,
-    copyCode: (String) -> Unit,
+    copyCode: (String, (String) -> String) -> Unit,
 ) {
     val column = Modifier.replyColumn(row.continued, row.continues)
     if (row.kind == RowKind.Code) {
         val body = remember(row.text) { FenceText.body(row.text) }
+        val mask = rememberKitMask()
         val streamed = row.origin == Origin.Streamed
         // A streamed fence keeps the stream-tuned block until its words have all landed and faded: the settled view
         // takes over only then, so its reveal never stops half way (and never holds up the blocks after it).
@@ -436,7 +459,7 @@ private fun RichBlock(
                         language = CodeLanguage.of(FenceText.info(row.text)),
                         maxLines = Int.MAX_VALUE,
                         copyLabel = reply.copyLabel,
-                        onCopy = { copyCode(row.key) },
+                        onCopy = { copyCode(row.key, mask) },
                     )
                 }
             else ->
@@ -446,7 +469,7 @@ private fun RichBlock(
                     continues = row.continues,
                     modifier = column,
                     copyLabel = reply.copyLabel,
-                    onCopy = { copyCode(row.key) },
+                    onCopy = { copyCode(row.key, mask) },
                 )
         }
         return

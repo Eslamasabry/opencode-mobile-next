@@ -172,4 +172,70 @@ class ChatFeelScreenTest {
             waitForIdle()
             assertEquals(null, p.current().select)
         }
+
+    private val bearerTail = "FIX3Copy6BearerSecret" + "3H4I5J6K7L"
+
+    private fun screen(vararg rows: io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow): Pair<ChatPresenter, Outside> {
+        val outside = Outside()
+        val world = FakeChatWorld()
+        world.transcript.value = stateOf(*rows)
+        return ChatPresenter(world, RecordingNavigator(), Immediate, outside = outside) to outside
+    }
+
+    @Test
+    fun `B-SEC-094 B-CHAT-056 a code block's Copy copies what it shows, a key masked`() =
+        runComposeUiTest {
+            val (p, outside) = screen(prompt("u1", "go"), code(0, "```sh\ncurl -H 'Authorization: Bearer $bearerTail' x\n```"), footer("u1"))
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, p, composer) }
+            }
+            onNodeWithText("Copy").performClick()
+            val copied = outside.calls.single()
+            assertTrue(copied.startsWith("copy curl -H 'Authorization:"), copied)
+            assertTrue(bearerTail !in copied, "the key never reaches the clipboard: $copied")
+        }
+
+    @Test
+    fun `09-9_1 a table longer than one chunk stays one table`() =
+        runComposeUiTest {
+            fun chunk(start: Int, text: String, continued: Boolean, continues: Boolean) =
+                BlockRow("b:a1/p:$start", "u1", RowKind.Prose, "p", start, text, false, false, Origin.Loaded, continued, continues)
+            val head = "| Name | Size |\n| --- | --- |\n" + (1..14).joinToString("\n") { "| f$it | $it |" }
+            val tail = (15..20).joinToString("\n") { "| f$it | $it |" }
+            val (p, _) = screen(prompt("u1", "go"), chunk(0, head, false, true), chunk(400, tail, true, false), footer("u1"))
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, p, composer) }
+            }
+            onNodeWithText("f20").assertExists()
+            assertEquals(0, onAllNodesWithText("|", substring = true).fetchSemanticsNodes().size, "no row reads as pipes")
+        }
+
+    @Test
+    fun `09-6_6 a failed reply still opens its message actions`() =
+        runComposeUiTest {
+            val (p, _) =
+                screen(
+                    prompt("u1", "go"),
+                    block("u1", "a1", "p", 0, "Half an answer"),
+                    io.github.eslamasabry.oc.engine.transcript.state.FooterRow("footer:u1", "u1", failed = true, reason = "provider exploded"),
+                )
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, p, composer) }
+            }
+            onNodeWithTag("chat-reply-failed").assertExists()
+            onNodeWithTag("chat-turn-footer").performClick()
+            waitForIdle()
+            for (label in listOf("Copy", "Share", "Select text")) {
+                assertTrue(onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty(), "menu shows $label")
+            }
+        }
 }

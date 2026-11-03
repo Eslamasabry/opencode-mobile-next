@@ -126,6 +126,11 @@ open class FakeChatWorld(override val ref: ConversationRef = Ref) : ChatWorld {
         return Outcome.Ok(Unit)
     }
 
+    override suspend fun sendAgain(text: String): Outcome<Unit> {
+        calls += "sendAgain $text"
+        return Outcome.Ok(Unit)
+    }
+
     override suspend fun retrySend(localId: Long): Outcome<Unit> {
         calls += "retrySend $localId"
         return Outcome.Ok(Unit)

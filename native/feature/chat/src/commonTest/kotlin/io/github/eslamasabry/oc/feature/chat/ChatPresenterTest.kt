@@ -205,7 +205,7 @@ class ChatPresenterTest {
     }
 
     @Test
-    fun `09-6_6 send again sends the prompt's words once, and fork opens the new conversation`() {
+    fun `09-6_6 send again sends the prompt's words once without the draft's files, and fork opens the new conversation`() {
         world.transcript.value = stateOf(*turn(1, ask = "try again please").toTypedArray())
         val p = presenter()
         p.openMessageMenu("prompt:u1")
@@ -216,7 +216,9 @@ class ChatPresenterTest {
         )
         p.messageAction(target, MessageAction.SendAgain)
         p.messageAction(target, MessageAction.Fork)
-        assertEquals(listOf("send try again please", "fork u1"), world.calls)
+        // sendAgain, never send: the draft's attached files never ride along with an older prompt (Flutter
+        // `_sendInsteadOfDraft`).
+        assertEquals(listOf("sendAgain try again please", "fork u1"), world.calls)
         assertEquals(listOf("openChat s2"), nav.calls)
     }
 
