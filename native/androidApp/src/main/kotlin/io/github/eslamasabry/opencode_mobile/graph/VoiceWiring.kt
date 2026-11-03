@@ -23,11 +23,6 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.android.voice.AndroidVoiceComponents
-import io.github.eslamasabry.oc.android.voice.speech.KokoroTtsConfig
-import io.github.eslamasabry.oc.android.voice.speech.NativeRecognizer
-import io.github.eslamasabry.oc.android.voice.speech.NativeTts
-import io.github.eslamasabry.oc.android.voice.speech.SherpaRuntime
-import io.github.eslamasabry.oc.android.voice.speech.WhisperRecognizerConfig
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
@@ -50,6 +45,7 @@ import io.github.eslamasabry.oc.feature.voice.presentation.Dictation
 import io.github.eslamasabry.oc.feature.voice.presentation.SpeechEngineKind
 import io.github.eslamasabry.oc.feature.voice.presentation.VoiceHub
 import io.github.eslamasabry.oc.feature.voice.presentation.VoiceParts
+import io.github.eslamasabry.oc.feature.voice.presentation.asDictation
 import io.github.eslamasabry.oc.feature.voice.presentation.asReader
 import io.github.eslamasabry.oc.feature.voice.presentation.asVoiceModels
 import java.lang.ref.WeakReference
@@ -75,11 +71,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /*
- * P12-VOICE app wiring (the one Android-only voice file). It builds `:android:voice`'s stack over the app's stores,
- * asks for the microphone through the resumed activity, and types with the phone's own speech recognizer while the
- * offline engine (sherpa-onnx, not vendored in this tree) is missing. When the sherpa adapter lands, bind it in place
- * of [NoOfflineSpeechEngine] and hand `components.voice.asDictation()` to [VoiceParts] with
- * `SpeechEngineKind.OfflineModel`; nothing in `:feature:voice` changes.
+ * P12-VOICE app wiring (the one Android-only voice file). It builds `:android:voice`'s stack over the app's stores and
+ * asks for the microphone through the resumed activity. P12-FIX-LINUX-VOICE: it types with the offline engine
+ * (sherpa-onnx Whisper, [OfflineSpeechEngine] in LinuxVoiceWiring.kt) over the models in files/voice_models, as the
+ * Flutter app does. The phone's own recognizer ([PhoneDictation]) is only the fallback when the JNI library cannot load.
  */
 
 /** The app's voice: built once, after the stores are warm (the adopted Flutter prefs throw on early reads). */
@@ -108,7 +103,8 @@ class AndroidVoiceHub(
         }
 
     private fun build(): Outcome<VoiceParts> {
-        val prefs = OfflineEngineAwarePrefs(KeyValueVoicePrefs(stores.prefs, stores.lanes.app), naturalVoiceRuns = false)
+        val offline = OfflineSpeechEngine.available
+        val prefs = OfflineEngineAwarePrefs(KeyValueVoicePrefs(stores.prefs, stores.lanes.app), naturalVoiceRuns = offline)
         val permission = ActivityMicPermission(application, activities, dispatchers.main)
         val hasMic = application.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)
         val components =
@@ -119,13 +115,33 @@ class AndroidVoiceHub(
                 scope = scope,
                 prefs = prefs,
                 permission = permission,
-                sherpa = NoOfflineSpeechEngine,
+                sherpa = OfflineSpeechEngine,
                 appLanguage = { Locale.getDefault().language },
                 voiceAvailable = hasMic,
                 readAloudAvailable = true,
             )
         val models = components.packs.asVoiceModels()
         val dictation =
+            if (offline) {
+                components.voice.asDictation()
+            } else {
+                phoneDictation(permission, models, components)
+            }
+        return VoiceParts(
+            dictation = dictation,
+            models = models,
+            reader = components.readAloud.asReader(),
+            engine = if (offline) SpeechEngineKind.OfflineModel else SpeechEngineKind.PhoneRecognizer,
+            micAvailable = hasMic && (offline || SpeechRecognizer.isRecognitionAvailable(application)),
+            naturalVoiceAvailable = offline,
+        ).ok()
+    }
+
+    private fun phoneDictation(
+        permission: ActivityMicPermission,
+        models: io.github.eslamasabry.oc.feature.voice.presentation.VoiceModels,
+        components: AndroidVoiceComponents,
+    ): Dictation =
             PhoneDictation(
                 app = application,
                 permission = permission,
@@ -135,15 +151,6 @@ class AndroidVoiceHub(
                 language = { models.state.value.language },
                 stopReading = { components.readAloud.stop() },
             )
-        return VoiceParts(
-            dictation = dictation,
-            models = models,
-            reader = components.readAloud.asReader(),
-            engine = SpeechEngineKind.PhoneRecognizer,
-            micAvailable = hasMic && SpeechRecognizer.isRecognitionAvailable(application),
-            naturalVoiceAvailable = false,
-        ).ok()
-    }
 
     override fun openAppSettings() {
         val intent =
@@ -165,17 +172,9 @@ class AndroidVoiceHub(
         }
 }
 
-/** The natural voice needs the offline engine; until it is in the app, a stored "natural" choice reads as the phone's. */
+/** The natural voice needs the offline engine; where it cannot load, a stored "natural" choice reads as the phone's. */
 private class OfflineEngineAwarePrefs(private val inner: VoicePrefs, private val naturalVoiceRuns: Boolean) : VoicePrefs by inner {
     override fun readAloudNatural(): Boolean = naturalVoiceRuns && inner.readAloudNatural()
-}
-
-/** sherpa-onnx is not vendored in this tree (docs/native/units/VOICE.md §5): every native call says so. */
-private object NoOfflineSpeechEngine : SherpaRuntime {
-    override fun newRecognizer(config: WhisperRecognizerConfig): NativeRecognizer =
-        throw IllegalStateException("offline speech engine not in this build")
-
-    override fun newTts(config: KokoroTtsConfig): NativeTts = throw IllegalStateException("offline speech engine not in this build")
 }
 
 /**

@@ -9,6 +9,13 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import io.github.eslamasabry.oc.android.media.speech.SherpaOnnx
+import io.github.eslamasabry.oc.android.voice.speech.KokoroSink
+import io.github.eslamasabry.oc.android.voice.speech.KokoroTtsConfig
+import io.github.eslamasabry.oc.android.voice.speech.NativeRecognizer
+import io.github.eslamasabry.oc.android.voice.speech.NativeTts
+import io.github.eslamasabry.oc.android.voice.speech.SherpaRuntime
+import io.github.eslamasabry.oc.android.voice.speech.WhisperRecognizerConfig
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
@@ -527,5 +534,59 @@ class BuiltinRuntime internal constructor(
         if (ownerId() == null) return false
         startNow()
         return true
+    }
+}
+
+/*
+ * P12-FIX-LINUX-VOICE: the REAL offline speech engine (the migration proof's ship blocker #3). sherpa-onnx 2.0.1 — the
+ * version the Flutter app pins — through :android:media's SherpaOnnx, adapted to :android:voice's SherpaRuntime port.
+ * It reads the speech models the Flutter app downloaded, in place (files/voice_models), and the total-RAM gate stays in
+ * :engine:voice (ModelPacks / VoiceController read ActivityManager.MemoryInfo.totalMem only). Replaces VoiceWiring's
+ * former NoOfflineSpeechEngine.
+ */
+object OfflineSpeechEngine : SherpaRuntime {
+    /** The JNI library loaded on this device (false only on a broken install or an ABI the APK lacks). */
+    val available: Boolean get() = SherpaOnnx.loadable
+
+    override fun newRecognizer(config: WhisperRecognizerConfig): NativeRecognizer {
+        val whisper =
+            SherpaOnnx.whisper(
+                encoder = config.encoder,
+                decoder = config.decoder,
+                tokens = config.tokens,
+                language = config.language,
+                task = config.task,
+                numThreads = config.numThreads,
+                debug = config.debug,
+                provider = config.provider,
+                modelType = config.modelType,
+            )
+        return object : NativeRecognizer {
+            override fun decode(samples: FloatArray, sampleRate: Int): String = whisper.decode(samples, sampleRate)
+
+            override fun release() = whisper.release()
+        }
+    }
+
+    override fun newTts(config: KokoroTtsConfig): NativeTts {
+        val kokoro =
+            SherpaOnnx.kokoro(
+                model = config.model,
+                voices = config.voices,
+                tokens = config.tokens,
+                lexicon = config.lexicon,
+                lang = config.lang,
+                numThreads = config.numThreads,
+                provider = config.provider,
+                maxNumSentences = config.maxNumSentences,
+            )
+        return object : NativeTts {
+            override val sampleRate: Int get() = kokoro.sampleRate
+
+            override fun generate(text: String, speakerId: Int, speed: Float, sink: KokoroSink) =
+                kokoro.generate(text, speakerId, speed, sink)
+
+            override fun release() = kokoro.release()
+        }
     }
 }

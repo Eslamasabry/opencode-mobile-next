@@ -50,6 +50,18 @@ public object SherpaOnnx {
     /** The native libraries the Kotlin API loads (`System.loadLibrary("sherpa-onnx-jni")`, which needs onnxruntime). */
     public val LIBRARIES: List<String> = listOf("libsherpa-onnx-jni.so", "libonnxruntime.so")
 
+    /** Loads the JNI library once; false when this APK or device cannot (the caller then offers another engine). */
+    public val loadable: Boolean by lazy {
+        try {
+            System.loadLibrary("sherpa-onnx-jni")
+            true
+        } catch (e: UnsatisfiedLinkError) {
+            false
+        } catch (e: SecurityException) {
+            false
+        }
+    }
+
     /** Throws (sherpa's `require`) when a file is missing or broken. */
     public fun whisper(
         encoder: String,
