@@ -572,8 +572,14 @@ class FirstRunStarter(
     }
 }
 
-/** The phone's own language, for "Use system language". */
-internal fun systemLocaleTag(): String = Resources.getSystem().configuration.locales[0].toLanguageTag()
+/**
+ * The phone's own language, for "Use system language": the first of the phone's languages the app ships, else the
+ * next one, else English (B-L10N-009, `AppLanguages.resolve`).
+ */
+internal fun systemLocaleTag(): String {
+    val locales = Resources.getSystem().configuration.locales
+    return io.github.eslamasabry.oc.ui.words.AppLanguages.resolve((0 until locales.size()).map { locales[it].toLanguageTag() })
+}
 
 /**
  * The app language on Android (B-L10N-001). Words come from Compose resources, which read the platform locale, so a
