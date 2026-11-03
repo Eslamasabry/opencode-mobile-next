@@ -57,8 +57,12 @@ class SearchViewModelTest {
         var gate: CompletableDeferred<Unit>? = null
         var pageSize = 50
 
+        /** Exact server pages by cursor, for continuation tests (an archived-only page arrives empty with a cursor). */
+        var scripted: Map<String?, Outcome<SearchConversationPage>>? = null
+
         override suspend fun conversations(profile: ProfileId, query: String, cursor: String?): Outcome<SearchConversationPage> {
             asked += Triple(profile, query, cursor)
+            scripted?.let { pages -> if (query.isNotEmpty()) return pages.getValue(cursor) }
             gate?.takeIf { query.isNotEmpty() && cursor == null }?.await()
             titlesResult?.let { if (query.isNotEmpty()) return it }
             val pool = if (serverSearch) all.filter { SearchMatch.titleMatches(it.title, query) } else all
@@ -278,6 +282,33 @@ class SearchViewModelTest {
         assertTrue(vm.state.value.canLoadMore)
         vm.loadMore()
         assertEquals(listOf("a", "b"), vm.state.value.titleHits.map { it.ref.sessionId.raw })
+        assertEquals(false, vm.state.value.canLoadMore)
+    }
+
+    @Test
+    fun `B-PROTO-020 an empty first page that keeps a cursor offers load more and reaches later matches`() = runTest {
+        val source = Source()
+        fun page(items: List<SearchConversation>, next: String?) =
+            Outcome.Ok(SearchConversationPage(items.toImmutableList(), next, titlesMatched = true, allProjects = true))
+        source.scripted =
+            mapOf(
+                null to page(emptyList(), "c1"),
+                "c1" to Outcome.Failed(Failure.Network(NetworkWhy.Refused)),
+            )
+        val vm = vm(source)
+        vm.search("plan")
+        assertEquals(SearchPhase.NoMatch, vm.state.value.phase)
+        assertTrue(vm.state.value.canLoadMore)
+        vm.loadMore()
+        assertTrue(vm.state.value.loadMoreFailed)
+        assertEquals(SearchPhase.NoMatch, vm.state.value.phase)
+        source.scripted = mapOf("c1" to page(emptyList(), "c2"), "c2" to page(listOf(conversation("late", "plan later")), null))
+        vm.loadMore()
+        assertEquals(SearchPhase.NoMatch, vm.state.value.phase)
+        assertTrue(vm.state.value.canLoadMore)
+        vm.loadMore()
+        assertEquals(SearchPhase.Results, vm.state.value.phase)
+        assertEquals(listOf("late"), vm.state.value.titleHits.map { it.ref.sessionId.raw })
         assertEquals(false, vm.state.value.canLoadMore)
     }
 }

@@ -3,6 +3,9 @@ package io.github.eslamasabry.oc.feature.search
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
@@ -202,4 +205,19 @@ class SearchScreenTest {
         assertTrue(onAllNodesWithText("البحث في المحادثات").fetchSemanticsNodes().isNotEmpty())
         onNodeWithText("عمليات البحث الأخيرة").assertExists()
     }
+
+    @Test
+    fun `B-PROTO-020 no match on this page still offers Load more while the server has more, and Try again after a failure`() =
+        runComposeUiTest {
+            val actions = Actions()
+            var state by mutableStateOf(
+                SearchUi(query = "plan", servers = servers, server = home, phase = SearchPhase.NoMatch, canLoadMore = true)
+            )
+            setContent { Screen(state, actions) }
+            onNodeWithText("Load more conversations").performClick()
+            state = state.copy(loadMoreFailed = true)
+            onNodeWithText("Could not load more conversations").assertExists()
+            onNodeWithText("Try again").performClick()
+            assertEquals(listOf("more", "more"), actions.calls)
+        }
 }

@@ -163,7 +163,7 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFiel
                             retry = KitLineAction(stringResource(Res.string.p12SearchTryAgain), actions::retry),
                         )
                     }
-                SearchPhase.NoMatch ->
+                SearchPhase.NoMatch -> {
                     item(key = "no-match") {
                         KitSearchNoMatch(
                             query = state.query,
@@ -171,6 +171,9 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFiel
                             what = stringResource(Res.string.p12SearchConversationsWhat),
                         )
                     }
+                    // Nothing matched on the pages read so far, but the server has more: keep the way on.
+                    more(state, actions)
+                }
                 SearchPhase.Results -> results(state, actions)
             }
             if (state.phase == SearchPhase.Results || state.phase == SearchPhase.NoMatch || state.phase == SearchPhase.Searching) {
@@ -245,6 +248,15 @@ private fun LazyListScope.results(state: SearchUi, actions: SearchActions) {
         item(key = "titles-label") { KitSectionLabel(stringResource(Res.string.p12SearchTitles)) }
         items(state.titleHits, key = { "t/" + it.key }) { HitRow(it, actions) }
     }
+    more(state, actions)
+    if (state.contentHits.isNotEmpty()) {
+        item(key = "inside-label") { KitSectionLabel(stringResource(Res.string.p12SearchInsideSection)) }
+        items(state.contentHits, key = { "c/" + it.key }) { HitRow(it, actions) }
+    }
+}
+
+/** Load more while the server has another page, or Try again after that page failed. */
+private fun LazyListScope.more(state: SearchUi, actions: SearchActions) {
     if (state.loadMoreFailed) {
         item(key = "more-failed") {
             KitNotice(
@@ -261,10 +273,6 @@ private fun LazyListScope.results(state: SearchUi, actions: SearchActions) {
                 working = state.loadingMore,
             )
         }
-    }
-    if (state.contentHits.isNotEmpty()) {
-        item(key = "inside-label") { KitSectionLabel(stringResource(Res.string.p12SearchInsideSection)) }
-        items(state.contentHits, key = { "c/" + it.key }) { HitRow(it, actions) }
     }
 }
 

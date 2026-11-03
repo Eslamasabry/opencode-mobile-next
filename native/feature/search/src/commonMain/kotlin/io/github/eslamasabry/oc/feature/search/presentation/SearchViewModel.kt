@@ -104,11 +104,14 @@ public class SearchViewModel(
                 is Outcome.Ok -> {
                     cursor = page.value.next
                     val more = hits(server, page.value, s.query)
+                    // A page can be empty (all archived) yet keep a cursor: the phase follows what has arrived.
                     local.update {
-                        it.copy(
-                            titleHits = (it.titleHits + more).distinctBy { hit -> hit.key }.toImmutableList(),
-                            loadingMore = false,
-                            canLoadMore = page.value.next != null,
+                        settle(
+                            it.copy(
+                                titleHits = (it.titleHits + more).distinctBy { hit -> hit.key }.toImmutableList(),
+                                loadingMore = false,
+                                canLoadMore = page.value.next != null,
+                            )
                         )
                     }
                 }
