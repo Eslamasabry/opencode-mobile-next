@@ -16,12 +16,33 @@ import kotlinx.serialization.json.JsonPrimitive
 public object CardJson {
     private val parser = Json { isLenient = false }
 
-    /** kotlinx JSON → tree. A number with a point or exponent is a double, as Dart's parser reads it. */
-    public fun tree(element: JsonElement): Any? =
-        when (element) {
+    /** Deeper than this a general tree is refused (IllegalArgumentException), never a StackOverflowError (B-CHAT-029). */
+    public const val MAX_TREE_DEPTH: Int = 256
+
+    /**
+     * kotlinx JSON → tree. A number with a point or exponent is a double, as Dart's parser reads it. Nesting deeper
+     * than [MAX_TREE_DEPTH] throws IllegalArgumentException.
+     */
+    public fun tree(element: JsonElement): Any? = build(element, 1, cut = false)
+
+    /** Stands in for a value below the validator's depth limit; never JSON, never read (see [validatorTree]). */
+    internal object Cut
+
+    /**
+     * The tree for [CardValidator.bounded]: Dart `_bounded` refuses the first value deeper than
+     * [CardValidator.MAX_DEPTH] before looking at it, so such a value is replaced by [Cut] instead of being copied.
+     * The validator then gives exactly Flutter's refusal (B-CHAT-029) and a hostile nesting cannot exhaust the stack.
+     */
+    internal fun validatorTree(element: JsonElement): Any? = build(element, 1, cut = true)
+
+    private fun build(element: JsonElement, depth: Int, cut: Boolean): Any? {
+        if (cut && depth > CardValidator.MAX_DEPTH) return Cut
+        require(depth <= MAX_TREE_DEPTH) { "JSON nested too deeply" }
+        return when (element) {
             JsonNull -> null
-            is JsonObject -> LinkedHashMap<String, Any?>().also { map -> element.forEach { (k, v) -> map[k] = tree(v) } }
-            is JsonArray -> element.map(::tree)
+            is JsonObject ->
+                LinkedHashMap<String, Any?>().also { map -> element.forEach { (k, v) -> map[k] = build(v, depth + 1, cut) } }
+            is JsonArray -> element.map { build(it, depth + 1, cut) }
             is JsonPrimitive ->
                 when {
                     element.isString -> element.content
@@ -30,6 +51,7 @@ public object CardJson {
                     else -> number(element.content)
                 }
         }
+    }
 
     private fun number(raw: String): Any {
         val integral = raw.none { it == '.' || it == 'e' || it == 'E' }
@@ -39,6 +61,9 @@ public object CardJson {
 
     /** Parses JSON text into the tree; throws on malformed text (callers treat that as "not a receipt"). */
     public fun parse(text: String): Any? = tree(parser.parseToJsonElement(text))
+
+    /** [parse] for text the validator reads next (answer lines): deep values are cut, as in [validatorTree]. */
+    internal fun parseForValidator(text: String): Any? = validatorTree(parser.parseToJsonElement(text))
 
     /** Dart `jsonEncode`, compact. */
     public fun encode(value: Any?): String = StringBuilder().also { write(it, value) }.toString()

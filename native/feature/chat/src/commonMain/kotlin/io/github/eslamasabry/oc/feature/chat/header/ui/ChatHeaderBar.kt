@@ -11,9 +11,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ContextLevel
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderActions
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderUi
-import io.github.eslamasabry.oc.feature.chat.header.presentation.ContextLevel
 import io.github.eslamasabry.oc.feature.chat.header.presentation.DetailsUi
 import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderAction
 import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderConfirm

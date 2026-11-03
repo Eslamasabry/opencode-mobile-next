@@ -12,6 +12,9 @@ internal object CardValidator {
 
     const val MAX_SAFE: Long = 9007199254740991L
 
+    /** Dart `_bounded`: the first value deeper than this is too large, whatever it is (checked before its type). */
+    const val MAX_DEPTH: Int = 8
+
     /** Unicode scalar count; an unpaired surrogate fails (Dart `_scalars`). */
     fun scalars(value: String): Int {
         var count = 0
@@ -43,7 +46,7 @@ internal object CardValidator {
             if (stringBytes > 32768) fail(CardProblem.TooLarge)
         }
         fun visit(x: Any?, depth: Int) {
-            if (++count > 4096 || depth > 8) fail(CardProblem.TooLarge)
+            if (++count > 4096 || depth > MAX_DEPTH) fail(CardProblem.TooLarge)
             when (x) {
                 null, is Boolean -> return
                 is String -> {

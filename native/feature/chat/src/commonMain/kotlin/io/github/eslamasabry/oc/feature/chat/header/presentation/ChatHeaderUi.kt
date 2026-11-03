@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.header.presentation
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ContextLevel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -67,9 +68,6 @@ public data class DetailsUi(
     val contextLevel: ContextLevel?,
     val totalTokens: Long?,
 )
-
-/** B-CHAT-057: under 70 % calm, 70–94 % warning, 95 %+ full. */
-public enum class ContextLevel { Calm, Warning, Full }
 
 public data class ContinueChoice(val providerId: String, val modelId: String, val label: String, val current: Boolean)
 

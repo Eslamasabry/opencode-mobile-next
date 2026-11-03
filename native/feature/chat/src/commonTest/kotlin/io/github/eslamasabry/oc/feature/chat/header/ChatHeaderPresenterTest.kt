@@ -6,13 +6,14 @@ import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ContextLevel
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.contextLevel
 import io.github.eslamasabry.oc.feature.chat.FakeChatWorld
 import io.github.eslamasabry.oc.feature.chat.Immediate
 import io.github.eslamasabry.oc.feature.chat.RecordingNavigator
 import io.github.eslamasabry.oc.feature.chat.block
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderPresenter
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ClipKind
-import io.github.eslamasabry.oc.feature.chat.header.presentation.ContextLevel
 import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderAction
 import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderConfirm
 import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderRules
@@ -128,6 +129,14 @@ class ChatHeaderPresenterTest {
         assertEquals(ContextLevel.Warning, HeaderRules.contextLevel(94))
         assertEquals(ContextLevel.Full, HeaderRules.contextLevel(95))
         assertEquals(100, HeaderRules.contextPercent(5000, 1000))
+    }
+
+    @Test
+    fun `B-CHAT-057 the header and the context ring read one level rule`() {
+        // P12-CHAT-GAPS: the header kept its own enum and thresholds; it now uses the turnfacts rule, so the two
+        // can never disagree on a percent.
+        for (percent in 0..100) assertEquals(contextLevel(percent / 100.0), HeaderRules.contextLevel(percent), "$percent %")
+        assertNull(HeaderRules.contextLevel(null))
     }
 
     @Test
