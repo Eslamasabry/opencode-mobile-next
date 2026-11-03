@@ -10,7 +10,7 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
-import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.feature.about.managespace.ManageSpaceFacts
 import io.github.eslamasabry.oc.feature.about.managespace.ManageSpacePort
 import java.io.File
@@ -31,7 +31,7 @@ interface BuildProjectEntryChatsGraph {
 class AndroidManageSpacePort(
     private val application: Application,
     private val dispatchers: AppDispatchers,
-    private val connections: ConnectionRegistry,
+    private val connections: ServerConnections,
 ) : ManageSpacePort {
     private val cacheRoots: List<File> get() = listOfNotNull(application.cacheDir, application.codeCacheDir, application.externalCacheDir)
 

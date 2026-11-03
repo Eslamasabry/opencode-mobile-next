@@ -79,6 +79,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.UpdateSettings
 import io.github.eslamasabry.oc.feature.settings.presentation.VoiceSettings
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.AboutRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import io.github.eslamasabry.oc.ui.routes.VoiceRoute
@@ -232,6 +233,7 @@ class AndroidSettingsHost(
             SettingsOutside.AndroidNotificationSettings -> openNotificationSettings()
             SettingsOutside.VoiceSetup -> nav.open(VoiceRoute.Settings)
             SettingsOutside.VoiceNotices -> application.view("$REPO/blob/master/THIRD_PARTY_NOTICES.md")
+            SettingsOutside.Tips -> nav.open(AboutRoute.Tips) // P12-BUILD-PROJECT-ENTRY-CHATS (B-NAV-074)
             else -> Unit // Absent rows: OPENS keeps them off screen.
         }
     }
@@ -299,6 +301,7 @@ class AndroidSettingsHost(
                 SettingsOutside.Servers, SettingsOutside.StarOnGitHub, SettingsOutside.WhatsNew,
                 SettingsOutside.ReleaseNotes, SettingsOutside.PrivacyPolicy, SettingsOutside.ShareApp,
                 SettingsOutside.AndroidNotificationSettings, SettingsOutside.VoiceSetup, SettingsOutside.VoiceNotices,
+                SettingsOutside.Tips,
             )
     }
 }
