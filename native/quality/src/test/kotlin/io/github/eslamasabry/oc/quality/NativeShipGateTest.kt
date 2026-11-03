@@ -97,8 +97,19 @@ class NativeShipGateTest {
         if (file.isFile) assertEquals(sums[aar], sha256(file), "run tools/vendor/fetch.sh again: the AAR does not match its pin")
     }
 
-    private fun sha256(file: File): String =
-        MessageDigest.getInstance("SHA-256").digest(file.readBytes()).joinToString("") { "%02x".format(it) }
+    // Streamed: the 47 MB AAR read whole ran the shared :quality:test JVM out of heap after the Compose UI tests.
+    private fun sha256(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().use { input ->
+            val buffer = ByteArray(64 * 1024)
+            while (true) {
+                val read = input.read(buffer)
+                if (read < 0) break
+                digest.update(buffer, 0, read)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
+    }
 
     /** The smallest p_align of a 64-bit little-endian ELF's PT_LOAD segments; null when it is not one. */
     private fun minLoadAlign(b: ByteArray): Long? {
