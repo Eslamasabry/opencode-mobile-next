@@ -2,7 +2,7 @@
 // Platform-neutral Kotlin over ports: the space budget, the provider-name reader, the private archive importer with
 // its in-directory receipt, the Termux transport (scripts + authenticated loopback receiver), the controller with its
 // journal, the profile switch, the owner and the page presenter. The Termux RUN_COMMAND bridge, the profile store and
-// the preferences file are ports the app binds. Catalog rows B-LINUX-233..238 and B-SEC-177. See README.md.
+// the preferences file are ports the app binds. Catalog rows B-LINUX-233..238 and B-SEC-177.
 plugins { id("oc.android.library") }
 
 android {
