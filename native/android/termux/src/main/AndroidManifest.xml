@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- :android:termux declares nothing yet: the RUN_COMMAND permission, the com.termux <queries> entry and
+     TermuxResultService stay in :androidApp until the bridge moves here (README.md). -->
+<manifest />
