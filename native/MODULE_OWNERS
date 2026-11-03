@@ -83,3 +83,4 @@
 :engine:linuxtools	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
 :engine:lifecycle	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
 :engine:setupscripts	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
+:feature:phonesetup	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12

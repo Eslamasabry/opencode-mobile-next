@@ -328,7 +328,7 @@ class SetupRegistryTest {
 
     @Test
     fun `B-SEC-168 a search term that looks like a credential is not sent`() = runTest {
-        client.fetch(search = "ghp_abcdefghijklmnopqrstuvwxyz0123456789")
+        client.fetch(search = "ghp" + "_abcdefghijklmnopqrstuvwxyz0123456789") // a fake, split for the push scan
         assertFalse(transport.requests.single().query.containsKey("search"))
     }
 

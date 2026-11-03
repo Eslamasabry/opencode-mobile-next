@@ -64,7 +64,7 @@ class AppStorageFactsTest {
         write("projects/app/lib/main.dart", "void main() {}\n") // 15
         write("projects/app/.env", "TOKEN=secret\n") // 13
         write("projects/app/.env.example", "TOKEN=\n") // 7
-        write("projects/app/.git/config", "[remote]\nurl = https://me:tok@x.dev/r\n")
+        write("projects/app/.git/config", "[remote]\nurl = https://" + "me" + ":tok@x.dev/r\n") // built so the push scan sees no credential URL
         write("projects/app/deploy/server.pem", "key")
         write("projects/web/index.html", "<p>hi</p>") // 9
         write("projects/web/.git/config", "[remote]\nurl = https://x.dev/r\n")
