@@ -20,6 +20,7 @@
         android:label="@string/app_label_preview"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
+        android:manageSpaceActivity=".ManageSpaceActivity"
         android:theme="@android:style/Theme.Material.NoActionBar">
         <activity
             android:name=".MainActivity"
@@ -41,6 +42,13 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
+        <!-- B-ANDR-035 (P12-BUILD-PROJECT-ENTRY-CHATS): Settings › Apps › Clear storage opens this guard page first
+             (what clearing deletes, cache only, Delete everything after a confirm). Exported for Settings; it reads
+             no extras. -->
+        <activity
+            android:name=".ManageSpaceActivity"
+            android:exported="true"
+            android:excludeFromRecents="true" />
         <!-- Notification buttons (P12-PLATFORM); frozen Flutter FQCNs. Tiles, widgets and the update receiver merge
              from :android:tiles and :android:widgets. -->
         <receiver

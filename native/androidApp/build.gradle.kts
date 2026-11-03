@@ -117,6 +117,8 @@ dependencies {
             ":android:voice",
             ":feature:voice",
             ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its native libraries)
+            ":engine:project", // P12-BUILD-PROJECT-ENTRY-CHATS
+            ":feature:about", // P12-BUILD-PROJECT-ENTRY-CHATS: Clear storage guard page, Help › Tips, notices
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)
