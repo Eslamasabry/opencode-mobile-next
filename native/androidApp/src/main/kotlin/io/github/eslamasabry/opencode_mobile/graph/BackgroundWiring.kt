@@ -258,3 +258,32 @@ private class NotificationPermission(private val app: Application, private val a
         val POLL = 200.milliseconds
     }
 }
+
+/**
+ * Where a phone-setup notification tap lands (B-ANDR-050; Flutter `phone_setup_routes.dart`). The ongoing setup row
+ * (`phone_setup`) opens the setup's progress, which in this build is the Linux page that shows it; a tap while that
+ * page is already on top changes nothing. The result row (`phone_setup_done`) just brings the app back (null = land).
+ */
+internal object SetupTapRoutes {
+    fun routeFor(action: io.github.eslamasabry.oc.android.tiles.LaunchAction, top: io.github.eslamasabry.oc.ui.routes.AppRoute?):
+        SetupTap =
+        when (action) {
+            io.github.eslamasabry.oc.android.tiles.LaunchAction.PhoneSetup ->
+                if (top == io.github.eslamasabry.oc.ui.routes.LinuxRoute.Home) SetupTap.Stay
+                else SetupTap.Open(io.github.eslamasabry.oc.ui.routes.LinuxRoute.Home)
+            io.github.eslamasabry.oc.android.tiles.LaunchAction.PhoneSetupDone -> SetupTap.Land
+            else -> SetupTap.NotSetup
+        }
+}
+
+internal sealed interface SetupTap {
+    data class Open(val route: io.github.eslamasabry.oc.ui.routes.AppRoute) : SetupTap
+
+    /** The setup page is already on top. */
+    data object Stay : SetupTap
+
+    /** Bring the app back where it was going (Conversations). */
+    data object Land : SetupTap
+
+    data object NotSetup : SetupTap
+}
