@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
+import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.server.LaunchMode
@@ -113,6 +114,10 @@ internal object PhoneServerScripts {
     const val USERNAME = "opencode"
     const val PROJECTS_DIR = "/root/projects"
     const val PASSWORD_FILE = "/root/.oc-builtin/server.password"
+
+    /** Flutter `renewBuiltinPassword`: 32 random bytes, base64url, padding removed. */
+    fun newPassword(random: java.util.Random): String =
+        Base64.getUrlEncoder().withoutPadding().encodeToString(ByteArray(32).also(random::nextBytes))
 
     /** Flutter `BuiltinLinux._quote`. */
     fun quote(value: String): String = "'" + value.replace("'", "'\"'\"'") + "'"
@@ -371,7 +376,21 @@ class BuiltinRuntime internal constructor(
             override suspend fun confirmRecovery(expectedGeneration: Long): Outcome<Unit> = Outcome.Ok(Unit)
         }
 
-    private val starter = PhoneServerStarter(port, clock)
+    private val starter = PhoneServerStarter(port, clock, renewPassword = ::renewPassword)
+
+    /**
+     * B-LINUX-025: the phone server's password is made by the app, so when the Keystore lost it (a fresh install, or
+     * the migration's `renewedByOwner`) a new one is made — 32 random bytes, base64url without padding, as Flutter's
+     * `renewBuiltinPassword` — and saved under `pw.<id>` on the same profile before the start writes it into Ubuntu.
+     */
+    private suspend fun renewPassword(id: ProfileId): String? {
+        val loaded = profiles.profile(id) ?: return null
+        val password = PhoneServerScripts.newPassword(java.security.SecureRandom())
+        return when (profiles.upsert(loaded.profile, SecretEdit.Set(password))) {
+            is Outcome.Ok -> password
+            is Outcome.Failed -> null
+        }
+    }
     private val facts = MutableStateFlow(PhoneServerFacts())
 
     private fun readStatus(): RuntimeStatus {

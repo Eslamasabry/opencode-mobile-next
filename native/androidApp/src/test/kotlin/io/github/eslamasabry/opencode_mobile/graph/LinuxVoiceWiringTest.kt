@@ -129,4 +129,13 @@ class LinuxVoiceWiringTest {
         val details = (classifyRuntime(IllegalStateException("secret /root path")) as Failure.Runtime).details
         assertEquals("IllegalStateException", details?.text)
     }
+
+    @Test
+    fun `B-LINUX-025 a lost phone-server password is replaced by 32 random bytes in base64url`() {
+        val first = PhoneServerScripts.newPassword(java.util.Random(1))
+        val second = PhoneServerScripts.newPassword(java.util.Random(2))
+        assertEquals(43, first.length)
+        assertTrue(first.all { it.isLetterOrDigit() || it == '-' || it == '_' })
+        assertFalse(first == second)
+    }
 }
