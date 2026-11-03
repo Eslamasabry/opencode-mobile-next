@@ -17,6 +17,8 @@ kotlin {
         implementation(project(":engine:analytics"))
         // P12-SETTINGS: personal choices over the device Preferences facade (PreferencesChoices).
         implementation(project(":engine:settings"))
+        // B-ANDR-008: the exit notice reads the exit classifier's kinds.
+        implementation(project(":engine:diagnostics"))
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(

@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
+import io.github.eslamasabry.oc.feature.settings.presentation.LanguageCoverage
 import io.github.eslamasabry.oc.feature.settings.presentation.ReportUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -35,6 +36,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiRussian
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSpanish
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSystem
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
+import io.github.eslamasabry.oc.ui.words.res.languagePickerPartlyTranslated
 import io.github.eslamasabry.oc.ui.words.res.reportProblemCopyShort
 import io.github.eslamasabry.oc.ui.words.res.reportProblemPrivacy
 import org.jetbrains.compose.resources.stringResource
@@ -47,7 +49,15 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun ColumnScope.LanguageBody(language: AppLanguage, actions: SettingsActions) {
     KitChoiceList(
-        choices = AppLanguage.entries.map { KitChoice(it, languageWords(it)) },
+        // Every language is offered honestly: one not fully translated says how much reads in it (B-L10N-017).
+        choices =
+            AppLanguage.entries.map { language ->
+                KitChoice(
+                    language,
+                    languageWords(language),
+                    supporting = LanguageCoverage.partly(language)?.let { stringResource(Res.string.languagePickerPartlyTranslated, it) },
+                )
+            },
         selected = language,
         semanticsLabel = stringResource(Res.string.e7LocaleUiLanguage),
         modifier = Modifier.testTag("language-choices"),
