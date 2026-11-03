@@ -59,6 +59,6 @@ public object HostScripts {
                 "  --bind \"\$(tailscale ip -4)\" --port 8373 \\\n" +
                 "  --allow you@example.com"
 
-    /** `curl … | bash`, `wget … | sh` and friends: a download run unchecked. */
+    /** A curl or wget download fed straight into a shell: a download run unchecked. */
     public val PipedToShell: Regex = Regex("(curl|wget)\\b[^\\n|]*\\|\\s*(sudo\\s+)?(ba|z|da)?sh\\b")
 }
