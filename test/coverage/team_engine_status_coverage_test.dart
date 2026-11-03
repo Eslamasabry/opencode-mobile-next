@@ -33,7 +33,7 @@ void main() {
 
   test('every field the engine reports has a decision', () {
     final status = _fields(
-      'lib/builtin/builtin_linux.dart',
+      'lib/builtin/builtin_linux_types.dart',
       'factory BuiltinPhoneEngineStatus.fromMap',
       'final String profileId;',
       RegExp(r"map\['(\w+)'\]"),
