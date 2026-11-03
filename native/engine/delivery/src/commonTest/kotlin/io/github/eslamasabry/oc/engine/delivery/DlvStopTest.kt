@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 
 class DlvStopTest {
     @Test
-    fun `B-AGENT-243 DLV-6 each on-wire send retains its own Stop obligation`() = runTest {
+    fun `09-4_4 DLV-6 each on-wire send retains its own Stop obligation`() = runTest {
         for (firstFails in listOf(false, true)) {
             val w = World(Disk(), this)
             val answers = listOf(CompletableDeferred<Unit>(), CompletableDeferred<Unit>())

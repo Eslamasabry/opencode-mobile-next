@@ -40,7 +40,9 @@ public object ModelPicker {
             )
             .forEach { list ->
                 val name = list.first().providerName.ifEmpty { list.first().providerId }
-                out += ModelSection(name, list.sortedBy { it.label.lowercase() }.map(::row))
+                // B-NAV-034: the current model leads its provider's group, so it is on screen when the picker opens.
+                val sorted = list.sortedWith(compareBy<ComposerModel>({ !row(it).current }, { it.label.lowercase() }))
+                out += ModelSection(name, sorted.map(::row))
             }
         return out
     }

@@ -514,7 +514,7 @@ class WorldComposerFilesModelsTest {
         }
 
     @Test
-    fun `B-STATE-103 a file-only unconfirmed send never settles on a blank row or duplicates`() =
+    fun `09-4_6 a file-only unconfirmed send never settles on a blank row or duplicates`() =
         runTest {
             val f = Fixture(this)
             f.base.admission = PromptAdmission.Uncertain
@@ -547,7 +547,7 @@ class WorldComposerFilesModelsTest {
     // ---- Draft attachment facts ----
 
     @Test
-    fun `B-STATE-104 replaceAttachments publishes the acknowledged snapshot and unsaved compares files`() =
+    fun `09-10_6 replaceAttachments publishes the acknowledged snapshot and unsaved compares files`() =
         runTest {
             val f = Fixture(this)
             f.open()

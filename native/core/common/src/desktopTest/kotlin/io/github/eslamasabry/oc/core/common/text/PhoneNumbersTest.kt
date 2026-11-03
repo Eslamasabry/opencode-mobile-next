@@ -16,7 +16,7 @@ class PhoneNumbersTest {
     }
 
     @Test
-    fun `B-L10N-012 the phone's number setting chooses the digits`() {
+    fun `06-12_1-8 the phone's number setting chooses the digits`() {
         assertEquals("1,234", withFormatLocale("en-US") { Numbers.format(1234) })
         assertEquals("١٬٢٣٤", withFormatLocale("ar-EG-u-nu-arab") { Numbers.format(1234) })
         assertEquals("1,234", withFormatLocale("ar-EG-u-nu-latn") { Numbers.format(1234) }.replace('٬', ','))

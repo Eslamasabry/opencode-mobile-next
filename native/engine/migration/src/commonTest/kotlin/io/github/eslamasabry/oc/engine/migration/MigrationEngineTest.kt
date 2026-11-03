@@ -203,7 +203,7 @@ class MigrationEngineTest {
     }
 
     @Test
-    fun `B-MIGR-009 the deferred-features notice is acknowledged once it was shown and no sheet is waiting`() = runTest {
+    fun `05-7_3 the deferred-features notice is acknowledged once it was shown and no sheet is waiting`() = runTest {
         val runner = FakeRunner()
         runner.onRun = {
             runner.progress.value = MigrationProgress.Open(firstNativeLaunch = true, deferred = setOf(DeferredFeature.AiTeam))

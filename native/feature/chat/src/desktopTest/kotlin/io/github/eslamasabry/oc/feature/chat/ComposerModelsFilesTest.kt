@@ -117,7 +117,7 @@ class ComposerModelsFilesTest {
     )
 
     @Test
-    fun `B-STATE-103 the model button names the server default until a verified model is chosen`() =
+    fun `09-10_3 the model button names the server default until a verified model is chosen`() =
         runComposeUiTest {
             // QA wave 4 B13: once the server confirmed the session uses its default (before that the chip claims nothing).
             setContent { Theme { BasicComposer(ui(models = ComposerModels(usesDefault = true)), Actions(), chrome) } }
@@ -126,7 +126,7 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `B-STATE-103 a chosen model appears on the button only from the published selection`() =
+    fun `09-10_3 a chosen model appears on the button only from the published selection`() =
         runComposeUiTest {
             val state =
                 mutableStateOf(ui(models = ComposerModels(choices = listOf(mini, big), selected = big)))
@@ -136,7 +136,7 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `B-STATE-103 the model sheet loads on open and a failed load offers plain-word retry`() =
+    fun `09-10_3 the model sheet loads on open and a failed load offers plain-word retry`() =
         runComposeUiTest {
             val actions = Actions()
             val state = mutableStateOf(ui())
@@ -155,7 +155,7 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `B-STATE-103 the model sheet shows loading and empty copy`() = runComposeUiTest {
+    fun `09-10_3 the model sheet shows loading and empty copy`() = runComposeUiTest {
         val actions = Actions()
         val state = mutableStateOf(ui(models = ComposerModels(loading = true)))
         setContent { Theme { KitSheetHost { BasicComposer(state.value, actions, chrome) } } }
@@ -167,7 +167,7 @@ class ComposerModelsFilesTest {
     }
 
     @Test
-    fun `B-STATE-103 a model choice closes the sheet only after the world verified it`() =
+    fun `09-10_3 a model choice closes the sheet only after the world verified it`() =
         runComposeUiTest {
             val actions = Actions().apply { selectResult = false }
             val state = mutableStateOf(ui(models = ComposerModels(choices = listOf(mini, big))))
@@ -184,7 +184,7 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `B-STATE-103 attached files show their names with an explicit remove control`() =
+    fun `09-10_6 attached files show their names with an explicit remove control`() =
         runComposeUiTest {
             val actions = Actions()
             val draft = DraftFacts(attachments = listOf(file("notes.txt"), file("more.txt")))
@@ -196,7 +196,7 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `B-STATE-103 attach is explained-disabled without a picker or when the chosen model refuses files`() =
+    fun `09-10_6 attach is explained-disabled without a picker or when the chosen model refuses files`() =
         runComposeUiTest {
             val actions = Actions()
             val state =
@@ -229,7 +229,7 @@ class ComposerModelsFilesTest {
         }
 
     @Test
-    fun `B-STATE-103 a running pick keeps Send off and files alone can send`() = runComposeUiTest {
+    fun `09-10_2 a running pick keeps Send off and files alone can send`() = runComposeUiTest {
         val actions = Actions()
         val state = mutableStateOf(ui(pickingFile = true))
         setContent { Theme { BasicComposer(state.value, actions, chrome) } }
@@ -241,7 +241,7 @@ class ComposerModelsFilesTest {
     }
 
     @Test
-    fun `B-STATE-103 attachment failures use plain words with dismiss and retry`() = runComposeUiTest {
+    fun `09-10_6 attachment failures use plain words with dismiss and retry`() = runComposeUiTest {
         val actions = Actions()
         val state =
             mutableStateOf(ui(attachmentFailure = Failure.Media(MediaProblem.AttachmentTooLarge)))
@@ -255,7 +255,7 @@ class ComposerModelsFilesTest {
     }
 
     @Test
-    fun `B-STATE-103 Arabic copy renders for the model control and the sheet title`() =
+    fun `09-10_3 Arabic copy renders for the model control and the sheet title`() =
         runComposeUiTest {
             val before = Locale.getDefault()
             Locale.setDefault(Locale.forLanguageTag("ar"))

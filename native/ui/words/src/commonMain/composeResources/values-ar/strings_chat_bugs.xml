@@ -3,7 +3,7 @@
 <resources>
     <string name="chatReplyFailedSignIn">لم يقبل مزوّد النموذج تسجيل الدخول. سجّل الدخول إلى هذا المزوّد مرة أخرى، أو اختر نموذجًا آخر.</string>
     <string name="chatReplyFailedModel">هذا النموذج غير متاح. اختر نموذجًا آخر وأرسل مرة أخرى.</string>
-    <string name="chatReplyFailedBusy">مزوّد النموذج مشغول أو نفدت حصته. انتظر قليلًا، أو اختر نموذجًا آخر.</string>
+    <string name="chatReplyFailedBusy">مزوّد النموذج مشغول الآن. انتظر قليلًا، أو اختر نموذجًا آخر.</string>
     <string name="chatReplyFailedOther">توقف الرد بسبب خطأ. أرسل مرة أخرى، أو اختر نموذجًا آخر.</string>
     <string name="chatReplyFailedDetails">التفاصيل</string>
     <string name="chatReplyFailedCopy">نسخ التفاصيل</string>

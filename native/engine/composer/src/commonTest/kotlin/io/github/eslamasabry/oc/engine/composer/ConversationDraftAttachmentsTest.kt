@@ -49,7 +49,7 @@ class ConversationDraftAttachmentsTest {
         ConversationRef(ProfileId(profile), SessionId("same"))
 
     @Test
-    fun `B-STATE-103 attach persists and a restart restores exact text and bytes without payload in metadata`() =
+    fun `B-STATE-016 attach persists and a restart restores exact text and bytes without payload in metadata`() =
         runTest {
             val note = dataAttachment("ملاحظة.txt", "Hello مرحبا 🌍")
             val handle = facade().open(ref())
@@ -73,7 +73,7 @@ class ConversationDraftAttachmentsTest {
         }
 
     @Test
-    fun `B-STATE-103 add and remove persist across restarts and collected payloads leave nothing behind`() =
+    fun `B-STATE-100 add and remove persist across restarts and collected payloads leave nothing behind`() =
         runTest {
             val first = dataAttachment("first.txt", "first bytes")
             val second = dataAttachment("second.txt", "second bytes")
@@ -99,7 +99,7 @@ class ConversationDraftAttachmentsTest {
         }
 
     @Test
-    fun `B-STATE-103 a missing payload blocks the session without overwriting metadata or bytes`() =
+    fun `B-STATE-101 a missing payload blocks the session without overwriting metadata or bytes`() =
         runTest {
             val handle = facade().open(ref())
             runCurrent()
@@ -127,7 +127,7 @@ class ConversationDraftAttachmentsTest {
         }
 
     @Test
-    fun `B-STATE-103 an older token never clears a same-text replacement carrying new files`() =
+    fun `B-STATE-101 an older token never clears a same-text replacement carrying new files`() =
         runTest {
             val handle = facade().open(ref())
             runCurrent()
@@ -150,7 +150,7 @@ class ConversationDraftAttachmentsTest {
         }
 
     @Test
-    fun `B-STATE-103 profile deletion fences a late file result and collects only owned payloads`() =
+    fun `B-STATE-100 profile deletion fences a late file result and collects only owned payloads`() =
         runTest {
             assertIs<Outcome.Ok<Unit>>(
                 store().save("beta", "same", "other profile", listOf(dataAttachment("other.txt", "x"))),
@@ -182,7 +182,7 @@ class ConversationDraftAttachmentsTest {
         }
 
     @Test
-    fun `B-STATE-103 a refused commit keeps chips unpublished and a retry commits them`() = runTest {
+    fun `B-STATE-101 a refused commit keeps chips unpublished and a retry commits them`() = runTest {
         val handle = facade().open(ref())
         runCurrent()
         handle.changed("with words")
@@ -207,7 +207,7 @@ class ConversationDraftAttachmentsTest {
     }
 
     @Test
-    fun `B-STATE-103 a file commit preserves newer text edits typed during its write`() = runTest {
+    fun `B-STATE-101 a file commit preserves newer text edits typed during its write`() = runTest {
         val gated = GatedPrefs(prefs)
         val handle = facade(store(gated)).open(ref())
         runCurrent()
@@ -232,7 +232,7 @@ class ConversationDraftAttachmentsTest {
     }
 
     @Test
-    fun `B-STATE-103 files-only submissions are captured without text and clear for the exact revision`() =
+    fun `B-STATE-100 files-only submissions are captured without text and clear for the exact revision`() =
         runTest {
             val handle = facade().open(ref())
             runCurrent()
@@ -251,7 +251,7 @@ class ConversationDraftAttachmentsTest {
         }
 
     @Test
-    fun `B-STATE-103 a vault refusal keeps the current chips and a flush recovers the session`() =
+    fun `B-STATE-101 a vault refusal keeps the current chips and a flush recovers the session`() =
         runTest {
             val handle = facade().open(ref())
             runCurrent()

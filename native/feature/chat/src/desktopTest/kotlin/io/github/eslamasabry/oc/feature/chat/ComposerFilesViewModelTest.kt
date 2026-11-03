@@ -81,7 +81,7 @@ class ComposerFilesViewModelTest {
     fun reset() = Dispatchers.resetMain()
 
     @Test
-    fun `B-STATE-103 a cancelled pick changes nothing`() = runTest {
+    fun `09-10_6 a cancelled pick changes nothing`() = runTest {
         val world = FilesWorld()
         val vm = BasicComposerViewModel(
             ComposerTarget("p1", "s1"),
@@ -98,7 +98,7 @@ class ComposerFilesViewModelTest {
     }
 
     @Test
-    fun `B-STATE-103 a picked file appends to the latest draft files, not the picker snapshot`() =
+    fun `09-10_6 a picked file appends to the latest draft files, not the picker snapshot`() =
         runTest {
             val world = FilesWorld()
             val vm = BasicComposerViewModel(
@@ -124,7 +124,7 @@ class ComposerFilesViewModelTest {
         }
 
     @Test
-    fun `B-STATE-103 a refused commit surfaces as an attachment failure the person can dismiss`() =
+    fun `09-10_6 a refused commit surfaces as an attachment failure the person can dismiss`() =
         runTest {
             val world =
                 FilesWorld().apply { replaceResult = Outcome.Failed(Failure.StorageRefused()) }
@@ -145,7 +145,7 @@ class ComposerFilesViewModelTest {
         }
 
     @Test
-    fun `B-STATE-103 a picker failure surfaces without touching the draft`() = runTest {
+    fun `09-10_6 a picker failure surfaces without touching the draft`() = runTest {
         val world = FilesWorld()
         val vm = BasicComposerViewModel(
             ComposerTarget("p1", "s1"),
@@ -167,7 +167,7 @@ class ComposerFilesViewModelTest {
     }
 
     @Test
-    fun `B-STATE-103 an unsettled draft fails closed with the picked file`() = runTest {
+    fun `09-10_6 an unsettled draft fails closed with the picked file`() = runTest {
         val world = FilesWorld()
         val vm = BasicComposerViewModel(
             ComposerTarget("p1", "s1"),
@@ -187,7 +187,7 @@ class ComposerFilesViewModelTest {
     }
 
     @Test
-    fun `B-STATE-103 removeAttachment commits the filtered list and guards the index`() = runTest {
+    fun `09-10_6 removeAttachment commits the filtered list and guards the index`() = runTest {
         val world = FilesWorld().apply {
             draft.update { it.copy(attachments = listOf(file("a.txt"), file("b.txt"))) }
         }
@@ -203,7 +203,7 @@ class ComposerFilesViewModelTest {
     }
 
     @Test
-    fun `B-STATE-103 selectModel reports the world answer and refuses a second in-flight choice`() =
+    fun `09-10_3 selectModel reports the world answer and refuses a second in-flight choice`() =
         runTest {
             val world = FilesWorld()
             val gate = CompletableDeferred<Unit>()
@@ -229,7 +229,7 @@ class ComposerFilesViewModelTest {
         }
 
     @Test
-    fun `B-STATE-103 send stays off while a pick runs and returns when it ends`() = runTest {
+    fun `09-10_2 send stays off while a pick runs and returns when it ends`() = runTest {
         val world = FilesWorld()
         val gate = CompletableDeferred<PromptAttachment?>()
         val vm = BasicComposerViewModel(
@@ -250,7 +250,7 @@ class ComposerFilesViewModelTest {
     }
 
     @Test
-    fun `B-STATE-103 files availability mirrors the platform picker set`() = runTest {
+    fun `09-10_6 files availability mirrors the platform picker set`() = runTest {
         val vm = BasicComposerViewModel(
             ComposerTarget("p1", "s1"),
             Worlds(FilesWorld()),
@@ -270,7 +270,7 @@ class ComposerFilesViewModelTest {
     }
 
     @Test
-    fun `B-STATE-103 without a session every file and model action is a safe no-op`() = runTest {
+    fun `09-10_6 without a session every file and model action is a safe no-op`() = runTest {
         val vm = BasicComposerViewModel(ComposerTarget("p1", null), Worlds(FilesWorld()), emptySet())
         vm.state.test {
             awaitItem()
@@ -286,7 +286,7 @@ class ComposerFilesViewModelTest {
     }
 
     @Test
-    fun `B-STATE-103 the send gate needs words or files and a settled draft`() {
+    fun `09-10_2 the send gate needs words or files and a settled draft`() {
         val settled = BasicComposerUi(available = true, sending = false, steers = false)
         assertFalse(SendGate.accepts(settled, ""))
         assertTrue(SendGate.accepts(settled, "hi"))

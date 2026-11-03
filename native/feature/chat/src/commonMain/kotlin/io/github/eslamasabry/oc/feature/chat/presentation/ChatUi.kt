@@ -282,4 +282,10 @@ public interface ChatActions {
     public fun checkPaths(paths: List<String>) {}
 
     public fun closePicture() {}
+
+    /**
+     * B-AGENT-024: a reply that stopped on a lost connection to the model's provider offers Continue: [words] (the
+     * localized "Continue") are sent alone, never the draft or its files (Flutter `_continueTruncated`).
+     */
+    public fun continueReply(words: String) {}
 }

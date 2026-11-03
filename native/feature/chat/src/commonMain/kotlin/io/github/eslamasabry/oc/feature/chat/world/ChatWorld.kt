@@ -160,6 +160,16 @@ public interface ChatWorld {
     /** Asks the server to stop the running reply. */
     public suspend fun stop(): Outcome<Unit>
 
+    /**
+     * [stop], saying whether the server was asked: `Ok(false)` is a tap the guard after a send ignored (it asked
+     * nothing), so Stop stays usable (Codex chat-bugs 2, Flutter's ignored-tap guard).
+     */
+    public suspend fun stopTurn(): Outcome<Boolean> =
+        when (val r = stop()) {
+            is Outcome.Ok -> Outcome.Ok(true)
+            is Outcome.Failed -> r
+        }
+
     /** Reads the conversation again (Try again on a failed load; after a delete). */
     public suspend fun reload(): Outcome<Unit>
 

@@ -306,6 +306,20 @@ class ChatPresenterTest {
     }
 
     @Test
+    fun `B10 Codex chat-bugs 2 a Stop the guard after a send ignored leaves Stop usable`() {
+        world.transcript.value = stateOf(*turn(1).toTypedArray(), run = RunFacts(busy = true))
+        val p = presenter()
+        world.stopAsked = false
+        p.stop()
+        assertEquals(LiveTurnUi(stopping = false), p.current().live, "nothing was asked: no Stopping… hold")
+        assertNull(p.current().status, "an ignored tap is not a failure")
+        world.stopAsked = true
+        p.stop()
+        assertEquals(listOf("stop", "stop"), world.calls, "the next tap still stops the turn")
+        assertEquals(LiveTurnUi(stopping = true), p.current().live)
+    }
+
+    @Test
     fun `09-4_6 pending bubbles show newest first and Try again resends only on the person's tap`() {
         world.pending.value = persistentListOf(PendingSend(1, "first", PendingState.Unconfirmed), PendingSend(2, "second", PendingState.Failed))
         val p = presenter()

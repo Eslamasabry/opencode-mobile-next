@@ -24,6 +24,19 @@ class StopTest {
         }
 
     @Test
+    fun `B10 Codex chat-bugs 2 an ignored Stop says it asked nothing, a heard one says it asked`() = runTest {
+        val w = World(Disk(), this)
+        val d = w.delivery()
+        d.send(req("hello"))
+        testScheduler.runCurrent()
+        assertEquals(Outcome.Ok(StopAnswer.Ignored), d.stopTurn(REF))
+        assertTrue(w.link.stops.isEmpty())
+        w.clock.advance(PromptDelivery.STOP_IGNORE_AFTER_SEND)
+        assertEquals(Outcome.Ok(StopAnswer.Asked), d.stopTurn(REF))
+        assertEquals(1, w.link.stops.size)
+    }
+
+    @Test
     fun `map CHAT-GENUI-40 Stop ignores taps for 800 ms after a send`() = runTest {
         val w = World(Disk(), this)
         val d = w.delivery()

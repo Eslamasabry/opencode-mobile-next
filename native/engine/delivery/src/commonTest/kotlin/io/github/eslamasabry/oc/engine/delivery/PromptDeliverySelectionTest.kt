@@ -95,7 +95,7 @@ class PromptDeliverySelectionTest {
         }
 
     @Test
-    fun `B-AGENT-243 DLV-11 Stop during the selection sends no prompt and restores the words and files once`() =
+    fun `09-4_4 DLV-11 Stop during the selection sends no prompt and restores the words and files once`() =
         runTest {
             val w = World(Disk(), this)
             val gate = CompletableDeferred<Unit>()

@@ -12,7 +12,7 @@ internal class SessionPages(val sessions: List<Session>, val complete: Boolean)
 /**
  * QA wave 1 B1: a server with more than one page of conversations is not a failure. The list follows `nextCursor`
  * (at most [maxPages] pages, never the same cursor twice); only a failed FIRST page fails the read. A later page
- * that fails, or more pages than [maxPages], keep what was read and say the list is incomplete only for a failure.
+ * that fails, more pages than [maxPages] or a repeated cursor keep what was read and say the list is incomplete.
  */
 internal suspend fun readSessionPages(server: ServerGateway, maxPages: Int = MAX_SESSION_PAGES): Outcome<SessionPages> {
     val first = when (val page = server.sessionPage()) {
@@ -38,6 +38,9 @@ internal suspend fun readSessionPages(server: ServerGateway, maxPages: Int = MAX
         for (s in next.items) if (seenIds.add(s.id)) all += s
         cursor = next.nextCursor
     }
+    // B-NAV-031: a cursor left over (the page cap, or a cursor the server repeated) means older conversations
+    // were not read; the feed says so (Flutter marks a page-capped feed incomplete).
+    if (cursor != null) complete = false
     return Outcome.Ok(SessionPages(all.toImmutableList(), complete))
 }
 

@@ -20,7 +20,7 @@ class NumberDigitsTest {
     @AfterTest fun unpin() { Numbers.pinned = null }
 
     @Test
-    fun `B-L10N-012 notification counts use the phone's digits, the same text the screens get`() {
+    fun `06-12_1-8 notification counts use the phone's digits, the same text the screens get`() {
         Numbers.pinned = arabicDigits
         assertEquals("٣ need you", words.plural(R.plurals.notify_group_need_you, 3, 3))
         assertEquals("${Numbers.format(1200)} need you", words.plural(R.plurals.notify_group_need_you, 1200, 1200))

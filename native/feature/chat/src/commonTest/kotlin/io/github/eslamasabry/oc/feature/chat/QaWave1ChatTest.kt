@@ -32,8 +32,21 @@ class QaWave1ChatTest {
         assertEquals(ReplyFailureKind.SignIn, ReplyFailureKind.of("Unauthorized"))
         assertEquals(ReplyFailureKind.Busy, ReplyFailureKind.of("429 Too Many Requests: rate limit reached"))
         assertEquals(ReplyFailureKind.Model, ReplyFailureKind.of("Model not found: glm-9"))
-        assertEquals(ReplyFailureKind.Other, ReplyFailureKind.of("socket hang up"))
+        // B-AGENT-024: a dropped connection is its own kind now (Flutter connectionLost), not "Other".
+        assertEquals(ReplyFailureKind.ConnectionLost, ReplyFailureKind.of("socket hang up"))
         assertEquals(ReplyFailureKind.Other, ReplyFailureKind.of(null))
+    }
+
+    @Test
+    fun `B-AGENT-024 no credit is not busy and a lost connection is its own kind, each with its own next step`() {
+        assertEquals(ReplyFailureKind.NoCredit, ReplyFailureKind.of("Insufficient credits for this request"))
+        assertEquals(ReplyFailureKind.NoCredit, ReplyFailureKind.of("402 Payment Required"))
+        assertEquals(ReplyFailureKind.NoCredit, ReplyFailureKind.of("You exceeded your current quota, please check your plan"))
+        assertEquals(ReplyFailureKind.Busy, ReplyFailureKind.of("overloaded_error: Overloaded"))
+        assertEquals(ReplyFailureKind.ConnectionLost, ReplyFailureKind.of("API Error: Request timed out."))
+        assertEquals(ReplyFailureKind.ConnectionLost, ReplyFailureKind.of("API Error: Connection error. (ECONNRESET)"))
+        assertEquals(ReplyFailureKind.Model, ReplyFailureKind.of("Free usage limit reached"))
+        assertEquals(ReplyFailureKind.Other, ReplyFailureKind.of("Agent a1 has no pending run"))
     }
 
     @Test

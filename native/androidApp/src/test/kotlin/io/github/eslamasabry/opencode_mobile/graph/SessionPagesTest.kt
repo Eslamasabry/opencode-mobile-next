@@ -41,15 +41,17 @@ class SessionPagesTest {
     }
 
     @Test
-    fun `B1 QA wave1 the page cap and a repeated cursor stop the read without a failure`() = runTest {
+    fun `B1 B-NAV-031 the page cap and a repeated cursor stop the read without a failure but say the list is incomplete`() = runTest {
         val looping = Paged(mapOf(null to page(0, 100, "c1"), "c1" to page(100, 200, "c1")))
         val read = assertIs<Outcome.Ok<SessionPages>>(readSessionPages(looping)).value
         assertEquals(200, read.sessions.size)
-        assertTrue(read.complete)
+        // Codex chat-bugs 4: a repeated cursor leaves conversations unread; the feed must not claim it is complete.
+        assertFalse(read.complete)
         val endless = Paged((0 until 20).associate { (if (it == 0) null else "c$it") to page(it * 100, it * 100 + 100, "c${it + 1}") })
         val capped = assertIs<Outcome.Ok<SessionPages>>(readSessionPages(endless, maxPages = 3)).value
         assertEquals(300, capped.sessions.size)
         assertEquals(3, endless.asked.size)
+        assertFalse(capped.complete, "a page-capped feed is incomplete (Flutter)")
     }
 
     @Test

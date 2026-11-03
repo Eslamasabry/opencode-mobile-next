@@ -33,7 +33,7 @@ class InlineAnnotatedTest {
     }
 
     @Test
-    fun `B-SEC-064 a link is handed to the caller, never opened by the kit`() {
+    fun `09-9_1 a link is handed to the caller, never opened by the kit`() {
         val inl = TestStreamingMarkdown.parseInlines("read [the docs](https://example.com/a?b=c) now")
         val s = inlineAnnotated(inl, style, sink)
         assertEquals("read the docs now", s.text)

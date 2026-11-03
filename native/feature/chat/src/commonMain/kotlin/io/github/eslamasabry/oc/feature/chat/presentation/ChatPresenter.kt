@@ -243,11 +243,13 @@ public class ChatPresenter(
         stopInFlight = true
         local.update { it.copy(stopping = true, actionFailure = null) }
         launcher.launch {
-            val result = world.stop()
+            val result = world.stopTurn()
             stopInFlight = false
             // B10: an accepted Stop keeps "Stopping…" until the server ends the turn; a refused one says why.
+            // Codex chat-bugs 2: a tap the guard after a send ignored asked nothing, so Stop stays usable.
             val failure = (result as? Outcome.Failed)?.failure
-            local.update { it.copy(stopping = failure == null && world.transcript.value.run.busy, actionFailure = failure) }
+            val asked = (result as? Outcome.Ok)?.value == true
+            local.update { it.copy(stopping = asked && world.transcript.value.run.busy, actionFailure = failure) }
         }
     }
 
@@ -255,6 +257,11 @@ public class ChatPresenter(
     internal fun settleStop() {
         if (!stopInFlight && local.value.stopping && !world.transcript.value.run.busy)
             local.update { it.copy(stopping = false) }
+    }
+
+    override fun continueReply(words: String) {
+        if (words.isBlank()) return
+        launcher.launch { world.sendAgain(words) }
     }
 
     override fun retrySend(localId: Long) {

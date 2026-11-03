@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.MessageId
+import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.OutgoingPrompt
@@ -165,6 +166,12 @@ public sealed interface SendOutcome {
 
 /** The local half of the live line: a send accepted for dispatch (09 §4.1 rule 1). */
 public data class LocalTurn(val sinceMs: Long, val sending: Boolean, val acceptedAtMs: Long? = null)
+
+/** Whether a Stop tap asked the server (Asked) or fell inside the guard after a send and asked nothing (Ignored). */
+public enum class StopAnswer {
+    Asked,
+    Ignored,
+}
 
 public enum class StopMode {
     Now,
@@ -673,17 +680,24 @@ public class PromptDelivery(
      * person is never "Failed" (B-AGENT-243).
      */
     public suspend fun stop(ref: ConversationRef, mode: StopMode = StopMode.Now): Outcome<Unit> =
+        withContext(queue.lane) { stopOnLane(ref, mode).map {} }
+
+    /**
+     * [stop], saying whether the tap was heard: [StopAnswer.Ignored] inside the 800 ms after a send asked the server
+     * nothing, so the caller keeps Stop usable (Flutter's ignored-tap guard, Codex chat-bugs 2).
+     */
+    public suspend fun stopTurn(ref: ConversationRef, mode: StopMode = StopMode.Now): Outcome<StopAnswer> =
         withContext(queue.lane) { stopOnLane(ref, mode) }
 
     private suspend fun stopOnLane(
         ref: ConversationRef,
         mode: StopMode = StopMode.Now,
-    ): Outcome<Unit> {
+    ): Outcome<StopAnswer> {
         if (mode == StopMode.AfterThisStep)
             return Failure.Unavailable(FeatureId("stopAfterStep")).failed()
         val now = clock.now().toEpochMilliseconds()
         lastSendAtMs[ref]?.let {
-            if (now - it < STOP_IGNORE_AFTER_SEND.inWholeMilliseconds) return Unit.ok()
+            if (now - it < STOP_IGNORE_AFTER_SEND.inWholeMilliseconds) return StopAnswer.Ignored.ok()
         }
         val calledOff = wire.withLock {
             val waiting =
@@ -713,7 +727,7 @@ public class PromptDelivery(
                     )
                 }
         }
-        return stopNow(ref)
+        return stopNow(ref).map { StopAnswer.Asked }
     }
 
     private suspend fun stopNow(ref: ConversationRef): Outcome<Unit> {

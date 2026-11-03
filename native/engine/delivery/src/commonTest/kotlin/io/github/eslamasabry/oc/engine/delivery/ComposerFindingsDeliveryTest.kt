@@ -62,7 +62,7 @@ class ComposerFindingsDeliveryTest {
         }
 
     @Test
-    fun `B-PROTO-028 finding 2 a failed transport never mutates the session model`() = runTest {
+    fun `09-10_3 finding 2 a failed transport never mutates the session model`() = runTest {
         val w = World(Disk(), this)
         w.link.transport = { Failure.Network(NetworkWhy.Offline).failed() }
         val d = w.delivery()
