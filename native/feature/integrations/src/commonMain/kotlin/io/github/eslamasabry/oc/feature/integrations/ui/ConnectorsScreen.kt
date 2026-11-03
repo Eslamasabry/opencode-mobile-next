@@ -21,7 +21,9 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -30,6 +32,8 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.intaBrowseDetail
+import io.github.eslamasabry.oc.ui.words.res.intaBrowseTitle
 import io.github.eslamasabry.oc.ui.words.res.intaConnectorsEmpty
 import io.github.eslamasabry.oc.ui.words.res.intaConnectorsEmptyBody
 import io.github.eslamasabry.oc.ui.words.res.intaConnectorsFailed
@@ -146,6 +150,19 @@ public fun ConnectorsScreen(state: ConnectorsUi, actions: ConnectorsActions) {
                         )
                     }
                 ConnectorsPhase.Ready -> Unit
+            }
+            if (state.catalogueOffered) {
+                item(key = "catalogue") {
+                    KitRowGroup {
+                        KitRow(
+                            title = stringResource(Res.string.intaBrowseTitle),
+                            supporting = stringResource(Res.string.intaBrowseDetail),
+                            trailing = KitRowTrailing.Chevron,
+                            supportingMaxLines = 2,
+                            onClick = actions::openCatalogue,
+                        )
+                    }
+                }
             }
             if (state.rows.isNotEmpty()) {
                 item(key = "rows") {

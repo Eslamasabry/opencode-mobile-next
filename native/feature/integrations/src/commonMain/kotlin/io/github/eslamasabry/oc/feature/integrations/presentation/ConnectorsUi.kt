@@ -53,6 +53,10 @@ public data class ConnectorsUi(
     val serverName: String?
         get() = servers.firstOrNull { it.id == server }?.name
 
+    /** The catalogue row shows wherever this server's connectors can be read (not before a server, not unsupported). */
+    val catalogueOffered: Boolean
+        get() = server != null && phase != ConnectorsPhase.NoServer && phase != ConnectorsPhase.Unsupported
+
     public companion object {
         /** Running connectors first, then the rest, each by name (the catalogue's "on first" order, B-AGENT-212). */
         public fun rows(list: List<McpServerInfo>, busy: Set<String> = emptySet()): ImmutableList<ConnectorRow> =
@@ -75,4 +79,7 @@ public interface ConnectorsActions {
     public fun dismissProblem()
 
     public fun openServers()
+
+    /** "Browse the catalogue": the public MCP registry as switches for this server. */
+    public fun openCatalogue()
 }

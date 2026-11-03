@@ -9,7 +9,9 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import io.github.eslamasabry.oc.feature.integrations.presentation.CatalogueViewModel
 import io.github.eslamasabry.oc.feature.integrations.presentation.ConnectorsViewModel
+import io.github.eslamasabry.oc.feature.integrations.ui.CatalogueScreen
 import io.github.eslamasabry.oc.feature.integrations.ui.ConnectorsScreen
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.IntegrationsRoute
@@ -23,6 +25,11 @@ public class IntegrationsEntries : EntryInstaller {
             val vm = assistedMetroViewModel<ConnectorsViewModel, ConnectorsViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
             ConnectorsScreen(state, vm)
+        }
+        entry<IntegrationsRoute.Catalogue> { route ->
+            val vm = assistedMetroViewModel<CatalogueViewModel, CatalogueViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            CatalogueScreen(state, vm)
         }
     }
 }

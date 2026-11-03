@@ -61,6 +61,8 @@ class ConnectorsScreenTest {
         override fun dismissProblem() { calls += "dismiss" }
 
         override fun openServers() { calls += "servers" }
+
+        override fun openCatalogue() { calls += "catalogue" }
     }
 
     @Composable
@@ -100,6 +102,21 @@ class ConnectorsScreenTest {
         onNodeWithText("Needs sign-in on the computer").assertExists()
         onNodeWithText("files").performClick()
         assertEquals(listOf("toggle files true"), actions.calls)
+    }
+
+    @Test
+    fun `B-AGENT-212 the Connectors page offers Browse the catalogue, which opens it`() = runComposeUiTest {
+        val actions = Actions()
+        setContent { Screen(ready(), actions) }
+        onNodeWithText("Servers from the public MCP registry, turned on with a switch").assertExists()
+        onNodeWithText("Browse the catalogue").performClick()
+        assertEquals(listOf("catalogue"), actions.calls)
+    }
+
+    @Test
+    fun `B-AGENT-212 no catalogue row before a server is connected`() = runComposeUiTest {
+        setContent { Screen(ConnectorsUi(phase = ConnectorsPhase.NoServer), Actions()) }
+        onNodeWithText("Browse the catalogue").assertDoesNotExist()
     }
 
     @Test

@@ -33,6 +33,8 @@ public class ConnectorsViewModel(
 
     override fun openServers(): Unit = nav.open(ServersRoute.Home)
 
+    override fun openCatalogue(): Unit = nav.open(IntegrationsRoute.Catalogue(state.value.server))
+
     override fun refresh(): Unit = presenter.refresh()
 
     override fun chooseServer(id: ProfileId): Unit = presenter.chooseServer(id)
