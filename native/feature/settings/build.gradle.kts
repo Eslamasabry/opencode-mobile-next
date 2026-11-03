@@ -36,6 +36,8 @@ tasks.withType<Test>().configureEach {
         "oc.goldens.record",
         providers.gradleProperty("oc.recordGoldens").orElse("false").get(),
     )
+    // UI-PARITY captures (ParityCapture): `-Poc.parityOut=<dir>` writes one PNG per screen state and frame.
+    systemProperty("oc.parity.out", providers.gradleProperty("oc.parityOut").orElse("").get())
 }
 
 // Keep the Linux desktop golden fallback identical to the recording environment.
