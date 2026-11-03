@@ -1253,9 +1253,11 @@ internal class GraphChatWorld(
             // The engine calls off waiting sends and records the person's Stop, then interrupts.
             val stopped = it.stopTurn(ref)
             // Codex chat-bugs 2: a tap inside the guard after a send asked nothing; Stop stays usable.
-            if (stopped is Outcome.Ok) return Outcome.Ok(stopped.value == StopAnswer.Asked)
-            // B10: a stale fence there asked the server nothing; the running turn is still owed its interrupt.
-            if (stopped !is Outcome.Failed || stopped.failure != STALE || currentAttached() !== a) return stopped
+            when (stopped) {
+                is Outcome.Ok -> return Outcome.Ok(stopped.value == StopAnswer.Asked)
+                // B10: a stale fence there asked the server nothing; the running turn is still owed its interrupt.
+                is Outcome.Failed -> if (stopped.failure != STALE || currentAttached() !== a) return stopped
+            }
         }
         return when (val r = a.gateway.stop(sid)) {
             is Outcome.Ok -> Outcome.Ok(true)
