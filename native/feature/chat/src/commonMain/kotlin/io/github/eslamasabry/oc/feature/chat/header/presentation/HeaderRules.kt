@@ -5,6 +5,8 @@ import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.ThoughtRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ContextLevel
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.contextLevel as levelOfFraction
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -26,13 +28,8 @@ public object HeaderRules {
         return ((tokens * 100) / limit).coerceIn(0, 100).toInt()
     }
 
-    public fun contextLevel(percent: Int?): ContextLevel? =
-        when {
-            percent == null -> null
-            percent >= 95 -> ContextLevel.Full
-            percent >= 70 -> ContextLevel.Warning
-            else -> ContextLevel.Calm
-        }
+    /** B-CHAT-057: the whole percent's level, by the one rule in `turnfacts` (70 % warning, 95 % full). */
+    public fun contextLevel(percent: Int?): ContextLevel? = percent?.let { levelOfFraction(it / 100.0) }
 
     /**
      * The ⋯ menu (Flutter `sessionMenuItems`): Go to (Find, Details), then Do (Share or Stop sharing, Fork, Rename,
