@@ -647,6 +647,14 @@ public class PaseoGateway(
                 requireProviderAvailable(runtime)
                 checkLocation(scope, epoch)
                 if (model != null && model.providerId != runtime) paseoFail(PaseoFailureKind.Unavailable)
+                // B-AGENT-144: a newly created/live session continues without restoration proof. A reopened ACP row
+                // (or one whose persistence handle is gone) needs an explicit, acknowledged new chat: the host could
+                // otherwise fall back to a fresh native session behind this id and lose the context silently.
+                val agent = agents[sessionId] ?: paseoFail(PaseoFailureKind.Unavailable)
+                val continuation =
+                    paseoHostAgentContinuation(sessionId, agent, live = sessionId in liveAgentSessions || daemonHolds(agent))
+                if (continuation.requiresNewChat) paseoFail(PaseoFailureKind.NewChatRequired)
+                checkLocation(scope, epoch)
                 applySelection(sessionId, model, prompt.agent, variant)
                 val realId = real(sessionId)
                 transport.request(
