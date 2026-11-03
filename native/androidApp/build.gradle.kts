@@ -88,6 +88,8 @@ dependencies {
             ":feature:search",
             ":feature:usage",
             ":feature:projects",
+            ":engine:review",
+            ":feature:review",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

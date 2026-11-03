@@ -70,10 +70,12 @@ fun turn(n: Int, ask: String = "ask $n", answer: String = "answer $n", failed: B
 
 class RecordingNavigator : AppNavigator {
     val calls = mutableListOf<String>()
+    val opened = mutableListOf<AppRoute>()
     override val top: StateFlow<AppRoute?> = MutableStateFlow(null)
 
     override fun open(route: AppRoute) {
         calls += "open"
+        opened += route
     }
 
     override fun openChat(ref: ConversationRef, focusComposer: Boolean) {

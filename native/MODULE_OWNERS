@@ -44,6 +44,7 @@
 :engine:media	S	media-lead	slice-3
 :engine:requests	S	chat-lead	slice-2
 :engine:voice	S	media-lead	slice-4
+:engine:review	S	chat-lead (P12-REVIEW)	slice-4
 :feature:agents	F	S3-AGENTSUI (S3-TERMMIN sign-in)	slice-3
 :feature:chat-composer	F	(slice brief names the agent)	slice-3
 :feature:onboarding	F	(slice brief names the agent)	slice-2
@@ -74,3 +75,4 @@
 :feature:usage	F	P12-SEARCH-USAGE	slice-5
 :engine:usage	S	P12-SEARCH-USAGE (calendar for :feature:usage)	slice-5
 :feature:projects	F	P12-PROJECTS	slice-5
+:feature:review	F	(slice brief names the agent)	slice-4

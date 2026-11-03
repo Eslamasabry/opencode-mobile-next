@@ -40,6 +40,7 @@ An unverified `p12v/projects` merge was in progress at hand-over; it was aborted
 | 15 | search (`p12v/search`, P12-SEARCH-USAGE) | `57874639b` | (this) | Conflicts: MODULE_OWNERS, androidApp deps, ServersUi/ServersViewModel (agents, pairing, schedules + `openUsage`, union); BasicComposerHost, ChatWorldReviewTest (HEAD). Compile green; `:engine:usage`, `:feature:chat`, `:feature:chats`, `:feature:search`, `:feature:servers`, `:feature:usage`, `:protocol:oc2`, `:ui:routes`, `:ui:words`, `:androidApp:testPreviewDebugUnitTest` green; `:quality:test` only the pre-existing P3 timeout |
 | 16 | settings follow-up (`p12v/settings`) | `6325290ef` | (this) | One verifier commit on top of the already-merged P12-SETTINGS. Conflict: androidApp `compose.resources` (already `implementation` since #4; one line, both reasons). Compile green; `:androidApp:testPreviewDebugUnitTest` green; `:quality:test` only the pre-existing P3 timeout |
 | 17 | projects (`p12v/projects`) | `c88ba2f76` | (this) | (Its unverified merge, in progress at hand-over, was aborted; this is the verified branch.) Conflicts: MODULE_OWNERS, androidApp deps, ChatsUi/ChatsViewModel (search's `openSearch` + projects' `openProjects`), ChatsScreen (both "Search all" and "Projects" buttons, union). Compile green; `:feature:chats`, `:feature:projects`, `:ui:routes`, `:ui:words`, `:androidApp:testPreviewDebugUnitTest` green; `:quality:test` only the pre-existing P3 timeout |
+| 18 | review (`p12v/review`) | `aab260bb3` | (this) | **Integration decision:** chat-feel and review both added "Undo from here". P12-REVIEW owns it (staged + one-step, its own confirm; chat-feel lists staged undo review as a non-goal), so the message action opens `ReviewRoute.UndoFromHere`; one capability name `undo` (`sessionRevert`), no longer gated on the chat-feel platform side. Review's reply action "Changes" joins chat-feel's menu (Copy, Share, Select text, Edit and resend, Send again, Fork, Changes, Undo from here, Delete), its bar action joins the shared bar actions. ChatFeelPresenterTest updated for both (B-KIT-051 reply menu, B-CHAT-120 now asserts the route and that nothing is undone from the chat); `RecordingNavigator` records routes. Also MODULE_OWNERS, androidApp deps (union), WorldComposerFilesModelsTest (HEAD). Compile green; `:engine:review`, `:feature:chat` (200), `:feature:review`, `:ui:routes`, `:ui:words`, `:androidApp:testPreviewDebugUnitTest` green; `:quality:test` only the pre-existing P3 timeout |
 
 ## Known
 
@@ -54,6 +55,12 @@ An unverified `p12v/projects` merge was in progress at hand-over; it was aborted
 - `androidApp` `FilesWiringTest` B-MEDIA-034 (P12-FILES) is flaky under a loaded parallel run: after
   `server.close()` HttpURLConnection can reuse a kept-alive connection and get a 200 instead of the expected
   `IOException`. It passes alone (twice). Owner fix: `Connection: close` on the test's requests.
+- Follow-ups for owners (integration left them in place):
+  - P12-CHAT-FEEL's inline undo (`ChatConfirm.UndoFrom`, `confirmUndo`, `world.revertFrom`) is unreachable since #18
+    routes Undo from here to P12-REVIEW's page; remove it or fold it into the review's one-step path.
+  - The plain chat bar (no header slot, tests and previews only) now carries up to 7 actions with no overflow;
+    `KitTopBar` asserts in debug when actions pass the compact limit without `more`. The app always uses the header
+    bar, which has the overflow.
 
 ## Blocked units
 

@@ -105,6 +105,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedBody
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.chatLoadingConversation
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailed
+import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
 import io.github.eslamasabry.oc.ui.words.res.chatUiContextCompacted
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteThisMessage
@@ -141,6 +142,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitWorkStopped
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWorking
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import io.github.eslamasabry.oc.ui.words.res.queuedDiscardUnconfirmedMessage
+import io.github.eslamasabry.oc.ui.words.res.revertFromHere
 import io.github.eslamasabry.oc.ui.words.res.sessionInstructionsUpdated
 import io.github.eslamasabry.oc.ui.words.res.skillApplied
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindClose
@@ -265,6 +267,11 @@ public fun ChatScreen(
                                 stringResource(Res.string.chatUiFiles),
                                 actions::openFiles,
                                 testTag = "chat-files-open",
+                            ),
+                            KitLineAction(
+                                stringResource(Res.string.chatUiChanges),
+                                actions::openChanges,
+                                testTag = "chat-changes-open",
                             ),
                             prompts?.let {
                                 KitLineAction(
@@ -508,6 +515,7 @@ private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Mo
                                 stringResource(Res.string.chatUiSendPromptAgain)
                             MessageAction.Fork ->
                                 stringResource(Res.string.chatUiForkFromThisPrompt)
+                            MessageAction.Changes -> stringResource(Res.string.chatUiChanges)
                             MessageAction.UndoFromHere -> stringResource(Res.string.revertFromHere)
                             MessageAction.Delete -> stringResource(Res.string.chatUiDeleteMessage)
                         },

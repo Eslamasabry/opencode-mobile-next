@@ -93,6 +93,8 @@ public class ChatViewModel(
 
     override fun openMessageMenu(rowKey: String): Unit = presenter.openMessageMenu(rowKey)
 
+    override fun openChanges(): Unit = presenter.openChanges()
+
     override fun closeMessageMenu(): Unit = presenter.closeMessageMenu()
 
     override fun messageAction(target: MessageTarget, action: MessageAction): Unit = presenter.messageAction(target, action)

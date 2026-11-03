@@ -179,7 +179,8 @@ public object MessageActions {
         if (feel && prompt && hasText) out += MessageAction.EditAndResend
         if (prompt && hasText && !busy) out += MessageAction.SendAgain
         if (prompt && caps.fork && messageId != null) out += MessageAction.Fork
-        if (feel && prompt && caps.revert && messageId != null && !busy) out += MessageAction.UndoFromHere
+        if (kind == TargetKind.Reply && caps.changes && messageId != null) out += MessageAction.Changes
+        if (prompt && caps.undo && messageId != null && !busy) out += MessageAction.UndoFromHere
         if (caps.deleteMessage && messageId != null) out += MessageAction.Delete
         return out.toImmutableList()
     }

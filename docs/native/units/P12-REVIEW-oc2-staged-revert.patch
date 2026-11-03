@@ -1,0 +1,178 @@
+diff --git a/native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2Dialect.kt b/native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2Dialect.kt
+index 4aca4d85..bc6d0147 100644
+--- a/native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2Dialect.kt
++++ b/native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2Dialect.kt
+@@ -25,6 +25,8 @@ internal enum class Oc2Dialect {
+             val id = session.groupValues[1]
+             val rest = session.groupValues[2]
+             if (rest == "rename") return Oc2Route("/session/$id", HttpMethod.Patch, body, query)
++            // dialect.dart: stable clears a staged revert with DELETE .../revert.
++            if (rest == "revert/clear") return Oc2Route("/session/$id/revert", HttpMethod.Delete, null, query)
+             if (rest == "interrupt" && "continue" in query) {
+                 return Oc2Route(
+                     path,
+diff --git a/native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2Gateway.kt b/native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2Gateway.kt
+index 358d27b8..48e19d3b 100644
+--- a/native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2Gateway.kt
++++ b/native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2Gateway.kt
+@@ -42,7 +42,7 @@ internal class Oc2Gateway(
+     initialLocation: ServerLocation = ServerLocation.Default,
+     random: Random = Random.Default,
+     initialDialect: Oc2Dialect? = null,
+-) : ServerGateway, ServerOperationsGateway, CorrelatedPromptGateway, SessionSelectionGateway {
++) : ServerGateway, ServerOperationsGateway, CorrelatedPromptGateway, SessionSelectionGateway, StagedRevertGateway {
+     private val ids = Oc2ClientIds(clock, random)
+     private val dialect = MutableStateFlow(initialDialect)
+     private val negotiation = Mutex()
+@@ -512,6 +512,59 @@ internal class Oc2Gateway(
+     override suspend fun diff(id: SessionId): Outcome<ImmutableList<FileDiff>> =
+         unavailable("sessionDiff")
+ 
++    // ---- Staged revert (P12-REVIEW; lib/api2/gateway_operations/ops_sessions.dart, protocol notes "Revert") ----
++    // POST .../revert/stage {messageID, files} → {"data": Revert}; POST .../revert/clear (stable: DELETE
++    // .../revert) and POST .../revert/commit, both 204, 409 SessionBusyError while running. One request each.
++
++    override suspend fun sessionRevertPrompt(session: SessionId, message: MessageId): Outcome<String?> =
++        when (val read = json("/session/${sid(session)}/message/${message.raw.encodeURLPathPart()}")) {
++            is Outcome.Failed -> read
++            is Outcome.Ok -> {
++                val row = Oc2History(redactor).message(session.raw, data(read.value))
++                if (row == null || row.info.id != message.raw || row.info.role != Role.User) {
++                    Outcome.Ok(null)
++                } else {
++                    val text =
++                        row.parts.filter { it.type == PartType.Text && !it.synthetic }.joinToString("\n") { it.text }
++                    Outcome.Ok(
++                        text.ifEmpty {
++                            row.parts.filter { it.type == PartType.File }.mapNotNull { it.filename?.takeIf(String::isNotEmpty) }.joinToString(", ")
++                        }
++                    )
++                }
++            }
++        }
++
++    override suspend fun stageSessionRevert(session: SessionId, message: MessageId, applyFiles: Boolean): Outcome<SessionRevert> =
++        read(
++            "/session/${sid(session)}/revert/stage",
++            HttpMethod.Post,
++            buildJsonObject {
++                put("messageID", message.raw)
++                put("files", applyFiles)
++            },
++        ) { root -> Oc2SessionRevert.fromJson(data(root))?.let(::revertOf) }
++
++    override suspend fun clearSessionRevert(session: SessionId): Outcome<Unit> =
++        unit("/session/${sid(session)}/revert/clear", HttpMethod.Post)
++
++    override suspend fun commitSessionRevert(session: SessionId): Outcome<Unit> =
++        unit("/session/${sid(session)}/revert/commit", HttpMethod.Post)
++
++    private fun revertOf(wire: Oc2SessionRevert): SessionRevert =
++        SessionRevert(
++            MessageId(wire.messageID),
++            wire.partID?.let(::PartId),
++            wire.snapshot,
++            wire.files?.mapNotNull { file ->
++                val path = (file["file"] ?: file["path"])?.let { (it as? JsonPrimitive)?.contentOrNull }?.takeIf(String::isNotEmpty)
++                    ?: return@mapNotNull null
++                fun text(key: String) = (file[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
++                fun count(key: String) = (file[key] as? JsonPrimitive)?.takeIf { !it.isString }?.intOrNull?.takeIf { it >= 0 }
++                FileDiff(path, text("before"), text("after"), text("patch"), count("additions"), count("deletions"), text("status"))
++            }?.toImmutableList(),
++        )
++
+     override suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>> =
+         read("/permission/request", query = locationQuery()) { root ->
+             val rows = data(root) as? JsonArray ?: return@read null
+@@ -716,6 +769,7 @@ internal class Oc2Gateway(
+             workspaceId = wire.location?.workspaceID?.let(::WorkspaceId),
+             path = wire.subpath,
+             reverted = wire.reverted,
++            stagedRevert = wire.revert?.let(::revertOf),
+             time =
+                 SessionTime(
+                     wire.time.created,
+@@ -769,7 +823,7 @@ internal class Oc2Gateway(
+                 permissionRequests = true,
+                 savedPermissionList = false,
+                 messageCompletionEndsRun = false,
+-                sessionRevert = false,
++                sessionRevert = true,
+                 sessionImportExport = false,
+                 sessionNotes = false,
+                 serverCatalog = true,
+diff --git a/native/protocol/oc2/src/commonTest/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2LiveGatewayTest.kt b/native/protocol/oc2/src/commonTest/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2LiveGatewayTest.kt
+index f3f48c9c..a3ae22a3 100644
+--- a/native/protocol/oc2/src/commonTest/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2LiveGatewayTest.kt
++++ b/native/protocol/oc2/src/commonTest/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2LiveGatewayTest.kt
+@@ -437,4 +437,70 @@ class Oc2LiveGatewayTest {
+             assertNull(page.items.single().agent)
+             gateway.close()
+         }
++
++    @Test
++    fun `B-PROTO-031 staging returns the fixed preview at once, with the files choice`() = runTest {
++        val seen = mutableListOf<String>()
++        val engine = MockEngine { request ->
++            seen += "${request.method.value} ${request.url.encodedPath} ${(request.body as? TextContent)?.text}"
++            respond(
++                """{"data":{"messageID":"msg_1","snapshot":"snap","files":[{"file":"a.kt","patch":"@@ -1 +1 @@","additions":1,"deletions":2,"status":"modified"}]}}""",
++                HttpStatusCode.OK,
++            )
++        }
++        val gateway = gateway(engine)
++        val revert = (gateway.stageSessionRevert(SessionId("s"), MessageId("msg_1"), applyFiles = false) as Outcome.Ok).value
++        assertEquals(listOf("""POST /api/session/s/revert/stage {"messageID":"msg_1","files":false}"""), seen)
++        assertEquals("snap", revert.snapshot)
++        assertEquals(FileDiff("a.kt", null, null, "@@ -1 +1 @@", 1, 2, "modified"), revert.files?.single())
++        gateway.close()
++    }
++
++    @Test
++    fun `B-PROTO-031 commit and clear use distinct endpoints, stable clears with DELETE`() = runTest {
++        val seen = mutableListOf<String>()
++        val engine = MockEngine { request ->
++            seen += "${request.method.value} ${request.url.encodedPath}"
++            respond("", HttpStatusCode.NoContent)
++        }
++        val beta = gateway(engine)
++        assertEquals(Outcome.Ok(Unit), beta.clearSessionRevert(SessionId("s")))
++        assertEquals(Outcome.Ok(Unit), beta.commitSessionRevert(SessionId("s")))
++        beta.close()
++        val stable = gateway(engine, Oc2Dialect.Stable)
++        assertEquals(Outcome.Ok(Unit), stable.clearSessionRevert(SessionId("s")))
++        stable.close()
++        assertEquals(
++            listOf("POST /api/session/s/revert/clear", "POST /api/session/s/revert/commit", "DELETE /api/session/s/revert"),
++            seen,
++        )
++    }
++
++    @Test
++    fun `B-PROTO-031 a session read carries its staged revert and the capability is on`() = runTest {
++        val engine = MockEngine {
++            respond("""{"data":{"id":"s","revert":{"messageID":"m","files":[{"file":"b.kt"}]}}}""", HttpStatusCode.OK)
++        }
++        val gateway = gateway(engine)
++        val session = (gateway.session(SessionId("s")) as Outcome.Ok).value
++        assertTrue(session.reverted)
++        assertEquals(MessageId("m"), session.stagedRevert?.messageId)
++        assertEquals(listOf("b.kt"), session.stagedRevert?.files?.map { it.file })
++        assertTrue(gateway.capabilities.value.sessionRevert)
++        gateway.close()
++    }
++
++    @Test
++    fun `B-CHAT-104 the revert prompt is a user message's words, null for a reply`() = runTest {
++        val engine = MockEngine { request ->
++            when (request.url.encodedPath) {
++                "/api/session/s/message/u" -> respond("""{"data":{"id":"u","type":"user","text":"make it blue"}}""", HttpStatusCode.OK)
++                else -> respond("""{"data":{"id":"a","type":"assistant","content":[{"type":"text","text":"done"}]}}""", HttpStatusCode.OK)
++            }
++        }
++        val gateway = gateway(engine)
++        assertEquals("make it blue", (gateway.sessionRevertPrompt(SessionId("s"), MessageId("u")) as Outcome.Ok).value)
++        assertNull((gateway.sessionRevertPrompt(SessionId("s"), MessageId("a")) as Outcome.Ok).value)
++        gateway.close()
++    }
+ }

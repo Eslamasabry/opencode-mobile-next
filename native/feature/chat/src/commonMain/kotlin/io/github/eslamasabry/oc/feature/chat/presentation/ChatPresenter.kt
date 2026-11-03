@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.ReviewRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -244,7 +245,7 @@ public class ChatPresenter(
     }
 
     private fun capsOf(c: ServerCapabilities): ChatCapabilitiesUi =
-        ChatCapabilitiesUi(fork = c.sessionFork, deleteMessage = c.messageDelete, revert = c.sessionRevert)
+        ChatCapabilitiesUi(fork = c.sessionFork, deleteMessage = c.messageDelete, undo = c.sessionRevert, changes = true)
 
     // ---- Find (plan 09 §6.6) ----
 
@@ -314,7 +315,6 @@ public class ChatPresenter(
                 val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
                 local.update { it.copy(insert = ClipUi(nextId++, text)) }
             }
-            MessageAction.UndoFromHere -> if (target.messageId != null) local.update { it.copy(confirm = ChatConfirm.UndoFrom(target)) }
             MessageAction.SendAgain -> {
                 val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
                 launcher.launch { world.send(text) } // a failed send shows on its bubble (status line), not twice
@@ -328,8 +328,14 @@ public class ChatPresenter(
                     }
                 }
             }
+            MessageAction.Changes -> nav.open(ReviewRoute.Changes(world.ref, target.messageId ?: return))
+            MessageAction.UndoFromHere -> nav.open(ReviewRoute.UndoFromHere(world.ref, target.messageId ?: return))
             MessageAction.Delete -> if (target.messageId != null) local.update { it.copy(confirm = ChatConfirm.DeleteMessage(target)) }
         }
+    }
+
+    override fun openChanges() {
+        nav.open(ReviewRoute.Changes(world.ref))
     }
 
     override fun confirmDelete() {

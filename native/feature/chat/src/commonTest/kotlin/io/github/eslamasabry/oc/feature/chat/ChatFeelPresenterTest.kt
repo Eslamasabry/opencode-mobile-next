@@ -17,6 +17,8 @@ import io.github.eslamasabry.oc.feature.chat.presentation.FenceText
 import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageAction
 import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
+import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.ReviewRoute
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -76,9 +78,9 @@ class ChatFeelPresenterTest {
         )
         p.openMessageMenu("footer:u1")
         assertEquals(
-            listOf(MessageAction.Copy, MessageAction.Share, MessageAction.SelectText, MessageAction.Delete),
+            listOf(MessageAction.Copy, MessageAction.Share, MessageAction.SelectText, MessageAction.Changes, MessageAction.Delete),
             p.current().menu!!.actions,
-            "a reply has no prompt-only actions",
+            "a reply has no prompt-only actions; its turn's changed files are P12-REVIEW's",
         )
     }
 
@@ -98,22 +100,15 @@ class ChatFeelPresenterTest {
     }
 
     @Test
-    fun `B-CHAT-120 undo from here asks first, undoes once on the server, and a refusal is reported`() {
+    fun `B-CHAT-120 undo from here opens the review's undo page, which asks first, and undoes nothing from the chat`() {
+        // P12 integration: P12-REVIEW owns Undo from here (staged and one-step servers); the chat only opens its page.
         world.transcript.value = stateOf(*turn(1).toTypedArray())
         val p = presenter()
         p.openMessageMenu("prompt:u1")
         p.messageAction(p.current().menu!!.target, MessageAction.UndoFromHere)
-        assertIs<ChatConfirm.UndoFrom>(p.current().confirm)
-        assertEquals(emptyList(), world.calls, "nothing happens before the person confirms")
-        p.confirmUndo()
-        p.confirmUndo()
-        assertEquals(listOf("revert u1"), world.calls)
+        assertEquals(listOf<AppRoute>(ReviewRoute.UndoFromHere(world.ref, "u1")), nav.opened)
         assertNull(p.current().confirm)
-        world.revertResult = Outcome.Failed(Failure.Unexpected())
-        p.openMessageMenu("prompt:u1")
-        p.messageAction(p.current().menu!!.target, MessageAction.UndoFromHere)
-        p.confirmUndo()
-        assertEquals(ChatStatusKind.ActionFailed, p.current().status?.kind)
+        assertEquals(emptyList(), world.calls, "nothing is undone before the review page confirms")
     }
 
     @Test
