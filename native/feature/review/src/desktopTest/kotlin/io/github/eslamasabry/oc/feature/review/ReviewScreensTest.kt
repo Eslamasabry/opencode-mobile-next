@@ -80,6 +80,10 @@ class ReviewScreensTest {
         override fun dismissConfirm() { calls += "dismiss" }
 
         override fun openStaged() { calls += "staged" }
+
+        override fun sendBack() { calls += "sendBack" }
+
+        override fun sendBackNote(note: String?) { calls += "note $note" }
     }
 
     private val files =
@@ -215,4 +219,20 @@ class ReviewScreensTest {
         onNodeWithText("تراجع عن الكل").assertIsDisplayed()
     }
 
+    @Test
+    fun `B-CHAT-098 Send back with a note is a visible action and its note field sends the words`() = runComposeUiTest {
+        val actions = Changes()
+        val ui = ChangesUi(turn = false, load = ReviewLoad.Ready, files = files, undoAll = UndoAllUi.Offered, canSendBack = true)
+        setContent { Themed { ChangesScreen(ui, actions) } }
+        onNodeWithText("Send back with a note").performClick()
+        assertEquals(listOf("sendBack"), actions.calls)
+    }
+
+    @Test
+    fun `B-CHAT-098 the open note field asks for the comment`() = runComposeUiTest {
+        val ui = ChangesUi(turn = false, load = ReviewLoad.Ready, files = files, canSendBack = true, noting = true)
+        setContent { Themed { ChangesScreen(ui, Changes()) } }
+        onNodeWithText("Your comment").assertExists()
+        onNodeWithText("Send back").assertExists()
+    }
 }

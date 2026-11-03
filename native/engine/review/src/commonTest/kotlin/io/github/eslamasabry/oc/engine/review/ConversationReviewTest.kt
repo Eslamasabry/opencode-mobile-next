@@ -232,4 +232,39 @@ class ConversationReviewTest {
         assertEquals(listOf("a.kt", "b.kt"), (r.editedAfter("u1") as Outcome.Ok).value)
         assertEquals(persistentListOf(), (r.editedAfter("u2") as Outcome.Ok).value)
     }
+
+    @Test
+    fun `B-CHAT-103 equal times keep page order, so a reply at the prompt's time still follows it`() = runTest(UnconfinedTestDispatcher()) {
+        fake.pages = listOf(listOf(prompt("u1", 7), reply("a1", 7)))
+        assertEquals(1, (review().messagesAfter("u1") as Outcome.Ok).value)
+    }
+
+    @Test
+    fun `B-CHAT-105 a remote stage after the page read refuses Undo from here before anything is sent`() = runTest(UnconfinedTestDispatcher()) {
+        val r = review()
+        r.refresh()
+        val basis = r.basis()
+        fake.staged = SessionRevert(MessageId("u2"), null, "other", null) // another client, no event seen here
+        val result = r.stage("u1", true, reviewed = basis)
+        assertEquals(Failure.Refused(RefusalReason.StaleScope), (result as Outcome.Failed).failure)
+        assertFalse(fake.calls.any { it.startsWith("stage") })
+        // An unchanged boundary still stages.
+        fake.staged = null
+        r.refresh()
+        assertIs<Outcome.Ok<*>>(r.stage("u1", true, reviewed = r.basis()))
+    }
+
+    @Test
+    fun `B-CHAT-104 a review read on one connection never commits through its replacement`() = runTest(UnconfinedTestDispatcher()) {
+        val r = review()
+        val reviewed = (r.stage("u1", true) as Outcome.Ok).value
+        // The replacement connection reports the very same staged undo.
+        val other = StagedFake().also { it.staged = fake.staged }
+        gateways.value = ReviewGateways(other, FakeOperationsGateway())
+        assertFalse(r.isCurrent(reviewed))
+        val result = r.keep(reviewed)
+        assertEquals(Failure.Refused(RefusalReason.StaleScope), (result as Outcome.Failed).failure)
+        assertFalse("commit" in other.calls)
+        assertFalse("commit" in fake.calls)
+    }
 }

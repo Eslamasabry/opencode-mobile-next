@@ -9,4 +9,5 @@
     <string name="reviewUndoUnknown">«تراجع عن الكل» يحتاج الطلب الذي بدأت منه هذه التغييرات، وتعذّرت قراءته.</string>
     <string name="reviewUndoUnavailable">هذا الخادم لا يستطيع التراجع بدءًا من طلب.</string>
     <string name="reviewToolEvidence">بحسب ما أبلغت عنه أدوات الوكيل. التغييرات التي أجرتها الأوامر غير مدرجة.</string>
+    <string name="reviewSendBackFailed">تعذّر وضع ملاحظتك في الرسالة. حاول مرة أخرى.</string>
 </resources>

@@ -12,13 +12,17 @@ public sealed interface ReviewRoute : AppRoute {
     /** The files one turn changed ([messageId] is any message of that turn), or the whole conversation (null). */
     @Serializable public data class Changes(val ref: ConversationRef, val messageId: String? = null) : ReviewRoute
 
-    /** One file's diff from [Changes] with the same [messageId]; [staged] reads it from the staged undo instead. */
+    /**
+     * One file's diff from [Changes] with the same [messageId]; [staged] reads it from the staged undo instead, and
+     * [workingTree] from the conversation folder's uncommitted changes.
+     */
     @Serializable
     public data class File(
         val ref: ConversationRef,
         val path: String,
         val messageId: String? = null,
         val staged: Boolean = false,
+        val workingTree: Boolean = false,
     ) : ReviewRoute
 
     /** "Undo from this prompt?" for the prompt [messageId]. */
