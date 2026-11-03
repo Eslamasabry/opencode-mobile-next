@@ -14,6 +14,9 @@ import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.engine.requests.consent.SessionApproval
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalCodec
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalStore
+import io.github.eslamasabry.oc.feature.chat.header.approval.ConnectionAutoApprovals
+import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import kotlin.time.Clock
 import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModel
 import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeNoteStore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,7 +70,10 @@ object ChatHeaderBindings {
     @Provides
     @IntoSet
     @SingleIn(AppScope::class)
-    fun approvals(stores: PreviewStores): ApprovalStore = PrefsApprovalStore(stores)
+    fun approvals(stores: PreviewStores, registry: ConnectionRegistry, clock: Clock): ApprovalStore =
+        // Codex chat-header #4: saved automatic approval runs at connection scope from the store's first use on,
+        // not only while a chat is open.
+        PrefsApprovalStore(stores).also { ConnectionAutoApprovals(registry, it, clock).start() }
 
     @Provides
     @IntoSet

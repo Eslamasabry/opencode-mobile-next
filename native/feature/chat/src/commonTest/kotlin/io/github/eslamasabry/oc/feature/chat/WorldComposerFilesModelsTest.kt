@@ -819,6 +819,35 @@ class WorldComposerFilesModelsTest {
         assertNull(port.approvals.parentOf(ref.sessionId), "the conversation itself is top level")
     }
 
+    @Test
+    fun `B-AGENT-225 Codex header 4 saved auto-approval answers with no chat open`() = runTest {
+        val f = Fixture(this)
+        f.base.capabilities.value = f.base.capabilities.value.copy(permissionRequests = true)
+        val store = io.github.eslamasabry.oc.feature.chat.header.MemoryApprovalStore()
+        store.set(
+            ref.profileId,
+            ref.sessionId.raw,
+            io.github.eslamasabry.oc.engine.requests.consent.SessionApproval(
+                io.github.eslamasabry.oc.engine.requests.consent.ApprovalMode.AutoOnce
+            ),
+        )
+        io.github.eslamasabry.oc.feature.chat.header.approval.ConnectionAutoApprovals(f.registry, store, TestClock()).start()
+        // The server is connected; no conversation is open.
+        f.base.events.connect()
+        f.registry.open(profile)
+        runCurrent()
+        f.base.events.emit(
+            GatewayEvent.PermissionAsked(
+                io.github.eslamasabry.oc.core.model.PermissionRequest(
+                    io.github.eslamasabry.oc.core.common.ids.RequestId("r1"), ref.sessionId, "bash", persistentListOf(),
+                    kotlinx.serialization.json.JsonObject(emptyMap()), persistentListOf(), null, false, null,
+                )
+            )
+        )
+        runCurrent()
+        assertTrue(f.base.calls.any { it.startsWith("replyPermission r1") }, "${f.base.calls}")
+    }
+
     // ---- QA wave 4 / Codex composer review ----
 
     @Test
