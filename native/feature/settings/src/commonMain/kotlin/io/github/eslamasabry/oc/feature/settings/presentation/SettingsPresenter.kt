@@ -295,12 +295,10 @@ public class SettingsPresenter(
                 val page =
                     if (notes.change.target == WhatsNewTarget.Updates) SettingsPage.Updates
                     else SettingsPage.Appearance
-                local.update {
-                    it.copy(
-                        stack = (it.stack.dropLast(1) + page).toImmutableList(),
-                        standaloneWhatsNew = false,
-                    )
-                }
+                // A standalone launch stays standalone: Back from the shown page leaves the
+                // route instead of revealing a Settings hub the person never opened (Flutter
+                // closes the sheet back to the launch screen).
+                local.update { it.copy(stack = (it.stack.dropLast(1) + page).toImmutableList()) }
                 if (page == SettingsPage.Appearance) onAppearanceQuestion(AppearanceQuestion.Text)
             }
             WhatsNewTarget.Agents -> {
@@ -349,7 +347,7 @@ public class SettingsPresenter(
     override fun onBack(): Boolean {
         val l = local.value
         return when {
-            l.standaloneWhatsNew && l.stack.last() == SettingsPage.WhatsNew -> {
+            l.standaloneWhatsNew && l.stack.size <= 2 -> {
                 exitWhatsNew()
                 true
             }
