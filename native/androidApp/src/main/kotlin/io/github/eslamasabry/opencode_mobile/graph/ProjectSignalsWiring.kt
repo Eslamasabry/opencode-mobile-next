@@ -36,7 +36,9 @@ class LiveProjectSignalsHost(
         if (parts.size != 2) return io.github.eslamasabry.oc.core.common.Outcome.Ok(Unit)
         val providers =
             when (val answer = server.gateway.providers()) {
-                is io.github.eslamasabry.oc.core.common.Outcome.Failed -> return answer
+                // No catalogue: skip the default rather than fail the new chat.
+                is io.github.eslamasabry.oc.core.common.Outcome.Failed ->
+                    return io.github.eslamasabry.oc.core.common.Outcome.Ok(Unit)
                 is io.github.eslamasabry.oc.core.common.Outcome.Ok -> answer.value
             }
         if (
@@ -51,14 +53,9 @@ class LiveProjectSignalsHost(
         val selector =
             server.gateway as? io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
         if (selector != null) {
+            // The server cannot switch a session's model: keep its own default.
             if (!server.gateway.capabilities.value.sessionModelProviderSwitching)
-                return io.github.eslamasabry.oc.core.common.Outcome.Failed(
-                    io.github.eslamasabry.oc.core.common.Failure.Unavailable(
-                        io.github.eslamasabry.oc.core.common.FeatureId(
-                            "sessionModelProviderSwitching"
-                        )
-                    )
-                )
+                return io.github.eslamasabry.oc.core.common.Outcome.Ok(Unit)
             when (
                 val saved =
                     selector.setSessionModel(

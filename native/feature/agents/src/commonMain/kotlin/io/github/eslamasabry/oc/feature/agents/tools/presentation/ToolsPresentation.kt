@@ -119,7 +119,7 @@ public class ToolsViewModel(private val source: ToolsSource, private val nav: Ap
 
     override fun selectModel(model: ModelRef) {
         if (model !in mutable.value.models || mutable.value.working || mutable.value.loading) return
-        mutable.update { it.copy(model = model, tool = null) }
+        mutable.update { it.copy(model = model, tool = null, tools = persistentListOf()) }
         refresh()
     }
 

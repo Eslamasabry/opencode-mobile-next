@@ -56,6 +56,7 @@ public class ProjectPageViewModel(
     private var adopted = false
     private var isolatedGeneration = 0
     private var taskOpened = false
+    private var workspaceOpened = false
     private var isolatedLaunch:
         io.github.eslamasabry.oc.engine.agents.worktree.IsolatedTaskLaunch? =
         null
@@ -141,7 +142,12 @@ public class ProjectPageViewModel(
                         }
                     }
                     workspace.adopt(next)
-                    if (next != null && route.initialWorkspace) workspace.openWorkspace()
+                    // Open the requested workspace once; a later re-adoption must not reopen a
+                    // workspace the person closed.
+                    if (next != null && route.initialWorkspace && !workspaceOpened) {
+                        workspaceOpened = true
+                        workspace.openWorkspace()
+                    }
                     load()
                     mutable.update {
                         it.copy(
@@ -286,15 +292,10 @@ public class ProjectPageViewModel(
                     sessions = listOf(made.value) + sessions
                     mutable.update { it.copy(creating = false) }
                     publish(ProjectPagePhase.Ready)
-                    when (val selected = signals.applyNewChatDefault(live, made.value.id)) {
-                        is Outcome.Failed ->
-                            mutable.update { it.copy(createFailure = selected.failure) }
-                        is Outcome.Ok ->
-                            nav.openChat(
-                                ConversationRef(live.profile, made.value.id),
-                                focusComposer = true,
-                            )
-                    }
+                    // The saved model default is best-effort: the chat exists on the server
+                    // already, so it always opens (Flutter never blocks a new chat on the model).
+                    signals.applyNewChatDefault(live, made.value.id)
+                    nav.openChat(ConversationRef(live.profile, made.value.id), focusComposer = true)
                 }
             }
         }

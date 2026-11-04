@@ -19,7 +19,6 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AllPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.AllProblemKind
 import io.github.eslamasabry.oc.feature.chats.presentation.AllRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllActions
-import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPinActions
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -90,8 +89,6 @@ import io.github.eslamasabry.oc.ui.words.res.p12SelectCancel
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuArchive
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuDelete
-import io.github.eslamasabry.oc.ui.words.res.sessionRelationsPin
-import io.github.eslamasabry.oc.ui.words.res.sessionRelationsUnpin
 import io.github.eslamasabry.oc.ui.words.res.sessionsReload
 import io.github.eslamasabry.oc.ui.words.res.stateContextUsage
 import io.github.eslamasabry.oc.ui.words.res.statePin
@@ -367,8 +364,8 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
             "$location · " + stringResource(Res.string.stateContextUsage, it)
         } ?: location
     val running = stringResource(Res.string.chatsHomeRunning)
-    // ANDR-1: the visible pin action takes the trailing slot, so Running moves into the line.
-    val supporting = if (row.running && row.pinAvailable) "$place · $running" else place
+    // ANDR-1: the visible More action takes the trailing slot, so Running moves into the line.
+    val supporting = if (row.running) "$place · $running" else place
     if (row.readOnly) {
         KitRow(
             title = title,
@@ -378,12 +375,6 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
         )
         return
     }
-    val pinActions = actions as? ChatsPinActions
-    val pinLabel =
-        stringResource(
-            if (row.pinned) Res.string.sessionRelationsUnpin else Res.string.sessionRelationsPin,
-            title,
-        )
     if (selecting) {
         KitChoiceRow(
             title = title,

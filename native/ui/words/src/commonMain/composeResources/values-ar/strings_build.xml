@@ -45,6 +45,6 @@
     <string name="nativeCapabilityAddExternalAgentTitle">توصيل وكيل خارجي</string>
     <string name="nativeCapabilityAddExternalAgentDetail">صِل وكيلًا عبر بطاقة الوكيل المنشورة.</string>
     <string name="nativeCapabilityTeamDeferred">فريق الذكاء الاصطناعي مخطط له بعد الانتقال إلى التطبيق الأصلي. تبقى بيانات الفريق الحالية على هذا الهاتف.</string>
-    <string name="nativeCapabilityExternalDropped">وكلاء A2A الخارجيون ليسوا ضمن هذا التطبيق الأصلي. تبقى البيانات المحفوظة الحالية دون تغيير.</string>
+    <string name="nativeCapabilityExternalDropped">الوكلاء من تطبيقات أخرى ليسوا جزءًا من هذا التطبيق. تبقى بياناتك المحفوظة كما هي.</string>
     <string name="nativeCapabilityTermuxMigrationOnly">يدعم Termux نقل البيانات الحالية إلى البيئة المدمجة. إعداد Termux جديد غير متاح.</string>
 </resources>

@@ -45,7 +45,9 @@ public class DefaultDesktopReleaseUpdates(
                 try {
                     when (val result = checker.fetchLatest()) {
                         is Outcome.Failed -> {
-                            mutable.value = mutable.value.copy(failure = result.failure)
+                            // A failed check must not keep offering an older answer's release.
+                            mutable.value =
+                                mutable.value.copy(failure = result.failure, release = null)
                             result
                         }
                         is Outcome.Ok -> {

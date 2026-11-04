@@ -45,6 +45,6 @@
     <string name="nativeCapabilityAddExternalAgentTitle">Connect an external agent</string>
     <string name="nativeCapabilityAddExternalAgentDetail">Connect an agent through its published agent card.</string>
     <string name="nativeCapabilityTeamDeferred">AI Team is planned after the native switch. Existing team data stays on this phone.</string>
-    <string name="nativeCapabilityExternalDropped">A2A external agents are not part of this native app. Existing saved data stays untouched.</string>
+    <string name="nativeCapabilityExternalDropped">Agents from other apps are not part of this app. Your saved data stays as it is.</string>
     <string name="nativeCapabilityTermuxMigrationOnly">Termux is supported for moving existing data to the built-in environment. New Termux setup is unavailable.</string>
 </resources>
