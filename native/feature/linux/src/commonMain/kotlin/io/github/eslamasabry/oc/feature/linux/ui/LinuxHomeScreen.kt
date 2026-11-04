@@ -219,7 +219,8 @@ public fun LinuxHomeScreen(
                     liveRegion = false,
                 )
             }
-            if (state.ready) LinuxVitalsPanel(state.vitals) { actions.open(LinuxPage.Running) }
+            val vitals = state.vitals
+            if (state.ready && vitals != null) LinuxVitalsPanel(vitals) { actions.open(LinuxPage.Running) }
             LinuxJobPanel(state.job, actions::askStopJob, actions::dismissJob)
             if (presence != null && presence != LinuxPresence.NotOnThisBuild) {
                 if (state.ready) LinuxIdlePanel(state, actions)

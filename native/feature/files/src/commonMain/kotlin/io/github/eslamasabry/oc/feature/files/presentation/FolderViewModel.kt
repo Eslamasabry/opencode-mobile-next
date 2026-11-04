@@ -260,16 +260,8 @@ public class FolderViewModel(
         else nav.open(FilesRoute.File(route.from, node.path))
     }
 
-    override fun requestStorageAccess() {
-        if (local.value.requestingStorage) return
-        val access = storageAccess.singleOrNull() ?: return
-        local.update { it.copy(requestingStorage = true) }
-        viewModelScope.launch {
-            access.request(route.from)
-            local.update { it.copy(requestingStorage = false) }
-            load()
-        }
-    }
+    /** One storage flow: the head's checked request (block, directory, stale-scope guards). */
+    override fun requestStorageAccess(): Unit = requestStorage()
 
     override fun toggleHidden() {
         local.update { it.copy(showHidden = !it.showHidden) }

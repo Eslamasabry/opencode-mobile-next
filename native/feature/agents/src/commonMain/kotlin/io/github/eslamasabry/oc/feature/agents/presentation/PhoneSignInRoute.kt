@@ -24,6 +24,11 @@ public interface PhoneSignInController : SignInTerminalActions {
 
     public fun dismissPage()
 
+    /** The head's sign-in page confirm/dismiss map onto this controller's page approval. */
+    override fun confirmSignInPage(): Unit = approvePage()
+
+    override fun dismissSignInPage(): Unit = dismissPage()
+
     /**
      * Schedules the exact sign-in's drain in the app owner; never abandoned with a screen scope.
      */

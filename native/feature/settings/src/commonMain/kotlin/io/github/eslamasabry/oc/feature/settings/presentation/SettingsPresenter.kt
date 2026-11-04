@@ -296,7 +296,6 @@ public class SettingsPresenter(
                         f,
                         p.reasoning,
                         p.timestamps,
-                        e.phrases?.enabled ?: true,
                     ),
                 )
             }

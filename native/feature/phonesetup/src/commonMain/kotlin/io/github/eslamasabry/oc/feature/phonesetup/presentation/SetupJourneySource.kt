@@ -78,7 +78,7 @@ public object SetupSelection {
         return expanded.filter {
             !it.jobStep &&
                 (!adding || (!it.required && it.id !in options.installed)) &&
-                (!it.app || it.id !in options.installed)
+                (it.app == null || it.id !in options.installed)
         }
     }
 

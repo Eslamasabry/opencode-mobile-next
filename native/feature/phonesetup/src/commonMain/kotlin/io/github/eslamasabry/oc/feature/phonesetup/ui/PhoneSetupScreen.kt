@@ -82,6 +82,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartReadyBody
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartSetUp
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStartTitle
+import io.github.eslamasabry.oc.ui.words.res.voiceComponentTitle
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewCancel
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewCancelled
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewContinue

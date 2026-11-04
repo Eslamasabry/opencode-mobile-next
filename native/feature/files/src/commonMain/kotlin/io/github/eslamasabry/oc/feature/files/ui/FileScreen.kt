@@ -233,7 +233,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                 }
             }
         }
-        FileShareSheet(state.share, state.name, actions)
+        FileShareSheet(state.share, state.name, actions, state.sizeBytes)
         KitConfirm(
             state.linkHost?.let {
                 KitConfirmSpec(
