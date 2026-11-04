@@ -22,7 +22,6 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.profiles.ProfileCloser
 import io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior
-import io.github.eslamasabry.oc.engine.requests.consent.AutomationPolicy
 import io.github.eslamasabry.oc.feature.servers.presentation.*
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import java.time.ZoneId
@@ -43,6 +42,7 @@ import kotlinx.coroutines.sync.withLock
 class AndroidProfileMonitoring(
     private val application: Application,
     private val stores: PreviewStores,
+    private val policies: AppAutomationPolicies,
     private val registry: ConnectionRegistry,
     private val factories: Set<GatewayFactory>,
     private val credentials: Set<ConnectionCredentialSource>,
@@ -108,34 +108,20 @@ class AndroidProfileMonitoring(
             private val listeners = mutableMapOf<String, MutableSet<() -> Unit>>()
 
             override fun allows(profileId: String): Boolean =
-                stores.prefs
-                    .string("oc.automation.$profileId")
-                    ?.let(AutomationPolicy::fromJson)
-                    ?.allows(AutomationBehavior.MonitorOtherServers) == true
+                policies.allows(ProfileId(profileId), AutomationBehavior.MonitorOtherServers)
 
             override fun hasRecord(profileId: String): Boolean =
-                stores.prefs.get("oc.automation.$profileId") != null
+                policies.hasRecord(ProfileId(profileId))
 
             override suspend fun set(profileId: String, allowed: Boolean): Boolean {
-                val key = "oc.automation.$profileId"
-                val old = stores.prefs.get(key)
-                val policy =
-                    (old as? PrefValue.Str)?.value?.let(AutomationPolicy::fromJson)
-                        ?: AutomationPolicy()
-                val result =
-                    stores.prefs.compareAndCommit(
-                        stores.lanes.forProfile(ProfileId(profileId)),
-                        mapOf(key to old),
-                    ) {
-                        putString(
-                            key,
-                            policy
-                                .withBehavior(AutomationBehavior.MonitorOtherServers, allowed)
-                                .toJson()
-                                .toString(),
-                        )
-                    }
-                if (result.getOrNull() != true) return false
+                if (
+                    policies.setBehavior(
+                        ProfileId(profileId),
+                        AutomationBehavior.MonitorOtherServers,
+                        allowed,
+                    ) !is Outcome.Ok
+                )
+                    return false
                 changed(profileId)
                 return true
             }

@@ -251,11 +251,15 @@ private constructor(
      * and inverses without erasing history or callbacks. Use [cancelDeletion] if the deletion
      * aborts.
      */
-    public suspend fun prepareForDeletion() {
+    public fun stopAdmission() {
         if (!closed.load() && !disposed.load()) {
             preparingDeletion.store(true)
             publish()
         }
+    }
+
+    public suspend fun prepareForDeletion() {
+        stopAdmission()
         lane.withLock {}
     }
 

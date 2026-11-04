@@ -41,6 +41,7 @@ import kotlinx.coroutines.sync.withLock
 class MonitorRuntime(
     private val application: Application,
     private val stores: PreviewStores,
+    private val policies: AppAutomationPolicies,
     private val registry: ConnectionRegistry,
     private val factories: Set<GatewayFactory>,
     private val credentials: Set<ConnectionCredentialSource>,
@@ -166,32 +167,23 @@ class MonitorRuntime(
             val consent =
                 object : MonitorConsent {
                     override fun allows(profileId: String): Boolean =
-                        stores.prefs
-                            .string(policyKey(profileId))
-                            ?.let(AutomationPolicy::fromJson)
-                            ?.allows(AutomationBehavior.MonitorOtherServers) == true
+                        policies.allows(
+                            ProfileId(profileId),
+                            AutomationBehavior.MonitorOtherServers,
+                        )
 
                     override fun hasRecord(profileId: String): Boolean =
-                        stores.prefs.get(policyKey(profileId)) != null
+                        policies.hasRecord(ProfileId(profileId))
 
                     override suspend fun set(profileId: String, allowed: Boolean): Boolean {
-                        val key = policyKey(profileId)
-                        val before = stores.prefs.get(key)
-                        val previous = (before as? PrefValue.Str)?.value
-                        val policy = previous?.let(AutomationPolicy::fromJson) ?: AutomationPolicy()
-                        val raw =
-                            policy
-                                .withBehavior(AutomationBehavior.MonitorOtherServers, allowed)
-                                .toJson()
-                                .toString()
-                        val saved =
-                            stores.prefs.compareAndCommit(
-                                stores.lanes.forProfile(ProfileId(profileId)),
-                                mapOf(key to before),
-                            ) {
-                                putString(key, raw)
-                            }
-                        if (saved !is Outcome.Ok || !saved.value) return false
+                        if (
+                            policies.setBehavior(
+                                ProfileId(profileId),
+                                AutomationBehavior.MonitorOtherServers,
+                                allowed,
+                            ) !is Outcome.Ok
+                        )
+                            return false
                         policyListeners[profileId]?.toList()?.forEach { it() }
                         return true
                     }
@@ -348,10 +340,7 @@ class MonitorRuntime(
                                 p.id.raw,
                                 p.profile.name,
                                 rules.enabled &&
-                                    stores.prefs
-                                        .string(policyKey(p.id.raw))
-                                        ?.let(AutomationPolicy::fromJson)
-                                        ?.allows(AutomationBehavior.MonitorOtherServers) == true,
+                                    policies.allows(p.id, AutomationBehavior.MonitorOtherServers),
                                 rules.checkInAfterMinutes,
                                 MonitoringState.valueOf(
                                     if (snapshot.status == MonitorStatus.Disabled) "Off"

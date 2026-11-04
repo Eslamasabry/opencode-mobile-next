@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="secAutomationTitle">What runs by itself</string>
+    <string name="secAutomationDetail">Choose what this server may do automatically. A choice allows existing work; it does not start it.</string>
+    <string name="secAutomationReconnect">Reconnect</string>
+    <string name="secAutomationRetryIntake">Retry incoming work</string>
+    <string name="secAutomationReconcileQueuedSends">Reconcile queued sends</string>
+    <string name="secAutomationRetryProviderErrors">Retry provider errors</string>
+    <string name="secAutomationRestartPhoneServer">Restart the phone server</string>
+    <string name="secAutomationResumeSetup">Resume setup</string>
+    <string name="secAutomationRecheckEnvironment">Recheck the environment</string>
+    <string name="secAutomationPollRestartHealth">Check restart health</string>
+    <string name="secAutomationThermalRecovery">Recover after heat</string>
+    <string name="secAutomationReduceEffects">Reduce effects</string>
+    <string name="secAutomationChooseDefaults">Choose defaults</string>
+    <string name="secAutomationDetectInstallations">Detect installations</string>
+    <string name="secAutomationPreserveDrafts">Preserve drafts</string>
+    <string name="secAutomationFollowOutput">Follow output</string>
+    <string name="secAutomationPollOpenPages">Refresh open pages</string>
+    <string name="secAutomationBoundedPaging">Load more results</string>
+    <string name="secAutomationRouteReadyWork">Route ready work</string>
+    <string name="secAutomationWakeStalledPool">Wake stalled workers</string>
+    <string name="secAutomationRestartWorkers">Restart workers</string>
+    <string name="secAutomationRecycleWorkers">Recycle workers</string>
+    <string name="secAutomationHoldAtProviderLimit">Wait at provider limits</string>
+    <string name="secAutomationRetryUnconfirmedAnswer">Retry unconfirmed answers</string>
+    <string name="secAutomationRetryTransientTask">Retry temporary task failures</string>
+    <string name="secAutomationFallBackToDirectTask">Use a direct task fallback</string>
+    <string name="secAutomationApplyCodePush">Apply code updates</string>
+    <string name="secAutomationRestartDevServices">Restart development services</string>
+    <string name="secAutomationStopIdleHelpers">Stop idle helpers</string>
+    <string name="secAutomationCleanCaches">Clean caches</string>
+    <string name="secAutomationUpdateWhenIdle">Update when idle</string>
+    <string name="secAutomationMonitorOtherServers">Monitor other servers</string>
+    <string name="secAutomationMonitorQuota">Monitor quota</string>
+</resources>

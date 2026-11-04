@@ -102,8 +102,9 @@ object LinuxRuntimeWiring {
         clock: Clock,
         acts: NativeRuntimeActs,
         leases: NativeChatLeases,
+        policies: AppAutomationPolicies,
     ): BuiltinRuntime =
-        BuiltinRuntime(app, dispatchers.io, appScope, profiles, stores, clock, acts, leases).also {
+        BuiltinRuntime(app, dispatchers.io, appScope, profiles, stores, clock, acts, leases, policies).also {
             leases.start()
         }
 
@@ -367,13 +368,14 @@ internal constructor(
     private val clock: Clock,
     private val acts: NativeRuntimeActs,
     private val leases: NativeChatLeases,
+    private val policies: AppAutomationPolicies,
 ) {
     private val linux: BuiltinLinux by lazy { BuiltinLinux.get(app) }
     private val filesDir: File
         get() = app.filesDir
 
     private val lane = Mutex()
-    private val recovery by lazy { NativeRuntimeRecovery(stores, linux, io) }
+    private val recovery by lazy { NativeRuntimeRecovery(stores, linux, io, policies) }
     private val helperLane = io.limitedParallelism(1)
     private val closedProfiles = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     @Volatile private var foreground = false
@@ -1324,11 +1326,22 @@ internal constructor(
     }
 
     suspend fun drainProfile(profile: String): Outcome<Unit> = lane.withLock {
+        // Revocation is reversible: keep the native budget, recipe and saved policy until the row commits.
+        blocking { linux.unbindServerRecovery(profile) }
+    }
+
+    suspend fun eraseProfileRecovery(profile: String): Outcome<Unit> = lane.withLock {
         blocking { linux.deleteServerRecovery(profile) }
     }
 
     fun reopenProfile(profile: String) {
         closedProfiles.remove(profile)
+        if (ownerId()?.raw == profile) scope.launch {
+            lane.withLock {
+                if (profile !in closedProfiles && stores.profiles.profile(ProfileId(profile)) != null)
+                    recovery.bind(ProfileId(profile))
+            }
+        }
     }
 
     private suspend fun stopNow(): Outcome<Unit> {

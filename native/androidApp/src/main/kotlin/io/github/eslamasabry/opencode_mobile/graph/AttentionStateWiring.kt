@@ -19,10 +19,8 @@ import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.security.Redactor
-import io.github.eslamasabry.oc.engine.attention.activity.AttentionKeyStore
 import io.github.eslamasabry.oc.engine.attention.activity.AutomaticActKind
 import io.github.eslamasabry.oc.engine.attention.activity.AutomaticActivity
-import io.github.eslamasabry.oc.engine.attention.activity.AutomaticActivityRegistry
 import io.github.eslamasabry.oc.engine.attention.elsewhere.AttentionEvent
 import io.github.eslamasabry.oc.engine.attention.feed.*
 import io.github.eslamasabry.oc.engine.attention.monitor.MonitorNotifyRules
@@ -43,12 +41,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.intOrNull
 
 /**
  * Activity uses the adopted preferences and the profile deletion lane; no optimistic writes reach
@@ -59,6 +53,8 @@ import kotlinx.serialization.json.intOrNull
 @Inject
 class AppAttentionState(
     private val stores: PreviewStores,
+    private val activity: AppActivityHistory,
+    private val policies: AppAutomationPolicies,
     private val connections: ConnectionRegistry,
     private val redactor: Redactor,
     private val clock: Clock,
@@ -77,28 +73,6 @@ class AppAttentionState(
     private val jobs = mutableMapOf<ProfileId, List<Job>>()
     private val histories = mutableMapOf<ProfileId, AutomaticActivity>()
     private val historyJobs = mutableMapOf<ProfileId, Job>()
-    private val historyRegistry =
-        AutomaticActivityRegistry(
-            object : AttentionKeyStore {
-                override suspend fun read(key: String): String? =
-                    (stores.prefs.get(key) as? PrefValue.Str)?.value
-
-                override suspend fun write(key: String, value: String): Boolean {
-                    val id = ProfileId(key.removePrefix("oc.automaticActivity."))
-                    if (stores.profiles.profile(id) == null) return false
-                    return stores.prefs.commit(stores.lanes.forProfile(id)) {
-                        putString(key, value)
-                    } is Outcome.Ok
-                }
-
-                override suspend fun remove(key: String): Boolean {
-                    val id = ProfileId(key.removePrefix("oc.automaticActivity."))
-                    return stores.prefs.commit(stores.lanes.forProfile(id)) { remove(key) } is
-                        Outcome.Ok
-                }
-            },
-            redactor,
-        )
 
     fun start() {
         if (started) return
@@ -118,16 +92,12 @@ class AppAttentionState(
                     val ids = saved.map { it.id }.toSet()
                     for (id in (histories.keys - ids).toList()) {
                         historyJobs.remove(id)?.cancel()
-                        histories.remove(id)?.dispose()
-                        historyRegistry.forgetProfile(id.raw)
+                        histories.remove(id)
+                        activity.forgetRemoved(id)
                     }
                     for (owner in saved) {
                         if (owner.id !in histories) {
-                            val history =
-                                historyRegistry.forProfile(owner.id.raw) {
-                                    stores.profiles.profile(owner.id) != null &&
-                                        stores.lanes.forProfile(owner.id).isAdmitting
-                                }
+                            val history = activity.forProfile(owner.id)
                             if (history != null) {
                                 histories[owner.id] = history
                                 historyJobs[owner.id] =
@@ -294,17 +264,10 @@ class AppAttentionState(
                 ?.value
                 ?.let(MonitorNotifyRules::fromJson)
         if (rules?.enabled != true) return false
-        val raw =
-            (stores.prefs.get("oc.automation.${id.raw}") as? PrefValue.Str)?.value ?: return false
-        val policy =
-            try {
-                Json.parseToJsonElement(raw) as? JsonObject
-            } catch (_: IllegalArgumentException) {
-                null
-            } ?: return false
-        return (policy["version"] as? JsonPrimitive)?.intOrNull == 1 &&
-            ((policy["behaviors"] as? JsonObject)?.get("monitorOtherServers") as? JsonPrimitive)
-                ?.booleanOrNull == true
+        return policies.allows(
+            id,
+            io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior.MonitorOtherServers,
+        )
     }
 
     private suspend fun refreshGraph(id: ProfileId, graph: ConnectionGraph) {
@@ -400,36 +363,6 @@ class AppAttentionState(
             val id = ProfileId(profile)
             if (stores.profiles.profile(id) == null)
                 return@withContext Outcome.Failed(Failure.StorageRefused())
-            val key = "oc.automation." + profile
-            val existing = stores.prefs.get(key)
-            val raw = (existing as? PrefValue.Str)?.value
-            val previous =
-                if (raw == null) null
-                else
-                    try {
-                        Json.parseToJsonElement(raw) as? JsonObject
-                    } catch (_: IllegalArgumentException) {
-                        null
-                    }
-            if (
-                existing != null &&
-                    (previous == null || (previous["version"] as? JsonPrimitive)?.intOrNull != 1)
-            ) {
-                settingsSaveFailed = true
-                publish()
-                return@withContext Outcome.Failed(Failure.StorageRefused())
-            }
-            val values: MutableMap<String, JsonElement> =
-                previous?.toMutableMap()
-                    ?: mutableMapOf(
-                        "version" to JsonPrimitive(1),
-                        "supervision" to JsonPrimitive("high"),
-                        "autoApprove" to JsonPrimitive(false),
-                        "autoMergeOnGreen" to JsonPrimitive(false),
-                    )
-            val behaviors = (values["behaviors"] as? JsonObject)?.toMutableMap() ?: mutableMapOf()
-            behaviors["monitorOtherServers"] = JsonPrimitive(enabled)
-            values["behaviors"] = JsonObject(behaviors)
             val rulesKey = "oc.notifyRules." + profile
             val oldRules = (stores.prefs.get(rulesKey) as? PrefValue.Str)?.value
             val rules = oldRules?.let(MonitorNotifyRules::fromJson)
@@ -438,9 +371,20 @@ class AppAttentionState(
                 publish()
                 return@withContext Outcome.Failed(Failure.StorageRefused())
             }
+            val policySaved =
+                policies.setBehavior(
+                    id,
+                    io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior
+                        .MonitorOtherServers,
+                    enabled,
+                )
+            if (policySaved is Outcome.Failed) {
+                settingsSaveFailed = true
+                publish()
+                return@withContext policySaved
+            }
             val result =
                 stores.prefs.commit(stores.lanes.forProfile(id)) {
-                    putString(key, JsonObject(values).toString())
                     putString(
                         rulesKey,
                         (rules ?: MonitorNotifyRules()).copy(enabled = enabled).toJson(),
