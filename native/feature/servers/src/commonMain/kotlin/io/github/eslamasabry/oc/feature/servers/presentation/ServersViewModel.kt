@@ -49,11 +49,19 @@ public class ServersViewModel(
      * Picks among a code's addresses (B-PROTO-068); without one, the best-ordered address is used.
      */
     private val probe: PairingProbe = NoPairingProbe,
+    private val imported: ImportedProviderReview? = null,
 ) : ViewModel(), ServersActions {
     private val local = MutableStateFlow(ServersUi(newConversation = route != null))
     public val state: StateFlow<ServersUi> =
         combine(local, connections.servers, connections.busy) { own, servers, busy ->
-                own.copy(servers = servers, busy = own.busy || busy)
+                own.copy(
+                    servers = servers,
+                    busy = own.busy || busy,
+                    importedSignIns =
+                        own.importedSignIns?.takeIf { review ->
+                            servers.any { it.id == review.profile }
+                        },
+                )
             }
             .stateIn(
                 viewModelScope,
@@ -111,6 +119,36 @@ public class ServersViewModel(
     override fun openPlans(): Unit = nav.open(PlansRoute)
 
     override fun openSetup(id: ProfileId): Unit = nav.open(ServersRoute.Setup(id))
+
+    override fun reviewImportedSignIns(id: ProfileId) = operation {
+        when (
+            val result =
+                imported?.read(id)
+                    ?: Outcome.Failed(
+                        Failure.Unavailable(
+                            io.github.eslamasabry.oc.core.common.FeatureId(
+                                "migration.providerReview"
+                            )
+                        )
+                    )
+        ) {
+            is Outcome.Ok ->
+                local.update { it.copy(importedSignIns = ImportedSignInUi(id, result.value)) }
+            is Outcome.Failed ->
+                local.update {
+                    it.copy(importedSignIns = ImportedSignInUi(id, emptyList(), failed = true))
+                }
+        }
+    }
+
+    override fun closeImportedSignIns() {
+        local.update { it.copy(importedSignIns = null) }
+    }
+
+    override fun openProviderSignIn() {
+        closeImportedSignIns()
+        nav.open(io.github.eslamasabry.oc.ui.routes.IntegrationsRoute)
+    }
 
     private var consentAddress: String? = null
 

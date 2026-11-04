@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.android.notifications.NotificationIds
 import io.github.eslamasabry.oc.android.notifications.NotifyChannel
 import io.github.eslamasabry.oc.android.notifications.NotifyWords
 import io.github.eslamasabry.oc.android.notifications.R as NotifyR
+import io.github.eslamasabry.opencode_mobile.graph.appGraph
 import io.github.eslamasabry.opencode_mobile.graph.backgroundHub
 import io.github.eslamasabry.opencode_mobile.graph.platformHub
 import kotlinx.coroutines.launch
@@ -101,6 +102,8 @@ class BackgroundConnectionService : Service() {
                     ServiceCompat.STOP_FOREGROUND_REMOVE,
                 )
                 stopSelf()
+            } else {
+                appGraph.previewRuntime.restoreSavedConnection()
             }
         }
         return START_NOT_STICKY

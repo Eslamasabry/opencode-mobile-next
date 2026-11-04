@@ -65,6 +65,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
 import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
+import io.github.eslamasabry.oc.ui.words.res.secImportedSignInsTitle
 import io.github.eslamasabry.oc.ui.words.res.secSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.serverFailureCertificate
 import io.github.eslamasabry.oc.ui.words.res.serverFailureIncompatible
@@ -182,6 +183,8 @@ public fun ServersScreen(
             }
     }
     HostSetupSheet(hostSetup) { hostSetup = false }
+    ImportedSignInsSheet(state.importedSignIns, actions)
+
     TailscaleSetupSheet(tailscaleSetup, tailscale, { tailscaleSetup = false }) { reviewed ->
         address.edit { replace(0, length, reviewed) }
         actions.allowCleartext(false, reviewed)
@@ -265,6 +268,13 @@ public fun ServersScreen(
                     }
                     if (server.connected) KitText(stringResource(Res.string.serversConnected))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                        KitButton(
+                            stringResource(Res.string.secImportedSignInsTitle),
+                            { actions.reviewImportedSignIns(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+
                         KitButton(
                             stringResource(Res.string.serversCreate),
                             { actions.create(server.id) },

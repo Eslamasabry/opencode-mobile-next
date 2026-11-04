@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.ui.routes.*
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.collections.immutable.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -59,6 +60,7 @@ class PreviewRuntime(
     private val eventJobs = mutableMapOf<ProfileId, Job>()
     // Retained only for a saved profile whose deletion reached the draft fence.
     private val draftRecovery = mutableSetOf<ProfileId>()
+    private val restoreRequested = AtomicBoolean(false)
 
     init {
         scope.launch {
@@ -66,11 +68,22 @@ class PreviewRuntime(
             ready.complete(result)
             if (result is Outcome.Ok) {
                 publishServers()
-                val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
-                if (active != null) command { connectNow(active) }
             }
         }
         scope.launch { profiles.profiles.collect { if (ready.isCompleted) publishServers() } }
+    }
+
+    /**
+     * Only a visible app launch may restore the ordinary connection. Cold OS actions validate their
+     * target first.
+     */
+    fun restoreSavedConnection() {
+        if (!restoreRequested.compareAndSet(false, true)) return
+        scope.launch {
+            if (ready.await() is Outcome.Failed) return@launch
+            val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
+            if (active != null) command { connectNow(active) }
+        }
     }
 
     private fun publishServers() {

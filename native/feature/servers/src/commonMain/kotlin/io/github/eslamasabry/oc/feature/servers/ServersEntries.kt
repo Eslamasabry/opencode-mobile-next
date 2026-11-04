@@ -26,7 +26,8 @@ import io.github.eslamasabry.oc.ui.routes.ServersRoute
 public class ServersEntries(
     private val navigator: AppNavigator,
     private val platform: PlatformCapabilities,
-    private val tailscale: io.github.eslamasabry.oc.feature.servers.presentation.TailscaleSetup,
+    private val tailscale: io.github.eslamasabry.oc.feature.servers.presentation.TailscaleSetup? =
+        null,
 ) : EntryInstaller {
     /** This phone is offered only where the built-in Linux exists (plan 07 §2.8). */
     private val thisPhone: (() -> Unit)?

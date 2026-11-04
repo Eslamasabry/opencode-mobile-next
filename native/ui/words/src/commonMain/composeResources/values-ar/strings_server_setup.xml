@@ -40,4 +40,12 @@
     <string name="secSetupUrlField">عنوان موصل HTTPS أو عنوان محلي</string>
     <string name="secSetupCommandField">وسائط الأمر في قائمة JSON، دون بيانات اعتماد</string>
     <string name="secSetupNameField">اسم الموصل</string>
+    <string name="secHostOfficialInstall">حزمة OpenCode 2 الرسمية</string>
+    <string name="secHostPinnedFront">أمر واجهة فريق الذكاء الاصطناعي مع التحقق</string>
+    <string name="secHostPinnedFrontHelp">شغّل هذا على حاسوبك بعد إعداد مشرف Gas City. استبدل you@example.com بهوية Tailscale المسموح بها الخاصة بك. التنزيل مثبّت على معرّف إيداع كامل ويُتحقق منه قبل تسميته أو تشغيله.</string>
+    <string name="secImportedSignInsTitle">مراجعة عمليات تسجيل الدخول المستوردة</string>
+    <string name="secImportedSignInsHelp">تأتي أسماء المزوّدين الثابتة هذه فقط من نسخة إعدادات خاصة تم التحقق منها. ولا تعني أنك سجّلت الدخول. افتح المزوّدين واختر الخادم المقصود وسجّل الدخول مرة أخرى عند الحاجة.</string>
+    <string name="secImportedSignInsFailed">تعذّر فحص الإعدادات المستوردة. لم تُعرض أسماء مزوّدين.</string>
+    <string name="secImportedSignInsEmpty">لا توجد إعدادات مزوّدين مستوردة تم التحقق منها لمراجعتها.</string>
+    <string name="secImportedSignInsOpen">فتح تسجيل دخول المزوّد</string>
 </resources>

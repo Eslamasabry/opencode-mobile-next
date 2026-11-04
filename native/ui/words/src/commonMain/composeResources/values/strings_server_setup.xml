@@ -40,4 +40,12 @@
     <string name="secSetupUrlField">HTTPS or loopback connector address</string>
     <string name="secSetupCommandField">Command arguments as a JSON list, without credentials</string>
     <string name="secSetupNameField">Connector name</string>
+    <string name="secHostOfficialInstall">Official OpenCode 2 package</string>
+    <string name="secHostPinnedFront">Checked AI Team front command</string>
+    <string name="secHostPinnedFrontHelp">Run this on your computer after setting up the Gas City supervisor. Replace you@example.com with your own allowed Tailscale identity. The download is pinned to a full commit and checked before it is named or run.</string>
+    <string name="secImportedSignInsTitle">Review imported sign-ins</string>
+    <string name="secImportedSignInsHelp">These fixed provider names come only from a verified private configuration export. They do not mean you are signed in. Open providers, choose the intended server, and sign in again where needed.</string>
+    <string name="secImportedSignInsFailed">The imported settings could not be checked. No provider names were shown.</string>
+    <string name="secImportedSignInsEmpty">No verified imported provider settings to review.</string>
+    <string name="secImportedSignInsOpen">Open provider sign-in</string>
 </resources>

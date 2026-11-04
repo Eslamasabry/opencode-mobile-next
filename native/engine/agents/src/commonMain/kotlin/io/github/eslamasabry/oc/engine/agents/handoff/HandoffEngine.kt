@@ -12,9 +12,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 
-public enum class HandoffPhase { Idle, Loading, Ready, WritingFile, Creating, Sending, Linking, Complete, Failed, Uncertain }
+public enum class HandoffPhase {
+    Idle,
+    Loading,
+    Ready,
+    WritingFile,
+    Creating,
+    Sending,
+    Linking,
+    Complete,
+    Failed,
+    Uncertain,
+}
 
-/** Which part of the pinned scope no longer holds. Content-free; the words live in [HandoffWords]. */
+/**
+ * Which part of the pinned scope no longer holds. Content-free; the words live in [HandoffWords].
+ */
 public enum class HandoffStaleReason {
     /** The caller's selection generation moved on (sheet closed, profile changed). */
     NotCurrent,
@@ -27,7 +40,14 @@ public enum class HandoffStaleReason {
 }
 
 /** The class of a port failure, never its text. */
-public enum class HandoffCause { TimedOut, Network, Server, Refused, Storage, Other }
+public enum class HandoffCause {
+    TimedOut,
+    Network,
+    Server,
+    Refused,
+    Storage,
+    Other,
+}
 
 /** Content-free technical detail for the sheet's Details fold. Never copy, never server text. */
 public sealed interface HandoffDetail {
@@ -65,22 +85,25 @@ public data class HandoffState(
 public sealed interface HandoffPrepared {
     public data class Ready(val draft: HandoffDraft) : HandoffPrepared
 
-    public data class Refused(val kind: HandoffFailureKind, val detail: HandoffDetail? = null) : HandoffPrepared
+    public data class Refused(val kind: HandoffFailureKind, val detail: HandoffDetail? = null) :
+        HandoffPrepared
 }
 
 public sealed interface HandoffSent {
     /** [navigationSessionId]: the id to open the continued conversation by. */
     public data class Sent(val navigationSessionId: String) : HandoffSent
 
-    public data class Refused(val kind: HandoffFailureKind, val detail: HandoffDetail? = null) : HandoffSent
+    public data class Refused(val kind: HandoffFailureKind, val detail: HandoffDetail? = null) :
+        HandoffSent
 }
 
 /**
- * Port of `AgentHandoffController` (lib/state/agent_handoff_controller.dart): one attempt in one pinned source/target
- * scope. [prepare] reads and builds the record without mutating anything; [send] dispatches only the reviewed draft:
- * write the record, create the target conversation, send the edited prompt behind a dispatch-time fence, then link the
- * canonical ids. An uncertain mutation consumes the attempt; [retryLink] only re-saves metadata after acknowledged
- * delivery. No automatic retry of remote mutations.
+ * Port of `AgentHandoffController` (lib/state/agent_handoff_controller.dart): one attempt in one
+ * pinned source/target scope. [prepare] reads and builds the record without mutating anything;
+ * [send] dispatches only the reviewed draft: write the record, create the target conversation, send
+ * the edited prompt behind a dispatch-time fence, then link the canonical ids. An uncertain
+ * mutation consumes the attempt; [retryLink] only re-saves metadata after acknowledged delivery. No
+ * automatic retry of remote mutations.
  *
  * [isCurrent] must turn false when either profile is deleting or the sheet closes.
  */
@@ -114,30 +137,39 @@ public class HandoffEngine(
         if (after != before) onPhase?.invoke(after)
     }
 
-    private fun stale(reason: HandoffStaleReason) = Stop(HandoffFailureKind.StaleScope, HandoffDetail.Stale(reason))
+    private fun stale(reason: HandoffStaleReason) =
+        Stop(HandoffFailureKind.StaleScope, HandoffDetail.Stale(reason))
 
     /** Null: every pinned fact still holds. */
     private fun check(): Stop? {
-        val reason = when {
-            !isCurrent() -> HandoffStaleReason.NotCurrent
-            source.isClosed -> HandoffStaleReason.SourceConnectionClosed
-            target.gateway.isClosed -> HandoffStaleReason.AgentConnectionClosed
-            source.directory != sourceScope.directory || source.workspace != sourceScope.workspace -> HandoffStaleReason.SourceMoved
-            target.gateway.directory != target.scope.directory || target.gateway.workspace != target.scope.workspace ->
-                HandoffStaleReason.AgentMoved
-            // Admission also closes synchronously during profile deletion.
-            !links.admitsProfiles(sourceScope.profileId, target.scope.profileId) -> HandoffStaleReason.ProfileUnavailable
-            else -> null
-        }
+        val reason =
+            when {
+                !isCurrent() -> HandoffStaleReason.NotCurrent
+                source.isClosed -> HandoffStaleReason.SourceConnectionClosed
+                target.gateway.isClosed -> HandoffStaleReason.AgentConnectionClosed
+                source.directory != sourceScope.directory ||
+                    source.workspace != sourceScope.workspace -> HandoffStaleReason.SourceMoved
+                target.gateway.directory != target.scope.directory ||
+                    target.gateway.workspace != target.scope.workspace ->
+                    HandoffStaleReason.AgentMoved
+                // Admission also closes synchronously during profile deletion.
+                !links.admitsProfiles(sourceScope.profileId, target.scope.profileId) ->
+                    HandoffStaleReason.ProfileUnavailable
+                else -> null
+            }
         return reason?.let(::stale)
     }
 
-    private suspend fun <T> call(step: HandoffPhase, block: suspend () -> Outcome<T>): Pair<T?, Stop?> {
+    private suspend fun <T> call(
+        step: HandoffPhase,
+        block: suspend () -> Outcome<T>,
+    ): Pair<T?, Stop?> {
         val outcome = attempt({ Failure.Unexpected() }) { block() }
-        val inner = when (outcome) {
-            is Outcome.Failed -> outcome
-            is Outcome.Ok -> outcome.value
-        }
+        val inner =
+            when (outcome) {
+                is Outcome.Failed -> outcome
+                is Outcome.Ok -> outcome.value
+            }
         return when (inner) {
             is Outcome.Ok -> inner.value to null
             is Outcome.Failed -> null to Stop(null, HandoffDetail.Step(step, cause(inner.failure)))
@@ -145,9 +177,13 @@ public class HandoffEngine(
     }
 
     private suspend fun validateTarget(step: HandoffPhase): Stop? {
-        check()?.let { return it }
+        check()?.let {
+            return it
+        }
         val (inventory, failed) = call(step) { target.gateway.providers() }
-        check()?.let { return it }
+        check()?.let {
+            return it
+        }
         if (inventory == null) return failed
         val model = target.model.normalized
         val providers = inventory.filter { it.id == model.providerId }
@@ -158,27 +194,44 @@ public class HandoffEngine(
         if (target.variant.isNotEmpty()) {
             val variants = provider.variants[ids.first()] ?: provider.variants[model.modelId]
             val disabled = variants?.get(target.variant)
-            if (disabled == null || disabled) return Stop(HandoffFailureKind.TargetUnavailable, null)
+            if (disabled == null || disabled)
+                return Stop(HandoffFailureKind.TargetUnavailable, null)
         }
         return null
     }
 
-    /** A route without mutating the source. For [HandoffRoute.SwitchModel] the UI uses the native model switch. */
-    public fun route(currentModel: HandoffModelRef?): HandoffRoute = handoffRoute(source, sourceScope, currentModel, target)
+    /**
+     * A route without mutating the source. For [HandoffRoute.SwitchModel] the UI uses the native
+     * model switch.
+     */
+    public fun route(currentModel: HandoffModelRef?): HandoffRoute =
+        handoffRoute(source, sourceScope, currentModel, target)
 
-    /** The editable preview and the dispatched text: the app-owned record path survives opaque-token masking. */
+    /**
+     * The editable preview and the dispatched text: the app-owned record path survives opaque-token
+     * masking.
+     */
     public fun sanitizePrompt(draft: HandoffDraft, value: String): String =
-        value.split(draft.relativePath).joinToString(draft.relativePath) { redactor.opaqueTokens(redactor.redact(it)) }
+        value.split(draft.relativePath).joinToString(draft.relativePath) {
+            redactor.opaqueTokens(redactor.redact(it))
+        }
 
     public suspend fun prepare(lastState: String): Outcome<HandoffPrepared> {
         if (!lane.tryLock()) return HandoffPrepared.Refused(HandoffFailureKind.InvalidDraft).ok()
         try {
-            if (state.value.phase != HandoffPhase.Idle) return HandoffPrepared.Refused(HandoffFailureKind.InvalidDraft).ok()
+            if (state.value.phase != HandoffPhase.Idle)
+                return HandoffPrepared.Refused(HandoffFailureKind.InvalidDraft).ok()
             phase(HandoffPhase.Loading)
             return when (val result = prepareSteps(lastState)) {
                 is HandoffPrepared.Ready -> result.ok()
                 is HandoffPrepared.Refused -> {
-                    set { it.copy(phase = HandoffPhase.Failed, failure = result.kind, detail = result.detail) }
+                    set {
+                        it.copy(
+                            phase = HandoffPhase.Failed,
+                            failure = result.kind,
+                            detail = result.detail,
+                        )
+                    }
                     result.ok()
                 }
             }
@@ -188,59 +241,94 @@ public class HandoffEngine(
     }
 
     private suspend fun prepareSteps(lastState: String): HandoffPrepared {
-        fun refused(stop: Stop) = HandoffPrepared.Refused(stop.kind ?: HandoffFailureKind.PreparationFailed, stop.detail)
+        fun refused(stop: Stop) =
+            HandoffPrepared.Refused(stop.kind ?: HandoffFailureKind.PreparationFailed, stop.detail)
         val step = HandoffPhase.Loading
-        check()?.let { return refused(it) }
-        if (!sourceScope.sharesProject(target.scope)) return HandoffPrepared.Refused(HandoffFailureKind.ProjectMismatch)
-        if (!target.gateway.capabilities.agentHandoffFiles || target.gateway.handoffTarget == null) {
+        check()?.let {
+            return refused(it)
+        }
+        if (!sourceScope.sharesProject(target.scope))
+            return HandoffPrepared.Refused(HandoffFailureKind.ProjectMismatch)
+        if (
+            !target.gateway.capabilities.agentHandoffFiles || target.gateway.handoffTarget == null
+        ) {
             return HandoffPrepared.Refused(HandoffFailureKind.Unavailable)
         }
-        validateTarget(step)?.let { return refused(it) }
+        validateTarget(step)?.let {
+            return refused(it)
+        }
         val (session, sessionFailed) = call(step) { source.session(sourceSessionId) }
-        check()?.let { return refused(it) }
+        check()?.let {
+            return refused(it)
+        }
         if (session == null) return refused(sessionFailed!!)
         if (session.id != sourceSessionId || session.directory != sourceScope.directory) {
             return HandoffPrepared.Refused(HandoffFailureKind.StaleScope)
         }
         var staleDuringHistory: Stop? = null
-        val history = readHandoffHistory(source, sourceSessionId, isCurrent = {
-            val stop = check()
-            if (stop != null) staleDuringHistory = stop
-            stop == null
-        })
-        staleDuringHistory?.let { return refused(it) }
-        val messages = when (history) {
-            is HandoffHistoryRead.Failed ->
-                return HandoffPrepared.Refused(HandoffFailureKind.PreparationFailed, HandoffDetail.History(history.kind))
-            is HandoffHistoryRead.Read -> history.messages
+        val history =
+            readHandoffHistory(
+                source,
+                sourceSessionId,
+                isCurrent = {
+                    val stop = check()
+                    if (stop != null) staleDuringHistory = stop
+                    stop == null
+                },
+            )
+        staleDuringHistory?.let {
+            return refused(it)
         }
-        val todos = if (source.capabilities.sessionTodos) {
-            val (value, failed) = call(step) { source.todos(sourceSessionId) }
-            value ?: return refused(failed!!)
-        } else {
-            emptyList()
+        val messages =
+            when (history) {
+                is HandoffHistoryRead.Failed ->
+                    return HandoffPrepared.Refused(
+                        HandoffFailureKind.PreparationFailed,
+                        HandoffDetail.History(history.kind),
+                    )
+                is HandoffHistoryRead.Read -> history.messages
+            }
+        val todos =
+            if (source.capabilities.sessionTodos) {
+                val (value, failed) = call(step) { source.todos(sourceSessionId) }
+                value ?: return refused(failed!!)
+            } else {
+                emptyList()
+            }
+        check()?.let {
+            return refused(it)
         }
-        check()?.let { return refused(it) }
-        val files = if (source.capabilities.sessionDiff) {
-            val (value, failed) = call(step) { source.diff(sourceSessionId) }
-            value ?: return refused(failed!!)
-        } else {
-            emptyList()
+        val files =
+            if (source.capabilities.sessionDiff) {
+                val (value, failed) = call(step) { source.diff(sourceSessionId) }
+                value ?: return refused(failed!!)
+            } else {
+                emptyList()
+            }
+        check()?.let {
+            return refused(it)
         }
-        check()?.let { return refused(it) }
         val (after, afterFailed) = call(step) { source.session(sourceSessionId) }
-        check()?.let { return refused(it) }
+        check()?.let {
+            return refused(it)
+        }
         if (after == null) return refused(afterFailed!!)
-        if (after.id != session.id || after.directory != session.directory || after.updated != session.updated) {
+        if (
+            after.id != session.id ||
+                after.directory != session.directory ||
+                after.updated != session.updated
+        ) {
             return HandoffPrepared.Refused(HandoffFailureKind.SourceChanged)
         }
-        val record = when (val built = records.build(session, messages, todos, files, lastState)) {
-            is HandoffRecordResult.TooLarge -> return HandoffPrepared.Refused(
-                HandoffFailureKind.PreparationFailed,
-                HandoffDetail.RecordTooLarge(built.requiredBytes, built.maxBytes),
-            )
-            is HandoffRecordResult.Built -> built.record
-        }
+        val record =
+            when (val built = records.build(session, messages, todos, files, lastState)) {
+                is HandoffRecordResult.TooLarge ->
+                    return HandoffPrepared.Refused(
+                        HandoffFailureKind.PreparationFailed,
+                        HandoffDetail.RecordTooLarge(built.requiredBytes, built.maxBytes),
+                    )
+                is HandoffRecordResult.Built -> built.record
+            }
         val id = recordId()
         if (!RECORD_ID.matches(id)) return HandoffPrepared.Refused(HandoffFailureKind.InvalidDraft)
         val path = ".handoff/$id/record.md"
@@ -258,7 +346,11 @@ public class HandoffEngine(
                 return HandoffSent.Refused(HandoffFailureKind.InvalidDraft).ok()
             }
             val text = sanitizePrompt(review, editedPrompt)
-            if (text.isBlank() || utf8Length(text) > MAX_PROMPT_BYTES || !text.contains(review.relativePath)) {
+            if (
+                text.isBlank() ||
+                    utf8Length(text) > MAX_PROMPT_BYTES ||
+                    !text.contains(review.relativePath)
+            ) {
                 return HandoffSent.Refused(HandoffFailureKind.InvalidDraft).ok()
             }
             return sendSteps(review, text).ok()
@@ -269,79 +361,121 @@ public class HandoffEngine(
 
     /** Any stop after a remote mutation began is reported by the step it happened in. */
     private fun fail(stop: Stop): HandoffSent.Refused {
-        val kind = when (state.value.phase) {
-            HandoffPhase.Sending -> HandoffFailureKind.DeliveryUnknown
-            HandoffPhase.Creating -> HandoffFailureKind.CreationUnknown
-            HandoffPhase.Linking -> HandoffFailureKind.LinkFailed
-            else -> stop.kind ?: HandoffFailureKind.FileWriteFailed
-        }
-        val uncertain = kind == HandoffFailureKind.DeliveryUnknown || kind == HandoffFailureKind.CreationUnknown
+        val kind =
+            when (state.value.phase) {
+                HandoffPhase.Sending -> HandoffFailureKind.DeliveryUnknown
+                HandoffPhase.Creating -> HandoffFailureKind.CreationUnknown
+                HandoffPhase.Linking -> HandoffFailureKind.LinkFailed
+                else -> stop.kind ?: HandoffFailureKind.FileWriteFailed
+            }
+        val uncertain =
+            kind == HandoffFailureKind.DeliveryUnknown || kind == HandoffFailureKind.CreationUnknown
         set {
-            it.copy(phase = if (uncertain) HandoffPhase.Uncertain else HandoffPhase.Failed, failure = kind, detail = stop.detail)
+            it.copy(
+                phase = if (uncertain) HandoffPhase.Uncertain else HandoffPhase.Failed,
+                failure = kind,
+                detail = stop.detail,
+            )
         }
         return HandoffSent.Refused(kind, stop.detail)
     }
 
     private suspend fun sendSteps(review: HandoffDraft, text: String): HandoffSent {
-        validateTarget(HandoffPhase.Ready)?.let { return fail(it) }
-        check()?.let { return fail(it) }
+        validateTarget(HandoffPhase.Ready)?.let {
+            return fail(it)
+        }
+        check()?.let {
+            return fail(it)
+        }
         val destination = target.gateway.handoffTarget
         if (!target.gateway.capabilities.agentHandoffFiles || destination == null) {
             return fail(Stop(HandoffFailureKind.Unavailable, null))
         }
         val (current, currentFailed) = call(HandoffPhase.Ready) { source.session(sourceSessionId) }
-        check()?.let { return fail(it) }
+        check()?.let {
+            return fail(it)
+        }
         if (current == null) return fail(currentFailed!!)
-        if (current.id != sourceSessionId || current.directory != sourceScope.directory ||
-            current.updated != sourceSession?.updated
+        if (
+            current.id != sourceSessionId ||
+                current.directory != sourceScope.directory ||
+                current.updated != sourceSession?.updated
         ) {
             return fail(Stop(HandoffFailureKind.SourceChanged, null))
         }
 
         phase(HandoffPhase.WritingFile)
-        val (written, writeFailed) = call(HandoffPhase.WritingFile) {
-            destination.writeRecord(target.scope.directory, review.recordId, review.record.markdown)
-        }
-        if (written == null) return fail(Stop(HandoffFailureKind.FileWriteFailed, writeFailed?.detail))
+        val (written, writeFailed) =
+            call(HandoffPhase.WritingFile) {
+                destination.writeRecord(
+                    target.scope.directory,
+                    review.recordId,
+                    review.record.markdown,
+                )
+            }
+        if (written == null)
+            return fail(Stop(HandoffFailureKind.FileWriteFailed, writeFailed?.detail))
         set { it.copy(writtenPath = written) }
-        check()?.let { return fail(it) }
-        if (written != review.relativePath) return fail(Stop(HandoffFailureKind.FileWriteFailed, null))
+        check()?.let {
+            return fail(it)
+        }
+        if (written != review.relativePath)
+            return fail(Stop(HandoffFailureKind.FileWriteFailed, null))
 
         phase(HandoffPhase.Creating)
         val (session, createFailed) = call(HandoffPhase.Creating) { target.gateway.createSession() }
         if (session == null) return fail(createFailed!!)
         set { it.copy(createdSessionId = session.id, navigationSessionId = session.id) }
-        check()?.let { return fail(it) }
-        if (session.directory != target.scope.directory) return fail(Stop(HandoffFailureKind.StaleScope, null))
+        check()?.let {
+            return fail(it)
+        }
+        if (session.directory != target.scope.directory)
+            return fail(Stop(HandoffFailureKind.StaleScope, null))
 
         phase(HandoffPhase.Sending)
         var fenced: Stop? = null
-        val (_, promptFailed) = call(HandoffPhase.Sending) {
-            destination.promptHandoff(session.id, text, target.model.normalized, target.agent, target.variant, beforeSend = {
-                fenced = check()
-                fenced == null
-            })
+        val (_, promptFailed) =
+            call(HandoffPhase.Sending) {
+                destination.promptHandoff(
+                    session.id,
+                    text,
+                    target.model.normalized,
+                    target.agent,
+                    target.variant,
+                    beforeSend = {
+                        fenced = check()
+                        fenced == null
+                    },
+                )
+            }
+        fenced?.let {
+            return fail(it)
         }
-        fenced?.let { return fail(it) }
         if (promptFailed != null) return fail(promptFailed)
         val created = destination.durableSessionId(session.id)
         set { it.copy(createdSessionId = created) }
-        check()?.let { return fail(it) }
-        val sourceDurable = source.handoffTarget?.durableSessionId(sourceSessionId) ?: sourceSessionId
-        pendingLink = HandoffLink(
-            id = review.recordId,
-            sourceProfileId = sourceScope.profileId,
-            sourceSessionId = sourceDurable,
-            sourceOrigin = sourceScope.origin,
-            sourceTitle = sourceSession?.title ?: UNTITLED,
-            targetProfileId = target.scope.profileId,
-            targetSessionId = created,
-            targetOrigin = target.scope.origin,
-            targetAgent = target.label,
-            projectDirectory = target.scope.directory,
-            handoffPath = written,
-        )
-        saveLink()?.let { return fail(it) }
+        check()?.let {
+            return fail(it)
+        }
+        val sourceDurable =
+            source.handoffTarget?.durableSessionId(sourceSessionId) ?: sourceSessionId
+        pendingLink =
+            HandoffLink(
+                id = review.recordId,
+                sourceProfileId = sourceScope.profileId,
+                sourceSessionId = sourceDurable,
+                sourceOrigin = sourceScope.origin,
+                sourceTitle = sourceSession?.title ?: UNTITLED,
+                targetProfileId = target.scope.profileId,
+                targetSessionId = created,
+                targetOrigin = target.scope.origin,
+                targetAgent = target.label,
+                projectDirectory = target.scope.directory,
+                handoffPath = written,
+            )
+        saveLink()?.let {
+            return fail(it)
+        }
         val navigation = destination.navigationSessionId(created)
         set { it.copy(navigationSessionId = navigation) }
         return HandoffSent.Sent(navigation)
@@ -349,11 +483,14 @@ public class HandoffEngine(
 
     private suspend fun saveLink(): Stop? {
         phase(HandoffPhase.Linking)
-        check()?.let { return it }
+        check()?.let {
+            return it
+        }
         val link = pendingLink ?: return Stop(HandoffFailureKind.LinkFailed, null)
         val (saved, failed) = call(HandoffPhase.Linking) { links.save(link) }
         if (saved == null) return failed
-        if (saved is HandoffLinkSave.Refused) return Stop(HandoffFailureKind.LinkFailed, HandoffDetail.Link(saved.reason))
+        if (saved is HandoffLinkSave.Refused)
+            return Stop(HandoffFailureKind.LinkFailed, HandoffDetail.Link(saved.reason))
         set { it.copy(phase = HandoffPhase.Complete, failure = null, detail = null) }
         return null
     }
@@ -366,17 +503,30 @@ public class HandoffEngine(
                 return HandoffSent.Refused(HandoffFailureKind.InvalidDraft).ok()
             }
             saveLink()?.let { stop ->
-                set { it.copy(phase = HandoffPhase.Failed, failure = HandoffFailureKind.LinkFailed, detail = stop.detail) }
+                set {
+                    it.copy(
+                        phase = HandoffPhase.Failed,
+                        failure = HandoffFailureKind.LinkFailed,
+                        detail = stop.detail,
+                    )
+                }
                 return HandoffSent.Refused(HandoffFailureKind.LinkFailed, stop.detail).ok()
             }
-            val navigation = target.gateway.handoffTarget?.navigationSessionId(pendingLink!!.targetSessionId)
-                ?: pendingLink!!.targetSessionId
+            val navigation =
+                target.gateway.handoffTarget?.navigationSessionId(pendingLink!!.targetSessionId)
+                    ?: pendingLink!!.targetSessionId
             set { it.copy(navigationSessionId = navigation) }
             return HandoffSent.Sent(navigation).ok()
         } finally {
             lane.unlock()
         }
     }
+
+    /** The completed target is navigable only while its original admitted scope still holds. */
+    public fun completedSessionId(): String? =
+        if (state.value.phase == HandoffPhase.Complete && check() == null)
+            state.value.navigationSessionId
+        else null
 
     public companion object {
         public val RECORD_ID: Regex = Regex("^[A-Za-z0-9_-]{1,128}$")
@@ -385,14 +535,16 @@ public class HandoffEngine(
         /** The stored fallback title (link metadata, mirrored from Flutter). */
         private const val UNTITLED = "Untitled conversation"
 
-        private fun cause(failure: Failure): HandoffCause = when (failure) {
-            is Failure.TimedOut -> HandoffCause.TimedOut
-            is Failure.Network -> HandoffCause.Network
-            is Failure.Server, is Failure.Rejected -> HandoffCause.Server
-            is Failure.Refused -> HandoffCause.Refused
-            is Failure.StorageRefused -> HandoffCause.Storage
-            else -> HandoffCause.Other
-        }
+        private fun cause(failure: Failure): HandoffCause =
+            when (failure) {
+                is Failure.TimedOut -> HandoffCause.TimedOut
+                is Failure.Network -> HandoffCause.Network
+                is Failure.Server,
+                is Failure.Rejected -> HandoffCause.Server
+                is Failure.Refused -> HandoffCause.Refused
+                is Failure.StorageRefused -> HandoffCause.Storage
+                else -> HandoffCause.Other
+            }
 
         /** A random UUID v4 (the default record id) from a secure source. */
         public fun uuidV4(random: SecureBytes): String {
@@ -406,8 +558,9 @@ public class HandoffEngine(
 }
 
 /**
- * The first prompt sent to the destination agent. Agent-directed wire text (the destination reads it as instructions),
- * byte-for-byte with Flutter; the person edits it in the composer before sending.
+ * The first prompt sent to the destination agent. Agent-directed wire text (the destination reads
+ * it as instructions), byte-for-byte with Flutter; the person edits it in the composer before
+ * sending.
  */
 public object HandoffPrompt {
     public fun initial(relativePath: String): String =

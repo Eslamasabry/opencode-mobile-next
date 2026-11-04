@@ -23,6 +23,7 @@ public data class ServersUi(
      */
     val pairingArrival: Int = 0,
     val pairingProblem: PairingProblem? = null,
+    val importedSignIns: ImportedSignInUi? = null,
 )
 
 public enum class ServerIssue {
@@ -80,4 +81,10 @@ public interface ServersActions {
     public fun openPlans() {}
 
     public fun openSetup(id: ProfileId) {}
+
+    public fun reviewImportedSignIns(id: ProfileId) {}
+
+    public fun closeImportedSignIns() {}
+
+    public fun openProviderSignIn() {}
 }

@@ -29,6 +29,7 @@ interface AndroidAppGraph : ViewModelGraph {
     val appScope: AppCoroutineScope
     val previewRuntime: PreviewRuntime
     val composerFiles: AndroidComposerFiles
+    val androidSessionImportFiles: AndroidSessionImportFiles
     val connections: ConnectionRegistry
     val shell: ShellDependencies
 

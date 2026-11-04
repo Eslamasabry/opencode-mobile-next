@@ -40,5 +40,6 @@ object SecurityFeatureBindings {
                 )
             )
             InAppQuotaCollector.register(this)
+            HandoffKeys.register(this)
         }
 }
