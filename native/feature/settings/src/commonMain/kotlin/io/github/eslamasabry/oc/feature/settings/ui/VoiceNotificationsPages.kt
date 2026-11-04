@@ -202,6 +202,15 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
                     }
             }
         }
+    else
+        // Flutter `_savedServers`: nothing to watch yet is said, rather than an empty section.
+        KitRowGroup(label = stringResource(Res.string.notifySectionServers)) {
+            KitRow(
+                title = stringResource(Res.string.notifyNoServersTitle),
+                supporting = stringResource(Res.string.notifyNoServersDetail),
+                supportingMaxLines = 2,
+            )
+        }
     // Flutter `_quietHours`: one switch that names itself; when on, its start and end (each opens
     // its time page).
     KitRowGroup {
@@ -228,7 +237,11 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
                 onClick = { actions.onOpen(SettingsPage.QuietTime(start = false)) },
             )
         }
-        KitSwitchRow(title = stringResource(Res.string.notifyWifiOnly), checked = n.wifiOnly) {
+        KitSwitchRow(
+            title = stringResource(Res.string.notifyWifiOnly),
+            checked = n.wifiOnly,
+            supporting = stringResource(Res.string.monitorWifiDetail),
+        ) {
             actions.onNotification(NotificationChange.WifiOnly(it))
         }
         KitRow(

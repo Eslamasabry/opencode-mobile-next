@@ -332,15 +332,15 @@ private fun ServerLocalBody(state: ServerSettingsUi, actions: ServerSettingsActi
                     KitEnabled.Disabled(stringResource(Res.string.e7ProjectMonitorUnsupported))
                 else enabled,
         )
-        KitSwitchRow(
-            stringResource(Res.string.settingsV3Notifications),
-            checked = local.notifications,
-            onCheckedChange = actions::notifications,
-            enabled =
-                if (!local.monitorSupported)
-                    KitEnabled.Disabled(stringResource(Res.string.e7ProjectMonitorUnsupported))
-                else enabled,
-        )
+        // Flutter `_monitoredServerRows`: whether what the monitor finds may notify exists only
+        // while this server is watched.
+        if (local.monitorSupported && local.watching)
+            KitSwitchRow(
+                stringResource(Res.string.settingsV3Notifications),
+                checked = local.notifications,
+                onCheckedChange = actions::notifications,
+                enabled = enabled,
+            )
         KitSwitchRow(
             stringResource(Res.string.settingsV3ShareRead),
             checked = local.sharingRead,

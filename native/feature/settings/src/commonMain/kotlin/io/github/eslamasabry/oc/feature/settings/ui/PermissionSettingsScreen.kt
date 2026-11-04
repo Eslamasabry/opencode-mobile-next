@@ -49,7 +49,7 @@ public fun PermissionSettingsScreen(
             if (facts == null) {
                 KitNotice(stringResource(Res.string.consentStorageFailed))
                 KitRow(
-                    title = stringResource(Res.string.appUpdateCheckNow),
+                    title = stringResource(Res.string.kitTryAgain),
                     onClick = actions::refresh,
                 )
             } else {
