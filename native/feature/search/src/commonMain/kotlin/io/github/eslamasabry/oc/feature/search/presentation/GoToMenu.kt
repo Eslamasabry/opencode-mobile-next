@@ -3,7 +3,20 @@ package io.github.eslamasabry.oc.feature.search.presentation
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 
 /** A place Search's Go to menu can open. */
-public enum class GoToPlace { NeedsYou, Files, Projects, Settings, Servers, AddServer, Terminal, Help, NewConversation }
+public enum class GoToPlace {
+    NeedsYou,
+    Files,
+    Projects,
+    Settings,
+    Servers,
+    AddServer,
+    Terminal,
+    Help,
+    NewConversation;
+
+    /** Files, Terminal and Help have no stand-alone page to open from here; they are not offered. */
+    public val openable: Boolean get() = this != Files && this != Terminal && this != Help
+}
 
 /** Where a row sits: the Go to places, the recent conversations, or an action found only once typed. */
 public enum class GoToSection { GoTo, Recent, Action }

@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.search.presentation
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import kotlinx.collections.immutable.ImmutableList
@@ -29,6 +30,15 @@ public data class SearchConversationPage(
     val allProjects: Boolean,
 )
 
+/** What the Go to menu is built from for one server: what it can open (never its flavour) and the newest conversations. */
+public data class SearchGoToFacts(
+    val fileBrowsing: Boolean,
+    val terminal: Boolean,
+    val projectManagement: Boolean,
+    /** Newest first; the menu shows the last three. */
+    val recent: ImmutableList<Pair<ConversationRef, String?>>,
+)
+
 /** The visible text of one message (text parts only; no tool output, no files). */
 public data class SearchMessage(val id: String, val fromYou: Boolean, val text: String)
 
@@ -45,6 +55,9 @@ public interface ConversationSearchSource {
 
     /** Conversations newest first; [query] blank = no title filter. */
     public suspend fun conversations(profile: ProfileId, query: String, cursor: String?): Outcome<SearchConversationPage>
+
+    /** What the Go to menu offers for [profile]; null when the server cannot be read now. */
+    public suspend fun goToFacts(profile: ProfileId): SearchGoToFacts? = null
 
     /** The newest [limit] messages of one conversation. */
     public suspend fun recentMessages(profile: ProfileId, session: SessionId, limit: Int): Outcome<ImmutableList<SearchMessage>>

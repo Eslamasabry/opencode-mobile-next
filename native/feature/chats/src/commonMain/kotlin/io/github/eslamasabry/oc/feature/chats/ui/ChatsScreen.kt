@@ -73,6 +73,11 @@ import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.pluralStringResource
+import io.github.eslamasabry.oc.feature.chats.presentation.RelativeAge
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceHoursAgo
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceJustNow
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceMinutesAgo
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -273,12 +278,21 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions) {
     // The row registers its grow key; the chat page grows out of it and shrinks back into it (P2).
     KitRow(
         title = title,
-        supporting = row.project,
+        supporting = listOfNotNull(row.project.ifEmpty { null }, row.ago?.let { agoText(it) }).joinToString(" · ").ifEmpty { null },
         trailing = status?.let { KitRowTrailing.Value(it, chevron = false) } ?: KitRowTrailing.None,
         growKey = row.ref,
         onClick = { actions.openConversation(row.ref) },
     )
 }
+
+@Composable
+private fun agoText(age: RelativeAge): String =
+    when (age) {
+        RelativeAge.JustNow -> stringResource(Res.string.e7WorkspaceJustNow)
+        is RelativeAge.Minutes -> stringResource(Res.string.e7WorkspaceMinutesAgo, Numbers.format(age.count))
+        is RelativeAge.Hours -> stringResource(Res.string.e7WorkspaceHoursAgo, Numbers.format(age.count))
+        is RelativeAge.Days -> stringResource(Res.string.e7WorkspaceDaysAgo, Numbers.format(age.count))
+    }
 
 /** P2 proof page for ChatRoute: the box a row grows into (plan 08 §5.4). */
 @Composable
