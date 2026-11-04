@@ -84,6 +84,7 @@ dependencies {
             ":engine:analytics",
             ":engine:diagnostics",
             ":android:notifications",
+            ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
             ":engine:migration",
             ":feature:gate",
@@ -96,6 +97,7 @@ dependencies {
             ":feature:git",
             ":engine:updates", // P12-PLATFORM: in-app update notice
             ":feature:updates", // P12-PLATFORM: Updates page
+            ":feature:background", // BUILD-ANDROID-BG-PLATFORM: Settings › Background
             ":android:tiles", // P12-PLATFORM: QS tiles, shortcuts, share, update installer
             ":android:widgets", // P12-PLATFORM: home-screen widgets
             ":feature:preview", // PREVIEW-QR

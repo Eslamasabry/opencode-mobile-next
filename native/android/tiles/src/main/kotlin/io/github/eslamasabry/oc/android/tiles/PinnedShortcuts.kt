@@ -168,5 +168,8 @@ object PinnedShortcuts {
             ids,
             context.getString(R.string.shortcut_session_unavailable),
         )
+        // Withdraw the dynamic entries explicitly too, so "no pins" publishes an empty set on every launcher (not
+        // only where disabling a dynamic shortcut also removes it); a user-pinned copy stays, greyed out.
+        ShortcutManagerCompat.removeDynamicShortcuts(context, ids)
     }
 }

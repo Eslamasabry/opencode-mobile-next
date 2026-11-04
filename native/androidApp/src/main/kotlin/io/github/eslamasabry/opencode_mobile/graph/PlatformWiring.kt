@@ -308,7 +308,13 @@ class PlatformHub(
             navigator.openChat(ref)
             return
         }
-        when (LaunchActions.consume(intent)) {
+        when (val action = LaunchActions.consume(intent)) {
+            LaunchAction.PhoneSetup, LaunchAction.PhoneSetupDone ->
+                when (val tap = SetupTapRoutes.routeFor(action, navigator.top.value)) { // B-ANDR-050
+                    is SetupTap.Open -> navigator.open(tap.route)
+                    SetupTap.Stay -> Unit
+                    SetupTap.Land, SetupTap.NotSetup -> navigator.land()
+                }
             LaunchAction.Connect -> navigator.open(ServersRoute.Home)
             LaunchAction.NewTask -> navigator.open(ChatsRoute.New(profile = stores.profiles.activeId.value))
             null -> Unit

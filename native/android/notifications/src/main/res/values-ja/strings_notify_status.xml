@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The status row's words (StatusModel, B-ANDR-041..047). Native translation of the notifStatus* strings; numbers arrive pre-formatted (%s). -->
+<resources>
+    <string name="notify_status_working">作業中…</string>
+    <string name="notify_status_still_working">%1$s 件が作業中</string>
+    <string name="notify_status_chats_working">%1$s 件の会話が作業中</string>
+    <string name="notify_status_more">他 %1$s 件</string>
+    <string name="notify_status_waiting_count">%1$s 件が待機中</string>
+    <string name="notify_status_tasks_progress">%1$s / %2$s タスク</string>
+    <string name="notify_status_minutes">%1$s 分</string>
+    <string name="notify_status_hours">%1$s 時間</string>
+    <string name="notify_status_waiting_provider">待機中 · %1$s の上限</string>
+    <string name="notify_status_waiting_generic">待機中 · プロバイダーが混雑しています</string>
+    <string name="notify_status_tries_again_at">%1$s に再試行</string>
+    <string name="notify_status_tries_again_soon">まもなく再試行</string>
+    <string name="notify_status_paused_android_title">一時停止 · Android のバックグラウンド上限</string>
+    <string name="notify_status_paused_android_body">Android は 1 日 6 時間を超えるとバックグラウンド処理を止めます。続けるには OpenCode を開いてください。</string>
+    <string name="notify_status_paused_hot_title">一時停止 · 端末が熱くなっています</string>
+    <string name="notify_status_paused_hot_body">冷えたら再開します</string>
+    <string name="notify_status_paused_idle_title">一時停止 · 何も実行されていませんでした</string>
+    <string name="notify_status_paused_idle_body">タップして OpenCode を再起動</string>
+    <string name="notify_status_reconnecting_title">%1$s に再接続中</string>
+    <string name="notify_status_reconnecting_generic">再接続中</string>
+    <string name="notify_status_reconnecting_body">接続を待っています</string>
+    <string name="notify_status_ready_title">準備完了 · 実行中のものはありません</string>
+    <string name="notify_status_ready_body">いつでもどうぞ</string>
+    <string name="notify_status_last_reply">最後の返信 %1$s 前</string>
+    <string name="notify_status_last_reply_now">最後の返信 たった今</string>
+    <string name="notify_status_setup_title">セットアップ · %1$s / %2$s</string>
+    <string name="notify_status_on_server">%1$s 上</string>
+    <string name="notify_status_on_this_phone">この端末上</string>
+    <string name="notify_status_lock_working">%1$s 件が作業中</string>
+    <string name="notify_status_lock_waiting">待機中</string>
+    <string name="notify_status_lock_paused">一時停止</string>
+    <string name="notify_status_lock_reconnecting">再接続中</string>
+    <string name="notify_status_lock_ready">準備完了</string>
+    <string name="notify_status_lock_setup">セットアップ中</string>
+    <plurals name="notify_status_needs_you">
+        <item quantity="other">%1$s 件要対応</item>
+    </plurals>
+</resources>
