@@ -55,13 +55,17 @@ private fun <T> liveRows(
         .toImmutableList()
 }
 
-private fun ConnectionGraph.operations(): ServerOperationsGateway? = session.server.facet<ServerOperationsGateway>()
+private fun ConnectionGraph.operations(): ServerOperationsGateway? =
+    session.server.facet<ServerOperationsGateway>()
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, replaces = [NoConversationServers::class])
 @Inject
-class LiveConversationServers(registry: ConnectionRegistry, stores: PreviewStores, appScope: AppCoroutineScope) :
-    ConversationServers {
+class LiveConversationServers(
+    registry: ConnectionRegistry,
+    stores: PreviewStores,
+    appScope: AppCoroutineScope,
+) : ConversationServers {
     override val servers: StateFlow<ImmutableList<ConversationServer>> =
         combine(registry.live, stores.profiles.profiles) { live, saved ->
                 liveRows(live, saved) { id, name, graph ->
@@ -74,11 +78,23 @@ class LiveConversationServers(registry: ConnectionRegistry, stores: PreviewStore
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, replaces = [NoProjectServers::class])
 @Inject
-class LiveProjectServers(registry: ConnectionRegistry, stores: PreviewStores, appScope: AppCoroutineScope) :
-    ProjectServers {
+class LiveProjectServers(
+    registry: ConnectionRegistry,
+    stores: PreviewStores,
+    appScope: AppCoroutineScope,
+) : ProjectServers {
     override val servers: StateFlow<ImmutableList<ProjectServer>> =
         combine(registry.live, stores.profiles.profiles) { live, saved ->
-                liveRows(live, saved) { id, name, graph -> ProjectServer(id, name, graph.session.server, graph.operations()) }
+                liveRows(live, saved) { id, name, graph ->
+                    ProjectServer(
+                        id,
+                        name,
+                        graph.session.server,
+                        graph.operations(),
+                        graph.profile.managedOnPhone ||
+                            graph.profile.origin.host in setOf("127.0.0.1", "localhost", "::1"),
+                    )
+                }
             }
             .stateIn(appScope, SharingStarted.Eagerly, persistentListOf())
 
@@ -86,9 +102,10 @@ class LiveProjectServers(registry: ConnectionRegistry, stores: PreviewStores, ap
 }
 
 /**
- * Folders opened on this phone, per server, under `oc.openedProjects.<profileId>` (B-ANDR-078). The profile sweep
- * (ProfileKeyRule `oc.<what>.<id>`) removes the key with the server, and writes go through that profile's writer
- * lane, which deletion closes first, so a late write cannot bring the list back.
+ * Folders opened on this phone, per server, under `oc.openedProjects.<profileId>` (B-ANDR-078). The
+ * profile sweep (ProfileKeyRule `oc.<what>.<id>`) removes the key with the server, and writes go
+ * through that profile's writer lane, which deletion closes first, so a late write cannot bring the
+ * list back.
  */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, replaces = [SessionOpenedFolders::class])
@@ -97,14 +114,18 @@ class StoredOpenedFolders(private val stores: PreviewStores) : OpenedFolders {
     private fun key(profile: ProfileId): String = "oc.openedProjects.${profile.raw}"
 
     override fun recent(profile: ProfileId): ImmutableList<String> {
-        // Only a saved, loaded server has a list; before the stores are warm there is nothing to read yet.
+        // Only a saved, loaded server has a list; before the stores are warm there is nothing to
+        // read yet.
         if (stores.profiles.profile(profile) == null) return persistentListOf()
         return stores.prefs.stringList(key(profile)).orEmpty().toImmutableList()
     }
 
     override suspend fun remember(profile: ProfileId, directory: String): Outcome<Unit> {
-        if (stores.profiles.profile(profile) == null) return Failure.Refused(RefusalReason.ProfileDeleted).failed()
+        if (stores.profiles.profile(profile) == null)
+            return Failure.Refused(RefusalReason.ProfileDeleted).failed()
         val next = ProjectRules.remembered(recent(profile), directory)
-        return stores.prefs.commit(stores.lanes.forProfile(profile)) { putStringList(key(profile), next) }
+        return stores.prefs.commit(stores.lanes.forProfile(profile)) {
+            putStringList(key(profile), next)
+        }
     }
 }

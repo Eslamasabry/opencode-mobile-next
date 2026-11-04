@@ -1,9 +1,15 @@
 package io.github.eslamasabry.oc.feature.projects.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FolderProblem
 import io.github.eslamasabry.oc.feature.projects.presentation.FolderRowUi
 import io.github.eslamasabry.oc.feature.projects.presentation.PathProblem
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectRules
@@ -24,14 +30,26 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.andrStorageAccess
+import io.github.eslamasabry.oc.ui.words.res.andrStorageFolderDenied
+import io.github.eslamasabry.oc.ui.words.res.andrStorageFolderFailed
+import io.github.eslamasabry.oc.ui.words.res.andrStorageFolderMissing
+import io.github.eslamasabry.oc.ui.words.res.andrStorageFoldersEmpty
+import io.github.eslamasabry.oc.ui.words.res.andrStorageInternal
+import io.github.eslamasabry.oc.ui.words.res.andrStorageUp
+import io.github.eslamasabry.oc.ui.words.res.andrStorageUseFolder
+import io.github.eslamasabry.oc.ui.words.res.andrStorageWorking
 import io.github.eslamasabry.oc.ui.words.res.chatsFilterChatCount
 import io.github.eslamasabry.oc.ui.words.res.chatsFilterRunningCount
 import io.github.eslamasabry.oc.ui.words.res.e7ProjectProjectsEmpty
@@ -65,9 +83,10 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Projects (07 §5 D15/D16). Kit parts only (K1). The obvious options come first as visible rows (owner rule):
- * New project, Open a folder on the server, Folder on this phone; then Opened before; then this server's projects.
- * A row that can't run here says why in its own line, never a dead tap.
+ * Projects (07 §5 D15/D16). Kit parts only (K1). The obvious options come first as visible rows
+ * (owner rule): New project, Open a folder on the server, Folder on this phone; then Opened before;
+ * then this server's projects. A row that can't run here says why in its own line, never a dead
+ * tap.
  */
 @Composable
 public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
@@ -82,7 +101,12 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
         },
         search =
             if (state.showSearch) {
-                { KitSearchField(label = stringResource(Res.string.e7ProjectProjectsSearch), onSearch = actions::search) }
+                {
+                    KitSearchField(
+                        label = stringResource(Res.string.e7ProjectProjectsSearch),
+                        onSearch = actions::search,
+                    )
+                }
             } else {
                 null
             },
@@ -96,7 +120,11 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                             kind = KitStateKind.Calm,
                             title = stringResource(Res.string.p12NoServerTitle),
                             body = stringResource(Res.string.p12NoServerBody),
-                            primary = KitAction(stringResource(Res.string.serversTitle), actions::openServers),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.serversTitle),
+                                    actions::openServers,
+                                ),
                         )
                     }
                 ProjectsPhase.Ready -> {
@@ -107,7 +135,9 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                                     KitChip(
                                         label = server.name,
                                         kind = KitChipKind.Action,
-                                        tone = if (server.selected) KitChipTone.Active else KitChipTone.Neutral,
+                                        tone =
+                                            if (server.selected) KitChipTone.Active
+                                            else KitChipTone.Neutral,
                                         selected = server.selected,
                                         onClick = { actions.chooseServer(server.profile) },
                                     )
@@ -115,10 +145,12 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                             }
                         }
                     }
-                    item(key = "start") { StartRows(actions) }
+                    item(key = "start") { StartRows(state, actions) }
                     if (state.openedBefore.isNotEmpty()) {
                         item(key = "opened") {
-                            KitRowGroup(label = stringResource(Res.string.folderBrowserOpenedBefore)) {
+                            KitRowGroup(
+                                label = stringResource(Res.string.folderBrowserOpenedBefore)
+                            ) {
                                 state.openedBefore.forEach { folder ->
                                     KitRow(
                                         title = folder.name,
@@ -135,6 +167,7 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
             }
         }
         PathDialog(state, actions)
+        PhoneFolderSheet(state, actions)
     }
 }
 
@@ -165,9 +198,10 @@ private fun PathDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) 
 }
 
 @Composable
-private fun StartRows(actions: ProjectsPickerActions) {
+private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
     KitRowGroup {
-        // OpenCode 2 has no folder-making call; Flutter offered New project only for servers it ran on the phone.
+        // OpenCode 2 has no folder-making call; Flutter offered New project only for servers it ran
+        // on the phone.
         KitRow(
             title = stringResource(Res.string.projectFolderNewProject),
             enabled = false,
@@ -182,7 +216,9 @@ private fun StartRows(actions: ProjectsPickerActions) {
         )
         KitRow(
             title = stringResource(Res.string.p12PhoneFolder),
-            enabled = false,
+            enabled = state.canBrowsePhone,
+            trailing = KitRowTrailing.Chevron,
+            onClick = actions::browsePhone,
             disabledReason = stringResource(Res.string.p12PhoneFolderUnavailable),
             supportingMaxLines = 2,
         )
@@ -216,13 +252,19 @@ private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActio
 
 @Composable
 private fun ProjectRow(project: FolderRowUi, actions: ProjectsPickerActions) {
-    val parts =
-        buildList {
-            add(pluralStringResource(Res.plurals.chatsFilterChatCount, project.conversations, project.conversations))
-            if (project.running > 0) add(stringResource(Res.string.chatsFilterRunningCount, project.running))
-            if (project.isGit == true) add(stringResource(Res.string.folderBrowserGit))
-            add(project.directory)
-        }
+    val parts = buildList {
+        add(
+            pluralStringResource(
+                Res.plurals.chatsFilterChatCount,
+                project.conversations,
+                project.conversations,
+            )
+        )
+        if (project.running > 0)
+            add(stringResource(Res.string.chatsFilterRunningCount, project.running))
+        if (project.isGit == true) add(stringResource(Res.string.folderBrowserGit))
+        add(project.directory)
+    }
     KitRow(
         title = project.name,
         supporting = parts.joinToString(" · "),
@@ -230,4 +272,93 @@ private fun ProjectRow(project: FolderRowUi, actions: ProjectsPickerActions) {
         trailing = KitRowTrailing.Chevron,
         onClick = { actions.openProject(project.directory) },
     )
+}
+
+/**
+ * An existing kit sheet keeps the browser in the project journey, without a second navigation
+ * stack.
+ */
+@Composable
+private fun PhoneFolderSheet(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
+    val path = state.phonePath
+    KitSheet(
+        visible = path != null,
+        onDismissRequest = actions::closePhoneFolders,
+        title = stringResource(Res.string.andrStorageInternal),
+        subtitle = path,
+        height = KitSheetHeight.Full,
+        primary =
+            KitAction(
+                stringResource(Res.string.andrStorageUseFolder),
+                actions::usePhoneFolder,
+                enabled =
+                    if (!state.phoneLoading && state.phoneFailure == null)
+                        io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Enabled
+                    else
+                        io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Disabled(
+                            stringResource(
+                                if (state.phoneLoading) Res.string.andrStorageWorking
+                                else Res.string.andrStorageFolderFailed
+                            )
+                        ),
+            ),
+    ) {
+        Column(Modifier.verticalScroll(rememberScrollState())) {
+            state.phoneParent?.let { parent ->
+                KitRow(
+                    title = stringResource(Res.string.andrStorageUp),
+                    onClick = { actions.enterPhoneFolder(parent) },
+                )
+            }
+            when {
+                state.phoneLoading -> KitSkeletonRows(count = 4)
+                state.phoneFailure != null -> {
+                    val failure = state.phoneFailure
+                    val message =
+                        when {
+                            failure is Failure.Folder && failure.problem == FolderProblem.Missing ->
+                                Res.string.andrStorageFolderMissing
+                            failure is Failure.Folder && failure.problem == FolderProblem.Denied ->
+                                Res.string.andrStorageFolderDenied
+                            else -> Res.string.andrStorageFolderFailed
+                        }
+                    KitNotice(
+                        message = stringResource(message),
+                        actions =
+                            buildList {
+                                if (
+                                    failure is Failure.Folder &&
+                                        failure.problem == FolderProblem.Denied
+                                )
+                                    add(
+                                        KitLineAction(
+                                            stringResource(Res.string.andrStorageAccess),
+                                            actions::allowPhoneFolderAccess,
+                                        )
+                                    )
+                                add(
+                                    KitLineAction(
+                                        stringResource(Res.string.kitTryAgain),
+                                        { path?.let(actions::enterPhoneFolder) },
+                                    )
+                                )
+                            },
+                    )
+                }
+                state.phoneFolders.isEmpty() ->
+                    KitNotice(message = stringResource(Res.string.andrStorageFoldersEmpty))
+                else ->
+                    KitRowGroup {
+                        state.phoneFolders.forEach { folder ->
+                            KitRow(
+                                title = folder.name,
+                                supporting = folder.hint,
+                                trailing = KitRowTrailing.Chevron,
+                                onClick = { actions.enterPhoneFolder(folder.path) },
+                            )
+                        }
+                    }
+            }
+        }
+    }
 }

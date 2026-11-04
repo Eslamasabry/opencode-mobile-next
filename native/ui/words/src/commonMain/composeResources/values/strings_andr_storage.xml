@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="andrStorageInternal">Internal storage</string>
+    <string name="andrStorageUp">Up one folder</string>
+    <string name="andrStorageUseFolder">Open this folder</string>
+    <string name="andrStorageFoldersEmpty">There are no folders here.</string>
+    <string name="andrStorageFolderMissing">This folder is no longer here. Go up and choose another folder.</string>
+    <string name="andrStorageFolderDenied">Allow access to folders in Android settings, then try again.</string>
+    <string name="andrStorageFolderFailed">Could not read this folder. Try again.</string>
+    <string name="andrStorageAccess">Allow access to folders</string>
+    <string name="andrStorageWorking">Wait for the folder to finish loading.</string>
+    <string name="andrStorageTitle">Phone storage</string>
+    <string name="andrStorageNearlyFull">Storage is nearly full: %1$s available. Free some space before installing tools or starting a large job.</string>
+    <string name="andrStorageAvailable">%1$s available to this app.</string>
+    <string name="andrStorageUnknown">Available space could not be read. Try measuring again.</string>
+    <string name="andrStorageMeasure">Measure storage and Linux files</string>
+    <string name="andrStorageMeasuring">Measuring storage…</string>
+    <string name="andrStorageHostSizes">Linux and tools: %1$s · Projects: %2$s. These are file sizes, not all app storage.</string>
+    <string name="andrStorageHostUnknown">Linux file sizes could not be measured. Your files are kept.</string>
+</resources>

@@ -7,12 +7,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
+import io.github.eslamasabry.oc.engine.runtime.storage.HostStorageAvailability
+import io.github.eslamasabry.oc.engine.runtime.storage.StoragePressure
 import io.github.eslamasabry.oc.feature.phone.presentation.ServerRow
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneActions
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneConfirm
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneNotice
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneUi
 import io.github.eslamasabry.oc.feature.phone.presentation.UpdateRow
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -28,12 +31,20 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.andrStorageAvailable
+import io.github.eslamasabry.oc.ui.words.res.andrStorageHostSizes
+import io.github.eslamasabry.oc.ui.words.res.andrStorageHostUnknown
+import io.github.eslamasabry.oc.ui.words.res.andrStorageMeasure
+import io.github.eslamasabry.oc.ui.words.res.andrStorageMeasuring
+import io.github.eslamasabry.oc.ui.words.res.andrStorageNearlyFull
+import io.github.eslamasabry.oc.ui.words.res.andrStorageTitle
+import io.github.eslamasabry.oc.ui.words.res.andrStorageUnknown
 import io.github.eslamasabry.oc.ui.words.res.keepRunningOpenFailed
 import io.github.eslamasabry.oc.ui.words.res.keepRunningRowSubtitle
 import io.github.eslamasabry.oc.ui.words.res.keepRunningTitle
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRow
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
-import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardUpdate
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardVersion
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneRowIdle
@@ -59,8 +70,9 @@ import org.jetbrains.compose.resources.stringResource
 private const val OPENCODE = "OpenCode"
 
 /**
- * PhoneRoute.ThisPhone (plan 07 F01). One answer at the top, its one act at the thumb, then the rows ordered by
- * likelihood: the server's own acts, the version, Running on this phone, Keep running. Arranges kit parts only (K1).
+ * PhoneRoute.ThisPhone (plan 07 F01). One answer at the top, its one act at the thumb, then the
+ * rows ordered by likelihood: the server's own acts, the version, Running on this phone, Keep
+ * running. Arranges kit parts only (K1).
  */
 @Composable
 public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
@@ -83,7 +95,14 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
         width = KitScreenWidth.Reading,
         bottom = {
             state.answer.primary?.let { act ->
-                KitActionBlock(primary = KitAction(label = act.words(), onClick = { actions.act(act) }, working = busy))
+                KitActionBlock(
+                    primary =
+                        KitAction(
+                            label = act.words(),
+                            onClick = { actions.act(act) },
+                            working = busy,
+                        )
+                )
             }
         },
     ) {
@@ -96,8 +115,10 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
             when (val notice = state.notice) {
                 null -> Unit
                 is ThisPhoneNotice.Failed -> PhoneNoticeLine(notice.op.failedWords(), actions)
-                ThisPhoneNotice.UpdateBusy -> PhoneNoticeLine(stringResource(Res.string.thisPhoneUpdateBusy), actions)
-                ThisPhoneNotice.SettingsMissing -> PhoneNoticeLine(stringResource(Res.string.keepRunningOpenFailed), actions)
+                ThisPhoneNotice.UpdateBusy ->
+                    PhoneNoticeLine(stringResource(Res.string.thisPhoneUpdateBusy), actions)
+                ThisPhoneNotice.SettingsMissing ->
+                    PhoneNoticeLine(stringResource(Res.string.keepRunningOpenFailed), actions)
             }
             if (state.serverRows.isNotEmpty() || state.version != null) {
                 KitRowGroup {
@@ -123,13 +144,26 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                         val installed = version.installed
                         when (val update = version.update) {
                             UpdateRow.UpToDate ->
-                                if (installed != null) KitRow(title = stringResource(Res.string.thisPhoneUpToDate, installed))
-                            is UpdateRow.Available, is UpdateRow.Failed -> {
-                                installed?.let { KitRow(title = stringResource(Res.string.phoneServerCardVersion, it)) }
-                                val offered = if (update is UpdateRow.Available) update.version else (update as UpdateRow.Failed).version
+                                if (installed != null)
+                                    KitRow(
+                                        title =
+                                            stringResource(Res.string.thisPhoneUpToDate, installed)
+                                    )
+                            is UpdateRow.Available,
+                            is UpdateRow.Failed -> {
+                                installed?.let {
+                                    KitRow(
+                                        title =
+                                            stringResource(Res.string.phoneServerCardVersion, it)
+                                    )
+                                }
+                                val offered =
+                                    if (update is UpdateRow.Available) update.version
+                                    else (update as UpdateRow.Failed).version
                                 KitRow(
                                     title = stringResource(Res.string.thisPhoneUpdate),
-                                    supporting = stringResource(Res.string.thisPhoneUpdateDetail, offered),
+                                    supporting =
+                                        stringResource(Res.string.thisPhoneUpdateDetail, offered),
                                     enabled = !busy,
                                     disabledReason = busyWords,
                                     onClick = actions::askUpdate,
@@ -141,10 +175,66 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                                     enabled = false,
                                     disabledReason = busyWords,
                                 )
-                            null -> installed?.let { KitRow(title = stringResource(Res.string.phoneServerCardVersion, it)) }
+                            null ->
+                                installed?.let {
+                                    KitRow(
+                                        title =
+                                            stringResource(Res.string.phoneServerCardVersion, it)
+                                    )
+                                }
                         }
                     }
                 }
+            }
+            if (state.storageSupported) {
+                val storage = state.storage
+                val bytes = storage?.availableBytes
+                val host = storage?.builtinHost
+                KitNotice(
+                    title = stringResource(Res.string.andrStorageTitle),
+                    message =
+                        when {
+                            bytes == null -> stringResource(Res.string.andrStorageUnknown)
+                            storage?.pressure == StoragePressure.NearlyFull ->
+                                stringResource(
+                                    Res.string.andrStorageNearlyFull,
+                                    PhoneSizes.text(bytes),
+                                )
+                            else ->
+                                stringResource(
+                                    Res.string.andrStorageAvailable,
+                                    PhoneSizes.text(bytes),
+                                )
+                        },
+                    tone =
+                        if (storage?.pressure == StoragePressure.NearlyFull) StatusTone.Attention
+                        else StatusTone.Neutral,
+                    notes =
+                        when {
+                            host != null ->
+                                listOf(
+                                    stringResource(
+                                        Res.string.andrStorageHostSizes,
+                                        PhoneSizes.text(host.runtimeBytes),
+                                        PhoneSizes.text(host.projectsBytes),
+                                    )
+                                )
+                            storage?.builtinAvailability == HostStorageAvailability.Unavailable ->
+                                listOf(stringResource(Res.string.andrStorageHostUnknown))
+                            else -> emptyList()
+                        },
+                    actions =
+                        listOf(
+                            KitLineAction(
+                                if (state.measuringStorage)
+                                    stringResource(Res.string.andrStorageMeasuring)
+                                else stringResource(Res.string.andrStorageMeasure),
+                                actions::measureStorage,
+                                enabled = !state.measuringStorage,
+                                disabledReason = stringResource(Res.string.andrStorageMeasuring),
+                            )
+                        ),
+                )
             }
             KitRowGroup {
                 val running = state.running
@@ -187,7 +277,9 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                         title = stringResource(Res.string.thisPhoneRestartTitle),
                         confirmLabel = stringResource(Res.string.thisPhoneRestartRow),
                         kind = KitConfirmKind.Neutral,
-                        body = if (asked.replyRunning) stringResource(Res.string.thisPhoneRestartBusy) else null,
+                        body =
+                            if (asked.replyRunning) stringResource(Res.string.thisPhoneRestartBusy)
+                            else null,
                     )
                 is ThisPhoneConfirm.Update ->
                     KitConfirmSpec(
@@ -204,5 +296,9 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
 
 @Composable
 private fun PhoneNoticeLine(words: String, actions: ThisPhoneActions) {
-    KitNotice(message = words, dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss))
+    KitNotice(
+        message = words,
+        dismiss =
+            KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss),
+    )
 }

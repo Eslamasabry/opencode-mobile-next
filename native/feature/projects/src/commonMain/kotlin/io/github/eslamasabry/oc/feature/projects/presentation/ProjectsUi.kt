@@ -25,9 +25,10 @@ public data class FolderRowUi(
 )
 
 /**
- * Projects (07 §5 D15/D16): obvious options first as visible rows (New project, Open a folder on the server,
- * Folder on this phone), then Opened before, then the server's projects. New project and the phone folder say why
- * they can't run when the server can't make folders or the phone's own server isn't set up.
+ * Projects (07 §5 D15/D16): obvious options first as visible rows (New project, Open a folder on
+ * the server, Folder on this phone), then Opened before, then the server's projects. New project
+ * and the phone folder say why they can't run when the server can't make folders or the phone's own
+ * server isn't set up.
  */
 public data class ProjectsPickerUi(
     val phase: ProjectsPhase = ProjectsPhase.NoServer,
@@ -42,6 +43,12 @@ public data class ProjectsPickerUi(
     val askingPath: Boolean = false,
     /** The folder used last, so the path field starts next to it. */
     val pathStart: String = "",
+    val canBrowsePhone: Boolean = false,
+    val phonePath: String? = null,
+    val phoneParent: String? = null,
+    val phoneFolders: ImmutableList<PhoneFolderUi> = persistentListOf(),
+    val phoneLoading: Boolean = false,
+    val phoneFailure: Failure? = null,
 )
 
 public interface ProjectsPickerActions {
@@ -50,6 +57,16 @@ public interface ProjectsPickerActions {
     public fun chooseServer(profile: ProfileId)
 
     public fun askPath()
+
+    public fun browsePhone()
+
+    public fun enterPhoneFolder(path: String)
+
+    public fun closePhoneFolders()
+
+    public fun usePhoneFolder()
+
+    public fun allowPhoneFolderAccess()
 
     /** The path dialog's answer; null = cancelled. */
     public fun finishPath(path: String?)
@@ -71,9 +88,17 @@ public data class ProjectChatUi(
     val running: Boolean,
 )
 
-public enum class ProjectPagePhase { Opening, NoServer, Failed, Ready }
+public enum class ProjectPagePhase {
+    Opening,
+    NoServer,
+    Failed,
+    Ready,
+}
 
-/** One project's page (07 §5 D15): New conversation here first, its conversations, then "In other projects". */
+/**
+ * One project's page (07 §5 D15): New conversation here first, its conversations, then "In other
+ * projects".
+ */
 public data class ProjectPageUi(
     val directory: String,
     val name: String,

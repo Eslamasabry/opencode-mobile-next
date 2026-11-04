@@ -1,10 +1,12 @@
 package io.github.eslamasabry.oc.feature.phone.presentation
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudget
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import io.github.eslamasabry.oc.core.common.pace.Pacer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,13 +16,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 /**
- * This phone's state holder (plan 07 F01). Plain Kotlin over a scope so its rules test on virtual time;
- * [ThisPhoneViewModel] hands it `viewModelScope`. One command at a time: a tap while one runs does nothing
- * (B-LINUX-038: the starter starts a stopped server once).
+ * This phone's state holder (plan 07 F01). Plain Kotlin over a scope so its rules test on virtual
+ * time; [ThisPhoneViewModel] hands it `viewModelScope`. One command at a time: a tap while one runs
+ * does nothing (B-LINUX-038: the starter starts a stopped server once).
  */
 public class ThisPhoneModel(
     private val source: PhoneServerSource,
@@ -29,29 +29,45 @@ public class ThisPhoneModel(
     private val scope: CoroutineScope,
     private val clock: Clock,
     private val pacer: Pacer,
+    private val storage: PhoneStorageReadings? = null,
 ) : ThisPhoneActions {
     private data class Local(
         val working: PhoneOp? = null,
         val confirm: ThisPhoneConfirm? = null,
         val notice: ThisPhoneNotice? = null,
         val now: Instant,
+        val storage: io.github.eslamasabry.oc.engine.runtime.storage.PhoneStorageSnapshot? = null,
+        val measuringStorage: Boolean = false,
     )
 
     private val local = MutableStateFlow(Local(now = clock.now()))
     private val visible = MutableStateFlow(false)
 
     public val state: StateFlow<ThisPhoneUi> =
-        combine(source.facts, local, ::build).stateIn(scope, SharingStarted.Eagerly, build(source.facts.value, local.value))
+        combine(source.facts, local, ::build)
+            .stateIn(scope, SharingStarted.Eagerly, build(source.facts.value, local.value))
 
     private fun build(facts: PhoneServerFacts, l: Local): ThisPhoneUi {
-        val shownFacts = if (l.working == PhoneOp.Start || l.working == PhoneOp.Restart) facts.copy(starting = true) else facts
+        val shownFacts =
+            if (l.working == PhoneOp.Start || l.working == PhoneOp.Restart)
+                facts.copy(starting = true)
+            else facts
         val server = PhoneServerState.of(shownFacts)
-        val answer = ThisPhoneAnswers.of(server, shownFacts, now = l.now, stopping = l.working == PhoneOp.Stop)
+        val answer =
+            ThisPhoneAnswers.of(
+                server,
+                shownFacts,
+                now = l.now,
+                stopping = l.working == PhoneOp.Stop,
+            )
         val serverRows =
             when (server) {
-                PhoneServerState.Running, PhoneServerState.NotAnswering -> persistentListOf(ServerRow.Stop, ServerRow.Restart)
-                PhoneServerState.Starting, PhoneServerState.Checking ->
-                    if (facts.status?.serverRunning == true) persistentListOf(ServerRow.Stop) else persistentListOf()
+                PhoneServerState.Running,
+                PhoneServerState.NotAnswering -> persistentListOf(ServerRow.Stop, ServerRow.Restart)
+                PhoneServerState.Starting,
+                PhoneServerState.Checking ->
+                    if (facts.status?.serverRunning == true) persistentListOf(ServerRow.Stop)
+                    else persistentListOf()
                 else -> persistentListOf()
             }
         return ThisPhoneUi(
@@ -67,6 +83,9 @@ public class ThisPhoneModel(
             working = l.working,
             confirm = l.confirm,
             notice = l.notice,
+            storageSupported = storage?.supported == true,
+            storage = l.storage,
+            measuringStorage = l.measuringStorage,
         )
     }
 
@@ -77,7 +96,8 @@ public class ThisPhoneModel(
         val update =
             when {
                 facts.updateRunning -> UpdateRow.Updating
-                installed == null || pinned == null -> null // an unknown version offers nothing (B-LINUX-078)
+                installed == null || pinned == null ->
+                    null // an unknown version offers nothing (B-LINUX-078)
                 installed == pinned -> UpdateRow.UpToDate
                 facts.updateFailed -> UpdateRow.Failed(pinned)
                 else -> UpdateRow.Available(pinned)
@@ -87,12 +107,16 @@ public class ThisPhoneModel(
 
     override fun act(act: PhoneAct) {
         when (act) {
-            PhoneAct.SetUp, PhoneAct.SetUpAgain -> nav.open(PhonePage.SetupStart)
+            PhoneAct.SetUp,
+            PhoneAct.SetUpAgain -> nav.open(PhonePage.SetupStart)
             PhoneAct.ShowProgress -> nav.open(PhonePage.SetupProgress)
-            PhoneAct.Start, PhoneAct.StartAgain, PhoneAct.RestartNow -> run(PhoneOp.Start) { source.start() }
+            PhoneAct.Start,
+            PhoneAct.StartAgain,
+            PhoneAct.RestartNow -> run(PhoneOp.Start) { source.start() }
             PhoneAct.OpenAppSettings ->
                 scope.launch {
-                    if (!settings.open(KeepAliveSetting.AppDetails)) local.update { it.copy(notice = ThisPhoneNotice.SettingsMissing) }
+                    if (!settings.open(KeepAliveSetting.AppDetails))
+                        local.update { it.copy(notice = ThisPhoneNotice.SettingsMissing) }
                 }
         }
     }
@@ -101,7 +125,12 @@ public class ThisPhoneModel(
 
     override fun askRestart() {
         if (local.value.working != null) return
-        local.update { it.copy(confirm = ThisPhoneConfirm.Restart(source.facts.value.replyRunning), notice = null) }
+        local.update {
+            it.copy(
+                confirm = ThisPhoneConfirm.Restart(source.facts.value.replyRunning),
+                notice = null,
+            )
+        }
     }
 
     override fun askUpdate() {
@@ -126,6 +155,24 @@ public class ThisPhoneModel(
 
     override fun dismiss(): Unit = local.update { it.copy(confirm = null, notice = null) }
 
+    override fun measureStorage() {
+        readStorage(includeBuiltinHost = true)
+    }
+
+    private fun readStorage(includeBuiltinHost: Boolean) {
+        val reader = storage ?: return
+        if (!reader.supported || local.value.measuringStorage) return
+        local.update { it.copy(measuringStorage = true) }
+        scope.launch {
+            try {
+                val measured = reader.read(includeBuiltinHost)
+                local.update { it.copy(storage = measured) }
+            } finally {
+                local.update { it.copy(measuringStorage = false) }
+            }
+        }
+    }
+
     override fun openRunning(): Unit = nav.open(PhonePage.Running)
 
     override fun openKeepRunning(): Unit = nav.open(PhonePage.KeepRunning)
@@ -135,13 +182,17 @@ public class ThisPhoneModel(
     override fun back(): Unit = nav.back()
 
     init {
-        // While shown: read the status once, then move the countdown each second (no timer while hidden).
+        // While shown: read the status once, then move the countdown each second (no timer while
+        // hidden).
         scope.launch {
             visible.collectLatest { shown ->
                 if (!shown) return@collectLatest
                 source.refresh()
+                readStorage(includeBuiltinHost = false)
                 local.update { it.copy(now = clock.now()) }
-                pacer.ticks(PhoneTimers.answerCountdown).collect { local.update { it.copy(now = clock.now()) } }
+                pacer.ticks(PhoneTimers.answerCountdown).collect {
+                    local.update { it.copy(now = clock.now()) }
+                }
             }
         }
     }
@@ -156,13 +207,20 @@ public class ThisPhoneModel(
         scope.launch {
             val outcome = command()
             local.update {
-                it.copy(working = null, notice = if (outcome is Outcome.Failed) ThisPhoneNotice.Failed(op) else null)
+                it.copy(
+                    working = null,
+                    notice = if (outcome is Outcome.Failed) ThisPhoneNotice.Failed(op) else null,
+                )
             }
         }
     }
 
     private companion object {
-        /** Versions read the way the manager trims them: blank is unknown, a leading `v` is ignored (B-LINUX-024/078). */
-        fun plainVersion(raw: String): String? = raw.trim().removePrefix("v").removePrefix("V").ifBlank { null }
+        /**
+         * Versions read the way the manager trims them: blank is unknown, a leading `v` is ignored
+         * (B-LINUX-024/078).
+         */
+        fun plainVersion(raw: String): String? =
+            raw.trim().removePrefix("v").removePrefix("V").ifBlank { null }
     }
 }
