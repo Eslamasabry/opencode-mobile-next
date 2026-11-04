@@ -44,6 +44,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
@@ -67,6 +68,18 @@ internal suspend fun openTerminalSocket(
         StaleConnectionRetry.forUpgrade(client)
             .newBuilder()
             .protocols(listOf(Protocol.HTTP_1_1))
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .retryOnConnectionFailure(false)
+            // A status follow-up (503 Retry-After: 0, 421) would send the one-use ticket twice.
+            .addNetworkInterceptor(
+                Interceptor { chain ->
+                    val attempt = chain.request().tag(TicketAttempt::class.java)
+                    if (attempt != null && !attempt.sent.compareAndSet(false, true))
+                        throw ResendRefusedException()
+                    chain.proceed(chain.request())
+                }
+            )
             .readTimeout(0, TimeUnit.MILLISECONDS)
             .writeTimeout(5_000, TimeUnit.MILLISECONDS)
             .callTimeout(15_000, TimeUnit.MILLISECONDS)
@@ -79,6 +92,7 @@ internal suspend fun openTerminalSocket(
                 .header("Upgrade", "websocket")
                 .header("Sec-WebSocket-Version", "13")
                 .header("Sec-WebSocket-Key", key)
+                .tag(TicketAttempt::class.java, TicketAttempt())
                 .apply { spec.headers.forEach { (name, value) -> header(name, value) } }
                 .build()
         } catch (_: IllegalArgumentException) {
@@ -139,6 +153,10 @@ internal suspend fun openTerminalSocket(
             response.close()
         }
     return Outcome.Ok(channel)
+}
+
+private class TicketAttempt {
+    val sent = AtomicBoolean(false)
 }
 
 private suspend fun Call.awaitUpgrade(): Response = suspendCancellableCoroutine { continuation ->

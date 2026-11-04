@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -151,9 +152,12 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
                 )
             }
             if (terminal != null) {
-                RenameTerminal(rename, terminal.title, onDismiss = { rename = false }) {
-                    rename = false
-                    actions.rename(terminal.id, it)
+                // A new title (after a rename or a refresh) starts the field from that title.
+                key(terminal.title) {
+                    RenameTerminal(rename, terminal.title, onDismiss = { rename = false }) {
+                        rename = false
+                        actions.rename(terminal.id, it)
+                    }
                 }
                 ResizeTerminal(resize, onDismiss = { resize = false }) { rows, columns ->
                     resize = false

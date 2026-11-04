@@ -1208,10 +1208,19 @@ internal class Oc2Gateway(
             )
         if (opened is Outcome.Failed) return opened
         val channel = (opened as Outcome.Ok).value
+        // A screen that closes its channel releases the gateway's hold on it too, so reconnects
+        // do not accumulate closed sockets for the connection's lifetime.
+        val tracked =
+            object : TerminalChannel by channel {
+                override suspend fun close() {
+                    terminalLane.withLock { terminalChannels.remove(this) }
+                    channel.close()
+                }
+            }
         val admitted = terminalLane.withLock {
             if (terminalScope !== scope) false
             else {
-                terminalChannels.add(channel)
+                terminalChannels.add(tracked)
                 true
             }
         }
@@ -1219,7 +1228,7 @@ internal class Oc2Gateway(
             channel.close()
             return Failure.Refused(RefusalReason.StaleScope).failed()
         }
-        return channel.ok()
+        return tracked.ok()
     }
 
     override suspend fun terminalShellSettings(): Outcome<TerminalShellSettings> = shellSettings()
