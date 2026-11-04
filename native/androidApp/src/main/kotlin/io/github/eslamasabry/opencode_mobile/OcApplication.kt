@@ -1,7 +1,10 @@
 package io.github.eslamasabry.opencode_mobile
 
+import android.app.ActivityManager
 import android.app.Application
 import android.content.pm.ApplicationInfo
+import android.os.Build
+import android.os.Process
 import dev.zacsweers.metro.createGraphFactory
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppLog
@@ -49,10 +52,23 @@ class OcApplication : Application(), GraphOwner {
                 channel = Channel.Preview,
                 debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
             )
-        // Standalone manage-space and widget windows must not warm profiles, connect, or start
-        // Linux.
-        // The main product activity starts these owners once; background components resolve only
-        // their own ports.
+        // Every component of the main process (activities, alert buttons, services, workers,
+        // tiles, widgets) may be the first thing in a cold process and relies on the started
+        // product, as before. Manage space runs in its own ":manage" process and the PDF parser in
+        // ":local_pdf"; neither warms profiles, connects, or starts Linux.
+        if (isMainProcess()) startProduct()
+    }
+
+    private fun isMainProcess(): Boolean {
+        val name =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) Application.getProcessName()
+            else
+                (getSystemService(ACTIVITY_SERVICE) as? ActivityManager)
+                    ?.runningAppProcesses
+                    ?.firstOrNull { it.pid == Process.myPid() }
+                    ?.processName
+        // Unknown name: behave as the main process (the pre-split default).
+        return name == null || name == packageName
     }
 
     @Synchronized

@@ -31,6 +31,10 @@ class MainActivity : ComponentActivity() {
     private var routeWhenReady = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Before super.onCreate: the product's activity-lifecycle owners (ResumedActivities, the
+        // mic/result registries, AppVisibility) must see this activity's own created/started
+        // callbacks, as they did when the product started in Application.onCreate.
+        (application as OcApplication).startProduct()
         super.onCreate(savedInstanceState)
         routeWhenReady =
             savedInstanceState == null &&
@@ -38,7 +42,6 @@ class MainActivity : ComponentActivity() {
         // B14 (QA wave 1): after super.onCreate, so a recreate (language switch) keeps edge-to-edge
         // too.
         enableEdgeToEdge()
-        (application as OcApplication).startProduct()
         val graph = appGraph
         graph.composerFiles.attach(this)
         // DecorView's DecorContext need not wrap this Activity; pass the actual window for
