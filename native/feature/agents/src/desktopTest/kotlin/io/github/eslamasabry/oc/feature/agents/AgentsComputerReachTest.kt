@@ -64,6 +64,14 @@ class AgentsComputerReachTest {
         override fun newConversation(id: ProfileId) {}
 
         override fun openComputer(id: ProfileId) { calls += "computer:${id.raw}" }
+
+        override fun refreshPhone() {}
+
+        override fun requestRemoval(id: String) {}
+
+        override fun cancelRemoval() {}
+
+        override fun confirmRemoval() {}
     }
 
     @Composable

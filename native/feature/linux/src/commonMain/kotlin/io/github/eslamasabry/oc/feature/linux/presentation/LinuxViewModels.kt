@@ -19,8 +19,8 @@ import io.github.eslamasabry.oc.feature.linux.manager.LinuxRetryWait
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.LinuxRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
-import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Clock
+import kotlinx.coroutines.flow.StateFlow
 
 /*
  * Thin Metro ViewModels (plan 03 §13.7): each hands viewModelScope to its plain state holder, whose rules are tested
@@ -28,22 +28,29 @@ import kotlin.time.Clock
  * by androidApp's graph/LinuxWiring.kt.
  */
 
-/** The manager, the one job watch and the reset flow: one each for the app (Linux is one per app). */
+/**
+ * The manager, the one job watch and the reset flow: one each for the app (Linux is one per app).
+ */
 @BindingContainer
 @ContributesTo(AppScope::class)
 public object LinuxBindings {
     @Provides
     @SingleIn(AppScope::class)
-    public fun linuxManager(host: LinuxHost, wait: LinuxRetryWait): LinuxManager = LinuxManager(host, wait)
+    public fun linuxManager(host: LinuxHost, wait: LinuxRetryWait): LinuxManager =
+        LinuxManager(host, wait)
 
     @Provides
     @SingleIn(AppScope::class)
-    public fun linuxJobWatch(manager: LinuxManager, notices: LinuxJobNotices): LinuxJobWatch = LinuxJobWatch(manager, notices)
+    public fun linuxJobWatch(manager: LinuxManager, notices: LinuxJobNotices): LinuxJobWatch =
+        LinuxJobWatch(manager, notices)
 
     @Provides
     @SingleIn(AppScope::class)
-    public fun linuxResetFlow(lifecycle: LinuxLifecycle, marker: LinuxResetMarker, clock: Clock): LinuxResetFlow =
-        LinuxResetFlow(lifecycle, marker, clock)
+    public fun linuxResetFlow(
+        lifecycle: LinuxLifecycle,
+        marker: LinuxResetMarker,
+        clock: Clock,
+    ): LinuxResetFlow = LinuxResetFlow(lifecycle, marker, clock)
 }
 
 /** LinuxPage → the routes of :ui:routes. */
@@ -59,7 +66,7 @@ public class RoutedLinuxNavigator(private val nav: AppNavigator) : LinuxNavigato
                 LinuxPage.Packages -> LinuxRoute.Packages
                 LinuxPage.Running -> PhoneRoute.Running
                 LinuxPage.ThisPhone -> PhoneRoute.ThisPhone
-            },
+            }
         )
     }
 
@@ -74,10 +81,27 @@ public class LinuxHomeViewModel(
     watch: LinuxJobWatch,
     lifecycle: LinuxLifecycle,
     reset: LinuxResetFlow,
+    storage: io.github.eslamasabry.oc.engine.runtime.storage.LinuxLocalStorage,
+    setup: LinuxSetupSource,
+    idle: LinuxIdleSource,
+    lifetimes: LinuxLifetimesSource,
     nav: LinuxNavigator,
     pacer: Pacer,
 ) : ViewModel(), LinuxHomeActions {
-    private val model = LinuxHomeModel(manager, watch, lifecycle, reset, nav, viewModelScope, pacer)
+    private val model =
+        LinuxHomeModel(
+            manager,
+            watch,
+            lifecycle,
+            reset,
+            nav,
+            viewModelScope,
+            pacer,
+            storage,
+            setup,
+            idle,
+            lifetimes,
+        )
     public val state: StateFlow<LinuxHomeUi> = model.state
 
     override fun shown(visible: Boolean): Unit = model.shown(visible)
@@ -87,6 +111,36 @@ public class LinuxHomeViewModel(
     override fun askRepair(): Unit = model.askRepair()
 
     override fun askReset(): Unit = model.askReset()
+
+    override fun setIdleEnabled(enabled: Boolean): Unit = model.setIdleEnabled(enabled)
+
+    override fun askIdleMinutes(): Unit = model.askIdleMinutes()
+
+    override fun finishIdleMinutes(value: String?): Unit = model.finishIdleMinutes(value)
+
+    override fun resumeIdle(): Unit = model.resumeIdle()
+
+    override fun startSetup(): Unit = model.startSetup()
+
+    override fun addPython(): Unit = model.addPython()
+
+    override fun continueSetup(): Unit = model.continueSetup()
+
+    override fun askStopSetup(): Unit = model.askStopSetup()
+
+    override fun refreshLifetimes(): Unit = model.refreshLifetimes()
+
+    override fun askCreateProject(): Unit = model.askCreateProject()
+
+    override fun finishCreateProject(path: String?): Unit = model.finishCreateProject(path)
+
+    override fun browse(path: String): Unit = model.browse(path)
+
+    override fun closeFolders(): Unit = model.closeFolders()
+
+    override fun measureRemoval(): Unit = model.measureRemoval()
+
+    override fun askRemove(projects: Boolean): Unit = model.askRemove(projects)
 
     override fun confirm(): Unit = model.confirm()
 
@@ -102,8 +156,11 @@ public class LinuxHomeViewModel(
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-public class LinuxPortsViewModel(manager: LinuxManager, opener: PortPreviewOpener, nav: LinuxNavigator) :
-    ViewModel(), LinuxPortsActions {
+public class LinuxPortsViewModel(
+    manager: LinuxManager,
+    opener: PortPreviewOpener,
+    nav: LinuxNavigator,
+) : ViewModel(), LinuxPortsActions {
     private val model = LinuxPortsModel(manager, opener, nav, viewModelScope)
     public val state: StateFlow<LinuxPortsUi> = model.state
 
@@ -113,6 +170,12 @@ public class LinuxPortsViewModel(manager: LinuxManager, opener: PortPreviewOpene
 
     override fun preview(port: Int): Unit = model.preview(port)
 
+    override fun readProgramLog(pid: Int): Unit = model.readProgramLog(pid)
+
+    override fun askStopProgram(pid: Int): Unit = model.askStopProgram(pid)
+
+    override fun confirmStopProgram(): Unit = model.confirmStopProgram()
+
     override fun dismiss(): Unit = model.dismiss()
 
     override fun back(): Unit = model.back()
@@ -121,7 +184,8 @@ public class LinuxPortsViewModel(manager: LinuxManager, opener: PortPreviewOpene
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-public class LinuxStorageViewModel(manager: LinuxManager, nav: LinuxNavigator) : ViewModel(), LinuxStorageActions {
+public class LinuxStorageViewModel(manager: LinuxManager, nav: LinuxNavigator) :
+    ViewModel(), LinuxStorageActions {
     private val model = LinuxStorageModel(manager, nav, viewModelScope)
     public val state: StateFlow<LinuxStorageUi> = model.state
 
@@ -129,7 +193,9 @@ public class LinuxStorageViewModel(manager: LinuxManager, nav: LinuxNavigator) :
 
     override fun retry(): Unit = model.retry()
 
-    override fun askCleanup(id: io.github.eslamasabry.oc.feature.linux.manager.LinuxCleanupId): Unit = model.askCleanup(id)
+    override fun askCleanup(
+        id: io.github.eslamasabry.oc.feature.linux.manager.LinuxCleanupId
+    ): Unit = model.askCleanup(id)
 
     override fun confirm(): Unit = model.confirm()
 
@@ -141,8 +207,12 @@ public class LinuxStorageViewModel(manager: LinuxManager, nav: LinuxNavigator) :
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-public class LinuxPackagesViewModel(manager: LinuxManager, watch: LinuxJobWatch, nav: LinuxNavigator, pacer: Pacer) :
-    ViewModel(), LinuxPackagesActions {
+public class LinuxPackagesViewModel(
+    manager: LinuxManager,
+    watch: LinuxJobWatch,
+    nav: LinuxNavigator,
+    pacer: Pacer,
+) : ViewModel(), LinuxPackagesActions {
     private val model = LinuxPackagesModel(manager, watch, nav, viewModelScope, pacer)
     public val state: StateFlow<LinuxPackagesUi> = model.state
 

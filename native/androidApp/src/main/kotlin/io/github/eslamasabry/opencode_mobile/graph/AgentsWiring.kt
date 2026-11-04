@@ -37,9 +37,6 @@ import io.github.eslamasabry.oc.engine.profiles.StoredProfile
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputer
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputers
 import io.github.eslamasabry.oc.feature.agents.hub.ComputerCheck
-import io.github.eslamasabry.oc.feature.agents.hub.NoPhoneAgents
-import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
-import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
 import io.github.eslamasabry.oc.protocol.paseo.PaseoEndpoint
 import io.github.eslamasabry.oc.protocol.paseo.PaseoException
 import io.github.eslamasabry.oc.protocol.paseo.PaseoFailureKind
@@ -334,8 +331,3 @@ class AppAgentComputers(
 
     override suspend fun newConversation(id: ProfileId): Outcome<ConversationRef> = connections.createConversation(id)
 }
-
-/** No phone agent host in this build yet: the hub says where agents run instead of showing an empty list. */
-@Inject
-@ContributesBinding(AppScope::class, binding = binding<PhoneAgents>())
-class AppPhoneAgents : PhoneAgents by NoPhoneAgents(MutableStateFlow(PhoneAgentsState()))

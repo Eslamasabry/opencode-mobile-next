@@ -1,0 +1,14 @@
+<resources>
+    <string name="linuxGitRepairAction">إصلاح ملفات Git المرتبطة</string>
+    <string name="linuxGitRepairDetail">استعد كائنات Git الموثقة من هذا المشروع أو مخزنه القديم في Termux. تبقى ملفات المشروع محفوظة.</string>
+    <string name="linuxGitRepairWorking">جارٍ إصلاح ملفات Git…</string>
+    <string name="linuxGitRepairHealthy">يمكن لـ Git قراءة هذا المشروع. لم تحتج ملفات الكائنات إلى إصلاح.</string>
+    <string name="linuxGitRepairRestored">تمت استعادة %1$d من ملفات كائنات Git. يمكن لـ Git قراءة المشروع من جديد.</string>
+    <string name="linuxGitRepairMissing">تعذر استرداد بعض كائنات Git أو التحقق منها. انسخ المشروع مجددًا أو استعد نسخة منه.</string>
+    <string name="linuxGitRepairTermuxMissing">Termux غير مثبت. ملفات كائنات Git هذه مفقودة. انسخ المشروع مجددًا أو استعد نسخة منه.</string>
+    <string name="linuxGitRepairPermission">يلزم إذن تشغيل أوامر Termux. لم تتغير ملفات الكائنات. اسمح بتشغيل الأوامر في Termux من إعدادات التطبيق، ثم فعّل allow-external-apps في Termux وأعد الإصلاح.</string>
+    <string name="linuxGitRepairNoAnswer">لم يُعد Termux الملفات المطلوبة. افتح Termux مرة، ثم عد وأصلح مجددًا.</string>
+    <string name="linuxGitRepairNotProject">يمكن هنا إصلاح مشاريع Git الموجودة في مجلد مشاريع هذا الهاتف فقط.</string>
+    <string name="linuxGitRepairFailed">تعذر على الهاتف إكمال إصلاح ملفات Git. حاول مجددًا.</string>
+    <string name="linuxGitRepairAppSettings">فتح إعدادات التطبيق</string>
+</resources>

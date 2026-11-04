@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="linuxAgentInstall">تثبيت %1$s أو تحديثه</string>
+    <string name="linuxAgentInstalling">جارٍ تثبيت %1$s</string>
+    <string name="linuxAgentInstallBackground">يستمر التثبيت في الخلفية. اضغط على تحديث لقراءة آخر تقدم.</string>
+    <string name="linuxAgentInstallCancel">إلغاء التثبيت</string>
+    <string name="linuxAgentInstallBusy">هناك إعداد آخر قيد التشغيل. انتظر انتهاءه أو ألغِه أولًا.</string>
+    <string name="linuxAgentInstallSpace">لا توجد مساحة كافية للتنزيل والملفات المثبتة. أفرغ بعض مساحة التخزين وحاول مجددًا.</string>
+    <string name="linuxAgentInstallUnavailable">لا يمكن تثبيت هذا الوكيل على هذا الهاتف الآن.</string>
+    <string name="linuxAgentInstallDone">تم تثبيت %1$s. ما زال تسجيل الدخول وفحص التوافق على الهاتف مطلوبين قبل الاستخدام.</string>
+    <string name="linuxAgentInstallFailed">تعذّر تثبيت %1$s. اضغط على التثبيت أو التحديث للمحاولة مجددًا.</string>
+    <string name="linuxAgentInstallInterrupted">انقطع تثبيت %1$s. اضغط على التثبيت أو التحديث لإعادة المحاولة بأمان.</string>
+</resources>
