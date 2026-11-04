@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairResult
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationActions
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
@@ -269,6 +270,11 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 stringResource(
                                     if (state.creationUnconfirmed)
                                         Res.string.p12NewCreationUnconfirmed
+                                    else if (
+                                        state.repairAvailable &&
+                                            state.failure is Failure.ProjectGit
+                                    )
+                                        Res.string.gitRepairFailureWords
                                     else Res.string.chatsNewFailed
                                 ),
                             failure = state.failure,
@@ -278,7 +284,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         if (
                             !state.creationUnconfirmed &&
                                 !state.deliveryUnconfirmed &&
-                                state.repairAvailable
+                                state.repairAvailable &&
+                                state.failure is Failure.ProjectGit
                         )
                             KitButton(
                                 stringResource(Res.string.gitRepairAction),
@@ -381,13 +388,19 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                             state.directory?.substringAfterLast('/').orEmpty(),
                         )
                     )
-                    if (state.importFailed) {
-                        KitNotice(stringResource(Res.string.claudeImportFailed))
-                        KitButton(
-                            stringResource(Res.string.commonRetry),
-                            { actions.sheet(NewConversationSheet.Import) },
+                    if (state.importFailed && state.imports == null && !state.importBusy)
+                        KitStateView(
+                            kind = KitStateKind.Error,
+                            title = stringResource(Res.string.claudeImportLoadFailedTitle),
+                            body = stringResource(Res.string.claudeImportLoadFailedBody),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.commonRetry),
+                                    { actions.sheet(NewConversationSheet.Import) },
+                                ),
                         )
-                    }
+                    else if (state.importFailed)
+                        KitNotice(stringResource(Res.string.claudeImportFailed))
                     if (state.importBusy) KitSkeletonRows()
                     else
                         state.imports?.let { found ->
@@ -410,7 +423,10 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                                                 stringResource(
                                                     Res.string.claudeImportRowDetail,
                                                     item.directory.substringAfterLast('/'),
-                                                    item.lastUsed.toString(),
+                                                    importAge(
+                                                        state.importsReadAtMs -
+                                                            item.lastUsed.toEpochMilliseconds()
+                                                    ),
                                                 ),
                                             supportingMaxLines = 2,
                                             onClick = { actions.import(item) },
@@ -430,5 +446,21 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                 null -> Unit
             }
         }
+    }
+}
+
+/** "Just now" / "5 min ago" / "3h ago" / "2d ago", never a raw timestamp. */
+@Composable
+private fun importAge(ageMs: Long): String {
+    val minutes = ageMs.coerceAtLeast(0) / 60_000
+    return when {
+        minutes < 1 -> stringResource(Res.string.e7WorkspaceJustNow)
+        minutes < 60 -> stringResource(Res.string.e7WorkspaceMinutesAgo, minutes.toInt())
+        minutes < 24 * 60 -> stringResource(Res.string.e7WorkspaceHoursAgo, (minutes / 60).toInt())
+        else ->
+            stringResource(
+                Res.string.e7WorkspaceDaysAgo,
+                (minutes / (24 * 60)).coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+            )
     }
 }

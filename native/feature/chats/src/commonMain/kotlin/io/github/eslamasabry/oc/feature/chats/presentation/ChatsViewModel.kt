@@ -229,7 +229,9 @@ public class ChatsViewModel(
                     sheet.value = null
                     nav.openChat(result.value)
                 }
-                is io.github.eslamasabry.oc.core.common.Outcome.Failed -> Unit
+                // The refusal is shown in the Inbox, which was closed for the confirmation.
+                is io.github.eslamasabry.oc.core.common.Outcome.Failed ->
+                    sheet.value = ChatsHomeSheet.Inbox
             }
         }
     }

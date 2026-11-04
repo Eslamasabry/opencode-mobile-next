@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -186,6 +187,8 @@ public data class NewConversationUi(
     val failure: Failure? = null,
     val sheet: NewConversationSheet? = null,
     val imports: ImportableConversations? = null,
+    /** When [imports] was read, for each row's relative age. */
+    val importsReadAtMs: Long = 0,
     val importBusy: Boolean = false,
     val importFailed: Boolean = false,
     val draftFailed: Boolean = false,
@@ -242,6 +245,7 @@ public class NewConversationViewModel(
     @Assisted private val route: ChatsRoute.New,
     private val host: NewConversationHost,
     private val nav: AppNavigator,
+    private val clock: Clock,
 ) : ViewModel(), NewConversationActions {
     private val mutable = MutableStateFlow(NewConversationUi())
     public val state: StateFlow<NewConversationUi> = mutable.asStateFlow()
@@ -422,7 +426,9 @@ public class NewConversationViewModel(
                 mutable.value.attempted ||
                 mutable.value.deliveryUnconfirmed ||
                 mutable.value.setup?.canChangeProject != true ||
-                directory.isBlank()
+                !directory.trim().startsWith('/') ||
+                directory.trim().split('/').any { it == ".." || it == "." } ||
+                directory.any { it.code <= 0x1f || it.code == 0x7f }
         )
             return
         val before = mutable.value
@@ -477,7 +483,13 @@ public class NewConversationViewModel(
         viewModelScope.launch {
             when (val result = host.imports(profile, directory)) {
                 is Outcome.Ok ->
-                    mutable.update { it.copy(importBusy = false, imports = result.value) }
+                    mutable.update {
+                        it.copy(
+                            importBusy = false,
+                            imports = result.value,
+                            importsReadAtMs = clock.now().toEpochMilliseconds(),
+                        )
+                    }
                 is Outcome.Failed ->
                     mutable.update { it.copy(importBusy = false, importFailed = true) }
             }
@@ -511,6 +523,7 @@ public class NewConversationViewModel(
         if (
             shown.busy ||
                 !shown.repairAvailable ||
+                shown.failure !is Failure.ProjectGit ||
                 shown.creationUnconfirmed ||
                 shown.deliveryUnconfirmed
         )

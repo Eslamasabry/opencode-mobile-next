@@ -142,6 +142,8 @@ public class DevPreviewViewModel(
                         it.copy(
                             asking = false,
                             askClear = it.askClear + 1,
+                            // A later restart needs its own visible "Stop and send".
+                            delivery = PreviewSent.Now,
                             notice =
                                 when (result.value) {
                                     PreviewSent.Now -> PreviewNotice.Sent
