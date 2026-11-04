@@ -1,0 +1,14 @@
+<resources>
+    <string name="linuxGitRepairAction">Repair linked Git files</string>
+    <string name="linuxGitRepairDetail">Restore verified Git objects from this project or its old Termux store. Project files are kept.</string>
+    <string name="linuxGitRepairWorking">Repairing Git files…</string>
+    <string name="linuxGitRepairHealthy">Git can read this project. No object files needed repair.</string>
+    <string name="linuxGitRepairRestored">%1$d Git object files restored. Git can read the project again.</string>
+    <string name="linuxGitRepairMissing">Some Git objects could not be recovered or verified. Clone the project again or restore a copy.</string>
+    <string name="linuxGitRepairTermuxMissing">Termux is not installed. These Git object files are missing. Clone the project again or restore a copy.</string>
+    <string name="linuxGitRepairPermission">Termux command permission is needed. No object files were changed. In app settings, allow Run commands in Termux, then enable allow-external-apps in Termux and repair again.</string>
+    <string name="linuxGitRepairNoAnswer">Termux did not return the requested files. Open Termux once, come back, and repair again.</string>
+    <string name="linuxGitRepairNotProject">Only Git projects in this phone’s projects folder can be repaired here.</string>
+    <string name="linuxGitRepairFailed">The phone could not finish repairing Git files. Try again.</string>
+    <string name="linuxGitRepairAppSettings">Open app settings</string>
+</resources>

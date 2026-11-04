@@ -1,0 +1,24 @@
+<resources>
+    <string name="linuxLocalProjects">Browse phone projects</string>
+    <string name="linuxLocalProjectsDetail">Browse folders while the server is stopped, including projects kept after removing Linux.</string>
+    <string name="linuxLocalParent">Up one folder</string>
+    <string name="linuxLocalClose">Close folders</string>
+    <string name="linuxLocalGit">Git project</string>
+    <string name="linuxLocalFolder">Folder</string>
+    <string name="linuxLocalReading">Reading folders…</string>
+    <string name="linuxLocalFolderFailed">This folder cannot be read. It may have moved, been removed, or be a link.</string>
+    <string name="linuxLocalEmpty">No folders here.</string>
+    <string name="linuxLocalMeasure">Measure Linux removal choices</string>
+    <string name="linuxLocalRemoveKeep">Remove Linux, keep projects</string>
+    <string name="linuxLocalRemoveAll">Remove Linux and projects</string>
+    <string name="linuxLocalFreed">Frees %1$s</string>
+    <string name="linuxLocalRemoveKeepQuestion">Remove Linux and keep projects?</string>
+    <string name="linuxLocalRemoveAllQuestion">Remove Linux and all phone projects?</string>
+    <string name="linuxLocalRemoveKeepBody">Stops phone programs and removes Linux, installed tools, sign-ins and local server history. Your project files stay available to browse. Frees %1$s.</string>
+    <string name="linuxLocalRemoveAllBody">Stops phone programs and removes Linux, installed tools, sign-ins, local server history and all retained phone project files. This cannot be undone. Frees %1$s.</string>
+    <string name="linuxLocalStorageFailed">The phone could not finish reading or removing Linux storage. Close phone tasks and try again.</string>
+    <string name="linuxLocalRemoved">Linux storage removed.</string>
+    <string name="linuxLocalCreate">Create a phone project</string>
+    <string name="linuxLocalCreatePath">Absolute project folder path</string>
+    <string name="linuxLocalInvalidPath">Enter an absolute folder path without parent traversal or line breaks.</string>
+</resources>

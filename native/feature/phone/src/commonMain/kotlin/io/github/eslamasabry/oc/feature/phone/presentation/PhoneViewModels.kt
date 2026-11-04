@@ -27,8 +27,10 @@ public class ThisPhoneViewModel(
     clock: Clock,
     pacer: Pacer,
     details: Set<PhoneStateDetails>,
+    exits: PhoneExitNotices,
 ) : ViewModel(), ThisPhoneActions {
-    private val model = ThisPhoneModel(source, settings, nav, viewModelScope, clock, pacer, details)
+    private val model =
+        ThisPhoneModel(source, settings, nav, viewModelScope, clock, pacer, details, exits)
     public val state: StateFlow<ThisPhoneUi> = model.state
 
     override fun act(act: PhoneAct): Unit = model.act(act)

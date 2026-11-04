@@ -76,6 +76,7 @@ public data class ThisPhoneUi(
     val working: PhoneOp? = null,
     val confirm: ThisPhoneConfirm? = null,
     val notice: ThisPhoneNotice? = null,
+    val exitNotice: PhoneExitNotice? = null,
 )
 
 /** Intents only (ADR §9.1). */

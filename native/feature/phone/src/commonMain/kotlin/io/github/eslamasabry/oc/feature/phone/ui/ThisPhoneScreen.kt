@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReadiness
 import io.github.eslamasabry.oc.feature.phone.presentation.ServerRow
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitKind
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneActions
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneConfirm
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneNotice
@@ -72,6 +73,14 @@ import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateDetail
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateKept
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
+import io.github.eslamasabry.oc.ui.words.res.linuxExitForceStop
+import io.github.eslamasabry.oc.ui.words.res.linuxExitMemory
+import io.github.eslamasabry.oc.ui.words.res.linuxExitMemoryLimit
+import io.github.eslamasabry.oc.ui.words.res.linuxExitCrash
+import io.github.eslamasabry.oc.ui.words.res.linuxExitKilled
+import io.github.eslamasabry.oc.ui.words.res.linuxExitRestored
+import io.github.eslamasabry.oc.ui.words.res.linuxExitCheckStatus
+import io.github.eslamasabry.oc.ui.words.res.linuxExitPolicyOff
 import org.jetbrains.compose.resources.stringResource
 
 /** The runtime's name in "Update OpenCode?" (the product name, not copy). */
@@ -115,6 +124,26 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
         },
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+            state.exitNotice?.let { exit ->
+                KitNotice(
+                    title = stringResource(when (exit.kind) {
+                        PhoneExitKind.ForceStop -> Res.string.linuxExitForceStop
+                        PhoneExitKind.LowMemory -> Res.string.linuxExitMemory
+                        PhoneExitKind.MemoryLimit -> Res.string.linuxExitMemoryLimit
+                        PhoneExitKind.Crash -> Res.string.linuxExitCrash
+                        PhoneExitKind.Killed -> Res.string.linuxExitKilled
+                    }),
+                    message = stringResource(when {
+                        exit.restored -> Res.string.linuxExitRestored
+                        !exit.recoveryAllowed -> Res.string.linuxExitPolicyOff
+                        else -> Res.string.linuxExitCheckStatus
+                    }),
+                    actions = if (exit.kind == PhoneExitKind.Crash) emptyList() else listOf(
+                        KitLineAction(stringResource(Res.string.keepRunningTitle), actions::openKeepRunning),
+                    ),
+                    dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss),
+                )
+            }
             KitNotice(
                 message = state.answer.line?.words() ?: state.answer.headline.words(),
                 title = if (state.answer.line != null) state.answer.headline.words() else null,

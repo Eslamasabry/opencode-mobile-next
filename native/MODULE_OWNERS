@@ -77,6 +77,13 @@
 :feature:projects	F	P12-PROJECTS	slice-5
 :feature:review	F	(slice brief names the agent)	slice-4
 :feature:voice	F	(slice brief names the agent)	slice-12
+:engine:linuxsetup	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
+:engine:setupassist	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
+:engine:termuxhost	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
+:engine:linuxtools	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
+:engine:lifecycle	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
+:engine:setupscripts	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
+:feature:phonesetup	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
 :feature:devservices	F	build-runtime-a	slice-5
 :feature:diagnostics	F	build-diagnostics-attention	parity
 :android:background	F	build-android-bg-platform	parity-p12

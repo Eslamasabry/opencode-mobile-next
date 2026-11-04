@@ -1,0 +1,11 @@
+<resources>
+    <string name="linuxIdleTitle">إيقاف الخادم عند الخمول</string>
+    <string name="linuxIdleDetail">يوفر موارد الهاتف بعد انتهاء العمل. استأنف الخادم نفسه عند الحاجة.</string>
+    <string name="linuxIdleMinutes">مدة الخمول بالدقائق</string>
+    <string name="linuxIdleMinutesValue">%1$d دقيقة</string>
+    <string name="linuxIdleInvalid">أدخل عددًا صحيحًا من 1 إلى 60.</string>
+    <string name="linuxIdleFailed">تعذر على الهاتف قراءة حالة الخمول أو تغييرها. افتح هذه الصفحة مجددًا للمحاولة.</string>
+    <string name="linuxIdleResume">استئناف خادم الهاتف الخامل</string>
+    <string name="linuxIdleSave">حفظ مدة الخمول</string>
+    <string name="linuxIdleWorking">جارٍ تحديث حالة الخمول…</string>
+</resources>

@@ -1,0 +1,11 @@
+<resources>
+    <string name="linuxAgentPayloadRefresh">Refresh phone agents</string>
+    <string name="linuxAgentPayloadRemove">Remove %1$s</string>
+    <string name="linuxAgentPayloadRemoveTitle">Remove %1$s from this phone?</string>
+    <string name="linuxAgentPayloadRemoveBody">Removes the downloaded program and unfinished downloads. Your accounts, conversations and shared tools stay on this phone.</string>
+    <string name="linuxAgentPayloadRemoved">Program removed. Freed %1$d bytes.</string>
+    <string name="linuxAgentPayloadBusy">The agent or another phone setup is running. Stop it, then try again.</string>
+    <string name="linuxAgentPayloadUnsafe">These files do not match an app-owned installation. Nothing was removed.</string>
+    <string name="linuxAgentPayloadUnconfirmed">Removal could not be confirmed. Refresh the list before trying again.</string>
+    <string name="linuxAgentPayloadUnavailable">Phone agent files could not be read or removed. Refresh and try again.</string>
+</resources>

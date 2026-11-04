@@ -1,0 +1,12 @@
+<resources>
+    <string name="linuxSetupStart">إعداد لينكس وOpenCode</string>
+    <string name="linuxSetupAddPython">إضافة أدوات Python</string>
+    <string name="linuxSetupContinue">متابعة الإعداد</string>
+    <string name="linuxSetupStop">إيقاف الإعداد</string>
+    <string name="linuxSetupStopQuestion">هل تريد إيقاف الإعداد؟</string>
+    <string name="linuxSetupStopBody">تبقى الأدوات المثبتة على الهاتف. يمكنك متابعة الإعداد لاحقًا.</string>
+    <string name="linuxSetupWorking">جارٍ إعداد أدوات الهاتف…</string>
+    <string name="linuxSetupAddingPython">جارٍ إضافة أدوات Python</string>
+    <string name="linuxSetupDone">أدوات الهاتف جاهزة.</string>
+    <string name="linuxSetupFailed">توقف الإعداد قبل اكتماله. تابع الإعداد لفحص الأدوات المثبتة والمحاولة مجددًا.</string>
+</resources>
