@@ -15,7 +15,6 @@ public enum class SignInStep {
 
     /** The sign-in ended; the account is being read. */
     Checking,
-
     SignedIn,
 
     /** The read did not say signed in ("isn't signed in yet. Start the sign-in again…"). */
@@ -55,16 +54,23 @@ public data class SignInTerminalUi(
     val failureCode: String? = null,
     /** The last attempt to stop the sign-in failed; it still runs and is still protected. */
     val stopFailed: Boolean = false,
+    val linkPrompt: SignInPagePrompt? = null,
 ) {
     override fun toString(): String =
         "SignInTerminalUi(step=$step, terminal=${terminal != null}, transcript=${transcript.length} chars, " +
             "canOpenPage=$canOpenPage, code=${code != null}, failureCode=$failureCode, stopFailed=$stopFailed)"
 }
 
+public data class SignInPagePrompt(val host: String, val insecure: Boolean)
+
 /** What the person can do on the sign-in terminal. Each action names its target. */
 public interface SignInTerminalActions {
     /** "Open sign-in page": the page the sign-in printed, through the link policy. */
     public fun openSignInPage()
+
+    public fun confirmSignInPage()
+
+    public fun dismissSignInPage()
 
     /** "Copy code": the one-time code, copied as sensitive. */
     public fun copyCode()
@@ -80,6 +86,8 @@ public interface SignInTerminalActions {
     /** "Sign in again" after NotYet or a failure. */
     public fun startAgain()
 
-    /** Back: stops the sign-in (exactly this one), then leaves; stays when it could not be stopped. */
+    /**
+     * Back: stops the sign-in (exactly this one), then leaves; stays when it could not be stopped.
+     */
     public fun leave()
 }

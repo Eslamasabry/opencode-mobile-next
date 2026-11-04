@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="secBuiltinFolders">مجلدات Linux المدمج</string>
+    <string name="secBuiltinFoldersBody">تصفّح مساحة المشاريع ومجلدات Linux على هذا الهاتف.</string>
+    <string name="secBuiltinFolderLinked">هذا المجلد رابط. اختر مجلدًا فعليًا.</string>
+    <string name="secBuiltinFolderNotInstalled">ثبّت Linux على هذا الهاتف لتصفّح هذه المجلدات.</string>
+</resources>

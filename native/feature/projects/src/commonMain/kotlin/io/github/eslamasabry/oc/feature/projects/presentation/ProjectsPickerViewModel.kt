@@ -111,6 +111,8 @@ public class ProjectsPickerViewModel(
                 pathStart = pathStart(before),
                 canCreate = creator.available(server),
                 canBrowsePhone = server.phoneFolders,
+                canBrowseBuiltin =
+                    server.phoneFolders && phoneFolders.builtinAvailable(server.profile),
             )
         viewModelScope.launch {
             val read = readProjects(server)
@@ -249,29 +251,38 @@ public class ProjectsPickerViewModel(
 
     override fun browsePhone() {
         if (current()?.phoneFolders != true) return
+        mutable.update { it.copy(browsingBuiltin = false) }
         enterPhoneFolder(PHONE_ROOT)
+    }
+
+    override fun browseBuiltin() {
+        val server = current() ?: return
+        if (!server.phoneFolders || !phoneFolders.builtinAvailable(server.profile)) return
+        mutable.update { it.copy(browsingBuiltin = true) }
+        enterPhoneFolder("/root/projects")
     }
 
     override fun enterPhoneFolder(path: String) {
         val server = current() ?: return
-        if (
-            !server.phoneFolders ||
-                (path != PHONE_ROOT && !path.startsWith("$PHONE_ROOT/")) ||
-                ".." in path.split('/')
-        )
-            return
+        val builtin = state.value.browsingBuiltin
+        if (!server.phoneFolders || ".." in path.split('/') || '\u0000' in path) return
+        if (builtin) {
+            if (!phoneFolders.builtinAvailable(server.profile) || !path.startsWith('/')) return
+        } else if (path != PHONE_ROOT && !path.startsWith("$PHONE_ROOT/")) return
         val run = ++phoneGeneration
         mutable.update {
             it.copy(
                 phonePath = path,
-                phoneParent = if (path == PHONE_ROOT) null else path.substringBeforeLast('/'),
+                phoneParent =
+                    if (path == (if (builtin) "/" else PHONE_ROOT)) null
+                    else path.substringBeforeLast('/').ifEmpty { "/" },
                 phoneFolders = persistentListOf(),
                 phoneLoading = true,
                 phoneFailure = null,
             )
         }
         viewModelScope.launch {
-            val result = phoneFolders.list(path)
+            val result = if (builtin) phoneFolders.listBuiltin(path) else phoneFolders.list(path)
             if (
                 run != phoneGeneration ||
                     current()?.profile != server.profile ||
@@ -300,13 +311,13 @@ public class ProjectsPickerViewModel(
     }
 
     override fun allowPhoneFolderAccess() {
-        viewModelScope.launch { phoneFolders.requestAccess() }
+        if (!state.value.browsingBuiltin) viewModelScope.launch { phoneFolders.requestAccess() }
     }
 
     override fun usePhoneFolder() {
         val path = state.value.phonePath ?: return
         if (
-            path == PHONE_ROOT ||
+            path == (if (state.value.browsingBuiltin) "/" else PHONE_ROOT) ||
                 state.value.phoneLoading ||
                 state.value.phoneFailure != null ||
                 current()?.phoneFolders != true
