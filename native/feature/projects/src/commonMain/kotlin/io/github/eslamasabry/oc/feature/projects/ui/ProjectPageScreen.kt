@@ -49,6 +49,7 @@ import io.github.eslamasabry.oc.ui.words.res.p12ProjectNoConversations
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.servicesSubtitle
 import io.github.eslamasabry.oc.ui.words.res.servicesTitle
+import io.github.eslamasabry.oc.ui.words.res.terminal40Title
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.stringResource
 
@@ -57,7 +58,12 @@ import org.jetbrains.compose.resources.stringResource
  * then this project's conversations with a visible Load more, then "In other projects" (B-NAV-010).
  */
 @Composable
-public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, onDevServices: (() -> Unit)? = null) {
+public fun ProjectPageScreen(
+    state: ProjectPageUi,
+    actions: ProjectPageActions,
+    onDevServices: (() -> Unit)? = null,
+    onTerminal: (() -> Unit)? = null,
+) {
     KitScreen(
         topBar = {
             KitTopBar(
@@ -94,6 +100,14 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, 
                     working = state.creating,
                 )
             }
+            if (onTerminal != null)
+                item(key = "terminal") {
+                    KitRow(
+                        title = stringResource(Res.string.terminal40Title),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = onTerminal,
+                    )
+                }
             item(key = "development-services") {
                 KitRow(
                     title = stringResource(Res.string.linuxSvcTitle),

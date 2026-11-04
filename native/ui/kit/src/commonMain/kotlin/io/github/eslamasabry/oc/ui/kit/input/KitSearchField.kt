@@ -51,6 +51,8 @@ import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -66,6 +68,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.motion.KitPresence
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -163,8 +167,7 @@ public fun KitSearchField(
         Row(
             Modifier.fillMaxWidth()
                 .heightIn(min = tokens.buttonHeight.dp)
-                .background(colors.surface1, shape)
-                .border(1.dp, colors.hairline, shape)
+                .kitSurface(kitSurfaceLook(SurfaceRequest(SurfaceRole.Field, disabled = !enabled), colors.surface1, colors.hairline, 1f), shape)
                 .padding(start = Space.S3.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),

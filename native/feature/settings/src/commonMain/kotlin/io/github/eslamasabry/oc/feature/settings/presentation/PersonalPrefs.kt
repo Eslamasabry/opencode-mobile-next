@@ -4,6 +4,10 @@ import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
+import io.github.eslamasabry.oc.ui.design.effects.FrostStrength
+import io.github.eslamasabry.oc.engine.settings.prefs.Corners
+import io.github.eslamasabry.oc.engine.settings.prefs.Density
+import io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle
 
 /** The five styles (B-KIT-037), in picker order; stored as `oc.effectsSurfaceStyle` by `:engine:settings`. */
 public enum class SurfaceStyle { Solid, Soft, Brutal, Paper, Signal }
@@ -25,12 +29,24 @@ public data class PersonalPrefs(
     val textSize: AppTextSize = AppTextSize.Normal,
     /** The app language (`oc.appLocale`); [AppLanguage.System] follows the phone (B-L10N-001). */
     val language: AppLanguage = AppLanguage.System,
+    val accent: String? = null,
+    val frost: FrostStrength = FrostStrength.Balanced,
+    val corners: Corners? = null,
+    val density: Density? = null,
+    val activityGlow: Boolean = true,
+    val glowStyle: GlowStyle = GlowStyle.Classic,
 ) {
     public val saver: Boolean get() = mode == AppearanceMode.Saver
 }
 
 /** One personal change; each is one all-or-nothing write in the engine. */
 public sealed interface PersonalChange {
+    public data class Accent(val id: String?) : PersonalChange
+    public data class Frost(val strength: FrostStrength) : PersonalChange
+    public data class Shape(val corners: Corners?, val density: Density?) : PersonalChange
+    public data class Glow(val style: GlowStyle?) : PersonalChange
+    public data object ResetAppearance : PersonalChange
+
     public data class Mode(val mode: AppearanceMode) : PersonalChange
 
     public data class Pack(val pack: PackId) : PersonalChange

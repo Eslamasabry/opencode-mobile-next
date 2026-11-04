@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -24,6 +25,23 @@ import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class SettingsEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
+        entry<SettingsRoute.WhatsNew> {
+            val vm = metroViewModel<SettingsViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            LaunchedEffect(vm) { vm.actions.onOpen(SettingsPage.WhatsNew) }
+            val actions = object : io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions by vm.actions {
+                override fun onNewsShow() {
+                    if (state.newsStep < 2) vm.exit()
+                    vm.actions.onNewsShow()
+                }
+                override fun onBack(): Boolean {
+                    if (state.stack.size <= 2) { vm.exit(); return true }
+                    return vm.actions.onBack()
+                }
+            }
+            KitBackGuard(enabled = true, onBack = { actions.onBack() })
+            if (state.page != SettingsPage.Hub) SettingsScreen(state, actions, onExit = vm::exit)
+        }
         entry<SettingsRoute.Home> {
             val vm = metroViewModel<SettingsViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()

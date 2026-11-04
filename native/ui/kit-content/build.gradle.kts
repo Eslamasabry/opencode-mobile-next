@@ -19,6 +19,10 @@ kotlin {
         implementation(project(":ui:words")) // kit-internal words (strings_kit.xml), plan 06 §16.1
         implementation(libs.compose.material3) // kit modules only (ExternalRules)
     }
+    sourceSets.androidMain.dependencies {
+        implementation("com.github.termux.termux-app:terminal-emulator:v0.118.3")
+        implementation("com.github.termux.termux-app:terminal-view:v0.118.3")
+    }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(project(":core:security")) // B-XPLAT-011: terminal lines masked by the app's one redactor
         implementation(zxingCore) // QR readability: every drawn code is decoded by ZXing (plan 10 §14.1)

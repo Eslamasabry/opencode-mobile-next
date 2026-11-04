@@ -20,6 +20,8 @@ import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
+import io.github.eslamasabry.oc.feature.chat.relations.presentation.SessionRelationsViewModel
+import io.github.eslamasabry.oc.feature.chat.relations.ui.SessionRelationsScreen
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
@@ -31,10 +33,12 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
+import io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
+import io.github.eslamasabry.oc.ui.words.res.r40RelationsTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -55,9 +59,15 @@ public class ChatEntries(
     private val readers: Set<KitReplyReader>,
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
+        entry<SessionRelationsRoute> { route ->
+            val vm = assistedMetroViewModel<SessionRelationsViewModel, SessionRelationsViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            SessionRelationsScreen(state, vm)
+        }
         entry<ChatRoute> { route ->
             val vm = assistedMetroViewModel<ChatViewModel, ChatViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
+            val serverCaps by vm.serverCapabilities.collectAsStateWithLifecycle()
             val requests by vm.requests.collectAsStateWithLifecycle()
             val slot = requests?.state?.collectAsStateWithLifecycle()?.value ?: io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi()
             val facts by vm.facts.collectAsStateWithLifecycle()
@@ -91,7 +101,10 @@ public class ChatEntries(
                         composerHost,
                         requests = slot,
                         requestActions = requests,
-                        extraActions = listOf(preview),
+                        extraActions = buildList {
+                            if (serverCaps.subagentSessions) add(KitLineAction(stringResource(Res.string.r40RelationsTitle), { navigator.open(SessionRelationsRoute(route.ref)) }, testTag = "session-relations-open"))
+                            add(preview)
+                        },
                         prompts = prompts,
                         facts = facts,
                         onOpenSession = vm::openSession,

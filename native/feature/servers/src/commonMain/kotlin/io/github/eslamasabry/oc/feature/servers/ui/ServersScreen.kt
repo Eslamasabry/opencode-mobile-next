@@ -25,6 +25,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.ShareLink
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
@@ -50,13 +53,11 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
+import io.github.eslamasabry.oc.ui.words.res.editor40Edit
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -75,6 +76,7 @@ import io.github.eslamasabry.oc.ui.words.res.serverFailureServer
 import io.github.eslamasabry.oc.ui.words.res.serverFailureStorage
 import io.github.eslamasabry.oc.ui.words.res.serverFailureTimeout
 import io.github.eslamasabry.oc.ui.words.res.serverFailureUnreadableReply
+import io.github.eslamasabry.oc.ui.words.res.serverSettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.serversAdd
 import io.github.eslamasabry.oc.ui.words.res.serversAddress
 import io.github.eslamasabry.oc.ui.words.res.serversCancel
@@ -236,13 +238,33 @@ public fun ServersScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                     KitText(server.name)
                     KitText(server.address)
-                    // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded loopback is a server.
-                    val support = if (onThisPhone != null) PhoneHostSupport.Android else PhoneHostSupport.Elsewhere
-                    if (PhoneOwnServers.isPhoneOwnServer(PhoneServerCandidate(server.id.raw, server.address), support)) {
+                    // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded
+                    // loopback is a server.
+                    val support =
+                        if (onThisPhone != null) PhoneHostSupport.Android
+                        else PhoneHostSupport.Elsewhere
+                    if (
+                        PhoneOwnServers.isPhoneOwnServer(
+                            PhoneServerCandidate(server.id.raw, server.address),
+                            support,
+                        )
+                    ) {
                         KitText(stringResource(Res.string.settingsV3ThisPhone))
                     }
                     if (server.connected) KitText(stringResource(Res.string.serversConnected))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                        KitButton(
+                            stringResource(Res.string.serverSettingsTitle),
+                            { actions.settings(server.id) },
+                            role = KitButtonRole.Secondary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.editor40Edit),
+                            { actions.edit(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
                         KitButton(
                             stringResource(Res.string.serversCreate),
                             { actions.create(server.id) },
@@ -310,7 +332,11 @@ public fun ServersScreen(
                 actions::openPlans,
                 role = KitButtonRole.Secondary,
             )
-            KitText(stringResource(Res.string.serversAdd))
+            KitButton(
+                stringResource(Res.string.serversAdd),
+                { actions.edit(null) },
+                enabled = enabled,
+            )
             KitButton(
                 stringResource(Res.string.addServerScan),
                 actions::scanPairing,

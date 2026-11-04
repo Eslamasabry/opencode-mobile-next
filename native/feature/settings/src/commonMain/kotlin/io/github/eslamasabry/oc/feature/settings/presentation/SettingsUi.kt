@@ -26,6 +26,7 @@ public data class SettingsUi(
     val report: ReportUi? = null,
     /** One plain line about the last save that did not stick, if any. */
     val note: SettingsNote? = null,
+    val newsStep: Int = 0,
 ) {
     val page: SettingsPage get() = stack.last()
 }
@@ -38,12 +39,14 @@ public data class HubUi(
     val results: ImmutableList<SettingsRowId> = persistentListOf(),
     /** Every row that exists now: the screen builds the search entries from these. */
     val searchable: ImmutableList<SettingsRowId> = persistentListOf(),
+    val savedServers: ImmutableList<SettingsSavedServer> = persistentListOf(),
 )
 
 public data class GroupUi(val id: SettingsGroupId, val rows: ImmutableList<SettingsRowUi>)
 
 /** The Appearance page (plan 07 I04, plan 06 K4): mode, colours, style, motion. Every choice applies at once. */
 public data class AppearanceUi(
+    val guide: AppearanceHelpFacts? = null,
     val mode: AppearanceMode = AppearanceMode.Dark,
     val pack: PackId = PackId.Opencode,
     /** The packs listed now: the most used (plus the one in use) until "See all" opens the rest. */
@@ -58,6 +61,12 @@ public data class AppearanceUi(
     /** Saver holds Style and Motion (B-KIT-008): shown, not changeable, with the reason. */
     val heldBySaver: Boolean = false,
     val systemMotionOff: Boolean = false,
+    val accent: String? = null,
+    val frost: io.github.eslamasabry.oc.ui.design.effects.FrostStrength = io.github.eslamasabry.oc.ui.design.effects.FrostStrength.Balanced,
+    val corners: io.github.eslamasabry.oc.engine.settings.prefs.Corners? = null,
+    val density: io.github.eslamasabry.oc.engine.settings.prefs.Density? = null,
+    val activityGlow: Boolean = true,
+    val glowStyle: io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle = io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle.Classic,
 )
 
 public sealed interface SpeechModel {

@@ -62,11 +62,22 @@ public object PreferenceMapping {
             timestamps = p.timestampsVisible,
             textSize = textSize(p.textSize),
             language = language(p.locale),
+            accent = p.accent,
+            frost = KitFrost.fromStorage(p.frost.wire),
+            corners = p.effects.fineTune.corners,
+            density = p.effects.fineTune.density,
+            activityGlow = p.effects.activityGlow,
+            glowStyle = p.effects.glowStyle,
         )
 
     /** One [PreferenceChange] per [PersonalChange]; effect changes keep every other effect field ([current]). */
     public fun change(change: PersonalChange, current: DevicePreferences): PreferenceChange =
         when (change) {
+            is PersonalChange.Accent -> PreferenceChange.Accent(change.id)
+            is PersonalChange.Frost -> PreferenceChange.Frost(io.github.eslamasabry.oc.engine.settings.prefs.FrostStrength.entries.first { it.wire == change.strength.storageName })
+            is PersonalChange.Shape -> PreferenceChange.SetEffects(current.effects.copy(fineTune = io.github.eslamasabry.oc.engine.settings.prefs.FineTune(change.corners, change.density)))
+            is PersonalChange.Glow -> PreferenceChange.SetEffects(current.effects.copy(activityGlow = change.style != null, glowStyle = change.style ?: current.effects.glowStyle))
+            PersonalChange.ResetAppearance -> PreferenceChange.ResetAppearance
             is PersonalChange.Mode -> PreferenceChange.Appearance(AppearanceChoice.entries.first { it.name == change.mode.name })
             is PersonalChange.Pack ->
                 PreferenceChange.Theme(ThemePack.entries.firstOrNull { it.wire == change.pack.storageName } ?: ThemePack.OpenCode)
@@ -88,6 +99,9 @@ public object PreferenceMapping {
             mode = mode(p.appearance),
             pack = pack(p.themePack),
             accent = p.accent,
+            corners = p.effects.fineTune.corners?.let { io.github.eslamasabry.oc.ui.design.effects.Corners.valueOf(it.name) },
+            activityGlow = p.effects.activityGlow,
+            glowStyle = io.github.eslamasabry.oc.ui.design.effects.GlowStyle.valueOf(p.effects.glowStyle.name),
             textSize = textSize(p.textSize),
             motion = motion(p.effects.motion),
             density = p.effects.fineTune.density?.let { d -> Density.entries.firstOrNull { it.name == d.name } } ?: Density.Comfortable,

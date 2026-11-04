@@ -50,6 +50,8 @@ import java.net.Proxy
 import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -236,6 +238,14 @@ class AppComputerTools(
                     },
                 )
             }
+        // The helper may have applied the update before its link dropped. Read only; never repeat
+        // daemon.update.request, and never interpret a recovered connection as proof it updated.
+        val uncertain = (result as? Outcome.Failed)?.failure.let { failure ->
+            failure is Failure.Network || failure is Failure.TimedOut ||
+                (failure is Failure.Refused && failure.reason == RefusalReason.DispatchUncertain)
+        }
+        val restarting = (result as? Outcome.Ok)?.value?.let { it.success && !it.alreadyUpToDate } == true
+        if (uncertain || restarting) refreshAfterUpdate(profile, gateway)
         return when (result) {
             is Outcome.Failed -> result
             is Outcome.Ok ->
@@ -245,6 +255,20 @@ class AppComputerTools(
                     // The computer's own reason stays out of the page (B-AGENT-167: a result, never its words).
                     else -> UpdateAnswer.Refused
                 }.ok()
+        }
+    }
+
+    /** Four bounded health reads, cancelled if the saved target or its live graph changes. */
+    private suspend fun refreshAfterUpdate(profile: ProfileId, gateway: PaseoGateway) {
+        val saved = profiles.profile(profile) ?: return
+        val graph = registry.live.value[profile] ?: return
+        if (graph.session.server !== gateway) return
+        repeat(4) {
+            delay(3_000)
+            if (profiles.profile(profile) != saved || registry.live.value[profile] !== graph) return
+            val answer = withTimeoutOrNull(5_000) { gateway.health() }
+            if (profiles.profile(profile) != saved || registry.live.value[profile] !== graph) return
+            if (answer is Outcome.Ok && answer.value.healthy) return
         }
     }
 

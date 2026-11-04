@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="serverSettingsTitle">إعدادات الخادم</string>
+    <string name="serverSettingsShell">الصدفة الافتراضية</string>
+    <string name="serverSettingsFailed">تعذر إكمال العملية. حاول مرة أخرى.</string>
+    <string name="serverSettingsRemove">إزالة الخادم</string>
+    <string name="serverSettingsRemoveBody">يزيل هذا الاتصال المحفوظ وبياناته المحلية من هذا التطبيق. يبقى الخادم والملفات على حاسوبه في مكانها.</string>
+    <string name="serverSettingsDisconnected">غير متصل</string>
+    <string name="serverSettingsConnect">الاتصال بهذا الخادم</string>
+    <string name="serverSettingsOnServer">تُحفظ التغييرات هنا على %1$s وتُشارك مع التطبيقات الأخرى التي تستخدمه.</string>
+    <string name="serverSettingsWaiting">في الانتظار</string>
+    <string name="serverSettingsPassed">نجح</string>
+    <string name="serverSettingsAttention">يحتاج إلى انتباه</string>
+    <string name="serverSettingsFailedCheck">يحتاج إلى إصلاح</string>
+    <string name="serverSettingsSkipped">لم يُفحص</string>
+    <string name="serverSettingsShellUnavailable">اتصل بخادم يتيح إعدادات الصدفة لتغيير صدفته الافتراضية.</string>
+    <string name="serverSettingsSaving">جارٍ الحفظ…</string>
+    <string name="serverSettingsTerminal">الطرفية</string>
+    <string name="serverSettingsFiles">تصفح الملفات</string>
+    <string name="serverSettingsProjects">إدارة المشاريع</string>
+    <string name="serverSettingsSchedules">الطلبات المجدولة</string>
+    <string name="serverSettingsProviders">مزودو النماذج</string>
+    <string name="serverSettingsPermissions">طلبات الأذونات</string>
+    <string name="serverSettingsSteering">توجيه رد قيد التنفيذ</string>
+    <string name="serverSettingsSupported">متاح على هذا الخادم</string>
+    <string name="serverSettingsUnsupported">غير متاح على هذا الخادم</string>
+</resources>

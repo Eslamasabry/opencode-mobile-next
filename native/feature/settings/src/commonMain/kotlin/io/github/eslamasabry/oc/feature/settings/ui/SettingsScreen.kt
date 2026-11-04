@@ -24,6 +24,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.tipsTitle
+import io.github.eslamasabry.oc.ui.words.res.whatsNewTitle
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
@@ -55,6 +57,9 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions, modifier:
     when (val page = state.page) {
         SettingsPage.Hub -> HubPage(state, actions, modifier, onExit)
         is SettingsPage.Group -> GroupPage(state, actions, page, modifier)
+        is SettingsPage.ByServer -> SettingsFrame(rowWords(io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId.DefaultShell), back, state, actions, modifier) {
+            SavedServersBody(state, actions, page.section)
+        }
         SettingsPage.Appearance ->
             SettingsFrame(stringResource(Res.string.e7AppearanceTitle), back, state, actions, modifier) {
                 AppearanceBody(state.appearance, actions)
@@ -70,6 +75,13 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions, modifier:
         SettingsPage.Updates ->
             SettingsFrame(stringResource(Res.string.appUpdatesTitle), back, state, actions, modifier) {
                 state.updates?.let { UpdatesBody(it, actions) }
+            }
+        SettingsPage.Tips -> SettingsFrame(stringResource(Res.string.tipsTitle), back, state, actions, modifier) {
+            TipsBody(actions)
+        }
+        SettingsPage.WhatsNew ->
+            SettingsFrame(stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.whatsNewTitle, "2.2.0"), back, state, actions, modifier) {
+                WhatsNewBody(state.newsStep, actions)
             }
         SettingsPage.About ->
             SettingsFrame(stringResource(Res.string.aboutTitle), back, state, actions, modifier) { AboutBody(state.about, actions) }

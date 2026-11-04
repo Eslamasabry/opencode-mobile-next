@@ -179,6 +179,13 @@ public interface TerminalGateway {
 
     public suspend fun createTerminal(title: String? = null): Outcome<TerminalProcess> = unavailable("terminal")
 
+    /** A fresh process for one explicit command; never writes into a person's existing terminal. */
+    public suspend fun createCommandTerminal(
+        command: String,
+        arguments: ImmutableList<String>,
+        title: String? = null,
+    ): Outcome<TerminalProcess> = unavailable("terminal")
+
     public suspend fun renameTerminal(id: String, title: String): Outcome<Unit> = unavailable("terminal")
 
     public suspend fun resizeTerminal(id: String, rows: Int, cols: Int): Outcome<Unit> = unavailable("terminal")

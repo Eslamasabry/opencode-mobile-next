@@ -43,6 +43,7 @@ public class ChatViewModel(
     private val presenter =
         ChatPresenter(world, nav, { block -> viewModelScope.launch { block() } }, focusComposer = route.focusComposer, outside = outside)
 
+    public val serverCapabilities = world.capabilities
     public val requests = world.requests
 
     public val state: StateFlow<ChatUi> = presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(STOP_AFTER_MS))

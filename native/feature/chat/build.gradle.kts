@@ -21,6 +21,7 @@ kotlin {
         ) // S2-REQ: the request slot (permissions, one-question asks)
         implementation(libs.kotlinx.collections.immutable)
         implementation(project(":engine:cards")) // P12-CHAT-CARDS: the agent card slot
+        implementation(project(":engine:settings")) // Profile-scoped session pins for related conversations
         implementation(project(":engine:agents")) // P12-BUILD-AGENTS: the Continue on computer resume command
     }
 }

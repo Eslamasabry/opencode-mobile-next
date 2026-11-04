@@ -126,6 +126,10 @@ public class Preferences(
     }
 
     private fun edits(change: PreferenceChange, current: DevicePreferences): Map<String, Any?> = when (change) {
+        PreferenceChange.ResetAppearance -> effectEdits(current.effects, Effects.Defaults) + mapOf(
+            K.APPEARANCE to AppearanceChoice.Dark.wire, K.THEME_PACK to ThemePack.OpenCode.wire,
+            K.ACCENT to null, K.TEXT_SIZE to TextSize.Normal.wire, K.FROST to FrostStrength.Balanced.wire,
+        )
         is PreferenceChange.Appearance -> mapOf(K.APPEARANCE to change.value.wire)
         is PreferenceChange.Theme -> mapOf(K.THEME_PACK to change.value.wire)
         is PreferenceChange.Locale -> mapOf(K.LOCALE to change.value.code)

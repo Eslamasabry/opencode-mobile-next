@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="serverSettingsTitle">Server settings</string>
+    <string name="serverSettingsShell">Default shell</string>
+    <string name="serverSettingsFailed">Could not finish. Try again.</string>
+    <string name="serverSettingsRemove">Remove server</string>
+    <string name="serverSettingsRemoveBody">Removes this saved connection and its local data from this app. The server and files on its computer stay in place.</string>
+    <string name="serverSettingsDisconnected">Not connected</string>
+    <string name="serverSettingsConnect">Connect to this server</string>
+    <string name="serverSettingsOnServer">Changes here are saved on %1$s and shared with other apps that use it.</string>
+    <string name="serverSettingsWaiting">Waiting</string>
+    <string name="serverSettingsPassed">Passed</string>
+    <string name="serverSettingsAttention">Needs attention</string>
+    <string name="serverSettingsFailedCheck">Needs fixing</string>
+    <string name="serverSettingsSkipped">Not checked</string>
+    <string name="serverSettingsShellUnavailable">Connect to a server that shares shell settings to change its default shell.</string>
+    <string name="serverSettingsSaving">Saving…</string>
+    <string name="serverSettingsTerminal">Terminal</string>
+    <string name="serverSettingsFiles">Browse files</string>
+    <string name="serverSettingsProjects">Manage projects</string>
+    <string name="serverSettingsSchedules">Scheduled prompts</string>
+    <string name="serverSettingsProviders">Model providers</string>
+    <string name="serverSettingsPermissions">Permission requests</string>
+    <string name="serverSettingsSteering">Guide a running reply</string>
+    <string name="serverSettingsSupported">Available on this server</string>
+    <string name="serverSettingsUnsupported">Not available on this server</string>
+</resources>

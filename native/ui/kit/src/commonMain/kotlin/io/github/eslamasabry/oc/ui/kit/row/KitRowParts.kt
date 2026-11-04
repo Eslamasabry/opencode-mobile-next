@@ -28,6 +28,9 @@ import io.github.eslamasabry.oc.ui.kit.frame.ExitGlyph
 import io.github.eslamasabry.oc.ui.kit.frame.KitExitGlyph
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
 
 /** What starts a row (Dart `KitRow.icon`, the lead column). */
 @Immutable
@@ -61,7 +64,7 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
     val tone = if (dim) TextTone.Tertiary else TextTone.Primary
     val tile = tokens.iconTile * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)
     Box(
-        Modifier.size(tile.dp).background(colors.surface3, KitShapeId.Tile.toShape()).clearAndSetSemantics {},
+        Modifier.size(tile.dp).then(if (LocalKitStyle.current.flatLists) Modifier else Modifier.kitSurface(SurfaceRole.Control, KitShapeId.Tile, colors.surface3)).clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
         when (leading) {

@@ -9,9 +9,13 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
-import io.github.eslamasabry.oc.feature.servers.presentation.ServersViewModel
-import io.github.eslamasabry.oc.feature.servers.ui.ServersScreen
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
+import io.github.eslamasabry.oc.feature.servers.presentation.SavedPermissionsViewModel
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerEditorViewModel
+import io.github.eslamasabry.oc.feature.servers.presentation.ServersViewModel
+import io.github.eslamasabry.oc.feature.servers.ui.SavedPermissionsScreen
+import io.github.eslamasabry.oc.feature.servers.ui.ServerEditorScreen
+import io.github.eslamasabry.oc.feature.servers.ui.ServersScreen
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
@@ -26,9 +30,29 @@ public class ServersEntries(
     private val platform: PlatformCapabilities,
 ) : EntryInstaller {
     /** This phone is offered only where the built-in Linux exists (plan 07 §2.8). */
-    private val thisPhone: (() -> Unit)? get() = if (platform.builtinLinux) ({ navigator.open(PhoneRoute.ThisPhone) }) else null
+    private val thisPhone: (() -> Unit)?
+        get() = if (platform.builtinLinux) ({ navigator.open(PhoneRoute.ThisPhone) }) else null
 
     override fun EntryProviderScope<NavKey>.install() {
+        entry<ServersRoute.Permissions> { route ->
+            val vm =
+                assistedMetroViewModel<
+                    SavedPermissionsViewModel,
+                    SavedPermissionsViewModel.Factory,
+                > {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            SavedPermissionsScreen(state, vm)
+        }
+        entry<ServersRoute.Edit> { route ->
+            val vm =
+                assistedMetroViewModel<ServerEditorViewModel, ServerEditorViewModel.Factory> {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            ServerEditorScreen(state, vm)
+        }
         entry<ChatsRoute.New> { route ->
             val vm =
                 assistedMetroViewModel<ServersViewModel, ServersViewModel.Factory> { create(route) }

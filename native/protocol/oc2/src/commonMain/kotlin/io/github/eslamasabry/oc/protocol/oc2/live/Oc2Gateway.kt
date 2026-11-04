@@ -45,6 +45,7 @@ internal class Oc2Gateway(
     initialDialect: Oc2Dialect? = null,
 ) : ServerGateway, ServerOperationsGateway, CorrelatedPromptGateway, SessionSelectionGateway, StagedRevertGateway,
     LocatedFileGateway, LocatedVcsGateway, WebSearchGateway, LocatedManagedShellGateway {
+    private val integrationOps = Oc2Integrations(this, redactor)
     private val ids = Oc2ClientIds(clock, random)
     private val dialect = MutableStateFlow(initialDialect)
     private val negotiation = Mutex()
@@ -848,6 +849,14 @@ internal class Oc2Gateway(
 
     // The public provider inventory suffices; never request config/provider (which contains API
     // keys).
+    override suspend fun integrations(): Outcome<ImmutableList<IntegrationInfo>> = integrationOps.list()
+    override suspend fun connectIntegrationKey(id: String, key: String, label: String?): Outcome<Unit> = integrationOps.connectKey(id,key,label)
+    override suspend fun disconnectIntegration(integration: IntegrationInfo): Outcome<Unit> = integrationOps.disconnect(integration)
+    override suspend fun startIntegrationOAuth(id: String, methodId: String, inputs: ImmutableMap<String,String>, label: String?): Outcome<IntegrationAuthLaunch> = integrationOps.start(id,methodId,inputs,label)
+    override suspend fun integrationOAuthStatus(attemptId: String): Outcome<IntegrationAuthStatus> = integrationOps.status(attemptId)
+    override suspend fun completeIntegrationOAuth(attemptId: String, code: String?): Outcome<Unit> = integrationOps.complete(attemptId,code)
+    override suspend fun cancelIntegrationOAuth(attemptId: String): Outcome<Unit> = integrationOps.cancel(attemptId)
+
     override suspend fun configuredProviders(): Outcome<ProvidersResponse> = providers()
 
     override suspend fun agents(): Outcome<ImmutableList<AgentInfo>> =
@@ -1041,6 +1050,24 @@ internal class Oc2Gateway(
     override suspend fun createWorktree(projectDirectory: String, name: String?): Outcome<WorktreeInfo> =
         worktreeCreate(projectDirectory, name)
 
+    override suspend fun savedPermissions(): Outcome<ImmutableList<SavedPermission>> = savedGrants()
+
+    override suspend fun removeSavedPermission(id: String): Outcome<Unit> = revokeGrant(id)
+
+    override suspend fun listTerminals(): Outcome<ImmutableList<TerminalProcess>> = ptyList()
+
+    override suspend fun createTerminal(title: String?): Outcome<TerminalProcess> = ptyCreate(title)
+
+    override suspend fun createCommandTerminal(command: String, arguments: ImmutableList<String>, title: String?): Outcome<TerminalProcess> = ptyCreate(title, command, arguments)
+
+    override suspend fun renameTerminal(id: String, title: String): Outcome<Unit> = ptyRename(id, title)
+
+    override suspend fun resizeTerminal(id: String, rows: Int, cols: Int): Outcome<Unit> = ptyResize(id, rows, cols)
+
+    override suspend fun removeTerminal(id: String): Outcome<Unit> = ptyRemove(id)
+
+    override suspend fun connectTerminal(id: String, cursor: Long?): Outcome<TerminalChannel> = ptyConnect(id, cursor)
+
     override suspend fun terminalShellSettings(): Outcome<TerminalShellSettings> = shellSettings()
 
     override suspend fun selectTerminalShell(value: String): Outcome<Unit> = selectShell(value)
@@ -1118,7 +1145,7 @@ internal class Oc2Gateway(
                 promptSteering = true,
                 offlinePromptQueue = false,
                 fileBrowsing = true,
-                terminal = false,
+                terminal = true,
                 conversationShell = true,
                 projectManagement = false,
                 globalSessionSearch = false,
@@ -1127,7 +1154,7 @@ internal class Oc2Gateway(
                 sessionCompact = false,
                 persistentPermissionGrants = false,
                 permissionRequests = true,
-                savedPermissionList = false,
+                savedPermissionList = true,
                 messageCompletionEndsRun = false,
                 sessionRevert = true,
                 sessionImportExport = false,
@@ -1148,7 +1175,7 @@ internal class Oc2Gateway(
                 mcpConfigWrites = false,
                 mcpRuntimeAdds = true,
                 mcpRuntimeRemovals = false,
-                integrationCredentials = false,
+                integrationCredentials = true,
                 integrationCommandAuth = false,
                 pluginInventory = false,
                 webSearch = true,

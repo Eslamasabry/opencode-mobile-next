@@ -21,8 +21,10 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.LayoutDirection
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
+import io.github.eslamasabry.oc.ui.design.color.withAccent
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.effects.StyleSpec
 import io.github.eslamasabry.oc.ui.design.motion.MotionSignals
 import io.github.eslamasabry.oc.ui.design.motion.resolveMotion
 import io.github.eslamasabry.oc.ui.design.tokens.Alphas
@@ -34,6 +36,8 @@ import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.KitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -72,14 +76,19 @@ public fun KitTheme(
         }
     // Called once per composition of the theme, and only for Material You (plan 06 §5.5).
     val dynamic = if (appearance.pack == PackId.Dynamic) remember(platform, dark) { platform.dynamicSource() } else null
+    val style = remember(appearance.style, appearance.corners, appearance.density, appearance.saver, signals.highContrast) {
+        StyleSpec.of(appearance, signals.highContrast)
+    }
     val roles =
-        remember(appearance.pack, appearance.accent, dark, appearance.saver, dynamic) {
-            ThemeResolver.roles(appearance.pack, appearance.accent, dark, appearance.saver, dynamic)
+        remember(appearance.pack, appearance.accent, dark, appearance.saver, dynamic, style) {
+            val base = ThemeResolver.roles(appearance.pack, appearance.accent, dark, appearance.saver, dynamic)
+            val adjusted = style.adjustRoles(base)
+            if (adjusted == base) base else adjusted.withAccent(adjusted.accent)
         }
     val colors = remember(roles) { roles.toKitColors() }
     val arabic = isArabic(localeTag)
     val fonts = rememberKitFonts(arabic)
-    val typography = remember(fonts, arabic) { KitTypography(fonts, arabic) }
+    val typography = remember(fonts, arabic, style) { KitTypography(fonts, arabic, style) }
     // Saver makes the effective knobs none (Dart KitEffects.underSaver).
     val tokens = if (appearance.saver) Tokens.Comfortable else Tokens.of(appearance.density)
     val level =
@@ -104,6 +113,8 @@ public fun KitTheme(
     CompositionLocalProvider(
         LocalKitPlatform provides platform,
         LocalKitAppearance provides appearance,
+        LocalKitStyle provides style,
+        LocalKitRoles provides roles,
         LocalKitColors provides colors,
         LocalKitTypography provides typography,
         LocalKitTokens provides tokens,
@@ -116,7 +127,7 @@ public fun KitTheme(
         LocalRippleConfiguration provides ripple,
         LocalTextSelectionColors provides selection,
     ) {
-        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes, content = content)
+        MaterialTheme(colorScheme = scheme, shapes = MaterialBridge.shapes(style), content = content)
     }
 }
 

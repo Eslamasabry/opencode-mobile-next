@@ -1,12 +1,12 @@
 package io.github.eslamasabry.oc.engine.schedules
 
+import kotlin.time.Instant
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Instant
 
 /** One instant on the device's wall clock, relative to "now" (no copy: the screens word it). */
 public data class LocalMoment(
@@ -21,11 +21,12 @@ public data class LocalMoment(
 )
 
 /**
- * Wall-clock helpers for the schedule screens, so features never handle time zones themselves. [zoneId] null is the
- * device zone; tests pass a fixed id.
+ * Wall-clock helpers for the schedule screens, so features never handle time zones themselves.
+ * [zoneId] null is the device zone; tests pass a fixed id.
  */
 public object ScheduleTime {
-    public fun zone(zoneId: String?): TimeZone = zoneId?.let { TimeZone.of(it) } ?: TimeZone.currentSystemDefault()
+    public fun zone(zoneId: String?): TimeZone =
+        zoneId?.let { TimeZone.of(it) } ?: TimeZone.currentSystemDefault()
 
     public fun moment(ms: Long, nowMs: Long, zoneId: String? = null): LocalMoment {
         val zone = zone(zoneId)
@@ -40,7 +41,10 @@ public object ScheduleTime {
         )
     }
 
-    /** The instant of [date] (ISO `yyyy-MM-dd`) at [hour]:[minute] local; null when the date is not a real date. */
+    /**
+     * The instant of [date] (ISO `yyyy-MM-dd`) at [hour]:[minute] local; null when the date is not
+     * a real date.
+     */
     public fun at(date: String, hour: Int, minute: Int, zoneId: String? = null): Long? {
         val day =
             try {
@@ -48,12 +52,22 @@ public object ScheduleTime {
             } catch (e: IllegalArgumentException) {
                 return null
             }
-        return LocalDateTime(day.year, day.month, day.day, hour, minute).toInstant(zone(zoneId)).toEpochMilliseconds()
+        return LocalDateTime(day.year, day.month, day.day, hour, minute)
+            .toInstant(zone(zoneId))
+            .toEpochMilliseconds()
     }
 
     /** Today (of [nowMs]) at [hour]:[minute] local. */
     public fun todayAt(nowMs: Long, hour: Int, minute: Int, zoneId: String? = null): Long =
         at(today(nowMs, zoneId), hour, minute, zoneId)!!
+
+    /** Nine in the morning, today if still ahead, otherwise the next local calendar day. */
+    public fun nextMorning(nowMs: Long, zoneId: String? = null): String {
+        val current = Instant.fromEpochMilliseconds(nowMs).toLocalDateTime(zone(zoneId))
+        val todayAtNine = at(current.date.toString(), 9, 0, zoneId)!!
+        return if (todayAtNine > nowMs) current.date.toString()
+        else LocalDate.fromEpochDays(current.date.toEpochDays() + 1).toString()
+    }
 
     public fun today(nowMs: Long, zoneId: String? = null): String =
         Instant.fromEpochMilliseconds(nowMs).toLocalDateTime(zone(zoneId)).date.toString()

@@ -6,4 +6,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 public sealed interface SettingsRoute : AppRoute {
     @Serializable public data object Home : SettingsRoute
+
+    @Serializable public data object WhatsNew : SettingsRoute
 }

@@ -13,6 +13,9 @@ import androidx.compose.ui.unit.sp
 import io.github.eslamasabry.oc.ui.design.type.TypeFamily
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.design.type.TypeScale
+import io.github.eslamasabry.oc.ui.design.effects.StyleSpec
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceStyle
 import io.github.eslamasabry.oc.ui.kit.res.Res
 import io.github.eslamasabry.oc.ui.kit.res.geist_italic_variable
 import io.github.eslamasabry.oc.ui.kit.res.geist_mono_italic_variable
@@ -58,13 +61,24 @@ private fun variation(weight: Int) = FontVariation.Settings(FontVariation.weight
 
 /** One `TextStyle` per role, built once per (fonts, locale). Proportional leading = Flutter's default distribution. */
 @Immutable
-public class KitTypography internal constructor(private val fonts: KitFontFamilies, private val arabic: Boolean) {
+public class KitTypography internal constructor(private val fonts: KitFontFamilies, private val arabic: Boolean, private val appearance: StyleSpec = StyleSpec.of(KitAppearance.Default)) {
     private val styles: Map<TypeRole, TextStyle> = TypeRole.entries.associateWith(::build)
 
     public fun style(role: TypeRole): TextStyle = styles.getValue(role)
 
     private fun build(role: TypeRole): TextStyle {
-        val spec = TypeScale.forLocale(role, arabic)
+        var spec = TypeScale.forLocale(role, arabic)
+        if (appearance.firmType) spec = spec.copy(weight = when (role) {
+            TypeRole.Title, TypeRole.RowTitle -> 650
+            TypeRole.LargeTitle -> when (appearance.style) { SurfaceStyle.Brutal -> 800; SurfaceStyle.Paper -> 750; SurfaceStyle.Signal -> 760; else -> 650 }
+            TypeRole.Headline, TypeRole.Label, TypeRole.Caption, TypeRole.Button -> 600
+            TypeRole.Secondary -> 500
+            TypeRole.Body -> if (appearance.style == SurfaceStyle.Brutal) 500 else spec.weight
+            else -> spec.weight
+        })
+        if (role == TypeRole.LargeTitle && appearance.style == SurfaceStyle.Paper) spec = spec.copy(sizeSp = 34, lineHeightSp = 40)
+        if (role == TypeRole.LargeTitle && appearance.style == SurfaceStyle.Signal) spec = spec.copy(sizeSp = 32, lineHeightSp = 38)
+        if (!arabic && role == TypeRole.LargeTitle && appearance.style != SurfaceStyle.Solid) spec = spec.copy(trackingSp = when (appearance.style) { SurfaceStyle.Brutal, SurfaceStyle.Paper -> -.03f * spec.sizeSp; SurfaceStyle.Signal -> -.02f * spec.sizeSp; else -> spec.trackingSp })
         return TextStyle(
             fontFamily = if (spec.family == TypeFamily.Mono) fonts.mono else fonts.sans,
             fontSize = spec.sizeSp.sp,

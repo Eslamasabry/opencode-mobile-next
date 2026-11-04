@@ -8,6 +8,17 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 
 /** Everything a person can do on the Settings pages. Each call names its target (rule 15). */
 public interface SettingsActions {
+    public fun onSavedServer(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId, section: SettingsOutside?)
+    public fun onAppearanceGuide(step: Int, done: Boolean)
+    public fun onShowTipsAgain()
+    public fun onNewsStep(index: Int)
+    public fun onNewsShow()
+    public fun onAccent(id: String?)
+    public fun onFrost(strength: io.github.eslamasabry.oc.ui.design.effects.FrostStrength)
+    public fun onShape(corners: io.github.eslamasabry.oc.engine.settings.prefs.Corners?, density: io.github.eslamasabry.oc.engine.settings.prefs.Density?)
+    public fun onGlow(style: io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle?)
+    public fun onResetAppearance()
+
     public fun onOpen(page: SettingsPage)
 
     /** True when Back was used here (search cleared or a page closed); false at the hub with no search. */

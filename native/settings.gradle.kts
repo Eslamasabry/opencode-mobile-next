@@ -17,6 +17,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        exclusiveContent {
+            forRepository { maven { url = uri("https://jitpack.io") } }
+            filter { includeGroup("com.github.termux.termux-app") }
+        }
         // P12-FIX-LINUX-VOICE (plan 03 §0 settings, plan 10 §2.2): vendored, hash-pinned artifacts. Only the sherpa-onnx
         // group resolves here; tools/vendor/fetch.sh fills it and third_party/SHA256SUMS pins it.
         exclusiveContent {

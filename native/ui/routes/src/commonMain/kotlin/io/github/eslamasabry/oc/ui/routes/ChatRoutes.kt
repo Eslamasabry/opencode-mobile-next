@@ -9,3 +9,7 @@ public data class ChatRoute(val ref: ConversationRef, val focusComposer: Boolean
     override val motion: RouteMotion
         get() = RouteMotion.GrowFromRow
 }
+
+/** The parent conversation and the subagents it started, reached from that conversation's menu. */
+@Serializable
+public data class SessionRelationsRoute(val ref: ConversationRef) : AppRoute

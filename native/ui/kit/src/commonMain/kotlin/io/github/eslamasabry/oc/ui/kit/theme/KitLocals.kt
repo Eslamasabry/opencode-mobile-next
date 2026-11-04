@@ -6,6 +6,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.effects.StyleSpec
+import io.github.eslamasabry.oc.ui.design.color.Roles
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.design.tokens.Tokens
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
@@ -14,6 +16,8 @@ private fun missing(what: String): Nothing = error("$what is provided by KitThem
 
 /** Plan 06 §5.1. Static: theme values change rarely and cost no read tracking. Kit parts only. */
 public val LocalKitAppearance: ProvidableCompositionLocal<KitAppearance> = staticCompositionLocalOf { missing("KitAppearance") }
+public val LocalKitStyle: ProvidableCompositionLocal<StyleSpec> = staticCompositionLocalOf { StyleSpec.of(KitAppearance.Default) }
+public val LocalKitRoles: ProvidableCompositionLocal<Roles> = staticCompositionLocalOf { missing("Roles") }
 public val LocalKitColors: ProvidableCompositionLocal<KitColors> = staticCompositionLocalOf { missing("KitColors") }
 public val LocalKitTypography: ProvidableCompositionLocal<KitTypography> = staticCompositionLocalOf { missing("KitTypography") }
 public val LocalKitTokens: ProvidableCompositionLocal<Tokens> = staticCompositionLocalOf { missing("Tokens") }

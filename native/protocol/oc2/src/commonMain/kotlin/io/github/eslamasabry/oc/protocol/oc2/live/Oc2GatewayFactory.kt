@@ -48,6 +48,26 @@ public class Oc2GatewayFactory(
         }
     }
 
+    /** Disposable editor check with the same origin-bound transport trust as a connection, without an event stream. */
+    public suspend fun checkConnection(
+        origin: ServerOrigin,
+        credentials: ConnectionCredentials,
+        trust: ProfileTrust,
+    ): Outcome<Health> {
+        val loopback = AddressRules.isLoopback(origin.host)
+        if (origin.scheme != "https" && !loopback && trust.cleartextConsentAtMs == null)
+            return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
+        val pin = trust.pinnedLeafSha256
+        val pinBytes = pin?.let { decodePin(it) ?: return Failure.UnreadableReply().failed() }
+        if (origin.scheme != "https" && pinBytes != null)
+            return Failure.Refused(RefusalReason.PinNeedsHttps).failed()
+        val net = clients.create(TransportSpec(origin, AddressRules.classify(origin.host),
+            loopback || trust.cleartextConsentAtMs != null, pinBytes))
+        return try {
+            Oc2Gateway(net, origin, credentials, clock, redactor).probe()
+        } finally { net.close() }
+    }
+
     override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> {
         val profile = spec.profile
         val origin = profile.origin

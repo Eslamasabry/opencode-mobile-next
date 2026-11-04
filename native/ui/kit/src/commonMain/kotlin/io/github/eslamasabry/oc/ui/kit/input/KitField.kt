@@ -59,6 +59,8 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -69,6 +71,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
@@ -351,9 +355,7 @@ private fun FieldBox(
             )
             .fillMaxWidth()
             .heightIn(min = tokens.minTarget.dp)
-            .clip(shape)
-            .background(colors.surface1)
-            .border(if (focused || hasError) 2.dp else 1.dp, edge, shape)
+            .kitSurface(kitSurfaceLook(SurfaceRequest(SurfaceRole.Field, selected = focused || hasError, disabled = !on), colors.surface1, edge, if (focused || hasError) 2f else 1f), shape)
             .padding(horizontal = Space.S3.dp, vertical = Space.S3.dp)
     val decorator: @Composable (inner: @Composable () -> Unit) -> Unit = { inner ->
         Box(Modifier.fillMaxWidth()) {

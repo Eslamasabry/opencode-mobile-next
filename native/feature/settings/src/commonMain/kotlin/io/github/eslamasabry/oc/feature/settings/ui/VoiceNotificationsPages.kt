@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.settings.ui
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationChange
@@ -118,11 +119,13 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
             title = stringResource(Res.string.notifyFinishedRuns),
             checked = n.finishedWork,
             supporting = stringResource(Res.string.notifyFinishedRunsDetail),
+            enabled = if (n.blocked) KitEnabled.Disabled(stringResource(Res.string.notifyBlockedMessage)) else KitEnabled.Enabled,
         ) { actions.onNotification(NotificationChange.FinishedWork(it)) }
         KitSwitchRow(
             title = stringResource(Res.string.notifyRequests),
             checked = n.questions,
             supporting = stringResource(Res.string.notifyRequestsDetail),
+            enabled = if (n.blocked) KitEnabled.Disabled(stringResource(Res.string.notifyBlockedMessage)) else KitEnabled.Enabled,
         ) { actions.onNotification(NotificationChange.Questions(it)) }
         if (n.usageAlertsShown) {
             KitRow(

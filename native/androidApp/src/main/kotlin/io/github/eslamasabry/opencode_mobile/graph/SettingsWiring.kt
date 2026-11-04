@@ -93,6 +93,7 @@ import kotlin.time.Clock
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.merge
@@ -188,6 +189,7 @@ class AndroidSettingsHost(
     private val diagnosticsLog: Diagnostics,
     updateSettings: AppUpdateSettings, // P12-FIX-PLATFORM-GIT: Settings › Updates on the real updater
     private val voiceSettings: AndroidVoiceSettings,
+    private val journey: SettingsJourney,
     private val gitHubReports: GitHubProblemReporter, // BUILD-DIAGNOSTICS-ATTENTION
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -195,7 +197,7 @@ class AndroidSettingsHost(
     /** Rows whose page or engine is not in this build are absent (02 §3.7), never dead. */
     private val shipped =
         platform.copy(
-            builtinLinux = false, voice = voiceSettings.offered, readAloud = false, backgroundService = true,
+            builtinLinux = platform.builtinLinux, voice = voiceSettings.offered, readAloud = false, backgroundService = true,
             inAppUpdater = true, desktopReleaseCheck = false,
         )
 
@@ -205,6 +207,7 @@ class AndroidSettingsHost(
                 SettingsFacts(
                     platform = shipped,
                     server = live?.let { ServerLine(it.name, onPhone = false) },
+                    savedServers = servers.map { io.github.eslamasabry.oc.feature.settings.presentation.SettingsSavedServer(it.id, it.name, it.connected) }.toImmutableList(),
                     dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                     systemMotionOff = scale == 0f,
                     diagnostics = true,
@@ -222,13 +225,30 @@ class AndroidSettingsHost(
                 ),
             )
 
+    override val serverPage = io.github.eslamasabry.oc.feature.settings.presentation.SettingsServerDoor { profile, section ->
+        if (stores.profiles.profile(profile) != null) nav.open(io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute(profile,
+            if (section == SettingsOutside.DefaultShell) io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Shell else io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Home))
+    }
+
+    override val appearanceHelp: io.github.eslamasabry.oc.feature.settings.presentation.AppearanceHelp = journey
+
     override val choices: PersonalChoices = PreferencesChoices(prefs::preferences, prefs.value, scope)
 
     override val openers: SettingsOpeners = SettingsOpeners { place ->
         when (place) {
             SettingsOutside.Servers -> nav.open(ServersRoute.Home)
+            SettingsOutside.ThisPhone -> nav.open(io.github.eslamasabry.oc.ui.routes.PhoneRoute.ThisPhone)
+            SettingsOutside.Agents -> nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.Home)
+            SettingsOutside.Usage -> nav.open(io.github.eslamasabry.oc.ui.routes.UsageRoute.Hub())
+            SettingsOutside.UsageAlerts -> nav.open(io.github.eslamasabry.oc.ui.routes.PlansAlertsRoute)
+            SettingsOutside.Updates -> nav.open(io.github.eslamasabry.oc.ui.routes.UpdatesRoute.Home)
+            SettingsOutside.Guide -> nav.open(io.github.eslamasabry.oc.ui.routes.OnboardingRoute.Welcome)
+            SettingsOutside.DefaultShell -> stores.profiles.activeId.value?.let { id ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute(id, io.github.eslamasabry.oc.ui.routes.ServerSettingsPage.Shell))
+            } ?: nav.open(ServersRoute.Home)
+            SettingsOutside.WhatsNew -> nav.open(SettingsRoute.WhatsNew)
             SettingsOutside.StarOnGitHub -> application.view(REPO)
-            SettingsOutside.WhatsNew, SettingsOutside.ReleaseNotes -> application.view("$REPO/releases")
+            SettingsOutside.ReleaseNotes -> application.view("$REPO/releases")
             SettingsOutside.PrivacyPolicy ->
                 application.view(if (prefs.localeTag.value == "ar") "$REPO/blob/master/assets/l10n/PRIVACY.ar.md" else "$REPO/blob/master/PRIVACY.md")
             SettingsOutside.ShareApp -> scope.launch { shareApp() }
@@ -309,7 +329,8 @@ class AndroidSettingsHost(
                 SettingsOutside.ReleaseNotes, SettingsOutside.PrivacyPolicy, SettingsOutside.ShareApp,
                 SettingsOutside.AndroidNotificationSettings, SettingsOutside.VoiceSetup, SettingsOutside.VoiceNotices,
                 SettingsOutside.ReportOnGitHub, SettingsOutside.KeptDiagnostics,
-                SettingsOutside.KeepRunning,
+                SettingsOutside.KeepRunning, SettingsOutside.ThisPhone, SettingsOutside.Agents,
+                SettingsOutside.Usage, SettingsOutside.UsageAlerts, SettingsOutside.Updates, SettingsOutside.Guide, SettingsOutside.DefaultShell, SettingsOutside.Tips,
             )
     }
 }
@@ -345,6 +366,7 @@ class AndroidNotificationSettings(
         fun minute(key: String): Long? = readOrNull { (stores.prefs.get(key) as? PrefValue.Int64)?.value }
         return NotificationFacts(
             blocked = !manager.areNotificationsEnabled(),
+            usageAlertsShown = true,
             finishedWork = flag(NotificationKeys.FINISHED, true),
             questions = flag(NotificationKeys.REQUESTS, true),
             quietHours = NotificationKeys.quiet(minute(NotificationKeys.QUIET_START), minute(NotificationKeys.QUIET_END)),
@@ -542,6 +564,8 @@ private class FileAnalyticsStore(private val file: File) : AnalyticsStore {
 @Inject
 class FirstRunStarter(
     private val diagnosticsFeed: DiagnosticsFeed,
+    private val journey: SettingsJourney,
+    private val buildInfo: AppBuildInfo,
     private val stores: PreviewStores,
     private val connections: ServerConnections,
     private val nav: AppNavigator,
@@ -573,6 +597,9 @@ class FirstRunStarter(
             if (stores.warm() is Outcome.Failed) return@launch
             val saved = stores.profiles.profiles.value.map { it.id }.toSet()
             withContext(dispatchers.main) { flow.start(stores.profiles.activeId.value, saved) }
+            if (journey.takeWhatsNew(buildInfo.versionName, buildInfo.versionCode.toString(), saved.isNotEmpty())) {
+                withContext(dispatchers.main) { nav.open(SettingsRoute.WhatsNew) }
+            }
             connections.servers
                 .map { list -> list.any { it.connected } }
                 .distinctUntilChanged()

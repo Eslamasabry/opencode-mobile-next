@@ -152,6 +152,7 @@ dependencies {
             ":feature:devservices", // BUILD-RUNTIME-A: Development services (saved commands, dev
                                     // servers found)
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
+            ":engine:integrations-quota", // Native plan collectors and quota reader rules
             ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
         )
         .forEach { implementation(project(it)) }

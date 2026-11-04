@@ -31,6 +31,8 @@ import io.github.eslamasabry.oc.ui.words.res.settingsHubServerLine
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServerNone
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServerOnPhone
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Connected
+import io.github.eslamasabry.oc.ui.words.res.settingsV3NotConnected
+import io.github.eslamasabry.oc.ui.words.res.settingsV3ServersBlock
 import org.jetbrains.compose.resources.stringResource
 
 /** I01: the search field, then the five groups (only Server has a value line); with a query, the matching rows. */
@@ -113,6 +115,22 @@ internal fun GroupPage(state: SettingsUi, actions: SettingsActions, page: Settin
                         )
                 }
             }
+        }
+        if (page.id == SettingsGroupId.Server && state.hub.savedServers.size > 1) {
+            SavedServersBody(state, actions, null)
+        }
+    }
+}
+
+
+@Composable
+internal fun androidx.compose.foundation.layout.ColumnScope.SavedServersBody(state: SettingsUi, actions: SettingsActions, section: io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside?) {
+    KitRowGroup(label = stringResource(Res.string.settingsV3ServersBlock)) {
+        state.hub.savedServers.forEach { server ->
+            KitRow(title = server.name,
+                supporting = stringResource(if (server.connected) Res.string.settingsV3Connected else Res.string.settingsV3NotConnected),
+                trailing = KitRowTrailing.Chevron,
+                onClick = { actions.onSavedServer(server.id, section) })
         }
     }
 }

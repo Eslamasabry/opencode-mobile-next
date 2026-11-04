@@ -10,18 +10,28 @@ import io.github.eslamasabry.oc.engine.schedules.ScheduleCode
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-/** What the app knows about one server for schedules (Flutter `canSchedulePrompts` and the seeds). */
+/**
+ * What the app knows about one server for schedules (Flutter `canSchedulePrompts` and the seeds).
+ */
 public data class ScheduleTarget(
     val serverName: String?,
-    /** ServerCapabilities.scheduledPrompts of the live connection (false when it cannot be opened). */
+    /**
+     * ServerCapabilities.scheduledPrompts of the live connection (false when it cannot be opened).
+     */
     val available: Boolean,
-    /** The project of the newest conversation: the default for a new schedule opened outside a conversation. */
+    /**
+     * The project of the newest conversation: the default for a new schedule opened outside a
+     * conversation.
+     */
     val recentProject: String?,
 )
 
 public data class ModelChoice(val providerId: String, val modelId: String, val label: String)
 
-/** The conversation a schedule was opened from: a new schedule keeps it, its project and its model (B-NAV-055). */
+/**
+ * The conversation a schedule was opened from: a new schedule keeps it, its project and its model
+ * (B-NAV-055).
+ */
 public data class ConversationSeed(
     val directory: String?,
     val title: String?,
@@ -41,9 +51,18 @@ public interface ScheduleServers {
 
 // ---- K01 list
 
-public enum class SchedulesPhase { Loading, Unavailable, Empty, List }
+public enum class SchedulesPhase {
+    Loading,
+    Unavailable,
+    Empty,
+    List,
+}
 
-public enum class Unavailable { Server, Phone, Storage }
+public enum class Unavailable {
+    Server,
+    Phone,
+    Storage,
+}
 
 public data class LastRunUi(
     val status: RunStatus,
@@ -107,18 +126,30 @@ public interface SchedulesActions {
 
 // ---- K02 editor
 
-public enum class EditPhase { Loading, Unavailable, Ready }
+public enum class EditPhase {
+    Loading,
+    Unavailable,
+    Ready,
+}
 
-public enum class EditIssue { PromptRequired, ProjectRequired, TimeInvalid, DateInvalid, HoursInvalid }
+public enum class EditIssue {
+    PromptRequired,
+    ProjectRequired,
+    TimeInvalid,
+    DateInvalid,
+    HoursInvalid,
+    FutureRequired,
+}
 
 /** The editor's starting values; [seed] changes when they are (re)loaded. */
 public data class EditorFields(
     val prompt: String = "",
     val project: String = "",
-    val kind: RecurrenceKind = RecurrenceKind.Daily,
+    val kind: RecurrenceKind = RecurrenceKind.Once,
     val time: String = "09:00",
     val date: String = "",
-    val hours: String = "6",
+    val hours: String = "3",
+    val thisConversation: Boolean = true,
     val missed: MissedRunPolicy = MissedRunPolicy.CatchUp,
     val model: ModelChoice? = null,
 )
@@ -132,6 +163,7 @@ public data class ScheduleEditUi(
     /** Set when the schedule continues a conversation. */
     val conversationTitle: String? = null,
     val continuesConversation: Boolean = false,
+    val canChooseConversation: Boolean = false,
     val issue: EditIssue? = null,
     val error: ScheduleCode? = null,
     val saving: Boolean = false,
@@ -142,6 +174,9 @@ public interface ScheduleEditActions {
 
     public fun save(input: EditorFields)
 
-    /** The typed fields changed: kept by the view model (rotation) and the prompt as a draft (B-STATE-024). */
+    /**
+     * The typed fields changed: kept by the view model (rotation) and the prompt as a draft
+     * (B-STATE-024).
+     */
     public fun edited(input: EditorFields) {}
 }

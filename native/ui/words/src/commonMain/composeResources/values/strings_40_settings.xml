@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings40_style_default">Style default</string>
+    <string name="settings40_reset_question">Reset Appearance?</string>
+    <string name="settings40_reset_body">Reset colours, style, shape, glass, text size, motion and reply glow. Your conversations, language and notification choices stay as they are.</string>
+</resources>

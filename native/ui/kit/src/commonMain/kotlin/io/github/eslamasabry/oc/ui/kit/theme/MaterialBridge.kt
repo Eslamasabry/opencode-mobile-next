@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.color.Roles
 import io.github.eslamasabry.oc.ui.design.color.lerp
 import io.github.eslamasabry.oc.ui.design.color.over
+import io.github.eslamasabry.oc.ui.design.effects.StyleSpec
 
 /**
  * Dart `schemeFromRoles` (`lib/ui/theme_roles.dart`), slot for slot (plan 06 §5.4). Only the M3 parts the kit wraps
@@ -44,12 +45,12 @@ internal object MaterialBridge {
         )
     }
 
-    val shapes: Shapes =
+    fun shapes(style: StyleSpec): Shapes =
         Shapes(
-            extraSmall = RoundedCornerShape(9.dp),
-            small = RoundedCornerShape(14.dp),
-            medium = RoundedCornerShape(18.dp),
-            large = RoundedCornerShape(22.dp),
-            extraLarge = RoundedCornerShape(30.dp),
+            extraSmall = RoundedCornerShape(style.corner(9).dp),
+            small = RoundedCornerShape(style.corner(14).dp),
+            medium = RoundedCornerShape(style.corner(18).dp),
+            large = RoundedCornerShape(style.corner(22).dp),
+            extraLarge = RoundedCornerShape(style.corner(30).dp),
         )
 }

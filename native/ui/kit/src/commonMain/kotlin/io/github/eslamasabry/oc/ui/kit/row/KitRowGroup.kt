@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
@@ -15,9 +16,14 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitTrack
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
 /**
  * Rows that belong together (Dart `KitRowGroup`). In Solid, lists are flat (`StyleTokens.flatLists`): full width on the
@@ -47,8 +53,12 @@ public fun KitRowGroup(
     val inset = (tokens.gutter + if (leadingTiles) tokens.iconTile + Space.S3 else 0).dp
     Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth().testTag("kit-row-group")) {
         label?.let { KitSectionLabel(it) }
-        HairlineColumn(inset, hairline, rows)
-        destructive?.let { HairlineColumn(0.dp, hairline, it, ruleAbove = true) }
+        val style = LocalKitStyle.current
+        val panel = if (style.flatLists) Modifier else Modifier.kitSurface(SurfaceRole.Content, KitShapeId.Panel, LocalKitColors.current.surface1)
+        Column(panel.then(if (style.track) Modifier.kitTrack((tokens.gutter + tokens.iconTile / 2f).dp, live = false) else Modifier)) {
+            HairlineColumn(inset, hairline, rows)
+            destructive?.let { HairlineColumn(0.dp, hairline, it, ruleAbove = true) }
+        }
         note?.let { KitGroupNote(it) }
     }
 }
@@ -62,6 +72,8 @@ private class Seams {
 @Composable
 private fun HairlineColumn(inset: Dp, hairline: Color, content: @Composable () -> Unit, ruleAbove: Boolean = false) {
     val seams = remember { Seams() }
+    val style = LocalKitStyle.current
+    val divider = kitSurfaceDivider(style, hairline, ruleAbove)
     Layout(
         content = content,
         modifier =
@@ -75,7 +87,7 @@ private fun HairlineColumn(inset: Dp, hairline: Color, content: @Composable () -
                     val full = ruleAbove && i == 0
                     val a = if (full) 0f else x0
                     val b = if (full) size.width else x1
-                    drawLine(hairline, Offset(a, y + 0.5f), Offset(b, y + 0.5f), 1f)
+                    if (divider.alpha > 0f) drawLine(divider, Offset(a, y + 0.5f), Offset(b, y + 0.5f), 1f)
                 }
             },
     ) { measurables, constraints ->
@@ -97,3 +109,9 @@ private fun HairlineColumn(inset: Dp, hairline: Color, content: @Composable () -
         }
     }
 }
+
+@Composable
+private fun kitSurfaceDivider(style: io.github.eslamasabry.oc.ui.design.effects.StyleSpec, original: Color, full: Boolean): Color =
+    Color(style.resolve(io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest(SurfaceRole.Divider, withinGroup = !full),
+        io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles.current,
+        io.github.eslamasabry.oc.ui.design.effects.SurfaceDecoration(io.github.eslamasabry.oc.ui.design.color.Argb(original.toArgb()))).fill.v)

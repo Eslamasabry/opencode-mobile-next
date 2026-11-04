@@ -8,6 +8,12 @@ import io.github.eslamasabry.oc.ui.design.tokens.Density
 /** `oc.appearance`. The default is Dark (plan 06 §4.2). Saver: true black, motion off, Style Solid. */
 public enum class AppearanceMode { System, Light, Dark, Saver }
 
+public enum class SurfaceStyle { Solid, Soft, Brutal, Paper, Signal }
+
+public enum class Corners { Round, Soft, Sharp }
+
+public enum class GlowStyle { Classic, SoftRing }
+
 /**
  * Everything `KitTheme` needs (plan 06 §5.2). Slice 1 adds the pack and the Accent swatch; glow, Style, corners and
  * live background join with the Style resolver (S4), as defaulted fields.
@@ -24,6 +30,10 @@ public data class KitAppearance(
     val haptics: Boolean = true,
     val density: Density = Density.Comfortable,
     val frost: FrostStrength = FrostStrength.Balanced,
+    val style: SurfaceStyle = SurfaceStyle.Solid,
+    val corners: Corners? = null,
+    val activityGlow: Boolean = true,
+    val glowStyle: GlowStyle = GlowStyle.Classic,
 ) {
     public val saver: Boolean get() = mode == AppearanceMode.Saver
 

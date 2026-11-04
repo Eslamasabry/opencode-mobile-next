@@ -38,7 +38,11 @@ public object EditorRules {
         return if (hour in 0..23 && minute in 0..59) hour to minute else null
     }
 
-    public fun recurrence(fields: EditorFields, nowMs: Long, zoneId: String? = null): Pair<Recurrence?, EditIssue?> {
+    public fun recurrence(
+        fields: EditorFields,
+        nowMs: Long,
+        zoneId: String? = null,
+    ): Pair<Recurrence?, EditIssue?> {
         if (fields.prompt.isBlank()) return null to EditIssue.PromptRequired
         if (fields.project.isBlank()) return null to EditIssue.ProjectRequired
         val (hour, minute) = time(fields.time) ?: return null to EditIssue.TimeInvalid
@@ -46,18 +50,27 @@ public object EditorRules {
             RecurrenceKind.Daily -> Recurrence.daily(hour, minute) to null
             RecurrenceKind.Weekdays -> Recurrence.weekdays(hour, minute) to null
             RecurrenceKind.Once -> {
-                val at = ScheduleTime.at(fields.date, hour, minute, zoneId) ?: return null to EditIssue.DateInvalid
+                val at =
+                    ScheduleTime.at(fields.date, hour, minute, zoneId)
+                        ?: return null to EditIssue.DateInvalid
+                if (at <= nowMs) return null to EditIssue.FutureRequired
                 Recurrence.once(at) to null
             }
             RecurrenceKind.Interval -> {
-                val hours = fields.hours.trim().toIntOrNull()?.takeIf { it in 1..168 } ?: return null to EditIssue.HoursInvalid
-                Recurrence.interval(hours, ScheduleTime.todayAt(nowMs, hour, minute, zoneId)) to null
+                val hours =
+                    fields.hours.trim().toIntOrNull()?.takeIf { it in 1..168 }
+                        ?: return null to EditIssue.HoursInvalid
+                Recurrence.interval(hours, nowMs + hours * 3_600_000L) to null
             }
         }
     }
 
     /** The editor fields of a saved schedule. */
-    public fun fields(schedule: ScheduledPrompt, models: List<ModelChoice>, zoneId: String? = null): EditorFields {
+    public fun fields(
+        schedule: ScheduledPrompt,
+        models: List<ModelChoice>,
+        zoneId: String? = null,
+    ): EditorFields {
         val rec = schedule.recurrence
         val at = rec.atMs?.let { ScheduleTime.moment(it, it, zoneId) }
         val hour = at?.hour ?: rec.hour
@@ -70,16 +83,21 @@ public object EditorRules {
             date = if (rec.kind == RecurrenceKind.Once && at != null) at.date else "",
             hours = rec.hours.toString(),
             missed = schedule.missedPolicy,
+            thisConversation = schedule.sessionId != null,
             model =
                 schedule.modelProviderId?.let { provider ->
-                    models.firstOrNull { it.providerId == provider && it.modelId == schedule.modelId }
-                        ?: ModelChoice(provider, schedule.modelId!!, "$provider/${schedule.modelId}")
+                    models.firstOrNull {
+                        it.providerId == provider && it.modelId == schedule.modelId
+                    } ?: ModelChoice(provider, schedule.modelId!!, "$provider/${schedule.modelId}")
                 },
         )
     }
 }
 
-/** K02: create or edit one scheduled prompt. Saving re-arms the OS schedule; a failed save keeps the typed fields. */
+/**
+ * K02: create or edit one scheduled prompt. Saving re-arms the OS schedule; a failed save keeps the
+ * typed fields.
+ */
 @AssistedInject
 public class ScheduleEditViewModel(
     @Assisted private val route: SchedulesRoute.Edit,
@@ -96,13 +114,17 @@ public class ScheduleEditViewModel(
     private var agent: String? = null
     private var workspace: String? = null
 
-    /** The typed prompt to keep as a draft; written one at a time, the newest winning (B-STATE-024). */
+    /**
+     * The typed prompt to keep as a draft; written one at a time, the newest winning (B-STATE-024).
+     */
     private val typedPrompt = MutableStateFlow<String?>(null)
 
     init {
         viewModelScope.launch { seed() }
         viewModelScope.launch {
-            typedPrompt.filterNotNull().collectLatest { engine.setPromptDraft(profile, route.scheduleId, it) }
+            typedPrompt.filterNotNull().collectLatest {
+                engine.setPromptDraft(profile, route.scheduleId, it)
+            }
         }
     }
 
@@ -114,7 +136,10 @@ public class ScheduleEditViewModel(
         }
         val models = servers.models(route.profileId)
         engine.load(profile)
-        val existing = route.scheduleId?.let { id -> engine.state(profile).value.schedules.firstOrNull { it.id == id } }
+        val existing =
+            route.scheduleId?.let { id ->
+                engine.state(profile).value.schedules.firstOrNull { it.id == id }
+            }
         val fields =
             if (existing != null) {
                 editing = existing
@@ -128,27 +153,38 @@ public class ScheduleEditViewModel(
                 agent = from?.agent
                 val model =
                     if (from?.providerId != null && from.modelId != null) {
-                        models.firstOrNull { it.providerId == from.providerId && it.modelId == from.modelId }
-                            ?: ModelChoice(from.providerId, from.modelId, "${from.providerId}/${from.modelId}")
+                        models.firstOrNull {
+                            it.providerId == from.providerId && it.modelId == from.modelId
+                        }
+                            ?: ModelChoice(
+                                from.providerId,
+                                from.modelId,
+                                "${from.providerId}/${from.modelId}",
+                            )
                     } else {
                         null
                     }
                 EditorFields(
                     project = from?.directory ?: route.projectDir ?: target.recentProject.orEmpty(),
-                    date = ScheduleTime.today(clock.now().toEpochMilliseconds()),
+                    date = ScheduleTime.nextMorning(clock.now().toEpochMilliseconds()),
                     model = model,
                 )
             }
-        val title = if (sessionId != null) route.from?.let { servers.conversation(it)?.title } else null
-        // The prompt typed last time and never saved comes back (Flutter KitDraft `schedule.<id|new>`).
+        val title =
+            if (sessionId != null) route.from?.let { servers.conversation(it)?.title } else null
+        // The prompt typed last time and never saved comes back (Flutter KitDraft
+        // `schedule.<id|new>`).
         val kept = engine.promptDraft(profile, route.scheduleId)?.takeIf { it.isNotBlank() }
         mutable.update {
             it.copy(
-                phase = if (route.scheduleId != null && existing == null) EditPhase.Unavailable else EditPhase.Ready,
+                phase =
+                    if (route.scheduleId != null && existing == null) EditPhase.Unavailable
+                    else EditPhase.Ready,
                 fields = if (kept != null) fields.copy(prompt = kept) else fields,
                 seed = it.seed + 1,
                 models = models.toImmutableList(),
                 continuesConversation = sessionId != null,
+                canChooseConversation = sessionId != null,
                 conversationTitle = title,
             )
         }
@@ -159,7 +195,8 @@ public class ScheduleEditViewModel(
     override fun edited(input: EditorFields) {
         if (mutable.value.phase != EditPhase.Ready) return
         val before = mutable.value.fields.prompt
-        // The seed stays: the open form is not rebuilt, but a recreated one starts from these fields.
+        // The seed stays: the open form is not rebuilt, but a recreated one starts from these
+        // fields.
         mutable.update { it.copy(fields = input) }
         if (input.prompt != before) typedPrompt.value = input.prompt
     }
@@ -179,7 +216,7 @@ public class ScheduleEditViewModel(
                     projectPath = input.project,
                     recurrence = recurrence,
                     workspace = workspace,
-                    sessionId = sessionId,
+                    sessionId = sessionId.takeIf { input.thisConversation },
                     agent = agent,
                     modelProviderId = input.model?.providerId,
                     modelId = input.model?.modelId,
@@ -193,7 +230,13 @@ public class ScheduleEditViewModel(
                     nav.back()
                 }
                 is Outcome.Failed ->
-                    mutable.update { it.copy(saving = false, error = engine.state(profile).value.error, fields = input) }
+                    mutable.update {
+                        it.copy(
+                            saving = false,
+                            error = engine.state(profile).value.error,
+                            fields = input,
+                        )
+                    }
             }
         }
     }

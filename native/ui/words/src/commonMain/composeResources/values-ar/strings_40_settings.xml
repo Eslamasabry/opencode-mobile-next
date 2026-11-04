@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings40_style_default">إعداد النمط الافتراضي</string>
+    <string name="settings40_reset_question">إعادة ضبط المظهر؟</string>
+    <string name="settings40_reset_body">إعادة ضبط الألوان والنمط والشكل والزجاج وحجم النص والحركة وتوهج الرد. تبقى محادثاتك ولغتك وخيارات الإشعارات كما هي.</string>
+</resources>

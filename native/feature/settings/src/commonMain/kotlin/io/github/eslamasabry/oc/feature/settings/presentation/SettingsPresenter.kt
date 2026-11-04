@@ -40,6 +40,8 @@ public class SettingsPresenter(
     private val updates: UpdateSettings? = null,
     private val about: AboutFacts = AboutFacts(),
     private val diagnostics: DiagnosticsExport? = null,
+    private val appearanceHelp: AppearanceHelp? = null,
+    private val serverPage: SettingsServerDoor? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -49,6 +51,7 @@ public class SettingsPresenter(
         val note: SettingsNote? = null,
         val consentSaving: Boolean = false,
         val report: ReportUi? = null,
+        val newsStep: Int = 0,
     )
 
     private data class Engines(
@@ -56,6 +59,7 @@ public class SettingsPresenter(
         val voice: VoiceFacts?,
         val notifications: NotificationFacts?,
         val updates: UpdateFacts?,
+        val guide: AppearanceHelpFacts?,
     )
 
     private val local = MutableStateFlow(Local())
@@ -68,10 +72,11 @@ public class SettingsPresenter(
             voice?.facts ?: flowOf(null),
             notifications?.facts ?: flowOf(null),
             updates?.facts ?: flowOf(null),
-        ) { c, v, n, u -> Engines(c, v, n, u) }
+            appearanceHelp?.facts ?: flowOf(null),
+        ) { c, v, n, u, g -> Engines(c, v, n, u, g) }
 
     private fun engineNow() =
-        Engines(analytics?.whatWeCollect?.value, voice?.facts?.value, notifications?.facts?.value, updates?.facts?.value)
+        Engines(analytics?.whatWeCollect?.value, voice?.facts?.value, notifications?.facts?.value, updates?.facts?.value, appearanceHelp?.facts?.value)
 
     public val state: StateFlow<SettingsUi> =
         combine(local, facts, prefs, engines) { l, f, p, e -> build(l, f, p, e) }
@@ -92,9 +97,9 @@ public class SettingsPresenter(
             }
         return SettingsUi(
             stack = l.stack,
-            hub = HubUi(SettingsStructure.groups(f), f.server, l.query, results, searchable),
+            hub = HubUi(SettingsStructure.groups(f), f.server, l.query, results, searchable, f.savedServers),
             group = group,
-            appearance = appearance(p, f, l.allPacks),
+            appearance = appearance(p, f, l.allPacks).copy(guide = e.guide),
             voice = e.voice,
             notifications = e.notifications,
             updates = e.updates,
@@ -103,6 +108,7 @@ public class SettingsPresenter(
             language = p.language,
             report = l.report,
             note = l.note,
+            newsStep = l.newsStep,
         )
     }
 
@@ -121,11 +127,13 @@ public class SettingsPresenter(
             styles = f.surfaceStyles,
             heldBySaver = p.saver,
             systemMotionOff = f.systemMotionOff,
+            accent = p.accent, frost = p.frost, corners = p.corners, density = p.density,
+            activityGlow = p.activityGlow, glowStyle = p.glowStyle,
         )
     }
 
     override fun onOpen(page: SettingsPage) {
-        local.update { if (it.stack.last() == page) it else it.copy(stack = (it.stack + page).toImmutableList()) }
+        local.update { if (it.stack.last() == page) it else it.copy(stack = (it.stack + page).toImmutableList(), newsStep = if (page == SettingsPage.WhatsNew) 0 else it.newsStep) }
         if (page == SettingsPage.ReportProblem) loadReport()
         if (page == SettingsPage.Notifications) notifications?.refresh()
     }
@@ -165,6 +173,9 @@ public class SettingsPresenter(
     }
 
     override fun onRow(row: SettingsRowId) {
+        if (row == SettingsRowId.DefaultShell && currentFacts.value.savedServers.size > 1 && serverPage != null) {
+            onOpen(SettingsPage.ByServer(SettingsOutside.DefaultShell)); return
+        }
         val p = prefs.value
         val door =
             SettingsStructure.rows(row.group, currentFacts.value, p.reasoning, p.timestamps).firstOrNull { it.id == row }?.door
@@ -186,8 +197,50 @@ public class SettingsPresenter(
     }
 
     override fun onOutside(place: SettingsOutside) {
+        if (place == SettingsOutside.WhatsNew) { onOpen(SettingsPage.WhatsNew); return }
+        if (place == SettingsOutside.Tips) { onOpen(SettingsPage.Tips); return }
         openers.open(place)
     }
+
+    override fun onSavedServer(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId, section: SettingsOutside?) {
+        if (currentFacts.value.savedServers.any { it.id == profile }) serverPage?.open(profile, section)
+    }
+
+    override fun onAppearanceGuide(step: Int, done: Boolean) {
+        val port = appearanceHelp ?: return
+        run(SettingsNote.ChoiceNotSaved) { port.save(step.coerceIn(0, 3), done) }
+    }
+
+    override fun onShowTipsAgain() {
+        val port = appearanceHelp ?: return
+        run(SettingsNote.ChoiceNotSaved) { port.resetTips() }
+    }
+
+    override fun onNewsStep(index: Int) {
+        if (index in 0..4) local.update { it.copy(newsStep = index) }
+    }
+
+    override fun onNewsShow() {
+        val step = local.value.newsStep
+        onBack()
+        when (step) {
+            0 -> onOutside(SettingsOutside.Updates)
+            1 -> onOutside(SettingsOutside.Agents)
+            2 -> onOpen(SettingsPage.Appearance)
+        }
+    }
+
+    override fun onAccent(id: String?) = write(PersonalChange.Accent(id), SettingsNote.AppearanceNotSaved)
+
+    override fun onFrost(strength: io.github.eslamasabry.oc.ui.design.effects.FrostStrength) = write(PersonalChange.Frost(strength), SettingsNote.AppearanceNotSaved)
+
+    override fun onShape(corners: io.github.eslamasabry.oc.engine.settings.prefs.Corners?, density: io.github.eslamasabry.oc.engine.settings.prefs.Density?) {
+        if (!prefs.value.saver) write(PersonalChange.Shape(corners, density), SettingsNote.AppearanceNotSaved)
+    }
+
+    override fun onGlow(style: io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle?) = write(PersonalChange.Glow(style), SettingsNote.AppearanceNotSaved)
+
+    override fun onResetAppearance() = write(PersonalChange.ResetAppearance, SettingsNote.AppearanceNotSaved)
 
     override fun onMode(mode: AppearanceMode) {
         if (prefs.value.mode != mode) write(PersonalChange.Mode(mode), SettingsNote.AppearanceNotSaved)
@@ -220,6 +273,7 @@ public class SettingsPresenter(
 
     override fun onNotification(change: NotificationChange) {
         val port = notifications ?: return
+        if (port.facts.value.blocked && (change is NotificationChange.FinishedWork || change is NotificationChange.Questions)) return
         run(SettingsNote.ChoiceNotSaved) { port.set(change) }
     }
 

@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.ui.kit
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
@@ -9,9 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
@@ -19,6 +23,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import io.github.eslamasabry.oc.ui.design.color.Argb
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
@@ -28,6 +35,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.toShape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -108,6 +118,14 @@ public fun KitButton(
         }
     val easedFill by animateColorAsState(fill, specs.quick(), label = "kit-button-fill")
     val easedWords by animateColorAsState(words, specs.quick(), label = "kit-button-words")
+    val interactions = remember { MutableInteractionSource() }
+    val pressed by interactions.collectIsPressedAsState()
+    val look = kitSurfaceLook(
+        SurfaceRequest(SurfaceRole.Control, fill = if (role == KitButtonRole.Primary || !on) Argb(fill.toArgb()) else null,
+            pressed = pressed, disabled = !on, action = true),
+        easedFill,
+    )
+    val surfaceWords = look.words?.let { Color(it.v) } ?: easedWords
     val ink = if (role == KitButtonRole.Primary && !destructive) TextTone.OnAccent else TextTone.Primary
     val minHeight = if (role == KitButtonRole.Tertiary) tokens.minTarget else tokens.buttonHeight
     val pad = if (role == KitButtonRole.Tertiary) Space.S2 else Space.S6
@@ -115,6 +133,8 @@ public fun KitButton(
         modifier =
             modifier
                 .heightIn(min = minHeight.dp)
+                .then(if (role == KitButtonRole.Tertiary) Modifier.background(easedFill)
+                    else Modifier.kitSurface(look, KitShapeId.Button.toShape(), clip = false))
                 .kitTappable(
                     onClick = { if (!working) onClick() },
                     enabled = on,
@@ -122,21 +142,21 @@ public fun KitButton(
                     haptic = if (working) null else haptic,
                     shape = KitShapeId.Button,
                     ink = ink,
+                    interactionSource = interactions,
                 )
                 .semantics {
                     if (working) disabled()
                     if (semanticsLabel != null) contentDescription = semanticsLabel
                 }
-                .background(easedFill)
                 .padding(horizontal = pad.dp),
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         when {
-            working -> KitWorkingMark(easedWords, size = tokens.smallIcon.dp)
-            icon != null -> KitGlyph(icon, easedWords, tokens.smallIcon.dp)
+            working -> KitWorkingMark(surfaceWords, size = tokens.smallIcon.dp)
+            icon != null -> KitGlyph(icon, surfaceWords, tokens.smallIcon.dp)
         }
-        KitButtonWords(label, easedWords, maxLines)
+        KitButtonWords(label, surfaceWords, maxLines)
     }
 }
 
