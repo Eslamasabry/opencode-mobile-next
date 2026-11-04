@@ -35,13 +35,17 @@ internal fun ConnectionCheckSheet(state: ConnectionCheckUi?, actions: ServersAct
                 for (step in ConnectionCheckStep.entries) {
                     val result = state.results.getValue(step)
                     KitRow(
-                        title = stringResource(when (step) {
-                            ConnectionCheckStep.Address -> Res.string.connectionCheckAddress
-                            ConnectionCheckStep.SignIn -> Res.string.connectionCheckSignIn
-                            ConnectionCheckStep.Version -> Res.string.connectionCheckVersion
-                            ConnectionCheckStep.LiveUpdates -> Res.string.connectionCheckLive
-                            ConnectionCheckStep.Speed -> Res.string.connectionCheckSpeed
-                        }),
+                        title =
+                            stringResource(
+                                when (step) {
+                                    ConnectionCheckStep.Address -> Res.string.connectionCheckAddress
+                                    ConnectionCheckStep.SignIn -> Res.string.connectionCheckSignIn
+                                    ConnectionCheckStep.Version -> Res.string.connectionCheckVersion
+                                    ConnectionCheckStep.LiveUpdates ->
+                                        Res.string.connectionCheckLive
+                                    ConnectionCheckStep.Speed -> Res.string.connectionCheckSpeed
+                                }
+                            ),
                         supporting = checkWords(result, step),
                         supportingMaxLines = 4,
                     )
@@ -60,28 +64,33 @@ internal fun ConnectionCheckSheet(state: ConnectionCheckUi?, actions: ServersAct
 
 @Composable
 private fun checkWords(result: ConnectionCheckResult, step: ConnectionCheckStep): String {
-    if (result.state == ConnectionCheckState.Waiting) return stringResource(Res.string.connectionCheckWaiting)
-    if (result.state == ConnectionCheckState.Running) return stringResource(Res.string.connectionCheckRunning)
-    val reason = when (result.reason) {
-        ConnectionCheckReason.Ok -> {
-            if (step == ConnectionCheckStep.Speed) return stringResource(Res.string.connectionCheckMillis, result.value.orEmpty())
-            if (step == ConnectionCheckStep.Version && !result.value.isNullOrBlank())
-                return stringResource(Res.string.connectionCheckVersionValue, result.value)
-            Res.string.connectionCheckPassed
+    if (result.state == ConnectionCheckState.Waiting)
+        return stringResource(Res.string.connectionCheckWaiting)
+    if (result.state == ConnectionCheckState.Running)
+        return stringResource(Res.string.connectionCheckRunning)
+    val reason =
+        when (result.reason) {
+            ConnectionCheckReason.Ok -> {
+                if (step == ConnectionCheckStep.Speed)
+                    return stringResource(Res.string.connectionCheckMillis, result.value.orEmpty())
+                if (step == ConnectionCheckStep.Version && !result.value.isNullOrBlank())
+                    return stringResource(Res.string.connectionCheckVersionValue, result.value)
+                Res.string.connectionCheckPassed
+            }
+            ConnectionCheckReason.Unreachable -> Res.string.connectionCheckUnreachable
+            ConnectionCheckReason.NotServer -> Res.string.connectionCheckNotServer
+            ConnectionCheckReason.NeedsPassword -> Res.string.connectionCheckNeedsPassword
+            ConnectionCheckReason.PasswordRejected -> Res.string.connectionCheckPasswordRejected
+            ConnectionCheckReason.VersionUnsupported -> Res.string.connectionCheckUnsupported
+            ConnectionCheckReason.VersionNotReady -> Res.string.connectionCheckNotReady
+            ConnectionCheckReason.StreamNotChecked -> Res.string.connectionCheckStreamUnchecked
+            ConnectionCheckReason.StreamConnecting -> Res.string.connectionCheckStreamConnecting
+            ConnectionCheckReason.StreamDown -> Res.string.connectionCheckStreamDown
+            ConnectionCheckReason.Slow ->
+                return stringResource(Res.string.connectionCheckSlow, result.value.orEmpty())
+            ConnectionCheckReason.EarlierFailed -> Res.string.connectionCheckSkipped
+            ConnectionCheckReason.Trust -> Res.string.connectionCheckTrust
+            ConnectionCheckReason.Changed -> Res.string.connectionCheckChanged
         }
-        ConnectionCheckReason.Unreachable -> Res.string.connectionCheckUnreachable
-        ConnectionCheckReason.NotServer -> Res.string.connectionCheckNotServer
-        ConnectionCheckReason.NeedsPassword -> Res.string.connectionCheckNeedsPassword
-        ConnectionCheckReason.PasswordRejected -> Res.string.connectionCheckPasswordRejected
-        ConnectionCheckReason.VersionUnsupported -> Res.string.connectionCheckUnsupported
-        ConnectionCheckReason.VersionNotReady -> Res.string.connectionCheckNotReady
-        ConnectionCheckReason.StreamNotChecked -> Res.string.connectionCheckStreamUnchecked
-        ConnectionCheckReason.StreamConnecting -> Res.string.connectionCheckStreamConnecting
-        ConnectionCheckReason.StreamDown -> Res.string.connectionCheckStreamDown
-        ConnectionCheckReason.Slow -> return stringResource(Res.string.connectionCheckSlow, result.value.orEmpty())
-        ConnectionCheckReason.EarlierFailed -> Res.string.connectionCheckSkipped
-        ConnectionCheckReason.Trust -> Res.string.connectionCheckTrust
-        ConnectionCheckReason.Changed -> Res.string.connectionCheckChanged
-    }
     return stringResource(reason)
 }

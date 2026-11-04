@@ -27,7 +27,9 @@ public class Oc2GatewayFactory(
 
     override suspend fun probe(target: ProbeTarget): Outcome<ProbeResult> {
         // Unsaved addresses have no trust. Saved targets carry only trust bound to this origin.
-        val cleartext = AddressRules.isLoopback(target.origin.host) || target.trust?.cleartextConsentAtMs != null
+        val cleartext =
+            AddressRules.isLoopback(target.origin.host) ||
+                target.trust?.cleartextConsentAtMs != null
         if (target.origin.scheme != "https" && !cleartext)
             return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
         val pin = target.trust?.pinnedLeafSha256
@@ -36,7 +38,12 @@ public class Oc2GatewayFactory(
             return Failure.Refused(RefusalReason.PinNeedsHttps).failed()
         val client =
             clients.create(
-                TransportSpec(target.origin, AddressRules.classify(target.origin.host), cleartext, pinBytes)
+                TransportSpec(
+                    target.origin,
+                    AddressRules.classify(target.origin.host),
+                    cleartext,
+                    pinBytes,
+                )
             )
         return try {
             val gateway =

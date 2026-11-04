@@ -52,6 +52,7 @@ import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
 import io.github.eslamasabry.oc.engine.settings.prefs.DevicePreferences
 import io.github.eslamasabry.oc.engine.settings.prefs.Preferences
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGuideMemory
 import io.github.eslamasabry.oc.feature.chats.presentation.ClosedSettingsDoor
 import io.github.eslamasabry.oc.feature.chats.presentation.SettingsDoor
 import io.github.eslamasabry.oc.feature.onboarding.presentation.FirstRun
@@ -80,6 +81,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateSettings
 import io.github.eslamasabry.oc.feature.settings.presentation.VoiceSettings
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
@@ -125,6 +127,7 @@ private const val REPO = "https://github.com/Eslamasabry/opencode-mobile-next"
 interface SettingsAppGraph {
     val appPreferences: AppPreferences
     val firstRunStarter: FirstRunStarter
+    val whatsNewStarter: NativeWhatsNewStarter
 }
 
 /**
@@ -205,6 +208,7 @@ class AndroidSettingsHost(
     private val voiceSettings: AndroidVoiceSettings,
     private val activities: ResumedActivities,
     private val gitHubReports: GitHubProblemReporter, // BUILD-DIAGNOSTICS-ATTENTION
+    private val migrationMemory: NativeSettingsMemory,
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
@@ -251,14 +255,18 @@ class AndroidSettingsHost(
                 ),
             )
 
+    override val appearanceGuide: AppearanceGuideMemory
+        get() = migrationMemory.appearanceGuide
+
     override val choices: PersonalChoices =
         PreferencesChoices(prefs::preferences, prefs.value, scope)
 
     override val openers: SettingsOpeners = SettingsOpeners { place ->
         when (place) {
             SettingsOutside.Servers -> nav.open(ServersRoute.Home)
+            SettingsOutside.Agents -> nav.open(AgentsRoute.Home)
             SettingsOutside.StarOnGitHub -> application.view(REPO)
-            SettingsOutside.WhatsNew,
+            SettingsOutside.WhatsNew -> nav.open(SettingsRoute.WhatsNew)
             SettingsOutside.ReleaseNotes -> application.view("$REPO/releases")
             SettingsOutside.PrivacyPolicy ->
                 application.view(
@@ -365,6 +373,7 @@ class AndroidSettingsHost(
         val OPENS: Set<SettingsOutside> =
             setOf(
                 SettingsOutside.Servers,
+                SettingsOutside.Agents,
                 SettingsOutside.StarOnGitHub,
                 SettingsOutside.WhatsNew,
                 SettingsOutside.ReleaseNotes,
@@ -646,6 +655,12 @@ class FirstRunStarter(
 ) {
     private val scope = CoroutineScope(appScope.coroutineContext)
     private var started = false
+    private val rootReady = CompletableDeferred<Unit>()
+
+    suspend fun awaitReady() {
+        rootReady.await()
+    }
+
     private val flow =
         FirstRunFlow(
             FirstRun(
@@ -667,9 +682,18 @@ class FirstRunStarter(
         started = true
         diagnosticsFeed.start() // Report a problem's connection errors, from the first connect on
         scope.launch {
-            if (stores.warm() is Outcome.Failed) return@launch
+            if (stores.warm() is Outcome.Failed) {
+                rootReady.complete(Unit)
+                return@launch
+            }
             val saved = stores.profiles.profiles.value.map { it.id }.toSet()
-            withContext(dispatchers.main) { flow.start(stores.profiles.activeId.value, saved) }
+            withContext(dispatchers.main) {
+                try {
+                    flow.start(stores.profiles.activeId.value, saved)
+                } finally {
+                    rootReady.complete(Unit)
+                }
+            }
             connections.servers
                 .map { list -> list.any { it.connected } }
                 .distinctUntilChanged()

@@ -20,7 +20,10 @@ import io.github.eslamasabry.oc.feature.servers.presentation.ServerConnectionChe
 import kotlin.time.Clock
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** Read-only manual check; it never connects a server, replaces its graph or opens another event stream. */
+/**
+ * Read-only manual check; it never connects a server, replaces its graph or opens another event
+ * stream.
+ */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<ServerConnectionCheck>())
 class NativeConnectionCheck(
@@ -35,33 +38,42 @@ class NativeConnectionCheck(
             is Outcome.Failed -> return warm
             is Outcome.Ok -> Unit
         }
-        val loaded = stores.profiles.profile(id)
-            ?: return Outcome.Failed(Failure.Refused(RefusalReason.ProfileDeleted))
-        val profile = loaded.toServerProfile()
-            ?: return Outcome.Failed(Failure.Refused(RefusalReason.InvalidAddress))
-        val source = credentials.singleOrNull()
-            ?: return Outcome.Failed(Failure.SecretUnavailable())
-        val credential = when (val read = source.resolve(profile)) {
-            is Outcome.Failed -> return read
-            is Outcome.Ok -> read.value
-        }
-        val factory = factories.singleOrNull { it.backend == profile.backend }
-            ?: return Outcome.Failed(Failure.Unavailable(FeatureId("connectionCheck")))
+        val loaded =
+            stores.profiles.profile(id)
+                ?: return Outcome.Failed(Failure.Refused(RefusalReason.ProfileDeleted))
+        val profile =
+            loaded.toServerProfile()
+                ?: return Outcome.Failed(Failure.Refused(RefusalReason.InvalidAddress))
+        val source =
+            credentials.singleOrNull() ?: return Outcome.Failed(Failure.SecretUnavailable())
+        val credential =
+            when (val read = source.resolve(profile)) {
+                is Outcome.Failed -> return read
+                is Outcome.Ok -> read.value
+            }
+        val factory =
+            factories.singleOrNull { it.backend == profile.backend }
+                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("connectionCheck")))
         if (stores.profiles.profile(id) !== loaded)
             return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
         val started = clock.now()
-        val result = withTimeoutOrNull(15_000) {
-            factory.probe(ProbeTarget(profile.origin, credential, profile.trust))
-        } ?: Outcome.Failed(Failure.TimedOut())
+        val result =
+            withTimeoutOrNull(15_000) {
+                factory.probe(ProbeTarget(profile.origin, credential, profile.trust))
+            } ?: Outcome.Failed(Failure.TimedOut())
         val elapsed = (clock.now() - started).inWholeMilliseconds.coerceAtLeast(0)
         if (stores.profiles.profile(id) !== loaded)
             return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
         val live = registry.live.value[id]?.takeIf { it.session.profile == profile }
-        val stream = if (live == null) ConnectionCheckStream.NotConnected else when (live.session.server.events.status.value) {
-            StreamStatus.Connected -> ConnectionCheckStream.Live
-            StreamStatus.Connecting, is StreamStatus.Reconnecting -> ConnectionCheckStream.Connecting
-            else -> ConnectionCheckStream.Down
-        }
+        val stream =
+            if (live == null) ConnectionCheckStream.NotConnected
+            else
+                when (live.session.server.events.status.value) {
+                    StreamStatus.Connected -> ConnectionCheckStream.Live
+                    StreamStatus.Connecting,
+                    is StreamStatus.Reconnecting -> ConnectionCheckStream.Connecting
+                    else -> ConnectionCheckStream.Down
+                }
         return Outcome.Ok(ConnectionCheckFacts(result, stream, elapsed))
     }
 }

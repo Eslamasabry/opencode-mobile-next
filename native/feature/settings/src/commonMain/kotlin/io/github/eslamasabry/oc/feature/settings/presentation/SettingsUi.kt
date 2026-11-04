@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
 import io.github.eslamasabry.oc.engine.analytics.WhatWeCollect
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGuideRecord
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
+import io.github.eslamasabry.oc.engine.settings.walkthrough.WhatsNewChange
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -19,6 +22,7 @@ public data class SettingsUi(
     val notifications: NotificationFacts? = null,
     val updates: UpdateFacts? = null,
     val about: AboutFacts = AboutFacts(),
+    val whatsNew: WhatsNewUi? = null,
     val privacy: PrivacyUi? = null,
     /** The language in use (acknowledged), for the Language page and its row. */
     val language: AppLanguage = AppLanguage.System,
@@ -27,7 +31,8 @@ public data class SettingsUi(
     /** One plain line about the last save that did not stick, if any. */
     val note: SettingsNote? = null,
 ) {
-    val page: SettingsPage get() = stack.last()
+    val page: SettingsPage
+        get() = stack.last()
 }
 
 public data class HubUi(
@@ -42,7 +47,10 @@ public data class HubUi(
 
 public data class GroupUi(val id: SettingsGroupId, val rows: ImmutableList<SettingsRowUi>)
 
-/** The Appearance page (plan 07 I04, plan 06 K4): mode, colours, style, motion. Every choice applies at once. */
+/**
+ * The Appearance page (plan 07 I04, plan 06 K4): mode, colours, style, motion. Every choice applies
+ * at once.
+ */
 public data class AppearanceUi(
     val mode: AppearanceMode = AppearanceMode.Dark,
     val pack: PackId = PackId.Opencode,
@@ -58,6 +66,9 @@ public data class AppearanceUi(
     /** Saver holds Style and Motion (B-KIT-008): shown, not changeable, with the reason. */
     val heldBySaver: Boolean = false,
     val systemMotionOff: Boolean = false,
+    val guide: AppearanceGuideRecord? = null,
+    val question: AppearanceQuestion? = null,
+    val questions: List<AppearanceQuestion> = emptyList(),
 )
 
 public sealed interface SpeechModel {
@@ -78,20 +89,35 @@ public data class VoiceFacts(
     val readAloudOn: Boolean = false,
 )
 
-/** Minutes after midnight, local. The same start and end mean quiet all day (Flutter `SharedNotifyRules`). */
+/**
+ * Minutes after midnight, local. The same start and end mean quiet all day (Flutter
+ * `SharedNotifyRules`).
+ */
 public data class QuietHours(val start: Int, val end: Int) {
-    val allDay: Boolean get() = start == end
+    val allDay: Boolean
+        get() = start == end
 
     public companion object {
-        /** What turning quiet hours on starts with (Flutter `defaultQuietStart` / `defaultQuietEnd`). */
+        /**
+         * What turning quiet hours on starts with (Flutter `defaultQuietStart` /
+         * `defaultQuietEnd`).
+         */
         public val Default: QuietHours = QuietHours(22 * 60, 8 * 60)
 
-        /** The times the start and end pages offer: every half hour, plus [current] when it is between them. */
-        public fun choices(current: Int): List<Int> = ((0 until 24 * 60 step 30) + current).distinct().sorted()
+        /**
+         * The times the start and end pages offer: every half hour, plus [current] when it is
+         * between them.
+         */
+        public fun choices(current: Int): List<Int> =
+            ((0 until 24 * 60 step 30) + current).distinct().sorted()
     }
 }
 
-public enum class BackgroundState { Off, Running, StoppedByAndroid }
+public enum class BackgroundState {
+    Off,
+    Running,
+    StoppedByAndroid,
+}
 
 public data class NotificationFacts(
     /** Android does not let the app notify: the page leads with the fix. */
@@ -111,18 +137,33 @@ public sealed interface NotificationChange {
 
     public data class WifiOnly(val on: Boolean) : NotificationChange
 
-    /** Quiet hours for every server (`oc.notify.quietStart` / `quietEnd`, minutes after midnight); null turns them off. */
+    /**
+     * Quiet hours for every server (`oc.notify.quietStart` / `quietEnd`, minutes after midnight);
+     * null turns them off.
+     */
     public data class Quiet(val hours: QuietHours?) : NotificationChange
 }
 
-public enum class UpdateFailure { Network, NoFile, Checksum, Signer, Package, Version, Storage, Installer }
+public enum class UpdateFailure {
+    Network,
+    NoFile,
+    Checksum,
+    Signer,
+    Package,
+    Version,
+    Storage,
+    Installer,
+}
 
 public sealed interface UpdateState {
     public data object NeverChecked : UpdateState
 
     public data object Checking : UpdateState
 
-    /** [checked] is a date already formatted for the person's locale (data, not copy); null = just now. */
+    /**
+     * [checked] is a date already formatted for the person's locale (data, not copy); null = just
+     * now.
+     */
     public data class UpToDate(val checked: String?) : UpdateState
 
     public data class Available(val version: String, val sizeMb: String) : UpdateState
@@ -154,7 +195,13 @@ public data class AboutFacts(
 public data class PrivacyUi(val collect: WhatWeCollect, val saving: Boolean = false)
 
 public enum class SettingsNote {
-    AppearanceNotSaved, ChoiceNotSaved, ConsentNotSaved, TestNotSent, UpdateFailed, ReportCopied, ShareFailed,
+    AppearanceNotSaved,
+    ChoiceNotSaved,
+    ConsentNotSaved,
+    TestNotSent,
+    UpdateFailed,
+    ReportCopied,
+    ShareFailed,
 }
 
 /** Report a problem's preview (B-SEC-060: the exact safe text that is shared). */
@@ -165,4 +212,18 @@ public sealed interface ReportUi {
 
     /** The report could not be built: a plain line and Try again, never the reason's text. */
     public data object Failed : ReportUi
+}
+
+/** A built-in walkthrough step. Strings and glyphs are resolved only by the screen. */
+public data class WhatsNewUi(
+    val version: String,
+    val changes: List<WhatsNewChange>,
+    val index: Int = 0,
+    val canShow: Boolean = false,
+) {
+    public val change: WhatsNewChange
+        get() = changes[index]
+
+    public val last: Boolean
+        get() = index == changes.lastIndex
 }

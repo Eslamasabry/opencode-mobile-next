@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
@@ -17,17 +18,31 @@ import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 
 /**
- * The Settings route; the ONLY file in the module that imports androidx.navigation3.runtime (Konsist K1). The hub's
- * pages are one route: system Back (predictive) walks them first, then the shell pops Settings.
+ * The Settings route; the ONLY file in the module that imports androidx.navigation3.runtime
+ * (Konsist K1). The hub's pages are one route: system Back (predictive) walks them first, then the
+ * shell pops Settings.
  */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class SettingsEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
+        entry<SettingsRoute.WhatsNew> {
+            val vm = metroViewModel<SettingsViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            LaunchedEffect(vm) { vm.showWhatsNew() }
+            KitBackGuard(
+                enabled = state.page != SettingsPage.Hub || state.hub.query.isNotEmpty(),
+                onBack = vm::back,
+            )
+            SettingsScreen(state, vm.actions, onExit = vm::exit)
+        }
         entry<SettingsRoute.Home> {
             val vm = metroViewModel<SettingsViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
-            KitBackGuard(enabled = state.page != SettingsPage.Hub || state.hub.query.isNotEmpty(), onBack = vm::back)
+            KitBackGuard(
+                enabled = state.page != SettingsPage.Hub || state.hub.query.isNotEmpty(),
+                onBack = vm::back,
+            )
             SettingsScreen(state, vm.actions, onExit = vm::exit)
         }
     }

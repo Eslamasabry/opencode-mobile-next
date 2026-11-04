@@ -27,13 +27,13 @@ import io.github.eslamasabry.oc.ui.routes.PairingRoute
 import io.github.eslamasabry.oc.ui.routes.PlansRoute
 import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
 import io.github.eslamasabry.oc.ui.routes.UsageRoute
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -52,7 +52,13 @@ public class ServersViewModel(
     private val monitoring: Set<ServerMonitoring> = emptySet(),
     private val connectionChecks: Set<ServerConnectionCheck> = emptySet(),
 ) : ViewModel(), ServersActions {
-    private val local = MutableStateFlow(ServersUi(newConversation = route != null, connectionCheckAvailable = connectionChecks.size == 1))
+    private val local =
+        MutableStateFlow(
+            ServersUi(
+                newConversation = route != null,
+                connectionCheckAvailable = connectionChecks.size == 1,
+            )
+        )
     public val state: StateFlow<ServersUi> =
         combine(local, connections.servers, connections.busy) { own, servers, busy ->
                 own.copy(servers = servers, busy = own.busy || busy)
@@ -120,13 +126,20 @@ public class ServersViewModel(
         val initial = ConnectionCheckUi(id, server.name)
         local.update { it.copy(connectionCheck = initial) }
         checkJob = viewModelScope.launch {
-            val facts = when (val result = checker.inspect(id)) {
-                is Outcome.Ok -> result.value
-                is Outcome.Failed -> ConnectionCheckFacts(result, ConnectionCheckStream.NotConnected, 0)
-            }
+            val facts =
+                when (val result = checker.inspect(id)) {
+                    is Outcome.Ok -> result.value
+                    is Outcome.Failed ->
+                        ConnectionCheckFacts(result, ConnectionCheckStream.NotConnected, 0)
+                }
             if (revision == checkRevision) {
                 local.update {
-                    it.copy(connectionCheck = if (connections.servers.value.any { saved -> saved.id == id }) initial.finish(facts) else null)
+                    it.copy(
+                        connectionCheck =
+                            if (connections.servers.value.any { saved -> saved.id == id })
+                                initial.finish(facts)
+                            else null
+                    )
                 }
             }
         }

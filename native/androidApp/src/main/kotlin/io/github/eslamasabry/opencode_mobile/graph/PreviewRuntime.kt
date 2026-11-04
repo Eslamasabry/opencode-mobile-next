@@ -6,9 +6,9 @@ import io.github.eslamasabry.oc.core.common.ids.*
 import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
-import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.feed.*
@@ -91,7 +91,8 @@ class PreviewRuntime(
                         it.id,
                         it.profile.name,
                         it.profile.baseUrl,
-                        registry.live.value[it.id]?.session?.status?.value == StreamStatus.Connected,
+                        registry.live.value[it.id]?.session?.status?.value ==
+                            StreamStatus.Connected,
                     )
                 }
                 .toImmutableList()
@@ -226,7 +227,10 @@ class PreviewRuntime(
         }
     }
 
-    /** Live evidence outranks reads which left before it, including run ends during slow inventory reads. */
+    /**
+     * Live evidence outranks reads which left before it, including run ends during slow inventory
+     * reads.
+     */
     private fun observeFeedEvent(id: ProfileId, event: GatewayEvent): Boolean {
         val listing = listings[id] ?: return false
         val current = listing.value
@@ -236,35 +240,49 @@ class PreviewRuntime(
             runSignals.getOrPut(id) { mutableMapOf() }[session] = next
             if (failed == true) failedRuns.getOrPut(id) { mutableSetOf() }.add(session)
             if (failed == false) failedRuns[id]?.remove(session)
-            listing.value = listing.value.copy(
-                statuses = listing.value.statuses + (session to status),
-                sessions = if (failed == null) listing.value.sessions else listing.value.sessions.map {
-                    if (it.id == session) it.copy(lastRunFailed = failed) else it
-                },
-            )
+            listing.value =
+                listing.value.copy(
+                    statuses = listing.value.statuses + (session to status),
+                    sessions =
+                        if (failed == null) listing.value.sessions
+                        else
+                            listing.value.sessions.map {
+                                if (it.id == session) it.copy(lastRunFailed = failed) else it
+                            },
+                )
         }
         fun request(kind: String, request: String, session: SessionId?) {
             requestRevision[id] = (requestRevision[id] ?: 0) + 1
             val pending = requests.getOrPut(id) { mutableMapOf() }
-            if (session == null) pending.remove(kind to request) else pending[kind to request] = session
+            if (session == null) pending.remove(kind to request)
+            else pending[kind to request] = session
             listing.value = listing.value.copy(needsYou = pending.values.toSet())
         }
-        val sessionEvent = when (event) {
-            is GatewayEvent.SessionDeleted -> event.sessionId
-            is GatewayEvent.SessionUpserted -> event.session.id
-            is GatewayEvent.SessionChanged -> event.sessionId
-            else -> null
+        val sessionEvent =
+            when (event) {
+                is GatewayEvent.SessionDeleted -> event.sessionId
+                is GatewayEvent.SessionUpserted -> event.session.id
+                is GatewayEvent.SessionChanged -> event.sessionId
+                else -> null
+            }
+        sessionEvent?.let {
+            sessionSignals.getOrPut(id) { mutableMapOf() }[it] = (refreshRevision[id] ?: 0) + 1
         }
-        sessionEvent?.let { sessionSignals.getOrPut(id) { mutableMapOf() }[it] = (refreshRevision[id] ?: 0) + 1 }
         when (event) {
             is GatewayEvent.RunStarted -> status(event.sessionId, SessionStatus.Busy, false)
             is GatewayEvent.RunRetrying -> status(event.sessionId, SessionStatus.Retry, false)
-            is GatewayEvent.RunEnded -> status(event.sessionId, SessionStatus.Idle, when (event.outcome) {
-                is RunOutcome.Failed -> true
-                RunOutcome.Idle -> null
-                else -> false
-            })
-            is GatewayEvent.PermissionAsked -> request("permission", event.request.id.raw, event.request.sessionId)
+            is GatewayEvent.RunEnded ->
+                status(
+                    event.sessionId,
+                    SessionStatus.Idle,
+                    when (event.outcome) {
+                        is RunOutcome.Failed -> true
+                        RunOutcome.Idle -> null
+                        else -> false
+                    },
+                )
+            is GatewayEvent.PermissionAsked ->
+                request("permission", event.request.id.raw, event.request.sessionId)
             is GatewayEvent.PermissionSettled -> request("permission", event.requestId.raw, null)
             is GatewayEvent.FormCreated -> request("form", event.form.id.raw, event.form.sessionId)
             is GatewayEvent.FormSettled -> request("form", event.formId.raw, null)
@@ -272,23 +290,42 @@ class PreviewRuntime(
                 runSignals[id]?.remove(event.sessionId)
                 failedRuns[id]?.remove(event.sessionId)
                 requests[id]?.entries?.removeAll { it.value == event.sessionId }
-                listing.value = current.copy(
-                    sessions = current.sessions.filterNot { it.id == event.sessionId },
-                    statuses = current.statuses - event.sessionId,
-                    needsYou = requests[id].orEmpty().values.toSet(),
-                )
+                listing.value =
+                    current.copy(
+                        sessions = current.sessions.filterNot { it.id == event.sessionId },
+                        statuses = current.statuses - event.sessionId,
+                        needsYou = requests[id].orEmpty().values.toSet(),
+                    )
             }
-            is GatewayEvent.SessionUpserted -> listing.value = current.copy(
-                sessions = current.sessions.filterNot { it.id == event.session.id } +
-                    event.session.copy(lastRunFailed = event.session.lastRunFailed || event.session.id in failedRuns[id].orEmpty()),
-            )
-            is GatewayEvent.SessionChanged -> listing.value = current.copy(sessions = current.sessions.map {
-                if (it.id != event.sessionId) it else it.copy(
-                    title = event.title ?: it.title,
-                    directory = if (event.replacesLocation) event.directory else it.directory,
-                )
-            })
-            GatewayEvent.Connected, is GatewayEvent.SessionViewed, is GatewayEvent.RefreshHint -> Unit
+            is GatewayEvent.SessionUpserted ->
+                listing.value =
+                    current.copy(
+                        sessions =
+                            current.sessions.filterNot { it.id == event.session.id } +
+                                event.session.copy(
+                                    lastRunFailed =
+                                        event.session.lastRunFailed ||
+                                            event.session.id in failedRuns[id].orEmpty()
+                                )
+                    )
+            is GatewayEvent.SessionChanged ->
+                listing.value =
+                    current.copy(
+                        sessions =
+                            current.sessions.map {
+                                if (it.id != event.sessionId) it
+                                else
+                                    it.copy(
+                                        title = event.title ?: it.title,
+                                        directory =
+                                            if (event.replacesLocation) event.directory
+                                            else it.directory,
+                                    )
+                            }
+                    )
+            GatewayEvent.Connected,
+            is GatewayEvent.SessionViewed,
+            is GatewayEvent.RefreshHint -> Unit
             else -> return false
         }
         return true
@@ -337,10 +374,14 @@ class PreviewRuntime(
                         .atStage(ConnectionStage.LoadConversations)
                 val statuses = graph.session.server.sessionStatuses()
                 val caps = graph.session.server.capabilities.value
-                val permissions = if (caps.permissionRequests) graph.session.server.pendingPermissions() else null
-                val questions = if (caps.legacyQuestionRequests) graph.session.server.pendingQuestions() else null
+                val permissions =
+                    if (caps.permissionRequests) graph.session.server.pendingPermissions() else null
+                val questions =
+                    if (caps.legacyQuestionRequests) graph.session.server.pendingQuestions()
+                    else null
                 val forms = if (caps.forms) graph.session.server.pendingForms() else null
-                if (registry.live.value[id] !== graph) return Failure.Refused(RefusalReason.StaleScope).failed()
+                if (registry.live.value[id] !== graph)
+                    return Failure.Refused(RefusalReason.StaleScope).failed()
                 val pending = requests.getOrPut(id) { mutableMapOf() }
                 if ((requestRevision[id] ?: 0) == readRequestRevision) {
                     fun replace(kind: String, entries: List<Pair<String, SessionId>>?) {
@@ -348,20 +389,38 @@ class PreviewRuntime(
                         pending.keys.removeAll { it.first == kind }
                         entries.forEach { (request, session) -> pending[kind to request] = session }
                     }
-                    replace("permission", (permissions as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId })
-                    replace("question", (questions as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId })
-                    replace("form", (forms as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId })
+                    replace(
+                        "permission",
+                        (permissions as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId },
+                    )
+                    replace(
+                        "question",
+                        (questions as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId },
+                    )
+                    replace(
+                        "form",
+                        (forms as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId },
+                    )
                 }
-                val resolvedStatuses = ((statuses as? Outcome.Ok)?.value ?: listing.value.statuses).toMutableMap()
+                val resolvedStatuses =
+                    ((statuses as? Outcome.Ok)?.value ?: listing.value.statuses).toMutableMap()
                 val newer = runSignals[id].orEmpty().filterValues { it > readRunRevision }.keys
-                for (session in newer) listing.value.statuses[session]?.let { resolvedStatuses[session] = it }
+                for (session in newer) listing.value.statuses[session]?.let {
+                    resolvedStatuses[session] = it
+                }
                 val liveSessions = listing.value.sessions.associateBy { it.id }
-                val changedSessions = sessionSignals[id].orEmpty().filterValues { it > readEventRevision }.keys
-                val inventory = page.value.sessions.filterNot { it.id in changedSessions } +
-                    changedSessions.mapNotNull { liveSessions[it] }
+                val changedSessions =
+                    sessionSignals[id].orEmpty().filterValues { it > readEventRevision }.keys
+                val inventory =
+                    page.value.sessions.filterNot { it.id in changedSessions } +
+                        changedSessions.mapNotNull { liveSessions[it] }
                 val sessions = inventory.map {
                     if (it.id in failedRuns[id].orEmpty()) it.copy(lastRunFailed = true)
-                    else if (it.id in newer) it.copy(lastRunFailed = liveSessions[it.id]?.lastRunFailed ?: it.lastRunFailed) else it
+                    else if (it.id in newer)
+                        it.copy(
+                            lastRunFailed = liveSessions[it.id]?.lastRunFailed ?: it.lastRunFailed
+                        )
+                    else it
                 }
                 runSignals[id]?.entries?.removeAll { it.value <= readRunRevision }
                 sessionSignals[id]?.entries?.removeAll { it.value <= readEventRevision }
@@ -372,12 +431,16 @@ class PreviewRuntime(
                         needsYou = pending.values.toSet(),
                         // B1: more pages on the server is not "couldn't load".
                         complete = page.value.complete,
-                        failed = statuses is Outcome.Failed || permissions is Outcome.Failed ||
-                            questions is Outcome.Failed || forms is Outcome.Failed,
+                        failed =
+                            statuses is Outcome.Failed ||
+                                permissions is Outcome.Failed ||
+                                questions is Outcome.Failed ||
+                                forms is Outcome.Failed,
                         acrossProjects =
                             graph.session.server.capabilities.value.globalSessionSearch,
                     )
-                // Unknown optional asks affect the feed's completeness, never healthy connect/create admission.
+                // Unknown optional asks affect the feed's completeness, never healthy
+                // connect/create admission.
                 return statuses.map { Unit }.atStage(ConnectionStage.LoadActivity)
             }
         }

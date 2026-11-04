@@ -1,23 +1,48 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
-import io.github.eslamasabry.oc.ui.design.text.AppTextSize
-
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGroup
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 
 /** Everything a person can do on the Settings pages. Each call names its target (rule 15). */
 public interface SettingsActions {
+    public fun onAppearanceQuestion(question: AppearanceQuestion?) {}
+
+    public fun onAppearanceGroup(group: AppearanceGroup) {}
+
+    public fun onAppearanceNext() {}
+
+    public fun onAppearanceSkip() {}
+
+    public fun onAppearanceAgain() {}
+
+    public fun onWhatsNewNext() {}
+
+    public fun onWhatsNewPrevious() {}
+
+    public fun onWhatsNewClose() {}
+
+    public fun onWhatsNewShowMe() {}
+
     public fun onOpen(page: SettingsPage)
 
-    /** True when Back was used here (search cleared or a page closed); false at the hub with no search. */
+    /**
+     * True when Back was used here (search cleared or a page closed); false at the hub with no
+     * search.
+     */
     public fun onBack(): Boolean
 
     public fun onRow(row: SettingsRowId)
 
     public fun onQuery(text: String)
 
-    /** The screen hands over the words of every row that exists, in the person's language (no copy here, K2). */
+    /**
+     * The screen hands over the words of every row that exists, in the person's language (no copy
+     * here, K2).
+     */
     public fun onSearchEntries(entries: List<SettingsSearchEntry>)
 
     public fun onOutside(place: SettingsOutside)
@@ -66,9 +91,15 @@ public interface SettingsActions {
     /** Notifications › Quiet hours switch: on starts at 22:00–08:00, off clears both times. */
     public fun onQuietHours(on: Boolean) {}
 
-    /** Quiet hours start ([start]) or end page: one tap saves [minutes] and returns to Notifications. */
+    /**
+     * Quiet hours start ([start]) or end page: one tap saves [minutes] and returns to
+     * Notifications.
+     */
     public fun onQuietTime(start: Boolean, minutes: Int) {}
 
-    /** The screen is on screen again (back from Android's settings): re-read what may have changed outside. */
+    /**
+     * The screen is on screen again (back from Android's settings): re-read what may have changed
+     * outside.
+     */
     public fun onResume() {}
 }

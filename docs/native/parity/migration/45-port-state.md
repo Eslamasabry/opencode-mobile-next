@@ -1,4 +1,4 @@
-Already there: 1 | Ported now: 2 | Not needed: 0 | Blocked: 9
+Already there: 2 | Ported now: 3 | Not needed: 5 | Blocked: 12
 
 # Migration step 4: Flutter state and connection logic
 
@@ -6,7 +6,7 @@ Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`; branch `p12x/45-port-state`.
 
 Finish line: read all 87 assigned Flutter sources, map reachable native behavior, port missing runnable slices, and identify prerequisites which still prevent full-file parity. Non-goals: tests, APKs, pushes, signing and releases. A dormant engine is not an implementation a person can use. A blocked row may contain a completed partial port; it stays blocked while other behavior in that source is missing.
 
-Checkpoint: 12/87 dispositions recorded; the remaining review reports are being integrated. Counts above cover recorded rows only. All Flutter source is read-only.
+Checkpoint: 22/87 dispositions recorded; the remaining review reports are being integrated. Counts above cover recorded rows only. All Flutter source is read-only.
 
 - `lib/state/connection/activity.dart` — blocked: AutomaticActivityRegistry has no production owner or Inbox history binding; confirmed-act recording/dismiss/undo cannot reach the person (native/engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/activity/AutomaticActivity.kt:430).
 - `lib/state/connection/agent_handoff.dart` — blocked: no production phone-agent target gateway/host lease/adoption binding exists; the standalone HandoffEngine cannot safely open or retain the target conversation.
@@ -21,4 +21,17 @@ Checkpoint: 12/87 dispositions recorded; the remaining review reports are being 
 - `lib/state/connection_check.dart` — ported now: native/feature/servers/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/servers/presentation/ConnectionCheck.kt:43 and native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ConnectionCheckWiring.kt:34 implement the visible Servers check, five outcomes/retry, saved trust/credentials, existing-stream observation, 15-second timeout and 1500ms warning with English/Arabic kit UI.
 - `lib/state/server_presentation.dart` — ported now: native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/composer/ProviderNames.kt:14 supplies localized explicit Z.AI Global/China routes in model groups/recent rows; native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/header/presentation/ChatHeaderPresenter.kt:243 already supplies the OpenCode 2 resume CLI.
 
+- `lib/state/appearance_guide.dart` — ported now: native/engine/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/settings/walkthrough/AppearanceGuide.kt:63 persists migrated seen/last-group/last-changed/finished/replay state; native/feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/ui/AppearanceGuide.kt:57 offers visible saver-aware guide steps for controls the native host exposes.
+- `lib/state/browser_secret_storage_io.dart` — not needed: constant “available” conditional-import glue; native uses its SecretStore, with no browser context.
+- `lib/state/browser_secret_storage_web.dart` — not needed: secure-context/localStorage/WebCrypto probe for the Flutter browser target, outside native platform scope (ADR D17).
+- `lib/state/budget_persistence.dart` — blocked: native/engine/integrations-usage/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/integrations/usage/UsageBudgets.kt:175 ports serialized durable merge/rollback/deletion fences, but UsageBudgets has zero production constructors and native Usage has no budget controls.
+- `lib/state/chat_notice_memory.dart` — blocked: native/engine/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/agents/memory/AgentTurnFailureMemory.kt:26 ports only failure persistence and has no production caller; no native standing-notice seen/reset or withdrawn-prompt persistence/filtering implementation.
+- `lib/state/claude_agent_trial.dart` — not needed: binding plan/02 §3.2 records the owner’s 2026-10-31 decision excluding the Claude Agent subscription-login product; the API-key spike does not authorize reusing subscription credentials.
+- `lib/state/connector_card_host.dart` — blocked: native McpChatConnect engine exists but no ConnectorCardHost/resolution presentation or production McpChatConnect constructor exists; chat connector suggestions cannot resolve cached catalog, offer Connect/Tools or display retained OAuth progress.
+- `lib/state/draft_attachment_storage_io.dart` — already there: native/engine/composer/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/composer/vault/FilePayloadStore.kt:20 implements validated hash identities, metadata-only listing, bounded exact reads, atomic .tmp publication and typed storage refusals; wired by native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PreviewDrafts.kt:91 into ConversationDrafts.
+- `lib/state/draft_attachment_storage_web.dart` — not needed: browser-only IndexedDB payload backend and persistence/quota APIs; native drafts use FilePayloadStore.
+- `lib/state/factsbook/phone_zone.dart` — not needed: FactsBook timezone offer belongs to deferred FactsBook (ADR §12 D6); no native FactsBook in current design.
+
 Compile checkpoint 1: requested command passed for Android and desktop, 592 actionable tasks, 0 test tasks, 14 seconds after the shared build lock became available. Log: `/tmp/45-port-state-compile-2.log`. The fresh-cache initial compile also passed (596 actionable tasks; 18m56s). No tests were written, modified or run; no APK was built.
+
+Compile checkpoint 2: requested Android/desktop targets passed, 592 actionable tasks, 0 test tasks, 52 seconds; `/tmp/45-port-state-compile-5.log`. Two integration retries corrected an internal kit icon reference; the guide now uses public KitStepChip and keeps glyph drawing in the kit. Changed Kotlin files were formatted with the plan-pinned ktfmt 0.64 fat jar after verifying its documented SHA-256. No tests changed or run.
