@@ -1,6 +1,6 @@
 # Migration 46 — Flutter platform, Linux, protocol and other code (part 1)
 
-Counts (21/78 files recorded): already there **10**; ported now **11**; not needed **0**; blocked **0**.
+Counts (31/78 files recorded): already there **14**; ported now **11**; not needed **6**; blocked **0**.
 
 Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`; branch `p12x/46-port-rest-1`.
 Finish line: all 78 source files have a behavior-based disposition and missing feasible native behavior is wired.
@@ -28,6 +28,16 @@ Non-goals: tests, APKs, pushes, signing, releases, and features explicitly defer
 - `lib/builtin/setup/setup_engine/progress_helpers.dart` — already there: native/engine/runtime/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/runtime/setup/SetupPlanning.kt:33 preserves resume parameters, dependency order, monotonic progress, ETA and typed errors; NativePhoneSetup.kt:140 supplies localized job copy.
 - `lib/domain/genui/gen_ui_mapping.dart` — already there: `native/engine/cards/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/cards/CardCodec.kt:77` and `native/engine/cards/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/cards/CardAnswers.kt:6` decode all card body/ask variants for the live chat card projection; interactive availability remains independently qualification-gated.
 - `lib/domain/genui/gen_ui_validation.dart` — already there: `native/engine/cards/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/cards/CardValidator.kt:411` enforces bounded trees, canonical values, secret-field refusal, schema/ask constraints and safe HTTPS nodes through `CardCodec.fromPart`; interactive availability remains independently qualification-gated.
+- `lib/domain/models/models_events.dart` — already there: `native/core/model/src/commonMain/kotlin/io/github/eslamasabry/oc/core/model/Requests.kt:19`, `native/core/model/src/commonMain/kotlin/io/github/eslamasabry/oc/core/model/Sessions.kt:88`, live OC2 event projection in `native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/adapter/Oc2CoreProjection.kt:108`, and `native/engine/requests/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/requests/ask/PermissionAsk.kt:57` retain event scope, permission targets/standing rules and provider-retry observations; OC1-only retry-action inputs have no native OC1 runtime.
+- `lib/domain/models/models_requests.dart` — already there: `native/core/model/src/commonMain/kotlin/io/github/eslamasabry/oc/core/model/Prompts.kt:8`, `native/core/model/src/commonMain/kotlin/io/github/eslamasabry/oc/core/model/Files.kt:8`, `native/engine/composer/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/composer/input/Mentions.kt:37` and `native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/send/Oc2PromptSend.kt:40` preserve request/file/provider values and real UTF-16 file-mention resolution in chat sends (`native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/world/GraphChatWorld.kt:1102`).
+- `lib/domain/server_answer.dart` — already there: `native/core/net/src/commonMain/kotlin/io/github/eslamasabry/oc/core/net/Http.kt:129` separates final HTTP-status failures from transport uncertainty, consumed by actual card delivery in `native/engine/cards/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/cards/CardBoard.kt:222`.
+- `lib/domain/session_stop.dart` — already there: `native/engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/elsewhere/ElsewhereAttention.kt:265` recognizes MessageAbortedError by name/type; `native/engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/feed/SelectedTransportAttention.kt:57` suppresses stop-as-failure attention in the live event path.
+- `lib/a2a/browser_request.dart` — not needed — conditional Dart browser transport export; A2A is dropped by plan/01 §12 D6.
+- `lib/a2a/browser_request_stub.dart` — not needed — native-side browser transport refusal belongs to dropped A2A (plan/01 §12 D6).
+- `lib/a2a/browser_request_web.dart` — not needed — browser Fetch/CORS A2A transport; A2A and web product are dropped by plan/01 §12 D6/D17.
+- `lib/api2/http_keep_alive.dart` — not needed: browser/Dio adapter glue; native uses the profile-owned hardened OkHttp transport, with no browser client.
+- `lib/builtin/abi_native.dart` — not needed: Dart FFI Abi re-export; native installation reads real Build.SUPPORTED_ABIS at native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AppPhoneAgents.kt:96.
+- `lib/builtin/abi_shim.dart` — not needed: Conditional Dart/browser export for the Widgetbook compiler; native uses platform capability interfaces.
 
 The native implementations include shared-storage file/APK handoff with a visible permission retry, localized age labels, retained assistant-model deletion, advisory agent build caps/full-speed settings, native thermal scheduling, visible-only Linux vitals, bounded card history, staged-history pagination, typed error fallback copy, Fork, project inventory and guarded launcher routing. Partial protocol/launch changes remain marked blocked where the rest of that file still lacks a complete native journey.
 
@@ -39,6 +49,7 @@ Validation: from `native/`, JDK 21, serialized with the shared machine build loc
 
 - `build/native-rest-46/compile-3.log`: both requested compilation tasks passed together (39s).
 - `build/native-rest-46/compile-21.log`: both requested compilation tasks passed together (3s).
+- `build/native-rest-46/compile-31.log`: both requested compilation tasks passed together (1s).
 
 The first two attempts exposed an unavailable resource-environment import and a void Android Intent setter; both were corrected before the successful checkpoint. No tests were written, run, weakened or removed; no Flutter/preflight/test runner, APK, signing, push, publication or release command was run. Existing compiler warnings remain in untouched code. Kotlin/XML diff and source-manifest checks are static review only.
 
