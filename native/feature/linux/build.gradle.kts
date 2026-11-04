@@ -4,3 +4,9 @@ plugins { id("oc.kmp.feature") }
 // what listens (ports with preview), storage and safe cleanups, packages (install, remove, update) as one long job,
 // repair and reset with plain confirmations. Common code over the narrow LinuxHost port; the Android binding is
 // androidApp's graph/LinuxWiring.kt. Ported from lib/builtin/linux_manager/** and lib/ui/screens/linux_manager/**.
+
+kotlin {
+    sourceSets.commonMain.dependencies {
+        implementation(project(":engine:runtime"))
+    }
+}

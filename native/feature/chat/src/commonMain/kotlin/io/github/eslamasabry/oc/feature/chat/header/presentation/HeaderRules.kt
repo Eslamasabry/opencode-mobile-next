@@ -36,7 +36,7 @@ public object HeaderRules {
 
     /**
      * The ⋯ menu (Flutter `sessionMenuItems`): Go to (Find, Details), then Do (Share or Stop sharing, Fork, Rename,
-     * Continue with…, Copy transcript, Archive), Delete last. Gated on the conversation's own capabilities, never on
+     * Continue with…, Continue on computer, Copy transcript, Archive), Delete last. Gated on the conversation's own capabilities, never on
      * the backend kind.
      */
     public fun menu(caps: ServerCapabilities, shared: Boolean): ImmutableList<HeaderAction> =
@@ -47,6 +47,7 @@ public object HeaderRules {
             if (caps.sessionFork) add(HeaderAction.Fork)
             add(HeaderAction.Rename)
             if (caps.sessionModelProviderSwitching && caps.serverCatalog) add(HeaderAction.ContinueWith)
+            if (caps.cliSessionResume) add(HeaderAction.ContinueOnComputer)
             add(HeaderAction.CopyTranscript)
             if (caps.sessionArchive) add(HeaderAction.Archive)
             if (caps.sessionDelete) add(HeaderAction.Delete)

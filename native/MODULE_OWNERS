@@ -78,3 +78,13 @@
 :feature:review	F	(slice brief names the agent)	slice-4
 :feature:voice	F	(slice brief names the agent)	slice-12
 :feature:setup	F	build-runtime-b	parity
+:feature:devservices	F	build-runtime-a	slice-5
+:feature:diagnostics	F	build-diagnostics-attention	parity
+:android:background	F	build-android-bg-platform	parity-p12
+:android:termux	F	build-android-bg-platform	parity-p12
+:feature:background	F	build-android-bg-platform	parity-p12
+:engine:integrations-usage	F	build-integrations-b	parity-p12
+:engine:integrations-quota	F	build-integrations-b	parity-p12
+:engine:integrations-catalog	F	build-integrations-b	parity-p12
+:engine:integrations-host	F	build-integrations-b	parity-p12
+:feature:plans	F	build-integrations-b	parity-p12

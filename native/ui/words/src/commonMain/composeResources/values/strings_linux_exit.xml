@@ -1,0 +1,10 @@
+<resources>
+    <string name="linuxExitForceStop">The app was closed while OpenCode was running</string>
+    <string name="linuxExitMemory">Android closed the app to free memory</string>
+    <string name="linuxExitMemoryLimit">Android closed the app at its memory limit</string>
+    <string name="linuxExitCrash">The app crashed while OpenCode was running</string>
+    <string name="linuxExitKilled">Android stopped the app while OpenCode was running</string>
+    <string name="linuxExitRestored">OpenCode is running again.</string>
+    <string name="linuxExitCheckStatus">Check the current server status below.</string>
+    <string name="linuxExitPolicyOff">Automatic restart is off. You can start OpenCode when you are ready.</string>
+</resources>

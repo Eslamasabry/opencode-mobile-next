@@ -50,6 +50,7 @@ public class Diagnostics(
     private val entries = MutableStateFlow<PersistentList<ErrorEntry>>(persistentListOf())
     private val nextId = AtomicLong(1L)
     private val clearListeners = AtomicReference<List<() -> Unit>>(emptyList())
+    private val recordListeners = AtomicReference<List<() -> Unit>>(emptyList())
 
     /** Newest last. */
     public val errors: StateFlow<ImmutableList<ErrorEntry>> = entries.asStateFlow()
@@ -77,6 +78,13 @@ public class Diagnostics(
                 if (next.size > maxEntries) next.subList(next.size - maxEntries, next.size).toPersistent() else next
             }
         }
+        for (listener in recordListeners.load()) {
+            try {
+                listener()
+            } catch (e: Exception) {
+                log.w(e) { "diagnostics record listener failed" }
+            }
+        }
     }
 
     /** A thrown error: its text and frames go through the same sanitiser as any other line. */
@@ -101,6 +109,20 @@ public class Diagnostics(
                 listener()
             } catch (e: Exception) {
                 log.w(e) { "diagnostics clear listener failed" }
+            }
+        }
+    }
+
+    /** Same-module hook for the persisted problem report: called after every [record], in the same call. */
+    internal fun onRecorded(listener: () -> Unit): () -> Unit {
+        while (true) {
+            val current = recordListeners.load()
+            if (recordListeners.compareAndSet(current, current + listener)) break
+        }
+        return {
+            while (true) {
+                val current = recordListeners.load()
+                if (recordListeners.compareAndSet(current, current - listener)) break
             }
         }
     }
