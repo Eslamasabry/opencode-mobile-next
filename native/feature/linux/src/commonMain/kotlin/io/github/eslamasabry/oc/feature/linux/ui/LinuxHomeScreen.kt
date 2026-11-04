@@ -28,6 +28,14 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveAll
+import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveAllBody
+import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveAllQuestion
+import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveKeep
+import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveKeepBody
+import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveKeepQuestion
+import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoved
+import io.github.eslamasabry.oc.ui.words.res.linuxLocalStorageFailed
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobStopBody
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrPackages
@@ -42,6 +50,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrRepairKept
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRepairTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrReset
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrResetBody
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrResetCleanupTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrResetDetail
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrResetKept
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrResetLostChats
@@ -56,15 +65,18 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrRunningDetail
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrStorage
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrStorageDetail
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrTitle
-import io.github.eslamasabry.oc.ui.words.res.linuxMgrResetCleanupTitle
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupStop
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupStopBody
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupStopQuestion
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProfileName
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * LinuxRoute.Home (Flutter LinuxManagerScreen): the long job in place, then one row per page (Running, Ports, Storage,
- * Packages), then Repair and, last and never red, Reset guarded by its typed word (owner rule LOOK-5). When Linux does
- * not answer the page says so plainly and offers This phone instead of rows that cannot work. Kit parts only.
+ * LinuxRoute.Home (Flutter LinuxManagerScreen): the long job in place, then one row per page
+ * (Running, Ports, Storage, Packages), then Repair and, last and never red, Reset guarded by its
+ * typed word (owner rule LOOK-5). When Linux does not answer the page says so plainly and offers
+ * This phone instead of rows that cannot work. Kit parts only.
  */
 @Composable
 public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
@@ -85,10 +97,16 @@ public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
         loading = state.presence == null || state.working,
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-            val dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
+            val dismiss =
+                KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
             when (val notice = state.notice) {
                 null -> Unit
-                is LinuxHomeNotice.Problem -> KitNotice(message = notice.problem.words(), tone = StatusTone.Attention, dismiss = dismiss)
+                is LinuxHomeNotice.Problem ->
+                    KitNotice(
+                        message = notice.problem.words(),
+                        tone = StatusTone.Attention,
+                        dismiss = dismiss,
+                    )
                 LinuxHomeNotice.ResetNotErased ->
                     KitNotice(
                         title = stringResource(Res.string.linuxMgrResetNotErasedTitle),
@@ -103,8 +121,23 @@ public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
                         tone = StatusTone.Attention,
                         dismiss = dismiss,
                     )
+                LinuxHomeNotice.StorageFailed ->
+                    KitNotice(
+                        message = stringResource(Res.string.linuxLocalStorageFailed),
+                        tone = StatusTone.Attention,
+                        dismiss = dismiss,
+                    )
+                LinuxHomeNotice.Removed ->
+                    KitNotice(
+                        message = stringResource(Res.string.linuxLocalRemoved),
+                        dismiss = dismiss,
+                    )
                 LinuxHomeNotice.SetupUnavailable ->
-                    KitNotice(message = stringResource(Res.string.linuxMgrProblemUnavailable), tone = StatusTone.Attention, dismiss = dismiss)
+                    KitNotice(
+                        message = stringResource(Res.string.linuxMgrProblemUnavailable),
+                        tone = StatusTone.Attention,
+                        dismiss = dismiss,
+                    )
             }
             val presence = state.presence
             if (presence != null && presence != LinuxPresence.Ready) {
@@ -113,7 +146,12 @@ public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
                     message = stringResource(Res.string.linuxMgrProblemUnavailable),
                     actions =
                         if (presence == LinuxPresence.NotInstalled) {
-                            listOf(KitLineAction(stringResource(Res.string.phoneSetupProfileName), { actions.open(LinuxPage.ThisPhone) }))
+                            listOf(
+                                KitLineAction(
+                                    stringResource(Res.string.phoneSetupProfileName),
+                                    { actions.open(LinuxPage.ThisPhone) },
+                                )
+                            )
                         } else {
                             emptyList()
                         },
@@ -121,12 +159,38 @@ public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
                 )
             }
             LinuxJobPanel(state.job, actions::askStopJob, actions::dismissJob)
+            if (presence != null && presence != LinuxPresence.NotOnThisBuild) {
+                if (state.ready) LinuxIdlePanel(state, actions)
+                LinuxSetupPanel(state, actions)
+                LinuxLocalStoragePanel(state, actions)
+                LinuxLifetimesPanel(state.lifetimes, actions::refreshLifetimes)
+            }
             if (state.ready) {
                 KitRowGroup {
-                    PageRow(stringResource(Res.string.linuxMgrRunning), stringResource(Res.string.linuxMgrRunningDetail)) { actions.open(LinuxPage.Running) }
-                    PageRow(stringResource(Res.string.linuxMgrPorts), stringResource(Res.string.linuxMgrPortsDetail)) { actions.open(LinuxPage.Ports) }
-                    PageRow(stringResource(Res.string.linuxMgrStorage), stringResource(Res.string.linuxMgrStorageDetail)) { actions.open(LinuxPage.Storage) }
-                    PageRow(stringResource(Res.string.linuxMgrPackages), stringResource(Res.string.linuxMgrPackagesDetail)) { actions.open(LinuxPage.Packages) }
+                    PageRow(
+                        stringResource(Res.string.linuxMgrRunning),
+                        stringResource(Res.string.linuxMgrRunningDetail),
+                    ) {
+                        actions.open(LinuxPage.Running)
+                    }
+                    PageRow(
+                        stringResource(Res.string.linuxMgrPorts),
+                        stringResource(Res.string.linuxMgrPortsDetail),
+                    ) {
+                        actions.open(LinuxPage.Ports)
+                    }
+                    PageRow(
+                        stringResource(Res.string.linuxMgrStorage),
+                        stringResource(Res.string.linuxMgrStorageDetail),
+                    ) {
+                        actions.open(LinuxPage.Storage)
+                    }
+                    PageRow(
+                        stringResource(Res.string.linuxMgrPackages),
+                        stringResource(Res.string.linuxMgrPackagesDetail),
+                    ) {
+                        actions.open(LinuxPage.Packages)
+                    }
                     KitRow(
                         title = stringResource(Res.string.linuxMgrRepair),
                         supporting = stringResource(Res.string.linuxMgrRepairDetail),
@@ -169,9 +233,46 @@ public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
                         ),
                     typedName = stringResource(Res.string.linuxMgrResetWord),
                 )
+            LinuxConfirm.StopSetup ->
+                KitConfirmSpec(
+                    title = stringResource(Res.string.linuxSetupStopQuestion),
+                    confirmLabel = stringResource(Res.string.linuxSetupStop),
+                    kind = KitConfirmKind.Stop,
+                    body = stringResource(Res.string.linuxSetupStopBody),
+                )
+            is LinuxConfirm.Remove ->
+                KitConfirmSpec(
+                    title =
+                        stringResource(
+                            if (asked.projects) Res.string.linuxLocalRemoveAllQuestion
+                            else Res.string.linuxLocalRemoveKeepQuestion
+                        ),
+                    confirmLabel =
+                        stringResource(
+                            if (asked.projects) Res.string.linuxLocalRemoveAll
+                            else Res.string.linuxLocalRemoveKeep
+                        ),
+                    kind = KitConfirmKind.Destructive,
+                    body =
+                        stringResource(
+                            if (asked.projects) Res.string.linuxLocalRemoveAllBody
+                            else Res.string.linuxLocalRemoveKeepBody,
+                            size(asked.bytes),
+                        ),
+                    typedName =
+                        if (asked.projects)
+                            io.github.eslamasabry.oc.engine.runtime.storage.LinuxLocalStorage
+                                .DELETION_NAME
+                        else null,
+                )
             is LinuxConfirm.StopJob -> {
                 val (title, label) = stopJobWords(asked.kind, asked.names)
-                KitConfirmSpec(title = title, confirmLabel = label, kind = KitConfirmKind.Stop, body = stringResource(Res.string.linuxMgrJobStopBody))
+                KitConfirmSpec(
+                    title = title,
+                    confirmLabel = label,
+                    kind = KitConfirmKind.Stop,
+                    body = stringResource(Res.string.linuxMgrJobStopBody),
+                )
             }
         }
     KitConfirm(spec = spec, onConfirm = actions::confirm, onCancel = actions::dismiss)
