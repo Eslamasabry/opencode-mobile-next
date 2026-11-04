@@ -1161,6 +1161,11 @@ internal constructor(
         }
     }
 
+    /** BUILD-RUNTIME-B: the setup job's finish step starts or re-reads the server through the one lane. */
+    suspend fun startServer(): Outcome<Unit> = startNow()
+
+    suspend fun refreshServer() = refreshNow()
+
     fun serverSource(update: suspend () -> Outcome<Unit>): PhoneServerSource =
         object : PhoneServerSource {
             override val facts: StateFlow<PhoneServerFacts> =

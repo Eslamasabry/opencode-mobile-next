@@ -309,10 +309,10 @@ class BuiltinSetupFinisher(
             }
         }
         if (request.openCodeChanged || !running) {
-            val started = runtime.server.start()
+            val started = runtime.startServer()
             if (started is Outcome.Failed) return started
         } else {
-            runtime.server.refresh()
+            runtime.refreshServer()
         }
         return connections.connect(profile.id)
     }
