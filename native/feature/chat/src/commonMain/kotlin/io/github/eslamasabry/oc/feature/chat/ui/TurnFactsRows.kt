@@ -41,7 +41,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchOff
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchUnavailable
 import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
 import io.github.eslamasabry.oc.ui.words.res.kitCodeShowAll
-import io.github.eslamasabry.oc.ui.words.res.kitToolFailed
 import io.github.eslamasabry.oc.ui.words.res.kitToolOpenConversation
 import io.github.eslamasabry.oc.ui.words.res.kitWorkEarlierSteps
 import org.jetbrains.compose.resources.pluralStringResource
@@ -184,8 +183,8 @@ private fun StepRow(
             id = step.partId,
             kind = f.kind.toKit(),
             title = stepTitle(f),
-            subject = f.subject,
-            detail = f.detail,
+            subject = stepSubjectWords(f),
+            detail = stepDetailWords(f),
             status = step.state.toKit(),
             durationLabel = (step.durationMs ?: runningFor)?.let { durationWords(it) },
             added = f.added,
@@ -203,6 +202,8 @@ private fun StepRow(
     val hasBody =
         connector != null ||
             text != null ||
+            out.pruned ||
+            (out.input.isNotEmpty() && inputHasBody(f.kind, step.state)) ||
             (shell && !f.subject.isNullOrBlank()) ||
             child != null ||
             files.isNotEmpty()
@@ -260,20 +261,7 @@ private fun StepRow(
                             onMore = { folds.full[key] = true },
                             exitLabel = null,
                         )
-                    else if (text != null)
-                        KitToolOutput(
-                            text = text,
-                            moreLabel = more,
-                            onMore = { folds.full[key] = true },
-                            maxLines =
-                                if (full) Int.MAX_VALUE
-                                else
-                                    io.github.eslamasabry.oc.ui.kitchat.tool
-                                        .KIT_COMMAND_OUTPUT_LINES,
-                            errorLabel =
-                                if (out.errorText != null) stringResource(Res.string.kitToolFailed)
-                                else null,
-                        )
+                    else ToolStepBody(step, reply)
                 }
             },
     )
@@ -355,3 +343,13 @@ private fun ToolKind.toKit(): KitToolKind =
         ToolKind.BackgroundNotice,
         ToolKind.Generic -> KitToolKind.Other
     }
+
+/** Only steps whose body draws its input open on input alone (ToolStepBody returns early for the rest). */
+private fun inputHasBody(kind: ToolKind, state: StepState): Boolean =
+    state != StepState.NotRun &&
+        state != StepState.Stopped &&
+        kind != ToolKind.Card &&
+        kind != ToolKind.Read &&
+        kind != ToolKind.Shell &&
+        kind != ToolKind.Lsp &&
+        kind != ToolKind.ConnectorSearch

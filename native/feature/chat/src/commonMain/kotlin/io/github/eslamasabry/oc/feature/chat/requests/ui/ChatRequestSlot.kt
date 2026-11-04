@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +60,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitRequestChangeSize
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReject
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReplyEmptyReason
 import io.github.eslamasabry.oc.ui.words.res.kitRequestSend
+import io.github.eslamasabry.oc.ui.words.res.kitRequestSendAnswers
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 

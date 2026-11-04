@@ -63,6 +63,41 @@ class SavedRecentModels(
         } catch (e: GateNotOpen) {
             null // before the migration gate opens: asked again on the next read
         }
+    }
+
+    override fun favorites(profile: String): List<Pair<String, String>>? {
+        return try {
+            val id = ProfileId(profile)
+            if (stores.profiles.profile(id) == null) return emptyList()
+            store(id).modelLibrary(id).favorites.map { it.providerId to it.modelId }
+        } catch (_: GateNotOpen) {
+            null
+        }
+    }
+
+    override suspend fun setFavorites(
+        profile: String,
+        favorites: List<Pair<String, String>>,
+    ): Outcome<Unit> = writes.withLock {
+        val id = ProfileId(profile)
+        if (stores.profiles.profile(id) == null)
+            return@withLock Outcome.Failed(Failure.Refused(RefusalReason.ProfileDeleted))
+        val store = store(id)
+        val saved =
+            try {
+                store.modelLibrary(id)
+            } catch (_: GateNotOpen) {
+                return@withLock Outcome.Failed(Failure.StorageRefused())
+            }
+        store.setModelLibrary(
+            id,
+            ModelLibrary(
+                favorites =
+                    favorites.distinct().map { (provider, model) -> ModelRef(provider, model) },
+                recent = saved.recent,
+            ),
+        )
+    }
 
     override fun save(profile: String, recent: List<Pair<String, String>>) {
         val refs = recent.map { (provider, model) -> ModelRef(provider, model) }
@@ -70,6 +105,8 @@ class SavedRecentModels(
             writes.withLock {
                 if (!admits(profile)) return@launch
                 val id = ProfileId(profile)
+                if (stores.profiles.profile(id) == null) return@launch
+                val store = store(id)
                 val saved =
                     try {
                         modelStore(profile).modelLibrary(id)

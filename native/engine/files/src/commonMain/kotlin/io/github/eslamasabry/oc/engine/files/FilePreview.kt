@@ -195,6 +195,10 @@ public object FilePreview {
             return FileBody.Pdf(bytes)
         val text = strictText(bytes) ?: return FileBody.Binary(data.mime, bytes.size.toLong())
         val (shown, truncated) = cut(text)
+        val separator = DelimitedText.separator(data.name, data.mime)
+        if (line == null && separator != null && !truncated) {
+            return FileBody.Delimited(text, DelimitedText.parse(text, separator))
+        }
         return when {
             line != null -> FileBody.Code(shown, ext.ifEmpty { null }, truncated, line)
             ext in markdown -> FileBody.Markdown(shown, truncated)

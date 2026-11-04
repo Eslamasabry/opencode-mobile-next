@@ -14,28 +14,42 @@ import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.shell.nav.SystemMotion
 import kotlin.reflect.KClass
 
-/** Zero features is legal (the desktop gallery); the consumer declares the multibinding (plan 03 §13.5). */
+/**
+ * Zero features is legal (the desktop gallery); the consumer declares the multibinding (plan 03
+ * §13.5).
+ */
 @ContributesTo(AppScope::class)
 public interface ShellMultibindings {
     @Multibinds(allowEmpty = true) public val entryInstallers: Set<EntryInstaller>
+    @Multibinds(allowEmpty = true) public val statusSources: Set<ShellStatusSource>
+    @Multibinds(allowEmpty = true) public val overlays: Set<ShellOverlay>
 }
 
-/** What the App() root needs (plan 03 §15.4). Bootstrap, preferences and the status line join in slices 1–2. */
+/**
+ * What the App() root needs (plan 03 §15.4). Bootstrap, preferences and the status line join in
+ * slices 1–2.
+ */
 @SingleIn(AppScope::class)
 @Inject
 public class ShellDependencies(
     public val navigator: ShellNavigator,
     public val installers: Set<EntryInstaller>,
     public val motion: SystemMotion,
+    public val statusSources: Set<ShellStatusSource> = emptySet(),
+    public val overlays: Set<ShellOverlay> = emptySet(),
 )
 
-/** One factory for both apps (plan 03 §13.7): every @ViewModelKey / assisted factory contributed on the classpath. */
+/**
+ * One factory for both apps (plan 03 §13.7): every @ViewModelKey / assisted factory contributed on
+ * the classpath.
+ */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
 @Inject
 public class ShellViewModelFactory(
     override val viewModelProviders: Map<KClass<out ViewModel>, () -> ViewModel>,
-    override val assistedFactoryProviders: Map<KClass<out ViewModel>, () -> ViewModelAssistedFactory>,
+    override val assistedFactoryProviders:
+        Map<KClass<out ViewModel>, () -> ViewModelAssistedFactory>,
     override val manualAssistedFactoryProviders:
         Map<KClass<out ManualViewModelAssistedFactory>, () -> ManualViewModelAssistedFactory>,
 ) : MetroViewModelFactory()

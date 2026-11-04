@@ -92,6 +92,8 @@ public class ChatEntries(
     private val registry: ConnectionRegistry,
     private val navigator: AppNavigator,
     private val readers: Set<KitReplyReader>,
+    private val photoSources:
+        Set<io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerAttachSource>,
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ChatRoute> { route ->

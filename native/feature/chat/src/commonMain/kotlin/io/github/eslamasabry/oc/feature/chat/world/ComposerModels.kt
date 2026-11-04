@@ -15,6 +15,20 @@ public data class ComposerModel(
     val variants: List<String> = emptyList(),
     /** B3 (QA wave 1): the provider's display name, so equal model names can be told apart. */
     val providerName: String = "",
+    val enabled: Boolean = true,
+    val contextLimit: Int = 0,
+    val outputLimit: Int = 0,
+    val reasoning: Boolean = false,
+    val tools: Boolean = false,
+    val inputCost: Double? = null,
+    val outputCost: Double? = null,
+    val releasedAtMs: Long? = null,
+    val status: String = "",
+    val isNew: Boolean = false,
+    val defaultVariantId: String? = null,
+    val fast: Boolean = false,
+    val variantLabels: Map<String, String> = emptyMap(),
+    val variantEfforts: Map<String, String> = emptyMap(),
 )
 
 /**

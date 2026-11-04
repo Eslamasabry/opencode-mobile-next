@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.ui.kitchat.card
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -23,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
@@ -58,10 +62,15 @@ import io.github.eslamasabry.oc.ui.kitchat.form.KitFormValue
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.decodeToImageBitmap
 
-// Agent cards (plan 09 §13.7, Flutter `KitAgentCard` + agent_card_nodes/asks/form). Kit-local models only: the chat
-// feature maps the cards engine onto these and passes every word already written (no copy in the kit). Every agent
-// string is bidi-isolated by reading text (TextDirection.Content); links are inert until tapped and then go to the
+// Agent cards (plan 09 §13.7, Flutter `KitAgentCard` + agent_card_nodes/asks/form). Kit-local
+// models only: the chat
+// feature maps the cards engine onto these and passes every word already written (no copy in the
+// kit). Every agent
+// string is bidi-isolated by reading text (TextDirection.Content); links are inert until tapped and
+// then go to the
 // caller, who routes them through the app's external-link policy.
 
 /** Reading cap of a card (plan 09 §13.7): one shape at 720 dp. */
@@ -74,18 +83,35 @@ public sealed interface KitCardNode {
 
     public data class KeyValue(val rows: ImmutableList<Pair<String, String>>) : KitCardNode
 
-    public data class Checklist(val items: ImmutableList<Pair<String, Boolean>>, val checks: Boolean) : KitCardNode
+    public data class Checklist(
+        val items: ImmutableList<Pair<String, Boolean>>,
+        val checks: Boolean,
+    ) : KitCardNode
 
-    public data class Table(val columns: ImmutableList<String>, val rows: ImmutableList<ImmutableList<String>>, val label: String) : KitCardNode
+    public data class Table(
+        val columns: ImmutableList<String>,
+        val rows: ImmutableList<ImmutableList<String>>,
+        val label: String,
+    ) : KitCardNode
 
     /** A chart as labelled value bars; [summary] is its spoken description (B-CHAT-054). */
-    public data class Chart(val labels: ImmutableList<String>, val values: ImmutableList<Double>, val unit: String?, val summary: String) : KitCardNode
+    public data class Chart(
+        val labels: ImmutableList<String>,
+        val values: ImmutableList<Double>,
+        val unit: String?,
+        val summary: String,
+        val line: Boolean = false,
+    ) : KitCardNode
 
     public data class Code(val language: String?, val text: String) : KitCardNode
 
-    public data class DiffStat(val files: ImmutableList<Triple<String, Long, Long>>, val more: String?) : KitCardNode
+    public data class DiffStat(
+        val files: ImmutableList<Triple<String, Long, Long>>,
+        val more: String?,
+    ) : KitCardNode
 
-    public data class Progress(val label: String, val value: Double, val valueLabel: String) : KitCardNode
+    public data class Progress(val label: String, val value: Double, val valueLabel: String) :
+        KitCardNode
 
     public data class Callout(val tone: StatusTone, val text: String) : KitCardNode
 
@@ -112,10 +138,11 @@ public enum class KitAgentCardMode {
 }
 
 /**
- * The agent card (plan 09 §13.7): eyebrow ("Claude Code asks"), title and body, then the [ask] slot; a card with an
- * ask wears the needs-you tone, a report is neutral. A receipt collapses to [receiptLabel] with [onUndo] while the
- * answer is held, and with [expandLabel] opens the body read-only. The size change runs on the quick motion (150 ms;
- * none under reduced motion). Lives in the reply, never inside a folded work line.
+ * The agent card (plan 09 §13.7): eyebrow ("Claude Code asks"), title and body, then the [ask]
+ * slot; a card with an ask wears the needs-you tone, a report is neutral. A receipt collapses to
+ * [receiptLabel] with [onUndo] while the answer is held, and with [expandLabel] opens the body
+ * read-only. The size change runs on the quick motion (150 ms; none under reduced motion). Lives in
+ * the reply, never inside a folded work line.
  *
  * Text: eyebrow and buttons frame (≤ 1.3×); title and body reading.
  */
@@ -149,13 +176,24 @@ public fun KitAgentCard(
             .fillMaxWidth()
             .clip(shape)
             .background(colors.surface1)
-            .then(if (asks) Modifier.background(colors.attentionSurface).border(1.dp, colors.attentionLine, shape) else Modifier.border(1.dp, colors.hairline, shape))
+            .then(
+                if (asks)
+                    Modifier.background(colors.attentionSurface)
+                        .border(1.dp, colors.attentionLine, shape)
+                else Modifier.border(1.dp, colors.hairline, shape)
+            )
             .animateContentSize(KitMotion.specs.quick())
             .padding(Space.S4.dp)
             .testTag("kit-agent-card"),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
-        KitText(eyebrow, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+        KitText(
+            eyebrow,
+            role = TypeRole.Secondary,
+            tone = TextTone.Secondary,
+            kind = KitTextKind.Frame,
+            maxLines = 1,
+        )
         KitText(
             title,
             Modifier.semantics {
@@ -174,40 +212,69 @@ public fun KitAgentCard(
                 if (details != null && detailsLabel != null) {
                     var shown by remember { mutableStateOf(false) }
                     KitButton(detailsLabel, { shown = !shown }, role = KitButtonRole.Tertiary)
-                    if (shown) KitText(details, Modifier.testTag("kit-agent-card-details"), role = TypeRole.Secondary, tone = TextTone.Secondary)
+                    if (shown)
+                        KitText(
+                            details,
+                            Modifier.testTag("kit-agent-card-details"),
+                            role = TypeRole.Secondary,
+                            tone = TextTone.Secondary,
+                        )
                 }
             }
-            KitAgentCardMode.Receipt, KitAgentCardMode.PassedOver -> {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                    val line = if (mode == KitAgentCardMode.Receipt) receiptLabel else passedOverLabel
+            KitAgentCardMode.Receipt,
+            KitAgentCardMode.PassedOver -> {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                ) {
+                    val line =
+                        if (mode == KitAgentCardMode.Receipt) receiptLabel else passedOverLabel
                     if (line != null) {
                         KitText(
                             line,
-                            Modifier.weight(1f).testTag("kit-agent-card-receipt").semantics { liveRegion = LiveRegionMode.Polite },
+                            Modifier.weight(1f).testTag("kit-agent-card-receipt").semantics {
+                                liveRegion = LiveRegionMode.Polite
+                            },
                             role = TypeRole.Body,
-                            tone = if (mode == KitAgentCardMode.Receipt) TextTone.Primary else TextTone.Secondary,
+                            tone =
+                                if (mode == KitAgentCardMode.Receipt) TextTone.Primary
+                                else TextTone.Secondary,
                         )
                     }
                     if (onUndo != null && undoLabel != null) {
-                        KitButton(undoLabel, onUndo, role = KitButtonRole.Tertiary, modifier = Modifier.testTag("kit-agent-card-undo"))
+                        KitButton(
+                            undoLabel,
+                            onUndo,
+                            role = KitButtonRole.Tertiary,
+                            modifier = Modifier.testTag("kit-agent-card-undo"),
+                        )
                     } else if (expandLabel != null && body.isNotEmpty()) {
                         KitButton(expandLabel, { open = !open }, role = KitButtonRole.Tertiary)
                     }
                 }
                 if (open && onUndo == null) KitCardBody(body, onLink)
             }
-            KitAgentCardMode.Ask, KitAgentCardMode.Report -> {
+            KitAgentCardMode.Ask,
+            KitAgentCardMode.Report -> {
                 KitCardBody(body, onLink)
                 ask?.invoke()
             }
         }
-        if (notice != null) KitNotice(notice, Modifier.testTag("kit-agent-card-notice"), tone = noticeTone)
+        if (notice != null)
+            KitNotice(notice, Modifier.testTag("kit-agent-card-notice"), tone = noticeTone)
     }
 }
 
-/** The body: one exhaustive `when` over the node kinds (a new kind fails compilation until it has a part). */
+/**
+ * The body: one exhaustive `when` over the node kinds (a new kind fails compilation until it has a
+ * part).
+ */
 @Composable
-public fun KitCardBody(nodes: ImmutableList<KitCardNode>, onLink: (String) -> Unit, modifier: Modifier = Modifier) {
+public fun KitCardBody(
+    nodes: ImmutableList<KitCardNode>,
+    onLink: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     if (nodes.isEmpty()) return
     val colors = LocalKitColors.current
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
@@ -218,7 +285,12 @@ public fun KitCardBody(nodes: ImmutableList<KitCardNode>, onLink: (String) -> Un
                     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                         node.rows.forEach { (k, v) ->
                             Row(horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-                                KitText(k, Modifier.weight(0.4f), role = TypeRole.Secondary, tone = TextTone.Secondary)
+                                KitText(
+                                    k,
+                                    Modifier.weight(0.4f),
+                                    role = TypeRole.Secondary,
+                                    tone = TextTone.Secondary,
+                                )
                                 KitText(v, Modifier.weight(0.6f), role = TypeRole.Body)
                             }
                         }
@@ -228,14 +300,27 @@ public fun KitCardBody(nodes: ImmutableList<KitCardNode>, onLink: (String) -> Un
                         node.items.forEach { (text, done) ->
                             val mark = if (!node.checks) "•" else if (done) "☑" else "☐"
                             Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                                KitText(mark, role = TypeRole.Body, tone = TextTone.Secondary, kind = KitTextKind.Frame)
-                                KitText(text, role = TypeRole.Body, tone = if (done && node.checks) TextTone.Secondary else TextTone.Primary)
+                                KitText(
+                                    mark,
+                                    role = TypeRole.Body,
+                                    tone = TextTone.Secondary,
+                                    kind = KitTextKind.Frame,
+                                )
+                                KitText(
+                                    text,
+                                    role = TypeRole.Body,
+                                    tone =
+                                        if (done && node.checks) TextTone.Secondary
+                                        else TextTone.Primary,
+                                )
                             }
                         }
                     }
                 is KitCardNode.Table ->
                     Column(
-                        Modifier.horizontalScroll(rememberScrollState()).semantics { contentDescription = node.label },
+                        Modifier.horizontalScroll(rememberScrollState()).semantics {
+                            contentDescription = node.label
+                        },
                         verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
                     ) {
                         TableRow(node.columns, header = true)
@@ -243,41 +328,114 @@ public fun KitCardBody(nodes: ImmutableList<KitCardNode>, onLink: (String) -> Un
                     }
                 is KitCardNode.Chart -> {
                     val max = node.values.maxOrNull()?.takeIf { it > 0 } ?: 1.0
-                    Column(Modifier.semantics { contentDescription = node.summary }, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                        node.labels.forEachIndexed { i, label ->
-                            val v = node.values.getOrElse(i) { 0.0 }
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                                KitText(label, Modifier.weight(0.35f), role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 1)
-                                Box(Modifier.weight(0.65f)) {
-                                    Box(
-                                        Modifier.fillMaxWidth((v / max).coerceIn(0.0, 1.0).toFloat().coerceAtLeast(0.02f))
-                                            .height(Space.S3.dp)
-                                            .clip(KitShapeId.Pill.shape())
-                                            .background(colors.accent)
+                    Column(
+                        Modifier.semantics { contentDescription = node.summary },
+                        verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+                    ) {
+                        if (node.line && node.values.isNotEmpty()) {
+                            val values = node.values.map { if (it.isFinite()) it else 0.0 }
+                            val low = minOf(0.0, values.minOrNull() ?: 0.0)
+                            val high = maxOf(low + 1.0, values.maxOrNull() ?: 0.0)
+                            Canvas(Modifier.fillMaxWidth().height(120.dp)) {
+                                val points = values.mapIndexed { i, v ->
+                                    Offset(
+                                        if (values.size == 1) size.width / 2
+                                        else size.width * i / (values.size - 1),
+                                        size.height * (1 - (v - low) / (high - low)).toFloat(),
                                     )
                                 }
+                                points.zipWithNext().forEach { (a, b) ->
+                                    drawLine(colors.accent, a, b, strokeWidth = 2.dp.toPx())
+                                }
+                                points.forEach { drawCircle(colors.accent, 3.dp.toPx(), it) }
+                            }
+                        }
+                        node.labels.forEachIndexed { i, label ->
+                            val v = node.values.getOrElse(i) { 0.0 }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                            ) {
+                                KitText(
+                                    label,
+                                    Modifier.weight(0.35f),
+                                    role = TypeRole.Secondary,
+                                    tone = TextTone.Secondary,
+                                    maxLines = 1,
+                                )
+                                if (node.line)
+                                    KitText(
+                                        "$v${node.unit.orEmpty()}",
+                                        Modifier.weight(0.65f),
+                                        role = TypeRole.Secondary,
+                                    )
+                                else
+                                    Box(Modifier.weight(0.65f)) {
+                                        Box(
+                                            Modifier.fillMaxWidth(
+                                                    (v / max)
+                                                        .coerceIn(0.0, 1.0)
+                                                        .toFloat()
+                                                        .coerceAtLeast(0.02f)
+                                                )
+                                                .height(Space.S3.dp)
+                                                .clip(KitShapeId.Pill.shape())
+                                                .background(colors.accent)
+                                        )
+                                    }
                             }
                         }
                     }
                 }
                 is KitCardNode.Code ->
-                    KitCodeBlock(node.text, KitCodeKind.Code, language = CodeLanguage.of(node.language))
+                    KitCodeBlock(
+                        node.text,
+                        KitCodeKind.Code,
+                        language = CodeLanguage.of(node.language),
+                    )
                 is KitCardNode.DiffStat ->
                     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                         node.files.forEach { (path, added, removed) ->
                             Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                                KitText(path, Modifier.weight(1f), role = TypeRole.Secondary, maxLines = 1)
-                                KitText("+$added", role = TypeRole.Secondary, tone = TextTone.Success, kind = KitTextKind.Frame)
-                                KitText("−$removed", role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+                                KitText(
+                                    path,
+                                    Modifier.weight(1f),
+                                    role = TypeRole.Secondary,
+                                    maxLines = 1,
+                                )
+                                KitText(
+                                    "+$added",
+                                    role = TypeRole.Secondary,
+                                    tone = TextTone.Success,
+                                    kind = KitTextKind.Frame,
+                                )
+                                KitText(
+                                    "−$removed",
+                                    role = TypeRole.Secondary,
+                                    tone = TextTone.Secondary,
+                                    kind = KitTextKind.Frame,
+                                )
                             }
                         }
-                        node.more?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame) }
+                        node.more?.let {
+                            KitText(
+                                it,
+                                role = TypeRole.Secondary,
+                                tone = TextTone.Secondary,
+                                kind = KitTextKind.Frame,
+                            )
+                        }
                     }
                 is KitCardNode.Progress ->
                     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                         Row {
                             KitText(node.label, Modifier.weight(1f), role = TypeRole.Secondary)
-                            KitText(node.valueLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+                            KitText(
+                                node.valueLabel,
+                                role = TypeRole.Secondary,
+                                tone = TextTone.Secondary,
+                                kind = KitTextKind.Frame,
+                            )
                         }
                         Box(Modifier.fillMaxWidth().height(Space.S1.dp).clip(KitShapeId.Pill.shape()).background(colors.surface2)) {
                             Box(Modifier.fillMaxWidth(node.value.toFloat().coerceIn(0f, 1f)).height(Space.S1.dp).background(colors.accent))
@@ -311,8 +469,9 @@ private fun TableRow(cells: List<String>, header: Boolean) {
 }
 
 /**
- * A choice ask (Flutter `agent_card_asks.dart`): every option a visible row. Single choice: one tap answers (the Undo
- * window covers a slip). Several: check rows and [sendLabel]. Controls wait while [blockedReason] says why.
+ * A choice ask (Flutter `agent_card_asks.dart`): every option a visible row. Single choice: one tap
+ * answers (the Undo window covers a slip). Several: check rows and [sendLabel]. Controls wait while
+ * [blockedReason] says why.
  */
 @Composable
 public fun KitCardChoice(
@@ -353,7 +512,10 @@ public fun KitCardChoice(
     }
 }
 
-/** A confirm ask: the cancel answer and the confirm answer side by side; danger tones the confirm answer. */
+/**
+ * A confirm ask: the cancel answer and the confirm answer side by side; danger tones the confirm
+ * answer.
+ */
 @Composable
 public fun KitCardConfirm(
     confirmLabel: String,
@@ -365,8 +527,22 @@ public fun KitCardConfirm(
 ) {
     val enabled = KitEnabled.of(blockedReason == null, blockedReason)
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-        KitButton(cancelLabel, { onAnswer(false) }, Modifier.weight(1f), role = KitButtonRole.Secondary, enabled = enabled, haptic = KitHaptic.Send)
-        KitButton(confirmLabel, { onAnswer(true) }, Modifier.weight(1f), destructive = danger, enabled = enabled, haptic = KitHaptic.Send)
+        KitButton(
+            cancelLabel,
+            { onAnswer(false) },
+            Modifier.weight(1f),
+            role = KitButtonRole.Secondary,
+            enabled = enabled,
+            haptic = KitHaptic.Send,
+        )
+        KitButton(
+            confirmLabel,
+            { onAnswer(true) },
+            Modifier.weight(1f),
+            destructive = danger,
+            enabled = enabled,
+            haptic = KitHaptic.Send,
+        )
     }
 }
 
@@ -386,13 +562,35 @@ public fun KitCardForm(
     val enabled = KitEnabled.of(blockedReason == null, blockedReason)
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
         KitForm(fields, values, onChange, enabled = enabled)
-        KitText(note, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+        KitText(
+            note,
+            role = TypeRole.Secondary,
+            tone = TextTone.Secondary,
+            kind = KitTextKind.Frame,
+        )
         val reason = blockedReason ?: sendBlockedReason
-        KitButton(sendLabel, onSend, enabled = KitEnabled.of(reason == null, reason), haptic = KitHaptic.Send, modifier = Modifier.testTag("kit-agent-card-send"))
+        KitButton(
+            sendLabel,
+            onSend,
+            enabled = KitEnabled.of(reason == null, reason),
+            haptic = KitHaptic.Send,
+            modifier = Modifier.testTag("kit-agent-card-send"),
+        )
     }
 }
 
-/** A photo ask: the purpose, the visible ways to add a photo, and Send; or one plain line when photos cannot go. */
+/** A selected, local photo, held by its card until the person sends or removes it. */
+public data class KitCardPhotoItem(
+    val id: String,
+    val name: String,
+    val removeLabel: String,
+    val bytes: ByteArray? = null,
+)
+
+/**
+ * A photo ask: the purpose, the visible ways to add a photo, and Send; or one plain line when
+ * photos cannot go.
+ */
 @Composable
 public fun KitCardPhoto(
     purpose: String,
@@ -405,29 +603,73 @@ public fun KitCardPhoto(
     onSend: (() -> Unit)? = null,
     sendBlockedReason: String? = null,
     blockedReason: String? = null,
+    items: ImmutableList<KitCardPhotoItem> = persistentListOf(),
+    onRemove: ((String) -> Unit)? = null,
+    takeLabel: String? = null,
+    onTake: (() -> Unit)? = null,
 ) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         KitText(purpose, role = TypeRole.Body)
         if (unavailable != null) {
-            KitText(unavailable, Modifier.testTag("kit-agent-card-photo-unavailable"), role = TypeRole.Secondary, tone = TextTone.Secondary)
+            KitText(
+                unavailable,
+                Modifier.testTag("kit-agent-card-photo-unavailable"),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
             return@Column
         }
-        KitText(countLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
+        KitText(
+            countLabel,
+            role = TypeRole.Secondary,
+            tone = TextTone.Secondary,
+            kind = KitTextKind.Frame,
+        )
         val enabled = KitEnabled.of(blockedReason == null, blockedReason)
-        if (chooseLabel != null && onChoose != null) KitButton(chooseLabel, onChoose, role = KitButtonRole.Secondary, enabled = enabled)
+        items.forEach { item ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            ) {
+                CardPhotoPreview(item)
+                KitText(item.name, Modifier.weight(1f), role = TypeRole.Secondary)
+                if (onRemove != null)
+                    KitButton(
+                        item.removeLabel,
+                        { onRemove(item.id) },
+                        role = KitButtonRole.Tertiary,
+                        enabled = enabled,
+                    )
+            }
+        }
+        if (takeLabel != null && onTake != null)
+            KitButton(takeLabel, onTake, role = KitButtonRole.Secondary, enabled = enabled)
+        if (chooseLabel != null && onChoose != null)
+            KitButton(chooseLabel, onChoose, role = KitButtonRole.Secondary, enabled = enabled)
         if (sendLabel != null && onSend != null) {
             val reason = blockedReason ?: sendBlockedReason
-            KitButton(sendLabel, onSend, enabled = KitEnabled.of(reason == null, reason), haptic = KitHaptic.Send)
+            KitButton(
+                sendLabel,
+                onSend,
+                enabled = KitEnabled.of(reason == null, reason),
+                haptic = KitHaptic.Send,
+            )
         }
     }
 }
 
 /**
- * The list slot (plan 09 §13.7, 07 C40): a waiting card under its Conversations row, one line and a way in. The row
- * keeps the list's one primary; this is secondary.
+ * The list slot (plan 09 §13.7, 07 C40): a waiting card under its Conversations row, one line and a
+ * way in. The row keeps the list's one primary; this is secondary.
  */
 @Composable
-public fun KitCardListSlot(eyebrow: String, title: String, openLabel: String, onOpen: () -> Unit, modifier: Modifier = Modifier) {
+public fun KitCardListSlot(
+    eyebrow: String,
+    title: String,
+    openLabel: String,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalKitColors.current
     val shape = KitShapeId.Card.shape()
     Row(
@@ -442,9 +684,30 @@ public fun KitCardListSlot(eyebrow: String, title: String, openLabel: String, on
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         Column(Modifier.weight(1f)) {
-            KitText(eyebrow, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+            KitText(
+                eyebrow,
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+                kind = KitTextKind.Frame,
+                maxLines = 1,
+            )
             KitText(title, role = TypeRole.Body, maxLines = 2)
         }
         KitButton(openLabel, onOpen, role = KitButtonRole.Secondary)
     }
+}
+
+@OptIn(ExperimentalResourceApi::class)
+@Composable
+private fun CardPhotoPreview(item: KitCardPhotoItem) {
+    val bitmap =
+        remember(item.bytes) {
+            try {
+                item.bytes?.decodeToImageBitmap()
+            } catch (_: RuntimeException) {
+                null
+            }
+        }
+    if (bitmap != null)
+        Image(BitmapPainter(bitmap), item.name, Modifier.height(64.dp).widthIn(max = 96.dp))
 }

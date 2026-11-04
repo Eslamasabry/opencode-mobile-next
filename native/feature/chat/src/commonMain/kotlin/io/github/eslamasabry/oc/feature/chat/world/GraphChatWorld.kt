@@ -1118,7 +1118,7 @@ internal class GraphChatWorld(
         val choices = ArrayList<ComposerModel>()
         val seen = HashSet<Pair<String, String>>()
         for (m in snapshot.models) {
-            if (!m.enabled || m.providerId !in enabledProviders) continue
+            if (m.providerId !in enabledProviders) continue
             if (!seen.add(m.providerId to m.id)) continue
             // Safe display metadata only; raw provider config never leaves the catalog.
             choices +=
@@ -1129,6 +1129,56 @@ internal class GraphChatWorld(
                     m.attachments,
                     variants = m.variants.filterNot { it.disabled }.map { it.id },
                     providerName = providerNames[m.providerId] ?: m.providerId,
+                    enabled = m.enabled,
+                    contextLimit = m.contextLimit,
+                    outputLimit = m.outputLimit,
+                    reasoning = m.reasoning,
+                    tools = m.tools,
+                    inputCost = m.cost?.inputPerMillion,
+                    outputCost = m.cost?.outputPerMillion,
+                    releasedAtMs = m.releasedAtMs,
+                    status = m.status,
+                    fast =
+                        m.id.endsWith("-fast", true) ||
+                            m.variants.any { v ->
+                                !v.disabled &&
+                                    (v.id.equals("fast", true) ||
+                                        v.id.contains("turbo", true) ||
+                                        (v.options["reasoningEffort"]
+                                                as? kotlinx.serialization.json.JsonPrimitive)
+                                            ?.content
+                                            ?.equals("low", true) == true)
+                            },
+                    variantLabels =
+                        m.variants
+                            .filterNot { it.disabled }
+                            .mapNotNull { v ->
+                                (v.options["label"] as? kotlinx.serialization.json.JsonPrimitive)
+                                    ?.takeIf { it.isString && it.content.isNotBlank() }
+                                    ?.content
+                                    ?.let { v.id to it }
+                            }
+                            .toMap(),
+                    variantEfforts =
+                        m.variants
+                            .filterNot { it.disabled }
+                            .mapNotNull { v ->
+                                (v.options["reasoningEffort"]
+                                        as? kotlinx.serialization.json.JsonPrimitive)
+                                    ?.takeIf { it.isString }
+                                    ?.content
+                                    ?.let { v.id to it }
+                            }
+                            .toMap(),
+                    defaultVariantId =
+                        m.variants
+                            .firstOrNull { variant ->
+                                !variant.disabled &&
+                                    (variant.options["isDefault"]
+                                            as? kotlinx.serialization.json.JsonPrimitive)
+                                        ?.let { !it.isString && it.content == "true" } == true
+                            }
+                            ?.id,
                 )
         }
         recentModels.prune(
@@ -1139,7 +1189,11 @@ internal class GraphChatWorld(
         catalogDefaults = (defaults as? Outcome.Ok)?.value
         val agents =
             snapshot.agents
-                .filter { !it.hidden && it.mode != "subagent" }
+                .filter {
+                    a.gateway.capabilities.value.agentSelection &&
+                        !it.hidden &&
+                        it.mode != "subagent"
+                }
                 .map { ComposerAgent(it.id, it.description) }
         subagentNames = snapshot.agents.filter { !it.hidden && it.mode == "subagent" }.map { it.id }
         // What the session holds; an absent model means the server default. A failed read (of the
@@ -1346,6 +1400,7 @@ internal class GraphChatWorld(
                         it.providerId == choice.providerId && it.modelId == choice.modelId
                     } ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
             }
+        if (!target.enabled) return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
         // A thinking level the model does not offer is refused (B-STATE-112); "default" is none.
         val level = variant.trim().let { if (it == "default") "" else it }
         if (level.isNotEmpty() && level !in target.variants)

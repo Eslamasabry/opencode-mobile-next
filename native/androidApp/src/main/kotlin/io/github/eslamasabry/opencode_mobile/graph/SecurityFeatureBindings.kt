@@ -122,5 +122,15 @@ object SecurityFeatureBindings {
             // and session pins are already registered above by AndroidProfileMonitoring.registerKeys
             // and registerStateKeys).
             io.github.eslamasabry.oc.engine.settings.consent.ConsentKeys.shapes.forEach { register(it) }
+            // 44-port-ui: model favorites and recent choices are per profile.
+            register(
+                KeyShape(
+                    "oc.modelLibrary.",
+                    KeyScope.Profile,
+                    PrefType.Str,
+                    ":engine:agents",
+                    "model favorites and recent choices",
+                )
+            )
         }
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="native44AllModels">All models (%1$s)</string>
+    <plurals name="native44MoreModels">
+        <item quantity="one">Show %1$s more model</item>
+        <item quantity="other">Show %1$s more models</item>
+    </plurals>
+    <string name="native44Context">%1$s context</string>
+    <string name="native44Output">%1$s output limit</string>
+    <string name="native44Price">Input $%1$s · output $%2$s per million tokens</string>
+    <string name="native44ModelShortcuts">Switch model</string>
+    <string name="native44CopyFailed">Could not copy the model ID. Try again.</string>
+</resources>

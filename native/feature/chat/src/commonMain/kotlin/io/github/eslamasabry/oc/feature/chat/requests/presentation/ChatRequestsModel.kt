@@ -48,7 +48,7 @@ public class ChatRequestsModel(
     private val capabilities: StateFlow<ServerCapabilities>,
     private val place: StateFlow<RequestPlace>,
     private val scope: CoroutineScope,
-) : ChatRequestActions {
+) : ChatRequestActions, QuestionSheetActions {
     private data class Local(
         val confirm: RequestId? = null,
         val otherOpen: RequestId? = null,
@@ -184,6 +184,52 @@ public class ChatRequestsModel(
         }
     }
 
+    private fun sheetRequest(id: RequestId): PendingRequest.Question? =
+        (engine.pending.value.firstOrNull { it.id == id && it.sessionId == session }
+                as? PendingRequest.Question)
+            ?.takeIf {
+                current().questionSheet?.question?.id == id && it.phase == AnswerPhase.Waiting
+            }
+
+    override fun chooseSheet(id: RequestId, prompt: Int, label: String) {
+        val question = sheetRequest(id)?.question ?: return
+        val spec = question.prompts.getOrNull(prompt) ?: return
+        if (spec.choices.none { it.label == label }) return
+        local.update { mine ->
+            val drafts =
+                (mine.sheetDrafts[id] ?: QuestionSheet.emptyDraft(question)).toMutableList()
+            sized(drafts, question.prompts.size)
+            drafts[prompt] = QuestionSheet.choose(spec, drafts[prompt], label)
+            mine.copy(sheetDrafts = mine.sheetDrafts.put(id, drafts.toImmutableList()))
+        }
+    }
+
+    override fun writeSheet(id: RequestId, prompt: Int, text: String) {
+        val question = sheetRequest(id)?.question ?: return
+        val spec = question.prompts.getOrNull(prompt)?.takeIf { it.custom } ?: return
+        local.update { mine ->
+            val drafts =
+                (mine.sheetDrafts[id] ?: QuestionSheet.emptyDraft(question)).toMutableList()
+            sized(drafts, question.prompts.size)
+            drafts[prompt] = QuestionSheet.write(spec, drafts[prompt], text)
+            mine.copy(sheetDrafts = mine.sheetDrafts.put(id, drafts.toImmutableList()))
+        }
+    }
+
+    override fun sendSheet(id: RequestId) {
+        val question = sheetRequest(id)?.question ?: return
+        val drafts = local.value.sheetDrafts[id] ?: QuestionSheet.emptyDraft(question)
+        val answers = QuestionSheet.answers(question, drafts) ?: return
+        // The engine's own check is stricter (no repeated values): the sheet stays open, with the
+        // person's words, unless the answer was taken.
+        if (engine.answer(id, RequestAnswer.Question(answers)) is Outcome.Ok)
+            local.update { it.copy(sheet = null) }
+    }
+
+    override fun closeSheet() {
+        local.update { it.copy(sheet = null) }
+    }
+
     override fun undo(id: RequestId) {
         if (current().card?.id == id) engine.undo(id)
     }
@@ -306,4 +352,10 @@ public class ChatRequestsModel(
         }
 
     private fun single(answer: String) = persistentListOf(persistentListOf(answer))
+}
+
+/** Drafts kept from before a refetch match the question's prompts again (one per prompt). */
+private fun sized(drafts: MutableList<PromptDraft>, size: Int) {
+    while (drafts.size > size) drafts.removeAt(drafts.lastIndex)
+    while (drafts.size < size) drafts.add(PromptDraft())
 }
