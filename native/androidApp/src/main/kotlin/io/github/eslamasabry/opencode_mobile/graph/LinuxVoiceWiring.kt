@@ -33,6 +33,9 @@ import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerPort
 import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerStarter
 import io.github.eslamasabry.oc.engine.runtime.server.ProbeAnswer
 import io.github.eslamasabry.oc.engine.runtime.server.StartTarget
+import io.github.eslamasabry.oc.engine.runtime.history.HistorySwitchAdmission
+import io.github.eslamasabry.oc.engine.runtime.history.HistorySwitchCheck
+import io.github.eslamasabry.oc.engine.runtime.history.LinuxRunResult
 import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.host.ShellRun
@@ -357,7 +360,12 @@ class BuiltinRuntime internal constructor(
 
     private val port =
         object : PhoneServerPort {
-            override suspend fun checkHistoryMove(): Outcome<Unit> = Outcome.Ok(Unit)
+            // BUILD-RUNTIME-B (B-LINUX-108, 142): the real read-only admission, not a blanket yes.
+            override suspend fun checkHistoryMove(): Outcome<Unit> =
+                when (HistorySwitchCheck({ script, timeout -> blocking { linux.run(script, timeout.inWholeSeconds).let { LinuxRunResult(it.exitCode, it.output) } } }).admission()) {
+                    HistorySwitchAdmission.Allowed -> Outcome.Ok(Unit)
+                    HistorySwitchAdmission.SeparateHistory, HistorySwitchAdmission.Unavailable -> Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                }
 
             override suspend fun writePassword(password: String): Outcome<Unit> =
                 when (val ran = blocking { linux.run(PhoneServerScripts.writePassword(password), 60) }) {
