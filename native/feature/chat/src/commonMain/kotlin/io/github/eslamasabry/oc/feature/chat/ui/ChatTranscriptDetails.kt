@@ -71,6 +71,8 @@ internal fun TranscriptDetail(
     val agent = remember(part) { BackgroundAgentResult.fromPart(part) }
     if (agent != null) {
         Column(Modifier.testTag("background-agent-result")) {
+            // Flutter: a server-authored result is labelled apart from the parent's own reply.
+            KitQuietLine(stringResource(Res.string.chatUiBackgroundResult))
             KitText(agent.description.ifBlank { agent.agent })
             KitQuietLine(
                 listOf(
@@ -174,7 +176,10 @@ internal fun TranscriptDetail(
                             tokens
                                 ?.takeIf { it > 0 }
                                 ?.let {
-                                    stringResource(Res.string.chatUiCompactedFrom, it.toString())
+                                    stringResource(
+                                        Res.string.chatUiCompactedFrom,
+                                        io.github.eslamasabry.oc.core.common.text.Numbers.format(it),
+                                    )
                                 },
                         )
                         .joinToString(" ")

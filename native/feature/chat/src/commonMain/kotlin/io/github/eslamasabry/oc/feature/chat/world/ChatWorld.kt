@@ -184,12 +184,13 @@ public interface ChatWorld {
     /** Reads the conversation again (Try again on a failed load; after a delete). */
     public suspend fun reload(): Outcome<Unit>
 
-    /** A new conversation that starts from [from]; its id. */
+    /** Whether [id] names a conversation whose parent is this one (server-checked). */
     public suspend fun isChildSession(id: String): Outcome<Boolean> = Outcome.Ok(false)
 
     public suspend fun compact(): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionCompact")))
 
+    /** A new conversation that starts from [from]; its id. */
     public suspend fun fork(from: MessageId): Outcome<SessionId>
 
     /**

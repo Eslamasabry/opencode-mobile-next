@@ -9,6 +9,7 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.transcript.ledger.latest
@@ -74,8 +75,14 @@ public class ChatViewModel(
      * profile).
      */
     public fun openSession(sessionId: String) {
-        if (sessionId.isNotBlank())
-            nav.openChat(ConversationRef(world.ref.profileId, SessionId(sessionId)))
+        if (sessionId.isBlank()) return
+        // The id is server-authored text: open it only when the server says it is this
+        // conversation's own child (Flutter `isKnownChild` / `requireChild: true`).
+        viewModelScope.launch {
+            val child = world.isChildSession(sessionId)
+            if (child is Outcome.Ok && child.value)
+                nav.openChat(ConversationRef(world.ref.profileId, SessionId(sessionId)))
+        }
     }
 
     override fun onCleared() {
