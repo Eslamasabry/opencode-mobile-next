@@ -5,8 +5,6 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.work.CoroutineWorker
@@ -74,8 +72,10 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /*
  * P12-SCHEDULES Android wiring: the engine's ports over the preview stores and connection registry, the WorkManager
@@ -94,6 +94,7 @@ interface SchedulesGraphAccess {
     val schedules: ScheduleEngine
     val schedulesNavigator: AppNavigator
     val schedulesClock: Clock
+    val scheduleOpens: ScheduleOpens
     val scheduleAlarms: WorkScheduleAlarms
 }
 
@@ -491,44 +492,113 @@ class ScheduledPromptWorker(context: Context, params: WorkerParameters) :
 }
 
 /**
- * The notification tap (B-NAV-054): the run's conversation, else the schedule's history, else
- * nothing.
+ * Notification trampoline: only carries identifiers to the main activity's migration/shell fence.
  */
 class ScheduleOpenActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val profile = intent.getStringExtra(ScheduleNotifications.EXTRA_PROFILE).orEmpty()
-        val schedule = intent.getStringExtra(ScheduleNotifications.EXTRA_SCHEDULE).orEmpty()
-        val session = intent.getStringExtra(ScheduleNotifications.EXTRA_SESSION)
-        val graph = appGraph
-        val access = graph as SchedulesGraphAccess
-        val main = Handler(Looper.getMainLooper())
-        graph.appScope.launch {
-            val target = access.schedules.resolveOpen(profile, schedule, session)
-            main.post {
-                when (target) {
-                    is ScheduledOpen.Conversation ->
-                        access.schedulesNavigator.openChat(
+        val next =
+            Intent(this, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .putExtra(
+                    ScheduleOpens.TICKET,
+                    ScheduleOpens.park(
+                        intent.getStringExtra(ScheduleNotifications.EXTRA_PROFILE).orEmpty(),
+                        intent.getStringExtra(ScheduleNotifications.EXTRA_SCHEDULE).orEmpty(),
+                        intent.getStringExtra(ScheduleNotifications.EXTRA_SESSION),
+                    ),
+                )
+        startActivity(next)
+        finish()
+    }
+}
+
+/**
+ * Startup settles once, for at most 30 seconds. Every fallback revalidates the private schedule
+ * target.
+ */
+@SingleIn(AppScope::class)
+@Inject
+class ScheduleOpens(
+    private val schedules: ScheduleEngine,
+    private val runtime: PreviewRuntime,
+    private val stores: PreviewStores,
+    private val registry: ConnectionRegistry,
+    private val navigator: AppNavigator,
+    private val appScope: AppCoroutineScope,
+    private val dispatchers: AppDispatchers,
+) {
+    private var generation = 0L
+
+    fun consume(intent: Intent): Boolean {
+        if (!intent.hasExtra(TICKET)) return false
+        val receipt = intent.getStringExtra(TICKET)
+        intent.removeExtra(TICKET)
+        val (profile, schedule, session) = take(receipt) ?: return true
+        val ticket = ++generation
+        appScope.launch(dispatchers.main) {
+            if (stores.warm() !is Outcome.Ok) return@launch
+            val target = schedules.resolveOpen(profile, schedule, session) ?: return@launch
+            if (ticket != generation) return@launch
+            if (target is ScheduledOpen.Conversation) {
+                val opened =
+                    withTimeoutOrNull(30_000) {
+                        runtime.busy.first { !it }
+                        if (ticket != generation) return@withTimeoutOrNull false
+                        if (runtime.connect(ProfileId(target.profileId)) !is Outcome.Ok)
+                            return@withTimeoutOrNull false
+                        val ref =
                             ConversationRef(
                                 ProfileId(target.profileId),
                                 SessionId(target.sessionId),
                             )
+                        val graph = registry.graphFor(ref) ?: return@withTimeoutOrNull false
+                        if (graph.session.server.session(ref.sessionId) !is Outcome.Ok)
+                            return@withTimeoutOrNull false
+                        if (
+                            ticket != generation ||
+                                registry.graphFor(ref) !== graph ||
+                                schedules.resolveOpen(profile, schedule, session) != target
                         )
-                    is ScheduledOpen.History ->
-                        access.schedulesNavigator.open(
-                            SchedulesRoute.List(
-                                ProfileId(target.profileId),
-                                highlight = target.scheduleId,
-                            )
-                        )
-                    null -> Unit // a deleted schedule or a changed server opens nothing but the app
-                }
+                            return@withTimeoutOrNull false
+                        navigator.openChat(ref)
+                        true
+                    } ?: false
+                if (opened) return@launch
             }
+            // Deleted/changed routing never opens another profile or an obsolete schedule's
+            // history.
+            if (ticket != generation || schedules.resolveOpen(profile, schedule, session) != target)
+                return@launch
+            val highlight =
+                when (target) {
+                    is ScheduledOpen.Conversation -> target.scheduleId
+                    is ScheduledOpen.History -> target.scheduleId
+                }
+            navigator.open(SchedulesRoute.List(ProfileId(target.profileId), highlight = highlight))
         }
-        startActivity(
-            Intent(this, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        )
-        finish()
+        return true
+    }
+
+    companion object {
+        const val TICKET = "oc.native.schedule.ticket"
+        private var parked: Pair<String, Triple<String, String, String?>>? = null
+
+        /**
+         * Only the non-exported notification trampoline may mint this one-shot in-process receipt.
+         */
+        @Synchronized
+        fun park(profile: String, schedule: String, session: String?): String =
+            java.util.UUID.randomUUID().toString().also {
+                parked = it to Triple(profile, schedule, session)
+            }
+
+        @Synchronized
+        private fun take(ticket: String?): Triple<String, String, String?>? {
+            val pending = parked ?: return null
+            if (pending.first != ticket) return null
+            parked = null
+            return pending.second
+        }
     }
 }

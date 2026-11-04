@@ -81,7 +81,8 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
     override fun lastTurnFailed(session: SessionId): Boolean =
         g.live[session.raw]?.failedBeforeLoad == true || g.lastTurnFailed(session)
 
-    override fun backgroundTasksRunning(session: SessionId): Boolean = g.backgroundTasksRunning(session)
+    override fun backgroundTasksRunning(session: SessionId): Boolean =
+        g.backgroundTasksRunning(session)
 
     override fun hasPendingPermission(session: SessionId): Boolean =
         g.requests.hasPermission(session.raw)
@@ -95,7 +96,8 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
      */
     override suspend fun archiveOlderCopy(session: SessionId): Boolean = g.onLane {
         val id = session.raw
-        if (g.isClosed || id in g.drafts || id in g.archivedCopies) return@onLane false
+        if (g.isClosed || id in g.drafts || g.isSubagent(id) || id in g.archivedCopies)
+            return@onLane false
         val agent = g.agents[id] ?: return@onLane false
         if (agent.str("status") !in setOf("idle", "closed", "error")) return@onLane false
         if (g.statuses[id] == SessionStatus.Busy || id in g.turnActive) return@onLane false

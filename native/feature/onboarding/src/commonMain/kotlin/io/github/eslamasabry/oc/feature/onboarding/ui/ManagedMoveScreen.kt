@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.ui.words.res.openCode2MoveProgress
 import io.github.eslamasabry.oc.ui.words.res.openCode2MoveRetrying
 import io.github.eslamasabry.oc.ui.words.res.openCode2UpgradeTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardFailedTitle
+import io.github.eslamasabry.oc.ui.words.res.serverSwitcherTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -71,6 +72,11 @@ public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions) 
                     primary =
                         if (failed.reason == ManagedMoveReason.SeparateHistory) null
                         else KitAction(stringResource(Res.string.commonRetry), actions::retry),
+                    secondary =
+                        KitAction(
+                            stringResource(Res.string.serverSwitcherTitle),
+                            actions::changeServer,
+                        ),
                 )
                 KitDetailsFold(
                     label = stringResource(Res.string.kitDetails),

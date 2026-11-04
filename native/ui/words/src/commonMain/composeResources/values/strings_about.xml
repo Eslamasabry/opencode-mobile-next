@@ -225,4 +225,5 @@
     <string name="whatsNewShowMic">Hold this button and talk, then let go.</string>
     <string name="appUpdateNotNow">Not now</string>
     <string name="aboutBrowserSummary">A browser client for the OpenCode server you choose. Voice, background monitoring and servers on this device are not available here.</string>
+    <string name="voiceNoticeCopyFailed">Could not copy the license. Try again.</string>
 </resources>

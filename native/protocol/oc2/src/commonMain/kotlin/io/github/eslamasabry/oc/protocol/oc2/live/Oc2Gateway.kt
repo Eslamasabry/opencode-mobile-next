@@ -27,6 +27,7 @@ import kotlin.io.encoding.Base64
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlinx.collections.immutable.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.*
@@ -206,8 +207,33 @@ internal class Oc2Gateway(
 
     override suspend fun removeTerminal(id: String): Outcome<Unit> = terminals().removeTerminal(id)
 
-    override suspend fun connectTerminal(id: String, cursor: Long?): Outcome<TerminalChannel> =
-        terminals().connectTerminal(id, cursor)
+    override suspend fun connectTerminal(id: String, cursor: Long?): Outcome<TerminalChannel> {
+        val opened = terminals().connectTerminal(id, cursor)
+        if (opened !is Outcome.Ok) return opened
+        val channel = opened.value
+        // A screen that closes its channel releases the gateway's hold on it too, so reconnects
+        // do not accumulate closed sockets; closing the gateway closes every open channel.
+        val tracked =
+            object : TerminalChannel by channel {
+                override suspend fun close() {
+                    terminalLane.withLock { terminalChannels.remove(this) }
+                    channel.close()
+                }
+            }
+        val admitted =
+            terminalLane.withLock {
+                if (closed) false
+                else {
+                    terminalChannels.add(tracked)
+                    true
+                }
+            }
+        if (!admitted) {
+            channel.close()
+            return Failure.Refused(RefusalReason.StaleScope).failed()
+        }
+        return tracked.ok()
+    }
 
     internal fun terminalRedact(value: String): String = redactor.redact(value)
 
@@ -325,6 +351,8 @@ internal class Oc2Gateway(
     private var stream: Job? = null
     @kotlin.concurrent.Volatile private var closed: Boolean = false
     internal val terminalClosed: Boolean get() = closed
+    private val terminalChannels = mutableSetOf<TerminalChannel>()
+    private val terminalLane = Mutex()
 
     init {
         credentials.secret?.let(redactor::registerSecret)
@@ -2018,7 +2046,13 @@ internal class Oc2Gateway(
 
     override suspend fun close() {
         closed = true
+        val channels = terminalLane.withLock {
+            terminalScope = null
+            terminalDispatchers = null
+            terminalChannels.toList().also { terminalChannels.clear() }
+        }
         try {
+            channels.forEach { channel -> channel.close() }
             stream?.cancelAndJoin()
         } finally {
             stream = null

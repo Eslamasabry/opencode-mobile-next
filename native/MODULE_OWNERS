@@ -115,3 +115,6 @@
 :feature:handoff	F	27-build-AGENT-2	parity-p12
 :feature:desktopupdates	F	50-blocked-5-NAV-STATE-BUILD	parity-p12
 :feature:capabilities	F	50-blocked-5-NAV-STATE-BUILD	parity-p12
+
+:feature:manage-space	F	47-port-rest-2	parity-p12
+:feature:widget-panels	F	47-port-rest-2	parity-p12

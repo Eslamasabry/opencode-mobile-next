@@ -277,4 +277,5 @@
     <string name="whatsNewShowMic">اضغط مطولًا على هذا الزر وتحدث ثم ارفع إصبعك.</string>
     <string name="appUpdateNotNow">ليس الآن</string>
     <string name="aboutBrowserSummary">عميل متصفح لخادم OpenCode الذي تختاره. الصوت والمراقبة في الخلفية والخوادم على هذا الجهاز غير متاحة هنا.</string>
+    <string name="voiceNoticeCopyFailed">تعذّر نسخ الترخيص. حاول مرة أخرى.</string>
 </resources>

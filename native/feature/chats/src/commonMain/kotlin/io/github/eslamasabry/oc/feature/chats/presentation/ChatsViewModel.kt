@@ -107,6 +107,8 @@ public class ChatsViewModel(
 
     override fun openConversation(ref: ConversationRef) {
         if (state.value.home.opening != null) return
+        // A row whose conversation cannot be reopened yet (its workspace is still connecting) stays shut.
+        if (feed.snapshot.value.items.none { it.ref == ref && it.canReopen }) return
         sheet.value = null
         feed.prefetch(ref)
         nav.openChat(ref)

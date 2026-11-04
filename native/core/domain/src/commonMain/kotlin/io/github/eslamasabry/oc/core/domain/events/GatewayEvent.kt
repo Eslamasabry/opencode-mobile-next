@@ -98,7 +98,14 @@ public sealed interface GatewayEvent {
     public data class RunEnded(val sessionId: SessionId, val outcome: RunOutcome) : GatewayEvent
 
     // ---- transcript
-    public data class MessageUpserted(val message: MessageInfo) : GatewayEvent
+    public data class MessageUpserted(
+        val message: MessageInfo,
+        /**
+         * Atomic server-origin user echo. An adapter-generated fallback id is never correlation
+         * proof.
+         */
+        val userEcho: UserPromptEcho? = null,
+    ) : GatewayEvent
 
     public data class PartUpserted(val part: Part) : GatewayEvent
 
@@ -193,6 +200,9 @@ public sealed interface GatewayEvent {
         val workspace: Boolean = false,
     ) : GatewayEvent
 }
+
+/** The server's correlation id and complete user parts observed in that same event. */
+public data class UserPromptEcho(val clientMessageId: MessageId, val parts: List<Part>)
 
 public sealed interface RunOutcome {
     public data object Succeeded : RunOutcome

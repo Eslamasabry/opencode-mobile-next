@@ -90,6 +90,7 @@ import io.github.eslamasabry.oc.ui.words.res.readerUiAttachPrompt
 import io.github.eslamasabry.oc.ui.words.res.readerUiChangedCount
 import io.github.eslamasabry.oc.ui.words.res.readerUiCopyPath
 import io.github.eslamasabry.oc.ui.words.res.readerUiIndicatorsFailed
+import io.github.eslamasabry.oc.ui.words.res.libraryTerminalTitle
 import io.github.eslamasabry.oc.ui.words.res.readerUiNoFiles
 import io.github.eslamasabry.oc.ui.words.res.readerUiNoSymbols
 import io.github.eslamasabry.oc.ui.words.res.readerUiOpenReview
@@ -159,13 +160,23 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                     exitLabel = stringResource(Res.string.kitTopBarBack),
                     onExit = actions::back,
                     actions =
-                        listOf(
-                            KitLineAction(stringResource(Res.string.fileReload), actions::retry),
-                            KitLineAction(
-                                stringResource(Res.string.filesViewOptions),
-                                { viewOptions = true },
-                            ),
-                        ),
+                        buildList {
+                            // The project's terminal, only where the server offers one.
+                            if (state.canTerminal)
+                                add(
+                                    KitLineAction(
+                                        stringResource(Res.string.libraryTerminalTitle),
+                                        actions::terminal,
+                                    )
+                                )
+                            add(KitLineAction(stringResource(Res.string.fileReload), actions::retry))
+                            add(
+                                KitLineAction(
+                                    stringResource(Res.string.filesViewOptions),
+                                    { viewOptions = true },
+                                )
+                            )
+                        },
                 )
             },
             search =

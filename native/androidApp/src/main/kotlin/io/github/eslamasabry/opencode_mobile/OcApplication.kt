@@ -1,7 +1,10 @@
 package io.github.eslamasabry.opencode_mobile
 
+import android.app.ActivityManager
 import android.app.Application
 import android.content.pm.ApplicationInfo
+import android.os.Build
+import android.os.Process
 import dev.zacsweers.metro.createGraphFactory
 import io.github.eslamasabry.oc.android.platform.NativeCrashStore
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
@@ -12,11 +15,11 @@ import io.github.eslamasabry.oc.core.common.Severity
 import io.github.eslamasabry.oc.core.security.RedactingWriter
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
-import io.github.eslamasabry.opencode_mobile.graph.CrashAccessors
 import io.github.eslamasabry.opencode_mobile.graph.AppExitAccessors
 import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
 import io.github.eslamasabry.opencode_mobile.graph.AttentionRuntimeAccessors
 import io.github.eslamasabry.opencode_mobile.graph.BackgroundAccessors
+import io.github.eslamasabry.opencode_mobile.graph.CrashAccessors
 import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsAttentionAccessors
 import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsLogSink
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
@@ -32,8 +35,13 @@ import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
  * never migrates.
  */
 class OcApplication : Application(), GraphOwner {
-    override lateinit var appGraph: AndroidAppGraph
-        private set
+    private lateinit var buildInfo: AppBuildInfo
+    private lateinit var redactor: Redactor
+    override val appGraph: AndroidAppGraph by lazy {
+        createGraphFactory<AndroidAppGraph.Factory>()
+            .create(this, buildInfo, redactor, LaunchMode.Normal)
+    }
+    private var productStarted = false
 
     override fun onCreate() {
         super.onCreate()
@@ -42,7 +50,7 @@ class OcApplication : Application(), GraphOwner {
         try {
             NativeCrashStore(filesDir).install()
         } catch (_: Throwable) {}
-        val redactor = Redactor() // 2. before any secret is read
+        redactor = Redactor() // 2. before any secret is read
         AppLog.install(
             RedactingWriter(
                 redactor,
@@ -50,16 +58,36 @@ class OcApplication : Application(), GraphOwner {
             ), // P12: warnings/errors feed Report a problem
             Severity.Info,
         ) // ring + logcat sinks: slice 1
-        val buildInfo =
+        buildInfo =
             AppBuildInfo(
                 versionName = BuildConfig.VERSION_NAME,
                 versionCode = BuildConfig.VERSION_CODE,
                 channel = Channel.Preview,
                 debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
             )
-        appGraph =
-            createGraphFactory<AndroidAppGraph.Factory>()
-                .create(this, buildInfo, redactor, LaunchMode.Normal)
+        // Every component of the main process (activities, alert buttons, services, workers,
+        // tiles, widgets) may be the first thing in a cold process and relies on the started
+        // product, as before. The isolated PDF parser in ":local_pdf" never warms profiles,
+        // connects, or starts Linux.
+        if (isMainProcess()) startProduct()
+    }
+
+    private fun isMainProcess(): Boolean {
+        val name =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) Application.getProcessName()
+            else
+                (getSystemService(ACTIVITY_SERVICE) as? ActivityManager)
+                    ?.runningAppProcesses
+                    ?.firstOrNull { it.pid == Process.myPid() }
+                    ?.processName
+        // Unknown name: behave as the main process (the pre-split default).
+        return name == null || name == packageName
+    }
+
+    @Synchronized
+    fun startProduct() {
+        if (productStarted) return
+        productStarted = true
         (appGraph as CrashAccessors).crashDiagnostics.start()
         (appGraph as DiagnosticsAttentionAccessors)
             .diagnosticsAttention

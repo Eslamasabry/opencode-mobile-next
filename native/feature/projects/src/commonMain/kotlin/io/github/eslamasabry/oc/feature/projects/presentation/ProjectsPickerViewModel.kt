@@ -396,6 +396,7 @@ public class ProjectsPickerViewModel(
 
     override fun openProject(directory: String) {
         val profile = chosen ?: return
+        // The project page owns the shared-storage gate (SharedStorageAccess) and asks there.
         nav.open(ProjectsRoute.Project(profile, ProjectRules.normalize(directory)))
     }
 

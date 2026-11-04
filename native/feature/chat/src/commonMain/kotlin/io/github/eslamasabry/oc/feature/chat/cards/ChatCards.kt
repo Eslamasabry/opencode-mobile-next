@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.domain.AgentFeaturesGateway
 import io.github.eslamasabry.oc.core.domain.CachedAgentRecoveryGateway
 import io.github.eslamasabry.oc.core.domain.McpGateway
 import io.github.eslamasabry.oc.core.domain.BoundedHistoryGateway
+import io.github.eslamasabry.oc.core.domain.BoundedCardHistoryGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
@@ -524,11 +525,18 @@ internal constructor(
             if (gateway.events.status.value != StreamStatus.Connected)
                 return@CardDispatchCheck CardRefusal.Changed
             if (!read(gateway)) return@CardDispatchCheck CardRefusal.Changed
+            // A backend with the capped card transport gives a fresh authoritative idle proof; others
+            // fall back to the shared session statuses.
+            val cardHistory = gateway.facet<BoundedCardHistoryGateway>()
             val idle =
-                when (val statuses = gateway.sessionStatuses()) {
-                    is Outcome.Failed -> false
-                    is Outcome.Ok ->
-                        statuses.value[sid].let { it == null || it == SessionStatus.Idle }
+                if (cardHistory != null) {
+                    (cardHistory.cardSessionIdle(sid) as? Outcome.Ok)?.value == true
+                } else {
+                    when (val statuses = gateway.sessionStatuses()) {
+                        is Outcome.Failed -> false
+                        is Outcome.Ok ->
+                            statuses.value[sid].let { it == null || it == SessionStatus.Idle }
+                    }
                 }
             if (bound !== graph) return@CardDispatchCheck CardRefusal.Changed
             board?.setBusy(!idle)
@@ -591,7 +599,25 @@ internal constructor(
                             read(gateway, explicit = false) // reconcile by refetch, not replay
                         }
                     is GatewayEvent.MessageUpserted ->
-                        if (e.message.sessionId == sid.raw) upsert(e.message)
+                        if (e.message.sessionId == sid.raw) {
+                            val echo = e.userEcho
+                            if (
+                                echo != null &&
+                                    e.message.role ==
+                                        io.github.eslamasabry.oc.core.model.transcript.Role.User &&
+                                    echo.parts.all {
+                                        it.sessionId == sid.raw && it.messageId == e.message.id
+                                    }
+                            ) {
+                                transcript.upsert(
+                                    io.github.eslamasabry.oc.core.model.transcript.MessageWithParts(
+                                        e.message,
+                                        echo.parts.toImmutableList(),
+                                    )
+                                )
+                                publish()
+                            } else upsert(e.message)
+                        }
                     is GatewayEvent.PartUpserted -> if (e.part.sessionId == sid.raw) upsert(e.part)
                     is GatewayEvent.TranscriptStale -> if (e.sessionId == sid) read(gateway)
                     GatewayEvent.Connected -> {
@@ -645,18 +671,36 @@ internal constructor(
             )
         }
         if (!explicit && !CardRecovery.needsRead(target(), thisCoverage)) return current()
-        // Agent-card recovery reads only through the bounded facet (1 MiB, 10 s): a backend without
-        // it cannot supply authoritative recovery through an unbounded fallback.
-        val bounded = gateway.facet<BoundedHistoryGateway>() ?: return false
+        // Agent-card recovery reads only through a bounded facet: the capped card transport
+        // (BoundedCardHistoryGateway) first, else the 1 MiB / 10 s bounded history. A backend with
+        // neither cannot supply authoritative recovery through an unbounded fallback.
+        val cardHistory = gateway.facet<BoundedCardHistoryGateway>()
+        val bounded = gateway.facet<BoundedHistoryGateway>()
+        if (cardHistory == null && bounded == null) return false
         val source = CardHistorySource { session, cursor, limit ->
-            when (
-                val page = bounded.boundedHistoryPage(SessionId(session), cursor = cursor, limit = limit)
-            ) {
-                is Outcome.Ok ->
-                    Outcome.Ok(
-                        CardHistoryPage(page.value.items, page.value.nextCursor, page.value.hasMore)
-                    )
-                is Outcome.Failed -> page
+            if (cardHistory != null) {
+                when (val page = cardHistory.cardHistoryPage(SessionId(session), cursor, limit)) {
+                    is Outcome.Ok ->
+                        Outcome.Ok(
+                            CardHistoryPage(
+                                page.value.items,
+                                page.value.nextCursor,
+                                page.value.nextCursor != null,
+                            )
+                        )
+                    is Outcome.Failed -> page
+                }
+            } else {
+                when (
+                    val page =
+                        bounded!!.boundedHistoryPage(SessionId(session), cursor = cursor, limit = limit)
+                ) {
+                    is Outcome.Ok ->
+                        Outcome.Ok(
+                            CardHistoryPage(page.value.items, page.value.nextCursor, page.value.hasMore)
+                        )
+                    is Outcome.Failed -> page
+                }
             }
         }
         // A live event during the read means the read is older than what is shown: read again, a

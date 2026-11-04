@@ -10,6 +10,7 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.OnboardingRoute
+import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +50,9 @@ public data class ManagedMoveUi(
 
 public interface ManagedMoveActions {
     public fun retry()
+
+    /** The exit to the server list: a protected move never traps the person on this screen. */
+    public fun changeServer() {}
 }
 
 /**
@@ -67,6 +71,10 @@ public class ManagedMoveViewModel(
 
     init {
         retry()
+    }
+
+    override fun changeServer() {
+        nav.open(ServersRoute.Home)
     }
 
     override fun retry() {

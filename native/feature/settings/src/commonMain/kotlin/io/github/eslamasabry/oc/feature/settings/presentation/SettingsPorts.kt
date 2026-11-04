@@ -71,6 +71,9 @@ public interface NotificationSettings {
 
 /** The in-app updater (plan 07 I20, plan 16 CR16-10). */
 public interface UpdateSettings {
+    /** The Updates page owns its status while it is visible. */
+    public fun setPageOpen(open: Boolean) {}
+
     public val facts: StateFlow<UpdateFacts>
 
     public suspend fun checkNow(): Outcome<Unit>

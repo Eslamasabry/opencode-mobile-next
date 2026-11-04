@@ -106,6 +106,7 @@ public object ChatsState {
             title = SessionTitles.present(item.title),
             project = item.projectName,
             updatedAtMs = item.lastActivityMs.takeIf { it > 0 },
+            canOpen = item.canReopen,
             status =
                 when (item.status) {
                     ChatStatus.NeedsYou -> RowStatus.NeedsYou

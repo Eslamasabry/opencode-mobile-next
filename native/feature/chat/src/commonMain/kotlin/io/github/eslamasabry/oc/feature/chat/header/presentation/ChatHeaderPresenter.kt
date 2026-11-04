@@ -52,6 +52,11 @@ internal data class HeaderLocal(
      * server wins.
      */
     val renamedOver: String? = null,
+    val agentChoices: List<io.github.eslamasabry.oc.feature.chat.header.world.AgentHandoffChoice> =
+        emptyList(),
+    val handoffDraft: io.github.eslamasabry.oc.engine.agents.handoff.HandoffDraft? = null,
+    val handoffFailure: io.github.eslamasabry.oc.engine.agents.handoff.HandoffFailureKind? = null,
+    val handoffLoading: Boolean = false,
     val continueFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
     val freeFacts: FreeModelFacts? = null,
     val freeDismissed: Boolean = false,
@@ -80,7 +85,10 @@ public class ChatHeaderPresenter(
     private val launcher: ChatLauncher,
     private val freeNotes: FreeNoteStore? = null,
     private val handoffs: io.github.eslamasabry.oc.feature.chat.header.world.ChatHandoffs? = null,
-) : ChatHeaderActions {
+    /** The connected daemon's agent handoff (reviewed record, files, then a new conversation). */
+    private val agentHandoffs: io.github.eslamasabry.oc.feature.chat.header.world.ChatAgentHandoff? =
+        null,
+) : ChatHeaderActions, ChatAgentHandoffActions {
     private val local = MutableStateFlow(HeaderLocal())
     private var nextId = 1L
     private var handoff: io.github.eslamasabry.oc.engine.agents.handoff.HandoffEngine? = null
@@ -199,11 +207,15 @@ public class ChatHeaderPresenter(
                     HeaderSheet.ContinueWith(
                         choices = continueChoices(models),
                         loading =
-                            models.loading ||
+                            l.handoffLoading ||
+                                models.loading ||
                                 (models.choices.isEmpty() &&
                                     models.failure == null &&
                                     l.continueFailure == null),
                         failure = l.continueFailure ?: models.failure,
+                        agents = l.agentChoices,
+                        draft = l.handoffDraft,
+                        handoffFailure = l.handoffFailure,
                     )
                 SheetKind.Handoff ->
                     HeaderSheet.Handoff(
@@ -298,6 +310,7 @@ public class ChatHeaderPresenter(
             HeaderAction.ContinueWith -> {
                 local.update { it.copy(sheet = SheetKind.ContinueWith, continueFailure = null) }
                 if (world.models.value.choices.isEmpty()) loadModels()
+                loadHandoffChoices()
             }
             HeaderAction.ContinueOnComputer -> {
                 // Built from the folder the server reports now (Flutter showSessionHandoff reads
@@ -394,6 +407,7 @@ public class ChatHeaderPresenter(
     override fun closeSheet() {
         handoffGeneration.value += 1
         handoff = null
+        agentHandoffs?.close()
         importer?.close()
         importer = null
         local.update {
@@ -403,6 +417,8 @@ public class ChatHeaderPresenter(
                 importState = null,
                 handoffState = null,
                 handoffLabel = null,
+                handoffDraft = null,
+                handoffFailure = null,
             )
         }
     }
@@ -526,9 +542,95 @@ public class ChatHeaderPresenter(
         }
     }
 
+    private fun loadHandoffChoices() {
+        val host = agentHandoffs ?: return
+        local.update { it.copy(handoffLoading = true) }
+        launcher.launch {
+            when (val r = host.choices()) {
+                is Outcome.Ok ->
+                    local.update { it.copy(agentChoices = r.value, handoffLoading = false) }
+                is Outcome.Failed ->
+                    local.update { it.copy(continueFailure = r.failure, handoffLoading = false) }
+            }
+        }
+    }
+
+    override fun prepareHandoff(
+        choice: io.github.eslamasabry.oc.feature.chat.header.world.AgentHandoffChoice
+    ) {
+        val host = agentHandoffs ?: return
+        if (local.value.working != null || choice !in local.value.agentChoices) return
+        local.update {
+            it.copy(working = HeaderAction.ContinueWith, handoffDraft = null, handoffFailure = null)
+        }
+        launcher.launch {
+            when (val read = host.prepare(choice)) {
+                is Outcome.Failed ->
+                    local.update { it.copy(working = null, continueFailure = read.failure) }
+                is Outcome.Ok ->
+                    when (val r = read.value) {
+                        is io.github.eslamasabry.oc.engine.agents.handoff.HandoffPrepared.Ready ->
+                            local.update { it.copy(working = null, handoffDraft = r.draft) }
+                        is io.github.eslamasabry.oc.engine.agents.handoff.HandoffPrepared.Refused ->
+                            local.update { it.copy(working = null, handoffFailure = r.kind) }
+                    }
+            }
+        }
+    }
+
+    override fun sendHandoff(prompt: String) {
+        val host = agentHandoffs ?: return
+        if (
+            local.value.working != null ||
+                local.value.handoffDraft == null ||
+                local.value.handoffFailure != null
+        )
+            return
+        local.update { it.copy(working = HeaderAction.ContinueWith) }
+        launcher.launch { finishHandoff(host.send(prompt)) }
+    }
+
+    override fun retryHandoffLink() {
+        val host = agentHandoffs ?: return
+        if (
+            local.value.working != null ||
+                local.value.handoffFailure !=
+                    io.github.eslamasabry.oc.engine.agents.handoff.HandoffFailureKind.LinkFailed
+        )
+            return
+        local.update { it.copy(working = HeaderAction.ContinueWith) }
+        launcher.launch { finishHandoff(host.retryLink()) }
+    }
+
+    private fun finishHandoff(
+        result: Outcome<io.github.eslamasabry.oc.engine.agents.handoff.HandoffSent>
+    ) {
+        when (result) {
+            is Outcome.Failed ->
+                local.update { it.copy(working = null, continueFailure = result.failure) }
+            is Outcome.Ok ->
+                when (val sent = result.value) {
+                    is io.github.eslamasabry.oc.engine.agents.handoff.HandoffSent.Sent -> {
+                        local.update { it.copy(working = null, sheet = null, handoffDraft = null) }
+                        nav.openChat(
+                            ConversationRef(
+                                world.ref.profileId,
+                                io.github.eslamasabry.oc.core.common.ids.SessionId(
+                                    sent.navigationSessionId
+                                ),
+                            )
+                        )
+                    }
+                    is io.github.eslamasabry.oc.engine.agents.handoff.HandoffSent.Refused ->
+                        local.update { it.copy(working = null, handoffFailure = sent.kind) }
+                }
+        }
+    }
+
     override fun retryContinueWith() {
         local.update { it.copy(continueFailure = null) }
         loadModels()
+        loadHandoffChoices()
     }
 
     private fun loadModels() {

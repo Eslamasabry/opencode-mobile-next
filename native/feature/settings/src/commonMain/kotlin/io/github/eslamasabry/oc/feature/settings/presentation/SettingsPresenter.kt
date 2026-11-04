@@ -56,6 +56,7 @@ public class SettingsPresenter(
     private val appearanceGuide: AppearanceGuideMemory? = null,
     private val exitWhatsNew: () -> Unit = {},
     private val localModels: LocalModelStorage? = null,
+    private val licenses: VoiceLicenseSource? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -74,6 +75,7 @@ public class SettingsPresenter(
         val whatsNewIndex: Int = 0,
         val standaloneWhatsNew: Boolean = false,
         val confirmLocalModels: Boolean = false,
+        val license: LicenseUi? = null,
     )
 
     private data class Engines(
@@ -260,6 +262,8 @@ public class SettingsPresenter(
             crash = l.crash,
             localModels = e.localModels?.copy(confirmDelete = l.confirmLocalModels),
             note = l.note,
+            voiceLicenses = licenses != null,
+            license = l.license,
         )
     }
 
@@ -424,6 +428,7 @@ public class SettingsPresenter(
     }
 
     override fun onOpen(page: SettingsPage) {
+        updates?.setPageOpen(page == SettingsPage.Updates)
         if (page == SettingsPage.WhatsNew) {
             showWhatsNew()
             return
@@ -490,6 +495,7 @@ public class SettingsPresenter(
             l.stack.size > 1 -> {
                 if (l.stack.last() == SettingsPage.ReportProblem) closeReport()
                 local.update { it.copy(stack = it.stack.dropLast(1).toImmutableList()) }
+                updates?.setPageOpen(local.value.stack.last() == SettingsPage.Updates)
                 true
             }
             l.query.isNotEmpty() -> {
@@ -559,7 +565,9 @@ public class SettingsPresenter(
             showWhatsNew()
             return
         }
-        openers.open(place)
+        // Voice notices open the in-app licence list when this build can read the bundled licences.
+        if (place == SettingsOutside.VoiceNotices && licenses != null) onOpen(SettingsPage.About)
+        else openers.open(place)
     }
 
     override fun onMode(mode: AppearanceMode) {
@@ -727,6 +735,61 @@ public class SettingsPresenter(
         reportGeneration++
         diagnostics?.endReport()
         local.update { it.copy(report = null, reportDescription = "") }
+    }
+
+    override fun onVoiceLicense(id: String) {
+        if (licenses == null || VoiceLicenseComponent.entries.none { it.id == id }) return
+        onOpen(SettingsPage.VoiceLicense(id))
+        loadLicense(id)
+    }
+
+    override fun onRetryLicense() {
+        val page = local.value.stack.last() as? SettingsPage.VoiceLicense ?: return
+        loadLicense(page.id)
+    }
+
+    override fun onCopyLicense() {
+        val source = licenses ?: return
+        val text = (local.value.license as? LicenseUi.Ready)?.text ?: return
+        scope.launch {
+            val note =
+                if (source.copy(text) is Outcome.Ok) SettingsNote.LicenseCopied
+                else SettingsNote.LicenseCopyFailed
+            local.update { it.copy(note = note) }
+        }
+    }
+
+    override fun onLicenseWebsite() {
+        val page = local.value.stack.last() as? SettingsPage.VoiceLicense ?: return
+        val component = VoiceLicenseComponent.entries.firstOrNull { it.id == page.id } ?: return
+        licenses?.openWebsite(component.website)
+    }
+
+    private var licenseGeneration = 0L
+
+    private fun loadLicense(id: String) {
+        val source = licenses ?: return
+        val component = VoiceLicenseComponent.entries.firstOrNull { it.id == id } ?: return
+        val generation = ++licenseGeneration
+        local.update { it.copy(license = LicenseUi.Loading) }
+        scope.launch {
+            val result =
+                when (val read = source.read(component.asset)) {
+                    is Outcome.Ok -> LicenseUi.Ready(reflowLicenseText(read.value))
+                    is Outcome.Failed -> LicenseUi.Failed
+                }
+            if (
+                generation == licenseGeneration &&
+                    local.value.stack.last() == SettingsPage.VoiceLicense(id)
+            ) {
+                local.update { it.copy(license = result) }
+            }
+        }
+    }
+
+    public fun close() {
+        updates?.setPageOpen(false)
+        licenseGeneration++
     }
 
     override fun onNoteSeen() {

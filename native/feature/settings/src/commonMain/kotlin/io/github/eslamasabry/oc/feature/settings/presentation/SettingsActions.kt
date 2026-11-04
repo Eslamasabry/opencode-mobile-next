@@ -147,4 +147,12 @@ public interface SettingsActions {
     public fun onCancelDeleteLocalModel() {}
 
     public fun onRefreshLocalModels() {}
+
+    public fun onVoiceLicense(id: String) {}
+
+    public fun onRetryLicense() {}
+
+    public fun onCopyLicense() {}
+
+    public fun onLicenseWebsite() {}
 }

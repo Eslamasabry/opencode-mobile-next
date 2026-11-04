@@ -98,6 +98,8 @@ public data class FileUi(
     val sizeBytes: Long? = null,
     val canShare: Boolean = false,
     val canOpenWith: Boolean = false,
+    val canOpenLocal: Boolean = false,
+    val canInstall: Boolean = false,
     /** Save the exact original bytes (B-MEDIA-001), where the platform can. */
     val canSave: Boolean = false,
     val saving: Boolean = false,
@@ -177,6 +179,8 @@ public interface FileActions {
 
     public fun openWith()
 
+    public fun openPhone(install: Boolean): Unit = openWith()
+
     /** Save the original bytes to a place the person picks. */
     public fun save()
 
@@ -212,6 +216,7 @@ public class FileViewModel(
     private val links: FileLinks,
     private val preferences: Set<FilesReaderPreferences>,
     private val storageAccess: Set<SharedStorageAccess> = emptySet(),
+    private val phoneFiles: Set<PhoneFiles> = emptySet(),
 ) : ViewModel(), FileActions {
     override fun openLink(url: String) {
         val host = links.host(url)
@@ -322,6 +327,16 @@ public class FileViewModel(
                     if (!checkStorage(identity) { mine == loads }) return@launch
                     if (mine != loads || connections.sourceIdentity(route.from) !== identity)
                         return@launch
+                    val localFile =
+                        phoneFiles.singleOrNull()?.available(route.from, route.path) == true
+                    if (mine != loads) return@launch
+                    local.update {
+                        it.copy(
+                            canOpenLocal = localFile,
+                            canInstall =
+                                localFile && route.path.endsWith(".apk", ignoreCase = true),
+                        )
+                    }
                     val opened = ProjectFiles.open(gateway, route.path, route.line)
                     if (
                         mine != loads ||
@@ -647,6 +662,24 @@ public class FileViewModel(
                                     FileNotice.OpenWithNone
                                 else FileNotice.OpenWithFailed
                         },
+                )
+            }
+        }
+    }
+
+    override fun openPhone(install: Boolean) {
+        val handoff = phoneFiles.singleOrNull() ?: return
+        if (
+            local.value.opening || !local.value.canOpenLocal || (install && !local.value.canInstall)
+        )
+            return
+        local.update { it.copy(opening = true, notice = null) }
+        viewModelScope.launch {
+            val result = handoff.open(route.from, route.path, install)
+            local.update {
+                it.copy(
+                    opening = false,
+                    notice = if (result is Outcome.Failed) FileNotice.OpenWithFailed else null,
                 )
             }
         }

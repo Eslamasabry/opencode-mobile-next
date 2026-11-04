@@ -89,13 +89,16 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiTitle
 import io.github.eslamasabry.oc.ui.words.res.chatUiTool
 import io.github.eslamasabry.oc.ui.words.res.chatUiUser
 import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
+import io.github.eslamasabry.oc.ui.words.res.continueWithFactAgent
 import io.github.eslamasabry.oc.ui.words.res.continueWithFactProject
 import io.github.eslamasabry.oc.ui.words.res.continueWithLoadFailed
 import io.github.eslamasabry.oc.ui.words.res.continueWithMenu
 import io.github.eslamasabry.oc.ui.words.res.continueWithModelFailed
 import io.github.eslamasabry.oc.ui.words.res.continueWithModelsHere
 import io.github.eslamasabry.oc.ui.words.res.continueWithNativeNote
+import io.github.eslamasabry.oc.ui.words.res.continueWithNewNote
 import io.github.eslamasabry.oc.ui.words.res.continueWithNothingReady
+import io.github.eslamasabry.oc.ui.words.res.continueWithPreparing
 import io.github.eslamasabry.oc.ui.words.res.continueWithSubtitle
 import io.github.eslamasabry.oc.ui.words.res.continueWithTitle
 import io.github.eslamasabry.oc.ui.words.res.continueWithTryAgain
@@ -517,8 +520,16 @@ private fun ContinueBody(
     working: Boolean,
     actions: ChatHeaderActions,
 ) {
+    val handoffActions =
+        actions
+            as? io.github.eslamasabry.oc.feature.chat.header.presentation.ChatAgentHandoffActions
+    if (sheet.draft != null && handoffActions != null) {
+        AgentHandoffReview(sheet, working, handoffActions)
+        return
+    }
     Column(Modifier.fillMaxWidth().testTag("continue-with-sheet")) {
         KitNotice(message = stringResource(Res.string.continueWithNativeNote))
+        if (working) KitNotice(message = stringResource(Res.string.continueWithPreparing))
         when {
             sheet.failure != null && sheet.choices.isEmpty() ->
                 KitErrorNotice(
@@ -531,7 +542,7 @@ private fun ContinueBody(
                         ),
                 )
             sheet.loading -> KitNotice(message = stringResource(Res.string.sessionContextLoading))
-            sheet.choices.size <= 1 && sheet.choices.all { it.current } ->
+            sheet.agents.isEmpty() && sheet.choices.size <= 1 && sheet.choices.all { it.current } ->
                 KitNotice(message = stringResource(Res.string.continueWithNothingReady))
             else -> {
                 if (sheet.failure != null)
@@ -557,6 +568,21 @@ private fun ContinueBody(
                         )
                     }
                 }
+                if (sheet.agents.isNotEmpty() && handoffActions != null) {
+                    KitSectionLabel(stringResource(Res.string.continueWithFactAgent))
+                    KitNotice(message = stringResource(Res.string.continueWithNewNote))
+                    KitRowGroup {
+                        sheet.agents.forEach { choice ->
+                            KitRow(
+                                title = choice.label,
+                                trailing = KitRowTrailing.Chevron,
+                                enabled = !working,
+                                onClick = { handoffActions.prepareHandoff(choice) },
+                            )
+                        }
+                    }
+                }
+                sheet.handoffFailure?.let { AgentHandoffFailure(it) }
             }
         }
     }

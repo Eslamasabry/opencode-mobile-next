@@ -3,4 +3,5 @@
 <paths>
     <cache-path name="open-with" path="open-with/" />
     <external-path name="phone-shared" path="." />
+    <external-path name="phone-shared-storage" path="." />
 </paths>

@@ -28,6 +28,8 @@ public interface FilesConnections {
 
     public fun canBrowse(ref: ConversationRef): Boolean
 
+    public fun canTerminal(ref: ConversationRef): Boolean = false
+
     /**
      * The conversation's project folder on the server (for the file mention's `file:` URL); null
      * when unknown.

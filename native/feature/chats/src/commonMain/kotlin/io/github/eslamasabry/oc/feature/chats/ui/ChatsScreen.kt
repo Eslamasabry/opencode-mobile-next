@@ -80,6 +80,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceHoursAgo
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceJustNow
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceMinutesAgo
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnecting
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
@@ -346,7 +347,10 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state
                 ?.takeUnless { signal && row.running != null }
                 ?.let { KitRowTrailing.Value(it, chevron = false) } ?: KitRowTrailing.None,
         growKey = row.ref,
-        onClick = { actions.openConversation(row.ref) },
+        enabled = row.canOpen,
+        disabledReason =
+            if (row.canOpen) null else stringResource(Res.string.e7WorkspaceConnecting),
+        onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
     )
     if (signal) {
         row.running?.let { running ->

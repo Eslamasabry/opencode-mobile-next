@@ -44,16 +44,19 @@ public fun App(
     viewModels: MetroViewModelFactory,
     appearance: KitAppearance = KitAppearance.Default,
     localeTag: String? = null,
+    windowContent: @Composable (@Composable () -> Unit) -> Unit = { it() },
 ) {
     CompositionLocalProvider(
         LocalKitPlatform provides platform,
         LocalMetroViewModelFactory provides viewModels,
     ) {
         if (localeTag == null) {
-            KitTheme(appearance = appearance) { NavShell(start = ChatsRoute.Home, deps = deps) }
+            KitTheme(appearance = appearance) {
+                windowContent { NavShell(start = ChatsRoute.Home, deps = deps) }
+            }
         } else {
             KitTheme(appearance = appearance, localeTag = localeTag) {
-                NavShell(start = ChatsRoute.Home, deps = deps)
+                windowContent { NavShell(start = ChatsRoute.Home, deps = deps) }
             }
         }
     }

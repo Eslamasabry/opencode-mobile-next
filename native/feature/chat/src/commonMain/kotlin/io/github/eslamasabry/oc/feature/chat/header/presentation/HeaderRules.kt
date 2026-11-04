@@ -53,7 +53,9 @@ public object HeaderRules {
             if (caps.sessionShare) add(if (shared) HeaderAction.Unshare else HeaderAction.Share)
             if (caps.sessionFork) add(HeaderAction.Fork)
             add(HeaderAction.Rename)
-            if (caps.sessionModelProviderSwitching && caps.serverCatalog)
+            if (
+                (caps.sessionModelProviderSwitching && caps.serverCatalog) || caps.agentHandoffFiles
+            )
                 add(HeaderAction.ContinueWith)
             if (caps.cliSessionResume) add(HeaderAction.ContinueOnComputer)
             if (caps.agentHandoffFiles) add(HeaderAction.Handoff)

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="agentFeaturesTitle">إعدادات الوكيل</string>
+    <string name="agentFeaturesEmpty">ليس لهذا الوكيل إعدادات إضافية.</string>
+    <string name="agentFeaturesFailed">تعذّر تحميل إعدادات الوكيل</string>
+</resources>

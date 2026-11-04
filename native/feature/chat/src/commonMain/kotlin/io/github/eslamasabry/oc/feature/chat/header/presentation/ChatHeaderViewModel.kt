@@ -40,7 +40,9 @@ public class ChatHeaderViewModel(
     freeNoteStores: Set<FreeNoteStore>,
     handoffSources: Set<io.github.eslamasabry.oc.feature.chat.header.world.ChatHandoffs>,
     clock: Clock,
-) : ViewModel(), ChatHeaderActions, ApprovalChipActions {
+    handoffs: Set<io.github.eslamasabry.oc.feature.chat.header.world.ChatAgentHandoffs> =
+        emptySet(),
+) : ViewModel(), ChatHeaderActions, ChatAgentHandoffActions, ApprovalChipActions {
     private val world = worlds.open(route.ref)
     private val port = ports.open(route.ref)
     private val launcher = ChatLauncher { block -> viewModelScope.launch { block() } }
@@ -52,6 +54,7 @@ public class ChatHeaderViewModel(
             launcher,
             freeNoteStores.singleOrNull(),
             handoffSources.singleOrNull(),
+            handoffs.singleOrNull()?.open(route.ref),
         )
     private val approvals =
         ApprovalPresenter(
@@ -108,6 +111,14 @@ public class ChatHeaderViewModel(
     override fun continueWith(choice: ContinueChoice): Unit = presenter.continueWith(choice)
 
     override fun retryContinueWith(): Unit = presenter.retryContinueWith()
+
+    override fun prepareHandoff(
+        choice: io.github.eslamasabry.oc.feature.chat.header.world.AgentHandoffChoice
+    ): Unit = presenter.prepareHandoff(choice)
+
+    override fun sendHandoff(prompt: String): Unit = presenter.sendHandoff(prompt)
+
+    override fun retryHandoffLink(): Unit = presenter.retryHandoffLink()
 
     override fun copyResumeCommand(): Unit = presenter.copyResumeCommand()
 

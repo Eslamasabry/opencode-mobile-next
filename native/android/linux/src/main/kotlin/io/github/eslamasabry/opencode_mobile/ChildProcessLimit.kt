@@ -5,16 +5,18 @@ import android.os.Build
 import android.provider.Settings
 
 /**
- * Reads whether Android's child process restrictions ("phantom process"
- * limit of 32) are lifted by the Developer options toggle "Disable child
- * process restrictions". NEEDS A RELEASE (native); an older APK answers
- * notImplemented and the Dart side falls back to instructions only.
+ * Reads whether Android's child process restrictions ("phantom process" limit of 32) are lifted by
+ * the Developer options toggle "Disable child process restrictions". NEEDS A RELEASE (native); an
+ * older APK answers notImplemented and the Dart side falls back to instructions only.
  */
-internal object ChildProcessLimit {
+object ChildProcessLimit {
     const val FLAG = "settings_enable_monitor_phantom_procs"
     private const val PROPERTY = "persist.sys.fflag.override.$FLAG"
 
-    /** The flag's value as text -> restrictionsOff. The flag is "monitor phantom procs": false = restrictions off. */
+    /**
+     * The flag's value as text -> restrictionsOff. The flag is "monitor phantom procs": false =
+     * restrictions off.
+     */
     fun restrictionsOffFrom(value: String?): Boolean? {
         val v = value?.trim()?.lowercase().orEmpty()
         return when (v) {
@@ -25,21 +27,25 @@ internal object ChildProcessLimit {
         }
     }
 
-    fun developerOptionsEnabled(context: Context): Boolean? = try {
-        Settings.Global.getInt(
-            context.contentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0
-        ) == 1
-    } catch (_: Exception) {
-        null
-    }
-
-    fun restrictionsOff(context: Context): Boolean? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
-        val fromGlobal = try {
-            restrictionsOffFrom(Settings.Global.getString(context.contentResolver, FLAG))
+    fun developerOptionsEnabled(context: Context): Boolean? =
+        try {
+            Settings.Global.getInt(
+                context.contentResolver,
+                Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,
+                0,
+            ) == 1
         } catch (_: Exception) {
             null
         }
+
+    fun restrictionsOff(context: Context): Boolean? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
+        val fromGlobal =
+            try {
+                restrictionsOffFrom(Settings.Global.getString(context.contentResolver, FLAG))
+            } catch (_: Exception) {
+                null
+            }
         return fromGlobal ?: restrictionsOffFrom(readProperty())
     }
 
@@ -56,9 +62,10 @@ internal object ChildProcessLimit {
         }
     }
 
-    fun status(context: Context): Map<String, Any?> = mapOf(
-        "sdkInt" to Build.VERSION.SDK_INT,
-        "developerOptionsEnabled" to developerOptionsEnabled(context),
-        "restrictionsOff" to restrictionsOff(context),
-    )
+    fun status(context: Context): Map<String, Any?> =
+        mapOf(
+            "sdkInt" to Build.VERSION.SDK_INT,
+            "developerOptionsEnabled" to developerOptionsEnabled(context),
+            "restrictionsOff" to restrictionsOff(context),
+        )
 }

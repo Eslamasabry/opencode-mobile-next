@@ -129,6 +129,7 @@ internal fun TurnWorkLine(
                     onOpenSession,
                     onOpenFile,
                     KitToolRail(index == 0, index == shown.lastIndex),
+                    reply,
                 )
             }
         } else {
@@ -137,7 +138,7 @@ internal fun TurnWorkLine(
             for (entry in entries) when (entry) {
                 is WorkEntryUi.Step -> {
                     val step = stepQueues[entry.partId]?.removeFirstOrNull() ?: continue
-                    if (skipped++ >= hidden) StepRow(step, nowMs, folds, onOpenSession, onOpenFile)
+                    if (skipped++ >= hidden) StepRow(step, nowMs, folds, onOpenSession, onOpenFile, reply = reply)
                 }
                 is WorkEntryUi.Detail ->
                     if (skipped >= hidden)
@@ -172,6 +173,7 @@ private fun StepRow(
     onOpenSession: ((String) -> Unit)?,
     onOpenFile: ((ToolArtifact) -> Unit)?,
     rail: KitToolRail? = null,
+    reply: ReplyActions? = null,
 ) {
     val key = "step:${step.partId}"
     val f = step.facts

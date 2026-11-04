@@ -51,6 +51,16 @@ public val PaseoGateway.handoffGeneration: Long
     get() = (transport.epoch.toLong() shl 32) xor locationEpoch.toLong()
 
 /**
+ * Writes one new, private handoff record through the gateway's single writer ([PaseoHandoff]); an
+ * existing file is never overwritten.
+ */
+public suspend fun PaseoGateway.writeAgentHandoff(
+    directory: String,
+    recordId: String,
+    markdown: String,
+): Outcome<String> = PaseoHandoff(this).write(directory, recordId, markdown)
+
+/**
  * Exclusively creates one ignored handoff directory; existing records are never overwritten or
  * retried.
  */

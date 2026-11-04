@@ -108,14 +108,6 @@ public interface BasicComposerActions {
     public suspend fun selectAgent(agent: String): Boolean = false
 
     /** Opens the platform picker; a cancelled pick changes nothing. */
-    public fun copyModelId(model: ComposerModel) {}
-
-    public fun toggleFavorite(model: ComposerModel) {}
-
-    public fun cycleModel(reverse: Boolean = false, favoritesOnly: Boolean = false) {}
-
-    public fun cycleVariant(reverse: Boolean = false) {}
-
     public fun attachFile() {}
 
     /** Removes one attached file by its current index. */
@@ -196,8 +188,6 @@ public class BasicComposerViewModel(
     private val phraseSources: Set<ComposerPhrases> = emptySet(),
     private val clock: kotlin.time.Clock? = null,
 ) : ViewModel(), BasicComposerActions {
-    private val outside: ChatOutside? = outside.takeUnless { it === NoComposerOutside }
-    private val clock: Clock? = clock.takeUnless { it === NoComposerClock }
     private val profileId = ProfileId(target.profileId)
     private val query = MutableStateFlow<ComposerQuery?>(null)
     private val fileMatches = MutableStateFlow<List<String>>(emptyList())
@@ -211,9 +201,6 @@ public class BasicComposerViewModel(
     private val pickingFile = MutableStateFlow(false)
     private val committingFiles = MutableStateFlow(false)
     private val selectingModel = MutableStateFlow(false)
-    private val favorites = MutableStateFlow<List<Pair<String, String>>>(emptyList())
-    private val favoriteFailure = MutableStateFlow<Failure?>(null)
-    private var savingFavorite = false
     private val attachmentFailure = MutableStateFlow<Failure?>(null)
     private val targetKey = "${target.profileId}/${target.sessionId}"
 
@@ -559,10 +546,7 @@ public class BasicComposerViewModel(
     }
 
     override fun loadModels() {
-        viewModelScope.launch {
-            modelBackings.firstOrNull()?.favorites(profileId.raw)?.let { favorites.value = it }
-            world?.loadModels()
-        }
+        viewModelScope.launch { world?.loadModels() }
     }
 
     override suspend fun selectModel(choice: ComposerModel?, variant: String): Boolean {
@@ -600,60 +584,6 @@ public class BasicComposerViewModel(
         } finally {
             selectingModel.value = false
         }
-    }
-
-    override fun copyModelId(model: ComposerModel) {
-        favoriteFailure.value =
-            if (outside?.copy("${model.providerId}/${model.modelId}") == true) null
-            else Failure.Unavailable(FeatureId("clipboard"))
-    }
-
-    override fun toggleFavorite(model: ComposerModel) {
-        val backing = modelBackings.firstOrNull() ?: return
-        if (savingFavorite) return
-        val id = model.providerId to model.modelId
-        val current = backing.favorites(profileId.raw) ?: favorites.value
-        val next = if (id in current) current - id else current + id
-        favorites.value = current
-        savingFavorite = true
-        viewModelScope.launch {
-            try {
-                when (val result = backing.setFavorites(profileId.raw, next)) {
-                    is Outcome.Ok -> {
-                        favorites.value = next
-                        favoriteFailure.value = null
-                    }
-                    is Outcome.Failed -> favoriteFailure.value = result.failure
-                }
-            } finally {
-                savingFavorite = false
-            }
-        }
-    }
-
-    override fun cycleModel(reverse: Boolean, favoritesOnly: Boolean) {
-        val models = state.value.models
-        val choices = (if (favoritesOnly) models.favorites else models.recent).filter { it.enabled }
-        if (choices.isEmpty()) return
-        val current = choices.indexOfFirst {
-            it.providerId == models.selected?.providerId && it.modelId == models.selected?.modelId
-        }
-        val index =
-            if (current < 0) {
-                if (reverse) choices.lastIndex else 0
-            } else (current + (if (reverse) -1 else 1) + choices.size) % choices.size
-        if (index == current) return
-        viewModelScope.launch { selectModel(choices[index]) }
-    }
-
-    override fun cycleVariant(reverse: Boolean) {
-        val models = state.value.models
-        val selected = models.selected ?: return
-        val levels = listOf("") + selected.variants
-        if (levels.size < 2) return
-        val current = levels.indexOf(models.variant).coerceAtLeast(0)
-        val next = (current + (if (reverse) -1 else 1) + levels.size) % levels.size
-        viewModelScope.launch { selectModel(selected, levels[next]) }
     }
 
     override fun attachFile() {
@@ -741,19 +671,4 @@ public class BasicComposerViewModel(
         const val MAX_COMMANDS = 8
         const val MAX_FILES = 5
     }
-}
-
-/** Defaults for hand-built view models (tests) with no platform: copying fails, release age is unknown. */
-private object NoComposerOutside : ChatOutside {
-    override fun copy(text: String): Boolean = false
-
-    override fun share(text: String): Boolean = false
-
-    override fun checkLink(url: String): LinkCheck = LinkCheck.Refused
-
-    override fun openLink(url: String): Boolean = false
-}
-
-private object NoComposerClock : Clock {
-    override fun now(): kotlin.time.Instant = kotlin.time.Instant.DISTANT_PAST
 }

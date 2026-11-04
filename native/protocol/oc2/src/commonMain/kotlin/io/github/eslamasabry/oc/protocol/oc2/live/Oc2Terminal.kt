@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.failed
+import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.model.TerminalChannel
 import io.github.eslamasabry.oc.core.net.CallKind
@@ -36,23 +37,27 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * Opens the PTY websocket the handshake describes (platform OkHttp in the app). [headers] carries the phone's Basic
- * header so a bring-your-own-server proxy still applies revocation before forwarding; a refusal is its Failure and
- * no channel exists.
+ * Opens the PTY websocket the handshake describes (platform OkHttp in the app). [headers] carries
+ * the phone's Basic header so a bring-your-own-server proxy still applies revocation before
+ * forwarding; a refusal is its Failure and no channel exists.
  */
 public fun interface Oc2TerminalSocketOpener {
     public suspend fun open(url: String, headers: Map<String, String>): Outcome<TerminalChannel>
 }
 
-/** The websocket request after the ticket step: the single-use ticket is the only credential in [url]. */
+/**
+ * The websocket request after the ticket step: the single-use ticket is the only credential in
+ * [url].
+ */
 public data class Oc2TerminalHandshake(val url: String, val headers: Map<String, String>) {
     override fun toString(): String = "Oc2TerminalHandshake(headers=${headers.keys})"
 }
 
 /**
- * Flutter `connectTerminal` (B-PROTO-036): `POST /pty/{id}/connect-token` with `x-opencode-ticket: 1` and the
- * default Basic header, then `ws(s)://…/api/pty/{id}/connect?ticket=…&cursor=…&location[directory]=…`. No password
- * or `auth_token` ever goes into a URL.
+ * Flutter `connectTerminal` (B-PROTO-036): `POST /pty/{id}/connect-token` with `x-opencode-ticket:
+ * 1` and the default Basic header, then
+ * `ws(s)://…/api/pty/{id}/connect?ticket=…&cursor=…&location[directory]=…`. No password or
+ * `auth_token` ever goes into a URL.
  */
 internal suspend fun Oc2Gateway.terminalHandshake(id: String, cursor: Long?): Outcome<Oc2TerminalHandshake> {
     if (terminalClosed) return Failure.Refused(RefusalReason.StaleScope).failed()
@@ -106,7 +111,10 @@ internal suspend fun Oc2Gateway.terminalHandshake(id: String, cursor: Long?): Ou
         .ok()
 }
 
-/** Ticket, then socket. A refused socket (revoked after the ticket) is a Failure; nothing is retried. */
+/**
+ * Ticket, then socket. A refused socket (revoked after the ticket) is a Failure; nothing is
+ * retried.
+ */
 internal suspend fun Oc2Gateway.connectTerminalWith(
     opener: Oc2TerminalSocketOpener,
     id: String,

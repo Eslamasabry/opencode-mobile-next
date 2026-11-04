@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -103,6 +104,12 @@ import io.github.eslamasabry.oc.ui.words.res.readerUiAttachPrompt
 import io.github.eslamasabry.oc.ui.words.res.readerUiAttached
 import io.github.eslamasabry.oc.ui.words.res.readerUiCopyPath
 import io.github.eslamasabry.oc.ui.words.res.readerUiOpenReview
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallAction
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallBody
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallTitle
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenAction
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenBody
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenTitle
 import io.github.eslamasabry.oc.ui.words.res.readerUiPathLine
 import io.github.eslamasabry.oc.ui.words.res.readerUiSavedDevice
 import io.github.eslamasabry.oc.ui.words.res.stateReaderNoWrap
@@ -130,6 +137,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
         actions.onResume()
         onPauseOrDispose {}
     }
+    var localOpen by rememberSaveable { mutableStateOf<Boolean?>(null) }
     // One modal layer for the frame and the share sheet (the chat's KitSheetHost pattern).
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(modifier = Modifier.fillMaxSize(), page = true) {
@@ -191,10 +199,20 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                         Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp),
                         role = KitButtonRole.Tertiary,
                     )
-                if (ready && state.canOpenWith) {
+                if (state.canInstall) {
+                    KitButton(
+                        stringResource(Res.string.phoneFileInstallAction),
+                        { localOpen = true },
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
+                        role = KitButtonRole.Tertiary,
+                        working = state.opening,
+                    )
+                }
+                if ((ready && state.canOpenWith) || state.canOpenLocal) {
                     KitButton(
                         stringResource(Res.string.filesOpenWith),
-                        actions::openWith,
+                        { if (state.canOpenLocal) localOpen = false else actions.openWith() },
                         Modifier.fillMaxWidth()
                             .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
                         role = KitButtonRole.Tertiary,
@@ -293,6 +311,35 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                     )
             }
         }
+        KitConfirm(
+            spec =
+                localOpen?.let { install ->
+                    KitConfirmSpec(
+                        title =
+                            stringResource(
+                                if (install) Res.string.phoneFileInstallTitle
+                                else Res.string.phoneFileOpenTitle,
+                                state.name,
+                            ),
+                        body =
+                            stringResource(
+                                if (install) Res.string.phoneFileInstallBody
+                                else Res.string.phoneFileOpenBody
+                            ),
+                        confirmLabel =
+                            stringResource(
+                                if (install) Res.string.phoneFileInstallAction
+                                else Res.string.phoneFileOpenAction
+                            ),
+                    )
+                },
+            onConfirm = {
+                val install = localOpen
+                localOpen = null
+                if (install != null) actions.openPhone(install)
+            },
+            onCancel = { localOpen = null },
+        )
     }
 }
 

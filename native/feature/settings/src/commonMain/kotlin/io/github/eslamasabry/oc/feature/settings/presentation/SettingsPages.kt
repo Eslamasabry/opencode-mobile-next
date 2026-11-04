@@ -40,6 +40,7 @@ public sealed interface SettingsPage {
 
     public data object PhraseChips : SettingsPage
     public data object WhatsNew : SettingsPage
+    public data class VoiceLicense(val id: String) : SettingsPage
 
     public data object Privacy : SettingsPage
 

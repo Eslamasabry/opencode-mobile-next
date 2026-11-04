@@ -204,6 +204,7 @@ public class LocalTerminalViewModel(
 
     override fun onCleared() {
         pauseDevServer()
+        dismissLinkTip()
         super.onCleared()
     }
 
@@ -312,10 +313,6 @@ public class LocalTerminalViewModel(
         nav.back()
     }
 
-    override fun onCleared() {
-        dismissLinkTip()
-        super.onCleared()
-    }
 
     private fun run(work: suspend () -> Outcome<Unit>) {
         if (local.value.working) return

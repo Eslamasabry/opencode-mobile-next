@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
+import io.github.eslamasabry.oc.ui.routes.TerminalRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -83,6 +84,7 @@ public data class FolderUi(
     val confirmingStorage: Boolean = false,
     val storageResult: FilesStorageResult? = null,
     val actionFailure: Failure? = null,
+    val canTerminal: Boolean = false,
 ) {
     val name: String
         get() = FilePaths.name(path)
@@ -95,9 +97,13 @@ public data class FolderUi(
 }
 
 public interface FolderActions {
+    public fun terminal() {}
+
     public fun back()
 
     public fun retry()
+
+    public fun requestStorageAccess(): Unit = retry()
 
     public fun open(node: FileNode)
 
@@ -181,6 +187,10 @@ public class FolderViewModel(
         load()
     }
 
+    override fun terminal() {
+        if (connections.canTerminal(route.from)) nav.open(TerminalRoute(route.from))
+    }
+
     override fun back(): Unit = nav.back()
 
     override fun retry() {
@@ -233,6 +243,7 @@ public class FolderViewModel(
                 entries = listing.entries,
                 hiddenCount = listing.hiddenCount,
                 failure = null,
+                canTerminal = connections.canTerminal(route.from),
             )
         }
     }
@@ -247,6 +258,17 @@ public class FolderViewModel(
         }
         if (node.isDir) nav.open(FilesRoute.Folder(route.from, node.path))
         else nav.open(FilesRoute.File(route.from, node.path))
+    }
+
+    override fun requestStorageAccess() {
+        if (local.value.requestingStorage) return
+        val access = storageAccess.singleOrNull() ?: return
+        local.update { it.copy(requestingStorage = true) }
+        viewModelScope.launch {
+            access.request(route.from)
+            local.update { it.copy(requestingStorage = false) }
+            load()
+        }
     }
 
     override fun toggleHidden() {

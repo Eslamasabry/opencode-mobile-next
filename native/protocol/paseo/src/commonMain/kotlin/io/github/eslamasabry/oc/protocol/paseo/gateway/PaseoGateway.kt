@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.AgentFeaturesGateway
 import io.github.eslamasabry.oc.core.domain.AgentHandoffGateway
 import io.github.eslamasabry.oc.core.domain.CachedAgentRecoveryGateway
+import io.github.eslamasabry.oc.core.domain.BoundedCardHistoryGateway
 import io.github.eslamasabry.oc.core.domain.CorrelatedPromptGateway
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.domain.ImportableConversations
@@ -109,6 +110,7 @@ import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransportListener
 import io.github.eslamasabry.oc.protocol.paseo.work.PaseoBackgroundTasks
 import io.github.eslamasabry.oc.protocol.paseo.work.PaseoPayloadLease
+import io.github.eslamasabry.oc.protocol.paseo.work.PaseoIdleGuard
 import io.github.eslamasabry.oc.protocol.paseo.work.PaseoWorkInventory
 import kotlin.random.Random
 import kotlin.time.Clock
@@ -201,7 +203,8 @@ public class PaseoGateway(
     ReadOnlySessionsGateway,
     HostDaemonUpdateGateway,
     CachedAgentRecoveryGateway,
-    AgentHandoffGateway {
+    AgentHandoffGateway,
+    BoundedCardHistoryGateway {
     private val payloadGeneration = MutableStateFlow(0)
     private val job = SupervisorJob(scope.coroutineContext[Job])
     internal val scope: CoroutineScope = CoroutineScope(scope.coroutineContext + job + lane)
@@ -304,7 +307,10 @@ public class PaseoGateway(
     internal val draftModels = HashMap<String, ModelRef>()
     internal val draftVariants = HashMap<String, String>()
 
-    /** Switches chosen before a draft's first prompt, sent with its creation (B-AGENT-146, PaseoAgentFeatures.kt). */
+    /**
+     * Switches chosen before a draft's first prompt, sent with its creation (B-AGENT-146,
+     * PaseoAgentFeatures.kt).
+     */
     internal val draftFeatureValues = HashMap<String, Map<String, JsonElement>>()
     internal val liveAgentSessions = HashSet<String>()
     internal val uncertain = HashSet<String>()
@@ -341,13 +347,37 @@ public class PaseoGateway(
     public var savedTitle: ((String) -> String?)? = null
 
     /**
-     * Payload-use admission (B-AGENT-173, PaseoPayloadUse.kt): a trusted phone host leases its installed payloads across
-     * daemon work. [beforePayloadUse] runs before any request of a send; a Failed answer refuses it and nothing is
-     * dispatched. [afterPayloadUse] runs once after an admitted send settles, however it ended. Remote gateways leave
-     * both null.
+     * Payload-use admission (B-AGENT-173, PaseoPayloadUse.kt): a trusted phone host leases its
+     * installed payloads across daemon work. [beforePayloadUse] runs before any request of a send;
+     * a Failed answer refuses it and nothing is dispatched. [afterPayloadUse] runs once after an
+     * admitted send settles, however it ended. Remote gateways leave both null.
      */
     public var beforePayloadUse: (suspend () -> Outcome<Unit>)? = null
     public var afterPayloadUse: (() -> Unit)? = null
+
+    /** Admission for a new phone agent process; remote gateways leave this unset. */
+    public var beforeAgentStart: (suspend () -> Outcome<Unit>)? = null
+    internal var pendingPayloadWork: Int = 0
+
+    internal fun payloadWorkChanged() {
+        localWork?.changed()
+    }
+
+    internal val idleGuard = PaseoIdleGuard()
+    /** Last displayed daemon-id list time, supplied by the feed's persisted rows. */
+    public var savedListTime: ((String) -> Long?)? = null
+
+    /** Profile-owned card qualification, checked again at dispatch; absence never approves. */
+    public var genUiShowAllowed: (() -> Boolean)? = null
+        set(value) {
+            field = value
+            scope.launch { requests.sweepCardApprovals() }
+        }
+
+    /** Recheck when the effective card qualification changes without replacing the gateway. */
+    public fun refreshCardApprovalQualification() {
+        scope.launch { requests.sweepCardApprovals() }
+    }
 
     internal var creating = 0
     internal val heldEvents = ArrayList<PaseoPush>()
@@ -392,7 +422,10 @@ public class PaseoGateway(
                 localWork.read(
                     transport.connected,
                     transport.epoch,
-                    awaitingTurn.isNotEmpty() || turnActive.isNotEmpty() || uncertain.isNotEmpty(),
+                    pendingPayloadWork > 0 ||
+                        awaitingTurn.isNotEmpty() ||
+                        turnActive.isNotEmpty() ||
+                        uncertain.isNotEmpty(),
                 )
             }
 
@@ -797,6 +830,7 @@ public class PaseoGateway(
         val scope = scopeDir
         val epoch = locationEpoch
         val agent = fetchAgent(id)
+        idleGuard.markAwake(id)
         val busy = paseoSessionStatus(agent, nowMs()) == SessionStatus.Busy
         // Later frames wait until the history is in place, as if mapped inline (Dart
         // holdingMessages).
@@ -849,7 +883,8 @@ public class PaseoGateway(
             result.obj("endCursor")?.get("seq")?.longOrNull()?.let { state.lastSeq = it }
             uncertain.remove(id)
             backgroundTasks.replace(real(id), timeline.messages)
-            // Its sub-agents (an old conversation's too), read beside the history: their cards link when it arrives.
+            // Its sub-agents (an old conversation's too), read beside the history: their cards link
+            // when it arrives.
             loadSubagents(id)
             linkMessages(timeline.messages)
         }
@@ -907,11 +942,27 @@ public class PaseoGateway(
         }
     }
 
+    override suspend fun cardSessionIdle(session: SessionId): Outcome<Boolean> =
+        genUiSessionIdle(session)
+
+    override suspend fun cardHistoryPage(
+        session: SessionId,
+        cursor: String?,
+        limit: Int,
+    ): Outcome<ServerPage<MessageWithParts>> =
+        when (val read = genUiHistoryPage(session, cursor, limit)) {
+            is Outcome.Failed -> read
+            is Outcome.Ok ->
+                Outcome.Ok(ServerPage(read.value.items.toImmutableList(), read.value.olderCursor))
+        }
+
     override suspend fun todos(id: SessionId): Outcome<ImmutableList<Todo>> =
         Outcome.Ok(persistentListOf())
 
     /** What the agent changed: the uncommitted work in the folder it runs in (B-AGENT-157). */
-    override suspend fun diff(id: SessionId): Outcome<ImmutableList<FileDiff>> = call { readSessionDiff(id.raw) }
+    override suspend fun diff(id: SessionId): Outcome<ImmutableList<FileDiff>> = call {
+        readSessionDiff(id.raw)
+    }
 
     /** AGENT-2: the same operations at another folder of this daemon (a worktree, say). */
     internal val workspaceOperations = PaseoWorkspaceOperations(this)
@@ -1070,6 +1121,7 @@ public class PaseoGateway(
         }
         awaitingTurn += sessionId
         publishRecovery(sessionId)
+        idleGuard.markAwake(sessionId)
         try {
             if (sessionId in drafts) {
                 createAgent(
@@ -1155,6 +1207,12 @@ public class PaseoGateway(
             if (model == null || model.providerId.isEmpty()) draftProviders[id] ?: DEFAULT_PROVIDER
             else model.providerId
         requireProviderAvailable(provider)
+        checkLocation(scope, epoch)
+        when (val admitted = beforeAgentStart?.invoke()) {
+            is Outcome.Failed ->
+                throw PaseoException(PaseoFailureKind.Unavailable, "The phone refused a new agent")
+            else -> Unit
+        }
         checkLocation(scope, epoch)
         val modes = modesFor(provider)
         val mode = requestedMode ?: defaultProviderModes[provider]
@@ -1742,11 +1800,17 @@ public class PaseoGateway(
 
     // ---- files (PaseoWorkspace.kt, B-AGENT-156)
 
-    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> = call { readFileList(path) }
+    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> = call {
+        readFileList(path)
+    }
 
-    override suspend fun fileContent(path: String): Outcome<FileContent> = call { readFileContent(path) }
+    override suspend fun fileContent(path: String): Outcome<FileContent> = call {
+        readFileContent(path)
+    }
 
-    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> = call { findFileByName(query) }
+    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> = call {
+        findFileByName(query)
+    }
 
     override suspend fun findText(pattern: String): Outcome<ImmutableList<FindMatch>> =
         unavailable("textSearch")
@@ -1784,10 +1848,25 @@ public class PaseoGateway(
         val id0 = agent.str("id")
         // A reloaded record can come back without its title: the known one stays.
         val known = id0?.let { agents[it]?.str("title") ?: titleHints[it] }
-        agent = io.github.eslamasabry.oc.protocol.paseo.feed.PaseoTitles.withTitle(agent, known, savedTitle)
-        // A runtime's long model id (an alias, or "kilo/<id>") is shown as the model list's own id (B-AGENT-146, 182).
-        canonicalModelId(agent.str("provider"), agent.str("model"))?.let { if (it != agent.str("model")) agent = agent.with("model", JsonPrimitive(it)) }
-        val session = paseoReply("agent") { paseoSession(agent) }
+        agent =
+            io.github.eslamasabry.oc.protocol.paseo.feed.PaseoTitles.withTitle(
+                agent,
+                known,
+                savedTitle,
+            )
+        // A runtime's long model id (an alias, or "kilo/<id>") is shown as the model list's own id
+        // (B-AGENT-146, 182).
+        canonicalModelId(agent.str("provider"), agent.str("model"))?.let {
+            if (it != agent.str("model")) agent = agent.with("model", JsonPrimitive(it))
+        }
+        val mapped = paseoReply("agent") { paseoSession(agent) }
+        val settled =
+            idleGuard.settle(mapped.id.raw, agent, mapped.time?.updatedMs) {
+                savedListTime?.invoke(real(mapped.id.raw))
+            }
+        val time = mapped.time
+        val session =
+            if (time == null) mapped else mapped.copy(time = time.copy(updatedMs = settled))
         if (session.directory != directoryValue || agent["archivedAt"].stringOrNull() != null)
             return null
         val id = session.id.raw
@@ -1941,8 +2020,10 @@ public class PaseoGateway(
                     if (agentId != null && agentId in sessions && request != null)
                         requests.onPermissionRequest(agentId, request)
                 }
-                "agent_permission_resolved" -> p.str("requestId")?.let { requests.onPermissionResolved(it) }
-                "agent_deleted", "agent_archived" -> removed(agentId)
+                "agent_permission_resolved" ->
+                    p.str("requestId")?.let { requests.onPermissionResolved(it) }
+                "agent_deleted",
+                "agent_archived" -> removed(agentId)
                 "agent.provider_subagents.update" -> onSubagentUpdate(p)
                 "providers_snapshot_update" -> {
                     providerRevision++
@@ -2133,6 +2214,17 @@ public class PaseoGateway(
             statuses.clear()
             cancelRecordBusyExpiry()
             drafts.clear()
+            draftProviders.clear()
+            draftModels.clear()
+            draftVariants.clear()
+            draftFeatureValues.clear()
+            liveAgentSessions.clear()
+            uncertain.clear()
+            uncertainStarts.clear()
+            awaitingTurn.clear()
+            turnActive.clear()
+            providerEntries = null
+            localWork?.invalidate()
             live.clear()
             realIds.clear()
             appIds.clear()

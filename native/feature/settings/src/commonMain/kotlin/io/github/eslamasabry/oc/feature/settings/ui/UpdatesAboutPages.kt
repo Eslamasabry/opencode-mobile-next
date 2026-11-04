@@ -156,7 +156,11 @@ private fun updateLine(state: UpdateState): String =
  * policy.
  */
 @Composable
-internal fun ColumnScope.AboutBody(about: AboutFacts, actions: SettingsActions) {
+internal fun ColumnScope.AboutBody(
+    about: AboutFacts,
+    actions: SettingsActions,
+    voiceLicenses: Boolean = false,
+) {
     KitRowGroup {
         KitRow(title = stringResource(Res.string.aboutBuildVersion, about.version, about.build))
         KitRow(
@@ -185,6 +189,7 @@ internal fun ColumnScope.AboutBody(about: AboutFacts, actions: SettingsActions) 
             onClick = { actions.onOutside(SettingsOutside.ShareApp) },
         )
     }
+    if (voiceLicenses) VoiceLicenseRows(actions)
     KitRowGroup {
         if (about.notices) {
             KitRow(

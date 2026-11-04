@@ -6,28 +6,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.common.MediaProblem
-import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.engine.cards.AgentCard
 import io.github.eslamasabry.oc.engine.cards.CardAnswer
 import io.github.eslamasabry.oc.engine.cards.CardAsk
 import io.github.eslamasabry.oc.engine.cards.CardBoardState
 import io.github.eslamasabry.oc.engine.cards.CardDelivery
 import io.github.eslamasabry.oc.engine.cards.CardEntry
-import io.github.eslamasabry.oc.engine.cards.CardField
 import io.github.eslamasabry.oc.engine.cards.CardFieldType
 import io.github.eslamasabry.oc.engine.cards.CardNode
 import io.github.eslamasabry.oc.engine.cards.CardParse
@@ -44,7 +37,6 @@ import io.github.eslamasabry.oc.ui.kitchat.card.KitCardConfirm
 import io.github.eslamasabry.oc.ui.kitchat.card.KitCardForm
 import io.github.eslamasabry.oc.ui.kitchat.card.KitCardNode
 import io.github.eslamasabry.oc.ui.kitchat.card.KitCardPhoto
-import io.github.eslamasabry.oc.ui.kitchat.card.KitCardPhotoItem
 import io.github.eslamasabry.oc.ui.kitchat.form.KitFormField
 import io.github.eslamasabry.oc.ui.kitchat.form.KitFormFieldKind
 import io.github.eslamasabry.oc.ui.kitchat.form.KitFormOption
@@ -62,27 +54,12 @@ import io.github.eslamasabry.oc.ui.words.res.agentCardChartPoints
 import io.github.eslamasabry.oc.ui.words.res.agentCardChartSeries
 import io.github.eslamasabry.oc.ui.words.res.agentCardChooseOneOrMore
 import io.github.eslamasabry.oc.ui.words.res.agentCardConfirmDefault
-import io.github.eslamasabry.oc.ui.words.res.agentCardDangerBody
-import io.github.eslamasabry.oc.ui.words.res.agentCardDangerConfirm
-import io.github.eslamasabry.oc.ui.words.res.agentCardDangerTitle
 import io.github.eslamasabry.oc.ui.words.res.agentCardDeliveryUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentCardDetails
 import io.github.eslamasabry.oc.ui.words.res.agentCardDiffMore
 import io.github.eslamasabry.oc.ui.words.res.agentCardFailed
-import io.github.eslamasabry.oc.ui.words.res.agentCardFieldMax
-import io.github.eslamasabry.oc.ui.words.res.agentCardFieldMin
-import io.github.eslamasabry.oc.ui.words.res.agentCardFieldNumber
-import io.github.eslamasabry.oc.ui.words.res.agentCardFieldRequired
-import io.github.eslamasabry.oc.ui.words.res.agentCardFieldRequiredHint
 import io.github.eslamasabry.oc.ui.words.res.agentCardFormFix
 import io.github.eslamasabry.oc.ui.words.res.agentCardNotAnswered
-import io.github.eslamasabry.oc.ui.words.res.agentCardPhotoChoose
-import io.github.eslamasabry.oc.ui.words.res.agentCardPhotoCount
-import io.github.eslamasabry.oc.ui.words.res.agentCardPhotoMax
-import io.github.eslamasabry.oc.ui.words.res.agentCardPhotoName
-import io.github.eslamasabry.oc.ui.words.res.agentCardPhotoNone
-import io.github.eslamasabry.oc.ui.words.res.agentCardPhotoRemove
-import io.github.eslamasabry.oc.ui.words.res.agentCardPhotoTake
 import io.github.eslamasabry.oc.ui.words.res.agentCardPhotoTooLarge
 import io.github.eslamasabry.oc.ui.words.res.agentCardPhotoUnavailable
 import io.github.eslamasabry.oc.ui.words.res.agentCardProgressValue
@@ -99,15 +76,10 @@ import io.github.eslamasabry.oc.ui.words.res.agentCardYourAnswer
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
 import io.github.eslamasabry.oc.ui.words.res.chatUiAgent
 import io.github.eslamasabry.oc.ui.words.res.kitUndoAction
-import io.github.eslamasabry.oc.ui.words.res.kitWorking
-import io.github.eslamasabry.oc.ui.words.res.photoPermissionDenied
-import io.github.eslamasabry.oc.ui.words.res.photoUnavailable
-import kotlin.io.encoding.Base64
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -151,12 +123,6 @@ public interface ChatConnectorSlotHost : ChatCardSlotHost {
  * opens only through the app's ExternalLinkPolicy → ExternalLinkOpener path, never straight from
  * the card.
  */
-public interface ChatCardPhotoHost {
-    public val photoSource: ComposerAttachSource?
-
-    public fun answerPhotos(card: AgentCard, photos: List<PromptAttachment>)
-}
-
 public class ModelCardSlotHost(
     private val model: ChatCardsModel,
     private val links: (String) -> Unit,
@@ -371,36 +337,15 @@ private fun CardAskControls(
                 blockedReason = blocked,
             )
         }
-        is CardAsk.Confirm -> {
-            var confirming by remember(card.identity) { mutableStateOf(false) }
+        is CardAsk.Confirm ->
             KitCardConfirm(
                 confirmLabel =
                     ask.confirmLabel ?: stringResource(Res.string.agentCardConfirmDefault),
                 cancelLabel = ask.cancelLabel ?: stringResource(Res.string.agentCardCancelDefault),
                 danger = ask.danger,
-                onAnswer = { answer ->
-                    if (answer && ask.danger) confirming = true
-                    else onAnswer(CardAnswer.Confirm(answer))
-                },
+                onAnswer = { onAnswer(CardAnswer.Confirm(it)) },
                 blockedReason = blocked,
             )
-            KitConfirm(
-                spec =
-                    if (confirming && blocked == null)
-                        KitConfirmSpec(
-                            title = stringResource(Res.string.agentCardDangerTitle),
-                            body = stringResource(Res.string.agentCardDangerBody),
-                            confirmLabel = stringResource(Res.string.agentCardDangerConfirm),
-                            kind = KitConfirmKind.Destructive,
-                        )
-                    else null,
-                onConfirm = {
-                    confirming = false
-                    if (blocked == null) onAnswer(CardAnswer.Confirm(true))
-                },
-                onCancel = { confirming = false },
-            )
-        }
         is CardAsk.Form -> {
             val values =
                 remember(card.identity, draft) {
@@ -411,44 +356,10 @@ private fun CardAskControls(
             var touched by remember(card.identity) { mutableStateOf(false) }
             val answer = CardForms.answer(ask, values)
             KitCardForm(
-                fields =
-                    CardForms.fields(ask)
-                        .map { field ->
-                            field.copy(
-                                description =
-                                    // Flutter puts the hint on typed and date fields only;
-                                    // a toggle or select always holds an answer.
-                                    if (
-                                        ask.fields.first { it.id == field.key }.let {
-                                            it.required &&
-                                                it.type != CardFieldType.Toggle &&
-                                                it.type != CardFieldType.Select
-                                        }
-                                    )
-                                        stringResource(Res.string.agentCardFieldRequiredHint)
-                                    else null,
-                                error =
-                                    if (touched[field.key] == true)
-                                        formProblemWords(
-                                            CardForms.problem(
-                                                ask.fields.first { it.id == field.key },
-                                                values[field.key],
-                                            )
-                                        )
-                                    else null,
-                                maxLength =
-                                    if (
-                                        field.kind == KitFormFieldKind.Text ||
-                                            field.kind == KitFormFieldKind.Multiline
-                                    )
-                                        2000
-                                    else null,
-                            )
-                        }
-                        .toImmutableList(),
+                fields = CardForms.fields(ask),
                 values = values.toImmutableMap(),
                 onChange = { k, v ->
-                    touched[k] = true
+                    touched = true
                     values[k] = v
                 },
                 sendLabel = ask.submitLabel ?: stringResource(Res.string.agentCardSend),
@@ -717,11 +628,7 @@ internal object CardForms {
                         }
                         else -> out[f.id] = v.text
                     }
-                else ->
-                    (value as? KitFormValue.Text)
-                        ?.text
-                        ?.takeIf { it.isNotBlank() }
-                        ?.let { out[field.id] = it }
+                null -> if (f.required && f.type != CardFieldType.Toggle) return null
             }
         }
         return CardAnswer.Form(out)
@@ -734,19 +641,6 @@ internal object CardForms {
             .substringBefore('#')
             .substringBefore(':')
 }
-
-@Composable
-private fun formProblemWords(problem: CardForms.Problem?): String? =
-    when (problem) {
-        null -> null
-        CardForms.Problem.Required -> stringResource(Res.string.agentCardFieldRequired)
-        CardForms.Problem.Number -> stringResource(Res.string.agentCardFieldNumber)
-        is CardForms.Problem.Minimum ->
-            stringResource(Res.string.agentCardFieldMin, CardCharts.plain(problem.value))
-        is CardForms.Problem.Maximum ->
-            stringResource(Res.string.agentCardFieldMax, CardCharts.plain(problem.value))
-        CardForms.Problem.Date -> stringResource(Res.string.kitDateInvalid)
-    }
 
 /** Initial empty map for previews. */
 internal val NoFormValues = persistentMapOf<String, KitFormValue>()

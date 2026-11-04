@@ -46,6 +46,7 @@ public data class ConversationRowUi(
     val permission: io.github.eslamasabry.oc.engine.agents.feed.FeedPermission? = null,
     val observedAtMs: Long = 0,
     val updatedAtMs: Long? = null,
+    val canOpen: Boolean = true,
 )
 
 /**

@@ -28,4 +28,10 @@
     <string name="remoteTerminalEndQuestion">إنهاء هذه الطرفية؟</string>
     <string name="remoteTerminalEndBody">يوقف هذا الصدفة البعيدة وكل ما يعمل بداخلها.</string>
     <string name="remoteTerminalKeep">إبقاء الطرفية</string>
+    <string name="remoteTerminalOffline">الطرفية غير متصلة. افتحها مجددًا لإعادة الاتصال.</string>
+    <string name="remoteTerminalSize">حجم الطرفية</string>
+    <string name="remoteTerminalRows">الصفوف</string>
+    <string name="remoteTerminalColumns">الأعمدة</string>
+    <string name="remoteTerminalApplySize">تطبيق الحجم</string>
+    <string name="remoteTerminalSizeRange">اختر عددًا من ١ إلى ١٠٠٠ للصفوف والأعمدة.</string>
 </resources>

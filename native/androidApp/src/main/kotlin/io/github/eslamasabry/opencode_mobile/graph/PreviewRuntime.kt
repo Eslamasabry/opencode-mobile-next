@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.feed.*
+import io.github.eslamasabry.oc.engine.agents.handoff.HandoffLinks
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.connection.*
 import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
@@ -58,6 +59,7 @@ class PreviewRuntime(
     dispatchers: AppDispatchers,
     private val draftOwners: Set<ConversationDrafts>,
     private val runtimeOwner: RuntimeProfileOwner,
+    private val inventory: NativeSessionInventory,
     private val cleaners:
         Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
     private val deliveryStores: Set<DeliveryStorage>,
@@ -75,6 +77,7 @@ class PreviewRuntime(
     private val mutableBusy = MutableStateFlow(false)
     override val busy: StateFlow<Boolean> = mutableBusy.asStateFlow()
     internal val snapshot = MutableStateFlow(ChatFeedSnapshot())
+    private val unverifiedListings = mutableSetOf<ProfileId>()
     private val listings = mutableMapOf<ProfileId, MutableStateFlow<OpenCodeListing>>()
     private val mutableSourceFailures = MutableStateFlow<Map<ProfileId, Failure>>(emptyMap())
     internal val sourceFailures: Map<ProfileId, Failure>
@@ -149,6 +152,9 @@ class PreviewRuntime(
         scope.launch {
             if (ready.await() is Outcome.Failed) return@launch
             val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
+            // 47-port-rest-2: the saved session labels show at once, marked unverified, until the
+            // server answers.
+            if (active != null) seedOpening(active)
             // PORT-SCREENS-2: the home list records each source's failure, then the other shown
             // sources join. Launcher shortcuts wait for this first connection (awaitInitialConnection).
             initialConnection.complete(
@@ -414,7 +420,12 @@ class PreviewRuntime(
                 if (saved is Outcome.Failed) return saved.atStage(ConnectionStage.SaveActiveProfile)
                 val graph = opened.value
                 if (!listings.containsKey(id)) {
-                    listings[id] = MutableStateFlow(OpenCodeListing(loading = true))
+                    val cached = inventory.read(loaded.profile)
+                    if (cached.isNotEmpty()) unverifiedListings += id
+                    listings[id] =
+                        MutableStateFlow(
+                            OpenCodeListing(sessions = cached, loading = true, complete = false)
+                        )
                     rebuildFeed()
                     eventJobs[id] = scope.launch {
                         launch {
@@ -661,8 +672,35 @@ class PreviewRuntime(
             }
         val merged = ChatFeed(sources, scope)
         feed = merged
-        snapshot.value = merged.snapshot.value
-        feedJob = scope.launch { merged.snapshot.collect { snapshot.value = it } }
+        snapshot.value = openingFlags(merged.snapshot.value)
+        feedJob = scope.launch { merged.snapshot.collect { snapshot.value = openingFlags(it) } }
+    }
+
+    private fun openingFlags(value: ChatFeedSnapshot): ChatFeedSnapshot =
+        value.copy(
+            items =
+                value.items
+                    .map {
+                        if (it.profileId in unverifiedListings) it.copy(canReopen = false) else it
+                    }
+                    .toImmutableList()
+        )
+
+    private fun seedOpening(id: ProfileId) {
+        val loaded = profiles.profile(id) ?: return
+        val cached = inventory.read(loaded.profile)
+        if (cached.isEmpty()) return
+        val source =
+            OpenCodeChatFeedSource(
+                id,
+                loaded.profile.name,
+                MutableStateFlow(OpenCodeListing(sessions = cached, complete = false)),
+            )
+        snapshot.value =
+            ChatFeedSnapshot(
+                items = source.current().items.map { it.copy(canReopen = false) }.toImmutableList(),
+                complete = false,
+            )
     }
 
     private suspend fun publishReadState(
@@ -736,6 +774,12 @@ class PreviewRuntime(
                     return Failure.Refused(RefusalReason.StaleScope)
                         .failed()
                         .atStage(ConnectionStage.LoadConversations)
+                unverifiedListings.remove(id)
+                val stored = profiles.profile(id)?.profile
+                if (stored != null)
+                    inventory.save(stored, page.value.sessions) {
+                        registry.live.value[id] === graph
+                    }
                 val statuses = graph.session.server.sessionStatuses()
                 val caps = graph.session.server.capabilities.value
                 val permissions =
@@ -873,6 +917,7 @@ class PreviewRuntime(
         requests.remove(id)
         listings.remove(id)
         loadedSources.update { it - id }
+        unverifiedListings.remove(id)
         rebuildFeed()
         application.platformHub.onExplicitDisconnect(id)
         // Flutter disconnect(keepActive: true): the server stays the chosen one, just offline.

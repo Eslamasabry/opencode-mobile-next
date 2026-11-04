@@ -40,6 +40,9 @@ public interface SettingsHost {
     public val localModels: LocalModelStorage?
         get() = null
 
+    public val licenses: VoiceLicenseSource?
+        get() = null
+
     public val diagnostics: DiagnosticsExport?
 }
 
@@ -68,6 +71,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.appearanceGuide,
             nav::back,
             host.localModels,
+            host.licenses,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state
@@ -82,6 +86,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
 
     override fun onCleared() {
         presenter.closeReport()
+        presenter.close()
     }
 
     private var announced = false

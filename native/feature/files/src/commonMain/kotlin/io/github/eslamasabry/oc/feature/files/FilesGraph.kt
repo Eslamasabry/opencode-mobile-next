@@ -185,6 +185,9 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
 
     override fun sourceIdentity(ref: ConversationRef): Any? = registry.graphFor(ref)
 
+    override fun canTerminal(ref: ConversationRef): Boolean =
+        live(ref)?.capabilities?.value?.terminal == true
+
     override suspend fun directory(ref: ConversationRef): String? {
         val gateway = live(ref) ?: return null
         return ConversationFiles(gateway, ref.sessionId).directory()

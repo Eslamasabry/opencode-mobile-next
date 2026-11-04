@@ -39,6 +39,8 @@ public data class SettingsUi(
     val localModels: LocalModelStorageFacts? = null,
     /** One plain line about the last save that did not stick, if any. */
     val note: SettingsNote? = null,
+    val voiceLicenses: Boolean = false,
+    val license: LicenseUi? = null,
 ) {
     val page: SettingsPage
         get() = stack.last()
@@ -223,6 +225,8 @@ public enum class SettingsNote {
     TestNotSent,
     UpdateFailed,
     ReportCopied,
+    LicenseCopied,
+    LicenseCopyFailed,
     ShareFailed,
 }
 

@@ -322,6 +322,8 @@ class PlatformHub(
     private val background: BackgroundHub,
     private val quotaTargets: QuotaAlertTargets,
     private val widgetTeams: NativeWidgetTeam,
+    // Created with the hub at startup so it sees the first activity start (Pacer reads it).
+    private val appVisibility: AppVisibility,
 ) {
     private val mainDispatcher = dispatchers.main
     private val appScope = CoroutineScope(appScope.coroutineContext + mainDispatcher)
@@ -356,7 +358,17 @@ class PlatformHub(
     private val statusPosted =
         mutableSetOf<String>() // finished / stopped alerts still in the shade
     private var knownProfiles: Set<ProfileId> = emptySet()
-    private val share = ShareSeed()
+    internal val incomingShare =
+        IncomingShare(
+            application,
+            appScope,
+            dispatchers,
+            stores,
+            registry,
+            runtime,
+            draftOwners,
+            navigator,
+        )
     private var widgetModel: WidgetModel? = null
     private var widgetBaseModel: WidgetModel? = null
     private val widgetPublishLane = kotlinx.coroutines.sync.Mutex()
@@ -457,7 +469,7 @@ class PlatformHub(
         appScope.launch {
             stores.profiles.activeId.collect { publishPins(runtime.snapshot.value) }
         }
-        appScope.launch { navigator.top.collect { top -> seedShare(top) } }
+        appScope.launch { navigator.top.collect { updates.setPageOpen(it == UpdatesRoute.Home) } }
     }
 
     val scope: CoroutineScope
@@ -492,6 +504,7 @@ class PlatformHub(
             appScope.launch { if (quotaTargets.accepts(profile, token)) navigator.open(PlansRoute) }
             return
         }
+        if ((application.appGraph as SchedulesGraphAccess).scheduleOpens.consume(intent)) return
         if (monitoring.route(intent)) return
         if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
             // B-ANDR-072: the one VIEW filter. Consumed once; route identifiers only.
@@ -508,8 +521,7 @@ class PlatformHub(
         }
         val share = SharedTextIntake.consume(intent)
         if (share != null) {
-            this.share.arrived(share.text, runtime.snapshot.value.items.map { it.ref }.toSet())
-            navigator.open(ChatsRoute.New(profile = stores.profiles.activeId.value))
+            incomingShare.arrived(share.text)
             return
         }
         LaunchActions.consumeSessionShortcut(intent)?.let { tap ->
@@ -642,23 +654,6 @@ class PlatformHub(
 
     // ---- Share into a new conversation
     // ----------------------------------------------------------------------------
-
-    /**
-     * The shared words become the draft of the new conversation made for them (07 §7.7); kept until
-     * saved.
-     */
-    private fun seedShare(top: AppRoute?) {
-        val ref = share.target(top) ?: return
-        val text = share.text ?: return
-        val owner = draftOwners.firstOrNull() ?: return share.notSaved(ref)
-        appScope.launch {
-            val session = owner.open(ref)
-            val ready = withTimeoutOrNull(SEED_WAIT_MS) { session.state.first { it.ready } }
-            if (ready == null) return@launch share.notSaved(ref)
-            session.changed(share.merged(ready.text, text))
-            if (session.flush() is Outcome.Ok) share.saved(ref) else share.notSaved(ref)
-        }
-    }
 
     /**
      * Every alert this app put in the shade goes; requests already alerted are not posted again.

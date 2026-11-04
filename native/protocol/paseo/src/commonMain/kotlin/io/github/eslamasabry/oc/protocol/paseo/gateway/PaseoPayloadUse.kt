@@ -14,28 +14,41 @@ import kotlinx.coroutines.CancellationException
  * send's own result. Without callbacks (every remote gateway) the operation simply runs.
  */
 internal suspend fun <T> PaseoGateway.withPayloadUse(operation: suspend () -> T): T {
-    val acquire = beforePayloadUse ?: return operation()
     val scope = directoryValue
     val epoch = locationEpoch
-    val admitted = try {
-        acquire()
-    } catch (e: CancellationException) {
-        throw e
-    } catch (_: Exception) {
-        // Host exceptions may carry private native detail: fixed words only.
-        paseoFail(PaseoFailureKind.Unavailable)
-    }
-    if (admitted is Outcome.Failed) throw PaseoException(PaseoFailureKind.Unavailable, "The phone refused new agent work")
+    var acquired = false
+    pendingPayloadWork++
+    payloadWorkChanged()
     try {
-        if (closed || scope != directoryValue || epoch != locationEpoch) paseoFail(PaseoFailureKind.ScopeMismatch)
+        val acquire = beforePayloadUse
+        if (acquire != null) {
+            val admitted =
+                try {
+                    acquire()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    paseoFail(PaseoFailureKind.Unavailable)
+                }
+            if (admitted is Outcome.Failed)
+                throw PaseoException(
+                    PaseoFailureKind.Unavailable,
+                    "The phone refused new agent work",
+                )
+            acquired = true
+            if (closed || scope != directoryValue || epoch != locationEpoch)
+                paseoFail(PaseoFailureKind.ScopeMismatch)
+        }
         return operation()
     } finally {
-        try {
-            afterPayloadUse?.invoke()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            // The host owns its counter's bookkeeping; its errors never replace delivery truth.
+        pendingPayloadWork--
+        payloadWorkChanged()
+        if (acquired) {
+            try {
+                afterPayloadUse?.invoke()
+            } catch (_: Exception) {
+                // Releasing a host lease must never replace the send's delivery result.
+            }
         }
     }
 }
