@@ -79,6 +79,7 @@
 :feature:voice	F	(slice brief names the agent)	slice-12
 :protocol:codex	F	build-protocols	parity-p12
 :feature:computer	F	build-protocols	parity-p12
+:feature:devservices	F	build-runtime-a	slice-5
 :feature:diagnostics	F	build-diagnostics-attention	parity
 :android:background	F	build-android-bg-platform	parity-p12
 :android:termux	F	build-android-bg-platform	parity-p12

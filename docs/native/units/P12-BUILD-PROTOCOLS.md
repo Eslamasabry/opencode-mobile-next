@@ -263,3 +263,44 @@ The new merge message passes `native/tool/check_commits.sh --message-file ...
 --merge`. A post-merge range scan (`HEAD^1..HEAD`, 118 commits) also traverses
 incoming integration history and reports pre-existing subject/body/skip-CI
 violations there. Those imported commits were preserved without rewriting.
+
+## P12 integration repair against 1999c91 (2026-11-04)
+
+Merged `1999c91f0b9bc2040db70d71f2981b1386fed0ee` into
+`p12x/protocols-01a99f9`, starting at
+`01a99f9cc237f50518681523afb1de9cb5dd8829`.
+
+Resolved the sole conflict in `native/MODULE_OWNERS` by keeping Codex, Computer
+and Development services. Verified both parents' ownership entries survive
+with 90 unique module paths, and the Android app retains the union of both
+parents' project dependencies (74 paths). No Kotlin source or tests needed
+changes. Restored the missing gitignored sherpa-onnx AAR using
+`native/tools/vendor/fetch.sh`; its committed SHA-256 matched.
+
+Ran the requested compile-only command under the shared PC build lock:
+
+```bash
+cd native
+export JAVA_HOME=/home/eslam/Storage2/tools/jdk21
+export ANDROID_HOME="$HOME/Android/Sdk"
+../tool/qa/machine_lock.sh build -- nice -n 5 ./gradlew --console=plain --continue \
+  -Dorg.gradle.workers.max=2 \
+  -Dorg.gradle.daemon.idletimeout=300000 \
+  -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' \
+  :androidApp:assemblePreviewDebug compileKotlinDesktop compileTestKotlinDesktop
+```
+
+**BUILD SUCCESSFUL in 5m 9s; 3/3 requested gates passed.**
+1,285 actionable tasks: 953 executed, 332 from cache. Zero failed tasks and
+zero Kotlin errors; existing compiler/configuration warnings remain.
+Desktop source compilation covered 71 modules. Desktop test-source compilation
+covered 71 tasks (69 with source, two `NO-SOURCE`). Tests executed: **0**, per
+the owner's migration boundary; the test-running Flutter preflight was omitted.
+
+Compiled tree: `7467c184aa6cf72978eff5b6938ea560b33b2637`, unchanged through
+completion, before this documentation-only append. Local build log:
+`/tmp/p12-protocols-1999c91-compile-20261104.log`.
+
+The merge message and resolved ownership/dependency/report whitespace checks
+pass. The incoming runtime file `ServerRestartBudget.kt` retains its existing
+extra blank line at EOF. No push, CI run, release or device validation performed.
