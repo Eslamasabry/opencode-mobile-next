@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.domain.platform.ForegroundKind
 import io.github.eslamasabry.oc.core.domain.platform.ForegroundTicket
 import io.github.eslamasabry.oc.core.domain.platform.ForegroundWork
+import io.github.eslamasabry.opencode_mobile.graph.attentionRuntime
 import io.github.eslamasabry.opencode_mobile.graph.backgroundHub
 import io.github.eslamasabry.opencode_mobile.graph.platformHub
 import kotlinx.coroutines.launch
@@ -167,10 +168,12 @@ class BackgroundConnectionService : Service() {
     }
 
     /**
-     * The connected row: the app's name and that it stays live; a tap opens the app (no
-     * trampoline).
+     * The live row uses the same status renderer as subsequent updates (ANDR-1); no static row can
+     * replace live work. The widget row: the app's name and that it is pending; a tap opens the app
+     * (no trampoline).
      */
     private fun row(widget: Boolean = false): Notification {
+        if (!widget) return attentionRuntime.notification()
         val words = NotifyWords(this) { platformHub.appLocaleTag }
         ChannelRegistry(getSystemService(android.app.NotificationManager::class.java), words)
             .ensure()

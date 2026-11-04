@@ -233,6 +233,8 @@ public fun ChatScreen(
     start: ChatStartUi = ChatStartUi(),
     startActions: ChatStartActions? = null,
     demoMode: Boolean = false,
+    appStatus: KitStatus? = null,
+    replyOffer: (@Composable () -> Unit)? = null,
 ) {
     var contextOpen by remember { mutableStateOf(false) }
     var tasksOpen by remember(state.ref) { mutableStateOf(false) }
@@ -449,12 +451,16 @@ public fun ChatScreen(
                                 stringResource(Res.string.stateDemoDisclosure),
                                 id = "offline-demo",
                             )
-                        else state.status?.let { statusLine(it, actions) },
+                        else
+                            KitStatus.highest(
+                                listOf(state.status?.let { statusLine(it, actions) }, appStatus)
+                            ),
                     search = state.find?.let { find -> @Composable { FindBar(find, actions) } },
                     loading = state.phase == ChatPhase.Loading,
                     loadingLabel = stringResource(Res.string.chatLoadingConversation),
                     bottom = {
                         Column {
+                            replyOffer?.invoke()
                             // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone
                             // consent.
                             replyReader?.Reader(

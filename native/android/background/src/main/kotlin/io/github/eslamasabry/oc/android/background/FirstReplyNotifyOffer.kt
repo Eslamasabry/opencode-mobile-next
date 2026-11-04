@@ -7,7 +7,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/** `oc.firstRun.notifyAsk` (Flutter `FirstRun.notifyAskKey`): `pending` until the question is answered. */
+/**
+ * `oc.firstRun.notifyAsk` (Flutter `FirstRun.notifyAskKey`): `pending` until the question is
+ * answered.
+ */
 public interface NotifyAskStore {
     public fun pending(): Boolean
 
@@ -21,8 +24,9 @@ public interface NotifyAskStore {
 }
 
 /**
- * The per-server "needs you" consent (`:engine:settings` `InFlowConsentStore.requestNeedsYouPreset` / `answer(…,
- * NeedsYouNotifications, …)`). [claim] is Ok(true) when the question is owed on that server and was claimed for it.
+ * The per-server "needs you" consent (`:engine:settings` `InFlowConsentStore.requestNeedsYouPreset`
+ * / `answer(…, NeedsYouNotifications, …)`). [claim] is Ok(true) when the question is owed on that
+ * server and was claimed for it.
  */
 public interface NeedsYouConsent {
     public suspend fun claim(profileId: String): Outcome<Boolean>
@@ -41,8 +45,19 @@ public interface NotifyOfferHost {
     /** The platform can post notifications at all (Flutter `supportsNotifications`). */
     public fun supportsNotifications(): Boolean
 
-    /** Turns on notifications for requests (`oc.notify.requests`), the first half of "Notify me". */
+    /**
+     * Turns on notifications for requests (`oc.notify.requests`), the first half of "Notify me".
+     */
     public suspend fun enableRequestNotifications()
+
+    /**
+     * A storage-aware host refuses activation when the request-notification choice could not be
+     * saved.
+     */
+    public suspend fun enableRequestNotificationsSaved(): Boolean {
+        enableRequestNotifications()
+        return true
+    }
 }
 
 /** Why "Notify me" did not turn notifications on. */
@@ -64,10 +79,11 @@ public data class NotifyOfferState(
 )
 
 /**
- * "Notify you when the agent needs you?" (port of `FirstReplyNotifyOffer`): asked once, only after the first reply
- * of a new person's first run has completed. Not asked when live mode is already on (that answers it), nor where the
- * device cannot notify (still owed). "Notify me" turns on request notifications and live mode, which raises Android's
- * notification prompt; a refusal there is an answer too. Confined with its [scope].
+ * "Notify you when the agent needs you?" (port of `FirstReplyNotifyOffer`): asked once, only after
+ * the first reply of a new person's first run has completed. Not asked when live mode is already on
+ * (that answers it), nor where the device cannot notify (still owed). "Notify me" turns on request
+ * notifications and live mode, which raises Android's notification prompt; a refusal there is an
+ * answer too. Confined with its [scope].
  */
 public class FirstReplyNotifyOffer(
     private val host: NotifyOfferHost,
@@ -84,14 +100,23 @@ public class FirstReplyNotifyOffer(
     private val _state = MutableStateFlow(NotifyOfferState())
     public val state: StateFlow<NotifyOfferState> = _state.asStateFlow()
 
-    /** Still owed to the person on this device; the one-time tips stay quiet until it is answered. */
+    /**
+     * Still owed to the person on this device; the one-time tips stay quiet until it is answered.
+     */
     public fun pending(): Boolean =
-        !host.isolated && host.supportsNotifications() && liveMode.support.supported() && ask.pending()
+        !host.isolated &&
+            host.supportsNotifications() &&
+            liveMode.support.supported() &&
+            ask.pending()
 
-    /** Whether the question shows now. Pure for the caller: the claim and the quiet answer happen after it. */
+    /**
+     * Whether the question shows now. Pure for the caller: the claim and the quiet answer happen
+     * after it.
+     */
     public fun showFor(replyCompleted: Boolean): Boolean {
         if (answered || !replyCompleted || !pending()) return false
-        // Already on (turned on in Settings between the reply and now): answered elsewhere, so not asked.
+        // Already on (turned on in Settings between the reply and now): answered elsewhere, so not
+        // asked.
         if (liveMode.state.value.enabled) {
             if (!settling) {
                 settling = true
@@ -118,7 +143,8 @@ public class FirstReplyNotifyOffer(
                     claimed = profileId
                     changed()
                 } else {
-                    // Already asked on this server (or answered in Settings): the first-run question is settled.
+                    // Already asked on this server (or answered in Settings): the first-run
+                    // question is settled.
                     answered = true
                     changed()
                     ask.answer()
@@ -139,11 +165,18 @@ public class FirstReplyNotifyOffer(
         val server = claimed
         if (server != null && consent.answer(server, allow = true) is Outcome.Failed) {
             answered = true
-            _state.value = _state.value.copy(working = false, failure = NotifyOfferFailure.SaveFailed)
+            _state.value =
+                _state.value.copy(working = false, failure = NotifyOfferFailure.SaveFailed)
             changed()
             return
         }
-        host.enableRequestNotifications()
+        if (!host.enableRequestNotificationsSaved()) {
+            answered = true
+            _state.value =
+                _state.value.copy(working = false, failure = NotifyOfferFailure.SaveFailed)
+            changed()
+            return
+        }
         val enabled = liveMode.setEnabled(true)
         // Asked once: a refusal at Android's own prompt is an answer too.
         ask.answer()
@@ -152,7 +185,8 @@ public class FirstReplyNotifyOffer(
             _state.value.copy(
                 working = false,
                 failure = if (enabled) _state.value.failure else NotifyOfferFailure.NotEnabled,
-                failureError = if (enabled) _state.value.failureError else liveMode.state.value.lastError,
+                failureError =
+                    if (enabled) _state.value.failureError else liveMode.state.value.lastError,
             )
         changed()
     }

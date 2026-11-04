@@ -14,15 +14,7 @@ import io.github.eslamasabry.oc.engine.integrations.quota.InAppQuotaCollector
 @BindingContainer
 @ContributesTo(AppScope::class)
 object SecurityFeatureBindings {
-    @Provides
-    @SingleIn(AppScope::class)
-    fun network(application: Application): NetworkStatus =
-        AndroidNetworkStatus(application).also { it.start() }
-
-    @Provides
-    @SingleIn(AppScope::class)
-    fun device(application: Application, network: NetworkStatus): DeviceFacts =
-        AndroidDeviceFacts(application, network).also { it.start() }
+    // NetworkStatus and DeviceFacts are provided once, by PreviewBindings (PreviewStores.kt).
 
     @Provides
     @SingleIn(AppScope::class)
@@ -116,5 +108,9 @@ object SecurityFeatureBindings {
                     "read-only opening conversation titles",
                 )
             )
+            // ANDR-1: consent records (moved here from PreviewRuntime's local scope; its monitor keys
+            // and session pins are already registered above by AndroidProfileMonitoring.registerKeys
+            // and registerStateKeys).
+            io.github.eslamasabry.oc.engine.settings.consent.ConsentKeys.shapes.forEach { register(it) }
         }
 }

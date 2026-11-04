@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose owns keyboard focus feedback in every native activity. -->
+    <style name="NativeAppTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:defaultFocusHighlightEnabled">false</item>
+    </style>
+    <style name="NativeTrampolineTheme" parent="android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:defaultFocusHighlightEnabled">false</item>
+    </style>
+</resources>

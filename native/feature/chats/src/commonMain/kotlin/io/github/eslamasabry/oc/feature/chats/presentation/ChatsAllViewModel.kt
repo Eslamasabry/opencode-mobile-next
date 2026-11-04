@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -49,7 +50,7 @@ public class ChatsAllViewModel(
     private val context: io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory? =
         null,
     private val previews: ConversationPreviews = NoConversationPreviews(),
-) : ViewModel(), ChatsAllActions {
+) : ViewModel(), ChatsAllActions, ChatsPinActions {
     private val model =
         MutableStateFlow(
             AllModel(
@@ -74,7 +75,12 @@ public class ChatsAllViewModel(
 
     public val state: StateFlow<AllConversationsUi> =
         model
-            .map { AllConversationsRules.build(it) }
+            .map { current ->
+                // ANDR-1: a host with pin storage shows the row's visible pin action too.
+                val built = AllConversationsRules.build(current)
+                if (!pins.supported) built
+                else built.copy(rows = built.rows.map { it.copy(pinAvailable = true) }.toImmutableList())
+            }
             .stateIn(
                 viewModelScope,
                 SharingStarted.Eagerly,
@@ -83,6 +89,21 @@ public class ChatsAllViewModel(
 
     init {
         viewModelScope.launch { connections.servers.collect { adopt(it) } }
+        // Pins stored by another surface: re-read each live server's set.
+        viewModelScope.launch {
+            pins.changes.collect {
+                val now = servers
+                model.update { cur ->
+                    cur.copy(
+                        sources =
+                            cur.sources.mapValues { (profile, src) ->
+                                now.firstOrNull { it.profile == profile }
+                                    ?.let { src.copy(pinned = pins.ids(it)) } ?: src
+                            }
+                    )
+                }
+            }
+        }
         viewModelScope.launch {
             followed.collectLatest { (run, list) ->
                 list.map { server -> flow<Unit> { follow(server, run) } }.merge().collect()

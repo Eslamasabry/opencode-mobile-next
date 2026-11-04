@@ -50,6 +50,7 @@ public fun SettingsScreen(
     actions: SettingsActions,
     modifier: Modifier = Modifier,
     onExit: (() -> Unit)? = null,
+    monitoring: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     val back: () -> Unit = { actions.onBack() }
     // Back from Android's notification settings: the blocked notice must say what is true now
@@ -90,6 +91,7 @@ public fun SettingsScreen(
                 modifier,
             ) {
                 state.notifications?.let { NotificationsBody(it, actions) }
+                monitoring?.invoke(this)
             }
         SettingsPage.Updates ->
             SettingsFrame(

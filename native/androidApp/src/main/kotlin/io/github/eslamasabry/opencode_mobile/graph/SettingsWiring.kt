@@ -382,7 +382,13 @@ class AndroidSettingsHost(
             Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                 .putExtra(Settings.EXTRA_APP_PACKAGE, application.packageName)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        application.startActivity(intent)
+        try {
+            application.startActivity(intent)
+        } catch (_: android.content.ActivityNotFoundException) {
+            // Some phone settings apps do not expose this page.
+        } catch (_: SecurityException) {
+            // A platform restriction does not escape into the settings action.
+        }
     }
 
     private companion object {

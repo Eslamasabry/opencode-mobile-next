@@ -109,7 +109,7 @@ dependencies {
             ":engine:diagnostics",
             ":android:platform", // SEC: the adopted category-only native crash handler/store
             ":android:notifications",
-            ":android:platform",
+            ":android:platform", // ANDR: real default-network tracker for consented monitors
             ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
             ":android:termux",

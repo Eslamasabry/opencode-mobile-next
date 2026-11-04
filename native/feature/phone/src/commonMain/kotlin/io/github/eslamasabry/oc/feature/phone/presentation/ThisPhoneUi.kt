@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.phone.presentation
 
+import io.github.eslamasabry.oc.engine.runtime.storage.PhoneStorageSnapshot
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -77,6 +78,9 @@ public data class ThisPhoneUi(
     val working: PhoneOp? = null,
     val confirm: ThisPhoneConfirm? = null,
     val notice: ThisPhoneNotice? = null,
+    val storageSupported: Boolean = false,
+    val phoneStorage: PhoneStorageSnapshot? = null,
+    val measuringStorage: Boolean = false,
     val exitNotice: PhoneExitNotice? = null,
     val leftover: io.github.eslamasabry.oc.engine.runtime.procs.RunawayNotice? = null,
 )
@@ -101,6 +105,8 @@ public interface ThisPhoneActions {
 
     /** Closes the confirm or the notice. */
     public fun dismiss()
+
+    public fun measureStorage()
 
     public fun openRunning()
 

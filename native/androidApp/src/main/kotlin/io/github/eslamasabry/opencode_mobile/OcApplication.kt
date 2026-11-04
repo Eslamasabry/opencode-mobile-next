@@ -13,10 +13,15 @@ import io.github.eslamasabry.oc.core.security.RedactingWriter
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
 import io.github.eslamasabry.opencode_mobile.graph.CrashAccessors
+import io.github.eslamasabry.opencode_mobile.graph.AppExitAccessors
+import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
+import io.github.eslamasabry.opencode_mobile.graph.AttentionRuntimeAccessors
+import io.github.eslamasabry.opencode_mobile.graph.BackgroundAccessors
 import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsAttentionAccessors
 import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsLogSink
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
 import io.github.eslamasabry.opencode_mobile.graph.LinuxAccessors
+import io.github.eslamasabry.opencode_mobile.graph.MonitorRuntimeAccessors
 import io.github.eslamasabry.opencode_mobile.graph.NativeExitAccessors
 import io.github.eslamasabry.opencode_mobile.graph.NativeHealingAccessors
 import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
@@ -59,6 +64,11 @@ class OcApplication : Application(), GraphOwner {
         (appGraph as DiagnosticsAttentionAccessors)
             .diagnosticsAttention
             .start() // persisted report, crash store, exits
+        (appGraph as BackgroundAccessors).background.start()
+        (appGraph as AppExitAccessors).appExit.start()
+        (appGraph as AppNoticesAccessors).appNotices.start()
+        (appGraph as AttentionRuntimeAccessors).attentionRuntime.start()
+        (appGraph as MonitorRuntimeAccessors).monitorRuntime.start()
         appGraph.previewRuntime // Warm local stores. MainActivity restores the ordinary connection.
         (appGraph as io.github.eslamasabry.opencode_mobile.graph.AttentionStateAccessors)
             .attentionState

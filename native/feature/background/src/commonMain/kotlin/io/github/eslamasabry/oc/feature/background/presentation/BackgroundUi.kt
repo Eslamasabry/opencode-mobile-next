@@ -4,7 +4,14 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import kotlinx.coroutines.flow.StateFlow
 
 /** Why Android stopped the background connection (Flutter `BackgroundPauseReason`). */
-public enum class PauseReason { TimeLimit, BatteryRestricted, UserStopped, DeviceRestarted, AppUpdated, Interrupted }
+public enum class PauseReason {
+    TimeLimit,
+    BatteryRestricted,
+    UserStopped,
+    DeviceRestarted,
+    AppUpdated,
+    Interrupted,
+}
 
 /** A durable pause the person has not dismissed yet (Flutter `BackgroundPauseNoticeState`). */
 public data class PauseFacts(
@@ -13,11 +20,22 @@ public data class PauseFacts(
     val clock: String,
     /** The short day ("Sep 25") when the pause is not from today; null = today. */
     val day: String? = null,
-    /** A Resume for this very pause was accepted but Android did not confirm the start (B-ANDR-016 resumeFailed). */
+    /**
+     * A Resume for this very pause was accepted but Android did not confirm the start (B-ANDR-016
+     * resumeFailed).
+     */
     val resumeFailed: Boolean = false,
+    /**
+     * Android allows this exact pause to be resumed. Otherwise the visible action opens Keep
+     * running.
+     */
+    val canResume: Boolean = true,
 )
 
-/** What the background connection is doing right now, as the app knows it (Flutter `BackgroundLiveController`). */
+/**
+ * What the background connection is doing right now, as the app knows it (Flutter
+ * `BackgroundLiveController`).
+ */
 public data class BackgroundLiveFacts(
     /** The platform can run the live connection at all (PlatformCapabilities.backgroundService). */
     val supported: Boolean = false,
@@ -34,10 +52,20 @@ public data class BackgroundLiveFacts(
     val resuming: Boolean = false,
 )
 
-/** Why the switch did not end where the person put it (shown in plain words, never Android's text). */
-public enum class SwitchFailure { NotEnabled, NotDisabled, NotificationsDenied, Unavailable }
+/**
+ * Why the switch did not end where the person put it (shown in plain words, never Android's text).
+ */
+public enum class SwitchFailure {
+    NotEnabled,
+    NotDisabled,
+    NotificationsDenied,
+    Unavailable,
+}
 
-/** The live connection, bound by :androidApp over :android:background. Each command names its one target. */
+/**
+ * The live connection, bound by :androidApp over :android:background. Each command names its one
+ * target.
+ */
 public interface BackgroundLive {
     public val facts: StateFlow<BackgroundLiveFacts>
 
@@ -57,8 +85,16 @@ public interface BackgroundLive {
     public fun refresh() {}
 }
 
-/** The status row: the disagreement between the choice and the service shows here (Flutter `_BackgroundStatusRow`). */
-public enum class LiveStatusLine { StoppedByAndroid, Running, Starting, Off }
+/**
+ * The status row: the disagreement between the choice and the service shows here (Flutter
+ * `_BackgroundStatusRow`).
+ */
+public enum class LiveStatusLine {
+    StoppedByAndroid,
+    Running,
+    Starting,
+    Off,
+}
 
 public data class BackgroundUi(
     val supported: Boolean,
@@ -95,7 +131,8 @@ public fun backgroundUi(facts: BackgroundLiveFacts, failure: SwitchFailure? = nu
             },
         restart = stopped && !facts.busy,
         timeoutNotice = stopped,
-        // The pause notice yields while a resume is being confirmed: the line then only says it is resuming.
+        // The pause notice yields while a resume is being confirmed: the line then only says it is
+        // resuming.
         pause = facts.pause,
         resuming = facts.resuming,
         failure = failure,

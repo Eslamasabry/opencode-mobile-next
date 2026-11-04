@@ -53,6 +53,12 @@ public data class ProjectsPickerUi(
     val folderFailure: Failure? = null,
     /** The folder used last, so the path field starts next to it. */
     val pathStart: String = "",
+    val canBrowsePhone: Boolean = false,
+    val phonePath: String? = null,
+    val phoneParent: String? = null,
+    val phoneFolders: ImmutableList<PhoneFolderUi> = persistentListOf(),
+    val phoneLoading: Boolean = false,
+    val phoneFailure: Failure? = null,
 )
 
 public interface ProjectsPickerActions {
@@ -73,6 +79,16 @@ public interface ProjectsPickerActions {
     public fun closeCreate() {}
 
     public fun createFolder() {}
+
+    public fun browsePhone()
+
+    public fun enterPhoneFolder(path: String)
+
+    public fun closePhoneFolders()
+
+    public fun usePhoneFolder()
+
+    public fun allowPhoneFolderAccess()
 
     /** The path dialog's answer; null = cancelled. */
     public fun finishPath(path: String?)

@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AllPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.AllProblemKind
 import io.github.eslamasabry.oc.feature.chats.presentation.AllRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllActions
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPinActions
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -95,6 +96,8 @@ import io.github.eslamasabry.oc.ui.words.res.statePin
 import io.github.eslamasabry.oc.ui.words.res.statePinFailed
 import io.github.eslamasabry.oc.ui.words.res.stateSavedPreview
 import io.github.eslamasabry.oc.ui.words.res.stateUnpin
+import io.github.eslamasabry.oc.ui.words.res.sessionRelationsPin
+import io.github.eslamasabry.oc.ui.words.res.sessionRelationsUnpin
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -359,20 +362,28 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
     val title = rowTitle(row.title)
     val project = row.project ?: stringResource(Res.string.globalSessionsUnknownLocation)
     val location = row.server?.let { "$it · $project" } ?: project
-    val supporting =
+    val place =
         row.contextPercent?.let {
             "$location · " + stringResource(Res.string.stateContextUsage, it)
         } ?: location
     val running = stringResource(Res.string.chatsHomeRunning)
+    // ANDR-1: the visible pin action takes the trailing slot, so Running moves into the line.
+    val supporting = if (row.running && row.pinAvailable) "$place · $running" else place
     if (row.readOnly) {
         KitRow(
             title = title,
-            supporting = supporting,
+            supporting = place,
             enabled = false,
             disabledReason = stringResource(Res.string.stateSavedPreview),
         )
         return
     }
+    val pinActions = actions as? ChatsPinActions
+    val pinLabel =
+        stringResource(
+            if (row.pinned) Res.string.sessionRelationsUnpin else Res.string.sessionRelationsPin,
+            title,
+        )
     if (selecting) {
         KitChoiceRow(
             title = title,
@@ -411,8 +422,14 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
             title = title,
             supporting = supporting,
             trailing =
-                if (row.running) KitRowTrailing.Value(running, chevron = false)
-                else KitRowTrailing.None,
+                when {
+                    row.pinAvailable && pinActions != null ->
+                        KitRowTrailing.Action(
+                            KitLineAction(pinLabel, { pinActions.togglePin(row.key) })
+                        )
+                    row.running -> KitRowTrailing.Value(running, chevron = false)
+                    else -> KitRowTrailing.None
+                },
             growKey = row.ref,
             onLongClick = { menu = true },
             onLongClickLabel = stringResource(Res.string.p12MoreFor, title),

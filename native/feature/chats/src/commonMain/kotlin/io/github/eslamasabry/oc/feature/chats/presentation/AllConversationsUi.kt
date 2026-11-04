@@ -83,6 +83,7 @@ public data class AllRowUi(
      * Its server can archive conversations (`sessionArchive`); otherwise Archive says why it can't.
      */
     val canArchive: Boolean = false,
+    val pinAvailable: Boolean = false,
     val pinned: Boolean = false,
     val contextPercent: Int? = null,
     val readOnly: Boolean = false,

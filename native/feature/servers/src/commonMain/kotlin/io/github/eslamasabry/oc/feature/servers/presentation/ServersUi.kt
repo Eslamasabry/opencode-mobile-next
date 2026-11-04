@@ -113,3 +113,10 @@ public interface ServersActions {
 
     public fun openCodexProbe() {}
 }
+
+/** Visible only on a host that can close a live saved connection. */
+public interface ServerDisconnectActions {
+    public val disconnectSupported: Boolean
+
+    public fun disconnect(id: ProfileId)
+}

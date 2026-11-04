@@ -27,6 +27,7 @@ public class ThisPhoneViewModel(
     clock: Clock,
     pacer: Pacer,
     details: Set<PhoneStateDetails>,
+    phoneStorage: PhoneStorageReadings = NoPhoneStorageReadings(),
     exits: PhoneExitNotices,
     processes: PhoneProcessSource,
 ) : ViewModel(), ThisPhoneActions {
@@ -39,6 +40,7 @@ public class ThisPhoneViewModel(
             clock,
             pacer,
             details = details,
+            phoneStorage = phoneStorage,
             exits = exits,
             processes = processes,
         )
@@ -59,6 +61,8 @@ public class ThisPhoneViewModel(
     override fun confirm(): Unit = model.confirm()
 
     override fun dismiss(): Unit = model.dismiss()
+
+    override fun measureStorage(): Unit = model.measureStorage()
 
     override fun openRunning(): Unit = model.openRunning()
 

@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.ShareLink
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerDisconnectActions
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerFailureKind
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerIssue
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerMonitorStatus
@@ -42,6 +43,8 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitServerName
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
@@ -62,6 +65,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7SetupNoServerAnswer
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairAddressUnusable
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairTestFailed
 import io.github.eslamasabry.oc.ui.words.res.codexNativeTitle
+import io.github.eslamasabry.oc.ui.words.res.e7SettingsDisconnectTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
 import io.github.eslamasabry.oc.ui.words.res.e7SetupRefused
 import io.github.eslamasabry.oc.ui.words.res.e7SetupTimeout
@@ -88,6 +92,9 @@ import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
 import io.github.eslamasabry.oc.ui.words.res.protoPairingCheck
 import io.github.eslamasabry.oc.ui.words.res.secImportedSignInsTitle
 import io.github.eslamasabry.oc.ui.words.res.secSetupTitle
+import io.github.eslamasabry.oc.ui.words.res.safetyDisconnectBody
+import io.github.eslamasabry.oc.ui.words.res.safetyDisconnectBodyPhone
+import io.github.eslamasabry.oc.ui.words.res.serverDisconnectFrom
 import io.github.eslamasabry.oc.ui.words.res.serverFailureCertificate
 import io.github.eslamasabry.oc.ui.words.res.serverFailureIncompatible
 import io.github.eslamasabry.oc.ui.words.res.serverFailureNetwork
@@ -172,6 +179,7 @@ public fun ServersScreen(
     // password is taken, not kept.
     var filledFromLink by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var clearedGeneration by rememberSaveable { mutableIntStateOf(0) }
+    var confirmingDisconnect by rememberSaveable { mutableStateOf<String?>(null) }
     // A pairing code carries a password, so it goes in a secret field (the kit's Paste lives there
     // too).
     val code = remember { TextFieldState() }
@@ -285,6 +293,29 @@ public fun ServersScreen(
             )
             if (state.servers.isEmpty()) KitText(stringResource(Res.string.serversEmpty))
             else KitText(stringResource(Res.string.serversSaved))
+            // Flutter confirmDisconnectServer: the person confirms before live updates stop.
+            val confirming =
+                state.servers.firstOrNull { it.connected && it.id.raw == confirmingDisconnect }
+            KitConfirm(
+                spec =
+                    confirming?.let {
+                        KitConfirmSpec(
+                            title = stringResource(Res.string.e7SettingsDisconnectTitle, it.name),
+                            confirmLabel = stringResource(Res.string.serverDisconnectFrom, it.name),
+                            body =
+                                stringResource(
+                                    if (it.address.startsWith("http://127.0.0.1:"))
+                                        Res.string.safetyDisconnectBodyPhone
+                                    else Res.string.safetyDisconnectBody
+                                ),
+                        )
+                    },
+                onConfirm = {
+                    confirmingDisconnect = null
+                    confirming?.let { (actions as? ServerDisconnectActions)?.disconnect(it.id) }
+                },
+                onCancel = { confirmingDisconnect = null },
+            )
             for (server in state.servers) {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                     KitServerName(server.name)
@@ -323,6 +354,15 @@ public fun ServersScreen(
                                 stringResource(Res.string.serversConnect),
                                 { actions.connect(server.id) },
                                 role = KitButtonRole.Secondary,
+                                enabled = enabled,
+                            )
+                        }
+                        val disconnect = actions as? ServerDisconnectActions
+                        if (server.connected && disconnect?.disconnectSupported == true) {
+                            KitButton(
+                                stringResource(Res.string.serverDisconnectFrom, server.name),
+                                { confirmingDisconnect = server.id.raw },
+                                role = KitButtonRole.Tertiary,
                                 enabled = enabled,
                             )
                         }

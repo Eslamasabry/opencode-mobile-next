@@ -44,6 +44,7 @@ import kotlinx.coroutines.sync.withLock
 @ContributesBinding(AppScope::class, binding = binding<ServerConnections>())
 @Inject
 class PreviewRuntime(
+    private val application: android.app.Application,
     private val stores: PreviewStores,
     private val registry: ConnectionRegistry,
     private val profileScope: ProfileScope,
@@ -57,7 +58,7 @@ class PreviewRuntime(
     private val deliveryStores: Set<DeliveryStorage>,
     private val profileClosers: Set<ProfileCloser>,
     private val clock: Clock,
-) : ServerConnections {
+) : ServerConnections, ServerDisconnects {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
     private val scope = CoroutineScope(appScope.coroutineContext + lane)
@@ -544,6 +545,17 @@ class PreviewRuntime(
     internal fun prefetch(ref: ConversationRef) {
         if (profiles.profile(ref.profileId) == null) return
         registry.live.value[ref.profileId]?.session?.reads?.prefetch(ref.sessionId)
+    }
+
+    override suspend fun disconnect(id: ProfileId): Outcome<Unit> = command {
+        registry.close(id)
+        eventJobs.remove(id)?.cancel()
+        listings.remove(id)
+        loadedSources.update { it - id }
+        rebuildFeed()
+        application.platformHub.onExplicitDisconnect(id)
+        // Flutter disconnect(keepActive: true): the server stays the chosen one, just offline.
+        Unit.ok()
     }
 
     override suspend fun createConversation(profile: ProfileId?): Outcome<ConversationRef> =

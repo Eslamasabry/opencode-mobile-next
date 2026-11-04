@@ -43,6 +43,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeClearFilters
@@ -88,7 +89,12 @@ import org.jetbrains.compose.resources.stringResource
  * top-bar words, search sits under the bar.
  */
 @Composable
-public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
+public fun ChatsScreen(
+    state: ChatsUi,
+    actions: ChatsActions,
+    appStatus: KitStatus? = null,
+    replyOffer: (@Composable () -> Unit)? = null,
+) {
     // B15 (QA wave 1): short words so "Conversations" is never cut, and the door says where it goes
     // (Settings).
     val newLabel = stringResource(Res.string.chatsHomeNewShort)
@@ -110,6 +116,7 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
         search =
             if (state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.Opening) null
             else ({ SearchField(actions) }),
+        status = appStatus,
         width = KitScreenWidth.Reading,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
@@ -119,6 +126,7 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
                 if (opening.rows.isEmpty()) item(key = "opening") { KitSkeletonRows() }
                 return@LazyColumn
             }
+            replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
             item(key = "attention") {
                 KitButton(
                     label = stringResource(Res.string.stateAttentionTitle),

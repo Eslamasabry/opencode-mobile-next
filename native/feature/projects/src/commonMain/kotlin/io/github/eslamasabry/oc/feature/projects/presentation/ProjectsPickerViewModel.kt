@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +39,7 @@ public class ProjectsPickerViewModel(
     private val opened: OpenedFolders,
     private val discovery: PhoneProjectDiscovery,
     private val creator: ProjectCreation = NoProjectCreation(),
+    private val phoneFolders: PhoneFolders = NoPhoneFolders(),
 ) : ViewModel(), ProjectsPickerActions {
     private val mutable = MutableStateFlow(ProjectsPickerUi())
     public val state: StateFlow<ProjectsPickerUi> = mutable.asStateFlow()
@@ -47,6 +49,7 @@ public class ProjectsPickerViewModel(
     private var all: List<FolderRowUi> = emptyList()
     private var generation = 0
     private var scanJob: kotlinx.coroutines.Job? = null
+    private var phoneGeneration = 0
 
     init {
         viewModelScope.launch {
@@ -87,6 +90,7 @@ public class ProjectsPickerViewModel(
 
     private fun load() {
         scanJob?.cancel()
+        phoneGeneration++
         val server = current()
         val run = ++generation
         if (server == null) {
@@ -106,6 +110,7 @@ public class ProjectsPickerViewModel(
                 canFindPhoneProjects = discovery.available(server.profile),
                 pathStart = pathStart(before),
                 canCreate = creator.available(server),
+                canBrowsePhone = server.phoneFolders,
             )
         viewModelScope.launch {
             val read = readProjects(server)
@@ -233,8 +238,86 @@ public class ProjectsPickerViewModel(
     }
 
     override fun back() {
+        // ANDR-1: inside the phone folder browser Back leaves the browser first.
+        if (state.value.phonePath != null) {
+            closePhoneFolders()
+            return
+        }
         scanJob?.cancel()
         nav.back()
+    }
+
+    override fun browsePhone() {
+        if (current()?.phoneFolders != true) return
+        enterPhoneFolder(PHONE_ROOT)
+    }
+
+    override fun enterPhoneFolder(path: String) {
+        val server = current() ?: return
+        if (
+            !server.phoneFolders ||
+                (path != PHONE_ROOT && !path.startsWith("$PHONE_ROOT/")) ||
+                ".." in path.split('/')
+        )
+            return
+        val run = ++phoneGeneration
+        mutable.update {
+            it.copy(
+                phonePath = path,
+                phoneParent = if (path == PHONE_ROOT) null else path.substringBeforeLast('/'),
+                phoneFolders = persistentListOf(),
+                phoneLoading = true,
+                phoneFailure = null,
+            )
+        }
+        viewModelScope.launch {
+            val result = phoneFolders.list(path)
+            if (
+                run != phoneGeneration ||
+                    current()?.profile != server.profile ||
+                    current()?.gateway !== server.gateway
+            )
+                return@launch
+            when (result) {
+                is Outcome.Ok ->
+                    mutable.update { it.copy(phoneFolders = result.value, phoneLoading = false) }
+                is Outcome.Failed ->
+                    mutable.update { it.copy(phoneFailure = result.failure, phoneLoading = false) }
+            }
+        }
+    }
+
+    override fun closePhoneFolders() {
+        phoneGeneration++
+        mutable.update {
+            it.copy(
+                phonePath = null,
+                phoneFolders = persistentListOf(),
+                phoneFailure = null,
+                phoneLoading = false,
+            )
+        }
+    }
+
+    override fun allowPhoneFolderAccess() {
+        viewModelScope.launch { phoneFolders.requestAccess() }
+    }
+
+    override fun usePhoneFolder() {
+        val path = state.value.phonePath ?: return
+        if (
+            path == PHONE_ROOT ||
+                state.value.phoneLoading ||
+                state.value.phoneFailure != null ||
+                current()?.phoneFolders != true
+        )
+            return
+        closePhoneFolders()
+        openProject(path)
+    }
+
+    private companion object {
+        const val PHONE_ROOT = "/storage/emulated/0"
     }
 
     override fun chooseServer(profile: ProfileId) {

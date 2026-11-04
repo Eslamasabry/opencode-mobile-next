@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.phone.presentation
 
+import io.github.eslamasabry.oc.engine.runtime.storage.HostStorageAvailability
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudget
@@ -31,6 +32,7 @@ public class ThisPhoneModel(
     private val clock: Clock,
     private val pacer: Pacer,
     private val details: Set<PhoneStateDetails> = emptySet(),
+    private val phoneStorage: PhoneStorageReadings? = null,
     private val exits: PhoneExitNotices = PhoneExitNotices.Absent,
     private val processes: PhoneProcessSource? = null,
 ) : ThisPhoneActions {
@@ -45,6 +47,9 @@ public class ThisPhoneModel(
         val lifecycle: io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReport? = null,
         val storage: io.github.eslamasabry.oc.engine.runtime.lifecycle.AppStorageFacts? = null,
         val storageFailed: Boolean = false,
+        val phoneStorage: io.github.eslamasabry.oc.engine.runtime.storage.PhoneStorageSnapshot? =
+            null,
+        val measuringStorage: Boolean = false,
     )
 
     private val local = MutableStateFlow(Local(now = clock.now()))
@@ -102,6 +107,9 @@ public class ThisPhoneModel(
             working = l.working,
             confirm = l.confirm,
             notice = l.notice,
+            storageSupported = phoneStorage?.supported == true,
+            phoneStorage = l.phoneStorage,
+            measuringStorage = l.measuringStorage,
             exitNotice = exitNotice,
             leftover = l.processReading?.leftover?.takeIf { it.identity != l.dismissedLeftover },
         )
@@ -199,6 +207,39 @@ public class ThisPhoneModel(
         exits.dismiss()
     }
 
+    override fun measureStorage() {
+        readStorage(includeBuiltinHost = true)
+    }
+
+    private fun readStorage(includeBuiltinHost: Boolean) {
+        val reader = phoneStorage ?: return
+        if (!reader.supported || local.value.measuringStorage) return
+        local.update { it.copy(measuringStorage = true) }
+        scope.launch {
+            try {
+                val measured = reader.read(includeBuiltinHost)
+                local.update { current ->
+                    // A plain free-space refresh keeps sizes the person asked to measure earlier.
+                    val earlier = current.phoneStorage
+                    val kept =
+                        if (
+                            measured.builtinAvailability == HostStorageAvailability.NotRequested &&
+                                earlier != null &&
+                                earlier.builtinAvailability != HostStorageAvailability.NotRequested
+                        )
+                            measured.copy(
+                                builtinHost = earlier.builtinHost,
+                                builtinAvailability = earlier.builtinAvailability,
+                            )
+                        else measured
+                    current.copy(phoneStorage = kept)
+                }
+            } finally {
+                local.update { it.copy(measuringStorage = false) }
+            }
+        }
+    }
+
     override fun openRunning(): Unit = nav.open(PhonePage.Running)
 
     override fun openKeepRunning(): Unit = nav.open(PhonePage.KeepRunning)
@@ -223,6 +264,7 @@ public class ThisPhoneModel(
                 source.refresh()
                 details.singleOrNull()?.refresh()
                 refreshStorage()
+                readStorage(includeBuiltinHost = false)
                 local.update { it.copy(now = clock.now()) }
                 coroutineScope {
                     if (processes != null)

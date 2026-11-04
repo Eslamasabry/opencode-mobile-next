@@ -4,10 +4,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName
 import io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FolderProblem
 import io.github.eslamasabry.oc.feature.projects.presentation.FolderRowUi
 import io.github.eslamasabry.oc.feature.projects.presentation.PathProblem
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectRules
@@ -32,6 +37,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
@@ -203,6 +209,7 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
         }
         PathDialog(state, actions)
         CreateDialog(state, actions)
+        PhoneFolderSheet(state, actions)
     }
 }
 
@@ -258,7 +265,9 @@ private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
         )
         KitRow(
             title = stringResource(Res.string.p12PhoneFolder),
-            enabled = false,
+            enabled = state.canBrowsePhone,
+            trailing = KitRowTrailing.Chevron,
+            onClick = actions::browsePhone,
             disabledReason = stringResource(Res.string.p12PhoneFolderUnavailable),
             supportingMaxLines = 2,
         )
@@ -394,6 +403,103 @@ private fun CreateDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions
                         KitEnabled.Disabled(if (state.creatingFolder) working else problem!!)
                     else KitEnabled.Enabled,
             )
+        }
+    }
+}
+
+/**
+ * An existing kit sheet keeps the browser in the project journey, without a second navigation
+ * stack.
+ */
+@Composable
+private fun PhoneFolderSheet(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
+    val path = state.phonePath
+    KitSheet(
+        visible = path != null,
+        onDismissRequest = actions::closePhoneFolders,
+        title = stringResource(Res.string.andrStorageInternal),
+        subtitle = path,
+        height = KitSheetHeight.Full,
+        primary =
+            KitAction(
+                stringResource(Res.string.andrStorageUseFolder),
+                actions::usePhoneFolder,
+                enabled =
+                    if (
+                        !state.phoneLoading &&
+                            state.phoneFailure == null &&
+                            state.phoneParent != null
+                    )
+                        io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Enabled
+                    else
+                        io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Disabled(
+                            stringResource(
+                                when {
+                                    state.phoneLoading -> Res.string.andrStorageWorking
+                                    state.phoneFailure != null -> Res.string.andrStorageFolderFailed
+                                    // B-ANDR-051: the storage root is never a project (Flutter).
+                                    else -> Res.string.andrStorageRootHere
+                                }
+                            )
+                        ),
+            ),
+    ) {
+        Column(Modifier.verticalScroll(rememberScrollState())) {
+            state.phoneParent?.let { parent ->
+                KitRow(
+                    title = stringResource(Res.string.andrStorageUp),
+                    onClick = { actions.enterPhoneFolder(parent) },
+                )
+            }
+            when {
+                state.phoneLoading -> KitSkeletonRows(count = 4)
+                state.phoneFailure != null -> {
+                    val failure = state.phoneFailure
+                    val message =
+                        when {
+                            failure is Failure.Folder && failure.problem == FolderProblem.Missing ->
+                                Res.string.andrStorageFolderMissing
+                            failure is Failure.Folder && failure.problem == FolderProblem.Denied ->
+                                Res.string.andrStorageFolderDenied
+                            else -> Res.string.andrStorageFolderFailed
+                        }
+                    KitNotice(
+                        message = stringResource(message),
+                        actions =
+                            buildList {
+                                if (
+                                    failure is Failure.Folder &&
+                                        failure.problem == FolderProblem.Denied
+                                )
+                                    add(
+                                        KitLineAction(
+                                            stringResource(Res.string.andrStorageAccess),
+                                            actions::allowPhoneFolderAccess,
+                                        )
+                                    )
+                                add(
+                                    KitLineAction(
+                                        stringResource(Res.string.kitTryAgain),
+                                        { path?.let(actions::enterPhoneFolder) },
+                                    )
+                                )
+                            },
+                    )
+                }
+                state.phoneFolders.isEmpty() ->
+                    KitNotice(message = stringResource(Res.string.andrStorageFoldersEmpty))
+                else ->
+                    KitRowGroup {
+                        state.phoneFolders.forEach { folder ->
+                            KitRow(
+                                title = folder.name,
+                                supporting = folder.hint,
+                                trailing = KitRowTrailing.Chevron,
+                                onClick = { actions.enterPhoneFolder(folder.path) },
+                            )
+                        }
+                    }
+            }
         }
     }
 }

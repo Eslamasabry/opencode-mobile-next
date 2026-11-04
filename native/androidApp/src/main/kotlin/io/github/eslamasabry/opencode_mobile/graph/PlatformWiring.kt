@@ -13,10 +13,12 @@ import android.os.Bundle
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.android.notifications.AlertFacts
 import io.github.eslamasabry.oc.android.notifications.AlertKeys
 import io.github.eslamasabry.oc.android.notifications.AlertKind
@@ -39,6 +41,7 @@ import io.github.eslamasabry.oc.android.tiles.LaunchActions
 import io.github.eslamasabry.oc.android.tiles.PinnedSession
 import io.github.eslamasabry.oc.android.tiles.PinnedShortcuts
 import io.github.eslamasabry.oc.android.tiles.SharedTextIntake
+import io.github.eslamasabry.oc.android.tiles.ShortcutClear
 import io.github.eslamasabry.oc.android.tiles.updates.AndroidUpdateFeed
 import io.github.eslamasabry.oc.android.tiles.updates.AndroidUpdatePlatform
 import io.github.eslamasabry.oc.android.tiles.updates.PrefsUpdateStore
@@ -58,6 +61,7 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
@@ -80,6 +84,9 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.entry.EntryLinkParser
 import io.github.eslamasabry.oc.engine.entry.ParsedLink
+import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
+import io.github.eslamasabry.oc.engine.profiles.DeletionStep
+import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.AppUpdates
@@ -269,7 +276,8 @@ internal data class Waiting(val profile: ProfileId, val request: PendingRequest)
 @Inject
 class PlatformHub(
     private val application: Application,
-    private val appScope: AppCoroutineScope,
+    appScope: AppCoroutineScope,
+    dispatchers: AppDispatchers,
     private val clock: Clock,
     private val updates: AppUpdates,
     private val registry: ConnectionRegistry,
@@ -283,7 +291,10 @@ class PlatformHub(
     private val widgetRunner: NativeWidgetRunner,
     private val widgetPersistence: WidgetPersistence,
     private val redactor: Redactor,
+    private val background: BackgroundHub,
 ) {
+    private val mainDispatcher = dispatchers.main
+    private val appScope = CoroutineScope(appScope.coroutineContext + mainDispatcher)
     private val log = AppLog.tagged("Platform")
     private val prefs = application.getSharedPreferences("oc_platform", Context.MODE_PRIVATE)
     // P12-FIX-SETTINGS: alerts speak the language chosen in Settings, not only the phone's
@@ -300,6 +311,14 @@ class PlatformHub(
     private val visible = MutableStateFlow(0)
     private val alerted = mutableMapOf<String, String>() // alert key -> request id (or turn marker)
     private val running = mutableMapOf<ConversationRef, Boolean>()
+    private val runEvents =
+        mutableMapOf<ConversationRef, io.github.eslamasabry.oc.core.domain.events.RunOutcome>()
+    private val runWatchers = mutableMapOf<ProfileId, kotlinx.coroutines.Job>()
+    private val eventStarted = mutableSetOf<ConversationRef>()
+    private val endedKinds = mutableMapOf<ConversationRef, AlertKind>()
+    private val endedReasons =
+        mutableMapOf<ConversationRef, io.github.eslamasabry.oc.android.notifications.StopReason>()
+    private var lastWaiting: List<Waiting> = emptyList()
     private var wasVisible = false
     private val statusPosted =
         mutableSetOf<String>() // finished / stopped alerts still in the shade
@@ -315,8 +334,50 @@ class PlatformHub(
     val actionBody: NotificationActionBody =
         NotificationActionBody(
             shade = shade,
-            answerer = ShadeAnswerer { answer -> answer(answer) },
-            stopper = ReplyStopper { Outcome.Failed(Failure.NotFound()) },
+            answerer =
+                io.github.eslamasabry.oc.android.notifications.GuardedShadeAnswerer(
+                    questionOf = { answer ->
+                        val pending =
+                            (registry.live.value[answer.profile] as? ChatGraphAccessors)
+                                ?.chatRequests
+                                ?.engine
+                                ?.pending
+                                ?.value
+                        val question =
+                            pending
+                                ?.filterIsInstance<PendingRequest.Question>()
+                                ?.firstOrNull {
+                                    it.id == answer.request && it.sessionId == answer.session
+                                }
+                                ?.question
+                        question?.let { q ->
+                            io.github.eslamasabry.oc.android.notifications.QuestionShape(
+                                q.prompts.map {
+                                    io.github.eslamasabry.oc.android.notifications.QuestionShape
+                                        .Prompt(
+                                            it.choices.map { c -> c.label },
+                                            it.multiple,
+                                            it.custom,
+                                        )
+                                }
+                            )
+                        }
+                    },
+                    delegate = ShadeAnswerer { answer -> answer(answer) },
+                ),
+            stopper =
+                ReplyStopper { ref ->
+                    val graph = registry.live.value[ref.profileId]
+                    val stillRunning =
+                        runtime.snapshot.value.items.any {
+                            // A run waiting on a permission or question is still a run to stop.
+                            it.ref == ref &&
+                                (it.status == ChatStatus.Running ||
+                                    it.status == ChatStatus.NeedsYou)
+                        }
+                    if (graph == null || !stillRunning) Outcome.Failed(Failure.NotFound())
+                    else graph.session.server.stop(ref.sessionId).map { Unit }
+                },
             lock =
                 object : DeviceLock {
                     override val sdkInt: Int = Build.VERSION.SDK_INT
@@ -341,7 +402,18 @@ class PlatformHub(
         application.registerActivityLifecycleCallbacks(Visibility())
         appScope.launch { updates.start() }
         appScope.launch { watchFeed() }
+        appScope.launch { watchRunEvents() }
         appScope.launch { watchProfiles() }
+        // A pin or active-server change need not change any feed row. Observe the acknowledged
+        // preference save too.
+        appScope.launch {
+            stores.prefs.changes.collect { keys ->
+                if (keys.any { it.startsWith(PINS_PREFIX) }) publishPins(runtime.snapshot.value)
+            }
+        }
+        appScope.launch {
+            stores.profiles.activeId.collect { publishPins(runtime.snapshot.value) }
+        }
         appScope.launch { navigator.top.collect { top -> seedShare(top) } }
     }
 
@@ -359,7 +431,6 @@ class PlatformHub(
      */
     fun onResumed(activity: Activity) {
         appScope.launch { updates.onResumed() }
-        askNotificationsOnce(activity)
     }
 
     /**
@@ -389,7 +460,13 @@ class PlatformHub(
             return
         }
         LaunchActions.consumeSessionShortcut(intent)?.let { tap ->
-            navigator.openChat(ConversationRef(ProfileId(tap.profileId), SessionId(tap.sessionId)))
+            val profile = ProfileId(tap.profileId)
+            if (
+                profile == stores.profiles.activeId.value &&
+                    stores.profiles.profile(profile) != null
+            ) {
+                navigator.openChat(ConversationRef(profile, SessionId(tap.sessionId)))
+            }
             return
         }
         alertTap(intent)?.let { ref ->
@@ -458,23 +535,6 @@ class PlatformHub(
         return ConversationRef(ProfileId(profile), SessionId(session))
     }
 
-    private fun askNotificationsOnce(activity: Activity) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-        if (prefs.getBoolean(ASKED_NOTIFY, false)) return
-        if (stores.profiles.profiles.value.isEmpty()) return // nothing to tell yet
-        // QA wave 4 N4: never mid-task (it popped up on the way back from the file picker into a
-        // chat); the calm
-        // place is the conversation list, where the alerts it enables are about.
-        if (navigator.top.value != ChatsRoute.Home) return
-        if (
-            activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
-        )
-            return
-        prefs.edit().putBoolean(ASKED_NOTIFY, true).apply()
-        activity.requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFY)
-    }
-
     private fun notificationsAllowed(): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
             application.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
@@ -529,6 +589,7 @@ class PlatformHub(
         for (key in alerted.keys) shade.dismiss(key)
         for (key in statusPosted) shade.dismiss(key)
         statusPosted.clear()
+        alerted.clear()
     }
 
     // ---- Feed: alerts, widgets, tile
@@ -562,6 +623,90 @@ class PlatformHub(
             }
     }
 
+    /**
+     * End events and polled state share one run identity: late errors replace a completion in
+     * place.
+     */
+    private suspend fun watchRunEvents() {
+        registry.live.collect { live ->
+            for (id in (runWatchers.keys - live.keys).toList()) {
+                runWatchers.remove(id)?.cancel()
+                runEvents.keys.removeAll { it.profileId == id }
+                eventStarted.removeAll { it.profileId == id }
+            }
+            for ((id, graph) in live) if (id !in runWatchers)
+                runWatchers[id] = appScope.launch {
+                    graph.session.server.events.all.collect { envelope ->
+                        if (registry.live.value[id] !== graph) return@collect
+                        when (val event = envelope.event) {
+                            is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.RunStarted -> {
+                                val ref = ConversationRef(id, event.sessionId)
+                                eventStarted += ref
+                                endedKinds.remove(ref)
+                                endedReasons.remove(ref)
+                                runEvents.remove(ref)
+                                shade.dismiss(AlertKeys.status(id.raw, event.sessionId.raw))
+                            }
+                            is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.RunEnded -> {
+                                val ref = ConversationRef(id, event.sessionId)
+                                val prior = runEvents[ref]
+                                if (
+                                    prior
+                                        !is
+                                        io.github.eslamasabry.oc.core.domain.events.RunOutcome.Failed
+                                )
+                                    runEvents[ref] = event.outcome
+                                val failed =
+                                    event.outcome
+                                        as?
+                                        io.github.eslamasabry.oc.core.domain.events.RunOutcome.Failed
+                                if (failed != null)
+                                    endedReasons[ref] =
+                                        when (failed.kind) {
+                                            io.github.eslamasabry.oc.core.model.transcript
+                                                .MessageErrorKind
+                                                .ProviderAuth ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Auth
+                                            io.github.eslamasabry.oc.core.model.transcript
+                                                .MessageErrorKind
+                                                .ContextOverflow ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Context
+                                            io.github.eslamasabry.oc.core.model.transcript
+                                                .MessageErrorKind
+                                                .OutputLength ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Length
+                                            io.github.eslamasabry.oc.core.model.transcript
+                                                .MessageErrorKind
+                                                .ContentFilter ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Filter
+                                            io.github.eslamasabry.oc.core.model.transcript
+                                                .MessageErrorKind
+                                                .ModelNotFound ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Model
+                                            else ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Other
+                                        }
+                                alerts(runtime.snapshot.value, lastWaiting, visible.value > 0)
+                            }
+                            else -> Unit
+                        }
+                    }
+                }
+        }
+    }
+
     private suspend fun watchProfiles() {
         stores.profiles.profiles.collect { list ->
             val now = list.map { it.id }.toSet()
@@ -578,15 +723,26 @@ class PlatformHub(
     }
 
     private fun publishTile(waiting: List<Waiting>) {
-        val owner =
-            stores.profiles.activeId.value?.raw ?: waiting.firstOrNull()?.profile?.raw ?: return
+        val profile = stores.profiles.activeId.value ?: return
+        if (!registry.live.value.containsKey(profile)) return
         AttentionTileCache.write(
             application,
-            waiting.size,
-            owner,
+            waiting.count { it.profile == profile },
+            profile.raw,
             clock.now().toEpochMilliseconds(),
         )
     }
+
+    /**
+     * Explicit disconnect withdraws the launcher promises; a lifecycle suspension never calls this.
+     */
+    suspend fun onExplicitDisconnect(profile: ProfileId) =
+        kotlinx.coroutines.withContext(mainDispatcher) {
+            // The launcher shows the active server only: another server's disconnect leaves it.
+            if (profile != stores.profiles.activeId.value) return@withContext
+            if (PinnedShortcuts.withdrawAll(application)) publishedPins = null
+            AttentionTileCache.clear(application)
+        }
 
     private suspend fun publishWidgets(feed: ChatFeedSnapshot, waiting: List<Waiting>) {
         val profile = stores.profiles.activeId.value ?: return
@@ -965,26 +1121,32 @@ class PlatformHub(
      */
     private fun publishPins(feed: ChatFeedSnapshot) {
         val profile = stores.profiles.activeId.value ?: return
+        if (!registry.live.value.containsKey(profile)) return
         val raw =
             try {
                 (stores.prefs.get(PINS_PREFIX + profile.raw) as? PrefValue.Str)?.value
             } catch (_: IllegalStateException) {
                 return // preferences not warm yet: the next feed change publishes
             }
-        val titles =
-            feed.items
-                .filter { it.profileId == profile }
-                .associate { it.sessionId.raw to it.title.orEmpty() }
+        val pinned = PlatformRules.pinnedIds(raw).toSet()
         val pins =
-            PlatformRules.pinnedIds(raw).map {
-                PinnedSession(it, PlatformRules.widgetText(titles[it]))
-            }
+            feed.items
+                .filter {
+                    it.profileId == profile &&
+                        it.sessionId.raw in pinned &&
+                        !it.isSubagent &&
+                        !it.inOtherFolder
+                }
+                .sortedByDescending { it.lastActivityMs }
+                .map { PinnedSession(it.sessionId.raw, PlatformRules.widgetText(it.title)) }
+                .take(PinnedShortcuts.MAX_SHORTCUTS)
         val next = profile.raw to pins
         if (next == publishedPins) return
         if (PinnedShortcuts.publish(application, profile.raw, pins)) publishedPins = next
     }
 
     private fun alerts(feed: ChatFeedSnapshot, waiting: List<Waiting>, appVisible: Boolean) {
+        lastWaiting = waiting
         // Back in the app (launcher, list or a tap): what the alerts said is on screen now (Flutter
         // clears them on
         // resume; B-ANDR-011/-040). The request ids stay remembered so the same request is not
@@ -995,14 +1157,14 @@ class PlatformHub(
         val names = stores.profiles.profiles.value.associate { it.id to it.profile.name }
         val facts =
             AlertFacts(
-                liveModeActive = false,
+                liveModeActive = background.live.value.enabled && background.live.value.active,
                 // The process is alive with a live connection: this is the reply watch of the
                 // preview (no service).
-                replyWatchActive = registry.live.value.isNotEmpty(),
+                replyWatchActive = false,
                 appVisible = appVisible,
                 permissionGranted = notificationsAllowed(),
                 serverAlertsOn = true, // narrowed per kind below by the person's Settings choices
-                quietHours = false,
+                quietHours = quietNow(),
                 onWifi = null,
                 wifiOnly = false,
             )
@@ -1012,7 +1174,12 @@ class PlatformHub(
         val current = mutableMapOf<String, Waiting>()
         for (w in waiting) {
             val key = AlertKeys.input(w.profile.raw, w.request.sessionId.raw)
-            if (key !in current) current[key] = w
+            if (
+                key !in current ||
+                    (current[key]?.request !is PendingRequest.Permission &&
+                        w.request is PendingRequest.Permission)
+            )
+                current[key] = w
         }
         for ((key, w) in current) {
             if (alerted[key] == w.request.id.raw) continue
@@ -1024,8 +1191,12 @@ class PlatformHub(
                 )
             when (val route = AlertPolicy.route(alert, allowed)) {
                 is AlertRoute.Post -> {
-                    shade.show(alert, route)
-                    alerted[key] = w.request.id.raw
+                    if (
+                        shade.show(alert, route)
+                            is io.github.eslamasabry.oc.android.notifications.AlertShown.Shown
+                    ) {
+                        alerted[key] = w.request.id.raw
+                    }
                 }
                 is AlertRoute.Skip -> Unit
             }
@@ -1038,10 +1209,38 @@ class PlatformHub(
         // Finished replies (B-ANDR-040, -048) and stopped runs (B-ANDR-011) while the app is not on
         // screen.
         for (item in feed.items) {
-            val was = running[item.ref] == true
-            running[item.ref] = item.status == ChatStatus.Running
-            val kind = PlatformRules.endedAlertKind(was, item.status) ?: continue
-            val alert = endedAlert(kind, item, names[item.profileId])
+            val ref = item.ref
+            val busyNow = item.status == ChatStatus.Running || item.status == ChatStatus.NeedsYou
+            val was = running[ref] == true || ref in eventStarted
+            if (busyNow && running[ref] != true && ref !in runEvents) endedKinds.remove(ref)
+            val ending = runEvents[ref]
+            val kind =
+                when {
+                    ending is io.github.eslamasabry.oc.core.domain.events.RunOutcome.Failed ->
+                        AlertKind.Error
+                    ending is io.github.eslamasabry.oc.core.domain.events.RunOutcome.Interrupted ->
+                        null
+                    ending != null && was -> AlertKind.Complete
+                    else -> PlatformRules.endedAlertKind(was, item.status)
+                }
+            running[ref] = busyNow && ending == null
+            if (kind == null || item.isSubagent) continue
+            if (
+                endedKinds[ref] == kind ||
+                    (endedKinds[ref] == AlertKind.Error && kind == AlertKind.Complete)
+            )
+                continue
+            // Claim even when suppressed (foreground/quiet/off): a later repaint never replays a
+            // finished run.
+            endedKinds[ref] = kind
+            eventStarted.remove(ref)
+            val alert =
+                endedAlert(kind, item, names[item.profileId])
+                    .copy(
+                        reason =
+                            endedReasons[ref]
+                                ?: io.github.eslamasabry.oc.android.notifications.StopReason.Other
+                    )
             val allowed =
                 facts.copy(
                     subAgentSession = item.isSubagent,
@@ -1054,7 +1253,15 @@ class PlatformHub(
                 appScope.launch {
                     val line =
                         withTimeoutOrNull(EXCERPT_WAIT_MS) { lastReplyLine(item.ref) }.orEmpty()
-                    shade.show(alert.copy(detail = line), route)
+                    // A late excerpt may not overwrite an error, a new run or a foreground return.
+                    if (
+                        endedKinds[item.ref] == kind &&
+                            visible.value == 0 &&
+                            background.live.value.enabled &&
+                            background.live.value.active &&
+                            registry.live.value.containsKey(item.profileId)
+                    )
+                        shade.show(alert.copy(detail = line), route)
                 }
             } else {
                 shade.show(alert, route)
@@ -1123,7 +1330,20 @@ class PlatformHub(
                     subtext = subtext,
                     chatTitle = shadeText(item?.title.orEmpty()),
                     detail = shadeText(prompt?.question.orEmpty()),
-                    options = prompt?.choices?.map { it.label }.orEmpty(),
+                    options =
+                        io.github.eslamasabry.oc.android.notifications
+                            .QuestionShape(
+                                r.question.prompts.map {
+                                    io.github.eslamasabry.oc.android.notifications.QuestionShape
+                                        .Prompt(
+                                            it.choices.map { choice -> choice.label },
+                                            it.multiple,
+                                            it.custom,
+                                        )
+                                }
+                            )
+                            .shadeOptions
+                            .map { NotificationText.redact(redactor.redact(it), 24) },
                 )
             }
         }
@@ -1148,6 +1368,26 @@ class PlatformHub(
             true // not warm yet
         }
 
+    /** The shared stored quiet-hours choice is authoritative for requests and finished replies. */
+    private fun quietNow(): Boolean {
+        fun minute(key: String): Int? =
+            try {
+                (stores.prefs.get(key) as? PrefValue.Int64)?.value?.toInt()?.takeIf {
+                    it in 0 until 1440
+                }
+            } catch (_: IllegalStateException) {
+                null
+            }
+        val start = minute("oc.notify.quietStart") ?: return false
+        val end = minute("oc.notify.quietEnd") ?: return false
+        val local =
+            java.time.Instant.ofEpochMilli(clock.now().toEpochMilliseconds())
+                .atZone(java.time.ZoneId.systemDefault())
+        val now = local.hour * 60 + local.minute
+        return start == end ||
+            if (start < end) now in start until end else now >= start || now < end
+    }
+
     private fun endedAlert(kind: AlertKind, item: ChatFeedItem, server: String?): CodingAlert =
         CodingAlert(
             kind = kind,
@@ -1156,10 +1396,9 @@ class PlatformHub(
             profileId = item.profileId.raw,
             subtext = NotificationText.subtitle(server, item.projectName),
             chatTitle = item.title.orEmpty(),
-            detail =
-                if (kind == AlertKind.Complete)
-                    NotificationText.firstReplyLine(listOf(item.preview))
-                else "",
+            // A feed preview can be the person's prompt: finished text is fetched from assistant
+            // messages only.
+            detail = "",
         )
 
     private fun metadataString(r: PendingRequest.Permission, key: String): String? =
@@ -1198,7 +1437,6 @@ class PlatformHub(
     }
 
     private companion object {
-        const val ASKED_NOTIFY = "oc.notify.asked"
         const val REQUEST_NOTIFY = 4747
         const val EXCERPT_WAIT_MS = 5_000L
         const val EXCERPT_MESSAGES = 6
@@ -1474,4 +1712,63 @@ internal class ShareSeed {
     /** The words added to what the draft already holds, never replacing it. */
     fun merged(existing: String, shared: String): String =
         if (existing.isBlank()) shared else existing.trimEnd() + "\n\n" + shared
+}
+
+/**
+ * Launcher records are deleted before the profile's credentials, and a failed withdrawal refuses
+ * deletion.
+ */
+@ContributesIntoSet(AppScope::class, binding = binding<ProfileResourceCleaner>())
+@Inject
+class LauncherProfileCleaner(
+    private val application: Application,
+    private val stores: PreviewStores,
+) : ProfileResourceCleaner {
+    override val owner: String = ":android:tiles"
+    override val order: Int = DeletionStep.DEVICE_SURFACES
+    override val guardsSweep: Boolean = true
+
+    override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> {
+        // Flutter stored both surfaces as app-wide values with their owner inside the JSON. The
+        // generic
+        // dotted-key sweep cannot find them. Unknown ownership is withdrawn rather than retaining
+        // private titles.
+        val legacyPins = stores.prefs.get("oc.pinnedShortcuts")
+        val pinOwner = legacyOwner(legacyPins)
+        val removePins = legacyPins != null && (pinOwner == null || pinOwner == profileId.raw)
+        val legacyTile = stores.prefs.get("oc.attentionTile")
+        val tileOwner = legacyOwner(legacyTile)
+        val removeTile = legacyTile != null && (tileOwner == null || tileOwner == profileId.raw)
+        if (removePins && pinOwner == null && !PinnedShortcuts.withdrawAll(application)) {
+            return Outcome.Failed(Failure.StorageRefused())
+        }
+        val shortcuts = PinnedShortcuts.withdrawProfile(application, profileId.raw)
+        if (shortcuts == ShortcutClear.Failed) return Outcome.Failed(Failure.StorageRefused())
+        val tile = AttentionTileCache.clearOwner(application, profileId.raw)
+        if (AttentionTileCache.hasOwner(application, profileId.raw))
+            return Outcome.Failed(Failure.StorageRefused())
+        if (removePins || removeTile) {
+            val saved =
+                stores.prefs.commit(stores.lanes.app) {
+                    if (removePins) remove("oc.pinnedShortcuts")
+                    if (removeTile) remove("oc.attentionTile")
+                }
+            if (saved is Outcome.Failed) return saved
+        }
+        return Outcome.Ok(
+            (if (shortcuts == ShortcutClear.Cleared) 1 else 0) +
+                (if (tile) 1 else 0) +
+                (if (removePins) 1 else 0) +
+                (if (removeTile) 1 else 0)
+        )
+    }
+
+    private fun legacyOwner(value: PrefValue?): String? {
+        val raw = (value as? PrefValue.Str)?.value ?: return null
+        return try {
+            JSONObject(raw).optString("profileID", "").takeIf { it.isNotBlank() }
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

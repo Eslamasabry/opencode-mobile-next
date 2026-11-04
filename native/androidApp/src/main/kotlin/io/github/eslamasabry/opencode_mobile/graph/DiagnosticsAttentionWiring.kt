@@ -119,8 +119,10 @@ object DiagnosticsAttentionBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun lifecycleSource(application: Application): LifecycleSource =
-        AndroidLifecycleSource(application)
+    fun lifecycleSource(
+        application: Application,
+        gate: io.github.eslamasabry.oc.core.data.migration.MigrationGate,
+    ): LifecycleSource = AndroidLifecycleSource(application, gate)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -495,7 +497,10 @@ class AndroidCrashStore(private val dir: File) : CrashStore {
  * report is the newest exit not reported before; the last reported time is kept app-wide (not per
  * profile) in `oc.diag.lastExitSeen`.
  */
-class AndroidLifecycleSource(private val application: Application) : LifecycleSource {
+class AndroidLifecycleSource(
+    private val application: Application,
+    private val gate: io.github.eslamasabry.oc.core.data.migration.MigrationGate,
+) : LifecycleSource {
     private val launchLock = Mutex()
     private var launch: RawLaunchReport? = null
 
@@ -519,8 +524,11 @@ class AndroidLifecycleSource(private val application: Application) : LifecycleSo
         }
     }
 
-    override suspend fun launchReport(): Outcome<RawLaunchReport> =
-        launchLock.withLock<Outcome<RawLaunchReport>> {
+    override suspend fun launchReport(): Outcome<RawLaunchReport> {
+        // This source reads the retained Flutter service receipt only after migration's byte
+        // backup/adoption (ANDR-1).
+        gate.awaitOpen()
+        return launchLock.withLock<Outcome<RawLaunchReport>> {
             launch?.let {
                 return@withLock Outcome.Ok(it)
             }
@@ -553,4 +561,5 @@ class AndroidLifecycleSource(private val application: Application) : LifecycleSo
                 report
             }
         }
+    }
 }

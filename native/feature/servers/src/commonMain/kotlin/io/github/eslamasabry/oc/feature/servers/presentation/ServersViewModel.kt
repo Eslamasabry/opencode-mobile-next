@@ -53,7 +53,7 @@ public class ServersViewModel(
     private val probe: PairingProbe = NoPairingProbe,
     private val monitoring: Set<ServerMonitoring> = emptySet(),
     private val imported: ImportedProviderReview? = null,
-) : ViewModel(), ServersActions {
+) : ViewModel(), ServersActions, ServerDisconnectActions {
     private val local = MutableStateFlow(ServersUi(newConversation = route != null))
     public val state: StateFlow<ServersUi> =
         combine(local, connections.servers, connections.busy) { own, servers, busy ->
@@ -243,6 +243,19 @@ public class ServersViewModel(
                     }
                 }
             }
+        }
+    }
+
+    override val disconnectSupported: Boolean
+        get() = connections is io.github.eslamasabry.oc.engine.connection.ServerDisconnects
+
+    override fun disconnect(id: ProfileId) = operation {
+        val owner =
+            connections as? io.github.eslamasabry.oc.engine.connection.ServerDisconnects
+                ?: return@operation
+        when (val result = owner.disconnect(id)) {
+            is Outcome.Ok -> local.update { it.copy(issue = null, failure = null) }
+            is Outcome.Failed -> failed(ServerIssue.ConnectFailed, result.failure)
         }
     }
 

@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
+import io.github.eslamasabry.oc.core.domain.platform.AppNotices
 import io.github.eslamasabry.oc.feature.chat.cards.ChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.LocalChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.ModelCardSlotHost
@@ -36,6 +37,9 @@ import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewMod
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.status.KitStatus
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
 import io.github.eslamasabry.oc.ui.kitchat.composer.ComposerInbox
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
@@ -65,6 +69,7 @@ import org.jetbrains.compose.resources.stringResource
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class ChatEntries(
+    private val appNotices: AppNotices,
     private val composerHost: ComposerHost,
     private val environment: KitChatEnvironment,
     private val inbox: ComposerInbox,
@@ -90,6 +95,48 @@ public class ChatEntries(
             // Older history can finish loading after the chat turned empty; re-check then too.
             val startVisible = emptyChat && start.emptyEligible
             LaunchedEffect(startVisible) { startVm.visible(startVisible) }
+            val appNotice by appNotices.status.collectAsStateWithLifecycle()
+            val replyOffer by appNotices.replyOffer.collectAsStateWithLifecycle()
+            val appStatus = appNotice?.let { notice ->
+                KitStatus(
+                    if (notice.stoppedApp) KitStatusKind.AppStopped else KitStatusKind.Info,
+                    notice.message,
+                    id = notice.id,
+                    action =
+                        notice.action?.let { action ->
+                            notice.actionLabel?.let { label ->
+                                KitLineAction(label, { appNotices.act(action) })
+                            }
+                        },
+                    onDismiss = { appNotices.dismiss(notice.id) },
+                    dismissLabel = notice.dismissLabel,
+                )
+            }
+            val offerContent: (@androidx.compose.runtime.Composable () -> Unit)? =
+                replyOffer?.let { offer ->
+                    {
+                        KitNotice(
+                            message = offer.message,
+                            actions =
+                                if (offer.busy) emptyList()
+                                else if (offer.failed) emptyList()
+                                else
+                                    listOf(
+                                        KitLineAction(
+                                            offer.acceptLabel,
+                                            { appNotices.answerReplyOffer(true) },
+                                        )
+                                    ),
+                            dismiss =
+                                if (offer.busy) null
+                                else
+                                    KitLineAction(
+                                        offer.declineLabel,
+                                        { appNotices.answerReplyOffer(false) },
+                                    ),
+                        )
+                    }
+                }
             val requests by vm.requests.collectAsStateWithLifecycle()
             val slot =
                 requests?.state?.collectAsStateWithLifecycle()?.value
@@ -197,6 +244,8 @@ public class ChatEntries(
                             replyReader = readers.firstOrNull(),
                             start = start,
                             startActions = startVm,
+                            appStatus = appStatus,
+                            replyOffer = offerContent,
                         )
                         SessionTransferSheet(transferState, transfer)
                         StateHandoffSheet(handoff, handoffVm)

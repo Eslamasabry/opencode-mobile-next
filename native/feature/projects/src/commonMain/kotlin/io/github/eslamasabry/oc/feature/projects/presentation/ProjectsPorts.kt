@@ -22,6 +22,8 @@ public class ProjectServer(
     public val name: String,
     public val gateway: ServerGateway,
     public val operations: ServerOperationsGateway?,
+    /** Capability to open shared folders on this phone for this connection. */
+    public val phoneFolders: Boolean = false,
 )
 
 /** The live connections and the active one. The app binds the real one (ProjectsWiring). */
