@@ -543,9 +543,11 @@ class PlatformHub(
         val details = mutableMapOf<Pair<String, String>, WidgetDetail>()
         // Only the four launcher-visible rows. Each read is bounded and never mutates the server.
         for (row in model.rows.take(4)) {
+            if (row.profile != profile.raw) continue
             val id = ProfileId(row.profile)
             val graph = registry.live.value[id] ?: continue
             val location = graph.session.server.location.value
+            if (row.project != location.directory.orEmpty()) continue
             val page =
                 withTimeoutOrNull(2_000L) {
                     graph.session.server.messagePage(SessionId(row.id), limit = EXCERPT_MESSAGES)
@@ -554,7 +556,8 @@ class PlatformHub(
                 registry.live.value[id] !== graph || graph.session.server.location.value != location
             )
                 continue
-            val messages = (page as? Outcome.Ok)?.value?.items.orEmpty()
+            val messages =
+                (page as? Outcome.Ok)?.value?.items.orEmpty().filter { it.info.sessionId == row.id }
             val permission =
                 waiting
                     .firstOrNull { it.profile == id && it.request.sessionId.raw == row.id }
@@ -635,10 +638,16 @@ class PlatformHub(
                     .put("server", row.server)
                     .put("busy", row.busy)
                     .put("needsYou", row.needsYou)
-                    .put("requestID", row.requestId)
-                    .put("preview", details[row.profile to row.id]?.preview.orEmpty())
-                    .put("ask", JSONObject(details[row.profile to row.id]?.ask.orEmpty()))
+                    .put("onDemandActions", JSONArray())
                     .put("updatedAt", row.updatedAt)
+                    .apply {
+                        val detail = details[row.profile to row.id]
+                        if (detail != null) {
+                            if (row.requestId.isNotEmpty()) put("requestID", row.requestId)
+                            if (detail.preview.isNotEmpty()) put("preview", detail.preview)
+                            if (detail.ask.isNotEmpty()) put("ask", JSONObject(detail.ask))
+                        }
+                    }
             )
         }
         val servers = JSONArray()
@@ -953,7 +962,7 @@ internal object PlatformRules {
                         id = item.sessionId.raw,
                         profile = item.profileId.raw,
                         title = widgetText(item.title),
-                        project = widgetText(item.directory),
+                        project = item.directory.orEmpty(),
                         server = widgetText(names[item.profileId]),
                         busy = item.status == ChatStatus.Running,
                         needsYou = item.status == ChatStatus.NeedsYou || request != null,

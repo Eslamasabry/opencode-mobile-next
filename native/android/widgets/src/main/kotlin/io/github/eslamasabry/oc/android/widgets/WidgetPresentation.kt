@@ -104,7 +104,7 @@ public class WidgetPresentation(context: Context, redactor: Redactor) {
         } else if (seen.isEmpty()) {
             if (folder.isNotEmpty()) result["dir"] = text.path(folder)
         } else {
-            val isPath = ' ' !in seen && '/' in seen
+            val isPath = '/' in seen
             val cut = if (isPath) seen.lastIndexOf('/') else -1
             result["file"] = text.title(if (isPath) seen.substring(cut + 1) else seen)
             if (isPath) result["path"] = text.path(seen)

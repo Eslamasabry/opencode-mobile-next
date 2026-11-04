@@ -144,7 +144,6 @@ class AndroidProfileMonitoring(
                 listeners.getOrPut(profileId) { mutableSetOf() }.add(listener)
                 return {
                     listeners[profileId]?.remove(listener)
-                    Unit
                 }
             }
 
