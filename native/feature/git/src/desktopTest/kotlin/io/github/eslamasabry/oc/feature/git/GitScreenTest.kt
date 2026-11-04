@@ -99,6 +99,12 @@ class GitScreenTest {
             override fun openGitHub() {}
             override fun manageGitHubAccess() {}
             override fun dismissResult() {}
+            override fun repairObjects() {
+                calls += "repairObjects"
+            }
+            override fun openRepairSettings() {
+                calls += "repairSettings"
+            }
         }
 
     @Composable

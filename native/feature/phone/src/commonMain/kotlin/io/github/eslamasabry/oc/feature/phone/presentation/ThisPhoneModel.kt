@@ -29,6 +29,7 @@ public class ThisPhoneModel(
     private val scope: CoroutineScope,
     private val clock: Clock,
     private val pacer: Pacer,
+    private val exits: PhoneExitNotices = PhoneExitNotices.Absent,
 ) : ThisPhoneActions {
     private data class Local(
         val working: PhoneOp? = null,
@@ -41,9 +42,9 @@ public class ThisPhoneModel(
     private val visible = MutableStateFlow(false)
 
     public val state: StateFlow<ThisPhoneUi> =
-        combine(source.facts, local, ::build).stateIn(scope, SharingStarted.Eagerly, build(source.facts.value, local.value))
+        combine(source.facts, local, exits.notice, ::build).stateIn(scope, SharingStarted.Eagerly, build(source.facts.value, local.value, exits.notice.value))
 
-    private fun build(facts: PhoneServerFacts, l: Local): ThisPhoneUi {
+    private fun build(facts: PhoneServerFacts, l: Local, exitNotice: PhoneExitNotice?): ThisPhoneUi {
         val shownFacts = if (l.working == PhoneOp.Start || l.working == PhoneOp.Restart) facts.copy(starting = true) else facts
         val server = PhoneServerState.of(shownFacts)
         val answer = ThisPhoneAnswers.of(server, shownFacts, now = l.now, stopping = l.working == PhoneOp.Stop)
@@ -67,6 +68,7 @@ public class ThisPhoneModel(
             working = l.working,
             confirm = l.confirm,
             notice = l.notice,
+            exitNotice = exitNotice,
         )
     }
 
@@ -124,7 +126,10 @@ public class ThisPhoneModel(
         }
     }
 
-    override fun dismiss(): Unit = local.update { it.copy(confirm = null, notice = null) }
+    override fun dismiss() {
+        local.update { it.copy(confirm = null, notice = null) }
+        exits.dismiss()
+    }
 
     override fun openRunning(): Unit = nav.open(PhonePage.Running)
 
