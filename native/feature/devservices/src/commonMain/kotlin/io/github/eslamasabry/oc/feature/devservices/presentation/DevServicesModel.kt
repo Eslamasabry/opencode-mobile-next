@@ -22,10 +22,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * One project's Development services page (Flutter DevelopmentServicesScreen): the saved commands, started as owned
- * shells and controlled only through their receipts (:engine:runtime DevelopmentServices, B-LINUX-060..064), and the
- * dev servers found running another way (DetectedDevServers, B-LINUX-054..059). Runs on [scope]'s one lane, as the
- * Flutter model ran on the UI isolate.
+ * One project's Development services page (Flutter DevelopmentServicesScreen): the saved commands,
+ * started as owned shells and controlled only through their receipts (:engine:runtime
+ * DevelopmentServices, B-LINUX-060..064), and the dev servers found running another way
+ * (DetectedDevServers, B-LINUX-054..059). Runs on [scope]'s one lane, as the Flutter model ran on
+ * the UI isolate.
  */
 public class DevServicesModel(
     profile: ProfileId,
@@ -36,33 +37,40 @@ public class DevServicesModel(
     private val onBack: () -> Unit,
 ) : DevServicesActions {
     private val context: DevServicesContext? = host.open(profile, directory)
-    private val ui = MutableStateFlow(DevServicesUi(available = context != null, directory = directory, loading = context != null))
+    private val ui =
+        MutableStateFlow(
+            DevServicesUi(
+                available = context != null,
+                directory = directory,
+                loading = context != null,
+            )
+        )
     public val state: StateFlow<DevServicesUi> = ui.asStateFlow()
 
-    private val services: DevelopmentServices? =
-        context?.let { c ->
-            DevelopmentServices(
-                store = DevelopmentServiceStore(c.settings, profile, c.canWrite),
-                directory = directory,
-                workspace = c.workspace,
-                resolveShells = { if (c.supported()) c.shells() else null },
-                isCurrent = { visible && c.isCurrent() },
-                supported = c.supported,
-                newOwnerToken = c.newId,
-            )
-        }
+    private val services: DevelopmentServices? = context?.let { c ->
+        DevelopmentServices(
+            store = DevelopmentServiceStore(c.settings, profile, c.canWrite),
+            directory = directory,
+            workspace = c.workspace,
+            resolveShells = { if (c.supported()) c.shells() else null },
+            isCurrent = { visible && c.isCurrent() },
+            supported = c.supported,
+            newOwnerToken = c.newId,
+        )
+    }
 
-    private val detected: DetectedDevServers? =
-        context?.let { c ->
-            DetectedDevServers(
-                directory = directory,
-                resolveShells = { if (c.supported()) c.shells() else null },
-                isCurrent = { visible && c.isCurrent() },
-                runOnPhone = c.phone,
-                ownedShellIds = { services?.state?.value?.services.orEmpty().mapNotNull { it.run?.shellId }.toSet() },
-                clock = c.clock,
-            )
-        }
+    private val detected: DetectedDevServers? = context?.let { c ->
+        DetectedDevServers(
+            directory = directory,
+            resolveShells = { if (c.supported()) c.shells() else null },
+            isCurrent = { visible && c.isCurrent() },
+            runOnPhone = c.phone,
+            ownedShellIds = {
+                services?.state?.value?.services.orEmpty().mapNotNull { it.run?.shellId }.toSet()
+            },
+            clock = c.clock,
+        )
+    }
 
     private var visible = false
     private var ticks = 0
@@ -70,16 +78,27 @@ public class DevServicesModel(
 
     init {
         if (services != null && detected != null && context != null) {
-            ui.update { it.copy(workspace = context.workspace, supported = context.supported(), scansPhone = context.phone != null) }
+            ui.update {
+                it.copy(
+                    workspace = context.workspace,
+                    supported = context.supported(),
+                    scansPhone = context.phone != null,
+                )
+            }
             scope.launch {
-                combine(services.state, detected.state) { s, d -> s to d }.collect { (s, d) -> publish(s.services, d.servers) }
+                combine(services.state, detected.state) { s, d -> s to d }
+                    .collect { (s, d) -> publish(s.services, d.servers) }
             }
             scope.launch {
                 services.reload()
                 ui.update { it.copy(loading = false) }
             }
             // The refresh timer runs only while the page is shown; hiding it cancels the ticks.
-            scope.launch { shownFlow.collectLatest { shown -> if (shown) pacer.ticks(DevServicesTimers.refresh).collect { tick() } } }
+            scope.launch {
+                shownFlow.collectLatest { shown ->
+                    if (shown) pacer.ticks(DevServicesTimers.refresh).collect { tick() }
+                }
+            }
         }
     }
 
@@ -105,10 +124,16 @@ public class DevServicesModel(
                                 exitCode = engine.exitCode(service),
                                 canStart = engine.canStart(service),
                                 canStop = engine.canStop(service),
-                                ports = service.run?.shellId?.let { scan.portsForShell(it) }.orEmpty().toImmutableList(),
+                                ports =
+                                    service.run
+                                        ?.shellId
+                                        ?.let { scan.portsForShell(it) }
+                                        .orEmpty()
+                                        .toImmutableList(),
                                 log = s.logs[service.id],
                             )
-                        }.toImmutableList(),
+                        }
+                        .toImmutableList(),
                 found =
                     found
                         .map { server ->
@@ -122,7 +147,8 @@ public class DevServicesModel(
                                 canSave = server.canSave,
                                 log = foundLogs[server.id],
                             )
-                        }.toImmutableList(),
+                        }
+                        .toImmutableList(),
                 foundFailed = d.error != null && d.scanned,
                 problem = old.problem ?: s.error?.let(::problemOf),
                 failure = old.failure ?: s.error,
@@ -132,7 +158,8 @@ public class DevServicesModel(
 
     private val foundLogs = mutableMapOf<String, String>()
 
-    private fun republish() = publish(services?.state?.value?.services.orEmpty(), detected?.servers.orEmpty())
+    private fun republish() =
+        publish(services?.state?.value?.services.orEmpty(), detected?.servers.orEmpty())
 
     override fun shown(visible: Boolean) {
         this.visible = visible
@@ -147,8 +174,10 @@ public class DevServicesModel(
 
     private suspend fun tick() {
         services?.refresh()
-        // Looking for servers started some other way costs a script on the phone: every other tick (Flutter).
+        // Looking for servers started some other way costs a script on the phone: every other tick
+        // (Flutter).
         if (ticks++ % 2 == 0) detected?.refresh()
+        readOpenLogs()
     }
 
     override fun refresh() {
@@ -168,7 +197,9 @@ public class DevServicesModel(
         val found = detected?.servers?.firstOrNull { it.id == id } ?: return
         if (!canRegister() || !found.canSave) return
         val url = found.firstPort?.let { "http://localhost:$it" }.orEmpty()
-        ui.update { it.copy(editor = EditorUi(name = found.name, command = found.command, url = url)) }
+        ui.update {
+            it.copy(editor = EditorUi(name = found.name, command = found.command, url = url))
+        }
     }
 
     private fun canRegister(): Boolean = services != null && ui.value.readable && !ui.value.busy
@@ -187,7 +218,9 @@ public class DevServicesModel(
         val taken = engine.state.value.services.map { it.name.lowercase() }.toSet()
         val checked =
             editor.copy(
-                nameError = if (name.isEmpty()) NameError.Required else if (name.lowercase() in taken) NameError.Duplicate else null,
+                nameError =
+                    if (name.isEmpty()) NameError.Required
+                    else if (name.lowercase() in taken) NameError.Duplicate else null,
                 commandMissing = command.isEmpty(),
                 urlInvalid = url.isNotEmpty() && !DevServicesRules.safePreviewUrl(url),
             )
@@ -222,7 +255,8 @@ public class DevServicesModel(
         scope.launch {
             val started = engine.start(id)
             report(started)
-            if (started is Outcome.Ok) ui.update { it.copy(receipt = DevServicesReceipt.Started(name)) }
+            if (started is Outcome.Ok)
+                ui.update { it.copy(receipt = DevServicesReceipt.Started(name)) }
         }
     }
 
@@ -240,7 +274,16 @@ public class DevServicesModel(
 
     override fun askRemove(id: String) {
         val row = ui.value.services.firstOrNull { it.id == id } ?: return
-        ui.update { it.copy(ask = DevServicesAsk.Remove(id, row.name, running = row.status == DevelopmentServiceStatus.Running)) }
+        ui.update {
+            it.copy(
+                ask =
+                    DevServicesAsk.Remove(
+                        id,
+                        row.name,
+                        running = row.status == DevelopmentServiceStatus.Running,
+                    )
+            )
+        }
     }
 
     override fun askStopFound(id: String) {
@@ -260,7 +303,8 @@ public class DevServicesModel(
                 is DevServicesAsk.Remove -> {
                     val removed = engine.remove(ask.id)
                     report(removed)
-                    if (removed is Outcome.Ok) ui.update { it.copy(receipt = DevServicesReceipt.Removed(ask.name)) }
+                    if (removed is Outcome.Ok)
+                        ui.update { it.copy(receipt = DevServicesReceipt.Removed(ask.name)) }
                 }
                 is DevServicesAsk.StopFound -> {
                     val server = detected?.servers?.firstOrNull { it.id == ask.id } ?: return@launch
@@ -273,25 +317,63 @@ public class DevServicesModel(
     }
 
     override fun logs(id: String) {
-        val engine = services ?: return
-        scope.launch {
-            val read = engine.readLogs(id)
-            if (read is Outcome.Failed) report(read, DevServicesProblem.LogFailed)
-        }
+        val row = ui.value.services.firstOrNull { it.id == id } ?: return
+        ui.update { it.copy(log = DevServiceLog(id, false, row.name, row.log.orEmpty())) }
+        refreshLogs()
     }
 
     override fun foundLogs(id: String) {
-        val scan = detected ?: return
-        val server = scan.servers.firstOrNull { it.id == id && it.hasLogs } ?: return
-        scope.launch {
-            when (val read = scan.readLog(server)) {
-                is Outcome.Ok -> {
-                    foundLogs[id] = read.value
-                    republish()
+        val row = ui.value.found.firstOrNull { it.id == id && it.hasLogs } ?: return
+        ui.update { it.copy(log = DevServiceLog(id, true, row.name, row.log.orEmpty())) }
+        refreshLogs()
+    }
+
+    private var readingLogs = false
+
+    private suspend fun readOpenLogs() {
+        val shown = ui.value.log ?: return
+        if (!visible || readingLogs || context?.isCurrent() != true) return
+        readingLogs = true
+        try {
+            val read: Outcome<String> =
+                if (shown.found) {
+                    val scan = detected ?: return
+                    val server =
+                        scan.servers.firstOrNull { it.id == shown.id && it.hasLogs } ?: return
+                    scan.readLog(server)
+                } else {
+                    val engine = services ?: return
+                    when (val loaded = engine.readLogs(shown.id)) {
+                        is Outcome.Failed -> loaded
+                        is Outcome.Ok -> Outcome.Ok(engine.state.value.logs[shown.id].orEmpty())
+                    }
                 }
-                is Outcome.Failed -> report(read, DevServicesProblem.LogFailed)
+            if (
+                !visible ||
+                    context?.isCurrent() != true ||
+                    ui.value.log?.id != shown.id ||
+                    ui.value.log?.found != shown.found
+            )
+                return
+            when (read) {
+                is Outcome.Ok -> {
+                    if (shown.found) foundLogs[shown.id] = read.value
+                    val text = read.value
+                    ui.update { it.copy(log = it.log?.copy(text = text, failed = false)) }
+                }
+                is Outcome.Failed -> ui.update { it.copy(log = it.log?.copy(failed = true)) }
             }
+        } finally {
+            readingLogs = false
         }
+    }
+
+    override fun refreshLogs() {
+        scope.launch { readOpenLogs() }
+    }
+
+    override fun closeLogs() {
+        ui.update { it.copy(log = null) }
     }
 
     override fun visit(id: String) {
@@ -322,16 +404,21 @@ public class DevServicesModel(
 
     private fun report(outcome: Outcome<*>, kind: DevServicesProblem? = null) {
         if (outcome !is Outcome.Failed) return
-        ui.update { it.copy(problem = kind ?: problemOf(outcome.failure), failure = outcome.failure) }
+        ui.update {
+            it.copy(problem = kind ?: problemOf(outcome.failure), failure = outcome.failure)
+        }
     }
 
     internal companion object {
         fun problemOf(failure: Failure): DevServicesProblem =
             when (failure) {
                 is Failure.Refused ->
-                    if (failure.reason == RefusalReason.StaleScope) DevServicesProblem.ScopeChanged else DevServicesProblem.Failed
+                    if (failure.reason == RefusalReason.StaleScope) DevServicesProblem.ScopeChanged
+                    else DevServicesProblem.Failed
                 is Failure.Unavailable -> DevServicesProblem.Unavailable
-                is Failure.Unknown, is Failure.Network, is Failure.TimedOut -> DevServicesProblem.Offline
+                is Failure.Unknown,
+                is Failure.Network,
+                is Failure.TimedOut -> DevServicesProblem.Offline
                 is Failure.StorageRefused -> DevServicesProblem.NotSaved
                 is Failure.UnreadableReply -> DevServicesProblem.LogFailed
                 else -> DevServicesProblem.Failed
@@ -341,7 +428,10 @@ public class DevServicesModel(
 
 /** Pure rules of the page. */
 public object DevServicesRules {
-    /** A preview address must be http or https with a host and no user name or password (Flutter safeExternalLinkUri). */
+    /**
+     * A preview address must be http or https with a host and no user name or password (Flutter
+     * safeExternalLinkUri).
+     */
     public fun safePreviewUrl(url: String): Boolean {
         val scheme = url.substringBefore("://", missingDelimiterValue = "").lowercase()
         if (scheme != "http" && scheme != "https") return false

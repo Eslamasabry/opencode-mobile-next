@@ -13,11 +13,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * The page's logic, without Android or Compose: the crash consent switch, the preview the person reads before
- * sharing (only the builder-issued preview authorizes a share, B-SEC-051), Android's exit history read fresh each
- * time (B-SEC-059), and Clear. Every failure becomes one fixed [KeptNotice].
+ * The page's logic, without Android or Compose: the crash consent switch, the preview the person
+ * reads before sharing (only the builder-issued preview authorizes a share, B-SEC-051), Android's
+ * exit history read fresh each time (B-SEC-059), and Clear. Every failure becomes one fixed
+ * [KeptNotice].
  */
-public class KeptPresenter(private val host: KeptDiagnosticsHost, private val scope: CoroutineScope) : KeptActions {
+public class KeptPresenter(
+    private val host: KeptDiagnosticsHost,
+    private val scope: CoroutineScope,
+) : KeptActions {
     private val local = MutableStateFlow(KeptUi())
     private var issued: CrashReportPreview? = null
     private var onBack: () -> Unit = {}
@@ -27,9 +31,10 @@ public class KeptPresenter(private val host: KeptDiagnosticsHost, private val sc
     public fun start(back: () -> Unit) {
         onBack = back
         scope.launch {
-            combine(host.crash, host.errorsKept) { crash, errors -> crash to errors }.collect { (crash, errors) ->
-                local.update { it.withCrash(crash).copy(errorsKept = errors) }
-            }
+            combine(host.crash, host.errorsKept) { crash, errors -> crash to errors }
+                .collect { (crash, errors) ->
+                    local.update { it.withCrash(crash).copy(errorsKept = errors) }
+                }
         }
         loadExits()
     }
@@ -39,7 +44,12 @@ public class KeptPresenter(private val host: KeptDiagnosticsHost, private val sc
         return copy(
             crashAvailable = usable,
             crashOn = usable && crash.enabled,
-            crashRows = if (usable) crash.records.map { KeptCrashRow(host.timeLabel(it.at), it.category.wire) } else emptyList(),
+            crashRows =
+                if (usable)
+                    crash.records.map {
+                        KeptCrashRow(host.timeLabel(it.at), it.category.wire, it.source)
+                    }
+                else emptyList(),
         )
     }
 
@@ -51,7 +61,11 @@ public class KeptPresenter(private val host: KeptDiagnosticsHost, private val sc
                 when {
                     history.error != null -> KeptExits.Failed
                     !history.supported -> KeptExits.Unsupported
-                    else -> KeptExits.Ready(history.entries.map { KeptExitRow(it.kind, host.timeLabel(it.at)) }, history.helperExits.size)
+                    else ->
+                        KeptExits.Ready(
+                            history.entries.map { KeptExitRow(it.kind, host.timeLabel(it.at)) },
+                            history.helperExits.size,
+                        )
                 }
             local.update { it.copy(exits = exits) }
         }
@@ -80,7 +94,10 @@ public class KeptPresenter(private val host: KeptDiagnosticsHost, private val sc
             } else {
                 issued = preview
                 local.update {
-                    it.copy(preview = KeptPreview(preview.text, preview.recordCount, preview.byteCount), notice = null)
+                    it.copy(
+                        preview = KeptPreview(preview.text, preview.recordCount, preview.byteCount),
+                        notice = null,
+                    )
                 }
             }
         }
@@ -92,15 +109,29 @@ public class KeptPresenter(private val host: KeptDiagnosticsHost, private val sc
         local.update { it.copy(sharing = true) }
         scope.launch {
             val result = host.shareCrashReport(preview)
-            local.update { ui ->
-                when {
-                    result.opened -> ui.copy(sharing = false, notice = null)
-                    // A stale preview is dropped: the person must preview the new evidence first.
-                    result.error == DiagnosticsError.StalePreview ->
-                        ui.copy(sharing = false, preview = null, notice = KeptNotice.Stale).also { issued = null }
-                    else -> ui.copy(sharing = false, notice = notice(result.error))
+            when {
+                result.opened -> dropPreview()
+                result.error == DiagnosticsError.StalePreview -> {
+                    // Evidence changed: replace what is shown, then require another explicit Share
+                    // tap.
+                    val rebuilt = host.previewCrashReport()
+                    issued = rebuilt.preview
+                    local.update { ui ->
+                        ui.copy(
+                            sharing = false,
+                            preview =
+                                rebuilt.preview?.let {
+                                    KeptPreview(it.text, it.recordCount, it.byteCount)
+                                },
+                            notice =
+                                if (rebuilt.preview != null) KeptNotice.Stale
+                                else notice(rebuilt.error),
+                        )
+                    }
                 }
+                else -> local.update { it.copy(sharing = false, notice = notice(result.error)) }
             }
+            if (result.opened) local.update { it.copy(sharing = false, notice = null) }
         }
     }
 
@@ -118,7 +149,8 @@ public class KeptPresenter(private val host: KeptDiagnosticsHost, private val sc
     override fun onConfirmDelete() {
         local.update { it.copy(confirmDelete = false) }
         scope.launch {
-            if (host.deleteCrashReports()) dropPreview() else local.update { it.copy(notice = KeptNotice.CrashUpdateFailed) }
+            if (host.deleteCrashReports()) dropPreview()
+            else local.update { it.copy(notice = KeptNotice.CrashUpdateFailed) }
         }
     }
 
@@ -151,7 +183,8 @@ public class KeptPresenter(private val host: KeptDiagnosticsHost, private val sc
             DiagnosticsError.CaptureDisabled -> KeptNotice.CaptureOff
             DiagnosticsError.NoCapture -> KeptNotice.NothingToShare
             DiagnosticsError.StalePreview -> KeptNotice.Stale
-            DiagnosticsError.ShareUnavailable, DiagnosticsError.Busy -> KeptNotice.ShareFailed
+            DiagnosticsError.ShareUnavailable,
+            DiagnosticsError.Busy -> KeptNotice.ShareFailed
             DiagnosticsError.StorageFailed -> KeptNotice.CrashUnavailable
             else -> KeptNotice.DetailsUnavailable
         }
