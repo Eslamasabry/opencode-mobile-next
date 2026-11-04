@@ -1116,18 +1116,20 @@ class BuiltinLinux(private val context: Context) {
     /**
      * One Claude sign-in for the app and the Terminal: `/home/oc/.claude` becomes a link to
      * [profileId]'s Claude folder, and a sign-in made in the Terminal before is adopted
-     * (PhoneAgentClaudeHome). A foreign link or a failed adoption stays untouched and refuses the
-     * launch, so an app launch cannot silently use a different sign-in from the Terminal.
+     * (PhoneAgentClaudeHome). Best effort, as in Flutter: a failure or a foreign link leaves the
+     * profile's own folder as it was and never blocks the launch.
      */
     private fun shareClaudeSignIn(profileId: String) {
         try {
-            PhoneAgentClaudeHome.requireShared(
-                File(rootfs, "home/oc"),
-                profileId,
-                File(rootfs, "root"),
-            )
-        } catch (_: Exception) {
-            throw IllegalStateException("agent_sign_in_home_unavailable")
+            val steps =
+                PhoneAgentClaudeHome.prepare(
+                    File(rootfs, "home/oc"),
+                    profileId,
+                    File(rootfs, "root"),
+                )
+            if (steps.isNotEmpty()) Log.i(TAG, "Claude sign-in folder: ${steps.joinToString()}")
+        } catch (error: Exception) {
+            Log.w(TAG, "Claude sign-in folder not shared: ${error.javaClass.simpleName}")
         }
     }
 

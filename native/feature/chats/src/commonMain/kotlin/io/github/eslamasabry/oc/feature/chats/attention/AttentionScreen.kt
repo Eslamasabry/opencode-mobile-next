@@ -136,7 +136,9 @@ public fun AttentionScreen(state: AttentionUi, actions: AttentionActions) {
                             Res.string.activityUndoUnconfirmed
                         row.undoResult == AutomaticUndoResult.Failed ->
                             Res.string.activityUndoFailed
-                        !row.undoable -> Res.string.activityUndoUnavailable
+                        // Only restarts ever carry an inverse; other kinds never offered Undo.
+                        row.kind == AutomaticActKind.Restart && !row.undoable ->
+                            Res.string.activityUndoUnavailable
                         else -> null
                     }
                 KitRow(

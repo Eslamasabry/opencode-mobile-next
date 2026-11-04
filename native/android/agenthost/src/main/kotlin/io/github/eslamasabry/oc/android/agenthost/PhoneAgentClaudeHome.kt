@@ -70,20 +70,6 @@ internal object PhoneAgentClaudeHome {
         return steps
     }
 
-    /** A launch may proceed only when the Terminal resolves to this exact profile's folder. */
-    fun requireShared(agentHome: File, profileId: String, rootHome: File? = null) {
-        prepare(agentHome, profileId, rootHome)
-        val home = agentHome.toPath()
-        val link = home.resolve(LINK)
-        check(
-            Files.isSymbolicLink(link) &&
-                Files.readSymbolicLink(link).toString() == linkTarget(profileId) &&
-                link.toRealPath() == home.toRealPath().resolve(linkTarget(profileId))
-        ) {
-            "agent_sign_in_home_unavailable"
-        }
-    }
-
     private fun pointLink(
         home: Path,
         link: Path,
