@@ -61,6 +61,7 @@ class NativePhoneSetup(
     private val settings: KeepAliveSettings,
     private val switchGate: NativeRuntimeSwitch,
     private val payloadGuard: PhonePayloadGuard,
+    private val voice: NativeVoiceSetup,
 ) : LinuxSetupSource {
     private val serial = dispatchers.serial("phone-setup")
     private val scope = CoroutineScope(appScope.coroutineContext + serial)
@@ -149,35 +150,35 @@ class NativePhoneSetup(
                     }
                 return try {
                     native {
-                    val specs =
-                        job.components.map { s ->
-                            SetupRunner.Spec(
-                                s.id,
-                                s.script,
-                                s.native,
-                                s.step,
-                                s.weight.toDouble(),
-                                s.skipped,
-                                s.version,
-                                s.stage,
-                                s.labels,
-                                s.data,
-                                s.agentUser,
-                            )
-                        }
-                    runner.start(
-                        job.jobId,
-                        specs,
-                        JSONObject(job.params),
-                        SetupRunner.Texts(
-                            job.texts.channel,
-                            job.texts.title,
-                            job.texts.progress,
-                            job.texts.done,
-                            job.texts.stopped,
-                        ),
-                    )
-                }
+                        val specs =
+                            job.components.map { s ->
+                                SetupRunner.Spec(
+                                    s.id,
+                                    s.script,
+                                    s.native,
+                                    s.step,
+                                    s.weight.toDouble(),
+                                    s.skipped,
+                                    s.version,
+                                    s.stage,
+                                    s.labels,
+                                    s.data,
+                                    s.agentUser,
+                                )
+                            }
+                        runner.start(
+                            job.jobId,
+                            specs,
+                            JSONObject(job.params),
+                            SetupRunner.Texts(
+                                job.texts.channel,
+                                job.texts.title,
+                                job.texts.progress,
+                                job.texts.done,
+                                job.texts.stopped,
+                            ),
+                        )
+                    }
                 } finally {
                     reservation.release()
                 }
@@ -214,7 +215,8 @@ class NativePhoneSetup(
                         runner.status()
                     }
                 },
-            registry = RemovableComponents.builtin,
+            registry = RemovableComponents.builtin + RemovableComponent(ComponentIds.VOICE),
+            apps = mapOf(ComponentIds.VOICE to voice),
             toolsChanged = ToolsChangedListener { changed.value += 1 },
         )
     }
@@ -248,6 +250,9 @@ class NativePhoneSetup(
         engine?.let {
             return it
         }
+        voice.prepare()
+        val voiceTitle = getString(Res.string.voiceComponentTitle)
+        val voiceSummary = getString(Res.string.voiceComponentSummary)
         val linuxTitle = getString(Res.string.phoneSetupLinuxTitle)
         val essentials = getString(Res.string.phoneSetupEssentialsTitle)
         val essentialsShort = getString(Res.string.phoneSetupEssentialsShort)
@@ -346,6 +351,17 @@ class NativePhoneSetup(
                             jobStep = true,
                             estimatedSeconds = 10,
                         ),
+                        SetupComponent(
+                            SetupComponentIds.VOICE,
+                            voiceTitle,
+                            voiceTitle,
+                            "",
+                            "",
+                            downloadBytes = voice.downloadBytes,
+                            summary = voiceSummary,
+                            estimatedSeconds = 120,
+                            app = voice,
+                        ),
                     )
                 },
                 words,
@@ -442,6 +458,19 @@ class NativePhoneSetup(
         )
     }
 
+    override suspend fun addVoice(): Outcome<Unit> {
+        when (val offered = voice.prepare()) {
+            is Outcome.Failed -> return offered
+            is Outcome.Ok -> Unit
+        }
+        return command {
+            it.run(
+                setOf(SetupComponentIds.VOICE),
+                SetupJobParams.adding(listOf(SetupComponentIds.VOICE)) + RUNTIME_PARAMS,
+            )
+        }
+    }
+
     override suspend fun resume(): Outcome<Unit> = command { it.resume() }
 
     override suspend fun cancel(): Outcome<Unit> =
@@ -449,7 +478,8 @@ class NativePhoneSetup(
             // A cancel during checks must set cancelRequested before startSetup can run, so it
             // bypasses the lane a running start holds. With no engine yet (a cold app with a
             // runner job), nothing is starting: build it through the lane and cancel normally.
-            val current = engine ?: return@withContext command(prepareMigration = false) { it.cancel() }
+            val current =
+                engine ?: return@withContext command(prepareMigration = false) { it.cancel() }
             current.cancel()
             Outcome.Ok(Unit)
         }

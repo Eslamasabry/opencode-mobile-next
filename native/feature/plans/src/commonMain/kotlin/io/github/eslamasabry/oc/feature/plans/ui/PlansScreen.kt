@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
 import io.github.eslamasabry.oc.feature.plans.presentation.CollectorFailure
 import io.github.eslamasabry.oc.feature.plans.presentation.CollectorUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanCardUi
@@ -122,6 +121,40 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                     }
                     if (state.failed && !state.editing)
                         KitNotice(stringResource(Res.string.statePlansSaveFailed))
+                }
+                if (state.phase != PlansPhase.Loading) {
+                    KitRowGroup(label = stringResource(Res.string.plansWidgetSettings)) {
+                        KitSwitchRow(
+                            title = stringResource(Res.string.plansWidgetSetupRows),
+                            checked = state.widgetSettings.showSetupRows,
+                            onCheckedChange = actions::setWidgetSetupRows,
+                        )
+                        for (windows in
+                            io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetWindows
+                                .entries) {
+                            KitRow(
+                                title =
+                                    stringResource(
+                                        when (windows) {
+                                            io.github.eslamasabry.oc.engine.integrations.usage
+                                                .UsageWidgetWindows
+                                                .Both -> Res.string.plansWidgetBoth
+                                            io.github.eslamasabry.oc.engine.integrations.usage
+                                                .UsageWidgetWindows
+                                                .FiveHour -> Res.string.plansWidgetFiveHour
+                                            io.github.eslamasabry.oc.engine.integrations.usage
+                                                .UsageWidgetWindows
+                                                .Weekly -> Res.string.plansWidgetWeekly
+                                        }
+                                    ),
+                                supporting =
+                                    if (state.widgetSettings.windows == windows)
+                                        stringResource(Res.string.plansWidgetSelected)
+                                    else null,
+                                onClick = { actions.setWidgetWindows(windows) },
+                            )
+                        }
+                    }
                 }
                 for (card in state.cards) PlanCard(card, state.nowMs, words, actions)
                 if (state.keys.isNotEmpty()) {
@@ -405,6 +438,11 @@ private fun UsageCollectorRows(state: PlansUi, actions: PlansActions) {
 @Composable
 private fun PlanCard(card: PlanCardUi, nowMs: Long, words: PlansWords, actions: PlansActions) {
     KitRowGroup(label = words.cardTitle(card.name, card.connection)) {
+        KitSwitchRow(
+            title = stringResource(Res.string.plansWidgetVisible),
+            checked = card.widgetVisible,
+            onCheckedChange = { actions.setWidgetVisible(card.key, it) },
+        )
         if (
             card.state ==
                 io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState.SignInExpired

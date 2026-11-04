@@ -131,6 +131,7 @@ class AgentTerminalHost(
     private val stores: PreviewStores,
     private val dispatchers: AppDispatchers,
     private val payloads: PhonePayloadGuard,
+    private val ownership: SignInOwnership,
 ) : TerminalHost {
     override suspend fun open(target: TerminalTarget): Outcome<TerminalModel> {
         val command = (target as TerminalTarget.SignIn).command
@@ -149,11 +150,22 @@ class AgentTerminalHost(
                 is Outcome.Ok -> claim.value
             }
         var transferred = false
+        val pending = CompletableDeferred<NativeTerminalManager.NativeSession?>()
+        var cleanup: SignInOwnership.Cleanup? = null
         try {
             when (val admitted = reader.awaitReady()) {
                 is Outcome.Failed -> return admitted
                 is Outcome.Ok -> Unit
             }
+            cleanup =
+                ownership.watch(owner) {
+                    val session = pending.await() ?: return@watch Unit.ok()
+                    withContext(dispatchers.io) {
+                        attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
+                            terminals.remove(session.id)
+                        }
+                    }
+                } ?: return Failure.Refused(RefusalReason.StaleScope).failed()
             val opened =
                 attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
                     bridge.open(owner, listOf(command.program) + command.args)
@@ -163,7 +175,12 @@ class AgentTerminalHost(
                     is Outcome.Failed -> return opened
                     is Outcome.Ok -> opened.value
                 }
-            session.onRemoved(reader::release)
+            pending.complete(session)
+            val registered = checkNotNull(cleanup)
+            session.onRemoved {
+                reader.release()
+                ownership.forget(registered)
+            }
             transferred = true
             if (
                 (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value != owner ||
@@ -208,7 +225,11 @@ class AgentTerminalHost(
                 }
                 .ok()
         } finally {
-            if (!transferred) reader.release()
+            if (!pending.isCompleted) pending.complete(null)
+            if (!transferred) {
+                cleanup?.let(ownership::forget)
+                reader.release()
+            }
         }
     }
 }
@@ -291,6 +312,7 @@ class NativeSignInAgents(
 class NativeSignInForeground(
     private val hub: BackgroundHub,
     private val dispatchers: AppDispatchers,
+    private val ownership: SignInOwnership,
 ) : SignInForeground {
     override fun reserve(): SignInForegroundLease {
         val ready = CompletableDeferred<ForegroundLease?>()
@@ -298,10 +320,10 @@ class NativeSignInForeground(
         var confirmed = false
         var held: ForegroundLease? = null
         hub.launchOnMain {
-            val controller = hub.controller()
+            hub.controller()
             if (released) ready.complete(null)
             else {
-                held = controller.reserve()
+                held = ownership.reserve { !released }
                 ready.complete(held)
             }
         }

@@ -311,4 +311,7 @@
     <string name="widget_allow_for">Allow once: %1$s</string>
     <string name="widget_reply_for">Reply to %1$s</string>
     <string name="widget_step_for">%1$s: %2$s</string>
+    <string name="andr_thermalPaused">Your phone is hot — paused the AI Team to cool down. It resumes by itself.</string>
+    <string name="andr_thermalStopped">Your phone is very hot — stopped the AI Team to protect it. Its work is kept, and it starts again once the phone has cooled down.</string>
+    <string name="andr_thermalResumed">Resumed the AI Team — your phone has cooled down.</string>
 </resources>

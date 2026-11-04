@@ -23,6 +23,12 @@ public enum class WidgetActionDestination {
 public data class WidgetActionUi(
     val phase: WidgetActionPhase = WidgetActionPhase.Editing,
     val destination: WidgetActionDestination? = null,
+    val newConversation: Boolean = false,
+    val listening: Boolean = false,
+    val dictating: Boolean = false,
+    val dictatedWords: String? = null,
+    val dictationFailed: Boolean = false,
+    val voiceAvailable: Boolean = false,
 )
 
 /**
@@ -33,7 +39,23 @@ public fun interface WidgetActionPort {
     public suspend fun send(text: String): WidgetActionPhase
 }
 
+public interface WidgetVoicePort {
+    public fun foreground(active: Boolean)
+
+    public suspend fun start(): Boolean
+
+    public suspend fun finish(): String?
+
+    public suspend fun cancel()
+}
+
 public interface WidgetActionActions {
+    public fun dictate()
+
+    public fun finishDictation()
+
+    public fun takeDictatedWords()
+
     public fun send(text: String)
 
     public fun close()
@@ -41,19 +63,75 @@ public interface WidgetActionActions {
     public fun openConversation()
 }
 
-public class WidgetActionViewModel(private val port: WidgetActionPort) :
-    ViewModel(), WidgetActionActions {
-    private val mutable = MutableStateFlow(WidgetActionUi())
+public class WidgetActionViewModel(
+    private val port: WidgetActionPort,
+    private val voice: WidgetVoicePort? = null,
+    newConversation: Boolean = false,
+) : ViewModel(), WidgetActionActions {
+    private val mutable =
+        MutableStateFlow(
+            WidgetActionUi(newConversation = newConversation, voiceAvailable = voice != null)
+        )
     public val state: StateFlow<WidgetActionUi> = mutable.asStateFlow()
+
+    init {
+        // Flutter voice box: dictation opens at once; sending still waits for an explicit Send.
+        if (newConversation) dictate()
+    }
+
+    public fun foreground(active: Boolean) {
+        voice?.foreground(active)
+    }
+
+    override fun dictate() {
+        if (
+            voice == null ||
+                mutable.value.phase != WidgetActionPhase.Editing ||
+                mutable.value.listening ||
+                mutable.value.dictating
+        )
+            return
+        mutable.value = mutable.value.copy(dictating = true, dictationFailed = false)
+        viewModelScope.launch {
+            val started = voice.start()
+            mutable.value =
+                mutable.value.copy(
+                    dictating = false,
+                    listening = started,
+                    dictationFailed = !started,
+                )
+        }
+    }
+
+    override fun finishDictation() {
+        if (voice == null || !mutable.value.listening || mutable.value.dictating) return
+        mutable.value = mutable.value.copy(dictating = true)
+        viewModelScope.launch {
+            val words = voice.finish()
+            mutable.value =
+                mutable.value.copy(
+                    dictating = false,
+                    listening = false,
+                    dictatedWords = words,
+                    dictationFailed = words == null,
+                )
+        }
+    }
+
+    override fun takeDictatedWords() {
+        mutable.value = mutable.value.copy(dictatedWords = null)
+    }
 
     override fun send(text: String) {
         if (
             mutable.value.phase != WidgetActionPhase.Editing ||
+                mutable.value.listening ||
+                mutable.value.dictating ||
                 text.isBlank() ||
                 text.length > MAX_TEXT
         )
             return
-        mutable.value = WidgetActionUi(WidgetActionPhase.Sending)
+        mutable.value = mutable.value.copy(phase = WidgetActionPhase.Sending)
         viewModelScope.launch {
             val result = port.send(text)
             mutable.value =
@@ -67,6 +145,7 @@ public class WidgetActionViewModel(private val port: WidgetActionPort) :
     }
 
     override fun close() {
+        if (voice != null) viewModelScope.launch { voice.cancel() }
         mutable.value = mutable.value.copy(destination = WidgetActionDestination.Close)
     }
 

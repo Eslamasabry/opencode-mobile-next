@@ -324,6 +324,10 @@ public class SettingsPresenter(
     }
 
     override fun onOutside(place: SettingsOutside) {
+        if (place == SettingsOutside.PrivacyPolicy) {
+            onOpen(SettingsPage.PrivacyPolicy)
+            return
+        }
         openers.open(place)
     }
 

@@ -40,6 +40,8 @@ public sealed interface SettingsPage {
 
     public data object Privacy : SettingsPage
 
+    public data object PrivacyPolicy : SettingsPage
+
     /** Settings › This app › Privacy › What we collect (plan 18 §6): one page, no new level. */
     public data object WhatWeCollect : SettingsPage
 

@@ -6,8 +6,8 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.android.background.FirstReplyNotifyOffer
-import io.github.eslamasabry.oc.android.background.NotifyOfferFailure
 import io.github.eslamasabry.oc.android.background.LiveModeError
+import io.github.eslamasabry.oc.android.background.NotifyOfferFailure
 import io.github.eslamasabry.oc.android.notifications.NotifyWords
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
@@ -50,6 +50,7 @@ class AndroidAppNotices(
     private val registry: io.github.eslamasabry.oc.engine.connection.ConnectionRegistry,
     private val navigator: AppNavigator,
     private val preferences: AppPreferences,
+    private val thermal: ThermalRuntime,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : AppNotices {
@@ -69,12 +70,15 @@ class AndroidAppNotices(
         started = true
         background.start()
         exits.start()
+        thermal.start()
         scope.launch {
-            combine(exits.notice, exits.serverBack, background.live, preferences.localeTag) {
-                    exit,
-                    back,
-                    live,
-                    _ ->
+            combine(
+                    exits.notice,
+                    exits.serverBack,
+                    background.live,
+                    preferences.localeTag,
+                    thermal.notice,
+                ) { exit, back, live, _, heat ->
                     val dismiss = words.text(R.string.andr_notifyDismiss)
                     when {
                         exit != null -> {
@@ -178,6 +182,24 @@ class AndroidAppNotices(
                                 dismissLabel = dismiss,
                             )
                         }
+                        heat != null ->
+                            AppNotice(
+                                "thermal",
+                                words.text(
+                                    when (heat.kind) {
+                                        io.github.eslamasabry.oc.engine.runtime.heat
+                                            .ThermalNoticeKind
+                                            .Paused -> R.string.andr_thermalPaused
+                                        io.github.eslamasabry.oc.engine.runtime.heat
+                                            .ThermalNoticeKind
+                                            .Stopped -> R.string.andr_thermalStopped
+                                        io.github.eslamasabry.oc.engine.runtime.heat
+                                            .ThermalNoticeKind
+                                            .Resumed -> R.string.andr_thermalResumed
+                                    }
+                                ),
+                                dismissLabel = dismiss,
+                            )
                         else -> null
                     }
                 }
@@ -306,6 +328,7 @@ class AndroidAppNotices(
     override fun dismiss(id: String) {
         when (id) {
             "app-exit" -> exits.dismiss()
+            "thermal" -> thermal.dismiss()
             "background-pause" -> background.launchOnMain { background.notice().dismiss() }
         }
     }

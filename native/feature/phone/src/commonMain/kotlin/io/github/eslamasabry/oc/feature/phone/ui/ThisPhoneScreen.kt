@@ -7,12 +7,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
-import io.github.eslamasabry.oc.feature.phone.presentation.PhoneAct
 import io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReadiness
 import io.github.eslamasabry.oc.engine.runtime.storage.HostStorageAvailability
 import io.github.eslamasabry.oc.engine.runtime.storage.StoragePressure
-import io.github.eslamasabry.oc.feature.phone.presentation.ServerRow
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneAct
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitKind
+import io.github.eslamasabry.oc.feature.phone.presentation.ServerRow
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneActions
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneConfirm
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneNotice
@@ -34,10 +34,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesB
-import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesGb
-import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesKb
-import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesMb
 import io.github.eslamasabry.oc.ui.words.res.andrStorageAvailable
 import io.github.eslamasabry.oc.ui.words.res.andrStorageHostSizes
 import io.github.eslamasabry.oc.ui.words.res.andrStorageHostUnknown
@@ -61,6 +57,10 @@ import io.github.eslamasabry.oc.ui.words.res.linuxExitPolicyOff
 import io.github.eslamasabry.oc.ui.words.res.linuxExitRestored
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRow
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
+import io.github.eslamasabry.oc.ui.words.res.linuxMigrationOfferTitle
+import io.github.eslamasabry.oc.ui.words.res.migrationOfferAction
+import io.github.eslamasabry.oc.ui.words.res.migrationRowBody
+import io.github.eslamasabry.oc.ui.words.res.migrationTermuxUnavailable
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardUpdate
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardVersion
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneRowIdle
@@ -82,6 +82,21 @@ import io.github.eslamasabry.oc.ui.words.res.stateStorageRefresh
 import io.github.eslamasabry.oc.ui.words.res.stateStorageSavedServers
 import io.github.eslamasabry.oc.ui.words.res.stateStorageServer
 import io.github.eslamasabry.oc.ui.words.res.stateStorageTitle
+import io.github.eslamasabry.oc.ui.words.res.termuxFixAllowAccess
+import io.github.eslamasabry.oc.ui.words.res.termuxFixAllowOtherApps
+import io.github.eslamasabry.oc.ui.words.res.termuxFixOpenPermissions
+import io.github.eslamasabry.oc.ui.words.res.termuxFixOpenTermux
+import io.github.eslamasabry.oc.ui.words.res.termuxOtherAppsBody
+import io.github.eslamasabry.oc.ui.words.res.termuxProblemAccessBlocked
+import io.github.eslamasabry.oc.ui.words.res.termuxProblemAccessNeeded
+import io.github.eslamasabry.oc.ui.words.res.termuxProblemAsleep
+import io.github.eslamasabry.oc.ui.words.res.termuxProblemNotInstalled
+import io.github.eslamasabry.oc.ui.words.res.termuxProblemOtherAppsOff
+import io.github.eslamasabry.oc.ui.words.res.termuxProblemOutdated
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesB
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesGb
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesKb
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesMb
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneBusy
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneExportProjects
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneRestartBusy
@@ -140,6 +155,73 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
         },
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+            val migrationActions =
+                actions
+                    as?
+                    io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneMigrationActions
+            if (migrationActions != null)
+                state.termuxMigration.forEach { offer ->
+                    val problem = offer.problem
+                    val fix =
+                        when (problem) {
+                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
+                                .Permission -> Res.string.termuxFixAllowAccess
+                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
+                                .Blocked -> Res.string.termuxFixOpenPermissions
+                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
+                                .OtherAppsOff -> Res.string.termuxFixAllowOtherApps
+                            else -> Res.string.termuxFixOpenTermux
+                        }
+                    val body =
+                        when (problem) {
+                            null -> Res.string.migrationRowBody
+                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
+                                .Missing -> Res.string.termuxProblemNotInstalled
+                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
+                                .Permission -> Res.string.termuxProblemAccessNeeded
+                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
+                                .Blocked -> Res.string.termuxProblemAccessBlocked
+                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
+                                .Unavailable -> Res.string.termuxProblemOutdated
+                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
+                                .OtherAppsOff -> Res.string.termuxProblemOtherAppsOff
+                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
+                                .Asleep -> Res.string.termuxProblemAsleep
+                            io.github.eslamasabry.oc.feature.phone.presentation.PhoneTermuxProblem
+                                .Unknown -> Res.string.migrationTermuxUnavailable
+                        }
+                    KitNotice(
+                        title =
+                            stringResource(Res.string.linuxMigrationOfferTitle, offer.displayName),
+                        message =
+                            stringResource(body) +
+                                if (
+                                    problem ==
+                                        io.github.eslamasabry.oc.feature.phone.presentation
+                                            .PhoneTermuxProblem
+                                            .OtherAppsOff
+                                )
+                                    "\n" + stringResource(Res.string.termuxOtherAppsBody)
+                                else "",
+                        actions =
+                            listOfNotNull(
+                                problem?.let {
+                                    KitLineAction(
+                                        stringResource(fix),
+                                        onClick = {
+                                            migrationActions.fixTermux(offer.profileId)
+                                        },
+                                    )
+                                },
+                                KitLineAction(
+                                    stringResource(Res.string.migrationOfferAction),
+                                    onClick = {
+                                        migrationActions.openTermuxMigration(offer.profileId)
+                                    },
+                                ),
+                            ),
+                    )
+                }
             state.exitNotice?.let { exit ->
                 KitNotice(
                     title =
@@ -336,7 +418,8 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                     title = stringResource(Res.string.andrStorageTitle),
                     message =
                         when {
-                            // Unknown only after a reading finished; the first one is still running.
+                            // Unknown only after a reading finished; the first one is still
+                            // running.
                             storage == null && state.measuringStorage ->
                                 stringResource(Res.string.andrStorageMeasuring)
                             bytes == null -> stringResource(Res.string.andrStorageUnknown)

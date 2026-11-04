@@ -21,7 +21,10 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.PlatformViewHandle
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.engine.project.terminal.LocalShell
+import io.github.eslamasabry.oc.engine.project.terminal.LocalTerminalInputPort
 import io.github.eslamasabry.oc.engine.project.terminal.LocalTerminalPort
+import io.github.eslamasabry.oc.engine.project.terminal.TerminalKey
+import io.github.eslamasabry.oc.engine.project.terminal.TerminalKeys
 import java.io.File
 import java.util.concurrent.FutureTask
 import kotlinx.coroutines.CancellationException
@@ -62,10 +65,11 @@ class NativeLocalTerminal(
     private val scope: AppCoroutineScope,
     private val launchShell: () -> TerminalLaunch,
     private val stopTree: (Int, Long) -> Unit,
-) : LocalTerminalPort {
+) : LocalTerminalPort, LocalTerminalInputPort {
     private val state = MutableStateFlow<List<LocalShell>>(emptyList())
     override val shells: StateFlow<List<LocalShell>> = state.asStateFlow()
     private val lane = Mutex()
+    private val inputHandler = Handler(Looper.getMainLooper())
     private val sessions = linkedMapOf<Int, Held>()
     private var nextId = 1
     private var publishing: Job? = null
@@ -75,7 +79,11 @@ class NativeLocalTerminal(
         lateinit var view: TerminalView
         lateinit var host: SettledTerminalHost
         var ctrl = false
+        var alt = false
         var startTicks: Long? = null
+        val pendingInput = StringBuilder()
+        val flushInput = Runnable { flush(this) }
+
         val handle =
             object : PlatformViewHandle {
                 override val native: Any
@@ -91,10 +99,11 @@ class NativeLocalTerminal(
                 if (session.isRunning) null else session.exitStatus,
                 session.emulator?.screen?.transcriptText?.takeLast(512 * 1024).orEmpty(),
                 handle,
-                ctrl,
-                confined,
-                session.emulator?.mRows ?: 24,
-                session.emulator?.mColumns ?: 80,
+                control = ctrl,
+                confined = confined,
+                rows = session.emulator?.mRows ?: 24,
+                cols = session.emulator?.mColumns ?: 80,
+                alt = alt,
             )
 
         fun finishIfCreated() {
@@ -138,6 +147,7 @@ class NativeLocalTerminal(
                 }
 
                 override fun onSessionFinished(finishedSession: TerminalSession) {
+                    discardInput(held.id)
                     publish()
                 }
 
@@ -149,11 +159,39 @@ class NativeLocalTerminal(
                     schedulePublish()
                 }
 
-                override fun readControlKey(): Boolean =
-                    held.ctrl.also {
+                override fun readControlKey(): Boolean {
+                    flush(held)
+                    return held.ctrl.also {
                         held.ctrl = false
                         schedulePublish()
                     }
+                }
+
+                override fun readAltKey(): Boolean {
+                    flush(held)
+                    return held.alt.also {
+                        held.alt = false
+                        schedulePublish()
+                    }
+                }
+
+                override fun onKeyDown(
+                    keyCode: Int,
+                    e: KeyEvent,
+                    session: TerminalSession,
+                ): Boolean {
+                    flush(held)
+                    return false
+                }
+
+                override fun onCodePoint(
+                    codePoint: Int,
+                    ctrlDown: Boolean,
+                    session: TerminalSession,
+                ): Boolean {
+                    flush(held)
+                    return false
+                }
 
                 override fun onSingleTapUp(e: MotionEvent) {
                     held.view.requestFocus()
@@ -203,18 +241,75 @@ class NativeLocalTerminal(
     }
 
     override suspend fun send(id: Int, text: String): Outcome<Unit> = onMain {
-        val held = sessions[id] ?: return@onMain failed()
-        if (!held.session.isRunning || text.isEmpty()) return@onMain Outcome.Ok(Unit)
-        val first = text.first()
-        val typed =
-            if (held.ctrl && first.code in 0x40..0x7f) {
+        val sent = enqueueText(id, text)
+        sessions[id]?.let(::flush)
+        sent
+    }
+
+    override fun enqueueText(id: Int, text: String): Outcome<Unit> {
+        if (Looper.myLooper() != Looper.getMainLooper()) return failed()
+        val held = sessions[id] ?: return failed()
+        if (!held.session.isRunning || text.isEmpty()) return Outcome.Ok(Unit)
+        val typed = TerminalKeys.text(text, held.ctrl, held.alt)
+        held.ctrl = false
+        held.alt = false
+        return enqueue(held, typed)
+    }
+
+    override fun enqueueKey(id: Int, key: TerminalKey): Outcome<Unit> {
+        if (Looper.myLooper() != Looper.getMainLooper()) return failed()
+        val held = sessions[id] ?: return failed()
+        if (!held.session.isRunning) return Outcome.Ok(Unit)
+        when (key) {
+            TerminalKey.Control -> held.ctrl = !held.ctrl
+            TerminalKey.Alt -> held.alt = !held.alt
+            else -> {
+                val text =
+                    TerminalKeys.bytes(
+                        key,
+                        held.ctrl,
+                        held.alt,
+                        held.session.emulator?.isCursorKeysApplicationMode == true,
+                    )
                 held.ctrl = false
-                (first.code and 0x1f).toChar() + text.drop(1)
-            } else text
-        val bytes = typed.toByteArray(Charsets.UTF_8)
-        held.session.write(bytes, 0, bytes.size)
+                held.alt = false
+                return enqueue(held, text)
+            }
+        }
         publish()
-        Outcome.Ok(Unit)
+        return Outcome.Ok(Unit)
+    }
+
+    private fun enqueue(held: Held, text: String): Outcome<Unit> {
+        if (held.pendingInput.length + text.length > 65_536) {
+            discardInput(held.id)
+            return failed()
+        }
+        held.pendingInput.append(text)
+        inputHandler.removeCallbacks(held.flushInput)
+        inputHandler.post(held.flushInput)
+        publish()
+        return Outcome.Ok(Unit)
+    }
+
+    /** Direct grid input drains earlier app input first, before Termux writes the native key. */
+    private fun flush(held: Held) {
+        inputHandler.removeCallbacks(held.flushInput)
+        val bytes = held.pendingInput.toString().toByteArray(Charsets.UTF_8)
+        held.pendingInput.clear()
+        if (sessions[held.id] === held && held.session.isRunning && bytes.isNotEmpty())
+            held.session.write(bytes, 0, bytes.size)
+    }
+
+    override fun discardInput(id: Int) {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            inputHandler.post { discardInput(id) }
+            return
+        }
+        sessions[id]?.let { held ->
+            inputHandler.removeCallbacks(held.flushInput)
+            held.pendingInput.clear()
+        }
     }
 
     override suspend fun resize(id: Int, rows: Int, cols: Int): Outcome<Unit> = onMain {
@@ -253,6 +348,7 @@ class NativeLocalTerminal(
         withContext(dispatchers.main) {
             val held = sessions[id]
             if (held?.session?.isRunning == true) return@withContext failed()
+            discardInput(id)
             sessions.remove(id)
             publish()
             Outcome.Ok(Unit)
@@ -290,12 +386,13 @@ class NativeLocalTerminal(
     /** Runtime cleanup calls this synchronous bridge from its own background lane. */
     fun startFromBridge(rows: Int, cols: Int): Int {
         val facts = launchFacts()
-        return onMainBlocking { startWith(rows, cols, facts) }.let { started ->
-            when (started) {
-                is Outcome.Ok -> started.value
-                is Outcome.Failed -> error("terminal_start_failed")
+        return onMainBlocking { startWith(rows, cols, facts) }
+            .let { started ->
+                when (started) {
+                    is Outcome.Ok -> started.value
+                    is Outcome.Failed -> error("terminal_start_failed")
+                }
             }
-        }
     }
 
     fun stopFromBridge(id: Int) {
@@ -311,6 +408,7 @@ class NativeLocalTerminal(
         stopFromBridge(id)
         onMainBlocking {
             check(sessions[id]?.session?.isRunning != true) { "terminal_stop_failed" }
+            discardInput(id)
             sessions.remove(id)
             publish()
         }

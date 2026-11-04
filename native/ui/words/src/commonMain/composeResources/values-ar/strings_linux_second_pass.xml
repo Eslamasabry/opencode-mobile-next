@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="runningOrphanParentGone">توقف البرنامج الذي شغّله</string>
+    <string name="runningOrphanCpuWithoutOwner">مشغول ولا توجد محادثة تنتظره</string>
+    <string name="linuxStorageScanRunning">جارٍ قياس %1$s</string>
+    <string name="linuxStorageScanDone">اكتمل قياس التخزين</string>
+    <string name="linuxStorageScanIdle">لا يجري فحص الآن</string>
+    <string name="linuxStorageScanLog">فحص التخزين</string>
+</resources>

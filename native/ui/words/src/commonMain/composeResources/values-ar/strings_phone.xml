@@ -1136,4 +1136,5 @@
     <string name="linuxMgrJobDoneBackup">النسخة الاحتياطية جاهزة</string>
     <string name="linuxMgrJobDoneRestore">تمت استعادة Linux</string>
     <string name="linuxMgrResetBackUpFirst">انسخ احتياطيًا أولًا</string>
+    <string name="thermalGuardSaveFailed">تعذّر حفظ الحماية من الحرارة. حاول مرة أخرى.</string>
 </resources>

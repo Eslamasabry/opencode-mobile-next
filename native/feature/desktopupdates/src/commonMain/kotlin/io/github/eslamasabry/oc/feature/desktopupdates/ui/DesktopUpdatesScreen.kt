@@ -34,7 +34,7 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateCurrentVersion
 import io.github.eslamasabry.oc.ui.words.res.appUpdateNeverChecked
 import io.github.eslamasabry.oc.ui.words.res.appUpdateOpenRelease
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
-import io.github.eslamasabry.oc.ui.words.res.desktopReleaseAvailable
+import io.github.eslamasabry.oc.ui.words.res.desktopUpdatesBuildAvailable
 import io.github.eslamasabry.oc.ui.words.res.desktopReleaseCurrent
 import io.github.eslamasabry.oc.ui.words.res.desktopReleaseFailed
 import io.github.eslamasabry.oc.ui.words.res.desktopReleaseLimit
@@ -78,7 +78,7 @@ public fun DesktopUpdatesScreen(state: DesktopUpdatesUi, actions: DesktopUpdates
                                 stringResource(Res.string.desktopReleaseCurrent)
                             DesktopCheckPhase.Available ->
                                 stringResource(
-                                    Res.string.desktopReleaseAvailable,
+                                    Res.string.desktopUpdatesBuildAvailable,
                                     state.releaseTag.orEmpty(),
                                 )
                             DesktopCheckPhase.Failed ->

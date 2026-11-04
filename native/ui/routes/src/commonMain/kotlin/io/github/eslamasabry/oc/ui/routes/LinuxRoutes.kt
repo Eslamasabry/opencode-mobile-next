@@ -21,6 +21,8 @@ public sealed interface LinuxRoute : AppRoute {
 
     @Serializable public data object Packages : LinuxRoute
 
+    @Serializable public data class Migration(val source: ProfileId) : LinuxRoute
+
     /**
      * Project services also work on remote servers; capability admission happens in the feature.
      */

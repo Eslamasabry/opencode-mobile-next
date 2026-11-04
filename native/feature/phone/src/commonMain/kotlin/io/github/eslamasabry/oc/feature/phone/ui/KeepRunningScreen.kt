@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.eslamasabry.oc.feature.phone.presentation.KeepRunningActions
 import io.github.eslamasabry.oc.feature.phone.presentation.KeepRunningUi
+import io.github.eslamasabry.oc.feature.phone.presentation.ThermalKeepRunningActions
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -18,6 +19,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.keepRunningAllSetBody
@@ -30,19 +32,23 @@ import io.github.eslamasabry.oc.ui.words.res.keepRunningOpenFailed
 import io.github.eslamasabry.oc.ui.words.res.keepRunningSwipeWarning
 import io.github.eslamasabry.oc.ui.words.res.keepRunningTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.thermalGuardSaveFailed
+import io.github.eslamasabry.oc.ui.words.res.thermalGuardSetting
+import io.github.eslamasabry.oc.ui.words.res.thermalGuardSettingDetail
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * PhoneRoute.KeepRunning (plan 07 F15): one list of steps ordered by what is left ("You're set" once nothing checkable
- * is left), the swipe warning on phones that close a swiped app, and Android's own daily limit stated plainly. Each
- * open row says "Open" because it opens Android's screen, not a page of this app. Kit parts only (K1).
+ * PhoneRoute.KeepRunning (plan 07 F15): one list of steps ordered by what is left ("You're set"
+ * once nothing checkable is left), the swipe warning on phones that close a swiped app, and
+ * Android's own daily limit stated plainly. Each open row says "Open" because it opens Android's
+ * screen, not a page of this app. Kit parts only (K1).
  */
 @Composable
 public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions) {
     // Back from a Settings screen the battery switch may have changed: read again on every resume.
     LifecycleResumeEffect(actions) {
         actions.resumed()
-        onPauseOrDispose { }
+        onPauseOrDispose {}
     }
     KitScreen(
         topBar = {
@@ -67,7 +73,11 @@ public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions) 
                 )
             }
             if (state.swipeWarning) {
-                KitNotice(message = stringResource(Res.string.keepRunningSwipeWarning), tone = StatusTone.Attention, liveRegion = false)
+                KitNotice(
+                    message = stringResource(Res.string.keepRunningSwipeWarning),
+                    tone = StatusTone.Attention,
+                    liveRegion = false,
+                )
             }
             KitGroupNote(stringResource(Res.string.keepRunningIntro))
             KitRowGroup(label = stringResource(Res.string.keepRunningTitle)) {
@@ -78,12 +88,27 @@ public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions) 
                         title = title,
                         supporting = detail,
                         supportingMaxLines = 4,
-                        trailing = if (opens) KitRowTrailing.Value(stringResource(Res.string.keepRunningOpen)) else KitRowTrailing.None,
+                        trailing =
+                            if (opens)
+                                KitRowTrailing.Value(stringResource(Res.string.keepRunningOpen))
+                            else KitRowTrailing.None,
                         onClick = if (opens) ({ actions.open(step.kind) }) else null,
                     )
                 }
             }
-            if (state.openFailed) KitNotice(message = stringResource(Res.string.keepRunningOpenFailed))
+            if (state.thermalSupported && actions is ThermalKeepRunningActions) {
+                KitSwitchRow(
+                    title = stringResource(Res.string.thermalGuardSetting),
+                    supporting = stringResource(Res.string.thermalGuardSettingDetail),
+                    checked = state.thermalEnabled,
+                    locked = state.thermalSaving,
+                    onCheckedChange = actions::setThermalEnabled,
+                )
+                if (state.thermalFailed)
+                    KitNotice(message = stringResource(Res.string.thermalGuardSaveFailed))
+            }
+            if (state.openFailed)
+                KitNotice(message = stringResource(Res.string.keepRunningOpenFailed))
             if (state.dailyLimit) KitGroupNote(stringResource(Res.string.keepRunningDailyLimit))
             KitGroupNote(stringResource(Res.string.keepRunningFootnote))
         }

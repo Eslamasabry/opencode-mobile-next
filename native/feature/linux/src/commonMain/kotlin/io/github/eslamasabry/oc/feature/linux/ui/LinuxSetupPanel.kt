@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.engine.runtime.setup.SetupProgressRules
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHomeActions
+import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHomeNativeActions
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHomeUi
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -15,7 +16,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.words.res.*
-import kotlin.time.Duration.Companion.seconds
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupAddPython
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupAddingPython
@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxSetupFailed
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupStart
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupStop
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupWorking
+import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -81,13 +82,16 @@ internal fun LinuxSetupPanel(
                 message =
                     when {
                         ownership -> SetupError.OwnershipUnknown.words()
-                        ownershipRecovery -> stringResource(Res.string.inAppServerOwnershipRecoveryBody)
-                        else -> progress.error?.words() ?: stringResource(Res.string.linuxSetupFailed)
+                        ownershipRecovery ->
+                            stringResource(Res.string.inAppServerOwnershipRecoveryBody)
+                        else ->
+                            progress.error?.words() ?: stringResource(Res.string.linuxSetupFailed)
                     },
                 actions =
                     if (ownership || ownershipRecovery)
                         listOf(
-                            // The app's own settings page (Force stop) when the screen can open it; else LINUX-2's
+                            // The app's own settings page (Force stop) when the screen can open it;
+                            // else LINUX-2's
                             // ownership-recovery path.
                             openAppSettings?.let {
                                 KitLineAction(stringResource(Res.string.e7SetupOpenAppSettings), it)
@@ -106,6 +110,15 @@ internal fun LinuxSetupPanel(
                         ),
             )
         KitRowGroup {
+            val native = actions as? LinuxHomeNativeActions
+            if (state.presence != null && native != null)
+                KitRow(
+                    title = stringResource(Res.string.voiceComponentTitle),
+                    supporting = stringResource(Res.string.voiceComponentSummary),
+                    onClick = native::addVoice,
+                    enabled = !state.working && !state.job.running,
+                    disabledReason = stringResource(Res.string.linuxToolsWait),
+                )
             if (state.presence == LinuxPresence.NotInstalled)
                 KitRow(
                     title = stringResource(Res.string.linuxSetupStart),
@@ -150,7 +163,7 @@ internal fun LinuxSetupPanel(
                     title = componentTitle(part.id),
                     supporting =
                         part.error?.words()
-                            ?: listOfNotNull(stateWords, part.version, byteWords)
+                            ?: listOfNotNull(part.stage ?: stateWords, part.version, byteWords)
                                 .joinToString(" · "),
                     supportingMaxLines = 3,
                 )

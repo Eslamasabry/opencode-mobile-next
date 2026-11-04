@@ -335,4 +335,7 @@
     <string name="widget_allow_for">السماح مرة: %1$s</string>
     <string name="widget_reply_for">الرد على %1$s</string>
     <string name="widget_step_for">%1$s: %2$s</string>
+    <string name="andr_thermalPaused">هاتفك ساخن — أُوقف فريق الذكاء الاصطناعي مؤقتًا حتى يبرد. سيستأنف تلقائيًا.</string>
+    <string name="andr_thermalStopped">هاتفك ساخن جدًا — أُوقف فريق الذكاء الاصطناعي لحمايته. عمله محفوظ وسيعمل مجددًا بعدما يبرد الهاتف.</string>
+    <string name="andr_thermalResumed">استأنف فريق الذكاء الاصطناعي عمله — برد هاتفك.</string>
 </resources>

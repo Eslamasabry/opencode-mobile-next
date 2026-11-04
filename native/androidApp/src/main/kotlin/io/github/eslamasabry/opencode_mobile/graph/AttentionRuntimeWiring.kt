@@ -57,6 +57,7 @@ class AttentionRuntime(
     private val runtime: PreviewRuntime,
     private val stores: PreviewStores,
     private val background: BackgroundHub,
+    private val thermal: ThermalRuntime,
     private val preferences: AppPreferences,
     private val clock: Clock,
     private val dispatchers: AppDispatchers,
@@ -87,10 +88,16 @@ class AttentionRuntime(
     fun start() {
         if (started) return
         started = true
+        thermal.start()
         scope.launch {
             stores.warm()
             launch {
-                combine(runtime.snapshot, background.live, preferences.localeTag) { _, _, _ ->
+                combine(
+                        runtime.snapshot,
+                        background.live,
+                        preferences.localeTag,
+                        thermal.pauseActive,
+                    ) { _, _, _, _ ->
                         Unit
                     }
                     .collect { refresh() }
@@ -420,6 +427,7 @@ class AttentionRuntime(
             controller.reconnecting =
                 graph.session.server.events.status.value is StreamStatus.Reconnecting
             controller.androidLimit = background.live.value.stoppedByAndroid
+            controller.thermalPaused = thermal.pauseActive.value
             controller.phoneServerRunning = serverRunning
             controller.setup = setup
         }
@@ -448,6 +456,7 @@ class AttentionRuntime(
                 pause =
                     when {
                         background.live.value.stoppedByAndroid -> PauseReason.AndroidLimit
+                        thermal.pauseActive.value -> PauseReason.PhoneHot
                         idleStopped -> PauseReason.Idle
                         else -> primary?.pause ?: PauseReason.None
                     },

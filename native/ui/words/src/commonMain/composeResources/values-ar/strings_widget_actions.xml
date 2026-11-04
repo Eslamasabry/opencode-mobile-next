@@ -12,4 +12,15 @@
     <string name="widgetActionOpenHint">افتح المحادثة لقراءة آخر رد.</string>
     <string name="widgetActionSending">جارٍ إرسال الرسالة…</string>
     <string name="widgetActionEnterMessage">اكتب رسالة أولًا</string>
+    <string name="widgetPanelSolid">مصمت</string>
+    <string name="widgetPanelTinted">ملوّن</string>
+    <string name="widgetPanelTransparent">شفاف</string>
+    <string name="widgetPanelBackground">الخلفية</string>
+    <string name="widgetPanelAccent">لون التمييز</string>
+    <string name="widgetPanelAllProjects">كل المشاريع</string>
+    <string name="widgetPanelSave">حفظ الخيارات</string>
+    <string name="widgetPanelSaving">جارٍ الحفظ…</string>
+    <string name="widgetPanelRecord">الكتابة الصوتية</string>
+    <string name="widgetPanelFinishRecording">إنهاء الكتابة الصوتية</string>
+    <string name="widgetPanelListening">جارٍ الاستماع…</string>
 </resources>

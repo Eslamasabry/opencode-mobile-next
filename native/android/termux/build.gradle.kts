@@ -24,6 +24,7 @@ android {
 dependencies {
     implementation(project(":core:common"))
     implementation(project(":engine:git"))
+    implementation(project(":engine:termuxhost"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     testImplementation(kotlin("test-junit"))

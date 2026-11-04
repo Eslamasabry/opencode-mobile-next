@@ -12,4 +12,15 @@
     <string name="widgetActionOpenHint">Open the conversation to see its latest reply.</string>
     <string name="widgetActionSending">Sending message…</string>
     <string name="widgetActionEnterMessage">Enter a message first</string>
+    <string name="widgetPanelSolid">Solid</string>
+    <string name="widgetPanelTinted">Tinted</string>
+    <string name="widgetPanelTransparent">Transparent</string>
+    <string name="widgetPanelBackground">Background</string>
+    <string name="widgetPanelAccent">Accent colour</string>
+    <string name="widgetPanelAllProjects">All projects</string>
+    <string name="widgetPanelSave">Save choices</string>
+    <string name="widgetPanelSaving">Saving…</string>
+    <string name="widgetPanelRecord">Voice typing</string>
+    <string name="widgetPanelFinishRecording">Finish voice typing</string>
+    <string name="widgetPanelListening">Listening…</string>
 </resources>

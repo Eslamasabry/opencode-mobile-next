@@ -17,6 +17,7 @@ public data class LocalShell(
     val confined: Boolean = true,
     val rows: Int = 24,
     val cols: Int = 80,
+    val alt: Boolean = false,
 )
 
 public interface LocalTerminalPort {
@@ -35,4 +36,13 @@ public interface LocalTerminalPort {
     public suspend fun restart(id: Int): Outcome<Int>
 
     public suspend fun control(id: Int, enabled: Boolean): Outcome<Unit>
+}
+
+/** Main-thread input submission shared with the native grid's hardware/IME input callbacks. */
+public interface LocalTerminalInputPort {
+    public fun enqueueText(id: Int, text: String): Outcome<Unit>
+
+    public fun enqueueKey(id: Int, key: TerminalKey): Outcome<Unit>
+
+    public fun discardInput(id: Int)
 }

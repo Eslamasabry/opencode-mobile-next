@@ -24,6 +24,7 @@ internal fun componentName(id: String): String =
             ComponentIds.OPENCODE -> Res.string.linuxRuntimeOpenCodeTitle
             ComponentIds.START -> Res.string.phoneSetupStartTitle
             ComponentIds.AITEAM -> Res.string.linuxComponentsTeam
+            ComponentIds.VOICE -> Res.string.voiceComponentTitle
             else -> Res.string.linuxComponentsUnknown
         }
     )

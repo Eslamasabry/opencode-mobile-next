@@ -29,7 +29,10 @@
         android:allowBackup="false"
         android:manageSpaceActivity=".ManageSpaceActivity"
         android:requestLegacyExternalStorage="true"
-        android:usesCleartextTraffic="true"
+        android:usesCleartextTraffic="false"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_label_preview"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
@@ -62,6 +65,8 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
+        <activity android:name=".IdleStartActivity" android:exported="false"
+            android:excludeFromRecents="true" android:noHistory="true" android:theme="@style/NativeTrampolineTheme" />
         <activity
             android:name=".ManageSpaceActivity"
             android:exported="true"
@@ -72,6 +77,9 @@
         <activity android:name=".WidgetRouteActivity" android:exported="false" android:excludeFromRecents="true"
             android:noHistory="true" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity android:name=".WidgetOverlayActivity" android:exported="false" android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".WidgetConfigureActivity" android:exported="true" android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
+        </activity>
         <meta-data android:name="io.github.eslamasabry.opencode_mobile.WIDGET_OVERLAY_READY" android:value="true" />
         <activity
             android:name="io.github.eslamasabry.opencode_mobile.graph.ScheduleOpenActivity"

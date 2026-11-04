@@ -1,15 +1,32 @@
 package io.github.eslamasabry.oc.feature.agents.remote_terminal.presentation
 
-public data class RemoteTerminalItem(val id: String, val title: String, val running: Boolean)
+import io.github.eslamasabry.oc.core.common.PlatformViewHandle
+import io.github.eslamasabry.oc.core.model.TerminalProcess
+import io.github.eslamasabry.oc.engine.project.terminal.TerminalKey
+
+public data class RemoteTerminalItem(
+    val id: String,
+    val title: String,
+    val running: Boolean,
+    val process: TerminalProcess? = null,
+)
 
 public enum class RemoteTerminalIssue {
     Unavailable,
     Failed,
     InputUncertain,
+    RerunUncertain,
 }
 
 public data class RemoteTerminalUi(
     val available: Boolean = false,
+    val builtInAvailable: Boolean = false,
+    val serverName: String = "",
+    val platformView: PlatformViewHandle? = null,
+    val accessible: Boolean? = null,
+    val control: Boolean = false,
+    val alt: Boolean = false,
+    val canRerun: Boolean = false,
     val busy: Boolean = false,
     val terminals: List<RemoteTerminalItem> = emptyList(),
     val selected: RemoteTerminalItem? = null,
@@ -21,6 +38,14 @@ public data class RemoteTerminalUi(
 )
 
 public interface RemoteTerminalActions {
+    public fun key(key: TerminalKey)
+
+    public fun setAccessible(enabled: Boolean)
+
+    public fun builtIn()
+
+    public fun rerun()
+
     public fun refresh()
 
     public fun create()

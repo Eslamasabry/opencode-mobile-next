@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="activityUndoRestart">إيقاف الخادم الذي أُعيد تشغيله</string>
+    <string name="activityUndoing">جارٍ إيقاف الخادم الذي أُعيد تشغيله…</string>
+    <string name="activityUndone">تم التراجع عن إعادة التشغيل.</string>
+    <string name="activityUndoFailed">تعذّر التراجع.</string>
+    <string name="activityUndoUnconfirmed">نتيجة التراجع غير معروفة. لن تتكرر المحاولة.</string>
+    <string name="activityUndoUnavailable">التراجع غير متاح.</string>
+</resources>

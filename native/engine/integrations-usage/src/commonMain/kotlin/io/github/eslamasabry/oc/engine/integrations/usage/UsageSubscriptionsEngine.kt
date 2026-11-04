@@ -100,6 +100,8 @@ public class UsageSubscriptionsEngine(
     private val widget: UsageWidgetFeed? = null,
     private val clock: () -> Instant,
     private val sourceTimeout: Duration = 25.seconds,
+    private val subscriptionAlerts: SubscriptionAlertDelivery? = null,
+    private val alertCovered: (UsageSubscription) -> Boolean = { false },
 ) {
     public companion object {
         public const val ALERTS_KEY: String = "oc.usageAlerts.v1"
@@ -498,7 +500,7 @@ public class UsageSubscriptionsEngine(
 
     /** Watches every readable subscription at its effective level. */
     private suspend fun syncAlerts() {
-        val bridge = alertBridge ?: return
+        val bridge = alertBridge
         if (disposed) return
         val wanted =
             _snapshot.value.subscriptions.mapNotNull { s ->
@@ -515,15 +517,28 @@ public class UsageSubscriptionsEngine(
                 }
             }
         // Alerts are best effort; the next refresh tries again.
-        attempt({ Failure.Device() }) { bridge.reconcile(wanted, alertsOn) }
+        val deliveryEpoch = epoch
+        attempt({ Failure.Device() }) {
+            bridge?.reconcile(wanted, alertsOn)
+            subscriptionAlerts?.evaluate(_snapshot.value, alertsOn, foreground, alertCovered) { s ->
+                !disposed &&
+                    epoch == deliveryEpoch &&
+                    s.readFrom?.id !in removedProfiles &&
+                    subscription(s.key)?.readFrom == s.readFrom
+            }
+        }
     }
 
     // -------------------------------------------------------------------------------------------------------- widget
 
-    public suspend fun setWidgetSettings(value: UsageWidgetSettings) {
+    public suspend fun setWidgetSettings(value: UsageWidgetSettings): Boolean {
+        if (
+            store.commit(lane) { putString(UsageWidgetSettings.KEY, value.toJson()) } !is Outcome.Ok
+        )
+            return false
         widgetSettings = value
-        store.commit(lane) { putString(UsageWidgetSettings.KEY, value.toJson()) }
         publishWidget()
+        return true
     }
 
     private suspend fun publishWidget() {
@@ -546,7 +561,8 @@ public class UsageSubscriptionsEngine(
      * subscriptions go with it.
      */
     public suspend fun removeProfile(profileId: String, deleted: Boolean = true): Boolean {
-        // STATE: a deleted server never comes back into the feed; a withdrawn collector (SEC-2) only drops its numbers.
+        // STATE: a deleted server never comes back into the feed; a withdrawn collector (SEC-2)
+        // only drops its numbers.
         if (deleted) removedProfiles += profileId
         epoch++
         cache.remove(profileId)
@@ -556,6 +572,7 @@ public class UsageSubscriptionsEngine(
         if (store.commit(lane) { remove(lastKey(profileId)) } !is Outcome.Ok) return false
         rebuild(loaded)
         val alive = _snapshot.value.subscriptions.mapTo(HashSet()) { it.key }
+        if (subscriptionAlerts?.prune(alive) == false) return false
         val before = overrides.size
         overrides.keys.retainAll(alive)
         if (overrides.size != before && !saveAlerts()) return false

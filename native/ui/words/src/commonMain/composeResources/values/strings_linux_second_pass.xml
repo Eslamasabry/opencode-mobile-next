@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="runningOrphanParentGone">Its owner has stopped</string>
+    <string name="runningOrphanCpuWithoutOwner">Busy with no conversation waiting for it</string>
+    <string name="linuxStorageScanRunning">Measuring %1$s</string>
+    <string name="linuxStorageScanDone">Storage measured</string>
+    <string name="linuxStorageScanIdle">No scan running</string>
+    <string name="linuxStorageScanLog">Storage scan</string>
+</resources>

@@ -12,6 +12,7 @@ kotlin {
         implementation(project(":engine:runtime"))
         implementation(project(":engine:integrations-catalog"))
         implementation(project(":engine:connection"))
+        implementation(project(":engine:project-terminal"))
         implementation(
             project(":ui:kit-content")
         ) // KitTerminalView (.live + .accessible, plan 06 §7.7)

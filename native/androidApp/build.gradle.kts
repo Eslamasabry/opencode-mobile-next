@@ -1,5 +1,7 @@
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.security.KeyStore
+import java.security.MessageDigest
 import java.util.zip.ZipFile
 
 plugins { id("oc.android.application") }
@@ -114,6 +116,7 @@ dependencies {
             ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
             ":android:termux",
+            ":engine:termuxhost",
             ":engine:migration",
             ":feature:gate",
             ":protocol:paseo",
@@ -297,4 +300,45 @@ androidComponents.onVariants { variant ->
             apkDir.set(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK))
         }
     tasks.matching { it.name == "assemble$name" }.configureEach { finalizedBy(verify) }
+}
+
+// A production release may only keep one of the two existing populations' signing lineages.
+// Release builds that Gradle leaves unsigned (signed afterwards with apksigner, as the migration
+// proof and the build server do) are checked by the signer comparison at delivery instead. The
+// values are captured at configuration time so the task stays configuration-cache safe.
+val verifyProductionLineage by tasks.registering {
+    val signing = android.buildTypes.getByName("release").signingConfig
+    val storeFile = signing?.storeFile
+    val storeType = signing?.storeType ?: "JKS"
+    val storePassword = signing?.storePassword
+    val keyAlias = signing?.keyAlias
+    doLast {
+        if (storeFile == null) {
+            logger.lifecycle(
+                "Release is unsigned here; its signer is compared with the installed lineage at delivery."
+            )
+            return@doLast
+        }
+        val store = KeyStore.getInstance(storeType)
+        storeFile.inputStream().use { store.load(it, storePassword?.toCharArray()) }
+        val certificate =
+            store.getCertificate(keyAlias) ?: error("Production signing certificate is missing.")
+        val digest =
+            MessageDigest.getInstance("SHA-256").digest(certificate.encoded).joinToString("") {
+                "%02X".format(it.toInt() and 255)
+            }
+        check(
+            digest in
+                setOf(
+                    "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
+                    "842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C",
+                )
+        ) {
+            "The production signing certificate must keep the existing installed lineage."
+        }
+    }
+}
+
+tasks.configureEach {
+    if (name.startsWith("package") && name.endsWith("Release")) dependsOn(verifyProductionLineage)
 }

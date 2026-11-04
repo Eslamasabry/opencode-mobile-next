@@ -75,6 +75,13 @@ public class PlansViewModel(
             // STATE: the alert threshold and reset-notice editor.
             .combine(edits) { ui, edit ->
                 ui.copy(
+                    cards =
+                        ui.cards
+                            .map {
+                                it.copy(widgetVisible = it.key !in source.widgetSettings.hiddenKeys)
+                            }
+                            .toImmutableList(),
+                    widgetSettings = source.widgetSettings,
                     defaultThreshold = source.defaultThreshold.toInt(),
                     resetNotice = source.resetNotice,
                     editing = edit.editing,
@@ -133,6 +140,33 @@ public class PlansViewModel(
 
     init {
         load(force = false)
+    }
+
+    override fun setWidgetVisible(key: String, visible: Boolean) {
+        val current = source.widgetSettings
+        saveWidget(
+            current.copy(
+                hiddenKeys = if (visible) current.hiddenKeys - key else current.hiddenKeys + key
+            )
+        )
+    }
+
+    override fun setWidgetSetupRows(visible: Boolean) =
+        saveWidget(source.widgetSettings.copy(showSetupRows = visible))
+
+    override fun setWidgetWindows(
+        windows: io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetWindows
+    ) = saveWidget(source.widgetSettings.copy(windows = windows))
+
+    private fun saveWidget(
+        settings: io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetSettings
+    ) {
+        if (edits.value.saving) return
+        edits.value = edits.value.copy(saving = true)
+        viewModelScope.launch {
+            val saved = source.setWidgetSettings(settings)
+            edits.value = edits.value.copy(saving = false, failed = !saved)
+        }
     }
 
     override fun editThreshold(key: String?) {

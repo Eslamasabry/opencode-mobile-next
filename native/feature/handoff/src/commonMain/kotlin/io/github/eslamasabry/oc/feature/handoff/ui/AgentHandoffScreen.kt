@@ -23,20 +23,18 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffActions) {
+    val sourceReview = state.sourceReview
     val attempt = state.attempt
+    val draft = sourceReview?.draft ?: attempt.draft
+    val reviewing = sourceReview != null || attempt.phase == HandoffPhase.Ready
     val locked = state.busy || state.loading || attempt.phase == HandoffPhase.Uncertain
     val working = stringResource(Res.string.handoffNativeWorking)
     val disabled = if (locked) KitEnabled.Disabled(working) else KitEnabled.Enabled
     val field = rememberTextFieldState()
-    val path = attempt.draft?.relativePath
+    val path = draft?.relativePath
     val initialPrompt = stringResource(Res.string.handoffNativeInitialPrompt, path.orEmpty())
     LaunchedEffect(path, state.busy) {
-        if (
-            path != null &&
-                !state.busy &&
-                state.prompt.isEmpty() &&
-                attempt.phase == HandoffPhase.Ready
-        )
+        if (path != null && !state.busy && state.prompt.isEmpty() && reviewing)
             actions.editPrompt(initialPrompt)
     }
     LaunchedEffect(state.prompt) {
@@ -56,7 +54,7 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             if (state.loading) item { KitSkeletonRows(count = 3) }
-            if (!state.loading && !state.connected)
+            if (!state.loading && !state.connected && sourceReview == null)
                 item {
                     KitStateView(
                         kind = KitStateKind.Calm,
@@ -79,8 +77,10 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                     )
                 }
             }
-            if (state.connected) {
-                item { KitText(state.directory) }
+            if (state.connected || sourceReview != null) {
+                if (state.directory.isNotBlank()) item { KitText(state.directory) }
+                if (sourceReview != null)
+                    item { KitNotice(stringResource(Res.string.handoffNativeSourceReviewOnly)) }
                 if (state.links.isNotEmpty())
                     item {
                         KitRowGroup(label = stringResource(Res.string.handoffNativeLinks)) {
@@ -119,7 +119,7 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                             }
                         }
                     }
-                if (attempt.phase == HandoffPhase.Idle) {
+                if (sourceReview == null && attempt.phase == HandoffPhase.Idle) {
                     item { KitNotice(stringResource(Res.string.handoffNativeExplanation)) }
                     if (state.choices.isEmpty())
                         item {
@@ -166,7 +166,7 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                     item {
                         KitNotice(stringResource(Res.string.handoffNativeUncertain))
                     }
-                if (attempt.phase == HandoffPhase.Ready) {
+                if (reviewing) {
                     item { KitNotice(stringResource(Res.string.handoffNativeReviewBody)) }
                     item {
                         KitField(
@@ -182,18 +182,20 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                     }
                     item {
                         KitRowGroup(label = stringResource(Res.string.handoffNativeRecord)) {
-                            KitText(attempt.draft?.record?.markdown.orEmpty())
+                            KitText(draft?.record?.markdown.orEmpty())
                         }
                     }
-                    item {
-                        KitButton(
-                            stringResource(Res.string.handoffNativeSend),
-                            actions::send,
-                            enabled =
-                                if (state.prompt.isBlank() || locked) KitEnabled.Disabled(working)
-                                else KitEnabled.Enabled,
-                        )
-                    }
+                    if (sourceReview == null)
+                        item {
+                            KitButton(
+                                stringResource(Res.string.handoffNativeSend),
+                                actions::send,
+                                enabled =
+                                    if (state.prompt.isBlank() || locked)
+                                        KitEnabled.Disabled(working)
+                                    else KitEnabled.Enabled,
+                            )
+                        }
                 }
                 if (
                     attempt.phase == HandoffPhase.Complete ||

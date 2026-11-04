@@ -185,6 +185,11 @@ public enum class ProcessKind {
     Other,
 }
 
+public enum class ProcessOrphanReason {
+    ParentGone,
+    CpuWithoutOwner,
+}
+
 /**
  * One process from the reading. [name] is already the plain name the runtime chose (B-LINUX-146,
  * 180).
@@ -205,6 +210,7 @@ public data class PhoneProcess(
     val memoryMb: Long? = null,
     val memberCount: Int = 1,
     val identity: String? = null,
+    val orphanReason: ProcessOrphanReason? = null,
 )
 
 /**
