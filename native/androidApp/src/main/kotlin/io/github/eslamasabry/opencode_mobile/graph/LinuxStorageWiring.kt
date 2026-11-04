@@ -16,6 +16,7 @@ import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.LinkOption.NOFOLLOW_LINKS
+import kotlin.io.encoding.Base64
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 
@@ -83,6 +84,7 @@ class AndroidLinuxLocalStorage(
                             val name = file.name
                             if (
                                 name.startsWith('.') ||
+                                    name.any { it.code < 0x20 || it.code == 0x7f } ||
                                     !Files.isDirectory(file.toPath(), NOFOLLOW_LINKS) ||
                                     Files.isSymbolicLink(file.toPath())
                             )
@@ -133,9 +135,9 @@ class AndroidLinuxLocalStorage(
             directory(root, ancestor)
             ancestor = ancestor.substringBeforeLast('/', "")
         }
-        val quoted = PhoneServerScripts.quote(guest)
+        val encoded = Base64.encode(guest.encodeToByteArray())
         val script =
-            "set -eu\ndir=$quoted\n" +
+            "set -eu\ndir=\$(printf '%s' '$encoded' | base64 -d)\n" +
                 "if [ -d \"\$dir\" ]; then exit 0; fi\n" +
                 "mkdir -p \"\$dir\"\ngit init -q \"\$dir\"\n" +
                 "name=\$(git config user.name || echo OpenCode)\n" +

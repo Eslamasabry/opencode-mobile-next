@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxToolsTitle">Installed tools</string>
+    <string name="linuxToolsAiTeam">AI Team</string>
+    <string name="linuxToolsPart">Phone tool</string>
+    <string name="linuxToolsFreedBytes">About %1$s can be freed.</string>
+    <string name="linuxToolsWait">Wait for the current phone operation to finish.</string>
+    <string name="linuxToolsInstalled">Installed</string>
+    <string name="linuxToolsAbsent">Not installed</string>
+    <string name="linuxToolsUnknown">Could not check. Refresh to try again.</string>
+    <string name="linuxToolsRefresh">Refresh installed tools</string>
+    <string name="linuxToolsRemovePython">Remove Python tools</string>
+    <string name="linuxToolsRemoveQuestion">Remove Python tools?</string>
+    <string name="linuxToolsRemoveBody">Remove pip and virtual environment packages. Python itself, projects and conversations stay.</string>
+    <string name="linuxToolsRemoved">Python tools were removed.</string>
+    <string name="linuxToolsDependent">Another installed tool needs this component.</string>
+    <string name="linuxToolsDependencyUnknown">Could not check another tool that may need this component. Refresh and try again.</string>
+    <string name="linuxToolsRequired">This component is required for phone tools.</string>
+    <string name="linuxToolsUnsupported">This component cannot be removed here.</string>
+    <string name="linuxToolsInventoryFailed">Installed tools could not be checked. Refresh and try again. Nothing was removed.</string>
+    <string name="linuxToolsSetupRunning">Stop setup or wait until it finishes before removing tools.</string>
+    <string name="linuxToolsRemoveFailed">Python tools could not be fully removed. Refresh installed tools, then try again.</string>
+    <string name="linuxSetupStatusUnreadable">The saved setup could not be read. Continue setup to try again.</string>
+    <string name="linuxSetupHostMismatch">This saved setup belongs to a different Linux environment. Start setup for this phone instead.</string>
+    <string name="linuxSetupHostRefused">Phone setup could not start safely. Continue setup to try again.</string>
+    <string name="linuxSetupSavedFailed">Setup could not be saved. Free some storage, then continue setup.</string>
+    <string name="linuxSetupBytes">%1$s of %2$s</string>
+    <string name="linuxSetupCheckingPart">Checking installed tools</string>
+    <string name="linuxSetupPartPending">Waiting</string>
+    <string name="linuxSetupPartRunning">Installing</string>
+    <string name="linuxSetupPartDone">Ready</string>
+    <string name="linuxSetupPartFailed">Could not finish</string>
+</resources>

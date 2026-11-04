@@ -229,7 +229,8 @@ object LinuxWiring {
                         PhonePage.Running -> PhoneRoute.Running
                         PhonePage.KeepRunning -> PhoneRoute.KeepRunning
                         PhonePage.Linux -> LinuxRoute.Home
-                        // P12-BUILD-RUNTIME-C: the real setup journey (PhoneSetupWiring).
+                        // P12-BUILD-RUNTIME-C: the real setup journey (PhoneSetupWiring). BUILD-RUNTIME-B's
+                        // SetupRoute.Phone (SetupWiring) stays registered; only one page can own these two entries.
                         PhonePage.SetupStart, PhonePage.SetupProgress -> PhoneSetupRoute.Setup
                     },
                 )

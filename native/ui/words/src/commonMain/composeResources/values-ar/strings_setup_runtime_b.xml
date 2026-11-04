@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BUILD-RUNTIME-B: the phone setup page's sentences that Flutter wrote only in English (setup_engine.dart). -->
+<resources>
+    <string name="setupRbStatusUnreadable">تعذّرت قراءة الإعداد المحفوظ. جرّب «متابعة الإعداد».</string>
+    <string name="setupRbToolsUncheckable">تعذّر فحص الأدوات المثبّتة. حاول مرة أخرى.</string>
+</resources>

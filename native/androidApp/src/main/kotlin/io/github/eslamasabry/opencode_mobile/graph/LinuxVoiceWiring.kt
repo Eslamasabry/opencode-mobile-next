@@ -53,6 +53,7 @@ import io.github.eslamasabry.oc.feature.phone.presentation.RecoveryFacts
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProfileName
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.SetupPersistenceException
 import io.github.eslamasabry.opencode_mobile.SetupRunner
 import java.io.File
 import java.net.HttpURLConnection
@@ -313,6 +314,9 @@ internal fun classifyRuntime(e: Throwable): Failure {
         when {
             message == "ownershipUnknown" || message == "ownership_unknown" ->
                 RuntimeProblem.OwnershipUnknown
+            // SetupRunner.start: the durable setup journal could not be written (B-LINUX-208).
+            e is SetupPersistenceException ->
+                RuntimeProblem.SetupPersistence
             message.startsWith("Another phone task") -> RuntimeProblem.SlotBusy
             message.startsWith("Ubuntu is not installed") -> RuntimeProblem.NotInstalled
             message.startsWith("Finish or cancel setup") -> RuntimeProblem.Installing
@@ -1160,6 +1164,11 @@ internal constructor(
             stopped
         }
     }
+
+    /** BUILD-RUNTIME-B: the setup job's finish step starts or re-reads the server through the one lane. */
+    suspend fun startServer(): Outcome<Unit> = startNow()
+
+    suspend fun refreshServer() = refreshNow()
 
     fun serverSource(update: suspend () -> Outcome<Unit>): PhoneServerSource =
         object : PhoneServerSource {

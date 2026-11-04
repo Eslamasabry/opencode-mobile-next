@@ -118,6 +118,7 @@ dependencies {
             ":engine:runtime",
             ":feature:phone",
             ":feature:linux",
+            ":feature:setup", // BUILD-RUNTIME-B: Set up OpenCode on this phone
             ":engine:git",
             ":feature:git",
             ":engine:updates", // P12-PLATFORM: in-app update notice
