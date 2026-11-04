@@ -1116,20 +1116,18 @@ class BuiltinLinux(private val context: Context) {
     /**
      * One Claude sign-in for the app and the Terminal: `/home/oc/.claude` becomes a link to
      * [profileId]'s Claude folder, and a sign-in made in the Terminal before is adopted
-     * (PhoneAgentClaudeHome). Best effort: a failure leaves the profile's own folder as it was and
-     * never blocks the launch.
+     * (PhoneAgentClaudeHome). A foreign link or a failed adoption stays untouched and refuses the
+     * launch, so an app launch cannot silently use a different sign-in from the Terminal.
      */
     private fun shareClaudeSignIn(profileId: String) {
         try {
-            val steps =
-                PhoneAgentClaudeHome.prepare(
-                    File(rootfs, "home/oc"),
-                    profileId,
-                    File(rootfs, "root"),
-                )
-            if (steps.isNotEmpty()) Log.i(TAG, "Claude sign-in folder: ${steps.joinToString()}")
-        } catch (error: Exception) {
-            Log.w(TAG, "Claude sign-in folder not shared: ${error.javaClass.simpleName}")
+            PhoneAgentClaudeHome.requireShared(
+                File(rootfs, "home/oc"),
+                profileId,
+                File(rootfs, "root"),
+            )
+        } catch (_: Exception) {
+            throw IllegalStateException("agent_sign_in_home_unavailable")
         }
     }
 
@@ -3001,25 +2999,48 @@ class BuiltinLinux(private val context: Context) {
     }
 
     /** Explicit helper start shares native owner, idle and foreground admission. */
-    fun startPhoneAgentHelper(profile: String, password: String, config: String, port: Int = 4099,
-        expectedHelperVersion: String? = null): Map<String, Any?> {
+    fun startPhoneAgentHelper(
+        profile: String,
+        password: String,
+        config: String,
+        port: Int = 4099,
+        expectedHelperVersion: String? = null,
+    ): Map<String, Any?> {
         val ticket = captureAgentHostStart(profile, false, null) ?: error("agent_host_unavailable")
         return withAgentHostStart(ticket) {
-            agentHost.start(PhoneAgentHost.StartRequest(profile, password, port, config,
-                PhoneAgentHost.HelperPolicy(expectedVersion = expectedHelperVersion)))
+            agentHost.start(
+                PhoneAgentHost.StartRequest(
+                    profile,
+                    password,
+                    port,
+                    config,
+                    PhoneAgentHost.HelperPolicy(expectedVersion = expectedHelperVersion),
+                )
+            )
         }
     }
 
     /** Foreground idle restoration uses the receipt's exact helper and generation. */
-    fun resumeIdleStoppedAgentHost(profile: String, generation: Long, password: String, config: String): Map<String, Any?> {
+    fun resumeIdleStoppedAgentHost(
+        profile: String,
+        generation: Long,
+        password: String,
+        config: String,
+    ): Map<String, Any?> {
         val ticket = captureAgentHostStart(profile, true, generation) ?: error("idle_resume_stale")
         return withAgentHostStart(ticket) {
             agentHost.start(PhoneAgentHost.StartRequest(profile, password, 4099, config))
         }
     }
 
-    internal data class AgentHostTicket(val profile: String, val owner: String?, val revision: Long,
-        val epoch: Long, val idleGeneration: Long?)
+    internal data class AgentHostTicket(
+        val profile: String,
+        val owner: String?,
+        val revision: Long,
+        val epoch: Long,
+        val idleGeneration: Long?,
+    )
+
     private val agentHostTicket = ThreadLocal<AgentHostTicket?>()
     private val agentHostAdmissions = java.util.IdentityHashMap<Process, AgentHostTicket>()
 
@@ -4945,6 +4966,75 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
+    /** Read-only availability; Undo repeats this exact ownership proof before revoking anything. */
+    @Synchronized
+    fun canUndoConfirmedServerRecovery(profileId: String, expectedGeneration: Long): Boolean =
+        synchronized(recoveryLock) {
+            confirmedRecoveryUndoProcess(profileId, expectedGeneration) != null
+        }
+
+    /** Call only while holding this monitor, then recoveryLock. */
+    private fun confirmedRecoveryUndoProcess(
+        profileId: String,
+        expectedGeneration: Long,
+    ): Process? {
+        val attempt = confirmedRecoveryAttempt ?: return null
+        val current = services[SERVER] ?: return null
+        if (
+            expectedGeneration <= 0 ||
+                attempt.generation != expectedGeneration ||
+                !attempt.process.isAlive ||
+                current.process !== attempt.process ||
+                !restartWanted ||
+                userStopped ||
+                supervisionProfile != profileId ||
+                recoveryPreferences.getString("restoreOwner", null) != profileId ||
+                serverRecipe?.profileId != profileId ||
+                manualStartGeneration == expectedGeneration ||
+                recoveryPreferences.contains("drainOwner") ||
+                nativeRecoveryAttempt?.let {
+                    it.generation != expectedGeneration || it.process !== attempt.process
+                } == true
+        )
+            return null
+        val receipt =
+            try {
+                ownership(profileId)
+            } catch (_: Exception) {
+                return null
+            }
+        val pid = pidOf(attempt.process) ?: return null
+        val root = receipt.root ?: return null
+        if (
+            receipt.generation != expectedGeneration ||
+                receipt.boot != bootIdentity() ||
+                root.pid != pid ||
+                !root.sameProcess(kernelIdentity(pid))
+        )
+            return null
+        return attempt.process
+    }
+
+    /** Undo owns only the freshly confirmed automatic process, never a later manual Start. */
+    @Synchronized
+    fun undoConfirmedServerRecovery(profileId: String, expectedGeneration: Long): Boolean {
+        val process =
+            synchronized(recoveryLock) {
+                val owned =
+                    confirmedRecoveryUndoProcess(profileId, expectedGeneration) ?: return false
+                // Save revocation and the exact owned drain before any signal. Holding this
+                // monitor prevents every service-start path from replacing the checked process.
+                requestServerStop()
+                serverRecipe = null
+                stoppedPhoneServer = null
+                owned
+            }
+        if (services[SERVER]?.process !== process) return false
+        removeService(SERVER)
+        drainPendingOwnedServer()
+        return !process.isAlive
+    }
+
     private fun setServerWanted(wanted: Boolean) {
         val revision =
             synchronized(recoveryLock) {
@@ -5254,8 +5344,7 @@ class BuiltinLinux(private val context: Context) {
         )
 
     /** Read-only admission check for interactive sends; a failed read must refuse dispatch. */
-    @Synchronized
-    fun hasScheduledPhoneLease(): Boolean = activeScheduledPhoneLease()
+    @Synchronized fun hasScheduledPhoneLease(): Boolean = activeScheduledPhoneLease()
 
     @Synchronized
     internal fun activeScheduledPhoneLease(): Boolean {
@@ -5850,7 +5939,9 @@ class BuiltinLinux(private val context: Context) {
                 val reason =
                     if (
                         expectedStarts != null &&
-                            (expectedStarts[pid] == null || entry == null || expectedStarts[pid] != entry.startTicks)
+                            (expectedStarts[pid] == null ||
+                                entry == null ||
+                                expectedStarts[pid] != entry.startTicks)
                     )
                         "changed"
                     else NativeProcessList.stopRefusal(pid, entry, uid, appPids, roots)

@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Inject
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.engine.attention.activity.AutomaticActKind
+import io.github.eslamasabry.oc.engine.attention.activity.AutomaticUndoResult
 import io.github.eslamasabry.oc.engine.attention.feed.AttentionKind
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -19,6 +20,11 @@ public data class HistoryRow(
     val kind: AutomaticActKind,
     val target: String,
     val at: String,
+    val undoable: Boolean = false,
+    val undoing: Boolean = false,
+    val undoAttempted: Boolean = false,
+    val undone: Boolean = false,
+    val undoResult: AutomaticUndoResult? = null,
 )
 
 public data class AttentionRow(
@@ -47,6 +53,9 @@ public interface AttentionHistory {
 
     public suspend fun refresh(): Outcome<Unit>
 
+    public suspend fun undo(identity: HistoryIdentity): AutomaticUndoResult =
+        AutomaticUndoResult.Unavailable
+
     public suspend fun acknowledge(shown: List<HistoryIdentity>): Outcome<Unit>
 
     public suspend fun setMonitored(profile: String, enabled: Boolean): Outcome<Unit>
@@ -74,6 +83,8 @@ public interface AttentionActions {
     public fun open(ref: ConversationRef)
 
     public fun acknowledge()
+
+    public fun undo(identity: HistoryIdentity)
 
     public fun setMonitored(profile: String, enabled: Boolean)
 }

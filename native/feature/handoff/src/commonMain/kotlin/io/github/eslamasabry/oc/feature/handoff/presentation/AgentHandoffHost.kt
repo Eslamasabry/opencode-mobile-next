@@ -21,6 +21,17 @@ public data class AgentHandoffChoice(
 
 public data class AgentHandoffLink(val id: String, val source: String, val target: String)
 
+/** A source-only review has no admitted destination, writer, conversation or send command. */
+public class AgentHandoffReview(
+    public val title: String,
+    public val draft: HandoffDraft,
+    private val sanitize: (String) -> String,
+) {
+    public fun sanitizePrompt(text: String): String = sanitize(text)
+
+    override fun toString(): String = "AgentHandoffReview(bytes=${draft.record.byteLength})"
+}
+
 /**
  * One review lifetime. All mutations remain behind both pinned graph and native filesystem fences.
  */
@@ -50,6 +61,9 @@ public interface AgentHandoffSession {
 
 public interface AgentHandoffHost {
     public suspend fun open(source: ConversationRef): Outcome<AgentHandoffSession>
+
+    /** A read-only draft remains useful when source filesystem identity cannot be attested. */
+    public suspend fun review(source: ConversationRef): Outcome<AgentHandoffReview?>
 }
 
 @Inject
@@ -57,4 +71,6 @@ public interface AgentHandoffHost {
 public class NoAgentHandoffHost : AgentHandoffHost {
     override suspend fun open(source: ConversationRef): Outcome<AgentHandoffSession> =
         Failure.Unavailable(FeatureId("agentHandoffFiles")).failed()
+
+    override suspend fun review(source: ConversationRef): Outcome<AgentHandoffReview?> = null.ok()
 }

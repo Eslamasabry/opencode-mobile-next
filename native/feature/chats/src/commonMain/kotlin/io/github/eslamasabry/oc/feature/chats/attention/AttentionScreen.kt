@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.attention.activity.AutomaticActKind
+import io.github.eslamasabry.oc.engine.attention.activity.AutomaticUndoResult
 import io.github.eslamasabry.oc.engine.attention.feed.AttentionKind
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -18,6 +19,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
@@ -126,7 +128,41 @@ public fun AttentionScreen(state: AttentionUi, actions: AttentionActions) {
                             AutomaticActKind.Other -> Res.string.stateActOther
                         }
                     )
-                KitRow(title = kind, supporting = row.target + " · " + row.at)
+                val undoStatus =
+                    when {
+                        row.undoing -> Res.string.activityUndoing
+                        row.undone -> Res.string.activityUndone
+                        row.undoResult == AutomaticUndoResult.Unconfirmed ->
+                            Res.string.activityUndoUnconfirmed
+                        row.undoResult == AutomaticUndoResult.Failed ->
+                            Res.string.activityUndoFailed
+                        !row.undoable -> Res.string.activityUndoUnavailable
+                        else -> null
+                    }
+                KitRow(
+                    title = kind,
+                    supporting =
+                        listOfNotNull(
+                                row.target,
+                                row.at,
+                                undoStatus?.let { stringResource(it) },
+                            )
+                            .joinToString(" · "),
+                    supportingMaxLines = 3,
+                    trailing =
+                        if (row.undoable || row.undoing) {
+                            KitRowTrailing.Action(
+                                KitLineAction(
+                                    stringResource(Res.string.activityUndoRestart),
+                                    { actions.undo(row.identity) },
+                                    enabled = !row.undoing,
+                                    disabledReason =
+                                        if (row.undoing) stringResource(Res.string.activityUndoing)
+                                        else null,
+                                )
+                            )
+                        } else KitRowTrailing.None,
+                )
             }
             if (state.history.isNotEmpty())
                 item("acknowledge") {
