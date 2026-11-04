@@ -96,3 +96,4 @@ An unverified `p12v/projects` merge was in progress at hand-over; it was aborted
 | 5 | 2026-11-03 05:25 | `~/wt/p12-apks/p12-wave5-53672f6e2-preview-debug.apk` (36 MB) | chat-bugs follow-up (chat gaps) |
 | 6 | 2026-11-03 15:02 | `~/wt/p12-apks/p12-wave6-b94b67bad-preview-debug.apk` (90 MB, now with the Linux and sherpa-onnx native libraries) | migration-proof, chat-fix2, chat-fix3, linux-voice, migration, files-search-review-projects, platform-git, settings-previewqr, agents-linux, voice-sched-prompts |
 | 7 | 2026-11-03 15:28 | `~/wt/p12-apks/p12-wave7-14b1245d3-preview-debug.apk` (90 MB) | chat-fix4 |
+- 2026-11-04 06:13 wave 8 (script integrator): merged inv-builtin-orch-paseo inv-domain inv-rest inv-state inv-ui-a inv-ui-c runtime-b inv-ui-b rest agents android-bg-platform job-10-file-ledger; gate green; APK p12-wave8-8f453ca86-preview-debug.apk
