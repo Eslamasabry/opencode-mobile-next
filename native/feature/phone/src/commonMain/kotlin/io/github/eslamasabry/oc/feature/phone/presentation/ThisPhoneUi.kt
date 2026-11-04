@@ -68,6 +68,7 @@ public sealed interface ThisPhoneNotice {
  * `:ui:words`.
  */
 public data class ThisPhoneUi(
+    val termuxMigration: List<PhoneTermuxMigrationOffer> = emptyList(),
     val lifecycle: io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReport? = null,
     val storage: io.github.eslamasabry.oc.engine.runtime.lifecycle.AppStorageFacts? = null,
     val storageFailed: Boolean = false,

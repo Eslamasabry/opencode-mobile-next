@@ -17,9 +17,9 @@ import io.github.eslamasabry.oc.feature.linux.presentation.LinuxPackagesViewMode
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxPortsViewModel
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxServicesViewModel
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxStorageViewModel
+import io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsViewModel
 import io.github.eslamasabry.oc.feature.linux.ui.KeptServicesScreen
 import io.github.eslamasabry.oc.feature.linux.ui.LinuxBackupsScreen
-import io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsViewModel
 import io.github.eslamasabry.oc.feature.linux.ui.LinuxHomeScreen
 import io.github.eslamasabry.oc.feature.linux.ui.LinuxPackagesScreen
 import io.github.eslamasabry.oc.feature.linux.ui.LinuxPortsScreen
@@ -36,6 +36,17 @@ import io.github.eslamasabry.oc.ui.routes.LinuxRoute
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class LinuxEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
+        entry<LinuxRoute.Migration> { route ->
+            val vm =
+                assistedMetroViewModel<
+                    io.github.eslamasabry.oc.feature.linux.presentation.LinuxMigrationViewModel,
+                    io.github.eslamasabry.oc.feature.linux.presentation.LinuxMigrationViewModel.Factory,
+                > {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            io.github.eslamasabry.oc.feature.linux.ui.LinuxMigrationScreen(state, vm)
+        }
         entry<LinuxRoute.Services> { route ->
             val vm =
                 assistedMetroViewModel<LinuxServicesViewModel, LinuxServicesViewModel.Factory> {

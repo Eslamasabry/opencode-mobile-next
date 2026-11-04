@@ -17,6 +17,13 @@ public interface LinuxSetupSource {
 
     public suspend fun addPython(): Outcome<Unit>
 
+    public suspend fun addVoice(): Outcome<Unit> =
+        Outcome.Failed(
+            io.github.eslamasabry.oc.core.common.Failure.Unavailable(
+                io.github.eslamasabry.oc.core.common.FeatureId("voice")
+            )
+        )
+
     public suspend fun resume(): Outcome<Unit>
 
     public suspend fun cancel(): Outcome<Unit>

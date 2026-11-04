@@ -34,9 +34,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * second [run] while one is starting returns at once (Flutter's `_starting`), and [cancel] never
  * waits for a start that is still checking.
  *
- * Not ported here: app-side components (the voice model), the Termux host's uncertain hand-over,
- * and the process budget wait (`:engine:runtime` budget owns it; the binding admits before calling
- * [run]).
+ * Not ported here: the Termux host's uncertain hand-over, and the process budget wait
+ * (`:engine:runtime` budget owns it; the binding admits before calling [run]).
  */
 public class SetupEngine(
     private val host: SetupJobHost,
@@ -82,6 +81,9 @@ public class SetupEngine(
     private var localAdding: List<String> = emptyList()
     private var handedOver: String? = null
     private var finishing: String? = null
+    private var appStep: Job? = null
+    private var appStepKey: String? = null
+    private var appProgress: Pair<String, SetupAppProgress>? = null
     private var poll: Job? = null
     private var pollIdle = false
     private var disposed = false
@@ -182,6 +184,11 @@ public class SetupEngine(
     /** Stops the running job; finished components stay installed. */
     public suspend fun cancel() {
         cancelRequested = true
+        jobComponents.mapNotNull { it.app }.forEach { it.cancel() }
+        appStep?.cancel()
+        appStep = null
+        appStepKey = null
+        appProgress = null
         // Still checking: nothing native runs yet, and start stops on the flag.
         if (starting && handedOver != _progress.value.jobId) return
         if (_progress.value.state != SetupState.Running) return
@@ -208,7 +215,10 @@ public class SetupEngine(
             return Unit.ok()
         }
         show(saved)
-        if (saved.state == "running") ensurePolling()
+        if (saved.state == "running") {
+            refresh()
+            ensurePolling()
+        }
         return Unit.ok()
     }
 
@@ -243,6 +253,7 @@ public class SetupEngine(
     public fun dispose() {
         disposed = true
         poll?.cancel()
+        appStep?.cancel()
         watcher.cancel()
     }
 
@@ -363,6 +374,7 @@ public class SetupEngine(
             SetupStepSpec(id = component.id, weight = component.estimatedSeconds, data = data)
         return when {
             check?.ok == true -> base.copy(skipped = true, version = check.version)
+            component.app != null -> base.copy(step = true, data = data + ("waitMinutes" to "240"))
             component.jobStep ->
                 base.copy(
                     step = true,
@@ -425,14 +437,21 @@ public class SetupEngine(
         job: List<SetupComponent>,
         requireComplete: Boolean,
     ): Checks {
+        val results = LinkedHashMap<String, SetupCheckResult>()
+        // App data is independent of Ubuntu, so probe it even on a fresh phone.
+        for (component in job.filter { it.app != null }) {
+            when (val status = guarded { component.app!!.installed() }) {
+                is Outcome.Failed -> return Checks.Failed(hostError(status.failure))
+                is Outcome.Ok -> results[component.id] = SetupCheckResult(status.value, null)
+            }
+        }
         val installed =
             when (val status = guarded { host.linuxInstalled() }) {
                 is Outcome.Failed -> return Checks.Failed(hostError(status.failure))
                 is Outcome.Ok -> status.value
             }
         // Nothing inside Ubuntu can pass before Ubuntu is there.
-        if (!installed) return Checks.Ok(emptyMap())
-        val results = LinkedHashMap<String, SetupCheckResult>()
+        if (!installed) return Checks.Ok(results)
         for (agentUser in listOf(false, true)) {
             val scripts = LinkedHashMap<String, String>()
             for (component in job) {
@@ -561,6 +580,41 @@ public class SetupEngine(
         val current = (read() as? Outcome.Ok)?.value ?: return
         if (startingJobId != null && current.jobId != startingJobId) return
         show(current)
+        if (current.state == "running") {
+            val component = jobComponents.firstOrNull { it.id == current.current }
+            val app = component?.app
+            val row = component?.let { current.component(it.id) }
+            if (component != null && app != null && row?.state == "running" && !cancelRequested) {
+                val key = "${current.jobId}/${component.id}"
+                if (appStepKey != key) {
+                    appStepKey = key
+                    appStep = scope.launch {
+                        val result = guarded {
+                            app.install { value ->
+                                if (appStepKey == key && !cancelRequested) {
+                                    appProgress = component.id to value
+                                    show(current)
+                                }
+                            }
+                        }
+                        if (cancelRequested || appStepKey != key) return@launch
+                        val error = (result as? Outcome.Failed)?.failure?.let(::appFailureCode)
+                        val completed = guarded {
+                            host.completeStep(
+                                current.jobId,
+                                component.id,
+                                error == null,
+                                error,
+                                null,
+                            )
+                        }
+                        appProgress = null
+                        if (completed is Outcome.Failed) appStepKey = null
+                        refresh()
+                    }
+                }
+            }
+        }
         if (
             current.state == "running" &&
                 current.current == SetupComponentIds.START &&
@@ -661,7 +715,7 @@ public class SetupEngine(
         }
         resetFloors(saved.jobId)
         traceFinished(saved)
-        publish(
+        val base =
             SetupPlanning.progressFromRecord(
                 saved,
                 jobComponents,
@@ -669,8 +723,37 @@ public class SetupEngine(
                 redact,
                 floors,
             )
+        val app = appProgress
+        publish(
+            if (app == null || saved.state != "running") base
+            else
+                base.copy(
+                    components =
+                        base.components.map {
+                            if (it.id == app.first && it.state == ComponentState.Running)
+                                it.copy(
+                                    stage = app.second.stage,
+                                    bytesDone = app.second.bytesDone,
+                                    bytesTotal = app.second.bytesTotal,
+                                )
+                            else it
+                        }
+                )
         )
     }
+
+    private fun appFailureCode(failure: Failure): String =
+        when ((failure as? Failure.Media)?.problem) {
+            io.github.eslamasabry.oc.core.common.MediaProblem.DownloadOffline,
+            io.github.eslamasabry.oc.core.common.MediaProblem.DownloadTimedOut,
+            io.github.eslamasabry.oc.core.common.MediaProblem.DownloadNoResponse,
+            io.github.eslamasabry.oc.core.common.MediaProblem.DownloadIncomplete -> "app_offline"
+            io.github.eslamasabry.oc.core.common.MediaProblem.DownloadNoSpace,
+            io.github.eslamasabry.oc.core.common.MediaProblem.PackStorageTooSmall -> "app_no_space"
+            io.github.eslamasabry.oc.core.common.MediaProblem.DownloadChecksum,
+            io.github.eslamasabry.oc.core.common.MediaProblem.DownloadVerification -> "app_checksum"
+            else -> "app_install_failed"
+        }
 
     private fun traceFinished(saved: SetupJobRecord) {
         val recordTiming = timing ?: return

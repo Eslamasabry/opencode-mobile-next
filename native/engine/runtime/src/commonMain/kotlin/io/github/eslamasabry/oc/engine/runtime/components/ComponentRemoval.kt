@@ -116,6 +116,8 @@ public class ComponentRemoval(
     private val toolsChanged: ToolsChangedListener = ToolsChangedListener {},
     /** The app's serial runtime scope keeps a shared probe alive when an individual page leaves. */
     private val scope: CoroutineScope? = null,
+    private val apps: Map<String, io.github.eslamasabry.oc.engine.runtime.setup.SetupAppComponent> =
+        emptyMap(),
 ) {
     private val registry: ImmutableList<RemovableComponent> = registry.toImmutableList()
 
@@ -191,6 +193,7 @@ public class ComponentRemoval(
         for (component in listed) {
             presence[component.id] =
                 when {
+                    component.id in apps -> presenceOf(component)
                     linux == null || linux.installing -> ComponentPresence.Unknown
                     !linux.installed -> ComponentPresence.Absent
                     component.native -> ComponentPresence.Installed
@@ -223,6 +226,7 @@ public class ComponentRemoval(
                     ComponentRemovalBlock.DependentInstalled
                 dependents.isNotEmpty() -> ComponentRemovalBlock.DependencyUnknown
                 component.required -> ComponentRemovalBlock.RequiredComponent
+                component.id in apps -> null
                 component.native ||
                     removeScript == null ||
                     removeScript.isBlank() ||
@@ -252,6 +256,13 @@ public class ComponentRemoval(
     }
 
     private suspend fun presenceOf(component: RemovableComponent): ComponentPresence {
+        apps[component.id]?.let { app ->
+            return when (val status = app.installed()) {
+                is Outcome.Failed -> ComponentPresence.Unknown
+                is Outcome.Ok ->
+                    if (status.value) ComponentPresence.Installed else ComponentPresence.Absent
+            }
+        }
         val script = component.presenceScript
         if (script == null || script.isBlank()) return ComponentPresence.Unknown
         val result = attempt(GENERIC) { shell.run(script, PRESENCE_TIMEOUT) }.flatten()
@@ -317,7 +328,9 @@ public class ComponentRemoval(
             }
             mutationAttempted = true
             val succeeded =
-                if (id == ComponentIds.AITEAM) {
+                if (id in apps) {
+                    apps.getValue(id).remove() is Outcome.Ok
+                } else if (id == ComponentIds.AITEAM) {
                     val remover =
                         team ?: return RemovalResult.Blocked(ComponentRemovalBlock.Unsupported)
                     attempt(GENERIC) { remover.remove() }.flatten() != null

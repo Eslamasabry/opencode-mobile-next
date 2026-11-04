@@ -261,6 +261,12 @@ public object SetupPlanning {
         val reason = failed.error ?: ""
         fun both(error: SetupError) = error to error
         if (isOwnershipText(reason)) return both(SetupError.OwnershipUnknown)
+        when (reason) {
+            "app_offline" -> return SetupError.Offline(title) to SetupError.NoInternet
+            "app_no_space" -> return both(SetupError.NoSpace(title))
+            "app_checksum" -> return both(SetupError.Checksum(title))
+            "app_install_failed" -> return both(SetupError.Install(title))
+        }
         if (
             reason.startsWith("[oc] Some packages are still unfinished.") ||
                 reason.startsWith("[oc] Package repair could not finish.") ||
