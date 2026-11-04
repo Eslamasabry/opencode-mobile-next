@@ -3,7 +3,6 @@ package io.github.eslamasabry.opencode_mobile.graph
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.*
-import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.security.AddressRules
@@ -38,7 +37,8 @@ class PreviewRuntime(
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
     private val draftOwners: Set<ConversationDrafts>,
-    private val cleaners: Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
+    private val cleaners:
+        Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
 ) : ServerConnections {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -343,11 +343,14 @@ class PreviewRuntime(
             is Outcome.Ok -> Unit
         }
         val scoped =
-            DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
+            stores.profileScope.apply {
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
             }
-        when (val result = ProfileDeletion(profiles, scoped, stores.lanes, cleaners = cleaners).delete(id)) {
+        when (
+            val result =
+                ProfileDeletion(profiles, scoped, stores.lanes, cleaners = cleaners).delete(id)
+        ) {
             is Outcome.Failed -> result
             is Outcome.Ok ->
                 if (result.value.complete) {

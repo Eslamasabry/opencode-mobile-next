@@ -22,8 +22,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * The app's stores behind the migration gate (P12: MigrationWiring). On the preview package the gate is open from the
- * start; on the real package it opens when the day-1 migration of the Flutter data has finished.
+ * The app's stores behind the migration gate (P12: MigrationWiring). On the preview package the
+ * gate is open from the start; on the real package it opens when the day-1 migration of the Flutter
+ * data has finished.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -35,16 +36,20 @@ class PreviewStores(
     migration: MigrationWiring,
 ) {
     val prefs = AndroidDataStores.flutterPrefs(application, gate, dispatchers.io)
-    val secrets = migration.ledgered(AndroidDataStores.secrets(application, gate, redactor, dispatchers.io))
+    val secrets =
+        migration.ledgered(AndroidDataStores.secrets(application, gate, redactor, dispatchers.io))
     val lanes = DefaultWriterLanes()
     val profiles = ProfileStore(prefs, secrets, lanes, redactor)
+    val profileScope =
+        io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope(prefs, secrets, lanes.app)
     private val warming = Mutex()
     @Volatile private var prepared = false
 
     /** Every synchronous composer read follows both preference warm-up and profile restoration. */
     suspend fun warm(): Outcome<Unit> = warming.withLock {
         if (prepared) return@withLock Unit.ok()
-        gate.awaitOpen() // nothing reads the adopted file before the migration has finished (plan 05 §7.3)
+        gate.awaitOpen() // nothing reads the adopted file before the migration has finished (plan
+        // 05 §7.3)
         when (
             val result =
                 attempt({ Failure.StorageRefused() }) {
