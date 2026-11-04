@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sessionTransferTitle">أدوات المحادثة</string>
+    <string name="sessionTransferWait">جارٍ إتمام هذا الإجراء…</string>
+    <string name="sessionTransferExport">حفظ نسخة كاملة</string>
+    <string name="sessionTransferRedact">إخفاء القيم الخاصة</string>
+    <string name="sessionTransferRedactBody">يستبدل الخادم القيم الحساسة في النسخة المُصدَّرة.</string>
+    <string name="sessionTransferSave">حفظ ملف JSON</string>
+    <string name="sessionTransferImport">استيراد محادثة</string>
+    <string name="sessionTransferChoose">اختيار ملف JSON</string>
+    <string name="sessionTransferRecords">%1$d من سجلات الرسائل</string>
+    <string name="sessionTransferRedacted">تحتوي هذه النسخة على قيم مخفية. يحتفظ الاستيراد بالعناصر البديلة.</string>
+    <string name="sessionTransferDestination">الاستيراد إلى مجلد الخادم هذا</string>
+    <string name="sessionTransferDestinationRequired">اختر مجلد الوجهة أولاً.</string>
+    <string name="sessionTransferImportAction">استيراد المحادثة بعد مراجعتها</string>
+    <string name="sessionTransferNote">ملاحظة المحادثة</string>
+    <string name="sessionTransferLoadNote">قراءة الملاحظة الحالية</string>
+    <string name="sessionTransferSaveNote">حفظ الملاحظة</string>
+    <string name="sessionTransferRemoveNote">إزالة الملاحظة</string>
+    <string name="sessionTransferNoteLimit">يجب ألا تتجاوز الملاحظة %1$d بايت بعد الترميز. اختصرها وحاول مجددًا.</string>
+    <string name="sessionTransferSaved">تم حفظ المحادثة.</string>
+    <string name="sessionTransferImported">تم استيراد المحادثة.</string>
+    <string name="sessionTransferNoteSaved">تم حفظ الملاحظة.</string>
+    <string name="sessionTransferNoteRemoved">تمت إزالة الملاحظة.</string>
+    <string name="sessionTransferInvalid">اختر ملف تصدير OpenCode صالحًا بصيغة JSON.</string>
+    <string name="sessionTransferLarge">اختر ملف تصدير أصغر من 128 ميبيبايت.</string>
+    <string name="sessionTransferChanged">تغيّر اتصال الخادم. افتح هذه الأدوات مجددًا قبل المتابعة.</string>
+    <string name="sessionTransferSignIn">رفض الخادم الوصول. تحقق من تسجيل الدخول إلى الخادم وحاول مجددًا.</string>
+    <string name="sessionTransferConflict">توجد محادثة بهذه الهوية بالفعل. اختر وجهة أخرى أو راجعها على الخادم.</string>
+    <string name="sessionTransferUnsupported">لا يتيح هذا الخادم نقل المحادثات.</string>
+    <string name="sessionTransferFailed">تعذّر إتمام هذا الإجراء. تحقق من الاتصال وحاول مجددًا.</string>
+    <string name="sessionTransferReference">إرفاق مرجع إلى مجلد على الخادم</string>
+    <string name="sessionTransferReferencePath">المسار الكامل للمجلد على هذا الخادم</string>
+    <string name="sessionTransferReferenceBody">يضيف مرجع المجلد إلى رسالتك التالية. يبقى المجلد على الخادم.</string>
+    <string name="sessionTransferReferenceAdd">إضافة مرجع المجلد</string>
+    <string name="sessionTransferReferenceRequired">أدخل مسار مجلد الخادم أولاً.</string>
+    <string name="sessionTransferReferenceAdded">تمت إضافة مرجع المجلد إلى مسودتك.</string>
+    <string name="sessionTransferReferenceInvalid">أدخل مسارًا مطلقًا لمجلد على الخادم.</string>
+</resources>

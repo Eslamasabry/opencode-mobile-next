@@ -2,7 +2,9 @@ package io.github.eslamasabry.oc.protocol.oc2.live
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
+import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Multibinds
 import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.domain.*
@@ -22,6 +24,7 @@ public class Oc2GatewayFactory(
     private val clock: Clock,
     private val redactor: Redactor,
     private val random: Random,
+    private val networks: Set<NetworkStatus> = emptySet(),
 ) : GatewayFactory {
     override val backend: BackendKind = BackendKind.OpenCode2
 
@@ -68,8 +71,19 @@ public class Oc2GatewayFactory(
                 )
             )
         val gateway =
-            Oc2Gateway(net, origin, spec.credentials, clock, redactor, spec.location, random)
-        return when (val health = gateway.health()) {
+            Oc2Gateway(
+                net,
+                origin,
+                spec.credentials,
+                clock,
+                redactor,
+                spec.location,
+                random,
+                requireDispatchAdmission = loopback && origin.port in setOf(4097, 4099),
+            )
+        // An unexpected health shape is a re-detection signal: the read-only probe recognises
+        // unsupported/legacy servers before a connection graph or event stream is admitted.
+        return when (val health = gateway.probe()) {
             is Outcome.Failed -> {
                 gateway.close()
                 health
@@ -79,7 +93,11 @@ public class Oc2GatewayFactory(
                     gateway.close()
                     Failure.UnreadableReply().failed()
                 } else {
-                    gateway.start(spec, dispatchers)
+                    gateway.start(
+                        spec,
+                        dispatchers,
+                        networks.singleOrNull() ?: UnknownNetworkStatus,
+                    )
                     GatewayPair(gateway, gateway).ok()
                 }
             }
@@ -91,4 +109,10 @@ public class Oc2GatewayFactory(
         if (hex.length != 64 || hex.any { it.digitToIntOrNull(16) == null }) return null
         return ByteArray(32) { hex.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
     }
+}
+
+/** Android contributes its process-owned network monitor; desktop can keep the unknown fallback. */
+@ContributesTo(AppScope::class)
+public interface Oc2NetworkBindings {
+    @Multibinds(allowEmpty = true) public val oc2Networks: Set<NetworkStatus>
 }

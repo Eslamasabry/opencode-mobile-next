@@ -1,0 +1,34 @@
+<resources>
+    <string name="setupInspectTitle">فحص الإعداد</string>
+    <string name="setupInspectReadOnly">تعرض هذه الصفحة الإعداد وحالة الأدوات. التطبيق والتراجع غير متاحين لأن هذا الخادم لا يستطيع استعادة تغييرات الإعداد بأمان.</string>
+    <string name="setupInspectFailed">تعذر تحميل معلومات الإعداد. أعد الاتصال بالخادم وحاول مرة أخرى.</string>
+    <string name="setupInspectRefresh">تحديث الإعداد</string>
+    <string name="setupInspectLoading">جارٍ قراءة الإعداد…</string>
+    <string name="setupInspectConfig">مصادر الإعداد</string>
+    <string name="setupInspectNoSources">لم يُبلّغ عن مصادر إعداد.</string>
+    <string name="setupInspectMcp">اتصالات الأدوات</string>
+    <string name="setupInspectNoMcp">لم يُبلّغ عن اتصالات أدوات.</string>
+    <string name="setupMcpConnected">متصل</string>
+    <string name="setupMcpPending">جارٍ الاتصال</string>
+    <string name="setupMcpDisabled">معطل</string>
+    <string name="setupMcpFailed">فشل الاتصال</string>
+    <string name="setupMcpSignIn">يلزم تسجيل الدخول</string>
+    <string name="setupMcpUnknown">الحالة غير معروفة</string>
+    <string name="setupRegistryTitle">سجل الأدوات العام</string>
+    <string name="setupRegistryConsent">تصفح السجل العام</string>
+    <string name="setupRegistryPrivacy">يتصل التحديث بسجل MCP العام دون بيانات دخول الخادم. تُرسل كلمات البحث إلى السجل ولا تُحفظ.</string>
+    <string name="setupRegistryDisabled">التصفح متوقف. فعّله لتحميل القوائم عند اختيار التحديث.</string>
+    <string name="setupRegistryLoading">جارٍ تحميل القوائم العامة…</string>
+    <string name="setupRegistryOffline">أنت غير متصل بالإنترنت. تُعرض القوائم المحفوظة.</string>
+    <string name="setupRegistryError">تعذر تحميل السجل العام. تُعرض القوائم المحفوظة.</string>
+    <string name="setupRegistryEmpty">لا توجد قوائم محملة. حدّث السجل أو ابحث فيه.</string>
+    <string name="setupRegistryReadOnly">القوائم للمعلومات فقط. أعدّ الأدوات يدويًا على خادمك؛ لا تُشغّل هذه الصفحة أوامر السجل ولا تفتح الروابط المدرجة.</string>
+    <string name="setupRegistrySearch">البحث في القوائم</string>
+    <string name="setupRegistryRefresh">تحديث القوائم</string>
+    <string name="setupRegistrySaved">عرض القوائم المحفوظة</string>
+    <string name="setupInspectUnsupported">فحص الإعداد غير متاح على هذا الخادم.</string>
+    <string name="setupMigrationRequired">جارٍ نقل محادثاتك السابقة…</string>
+    <string name="setupMigrationProgress">جارٍ نقل محادثاتك السابقة (%1$d من %2$d)…</string>
+    <string name="setupMigrationError">تعذر على الخادم إكمال نقل محادثاتك السابقة. ما زالت بياناتك الأصلية على هذا الهاتف دون تغيير.</string>
+    <string name="setupMigrationUnavailable">تعذر على الخادم الإبلاغ عن حالة محادثاتك السابقة. حدّث للمحاولة مرة أخرى.</string>
+</resources>
