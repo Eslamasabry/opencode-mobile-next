@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.integrations.catalog.McpCatalogHost
 import io.github.eslamasabry.oc.engine.setupassist.setupRedact
 import io.github.eslamasabry.oc.feature.setupreview.presentation.*
+import io.github.eslamasabry.oc.feature.setupreview.presentation.SetupMcpState
 import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.*

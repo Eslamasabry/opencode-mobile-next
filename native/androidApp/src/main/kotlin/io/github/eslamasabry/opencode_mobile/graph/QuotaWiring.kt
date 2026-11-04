@@ -332,7 +332,7 @@ class AndroidQuotaCollector(
                         p.baseUrl,
                         "",
                         "",
-                        transport = AndroidQuotaTransport(dispatchers),
+                        transport = HttpUrlQuotaTransport(dispatchers),
                         provider = provider,
                         inAppToken = { token(p) },
                     )
@@ -415,7 +415,7 @@ class AndroidQuotaCollector(
 /**
  * Redirect-free, cookie-free transport with response lifetime owned by its bounded body collector.
  */
-private class AndroidQuotaTransport(private val dispatchers: AppDispatchers) : QuotaTransport {
+private class HttpUrlQuotaTransport(private val dispatchers: AppDispatchers) : QuotaTransport {
     private val connections =
         java.util.Collections.synchronizedSet(mutableSetOf<HttpURLConnection>())
 

@@ -11,6 +11,9 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.flatMap
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.engine.composer.drafts.Drafts
+import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.composer.stash.PromptShelf
 import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistory
 
@@ -22,8 +25,11 @@ class ComposerHistoryWiring(
     private val stores: PreviewStores,
     private val shelf: PromptShelf,
     files: StashPayloads,
+    drafts: Drafts,
+    redactor: Redactor,
+    registry: ConnectionRegistry,
 ) : ComposerHistory {
-    private val ready = PreviewShelfReady(stores, shelf, files.store)
+    private val ready = PreviewShelfReady(stores, shelf, files.store, drafts, redactor, registry)
 
     private suspend fun <T> prepared(
         profile: ProfileId,

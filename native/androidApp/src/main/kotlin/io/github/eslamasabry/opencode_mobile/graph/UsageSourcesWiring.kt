@@ -228,7 +228,7 @@ class AndroidAdditionalUsageSources(
                         username = saved.profile.username.ifBlank { "opencode" },
                         password = password,
                         transport =
-                            AndroidQuotaTransport(
+                            PinnedQuotaTransport(
                                 dispatchers,
                                 if (local) null
                                 else saved.toServerProfile()?.trust?.pinnedLeafSha256,
@@ -400,7 +400,7 @@ class AndroidAdditionalUsageSources(
 /**
  * Dedicated collector HTTP client: no redirects, proxy, cookies, logging or unbounded body reads.
  */
-private class AndroidQuotaTransport(private val dispatchers: AppDispatchers, expectedPin: String?) :
+private class PinnedQuotaTransport(private val dispatchers: AppDispatchers, expectedPin: String?) :
     QuotaTransport {
     private val client =
         OkHttpClient.Builder()

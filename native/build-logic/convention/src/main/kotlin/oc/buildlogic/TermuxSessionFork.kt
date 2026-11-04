@@ -44,8 +44,9 @@ internal object TermuxSessionFork {
             to.attribute(FORKED, true).attribute(ARTIFACT_TYPE, "aar")
             parameters.emulatorSha256.set(pin)
         }
+        // By name: AGP sets a classpath's resolvable/consumable roles after configureEach has run.
         configurations.configureEach {
-            if (isCanBeResolved && !isCanBeConsumed) attributes.attribute(FORKED, true)
+            if (name.endsWith("Classpath")) attributes.attribute(FORKED, true)
         }
     }
 

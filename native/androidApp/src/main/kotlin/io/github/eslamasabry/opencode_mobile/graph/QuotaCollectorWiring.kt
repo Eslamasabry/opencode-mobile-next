@@ -544,7 +544,7 @@ class CollectorUsageSource(
         }
     }
 
-    private fun transportFor(p: LoadedProfile): AndroidQuotaTransport? {
+    private fun transportFor(p: LoadedProfile): CollectorQuotaTransport? {
         val profile = p.toServerProfile() ?: return null
         val origin =
             if (local(p)) ServerOrigin("http", "127.0.0.1", IN_APP_QUOTA_PORT) else profile.origin
@@ -561,7 +561,7 @@ class CollectorUsageSource(
                     ByteArray(32) { hex.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
                 }
         if (origin.scheme != "https" && pin != null) return null
-        return AndroidQuotaTransport(
+        return CollectorQuotaTransport(
             http,
             TransportSpec(
                 origin,
@@ -753,7 +753,7 @@ class QuotaAlertPublisher(application: Application, preferences: AppPreferences)
 private class CollectorUnavailable : Exception()
 
 /** One client for the collector's exact approved origin, using the existing core trust gate. */
-private class AndroidQuotaTransport(factory: HttpClientFactory, spec: TransportSpec) :
+private class CollectorQuotaTransport(factory: HttpClientFactory, spec: TransportSpec) :
     QuotaTransport {
     private val client: NetClient = factory.create(spec)
     private var closed = false
