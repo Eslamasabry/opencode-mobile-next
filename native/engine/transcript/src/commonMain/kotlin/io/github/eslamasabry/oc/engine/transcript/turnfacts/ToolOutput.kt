@@ -9,18 +9,30 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-// Port of Flutter lib/domain/models/models_messages.dart `ToolState.fromJson` text rules (`_pretty`, output /
+// Port of Flutter lib/domain/models/models_messages.dart `ToolState.fromJson` text rules
+// (`_pretty`, output /
 // inputJson) and `_toolOutputFiles`, over the core ToolState the protocol adapters already built.
 
 /** A file a tool call produced (Dart `ToolOutputFile`). */
-public data class ToolArtifact(val path: String?, val url: String?, val mime: String?, val filename: String?) {
+public data class ToolArtifact(
+    val path: String?,
+    val url: String?,
+    val mime: String?,
+    val filename: String?,
+) {
     /**
-     * Dart `ToolOutputFile.displayName`: the explicit file name, else the last segment of the path (or URL, without
-     * its query). Null where Dart says "Generated file" (copy belongs to the feature).
+     * Dart `ToolOutputFile.displayName`: the explicit file name, else the last segment of the path
+     * (or URL, without its query). Null where Dart says "Generated file" (copy belongs to the
+     * feature).
      */
     public val displayName: String?
         get() {
-            filename?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
+            filename
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
+                ?.let {
+                    return it
+                }
             val location = if (path?.trim()?.isNotEmpty() == true) path else url ?: ""
             val withoutQuery = location.split('?').first()
             return withoutQuery.replace('\\', '/').split('/').lastOrNull { it.isNotEmpty() }
@@ -30,14 +42,15 @@ public data class ToolArtifact(val path: String?, val url: String?, val mime: St
 /**
  * What a tool step's body shows, as text (B-CHAT-112/113/114).
  *
- * - [text]: Dart `ToolState.output` exactly: a finished or failed call's output with its leading and trailing
- *   whitespace kept, a JSON object or list pretty-printed with two-space indent; empty while pending or running.
+ * - [text]: Dart `ToolState.output` exactly: a finished or failed call's output with its leading
+ *   and trailing whitespace kept, a JSON object or list pretty-printed with two-space indent; empty
+ *   while pending or running.
  * - [errorText]: the same text when the call failed (Error), else null.
- * - [rawInput]: Dart `inputJson`: a pending call's streamed raw input unchanged, otherwise the structured input
- *   pretty-printed.
+ * - [rawInput]: Dart `inputJson`: a pending call's streamed raw input unchanged, otherwise the
+ *   structured input pretty-printed.
  * - [input] / [metadata]: the server's structured input and metadata, kept for renderers.
- * - [artifacts]: only explicit files (attachments, `filePath` outputs, a shell `outputPath`), never URLs or
- *   path-like prose; a `read` call's attachments take the requested file's name.
+ * - [artifacts]: only explicit files (attachments, `filePath` outputs, a shell `outputPath`), never
+ *   URLs or path-like prose; a `read` call's attachments take the requested file's name.
  */
 public data class ToolOutputView(
     val text: String,
@@ -46,29 +59,38 @@ public data class ToolOutputView(
     val input: JsonObject,
     val metadata: JsonObject?,
     val artifacts: List<ToolArtifact>,
+    val pruned: Boolean = false,
 )
 
 public fun toolOutputView(state: ToolState, toolName: String?): ToolOutputView {
     val text =
         when (state.status) {
-            ToolStatus.Completed, ToolStatus.Error -> outputText(state)
+            ToolStatus.Completed,
+            ToolStatus.Error -> outputText(state)
             else -> ""
         }
     return ToolOutputView(
         text = text,
         errorText = if (state.status == ToolStatus.Error) text else null,
-        rawInput = if (state.status == ToolStatus.Pending) state.inputRaw ?: "" else prettyJson(state.input),
+        rawInput =
+            if (state.status == ToolStatus.Pending) state.inputRaw ?: ""
+            else prettyJson(state.input),
         input = state.input,
         metadata = state.metadata,
         artifacts = toolArtifacts(state, toolName),
+        pruned = state.pruned,
     )
 }
 
-/** Dart `_pretty(structuredOutput)`: the structured value when the adapter kept one, else the output text. */
+/**
+ * Dart `_pretty(structuredOutput)`: the structured value when the adapter kept one, else the output
+ * text.
+ */
 private fun outputText(state: ToolState): String =
     when (val value = state.outputValue) {
         null -> state.output ?: ""
-        is JsonObject, is JsonArray -> prettyJson(value)
+        is JsonObject,
+        is JsonArray -> prettyJson(value)
         JsonNull -> ""
         is JsonPrimitive -> if (value.isString) value.content else value.content.trim()
     }
@@ -99,9 +121,10 @@ private fun toolArtifacts(state: ToolState, toolName: String?): List<ToolArtifac
                 mime?.isNotBlank() == true ||
                 filename?.isNotBlank() == true ||
                 (allowBareUrl && url?.isNotBlank() == true)
-        if ((path?.isNotBlank() == true && hasExplicitFilePath) ||
-            (url?.isNotBlank() == true && hasFileSignal) ||
-            mime?.isNotBlank() == true
+        if (
+            (path?.isNotBlank() == true && hasExplicitFilePath) ||
+                (url?.isNotBlank() == true && hasFileSignal) ||
+                mime?.isNotBlank() == true
         ) {
             if (url?.startsWith("file://") == true && path == null) {
                 add(filePathOf(url), null, mime, filename)
@@ -116,10 +139,13 @@ private fun toolArtifacts(state: ToolState, toolName: String?): List<ToolArtifac
         when (value) {
             is JsonArray -> value.forEach { scan(it, allowBareUrl, depth + 1) }
             is JsonObject -> {
-                val hasExplicitFilePath = "filePath" in value || "filepath" in value || "file_path" in value
+                val hasExplicitFilePath =
+                    "filePath" in value || "filepath" in value || "file_path" in value
                 val rawPath =
                     if (hasExplicitFilePath) {
-                        nonNull(value["filePath"]) ?: nonNull(value["filepath"]) ?: nonNull(value["file_path"])
+                        nonNull(value["filePath"])
+                            ?: nonNull(value["filepath"])
+                            ?: nonNull(value["file_path"])
                     } else {
                         nonNull(value["path"])
                     }
@@ -127,8 +153,10 @@ private fun toolArtifacts(state: ToolState, toolName: String?): List<ToolArtifac
                     hasExplicitFilePath,
                     path = rawPath?.let(::dartToString),
                     url = nonNull(value["url"])?.let(::dartToString),
-                    mime = (nonNull(value["mime"]) ?: nonNull(value["mimeType"]))?.let(::dartToString),
-                    filename = (nonNull(value["filename"]) ?: nonNull(value["name"]))?.let(::dartToString),
+                    mime =
+                        (nonNull(value["mime"]) ?: nonNull(value["mimeType"]))?.let(::dartToString),
+                    filename =
+                        (nonNull(value["filename"]) ?: nonNull(value["name"]))?.let(::dartToString),
                     allowBareUrl = allowBareUrl,
                 )
                 value.values.forEach { scan(it, allowBareUrl, depth + 1) }
@@ -143,7 +171,8 @@ private fun toolArtifacts(state: ToolState, toolName: String?): List<ToolArtifac
         addCandidate(false, file.path, file.url, file.mime, file.filename, true)
     }
     // A failed call's output is its error text, which Dart never scanned for files.
-    if (state.status != ToolStatus.Error) scan(decodedOutput(state), allowBareUrl = false, depth = 0)
+    if (state.status != ToolStatus.Error)
+        scan(decodedOutput(state), allowBareUrl = false, depth = 0)
 
     val normalizedTool = toolName?.lowercase()
     if (normalizedTool == "read" && files.isNotEmpty()) {
@@ -157,7 +186,11 @@ private fun toolArtifacts(state: ToolState, toolName: String?): List<ToolArtifac
         }
     }
     val outputPath = nonNull(state.metadata?.get("outputPath"))?.let(::dartToString)
-    if ((normalizedTool == "bash" || normalizedTool == "shell") && outputPath != null && outputPath.isNotBlank()) {
+    if (
+        (normalizedTool == "bash" || normalizedTool == "shell") &&
+            outputPath != null &&
+            outputPath.isNotBlank()
+    ) {
         add(outputPath, null, null, outputPath.split('/').last())
     }
     return files.toList()
@@ -168,7 +201,10 @@ private fun decodedOutput(state: ToolState): JsonElement? {
     state.outputValue?.let { if (it !is JsonPrimitive || !it.isString) return it }
     val output = (state.outputValue as? JsonPrimitive)?.content ?: state.output ?: return null
     val trimmed = output.trim()
-    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+    if (
+        (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+            (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    ) {
         return try {
             Json.parseToJsonElement(trimmed)
         } catch (_: IllegalArgumentException) {
@@ -181,9 +217,13 @@ private fun decodedOutput(state: ToolState): JsonElement? {
 private fun nonNull(value: JsonElement?): JsonElement? = value?.takeIf { it != JsonNull }
 
 /** Dart `value.toString()` for a JSON value (a string's content; other values as JSON text). */
-private fun dartToString(value: JsonElement): String = (value as? JsonPrimitive)?.content ?: value.toString()
+private fun dartToString(value: JsonElement): String =
+    (value as? JsonPrimitive)?.content ?: value.toString()
 
-/** Dart `Uri.tryParse(url)?.toFilePath()` for a local `file:///…` URL; null for a host or anything unreadable. */
+/**
+ * Dart `Uri.tryParse(url)?.toFilePath()` for a local `file:///…` URL; null for a host or anything
+ * unreadable.
+ */
 private fun filePathOf(url: String): String? {
     val rest = url.removePrefix("file://")
     if (!rest.startsWith("/")) return null
@@ -213,10 +253,11 @@ private fun percentDecode(text: String): String? {
 }
 
 /**
- * Dart `JsonEncoder.withIndent('  ').convert(value)`: two-space indent, `"key": value`, empty containers as `{}`
- * and `[]`, strings escaped the way Dart's encoder escapes them.
+ * Dart `JsonEncoder.withIndent(' ').convert(value)`: two-space indent, `"key": value`, empty
+ * containers as `{}` and `[]`, strings escaped the way Dart's encoder escapes them.
  */
-private fun prettyJson(value: JsonElement): String = StringBuilder().also { writePretty(it, value, 0) }.toString()
+private fun prettyJson(value: JsonElement): String =
+    StringBuilder().also { writePretty(it, value, 0) }.toString()
 
 private fun writePretty(out: StringBuilder, value: JsonElement, depth: Int) {
     when (value) {
@@ -255,7 +296,8 @@ private fun writePretty(out: StringBuilder, value: JsonElement, depth: Int) {
             out.append(']')
         }
         is JsonNull -> out.append("null")
-        is JsonPrimitive -> if (value.isString) writeString(out, value.content) else out.append(value.content)
+        is JsonPrimitive ->
+            if (value.isString) writeString(out, value.content) else out.append(value.content)
     }
 }
 

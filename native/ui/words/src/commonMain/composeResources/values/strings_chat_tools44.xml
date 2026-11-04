@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tools44ShowAll">Show all output</string>
+    <string name="tools44Lines">Lines</string>
+    <string name="tools44HiddenLines">hidden lines</string>
+</resources>
