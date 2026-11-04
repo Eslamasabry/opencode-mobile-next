@@ -120,6 +120,8 @@ class LiveDevServicesHost(
 
 /** The engine's shell port over the connection's ManagedShellGateway (field for field the same contract). */
 private class GatewayShells(private val gateway: ServerOperationsGateway) : ManagedShellPort {
+    override suspend fun serverIdentity(): Outcome<String?> = gateway.managedShellServerIdentity()
+
     override suspend fun start(command: String, directory: String, ownerToken: String): Outcome<ManagedShell> =
         gateway.startManagedShell(command, directory, ownerToken).map(::shell)
 

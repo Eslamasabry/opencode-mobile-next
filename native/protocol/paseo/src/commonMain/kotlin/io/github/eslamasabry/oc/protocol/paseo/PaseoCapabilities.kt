@@ -59,11 +59,11 @@ public object PaseoCapabilities {
         worktreeReset = false,
         cliSessionResume = false,
         // TODO(S5-PASEOP1): Dart has these on; their gateways are P1 extras.
-        fileBrowsing = false,
+        fileBrowsing = true,
         terminal = false,
-        sessionDiff = false,
-        worktreeCreate = false,
-        worktreeBrowsing = false,
+        sessionDiff = true,
+        worktreeCreate = true,
+        worktreeBrowsing = true,
         subagentSessions = false,
     )
 }

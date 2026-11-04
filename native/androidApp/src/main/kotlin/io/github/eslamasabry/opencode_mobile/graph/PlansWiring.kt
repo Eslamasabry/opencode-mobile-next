@@ -11,14 +11,22 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.model.BackendKind
+import io.github.eslamasabry.oc.core.domain.ProviderUsageGateway
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.integrations.usage.ConnectedProvider
 import io.github.eslamasabry.oc.engine.integrations.usage.OpenCodeSignInSource
+import io.github.eslamasabry.oc.engine.integrations.usage.PaseoUsageMonitor
+import io.github.eslamasabry.oc.engine.integrations.usage.PaseoUsagePorts
+import io.github.eslamasabry.oc.engine.integrations.usage.PaseoUsageProfile
+import io.github.eslamasabry.oc.engine.integrations.usage.PaseoUsageSource
+import io.github.eslamasabry.oc.engine.integrations.usage.ProviderUsageReading
+import io.github.eslamasabry.oc.engine.integrations.usage.parseProviderUsageList
 import io.github.eslamasabry.oc.engine.integrations.usage.RetiredQuotaBudgets
 import io.github.eslamasabry.oc.engine.integrations.usage.SignInServer
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnection
@@ -46,9 +54,8 @@ import kotlin.time.Clock
  * widget feed live in the app's preference store under the Flutter keys, so the Usage widget draws them. Nothing
  * here switches the active server or replays a request.
  *
- * Not wired yet (engines exist, adapters do not): the in-app Ubuntu quota collector (`:engine:integrations-quota`
- * needs an OkHttp QuotaTransport), Paseo/phone usage lists (PaseoUsageMonitor needs the Paseo usage call) and the
- * alert delivery bridge.
+ * Provider-usage facets feed connected daemon readings without switching the current server or starting a host.
+ * The quota collector and alert delivery have separate platform owners.
  */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<PlansSource>())
@@ -65,6 +72,7 @@ class AndroidPlansSource(
     override val snapshot: StateFlow<UsageSnapshot> = state.asStateFlow()
     private val creating = Mutex()
     private var engine: UsageSubscriptionsEngine? = null
+    private var paseo: PaseoUsageMonitor? = null
 
     private fun openCodeServers() =
         registry.live.value.filter { (_, graph) -> graph.profile.backend == BackendKind.OpenCode2 }
@@ -94,13 +102,62 @@ class AndroidPlansSource(
                     refreshNative = { UsageWidgetProvider.refreshAll(application) },
                     clock = { clock.now() },
                 )
+            val usagePorts = object : PaseoUsagePorts {
+                override fun paseoProfiles(): List<PaseoUsageProfile> =
+                    registry.live.value.filterValues { it.session.server is ProviderUsageGateway }
+                        .map { (id, graph) -> PaseoUsageProfile(id.raw, graph.profile.name) }
+
+                override fun isReadable(profileId: String): Boolean =
+                    registry.live.value[ProfileId(profileId)]?.session?.server is ProviderUsageGateway
+
+                override suspend fun readServer(profileId: String): Outcome<List<ProviderUsageReading>> {
+                    val id = ProfileId(profileId)
+                    val graph = registry.live.value[id]
+                        ?: return Failure.Refused(RefusalReason.StaleScope).failed()
+                    val gateway = graph.session.server as? ProviderUsageGateway
+                        ?: return Failure.Refused(RefusalReason.StaleScope).failed()
+                    val result = gateway.providerUsage()
+                    if (registry.live.value[id] !== graph) return Failure.Refused(RefusalReason.StaleScope).failed()
+                    return when (result) {
+                        is Outcome.Failed -> result
+                        is Outcome.Ok -> {
+                            try {
+                                parseProviderUsageList(DartJson.decodeOrNull(result.value.toString()), clock.now()).ok()
+                            } catch (_: io.github.eslamasabry.oc.engine.integrations.usage.ProviderUsageListInvalid) {
+                                Failure.Device().failed()
+                            }
+                        }
+                    }
+                }
+            }
+            val daemonUsage = PaseoUsageMonitor(
+                store = stores.prefs,
+                lane = stores.lanes.app,
+                ports = usagePorts,
+                widget = null,
+                clock = { clock.now() },
+                autoRead = true,
+            )
+            paseo = daemonUsage
             UsageSubscriptionsEngine(
                 store = stores.prefs,
                 lane = stores.lanes.app,
                 connections = {
-                    openCodeServers().map { (id, graph) -> UsageConnection(id.raw, graph.profile.name, UsageConnectionKind.OpenCodeServer) }
+                    registry.live.value.filterValues {
+                        it.profile.backend == BackendKind.OpenCode2 || it.session.server is ProviderUsageGateway
+                    }.map { (id, graph) ->
+                        UsageConnection(
+                            id.raw,
+                            graph.profile.name,
+                            when {
+                                graph.session.server is ProviderUsageGateway -> UsageConnectionKind.PaseoServer
+                                graph.profile.managedOnPhone -> UsageConnectionKind.InAppUbuntu
+                                else -> UsageConnectionKind.OpenCodeServer
+                            },
+                        )
+                    }
                 },
-                sources = listOf(signIns),
+                sources = listOf(signIns, PaseoUsageSource(daemonUsage) { usagePorts.paseoProfiles().map { it.id } }),
                 alertsOnRule = { false },
                 setQuotaAlerts = {},
                 widget = widget,
@@ -118,6 +175,7 @@ class AndroidPlansSource(
     /** B-SEC-178: a removed server takes its cached numbers, its overrides and its widget rows along. */
     suspend fun removeProfile(profile: ProfileId): Boolean {
         val e = engine() ?: return false
+        paseo?.removeProfile(profile.raw)
         e.removeProfile(profile.raw)
         return true
     }

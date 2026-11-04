@@ -108,7 +108,7 @@ public class PaseoGatewayFactory(
             trackLocalWork = trackLocalWork,
         )
         savedTitles?.let { lookup -> gateway.savedTitle = { key -> lookup(spec.profile.id, key) } }
-        return GatewayPair(gateway, object : ServerOperationsGateway {})
+        return GatewayPair(gateway, gateway.workspaceOperations)
     }
     /**
      * The pairing check (Dart `probePaseoConnection`): validates, says hello, reads one agent page in [directory] and

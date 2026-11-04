@@ -34,6 +34,7 @@ import io.github.eslamasabry.oc.engine.cards.CardHistory
 import io.github.eslamasabry.oc.engine.cards.CardHistoryPage
 import io.github.eslamasabry.oc.engine.cards.CardHistorySource
 import io.github.eslamasabry.oc.engine.cards.CardScope
+import io.github.eslamasabry.oc.engine.cards.CardState
 import io.github.eslamasabry.oc.engine.cards.CardsPrefs
 import io.github.eslamasabry.oc.engine.cards.CardsProblem
 import io.github.eslamasabry.oc.engine.cards.CardsQualifier
@@ -49,6 +50,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /*
@@ -158,6 +160,11 @@ public class ChatCardsModel internal constructor(
         board?.undo(card)
     }
 
+    /** Display continuity during suspension is separate from permission to start a connector request. */
+    public fun observedCard(card: AgentCard): AgentCard? = board?.observedCard(card)
+
+    public fun observedState(card: AgentCard): CardState? = board?.observedState(card)
+
     public fun close() {
         stopWatching?.invoke()
         unbind()
@@ -220,7 +227,9 @@ public class ChatCardsModel internal constructor(
         val profile = ref.profileId.raw
         graph.run { b.state.collect { mutable.value = it } }
         graph.run {
-            setup.changes.collect { b.setAvailable(setup.effective(profile)) }
+            combine(setup.changes, gateway.events.status) { _, stream ->
+                setup.effective(profile) && stream == StreamStatus.Connected
+            }.collect { b.setAvailable(it) }
         }
         graph.run {
             setup.recheck(profile) // B-CHAT-034: a reconnect or another server is checked again

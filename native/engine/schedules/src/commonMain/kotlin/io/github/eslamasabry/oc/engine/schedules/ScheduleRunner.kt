@@ -212,6 +212,9 @@ public class ScheduleRunner(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                // A phone runtime created for this occurrence cannot be released as a successful run
+                // until fresh output finishes. Remote servers continue independently after admission.
+                if (opened.startedPhoneServer) throw e
                 result(RunStatus.Ran)
             }
         }

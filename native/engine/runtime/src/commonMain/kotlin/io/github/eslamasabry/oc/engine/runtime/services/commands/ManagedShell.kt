@@ -49,6 +49,9 @@ public data class ManagedShellOutput(
  * answers `Ok(null)` for a shell the server no longer has (HTTP 404).
  */
 public interface ManagedShellPort {
+    /** Null means the host has no restart identity; a missing shell alone never proves a restart. */
+    public suspend fun serverIdentity(): Outcome<String?> = Outcome.Ok(null)
+
     public suspend fun start(command: String, directory: String, ownerToken: String): Outcome<ManagedShell>
 
     public suspend fun running(): Outcome<ManagedShellList>

@@ -114,7 +114,7 @@ public fun parseProviderUsageList(payload: Any?, now: Instant, maxProviders: Int
                 ProviderUsageReading(
                     providerId = id,
                     displayName = cleanUsageText(raw["displayName"], 24) ?: id,
-                    fetchedAt = time(raw["fetchedAt"]) ?: listFetched ?: now,
+                    fetchedAt = (time(raw["fetchedAt"]) ?: listFetched ?: now).coerceAtMost(now),
                     windows = emptyList(),
                     needsSignIn = true,
                 )

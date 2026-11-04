@@ -7,6 +7,10 @@ import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.CorrelatedPromptGateway
+import io.github.eslamasabry.oc.core.domain.FileGateway
+import io.github.eslamasabry.oc.core.domain.LocatedVcsGateway
+import io.github.eslamasabry.oc.core.domain.LocatedFileGateway
+import io.github.eslamasabry.oc.core.domain.ProviderUsageGateway
 import io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
@@ -148,7 +152,7 @@ public class PaseoGateway(
     /** Overridable so tests do not wait for a warming daemon. */
     internal val providerWarmupAttempts: Int = 8,
     internal val providerWarmupIntervalMs: Long = 1_500,
-) : ServerGateway, SessionSelectionGateway, CorrelatedPromptGateway, MidTurnPromptGateway {
+) : ServerGateway, SessionSelectionGateway, CorrelatedPromptGateway, MidTurnPromptGateway, LocatedFileGateway, LocatedVcsGateway, ProviderUsageGateway {
     private val job = SupervisorJob(scope.coroutineContext[Job])
     internal val scope: CoroutineScope = CoroutineScope(scope.coroutineContext + job + lane)
     public val defaultProviderModes: Map<String, String> = defaultProviderModes.toMap()
@@ -575,7 +579,17 @@ public class PaseoGateway(
 
     override suspend fun todos(id: SessionId): Outcome<ImmutableList<Todo>> = Outcome.Ok(persistentListOf())
 
-    override suspend fun diff(id: SessionId): Outcome<ImmutableList<FileDiff>> = unavailable("sessionDiff")
+    internal val workspaceOperations = PaseoWorkspaceOperations(this)
+
+    override suspend fun diff(id: SessionId): Outcome<ImmutableList<FileDiff>> {
+        val read = session(id)
+        if (read is Outcome.Failed) return read
+        val directory = (read as Outcome.Ok).value.directory
+            ?: return Outcome.Failed(PaseoException(PaseoFailureKind.ScopeMismatch).toFailure())
+        return workingTreeAt(ServerLocation(directory = directory))
+    }
+
+    override suspend fun workingTreeAt(location: ServerLocation): Outcome<ImmutableList<FileDiff>> = workspaceOperations.changesAt(location)
 
     // ---- prompts
 
@@ -1071,13 +1085,27 @@ public class PaseoGateway(
 
     // ---- files (P1 extras, S5-PASEOP1)
 
-    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> = unavailable("fileBrowsing")
+    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> = filesAt(location.value).listFiles(path)
 
-    override suspend fun fileContent(path: String): Outcome<FileContent> = unavailable("fileBrowsing")
+    override suspend fun fileContent(path: String): Outcome<FileContent> = filesAt(location.value).fileContent(path)
 
-    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> = unavailable("fileBrowsing")
+    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> = filesAt(location.value).findFile(query)
 
     override suspend fun findText(pattern: String): Outcome<ImmutableList<FindMatch>> = unavailable("textSearch")
+
+    override fun filesAt(location: ServerLocation): FileGateway = PaseoFiles(this, location)
+
+    /** An authenticated numeric-usage read; callers apply the privacy parser before publishing it. */
+    override suspend fun providerUsage(): Outcome<JsonObject> = call {
+        if (closed) paseoFail(PaseoFailureKind.Disconnected)
+        transport.connect()
+        val epoch = transport.epoch
+        val response = transport.request("provider.usage.list.request", jsonOf(), timeoutMs = 10_000)
+        if (closed || transport.epoch != epoch) paseoFail(PaseoFailureKind.Disconnected)
+        if (response["error"] != null && response["error"] != JsonNull) paseoFail(PaseoFailureKind.Unavailable)
+        paseoList(response["providers"], max = 10_000)
+        response
+    }
 
     // ---- agent records
 
@@ -1087,6 +1115,9 @@ public class PaseoGateway(
      */
     internal fun remember(raw: JsonObject, reconcileStatus: Boolean = true): Session? {
         var agent = raw
+        canonicalModelId(agent.str("provider"), agent.str("model"))?.let { model ->
+            agent = agent.with("model", JsonPrimitive(model))
+        }
         agent.str("id")?.let { realId -> appIds[realId]?.let { agent = agent.with("id", JsonPrimitive(it)) } }
         val id0 = agent.str("id")
         // A reloaded record can come back without its title: the known one stays.
@@ -1128,6 +1159,23 @@ public class PaseoGateway(
         hooks.forEach { it.onAgentRecorded(id, agent) }
         while (sessions.size > MAX_SESSIONS) forget(sessions.keys.first())
         return session
+    }
+
+    /** Match a resolved daemon id to the exact id offered by its provider's model list. */
+    private fun canonicalModelId(provider: String?, model: String?): String? {
+        if (provider == null || model == null) return null
+        val entry = providerEntries?.firstOrNull { it.str("provider") == provider } ?: return null
+        val models = entry.arr("models").orEmpty().mapNotNull { it.objectOrNull() }
+        var candidate: String = model
+        repeat(16) {
+            models.firstOrNull { it.str("id") == candidate }?.let { return candidate }
+            models.firstOrNull { m -> m.arr("aliases").orEmpty().any { it.stringOrNull() == candidate } }
+                ?.str("id")?.let { return it }
+            val prefix = "$provider/"
+            if (!candidate.startsWith(prefix) || candidate.length <= prefix.length) return null
+            candidate = candidate.removePrefix(prefix)
+        }
+        return null
     }
 
     /** A record's running status outlived its bound with nothing newer: the session reads idle. */

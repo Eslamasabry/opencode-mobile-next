@@ -7,9 +7,24 @@ import io.github.eslamasabry.oc.core.domain.ServerGateway
  * A private transport for one run. [close] releases exactly what this run opened (a gateway the app already holds
  * for the profile is borrowed, not closed).
  */
-public class ScheduleConnection(public val gateway: ServerGateway, private val release: suspend () -> Unit = {}) {
+public class ScheduleConnection(
+    public val gateway: ServerGateway,
+    /** The run started this phone runtime, so its lease must last until fresh output completes. */
+    public val startedPhoneServer: Boolean = false,
+    private val release: suspend () -> Unit = {},
+) {
+    private val closing = kotlinx.coroutines.sync.Mutex()
+    private var closed = false
+
     public suspend fun close() {
-        release()
+        closing.lock()
+        try {
+            if (closed) return
+            closed = true
+            release()
+        } finally {
+            closing.unlock()
+        }
     }
 }
 

@@ -11,8 +11,10 @@ import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServ
 import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServiceStatus
 import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServiceStore
 import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServices
+import io.github.eslamasabry.oc.engine.runtime.services.commands.ShellOutput
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -131,6 +133,9 @@ public class DevServicesModel(
     }
 
     private val foundLogs = mutableMapOf<String, String>()
+    private var output: ShellOutput? = null
+    private var outputObserver: Job? = null
+    private var outputOpening = false
 
     private fun republish() = publish(services?.state?.value?.services.orEmpty(), detected?.servers.orEmpty())
 
@@ -138,6 +143,7 @@ public class DevServicesModel(
         this.visible = visible
         shownFlow.value = visible
         if (!visible) {
+            closeOutput()
             services?.invalidateRuntime()
             detected?.invalidate()
             return
@@ -274,10 +280,41 @@ public class DevServicesModel(
 
     override fun logs(id: String) {
         val engine = services ?: return
+        val c = context ?: return
+        val shellId = engine.state.value.services.firstOrNull { it.id == id }?.run?.shellId ?: return
+        if (outputOpening) return
+        outputOpening = true
         scope.launch {
-            val read = engine.readLogs(id)
-            if (read is Outcome.Failed) report(read, DevServicesProblem.LogFailed)
+            try {
+                val port = c.shells()
+                if (!visible || !c.isCurrent()) return@launch
+                if (port == null) {
+                    ui.update { it.copy(problem = DevServicesProblem.Offline) }
+                    return@launch
+                }
+                closeOutput()
+                val viewer = ShellOutput(shellId, port) { visible && c.isCurrent() }
+                output = viewer
+                ui.update { it.copy(output = viewer.state.value) }
+                outputObserver = scope.launch { viewer.state.collect { state -> if (output === viewer) ui.update { it.copy(output = state) } } }
+                viewer.refresh()
+            } finally {
+                outputOpening = false
+            }
         }
+    }
+
+    override fun refreshOutput() {
+        val viewer = output ?: return
+        scope.launch { viewer.refresh() }
+    }
+
+    override fun closeOutput() {
+        output?.close()
+        output = null
+        outputObserver?.cancel()
+        outputObserver = null
+        ui.update { it.copy(output = null) }
     }
 
     override fun foundLogs(id: String) {
@@ -313,6 +350,7 @@ public class DevServicesModel(
     override fun back(): Unit = onBack()
 
     public fun close() {
+        closeOutput()
         shownFlow.value = false
         services?.close()
         detected?.close()
