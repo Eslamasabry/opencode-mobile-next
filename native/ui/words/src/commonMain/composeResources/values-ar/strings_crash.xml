@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="secCrashTitle">أدلة الأعطال المحفوظة</string>
+    <string name="secCrashCapture">حفظ فئات الأعطال على هذا الهاتف</string>
+    <string name="secCrashPrivacy">متوقف افتراضيًا. يحفظ فئات الأخطاء وأوقاتها فقط، دون رسائل أو تتبعات أو محادثات.</string>
+    <string name="secCrashClear">مسح الأدلة المحفوظة</string>
+    <string name="secCrashPreview">معاينة تقرير الأعطال</string>
+    <string name="secCrashEmpty">لم تُحفظ أي أدلة أعطال.</string>
+    <string name="secCrashDisabled">فعّل حفظ الأعطال للاحتفاظ بفئات الأخطاء القادمة.</string>
+    <string name="secCrashStale">تغيرت الأدلة. عاين التقرير مجددًا قبل مشاركته.</string>
+    <string name="secCrashBusy">تجري بالفعل عملية فتح نافذة المشاركة.</string>
+    <string name="secCrashUnavailable">أدلة الأعطال غير متاحة. حاول مجددًا.</string>
+    <string name="secCrashShareUnavailable">المشاركة غير متاحة. حاول مجددًا.</string>
+    <string name="secAppExits">عمليات خروج تطبيق أندرويد</string>
+    <string name="secHelperExits">عمليات خروج مساعد الوكيل</string>
+    <string name="secHistoryRefresh">تحديث سجل الخروج</string>
+    <string name="secHistoryEmpty">لم تُسجل عمليات خروج حديثة.</string>
+    <string name="secHistoryUnavailable">سجل الخروج غير متاح.</string>
+    <string name="secHistoryEntry">%1$s · الرمز %2$d</string>
+    <string name="secCrashReportHeader">تقرير أعطال OpenCode Mobile\nفئات الأخطاء المحفوظة وأوقاتها فقط.\nلا يتضمن رسائل أو تتبعات أو محادثات.\n\n</string>
+</resources>
