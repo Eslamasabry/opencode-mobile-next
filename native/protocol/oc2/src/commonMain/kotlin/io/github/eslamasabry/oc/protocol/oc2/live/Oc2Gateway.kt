@@ -43,8 +43,19 @@ internal class Oc2Gateway(
     initialLocation: ServerLocation = ServerLocation.Default,
     random: Random = Random.Default,
     initialDialect: Oc2Dialect? = null,
-) : ServerGateway, ServerOperationsGateway, CorrelatedPromptGateway, SessionSelectionGateway, StagedRevertGateway,
-    LocatedFileGateway, LocatedVcsGateway {
+) :
+    ServerGateway,
+    ServerOperationsGateway,
+    CorrelatedPromptGateway,
+    SessionSelectionGateway,
+    StagedRevertGateway,
+    LocatedFileGateway,
+    LocatedVcsGateway,
+    SessionSkillGateway,
+    SessionNoteGateway,
+    SetupInspectionGateway {
+    override suspend fun inspectSetup() = Oc2SetupInspection.read(this, redactor)
+
     private val ids = Oc2ClientIds(clock, random)
     private val dialect = MutableStateFlow(initialDialect)
     private val negotiation = Mutex()
@@ -52,14 +63,19 @@ internal class Oc2Gateway(
     override fun createPromptMessageId(): MessageId = MessageId(ids.message())
 
     /**
-     * B-PROTO-028 (Flutter `Api2Gateway.serverRunsTools`): true when the person approves this session automatically.
-     * Such a session gets its original rules back before each send, so the server runs what its own rules allow
-     * without waiting for this phone; asks and denials still apply.
+     * B-PROTO-028 (Flutter `Api2Gateway.serverRunsTools`): true when the person approves this
+     * session automatically. Such a session gets its original rules back before each send, so the
+     * server runs what its own rules allow without waiting for this phone; asks and denials still
+     * apply.
      */
     var serverRunsTools: (SessionId) -> Boolean = { false }
 
-    /** Re-installs the session's permission layer now (automatic approval switched on or off mid-reply). */
-    suspend fun syncSessionPermissions(session: SessionId): Outcome<Unit> = preparePermissions(session)
+    /**
+     * Re-installs the session's permission layer now (automatic approval switched on or off
+     * mid-reply).
+     */
+    suspend fun syncSessionPermissions(session: SessionId): Outcome<Unit> =
+        preparePermissions(session)
 
     override val capabilities: StateFlow<ServerCapabilities> = MutableStateFlow(Capabilities)
     override val location = MutableStateFlow(initialLocation)
@@ -251,6 +267,97 @@ internal class Oc2Gateway(
         body: JsonObject? = null,
     ): Outcome<Unit> = json(path, verb, body).map {}
 
+    /** B-STATE-113: only mobile.note crosses the protocol boundary, in the captured location. */
+    override suspend fun loadSessionNote(
+        session: SessionId,
+        location: ServerLocation,
+    ): Outcome<String?> {
+        val result =
+            noteRequest("/session/${sid(session)}/instructions/entries", HttpMethod.Get, location)
+        if (result is Outcome.Failed) return result
+        val rows =
+            ((result as Outcome.Ok).value as? JsonObject)?.get("data") as? JsonArray
+                ?: return Failure.UnreadableReply().failed()
+        val owned =
+            rows.filterIsInstance<JsonObject>().filter { it["key"] == JsonPrimitive("mobile.note") }
+        if (owned.isEmpty()) return Outcome.Ok(null)
+        val value = owned.singleOrNull()?.get("value") as? JsonPrimitive
+        return if (value?.isString == true) Outcome.Ok(value.content)
+        else Failure.UnreadableReply().failed()
+    }
+
+    override suspend fun saveSessionNote(
+        session: SessionId,
+        location: ServerLocation,
+        value: String?,
+        beforeSend: () -> Boolean,
+    ): Outcome<Unit> {
+        if (value != null && JsonPrimitive(value).toString().encodeToByteArray().size > 8192)
+            return Failure.Rejected(413).failed()
+        // Negotiate before the final admission check; a wake must not redirect this mutation.
+        if (dialect.value == null) {
+            val ready = health()
+            if (ready is Outcome.Failed) return ready
+        }
+        if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
+        return noteRequest(
+                "/session/${sid(session)}/instructions/entries/mobile.note",
+                if (value == null) HttpMethod.Delete else HttpMethod.Put,
+                location,
+                value?.let { buildJsonObject { put("value", it) } },
+            )
+            .map {}
+    }
+
+    private suspend fun noteRequest(
+        path: String,
+        method: HttpMethod,
+        at: ServerLocation,
+        body: JsonObject? = null,
+    ): Outcome<JsonElement> {
+        val result = json(path, method, body, locationQuery(at))
+        val failure = (result as? Outcome.Failed)?.failure
+        val unsupported =
+            (failure is Failure.NotFound && failure.tag?.raw != "SessionNotFoundError") ||
+                (failure is Failure.Rejected && failure.status in listOf(405, 501)) ||
+                (failure is Failure.Server && failure.status == 501)
+        if (unsupported) {
+            (capabilities as MutableStateFlow<ServerCapabilities>).update {
+                it.copy(sessionNotes = false)
+            }
+            return Failure.Unavailable(FeatureId("sessionNotes")).failed()
+        }
+        return result
+    }
+
+    override suspend fun sessionSkills(): Outcome<ImmutableList<SkillInfo>> =
+        Oc2SessionSkills.list(this)
+
+    override suspend fun activateSessionSkill(
+        session: SessionId,
+        skillId: String,
+        resume: Boolean,
+        beforeSend: () -> Boolean,
+    ): Outcome<Unit> {
+        if (!capabilities.value.sessionSkills)
+            return Failure.Unavailable(FeatureId("sessionSkills")).failed()
+        // Resolve the dialect before admission: a wake cannot redirect a skill into a changed
+        // location.
+        if (dialect.value == null) {
+            val ready = health()
+            if (ready is Outcome.Failed) return ready
+        }
+        if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
+        val result = Oc2SessionSkills.activate(this, session, skillId, resume)
+        if (Oc2SessionSkills.unsupported(result)) {
+            (capabilities as MutableStateFlow<ServerCapabilities>).update {
+                it.copy(sessionSkills = false)
+            }
+            return Failure.Unavailable(FeatureId("sessionSkills")).failed()
+        }
+        return result
+    }
+
     private fun sid(id: SessionId): String = id.raw.encodeURLPathPart()
 
     override suspend fun health(): Outcome<Health> = negotiation.withLock {
@@ -291,27 +398,35 @@ internal class Oc2Gateway(
     }
 
     /**
-     * The add-server probe verdict (Flutter `probeServerConnection`, row B-PROTO-094): a healthy answer connects with its
-     * version; an unhealthy one fails as `Busy(Failed)` without any v1 fallback; a 503 while booting is
-     * `Busy(Starting)`; 401 keeps its password verdict. Only when no OpenCode 2 health answer exists (404, or a 200 that
-     * is not the v2 health JSON) is the OpenCode 1 route read, and a real v1 server is `Incompatible(LegacyOpenCode1)`,
-     * never read as v2.
+     * The add-server probe verdict (Flutter `probeServerConnection`, row B-PROTO-094): a healthy
+     * answer connects with its version; an unhealthy one fails as `Busy(Failed)` without any v1
+     * fallback; a 503 while booting is `Busy(Starting)`; 401 keeps its password verdict. Only when
+     * no OpenCode 2 health answer exists (404, or a 200 that is not the v2 health JSON) is the
+     * OpenCode 1 route read, and a real v1 server is `Incompatible(LegacyOpenCode1)`, never read as
+     * v2.
      */
     internal suspend fun probe(): Outcome<Health> =
         when (val result = health()) {
-            is Outcome.Ok -> if (result.value.healthy) result else Failure.Busy(BusyKind.Failed).failed()
+            is Outcome.Ok ->
+                if (result.value.healthy) result else Failure.Busy(BusyKind.Failed).failed()
             is Outcome.Failed -> {
                 val failure = result.failure
                 when {
-                    failure is Failure.Busy && failure.kind == BusyKind.Overloaded -> Failure.Busy(BusyKind.Starting).failed()
+                    failure is Failure.Busy && failure.kind == BusyKind.Overloaded ->
+                        Failure.Busy(BusyKind.Starting).failed()
                     failure is Failure.NotFound || failure is Failure.UnreadableReply ->
-                        if (isLegacyServer()) Failure.Incompatible(IncompatibleKind.LegacyOpenCode1).failed() else result
+                        if (isLegacyServer())
+                            Failure.Incompatible(IncompatibleKind.LegacyOpenCode1).failed()
+                        else result
                     else -> result
                 }
             }
         }
 
-    /** `GET /global/health` (no `/api` prefix): an OpenCode 1 server answers `{healthy: true, version}` there. */
+    /**
+     * `GET /global/health` (no `/api` prefix): an OpenCode 1 server answers `{healthy: true,
+     * version}` there.
+     */
     private suspend fun isLegacyServer(): Boolean {
         val response =
             net.exchange({
@@ -319,9 +434,14 @@ internal class Oc2Gateway(
                 url("$origin/global/health")
                 header(HttpHeaders.Accept, "application/json")
                 auth?.let { header(HttpHeaders.Authorization, it) }
-            }) { reply -> reply.bodyAsText() }
-        val obj = (response as? Outcome.Ok)?.value?.let { Oc2Wire.parse(it) } as? JsonObject ?: return false
-        return (obj["healthy"] as? JsonPrimitive)?.booleanOrNull == true && obj.str("version") != null
+            }) { reply ->
+                reply.bodyAsText()
+            }
+        val obj =
+            (response as? Outcome.Ok)?.value?.let { Oc2Wire.parse(it) } as? JsonObject
+                ?: return false
+        return (obj["healthy"] as? JsonPrimitive)?.booleanOrNull == true &&
+            obj.str("version") != null
     }
 
     override suspend fun sessionPage(cursor: String?, limit: Int): Outcome<ServerPage<Session>> =
@@ -513,10 +633,10 @@ internal class Oc2Gateway(
     }
 
     /**
-     * Codex chat-header BLOCKER 1 (Flutter `_prepareSessionDispatch`): before a prompt, command or shell can run, the
-     * session's permission layer turns every allow into an ask ("Ask first": no tool runs without a card), and it is
-     * read back. A failed or unconfirmed install sends nothing. A staged revert refuses too (the server would commit
-     * it on admission).
+     * Codex chat-header BLOCKER 1 (Flutter `_prepareSessionDispatch`): before a prompt, command or
+     * shell can run, the session's permission layer turns every allow into an ask ("Ask first": no
+     * tool runs without a card), and it is read back. A failed or unconfirmed install sends
+     * nothing. A staged revert refuses too (the server would commit it on admission).
      */
     private suspend fun preparePermissions(session: SessionId): Outcome<Unit> {
         val path = "/session/${sid(session)}"
@@ -545,7 +665,8 @@ internal class Oc2Gateway(
         if (policy.confirms(update)) return Outcome.Ok(Unit)
         val patched = json(path, HttpMethod.Patch, update)
         if (patched is Outcome.Failed) return patched
-        // A successful PATCH alone does not establish the mode: it is read back before anything can run.
+        // A successful PATCH alone does not establish the mode: it is read back before anything can
+        // run.
         val back = json(path)
         if (back is Outcome.Failed) return back
         val confirmed = Oc2PermissionPolicy.fromSession((back as Outcome.Ok).value, session.raw)
@@ -555,12 +676,16 @@ internal class Oc2Gateway(
         return Outcome.Ok(Unit)
     }
 
-    /** The server answers 404 for an existing agent for a moment after an idle restart; a short retry rides it. */
+    /**
+     * The server answers 404 for an existing agent for a moment after an idle restart; a short
+     * retry rides it.
+     */
     private suspend fun readAgent(agent: String): Outcome<JsonElement> {
         var attempt = 0
         while (true) {
             val result = json("/agent/${agent.encodeURLPathPart()}", query = locationQuery())
-            if (result !is Outcome.Failed || result.failure !is Failure.NotFound || attempt >= 2) return result
+            if (result !is Outcome.Failed || result.failure !is Failure.NotFound || attempt >= 2)
+                return result
             attempt++
             kotlinx.coroutines.delay(AGENT_BOOT_RETRY_MS)
         }
@@ -590,7 +715,9 @@ internal class Oc2Gateway(
                 }
         }
 
-    /** `POST /session/{id}/shell {command}`: v2 runs it as the session's own agent (Flutter api2). */
+    /**
+     * `POST /session/{id}/shell {command}`: v2 runs it as the session's own agent (Flutter api2).
+     */
     override suspend fun shell(
         session: SessionId,
         command: String,
@@ -607,8 +734,8 @@ internal class Oc2Gateway(
     }
 
     /**
-     * `POST /session/{id}/command {command, text}` (Flutter `Api2Gateway.slashCommand`). The model is
-     * session state on v2, so it never rides the body.
+     * `POST /session/{id}/command {command, text}` (Flutter `Api2Gateway.slashCommand`). The model
+     * is session state on v2, so it never rides the body.
      */
     override suspend fun slashCommand(
         session: SessionId,
@@ -647,12 +774,20 @@ internal class Oc2Gateway(
     override suspend fun diff(id: SessionId): Outcome<ImmutableList<FileDiff>> =
         unavailable("sessionDiff")
 
-    // ---- Staged revert (P12-REVIEW; lib/api2/gateway_operations/ops_sessions.dart, protocol notes "Revert") ----
-    // POST .../revert/stage {messageID, files} → {"data": Revert}; POST .../revert/clear (stable: DELETE
-    // .../revert) and POST .../revert/commit, both 204, 409 SessionBusyError while running. One request each.
+    // ---- Staged revert (P12-REVIEW; lib/api2/gateway_operations/ops_sessions.dart, protocol notes
+    // "Revert") ----
+    // POST .../revert/stage {messageID, files} → {"data": Revert}; POST .../revert/clear (stable:
+    // DELETE
+    // .../revert) and POST .../revert/commit, both 204, 409 SessionBusyError while running. One
+    // request each.
 
-    override suspend fun sessionRevertPrompt(session: SessionId, message: MessageId): Outcome<String?> =
-        when (val read = json("/session/${sid(session)}/message/${message.raw.encodeURLPathPart()}")) {
+    override suspend fun sessionRevertPrompt(
+        session: SessionId,
+        message: MessageId,
+    ): Outcome<String?> =
+        when (
+            val read = json("/session/${sid(session)}/message/${message.raw.encodeURLPathPart()}")
+        ) {
             is Outcome.Failed -> read
             is Outcome.Ok -> {
                 val row = Oc2History(redactor).message(session.raw, data(read.value))
@@ -660,17 +795,26 @@ internal class Oc2Gateway(
                     Outcome.Ok(null)
                 } else {
                     val text =
-                        row.parts.filter { it.type == PartType.Text && !it.synthetic }.joinToString("\n") { it.text }
+                        row.parts
+                            .filter { it.type == PartType.Text && !it.synthetic }
+                            .joinToString("\n") { it.text }
                     Outcome.Ok(
                         text.ifEmpty {
-                            row.parts.filter { it.type == PartType.File }.mapNotNull { it.filename?.takeIf(String::isNotEmpty) }.joinToString(", ")
+                            row.parts
+                                .filter { it.type == PartType.File }
+                                .mapNotNull { it.filename?.takeIf(String::isNotEmpty) }
+                                .joinToString(", ")
                         }
                     )
                 }
             }
         }
 
-    override suspend fun stageSessionRevert(session: SessionId, message: MessageId, applyFiles: Boolean): Outcome<SessionRevert> =
+    override suspend fun stageSessionRevert(
+        session: SessionId,
+        message: MessageId,
+        applyFiles: Boolean,
+    ): Outcome<SessionRevert> =
         read(
             "/session/${sid(session)}/revert/stage",
             HttpMethod.Post,
@@ -678,7 +822,9 @@ internal class Oc2Gateway(
                 put("messageID", message.raw)
                 put("files", applyFiles)
             },
-        ) { root -> Oc2SessionRevert.fromJson(data(root))?.let(::revertOf) }
+        ) { root ->
+            Oc2SessionRevert.fromJson(data(root))?.let(::revertOf)
+        }
 
     override suspend fun clearSessionRevert(session: SessionId): Outcome<Unit> =
         unit("/session/${sid(session)}/revert/clear", HttpMethod.Post)
@@ -691,13 +837,30 @@ internal class Oc2Gateway(
             MessageId(wire.messageID),
             wire.partID?.let(::PartId),
             wire.snapshot,
-            wire.files?.mapNotNull { file ->
-                val path = (file["file"] ?: file["path"])?.let { (it as? JsonPrimitive)?.contentOrNull }?.takeIf(String::isNotEmpty)
-                    ?: return@mapNotNull null
-                fun text(key: String) = (file[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
-                fun count(key: String) = (file[key] as? JsonPrimitive)?.takeIf { !it.isString }?.intOrNull?.takeIf { it >= 0 }
-                FileDiff(path, text("before"), text("after"), text("patch"), count("additions"), count("deletions"), text("status"))
-            }?.toImmutableList(),
+            wire.files
+                ?.mapNotNull { file ->
+                    val path =
+                        (file["file"] ?: file["path"])
+                            ?.let { (it as? JsonPrimitive)?.contentOrNull }
+                            ?.takeIf(String::isNotEmpty) ?: return@mapNotNull null
+                    fun text(key: String) =
+                        (file[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
+                    fun count(key: String) =
+                        (file[key] as? JsonPrimitive)
+                            ?.takeIf { !it.isString }
+                            ?.intOrNull
+                            ?.takeIf { it >= 0 }
+                    FileDiff(
+                        path,
+                        text("before"),
+                        text("after"),
+                        text("patch"),
+                        count("additions"),
+                        count("deletions"),
+                        text("status"),
+                    )
+                }
+                ?.toImmutableList(),
         )
 
     override suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>> =
@@ -812,7 +975,10 @@ internal class Oc2Gateway(
                 .toImmutableList()
         }
 
-    /** Safe catalog rows only (GET /provider + /model + /agent, all confirmed 200); no raw provider config is kept. */
+    /**
+     * Safe catalog rows only (GET /provider + /model + /agent, all confirmed 200); no raw provider
+     * config is kept.
+     */
     override suspend fun catalog(): Outcome<CatalogSnapshot> {
         val providerReply = json("/provider", query = locationQuery())
         if (providerReply is Outcome.Failed) return providerReply
@@ -859,23 +1025,34 @@ internal class Oc2Gateway(
             .ok()
     }
 
-    /** GET /model/default only; there is no confirmed default-agent endpoint, so the agent stays null. */
+    /**
+     * GET /model/default only; there is no confirmed default-agent endpoint, so the agent stays
+     * null.
+     */
     override suspend fun chatDefaults(): Outcome<ChatDefaults> {
         val reply = json("/model/default", query = locationQuery())
         if (reply is Outcome.Failed) return reply
         val raw = data((reply as Outcome.Ok).value)
         if (raw == JsonNull) return ChatDefaults(null, null).ok()
-        val info = (raw as? JsonObject)?.let { Oc2ModelInfo.fromJson(it) }
-            ?: return Failure.UnreadableReply().failed()
-        val ref = Oc2SessionSelection.defaultModelRef(info)
-            ?: return Failure.UnreadableReply().failed()
+        val info =
+            (raw as? JsonObject)?.let { Oc2ModelInfo.fromJson(it) }
+                ?: return Failure.UnreadableReply().failed()
+        val ref =
+            Oc2SessionSelection.defaultModelRef(info) ?: return Failure.UnreadableReply().failed()
         return ChatDefaults(ref, null).ok()
     }
 
-    /** GET /fs/list (lib/api2/client.dart fsList): `{path, type}` entries, folders with a trailing `/`. */
-    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> = listFiles(path, location.value)
+    /**
+     * GET /fs/list (lib/api2/client.dart fsList): `{path, type}` entries, folders with a trailing
+     * `/`.
+     */
+    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> =
+        listFiles(path, location.value)
 
-    /** The files of one conversation's folder: every request carries [at], never the shared location. */
+    /**
+     * The files of one conversation's folder: every request carries [at], never the shared
+     * location.
+     */
     override fun filesAt(location: ServerLocation): FileGateway =
         object : FileGateway {
             override suspend fun listFiles(path: String) = listFiles(path, location)
@@ -887,29 +1064,41 @@ internal class Oc2Gateway(
             override suspend fun findText(pattern: String) = this@Oc2Gateway.findText(pattern)
         }
 
-    private suspend fun listFiles(path: String, at: ServerLocation): Outcome<ImmutableList<FileNode>> =
+    private suspend fun listFiles(
+        path: String,
+        at: ServerLocation,
+    ): Outcome<ImmutableList<FileNode>> =
         read("/fs/list", query = locationQuery(at) + ("path" to path.ifEmpty { "." })) { reply ->
-            entries(reply).map { entry ->
-                val obj = entry as? JsonObject ?: return@read null
-                val raw = obj.str("path") ?: return@read null
-                val normal = raw.removeSuffix("/")
-                FileNode(
-                    name = normal.substringAfterLast('/'),
-                    path = normal,
-                    isDir = obj.str("type") == "directory" || raw.endsWith("/"),
-                )
-            }.toImmutableList()
+            entries(reply)
+                .map { entry ->
+                    val obj = entry as? JsonObject ?: return@read null
+                    val raw = obj.str("path") ?: return@read null
+                    val normal = raw.removeSuffix("/")
+                    FileNode(
+                        name = normal.substringAfterLast('/'),
+                        path = normal,
+                        isDir = obj.str("type") == "directory" || raw.endsWith("/"),
+                    )
+                }
+                .toImmutableList()
         }
 
     /**
-     * GET /fs/read/<path> (raw bytes, no JSON envelope). Text only when the bytes are strict UTF-8 without a NUL in
-     * the first 8 KiB; anything else stays exact as base64 (B-MEDIA-001).
+     * GET /fs/read/<path> (raw bytes, no JSON envelope). Text only when the bytes are strict UTF-8
+     * without a NUL in the first 8 KiB; anything else stays exact as base64 (B-MEDIA-001).
      */
-    override suspend fun fileContent(path: String): Outcome<FileContent> = fileContent(path, location.value)
+    override suspend fun fileContent(path: String): Outcome<FileContent> =
+        fileContent(path, location.value)
 
     private suspend fun fileContent(path: String, at: ServerLocation): Outcome<FileContent> {
         val bytes =
-            when (val reply = rawBytes("/fs/read/" + path.split('/').joinToString("/") { it.encodeURLPathPart() }, at)) {
+            when (
+                val reply =
+                    rawBytes(
+                        "/fs/read/" + path.split('/').joinToString("/") { it.encodeURLPathPart() },
+                        at,
+                    )
+            ) {
                 is Outcome.Failed -> return reply
                 is Outcome.Ok -> reply.value
             }
@@ -929,9 +1118,13 @@ internal class Oc2Gateway(
     }
 
     /** `GET /fs/find?query=&type=file` (Flutter `Api2Gateway.findFile`): project-relative paths. */
-    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> = findFile(query, location.value)
+    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> =
+        findFile(query, location.value)
 
-    private suspend fun findFile(query: String, at: ServerLocation): Outcome<ImmutableList<String>> =
+    private suspend fun findFile(
+        query: String,
+        at: ServerLocation,
+    ): Outcome<ImmutableList<String>> =
         read(
             "/fs/find",
             query = locationQuery(at) + mapOf("query" to query, "type" to "file"),
@@ -945,17 +1138,32 @@ internal class Oc2Gateway(
         }
 
     /**
-     * `GET /vcs/diff?mode=working` (protocol notes "VCS"): the folder's uncommitted changes vs HEAD,
-     * `{file, patch, additions, deletions, status}` per file, for the conversation's own [location].
+     * `GET /vcs/diff?mode=working` (protocol notes "VCS"): the folder's uncommitted changes vs
+     * HEAD, `{file, patch, additions, deletions, status}` per file, for the conversation's own
+     * [location].
      */
     override suspend fun workingTreeAt(location: ServerLocation): Outcome<ImmutableList<FileDiff>> =
         read("/vcs/diff", query = locationQuery(location) + ("mode" to "working")) { root ->
             entries(root)
                 .mapNotNull { value ->
                     val obj = value as? JsonObject ?: return@mapNotNull null
-                    val path = (obj.str("file") ?: obj.str("path"))?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
-                    fun count(key: String) = (obj[key] as? JsonPrimitive)?.takeIf { !it.isString }?.intOrNull?.takeIf { it >= 0 }
-                    FileDiff(path, null, null, obj.str("patch"), count("additions"), count("deletions"), obj.str("status"))
+                    val path =
+                        (obj.str("file") ?: obj.str("path"))?.takeIf { it.isNotEmpty() }
+                            ?: return@mapNotNull null
+                    fun count(key: String) =
+                        (obj[key] as? JsonPrimitive)
+                            ?.takeIf { !it.isString }
+                            ?.intOrNull
+                            ?.takeIf { it >= 0 }
+                    FileDiff(
+                        path,
+                        null,
+                        null,
+                        obj.str("patch"),
+                        count("additions"),
+                        count("deletions"),
+                        obj.str("status"),
+                    )
                 }
                 .toImmutableList()
         }
@@ -965,19 +1173,30 @@ internal class Oc2Gateway(
         unavailable("textSearch")
 
     /** One GET whose body is raw bytes, through the same dialect routing as [json]. */
-    private suspend fun rawBytes(path: String, at: ServerLocation = location.value): Outcome<ByteArray> {
+    private suspend fun rawBytes(
+        path: String,
+        at: ServerLocation = location.value,
+    ): Outcome<ByteArray> {
         if (dialect.value == null) {
             when (val health = health()) {
                 is Outcome.Failed -> return health
-                is Outcome.Ok -> if (!health.value.healthy) return Failure.UnreadableReply().failed()
+                is Outcome.Ok ->
+                    if (!health.value.healthy) return Failure.UnreadableReply().failed()
             }
         }
         val settled = dialect.value ?: return Failure.UnreadableReply().failed()
         val route = settled.route(path, HttpMethod.Get, null, locationQuery(at))
-        val response = net.exchange({ request(route.path, route.method, route.query) }) { reply -> reply.bodyAsBytes() }
+        val response =
+            net.exchange({ request(route.path, route.method, route.query) }) { reply ->
+                reply.bodyAsBytes()
+            }
         if (response is Outcome.Failed) {
             val failure = response.failure
-            if (auth == null && failure is Failure.SignIn && failure.why == SignInWhy.PasswordRejected) {
+            if (
+                auth == null &&
+                    failure is Failure.SignIn &&
+                    failure.why == SignInWhy.PasswordRejected
+            ) {
                 return Failure.SignIn(SignInWhy.PasswordMissing, failure.details).failed()
             }
         }
@@ -1024,17 +1243,20 @@ internal class Oc2Gateway(
     companion object {
         val Capabilities =
             ServerCapabilities(
-                scheduledPrompts = true, // Flutter api2 parity (gateway_mappers.dart): schedules run client-side over the normal session API
+                sessionSkills = true,
+                scheduledPrompts =
+                    true, // Flutter api2 parity (gateway_mappers.dart): schedules run client-side
+                // over the normal session API
                 phoneTeamExecution = false,
                 genUi = false,
                 sessionAddressHandoff = false,
                 agentHandoffFiles = false,
-                setupConfigRead = false,
+                setupConfigRead = true,
                 setupConfigWrite = false,
-                setupMcpInventory = false,
+                setupMcpInventory = true,
                 setupAssistantSession = false,
                 clientPromptMessageID = true,
-                commandReceipts = false,
+                commandReceipts = true,
                 agentAccount = false,
                 hostAgentProviders = false,
                 hostAgentPermissionActions = false,
@@ -1060,7 +1282,7 @@ internal class Oc2Gateway(
                 messageCompletionEndsRun = false,
                 sessionRevert = true,
                 sessionImportExport = false,
-                sessionNotes = false,
+                sessionNotes = true,
                 serverCatalog = true,
                 sessionModelProviderSwitching = true,
                 agentSelection = true,
@@ -1106,7 +1328,8 @@ internal class Oc2Gateway(
                 legacyQuestionRequests = false,
                 forms = false,
                 inbox = false,
-                cliSessionResume = true, // Flutter api2: opencode2 --session resumes by id (P12-BUILD-AGENTS)
+                cliSessionResume =
+                    true, // Flutter api2: opencode2 --session resumes by id (P12-BUILD-AGENTS)
                 projectsAreGitRepositories = false,
                 remoteShell = false,
                 claudeAgent = false,
