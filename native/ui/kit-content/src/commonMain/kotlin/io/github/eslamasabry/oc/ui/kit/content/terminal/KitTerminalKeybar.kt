@@ -16,7 +16,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 
 /** A key name is protocol data; its face and accessible name come from native string resources. */
 @Immutable
-public data class KitTerminalKey(val id: String, val label: String, val selected: Boolean? = null)
+public data class KitTerminalKeyChoice(val id: String, val label: String, val selected: Boolean? = null)
 
 /**
  * The single terminal key row: minimum kit targets, one shared horizontal scroll, labelled modifier
@@ -24,7 +24,7 @@ public data class KitTerminalKey(val id: String, val label: String, val selected
  */
 @Composable
 public fun KitTerminalKeybar(
-    keys: List<KitTerminalKey>,
+    keys: List<KitTerminalKeyChoice>,
     enabled: KitEnabled,
     onKey: (String) -> Unit,
 ) {

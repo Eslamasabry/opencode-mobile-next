@@ -307,7 +307,7 @@ class NativePhoneDetails(
         if (!visible) return false
         val id = owner()
         val graph = id?.let { registry.live.value[it] }?.takeIf(::localOwner)
-        val migration = graph?.session?.server?.let { readHistoryMigrationStatus(it) }
+        val migration = graph?.session?.server?.let { it.readHistoryMigrationStatus() }
         if (
             !visible ||
                 revision != viewRevision ||

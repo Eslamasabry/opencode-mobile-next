@@ -83,7 +83,7 @@ class UsageHubEntries(private val source: PlansSource) : EntryInstaller {
                         invalidTarget =
                             facts.subscriptions.none {
                                 io.github.eslamasabry.oc.engine.integrations.usage
-                                    .UsageAlertDelivery
+                                    .SubscriptionAlertDelivery
                                     .tokenFor(it.key) == route.alertToken &&
                                     it.readFrom?.id == route.alertProfile
                             }

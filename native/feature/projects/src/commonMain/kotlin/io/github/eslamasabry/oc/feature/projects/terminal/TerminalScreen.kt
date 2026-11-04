@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKey
+import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKeyChoice
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKeybar
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalView
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalWords
@@ -266,38 +266,38 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                 KitTerminalKeybar(
                     keys =
                         listOf(
-                            KitTerminalKey("escape", stringResource(Res.string.terminal40Escape)),
-                            KitTerminalKey("tab", stringResource(Res.string.terminal40Tab)),
-                            KitTerminalKey(
+                            KitTerminalKeyChoice("escape", stringResource(Res.string.terminal40Escape)),
+                            KitTerminalKeyChoice("tab", stringResource(Res.string.terminal40Tab)),
+                            KitTerminalKeyChoice(
                                 "ctrl",
                                 stringResource(Res.string.terminal40Ctrl),
                                 state.control,
                             ),
-                            KitTerminalKey(
+                            KitTerminalKeyChoice(
                                 "alt",
                                 stringResource(Res.string.terminal40Alt),
                                 state.alt,
                             ),
-                            KitTerminalKey("left", stringResource(Res.string.terminal40Left)),
-                            KitTerminalKey("up", stringResource(Res.string.terminal40Up)),
-                            KitTerminalKey("down", stringResource(Res.string.terminal40Down)),
-                            KitTerminalKey("right", stringResource(Res.string.terminal40Right)),
-                            KitTerminalKey("|", stringResource(Res.string.terminal40Pipe)),
-                            KitTerminalKey("~", stringResource(Res.string.terminal40Tilde)),
-                            KitTerminalKey("/", stringResource(Res.string.terminal40Slash)),
-                            KitTerminalKey("-", stringResource(Res.string.terminal40Dash)),
-                            KitTerminalKey("home", stringResource(Res.string.terminal40Home)),
-                            KitTerminalKey("end", stringResource(Res.string.terminal40End)),
-                            KitTerminalKey("pageUp", stringResource(Res.string.terminal40PageUp)),
-                            KitTerminalKey(
+                            KitTerminalKeyChoice("left", stringResource(Res.string.terminal40Left)),
+                            KitTerminalKeyChoice("up", stringResource(Res.string.terminal40Up)),
+                            KitTerminalKeyChoice("down", stringResource(Res.string.terminal40Down)),
+                            KitTerminalKeyChoice("right", stringResource(Res.string.terminal40Right)),
+                            KitTerminalKeyChoice("|", stringResource(Res.string.terminal40Pipe)),
+                            KitTerminalKeyChoice("~", stringResource(Res.string.terminal40Tilde)),
+                            KitTerminalKeyChoice("/", stringResource(Res.string.terminal40Slash)),
+                            KitTerminalKeyChoice("-", stringResource(Res.string.terminal40Dash)),
+                            KitTerminalKeyChoice("home", stringResource(Res.string.terminal40Home)),
+                            KitTerminalKeyChoice("end", stringResource(Res.string.terminal40End)),
+                            KitTerminalKeyChoice("pageUp", stringResource(Res.string.terminal40PageUp)),
+                            KitTerminalKeyChoice(
                                 "pageDown",
                                 stringResource(Res.string.terminal40PageDown),
                             ),
-                            KitTerminalKey(
+                            KitTerminalKeyChoice(
                                 "interrupt",
                                 stringResource(Res.string.terminal40Interrupt),
                             ),
-                            KitTerminalKey("eof", stringResource(Res.string.terminal40Eof)),
+                            KitTerminalKeyChoice("eof", stringResource(Res.string.terminal40Eof)),
                         ),
                     enabled =
                         if (connected) KitEnabled.Enabled else KitEnabled.Disabled(unavailable),
