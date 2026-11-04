@@ -13,6 +13,8 @@ import io.github.eslamasabry.oc.feature.phone.presentation.ProcessRowUi
 import io.github.eslamasabry.oc.feature.phone.presentation.RunningActions
 import io.github.eslamasabry.oc.feature.phone.presentation.RunningUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -21,10 +23,12 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -37,7 +41,15 @@ import io.github.eslamasabry.oc.ui.words.res.childLimitStepsOpen
 import io.github.eslamasabry.oc.ui.words.res.childLimitStepsText
 import io.github.eslamasabry.oc.ui.words.res.childLimitTitle
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
+import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.runningDetailBusy
+import io.github.eslamasabry.oc.ui.words.res.runningDetailElapsed
+import io.github.eslamasabry.oc.ui.words.res.runningDetailHelpers
+import io.github.eslamasabry.oc.ui.words.res.runningDetailIdle
+import io.github.eslamasabry.oc.ui.words.res.runningDetailMemory
+import io.github.eslamasabry.oc.ui.words.res.runningDetailPid
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneEmpty
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneEmptyBody
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneLimitBody
@@ -60,8 +72,9 @@ import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * PhoneRoute.Running (plan 07 F08): the near-limit notice, the guided child-process-limit card (plan 11 §7.2), then
- * one row per program. Protected rows carry no Stop and say where they are controlled. Kit parts only (K1).
+ * PhoneRoute.Running (plan 07 F08): the near-limit notice, the guided child-process-limit card
+ * (plan 11 §7.2), then one row per program. Protected rows carry no Stop and say where they are
+ * controlled. Kit parts only (K1).
  */
 @Composable
 public fun RunningScreen(state: RunningUi, actions: RunningActions) {
@@ -89,7 +102,8 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                     retry = KitLineAction(stringResource(Res.string.commonRetry), actions::retry),
                 )
             }
-            if (state.refreshFailed) KitNotice(message = stringResource(Res.string.runningPhoneRefreshFailed))
+            if (state.refreshFailed)
+                KitNotice(message = stringResource(Res.string.runningPhoneRefreshFailed))
             val count = state.count
             if (state.nearLimit && count != null) {
                 KitNotice(
@@ -103,7 +117,11 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                 KitNotice(
                     message = stringResource(Res.string.runningPhoneStopFailed),
                     tone = StatusTone.Failure,
-                    dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss),
+                    dismiss =
+                        KitLineAction(
+                            stringResource(Res.string.workspaceDismissNotice),
+                            actions::dismiss,
+                        ),
                 )
             }
             if (!state.loading && !state.loadFailed && state.rows.isEmpty()) {
@@ -115,7 +133,9 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
             }
             if (state.rows.isNotEmpty()) {
                 KitRowGroup(note = stringResource(Res.string.termuxProcsAutoRefresh)) {
-                    state.rows.forEach { ProcessRow(it, stopping = state.stopping == it.pid, actions) }
+                    state.rows.forEach {
+                        ProcessRow(it, stopping = state.stopping == it.pid, actions)
+                    }
                 }
             } else if (!state.loadFailed) {
                 KitGroupNote(stringResource(Res.string.termuxProcsAutoRefresh))
@@ -131,41 +151,106 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                     confirmLabel = stringResource(Res.string.runningPhoneStopNamed, it.name),
                     kind = KitConfirmKind.Stop,
                     body = stringResource(Res.string.runningPhoneStopBody),
+                    consequences =
+                        if (it.stopIdentities.size > 1)
+                            listOf(
+                                stringResource(
+                                    Res.string.runningDetailHelpers,
+                                    it.stopIdentities.size - 1,
+                                )
+                            )
+                        else emptyList(),
                 )
             },
         onConfirm = actions::confirmStop,
         onCancel = actions::dismiss,
     )
+    val selected = state.selected
+    KitSheet(
+        visible = selected != null,
+        title = selected?.name ?: stringResource(Res.string.runningPhoneTitle),
+        onDismissRequest = actions::dismiss,
+        primary =
+            selected
+                ?.takeIf { it.stoppable }
+                ?.let { row ->
+                    KitAction(
+                        stringResource(Res.string.runningPhoneStopNamed, row.name),
+                        { actions.askStop(row.pid) },
+                    )
+                },
+    ) {
+        selected?.let { row ->
+            row.kind.words()?.let { KitText(it) }
+            KitText(stringResource(Res.string.runningDetailPid, row.pid))
+            row.memoryBytes?.let {
+                KitText(
+                    stringResource(Res.string.runningDetailMemory, (it / 1048576).coerceAtLeast(1))
+                )
+            }
+            row.elapsedSeconds?.let {
+                KitText(stringResource(Res.string.runningDetailElapsed, it / 60))
+            }
+            KitDetailsFold(
+                label = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
+                text = row.command,
+            )
+        }
+    }
 }
 
 @Composable
 private fun ProcessRow(row: ProcessRowUi, stopping: Boolean, actions: RunningActions) {
     val details =
         listOfNotNull(
-            row.kind.words(),
-            row.cpuPercent?.let { "⁦$it %⁩" },
-            if (row.leftBehind) stringResource(Res.string.runningPhoneMarkStuck) else null,
-        ).joinToString(" · ")
+                row.kind.words(),
+                row.cpuPercent?.let {
+                    if (it >= 5) stringResource(Res.string.runningDetailBusy)
+                    else stringResource(Res.string.runningDetailIdle)
+                },
+                row.cpuPercent?.let { "⁦$it %⁩" },
+                row.memoryBytes?.let {
+                    stringResource(Res.string.runningDetailMemory, (it / 1048576).coerceAtLeast(1))
+                },
+                row.elapsedSeconds?.let {
+                    stringResource(Res.string.runningDetailElapsed, it / 60)
+                },
+                if (row.leftBehind) stringResource(Res.string.runningPhoneMarkStuck) else null,
+            )
+            .joinToString(" · ")
     val supporting =
         when (row.protectedAs) {
             ProcessRole.ServerRoot -> stringResource(Res.string.runningPhoneServerRoot)
             ProcessRole.App -> stringResource(Res.string.termuxProcsAboutHostApp)
-            ProcessRole.Normal, null -> if (stopping) stringResource(Res.string.termuxProcsStopping) else details.ifBlank { null }
+            ProcessRole.Normal,
+            null ->
+                if (stopping) stringResource(Res.string.termuxProcsStopping)
+                else details.ifBlank { null }
         }
     KitRow(
         title = row.name,
         supporting = supporting,
-        supportingMaxLines = 2,
+        supportingMaxLines = 3,
+        onClick = { actions.details(row.pid) },
         trailing =
             if (row.stoppable && !stopping) {
-                KitRowTrailing.Action(KitLineAction(stringResource(Res.string.runningPhoneStop), { actions.askStop(row.pid) }))
+                KitRowTrailing.Action(
+                    KitLineAction(
+                        stringResource(Res.string.runningPhoneStop),
+                        { actions.askStop(row.pid) },
+                    )
+                )
             } else {
                 KitRowTrailing.None
             },
     )
 }
 
-/** The guided card (port of child_limit_card.dart): one notice with its steps, one button when one can open, Hide. */
+/**
+ * The guided card (port of child_limit_card.dart): one notice with its steps, one button when one
+ * can open, Hide.
+ */
 @Composable
 private fun ChildLimitCard(kind: ChildLimitCardKind, actions: RunningActions) {
     val steps =
@@ -184,8 +269,22 @@ private fun ChildLimitCard(kind: ChildLimitCardKind, actions: RunningActions) {
         title = stringResource(Res.string.childLimitTitle),
         message = stringResource(Res.string.childLimitBody),
         notes = listOf(stringResource(steps)),
-        actions = listOfNotNull(open?.let { KitLineAction(stringResource(it), actions::openChildLimitSettings, testTag = "child-limit-open") }),
-        dismiss = KitLineAction(stringResource(Res.string.childLimitHide), actions::hideChildLimit, testTag = "child-limit-hide"),
+        actions =
+            listOfNotNull(
+                open?.let {
+                    KitLineAction(
+                        stringResource(it),
+                        actions::openChildLimitSettings,
+                        testTag = "child-limit-open",
+                    )
+                }
+            ),
+        dismiss =
+            KitLineAction(
+                stringResource(Res.string.childLimitHide),
+                actions::hideChildLimit,
+                testTag = "child-limit-hide",
+            ),
         liveRegion = false,
     )
 }

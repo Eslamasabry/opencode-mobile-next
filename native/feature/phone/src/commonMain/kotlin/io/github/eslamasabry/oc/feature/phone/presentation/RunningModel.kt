@@ -1,11 +1,14 @@
 package io.github.eslamasabry.oc.feature.phone.presentation
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudget
+import kotlin.math.roundToInt
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import io.github.eslamasabry.oc.core.common.pace.Pacer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,11 +16,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
-import kotlin.time.Clock
-import kotlin.time.Instant
 
-/** One process row. [protectedAs] says why it has no Stop (B-LINUX-143); the words point to This phone. */
+/**
+ * One process row. [protectedAs] says why it has no Stop (B-LINUX-143); the words point to This
+ * phone.
+ */
 public data class ProcessRowUi(
     val pid: Int,
     val name: String,
@@ -25,8 +28,13 @@ public data class ProcessRowUi(
     val cpuPercent: Int?,
     val leftBehind: Boolean,
     val protectedAs: ProcessRole?,
+    val command: io.github.eslamasabry.oc.core.common.Redacted? = null,
+    val memoryBytes: Long? = null,
+    val elapsedSeconds: Long? = null,
+    val stopIdentities: Map<Int, Long> = emptyMap(),
 ) {
-    val stoppable: Boolean get() = protectedAs == null
+    val stoppable: Boolean
+        get() = protectedAs == null
 }
 
 /** PhoneRoute.Running's state (plan 07 F08, merged Linux processes + Running on this phone). */
@@ -42,12 +50,15 @@ public data class RunningUi(
     val confirmStop: ProcessRowUi? = null,
     val stopping: Int? = null,
     val stopFailed: Boolean = false,
+    val selected: ProcessRowUi? = null,
 )
 
 public interface RunningActions {
     public fun shown(visible: Boolean)
 
     public fun retry()
+
+    public fun details(pid: Int)
 
     public fun askStop(pid: Int)
 
@@ -65,8 +76,9 @@ public interface RunningActions {
 }
 
 /**
- * Running on this phone (plan 07 F08): reads every 10 s ([PhoneTimers.runningRefresh]) only while shown, stops one process with a confirm
- * and never offers a protected one, warns from 28 programs, and carries the child-process-limit card (plan 11 §7.2).
+ * Running on this phone (plan 07 F08): reads every 10 s ([PhoneTimers.runningRefresh]) only while
+ * shown, stops one process with a confirm and never offers a protected one, warns from 28 programs,
+ * and carries the child-process-limit card (plan 11 §7.2).
  */
 public class RunningModel(
     private val source: PhoneProcessSource,
@@ -138,25 +150,36 @@ public class RunningModel(
             cpuPercent = p.cpuPercent?.takeIf { it.isFinite() && it >= 0 }?.roundToInt(),
             leftBehind = p.leftBehind,
             protectedAs = p.role.takeIf { it != ProcessRole.Normal },
+            command = p.command,
+            memoryBytes = p.memoryBytes,
+            elapsedSeconds = p.elapsedSeconds,
+            stopIdentities = p.stopIdentities,
         )
+
+    override fun details(pid: Int) {
+        val row = ui.value.rows.firstOrNull { it.pid == pid } ?: return
+        ui.update { it.copy(selected = row) }
+    }
 
     override fun askStop(pid: Int) {
         val row = ui.value.rows.firstOrNull { it.pid == pid } ?: return
         if (!row.stoppable || ui.value.stopping != null) return
-        ui.update { it.copy(confirmStop = row, stopFailed = false) }
+        ui.update { it.copy(confirmStop = row, selected = null, stopFailed = false) }
     }
 
     override fun confirmStop() {
         val row = ui.value.confirmStop ?: return
         ui.update { it.copy(confirmStop = null, stopping = row.pid) }
         scope.launch {
-            val stopped = source.stop(row.pid)
+            val stopped = source.stop(row.pid, row.stopIdentities)
             ui.update { it.copy(stopping = null, stopFailed = stopped is Outcome.Failed) }
             load()
         }
     }
 
-    override fun dismiss(): Unit = ui.update { it.copy(confirmStop = null, stopFailed = false) }
+    override fun dismiss(): Unit = ui.update {
+        it.copy(confirmStop = null, selected = null, stopFailed = false)
+    }
 
     override fun openChildLimitSettings() {
         scope.launch {

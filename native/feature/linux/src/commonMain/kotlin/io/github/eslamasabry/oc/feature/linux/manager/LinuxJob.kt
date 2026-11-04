@@ -1,7 +1,14 @@
 package io.github.eslamasabry.oc.feature.linux.manager
 
 /** How the one long job stands (port of `LinuxJobStatus`). */
-public enum class LinuxJobStatus { None, Running, Done, Failed, Interrupted, TimedOut }
+public enum class LinuxJobStatus {
+    None,
+    Running,
+    Done,
+    Failed,
+    Interrupted,
+    TimedOut,
+}
 
 /** A package (or backup) job as its log tells it (port of `LinuxJobState.fromLog`, B-LINUX-091). */
 public data class LinuxJobState(
@@ -15,11 +22,14 @@ public data class LinuxJobState(
     val exitCode: Int? = null,
     /** The end of the log, for Details. */
     val tail: String = "",
+    val details: io.github.eslamasabry.oc.core.common.Redacted? = null,
 ) {
-    val running: Boolean get() = status == LinuxJobStatus.Running
+    val running: Boolean
+        get() = status == LinuxJobStatus.Running
 
     /** Another task held the slot when the job began. */
-    val wasBusy: Boolean get() = exitCode == 75
+    val wasBusy: Boolean
+        get() = exitCode == 75
 
     public companion object {
         public val None: LinuxJobState = LinuxJobState()
@@ -34,11 +44,18 @@ public data class LinuxJobState(
             for (line in log.split('\n')) {
                 when {
                     line.startsWith("::oc job-exit ") ->
-                        exitCode = line.substring(LinuxPackages.JOB_EXIT_PREFIX.length).trim().toIntOrNull()
+                        exitCode =
+                            line
+                                .substring(LinuxPackages.JOB_EXIT_PREFIX.length)
+                                .trim()
+                                .toIntOrNull()
                     line.startsWith("::oc job ") -> kind = LinuxJobKind.of(line.substring(9).trim())
-                    line.startsWith("::oc names") -> names = line.substring(10).trim().split(' ').filter { it.isNotEmpty() }
+                    line.startsWith("::oc names") ->
+                        names = line.substring(10).trim().split(' ').filter { it.isNotEmpty() }
                     line.startsWith("::oc percent ") ->
-                        line.substring(13).trim().toDoubleOrNull()?.let { percent = kotlin.math.round(it).toInt().coerceIn(0, 100) }
+                        line.substring(13).trim().toDoubleOrNull()?.let {
+                            percent = kotlin.math.round(it).toInt().coerceIn(0, 100)
+                        }
                     line.startsWith("::oc stage ") -> stage = line.substring(11).trim()
                 }
             }
@@ -52,7 +69,15 @@ public data class LinuxJobState(
                     else -> LinuxJobStatus.Interrupted
                 }
             val lines = log.trimEnd().split('\n')
-            return LinuxJobState(kind, names, status, percent, stage, exitCode, lines.takeLast(40).joinToString("\n"))
+            return LinuxJobState(
+                kind,
+                names,
+                status,
+                percent,
+                stage,
+                exitCode,
+                lines.takeLast(40).joinToString("\n"),
+            )
         }
     }
 }

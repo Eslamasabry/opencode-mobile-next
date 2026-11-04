@@ -9,7 +9,9 @@ import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.runtime.procs.PhoneProcessOwner
 import io.github.eslamasabry.oc.engine.runtime.procs.PhoneProcessWatch
 import io.github.eslamasabry.oc.engine.runtime.procs.RunningGroupKind
@@ -47,6 +49,8 @@ import io.github.eslamasabry.oc.ui.words.res.runningPhoneName__search
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneName__signIn
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneName__team
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.sync.Mutex
@@ -54,8 +58,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.seconds
 
 /*
  * BUILD-RUNTIME-B: Running on this phone, for real. Replaces LinuxWiring's empty process reading with the native
@@ -68,20 +70,32 @@ import kotlin.time.Duration.Companion.seconds
 object RuntimeBWiring {
     @Provides
     @SingleIn(AppScope::class)
-    fun phoneProcessSource(app: Application, dispatchers: AppDispatchers, limit: ChildLimitSource, clock: Clock): PhoneProcessSource =
-        NativePhoneProcesses(app, dispatchers.io, limit, clock)
+    fun phoneProcessSource(
+        app: Application,
+        dispatchers: AppDispatchers,
+        limit: ChildLimitSource,
+        clock: Clock,
+        redactor: Redactor,
+    ): PhoneProcessSource = NativePhoneProcesses(app, dispatchers.io, limit, clock, redactor)
 }
 
-/** Reads and stops the app's own processes (port of lib/builtin/phone_processes.dart over the copied native side). */
+/**
+ * Reads and stops the app's own processes (port of lib/builtin/phone_processes.dart over the copied
+ * native side).
+ */
 internal class NativePhoneProcesses(
     private val app: Application,
     private val io: CoroutineDispatcher,
     private val limit: ChildLimitSource,
     private val clock: Clock,
+    private val redactor: Redactor,
 ) : PhoneProcessSource {
     private val linux: BuiltinLinux by lazy { BuiltinLinux.get(app) }
 
-    /** One watch per app, so the heavy history survives between readings; recorded from this lane only. */
+    /**
+     * One watch per app, so the heavy history survives between readings; recorded from this lane
+     * only.
+     */
     private val watch = PhoneProcessWatch()
     private val lane = Mutex()
 
@@ -91,14 +105,31 @@ internal class NativePhoneProcesses(
         val snapshot = ProcessRows.snapshot((table as Outcome.Ok).value)
         val reading = lane.withLock { watch.record(snapshot, clock.now()) }
         val lifted = limit.status().state == ChildLimitState.Lifted
-        return Outcome.Ok(ProcessReading(ProcessRows.rows(reading) { name(it) }, reading.childCount, lifted))
+        return Outcome.Ok(
+            ProcessReading(
+                ProcessRows.rowsWithDetails(reading, { name(it) }, { redactor.details(it) }),
+                reading.childCount,
+                lifted,
+            )
+        )
+    }
+
+    override suspend fun stop(pid: Int, identities: Map<Int, Long>): Outcome<Unit> {
+        if (identities[pid] == null || identities.isEmpty() || identities.values.any { it <= 0 })
+            return Outcome.Failed(Failure.Runtime(RuntimeProblem.OwnershipUnknown))
+        val result = native { linux.stopProcesses(identities.keys.toList(), identities) }
+        if (result is Outcome.Failed) return result
+        val stopped = ((result as Outcome.Ok).value["stopped"] as? List<*>).orEmpty()
+        return if (identities.keys.all { it in stopped }) Outcome.Ok(Unit)
+        else Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
     }
 
     override suspend fun stop(pid: Int): Outcome<Unit> {
         val result = native { linux.stopProcesses(listOf(pid)) }
         if (result is Outcome.Failed) return result
         val stopped = ((result as Outcome.Ok).value["stopped"] as? List<*>).orEmpty()
-        return if (pid in stopped) Outcome.Ok(Unit) else Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+        return if (pid in stopped) Outcome.Ok(Unit)
+        else Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
     }
 
     private suspend fun name(name: RunningProcessName): String =
@@ -137,12 +168,22 @@ internal object ProcessRows {
                         elapsed = ((map["elapsedSeconds"] as? Number)?.toLong() ?: 0L).seconds,
                         owner = PhoneProcessOwner.parse(map["owner"] as? String),
                         session = (map["session"] as? String)?.takeIf { it.isNotEmpty() },
+                        startTicks = (map["startTicks"] as? Number)?.toLong() ?: 0,
                     )
                 },
             orphansReaped = (table["orphansReaped"] as? Number)?.toInt() ?: 0,
         )
 
-    suspend fun rows(reading: RunningReading, name: suspend (RunningProcessName) -> String): List<PhoneProcess> =
+    suspend fun rows(
+        reading: RunningReading,
+        name: suspend (RunningProcessName) -> String,
+    ): List<PhoneProcess> = rowsWithDetails(reading, name) { null }
+
+    suspend fun rowsWithDetails(
+        reading: RunningReading,
+        name: suspend (RunningProcessName) -> String,
+        redact: (String) -> Redacted?,
+    ): List<PhoneProcess> =
         reading.groups.flatMap { group ->
             group.nodes.map { node ->
                 val p = node.process
@@ -159,9 +200,25 @@ internal object ProcessRows {
                         },
                     cpuPercent = p.cpuPercent,
                     leftBehind = node.leftBehind || node.stuck,
+                    command = redact(p.command),
+                    memoryBytes = p.rssBytes.takeIf { it > 0 },
+                    elapsedSeconds = p.elapsed.inWholeSeconds.takeIf { it >= 0 },
+                    stopIdentities = stopTree(reading, p.pid),
                 )
             }
         }
+
+    private fun stopTree(reading: RunningReading, pid: Int): Map<Int, Long> {
+        val all = reading.groups.flatMap { it.nodes }
+        val selected = mutableSetOf(pid)
+        var changed = true
+        while (changed) {
+            changed = false
+            all.forEach { if (it.process.ppid in selected && selected.add(it.pid)) changed = true }
+        }
+        return all.filter { it.pid in selected && it.stoppable && it.process.startTicks > 0 }
+            .associate { it.pid to it.process.startTicks }
+    }
 
     fun kind(group: RunningGroupKind): ProcessKind =
         when (group) {
@@ -169,8 +226,12 @@ internal object ProcessRows {
             RunningGroupKind.ClaudeCode -> ProcessKind.ClaudeCode
             RunningGroupKind.AiTeam -> ProcessKind.AiTeam
             RunningGroupKind.Terminal -> ProcessKind.Terminal
-            RunningGroupKind.AgentHelper, RunningGroupKind.Helpers, RunningGroupKind.Setup -> ProcessKind.Helper
-            RunningGroupKind.LeftBehind, RunningGroupKind.App, RunningGroupKind.Other -> ProcessKind.Other
+            RunningGroupKind.AgentHelper,
+            RunningGroupKind.Helpers,
+            RunningGroupKind.Setup -> ProcessKind.Helper
+            RunningGroupKind.LeftBehind,
+            RunningGroupKind.App,
+            RunningGroupKind.Other -> ProcessKind.Other
         }
 
     /** Flutter `runningPhoneName(kind)`. */

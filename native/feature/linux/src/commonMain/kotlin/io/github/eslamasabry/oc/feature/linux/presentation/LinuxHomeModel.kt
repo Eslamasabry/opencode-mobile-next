@@ -75,6 +75,7 @@ public data class LinuxHomeUi(
     val askingIdleMinutes: Boolean = false,
     val lifetimes: LinuxLifetimesUi = LinuxLifetimesUi(),
     val askingCreateProject: Boolean = false,
+    val vitals: LinuxVitalsUi? = null,
 ) {
     /** The rows that act on Linux are offered only when it answers. */
     val ready: Boolean
@@ -146,6 +147,7 @@ public class LinuxHomeModel(
     private val setupSource: LinuxSetupSource? = null,
     private val idleSource: LinuxIdleSource? = null,
     lifetimesSource: LinuxLifetimesSource? = null,
+    vitalsSource: LinuxVitalsSource? = null,
 ) : LinuxHomeActions {
     private val ui = MutableStateFlow(LinuxHomeUi())
     public val state: StateFlow<LinuxHomeUi> = ui.asStateFlow()
@@ -154,6 +156,22 @@ public class LinuxHomeModel(
     private val lifetimes = lifetimesSource?.let { LinuxLifetimesModel(it, scope) }
 
     init {
+        vitalsSource?.let { source ->
+            scope.launch {
+                visible.collectLatest { shown ->
+                    if (shown) {
+                        suspend fun read() {
+                            when (val result = source.read()) {
+                                is Outcome.Ok -> ui.update { it.copy(vitals = result.value) }
+                                is Outcome.Failed -> Unit
+                            }
+                        }
+                        read()
+                        pacer.ticks(LinuxVitalsTimer).collect { read() }
+                    }
+                }
+            }
+        }
         lifetimes?.let { model ->
             scope.launch {
                 model.state.collect { state -> ui.update { it.copy(lifetimes = state) } }

@@ -39,6 +39,10 @@ public data class LinuxPortsUi(
     val ports: ImmutableList<LinuxPort> = persistentListOf(),
     /** The browser did not open for the preview. */
     val previewFailed: Boolean = false,
+    val selectedPort: Int? = null,
+    val ownerStopAsk: PortOwnerStop? = null,
+    val ownerStopping: Boolean = false,
+    val ownerStopResult: io.github.eslamasabry.oc.engine.runtime.procs.LinuxStopResult? = null,
     val programs: ImmutableList<LocalServerProcess> = persistentListOf(),
     val scanningPrograms: Boolean = false,
     val programsScanned: Boolean = false,
@@ -51,7 +55,17 @@ public data class LinuxPortsUi(
     val logFailed: Boolean = false,
 )
 
+public data class PortOwnerStop(val name: String, val identities: List<String>)
+
 public interface LinuxPortsActions {
+    public fun selectPort(port: Int)
+
+    public fun copyAddress(port: Int)
+
+    public fun askStopOwner(port: Int)
+
+    public fun confirmStopOwner()
+
     public fun shown(visible: Boolean)
 
     public fun retry()
@@ -74,12 +88,14 @@ public class LinuxPortsModel(
     private val opener: PortPreviewOpener,
     private val nav: LinuxNavigator,
     private val scope: CoroutineScope,
+    private val addressCopy: LinuxAddressCopy? = null,
 ) : LinuxPortsActions {
     private val ui = MutableStateFlow(LinuxPortsUi())
     public val state: StateFlow<LinuxPortsUi> = ui.asStateFlow()
     private val detected = manager.developmentServers()
     private var visible = false
     private var generation = 0L
+    private var processScan: io.github.eslamasabry.oc.engine.runtime.procs.LinuxProcessScan? = null
 
     init {
         scope.launch {
@@ -120,8 +136,10 @@ public class LinuxPortsModel(
         val admitted = generation
         scope.launch {
             ui.update { it.copy(loading = true) }
+            val captured = manager.scanProcesses()
             val read = manager.scanPorts()
             if (!visible || admitted != generation) return@launch
+            processScan = (captured as? LinuxAnswer.Ok)?.value
             when (read) {
                 is LinuxAnswer.Ok ->
                     ui.update {
@@ -135,6 +153,49 @@ public class LinuxPortsModel(
                     ui.update { it.copy(loading = false, problem = read.problem) }
             }
             detected.refresh()
+        }
+    }
+
+    override fun selectPort(port: Int) {
+        if (ui.value.ports.any { it.port == port }) ui.update { it.copy(selectedPort = port) }
+    }
+
+    override fun copyAddress(port: Int) {
+        if (ui.value.ports.none { it.port == port }) return
+        val copier = addressCopy ?: return
+        scope.launch {
+            if (copier.copy("http://127.0.0.1:$port/") is Outcome.Failed)
+                ui.update { it.copy(previewFailed = true) }
+        }
+    }
+
+    override fun askStopOwner(port: Int) {
+        if (ui.value.ownerStopping) return
+        val owner = ui.value.ports.firstOrNull { it.port == port }?.owner ?: return
+        val scan = processScan ?: return
+        val process = scan.processes.firstOrNull { it.pid == owner.pid && !it.protected } ?: return
+        val identities = scan.withDescendants(listOf(process)).map { it.identity }
+        if (identities.isEmpty()) return
+        ui.update {
+            it.copy(
+                selectedPort = null,
+                ownerStopAsk = PortOwnerStop(process.programName, identities),
+            )
+        }
+    }
+
+    override fun confirmStopOwner() {
+        val ask = ui.value.ownerStopAsk ?: return
+        if (ui.value.ownerStopping) return
+        ui.update { it.copy(ownerStopAsk = null, ownerStopping = true, ownerStopResult = null) }
+        scope.launch {
+            when (val result = manager.stopIdentities(ask.identities)) {
+                is LinuxAnswer.Ok ->
+                    ui.update { it.copy(ownerStopping = false, ownerStopResult = result.value) }
+                is LinuxAnswer.Problem ->
+                    ui.update { it.copy(ownerStopping = false, problem = result.problem) }
+            }
+            retry()
         }
     }
 
@@ -185,6 +246,9 @@ public class LinuxPortsModel(
         ui.update {
             it.copy(
                 previewFailed = false,
+                selectedPort = null,
+                ownerStopAsk = null,
+                ownerStopResult = null,
                 stopAsk = null,
                 logPid = null,
                 logText = null,

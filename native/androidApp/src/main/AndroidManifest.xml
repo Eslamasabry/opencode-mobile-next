@@ -3,6 +3,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Raw project paths inside selected proot mounts require Android file access. Requested only from a visible folder action. -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
     <!-- Settings › Notifications: Android 13+ lets the app notify only with this declared (P12-SETTINGS). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -18,6 +22,8 @@
     <application
         android:name=".OcApplication"
         android:allowBackup="false"
+        android:manageSpaceActivity=".ManageSpaceActivity"
+        android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="true"
         android:label="@string/app_label_preview"
         android:localeConfig="@xml/locales_config"
@@ -43,6 +49,12 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
+        <activity
+            android:name=".ManageSpaceActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize" />
         <service android:name="io.github.eslamasabry.oc.android.termux.GitRepairResultService" android:exported="false" />
         <!-- Notification buttons (P12-PLATFORM); frozen Flutter FQCNs. Tiles, widgets and the update receiver merge
              from :android:tiles and :android:widgets. -->
