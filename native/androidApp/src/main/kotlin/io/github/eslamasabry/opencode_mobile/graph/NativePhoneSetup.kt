@@ -60,6 +60,7 @@ class NativePhoneSetup(
     private val trace: PerfTrace,
     private val settings: KeepAliveSettings,
     private val switchGate: NativeRuntimeSwitch,
+    private val payloadGuard: PhonePayloadGuard,
 ) : LinuxSetupSource {
     private val serial = dispatchers.serial("phone-setup")
     private val scope = CoroutineScope(appScope.coroutineContext + serial)
@@ -140,7 +141,14 @@ class NativePhoneSetup(
                 admissionState.value = admission
                 if (!admission.supported)
                     return Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
-                return native {
+                // AGENT-2: the payload guard reserves the runtime for this mutation.
+                val reservation =
+                    when (val reserved = payloadGuard.beginMutation(null)) {
+                        is Outcome.Failed -> return reserved
+                        is Outcome.Ok -> reserved.value
+                    }
+                return try {
+                    native {
                     val specs =
                         job.components.map { s ->
                             SetupRunner.Spec(
@@ -169,6 +177,9 @@ class NativePhoneSetup(
                             job.texts.stopped,
                         ),
                     )
+                }
+                } finally {
+                    reservation.release()
                 }
             }
 

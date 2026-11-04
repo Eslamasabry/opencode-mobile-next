@@ -23,11 +23,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * The sign-in terminal's logic (plan 07 G03, plan 17 §1.5 "Sign in"; AGENTS-BACKENDS-13/14), kept out of the
- * ViewModel so it runs on any scope in tests. The agent's own sign-in runs in a visible terminal ([SignInTerminalSession]
- * holds the foreground claim); what it prints becomes "Open sign-in page" and "Copy code"; when it ends the account is
- * read, and it counts as signed in only on a `SignedIn` read. The app never reads, stores or relays the code beyond the
- * sensitive copy the person asks for (owner terms decision 2026-10-05).
+ * The sign-in terminal's logic (plan 07 G03, plan 17 §1.5 "Sign in"; AGENTS-BACKENDS-13/14), kept
+ * out of the ViewModel so it runs on any scope in tests. The agent's own sign-in runs in a visible
+ * terminal ([SignInTerminalSession] holds the foreground claim); what it prints becomes "Open
+ * sign-in page" and "Copy code"; when it ends the account is read, and it counts as signed in only
+ * on a `SignedIn` read. The app never reads, stores or relays the code beyond the sensitive copy
+ * the person asks for (owner terms decision 2026-10-05).
  */
 public class SignInTerminalPresenter(
     private val scope: CoroutineScope,
@@ -55,7 +56,9 @@ public class SignInTerminalPresenter(
     public fun begin() {
         when (val plan = agents.plan(agent)) {
             is SignInPlan.Terminal -> {
-                ui.update { it.copy(agentName = plan.agentName, usesClaudeAccount = plan.usesClaudeAccount) }
+                ui.update {
+                    it.copy(agentName = plan.agentName, usesClaudeAccount = plan.usesClaudeAccount)
+                }
                 when (val built = agents.command(owner, agent)) {
                     is Outcome.Ok -> {
                         command = built.value
@@ -64,8 +67,12 @@ public class SignInTerminalPresenter(
                     is Outcome.Failed -> ui.update { it.copy(step = SignInStep.Unavailable) }
                 }
             }
-            is SignInPlan.ProviderKeyOnHost -> ui.update { it.copy(agentName = plan.agentName, step = SignInStep.ProviderKeyOnHost) }
-            is SignInPlan.NotAvailable -> ui.update { it.copy(agentName = plan.agentName, step = SignInStep.Unavailable) }
+            is SignInPlan.ProviderKeyOnHost ->
+                ui.update {
+                    it.copy(agentName = plan.agentName, step = SignInStep.ProviderKeyOnHost)
+                }
+            is SignInPlan.NotAvailable ->
+                ui.update { it.copy(agentName = plan.agentName, step = SignInStep.Unavailable) }
         }
     }
 
@@ -78,7 +85,9 @@ public class SignInTerminalPresenter(
         checking = false
         val next = SignInTerminalSession(scope, host, foreground)
         session = next
-        ui.update { cleared(it).copy(step = SignInStep.Starting, failureCode = null, stopFailed = false) }
+        ui.update {
+            cleared(it).copy(step = SignInStep.Starting, failureCode = null, stopFailed = false)
+        }
         val states = scope.launch { next.state.collect { onSession(next, it) } }
         val urls = scope.launch { next.openUrls.collect { links.open(it) } }
         sessionWatchers += { states.cancel() }
@@ -94,7 +103,13 @@ public class SignInTerminalPresenter(
             is SignInSessionState.Running -> {
                 watch(now.terminal)
                 if (now.exitCode == null) {
-                    ui.update { it.copy(step = SignInStep.Running, terminal = now.terminal.view, inputEnabled = true) }
+                    ui.update {
+                        it.copy(
+                            step = SignInStep.Running,
+                            terminal = now.terminal.view,
+                            inputEnabled = true,
+                        )
+                    }
                 } else if (!checking) {
                     checking = true
                     ui.update { it.copy(step = SignInStep.Checking, inputEnabled = false) }
@@ -121,19 +136,28 @@ public class SignInTerminalPresenter(
     private fun watch(terminal: TerminalModel) {
         if (terminal === watched) return
         watched = terminal
-        val text =
-            scope.launch {
-                terminal.transcript.collect { transcript ->
-                    found = agents.read(transcript)
-                    ui.update { it.copy(transcript = transcript, canOpenPage = found.page != null, code = found.code) }
+        val text = scope.launch {
+            terminal.transcript.collect { transcript ->
+                found = agents.read(transcript)
+                ui.update {
+                    it.copy(
+                        transcript = transcript,
+                        canOpenPage = found.page != null,
+                        code = found.code,
+                    )
                 }
             }
-        val title = scope.launch { terminal.title.collect { t -> ui.update { it.copy(title = t) } } }
+        }
+        val title = scope.launch {
+            terminal.title.collect { t -> ui.update { it.copy(title = t) } }
+        }
         terminalWatchers += { text.cancel() }
         terminalWatchers += { title.cancel() }
     }
 
-    /** Reads the account; the claim is held through the read and released after it (B-LINUX-096). */
+    /**
+     * Reads the account; the claim is held through the read and released after it (B-LINUX-096).
+     */
     private suspend fun check(owned: SignInTerminalSession, stopFirst: Boolean) {
         if (stopFirst && owned.end() is Outcome.Failed) {
             checking = false
@@ -143,13 +167,18 @@ public class SignInTerminalPresenter(
         ui.update { it.copy(step = SignInStep.Checking, inputEnabled = false) }
         val signedIn = agents.confirmSignedIn(owner, agent)
         val stopped = stopFirst || owned.end() is Outcome.Ok
-        ui.update { it.copy(step = if (signedIn) SignInStep.SignedIn else SignInStep.NotYet, stopFailed = !stopped) }
+        ui.update {
+            it.copy(
+                step = if (signedIn) SignInStep.SignedIn else SignInStep.NotYet,
+                stopFailed = !stopped,
+            )
+        }
     }
 
     override fun openSignInPage() {
         val page = found.page ?: return
-        if (ui.value.terminal == null) return
-        scope.launch { links.open(page) }
+        if (ui.value.terminal == null || session?.canOpenLinks != true) return
+        scope.launch { if (session?.canOpenLinks == true) links.open(page) }
     }
 
     override fun copyCode() {
@@ -194,6 +223,13 @@ public class SignInTerminalPresenter(
             }
             onLeave()
         }
+    }
+
+    /** Host-owned cleanup survives a ViewModel being removed while native admission is pending. */
+    public suspend fun close(): io.github.eslamasabry.oc.core.common.Outcome<Unit> {
+        stop(sessionWatchers)
+        stop(terminalWatchers)
+        return session?.end() ?: io.github.eslamasabry.oc.core.common.Outcome.Ok(Unit)
     }
 
     private fun cleared(now: SignInTerminalUi): SignInTerminalUi =

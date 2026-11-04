@@ -68,7 +68,13 @@ internal class Oc2Gateway(
     IntegrationCredentialGateway,
     IntegrationCommandGateway,
     IntegrationAuthRecoveryGateway,
-    ApiRouteGateway {
+    ApiRouteGateway,
+    SessionCreationGateway,
+    WorktreeInspectionGateway {
+    // AGENT-2: worktree inspection reads (WorktreeInspectionGateway). Its MCP calls are served once
+    // by PROTO's Oc2Library and SEC-2's integrations below.
+    private val inspection = Oc2WorktreeInspection(this)
+
     // STATE: the safe setup summary of the current location (beside PROTO's pinned inspector below).
     override suspend fun inspectSetup(): Outcome<SetupInspection> = Oc2SetupSnapshot.read(this, redactor)
 
@@ -747,6 +753,23 @@ internal class Oc2Gateway(
             obj.str("version") != null
     }
 
+    override suspend fun inspectionProject(location: ServerLocation): Outcome<WorkspaceProject?> =
+        inspection.inspectionProject(location)
+
+    override suspend fun inspectionWorktrees(
+        projectId: String
+    ): Outcome<ImmutableList<WorktreeInfo>> = inspection.inspectionWorktrees(projectId)
+
+    override suspend fun inspectionChanges(
+        location: ServerLocation
+    ): Outcome<ImmutableList<VersionControlFile>> = inspection.inspectionChanges(location)
+
+    override suspend fun inspectionSessions(
+        cursor: String?,
+        limit: Int,
+        includeArchived: Boolean,
+    ): Outcome<ServerPage<Session>> = inspection.inspectionSessions(cursor, limit, includeArchived)
+
     override suspend fun sessionPage(cursor: String?, limit: Int): Outcome<ServerPage<Session>> =
         read(
             "/session",
@@ -787,6 +810,49 @@ internal class Oc2Gateway(
         ) {
             sessionValue(data(it))
         }
+
+    override fun newSessionCreationId(): SessionId = SessionId(ids.session())
+
+    override suspend fun createSessionWithId(
+        id: SessionId,
+        location: ServerLocation,
+    ): Outcome<SessionId> {
+        if (!id.raw.startsWith("ses_") || !Oc2ClientIds.isClientId(id.raw))
+            return Failure.Rejected(400).failed()
+        return when (
+            val answer =
+                json(
+                    "/session",
+                    HttpMethod.Post,
+                    buildJsonObject {
+                        put("id", id.raw)
+                        if (location.directory != null || location.workspace != null)
+                            put(
+                                "location",
+                                buildJsonObject {
+                                    location.directory?.let { put("directory", it) }
+                                    location.workspace?.let { put("workspaceID", it) }
+                                },
+                            )
+                    },
+                )
+        ) {
+            is Outcome.Failed -> answer
+            is Outcome.Ok -> {
+                val admitted = sessionValue(data(answer.value))?.id
+                if (admitted == id) admitted.ok() else Failure.UnreadableReply().failed()
+            }
+        }
+    }
+
+    override suspend fun lookupCreatedSession(id: SessionId): Outcome<Boolean> {
+        if (!id.raw.startsWith("ses_") || !Oc2ClientIds.isClientId(id.raw))
+            return Failure.Rejected(400).failed()
+        return when (val found = session(id)) {
+            is Outcome.Ok -> (found.value.id == id).ok()
+            is Outcome.Failed -> if (found.failure is Failure.NotFound) false.ok() else found
+        }
+    }
 
     override suspend fun session(id: SessionId): Outcome<Session> =
         read("/session/${sid(id)}") { sessionValue(data(it)) }
@@ -1331,6 +1397,9 @@ internal class Oc2Gateway(
     override suspend fun selectTerminalShell(value: String): Outcome<Unit> =
         Oc2HostTools(this, location.value).selectShell(value)
 
+    // AGENT-2: the setup review's raw config sources (SetupInspectionGateway, one interface).
+    override suspend fun setupConfigSources(): Outcome<JsonObject> = readSetupSources(redactor)
+
     internal fun locationQuery(at: ServerLocation = location.value): Map<String, String?> =
         mapOf(
             "location[directory]" to at.directory,
@@ -1849,6 +1918,7 @@ internal class Oc2Gateway(
                 worktreeReset = false,
                 worktreeCreate = true,
                 worktreeBrowsing = false,
+                worktreeInspection = true,
                 legacyQuestionRequests = false,
                 forms = false,
                 inbox = false,

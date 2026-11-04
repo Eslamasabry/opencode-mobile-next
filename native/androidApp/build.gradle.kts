@@ -167,6 +167,18 @@ dependencies {
             ":android:terminal",
             ":feature:terminal",
             ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
+            ":engine:integrations-catalog",
+            ":feature:integrations-catalog",
+            ":feature:setupreview",
+            ":feature:agenttools",
+            ":feature:widgetactions",
+            ":feature:monitor",
+            ":protocol:codex",
+            ":feature:codexprobe",
+            ":feature:handoff",
+            ":android:terminal",
+            ":engine:integrations-quota",
+            ":engine:setupassist",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

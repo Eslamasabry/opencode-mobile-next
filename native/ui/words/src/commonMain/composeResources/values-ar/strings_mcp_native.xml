@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mcpNativeTitle">دليل الموصلات</string>
+    <string name="mcpNativeConsent">تصفّح سجل MCP العام. لن يُرسل بحثك إلى السجل إلا بعد تفعيل هذه الميزة.</string>
+    <string name="mcpNativeTurnOn">تفعيل</string>
+    <string name="mcpNativeTurnOff">إيقاف الدليل</string>
+    <string name="mcpNativeRefresh">تحديث</string>
+    <string name="mcpNativeSearch">البحث عن موصلات</string>
+    <string name="mcpNativeEmpty">لم يتم العثور على موصلات.</string>
+    <string name="mcpNativeLoadFailed">تعذّر التحديث. تُعرض القوائم المحفوظة إن توفرت.</string>
+    <string name="mcpNativeUnsupported">لا يتيح هذا الاتصال إضافة موصلات. يمكنك مراجعة القوائم.</string>
+    <string name="mcpNativeReview">مراجعة الموصل</string>
+    <string name="mcpNativeRuntimeOnly">ستُضاف هذه الوصلة إلى المشروع حتى إعادة تشغيل الخادم. راجع العنوان أو الأمر أولاً.</string>
+    <string name="mcpNativeAdd">إضافة موصل</string>
+    <string name="mcpNativeAdded">يُدرج الخادم هذا الموصل. لم يتأكد توفر أدواته بعد.</string>
+    <string name="mcpNativeCheck">التحقق من الاتصال</string>
+    <string name="mcpNativeAddUncertain">تعذّر تأكيد الإضافة. تحقّق من الاتصال قبل المحاولة مجددًا.</string>
+    <string name="mcpNativeConflict">يوجد موصل بهذا الاسم. اختر اسمًا آخر.</string>
+    <string name="mcpNativeName">الاسم</string>
+    <string name="mcpNativeAddress">العنوان</string>
+    <string name="mcpNativeCommand">الأمر</string>
+    <string name="mcpNativeNeedsSettings">تحتاج هذه القائمة إلى تفاصيل اتصال أو مُعاملات أمر إضافية. أعدّها يدويًا على الخادم.</string>
+    <string name="mcpNativeNotAddable">لا يمكن إضافة هذه القائمة من الدليل.</string>
+    <string name="mcpNativeBack">رجوع</string>
+    <string name="mcpNativeSaveFailed">تعذّر حفظ تفضيل الدليل. حاول مجددًا.</string>
+    <string name="mcpNativeSourceChanged">تغيّر الاتصال. أعد فتح الدليل.</string>
+    <string name="mcpNativeToolsReady">أدوات الموصل جاهزة للدور التالي.</string>
+    <string name="mcpNativeSignIn">تسجيل الدخول إلى الموصل</string>
+    <string name="mcpNativeCode">رابط العودة أو الرمز</string>
+    <string name="mcpNativeFinishSignIn">إكمال تسجيل الدخول</string>
+    <string name="mcpNativeCancelSignIn">إلغاء تسجيل الدخول</string>
+</resources>

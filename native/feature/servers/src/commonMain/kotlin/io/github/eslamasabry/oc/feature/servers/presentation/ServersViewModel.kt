@@ -23,10 +23,12 @@ import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.McpCatalogRoute
 import io.github.eslamasabry.oc.ui.routes.PairingRoute
 import io.github.eslamasabry.oc.ui.routes.PlansRoute
 import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
+import io.github.eslamasabry.oc.ui.routes.SetupReviewRoute
 import io.github.eslamasabry.oc.ui.routes.UsageRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -181,6 +183,24 @@ public class ServersViewModel(
         nav.open(io.github.eslamasabry.oc.ui.routes.IntegrationsRoute)
     }
 
+    override fun openConnectorCatalog(id: ProfileId) {
+        val location = connections.currentLocation(id)
+        nav.open(McpCatalogRoute(id, location?.directory, location?.workspace))
+    }
+
+    override fun openSetupReview(id: ProfileId) {
+        val location = connections.currentLocation(id)
+        nav.open(SetupReviewRoute(id, location?.directory, location?.workspace))
+    }
+
+    override fun openAgentTools(id: ProfileId) =
+        nav.open(io.github.eslamasabry.oc.ui.routes.AgentToolsRoute(id))
+
+    override fun openMonitor(id: ProfileId) =
+        nav.open(io.github.eslamasabry.oc.ui.routes.MonitorRoute(id))
+
+    override fun openCodexProbe() = nav.open(io.github.eslamasabry.oc.ui.routes.CodexProbeRoute())
+
     private var consentAddress: String? = null
 
     override fun allowCleartext(allowed: Boolean, address: String) {
@@ -233,16 +253,42 @@ public class ServersViewModel(
         }
     }
 
-    override fun create(id: ProfileId) = operation {
-        when (val connected = connections.connect(id)) {
-            is Outcome.Ok -> createNow(id)
-            is Outcome.Failed -> failed(ServerIssue.ConnectFailed, connected.failure)
+    override fun create(id: ProfileId) {
+        // Every explicit New chat gets its own saved route owner. A retry stays on that route.
+        if (route == null) {
+            if (!local.value.busy && !connections.busy.value && nav.top.value !is ChatsRoute.New)
+                nav.open(ChatsRoute.New(id))
+            return
+        }
+        operation {
+            when (val connected = connections.connect(id)) {
+                is Outcome.Ok -> createNow(id)
+                is Outcome.Failed -> failed(ServerIssue.ConnectFailed, connected.failure)
+            }
         }
     }
 
     private suspend fun createNow(id: ProfileId) {
-        when (val result = connections.createConversation(id)) {
+        val owner = route ?: return
+        // Save the chosen profile in navigation before dispatch. Restore cannot retarget the
+        // same command to a newly active server when the original chooser had profile=null.
+        if (owner.profile == null) {
+            if (nav.top.value == owner) {
+                nav.back()
+                nav.open(owner.copy(profile = id))
+            }
+            return
+        }
+        if (owner.profile != id) {
+            failed(
+                ServerIssue.CreateFailed,
+                Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope),
+            )
+            return
+        }
+        when (val result = connections.createConversation(id, owner.commandId, owner.tabId)) {
             is Outcome.Ok -> {
+                if (nav.top.value != owner) return
                 // The chooser is done: Back from the new chat returns to where New chat was tapped.
                 if (route != null && nav.top.value == route) nav.back()
                 nav.openChat(result.value, focusComposer = true)

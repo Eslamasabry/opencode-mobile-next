@@ -85,6 +85,7 @@ class AppPhoneAgents(
     private val setupJobs: NativeAgentSetupJobs,
     private val registry: ConnectionRegistry,
     private val redactor: Redactor,
+    private val payloads: PhonePayloadGuard,
 ) : PhoneAgents, ProfileCloser {
     override val owner: String = ":engine:agents:auth"
     private val admission = Any()
@@ -306,7 +307,21 @@ class AppPhoneAgents(
         }
     }
 
-    override suspend fun remove(id: String): Outcome<PhoneAgentRemoval> = lane.withLock {
+    override suspend fun remove(id: String): Outcome<PhoneAgentRemoval> {
+        val mutation =
+            when (val claim = payloads.beginMutation(ownerId())) {
+                is Outcome.Failed ->
+                    return Outcome.Ok(PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Busy))
+                is Outcome.Ok -> claim.value
+            }
+        try {
+            return removeLocked(id)
+        } finally {
+            mutation.release()
+        }
+    }
+
+    private suspend fun removeLocked(id: String): Outcome<PhoneAgentRemoval> = lane.withLock {
         val owner =
             try {
                 (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value

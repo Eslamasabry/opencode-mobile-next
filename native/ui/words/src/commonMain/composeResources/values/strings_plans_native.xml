@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quotaCollectorService">Reading plan usage</string>
+    <string name="plansNativeCollectors">Read plan limits</string>
+    <string name="plansNativeCollectorOn">Reading is on</string>
+    <string name="plansNativeCollectorOff">Reading is off</string>
+    <string name="plansNativeCollectorSetup">Set up reading on this phone</string>
+    <string name="plansNativeCollectorRemote">Allow reading from this server</string>
+    <string name="plansNativeCollectorWorking">Updating plan reading</string>
+    <string name="plansNativeCollectorFailed">Plan reading could not be changed. Check the server and try again.</string>
+    <string name="plansNativeAlerts">Plan limit alerts</string>
+    <string name="plansNativeAlertsBody">Alert when a readable plan reaches its selected level. Remote reading still needs your permission.</string>
+    <string name="plansNativeSetupQuestion">Set up plan reading on %1$s?</string>
+    <string name="plansNativeRemoteQuestion">Allow plan reading from %1$s?</string>
+    <string name="plansNativeOffQuestion">Turn off plan reading on %1$s?</string>
+    <string name="plansNativeSetupBody">The app installs its plan reader inside In-app Ubuntu. Provider credentials stay on the phone.</string>
+    <string name="plansNativeRemoteBody">Read plan limits from the collector already installed on this server. This permission applies only to this server and the provider accounts it reports.</string>
+    <string name="plansNativeOffBody">Stop reading this source and remove its reading permission. Provider sign-ins are kept.</string>
+    <string name="plansNativeSetUp">Set up reading</string>
+    <string name="plansNativeAllow">Allow reading</string>
+    <string name="plansNativeTurnOff">Turn off reading</string>
+    <string name="plansNativeCancel">Cancel</string>
+</resources>

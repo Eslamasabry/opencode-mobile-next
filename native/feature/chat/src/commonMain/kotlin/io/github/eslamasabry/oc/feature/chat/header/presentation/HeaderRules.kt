@@ -48,6 +48,8 @@ public object HeaderRules {
         buildList {
             add(HeaderAction.Find)
             add(HeaderAction.Details)
+            add(HeaderAction.CardsSettings)
+            add(HeaderAction.AgentHandoff)
             if (caps.sessionShare) add(if (shared) HeaderAction.Unshare else HeaderAction.Share)
             if (caps.sessionFork) add(HeaderAction.Fork)
             add(HeaderAction.Rename)
@@ -56,6 +58,7 @@ public object HeaderRules {
             if (caps.cliSessionResume) add(HeaderAction.ContinueOnComputer)
             if (caps.agentHandoffFiles) add(HeaderAction.Handoff)
             if (caps.sessionImportExport) add(HeaderAction.ImportConversation)
+            if (caps.agentFeatures) add(HeaderAction.AgentOptions)
             add(HeaderAction.CopyTranscript)
             if (caps.sessionArchive) add(HeaderAction.Archive)
             if (caps.sessionDelete) add(HeaderAction.Delete)

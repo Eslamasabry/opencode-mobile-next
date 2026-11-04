@@ -56,10 +56,12 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
+import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupNoServerAnswer
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairAddressUnusable
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairTestFailed
+import io.github.eslamasabry.oc.ui.words.res.codexNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
 import io.github.eslamasabry.oc.ui.words.res.e7SetupRefused
 import io.github.eslamasabry.oc.ui.words.res.e7SetupTimeout
@@ -78,6 +80,8 @@ import io.github.eslamasabry.oc.ui.words.res.monitorServerUnavailable
 import io.github.eslamasabry.oc.ui.words.res.monitorServerWaiting
 import io.github.eslamasabry.oc.ui.words.res.monitorServerWifi
 import io.github.eslamasabry.oc.ui.words.res.monitorServerWifiRequired
+import io.github.eslamasabry.oc.ui.words.res.mcpNativeTitle
+import io.github.eslamasabry.oc.ui.words.res.monitorNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
@@ -128,6 +132,7 @@ import io.github.eslamasabry.oc.ui.words.res.tailscaleTitle
 import io.github.eslamasabry.oc.ui.words.res.stateDemoTryOffline
 import io.github.eslamasabry.oc.ui.words.res.stateServerSchedules
 import io.github.eslamasabry.oc.ui.words.res.stateSetupTitle
+import io.github.eslamasabry.oc.ui.words.res.setupNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
@@ -354,6 +359,30 @@ public fun ServersScreen(
                             enabled = enabled,
                         )
                         KitButton(
+                            stringResource(Res.string.mcpNativeTitle),
+                            { actions.openConnectorCatalog(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.setupNativeTitle),
+                            { actions.openSetupReview(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.agentToolsTitle),
+                            { actions.openAgentTools(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.monitorNativeTitle),
+                            { actions.openMonitor(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                        KitButton(
                             stringResource(Res.string.serversRemove),
                             { removing = server.id },
                             role = KitButtonRole.Tertiary,
@@ -452,6 +481,11 @@ public fun ServersScreen(
             KitButton(
                 stringResource(Res.string.usageTabPlans),
                 actions::openPlans,
+                role = KitButtonRole.Secondary,
+            )
+            KitButton(
+                stringResource(Res.string.codexNativeTitle),
+                actions::openCodexProbe,
                 role = KitButtonRole.Secondary,
             )
             KitText(stringResource(Res.string.serversAdd))

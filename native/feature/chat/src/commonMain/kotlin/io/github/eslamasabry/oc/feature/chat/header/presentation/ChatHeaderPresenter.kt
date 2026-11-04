@@ -112,7 +112,7 @@ public class ChatHeaderPresenter(
                 m ->
                 ServerSide(t, c, f, tr, m)
             }
-        return combine(serverSide, local) { s, l ->
+        return combine(serverSide, local, world.readOnly) { s, l, _ ->
                 present(s.title, s.caps, s.facts, s.transcript, s.models, l)
             }
             .stateIn(scope, started, current())
@@ -221,7 +221,18 @@ public class ChatHeaderPresenter(
             title = title,
             serverName = facts.serverName,
             projectName = project,
-            menu = HeaderRules.menu(caps, shared = facts.shareUrl != null),
+            menu =
+                HeaderRules.menu(caps, shared = facts.shareUrl != null)
+                    .filter {
+                        world.readOnly.value == null ||
+                            it in
+                                setOf(
+                                    HeaderAction.Find,
+                                    HeaderAction.Details,
+                                    HeaderAction.CopyTranscript,
+                                )
+                    }
+                    .toImmutableList(),
             menuOpen = l.menuOpen,
             hasPrompt = transcript.rows.any { it is PromptRow },
             sheet = sheet,
@@ -269,6 +280,14 @@ public class ChatHeaderPresenter(
     override fun choose(action: HeaderAction) {
         local.update { it.copy(menuOpen = false) }
         when (action) {
+            HeaderAction.AgentHandoff ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.AgentHandoffRoute(ref))
+            HeaderAction.CardsSettings ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute)
+            HeaderAction.AgentOptions ->
+                nav.open(
+                    io.github.eslamasabry.oc.ui.routes.AgentToolsRoute(ref.profileId, ref.sessionId)
+                )
             HeaderAction.Find -> Unit // the chat screen's own find bar
             HeaderAction.Details -> {
                 local.update { it.copy(sheet = SheetKind.Details) }

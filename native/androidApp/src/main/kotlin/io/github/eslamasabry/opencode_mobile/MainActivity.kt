@@ -15,10 +15,12 @@ import io.github.eslamasabry.oc.ui.kit.content.terminal.AndroidKitTerminalSlot
 import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalSlot
 import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
+import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.shell.App
 import io.github.eslamasabry.opencode_mobile.graph.AppLocale
 import io.github.eslamasabry.opencode_mobile.graph.MigrationRoot
+import io.github.eslamasabry.opencode_mobile.graph.ProviderLogoGraph
 import io.github.eslamasabry.opencode_mobile.graph.SettingsAppGraph
 import io.github.eslamasabry.opencode_mobile.graph.appGraph
 import io.github.eslamasabry.opencode_mobile.graph.migration
@@ -59,6 +61,7 @@ class MainActivity : ComponentActivity() {
             CompositionLocalProvider(
                 LocalKitSecretSink provides KitSecretSink(graph.redactor::registerSecret),
                 LocalKitTerminalSlot provides AndroidKitTerminalSlot,
+                LocalKitLogoLoader provides (graph as ProviderLogoGraph).kitLogoLoader,
             ) {
                 MigrationRoot(graph.migration, graph.shell.navigator, platform) {
                     App(

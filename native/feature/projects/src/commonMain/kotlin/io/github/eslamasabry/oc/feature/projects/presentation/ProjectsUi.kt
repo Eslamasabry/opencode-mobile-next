@@ -131,9 +131,10 @@ public data class ProjectPageUi(
     val isolatedDraftFailed: Boolean = false,
     val confirmRemoveCopy: Boolean = false,
     val isolatedDetails: io.github.eslamasabry.oc.core.common.Redacted? = null,
+    val workspace: ProjectWorkspaceUi = ProjectWorkspaceUi(),
 )
 
-public interface ProjectPageActions {
+public interface ProjectPageActions : ProjectWorkspaceActions {
     public fun refreshCopies() {}
 
     public fun openCopy(directory: String) {}

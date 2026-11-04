@@ -70,6 +70,7 @@ public data class BasicComposerUi(
     val fileMatches: List<String> = emptyList(),
     /** The extra ways to attach this platform offers besides the document picker. */
     val attachKinds: Set<AttachKind> = emptySet(),
+    val readOnly: io.github.eslamasabry.oc.feature.chat.world.ReadOnlyChat? = null,
 ) {
     override fun toString(): String =
         "BasicComposerUi(available=$available, sending=$sending, steers=$steers, draft=$draft, " +
@@ -85,6 +86,8 @@ public interface BasicComposerActions {
     public suspend fun send(text: String): Boolean
 
     public fun retrySave() {}
+
+    public fun openParent() {}
 
     public suspend fun sendAgain(text: String, expectedRevision: Long): Boolean = false
 
@@ -176,6 +179,7 @@ public class BasicComposerViewModel(
     private val attachSources: Set<ComposerAttachSource> = emptySet(),
     private val appCommands: Set<ComposerAppCommands> = emptySet(),
     private val histories: Set<ComposerHistory> = emptySet(),
+    private val navigator: io.github.eslamasabry.oc.ui.routes.AppNavigator? = null,
 ) : ViewModel(), BasicComposerActions {
     private val profileId = ProfileId(target.profileId)
     private val query = MutableStateFlow<ComposerQuery?>(null)
@@ -252,11 +256,17 @@ public class BasicComposerViewModel(
                         world.capabilities,
                         sending,
                         world.load,
-                        world.draft,
-                    ) { t, caps, inFlight, load, draft ->
+                        combine(world.draft, world.readOnly) { draft, readOnly ->
+                            draft to readOnly
+                        },
+                    ) { t, caps, inFlight, load, draftAndMode ->
+                        val (draft, readOnly) = draftAndMode
                         BasicComposerUi(
+                            readOnly = readOnly,
                             available =
-                                load is io.github.eslamasabry.oc.feature.chat.world.ChatLoad.Live &&
+                                readOnly == null &&
+                                    load is
+                                        io.github.eslamasabry.oc.feature.chat.world.ChatLoad.Live &&
                                     draft.ready &&
                                     draft.failure == null &&
                                     !draft.sendBlocked,
@@ -445,7 +455,12 @@ public class BasicComposerViewModel(
     private fun busy(): Boolean =
         sending.value || pickingFile.value || committingFiles.value || selectingModel.value
 
+    override fun openParent() {
+        world?.readOnly?.value?.parent?.let { navigator?.openChat(it) }
+    }
+
     override suspend fun send(text: String): Boolean {
+        if (world?.readOnly?.value != null) return false
         val w = world ?: return false
         if (busy()) return false
         if (!SendGate.accepts(state.value.copy(sending = sending.value), text)) return false

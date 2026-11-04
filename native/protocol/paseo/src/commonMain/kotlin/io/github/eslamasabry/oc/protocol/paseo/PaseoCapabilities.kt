@@ -13,6 +13,8 @@ public object PaseoCapabilities {
     public val Base: ServerCapabilities = ServerCapabilities(
         scheduledPrompts = true,
         hostAgentProviders = true,
+        // AGENT-2: agent options, tools, import and host update (gateway/PaseoAgentTools.kt).
+        agentFeatures = true,
         hostAgentPermissionActions = true,
         promptImagesOnly = true,
         promptEchoTextOnly = true,

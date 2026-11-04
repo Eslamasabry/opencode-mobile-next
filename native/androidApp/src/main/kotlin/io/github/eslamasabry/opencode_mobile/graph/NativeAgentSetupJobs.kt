@@ -54,6 +54,7 @@ class NativeAgentSetupJobs(
     private val app: Application,
     private val stores: PreviewStores,
     private val dispatchers: AppDispatchers,
+    private val payloads: PhonePayloadGuard,
 ) : AgentSetupJobs, ProfileCloser {
     override val owner: String = ":engine:agents"
     private val denied = ConcurrentHashMap.newKeySet<ProfileId>()
@@ -137,14 +138,23 @@ class NativeAgentSetupJobs(
                 )
             }
             // Deletion revokes and drains the same admission lock before the profile sweep.
-            synchronized(admission) {
-                check(admitted(owner)) { "unavailable" }
-                runner.start(
-                    "agent-${UUID.randomUUID()}",
-                    specs,
-                    JSONObject().put("agentOwner", owner.raw).put("agentId", agent.raw),
-                    texts,
-                )
+            val mutation =
+                when (val claim = payloads.beginMutation(owner)) {
+                    is Outcome.Failed -> error("busy")
+                    is Outcome.Ok -> claim.value
+                }
+            try {
+                synchronized(admission) {
+                    check(admitted(owner)) { "unavailable" }
+                    runner.start(
+                        "agent-${UUID.randomUUID()}",
+                        specs,
+                        JSONObject().put("agentOwner", owner.raw).put("agentId", agent.raw),
+                        texts,
+                    )
+                }
+            } finally {
+                mutation.release()
             }
         }
     }

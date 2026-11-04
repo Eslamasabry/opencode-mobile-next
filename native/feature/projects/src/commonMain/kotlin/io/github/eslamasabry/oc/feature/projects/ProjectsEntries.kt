@@ -13,25 +13,42 @@ import io.github.eslamasabry.oc.feature.projects.presentation.ProjectPageViewMod
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsPickerViewModel
 import io.github.eslamasabry.oc.feature.projects.ui.ProjectPageScreen
 import io.github.eslamasabry.oc.feature.projects.ui.ProjectsPickerScreen
+import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.DevServicesRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 
-/** The EntryInstaller; the ONLY file in the module that imports androidx.navigation3.runtime (Konsist K1). */
+/**
+ * The EntryInstaller; the ONLY file in the module that imports androidx.navigation3.runtime
+ * (Konsist K1).
+ */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class ProjectsEntries(private val navigator: AppNavigator) : EntryInstaller {
+public class ProjectsEntries(
+    private val navigator: AppNavigator,
+    private val chatEnvironment: KitChatEnvironment,
+) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ProjectsRoute.Picker> { route ->
-            val vm = assistedMetroViewModel<ProjectsPickerViewModel, ProjectsPickerViewModel.Factory> { create(route) }
+            val vm =
+                assistedMetroViewModel<ProjectsPickerViewModel, ProjectsPickerViewModel.Factory> {
+                    create(route)
+                }
             val state by vm.state.collectAsStateWithLifecycle()
             ProjectsPickerScreen(state, vm)
         }
         entry<ProjectsRoute.Project> { route ->
-            val vm = assistedMetroViewModel<ProjectPageViewModel, ProjectPageViewModel.Factory> { create(route) }
+            val vm =
+                assistedMetroViewModel<ProjectPageViewModel, ProjectPageViewModel.Factory> {
+                    create(route)
+                }
             val state by vm.state.collectAsStateWithLifecycle()
-            ProjectPageScreen(state, vm) { navigator.open(DevServicesRoute.Home(route.profile, route.directory)) }
+            chatEnvironment.Provide {
+                ProjectPageScreen(state, vm) {
+                    navigator.open(DevServicesRoute.Home(route.profile, route.directory))
+                }
+            }
         }
     }
 }

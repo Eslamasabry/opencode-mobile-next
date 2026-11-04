@@ -6,18 +6,25 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
-// The seams the sign-in terminal (plan 07 G03, plan 17 §1.5 "Sign in", AGENTS-BACKENDS-13/14) needs. Each mirrors an
-// engine contract that does not compile or exist yet in this tree; the binding above both adapts one to the other.
-//   - TerminalHost / TerminalTarget / TerminalModel: plan 17 §2.6 (owner :engine:project, frozen in contracts/s3.md).
+// The seams the sign-in terminal (plan 07 G03, plan 17 §1.5 "Sign in", AGENTS-BACKENDS-13/14)
+// needs. Each mirrors an
+// engine contract that does not compile or exist yet in this tree; the binding above both adapts
+// one to the other.
+//   - TerminalHost / TerminalTarget / TerminalModel: plan 17 §2.6 (owner :engine:project, frozen in
+// contracts/s3.md).
 //     TODO(S3-TERMMIN → :engine:project): replace with the engine's types when they land.
-//   - SignInAgents: :engine:agents AgentSignIn + SignInOutputReader + AgentAuth (S3-AGENTSE), which uses Failure.Net and
+//   - SignInAgents: :engine:agents AgentSignIn + SignInOutputReader + AgentAuth (S3-AGENTSE), which
+// uses Failure.Net and
 //     does not compile on the flat core contract until INTEGRATE-W2.
 //   - SignInForeground: plan 11 §9.1 ForegroundWork.begin(SignIn) (W11-09).
 //   - SignInLinks: ExternalLinkPolicy → ExternalLinkOpener (16 SI-1, CR11-14).
 
 /** The phone's terminal sessions (plan 17 §2.6). Sessions belong to the host, not a screen. */
 public interface TerminalHost {
-    /** Opens [target] on a new PTY. Returns once the native side named the session; a failure carries no CLI text. */
+    /**
+     * Opens [target] on a new PTY. Returns once the native side named the session; a failure
+     * carries no CLI text.
+     */
     public suspend fun open(target: TerminalTarget): Outcome<TerminalModel>
 }
 
@@ -29,7 +36,10 @@ public sealed interface TerminalTarget {
 
 /** One live terminal (plan 17 §2.6, plus the event stream of plan 11 W11-08a). */
 public interface TerminalModel {
-    /** The live grid (a Termux `TerminalView` on Android); only kit `androidMain` touches its `native` value. */
+    /**
+     * The live grid (a Termux `TerminalView` on Android); only kit `androidMain` touches its
+     * `native` value.
+     */
     public val view: PlatformViewHandle
     public val title: StateFlow<String>
 
@@ -43,12 +53,18 @@ public interface TerminalModel {
 
     public suspend fun resize(cols: Int, rows: Int)
 
-    /** Stops the program and removes this exact session. A failed drain keeps it; calling again retries the same id. */
+    /**
+     * Stops the program and removes this exact session. A failed drain keeps it; calling again
+     * retries the same id.
+     */
     public suspend fun close(): Outcome<Unit>
 }
 
 public sealed interface TerminalEvent {
-    /** The guest's stand-in `xdg-open` asked for [url] (`<home>/.oc-open-url`). Opened only through the link policy. */
+    /**
+     * The guest's stand-in `xdg-open` asked for [url] (`<home>/.oc-open-url`). Opened only through
+     * the link policy.
+     */
     public class OpenUrl(public val url: String) : TerminalEvent {
         override fun toString(): String = "OpenUrl(•••)"
     }
@@ -58,9 +74,10 @@ public sealed interface TerminalEvent {
 }
 
 /**
- * The guest command a sign-in terminal runs (mirror of `:engine:agents` `GuestCommand`): an allowlisted [program] with
- * at most five short arguments, a private [home] and its environment. Built only by the agents engine
- * (`AgentHost.signInCommand`); `toString` never prints the environment.
+ * The guest command a sign-in terminal runs (mirror of `:engine:agents` `GuestCommand`): an
+ * allowlisted [program] with at most five short arguments, a private [home] and its environment.
+ * Built only by the agents engine (`AgentHost.signInCommand`); `toString` never prints the
+ * environment.
  */
 public class SignInCommand(
     public val program: String,
@@ -69,9 +86,14 @@ public class SignInCommand(
     public val home: String = "",
 ) {
     override fun equals(other: Any?): Boolean =
-        other is SignInCommand && other.program == program && other.args == args && other.env == env && other.home == home
+        other is SignInCommand &&
+            other.program == program &&
+            other.args == args &&
+            other.env == env &&
+            other.home == home
 
-    override fun hashCode(): Int = ((program.hashCode() * 31 + args.hashCode()) * 31 + env.hashCode()) * 31 + home.hashCode()
+    override fun hashCode(): Int =
+        ((program.hashCode() * 31 + args.hashCode()) * 31 + env.hashCode()) * 31 + home.hashCode()
 
     override fun toString(): String = "SignInCommand($program, ${args.size} args)"
 }
@@ -81,19 +103,27 @@ public data class AgentRef(val id: String)
 
 /** How an agent signs in (mirror of `:engine:agents` `SignInPlan`). */
 public sealed interface SignInPlan {
-    /** The agent's own login runs in a terminal. [usesClaudeAccount]: words name the Claude account. */
+    /**
+     * The agent's own login runs in a terminal. [usesClaudeAccount]: words name the Claude account.
+     */
     public data class Terminal(val agentName: String, val usesClaudeAccount: Boolean) : SignInPlan
 
-    /** API-key agents (Qwen, Goose): "Set up a provider key on the host"; the app has no key field. */
+    /**
+     * API-key agents (Qwen, Goose): "Set up a provider key on the host"; the app has no key field.
+     */
     public data class ProviderKeyOnHost(val agentName: String) : SignInPlan
 
     /** Not a phone agent, not in the catalog, or no sign-in at all. */
     public data class NotAvailable(val agentName: String) : SignInPlan
 }
 
-/** What the sign-in printed: the page to sign in on and the one-time code. Never logged, stored or sent. */
+/**
+ * What the sign-in printed: the page to sign in on and the one-time code. Never logged, stored or
+ * sent.
+ */
 public class SignInFound(public val page: String? = null, public val code: String? = null) {
-    override fun equals(other: Any?): Boolean = other is SignInFound && other.page == page && other.code == code
+    override fun equals(other: Any?): Boolean =
+        other is SignInFound && other.page == page && other.code == code
 
     override fun hashCode(): Int = (page?.hashCode() ?: 0) * 31 + (code?.hashCode() ?: 0)
 
@@ -104,19 +134,31 @@ public class SignInFound(public val page: String? = null, public val code: Strin
 public interface SignInAgents {
     public fun plan(agent: AgentRef): SignInPlan
 
-    /** The guest command (allowlist checked before the host sees anything). A refusal carries no CLI text. */
+    /**
+     * The guest command (allowlist checked before the host sees anything). A refusal carries no CLI
+     * text.
+     */
     public fun command(owner: ProfileId, agent: AgentRef): Outcome<SignInCommand>
 
-    /** The terminal ended: re-read the account; true only on a `SignedIn` projection (exit code 0 is never proof). */
+    /**
+     * The terminal ended: re-read the account; true only on a `SignedIn` projection (exit code 0 is
+     * never proof).
+     */
     public suspend fun confirmSignedIn(owner: ProfileId, agent: AgentRef): Boolean
 
-    /** `SignInOutputReader` over the transcript: the newest https page not on this phone, and a device code. */
+    /**
+     * `SignInOutputReader` over the transcript: the newest https page not on this phone, and a
+     * device code.
+     */
     public fun read(transcript: String): SignInFound
 }
 
 /** The sign-in foreground claim (plan 11 §9.1 `SignIn` row). */
 public interface SignInForeground {
-    /** Reserves the claim at once (before anything suspends); the lease says when Android admitted it. */
+    /**
+     * Reserves the claim at once (before anything suspends); the lease says when Android admitted
+     * it.
+     */
     public fun reserve(): SignInForegroundLease
 }
 
@@ -129,6 +171,10 @@ public interface SignInForegroundLease {
 
     /** Loss reasons (`android-time-limit`, `paused-by-you`, `service-gone`, …) after admission. */
     public val lost: Flow<String>
+
+    /** True only after the platform confirmed releasing this particular claim. */
+    public val releaseConfirmed: Boolean
+        get() = true
 
     public suspend fun release()
 }
@@ -143,12 +189,18 @@ public sealed interface SignInAdmission {
     public data class Refused(val code: String) : SignInAdmission
 }
 
-/** Opens a page the sign-in asked for, only through ExternalLinkPolicy → ExternalLinkOpener (16 SI-1). */
+/**
+ * Opens a page the sign-in asked for, only through ExternalLinkPolicy → ExternalLinkOpener (16
+ * SI-1).
+ */
 public fun interface SignInLinks {
     public suspend fun open(url: String): Outcome<Unit>
 }
 
-/** Copies the one-time code as sensitive (`KitCopy(sensitive = true)`: hidden from clipboard previews). */
+/**
+ * Copies the one-time code as sensitive (`KitCopy(sensitive = true)`: hidden from clipboard
+ * previews).
+ */
 public fun interface SignInClipboard {
     public fun copySensitive(text: String)
 }

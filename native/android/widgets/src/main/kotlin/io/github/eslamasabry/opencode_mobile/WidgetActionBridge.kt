@@ -43,6 +43,14 @@ internal object WidgetActionBridge {
         }
         val error = submissionError(app, payload)
         if (error != null) {
+            if (error == "busy") {
+                // A durable claim may have crossed the server boundary before a process or reply
+                // was lost.
+                val uncertain = result(payload, "uncertain", "uncertainDelivery")
+                publishResult(app, payload, uncertain)
+                done(uncertain)
+                return
+            }
             rejected(error)
             return
         }

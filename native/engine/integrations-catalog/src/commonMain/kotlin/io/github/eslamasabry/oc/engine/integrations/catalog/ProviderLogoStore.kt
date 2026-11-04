@@ -76,6 +76,7 @@ public class ProviderLogoStore(
     private val loadBundled: suspend (slug: String) -> String? = { null },
 ) {
     private val resolved = HashMap<String, String?>()
+    private val resolvedUntil = HashMap<String, Long>()
     private val failedAt = HashMap<String, Long>()
     private val locks = HashMap<String, Mutex>()
 
@@ -85,22 +86,28 @@ public class ProviderLogoStore(
      */
     public suspend fun svgFor(providerId: String): String? {
         val slug = providerLogoSlug(providerId) ?: return null
-        if (resolved.containsKey(slug)) return resolved[slug]
+        if (nowMs() < (resolvedUntil[slug] ?: Long.MIN_VALUE)) return resolved[slug]
         val lock = locks.getOrPut(slug) { Mutex() }
         return lock.withLock {
-            if (resolved.containsKey(slug)) resolved[slug] else bundledOrFetched(slug)
+            if (nowMs() < (resolvedUntil[slug] ?: Long.MIN_VALUE)) resolved[slug]
+            else bundledOrFetched(slug)
         }
     }
 
     private suspend fun bundledOrFetched(slug: String): String? {
         val mark = (attempt({ Failure.Device() }) { loadBundled(slug) } as? Outcome.Ok)?.value
-        if (mark != null) return remember(slug, mark)
+        if (
+            mark != null &&
+                mark.encodeToByteArray().size <= PROVIDER_LOGO_MAX_BYTES &&
+                looksLikePlainSvg(mark)
+        )
+            return remember(slug, mark, Long.MAX_VALUE)
         val result = attempt({ Failure.Device() }) { resolve(slug) }
         return when (result) {
             is Outcome.Ok -> result.value
             is Outcome.Failed -> {
                 failedAt[slug] = nowMs()
-                null
+                remember(slug, resolved[slug], nowMs() + FAILURE_BACKOFF_MS)
             }
         }
     }
@@ -117,33 +124,47 @@ public class ProviderLogoStore(
                     (attempt({ Failure.Device() }) { f.read(noneName) } as? Outcome.Ok)?.value
                 }
             else null
-        val cached = svg?.text
-        val fresh = (svg ?: none)?.let { nowMs() - it.modifiedAtMs < REFRESH_AFTER_MS } ?: false
-        if (fresh) return remember(slug, cached)
+        val cached =
+            svg?.text?.takeIf {
+                it.encodeToByteArray().size <= PROVIDER_LOGO_MAX_BYTES && looksLikePlainSvg(it)
+            }
+        val cachedAt = (if (cached != null) svg else none)?.modifiedAtMs
+        val fresh = cachedAt != null && nowMs() - cachedAt in 0 until REFRESH_AFTER_MS
+        if (fresh) return remember(slug, cached, cachedAt!! + REFRESH_AFTER_MS)
         val failed = failedAt[slug]
-        if (failed != null && nowMs() - failed < FAILURE_BACKOFF_MS) return cached
+        if (failed != null && nowMs() - failed in 0 until FAILURE_BACKOFF_MS)
+            return remember(slug, cached, failed + FAILURE_BACKOFF_MS)
 
         val response = fetchSafely(slug)
         if (response == null) {
             failedAt[slug] = nowMs()
-            return cached
+            return remember(slug, cached, nowMs() + FAILURE_BACKOFF_MS)
         }
         failedAt.remove(slug)
         if (Md5.hex(response.body) == defaultLogoMd5) {
-            files?.delete(svgName)
-            files?.write(noneName, "")
+            attempt({ Failure.Device() }) {
+                files?.delete(svgName)
+                files?.write(noneName, "")
+            }
             return remember(slug, null)
         }
         val text = response.body.decodeToString(throwOnInvalidSequence = true)
-        files?.let {
-            it.write(svgName, text)
-            it.delete(noneName)
+        attempt({ Failure.Device() }) {
+            files?.let {
+                it.write(svgName, text)
+                it.delete(noneName)
+            }
         }
         return remember(slug, text)
     }
 
-    private fun remember(slug: String, svg: String?): String? {
+    private fun remember(
+        slug: String,
+        svg: String?,
+        until: Long = nowMs() + REFRESH_AFTER_MS,
+    ): String? {
         resolved[slug] = svg
+        resolvedUntil[slug] = until
         return svg
     }
 
@@ -175,6 +196,8 @@ private val BANNED_SVG =
         "onload=",
         "onclick=",
         "<!entity",
+        "<!doctype",
+        "@import",
     )
 
 /**
@@ -191,10 +214,10 @@ internal fun looksLikePlainSvg(text: String): Boolean {
             .containsMatchIn(lower)
     )
         return false
-    if (
-        Regex("""\bon[a-z]+\s*=|(?:href|src)\s*=|url\s*\(|@import|<!doctype|<!entity""")
-            .containsMatchIn(lower)
-    )
+    if (Regex("""\bon[a-z]+\s*=|\bsrc\s*=|@import|<!doctype|<!entity""").containsMatchIn(lower))
         return false
-    return true
+    // Only same-document references such as `url(#gradient)` may remain (AGENT-2).
+    val withoutLocalReferences =
+        lower.replace(Regex("""url\(\s*["']?#[a-z0-9_.:-]+["']?\s*\)"""), "")
+    return !Regex("""(?:\bhref\s*=|\burl\s*\()""").containsMatchIn(withoutLocalReferences)
 }

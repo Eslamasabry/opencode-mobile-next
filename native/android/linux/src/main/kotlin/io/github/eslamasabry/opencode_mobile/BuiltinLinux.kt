@@ -5022,6 +5022,125 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
+    /**
+     * Installed rootfs identity for handoff only; every unknown or changed field refuses sharing.
+     */
+    @Synchronized
+    fun captureHandoffFilesystem(owner: String): NativeHandoffFilesystem? {
+        if (
+            !Regex("[A-Za-z0-9_-]{1,80}").matches(owner) ||
+                !installed ||
+                installingRuntime ||
+                owner in blockedAgentProfiles
+        )
+            return null
+        fun identity(): String? =
+            try {
+                val root = rootfs.canonicalFile
+                val marker = ready.canonicalFile
+                if (root != rootfs.absoluteFile || marker != ready.absoluteFile) null
+                else {
+                    val r = Os.lstat(root.absolutePath)
+                    val m = Os.lstat(marker.absolutePath)
+                    val generation = installerPreferences.getString("rootfsGeneration", null)
+                    if (
+                        !OsConstants.S_ISDIR(r.st_mode) ||
+                            !OsConstants.S_ISREG(m.st_mode) ||
+                            m.st_size !in 1..4096 ||
+                            generation != null && !Regex("[0-9a-f]{64}").matches(generation)
+                    )
+                        null
+                    else
+                        listOf(
+                                root.absolutePath,
+                                r.st_dev,
+                                r.st_ino,
+                                m.st_dev,
+                                m.st_ino,
+                                m.st_mtime,
+                                m.st_size,
+                                ready.readText(),
+                                generation ?: "legacy",
+                            )
+                            .joinToString("\u0000")
+                }
+            } catch (_: Exception) {
+                null
+            }
+        val captured = identity() ?: return null
+        val opaque =
+            MessageDigest.getInstance("SHA-256")
+                .digest(captured.toByteArray(Charsets.UTF_8))
+                .joinToString("") { (it.toInt() and 255).toString(16).padStart(2, '0') }
+        return NativeHandoffFilesystem(opaque) {
+            synchronized(this) {
+                installed &&
+                    !installingRuntime &&
+                    owner !in blockedAgentProfiles &&
+                    identity() == captured
+            }
+        }
+    }
+
+    /** Only the exact tracked, authenticated OpenCode process can establish a managed source. */
+    @Synchronized
+    fun captureManagedHandoffSource(
+        owner: String,
+        sourcePort: Int,
+        sourcePassword: String,
+        filesystem: NativeHandoffFilesystem,
+    ): NativeHandoffIdentity? {
+        val service =
+            services[SERVER]?.takeIf { it.process.isAlive && it.port == sourcePort } ?: return null
+        val password = File(rootfs, "root/.oc-builtin/server.password")
+        fun authenticated(): Boolean =
+            try {
+                val stat = Os.lstat(password.absolutePath)
+                OsConstants.S_ISREG(stat.st_mode) &&
+                    stat.st_size in 1..4096 &&
+                    password.canonicalFile == password.absoluteFile &&
+                    sourcePassword.isNotEmpty() &&
+                    password.readText().trimEnd() == sourcePassword
+            } catch (_: Exception) {
+                false
+            }
+        fun current(): Boolean =
+            filesystem.isCurrent() &&
+                supervisionProfile?.let { it == owner || helperOwner(it) == owner } == true &&
+                services[SERVER] === service &&
+                service.process.isAlive &&
+                service.port == sourcePort &&
+                authenticated()
+        if (!current()) return null
+        return NativeHandoffIdentity { synchronized(this) { current() } }
+    }
+
+    /**
+     * Explicit foreground handoff/open-chat only; the existing native lifecycle ticket admits the
+     * start.
+     */
+    fun startTrustedAgentHelper(
+        owner: String,
+        password: String,
+        config: String,
+        expectedVersion: String,
+    ): Map<String, Any?> {
+        val ticket =
+            captureAgentHostStart(owner, false, null)
+                ?: throw IllegalStateException("The agent host is unavailable.")
+        return withAgentHostStart(ticket) {
+            agentHost.start(
+                PhoneAgentHost.StartRequest(
+                    owner,
+                    password,
+                    4099,
+                    config,
+                    PhoneAgentHost.HelperPolicy(expectedVersion, false, false),
+                )
+            )
+        }
+    }
+
     val serverLog = File(home, "server.log")
 
     val serverRunning: Boolean

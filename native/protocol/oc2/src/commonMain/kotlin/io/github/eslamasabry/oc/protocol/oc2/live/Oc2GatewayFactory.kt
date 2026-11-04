@@ -14,6 +14,8 @@ import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.core.security.Redactor
 import kotlin.random.Random
 import kotlin.time.Clock
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 /** Real OC2 transport, sharing the trust/no-resend enforcement of :core:net. */
 @Inject
@@ -81,26 +83,27 @@ public class Oc2GatewayFactory(
                 random,
                 requireDispatchAdmission = loopback && origin.port in setOf(4097, 4099),
             )
-        // An unexpected health shape is a re-detection signal: the read-only probe recognises
-        // unsupported/legacy servers before a connection graph or event stream is admitted.
-        return when (val health = gateway.probe()) {
-            is Outcome.Failed -> {
-                gateway.close()
-                health
-            }
-            is Outcome.Ok -> {
-                if (!health.value.healthy) {
-                    gateway.close()
-                    Failure.UnreadableReply().failed()
-                } else {
-                    gateway.start(
-                        spec,
-                        dispatchers,
-                        networks.singleOrNull() ?: UnknownNetworkStatus,
-                    )
-                    GatewayPair(gateway, gateway).ok()
+        var transferred = false
+        try {
+            // An unexpected health shape is a re-detection signal: the read-only probe recognises
+            // unsupported/legacy servers before a connection graph or event stream is admitted.
+            return when (val health = gateway.probe()) {
+                is Outcome.Failed -> health
+                is Outcome.Ok -> {
+                    if (!health.value.healthy) Failure.UnreadableReply().failed()
+                    else {
+                        gateway.start(
+                            spec,
+                            dispatchers,
+                            networks.singleOrNull() ?: UnknownNetworkStatus,
+                        )
+                        transferred = true
+                        GatewayPair(gateway, gateway).ok()
+                    }
                 }
             }
+        } finally {
+            if (!transferred) withContext(NonCancellable) { gateway.close() }
         }
     }
 

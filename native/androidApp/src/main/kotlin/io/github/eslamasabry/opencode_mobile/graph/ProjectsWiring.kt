@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.stringList
+import io.github.eslamasabry.oc.core.domain.LocatedProjectGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
@@ -57,6 +58,9 @@ private fun <T> liveRows(
 
 private fun ConnectionGraph.operations(): ServerOperationsGateway? =
     session.server.facet<ServerOperationsGateway>()
+        ?: session.server
+            .facet<LocatedProjectGateway>()
+            ?.operationsAt(session.server.location.value)
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, replaces = [NoConversationServers::class])

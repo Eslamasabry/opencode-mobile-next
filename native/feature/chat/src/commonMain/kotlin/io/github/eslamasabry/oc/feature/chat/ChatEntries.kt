@@ -158,6 +158,7 @@ public class ChatEntries(
                         cardModel,
                         vm::openLink,
                         { navigator.open(CardsSettingsRoute) },
+                        catalogue = { cardModel.catalogueRoute()?.let(navigator::open) },
                     )
                 }
             CompositionLocalProvider(LocalChatCards provides cardSlot) {

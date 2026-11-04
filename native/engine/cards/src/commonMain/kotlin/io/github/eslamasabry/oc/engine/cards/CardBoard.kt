@@ -91,6 +91,7 @@ public class CardBoard(
     private val refusals = HashMap<String, CardRefusal>()
     private val sending = HashSet<String>()
     private var closed = false
+    private val authority = CardAuthority { !closed && mutable.value.available }
 
     /** The authoritative transcript (oldest first, no optimistic rows). [tailComplete] = the newest page is loaded. */
     public fun observe(scope: CardScope, sessionId: String, transcript: List<MessageWithParts>, tailComplete: Boolean) {
@@ -100,8 +101,15 @@ public class CardBoard(
         this.sessionId = sessionId
         messages = transcript
         this.tailComplete = tailComplete
+        authority.observe(scope, sessionId, transcript, tailComplete)
         publish()
     }
+
+    /** Retained display payload, including while the transport is suspended; never authorizes a new action. */
+    public fun observedCard(card: AgentCard): AgentCard? = if (owns(card)) authority.observedCard(card) else null
+
+    /** Null is recovery still pending; Unknown is a removed or replaced card. */
+    public fun observedState(card: AgentCard): CardState? = if (owns(card)) authority.observedState(card) else CardState.Unknown
 
     public fun setBusy(busy: Boolean) {
         if (mutable.value.busy != busy) publish(busy = busy)
@@ -157,10 +165,12 @@ public class CardBoard(
     /** Leaving the chat or closing the profile drops held answers; nothing is sent late. */
     public fun close() {
         held.keys.toList().forEach(::undoIdentity)
+        retireAuthority()
         closed = true
     }
 
     private fun reset() {
+        retireAuthority()
         held.keys.toList().forEach(::undoIdentity)
         delivery.clear()
         drafts.clear()
@@ -246,7 +256,15 @@ public class CardBoard(
     }
 
     private fun stateOf(card: AgentCard): CardState =
-        if (!mutable.value.available) CardState.Unknown else CardCodec.stateFor(card, messages, tailComplete)
+        if (owns(card)) authority.state(card) else CardState.Unknown
+
+    private fun owns(card: AgentCard): Boolean = !closed && card.scope == cardScope && card.sessionId == sessionId
+
+    private fun retireAuthority() {
+        val oldScope = cardScope ?: return
+        val oldSession = sessionId ?: return
+        authority.removeSession(oldScope, oldSession)
+    }
 
     private fun publish(busy: Boolean = mutable.value.busy, available: Boolean = mutable.value.available) {
         val scope = cardScope

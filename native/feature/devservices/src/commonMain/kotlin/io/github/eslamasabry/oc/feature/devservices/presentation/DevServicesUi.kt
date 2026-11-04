@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.devservices.presentation
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServiceStatus
+import io.github.eslamasabry.oc.engine.runtime.services.commands.ShellOutputState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -120,6 +121,7 @@ public data class DevServicesUi(
     val ask: DevServicesAsk? = null,
     val receipt: DevServicesReceipt? = null,
     val log: DevServiceLog? = null,
+    val output: ShellOutputState? = null,
 )
 
 public interface DevServicesActions {
@@ -149,6 +151,10 @@ public interface DevServicesActions {
     public fun askRemove(id: String)
 
     public fun logs(id: String)
+
+    public fun refreshOutput(): Unit = refresh()
+
+    public fun closeOutput(): Unit = dismiss()
 
     public fun visit(id: String)
 

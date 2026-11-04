@@ -114,6 +114,13 @@ import io.github.eslamasabry.oc.ui.words.res.servicesUrlInvalid
 import io.github.eslamasabry.oc.ui.words.res.servicesVisit
 import io.github.eslamasabry.oc.ui.words.res.servicesWorking
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
+import io.github.eslamasabry.oc.ui.words.res.workOutput
+import io.github.eslamasabry.oc.ui.words.res.workMoreOutput
+import io.github.eslamasabry.oc.ui.words.res.workTrimmed
+import io.github.eslamasabry.oc.ui.words.res.workUnavailable
+import io.github.eslamasabry.oc.ui.words.res.workRestarted
+import io.github.eslamasabry.oc.ui.words.res.shellOutputReadFailed
+import io.github.eslamasabry.oc.ui.words.res.workRefresh
 import org.jetbrains.compose.resources.stringResource
 
 /** How many log lines a row shows: the tail is already bounded by the engine (B-LINUX-064). */
@@ -209,11 +216,39 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
         }
     }
     Editor(state.editor, actions)
-    KitConfirm(
-        state.ask?.let { spec(it) },
-        onConfirm = actions::confirm,
-        onCancel = actions::cancel,
-    )
+    Output(state, actions)
+    KitConfirm(state.ask?.let { spec(it) }, onConfirm = actions::confirm, onCancel = actions::cancel)
+}
+
+@Composable
+private fun Output(state: DevServicesUi, actions: DevServicesActions) {
+    val output = state.output
+    KitSheet(
+        visible = output != null,
+        onDismissRequest = actions::closeOutput,
+        title = stringResource(Res.string.workOutput),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+        primary = KitAction(
+            stringResource(if (output?.hasMore == true) Res.string.workMoreOutput else Res.string.workRefresh),
+            actions::refreshOutput.takeIf { output?.refreshing == false },
+        ),
+    ) {
+        if (output != null) {
+            output.shell?.command?.let { KitText(it, role = TypeRole.Mono) }
+            if (!output.available) KitNotice(message = stringResource(if (output.serverRestarted) Res.string.workRestarted else Res.string.workUnavailable))
+            if (output.trimmed) KitNotice(message = stringResource(Res.string.workTrimmed), liveRegion = false)
+            output.failure?.let {
+                KitErrorNotice(
+                    message = stringResource(Res.string.shellOutputReadFailed),
+                    failure = it,
+                    retry = KitLineAction(stringResource(Res.string.commonRetry), actions::refreshOutput),
+                )
+            }
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                KitText(output.displayText.ifBlank { stringResource(Res.string.servicesLogEmpty) }, role = TypeRole.Mono)
+            }
+        }
+    }
 }
 
 @Composable

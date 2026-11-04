@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.frame.ExitGlyph
 import io.github.eslamasabry.oc.ui.kit.frame.KitExitGlyph
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -48,6 +49,9 @@ public sealed interface KitRowLeading {
      * A bounded static provider mark. A missing or refused picture displays [fallback]'s initials.
      */
     public data class Svg(val text: String, val fallback: String) : KitRowLeading
+
+    public data class Logo(val id: String, val name: String, val agent: Boolean = false) :
+        KitRowLeading
 }
 
 /** What ends a row (Dart `KitRowValue`, `KitChevron`, the row's own action). */
@@ -90,6 +94,7 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
                     ),
                     colorFilter = ColorFilter.tint(colors.tone(tone)),
                 )
+            is KitRowLeading.Logo -> KitProviderLogo(leading.id, leading.name, leading.agent)
             is KitRowLeading.Initials ->
                 KitText(leading.text.take(2), role = TypeRole.Label, tone = tone, maxLines = 1)
             is KitRowLeading.Svg -> {

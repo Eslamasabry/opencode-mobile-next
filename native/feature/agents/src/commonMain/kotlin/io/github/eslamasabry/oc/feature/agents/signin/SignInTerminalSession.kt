@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.getOrNull
 import io.github.eslamasabry.oc.core.common.ok
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,34 +15,45 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-/** Why a sign-in terminal stopped or never started. [code] is shown only under Details; words are fixed. */
+/**
+ * Why a sign-in terminal stopped or never started. [code] is shown only under Details; words are
+ * fixed.
+ */
 public sealed interface SignInProblem {
     public val code: String?
 
     /** "Allow notifications before signing in, then try again." */
     public data object NotificationsBlocked : SignInProblem {
-        override val code: String? get() = null
+        override val code: String?
+            get() = null
     }
 
     /** Android refused the claim or it was not active: `sign-in-admission/<code>`. */
     public data class Admission(val admission: String) : SignInProblem {
-        override val code: String get() = "sign-in-admission/$admission"
+        override val code: String
+            get() = "sign-in-admission/$admission"
     }
 
     /** Protection was lost while the sign-in ran: `sign-in-lost/<reason>`. */
     public data class Lost(val reason: String) : SignInProblem {
-        override val code: String get() = "sign-in-lost/$reason"
+        override val code: String
+            get() = "sign-in-lost/$reason"
     }
 
     /** The native start failed (its text is never shown, B-SEC-098). */
     public data object Start : SignInProblem {
-        override val code: String get() = "sign-in-start"
+        override val code: String
+            get() = "sign-in-start"
     }
 
-    /** The agent's command was refused before anything ran (not a phone agent, or not allowlisted). */
+    /**
+     * The agent's command was refused before anything ran (not a phone agent, or not allowlisted).
+     */
     public data object Unavailable : SignInProblem {
-        override val code: String? get() = null
+        override val code: String?
+            get() = null
     }
 }
 
@@ -51,8 +63,12 @@ public sealed interface SignInSessionState {
     /** Waiting for the foreground claim, then for the native start. */
     public data object Starting : SignInSessionState
 
-    /** The terminal shows; [exitCode] is set once the program ended (protection is still held for the check). */
-    public data class Running(val terminal: TerminalModel, val exitCode: Int? = null) : SignInSessionState
+    /**
+     * The terminal shows; [exitCode] is set once the program ended (protection is still held for
+     * the check).
+     */
+    public data class Running(val terminal: TerminalModel, val exitCode: Int? = null) :
+        SignInSessionState
 
     public data class Failed(val problem: SignInProblem) : SignInSessionState
 
@@ -61,17 +77,19 @@ public sealed interface SignInSessionState {
 }
 
 /**
- * One sign-in terminal and its foreground claim (port of Dart `LocalTerminalSessions.startSignIn/endSignIn`; plan 17
- * §1.5, plan 11 §9.1 `SignIn` row and W11-08a; B-LINUX-094…096, B-SEC-098, B-AGENT-129).
+ * One sign-in terminal and its foreground claim (port of Dart
+ * `LocalTerminalSessions.startSignIn/endSignIn`; plan 17 §1.5, plan 11 §9.1 `SignIn` row and
+ * W11-08a; B-LINUX-094…096, B-SEC-098, B-AGENT-129).
  *
- * - The claim is reserved at once and the PTY starts only after Android admitted it **and** it is active; a refused or
- *   inactive admission never launches one (fixed codes, never CLI text).
- * - [end] is the one way out: cancelling during admission ends at once; during a pending native start it waits for the
- *   late session and drains exactly it; the claim is released only after the native removal succeeded. A failed drain
- *   keeps the claim and the session, and calling [end] again retries the same one. Concurrent ends share one drain.
+ * - The claim is reserved at once and the PTY starts only after Android admitted it **and** it is
+ *   active; a refused or inactive admission never launches one (fixed codes, never CLI text).
+ * - [end] is the one way out: cancelling during admission ends at once; during a pending native
+ *   start it waits for the late session and drains exactly it; the claim is released only after the
+ *   native removal succeeded. A failed drain keeps the claim and the session, and calling [end]
+ *   again retries the same one. Concurrent ends share one drain.
  * - The program's exit keeps the claim through the account check, until [end].
- * - Loss of protection drains only this sign-in. Every URL handoff rechecks protection first; after [end] no URL is
- *   ever handed on.
+ * - Loss of protection drains only this sign-in. Every URL handoff rechecks protection first; after
+ *   [end] no URL is ever handed on.
  *
  * Not thread-safe by design: [scope] is the screen's single main-thread scope.
  */
@@ -85,7 +103,10 @@ public class SignInTerminalSession(
 
     private val urls = MutableSharedFlow<String>(extraBufferCapacity = 8)
 
-    /** Pages the guest asked to open, already rechecked against protection. Open them only through the link policy. */
+    /**
+     * Pages the guest asked to open, already rechecked against protection. Open them only through
+     * the link policy.
+     */
     public val openUrls: Flow<String> = urls.asSharedFlow()
 
     private sealed interface Open {
@@ -109,6 +130,9 @@ public class SignInTerminalSession(
     private var lease: SignInForegroundLease? = null
     private var released = false
     private var ending = false
+    public val canOpenLinks: Boolean
+        get() = !ending && lease?.active == true
+
     private var cancelStart: (() -> Unit)? = null
     private val stopWatching = mutableListOf<() -> Unit>()
 
@@ -127,7 +151,8 @@ public class SignInTerminalSession(
         if (ending) return
         val refused =
             when (admission) {
-                SignInAdmission.Ready -> if (claim.active) null else SignInProblem.Admission("service-inactive")
+                SignInAdmission.Ready ->
+                    if (claim.active) null else SignInProblem.Admission("service-inactive")
                 SignInAdmission.NotificationsBlocked -> SignInProblem.NotificationsBlocked
                 is SignInAdmission.Refused -> SignInProblem.Admission(admissionCode(admission.code))
             }
@@ -137,8 +162,12 @@ public class SignInTerminalSession(
             return
         }
         opening.value = Open.Pending
-        val terminal = host.open(TerminalTarget.SignIn(command)).getOrNull()
-        opening.value = Open.Done(terminal)
+        val terminal =
+            withContext(NonCancellable) {
+                host.open(TerminalTarget.SignIn(command)).getOrNull().also {
+                    opening.value = Open.Done(it)
+                }
+            }
         if (ending) return // end() is waiting for exactly this session and drains it
         if (terminal == null) {
             mutableState.value = SignInSessionState.Failed(SignInProblem.Start)
@@ -165,7 +194,8 @@ public class SignInTerminalSession(
     private fun onLost(reason: String) {
         if (ending) return
         val problem = SignInProblem.Lost(if (reason in LOST_REASONS) reason else LOST_DEFAULT)
-        // A fresh coroutine: end() stops the collectors, and this may be running inside one of them.
+        // A fresh coroutine: end() stops the collectors, and this may be running inside one of
+        // them.
         scope.launch {
             end()
             mutableState.value = SignInSessionState.Failed(problem)
@@ -173,8 +203,9 @@ public class SignInTerminalSession(
     }
 
     /**
-     * Ends the sign-in: drains the exact native session (also a late one), then releases the claim. Returns the drain's
-     * outcome; a failure keeps the claim, and calling again retries the same session.
+     * Ends the sign-in: drains the exact native session (also a late one), then releases the claim.
+     * Returns the drain's outcome; a failure keeps the claim, and calling again retries the same
+     * session.
      */
     public suspend fun end(): Outcome<Unit> {
         when (val now = drain.value) {
@@ -187,7 +218,8 @@ public class SignInTerminalSession(
             try {
                 drainNow()
             } catch (stopped: Throwable) {
-                // The caller was cancelled mid-drain: a later end() starts over instead of waiting forever.
+                // The caller was cancelled mid-drain: a later end() starts over instead of waiting
+                // forever.
                 drain.value = Drain.Done(Failure.Unexpected().failed())
                 throw stopped
             }
@@ -201,8 +233,10 @@ public class SignInTerminalSession(
         stopWatching.clear()
         if (opening.value == Open.NotIssued) {
             cancelStart?.invoke()
-            releaseOnce()
-            if (mutableState.value !is SignInSessionState.Failed) mutableState.value = SignInSessionState.Ended
+            val released = releaseOnce()
+            if (released is Outcome.Failed) return released
+            if (mutableState.value !is SignInSessionState.Failed)
+                mutableState.value = SignInSessionState.Ended
             return Unit.ok()
         }
         val terminal = (opening.first { it is Open.Done } as Open.Done).terminal
@@ -210,24 +244,40 @@ public class SignInTerminalSession(
             val closed = terminal.close()
             if (closed is Outcome.Failed) return closed
         }
-        releaseOnce()
-        if (mutableState.value !is SignInSessionState.Failed) mutableState.value = SignInSessionState.Ended
+        val released = releaseOnce()
+        if (released is Outcome.Failed) return released
+        if (mutableState.value !is SignInSessionState.Failed)
+            mutableState.value = SignInSessionState.Ended
         return Unit.ok()
     }
 
-    private suspend fun releaseOnce() {
-        if (released) return
+    private suspend fun releaseOnce(): Outcome<Unit> {
+        if (released) return Unit.ok()
+        val held = lease
+        held?.release()
+        if (held != null && !held.releaseConfirmed) return Failure.Device().failed()
         released = true
-        lease?.release()
+        return Unit.ok()
     }
 
     private companion object {
-        /** plan 17 §1.5 `sign-in-lost/{…}`; anything else is reported as the generic loss, never echoed. */
+        /**
+         * plan 17 §1.5 `sign-in-lost/{…}`; anything else is reported as the generic loss, never
+         * echoed.
+         */
         val LOST_REASONS =
-            setOf("android-time-limit", "paused-by-you", "service-gone", "live-turned-off", "app-closed", "owner-closed")
+            setOf(
+                "android-time-limit",
+                "paused-by-you",
+                "service-gone",
+                "live-turned-off",
+                "app-closed",
+                "owner-closed",
+            )
         const val LOST_DEFAULT = "service-gone"
         private val ADMISSION = Regex("^[a-z0-9-]{1,40}$")
 
-        fun admissionCode(code: String): String = if (ADMISSION.matches(code)) code else "service-refused"
+        fun admissionCode(code: String): String =
+            if (ADMISSION.matches(code)) code else "service-refused"
     }
 }

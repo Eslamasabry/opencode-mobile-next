@@ -2,8 +2,8 @@ package io.github.eslamasabry.oc.protocol.paseo.gateway
 
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.ModelRef
-import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.ModelSelection
+import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.ProvidersResponse
 import io.github.eslamasabry.oc.core.model.ServerPage
 import io.github.eslamasabry.oc.core.model.Session
@@ -12,41 +12,53 @@ import io.github.eslamasabry.oc.protocol.paseo.PaseoException
 import io.github.eslamasabry.oc.protocol.paseo.PaseoFailureKind
 import io.github.eslamasabry.oc.protocol.paseo.feed.PaseoFeedPort
 import io.github.eslamasabry.oc.protocol.paseo.feed.PaseoTitles
-import io.github.eslamasabry.oc.protocol.paseo.mappers.PaseoImages
 import io.github.eslamasabry.oc.protocol.paseo.paseoFail
 import io.github.eslamasabry.oc.protocol.paseo.str
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * The gateway as one chat-feed scope (slice D's [PaseoFeedPort]; Dart reads these off `PaseoGateway`, including the
- * `copies.dart` part: [keepTitle] and [archiveOlderCopy], B-AGENT-149). Non-suspend members read lane-confined state:
- * call them from the gateway's lane (the feed runs there). Suspend members hop onto it and throw `PaseoException`.
+ * The gateway as one chat-feed scope (slice D's [PaseoFeedPort]; Dart reads these off
+ * `PaseoGateway`, including the `copies.dart` part: [keepTitle] and [archiveOlderCopy],
+ * B-AGENT-149). Non-suspend members read lane-confined state: call them from the gateway's lane
+ * (the feed runs there). Suspend members hop onto it and throw `PaseoException`.
  */
 public fun PaseoGateway.feedPort(): PaseoFeedPort = GatewayFeedPort(this)
 
 private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
-    override val directory: String? get() = g.directory
-    override val isClosed: Boolean get() = g.isClosed
+    override val directory: String?
+        get() = g.directory
+
+    override val isClosed: Boolean
+        get() = g.isClosed
 
     /** Permission and question attention, local only (collecting never touches the transport). */
     override val attentionChanges: Flow<Unit> =
-        kotlinx.coroutines.flow.merge(g.requests.revision.drop(1), g.backgroundTasks.revision.drop(1)).map { }
+        merge(g.requests.revision.drop(1).map {}, g.backgroundTasks.changes)
 
-    override suspend fun sessionPage(cursor: String?, limit: Int): ServerPage<Session> = g.onLane { g.readSessionPage(cursor, limit) }
+    override suspend fun sessionPage(cursor: String?, limit: Int): ServerPage<Session> = g.onLane {
+        g.readSessionPage(cursor, limit)
+    }
 
-    override suspend fun sessionStatuses(): Map<SessionId, SessionStatus> =
-        g.onLane { g.statuses.entries.associate { SessionId(it.key) to it.value } }
+    override suspend fun sessionStatuses(): Map<SessionId, SessionStatus> = g.onLane {
+        g.statuses.entries.associate { SessionId(it.key) to it.value }
+    }
 
-    override fun sessionKey(session: SessionId): String? = PaseoTitles.sessionKey(g.agents[session.raw])
+    override fun sessionKey(session: SessionId): String? =
+        PaseoTitles.sessionKey(g.agents[session.raw])
 
-    override fun hasOwnTitle(session: SessionId): Boolean = PaseoTitles.hasOwnTitle(g.agents[session.raw])
+    override fun hasOwnTitle(session: SessionId): Boolean =
+        PaseoTitles.hasOwnTitle(g.agents[session.raw])
 
-    /** The title a resume lost; nothing is written to the helper (an update would move the row to the top). */
+    /**
+     * The title a resume lost; nothing is written to the helper (an update would move the row to
+     * the top).
+     */
     override fun keepTitle(session: SessionId, title: String) {
         if (title.isBlank()) return
         val id = session.raw
@@ -58,7 +70,8 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
 
     override fun providerIdForSession(session: SessionId): String? = g.providerIdForSession(session)
 
-    override fun agentFailed(session: SessionId): Boolean = g.agents[session.raw]?.str("status") == "error" || lastTurnFailed(session)
+    override fun agentFailed(session: SessionId): Boolean =
+        g.agents[session.raw]?.str("status") == "error" || lastTurnFailed(session)
 
     /** The saved record failed before the helper loaded it, or the last turn read ended on the agent's own failure. */
     override fun lastTurnFailed(session: SessionId): Boolean =
@@ -66,11 +79,16 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
 
     override fun backgroundTasksRunning(session: SessionId): Boolean = g.backgroundTasksRunning(session)
 
-    override fun hasPendingPermission(session: SessionId): Boolean = g.requests.hasPermission(session.raw)
+    override fun hasPendingPermission(session: SessionId): Boolean =
+        g.requests.hasPermission(session.raw)
 
-    override fun hasPendingQuestion(session: SessionId): Boolean = g.requests.hasQuestion(session.raw)
+    override fun hasPendingQuestion(session: SessionId): Boolean =
+        g.requests.hasQuestion(session.raw)
 
-    /** Archives an older quiet record of a resumed conversation, at most once per gateway; false on any refusal. */
+    /**
+     * Archives an older quiet record of a resumed conversation, at most once per gateway; false on
+     * any refusal.
+     */
     override suspend fun archiveOlderCopy(session: SessionId): Boolean = g.onLane {
         val id = session.raw
         if (g.isClosed || id in g.drafts || id in g.archivedCopies) return@onLane false
@@ -79,7 +97,11 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
         if (g.statuses[id] == SessionStatus.Busy || id in g.turnActive) return@onLane false
         g.archivedCopies += id
         try {
-            g.transport.request("archive_agent_request", io.github.eslamasabry.oc.protocol.paseo.jsonOf("agentId" to g.real(id)), mutation = true)
+            g.transport.request(
+                "archive_agent_request",
+                io.github.eslamasabry.oc.protocol.paseo.jsonOf("agentId" to g.real(id)),
+                mutation = true,
+            )
             g.forget(id)
             true
         } catch (e: CancellationException) {
@@ -95,7 +117,10 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
     override suspend fun createDraft(): Session = g.onLane { g.createDraft() }
 
     override fun seedDraftProvider(session: SessionId, providerId: String) {
-        if (session.raw !in g.drafts || !io.github.eslamasabry.oc.protocol.paseo.requests.isPaseoProviderId(providerId)) {
+        if (
+            session.raw !in g.drafts ||
+                !io.github.eslamasabry.oc.protocol.paseo.requests.isPaseoProviderId(providerId)
+        ) {
             paseoFail(PaseoFailureKind.Unavailable)
         }
         g.draftProviders[session.raw] = providerId
@@ -106,14 +131,17 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
     }
 
     override suspend fun prompt(session: SessionId, text: String, model: ModelRef) {
-        g.onLane {
-            g.withPayloadUse {
-                g.sendPrompt(session.raw, paseoUuid(g.random), OutgoingPrompt(text, ModelSelection(model)), (PaseoImages.Ok(emptyList())).images, false, null)
-            }
+        when (val admitted = g.prompt(session, OutgoingPrompt(text, ModelSelection(model)))) {
+            is io.github.eslamasabry.oc.core.common.Outcome.Ok ->
+                if (admitted.value is io.github.eslamasabry.oc.core.model.PromptAdmission.Uncertain)
+                    paseoFail(PaseoFailureKind.DeliveryUnknown)
+            is io.github.eslamasabry.oc.core.common.Outcome.Failed ->
+                paseoFail(PaseoFailureKind.Unavailable)
         }
     }
 
     override fun daemonSessionId(session: SessionId): SessionId = g.daemonSessionId(session)
 }
 
-internal suspend fun <T> PaseoGateway.onLane(block: suspend () -> T): T = withContext(lane) { block() }
+internal suspend fun <T> PaseoGateway.onLane(block: suspend () -> T): T =
+    withContext(lane) { block() }

@@ -1,0 +1,31 @@
+<resources>
+    <string name="agentProjectWorkspace">التغييرات وأشجار العمل</string>
+    <string name="agentProjectReadFailed">تعذّر إكمال إجراء المشروع. تحقّق من الحالة الحالية قبل المحاولة مجددًا.</string>
+    <string name="agentProjectNoGit">هذا المجلد ليس مستودع Git.</string>
+    <string name="agentProjectBranch">الفرع الحالي</string>
+    <string name="agentProjectBaseBranch">الفرع الأساسي</string>
+    <string name="agentProjectDetached">نسخة دون فرع</string>
+    <string name="agentProjectWorkingTree">شجرة العمل الحالية</string>
+    <string name="agentProjectBranchChanges">منذ الفرع الأساسي</string>
+    <string name="agentProjectAllFiles">كل الملفات المتغيّرة</string>
+    <string name="agentProjectNoPatch">لا توجد تغييرات نصية لهذا الملف.</string>
+    <string name="agentProjectPreviousLines">الأسطر الـ 200 السابقة</string>
+    <string name="agentProjectNextLines">الأسطر الـ 200 التالية</string>
+    <string name="agentProjectChangedFiles">الملفات المتغيّرة</string>
+    <string name="agentProjectNoChanges">لا توجد تغييرات في هذه المقارنة.</string>
+    <string name="agentProjectLineChanges">%1$d إضافة · %2$d حذف</string>
+    <string name="agentProjectWorktrees">أشجار العمل</string>
+    <string name="agentProjectNoWorktrees">لم يُبلغ الخادم عن أشجار عمل لهذا المشروع.</string>
+    <string name="agentProjectReady">جاهزة</string>
+    <string name="agentProjectRemove">إزالة شجرة العمل</string>
+    <string name="agentProjectWorking">انتظر انتهاء هذا الإجراء.</string>
+    <string name="agentProjectNewWorktree">شجرة عمل باسم تختاره</string>
+    <string name="agentProjectGenerateWorktree">إنشاء باسم مولّد تلقائيًا</string>
+    <string name="agentProjectRefresh">تحديث حالة المشروع</string>
+    <string name="agentProjectNameInvalid">استخدم من 1 إلى 128 حرفًا لاتينيًا أو رقمًا أو نقطة أو شرطة أو شرطة سفلية. ابدأ بحرف أو رقم ولا تستخدم نقطتين متتاليتين.</string>
+    <string name="agentProjectWorktreeName">اسم شجرة العمل</string>
+    <string name="agentProjectCreate">إنشاء شجرة العمل</string>
+    <string name="agentProjectRemoveQuestion">إزالة «%1$s»؟</string>
+    <string name="agentProjectRemoveBody">تؤرشف شجرة العمل ومحادثاتها، وتزيل مجلدها: %1$s</string>
+    <string name="agentProjectRemoveChanges">تحتوي شجرة العمل هذه على %1$d ملفات متغيّرة. ستُزال مع المجلد.</string>
+</resources>

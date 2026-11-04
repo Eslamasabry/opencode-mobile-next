@@ -5,10 +5,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/** Stable reasons (Flutter `GenUiSetupProblem`); the words layer says them. Never command or exception text. */
+/**
+ * Stable reasons (Flutter `GenUiSetupProblem`); the words layer says them. Never command or
+ * exception text.
+ */
 public enum class CardsProblem {
-    UnsupportedHost, RuntimeMissing, NotQualified, PermissionDenied, Conflict, InstallationFailed,
-    RegistrationFailed, VerificationFailed, RemovalFailed, StorageFailed, Busy,
+    UnsupportedHost,
+    RuntimeMissing,
+    NotQualified,
+    PermissionDenied,
+    Conflict,
+    InstallationFailed,
+    RegistrationFailed,
+    VerificationFailed,
+    RemovalFailed,
+    StorageFailed,
+    Busy,
 }
 
 /** An agent that can show cards, by its product name ("Claude Code", "OpenCode 2"). */
@@ -21,7 +33,8 @@ public data class CardAgent(val id: String, val displayName: String) {
 
 /** What the Cards row says (Flutter `GenUiSetupStatus`), per agent. */
 public sealed interface CardsStatus {
-    public val agents: List<CardAgent> get() = emptyList()
+    public val agents: List<CardAgent>
+        get() = emptyList()
 
     public data object Off : CardsStatus
 
@@ -29,13 +42,23 @@ public sealed interface CardsStatus {
 
     public data class On(override val agents: List<CardAgent>) : CardsStatus
 
-    public data class Partial(override val agents: List<CardAgent>, val reason: CardsProblem, val affected: List<CardAgent>) : CardsStatus
+    public data class Partial(
+        override val agents: List<CardAgent>,
+        val reason: CardsProblem,
+        val affected: List<CardAgent>,
+    ) : CardsStatus
 
     public data class RestartRequired(override val agents: List<CardAgent>) : CardsStatus
 
-    public data class Unavailable(val reason: CardsProblem, val affected: List<CardAgent> = emptyList()) : CardsStatus
+    public data class Unavailable(
+        val reason: CardsProblem,
+        val affected: List<CardAgent> = emptyList(),
+    ) : CardsStatus
 
-    public data class Failed(val reason: CardsProblem, val affected: List<CardAgent> = emptyList()) : CardsStatus
+    public data class Failed(
+        val reason: CardsProblem,
+        val affected: List<CardAgent> = emptyList(),
+    ) : CardsStatus
 }
 
 /** The one stored preference: `oc.genui.enabled.<profileId>`, off by default (plan 09 §13.1). */
@@ -54,8 +77,9 @@ public interface CardsPrefs {
 }
 
 /**
- * Proves which agents can show cards here (registration plus the MCP self-check). A registration alone is never
- * "ready". [install] runs explicit setup on a managed host; unmanaged hosts never reach it.
+ * Proves which agents can show cards here (registration plus the MCP self-check). A registration
+ * alone is never "ready". [install] runs explicit setup on a managed host; unmanaged hosts never
+ * reach it.
  */
 public interface CardsQualifier {
     /** False = this host cannot be set up from the phone (a remote server we do not manage). */
@@ -64,7 +88,21 @@ public interface CardsQualifier {
     /** The agents of this connection (phone agents plus the connected server's runtime). */
     public fun agentsHere(profileId: String): List<CardAgent>
 
-    /** Ready agents, or a problem (Outcome.Failed is a storage/transport problem: VerificationFailed). */
+    /**
+     * Qualified transport and runtime for the exact conversation, never another provider on a mixed
+     * host.
+     */
+    public fun permitsSession(profileId: String, sessionId: String): Boolean = true
+
+    /** Transient conversations store preferences under their trusted saved owner. */
+    public fun settingsOwner(profileId: String): String? = profileId
+
+    public fun activeSettingsOwner(profileId: String): Boolean = true
+
+    /**
+     * Ready agents, or a problem (Outcome.Failed is a storage/transport problem:
+     * VerificationFailed).
+     */
     public suspend fun verify(profileId: String): Outcome<CardsVerdict>
 
     /** Explicit setup on a managed host; default: nothing to install. */
@@ -74,13 +112,18 @@ public interface CardsQualifier {
     public suspend fun remove(profileId: String): Outcome<Unit> = Outcome.Ok(Unit)
 }
 
-public data class CardsVerdict(val ready: List<CardAgent>, val problem: CardsProblem? = null, val affected: List<CardAgent> = emptyList())
+public data class CardsVerdict(
+    val ready: List<CardAgent>,
+    val problem: CardsProblem? = null,
+    val affected: List<CardAgent> = emptyList(),
+)
 
 /**
- * Cards availability (B-CHAT-034..036, Flutter `_ConnectionControllerGenUi`): the desired setting (what the person
- * chose) is kept apart from the effective capability (what was proven). Off by default even where the server could;
- * rechecked when the connection changes; a newer request always wins over an older one still running; disabling
- * blocks card actions before removal finishes; unmanaged profiles never run setup.
+ * Cards availability (B-CHAT-034..036, Flutter `_ConnectionControllerGenUi`): the desired setting
+ * (what the person chose) is kept apart from the effective capability (what was proven). Off by
+ * default even where the server could; rechecked when the connection changes; a newer request
+ * always wins over an older one still running; disabling blocks card actions before removal
+ * finishes; unmanaged profiles never run setup.
  */
 public class CardsSetup(private val prefs: CardsPrefs, private val qualifier: CardsQualifier) {
     private val statuses = HashMap<String, CardsStatus>()
@@ -92,21 +135,35 @@ public class CardsSetup(private val prefs: CardsPrefs, private val qualifier: Ca
     /** +1 whenever a status changes (screens re-read [status]). */
     public val changes: StateFlow<Long> = mutable.asStateFlow()
 
-    public fun desired(profileId: String): Boolean = desired[profileId] ?: prefs.enabled(profileId) ?: false
+    public fun permitsSession(profileId: String, sessionId: String): Boolean =
+        qualifier.permitsSession(profileId, sessionId)
+
+    public fun settingsOwner(profileId: String): String? = qualifier.settingsOwner(profileId)
+
+    public fun activeSettingsOwner(profileId: String): Boolean =
+        qualifier.activeSettingsOwner(profileId)
+
+    public fun desired(profileId: String): Boolean {
+        val owner = settingsOwner(profileId) ?: return false
+        return desired[owner] ?: prefs.enabled(owner) ?: false
+    }
 
     /** Effective: on, proven, for at least one agent here, and not being turned off. */
     public fun effective(profileId: String, agent: CardAgent? = null): Boolean {
         if (!desired(profileId)) return false
         val s = status(profileId)
         val ready = s.agents
-        return (s is CardsStatus.On || s is CardsStatus.Partial) && (if (agent == null) ready.isNotEmpty() else agent in ready)
+        return (s is CardsStatus.On || s is CardsStatus.Partial) &&
+            (if (agent == null) ready.isNotEmpty() else agent in ready)
     }
 
     /** The status for this connection, naming only its agents (B-CHAT-035). */
     public fun status(profileId: String): CardsStatus {
         if (!desired(profileId)) return CardsStatus.Off
-        val here = qualifier.agentsHere(profileId)
-        val raw = statuses[profileId] ?: CardsStatus.Unavailable(CardsProblem.NotQualified, here)
+        val owner =
+            settingsOwner(profileId) ?: return CardsStatus.Unavailable(CardsProblem.UnsupportedHost)
+        val here = qualifier.agentsHere(owner)
+        val raw = statuses[owner] ?: CardsStatus.Unavailable(CardsProblem.NotQualified, here)
         return project(raw, here)
     }
 
@@ -127,15 +184,28 @@ public class CardsSetup(private val prefs: CardsPrefs, private val qualifier: Ca
                 else CardsStatus.Unavailable(status.reason, mine(status.affected))
             is CardsStatus.Failed -> CardsStatus.Failed(status.reason, mine(status.affected))
             is CardsStatus.RestartRequired -> CardsStatus.RestartRequired(ready)
-            CardsStatus.Off, CardsStatus.Checking -> status
+            CardsStatus.Off,
+            CardsStatus.Checking -> status
         }
     }
 
     /**
-     * The switch. On: store the wish, then (managed host) set up and verify, or (unmanaged) only verify. Off: effective
-     * goes false at once, then removal runs. A request superseded by a newer one never writes its result.
+     * The switch. On: store the wish, then (managed host) set up and verify, or (unmanaged) only
+     * verify. Off: effective goes false at once, then removal runs. A request superseded by a newer
+     * one never writes its result.
      */
     public suspend fun setEnabled(profileId: String, on: Boolean): Outcome<Unit> {
+        val owner =
+            settingsOwner(profileId)
+                ?: return Outcome.Failed(
+                    io.github.eslamasabry.oc.core.common.Failure.Refused(
+                        io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope
+                    )
+                )
+        return setOwnedEnabled(owner, on)
+    }
+
+    private suspend fun setOwnedEnabled(profileId: String, on: Boolean): Outcome<Unit> {
         val gen = (generation[profileId] ?: 0) + 1
         generation[profileId] = gen
         desired[profileId] = on
@@ -159,10 +229,15 @@ public class CardsSetup(private val prefs: CardsPrefs, private val qualifier: Ca
     }
 
     /**
-     * Recheck after a runtime switch, an "All projects" change or a reconnect (B-CHAT-034). Automatic checks are
-     * coalesced: one runs at a time per profile.
+     * Recheck after a runtime switch, an "All projects" change or a reconnect (B-CHAT-034).
+     * Automatic checks are coalesced: one runs at a time per profile.
      */
     public suspend fun recheck(profileId: String): Outcome<Unit> {
+        val owner = settingsOwner(profileId) ?: return Outcome.Ok(Unit)
+        return recheckOwned(owner)
+    }
+
+    private suspend fun recheckOwned(profileId: String): Outcome<Unit> {
         if (!desired(profileId)) return Outcome.Ok(Unit)
         if (running.containsKey(profileId)) return Outcome.Ok(Unit)
         return refresh(profileId, explicit = false, gen = generation[profileId] ?: 0)
@@ -175,7 +250,8 @@ public class CardsSetup(private val prefs: CardsPrefs, private val qualifier: Ca
         val managed = qualifier.managed(profileId)
         val result =
             try {
-                if (explicit && managed) qualifier.install(profileId) else qualifier.verify(profileId)
+                if (explicit && managed) qualifier.install(profileId)
+                else qualifier.verify(profileId)
             } finally {
                 if (running[profileId] == gen) running.remove(profileId)
             }
@@ -183,13 +259,21 @@ public class CardsSetup(private val prefs: CardsPrefs, private val qualifier: Ca
         if ((generation[profileId] ?: 0) != gen || !desired(profileId)) return Outcome.Ok(Unit)
         statuses[profileId] =
             when (result) {
-                is Outcome.Failed -> CardsStatus.Failed(CardsProblem.VerificationFailed, qualifier.agentsHere(profileId))
+                is Outcome.Failed ->
+                    CardsStatus.Failed(
+                        CardsProblem.VerificationFailed,
+                        qualifier.agentsHere(profileId),
+                    )
                 is Outcome.Ok -> {
                     val v = result.value
                     when {
                         v.ready.isEmpty() && !managed && v.problem == null ->
                             CardsStatus.Unavailable(CardsProblem.UnsupportedHost)
-                        v.ready.isEmpty() -> CardsStatus.Unavailable(v.problem ?: CardsProblem.NotQualified, v.affected)
+                        v.ready.isEmpty() ->
+                            CardsStatus.Unavailable(
+                                v.problem ?: CardsProblem.NotQualified,
+                                v.affected,
+                            )
                         v.problem != null -> CardsStatus.Partial(v.ready, v.problem, v.affected)
                         else -> CardsStatus.On(v.ready)
                     }
@@ -211,4 +295,12 @@ public class CardsSetup(private val prefs: CardsPrefs, private val qualifier: Ca
     private fun bump() {
         mutable.value = mutable.value + 1
     }
+}
+
+/**
+ * The app binds lifecycle owners without making this engine depend on integrations or platform
+ * code.
+ */
+public fun interface CardsLifecycle {
+    public fun attach(setup: CardsSetup)
 }

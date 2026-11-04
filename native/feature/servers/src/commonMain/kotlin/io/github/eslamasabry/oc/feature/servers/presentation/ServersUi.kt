@@ -102,4 +102,14 @@ public interface ServersActions {
 
     /** STATE: the offline demo conversation. */
     public fun tryOffline() {}
+
+    public fun openConnectorCatalog(id: ProfileId) {}
+
+    public fun openSetupReview(id: ProfileId) {}
+
+    public fun openAgentTools(id: ProfileId) {}
+
+    public fun openMonitor(id: ProfileId) {}
+
+    public fun openCodexProbe() {}
 }

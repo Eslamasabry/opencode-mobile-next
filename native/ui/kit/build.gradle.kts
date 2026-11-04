@@ -13,6 +13,9 @@ val roborazzi = libs.versions.roborazzi.get()
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":core:common"))
+        implementation("io.coil-kt.coil3:coil-compose:3.6.3")
+        implementation("io.coil-kt.coil3:coil-svg:3.6.3") // bytes only: no Coil network artifact
+
         implementation(
             project(":ui:words")
         ) // S1-KITA2: kit-internal words from strings_kit.xml (plan 06 §13.5)

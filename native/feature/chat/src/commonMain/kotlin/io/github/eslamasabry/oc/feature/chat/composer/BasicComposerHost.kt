@@ -104,6 +104,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatHistoryTitle
 import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_add
 import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_remove
 import io.github.eslamasabry.oc.ui.words.res.chat_model_favorites
+import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
+import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
+import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachModelWithoutFiles
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachNoPicker
@@ -193,6 +196,24 @@ public fun BasicComposer(
     history: ComposerHistoryUi = ComposerHistoryUi(),
     refreshHistory: (() -> Unit)? = null,
 ) {
+    if (state.readOnly != null) {
+        Column(modifier) {
+            KitNotice(
+                stringResource(
+                    io.github.eslamasabry.oc.ui.words.res.Res.string.chatSubagentReadOnly
+                )
+            )
+            if (state.readOnly.parent != null)
+                KitButton(
+                    stringResource(
+                        io.github.eslamasabry.oc.ui.words.res.Res.string.chatUiOpenParentSession
+                    ),
+                    actions::openParent,
+                    role = KitButtonRole.Secondary,
+                )
+        }
+        return
+    }
     val field = remember(state.targetKey) { TextFieldState() }
     val focus = remember(state.targetKey) { FocusRequester() }
     var editorReady by remember(state.targetKey) { mutableStateOf(false) }
@@ -695,6 +716,12 @@ public fun BasicComposer(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     KitChoiceRow(
                                         title = pick.model.label,
+                                        leading = {
+                                            KitProviderLogo(
+                                                pick.model.providerId,
+                                                pick.model.providerName,
+                                            )
+                                        },
                                         selected = pick.current,
                                         // In "Recent" the provider tells equal names apart.
                                         supporting =

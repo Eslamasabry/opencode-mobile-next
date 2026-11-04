@@ -1,0 +1,31 @@
+<resources>
+    <string name="agentProjectWorkspace">Changes and worktrees</string>
+    <string name="agentProjectReadFailed">Couldn’t finish this project action. Check the latest state before trying again.</string>
+    <string name="agentProjectNoGit">This folder isn’t a Git repository.</string>
+    <string name="agentProjectBranch">Current branch</string>
+    <string name="agentProjectBaseBranch">Base branch</string>
+    <string name="agentProjectDetached">Detached checkout</string>
+    <string name="agentProjectWorkingTree">Working tree</string>
+    <string name="agentProjectBranchChanges">Since base branch</string>
+    <string name="agentProjectAllFiles">All changed files</string>
+    <string name="agentProjectNoPatch">This file has no text patch.</string>
+    <string name="agentProjectPreviousLines">Previous 200 lines</string>
+    <string name="agentProjectNextLines">Next 200 lines</string>
+    <string name="agentProjectChangedFiles">Changed files</string>
+    <string name="agentProjectNoChanges">No changes in this comparison.</string>
+    <string name="agentProjectLineChanges">%1$d added · %2$d removed</string>
+    <string name="agentProjectWorktrees">Worktrees</string>
+    <string name="agentProjectNoWorktrees">No worktrees reported for this project.</string>
+    <string name="agentProjectReady">Ready</string>
+    <string name="agentProjectRemove">Remove worktree</string>
+    <string name="agentProjectWorking">Wait for this action to finish.</string>
+    <string name="agentProjectNewWorktree">New named worktree</string>
+    <string name="agentProjectGenerateWorktree">Create with a generated name</string>
+    <string name="agentProjectRefresh">Refresh project state</string>
+    <string name="agentProjectNameInvalid">Use 1–128 letters, numbers, dots, underscores or hyphens. Start with a letter or number and don’t use two dots together.</string>
+    <string name="agentProjectWorktreeName">Worktree name</string>
+    <string name="agentProjectCreate">Create worktree</string>
+    <string name="agentProjectRemoveQuestion">Remove “%1$s”?</string>
+    <string name="agentProjectRemoveBody">Archives the worktree and its conversations, and removes its folder: %1$s</string>
+    <string name="agentProjectRemoveChanges">This worktree has %1$d changed files. They will be removed with the folder.</string>
+</resources>

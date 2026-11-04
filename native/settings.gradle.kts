@@ -35,7 +35,10 @@ dependencyResolutionManagement {
                     }
                 }
             }
-            filter { includeGroup("com.k2fsa.sherpa.onnx") }
+            filter {
+                includeGroup("com.k2fsa.sherpa.onnx")
+                includeGroup("com.github.termux.termux-app")
+            }
         }
     }
 }

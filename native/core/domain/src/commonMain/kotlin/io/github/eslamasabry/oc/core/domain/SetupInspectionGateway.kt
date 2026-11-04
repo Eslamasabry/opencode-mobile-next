@@ -13,6 +13,11 @@ public interface SetupInspectionGateway {
     public fun setupInspection(location: ServerLocation): SetupInspector
 
     public suspend fun inspectSetup(): Outcome<SetupInspection> = unavailable("setupInspection")
+
+    /**
+     * AGENT-2: read-only configuration layers in server priority order. Register credentials before projection.
+     */
+    public suspend fun setupConfigSources(): Outcome<JsonObject> = unavailable("setupConfigSources")
 }
 
 /**

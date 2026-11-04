@@ -15,9 +15,24 @@ import io.github.eslamasabry.oc.android.notifications.NotifyChannel
 import io.github.eslamasabry.oc.android.notifications.NotifyWords
 import io.github.eslamasabry.oc.android.notifications.R as NotifyR
 import io.github.eslamasabry.opencode_mobile.graph.appGraph
+import io.github.eslamasabry.oc.android.widgets.NativeStrings
+import io.github.eslamasabry.oc.android.widgets.R as WidgetR
+import io.github.eslamasabry.oc.android.widgets.WidgetActionAdmission
+import io.github.eslamasabry.oc.android.widgets.WidgetActionExtras
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.domain.platform.ForegroundKind
+import io.github.eslamasabry.oc.core.domain.platform.ForegroundTicket
+import io.github.eslamasabry.oc.core.domain.platform.ForegroundWork
 import io.github.eslamasabry.opencode_mobile.graph.backgroundHub
 import io.github.eslamasabry.opencode_mobile.graph.platformHub
 import kotlinx.coroutines.launch
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * The live background connection's foreground service, at the Flutter app's frozen FQCN (plan 11
@@ -27,7 +42,12 @@ import kotlinx.coroutines.launch
  * `dataSync` at 6 h per 24 h: [onTimeout] saves the pause first.
  */
 class BackgroundConnectionService : Service() {
-    private var widgetWork: kotlinx.coroutines.Job? = null
+    private var livePromised = false
+    private val widgetJobs = mutableSetOf<Job>()
+    private var widgetRuns = 0
+    private var widgetStartId = 0
+    private val widgetForeground = WidgetForeground()
+    private val widgetAdmission by lazy { WidgetActionAdmission(this, widgetForeground) }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -37,48 +57,37 @@ class BackgroundConnectionService : Service() {
                 io.github.eslamasabry.oc.android.widgets.BackgroundConnectionService
                     .ACTION_WIDGET_ACTION
         ) {
-            // The first tap owns this service lease; another intent cannot replace or stop its job.
-            if (widgetWork?.isActive == true) return START_NOT_STICKY
-            val raw =
-                intent.getStringExtra("oc.widgetPayload")
-                    ?: return START_NOT_STICKY.also { stopSelf(startId) }
-            // A launcher tap gets a short bounded promise, without enabling the persistent live
-            // connection.
-            val hub = platformHub
-            val promoted =
-                try {
-                    val type =
-                        if (backgroundHub.signals.active && Build.VERSION.SDK_INT >= 29)
-                            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-                        else if (Build.VERSION.SDK_INT >= 34)
-                            ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE
-                        else 0
-                    ServiceCompat.startForeground(
-                        this,
-                        NotificationIds.STATUS,
-                        row(widget = !backgroundHub.signals.active),
-                        type,
-                    )
-                    true
-                } catch (_: IllegalStateException) {
-                    false
-                } catch (_: SecurityException) {
-                    false
+            val request = WidgetActionExtras.read(intent)
+            if (request == null) {
+                // Started through getForegroundService: keep the start-foreground promise even for
+                // a malformed request, then drop the row at once.
+                if (!livePromised) {
+                    widgetForeground.promote()
+                    ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
                 }
-            widgetWork =
-                hub.scope.launch {
-                    try {
-                        if (promoted) hub.runWidgetAction(raw)
-                    } finally {
-                        if (!backgroundHub.signals.active) {
-                            ServiceCompat.stopForeground(
-                                this@BackgroundConnectionService,
-                                ServiceCompat.STOP_FOREGROUND_REMOVE,
-                            )
-                            stopSelf(startId)
-                        }
+                if (!hasLiveOwner()) stopSelfResult(startId)
+                return START_NOT_STICKY
+            }
+            widgetStartId = startId
+            widgetRuns++
+            backgroundHub.launchOnMain {
+                val job = currentCoroutineContext()[Job]!!
+                widgetJobs += job
+                widgetForeground.syncOwners()
+                try {
+                    widgetAdmission.run(request)
+                } finally {
+                    widgetJobs -= job
+                    widgetRuns--
+                    if (widgetRuns == 0 && !hasLiveOwner()) {
+                        ServiceCompat.stopForeground(
+                            this@BackgroundConnectionService,
+                            ServiceCompat.STOP_FOREGROUND_REMOVE,
+                        )
+                        stopSelfResult(widgetStartId)
                     }
                 }
+            }
             return START_NOT_STICKY
         }
         val hub = backgroundHub
@@ -89,6 +98,7 @@ class BackgroundConnectionService : Service() {
                         ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
                     else 0
                 ServiceCompat.startForeground(this, NotificationIds.STATUS, row(), type)
+                livePromised = true
                 true
             } catch (_: IllegalStateException) {
                 false // ForegroundServiceStartNotAllowedException and the API 34+ type checks
@@ -97,11 +107,14 @@ class BackgroundConnectionService : Service() {
             }
         hub.launchOnMain {
             if (!hub.serviceBody.onForegroundResult(promised)) {
-                ServiceCompat.stopForeground(
-                    this@BackgroundConnectionService,
-                    ServiceCompat.STOP_FOREGROUND_REMOVE,
-                )
-                stopSelf()
+                livePromised = false
+                if (widgetRuns == 0) {
+                    ServiceCompat.stopForeground(
+                        this@BackgroundConnectionService,
+                        ServiceCompat.STOP_FOREGROUND_REMOVE,
+                    )
+                    stopSelf()
+                } else widgetForeground.promote()
             } else {
                 appGraph.previewRuntime.restoreSavedConnection()
             }
@@ -114,19 +127,30 @@ class BackgroundConnectionService : Service() {
             Build.VERSION.SDK_INT >= 34 &&
                 fgsType == ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE
         ) {
-            widgetWork?.cancel()
-            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
-            stopSelf(startId)
+            expireWidget(startId)
             return
         }
         val hub = backgroundHub
         hub.launchOnMain {
             hub.serviceBody.onTimeout()
+            livePromised = false
             ServiceCompat.stopForeground(
                 this@BackgroundConnectionService,
                 ServiceCompat.STOP_FOREGROUND_REMOVE,
             )
             stopSelf()
+        }
+    }
+
+    override fun onTimeout(startId: Int) {
+        expireWidget(startId)
+    }
+
+    private fun expireWidget(startId: Int) {
+        widgetJobs.toList().forEach { it.cancel() }
+        if (!hasLiveOwner()) {
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+            stopSelfResult(startId)
         }
     }
 
@@ -136,7 +160,8 @@ class BackgroundConnectionService : Service() {
     }
 
     override fun onDestroy() {
-        widgetWork?.cancel()
+        widgetJobs.toList().forEach { it.cancel() }
+        livePromised = false
         backgroundHub.serviceBody.onDestroy()
         super.onDestroy()
     }
@@ -160,21 +185,86 @@ class BackgroundConnectionService : Service() {
         return NotificationCompat.Builder(this, NotifyChannel.LiveConnection.id)
             .setSmallIcon(NotifyR.drawable.notify_ic_status)
             .setContentTitle(
-                words.text(
-                    if (widget) NotifyR.string.notify_widget_action
-                    else NotifyR.string.notify_live_channel
-                )
+                if (widget) NativeStrings.get(this, WidgetR.string.widget_label)
+                else words.text(NotifyR.string.notify_live_channel)
             )
             .setContentText(
-                words.text(
-                    if (widget) NotifyR.string.notify_widget_action_description
-                    else NotifyR.string.notify_live_description
-                )
+                if (widget) NativeStrings.get(this, WidgetR.string.widget_v2_pending)
+                else words.text(NotifyR.string.notify_live_description)
             )
             .setOngoing(true)
             .setSilent(true)
             .setContentIntent(open)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
+    }
+
+    private fun hasLiveOwner(): Boolean = livePromised || backgroundHub.signals.active
+
+    /**
+     * The widget borrows an existing live promise; otherwise its exact ticket owns only a
+     * shortService.
+     */
+    private inner class WidgetForeground : ForegroundWork {
+        private val mutable = MutableStateFlow<ImmutableSet<ForegroundKind>>(persistentSetOf())
+        override val active: StateFlow<ImmutableSet<ForegroundKind>> = mutable
+        private var next = 0L
+        private val tickets = mutableSetOf<Long>()
+
+        fun syncOwners() {
+            mutable.value =
+                when {
+                    // Only this instance's own live promise counts: the live signal alone has not
+                    // called startForeground here.
+                    livePromised -> persistentSetOf(ForegroundKind.LiveMode)
+                    tickets.isNotEmpty() -> persistentSetOf(ForegroundKind.WidgetAction)
+                    else -> persistentSetOf()
+                }
+        }
+
+        fun promote(): Boolean =
+            try {
+                if (!livePromised) {
+                    val type =
+                        when {
+                            Build.VERSION.SDK_INT >= 34 ->
+                                ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE
+                            Build.VERSION.SDK_INT >= 29 ->
+                                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                            else -> 0
+                        }
+                    ServiceCompat.startForeground(
+                        this@BackgroundConnectionService,
+                        4748,
+                        row(widget = true),
+                        type,
+                    )
+                }
+                true
+            } catch (e: IllegalStateException) {
+                false
+            } catch (e: SecurityException) {
+                false
+            }
+
+        override suspend fun begin(kind: ForegroundKind): Outcome<ForegroundTicket> {
+            if (kind != ForegroundKind.WidgetAction || !promote())
+                return Outcome.Failed(Failure.Device())
+            val ticket = ForegroundTicket(kind, ++next)
+            tickets += ticket.id
+            syncOwners()
+            return Outcome.Ok(ticket)
+        }
+
+        override suspend fun end(ticket: ForegroundTicket) {
+            if (ticket.kind != ForegroundKind.WidgetAction || !tickets.remove(ticket.id)) return
+            syncOwners()
+            if (tickets.isEmpty() && !livePromised) {
+                ServiceCompat.stopForeground(
+                    this@BackgroundConnectionService,
+                    ServiceCompat.STOP_FOREGROUND_REMOVE,
+                )
+            }
+        }
     }
 }

@@ -47,6 +47,9 @@ public enum class HeaderAction {
     Fork,
     Rename,
     ContinueWith,
+    AgentOptions,
+    AgentHandoff,
+    CardsSettings,
 
     /**
      * "Continue on computer" (Flutter `continueOnComputer`, B-AGENT-227): the copyable resume

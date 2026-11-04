@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.domain.ReadOnlySessionsGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
@@ -26,6 +27,7 @@ import io.github.eslamasabry.oc.core.model.ChatDefaults
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.PromptAttachment
+import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
@@ -167,6 +169,7 @@ internal class GraphChatWorld(
     private var draftSession = draftStore?.open(ref)
     private val mutableTranscript = MutableStateFlow(TranscriptState.Empty)
     private val mutableLoad = MutableStateFlow<ChatLoad>(ChatLoad.Loading)
+    private val mutableReadOnly = MutableStateFlow<ReadOnlyChat?>(null)
     private val mutableTitle = MutableStateFlow<String?>(null)
     private val mutableCaps = MutableStateFlow(ServerCapabilities())
     private val mutableLink = MutableStateFlow(ChatLink.Connecting)
@@ -215,6 +218,7 @@ internal class GraphChatWorld(
 
     override val transcript: StateFlow<TranscriptState> = mutableTranscript.asStateFlow()
     override val load: StateFlow<ChatLoad> = mutableLoad.asStateFlow()
+    override val readOnly: StateFlow<ReadOnlyChat?> = mutableReadOnly.asStateFlow()
     override val title: StateFlow<String?> = mutableTitle.asStateFlow()
     override val capabilities: StateFlow<ServerCapabilities> = mutableCaps.asStateFlow()
     override val link: StateFlow<ChatLink> = mutableLink.asStateFlow()
@@ -616,6 +620,9 @@ internal class GraphChatWorld(
         }
         val watcher =
             registry.appScope.launch(registry.mainContext) {
+                // An explicit conversation route may restore its proven native helper once.
+                // Passive feed observation never starts or retries a helper.
+                if (registry.graphFor(ref) == null) registry.recoverTransient(ref)
                 registry.live.collect {
                     val graph = registry.graphFor(ref)
                     if (
@@ -638,6 +645,7 @@ internal class GraphChatWorld(
         mutableCommands.value = emptyList()
         catalogDefaults = null
         mutableTranscript.value = TranscriptState.Empty
+        mutableReadOnly.value = null
         feedKeeper.reset()
         nextCursor = null
         mutableOlder.value = false
@@ -650,6 +658,7 @@ internal class GraphChatWorld(
             return
         }
         val gateway = (graph as ChatGraphAccessors).chatGateway
+        refreshReadOnly(gateway)
         userMessageKeys.clear()
         // The draft records (and restores `file:` references only at) this conversation's place.
         gateway.location.value.let {
@@ -764,6 +773,10 @@ internal class GraphChatWorld(
                 scope.launch(registry.mainContext) {
                     gateway.events.all.collect { envelope ->
                         val event = envelope.event
+                        if (event is CoreEvent.SessionUpserted && event.session.id == sid)
+                            refreshReadOnly(gateway, event.session)
+                        if (event is CoreEvent.SessionChanged && event.sessionId == sid)
+                            refreshReadOnly(gateway)
                         if (
                             event is CoreEvent.SessionChanged &&
                                 event.sessionId == sid &&
@@ -836,9 +849,9 @@ internal class GraphChatWorld(
                         loadModels()
                 },
                 scope.launch(registry.mainContext) {
-                    (graph.session.reads.session(sid) as? Outcome.Ok)?.value?.title?.let {
-                        mutableTitle.value = it
-                    }
+                    val session = (graph.session.reads.session(sid) as? Outcome.Ok)?.value
+                    session?.title?.let { mutableTitle.value = it }
+                    refreshReadOnly(gateway, session)
                     val statuses = gateway.sessionStatuses()
                     if (statuses is Outcome.Ok && statuses.value[sid] == SessionStatus.Busy) {
                         handle.submit(GatewayEvent.RunStarted(sid.raw))
@@ -858,6 +871,25 @@ internal class GraphChatWorld(
         unbind(flushHeld = true)
         draftSession?.close()
     }
+
+    private fun refreshReadOnly(gateway: ServerGateway, session: Session? = null) {
+        val readOnly = gateway.facet<ReadOnlySessionsGateway>()?.isReadOnlySession(sid) == true
+        mutableReadOnly.value =
+            if (readOnly)
+                ReadOnlyChat(
+                    session?.parentId?.let { ConversationRef(ref.profileId, it) }
+                        ?: mutableReadOnly.value?.parent
+                )
+            else null
+    }
+
+    private fun readOnlyNow(): Boolean =
+        mutableReadOnly.value != null ||
+            currentAttached()?.gateway?.facet<ReadOnlySessionsGateway>()?.isReadOnlySession(sid) ==
+                true
+
+    private fun readOnlyFailure(): Outcome.Failed =
+        Outcome.Failed(Failure.Unavailable(FeatureId("subagentReplies")))
 
     private fun currentAttached(): Attached? = attached?.takeIf {
         registry.graphFor(ref) === it.graph
@@ -1205,6 +1237,7 @@ internal class GraphChatWorld(
     }
 
     override suspend fun selectModel(choice: ComposerModel?, variant: String): Outcome<Unit> {
+        if (readOnlyNow()) return readOnlyFailure()
         val delivery = (currentAttached()?.graph as? ChatGraphAccessors)?.chatDelivery
         val result =
             if (delivery == null) applyModel(choice, variant)
@@ -1308,6 +1341,7 @@ internal class GraphChatWorld(
     }
 
     override suspend fun selectAgent(agent: String): Outcome<Unit> {
+        if (readOnlyNow()) return readOnlyFailure()
         val delivery = (currentAttached()?.graph as? ChatGraphAccessors)?.chatDelivery
         return if (delivery == null) applyAgent(agent)
         else delivery.withSelection(ref) { applyAgent(agent) }
@@ -1399,6 +1433,7 @@ internal class GraphChatWorld(
     override suspend fun sendAgain(text: String): Outcome<Unit> = send(text, draftFiles = false)
 
     private suspend fun send(text: String, draftFiles: Boolean): Outcome<Unit> {
+        if (readOnlyNow()) return readOnlyFailure()
         val id = nextLocalId++
         if (mutableLoad.value !is ChatLoad.Live)
             return Outcome.Failed(Failure.Busy(BusyKind.Starting))
@@ -1440,6 +1475,7 @@ internal class GraphChatWorld(
     }
 
     override suspend fun sendRepeated(text: String, expectedRevision: Long): Outcome<Unit> {
+        if (readOnlyNow()) return readOnlyFailure()
         val session =
             draftSession ?: return Outcome.Failed(Failure.Unavailable(FeatureId("draftRepeat")))
         val captured = session.state.value
@@ -1474,6 +1510,7 @@ internal class GraphChatWorld(
     }
 
     override suspend fun retrySend(localId: Long): Outcome<Unit> {
+        if (readOnlyNow()) return readOnlyFailure()
         val bubble =
             mutablePending.value.firstOrNull {
                 it.localId == localId && it.state == PendingState.Failed
@@ -1750,6 +1787,7 @@ internal class GraphChatWorld(
         }
 
     override suspend fun stopTurn(): Outcome<Boolean> {
+        if (readOnlyNow()) return readOnlyFailure()
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         (a.graph as ChatGraphAccessors).chatDelivery.engine?.let {
             // The engine calls off waiting sends and records the person's Stop, then interrupts.
@@ -1803,6 +1841,7 @@ internal class GraphChatWorld(
     }
 
     override suspend fun fork(from: MessageId): Outcome<SessionId> {
+        if (readOnlyNow()) return readOnlyFailure()
         val graph =
             currentAttached()?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         return (graph as ChatGraphAccessors).chatOperations.forkSession(sid, from)
@@ -1813,6 +1852,7 @@ internal class GraphChatWorld(
      * removeMessage).
      */
     override suspend fun deleteMessage(id: MessageId): Outcome<Unit> {
+        if (readOnlyNow()) return readOnlyFailure()
         val graph =
             currentAttached()?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         val r = (graph as ChatGraphAccessors).chatOperations.deleteMessage(sid, id)
@@ -1821,6 +1861,7 @@ internal class GraphChatWorld(
     }
 
     override suspend fun revertFrom(from: MessageId): Outcome<Unit> {
+        if (readOnlyNow()) return readOnlyFailure()
         val graph =
             currentAttached()?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         val r = (graph as ChatGraphAccessors).chatOperations.revertSession(sid, from)

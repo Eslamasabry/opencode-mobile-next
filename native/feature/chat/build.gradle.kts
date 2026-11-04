@@ -23,6 +23,7 @@ kotlin {
         ) // S2-REQ: the request slot (permissions, one-question asks)
         implementation(libs.kotlinx.collections.immutable)
         implementation(libs.kotlinx.datetime)
+        implementation(project(":engine:integrations-catalog"))
         implementation(project(":engine:cards")) // P12-CHAT-CARDS: the agent card slot
         implementation(
             project(":engine:agents")

@@ -1,0 +1,21 @@
+<resources>
+    <string name="codexNativeTitle">فحص اتصال Codex</string>
+    <string name="codexNativeIntro">شغّل هذا الأمر ذي السطر الواحد على حاسوبك. أدخل عنوانه ومسار مجلد مطلق ورمز الصلاحية لفحص الاتصال الموثّق.</string>
+    <string name="codexNativeCopy">نسخ أمر التشغيل</string>
+    <string name="codexNativeTokenHelp">استخدم مسار ملف الرمز المطلق الخاص بك. حافظ على سرية الرمز. يُسمح باتصال WebSocket غير المشفّر على هذا الجهاز فقط؛ استخدم اتصالًا آمنًا لحاسوب آخر.</string>
+    <string name="codexNativeAddress">عنوان WebSocket</string>
+    <string name="codexNativeDirectory">مسار المجلد المطلق</string>
+    <string name="codexNativeToken">رمز الصلاحية</string>
+    <string name="codexNativeWorking">جارٍ فحص الاتصال…</string>
+    <string name="codexNativeProbe">فحص الاتصال</string>
+    <string name="codexNativeProbed">أجاب الاتصال الموثّق عن قراءة تخص المجلد. لا تؤكّد النتيجة الفارغة وجود المجلد.</string>
+    <string name="codexNativeFailed">تعذّر فحص الاتصال. تحقّق من تشغيل Codex وحاول مجددًا.</string>
+    <string name="codexNativeAuthFailed">رفض Codex رمز الصلاحية. تحقّق منه وحاول مجددًا.</string>
+    <string name="codexNativeScopeFailed">تحقّق من العنوان ومسار المجلد المطلق ونطاق الاتصال المسموح.</string>
+    <string name="codexNativeVersion">لا يمكن لهذا الاتصال توفير استهلاك الحساب. تتطلب قراءة الحساب بروتوكول Codex 0.153.4 المعتمد.</string>
+    <string name="codexNativeOpen">فتح قارئ الحساب</string>
+    <string name="codexNativeReaderOpen">قارئ الحساب مفتوح. افتح الخطط لتحديث حدود الحساب. أغلقه هنا عند الانتهاء.</string>
+    <string name="codexNativePlans">فتح الخطط</string>
+    <string name="codexNativeClose">إغلاق قارئ الحساب</string>
+    <string name="codexNativeReadOnly">تفحص هذه الصفحة الاتصال وتقرأ استهلاك الحساب. لا تبدأ محادثة ولا تسجّل دخولك ولا ترسل طلبًا.</string>
+</resources>

@@ -26,6 +26,10 @@ import kotlinx.coroutines.flow.StateFlow
  * One instance per open conversation, shared by the chat and its composer through [ChatWorlds].
  */
 public interface ChatWorld {
+    /** A helper conversation reports to its parent and cannot accept independent replies. */
+    public val readOnly: StateFlow<ReadOnlyChat?>
+        get() = NoReadOnly
+
     public val requests:
         StateFlow<io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestsModel?>
         get() = NoRequests
@@ -333,3 +337,7 @@ private val NoModels = kotlinx.coroutines.flow.MutableStateFlow(ComposerModels()
 
 private val NoCommands =
     kotlinx.coroutines.flow.MutableStateFlow<List<ComposerCommand>>(emptyList())
+
+public data class ReadOnlyChat(val parent: ConversationRef? = null)
+
+private val NoReadOnly = kotlinx.coroutines.flow.MutableStateFlow<ReadOnlyChat?>(null)

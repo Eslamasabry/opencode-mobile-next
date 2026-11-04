@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentProjectWorkspace
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMore
@@ -144,6 +145,15 @@ public fun ProjectPageScreen(
                     onClick = actions::developmentServices,
                 )
             }
+            if (state.workspace.available) {
+                item(key = "project-workspace") {
+                    KitRow(
+                        title = stringResource(Res.string.agentProjectWorkspace),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = actions::openWorkspace,
+                    )
+                }
+            }
             item(key = "new-body") {
                 KitText(
                     stringResource(Res.string.p12NewHereBody, state.name),
@@ -218,6 +228,7 @@ public fun ProjectPageScreen(
                 }
             }
         }
+        ProjectWorkspaceSheet(state.workspace, actions)
     }
 }
 

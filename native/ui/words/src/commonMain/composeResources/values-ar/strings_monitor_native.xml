@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="monitorNativeTitle">التحقق من الخوادم الأخرى</string>
+    <string name="monitorNativeBack">رجوع</string>
+    <string name="monitorNativeForegroundOnly">تحقق من الخوادم المحفوظة ما دامت هذه الصفحة مفتوحة. إغلاقها يوقف القراءة. هذا لا يشغّل خادم الهاتف ولا يفعّل تنبيهات الخلفية.</string>
+    <string name="monitorNativeCheck">تحقق الآن</string>
+    <string name="monitorNativeChecking">جارٍ التحقق…</string>
+    <string name="monitorNativeAllow">السماح بالتحقق</string>
+    <string name="monitorNativeConsent">اسمح لهذا التطبيق بقراءة الطلبات وحالة المحادثات الحديثة من هذا الخادم المحفوظ.</string>
+    <string name="monitorNativeUnsupported">لا يمكن التحقق من هذا الخادم المحفوظ هنا.</string>
+    <string name="monitorNativeOff">التحقق متوقف</string>
+    <string name="monitorNativeWaiting">لم يتم التحقق بعد</string>
+    <string name="monitorNativeCurrent">تم التحقق</string>
+    <string name="monitorNativePartial">تم التحقق جزئيًا. تحقق مجددًا لقراءة المزيد من المحادثات.</string>
+    <string name="monitorNativeUnknown">تعذّر تأكيد أحدث حالة. قد تبقى الملاحظات السابقة ظاهرة.</string>
+    <string name="monitorNativePaused">التحقق موقوف مؤقتًا</string>
+    <string name="monitorNativePending">بانتظارك: %1$d</string>
+    <string name="monitorNativeRunning">قيد التشغيل: %1$d</string>
+    <string name="monitorNativeConversation">محادثة</string>
+    <string name="monitorNativeFailed">فشلت آخر جولة تم التحقق منها</string>
+    <string name="monitorNativeEarlierFailure">فشل سابق؛ أحدث حالة غير معروفة</string>
+    <string name="monitorNativeSaveFailed">تعذّر حفظ هذه الإعدادات أو تحميلها. حاول مجددًا.</string>
+    <string name="monitorNativeEmpty">لا توجد خوادم محفوظة متاحة للتحقق.</string>
+    <string name="monitorNativeRequest">بانتظارك</string>
+    <string name="monitorNativeEarlierRequest">طلب سابق؛ أحدث حالة غير معروفة</string>
+    <string name="monitorNativeReconnect">اتصل بهذا الخادم أو حدّث تسجيل الدخول إليه في صفحة الخوادم قبل التحقق.</string>
+</resources>

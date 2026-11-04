@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.feature.plans.presentation
 
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.integrations.usage.SignInState
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnection
@@ -36,6 +39,27 @@ public interface PlansSource {
     public val defaultThreshold: Double
 
     public val resetNotice: Boolean
+
+    /** AGENT-2: the provider-usage collector rows (phone and opted-in servers). */
+    public fun collectorRows(): List<PlanCollectorUi> = emptyList()
+
+    public fun alertsOn(): Boolean = false
+
+    public fun canAlert(): Boolean = false
+
+    public fun phoneSignInOwner(): ProfileId? = null
+
+    public suspend fun setAlertsOn(enabled: Boolean): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("usageAlerts")))
+
+    public suspend fun setUpCollector(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("usageCollector")))
+
+    public suspend fun consentRemoteCollector(profile: ProfileId, enabled: Boolean): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("usageCollector")))
+
+    public suspend fun turnOffCollector(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("usageCollector")))
 }
 
 /** The binding is an opaque digest, so stale confirmations cannot authorize changed credentials. */
@@ -82,7 +106,16 @@ public enum class PlansPhase {
  * A connection as the screen names it; this phone's agent host has no saved name ([isPhone], words
  * say "This phone").
  */
-public data class PlanConnectionUi(val name: String, val isPhone: Boolean)
+public data class PlanConnectionUi(val name: String, val isPhone: Boolean, val id: String = "")
+
+public data class PlanCollectorUi(
+    val profile: ProfileId,
+    val name: String,
+    val inApp: Boolean,
+    val enabled: Boolean,
+)
+
+public data class PlanCollectorAsk(val collector: PlanCollectorUi, val enable: Boolean)
 
 public data class PlanWindowUi(
     val kind: UsageWindowKind,
@@ -113,6 +146,7 @@ public data class PlanCardUi(
     val resetSince: Boolean,
     val fetchedAtMs: Long?,
     val alertThreshold: Int,
+    val canFix: Boolean = false,
 )
 
 public data class PlanKeyUi(
@@ -140,6 +174,12 @@ public data class PlansUi(
     val thresholdInput: String = "",
     val saving: Boolean = false,
     val failed: Boolean = false,
+    val collectorRows: ImmutableList<PlanCollectorUi> = persistentListOf(),
+    val alertsAvailable: Boolean = false,
+    val alertsOn: Boolean = false,
+    val actionBusy: Boolean = false,
+    val actionFailed: Boolean = false,
+    val ask: PlanCollectorAsk? = null,
 )
 
 public interface PlansActions {
@@ -168,12 +208,19 @@ public interface PlansActions {
     public fun toggleResetNotice()
 
     public fun dismissEditor()
+
+    public fun setAlertsOn(enabled: Boolean)
+
+    public fun askCollector(profile: ProfileId)
+
+    public fun fix(key: String)
 }
 
 private fun UsageConnection.ui(): PlanConnectionUi =
     PlanConnectionUi(
         name = name,
         isPhone = kind == UsageConnectionKind.PhoneAgents || id == UsageConnection.PHONE_ID,
+        id = id,
     )
 
 /** Pure: the engine snapshot as screen state. */

@@ -13,6 +13,7 @@ kotlin {
         implementation(project(":core:security"))
         implementation(project(":core:model"))
         api("io.ktor:ktor-client-core:$ktor")
+        api("io.ktor:ktor-websockets:$ktor")
     }
     sourceSets.commonTest.dependencies {
         implementation("io.ktor:ktor-client-mock:$ktor")
@@ -27,12 +28,20 @@ kotlin {
             api("io.ktor:ktor-client-okhttp:$ktor")
             implementation("io.ktor:ktor-websockets:$ktor")
         }
+        dependencies {
+            api("io.ktor:ktor-client-okhttp:$ktor")
+            implementation(project(":core:net-okhttp"))
+        }
     }
     sourceSets.getByName("desktopMain") {
         kotlin.srcDir("src/jvmShared/kotlin")
         dependencies {
             api("io.ktor:ktor-client-okhttp:$ktor")
             implementation("io.ktor:ktor-websockets:$ktor")
+        }
+        dependencies {
+            api("io.ktor:ktor-client-okhttp:$ktor")
+            implementation(project(":core:net-okhttp"))
         }
     }
 }

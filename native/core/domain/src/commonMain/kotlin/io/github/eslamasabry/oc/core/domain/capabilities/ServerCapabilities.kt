@@ -105,6 +105,8 @@ public data class ServerCapabilities(
     val projectsAreGitRepositories: Boolean = true,
     val remoteShell: Boolean = false,
     val claudeAgent: Boolean = false,
+    val agentFeatures: Boolean = false,
+    val worktreeInspection: Boolean = false,
 ) {
     /** Whether a conversation runs shell commands here (Dart `conversationShellOn`). */
     public val conversationShellOn: Boolean

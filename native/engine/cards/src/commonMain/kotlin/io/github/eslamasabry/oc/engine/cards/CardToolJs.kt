@@ -4,7 +4,8 @@ package io.github.eslamasabry.oc.engine.cards
 // lib/builtin/agents/gen_ui_connector_search_js.dart, lib/builtin/agents/gen_ui_server.dart):
 // the card tool server is the same zero-dependency Node.js MCP helper the Flutter app installs.
 internal object CardToolJs {
-    const val VALIDATION: String = """function normalizeGenUiCard(input) {
+    const val VALIDATION: String =
+        """function normalizeGenUiCard(input) {
   const fail = (code = 'badValue') => { throw new Error(code); };
   let count = 0;
   let stringBytes = 0;
@@ -130,7 +131,8 @@ internal object CardToolJs {
 }
 """
 
-    const val CONNECTOR_SEARCH: String = """const genUiConnectorSearchTool = {
+    const val CONNECTOR_SEARCH: String =
+        """const genUiConnectorSearchTool = {
   name: 'find_connectors',
   description: 'Search the connector catalogue already loaded in OpenCode Mobile. '
     + 'Use an exact catalogId from these results when suggesting a connector with show. '
@@ -290,7 +292,8 @@ async function findGenUiConnectors(args) {
 }
 """
 
-    const val SERVER: String = """;(() => {
+    const val SERVER: String =
+        """;(() => {
 const fs = require('node:fs');
 const { TextDecoder } = require('node:util');
 const decoder = new TextDecoder('utf-8', { fatal: true });
@@ -509,7 +512,8 @@ main().catch(() => process.exit(1));
 })();
 """
 
-    const val INSTALLER_PY: String = """import os, sys, json, re, stat, base64, pathlib, tempfile, hashlib, fcntl, subprocess
+    const val INSTALLER_PY: String =
+        """import os, sys, json, re, stat, base64, pathlib, tempfile, hashlib, fcntl, subprocess
 class SetupError(Exception):
     def __init__(self, code): self.code = code
 
@@ -661,7 +665,7 @@ def cli(args, environment):
 def verify_claude(d, helper, config_parent):
     if not d['qualifiedPins']: fail(24)
     if not safe(d['cli']) or not safe(d['node']): fail(20)
-    env = dict(os.environ, HOME=d['home'], CLAUDE_CONFIG_DIR=config_parent,
+    env = dict(os.environ, HOME=d['home'], CLAUDE_CONFIG_DIR=config_parent, CLAUDE_HOME=config_parent,
       NO_COLOR='1', FORCE_COLOR='0', TERM='dumb')
     def output(args, data=None):
         try:

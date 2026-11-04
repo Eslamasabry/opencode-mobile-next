@@ -52,6 +52,8 @@ import io.github.eslamasabry.oc.ui.kitchat.header.KitChatMoreMenu
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
+import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
 import io.github.eslamasabry.oc.ui.words.res.chatFreeModelNote
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderArchiveFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderContext
@@ -106,6 +108,7 @@ import io.github.eslamasabry.oc.ui.words.res.handoffUiComputerVerify
 import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableDirectory
 import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableReference
 import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableWorkspace
+import io.github.eslamasabry.oc.ui.words.res.handoffNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.historyLoadedOnly
 import io.github.eslamasabry.oc.ui.words.res.importAction
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
@@ -616,6 +619,9 @@ private fun menuWords(action: HeaderAction): String =
         HeaderAction.ContinueOnComputer -> stringResource(Res.string.handoffUiComputerTitle)
         HeaderAction.ImportConversation -> stringResource(Res.string.importAction)
         HeaderAction.Handoff -> stringResource(Res.string.nativeHandoffTitle)
+        HeaderAction.AgentHandoff -> stringResource(Res.string.handoffNativeTitle)
+        HeaderAction.AgentOptions -> stringResource(Res.string.agentToolsTitle)
+        HeaderAction.CardsSettings -> stringResource(Res.string.cardsFromAgentsTitle)
         HeaderAction.CopyTranscript -> stringResource(Res.string.chatUiCopyTranscript)
         HeaderAction.Archive -> stringResource(Res.string.sessionMenuArchive)
         HeaderAction.Delete -> stringResource(Res.string.sessionMenuDelete)

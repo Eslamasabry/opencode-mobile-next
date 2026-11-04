@@ -54,6 +54,28 @@ object SecurityFeatureBindings {
             )
             // REST-1: per-profile monitoring keys.
             AndroidProfileMonitoring.registerKeys(this)
+            // AGENT-2: the phone helper's secret, collector rules, widget routing and monitor consent
+            // (moved here from PreviewRuntime's local scope; the rest of its list is registered above).
+            registerSecret("oc.agentHostSecret.", ":engine:agents")
+            io.github.eslamasabry.oc.engine.integrations.quota.CollectorRules.register(this)
+            register(
+                KeyShape(
+                    "oc.widgetTarget.",
+                    KeyScope.Profile,
+                    PrefType.Str,
+                    ":engine:attention",
+                    "monitor and private widget routing metadata",
+                )
+            )
+            register(
+                KeyShape(
+                    "oc.monitorConsent.",
+                    KeyScope.Profile,
+                    PrefType.Bool,
+                    ":engine:attention",
+                    "explicit per-server foreground monitor consent",
+                )
+            )
             // STATE: saved native state (pins, budgets, models, prompt history, pending commands and more).
             registerStateKeys(this)
             // PORT-SCREENS-2: reader choices, new-chat project, shared project folders, list sources, opening titles.

@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
@@ -36,6 +37,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -85,6 +87,8 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
             ) {
                 // LINUX-2: the phone's own usage collector, above the plans.
                 if (state.collector.available) CollectorSetup(state.collector, actions)
+                // AGENT-2: usage alerts and the provider-usage collectors.
+                UsageCollectorRows(state, actions)
                 if (state.phase == PlansPhase.Loading) KitStateView(KitStateKind.Loading, words.loading)
                 if (state.phase == PlansPhase.Empty)
                     KitStateView(KitStateKind.Empty, words.emptyTitle, body = words.emptyBody)
@@ -191,6 +195,44 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
         onConfirm = actions::confirmCollector,
         onCancel = actions::cancelCollector,
     )
+    // AGENT-2: the provider-usage collector consent.
+    val ask = state.ask
+    val place = ask?.collector?.let { if (it.inApp) words.thisPhone else it.name }.orEmpty()
+    KitConfirm(
+        spec =
+            ask?.let {
+                KitConfirmSpec(
+                    title =
+                        stringResource(
+                            when {
+                                !it.enable -> Res.string.plansNativeOffQuestion
+                                it.collector.inApp -> Res.string.plansNativeSetupQuestion
+                                else -> Res.string.plansNativeRemoteQuestion
+                            },
+                            place,
+                        ),
+                    confirmLabel =
+                        stringResource(
+                            when {
+                                !it.enable -> Res.string.plansNativeTurnOff
+                                it.collector.inApp -> Res.string.plansNativeSetUp
+                                else -> Res.string.plansNativeAllow
+                            }
+                        ),
+                    body =
+                        stringResource(
+                            when {
+                                !it.enable -> Res.string.plansNativeOffBody
+                                it.collector.inApp -> Res.string.plansNativeSetupBody
+                                else -> Res.string.plansNativeRemoteBody
+                            }
+                        ),
+                    cancelLabel = stringResource(Res.string.plansNativeCancel),
+                )
+            },
+        onConfirm = actions::confirmCollector,
+        onCancel = actions::cancelCollector,
+    )
     // STATE: the threshold editor.
         if (state.editing)
             key(state.editKey) {
@@ -275,6 +317,40 @@ private fun CollectorSetup(state: CollectorUi, actions: PlansActions) {
 }
 
 @Composable
+private fun UsageCollectorRows(state: PlansUi, actions: PlansActions) {
+    val disabled =
+        if (state.actionBusy || state.refreshing)
+            KitEnabled.Disabled(stringResource(Res.string.plansNativeCollectorWorking))
+        else KitEnabled.Enabled
+    if (state.actionFailed) KitErrorNotice(stringResource(Res.string.plansNativeCollectorFailed))
+    if (state.alertsAvailable) {
+        KitSwitchRow(
+            title = stringResource(Res.string.plansNativeAlerts),
+            checked = state.alertsOn,
+            supporting = stringResource(Res.string.plansNativeAlertsBody),
+            enabled = disabled,
+            onCheckedChange = actions::setAlertsOn,
+        )
+    }
+    if (state.collectorRows.isNotEmpty())
+        KitRowGroup(label = stringResource(Res.string.plansNativeCollectors)) {
+            for (option in state.collectorRows) KitRow(
+                title = if (option.inApp) plansWords().thisPhone else option.name,
+                supporting =
+                    stringResource(
+                        if (option.enabled) Res.string.plansNativeCollectorOn
+                        else if (option.inApp) Res.string.plansNativeCollectorSetup
+                        else Res.string.plansNativeCollectorRemote
+                    ),
+                supportingMaxLines = 3,
+                enabled = disabled.isEnabled,
+                disabledReason = disabled.reason,
+                onClick = { actions.askCollector(option.profile) },
+            )
+        }
+}
+
+@Composable
 private fun PlanCard(card: PlanCardUi, nowMs: Long, words: PlansWords, actions: PlansActions) {
     KitRowGroup(label = words.cardTitle(card.name, card.connection)) {
         KitRow(
@@ -306,8 +382,8 @@ private fun PlanCard(card: PlanCardUi, nowMs: Long, words: PlansWords, actions: 
         }
         if (card.resetSince) KitRow(title = words.resetSince, supportingMaxLines = 2)
         words.fix(card.fix, card.fixConnection)?.let { fixLine ->
-            if (card.fix == UsageFix.TryAgain) {
-                KitRow(title = fixLine, onClick = actions::refresh)
+            if (card.canFix) {
+                KitRow(title = fixLine, onClick = { actions.fix(card.key) })
             } else {
                 KitRow(title = fixLine, supportingMaxLines = 2)
             }
