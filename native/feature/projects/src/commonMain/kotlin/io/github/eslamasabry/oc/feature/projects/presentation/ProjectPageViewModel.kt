@@ -39,6 +39,7 @@ public class ProjectPageViewModel(
     private val nav: AppNavigator,
     private val connections: ProjectServers,
     private val opened: OpenedFolders,
+    private val isolatedHosts: Set<IsolatedTaskHost> = emptySet(),
 ) : ViewModel(), ProjectPageActions {
     private val directory = ProjectRules.normalize(route.directory)
     private val mutable = MutableStateFlow(ProjectPageUi(directory, ProjectRules.name(directory)))
@@ -50,6 +51,13 @@ public class ProjectPageViewModel(
     private var cursor: String? = null
     private var generation = 0
     private var adopted = false
+    private var isolatedGeneration = 0
+    private var taskOpened = false
+    private var isolatedLaunch:
+        io.github.eslamasabry.oc.engine.agents.worktree.IsolatedTaskLaunch? =
+        null
+    private var isolatedWatch: kotlinx.coroutines.Job? = null
+    private val taskWrites = kotlinx.coroutines.sync.Mutex()
 
     init {
         viewModelScope.launch {
@@ -59,6 +67,18 @@ public class ProjectPageViewModel(
                     adopted = true
                     server = next
                     load()
+                    mutable.update {
+                        it.copy(
+                            canStartIsolated =
+                                next?.gateway?.capabilities?.value?.worktreeCreate == true &&
+                                    isolatedHosts.size == 1
+                        )
+                    }
+                    refreshCopies()
+                    if (next != null && route.autoStartIsolated && !taskOpened) {
+                        taskOpened = true
+                        startIsolatedTask()
+                    }
                 }
             }
         }
@@ -176,6 +196,239 @@ public class ProjectPageViewModel(
                 }
             }
         }
+    }
+
+    override fun refreshCopies() {
+        val live = server ?: return
+        val ops = live.operations ?: return
+        if (!live.gateway.capabilities.value.worktreeCreate || state.value.copiesLoading) return
+        mutable.update { it.copy(copiesLoading = true) }
+        viewModelScope.launch {
+            val read = ops.listWorktrees(directory)
+            if (server?.gateway !== live.gateway) return@launch
+            when (read) {
+                is Outcome.Failed ->
+                    mutable.update { it.copy(copiesLoading = false, copiesFailure = read.failure) }
+                is Outcome.Ok ->
+                    mutable.update {
+                        it.copy(copiesLoading = false, copiesFailure = null, copies = read.value)
+                    }
+            }
+        }
+    }
+
+    override fun openCopy(directory: String) {
+        nav.open(ProjectsRoute.Project(route.profile, directory))
+    }
+
+    override fun startIsolatedTask() {
+        if (state.value.isolatedShown) return
+        val host = isolatedHosts.singleOrNull() ?: return
+        val sheetGeneration = ++isolatedGeneration
+        isolatedLaunch?.close()
+        isolatedWatch?.cancel()
+        mutable.update {
+            it.copy(
+                isolatedShown = true,
+                isolatedLoading = true,
+                isolatedFailure = null,
+                isolated = null,
+                isolatedTask = "",
+                isolatedName = "",
+            )
+        }
+        viewModelScope.launch {
+            val loadedDraft = host.draft(route.profile)
+            if (sheetGeneration != isolatedGeneration || !state.value.isolatedShown) return@launch
+            when (val loaded = loadedDraft) {
+                is Outcome.Failed -> {
+                    mutable.update {
+                        it.copy(isolatedLoading = false, isolatedFailure = loaded.failure)
+                    }
+                    return@launch
+                }
+                is Outcome.Ok ->
+                    mutable.update {
+                        it.copy(isolatedTask = loaded.value.ifEmpty { route.initialTask })
+                    }
+            }
+            val model =
+                route.taskProvider?.let { provider ->
+                    route.taskModel?.let {
+                        io.github.eslamasabry.oc.core.model.ModelRef(provider, it)
+                    }
+                }
+            val openedLaunch =
+                host.open(viewModelScope, route.profile, directory, model, route.taskAgent)
+            if (sheetGeneration != isolatedGeneration || !state.value.isolatedShown) {
+                (openedLaunch as? Outcome.Ok)?.value?.close()
+                return@launch
+            }
+            when (val launch = openedLaunch) {
+                is Outcome.Failed ->
+                    mutable.update {
+                        it.copy(isolatedLoading = false, isolatedFailure = launch.failure)
+                    }
+                is Outcome.Ok -> {
+                    if (!state.value.isolatedShown) {
+                        launch.value.close()
+                        return@launch
+                    }
+                    isolatedLaunch = launch.value
+                    mutable.update {
+                        it.copy(isolatedLoading = false, isolated = launch.value.state.value)
+                    }
+                    isolatedWatch = viewModelScope.launch {
+                        launch.value.state.collect { task ->
+                            if (sheetGeneration != isolatedGeneration) return@collect
+                            mutable.update {
+                                it.copy(
+                                    isolated = task,
+                                    isolatedDetails =
+                                        task.worktree?.let { copy ->
+                                            host.redactTechnical(
+                                                copy.directory +
+                                                    (copy.branch?.let { "\n" + it } ?: "")
+                                            )
+                                        },
+                                )
+                            }
+                            if (
+                                task.phase ==
+                                    io.github.eslamasabry.oc.engine.agents.worktree
+                                        .IsolatedTaskPhase
+                                        .Opened && task.ref != null
+                            ) {
+                                mutable.update { it.copy(isolatedShown = false) }
+                                task.ref?.let { nav.openChat(it, focusComposer = true) }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    override fun isolatedDraftChanged(text: String) {
+        if (
+            state.value.isolatedLoading ||
+                state.value.isolated?.phase !in
+                    setOf(
+                        io.github.eslamasabry.oc.engine.agents.worktree.IsolatedTaskPhase.Form,
+                        io.github.eslamasabry.oc.engine.agents.worktree.IsolatedTaskPhase
+                            .CreateFailed,
+                    )
+        )
+            return
+        mutable.update { it.copy(isolatedTask = text) }
+        val host = isolatedHosts.singleOrNull() ?: return
+        viewModelScope.launch {
+            taskWrites.lock()
+            try {
+                val saved = host.saveDraft(route.profile, text)
+                if (state.value.isolatedTask == text)
+                    mutable.update { it.copy(isolatedDraftFailed = saved is Outcome.Failed) }
+            } finally {
+                taskWrites.unlock()
+            }
+        }
+    }
+
+    override fun isolatedNameChanged(name: String) {
+        mutable.update { it.copy(isolatedName = name) }
+    }
+
+    override fun createIsolatedTask() {
+        val text = state.value.isolatedTask
+        val name = state.value.isolatedName
+        viewModelScope.launch {
+            taskWrites.lock()
+            try {
+                val saved = isolatedHosts.singleOrNull()?.saveDraft(route.profile, text)
+                mutable.update { it.copy(isolatedDraftFailed = saved !is Outcome.Ok) }
+                isolatedLaunch?.start(text, name)
+            } finally {
+                taskWrites.unlock()
+            }
+        }
+    }
+
+    override fun closeIsolatedTask() {
+        if (state.value.isolated?.busy == true) return
+        if (state.value.isolatedLoading) {
+            finishClosingTask()
+            return
+        }
+        if (
+            state.value.isolated?.phase ==
+                io.github.eslamasabry.oc.engine.agents.worktree.IsolatedTaskPhase.Unsent
+        ) {
+            openUnsentConversation()
+            return
+        }
+        val phase = state.value.isolated?.phase
+        if (
+            phase == io.github.eslamasabry.oc.engine.agents.worktree.IsolatedTaskPhase.Form ||
+                phase ==
+                    io.github.eslamasabry.oc.engine.agents.worktree.IsolatedTaskPhase.CreateFailed
+        ) {
+            val text = state.value.isolatedTask
+            val ticket = isolatedGeneration
+            mutable.update { it.copy(isolatedLoading = true) }
+            viewModelScope.launch {
+                taskWrites.lock()
+                try {
+                    val saved = isolatedHosts.singleOrNull()?.saveDraft(route.profile, text)
+                    if (ticket != isolatedGeneration) return@launch
+                    if (saved !is Outcome.Ok) {
+                        mutable.update {
+                            it.copy(isolatedLoading = false, isolatedDraftFailed = true)
+                        }
+                        return@launch
+                    }
+                    finishClosingTask()
+                } finally {
+                    taskWrites.unlock()
+                }
+            }
+        } else finishClosingTask()
+    }
+
+    private fun finishClosingTask() {
+        isolatedGeneration += 1
+        isolatedLaunch?.stopWaiting()
+        isolatedLaunch?.close()
+        isolatedWatch?.cancel()
+        mutable.update { it.copy(isolatedShown = false, isolatedLoading = false) }
+        refreshCopies()
+    }
+
+    override fun keepWaitingForCopy() {
+        isolatedLaunch?.keepWaiting()
+    }
+
+    override fun openCopyAnyway() {
+        isolatedLaunch?.open(acceptUnconfirmed = true, acceptFailedSetup = true)
+    }
+
+    override fun requestRemoveCopy() {
+        mutable.update { it.copy(confirmRemoveCopy = true) }
+    }
+
+    override fun confirmRemoveCopy(remove: Boolean) {
+        mutable.update { it.copy(confirmRemoveCopy = false) }
+        if (remove) isolatedLaunch?.removeFailedCopy()
+    }
+
+    override fun openUnsentConversation() {
+        val ref = state.value.isolated?.ref ?: return
+        mutable.update { it.copy(isolatedShown = false) }
+        nav.openChat(ref, focusComposer = true)
+    }
+
+    override fun onCleared() {
+        isolatedLaunch?.close()
+        super.onCleared()
     }
 
     override fun openConversation(ref: ConversationRef): Unit = nav.openChat(ref)

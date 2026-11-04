@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxPortActions">Port actions</string>
+    <string name="linuxPortCopiedAddress">Copy address</string>
+    <string name="linuxPortOwnerStop">Stop %1$s</string>
+    <string name="linuxPortOwnerQuestion">Stop %1$s?</string>
+    <string name="linuxPortOwnerStopBody">Stop the selected program and its helpers (%1$d processes). Each process must still match the identity shown. Nothing restarts it.</string>
+    <string name="linuxPortOwnerResult">Ended: %1$d · forced: %2$d · still running: %3$d · identity changed and kept: %4$d</string>
+</resources>

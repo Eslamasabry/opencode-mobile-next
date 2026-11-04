@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.voice.presentation
 
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.engine.voice.dictation.VoiceController
@@ -29,7 +31,10 @@ import kotlinx.coroutines.flow.StateFlow
 
 /** Speech to text for the composer: the engine's [VoiceController] or the phone's recognizer. */
 public interface Dictation {
-    /** The engine's states: Starting → Listening(words) → Writing → Done(words, endedBy) | Failed | Idle. */
+    /**
+     * The engine's states: Starting → Listening(words) → Writing → Done(words, endedBy) | Failed |
+     * Idle.
+     */
     public val state: StateFlow<VoiceState>
 
     /** 0..1, for the level meter. */
@@ -48,10 +53,14 @@ public interface Dictation {
 
 public fun VoiceController.asDictation(): Dictation =
     object : Dictation {
-        override val state: StateFlow<VoiceState> get() = this@asDictation.state
-        override val level: StateFlow<Float> get() = this@asDictation.level
+        override val state: StateFlow<VoiceState>
+            get() = this@asDictation.state
 
-        override suspend fun start(request: VoiceStart): Outcome<Unit> = this@asDictation.start(request)
+        override val level: StateFlow<Float>
+            get() = this@asDictation.level
+
+        override suspend fun start(request: VoiceStart): Outcome<Unit> =
+            this@asDictation.start(request)
 
         override suspend fun finish(): Outcome<String> = this@asDictation.finish()
 
@@ -91,9 +100,14 @@ public interface VoiceModels {
 public fun ModelPacks.asVoiceModels(): VoiceModels =
     object : VoiceModels {
         private val packs = this@asVoiceModels
-        override val state: StateFlow<ModelPacksState> get() = packs.state
-        override val speechPacks: List<ModelPackSpec> get() = packs.speechPacks
-        override val naturalPack: ModelPackSpec get() = ModelCatalog.kokoroEn
+        override val state: StateFlow<ModelPacksState>
+            get() = packs.state
+
+        override val speechPacks: List<ModelPackSpec>
+            get() = packs.speechPacks
+
+        override val naturalPack: ModelPackSpec
+            get() = ModelCatalog.kokoroEn
 
         override suspend fun refresh() = packs.refresh()
 
@@ -102,15 +116,17 @@ public fun ModelPacks.asVoiceModels(): VoiceModels =
         override suspend fun select(pack: PackId): Outcome<Unit> = packs.select(pack)
 
         override suspend fun download(pack: PackId, replaceExisting: Boolean): Outcome<Unit> =
-            packs.download(pack, replaceExisting).map { }
+            packs.download(pack, replaceExisting).map {}
 
         override suspend fun cancelDownload() = packs.cancelDownload()
 
         override suspend fun remove(pack: PackId): Outcome<Unit> = packs.remove(pack)
 
-        override suspend fun discardPartial(pack: PackId): Outcome<Unit> = packs.discardPartial(pack)
+        override suspend fun discardPartial(pack: PackId): Outcome<Unit> =
+            packs.discardPartial(pack)
 
-        override suspend fun setLanguage(choice: VoiceLanguage): Outcome<Unit> = packs.setLanguage(choice)
+        override suspend fun setLanguage(choice: VoiceLanguage): Outcome<Unit> =
+            packs.setLanguage(choice)
 
         override suspend fun setAutoSend(on: Boolean): Outcome<Unit> = packs.setAutoSend(on)
 
@@ -125,6 +141,11 @@ public interface Reader {
 
     public suspend fun giveConsent(): Outcome<Unit>
 
+    /** Enumerates offline voices only, after consent, before enabling automatic playback. */
+    public suspend fun voices():
+        Outcome<List<io.github.eslamasabry.oc.engine.voice.readaloud.TtsVoice>> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("readAloudVoices")))
+
     public suspend fun read(request: ReadRequest): Outcome<Unit>
 
     public suspend fun stop()
@@ -134,11 +155,16 @@ public interface Reader {
 
 public fun ReadAloud.asReader(): Reader =
     object : Reader {
-        override val state: StateFlow<ReadAloudState> get() = this@asReader.state
+        override val state: StateFlow<ReadAloudState>
+            get() = this@asReader.state
 
         override fun consentGiven(): Boolean = this@asReader.consentGiven()
 
         override suspend fun giveConsent(): Outcome<Unit> = this@asReader.giveConsent()
+
+        override suspend fun voices():
+            Outcome<List<io.github.eslamasabry.oc.engine.voice.readaloud.TtsVoice>> =
+            this@asReader.voices().map { it.toList() }
 
         override suspend fun read(request: ReadRequest): Outcome<Unit> = this@asReader.read(request)
 
@@ -152,7 +178,10 @@ public enum class SpeechEngineKind {
     /** The downloaded offline model (sherpa-onnx Whisper): Settings' models are what types. */
     OfflineModel,
 
-    /** The phone's own speech recognition (Android `SpeechRecognizer`), while the offline engine is not in the app. */
+    /**
+     * The phone's own speech recognition (Android `SpeechRecognizer`), while the offline engine is
+     * not in the app.
+     */
     PhoneRecognizer,
 }
 
@@ -164,17 +193,25 @@ public class VoiceParts(
     public val engine: SpeechEngineKind,
     /** False when the phone has no way to capture speech: the mic is absent, never dead. */
     public val micAvailable: Boolean,
-    /** False when the offline engine is missing: the natural voice cannot read yet (shown with the reason). */
+    /**
+     * False when the offline engine is missing: the natural voice cannot read yet (shown with the
+     * reason).
+     */
     public val naturalVoiceAvailable: Boolean,
 )
 
-/** The app graph's voice: [parts] waits for the stores; a failure keeps voice visibly unavailable. */
+/**
+ * The app graph's voice: [parts] waits for the stores; a failure keeps voice visibly unavailable.
+ */
 public interface VoiceHub {
     public suspend fun parts(): Outcome<VoiceParts>
 
     /** Android's app settings page for this app ("Allow microphone in Android settings"). */
     public fun openAppSettings()
 
-    /** A tick every [period] while collected (the pill's clock and the countdown); the platform owns the timer. */
+    /**
+     * A tick every [period] while collected (the pill's clock and the countdown); the platform owns
+     * the timer.
+     */
     public fun ticks(period: Duration): Flow<Unit>
 }

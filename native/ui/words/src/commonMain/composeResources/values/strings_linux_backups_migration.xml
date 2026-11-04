@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxBackupPrivacyNative">Known sign-in files and saved service environment settings stay on this phone. Custom service commands are included; review them before sharing a backup.</string>
+    <string name="linuxBackupServiceAccountsNative">Services with saved environment settings are backed up switched off. After restoring, set up their account and environment again before starting them.</string>
+</resources>

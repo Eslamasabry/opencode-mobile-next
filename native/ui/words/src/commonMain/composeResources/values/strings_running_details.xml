@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="runningDetailMemory">%1$d MB memory</string>
+    <string name="runningDetailElapsed">Running for %1$d min</string>
+    <string name="runningDetailPid">Process %1$d</string>
+    <string name="runningDetailHelpers">Also stops its %1$d helper processes. Each identity is checked again.</string>
+    <string name="runningDetailBusy">Busy</string>
+    <string name="runningDetailIdle">Idle</string>
+</resources>

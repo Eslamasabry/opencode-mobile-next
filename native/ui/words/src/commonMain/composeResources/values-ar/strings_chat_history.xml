@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chatHistoryReadFailed">تعذّر تحميل الرسائل الأقدم. الرسائل المحمّلة ما زالت هنا. حاول مجددًا.</string>
+    <string name="chatTranscriptTokens">%1$s رمز</string>
+    <string name="chatTranscriptCost">التكلفة التقديرية: $%1$s</string>
+</resources>

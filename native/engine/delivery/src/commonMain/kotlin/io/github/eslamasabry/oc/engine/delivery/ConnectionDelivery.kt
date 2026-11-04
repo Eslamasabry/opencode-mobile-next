@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.engine.delivery
 
-import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
@@ -18,6 +17,7 @@ import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.model.ModelSelection
+import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy
@@ -138,22 +138,30 @@ public class ConnectionDelivery(
         if (!busy) engine?.turnEnded(ref)
     }
 
-    /** A picker change under the conversation's send-selection lock (Codex composer #3); no engine: runs as is. */
+    /**
+     * A picker change under the conversation's send-selection lock (Codex composer #3); no engine:
+     * runs as is.
+     */
     public suspend fun <T> withSelection(ref: ConversationRef, block: suspend () -> T): T =
         engine?.withSelection(ref, block) ?: block()
 
     /**
-     * Only the durable pipeline may accept; the caller keeps its draft on any refusal. [attachments] and
-     * [model] ride the same request: the files are snapshotted immutably and the choice is applied before
-     * the prompt is admitted to the wire.
+     * Only the durable pipeline may accept; the caller keeps its draft on any refusal.
+     * [attachments] and [model] ride the same request: the files are snapshotted immutably and the
+     * choice is applied before the prompt is admitted to the wire.
      */
     public suspend fun send(
         ref: ConversationRef,
         text: String,
         attachments: ImmutableList<PromptAttachment> = persistentListOf(),
         model: ModelSelection? = null,
-        /** Sub-agent `@name` mentions in [text] (Codex composer #6; OC2 sends them as the prompt's agents). */
+        /**
+         * Sub-agent `@name` mentions in [text] (Codex composer #6; OC2 sends them as the prompt's
+         * agents).
+         */
         mentions: ImmutableList<PromptAgentMention> = persistentListOf(),
+        /** Ephemeral voice turns never learn phrases or restore themselves into a later draft. */
+        insteadOfDraft: Boolean = false,
     ): Outcome<LocalSendId> {
         val engine = engine ?: return Outcome.Failed(Failure.StorageRefused())
         when (val undo = (connection.link.value ?: link).revertPending(ref.sessionId)) {
@@ -161,6 +169,8 @@ public class ConnectionDelivery(
             is Outcome.Ok ->
                 if (undo.value) return Outcome.Failed(Failure.Refused(RefusalReason.UndoUnresolved))
         }
-        return engine.send(SendRequest(ref, text, attachments = attachments, model = model, mentions = mentions))
+        val request =
+            SendRequest(ref, text, attachments = attachments, model = model, mentions = mentions)
+        return if (insteadOfDraft) engine.sendInsteadOfDraft(request) else engine.send(request)
     }
 }

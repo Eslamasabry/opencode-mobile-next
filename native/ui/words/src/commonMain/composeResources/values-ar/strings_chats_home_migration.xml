@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="homeOpeningConnecting">جارٍ الاتصال بـ %1$s</string>
+    <string name="homeOpeningFailed">%1$s لا يستجيب</string>
+    <string name="homeOpeningSavedTitles">هذه عناوين المحادثات المحفوظة من المرة السابقة. يمكنك فتحها عندما يستجيب الخادم.</string>
+    <string name="homeWatchedServers">الخوادم المراقَبة</string>
+    <string name="homeInboxCount">الوارد · %1$s</string>
+    <string name="homeSourcesFailed">تعذر تغيير اتصالات هذه القائمة. حاول مجددًا.</string>
+    <string name="homeWatchedOpenBody">سنتحقق من أن هذا الطلب نفسه ما زال ينتظر على هذا الخادم قبل فتح محادثته.</string>
+    <string name="homeWatchedOpenFailed">تعذر فتح هذا الطلب. حدّث الخوادم المراقَبة ثم حاول مجددًا.</string>
+    <string name="homeRefreshWatched">تحديث الخوادم المراقَبة</string>
+    <string name="homeMonitorOff">متوقفة. فعّلها للتحقق من طلبات هذا الخادم المعلّقة.</string>
+    <string name="homeMonitorWaiting">في انتظار التحقق التالي</string>
+    <string name="homeMonitorChecking">جارٍ التحقق من الطلبات المعلّقة</string>
+    <string name="homeMonitorCurrent">الطلبات المعلّقة محدّثة</string>
+    <string name="homeMonitorUnavailable">لا يستجيب. طلباته غير معروضة.</string>
+    <string name="homeMonitorWifi">في انتظار Wi-Fi</string>
+    <string name="homeMonitorPaused">التحقق متوقف ما دام التطبيق وخدمة الخلفية متوقفين.</string>
+</resources>

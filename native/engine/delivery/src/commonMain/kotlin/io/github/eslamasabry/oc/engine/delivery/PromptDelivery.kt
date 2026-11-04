@@ -69,6 +69,8 @@ public data class SendRequest(
     /** The conversation's selection at send time (saved with an offline or held entry). */
     val model: ModelSelection? = null,
     val agent: String? = null,
+    /** A task sheet sends its text literally, even when it begins with a slash or exclamation. */
+    val promptOnly: Boolean = false,
 ) {
     override fun toString(): String =
         "SendRequest(ref=${ref.sessionId.raw}, textLen=${text.length}, attachments=${attachments.size})"
@@ -167,7 +169,10 @@ public sealed interface SendOutcome {
 /** The local half of the live line: a send accepted for dispatch (09 §4.1 rule 1). */
 public data class LocalTurn(val sinceMs: Long, val sending: Boolean, val acceptedAtMs: Long? = null)
 
-/** Whether a Stop tap asked the server (Asked) or fell inside the guard after a send and asked nothing (Ignored). */
+/**
+ * Whether a Stop tap asked the server (Asked) or fell inside the guard after a send and asked
+ * nothing (Ignored).
+ */
 public enum class StopAnswer {
     Asked,
     Ignored,
@@ -257,13 +262,16 @@ public class PromptDelivery(
     private val selectionLocks = HashMap<ConversationRef, Mutex>()
 
     /** Runs on the queue lane only (every dispatch does), so the map needs no lock of its own. */
-    private fun selectionLock(ref: ConversationRef): Mutex = selectionLocks.getOrPut(ref) { Mutex() }
+    private fun selectionLock(ref: ConversationRef): Mutex =
+        selectionLocks.getOrPut(ref) { Mutex() }
+
     private var counter = 0L
 
     /**
-     * Codex composer #3 (B-STATE-118/119): a picker change takes the same per-conversation lock as a send's
-     * select-then-prompt step, so a choice made while a send is between its selection check and its prompt can't
-     * land in between (OC2's prompt carries no model: the session's model at admission is what runs).
+     * Codex composer #3 (B-STATE-118/119): a picker change takes the same per-conversation lock as
+     * a send's select-then-prompt step, so a choice made while a send is between its selection
+     * check and its prompt can't land in between (OC2's prompt carries no model: the session's
+     * model at admission is what runs).
      */
     public suspend fun <T> withSelection(ref: ConversationRef, block: suspend () -> T): T {
         val lock = withContext(queue.lane) { selectionLock(ref) }
@@ -308,7 +316,7 @@ public class PromptDelivery(
         // Files never ride the command path: with attachments, `/…` and `!…` go out as a prompt
         // (Flutter chat_send.dart:293), so no file is dropped.
         val kind =
-            if (request.attachments.isNotEmpty()) TypedKind.Prompt
+            if (request.promptOnly || request.attachments.isNotEmpty()) TypedKind.Prompt
             else TypedKind.of(request.typedText.trim())
         // 2. A staged undo is resolved first.
         if (facts.undoUnresolved(ref)) return Failure.Refused(RefusalReason.UndoUnresolved).failed()
@@ -412,14 +420,22 @@ public class PromptDelivery(
         // 7. Transport, then the epoch: a changed connection dispatches to neither server, and the
         // session's model is never mutated before both hold.
         val ready = link.awaitActionTransport()
-        if (ready is Outcome.Failed) return failed(bubble, request, putBack, ready.failure, left = false)
+        if (ready is Outcome.Failed)
+            return failed(bubble, request, putBack, ready.failure, left = false)
         if (!sameTarget(link, origin))
-            return failed(bubble, request, putBack, Failure.Refused(RefusalReason.StaleScope), left = false)
+            return failed(
+                bubble,
+                request,
+                putBack,
+                Failure.Refused(RefusalReason.StaleScope),
+                left = false,
+            )
         // The model is session state on servers with session selection: a send's selection and its
         // prompt's admission form one step, so another send's choice can never land in between.
         // Only sends carrying a choice take the lock, and it spans one request, never a turn: plain
         // sends and steers never wait (no invisible queue).
-        if (request.model == null && request.agent == null) admit(link, origin, bubble, request, putBack)
+        if (request.model == null && request.agent == null)
+            admit(link, origin, bubble, request, putBack)
         else selectionLock(ref).withLock { admit(link, origin, bubble, request, putBack) }
     }
 
@@ -431,16 +447,27 @@ public class PromptDelivery(
         putBack: Boolean,
     ) {
         val ref = bubble.ref
-        // 7b. The conversation's intentional model/agent choice reaches the server before the prompt is
-        // admitted to the wire — a choice is never silently dropped. A failed or stale selection sends
-        // nothing and the words stay (never an unknown-prompt receipt); Stop may have called the send off
-        // while it waited, and Stop itself already put the words back, so a vanished bubble just ends.
+        // 7b. The conversation's intentional model/agent choice reaches the server before the
+        // prompt is
+        // admitted to the wire — a choice is never silently dropped. A failed or stale selection
+        // sends
+        // nothing and the words stay (never an unknown-prompt receipt); Stop may have called the
+        // send off
+        // while it waited, and Stop itself already put the words back, so a vanished bubble just
+        // ends.
         if (mutablePending.value.none { it.localId == bubble.localId }) return
         if (request.model != null || request.agent != null) {
             if (!sameTarget(link, origin))
-                return failed(bubble, request, putBack, Failure.Refused(RefusalReason.StaleScope), left = false)
+                return failed(
+                    bubble,
+                    request,
+                    putBack,
+                    Failure.Refused(RefusalReason.StaleScope),
+                    left = false,
+                )
             when (val applied = link.applySelection(ref.sessionId, request.model, request.agent)) {
-                is Outcome.Failed -> return failed(bubble, request, putBack, applied.failure, left = false)
+                is Outcome.Failed ->
+                    return failed(bubble, request, putBack, applied.failure, left = false)
                 is Outcome.Ok -> Unit
             }
             if (mutablePending.value.none { it.localId == bubble.localId }) return
@@ -683,11 +710,14 @@ public class PromptDelivery(
         withContext(queue.lane) { stopOnLane(ref, mode).map {} }
 
     /**
-     * [stop], saying whether the tap was heard: [StopAnswer.Ignored] inside the 800 ms after a send asked the server
-     * nothing, so the caller keeps Stop usable (Flutter's ignored-tap guard, Codex chat-bugs 2).
+     * [stop], saying whether the tap was heard: [StopAnswer.Ignored] inside the 800 ms after a send
+     * asked the server nothing, so the caller keeps Stop usable (Flutter's ignored-tap guard, Codex
+     * chat-bugs 2).
      */
-    public suspend fun stopTurn(ref: ConversationRef, mode: StopMode = StopMode.Now): Outcome<StopAnswer> =
-        withContext(queue.lane) { stopOnLane(ref, mode) }
+    public suspend fun stopTurn(
+        ref: ConversationRef,
+        mode: StopMode = StopMode.Now,
+    ): Outcome<StopAnswer> = withContext(queue.lane) { stopOnLane(ref, mode) }
 
     private suspend fun stopOnLane(
         ref: ConversationRef,
@@ -697,7 +727,8 @@ public class PromptDelivery(
             return Failure.Unavailable(FeatureId("stopAfterStep")).failed()
         val now = clock.now().toEpochMilliseconds()
         lastSendAtMs[ref]?.let {
-            if (now - it < STOP_IGNORE_AFTER_SEND.inWholeMilliseconds) return StopAnswer.Ignored.ok()
+            if (now - it < STOP_IGNORE_AFTER_SEND.inWholeMilliseconds)
+                return StopAnswer.Ignored.ok()
         }
         val calledOff = wire.withLock {
             val waiting =

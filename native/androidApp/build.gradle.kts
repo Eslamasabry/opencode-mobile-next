@@ -79,6 +79,8 @@ dependencies {
             ":core:model",
             ":core:domain",
             ":engine:connection",
+            ":engine:integrations-catalog",
+            ":engine:setupassist",
             ":engine:transcript",
             ":ui:design",
             ":ui:words",
@@ -98,6 +100,7 @@ dependencies {
             ":engine:agents",
             ":engine:delivery",
             ":engine:requests",
+            ":engine:attention", // Native watched-server Inbox and explicit monitoring consent.
             ":ui:kit-chat",
             ":ui:kit-content",
             ":feature:settings",
@@ -106,6 +109,7 @@ dependencies {
             ":engine:analytics",
             ":engine:diagnostics",
             ":android:notifications",
+            ":android:platform",
             ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
             ":android:termux",
@@ -141,14 +145,16 @@ dependencies {
             ":engine:voice",
             ":android:voice",
             ":feature:voice",
-            ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its native libraries)
+            ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its
+            // native libraries)
             ":engine:linuxsetup", // P12-BUILD-RUNTIME-C: the phone setup engine
-            ":engine:setupscripts", // P12-BUILD-RUNTIME-C: the setup prelude the job scripts run under
+            ":engine:setupscripts", // P12-BUILD-RUNTIME-C: the setup prelude the job scripts run
+            // under
             ":engine:lifecycle", // P12-BUILD-RUNTIME-C: this-phone mark and lifecycle rules
             ":feature:phonesetup", // P12-BUILD-RUNTIME-C: Set up OpenCode on this phone
             ":feature:diagnostics", // BUILD-DIAGNOSTICS-ATTENTION
             ":feature:devservices", // BUILD-RUNTIME-A: Development services (saved commands, dev
-                                    // servers found)
+            // servers found)
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
             ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
         )

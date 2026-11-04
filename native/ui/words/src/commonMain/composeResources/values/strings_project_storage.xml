@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="projectStorageMeasureFailed">Could not measure the stored files. Try again.</string>
+    <string name="projectStorageDeleteFailed">Android could not clear the app’s data. Try again.</string>
+</resources>

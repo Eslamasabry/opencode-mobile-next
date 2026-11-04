@@ -1,0 +1,9 @@
+<resources>
+    <string name="isolatedTaskCreateUnknown">لم يؤكد الخادم إنشاء النسخة. تحقق من المشروع قبل إنشاء نسخة أخرى.</string>
+    <string name="isolatedTaskOpenUnknown">لم يؤكد الخادم المحادثة. تحقق من المحادثات قبل بدء أخرى. تبقى مهمتك محفوظة هنا.</string>
+    <string name="isolatedTaskProgress">الخطوة %1$d من 3</string>
+    <string name="isolatedTaskOperationFailed">تعذر إكمال هذه الخطوة. تبقى مهمتك محفوظة هنا.</string>
+    <string name="isolatedTaskCopies">نسخ منفصلة</string>
+    <string name="isolatedTaskRefreshCopies">تحديث النسخ</string>
+    <string name="isolatedTaskSendUnconfirmed">تعذر تأكيد إرسال مهمتك. تبقى محفوظة هنا. افتح المحادثة وتحقق قبل إرسالها مرة أخرى.</string>
+</resources>

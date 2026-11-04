@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="p12LogSearch">Find in log</string>
+    <string name="p12LogFollow">Follow</string>
+    <string name="p12LogPause">Pause</string>
+    <string name="p12LogCopy">Copy all</string>
+    <string name="p12LogWrap">Wrap lines</string>
+    <string name="p12LogMatches">%1$d of %2$d matching lines</string>
+    <string name="p12LogPrevious">Previous match</string>
+    <string name="p12LogNext">Next match</string>
+</resources>

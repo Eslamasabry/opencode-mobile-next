@@ -11,6 +11,10 @@ import kotlinx.serialization.Serializable
 public sealed interface LinuxRoute : AppRoute {
     @Serializable public data object Home : LinuxRoute
 
+    @Serializable public data object KeptServices : LinuxRoute
+
+    @Serializable public data object Backups : LinuxRoute
+
     @Serializable public data object Ports : LinuxRoute
 
     @Serializable public data object Storage : LinuxRoute

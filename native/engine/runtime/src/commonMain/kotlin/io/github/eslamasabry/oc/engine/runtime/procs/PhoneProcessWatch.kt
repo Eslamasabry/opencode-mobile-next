@@ -6,10 +6,10 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 /**
- * Port of lib/builtin/phone_process_watch.dart and the models of lib/builtin/phone_processes.dart ("Running on this
- * phone": the app's processes grouped under what started them, as a tree, with the heavy and stuck marks that need
- * more than one reading). The native process list itself (pids, owners, cpu over about a second) is the platform's;
- * this is the rules over its readings.
+ * Port of lib/builtin/phone_process_watch.dart and the models of lib/builtin/phone_processes.dart
+ * ("Running on this phone": the app's processes grouped under what started them, as a tree, with
+ * the heavy and stuck marks that need more than one reading). The native process list itself (pids,
+ * owners, cpu over about a second) is the platform's; this is the rules over its readings.
  */
 public enum class PhoneProcessOwner(public val wire: String) {
     /** The app's own Android processes. */
@@ -40,11 +40,11 @@ public enum class PhoneProcessOwner(public val wire: String) {
     Orphan("orphan"),
 
     /** None of the above. */
-    Other("other"),
-    ;
+    Other("other");
 
     public companion object {
-        public fun parse(value: String?): PhoneProcessOwner = entries.firstOrNull { it.wire == value } ?: Other
+        public fun parse(value: String?): PhoneProcessOwner =
+            entries.firstOrNull { it.wire == value } ?: Other
     }
 }
 
@@ -54,7 +54,10 @@ public data class RunningProcess(
     val ppid: Int,
     /** The kernel's short name (at most 15 characters). */
     val name: String,
-    /** Its command line, at most 200 characters, secret-looking values masked. Never shown as the name. */
+    /**
+     * Its command line, at most 200 characters, secret-looking values masked. Never shown as the
+     * name.
+     */
     val command: String,
     /** Share of one CPU core over about a second, so up to 100 × cores. */
     val cpuPercent: Double,
@@ -64,6 +67,7 @@ public data class RunningProcess(
     val owner: PhoneProcessOwner,
     /** The agent session it runs (Claude Code's `--resume` id), if any. */
     val session: String? = null,
+    val startTicks: Long = 0,
 )
 
 /** What runs now, and what the orphan clean-up has stopped since app start. */
@@ -73,7 +77,10 @@ public data class RunningSnapshot(
     val orphansLastReapedAt: Instant? = null,
 )
 
-/** What started a group of processes, in the order the page shows them. [key] is the Flutter enum name. */
+/**
+ * What started a group of processes, in the order the page shows them. [key] is the Flutter enum
+ * name.
+ */
 public enum class RunningGroupKind(public val key: String) {
     /** Left running by a Linux that has ended (native `orphan`). */
     LeftBehind("leftBehind"),
@@ -103,25 +110,41 @@ public data class RunningNode(
     val process: RunningProcess,
     /** 0 for a process whose parent is not in the same group. */
     val depth: Int,
-    /** The root of a tree the app runs (a server, the agent helper, a terminal, a setup step): no Stop offered. */
+    /**
+     * The root of a tree the app runs (a server, the agent helper, a terminal, a setup step): no
+     * Stop offered.
+     */
     val root: Boolean,
-    /** Over [PhoneProcessWatch.HEAVY_CPU] in every reading for at least [PhoneProcessWatch.HEAVY_FOR]. */
+    /**
+     * Over [PhoneProcessWatch.HEAVY_CPU] in every reading for at least
+     * [PhoneProcessWatch.HEAVY_FOR].
+     */
     val heavy: Boolean,
-    /** Left behind, or about 100% for more than [PhoneProcessWatch.STUCK_AFTER] with no conversation above it. */
+    /**
+     * Left behind, or about 100% for more than [PhoneProcessWatch.STUCK_AFTER] with no conversation
+     * above it.
+     */
     val stuck: Boolean,
     /** How long it has been heavy, when [heavy]. */
     val heavyFor: Duration? = null,
     /** The agent session of the conversation above it (its own or an ancestor's), if any. */
     val session: String? = null,
 ) {
-    val pid: Int get() = process.pid
-    val leftBehind: Boolean get() = process.owner == PhoneProcessOwner.Orphan
+    val pid: Int
+        get() = process.pid
+
+    val leftBehind: Boolean
+        get() = process.owner == PhoneProcessOwner.Orphan
 
     /** Whether the page offers to stop it: never the app nor a tree's root. */
-    val stoppable: Boolean get() = !root && process.owner != PhoneProcessOwner.App
+    val stoppable: Boolean
+        get() = !root && process.owner != PhoneProcessOwner.App
 }
 
-/** The processes one thing started, as a tree in reading order (parents before children, siblings by pid). */
+/**
+ * The processes one thing started, as a tree in reading order (parents before children, siblings by
+ * pid).
+ */
 public data class RunningGroup(
     val kind: RunningGroupKind,
     val nodes: List<RunningNode>,
@@ -129,9 +152,14 @@ public data class RunningGroup(
     val session: String? = null,
 ) {
     /** A stable id for keys and animations. */
-    val id: String get() = if (session == null) kind.key else "${kind.key}:$session"
-    val cpuPercent: Double get() = nodes.sumOf { it.process.cpuPercent }
-    val rssBytes: Long get() = nodes.sumOf { it.process.rssBytes }
+    val id: String
+        get() = if (session == null) kind.key else "${kind.key}:$session"
+
+    val cpuPercent: Double
+        get() = nodes.sumOf { it.process.cpuPercent }
+
+    val rssBytes: Long
+        get() = nodes.sumOf { it.process.rssBytes }
 }
 
 /** One reading, grouped and marked. */
@@ -140,27 +168,34 @@ public data class RunningReading(
     val groups: List<RunningGroup>,
     val at: Instant,
 ) {
-    val nodes: List<RunningNode> get() = groups.flatMap { it.nodes }
+    val nodes: List<RunningNode>
+        get() = groups.flatMap { it.nodes }
 
     /** The processes Android counts toward its limit: all but the app's own. */
-    val childCount: Int get() = snapshot.processes.count { it.owner != PhoneProcessOwner.App }
+    val childCount: Int
+        get() = snapshot.processes.count { it.owner != PhoneProcessOwner.App }
 
-    val nearLimit: Boolean get() = childCount >= PhoneProcessWatch.NEAR_LIMIT
+    val nearLimit: Boolean
+        get() = childCount >= PhoneProcessWatch.NEAR_LIMIT
 
-    val leftBehind: List<RunningNode> get() = nodes.filter { it.leftBehind && it.stoppable }
+    val leftBehind: List<RunningNode>
+        get() = nodes.filter { it.leftBehind && it.stoppable }
 
     /** Heavy ones, the busiest first. */
-    val heavy: List<RunningNode> get() = nodes.filter { it.heavy }.sortedByDescending { it.process.cpuPercent }
+    val heavy: List<RunningNode>
+        get() = nodes.filter { it.heavy }.sortedByDescending { it.process.cpuPercent }
 
-    val rssBytes: Long get() = snapshot.processes.sumOf { it.rssBytes }
+    val rssBytes: Long
+        get() = snapshot.processes.sumOf { it.rssBytes }
 
     /** Something on This phone should point at the page. */
-    val needsLook: Boolean get() = leftBehind.isNotEmpty() || heavy.isNotEmpty()
+    val needsLook: Boolean
+        get() = leftBehind.isNotEmpty() || heavy.isNotEmpty()
 }
 
 /**
- * Marks the heavy and stuck processes from the readings so far. One per app, so This phone and Running on this phone
- * share the history. Not thread-safe: the caller records from one place.
+ * Marks the heavy and stuck processes from the readings so far. One per app, so This phone and
+ * Running on this phone share the history. Not thread-safe: the caller records from one place.
  */
 public class PhoneProcessWatch {
     private class Track(var name: String, var elapsed: Duration) {
@@ -178,7 +213,10 @@ public class PhoneProcessWatch {
         private set
 
     /** Reads through [list] and records it at [now] (the app passes its clock). */
-    public suspend fun sample(list: suspend () -> RunningSnapshot, now: () -> Instant): RunningReading {
+    public suspend fun sample(
+        list: suspend () -> RunningSnapshot,
+        now: () -> Instant,
+    ): RunningReading {
         val snapshot = list()
         return record(snapshot, now())
     }
@@ -200,13 +238,19 @@ public class PhoneProcessWatch {
             track.highSince = if (high) (if (known) track.highSince ?: at else at) else null
             val since = track.highSince
             if (since != null && at - since >= HEAVY_FOR) heavy[p.pid] = at - since
-            if (known && track.lastCpu >= STUCK_CPU && p.cpuPercent >= STUCK_CPU) aboutFull.add(p.pid)
+            if (known && track.lastCpu >= STUCK_CPU && p.cpuPercent >= STUCK_CPU)
+                aboutFull.add(p.pid)
             track.lastCpu = p.cpuPercent
             track.elapsed = p.elapsed
             track.name = p.name
         }
         tracks.keys.retainAll(live)
-        val reading = RunningReading(snapshot, groupRunningProcesses(snapshot.processes, heavy, aboutFull), at)
+        val reading =
+            RunningReading(
+                snapshot,
+                groupRunningProcesses(snapshot.processes, heavy, aboutFull),
+                at,
+            )
         last = reading
         return reading
     }
@@ -224,7 +268,10 @@ public class PhoneProcessWatch {
         /** For a process that has run longer than this. */
         public val STUCK_AFTER: Duration = 10.minutes
 
-        /** Readings further apart than this do not prove a process stayed busy in between: a streak starts again. */
+        /**
+         * Readings further apart than this do not prove a process stayed busy in between: a streak
+         * starts again.
+         */
         public val MAX_GAP: Duration = 30.seconds
 
         /** Android stops an app's child processes above this, the oldest first. */
@@ -236,8 +283,8 @@ public class PhoneProcessWatch {
 }
 
 /**
- * Groups [processes] under what started them, each group a tree. [heavy] maps a pid to how long it has been heavy;
- * [aboutFull] holds the pids at about 100% in the last two readings.
+ * Groups [processes] under what started them, each group a tree. [heavy] maps a pid to how long it
+ * has been heavy; [aboutFull] holds the pids at about 100% in the last two readings.
  */
 public fun groupRunningProcesses(
     processes: List<RunningProcess>,
@@ -246,41 +293,54 @@ public fun groupRunningProcesses(
 ): List<RunningGroup> {
     val byPid = processes.associateBy { it.pid }
 
-    // The agent session above a process: its own, else the nearest ancestor's (Claude Code's tools carry none).
+    // The agent session above a process: its own, else the nearest ancestor's (Claude Code's tools
+    // carry none).
     val sessions = HashMap<Int, String?>()
     fun sessionOf(p: RunningProcess): String? {
         if (sessions.containsKey(p.pid)) return sessions[p.pid]
         sessions[p.pid] = null // a loop in a bad reading ends here
         val parent = byPid[p.ppid]
-        val found = p.session ?: if (parent == null || parent.pid == p.pid) null else sessionOf(parent)
+        val found =
+            p.session ?: if (parent == null || parent.pid == p.pid) null else sessionOf(parent)
         sessions[p.pid] = found
         return found
     }
 
-    fun kindOf(p: RunningProcess): RunningGroupKind = when (p.owner) {
-        PhoneProcessOwner.Orphan -> RunningGroupKind.LeftBehind
-        PhoneProcessOwner.OpenCode -> RunningGroupKind.OpenCode
-        PhoneProcessOwner.Paseo, PhoneProcessOwner.AgentSignIn ->
-            if (sessionOf(p) == null) RunningGroupKind.AgentHelper else RunningGroupKind.ClaudeCode
-        PhoneProcessOwner.Engine -> RunningGroupKind.AiTeam
-        PhoneProcessOwner.Terminal -> RunningGroupKind.Terminal
-        PhoneProcessOwner.Task -> RunningGroupKind.Setup
-        PhoneProcessOwner.Helper -> RunningGroupKind.Helpers
-        PhoneProcessOwner.App -> RunningGroupKind.App
-        PhoneProcessOwner.Other -> RunningGroupKind.Other
-    }
+    fun kindOf(p: RunningProcess): RunningGroupKind =
+        when (p.owner) {
+            PhoneProcessOwner.Orphan -> RunningGroupKind.LeftBehind
+            PhoneProcessOwner.OpenCode -> RunningGroupKind.OpenCode
+            PhoneProcessOwner.Paseo,
+            PhoneProcessOwner.AgentSignIn ->
+                if (sessionOf(p) == null) RunningGroupKind.AgentHelper
+                else RunningGroupKind.ClaudeCode
+            PhoneProcessOwner.Engine -> RunningGroupKind.AiTeam
+            PhoneProcessOwner.Terminal -> RunningGroupKind.Terminal
+            PhoneProcessOwner.Task -> RunningGroupKind.Setup
+            PhoneProcessOwner.Helper -> RunningGroupKind.Helpers
+            PhoneProcessOwner.App -> RunningGroupKind.App
+            PhoneProcessOwner.Other -> RunningGroupKind.Other
+        }
 
     fun groupId(p: RunningProcess): String {
         val kind = kindOf(p)
         return if (kind == RunningGroupKind.ClaudeCode) "${kind.key}:${sessionOf(p)}" else kind.key
     }
 
-    // The root of a tree the app runs: its parent is in no tree of the same owner (native refuses to stop these).
-    val treeOwners = setOf(
-        PhoneProcessOwner.OpenCode, PhoneProcessOwner.Paseo, PhoneProcessOwner.AgentSignIn, PhoneProcessOwner.Engine,
-        PhoneProcessOwner.Helper, PhoneProcessOwner.Task, PhoneProcessOwner.Terminal,
-    )
-    fun isRoot(p: RunningProcess): Boolean = p.owner in treeOwners && byPid[p.ppid]?.owner != p.owner
+    // The root of a tree the app runs: its parent is in no tree of the same owner (native refuses
+    // to stop these).
+    val treeOwners =
+        setOf(
+            PhoneProcessOwner.OpenCode,
+            PhoneProcessOwner.Paseo,
+            PhoneProcessOwner.AgentSignIn,
+            PhoneProcessOwner.Engine,
+            PhoneProcessOwner.Helper,
+            PhoneProcessOwner.Task,
+            PhoneProcessOwner.Terminal,
+        )
+    fun isRoot(p: RunningProcess): Boolean =
+        p.owner in treeOwners && byPid[p.ppid]?.owner != p.owner
 
     val members = LinkedHashMap<String, MutableList<RunningProcess>>()
     for (p in processes) members.getOrPut(groupId(p)) { mutableListOf() }.add(p)
@@ -291,7 +351,9 @@ public fun groupRunningProcesses(
         val children = HashMap<Int, MutableList<RunningProcess>>()
         val roots = mutableListOf<RunningProcess>()
         for (p in entry) {
-            if (p.ppid != p.pid && p.ppid in inGroup) children.getOrPut(p.ppid) { mutableListOf() }.add(p) else roots.add(p)
+            if (p.ppid != p.pid && p.ppid in inGroup)
+                children.getOrPut(p.ppid) { mutableListOf() }.add(p)
+            else roots.add(p)
         }
         val nodes = mutableListOf<RunningNode>()
         val placed = mutableSetOf<Int>()
@@ -300,9 +362,13 @@ public fun groupRunningProcesses(
             val heavyFor = heavy[p.pid]
             val root = isRoot(p)
             val session = sessionOf(p)
-            val stuck = p.owner == PhoneProcessOwner.Orphan ||
-                (!root && p.owner != PhoneProcessOwner.App && session == null &&
-                    p.elapsed > PhoneProcessWatch.STUCK_AFTER && p.pid in aboutFull)
+            val stuck =
+                p.owner == PhoneProcessOwner.Orphan ||
+                    (!root &&
+                        p.owner != PhoneProcessOwner.App &&
+                        session == null &&
+                        p.elapsed > PhoneProcessWatch.STUCK_AFTER &&
+                        p.pid in aboutFull)
             nodes.add(RunningNode(p, depth, root, heavyFor != null, stuck, heavyFor, session))
             for (kid in children[p.pid].orEmpty().sortedBy { it.pid }) visit(kid, depth + 1)
         }
@@ -311,7 +377,15 @@ public fun groupRunningProcesses(
         for (p in entry) visit(p, 0)
         val first = entry.first()
         val kind = kindOf(first)
-        groups.add(RunningGroup(kind, nodes.toList(), if (kind == RunningGroupKind.ClaudeCode) sessionOf(first) else null))
+        groups.add(
+            RunningGroup(
+                kind,
+                nodes.toList(),
+                if (kind == RunningGroupKind.ClaudeCode) sessionOf(first) else null,
+            )
+        )
     }
-    return groups.sortedWith(compareBy<RunningGroup> { it.kind.ordinal }.thenBy { it.nodes.first().pid })
+    return groups.sortedWith(
+        compareBy<RunningGroup> { it.kind.ordinal }.thenBy { it.nodes.first().pid }
+    )
 }

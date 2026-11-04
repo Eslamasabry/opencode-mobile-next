@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="p12LogSearch">البحث في السجل</string>
+    <string name="p12LogFollow">متابعة</string>
+    <string name="p12LogPause">إيقاف مؤقت</string>
+    <string name="p12LogCopy">نسخ الكل</string>
+    <string name="p12LogWrap">التفاف الأسطر</string>
+    <string name="p12LogMatches">%1$d من %2$d أسطر مطابقة</string>
+    <string name="p12LogPrevious">المطابقة السابقة</string>
+    <string name="p12LogNext">المطابقة التالية</string>
+</resources>
