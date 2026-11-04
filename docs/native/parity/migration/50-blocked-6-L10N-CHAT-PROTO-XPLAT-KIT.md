@@ -36,3 +36,17 @@ Tests written/changed/run: **0 / 0 / 0**. APKs, signing, pushes, CI, device runs
 Parent first-batch commit: `ac79d8312e37c59e90cc00e38a8366fd67256cef`. After restoring the second batch and completing wrapped visible-link discovery using actual terminal columns, both requested selectors passed again on the final source snapshot: `:androidApp:compilePreviewDebugKotlin compileKotlinDesktop` (`BUILD SUCCESSFUL`, 43s, 689 actionable tasks). The same shared lock, JDK, SDK, nice level, worker/idle limits and 2 GiB heap were used. No Kotlin/Gradle changes followed this gate. Warnings remain; this is compile evidence only.
 
 Final accounting: **18 rows = 12 built now + 3 already there + 3 blocked**. Both committed candidates passed **2/2 requested compile selectors**. Tests written/changed/run remain **0 / 0 / 0**; no test or baseline was weakened or deleted. There was no APK, signing, device/network/clipboard run, push, CI, deployment or release. The remaining blockers are exactly the unsupported remote-upgrade server API (B-PROTO-083) and the two owner-deferred test/quality gates (B-L10N-007, B-KIT-060).
+
+## Review corrections (final approval, 2026-11-04)
+
+The approval review fixed these on the branch, after merging the P12 integration head. Nothing was compiled or tested in the review environment; the build server compiles next.
+
+- B-XPLAT-009: an OSC 52 write now reaches the clipboard only while that terminal's view is on screen (Dart `_KitTerminalOscHost`). A background sign-in or a closed screen can no longer change the clipboard silently.
+- B-XPLAT-011: command output is masked as a whole before it is split into lines, so a multi-line private key stays masked. The box shows the first lines again (Dart `_CommandBox`). "Show all" expands in place up to 200 lines and opens the full output past that. The job's "Show earlier" tail control is removed. After the merge, the server and native-local key bars lead with Ctrl-C and Ctrl-D (`kitTerminalInterruptKeys`). `KitTerminalView.defaultKeyBar` stops the keys being shown twice. Partial: the `TerminalSurface.selectedText()` seam has no caller yet.
+- B-XPLAT-010: partial. The link sheet shows the policy's host and Open, but not Flutter's full address or Copy link. A refused link gives no notice.
+- B-CHAT-124: a `websearch` refresh or capability change rediscovers providers but keeps the person's staged sources (Dart `discoverProviders`). Only a scope change clears them. The protocol-module `WebSourcesReview` copy is still unused by the app.
+- B-PROTO-045 / B-PROTO-088: waiting sends show as a strip above the composer with Review (Dart `_PendingSendsStrip`), not only in the overflow menu. An offline send that has not gone out can be brought back to the composer. A pending restore survives a connection change.
+- B-CHAT-108: reopening the sheet no longer re-arms a confirmation that may have reached the server. The skill is remembered as started, with its conversation when known.
+- B-L10N-017: Material You applies at once instead of showing a fallback-colour preview. The preview starts in the current light/dark mode.
+- B-KIT-013: overstated. Flows are registered from collected settings facts now, but the only explainer in use is "server.any", so only Add server is reachable today.
+- B-L10N-007 / B-KIT-060: owner-deferred test gates, not external blockers.

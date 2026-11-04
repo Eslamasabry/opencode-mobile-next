@@ -133,7 +133,10 @@ public class WebSourcesReview(
         }
     }
 
-    /** The `websearch.updated` / reconnect signal: drop the current answer and rediscover. */
+    /**
+     * The `websearch.updated` / reconnect signal: drop the current answer and rediscover. The
+     * person's staged sources stay (Dart `discoverProviders`); only a scope change clears them.
+     */
     public suspend fun invalidateProviders() {
         searchRevision++
         results = persistentListOf()
@@ -141,8 +144,6 @@ public class WebSourcesReview(
         providerId = null
         searching = false
         searched = false
-        staged.clear()
-        selected.clear()
         discoverProviders()
     }
 

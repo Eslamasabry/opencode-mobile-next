@@ -60,7 +60,8 @@ import org.jetbrains.compose.resources.stringResource
 
 /**
  * I04, one page (plan 06 K4): light or dark, the colour pack (most used first, "See all 31 themes"
- * for the rest), the five styles and Motion. Every choice applies at once (no Apply). Saver holds
+ * for the rest), the five styles and Motion. A colour pack opens a contained preview with Apply and
+ * then Undo (Material You applies at once); every other choice applies at once. Saver holds
  * Style and Motion and says so. Text size is the last question (B-KIT-059). Accent is a swatch grid
  * (B-KIT-049) and Fine-tune is Corners and Spacing over the style's own (B-KIT-017). Glow and the
  * guided first visit are S4-APPEAR's.
@@ -117,7 +118,9 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         selected = ui.pack,
         semanticsLabel = stringResource(Res.string.appearanceAskTheme),
         modifier = Modifier.testTag("appearance-packs"),
-        onSelect = { preview = it },
+        // Material You has no contained preview (its colours come from the system), so it applies
+        // at once like before; every other pack is previewed first.
+        onSelect = { if (it == PackId.Dynamic) actions.onPack(it) else preview = it },
     )
     if (ui.seeAllCount > 0) {
         KitRow(

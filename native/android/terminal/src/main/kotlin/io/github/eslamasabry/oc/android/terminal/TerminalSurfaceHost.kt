@@ -83,10 +83,14 @@ internal open class TerminalSurfaceHost(context: Context, protected val terminal
     }
 }
 
-/** The stream parser admits bounded UTF-8 writes only; this sink never reads the clipboard. */
-internal fun copyTerminalText(session: TerminalSession, text: String, context: Context) {
+/**
+ * The stream parser admits bounded UTF-8 writes only; this sink never reads the clipboard. As in
+ * Dart (`_KitTerminalOscHost`), a write is honoured only while the terminal is on screen: a session
+ * running unseen (a background sign-in, a closed screen) cannot change the clipboard.
+ */
+internal fun copyTerminalText(session: TerminalSession, text: String, shown: android.view.View?) {
+    if (shown == null || !shown.isShown) return
     if (text.isEmpty() || text.toByteArray(Charsets.UTF_8).size > 65_536) return
-    (context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)?.setPrimaryClip(
-        ClipData.newPlainText("", text)
-    )
+    (shown.context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
+        ?.setPrimaryClip(ClipData.newPlainText("", text))
 }

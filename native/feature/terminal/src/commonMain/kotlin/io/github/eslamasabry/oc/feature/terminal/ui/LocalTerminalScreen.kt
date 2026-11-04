@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKey
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKeyBar
+import io.github.eslamasabry.oc.ui.kit.content.terminal.kitTerminalInterruptKeys
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalView
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalWords
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -184,6 +185,7 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
                 if (nativeActions != null)
                     KitTerminalKeyBar(
                         keys =
+                            kitTerminalInterruptKeys(actions::send) +
                             TerminalKey.entries.map { key ->
                                 val label =
                                     stringResource(

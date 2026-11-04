@@ -197,7 +197,7 @@ class NativeLocalTerminal(
                 }
 
                 override fun onCopyTextToClipboard(session: TerminalSession, text: String) {
-                    copyTerminalText(session, text, context)
+                    copyTerminalText(session, text, held.view)
                 }
             }
         try {

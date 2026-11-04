@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.feature.settings.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsHost
@@ -17,7 +19,8 @@ import io.github.eslamasabry.oc.ui.kit.capability.LocalKitCapabilities
  */
 @Composable
 internal fun SettingsCapabilityFlows(host: SettingsHost, content: @Composable () -> Unit) {
-    val facts = host.facts.value
+    // Collected, so a server connecting or leaving while Settings is open re-registers flows.
+    val facts by host.facts.collectAsState()
     val registry =
         remember(host, facts) {
             KitCapabilities().apply {

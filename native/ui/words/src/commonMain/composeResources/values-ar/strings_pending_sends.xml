@@ -10,4 +10,12 @@
   <string name="nativePendingSteer">الانضمام إلى هذا الرد</string>
   <string name="nativePendingCheck">التحقّق مجددًا</string>
     <string name="nativePendingEmpty">لا توجد رسائل بانتظار الإرسال.</string>
+  <plurals name="nativePendingCount">
+    <item quantity="zero">لا توجد رسائل بانتظار الإرسال.</item>
+    <item quantity="one">رسالة واحدة بانتظار الإرسال.</item>
+    <item quantity="two">رسالتان بانتظار الإرسال.</item>
+    <item quantity="few">%1$s رسائل بانتظار الإرسال.</item>
+    <item quantity="many">%1$s رسالة بانتظار الإرسال.</item>
+    <item quantity="other">%1$s رسالة بانتظار الإرسال.</item>
+  </plurals>
 </resources>

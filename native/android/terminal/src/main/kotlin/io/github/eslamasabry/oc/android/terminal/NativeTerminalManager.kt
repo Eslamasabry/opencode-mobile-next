@@ -125,7 +125,10 @@ class NativeTerminalManager(
             get() = this::terminal.isInitialized && this::view.isInitialized && terminal.pid > 0
 
         private val client =
-            object : QuietSessionClient(app) {
+            object :
+                QuietSessionClient({
+                    if (this@NativeSession::view.isInitialized) view else null
+                }) {
                 override fun onTextChanged(session: TerminalSession) {
                     // The emulator parses UTF-8 incrementally; whole characters survive split PTY
                     // reads.
@@ -309,11 +312,13 @@ class NativeTerminalManager(
 }
 
 /**
- * Library diagnostics are discarded; valid bounded OSC 52 writes use the system clipboard.
+ * Library diagnostics are discarded; valid bounded OSC 52 writes use the system clipboard, only
+ * while [shownView] is on screen.
  * Clipboard queries are removed by TerminalSession before VT decoding.
  */
-internal open class QuietSessionClient(private val context: Context? = null) :
-    TerminalSessionClient {
+internal open class QuietSessionClient(
+    private val shownView: () -> android.view.View? = { null }
+) : TerminalSessionClient {
     override fun onTextChanged(session: TerminalSession) = Unit
 
     override fun onTitleChanged(session: TerminalSession) = Unit
@@ -321,7 +326,7 @@ internal open class QuietSessionClient(private val context: Context? = null) :
     override fun onSessionFinished(session: TerminalSession) = Unit
 
     override fun onCopyTextToClipboard(session: TerminalSession, text: String) {
-        context?.let { copyTerminalText(session, text, it) }
+        copyTerminalText(session, text, shownView())
     }
 
     override fun onPasteTextFromClipboard(session: TerminalSession) = Unit

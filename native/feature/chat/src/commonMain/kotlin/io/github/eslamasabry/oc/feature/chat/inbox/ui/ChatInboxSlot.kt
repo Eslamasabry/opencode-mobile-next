@@ -71,6 +71,14 @@ public fun ChatInboxSlot(
                                         !state.busy,
                                     )
                                 )
+                            if (row.local && !row.dispatched)
+                                add(
+                                    KitLineAction(
+                                        stringResource(Res.string.nativePendingEdit),
+                                        { actions.editLocal(row) },
+                                        !state.busy && !row.sending,
+                                    )
+                                )
                             if (row.local && row.dispatched)
                                 add(
                                     KitLineAction(

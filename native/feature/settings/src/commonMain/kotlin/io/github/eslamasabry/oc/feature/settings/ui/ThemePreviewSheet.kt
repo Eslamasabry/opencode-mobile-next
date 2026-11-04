@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.theme.KitThemePreview
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -21,7 +22,8 @@ internal fun ThemePreviewSheet(
     onDismiss: () -> Unit,
     onApply: (PackId) -> Unit,
 ) {
-    var dark by remember(pack) { mutableStateOf(true) }
+    val current = LocalKitColors.current.dark
+    var dark by remember(pack) { mutableStateOf(current) }
     KitSheet(
         visible = true,
         onDismissRequest = onDismiss,

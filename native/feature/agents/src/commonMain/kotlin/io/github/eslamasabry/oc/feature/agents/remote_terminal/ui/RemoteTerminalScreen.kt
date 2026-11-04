@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKey
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKeyBar
+import io.github.eslamasabry.oc.ui.kit.content.terminal.kitTerminalInterruptKeys
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalView
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalWords
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -161,7 +162,8 @@ public fun RemoteTerminalScreen(state: RemoteTerminalUi, actions: RemoteTerminal
                     else KitEnabled.Disabled(stringResource(Res.string.remoteTerminalInputOff))
                 KitTerminalKeyBar(
                     keys =
-                        TerminalKey.entries.map { key ->
+                        kitTerminalInterruptKeys(actions::send) +
+                            TerminalKey.entries.map { key ->
                             val label =
                                 stringResource(
                                     when (key) {

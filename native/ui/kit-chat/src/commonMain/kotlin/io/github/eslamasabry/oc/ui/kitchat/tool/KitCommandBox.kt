@@ -43,14 +43,15 @@ import io.github.eslamasabry.oc.ui.kit.theme.KitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
-import io.github.eslamasabry.oc.ui.words.res.*
-import org.jetbrains.compose.resources.pluralStringResource
 
 /**
  * Lines of output shown in place before "Show all" (plan 09 §9.5: output is cut at 12 lines before
  * the row).
  */
 public const val KIT_COMMAND_OUTPUT_LINES: Int = 12
+
+/** Lines "Show all" expands in place; longer output opens in full instead (Dart `inlineCap`). */
+public const val KIT_COMMAND_INLINE_CAP: Int = 200
 
 /**
  * A shell step's opened body (plan 09 §9.5; Dart `_CommandBox`): one box with the command after a
@@ -76,12 +77,15 @@ public fun KitCommandBox(
     val colors = LocalKitColors.current
     val shape = KitShapeId.Code.shape()
     val redactor = LocalKitRedactor.current
-    val raw = output.orEmpty().trimEnd()
+    // The whole output is masked first (a private key spans lines), then each line again across
+    // its ANSI runs; masking twice changes nothing.
+    val raw = output?.let(redactor::redact)?.trimEnd().orEmpty()
     val lines = if (raw.isEmpty()) emptyList() else raw.lines()
     var expanded by remember(command, output) { mutableStateOf(false) }
-    val cap = 2000
-    val count = if (expanded) cap else maxLines.coerceIn(0, cap)
-    val shown = lines.takeLast(count)
+    // Dart `_CommandBox`: the first lines, "Show all" expands in place up to the inline cap and
+    // opens the full output past it.
+    val cap = KIT_COMMAND_INLINE_CAP
+    val shown = lines.take(if (expanded) cap else maxLines.coerceIn(0, cap))
     val commandSpans = TerminalText.command(redactor.redact(TerminalText.strip(command))).drop(1)
     Column(
         modifier
@@ -114,18 +118,6 @@ public fun KitCommandBox(
         }
         if (lines.isNotEmpty()) {
             Column(Modifier.fillMaxWidth()) {
-                if (!expanded && lines.size > shown.size) {
-                    KitTappable(onClick = { expanded = true }, shape = KitShapeId.Button) {
-                        KitText(
-                            pluralStringResource(
-                                Res.plurals.terminalShowEarlier,
-                                minOf(lines.size, cap) - shown.size,
-                                (minOf(lines.size, cap) - shown.size).toString(),
-                            ),
-                            tone = TextTone.Accent,
-                        )
-                    }
-                }
                 SelectionContainer {
                     Column(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
                         for (line in shown) TerminalStyledText(
@@ -144,8 +136,11 @@ public fun KitCommandBox(
                 kind = KitTextKind.Frame,
             )
         }
-        if (lines.size > cap || (!expanded && lines.size > maxLines)) {
-            KitTappable(onClick = onMore, shape = KitShapeId.Button) {
+        if (!expanded && lines.size > maxLines) {
+            KitTappable(
+                onClick = { if (lines.size > cap) onMore() else expanded = true },
+                shape = KitShapeId.Button,
+            ) {
                 KitText(
                     moreLabel,
                     Modifier.padding(horizontal = Space.S2.dp),

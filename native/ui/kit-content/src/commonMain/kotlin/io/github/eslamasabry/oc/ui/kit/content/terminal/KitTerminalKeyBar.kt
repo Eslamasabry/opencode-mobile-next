@@ -56,6 +56,14 @@ public fun KitTerminalKeyBar(
 }
 
 /**
+ * Ctrl-C and Ctrl-D as one-tap keys (Dart `interruptKeys`): screens with their own key list put
+ * these first so a running command can always be stopped.
+ */
+@Composable
+public fun kitTerminalInterruptKeys(onSend: (String) -> Unit): List<KitTerminalKey> =
+    controlKeys(listOf(TerminalBarKey.Interrupt, TerminalBarKey.EndOfInput), onSend)
+
+/**
  * The default control-byte bar (Ctrl-C, Ctrl-D, Esc, Tab) for terminals whose screen does not
  * supply its own keys. Direct bytes, never command-line text or a queued send; keys remain
  * reachable in narrow windows.
@@ -66,23 +74,30 @@ public fun KitTerminalKeyBar(
     enabled: KitEnabled,
     modifier: Modifier = Modifier,
 ) {
-    val labels =
-        listOf(
-            TerminalBarKey.Interrupt to stringResource(Res.string.terminalParityInterrupt),
-            TerminalBarKey.EndOfInput to stringResource(Res.string.terminalParityEndInput),
-            TerminalBarKey.Escape to stringResource(Res.string.terminalParityEscape),
-            TerminalBarKey.Tab to stringResource(Res.string.terminalParityTab),
-        )
     KitTerminalKeyBar(
-        keys =
-            labels.map { (key, label) ->
-                KitTerminalKey(
-                    label = label,
-                    testTag = "terminal-key-${key.name}",
-                    onClick = { onSend(TerminalText.keyBytes(key)) },
-                )
-            },
+        keys = controlKeys(TerminalBarKey.entries, onSend),
         enabled = enabled,
         modifier = modifier,
     )
 }
+
+@Composable
+private fun controlKeys(
+    keys: List<TerminalBarKey>,
+    onSend: (String) -> Unit,
+): List<KitTerminalKey> =
+    keys.map { key ->
+        KitTerminalKey(
+            label =
+                stringResource(
+                    when (key) {
+                        TerminalBarKey.Interrupt -> Res.string.terminalParityInterrupt
+                        TerminalBarKey.EndOfInput -> Res.string.terminalParityEndInput
+                        TerminalBarKey.Escape -> Res.string.terminalParityEscape
+                        TerminalBarKey.Tab -> Res.string.terminalParityTab
+                    }
+                ),
+            testTag = "terminal-key-${key.name}",
+            onClick = { onSend(TerminalText.keyBytes(key)) },
+        )
+    }

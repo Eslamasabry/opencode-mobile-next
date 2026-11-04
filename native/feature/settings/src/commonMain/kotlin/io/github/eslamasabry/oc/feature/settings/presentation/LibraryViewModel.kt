@@ -353,6 +353,19 @@ public class LibraryViewModel(
         )
             return
         if (mutable.value.inventory.skills.none { it == skill } || skill.id.isNullOrBlank()) return
+        // Reopening the sheet must not re-arm a confirmation that may already have reached the
+        // server (Dart: never duplicates on failure, no retry).
+        val skillId = skill.id ?: return
+        if (skillId in consumedSkills) {
+            mutable.update {
+                it.copy(
+                    skillConversation =
+                        SkillConversationResult(SkillConversationStatus.AlreadyStarted),
+                    skillConversationRef = consumedSkills[skillId],
+                )
+            }
+            return
+        }
         val selection =
             route.ref?.sessionId?.let { id ->
                 mutable.value.inventory.conversations.firstOrNull { it.id == id }?.selection
@@ -369,8 +382,13 @@ public class LibraryViewModel(
         // Keep this confirmation consumed after failure: creation/activation may have reached the
         // server.
         mutable.update { it.copy(working = true, locked = true, notice = null) }
+        consumedSkills[skillId] = null
         viewModelScope.launch {
-            val result = action.useInNewConversation(skill.id)
+            val result = action.useInNewConversation(skillId)
+            if (result.status in NOTHING_SENT) consumedSkills -= skillId
+            else
+                consumedSkills[skillId] =
+                    result.sessionId?.let { id -> ConversationRef(profile, SessionId(id)) }
             mutable.update {
                 it.copy(
                     working = false,
@@ -381,6 +399,19 @@ public class LibraryViewModel(
             }
             if (result.status == SkillConversationStatus.Ready) library.refresh()
         }
+    }
+
+    /** Skills whose confirmation was spent, with the conversation it made when known. */
+    private val consumedSkills = mutableMapOf<String, ConversationRef?>()
+
+    private companion object {
+        /** Outcomes refused before anything reached the server; the person may try again. */
+        val NOTHING_SENT =
+            setOf(
+                SkillConversationStatus.Unsupported,
+                SkillConversationStatus.InvalidInput,
+                SkillConversationStatus.Changed,
+            )
     }
 
     override fun openSkillConversation() {

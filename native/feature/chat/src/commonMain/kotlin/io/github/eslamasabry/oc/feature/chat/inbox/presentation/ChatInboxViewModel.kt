@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 public data class ChatInboxRow(
@@ -50,6 +52,9 @@ public interface ChatInboxActions {
 
     public fun check(row: ChatInboxRow)
 
+    /** A device send not yet dispatched leaves the queue and returns to the composer. */
+    public fun editLocal(row: ChatInboxRow)
+
     public fun restoreDone(id: Long)
 }
 
@@ -65,10 +70,13 @@ public class ChatInboxViewModel(
 
     init {
         viewModelScope.launch {
-            registry.live.collectLatest { live ->
-                val graph = live[route.ref.profileId]
+            // Only this profile's graph matters; a pending restore survives a reconnect.
+            registry.live
+                .map { it[route.ref.profileId] }
+                .distinctUntilChanged()
+                .collectLatest { graph ->
                 val services = graph as? ChatGraphAccessors
-                mutable.value = ChatInboxUi()
+                mutable.value = ChatInboxUi(restore = mutable.value.restore)
                 if (services == null) return@collectLatest
                 val gateway = services.chatGateway
                 val delivery = services.chatDelivery
@@ -183,6 +191,23 @@ public class ChatInboxViewModel(
     override fun check(row: ChatInboxRow) {
         if (!row.local || !row.dispatched) return
         action(row) { services -> services.chatDelivery.queue?.checkReceipt(row.id) == true }
+    }
+
+    override fun editLocal(row: ChatInboxRow) {
+        if (!row.local || row.dispatched) return
+        action(row) { services ->
+            val queue = services.chatDelivery.queue ?: return@action false
+            val revision = services.chatGateway.scopeRevision
+            val entry = queue.entries().firstOrNull { it.id == row.id }
+            if (entry == null || entry.dispatched || queue.sending(row.id)) return@action false
+            val removed = queue.remove(row.id)
+            if (removed !is Outcome.Ok || !removed.value) return@action false
+            if (services.chatGateway.scopeRevision == revision) {
+                nextRestore += 1
+                mutable.value = mutable.value.copy(restore = InboxRestore(nextRestore, entry.text))
+            }
+            true
+        }
     }
 
     override fun restoreDone(id: Long) {

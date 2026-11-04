@@ -10,4 +10,8 @@
   <string name="nativePendingSteer">Join this reply</string>
   <string name="nativePendingCheck">Check again</string>
     <string name="nativePendingEmpty">No sends are waiting.</string>
+  <plurals name="nativePendingCount">
+    <item quantity="one">1 message is waiting to send.</item>
+    <item quantity="other">%1$s messages are waiting to send.</item>
+  </plurals>
 </resources>

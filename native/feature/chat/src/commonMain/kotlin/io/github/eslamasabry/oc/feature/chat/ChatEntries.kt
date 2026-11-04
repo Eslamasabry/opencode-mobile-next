@@ -58,11 +58,15 @@ import io.github.eslamasabry.oc.ui.routes.WebSourcesRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
+import io.github.eslamasabry.oc.ui.words.res.nativePendingCount
+import io.github.eslamasabry.oc.ui.words.res.nativePendingFailed
 import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
+import io.github.eslamasabry.oc.ui.words.res.nativePendingTitle
 import io.github.eslamasabry.oc.ui.words.res.protoToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionTransferTitle
 import io.github.eslamasabry.oc.ui.words.res.stateHandoffTitle
 import io.github.eslamasabry.oc.ui.words.res.webSourcesTitle
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -279,7 +283,32 @@ public class ChatEntries(
                             start = start,
                             startActions = startVm,
                             appStatus = appStatus,
-                            replyOffer = offerContent,
+                            replyOffer = {
+                                offerContent?.invoke()
+                                // Dart `_PendingSendsStrip`: waiting sends stay visible above the
+                                // composer, not only in the overflow menu.
+                                if (pendingSends.rows.isNotEmpty() || pendingSends.failed)
+                                    KitNotice(
+                                        message =
+                                            if (pendingSends.rows.isEmpty())
+                                                stringResource(Res.string.nativePendingFailed)
+                                            else
+                                                pluralStringResource(
+                                                    Res.plurals.nativePendingCount,
+                                                    pendingSends.rows.size,
+                                                    pendingSends.rows.size.toString(),
+                                                ),
+                                        title = stringResource(Res.string.nativePendingTitle),
+                                        actions =
+                                            listOf(
+                                                KitLineAction(
+                                                    stringResource(Res.string.nativePendingReview),
+                                                    { pendingOpen = true },
+                                                )
+                                            ),
+                                        liveRegion = false,
+                                    )
+                            },
                         )
                         ChatInboxSlot(
                             pendingSends,

@@ -61,7 +61,7 @@ class AndroidRemoteTerminalRenderer(
                     }
                 },
                 2000,
-                object : QuietSessionClient(app) {
+                object : QuietSessionClient({ grid }) {
                     override fun onTextChanged(session: TerminalSession) {
                         val raw =
                             redactor.redact(session.emulator?.screen?.transcriptText.orEmpty())
