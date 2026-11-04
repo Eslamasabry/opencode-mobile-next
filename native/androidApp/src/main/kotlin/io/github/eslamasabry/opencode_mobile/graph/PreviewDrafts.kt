@@ -58,6 +58,27 @@ internal class PreviewComposerPrefs(private val stores: PreviewStores) : Compose
             }
         } is Outcome.Ok
     }
+
+    override suspend fun compareAndCommit(
+        expected: Map<String, String?>,
+        edit: PrefsEdit,
+    ): Boolean {
+        stores.requirePrepared()
+        val result =
+            stores.prefs.compareAndCommit(
+                stores.lanes.app,
+                expected.mapValues { (_, value) -> value?.let(PrefValue::Str) },
+            ) {
+                edit.entries.forEach { (key, write) ->
+                    when (write) {
+                        is PrefWrite.Str -> putString(key, write.value)
+                        is PrefWrite.Bool -> putBool(key, write.value)
+                        PrefWrite.Remove -> remove(key)
+                    }
+                }
+            }
+        return result is Outcome.Ok && result.value
+    }
 }
 
 internal class PreviewComposerProfiles(private val stores: PreviewStores) : ComposerProfiles {
@@ -76,28 +97,31 @@ internal class PreviewComposerProfiles(private val stores: PreviewStores) : Comp
 @ContributesTo(AppScope::class)
 object PreviewDraftBindings {
     @Provides
+    @SingleIn(AppScope::class)
+    fun draftStore(
+        stores: PreviewStores,
+        application: Application,
+        dispatchers: AppDispatchers,
+        clock: Clock,
+    ): Drafts =
+        Drafts(
+            PreviewComposerPrefs(stores),
+            AttachmentVault(
+                FilePayloadStore(
+                    Path(application.filesDir.absolutePath, AttachmentVault.DRAFT_ROOT),
+                    dispatchers.io,
+                )
+            ),
+            PreviewComposerProfiles(stores),
+            clock,
+        )
+
+    @Provides
     @IntoSet
     @SingleIn(AppScope::class)
     fun drafts(
-        stores: PreviewStores,
-        application: Application,
+        drafts: Drafts,
         appScope: AppCoroutineScope,
         dispatchers: AppDispatchers,
-        clock: Clock,
-    ): ConversationDrafts =
-        ConversationDrafts(
-            Drafts(
-                PreviewComposerPrefs(stores),
-                AttachmentVault(
-                    FilePayloadStore(
-                        Path(application.filesDir.absolutePath, AttachmentVault.DRAFT_ROOT),
-                        dispatchers.io,
-                    )
-                ),
-                PreviewComposerProfiles(stores),
-                clock,
-            ),
-            appScope,
-            dispatchers,
-        )
+    ): ConversationDrafts = ConversationDrafts(drafts, appScope, dispatchers)
 }

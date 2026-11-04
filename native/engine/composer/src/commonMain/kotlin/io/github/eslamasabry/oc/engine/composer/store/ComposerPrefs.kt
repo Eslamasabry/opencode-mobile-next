@@ -1,11 +1,13 @@
 package io.github.eslamasabry.oc.engine.composer.store
 
 /**
- * The composer's view of the app preferences file (Flutter `SharedPreferences`, logical keys without the `flutter.`
- * prefix). Reads are synchronous over acknowledged values; [commit] applies every write of one edit or none.
+ * The composer's view of the app preferences file (Flutter `SharedPreferences`, logical keys
+ * without the `flutter.` prefix). Reads are synchronous over acknowledged values; [commit] applies
+ * every write of one edit or none.
  *
- * The production adapter wraps `:core:data` `KeyValueStore` (its `commit` is all-or-nothing and publishes only
- * acknowledged values, so the Flutter "optimistic cache after a refused write" problem cannot happen here).
+ * The production adapter wraps `:core:data` `KeyValueStore` (its `commit` is all-or-nothing and
+ * publishes only acknowledged values, so the Flutter "optimistic cache after a refused write"
+ * problem cannot happen here).
  */
 public interface ComposerPrefs {
     public fun string(key: String): String?
@@ -18,21 +20,31 @@ public interface ComposerPrefs {
 
     /** True when every write landed; false when refused, and then nothing changed. */
     public suspend fun commit(edit: PrefsEdit): Boolean
+
+    /** Refuses when any acknowledged source value changed while a migration copied its files. */
+    public suspend fun compareAndCommit(expected: Map<String, String?>, edit: PrefsEdit): Boolean =
+        false
 }
 
 /** One atomic set of writes. */
 public class PrefsEdit {
     internal val writes: LinkedHashMap<String, PrefWrite> = LinkedHashMap()
 
-    public fun putString(key: String, value: String): PrefsEdit = apply { writes[key] = PrefWrite.Str(value) }
+    public fun putString(key: String, value: String): PrefsEdit = apply {
+        writes[key] = PrefWrite.Str(value)
+    }
 
-    public fun putBool(key: String, value: Boolean): PrefsEdit = apply { writes[key] = PrefWrite.Bool(value) }
+    public fun putBool(key: String, value: Boolean): PrefsEdit = apply {
+        writes[key] = PrefWrite.Bool(value)
+    }
 
     public fun remove(key: String): PrefsEdit = apply { writes[key] = PrefWrite.Remove }
 
-    public val entries: Map<String, PrefWrite> get() = writes
+    public val entries: Map<String, PrefWrite>
+        get() = writes
 
-    public val isEmpty: Boolean get() = writes.isEmpty()
+    public val isEmpty: Boolean
+        get() = writes.isEmpty()
 }
 
 public sealed interface PrefWrite {
@@ -45,9 +57,13 @@ public sealed interface PrefWrite {
     public data object Remove : PrefWrite
 }
 
-public suspend fun ComposerPrefs.commit(build: PrefsEdit.() -> Unit): Boolean = commit(PrefsEdit().apply(build))
+public suspend fun ComposerPrefs.commit(build: PrefsEdit.() -> Unit): Boolean =
+    commit(PrefsEdit().apply(build))
 
-/** An in-memory [ComposerPrefs] for previews and tests; [refuse] makes the next commits fail without changes. */
+/**
+ * An in-memory [ComposerPrefs] for previews and tests; [refuse] makes the next commits fail without
+ * changes.
+ */
 public class MemoryComposerPrefs(initial: Map<String, Any> = emptyMap()) : ComposerPrefs {
     private val values = LinkedHashMap<String, Any>(initial)
 
@@ -77,6 +93,14 @@ public class MemoryComposerPrefs(initial: Map<String, Any> = emptyMap()) : Compo
         }
         commits++
         return true
+    }
+
+    override suspend fun compareAndCommit(
+        expected: Map<String, String?>,
+        edit: PrefsEdit,
+    ): Boolean {
+        if (expected.any { (key, value) -> values[key] != value }) return false
+        return commit(edit)
     }
 
     /** Test seam: write as another process or an older build would, outside any engine. */
