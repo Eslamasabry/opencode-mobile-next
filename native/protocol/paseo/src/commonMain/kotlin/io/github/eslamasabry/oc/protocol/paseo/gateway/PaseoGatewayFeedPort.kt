@@ -34,7 +34,8 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
     override val isClosed: Boolean get() = g.isClosed
 
     /** Permission and question attention, local only (collecting never touches the transport). */
-    override val attentionChanges: Flow<Unit> = g.requests.revision.drop(1).map { }
+    override val attentionChanges: Flow<Unit> =
+        kotlinx.coroutines.flow.merge(g.requests.revision.drop(1), g.backgroundTasks.revision.drop(1)).map { }
 
     override suspend fun sessionPage(cursor: String?, limit: Int): ServerPage<Session> = g.onLane { g.readSessionPage(cursor, limit) }
 
@@ -59,10 +60,11 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
 
     override fun agentFailed(session: SessionId): Boolean = g.agents[session.raw]?.str("status") == "error" || lastTurnFailed(session)
 
-    /** The saved record failed before the helper loaded it (the background-task book is S5-PASEOP1). */
-    override fun lastTurnFailed(session: SessionId): Boolean = g.live[session.raw]?.failedBeforeLoad == true
+    /** The saved record failed before the helper loaded it, or the last turn read ended on the agent's own failure. */
+    override fun lastTurnFailed(session: SessionId): Boolean =
+        g.live[session.raw]?.failedBeforeLoad == true || g.lastTurnFailed(session)
 
-    override fun backgroundTasksRunning(session: SessionId): Boolean = false // TODO(S5-PASEOP1): BackgroundTaskBook
+    override fun backgroundTasksRunning(session: SessionId): Boolean = g.backgroundTasksRunning(session)
 
     override fun hasPendingPermission(session: SessionId): Boolean = g.requests.hasPermission(session.raw)
 
@@ -105,7 +107,9 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
 
     override suspend fun prompt(session: SessionId, text: String, model: ModelRef) {
         g.onLane {
-            g.sendPrompt(session.raw, paseoUuid(g.random), OutgoingPrompt(text, ModelSelection(model)), (PaseoImages.Ok(emptyList())).images, false, null)
+            g.withPayloadUse {
+                g.sendPrompt(session.raw, paseoUuid(g.random), OutgoingPrompt(text, ModelSelection(model)), (PaseoImages.Ok(emptyList())).images, false, null)
+            }
         }
     }
 

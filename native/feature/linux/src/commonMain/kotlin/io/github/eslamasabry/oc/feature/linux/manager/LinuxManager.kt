@@ -8,6 +8,8 @@ import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Why the manager could not do something, in a fixed vocabulary the screens turn into words
@@ -63,6 +65,10 @@ public class LinuxManager(
     private val retryWait: LinuxRetryWait,
     private val details: io.github.eslamasabry.oc.feature.linux.host.LinuxLogDetails? = null,
 ) {
+    private val storageLane = Mutex()
+    private var storageScanned = false
+    private val cleanupReceipts = mutableMapOf<LinuxCleanupId, String>()
+
     public suspend fun presence(): LinuxPresence = host.presence()
 
     /**
@@ -147,40 +153,77 @@ public class LinuxManager(
 
     // --- Storage
 
-    public suspend fun measureStorage(): LinuxAnswer<LinuxStorageReport> =
-        run(LinuxStorage.script, timeoutSeconds = 180).then {
+    public suspend fun measureStorage(): LinuxAnswer<LinuxStorageReport> = storageLane.withLock {
+        storageScanned = false
+        cleanupReceipts.clear()
+        run(LinuxStorage.DISCARD_RECEIPTS + LinuxStorage.script, timeoutSeconds = 180).then {
+            storageScanned = true
             LinuxAnswer.Ok(LinuxStorage.report(it))
         }
+    }
 
-    /** Bytes [action] would give back now. */
+    /** An explicit scan is required before measuring a registered cleanup's exact file list. */
     public suspend fun cleanableBytes(action: LinuxCleanupAction): LinuxAnswer<Long> =
-        run(action.measureScript, timeoutSeconds = 120).then { out ->
-            LinuxAnswer.Ok(LinuxStorage.parseDu(out).values.sum() * 1024L)
+        storageLane.withLock {
+            if (!storageScanned || LinuxStorage.cleanups.none { it === action }) {
+                return@withLock LinuxAnswer.Problem(LinuxProblem.Failed)
+            }
+            cleanupReceipts.remove(action.id)
+            requireQuiet()
+                .then { run(LinuxStorage.scanCleanup(action), timeoutSeconds = 120) }
+                .then { output ->
+                    val parts =
+                        output
+                            .lineSequence()
+                            .filter { it.startsWith("::cleanup ") }
+                            .singleOrNull()
+                            ?.split(' ')
+                    val receipt = parts?.getOrNull(1)
+                    val kb = parts?.getOrNull(2)?.toLongOrNull()
+                    if (
+                        parts?.size != 3 ||
+                            receipt == null ||
+                            !LinuxStorage.receiptName.matches(receipt) ||
+                            kb == null ||
+                            kb < 0 ||
+                            kb > Long.MAX_VALUE / 1024L
+                    ) {
+                        LinuxAnswer.Problem(LinuxProblem.Failed)
+                    } else {
+                        cleanupReceipts[action.id] = receipt
+                        LinuxAnswer.Ok(kb * 1024L)
+                    }
+                }
         }
 
-    /**
-     * Runs [action] and returns the bytes it freed (two readings). Refuses an action that names an
-     * unsafe path.
-     */
-    public suspend fun cleanup(action: LinuxCleanupAction): LinuxAnswer<Long> {
-        if (!action.paths.all(LinuxStorage::cleanupPathIsSafe))
-            return LinuxAnswer.Problem(LinuxProblem.Failed)
-        return requireQuiet()
-            .then { run(action.measureScript, 120) }
-            .then { before ->
-                run(action.script, 300)
-                    .then { run(action.measureScript, 120) }
-                    .then { after -> LinuxAnswer.Ok(before to after) }
+    /** One use of the scanned receipt; no caller-supplied script or broad directory is executed. */
+    public suspend fun cleanup(action: LinuxCleanupAction): LinuxAnswer<Long> =
+        storageLane.withLock {
+            if (!storageScanned || LinuxStorage.cleanups.none { it === action }) {
+                return@withLock LinuxAnswer.Problem(LinuxProblem.Failed)
             }
-            .then { (before, after) ->
-                LinuxAnswer.Ok(
-                    LinuxStorage.freedBytes(
-                        LinuxStorage.parseDu(before),
-                        LinuxStorage.parseDu(after),
-                    )
-                )
-            }
-    }
+            val receipt =
+                cleanupReceipts[action.id]
+                    ?: return@withLock LinuxAnswer.Problem(LinuxProblem.Failed)
+            // Every outcome consumes admission. A retry must perform a fresh scan, including after
+            // partial removal.
+            storageScanned = false
+            cleanupReceipts.clear()
+            requireQuiet()
+                .then { run(LinuxStorage.cleanReceipt(action, receipt), 300) }
+                .then { output ->
+                    val kb =
+                        output
+                            .lineSequence()
+                            .filter { it.startsWith("::freed ") }
+                            .singleOrNull()
+                            ?.removePrefix("::freed ")
+                            ?.toLongOrNull()
+                    if (kb == null || kb < 0 || kb > Long.MAX_VALUE / 1024L)
+                        LinuxAnswer.Problem(LinuxProblem.Failed)
+                    else LinuxAnswer.Ok(kb * 1024L)
+                }
+        }
 
     // --- Packages
 

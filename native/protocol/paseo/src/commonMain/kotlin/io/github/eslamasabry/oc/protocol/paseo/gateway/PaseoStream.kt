@@ -135,6 +135,7 @@ private fun PaseoGateway.onTimelineItem(id: String, state: PaseoLive, raw: JsonO
         createdMs = at ?: nowMs(),
         completedMs = if (type == "user_message") at else null,
     ) ?: return
+    backgroundTasks.observe(real(id), message)
     if (message.info.errorText != null) state.turnErrorShown = true
     if (text == null) {
         state.announced[messageId] = StringBuilder(if (streamed) paseoText(item["text"]) else "")
@@ -143,7 +144,7 @@ private fun PaseoGateway.onTimelineItem(id: String, state: PaseoLive, raw: JsonO
         if (message.info.role == Role.Assistant && message.info.time?.completedMs == null) state.open[messageId] = message.info
     }
     for (part in message.parts) {
-        emit(GatewayEvent.PartUpserted(part.copy(sessionId = id)))
+        emit(GatewayEvent.PartUpserted(rememberAndLink(part.copy(sessionId = id))))
     }
 }
 

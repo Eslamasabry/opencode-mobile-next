@@ -125,7 +125,7 @@ internal class PaseoProviderImport(private val gateway: PaseoGateway) {
         }
         gateway.fetchAgent(id)
         gateway.checkLocation(directory, epoch)
-        gateway.sessions[id] ?: paseoFail(PaseoFailureKind.ScopeMismatch)
+        gateway.sessions[gateway.app(id)] ?: paseoFail(PaseoFailureKind.ScopeMismatch)
     }
 
     private fun importText(raw: String?): String? {

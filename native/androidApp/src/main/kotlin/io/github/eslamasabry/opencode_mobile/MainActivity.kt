@@ -10,6 +10,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.withFrameNanos
 import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
@@ -24,8 +25,14 @@ import io.github.eslamasabry.opencode_mobile.graph.projectExport
 
 /** Frozen FQCN (ADR §9.9). EntryRouter and ActivityResults attach here in slice 2. */
 class MainActivity : ComponentActivity() {
+    private var shellReady = false
+    private var routeWhenReady = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        routeWhenReady =
+            savedInstanceState == null &&
+                intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
         // B14 (QA wave 1): after super.onCreate, so a recreate (language switch) keeps edge-to-edge
         // too.
         enableEdgeToEdge()
@@ -56,6 +63,18 @@ class MainActivity : ComponentActivity() {
                         appearance,
                         AppLocale.applied,
                     )
+                    // A parked launch is handed over only after the migration gate and shell
+                    // have actually composed. This effect dies with its Activity's composition.
+                    LaunchedEffect(Unit) {
+                        withFrameNanos {}
+                        if (!isDestroyed) {
+                            shellReady = true
+                            if (routeWhenReady) {
+                                routeWhenReady = false
+                                platformHub.route(intent)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -65,18 +84,10 @@ class MainActivity : ComponentActivity() {
         super.attachBaseContext(AppLocale.wrap(newBase))
     }
 
-    // P12-PLATFORM: launcher / pinned shortcuts, notification taps and shares. Posted so the
-    // shell's first frame
-    // attaches the back stack first; each extra is consumed once.
-    override fun onPostCreate(savedInstanceState: Bundle?) {
-        super.onPostCreate(savedInstanceState)
-        if (savedInstanceState == null) window.decorView.post { platformHub.route(intent) }
-    }
-
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        platformHub.route(intent)
+        if (shellReady) platformHub.route(intent) else routeWhenReady = true
     }
 
     override fun onResume() {
@@ -87,6 +98,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         appGraph.projectExport.detach(this)
+        shellReady = false
         appGraph.composerFiles.detach(this)
         super.onDestroy()
     }

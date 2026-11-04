@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.engine.voice.models.DeviceProbeResult
 import io.github.eslamasabry.oc.engine.voice.models.ModelCatalog
 import io.github.eslamasabry.oc.engine.voice.models.ModelPackSpec
 import io.github.eslamasabry.oc.engine.voice.models.ModelPacks
+import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
 import io.github.eslamasabry.oc.engine.voice.readaloud.ReadAloud
 import io.github.eslamasabry.oc.engine.voice.readaloud.ReadRequest
 import io.github.eslamasabry.oc.engine.voice.state.ModelPacksState
@@ -83,6 +84,16 @@ public interface VoiceModels {
 
     /** Downloads and verifies (SHA-256) [pack]; keeps running when the page closes. */
     public suspend fun download(pack: PackId, replaceExisting: Boolean = false): Outcome<Unit>
+
+    /** Native network probe; an unavailable probe never promises a free download. */
+    public suspend fun downloadNetwork(): SetupNetwork = SetupNetwork.Unknown
+
+    /** A choice for this attempt only, after the screen names the data cost. */
+    public suspend fun downloadConsented(
+        pack: PackId,
+        replaceExisting: Boolean,
+        allowMetered: Boolean,
+    ): Outcome<Unit> = download(pack, replaceExisting)
 
     public suspend fun cancelDownload()
 

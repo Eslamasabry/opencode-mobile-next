@@ -164,6 +164,8 @@ import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.queuedDiscardUnconfirmedMessage
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
 import io.github.eslamasabry.oc.ui.words.res.revertFromHere
+import io.github.eslamasabry.oc.ui.words.res.schedulePhoneBusy
+import io.github.eslamasabry.oc.ui.words.res.schedulePhoneCheckFailed
 import io.github.eslamasabry.oc.ui.words.res.sessionInstructionsUpdated
 import io.github.eslamasabry.oc.ui.words.res.skillApplied
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindAll
@@ -974,9 +976,15 @@ private fun rememberSendFailureWords(): (Failure) -> String {
     val offline = stringResource(Res.string.chatSendFailedOffline)
     val changed = stringResource(Res.string.chatSendFailedChanged)
     val refused = stringResource(Res.string.chatSendFailedRefused)
-    return remember(offline, changed, refused) {
+    val phoneBusy = stringResource(Res.string.schedulePhoneBusy)
+    val phoneCheckFailed = stringResource(Res.string.schedulePhoneCheckFailed)
+    return remember(offline, changed, refused, phoneBusy, phoneCheckFailed) {
         { failure ->
             when {
+                failure is Failure.Unavailable && failure.feature.name == "schedulePhoneBusy" ->
+                    phoneBusy
+                failure is Failure.Unavailable &&
+                    failure.feature.name == "schedulePhoneCheckFailed" -> phoneCheckFailed
                 failure is Failure.Network || failure is Failure.TimedOut -> offline
                 failure is Failure.Refused && failure.reason == RefusalReason.StaleScope -> changed
                 else -> refused

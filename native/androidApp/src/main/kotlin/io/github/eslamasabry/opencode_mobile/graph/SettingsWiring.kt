@@ -23,6 +23,8 @@ import io.github.eslamasabry.oc.android.notifications.ChannelRegistry
 import io.github.eslamasabry.oc.android.notifications.NotifyChannel
 import io.github.eslamasabry.oc.android.notifications.NotifyWords
 import io.github.eslamasabry.oc.android.notifications.R as NotifyR
+import io.github.eslamasabry.oc.android.platform.AndroidShareService
+import io.github.eslamasabry.oc.android.platform.CurrentActivity
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
@@ -203,6 +205,7 @@ class AndroidSettingsHost(
     updateSettings:
         AppUpdateSettings, // P12-FIX-PLATFORM-GIT: Settings › Updates on the real updater
     private val voiceSettings: AndroidVoiceSettings,
+    private val activities: ResumedActivities,
     private val gitHubReports: GitHubProblemReporter, // BUILD-DIAGNOSTICS-ATTENTION
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -342,21 +345,17 @@ class AndroidSettingsHost(
 
             override suspend fun share(text: String): Outcome<Unit> =
                 withContext(dispatchers.main) {
-                    attempt({ Failure.StorageRefused() }) { sendText(text) }
+                    sendText(text)
                 }
         }
 
-    private fun sendText(text: String) {
-        val send =
-            Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
-        application.startActivity(
-            Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
-    }
+    private fun sendText(text: String, subject: String? = null): Outcome<Unit> =
+        AndroidShareService(application, CurrentActivity { activities.current })
+            .shareText(text, subject)
 
     private suspend fun shareApp() {
         val text = getString(Res.string.shareAppMessage, REPO)
-        withContext(dispatchers.main) { attempt({ Failure.StorageRefused() }) { sendText(text) } }
+        withContext(dispatchers.main) { sendText(text) }
     }
 
     private fun openNotificationSettings() {

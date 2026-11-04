@@ -182,6 +182,9 @@ public class PaseoGateway(
     internal val draftProviders = HashMap<String, String>()
     internal val draftModels = HashMap<String, ModelRef>()
     internal val draftVariants = HashMap<String, String>()
+
+    /** Switches chosen before a draft's first prompt, sent with its creation (B-AGENT-146, PaseoAgentFeatures.kt). */
+    internal val draftFeatureValues = HashMap<String, Map<String, JsonElement>>()
     internal val liveAgentSessions = HashSet<String>()
     internal val uncertain = HashSet<String>()
 
@@ -203,12 +206,27 @@ public class PaseoGateway(
     internal val titleHints = HashMap<String, String>()
     internal val archivedCopies = HashSet<String>()
 
+    /** Background work and failed turns as this gateway read them (B-AGENT-151, PaseoBackgroundTasks.kt). */
+    internal val backgroundTasks = PaseoBackgroundTaskBook()
+
+    /** Claude Code's sub-agents as read-only child sessions (B-AGENT-165, PaseoSubAgents.kt). */
+    internal val subagentBook = PaseoSubagentBook()
+
     /**
      * The title the app saved for a conversation (by `provider:sessionId`): a record without a
      * title of its own shows it, in every list and header (B-AGENT-180, 181). Installed by the
      * owner of the saved titles.
      */
     public var savedTitle: ((String) -> String?)? = null
+
+    /**
+     * Payload-use admission (B-AGENT-173, PaseoPayloadUse.kt): a trusted phone host leases its installed payloads across
+     * daemon work. [beforePayloadUse] runs before any request of a send; a Failed answer refuses it and nothing is
+     * dispatched. [afterPayloadUse] runs once after an admitted send settles, however it ended. Remote gateways leave
+     * both null.
+     */
+    public var beforePayloadUse: (suspend () -> Outcome<Unit>)? = null
+    public var afterPayloadUse: (() -> Unit)? = null
 
     internal var creating = 0
     internal val heldEvents = ArrayList<PaseoPush>()
@@ -371,6 +389,7 @@ public class PaseoGateway(
         draftProviders.clear()
         draftModels.clear()
         draftVariants.clear()
+        draftFeatureValues.clear()
         liveAgentSessions.clear()
         uncertain.clear()
         uncertainStarts.clear()
@@ -383,6 +402,7 @@ public class PaseoGateway(
         providerEntries = null
         recoveryDegraded = false
         requests.clear()
+        subagentBook.clear()
         hooks.forEach { it.onLocationChanged() }
     }
 
@@ -556,7 +576,7 @@ public class PaseoGateway(
         agents[session.raw]?.str("provider") ?: draftProviders[session.raw]
 
     override suspend fun session(id: SessionId): Outcome<Session> = call {
-        if (id.raw in drafts) return@call sessions.getValue(id.raw)
+        if (id.raw in drafts || isSubagent(id.raw)) return@call sessions.getValue(id.raw)
         fetchAgent(id.raw)
         sessions[id.raw] ?: paseoFail(PaseoFailureKind.NotFound)
     }
@@ -610,6 +630,7 @@ public class PaseoGateway(
 
     internal suspend fun readMessages(id: String): ImmutableList<MessageWithParts> {
         if (id in drafts && !draftStarted(id)) return persistentListOf()
+        if (isSubagent(id)) return readSubagentMessages(id)
         val scope = scopeDir
         val epoch = locationEpoch
         val agent = fetchAgent(id)
@@ -654,7 +675,10 @@ public class PaseoGateway(
             result.str("epoch")?.let { state.epoch = it }
             result.obj("endCursor")?.get("seq")?.longOrNull()?.let { state.lastSeq = it }
             uncertain.remove(id)
-            timeline.messages
+            backgroundTasks.replace(real(id), timeline.messages)
+            // Its sub-agents (an old conversation's too), read beside the history: their cards link when it arrives.
+            loadSubagents(id)
+            linkMessages(timeline.messages)
         }
     }
 
@@ -713,8 +737,8 @@ public class PaseoGateway(
     override suspend fun todos(id: SessionId): Outcome<ImmutableList<Todo>> =
         Outcome.Ok(persistentListOf())
 
-    override suspend fun diff(id: SessionId): Outcome<ImmutableList<FileDiff>> =
-        unavailable("sessionDiff")
+    /** What the agent changed: the uncommitted work in the folder it runs in (B-AGENT-157). */
+    override suspend fun diff(id: SessionId): Outcome<ImmutableList<FileDiff>> = call { readSessionDiff(id.raw) }
 
     // ---- prompts
 
@@ -751,6 +775,8 @@ public class PaseoGateway(
         existingOnly: Boolean,
         beforeSend: (() -> Boolean)?,
     ): Outcome<PromptAdmission> {
+        // Claude's sub-agents answer only their main conversation.
+        if (withContext(lane) { isSubagent(sessionId) }) return unavailable("subagentReplies")
         val images = paseoImages(prompt.attachments)
         if (images is PaseoImages.Refused) {
             return Outcome.Failed(
@@ -761,14 +787,7 @@ public class PaseoGateway(
             )
         }
         val outcome = call {
-            sendPrompt(
-                sessionId,
-                messageId,
-                prompt,
-                (images as PaseoImages.Ok).images,
-                existingOnly,
-                beforeSend,
-            )
+            withPayloadUse { sendPrompt(sessionId, messageId, prompt, (images as PaseoImages.Ok).images, existingOnly, beforeSend) }
         }
         // A lost answer is Uncertain: look it up, never resend (plan 04 §11.1).
         val failure = (outcome as? Outcome.Failed)?.failure
@@ -915,45 +934,38 @@ public class PaseoGateway(
         val title = sessions[id]?.title
         val sentAt = nowMs()
         creating++
-        val result =
-            try {
-                transport.request(
-                    "create_agent_request",
-                    jsonOf(
-                            "config" to
-                                jsonOf(
-                                        "provider" to provider,
-                                        "cwd" to scope,
-                                        "model" to
-                                            model?.modelId?.takeIf {
-                                                it.isNotEmpty() && it != DEFAULT_MODEL
-                                            },
-                                        "modeId" to mode?.takeIf { sendMode },
-                                        "thinkingOptionId" to variant?.takeIf { it.isNotEmpty() },
-                                        "title" to title?.takeIf { it != NEW_CONVERSATION_TITLE },
-                                    )
-                                    .withoutNulls(),
-                            "initialPrompt" to prompt,
-                            "images" to images.takeIf { it.isNotEmpty() },
-                            "clientMessageId" to messageId,
-                            "labels" to emptyMap<String, String>(),
-                        )
-                        .withoutNulls(),
-                    mutation = true,
-                    timeoutMs = CREATE_TIMEOUT_MS,
-                    beforeSend = {
-                        checkLocation(scope, epoch)
-                        fence()
-                    },
-                )
-            } catch (e: PaseoException) {
-                if (e.kind == PaseoFailureKind.DeliveryUnknown)
-                    uncertainStarts[id] = PaseoUncertainStart(messageId, provider, sentAt)
-                throw e
-            } finally {
-                creating--
-                if (creating == 0 && closed) heldEvents.clear()
-            }
+        val result = try {
+            transport.request(
+                "create_agent_request",
+                jsonOf(
+                    "config" to jsonOf(
+                        "provider" to provider,
+                        "cwd" to scope,
+                        "model" to model?.modelId?.takeIf { it.isNotEmpty() && it != DEFAULT_MODEL },
+                        "modeId" to mode?.takeIf { sendMode },
+                        "thinkingOptionId" to variant?.takeIf { it.isNotEmpty() },
+                        "title" to title?.takeIf { it != NEW_CONVERSATION_TITLE },
+                        "featureValues" to draftFeatureValues[id]?.takeIf { it.isNotEmpty() }?.let(::JsonObject),
+                    ).withoutNulls(),
+                    "initialPrompt" to prompt,
+                    "images" to images.takeIf { it.isNotEmpty() },
+                    "clientMessageId" to messageId,
+                    "labels" to emptyMap<String, String>(),
+                ).withoutNulls(),
+                mutation = true,
+                timeoutMs = CREATE_TIMEOUT_MS,
+                beforeSend = {
+                    checkLocation(scope, epoch)
+                    fence()
+                },
+            )
+        } catch (e: PaseoException) {
+            if (e.kind == PaseoFailureKind.DeliveryUnknown) uncertainStarts[id] = PaseoUncertainStart(messageId, provider, sentAt)
+            throw e
+        } finally {
+            creating--
+            if (creating == 0 && closed) heldEvents.clear()
+        }
         val agent = paseoReply("create_agent_response") { paseoObject(result["agent"]) }
         checkLocation(scope, epoch)
         if (agent.str("provider") != provider) paseoFail(PaseoFailureKind.InvalidResponse)
@@ -967,6 +979,7 @@ public class PaseoGateway(
         draftProviders.remove(id)
         draftModels.remove(id)
         draftVariants.remove(id)
+        draftFeatureValues.remove(id)
         // Pushes that raced ahead of the create answer (B-AGENT-163).
         if (creating == 0) {
             val held = heldEvents.toList()
@@ -1291,7 +1304,10 @@ public class PaseoGateway(
                     paseoList(result["entries"], max = 256).mapNotNull { it.objectOrNull() }
                 }
             if (entries.none { it.str("status") == "loading" }) {
-                if (revision == providerRevision) providerEntries = entries
+                if (revision == providerRevision) {
+                    providerEntries = entries
+                    refreshCanonicalModels()
+                }
                 break
             }
         }
@@ -1458,16 +1474,13 @@ public class PaseoGateway(
         selectedActionId: String?,
     ): Outcome<Unit> = call { requests.replyHostPermission(request.raw, selectedActionId) }
 
-    // ---- files (P1 extras, S5-PASEOP1)
+    // ---- files (PaseoWorkspace.kt, B-AGENT-156)
 
-    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> =
-        unavailable("fileBrowsing")
+    override suspend fun listFiles(path: String): Outcome<ImmutableList<FileNode>> = call { readFileList(path) }
 
-    override suspend fun fileContent(path: String): Outcome<FileContent> =
-        unavailable("fileBrowsing")
+    override suspend fun fileContent(path: String): Outcome<FileContent> = call { readFileContent(path) }
 
-    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> =
-        unavailable("fileBrowsing")
+    override suspend fun findFile(query: String): Outcome<ImmutableList<String>> = call { findFileByName(query) }
 
     override suspend fun findText(pattern: String): Outcome<ImmutableList<FindMatch>> =
         unavailable("textSearch")
@@ -1487,17 +1500,15 @@ public class PaseoGateway(
         val id0 = agent.str("id")
         // A reloaded record can come back without its title: the known one stays.
         val known = id0?.let { agents[it]?.str("title") ?: titleHints[it] }
-        agent =
-            io.github.eslamasabry.oc.protocol.paseo.feed.PaseoTitles.withTitle(
-                agent,
-                known,
-                savedTitle,
-            )
+        agent = io.github.eslamasabry.oc.protocol.paseo.feed.PaseoTitles.withTitle(agent, known, savedTitle)
+        // A runtime's long model id (an alias, or "kilo/<id>") is shown as the model list's own id (B-AGENT-146, 182).
+        canonicalModelId(agent.str("provider"), agent.str("model"))?.let { if (it != agent.str("model")) agent = agent.with("model", JsonPrimitive(it)) }
         val session = paseoReply("agent") { paseoSession(agent) }
         if (session.directory != directoryValue || agent["archivedAt"].stringOrNull() != null)
             return null
         val id = session.id.raw
         agents[id] = agent
+        noteAgentProcess(id, agent)
         sessions.remove(id)
         sessions[id] = session
         val status = agent.str("status")
@@ -1555,6 +1566,7 @@ public class PaseoGateway(
         draftProviders.remove(id)
         draftModels.remove(id)
         draftVariants.remove(id)
+        draftFeatureValues.remove(id)
         liveAgentSessions.remove(id)
         uncertain.remove(id)
         uncertainStarts.remove(id)
@@ -1636,10 +1648,9 @@ public class PaseoGateway(
                     if (agentId != null && agentId in sessions && request != null)
                         requests.onPermissionRequest(agentId, request)
                 }
-                "agent_permission_resolved" ->
-                    p.str("requestId")?.let { requests.onPermissionResolved(it) }
-                "agent_deleted",
-                "agent_archived" -> removed(agentId)
+                "agent_permission_resolved" -> p.str("requestId")?.let { requests.onPermissionResolved(it) }
+                "agent_deleted", "agent_archived" -> removed(agentId)
+                "agent.provider_subagents.update" -> onSubagentUpdate(p)
                 "providers_snapshot_update" -> {
                     providerRevision++
                     providerEntries = null
@@ -1827,6 +1838,7 @@ public class PaseoGateway(
             realIds.clear()
             appIds.clear()
             heldEvents.clear()
+            subagentBook.clear()
             requests.disconnect()
             hooks.forEach { it.onClosed() }
             removeListener()

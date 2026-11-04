@@ -67,6 +67,8 @@ internal data class Oc2AdaptedTool(
     /** Set when the adapter settled the call itself because its result was lost: the UI words it. */
     public val settledBy: Oc2SettleReason? = null,
     public val attachments: List<Oc2ToolAttachment> = emptyList(),
+    /** The result's text and file items in server order (Dart ToolState.segments, B-PROTO-017). */
+    public val content: List<Oc2ToolResultItem> = emptyList(),
     public val metadata: JsonObject? = null,
     public val executed: Boolean? = null,
     /** B-CHAT-109: when the call started running (`time.ran`, else `time.created`) and finished (`time.completed`). */
@@ -507,6 +509,7 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
                 output = if (e.succeeded) text else null,
                 error = if (e.succeeded) null else e.error?.message ?: text.ifEmpty { null },
                 attachments = attachments,
+                content = e.content,
                 metadata = e.metadata,
                 executed = e.executed,
                 completedAtMs = created,
@@ -542,14 +545,23 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
                 is Oc2ToolState.Streaming -> Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Pending, raw = s.rawInput)
                 is Oc2ToolState.Running -> Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Running, input = s.input, metadata = s.metadata)
                 is Oc2ToolState.Completed ->
-                    Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Completed, input = s.input, output = s.textOutput, metadata = s.metadata)
+                    Oc2AdaptedTool(
+                        item.id, item.name, Oc2ToolStatus.Completed, input = s.input, output = s.textOutput,
+                        attachments = s.content.attachments(), content = s.content, metadata = s.metadata,
+                    )
                 is Oc2ToolState.Error ->
-                    Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Error, input = s.input, error = s.error?.message, metadata = s.metadata)
+                    Oc2AdaptedTool(
+                        item.id, item.name, Oc2ToolStatus.Error, input = s.input, error = s.error?.message,
+                        attachments = s.content.attachments(), content = s.content, metadata = s.metadata,
+                    )
                 is Oc2ToolState.Unknown -> Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Pending)
             }
         // B-CHAT-109 (Dart v1ToolTimeJson): start prefers `ran` (execution start) over `created` (call emitted).
         return state.copy(startedAtMs = item.time.ran ?: item.time.created, completedAtMs = item.time.completed)
     }
+
+    private fun List<Oc2ToolResultItem>.attachments(): List<Oc2ToolAttachment> =
+        filterIsInstance<Oc2ToolResultItem.File>().map { Oc2ToolAttachment(it.uri, it.mime, it.name) }
 
     private fun refresh(topic: String, data: JsonObject): List<Oc2Adapted> {
         val kind =

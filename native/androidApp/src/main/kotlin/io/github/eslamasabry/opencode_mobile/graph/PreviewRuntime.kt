@@ -538,42 +538,7 @@ class PreviewRuntime(
                         "read-only opening conversation titles",
                     )
                 )
-                register(
-                    KeyShape(
-                        "oc.notifyRules.",
-                        KeyScope.Profile,
-                        PrefType.Str,
-                        ":engine:attention",
-                        "explicit watched-server rules",
-                    )
-                )
-                register(
-                    KeyShape(
-                        "oc.monitorAlerts.",
-                        KeyScope.Profile,
-                        PrefType.StrList,
-                        ":engine:attention",
-                        "watched-server alert keys",
-                    )
-                )
-                register(
-                    KeyShape(
-                        "oc.monitorRoutes.",
-                        KeyScope.Profile,
-                        PrefType.Str,
-                        ":engine:attention",
-                        "opaque watched-request routes",
-                    )
-                )
-                register(
-                    KeyShape(
-                        "oc.monitorBusy.",
-                        KeyScope.Profile,
-                        PrefType.Str,
-                        ":engine:attention",
-                        "bounded watched-server busy observations",
-                    )
-                )
+                AndroidProfileMonitoring.registerKeys(this)
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
             }

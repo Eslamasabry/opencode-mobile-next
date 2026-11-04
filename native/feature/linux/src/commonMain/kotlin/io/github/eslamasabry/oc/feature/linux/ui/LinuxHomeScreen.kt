@@ -85,7 +85,12 @@ import org.jetbrains.compose.resources.stringResource
  * This phone instead of rows that cannot work. Kit parts only.
  */
 @Composable
-public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
+public fun LinuxHomeScreen(
+    state: LinuxHomeUi,
+    actions: LinuxHomeActions,
+    tools: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsPanelUi? = null,
+    toolsActions: io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsActions? = null,
+) {
     LifecycleStartEffect(actions) {
         actions.shown(true)
         onStopOrDispose { actions.shown(false) }
@@ -168,7 +173,18 @@ public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
             LinuxJobPanel(state.job, actions::askStopJob, actions::dismissJob)
             if (presence != null && presence != LinuxPresence.NotOnThisBuild) {
                 if (state.ready) LinuxIdlePanel(state, actions)
-                LinuxSetupPanel(state, actions)
+                LinuxSetupPanel(state, actions, toolsActions?.let { it::openAppSettings })
+                if (tools != null && toolsActions != null)
+                    LinuxToolsPanel(
+                        tools,
+                        toolsActions,
+                        busy =
+                            state.working ||
+                                state.job.running ||
+                                state.setup.state ==
+                                    io.github.eslamasabry.oc.engine.runtime.setup.SetupState
+                                        .Running,
+                    )
                 LinuxLocalStoragePanel(state, actions)
                 LinuxLifetimesPanel(state.lifetimes, actions::refreshLifetimes)
             }
