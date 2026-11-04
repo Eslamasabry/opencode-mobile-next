@@ -22,19 +22,29 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /** Where a profile's sharing answer came from (Flutter `SettingOriginKind`). */
-public enum class ConsentOrigin { Default, Explicit, Migrated }
-
-/** Captured before a read receipt is sent; the receipt may only be sent, or acknowledged, while it is still [ReadStateConsentStore.stillShared]. */
-public class SharingTicket internal constructor(public val profileId: ProfileId, internal val revision: Long)
+public enum class ConsentOrigin {
+    Default,
+    Explicit,
+    Migrated,
+}
 
 /**
- * "Share which sessions I viewed with the server" (B-SEC-142/143/164), per profile and private by default:
- * `oc.shareSessionViews.<id>` (bool), `…Origin.<id>` (`migrated`/`explicit`), `…Default.<id>` (bool) and the L3 journal
- * `oc.readStateConsentMigration.v1` = `{"version":1,"complete":<bool>,"ids":[…],"legacy":<bool>}`.
+ * Captured before a read receipt is sent; the receipt may only be sent, or acknowledged, while it
+ * is still [ReadStateConsentStore.stillShared].
+ */
+public class SharingTicket
+internal constructor(public val profileId: ProfileId, internal val revision: Long)
+
+/**
+ * "Share which sessions I viewed with the server" (B-SEC-142/143/164), per profile and private by
+ * default: `oc.shareSessionViews.<id>` (bool), `…Origin.<id>` (`migrated`/`explicit`),
+ * `…Default.<id>` (bool) and the L3 journal `oc.readStateConsentMigration.v1` =
+ * `{"version":1,"complete":<bool>,"ids":[…],"legacy":<bool>}`.
  *
- * One instance serves every profile, so every observer reads the same answer and the same [revision]. Sharing is never
- * reported on before the disk acknowledged it: while a change saves, the profile reads private; a failed opt-out stays
- * private; an unfinished migration grants nothing. This store never sends a receipt.
+ * One instance serves every profile, so every observer reads the same answer and the same
+ * [revision]. Sharing is never reported on before the disk acknowledged it: while a change saves,
+ * the profile reads private; a failed opt-out stays private; an unfinished migration grants
+ * nothing. This store never sends a receipt.
  */
 public class ReadStateConsentStore(
     private val store: KeyValueStore,
@@ -60,82 +70,129 @@ public class ReadStateConsentStore(
     override val topics: Set<ConsentTopic> = setOf(ConsentTopic.ReadStateSharing)
     override val revision: StateFlow<Long> = changes.flow
 
-    override fun read(profileId: ProfileId, topic: ConsentTopic): ConsentRead = when {
-        topic != ConsentTopic.ReadStateSharing -> ConsentRead.Unknown
-        enabled(profileId) -> ConsentRead.Granted
-        profileId.raw in state.load().private || origin(profileId) != ConsentOrigin.Default -> ConsentRead.Refused
-        else -> ConsentRead.Unknown
-    }
+    override fun read(profileId: ProfileId, topic: ConsentTopic): ConsentRead =
+        when {
+            topic != ConsentTopic.ReadStateSharing -> ConsentRead.Unknown
+            enabled(profileId) -> ConsentRead.Granted
+            profileId.raw in state.load().private || origin(profileId) != ConsentOrigin.Default ->
+                ConsentRead.Refused
+            else -> ConsentRead.Unknown
+        }
 
     /** True only for an acknowledged `true` with nothing saving, failed, blocked or closed. */
     public fun enabled(profileId: ProfileId): Boolean {
         val s = state.load()
         val id = profileId.raw
-        if (id.isEmpty() || id in s.closed || id in s.private || id in s.blocked || (s.pending[id] ?: 0) > 0) return false
+        if (
+            id.isEmpty() ||
+                id in s.closed ||
+                id in s.private ||
+                id in s.blocked ||
+                (s.pending[id] ?: 0) > 0
+        )
+            return false
         val origin = store.string(ConsentKeys.shareViewsOrigin(profileId))
         if (origin == PENDING) return false
-        if (origin == MIGRATED && store.get(ConsentKeys.READ_STATE_MIGRATION)?.let(::parseJournal)?.complete != true) return false
+        if (
+            origin == MIGRATED &&
+                store.get(ConsentKeys.READ_STATE_MIGRATION)?.let(::parseJournal)?.complete != true
+        )
+            return false
         val boundOwner = store.string(ConsentKeys.shareViewsOwner(profileId))
         if (boundOwner != null && boundOwner != owner(profileId)) return false
         return store.bool(ConsentKeys.shareViews(profileId)) == true
     }
 
-    public fun saving(profileId: ProfileId): Boolean = (state.load().pending[profileId.raw] ?: 0) > 0
+    public fun saving(profileId: ProfileId): Boolean =
+        (state.load().pending[profileId.raw] ?: 0) > 0
 
     public fun isClosed(profileId: ProfileId): Boolean = profileId.raw in state.load().closed
 
-    /** Off for a new server; the carried-over value for one that existed before consent was per server. */
+    /**
+     * Off for a new server; the carried-over value for one that existed before consent was per
+     * server.
+     */
     public fun defaultFor(profileId: ProfileId): Boolean {
-        store.bool(ConsentKeys.shareViewsDefault(profileId))?.let { return it }
-        if (store.string(ConsentKeys.shareViewsOrigin(profileId)) == MIGRATED) return store.bool(ConsentKeys.shareViews(profileId)) == true
+        store.bool(ConsentKeys.shareViewsDefault(profileId))?.let {
+            return it
+        }
+        if (store.string(ConsentKeys.shareViewsOrigin(profileId)) == MIGRATED)
+            return store.bool(ConsentKeys.shareViews(profileId)) == true
         return false
     }
 
-    public fun origin(profileId: ProfileId): ConsentOrigin = when {
-        store.string(ConsentKeys.shareViewsOrigin(profileId)) == MIGRATED -> ConsentOrigin.Migrated
-        store.get(ConsentKeys.shareViews(profileId)) is PrefValue.Bool -> ConsentOrigin.Explicit
-        else -> ConsentOrigin.Default
-    }
+    public fun origin(profileId: ProfileId): ConsentOrigin =
+        when {
+            store.string(ConsentKeys.shareViewsOrigin(profileId)) == MIGRATED ->
+                ConsentOrigin.Migrated
+            store.get(ConsentKeys.shareViews(profileId)) is PrefValue.Bool -> ConsentOrigin.Explicit
+            else -> ConsentOrigin.Default
+        }
 
-    /** Null unless sharing is on now. A receipt sender checks [stillShared] before sending and again before acknowledging. */
+    /**
+     * Null unless sharing is on now. A receipt sender checks [stillShared] before sending and again
+     * before acknowledging.
+     */
     public fun ticket(profileId: ProfileId): SharingTicket? =
         if (enabled(profileId)) SharingTicket(profileId, revision.value) else null
 
     /** False after ANY change since the ticket (conservative: private wins every race). */
-    public fun stillShared(ticket: SharingTicket): Boolean = revision.value == ticket.revision && enabled(ticket.profileId)
+    public fun stillShared(ticket: SharingTicket): Boolean =
+        revision.value == ticket.revision && enabled(ticket.profileId)
 
     /**
-     * L3 (plan 05): copies the legacy app-wide value to the INITIAL saved population, journalled so a restart resumes
-     * the same cohort. Missing legacy meant on; anything but `true` cannot grant. An explicit per-profile value wins.
-     * Completion is committed last; until then nothing new is shared and a retry resumes.
+     * L3 (plan 05): copies the legacy app-wide value to the INITIAL saved population, journalled so
+     * a restart resumes the same cohort. Missing legacy meant on; anything but `true` cannot grant.
+     * An explicit per-profile value wins. Completion is committed last; until then nothing new is
+     * shared and a retry resumes.
      */
     public suspend fun migrateExistingProfiles(profileIds: Collection<ProfileId>): Outcome<Unit> {
         if (state.load().migrationCompleted) return Outcome.Ok(Unit)
         val present = profileIds.map { it.raw }.filter { it.isNotEmpty() }.toSet()
-        mutate { s -> s.copy(pending = present.fold(s.pending) { m, id -> m.putting(id, (m[id] ?: 0) + 1) }) }
+        mutate { s ->
+            s.copy(pending = present.fold(s.pending) { m, id -> m.putting(id, (m[id] ?: 0) + 1) })
+        }
         try {
             return writes.withLock {
                 when (val done = migrate(present)) {
                     is Outcome.Ok -> {
-                        mutate { it.copy(migrationCompleted = true, blocked = persistentHashSetOf()) }
+                        mutate {
+                            it.copy(migrationCompleted = true, blocked = persistentHashSetOf())
+                        }
                         done
                     }
                     is Outcome.Failed -> {
-                        log.w { "read-state migration incomplete; sharing stays off until it finishes" }
-                        mutate { s -> s.copy(blocked = present.fold(s.blocked) { b, id -> b.adding(id) }) }
+                        log.w {
+                            "read-state migration incomplete; sharing stays off until it finishes"
+                        }
+                        mutate { s ->
+                            s.copy(blocked = present.fold(s.blocked) { b, id -> b.adding(id) })
+                        }
                         done
                     }
                 }
             }
         } finally {
-            mutate { s -> s.copy(pending = present.fold(s.pending) { m, id -> m.putting(id, (m[id] ?: 1) - 1) }) }
+            mutate { s ->
+                s.copy(
+                    pending = present.fold(s.pending) { m, id -> m.putting(id, (m[id] ?: 1) - 1) }
+                )
+            }
         }
     }
 
-    public suspend fun setEnabled(profileId: ProfileId, value: Boolean): Outcome<Unit> = setEnabledIfCurrent(profileId, value) { true }
+    public suspend fun setEnabled(profileId: ProfileId, value: Boolean): Outcome<Unit> =
+        setEnabledIfCurrent(profileId, value) { true }
 
-    /** [isCurrent] guards the caller's captured editor: a stale editor cannot authorise a replacement owner. */
-    public suspend fun setEnabledIfCurrent(profileId: ProfileId, value: Boolean, isCurrent: () -> Boolean): Outcome<Unit> {
+    /**
+     * [isCurrent] guards the caller's captured editor: a stale editor cannot authorise a
+     * replacement owner.
+     */
+    public suspend fun setEnabledIfCurrent(
+        profileId: ProfileId,
+        value: Boolean,
+        isCurrent: () -> Boolean,
+    ): Outcome<Unit> {
         val id = profileId.raw
         if (id.isEmpty() || isClosed(profileId) || !isCurrent()) return Outcome.Failed(stale())
         var generation = 0L
@@ -154,33 +211,50 @@ public class ReadStateConsentStore(
                 val capturedOwner = owner(profileId) ?: return@withLock Outcome.Failed(stale())
                 val keepDefault = store.get(ConsentKeys.shareViewsDefault(profileId)) == null
                 val default = defaultFor(profileId)
-                val written = store.commit(lanes.forProfile(profileId)) {
-                    if (keepDefault) putBool(ConsentKeys.shareViewsDefault(profileId), default)
-                    putString(ConsentKeys.shareViewsOrigin(profileId), if (value) PENDING else EXPLICIT)
-                    putString(ConsentKeys.shareViewsOwner(profileId), capturedOwner)
-                    putBool(ConsentKeys.shareViews(profileId), value)
-                }
+                val written =
+                    store.commit(lanes.forProfile(profileId)) {
+                        if (keepDefault) putBool(ConsentKeys.shareViewsDefault(profileId), default)
+                        putString(
+                            ConsentKeys.shareViewsOrigin(profileId),
+                            if (value) PENDING else EXPLICIT,
+                        )
+                        putString(ConsentKeys.shareViewsOwner(profileId), capturedOwner)
+                        putBool(ConsentKeys.shareViews(profileId), value)
+                    }
                 if (written is Outcome.Failed) {
                     val failure = written.failure
-                    return@withLock Outcome.Failed(if (failure is Failure.Refused) stale() else failure)
+                    return@withLock Outcome.Failed(
+                        if (failure is Failure.Refused) stale() else failure
+                    )
                 }
                 if (isClosed(profileId) || !isCurrent() || owner(profileId) != capturedOwner) {
-                    // The write reached disk; erase its authorisation before a restart could read it.
-                    if (value) store.commit(lanes.app) { putBool(ConsentKeys.shareViews(profileId), false) }
+                    // The write reached disk; erase its authorisation before a restart could read
+                    // it.
+                    if (value)
+                        store.commit(lanes.app) {
+                            putBool(ConsentKeys.shareViews(profileId), false)
+                        }
                     return@withLock Outcome.Failed(stale())
                 }
                 if (value) {
-                    // B-STATE-124: a durable pending grant never authorises if compensation or finalisation fails.
-                    val confirmed = store.commit(lanes.forProfile(profileId)) {
-                        putString(ConsentKeys.shareViewsOrigin(profileId), EXPLICIT)
-                    }
+                    // B-STATE-124: a durable pending grant never authorises if compensation or
+                    // finalisation fails.
+                    val confirmed =
+                        store.commit(lanes.forProfile(profileId)) {
+                            putString(ConsentKeys.shareViewsOrigin(profileId), EXPLICIT)
+                        }
                     if (confirmed is Outcome.Failed) return@withLock confirmed
                     if (isClosed(profileId) || !isCurrent() || owner(profileId) != capturedOwner) {
-                        store.commit(lanes.app) { putBool(ConsentKeys.shareViews(profileId), false) }
+                        store.commit(lanes.app) {
+                            putBool(ConsentKeys.shareViews(profileId), false)
+                        }
                         return@withLock Outcome.Failed(stale())
                     }
                 }
-                mutate { s -> if (s.generations[id] == generation) s.copy(private = s.private.removing(id)) else s }
+                mutate { s ->
+                    if (s.generations[id] == generation) s.copy(private = s.private.removing(id))
+                    else s
+                }
                 Outcome.Ok(Unit)
             }
         } finally {
@@ -199,14 +273,23 @@ public class ReadStateConsentStore(
         }
     }
 
-    /** A failed deletion may reopen editing, but never restores automatic sharing: the profile stays private until set. */
+    /**
+     * A failed deletion may reopen editing, but never restores automatic sharing: the profile stays
+     * private until set.
+     */
     public fun reopenProfile(profileId: ProfileId) {
         mutate { s -> s.copy(closed = s.closed.removing(profileId.raw)) }
     }
 
+    public suspend fun drainProfile(profileId: ProfileId): Outcome<Unit> {
+        closeProfile(profileId)
+        return writes.withLock { Outcome.Ok(Unit) }
+    }
+
     /**
-     * Closes, drains every accepted write (a pending grant ends refused and erased), prunes the id from the journal,
-     * then removes the three per-profile keys. A refused prune is retryable and never restores consent.
+     * Closes, drains every accepted write (a pending grant ends refused and erased), prunes the id
+     * from the journal, then removes the three per-profile keys. A refused prune is retryable and
+     * never restores consent.
      */
     override suspend fun forgetProfile(profileId: ProfileId): Outcome<Unit> {
         closeProfile(profileId)
@@ -214,13 +297,16 @@ public class ReadStateConsentStore(
             when (val pruned = pruneJournal(profileId)) {
                 is Outcome.Failed -> pruned.also { log.w { "read-state journal prune refused" } }
                 is Outcome.Ok -> {
-                    val keys = listOf(
-                        ConsentKeys.shareViews(profileId),
-                        ConsentKeys.shareViewsOrigin(profileId),
-                        ConsentKeys.shareViewsDefault(profileId),
-                        ConsentKeys.shareViewsOwner(profileId),
-                    ).filter { store.get(it) != null }
-                    if (keys.isEmpty()) Outcome.Ok(Unit) else store.commit(lanes.app) { keys.forEach(::remove) }
+                    val keys =
+                        listOf(
+                                ConsentKeys.shareViews(profileId),
+                                ConsentKeys.shareViewsOrigin(profileId),
+                                ConsentKeys.shareViewsDefault(profileId),
+                                ConsentKeys.shareViewsOwner(profileId),
+                            )
+                            .filter { store.get(it) != null }
+                    if (keys.isEmpty()) Outcome.Ok(Unit)
+                    else store.commit(lanes.app) { keys.forEach(::remove) }
                 }
             }
         }
@@ -233,7 +319,8 @@ public class ReadStateConsentStore(
     /** Caller holds [writes]. */
     private suspend fun migrate(present: Set<String>): Outcome<Unit> {
         val raw = store.get(ConsentKeys.READ_STATE_MIGRATION)
-        val existing = if (raw == null) null else parseJournal(raw) ?: return Outcome.Failed(unreadable())
+        val existing =
+            if (raw == null) null else parseJournal(raw) ?: return Outcome.Failed(unreadable())
         if (existing?.complete == true) return Outcome.Ok(Unit)
         val journal: Journal
         if (existing != null) {
@@ -241,24 +328,37 @@ public class ReadStateConsentStore(
         } else {
             val legacyRaw = store.get(ConsentKeys.SHARE_VIEWS_LEGACY)
             // Missing used to mean on. Invalid data must not grant sharing.
-            journal = Journal(false, present.sorted(), legacyRaw == null || legacyRaw == PrefValue.Bool(true))
-            val started = store.commit(lanes.app) { putString(ConsentKeys.READ_STATE_MIGRATION, encode(journal)) }
+            journal =
+                Journal(
+                    false,
+                    present.sorted(),
+                    legacyRaw == null || legacyRaw == PrefValue.Bool(true),
+                )
+            val started =
+                store.commit(lanes.app) {
+                    putString(ConsentKeys.READ_STATE_MIGRATION, encode(journal))
+                }
             if (started is Outcome.Failed) return started
         }
         val closedNow = state.load().closed
         for (id in journal.ids) {
             if (id !in present || id in closedNow) continue
             val profileId = ProfileId(id)
-            if (store.get(ConsentKeys.shareViews(profileId)) != null) continue // explicit destination wins
-            val copied = store.commit(lanes.forProfile(profileId)) {
-                putString(ConsentKeys.shareViewsOrigin(profileId), MIGRATED)
-                putBool(ConsentKeys.shareViews(profileId), journal.legacy)
-            }
+            if (store.get(ConsentKeys.shareViews(profileId)) != null)
+                continue // explicit destination wins
+            val copied =
+                store.commit(lanes.forProfile(profileId)) {
+                    putString(ConsentKeys.shareViewsOrigin(profileId), MIGRATED)
+                    putBool(ConsentKeys.shareViews(profileId), journal.legacy)
+                }
             if (copied is Outcome.Failed) return copied
         }
         // Completion is committed last; a completed journal keeps no ids.
         return store.commit(lanes.app) {
-            putString(ConsentKeys.READ_STATE_MIGRATION, encode(Journal(true, emptyList(), journal.legacy)))
+            putString(
+                ConsentKeys.READ_STATE_MIGRATION,
+                encode(Journal(true, emptyList(), journal.legacy)),
+            )
         }
     }
 
@@ -269,8 +369,11 @@ public class ReadStateConsentStore(
         val data = DartJson.decodeOrNull(text) as? Map<*, *> ?: return Outcome.Failed(unreadable())
         val ids = data["ids"] as? List<*> ?: return Outcome.Failed(unreadable())
         if (profileId.raw !in ids) return Outcome.Ok(Unit)
-        val next = LinkedHashMap<Any?, Any?>(data).apply { put("ids", ids.filter { it != profileId.raw }) }
-        return store.commit(lanes.app) { putString(ConsentKeys.READ_STATE_MIGRATION, DartJson.encode(next)) }
+        val next =
+            LinkedHashMap<Any?, Any?>(data).apply { put("ids", ids.filter { it != profileId.raw }) }
+        return store.commit(lanes.app) {
+            putString(ConsentKeys.READ_STATE_MIGRATION, DartJson.encode(next))
+        }
     }
 
     private fun parseJournal(raw: PrefValue): Journal? {
@@ -285,9 +388,17 @@ public class ReadStateConsentStore(
     }
 
     private fun encode(journal: Journal): String =
-        DartJson.encode(linkedMapOf("version" to 1L, "complete" to journal.complete, "ids" to journal.ids, "legacy" to journal.legacy))
+        DartJson.encode(
+            linkedMapOf(
+                "version" to 1L,
+                "complete" to journal.complete,
+                "ids" to journal.ids,
+                "legacy" to journal.legacy,
+            )
+        )
 
-    private fun owner(profileId: ProfileId): String? = owners.fingerprint(profileId)?.let { DartJson.sha256Hex(it.encodeToByteArray()) }
+    private fun owner(profileId: ProfileId): String? =
+        owners.fingerprint(profileId)?.let { DartJson.sha256Hex(it.encodeToByteArray()) }
 
     private fun stale(): Failure = Failure.Refused(RefusalReason.StaleScope)
 

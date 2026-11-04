@@ -14,9 +14,12 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.Health
+import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.TerminalShellSettings
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ComputerRoute
+import io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage
+import io.github.eslamasabry.oc.ui.routes.ServerIntegrationRoute
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsPage
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
@@ -96,6 +99,10 @@ public interface ServerSettingsSource {
     ): Outcome<TerminalShellSettings>
 
     public suspend fun connect(profile: ProfileId): Outcome<Unit>
+
+    public suspend fun disconnect(profile: ProfileId): Outcome<Unit>
+
+    public suspend fun recheckAgents(profile: ProfileId): Outcome<ImmutableList<String>>
 }
 
 public data class ShellChoice(
@@ -130,6 +137,12 @@ public data class ServerSettingsUi(
     val shells: TerminalShellSettings? = null,
     val working: Boolean = false,
     val failure: Failure? = null,
+    val local: ServerLocalFacts? = null,
+    val modelChoices: ImmutableList<ServerModelChoice> = persistentListOf(),
+    val modelWorking: Boolean = false,
+    val resetDone: Boolean = false,
+    val disconnectConfirm: Boolean = false,
+    val agents: ImmutableList<String>? = null,
 )
 
 public interface ServerSettingsActions {
@@ -156,12 +169,35 @@ public interface ServerSettingsActions {
     public fun reachHelp()
 
     public fun askRemove()
+
+    public fun showModels()
+
+    public fun selectModel(model: ModelRef?, variant: String = "")
+
+    public fun watching(enabled: Boolean)
+
+    public fun notifications(enabled: Boolean)
+
+    public fun shareRead(enabled: Boolean)
+
+    public fun resetDefaults()
+
+    public fun askDisconnect()
+
+    public fun cancelDisconnect()
+
+    public fun disconnect()
+
+    public fun recheckAgents()
+
+    public fun integration(page: ServerIntegrationPage)
 }
 
 @AssistedInject
 public class ServerSettingsViewModel(
     @Assisted private val route: ServerSettingsRoute,
     private val source: ServerSettingsSource,
+    private val preferences: ServerPreferencesSource,
     private val nav: AppNavigator,
 ) : ViewModel(), ServerSettingsActions {
     private val mutable = MutableStateFlow(ServerSettingsUi(page = route.page))
@@ -169,13 +205,26 @@ public class ServerSettingsViewModel(
 
     init {
         viewModelScope.launch {
+            preferences.watch(route.profile).collect { result ->
+                when (result) {
+                    is Outcome.Ok -> mutable.update { it.copy(local = result.value) }
+                    is Outcome.Failed ->
+                        mutable.update { it.copy(local = null, failure = result.failure) }
+                }
+            }
+        }
+        viewModelScope.launch {
             source.watch(route.profile).collect { facts ->
                 val firstLive = facts?.connected == true && mutable.value.facts?.connected != true
                 mutable.update { it.copy(loading = false, facts = facts) }
                 if (firstLive && route.page == ServerSettingsPage.Home) refresh()
             }
         }
-        if (route.page == ServerSettingsPage.Check || route.page == ServerSettingsPage.Shell)
+        if (
+            route.page == ServerSettingsPage.Check ||
+                route.page == ServerSettingsPage.Shell ||
+                route.page == ServerSettingsPage.Model
+        )
             refresh()
     }
 
@@ -185,6 +234,7 @@ public class ServerSettingsViewModel(
         when (route.page) {
             ServerSettingsPage.Check -> runCheck()
             ServerSettingsPage.Shell -> loadShells()
+            ServerSettingsPage.Model -> loadModels()
             ServerSettingsPage.Capabilities,
             ServerSettingsPage.Reach -> Unit
             ServerSettingsPage.Home -> {
@@ -312,6 +362,80 @@ public class ServerSettingsViewModel(
     override fun askRemove() {
         if (!mutable.value.working) nav.open(ServersRoute.Remove(route.profile))
     }
+
+    override fun showModels(): Unit =
+        nav.open(ServerSettingsRoute(route.profile, ServerSettingsPage.Model))
+
+    private fun loadModels() {
+        if (mutable.value.modelWorking) return
+        mutable.update { it.copy(modelWorking = true, failure = null) }
+        viewModelScope.launch {
+            when (val result = preferences.models(route.profile)) {
+                is Outcome.Ok ->
+                    mutable.update { it.copy(modelWorking = false, modelChoices = result.value) }
+                is Outcome.Failed ->
+                    mutable.update { it.copy(modelWorking = false, failure = result.failure) }
+            }
+        }
+    }
+
+    private fun change(block: suspend () -> Outcome<Unit>, reset: Boolean = false) {
+        if (mutable.value.working) return
+        mutable.update { it.copy(working = true, failure = null, resetDone = false) }
+        viewModelScope.launch {
+            val result = block()
+            mutable.update {
+                it.copy(
+                    working = false,
+                    failure = (result as? Outcome.Failed)?.failure,
+                    resetDone = reset && result is Outcome.Ok,
+                )
+            }
+        }
+    }
+
+    override fun selectModel(model: ModelRef?, variant: String): Unit =
+        change({ preferences.selectModel(route.profile, model, variant) })
+
+    override fun watching(enabled: Boolean): Unit =
+        change({ preferences.watching(route.profile, enabled) })
+
+    override fun notifications(enabled: Boolean): Unit =
+        change({ preferences.notifications(route.profile, enabled) })
+
+    override fun shareRead(enabled: Boolean): Unit =
+        change({ preferences.shareRead(route.profile, enabled) })
+
+    override fun resetDefaults(): Unit = change({ preferences.reset(route.profile) }, true)
+
+    override fun askDisconnect() {
+        mutable.update { it.copy(disconnectConfirm = true) }
+    }
+
+    override fun cancelDisconnect() {
+        if (!mutable.value.working) mutable.update { it.copy(disconnectConfirm = false) }
+    }
+
+    override fun disconnect() {
+        if (!mutable.value.disconnectConfirm) return
+        mutable.update { it.copy(disconnectConfirm = false) }
+        change({ source.disconnect(route.profile) })
+    }
+
+    override fun recheckAgents() {
+        if (mutable.value.working) return
+        mutable.update { it.copy(working = true, failure = null, agents = null) }
+        viewModelScope.launch {
+            when (val result = source.recheckAgents(route.profile)) {
+                is Outcome.Ok -> mutable.update { it.copy(working = false, agents = result.value) }
+                is Outcome.Failed ->
+                    mutable.update { it.copy(working = false, failure = result.failure) }
+            }
+        }
+    }
+
+    override fun integration(page: ServerIntegrationPage): Unit =
+        nav.open(ServerIntegrationRoute(route.profile, page))
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

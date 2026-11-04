@@ -103,6 +103,20 @@ public class AndroidKitPlatform(
         SideEffect { applySystemBars(hostWindow, darkContent, ground.toArgb()) }
     }
 
+    override fun messageTime(createdMs: Long, nowMs: Long): String {
+        val created = java.util.Date(createdMs)
+        val a = java.util.Calendar.getInstance().apply { timeInMillis = createdMs }
+        val b = java.util.Calendar.getInstance().apply { timeInMillis = nowMs }
+        val sameDay = a.get(java.util.Calendar.ERA) == b.get(java.util.Calendar.ERA) &&
+            a.get(java.util.Calendar.YEAR) == b.get(java.util.Calendar.YEAR) &&
+            a.get(java.util.Calendar.DAY_OF_YEAR) == b.get(java.util.Calendar.DAY_OF_YEAR)
+        val time = android.text.format.DateFormat.getTimeFormat(context).format(created)
+        val formatted = if (sameDay) time else android.text.format.DateFormat.getDateFormat(context).format(created) + ", " + time
+        // Phone number preferences control digits independently of the app's language.
+        val zero = io.github.eslamasabry.oc.core.common.text.Numbers.symbols().zeroDigit
+        return formatted.map { c -> c.digitToIntOrNull()?.let { (zero.code + it).toChar() } ?: c }.joinToString("")
+    }
+
     private fun animatorScale(): Float =
         Settings.Global.getFloat(
             context.contentResolver,

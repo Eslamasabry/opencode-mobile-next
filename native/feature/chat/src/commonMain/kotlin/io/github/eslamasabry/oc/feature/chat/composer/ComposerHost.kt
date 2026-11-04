@@ -34,7 +34,9 @@ public data class InsertRequest(
     val attachments: List<PromptAttachment> = emptyList(),
     val missingAttachments: List<String> = emptyList(),
     val stillCurrent: () -> Boolean = { true },
-)
+) {
+    override fun toString(): String = "InsertRequest(id=$id, textChars=${text.length}, replace=$replace, attachments=${attachments.size}, missing=${missingAttachments.size})"
+}
 
 /**
  * What the chat hands the composer. Every getter is read in draw, layout or an effect, so a change never recomposes

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="account40Title">حساب Codex</string>
+    <string name="account40ScopeLost">تغيّر هذا الخادم. ارجع إلى «الخوادم» وافتح الحساب للخادم المتصل.</string>
+    <string name="account40Refresh">تحديث الحساب</string>
+    <string name="account40Loading">جارٍ فحص حساب المضيف</string>
+    <string name="account40Unavailable">لوحة الحساب غير متاحة</string>
+    <string name="account40ReadFailed">تعذّرت قراءة الحساب</string>
+    <string name="account40Disconnected">انقطع الاتصال</string>
+    <string name="account40Connected">تم تسجيل الدخول على المضيف</string>
+    <string name="account40SignedOut">جاهز لتسجيل الدخول</string>
+    <string name="account40InProgress">جارٍ تسجيل الدخول</string>
+    <string name="account40NeedsAttention">تسجيل الدخول يحتاج إلى انتباه</string>
+    <string name="account40NoAuth">المضيف لا يتطلب تسجيل دخول</string>
+    <string name="account40ApiKey">مفتاح API</string>
+    <string name="account40HostAuth">مصادقة المضيف</string>
+    <string name="account40HostNote">تحتفظ بيئة التشغيل الرسمية بتسجيل الدخول. تؤثر تغييرات الحساب في كل خادم محفوظ متصل بهذا المضيف.</string>
+    <string name="account40UnsupportedDetail">تم التحقق من هذه اللوحة مع Codex 0.153.4. قد لا تدعم بيئة التشغيل المتصلة طرق الحساب هذه.</string>
+    <string name="account40ReconnectDetail">مُسحت بيانات الحساب ورمز تسجيل الدخول. أعد الاتصال للتحديث. لن يُعاد بدء تسجيل الدخول تلقائيًا.</string>
+    <string name="account40SignIn">تسجيل الدخول باستخدام ChatGPT</string>
+    <string name="account40SignInNote">ابدأ تسجيل دخول رسميًا برمز جهاز على هذا المضيف. أكمله في متصفحك؛ ولا يتلقى التطبيق رموز مزوّد الخدمة مطلقًا.</string>
+    <string name="account40Limits">حدود معدل الطلبات</string>
+    <string name="account40LimitsUnavailable">حدود معدل الطلبات غير متاحة لهذا الحساب أو المضيف.</string>
+    <string name="account40Usage">استخدام الرموز</string>
+    <string name="account40UsageUnavailable">استخدام الرموز غير متاح لهذا الحساب أو المضيف.</string>
+    <string name="account40LifetimeTokens">إجمالي الرموز منذ البدء</string>
+    <string name="account40PeakTokens">أعلى استخدام يومي للرموز</string>
+    <string name="account40UsageNote">يبلّغ المضيف عن القيم. القيم المفقودة مجهولة، وليست صفرًا. لا تمثل أعداد الرموز فاتورة أو رصيد رسائل متبقيًا.</string>
+    <string name="account40Updated">آخر تحقق %1$s</string>
+    <string name="account40Starting">جارٍ طلب رمز تسجيل الدخول</string>
+    <string name="account40Waiting">أكمل تسجيل الدخول في متصفحك</string>
+    <string name="account40Cancelling">جارٍ إلغاء تسجيل الدخول</string>
+    <string name="account40Cancelled">أُلغي تسجيل الدخول</string>
+    <string name="account40LoginFailed">لم يكتمل تسجيل الدخول. تحقّق من المضيف وأعد المحاولة.</string>
+    <string name="account40LoginUncertain">تعذّر على المضيف تأكيد تسجيل الدخول أو الإلغاء. ربما لا يزال ينتظر. افحص بيئة التشغيل الرسمية على المضيف قبل البدء مجددًا.</string>
+    <string name="account40LoginCompleted">اكتمل تسجيل الدخول. جارٍ فحص الحساب.</string>
+    <string name="account40CodeHint">أدخل هذا الرمز الذي يُستخدم مرة واحدة في صفحة تسجيل الدخول الرسمية. احتفظ به سريًا.</string>
+    <string name="account40OpenSignIn">فتح تسجيل الدخول الرسمي</string>
+    <string name="account40Cancel">إلغاء تسجيل الدخول</string>
+    <string name="account40Allowance">رصيد الاستخدام المبلّغ عنه</string>
+    <string name="account40PercentUsed">تم استخدام %1$d%%</string>
+    <string name="account40WindowUnknown">مدة الفترة غير متاحة</string>
+    <string name="account40WindowMinutes">مدة الفترة بالدقائق: %1$d</string>
+    <string name="account40WindowHours">مدة الفترة بالساعات: %1$d</string>
+    <string name="account40WindowDays">مدة الفترة بالأيام: %1$d</string>
+    <string name="account40ResetUnknown">موعد التجديد غير متاح</string>
+    <string name="account40ScopeLostTitle">تغيّر هذا الخادم</string>
+    <string name="account40BackToServers">العودة إلى الخوادم</string>
+    <string name="account40NotConnected">اتصل بهذا الخادم لرؤية حساب Codex الخاص به.</string>
+    <string name="account40SignInMethod">طريقة تسجيل الدخول</string>
+    <string name="account40PlanTitle">الخطة</string>
+    <string name="account40CopyCode">نسخ رمز تسجيل الدخول</string>
+    <string name="account40LimitReached">بلغت أحد حدود Codex. %1$s</string>
+    <string name="account40ResetDue">يُعاد تعيين الحد في أي لحظة</string>
+    <string name="account40ResetWhen">%1$s (%2$s)</string>
+    <plurals name="account40ResetInDays">
+        <item quantity="one">يُعاد تعيين الحد بعد يوم واحد</item>
+        <item quantity="other">يُعاد تعيين الحد بعد %1$d أيام</item>
+    </plurals>
+    <plurals name="account40ResetInHours">
+        <item quantity="one">يُعاد تعيين الحد بعد ساعة واحدة</item>
+        <item quantity="other">يُعاد تعيين الحد بعد %1$d ساعات</item>
+    </plurals>
+    <plurals name="account40ResetInMinutes">
+        <item quantity="one">يُعاد تعيين الحد بعد دقيقة واحدة</item>
+        <item quantity="other">يُعاد تعيين الحد بعد %1$d دقائق</item>
+    </plurals>
+    <string name="account40Back">رجوع</string>
+    <string name="account40Details">التفاصيل</string>
+    <string name="account40CopyDetails">نسخ التفاصيل</string>
+    <string name="account40Copied">تمّ نسخ الرمز</string>
+    <string name="account40OpenQuestion">هل تريد فتح صفحة تسجيل الدخول الرسمية لدى %1$s؟</string>
+    <string name="account40OpenPage">فتح صفحة تسجيل الدخول</string>
+    <string name="account40OpenFailed">تعذّر فتح صفحة تسجيل الدخول أو الحافظة.</string>
+</resources>

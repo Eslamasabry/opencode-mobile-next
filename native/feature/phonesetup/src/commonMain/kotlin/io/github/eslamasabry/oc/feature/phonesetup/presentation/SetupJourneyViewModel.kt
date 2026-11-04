@@ -36,7 +36,7 @@ public data class SetupJourneyUi(
     val progress: SetupProgress = SetupProgress.Idle,
     val details: Redacted? = null,
     val failure: Failure? = null,
-    val confirmStop: Boolean = false,
+    val confirmStop: String? = null,
     val confirmRemoveVoice: Boolean = false,
     val storageUnopened: Boolean = false,
 ) {
@@ -57,6 +57,7 @@ public data class SetupJourneyUi(
             !checking &&
                 !working &&
                 options != null &&
+                failure == null &&
                 preflight?.supported != false &&
                 (!adding || install.isNotEmpty())
 }
@@ -177,10 +178,11 @@ public class SetupJourneyViewModel(
 
     override fun accept() {
         if (!state.value.canConfirm) return
-        if (adding) begin { source.run(state.value.chosen, true) }
+        val selected = state.value.chosen.toSet()
+        if (adding) begin(openProgress = true) { source.run(selected, true) }
         else {
             viewModelScope.launch {
-                source.choose(state.value.chosen)
+                source.choose(selected)
                 nav.back()
             }
         }
@@ -188,10 +190,11 @@ public class SetupJourneyViewModel(
 
     override fun start() {
         if (!state.value.canConfirm) return
-        begin { source.run(state.value.chosen, false) }
+        val selected = state.value.chosen.toSet()
+        begin { source.run(selected, false) }
     }
 
-    private fun begin(command: suspend () -> Outcome<Unit>) {
+    private fun begin(openProgress: Boolean = false, command: suspend () -> Outcome<Unit>) {
         if (state.value.working) return
         mutable.update { it.copy(working = true, failure = null) }
         viewModelScope.launch {
@@ -199,7 +202,7 @@ public class SetupJourneyViewModel(
             mutable.update {
                 it.copy(working = false, failure = (result as? Outcome.Failed)?.failure)
             }
-            if (result is Outcome.Ok && customizing && adding) {
+            if (result is Outcome.Ok && openProgress) {
                 nav.back()
                 nav.open(PhoneSetupRoute.Setup)
             }
@@ -216,27 +219,32 @@ public class SetupJourneyViewModel(
 
     override fun askStop() {
         if (state.value.progress.state == SetupState.Running)
-            mutable.update { it.copy(confirmStop = true, failure = null) }
+            mutable.update {
+                it.copy(confirmStop = it.progress.jobId, confirmRemoveVoice = false, failure = null)
+            }
     }
 
     override fun cancelConfirm() {
         if (!state.value.working)
             mutable.update {
-                it.copy(confirmStop = false, confirmRemoveVoice = false, failure = null)
+                it.copy(confirmStop = null, confirmRemoveVoice = false, failure = null)
             }
     }
 
     override fun confirmStop() {
+        val jobId = state.value.confirmStop ?: return
         begin {
-            source.cancel().also {
-                if (it is Outcome.Ok) mutable.update { s -> s.copy(confirmStop = false) }
+            source.cancel(jobId).also {
+                if (it is Outcome.Ok) mutable.update { s -> s.copy(confirmStop = null) }
             }
         }
     }
 
     override fun askRemoveVoice() {
         if (!state.value.working)
-            mutable.update { it.copy(confirmRemoveVoice = true, failure = null) }
+            mutable.update {
+                it.copy(confirmRemoveVoice = true, confirmStop = null, failure = null)
+            }
     }
 
     override fun confirmRemoveVoice() {

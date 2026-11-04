@@ -5,7 +5,6 @@ import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.*
 import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
-import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.feed.*
@@ -37,6 +36,7 @@ class PreviewRuntime(
     private val redactor: Redactor,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
+    private val defaults: NativeServerDefaults,
     private val draftOwners: Set<ConversationDrafts>,
     private val profileClosers: Set<ProfileCloser>,
     private val cleaners:
@@ -56,6 +56,7 @@ class PreviewRuntime(
     private var feed: ChatFeed? = null
     private var feedJob: Job? = null
     private val eventJobs = mutableMapOf<ProfileId, Job>()
+    private val listingGraphs = mutableMapOf<ProfileId, ConnectionGraph>()
     // Retained only for a saved profile whose deletion reached the draft fence.
     private val draftRecovery = mutableSetOf<ProfileId>()
 
@@ -70,6 +71,24 @@ class PreviewRuntime(
             }
         }
         scope.launch { profiles.profiles.collect { if (ready.isCompleted) publishServers() } }
+        scope.launch {
+            if (ready.await() is Outcome.Failed) return@launch
+            registry.live.collect {
+                order.withLock {
+                    val live = registry.live.value
+                    val gone = listings.keys.filter { listingGraphs[it] !== live[it] }
+                    gone.forEach(::detachListing)
+                    if (gone.isNotEmpty()) rebuildFeed()
+                    publishServers()
+                }
+            }
+        }
+    }
+
+    private fun detachListing(id: ProfileId) {
+        eventJobs.remove(id)?.cancel()
+        listings.remove(id)
+        listingGraphs.remove(id)
     }
 
     private fun publishServers() {
@@ -146,6 +165,22 @@ class PreviewRuntime(
         connectNow(id, recoverDrafts = true)
     }
 
+    override suspend fun disconnect(id: ProfileId): Outcome<Unit> = command {
+        if (profiles.profile(id) == null)
+            return@command Failure.Refused(RefusalReason.ProfileDeleted).failed()
+        val graph = registry.live.value[id]
+        if (graph != null) {
+            val delivery =
+                (graph as? ChatGraphAccessors)?.chatDelivery?.queue
+                    ?: return@command Failure.StorageRefused().failed()
+            delivery.closeProfile(id)
+            registry.close(id)
+        }
+        detachListing(id)
+        rebuildFeed()
+        Unit.ok()
+    }
+
     private suspend fun connectNow(id: ProfileId, recoverDrafts: Boolean = false): Outcome<Unit> {
         val loaded =
             profiles.profile(id)
@@ -182,7 +217,9 @@ class PreviewRuntime(
                 val saved = profiles.setActive(id)
                 if (saved is Outcome.Failed) return saved.atStage(ConnectionStage.SaveActiveProfile)
                 val graph = opened.value
+                if (listingGraphs[id] !== graph) detachListing(id)
                 if (!listings.containsKey(id)) {
+                    listingGraphs[id] = graph
                     listings[id] = MutableStateFlow(OpenCodeListing(loading = true))
                     rebuildFeed()
                     eventJobs[id] = scope.launch {
@@ -283,7 +320,7 @@ class PreviewRuntime(
             val graph =
                 registry.live.value[id]
                     ?: return@command Failure.Refused(RefusalReason.StaleScope).failed()
-            when (val created = graph.session.server.createSession(NewSession())) {
+            when (val created = defaults.create(graph)) {
                 is Outcome.Failed -> created
                 is Outcome.Ok -> {
                     refreshOne(id)
@@ -331,8 +368,7 @@ class PreviewRuntime(
                 delivery.closeProfile(id)
             }
             registry.close(id)
-            eventJobs.remove(id)?.cancel()
-            listings.remove(id)
+            detachListing(id)
             rebuildFeed()
             // Queue admission is fenced above and close joins connection work. A send may have
             // written
@@ -373,8 +409,10 @@ class PreviewRuntime(
                     NativeProfileMonitoring.register(this)
                     AndroidProjectStorageAccess.register(this)
                     NativePhraseSuggestions.register(this)
+                    NativeReadStateConsent.register(this)
                     NativeConnectionForms.register(this)
                     PlansLegacyCollectors.register(this)
+                    NativeServerDefaults.register(this)
                     registerSecret("pw.", "profiles")
                     registerSecret("oc.codexToken.", "profiles")
                 }

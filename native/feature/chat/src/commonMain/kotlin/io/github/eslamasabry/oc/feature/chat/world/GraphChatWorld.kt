@@ -92,6 +92,7 @@ public class GraphChatWorlds(
     private val registry: ConnectionRegistry,
     private val draftStores: Set<ConversationDrafts> = emptySet(),
     private val recentBackings: Set<RecentModelsBacking> = emptySet(),
+    private val readSharing: Set<ChatReadSharing> = emptySet(),
 ) : ChatWorlds {
     /**
      * B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest)
@@ -111,7 +112,13 @@ public class GraphChatWorlds(
     override fun open(ref: ConversationRef): ChatWorld {
         val (world, holders) =
             open[ref]
-                ?: (GraphChatWorld(ref, registry, draftStores.singleOrNull(), recentModels) to 0)
+                ?: (GraphChatWorld(
+                    ref,
+                    registry,
+                    draftStores.singleOrNull(),
+                    recentModels,
+                    readSharing.singleOrNull(),
+                ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
         return world
@@ -143,6 +150,7 @@ internal class GraphChatWorld(
     private val registry: ConnectionRegistry,
     private val draftStore: ConversationDrafts? = null,
     private val recentModels: RecentModels = RecentModels(),
+    private val readSharing: ChatReadSharing? = null,
 ) : ChatWorld, TurnFeedSource {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
@@ -1396,14 +1404,37 @@ internal class GraphChatWorld(
         return Outcome.Ok(nodes.any { !it.isDir && it.name == name })
     }
 
-    override fun markRead() {
+    private var acknowledgingRead = false
+
+    override fun markRead() = observeRead { mutableLoad.value is ChatLoad.Live }
+
+    override fun observeRead(stillCurrent: () -> Boolean) {
         val a = currentAttached() ?: return
+        fun admitted(): Boolean =
+            currentAttached() === a && stillCurrent() && (readSharing?.visible(ref) ?: true)
+        if (acknowledgingRead || !admitted()) return
+        acknowledgingRead = true
         a.graph.scope.launch(registry.mainContext) {
-            val session = (a.gateway.session(sid) as? Outcome.Ok)?.value ?: return@launch
-            if (currentAttached() !== a) return@launch
-            val owner = a.graph.session.readState
-            owner.observe(session)
-            session.time?.idleMs?.let { owner.markRead(sid, it) }
+            try {
+                // Capture idle before the bounded history read: a newer, unseen reply cannot be
+                // acknowledged.
+                val session = (a.gateway.session(sid) as? Outcome.Ok)?.value ?: return@launch
+                val idle = session.time?.idleMs?.takeIf { it > 0 } ?: return@launch
+                if (!admitted()) return@launch
+                if (
+                    readHistory(a.gateway, a.handle, P3Bridge(sid.raw)) !is Outcome.Ok ||
+                        !admitted()
+                )
+                    return@launch
+                val shared = readSharing?.shared(ref) == true
+                if (!admitted()) return@launch
+                val owner = a.graph.session.readState
+                owner.observe(session, shared)
+                owner.markRead(sid, idle)
+                readSharing?.publish(ref, a.gateway, idle, ::admitted)
+            } finally {
+                acknowledgingRead = false
+            }
         }
     }
 

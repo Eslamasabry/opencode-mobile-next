@@ -24,4 +24,12 @@
     <string name="serverSettingsSteering">Guide a running reply</string>
     <string name="serverSettingsSupported">Available on this server</string>
     <string name="serverSettingsUnsupported">Not available on this server</string>
+    <string name="server40DisconnectConfirm">Disconnect from %1$s?</string>
+    <string name="server40Disconnect">Disconnect</string>
+    <string name="server40DisconnectBody">This closes the connection on this phone. Your conversations, drafts and queued messages stay saved.</string>
+    <string name="server40Reconnect">Reconnect</string>
+    <string name="server40AgentsNone">No agents are ready on this computer.</string>
+    <string name="server40Plugins">Server plugins</string>
+    <string name="server40ResetDone">Your defaults apply here again.</string>
+    <string name="server40ModelHelp">This choice applies to new conversations on this server. Existing conversations keep their own model.</string>
 </resources>

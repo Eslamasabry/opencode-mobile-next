@@ -49,6 +49,13 @@ internal fun ServerSavedRows(state: ServersUi, actions: ServersActions, enabled:
                     else actions.settings(server.id)
                 },
             )
+            if (facts?.account == true)
+                KitButton(
+                    stringResource(Res.string.account40Title),
+                    { actions.openAccount(server.id) },
+                    role = KitButtonRole.Tertiary,
+                    enabled = enabled,
+                )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                 if (!server.connected)
                     KitButton(

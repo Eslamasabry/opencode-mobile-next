@@ -25,6 +25,8 @@ public enum class ServerEditorStep {
 
 public data class ServerEditorUi(
     val step: ServerEditorStep = ServerEditorStep.Kind,
+    val newServer: Boolean = true,
+    val connectOnSave: Boolean = true,
     val record: ServerEditorRecord? = null,
     val loading: Boolean = false,
     val checking: Boolean = false,
@@ -102,6 +104,8 @@ public class ServerEditorViewModel(
     private val mutable =
         MutableStateFlow(
             ServerEditorUi(
+                newServer = route.profile == null,
+                connectOnSave = route.profile == null || route.newConversation,
                 step =
                     if (route.profile == null) ServerEditorStep.Kind else ServerEditorStep.Connect,
                 loading = route.profile != null,
@@ -149,7 +153,13 @@ public class ServerEditorViewModel(
             viewModelScope.launch {
                 when (val read = port.read(id)) {
                     is Outcome.Ok ->
-                        mutable.update { it.copy(record = read.value, loading = false) }
+                        mutable.update {
+                            it.copy(
+                                record = read.value,
+                                loading = false,
+                                connectOnSave = route.newConversation || read.value.reconnectOnSave,
+                            )
+                        }
                     is Outcome.Failed ->
                         mutable.update { it.copy(failure = read.failure, loading = false) }
                 }
@@ -218,7 +228,7 @@ public class ServerEditorViewModel(
         val ticket = ++generation
         work = viewModelScope.launch {
             var checked = mutable.value.checked.takeIf { resultFor == input }
-            if (!anyway && checked == null) {
+            if (!anyway && checked == null && (!saveAfter || mutable.value.connectOnSave)) {
                 mutable.update {
                     it.copy(checking = true, failure = null, failedCheck = false, slow = false)
                 }
@@ -265,13 +275,19 @@ public class ServerEditorViewModel(
                                 return@launch
                             }
                         }
+                        if (!mutable.value.connectOnSave) {
+                            nav.back()
+                            return@launch
+                        }
                         // The primary promises Save and connect; no mutation is replayed if
                         // connecting fails.
                         when (val connected = connections.connect(saved.value)) {
                             is Outcome.Failed ->
                                 mutable.update { it.copy(failure = connected.failure) }
                             is Outcome.Ok ->
-                                mutable.update { it.copy(step = ServerEditorStep.Ready) }
+                                if (route.profile == null || route.newConversation)
+                                    mutable.update { it.copy(step = ServerEditorStep.Ready) }
+                                else nav.back()
                         }
                     }
                 }
@@ -355,8 +371,27 @@ public class ServerEditorViewModel(
     }
 
     override fun openReady() {
-        nav.back()
-        nav.land()
+        if (mutable.value.saving) return
+        if (!route.newConversation) {
+            nav.back()
+            nav.land()
+            return
+        }
+        val id = savedId ?: return
+        mutable.update { it.copy(saving = true, failure = null) }
+        viewModelScope.launch {
+            try {
+                when (val created = connections.createConversation(id)) {
+                    is Outcome.Ok -> {
+                        nav.land()
+                        nav.openChat(created.value, focusComposer = true)
+                    }
+                    is Outcome.Failed -> mutable.update { it.copy(failure = created.failure) }
+                }
+            } finally {
+                mutable.update { it.copy(saving = false) }
+            }
+        }
     }
 
     override fun onCleared() {

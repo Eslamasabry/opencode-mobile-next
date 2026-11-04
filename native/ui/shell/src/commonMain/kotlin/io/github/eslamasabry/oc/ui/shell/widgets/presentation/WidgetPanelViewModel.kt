@@ -92,6 +92,11 @@ public class WidgetPanelViewModel(
         }
     }
 
+    /** Re-resolve the real renderer palette after an Appearance or system brightness change. */
+    public fun refreshPalette() {
+        if (!mutable.value.loading) mutable.update { it.copy(palette = source.palette(it.background, it.accent)) }
+    }
+
     override fun close() {
         if (!mutable.value.saving) mutable.update { it.copy(dismissed = true) }
     }

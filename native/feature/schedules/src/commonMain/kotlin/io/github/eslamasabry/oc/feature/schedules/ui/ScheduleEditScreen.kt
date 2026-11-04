@@ -46,10 +46,11 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.ui.words.res.scheduleClosedNote
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.scheduleNeedFuture
 import io.github.eslamasabry.oc.ui.words.res.scheduleThisConversation
 import kotlinx.coroutines.flow.drop
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * K02 as a page: the prompt, project, repeat, time, missed-run choice and model, with one main
@@ -81,7 +82,8 @@ public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditAction
             else
                 ({
                     KitButton(
-                        if (state.saving) words.saving else words.save,
+                        if (state.saving) words.saving
+                        else scheduleActionLabel(draft.fields(), words),
                         { actions.save(draft.fields()) },
                         Modifier.fillMaxWidth()
                             .padding(
@@ -187,14 +189,15 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
                 enabled = enabled,
             )
         }
-        KitField(
-            draft.time,
-            words.time,
-            kind = KitFieldKind.Mono,
-            helper = if (draft.kind == RecurrenceKind.Interval) words.firstAt else null,
-            error = if (state.issue == EditIssue.TimeInvalid) words.issueTime else null,
-            enabled = enabled,
-        )
+        if (draft.kind != RecurrenceKind.Interval) {
+            KitField(
+                draft.time,
+                words.time,
+                kind = KitFieldKind.Mono,
+                error = if (state.issue == EditIssue.TimeInvalid) words.issueTime else null,
+                enabled = enabled,
+            )
+        }
         if (draft.kind == RecurrenceKind.Interval) {
             KitField(
                 draft.hours,
@@ -261,4 +264,28 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
             )
         )
     }
+}
+
+@Composable
+private fun scheduleActionLabel(fields: EditorFields, words: ScheduleWords): String {
+    if (fields.kind == RecurrenceKind.Interval) {
+        val hours = fields.hours.toIntOrNull() ?: return words.save
+        return stringResource(Res.string.scheduleActionHours, hours)
+    }
+    val time =
+        io.github.eslamasabry.oc.feature.schedules.presentation.EditorRules.time(fields.time)
+            ?: return words.save
+    val clock =
+        "${time.first.toString().padStart(2, '0')}:${time.second.toString().padStart(2, '0')}"
+    val whenText =
+        if (fields.kind == RecurrenceKind.Once) {
+            val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
+            io.github.eslamasabry.oc.engine.schedules.ScheduleTime.at(
+                    fields.date,
+                    time.first,
+                    time.second,
+                )
+                ?.let { moment(it, now, words) } ?: return words.save
+        } else clock
+    return stringResource(Res.string.scheduleActionWhen, whenText)
 }

@@ -28,7 +28,7 @@ internal object WidgetActionBridge {
         done: (Map<String, Any?>) -> Unit,
     ) {
         val storage = WidgetFeed.persistence
-        if (storage == null) {
+        if (storage == null || !WidgetFeed.connectionActive || WidgetFeed.liveDispatcher == null) {
             done(result(payload, "rejected", "unavailable"))
             return
         }
@@ -71,7 +71,8 @@ internal object WidgetActionBridge {
     }
 
     private suspend fun submissionError(context: Context, payload: Map<String, Any?>): String? {
-        if (context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked == true)
+        if (!WidgetFeed.connectionActive || WidgetFeed.liveDispatcher == null ||
+            context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked == true)
             return "unavailable"
         val validationError =
             WidgetActionPolicy.validate(payload, currentIdentity(context, payload))

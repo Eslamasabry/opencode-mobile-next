@@ -28,8 +28,11 @@ public data class WidgetPanelStyle(
 public class WidgetPanelStore(context: Context, private val persistence: WidgetPersistence) {
     private val app = context.applicationContext
 
-    public fun palette(background: String, accent: String): WidgetV2Style.Palette =
-        WidgetV2Style.previewPalette(app, background, accent, parse(persistence.string(WidgetPersistence.SNAPSHOT)))
+    public fun palette(background: String, accent: String, appTheme: Map<String, Int>? = null): WidgetV2Style.Palette {
+        val snapshot = parse(persistence.string(WidgetPersistence.SNAPSHOT)) ?: JSONObject()
+        if (appTheme != null) snapshot.put("appTheme", JSONObject(appTheme))
+        return WidgetV2Style.previewPalette(app, background, accent, snapshot)
+    }
 
     public fun owns(widgetId: Int): Boolean {
         val provider = AppWidgetManager.getInstance(app).getAppWidgetInfo(widgetId)?.provider ?: return false

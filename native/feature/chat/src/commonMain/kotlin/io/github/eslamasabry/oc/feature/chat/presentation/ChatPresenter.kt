@@ -252,7 +252,7 @@ public class ChatPresenter(
         val mark = allowed && (!readAllowed || (readBusy && !busy))
         readAllowed = allowed
         readBusy = busy
-        if (mark) world.markRead()
+        if (mark) world.observeRead { ReadAck.allowed(world.load.value, local.value.atLiveEdge) }
     }
 
     // ---- Back (07 §3.3–§3.4) ----

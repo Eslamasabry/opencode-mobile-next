@@ -88,6 +88,13 @@ class NativeServerRows(
                                             running,
                                             if (graph != null && id == active) 0
                                             else queue?.count { it.profileId == id } ?: 0,
+                                            account =
+                                                id == active &&
+                                                    graph
+                                                        ?.session
+                                                        ?.capabilities
+                                                        ?.value
+                                                        ?.agentAccount == true,
                                         )
                                 }
                                 .toImmutableMap()

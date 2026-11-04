@@ -18,6 +18,12 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions) {
+    KitRowGroup {
+        KitRow(
+            title = stringResource(Res.string.keptPromptsTitle),
+            onClick = { actions.onOutside(SettingsOutside.KeptPrompts) },
+        )
+    }
     if (ui.failed) KitNotice(stringResource(Res.string.settings40_discard_failed))
     ui.result?.let { result ->
         KitNotice(
@@ -37,6 +43,23 @@ internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions
         KitGroupNote(stringResource(Res.string.settings40_storage_reading))
         return
     }
+    if (facts.servers.isNotEmpty())
+        KitRowGroup(label = stringResource(Res.string.privacySharedSection)) {
+            KitRow(
+                title = stringResource(Res.string.shareSessionViewsTitle),
+                supporting =
+                    stringResource(
+                        Res.string.settingsV3SharingCount,
+                        facts.sharing,
+                        facts.servers.size,
+                    ),
+                onClick = {
+                    if (facts.servers.size == 1)
+                        actions.onSavedServer(facts.servers.single(), SettingsOutside.ReadState)
+                    else actions.onOpen(SettingsPage.ByServer(SettingsOutside.ReadState))
+                },
+            )
+        }
     KitRowGroup(label = stringResource(Res.string.settings40_local_work)) {
         KitRow(
             title = stringResource(Res.string.settings40_queue_title),

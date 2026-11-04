@@ -18,7 +18,9 @@ public data class ComposerInsert(
     val attachments: List<PromptAttachment> = emptyList(),
     val missingAttachments: List<String> = emptyList(),
     val stillCurrent: () -> Boolean = { true },
-)
+) {
+    override fun toString(): String = "ComposerInsert(id=$id, textChars=${text.length}, attachments=${attachments.size}, missing=${missingAttachments.size})"
+}
 
 /**
  * One slot of text a page outside the chat (Saved prompts, slash commands) hands back to a conversation's composer.

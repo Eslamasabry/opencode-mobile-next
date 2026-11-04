@@ -14,12 +14,12 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.feature.servers.pairing.NoPairingProbe
-import io.github.eslamasabry.oc.feature.servers.pairing.PairingChoice
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingFill
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingInbox
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingProbe
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingRead
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
+import io.github.eslamasabry.oc.ui.routes.AgentAccountRoute
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -113,13 +113,9 @@ public class ServersViewModel(
     }
 
     private fun choose(fill: PairingFill) {
-        val generation = ++choosing
-        if (probe === NoPairingProbe || fill.candidates.size < 2) return publish(fill)
-        viewModelScope.launch {
-            val chosen = PairingChoice.choose(fill.candidates, probe)
-            if (generation == choosing)
-                publish(if (chosen == null || chosen == fill.address) fill else fill.at(chosen))
-        }
+        pairing.recipient = "server-editor"
+        pairing.put(fill)
+        nav.open(ServersRoute.Edit(newConversation = route != null))
     }
 
     private fun publish(fill: PairingFill) {
@@ -127,12 +123,16 @@ public class ServersViewModel(
         local.update { it.copy(pairingArrival = it.pairingArrival + 1) }
     }
 
+    override fun openAccount(id: ProfileId) {
+        nav.open(AgentAccountRoute(id))
+    }
+
     override fun moveQueued(id: ProfileId) {
         nav.open(ServersRoute.MoveQueued(id))
     }
 
     override fun edit(id: ProfileId?) {
-        nav.open(ServersRoute.Edit(id))
+        nav.open(ServersRoute.Edit(id, newConversation = route != null))
     }
 
     override fun settings(id: ProfileId) {

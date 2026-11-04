@@ -22,9 +22,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Saved prompts for the conversation's server (Flutter `_PromptStashSheet`): list newest first, search, write a new
- * one, edit, delete at once with Undo, and put one into the conversation's composer. One operation at a time; a tap
- * while one runs does nothing.
+ * Saved prompts for the conversation's server (Flutter `_PromptStashSheet`): list newest first,
+ * search, write a new one, edit, delete at once with Undo, and put one into the conversation's
+ * composer. One operation at a time; a tap while one runs does nothing.
  */
 @AssistedInject
 public class SavedPromptsViewModel(
@@ -52,7 +52,11 @@ public class SavedPromptsViewModel(
                     }
                 is Outcome.Failed ->
                     local.update {
-                        it.copy(loading = false, issue = SavedPromptsIssue.ReadFailed, failure = read.failure)
+                        it.copy(
+                            loading = false,
+                            issue = SavedPromptsIssue.ReadFailed,
+                            failure = read.failure,
+                        )
                     }
             }
         }
@@ -92,14 +96,19 @@ public class SavedPromptsViewModel(
             return
         }
         generation += 1
-        local.update { it.copy(editor = PromptEditor(null, "", generation), issue = null, note = null) }
+        local.update {
+            it.copy(editor = PromptEditor(null, "", generation), issue = null, note = null)
+        }
     }
 
     override fun editPrompt(id: String) {
         if (local.value.busy) return
         val prompt = local.value.prompts.firstOrNull { it.id == id } ?: return
+        if (prompt.kept) return
         generation += 1
-        local.update { it.copy(editor = PromptEditor(id, prompt.text, generation), issue = null, note = null) }
+        local.update {
+            it.copy(editor = PromptEditor(id, prompt.text, generation), issue = null, note = null)
+        }
     }
 
     override fun cancelEdit() {
@@ -111,11 +120,13 @@ public class SavedPromptsViewModel(
         if (text.isBlank()) return
         operation {
             val id = editor.id
-            val result = if (id == null) store.save(profile, text) else store.edit(profile, id, text)
+            val result =
+                if (id == null) store.save(profile, text) else store.edit(profile, id, text)
             when (result) {
                 is Outcome.Failed ->
                     failed(
-                        if (id == null && local.value.full) SavedPromptsIssue.Full else SavedPromptsIssue.SaveFailed,
+                        if (id == null && local.value.full) SavedPromptsIssue.Full
+                        else SavedPromptsIssue.SaveFailed,
                         result.failure,
                     )
                 is Outcome.Ok -> {
@@ -131,10 +142,43 @@ public class SavedPromptsViewModel(
         val current = local.value
         if (current.busy || current.editor != null) return
         val prompt = current.prompts.firstOrNull { it.id == id } ?: return
+        if (prompt.kept) {
+            val restorer = store as? KeptPromptRestorer
+            if (restorer == null) {
+                failed(SavedPromptsIssue.RestoreFailed, null)
+                return
+            }
+            operation {
+                when (val result = restorer.restoreKept(id, route.ref)) {
+                    is Outcome.Failed -> failed(SavedPromptsIssue.RestoreFailed, result.failure)
+                    is Outcome.Ok -> {
+                        val draft = result.value
+                        if (!draft.stillCurrent()) {
+                            failed(SavedPromptsIssue.RestoreFailed, null)
+                            return@operation
+                        }
+                        inbox.offer(
+                            ComposerInbox.target(profile, route.ref.sessionId.raw),
+                            draft.text,
+                            attachments = draft.attachments,
+                            missingAttachments = draft.unavailable,
+                            stillCurrent = draft.stillCurrent,
+                        )
+                        nav.returnToChat()
+                    }
+                }
+            }
+            return
+        }
         if (prompt.attachments > 0 || prompt.references > 0) {
-            // The composer takes words only for now: never drop the files silently (Codex prompts #2).
+            // The composer takes words only for now: never drop the files silently (Codex prompts
+            // #2).
             local.update {
-                it.copy(issue = SavedPromptsIssue.FilesStay, failure = null, wordsOnly = id.takeIf { prompt.text.isNotBlank() })
+                it.copy(
+                    issue = SavedPromptsIssue.FilesStay,
+                    failure = null,
+                    wordsOnly = id.takeIf { prompt.text.isNotBlank() },
+                )
             }
             return
         }
@@ -148,6 +192,32 @@ public class SavedPromptsViewModel(
         if (current.busy || current.editor != null) return
         val prompt = current.prompts.firstOrNull { it.id == id } ?: return
         if (prompt.text.isBlank()) return
+        if (prompt.kept) {
+            val restorer = store as? KeptPromptRestorer
+            if (restorer == null) {
+                failed(SavedPromptsIssue.RestoreFailed, null)
+                return
+            }
+            operation {
+                when (val result = restorer.restoreKept(id, route.ref)) {
+                    is Outcome.Failed -> failed(SavedPromptsIssue.RestoreFailed, result.failure)
+                    is Outcome.Ok -> {
+                        val draft = result.value
+                        if (!draft.stillCurrent()) {
+                            failed(SavedPromptsIssue.RestoreFailed, null)
+                            return@operation
+                        }
+                        inbox.offer(
+                            ComposerInbox.target(profile, route.ref.sessionId.raw),
+                            draft.text,
+                            stillCurrent = draft.stillCurrent,
+                        )
+                        nav.returnToChat()
+                    }
+                }
+            }
+            return
+        }
         local.update { it.copy(issue = null, wordsOnly = null) }
         inbox.offer(ComposerInbox.target(profile, route.ref.sessionId.raw), prompt.text)
         nav.returnToChat()
@@ -179,7 +249,8 @@ public class SavedPromptsViewModel(
         operation {
             when (val put = pending.undo()) {
                 is Outcome.Failed -> {
-                    // B-STATE-085: the Undo stays offered, so the person can try again (Flutter's Try again).
+                    // B-STATE-085: the Undo stays offered, so the person can try again (Flutter's
+                    // Try again).
                     failed(SavedPromptsIssue.UndoFailed, put.failure)
                 }
                 is Outcome.Ok -> {

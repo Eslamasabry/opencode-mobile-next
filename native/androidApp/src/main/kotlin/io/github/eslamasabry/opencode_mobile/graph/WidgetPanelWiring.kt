@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.ui.shell.widgets.presentation.WidgetComposeSourc
 import io.github.eslamasabry.oc.ui.shell.widgets.presentation.WidgetPanelPalette
 import io.github.eslamasabry.oc.ui.shell.widgets.presentation.WidgetPanelSnapshot
 import io.github.eslamasabry.oc.ui.shell.widgets.presentation.WidgetPanelSource
+import io.github.eslamasabry.oc.ui.kit.platform.androidWidgetThemeColors
 import kotlinx.coroutines.withContext
 
 @ContributesTo(AppScope::class)
@@ -34,6 +35,7 @@ interface WidgetPanelAppGraph {
 class WidgetPanelBindings(
     private val app: Application,
     private val stores: PreviewStores,
+    private val preferences: AppPreferences,
     private val dispatchers: AppDispatchers,
 ) : WidgetPanelSource {
     private val store: WidgetPanelStore?
@@ -50,7 +52,7 @@ class WidgetPanelBindings(
     }
 
     override fun palette(background: String, accent: String): WidgetPanelPalette {
-        val value = requireNotNull(store).palette(background, accent)
+        val value = requireNotNull(store).palette(background, accent, androidWidgetThemeColors(app, preferences.appearance.value))
         return WidgetPanelPalette(value.background, value.text, value.muted, value.accent)
     }
 

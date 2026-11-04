@@ -14,5 +14,7 @@ public sealed interface ServersRoute : AppRoute {
 
     @Serializable public data class Permissions(val profile: ProfileId) : ServersRoute
 
-    @Serializable public data class Edit(val profile: ProfileId? = null) : ServersRoute
+    @Serializable
+    public data class Edit(val profile: ProfileId? = null, val newConversation: Boolean = false) :
+        ServersRoute
 }

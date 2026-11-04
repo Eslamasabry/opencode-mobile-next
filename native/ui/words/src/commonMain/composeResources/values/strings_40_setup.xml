@@ -2,4 +2,33 @@
 <resources>
     <string name="r40SetupVoiceDownloading">Downloading voice typing</string>
     <string name="r40SetupVoiceVerifying">Checking voice typing files</string>
+
+    <string name="r40SetupRequired">Required</string>
+    <string name="r40SetupWorking">Please wait for the current action.</string>
+    <string name="r40SetupTotals">%1$s · about %2$s min</string>
+    <string name="r40SetupCouldNotCheck">The installed tools or setup could not be checked. Try again.</string>
+    <string name="r40SetupRetry">Try again</string>
+    <string name="r40SetupActionFailed">That did not finish. Try again.</string>
+    <string name="r40SetupCheckDevice">Resolve the phone requirements above before starting.</string>
+    <string name="r40SetupStorageUnopened">Storage settings could not be opened. Free space in your phone settings, then try again.</string>
+    <string name="r40SetupRemoveVoiceTitle">Remove voice typing?</string>
+    <string name="r40SetupRemoveVoiceBody">This removes the downloaded speech models from this app. Your conversations stay. You can download voice typing again later.</string>
+    <string name="r40SetupRemoveVoice">Remove voice typing</string>
+    <string name="r40SetupKeepVoice">Keep voice typing</string>
+    <string name="r40SetupRemoveVoiceFailed">Voice typing could not be removed. Finish any active recording or download, then try again.</string>
+    <string name="r40SetupPercent">%1$s%</string>
+    <string name="r40SetupComponentDone">Done</string>
+    <string name="r40SetupComponentInstalled">Already installed</string>
+    <string name="r40SetupComponentChecking">Checking…</string>
+    <string name="r40SetupComponentRunning">Installing…</string>
+    <string name="r40SetupComponentFailed">Did not finish</string>
+    <string name="r40SetupComponentPending">Waiting</string>
+    <string name="r40WelcomePhone">On this phone</string>
+    <string name="r40WelcomePhoneBody">Run OpenCode here. No computer needed.</string>
+    <string name="r40WelcomeComputer">On my computer</string>
+    <string name="r40WelcomeComputerBody">Connect to a computer where OpenCode is running.</string>
+    <string name="r40WelcomeRunning">Setup is %1$s% done</string>
+    <string name="r40WelcomeStopped">Setup stopped at %1$s%</string>
+    <string name="r40WelcomeSetupBody">Downloads a private Linux workspace and the tools OpenCode needs. Choose what to install before starting.</string>
+    <string name="r40WelcomeViewProgress">View setup progress</string>
 </resources>

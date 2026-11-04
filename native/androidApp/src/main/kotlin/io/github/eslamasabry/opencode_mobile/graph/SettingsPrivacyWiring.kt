@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.delivery.receipts.*
 import io.github.eslamasabry.oc.engine.profiles.ProfileKeys
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.settings.presentation.*
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +32,7 @@ class SettingsPrivacy(
     private val stores: PreviewStores,
     private val owners: Set<ConversationDrafts>,
     private val registry: ConnectionRegistry,
+    private val consent: NativeReadStateConsent,
     private val scope: AppCoroutineScope,
 ) : LocalDataSettings {
     private val mutable = MutableStateFlow<LocalDataFacts?>(null)
@@ -44,7 +46,12 @@ class SettingsPrivacy(
             if (stores.warm() is Outcome.Ok) {
                 refresh()
                 stores.prefs.changes.collect { keys ->
-                    if (Drafts.KEY in keys || OfflineQueueStore.KEY in keys) refresh()
+                    if (
+                        Drafts.KEY in keys ||
+                            OfflineQueueStore.KEY in keys ||
+                            ProfileKeys.PROFILES in keys
+                    )
+                        refresh()
                 }
             }
         }
@@ -52,6 +59,12 @@ class SettingsPrivacy(
 
     override fun refresh() {
         scope.launch { reads.withLock { readFacts() } }
+    }
+
+    init {
+        scope.launch {
+            if (stores.warm() is Outcome.Ok) consent.revision.collect { refresh() }
+        }
     }
 
     private suspend fun readFacts() {
@@ -64,6 +77,9 @@ class SettingsPrivacy(
         val q = queue.load() as? QueueRead.Readable
         val bytes =
             (queue.version() as? PrefValue.Str)?.value?.encodeToByteArray()?.size?.toLong() ?: 0
+        val profiles = stores.profiles.profiles.value.map { it.id }.toImmutableList()
+        var shared = 0
+        for (id in profiles) if (consent.snapshot(id).enabled) shared++
         mutable.value =
             LocalDataFacts(
                 q?.entries?.size ?: 0,
@@ -72,6 +88,8 @@ class SettingsPrivacy(
                 d?.count ?: 0,
                 d?.bytes ?: 0,
                 d?.readable == true,
+                profiles,
+                shared,
             )
     }
 

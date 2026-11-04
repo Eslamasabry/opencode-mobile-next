@@ -91,6 +91,10 @@ class NativeServerEditor(
         }
 
     override suspend fun read(id: ProfileId): Outcome<ServerEditorRecord> {
+        when (val ready = stores.warm()) {
+            is Outcome.Failed -> return ready
+            is Outcome.Ok -> Unit
+        }
         val profile = stores.profiles.profile(id) ?: return gone()
         val p = profile.profile
         return ServerEditorRecord(
@@ -107,6 +111,7 @@ class NativeServerEditor(
                 profile.trust.pin?.leafSha256,
                 profile.trust.pin?.origin,
                 profile,
+                reconnectOnSave = stores.profiles.activeId.value == id || p.usesAgentSocket,
             )
             .ok()
     }

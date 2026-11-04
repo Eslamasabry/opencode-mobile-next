@@ -13,6 +13,7 @@ public data class ServerRowFacts(
     val waiting: Int?,
     val running: Int?,
     val queued: Int,
+    val account: Boolean = false,
 )
 
 public data class ServerRowsState(

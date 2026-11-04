@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="account40Title">Codex account</string>
+    <string name="account40ScopeLost">This server changed. Return to Servers and open the account for the connected server.</string>
+    <string name="account40Refresh">Refresh account</string>
+    <string name="account40Loading">Checking the host account</string>
+    <string name="account40Unavailable">Account panel unavailable</string>
+    <string name="account40ReadFailed">Could not read the account</string>
+    <string name="account40Disconnected">Connection interrupted</string>
+    <string name="account40Connected">Signed in on the host</string>
+    <string name="account40SignedOut">Ready to sign in</string>
+    <string name="account40InProgress">Sign-in in progress</string>
+    <string name="account40NeedsAttention">Sign-in needs attention</string>
+    <string name="account40NoAuth">Host does not require sign-in</string>
+    <string name="account40ApiKey">API key</string>
+    <string name="account40HostAuth">Host authentication</string>
+    <string name="account40HostNote">The official runtime keeps the sign-in. Account changes affect every saved server connected to this host.</string>
+    <string name="account40UnsupportedDetail">This panel is verified with Codex 0.153.4. The connected runtime may not support these account methods.</string>
+    <string name="account40ReconnectDetail">Account data and the sign-in code were cleared. Reconnect to refresh. Sign-in will not restart automatically.</string>
+    <string name="account40SignIn">Sign in with ChatGPT</string>
+    <string name="account40SignInNote">Sign in with your ChatGPT account. You finish in the browser; this app never sees your password.</string>
+    <string name="account40Limits">Rate limits</string>
+    <string name="account40LimitsUnavailable">Rate limits are unavailable for this account or host.</string>
+    <string name="account40Usage">Token usage</string>
+    <string name="account40UsageUnavailable">Token usage is unavailable for this account or host.</string>
+    <string name="account40LifetimeTokens">Lifetime tokens</string>
+    <string name="account40PeakTokens">Peak daily tokens</string>
+    <string name="account40UsageNote">Values are reported by the host. Missing values are unknown, not zero. Token counts are not a bill or remaining message allowance.</string>
+    <string name="account40Updated">Last checked %1$s</string>
+    <string name="account40Starting">Requesting a sign-in code</string>
+    <string name="account40Waiting">Finish sign-in in your browser</string>
+    <string name="account40Cancelling">Cancelling sign-in</string>
+    <string name="account40Cancelled">Sign-in cancelled</string>
+    <string name="account40LoginFailed">Sign-in did not complete. Check the host and try again.</string>
+    <string name="account40LoginUncertain">The host could not confirm sign-in or cancellation. It may still be waiting. Check the official host runtime before starting again.</string>
+    <string name="account40LoginCompleted">Sign-in completed. Checking the account.</string>
+    <string name="account40CodeHint">Enter this one-time code on the official sign-in page. Keep it private.</string>
+    <string name="account40OpenSignIn">Open official sign-in</string>
+    <string name="account40Cancel">Cancel sign-in</string>
+    <string name="account40Allowance">Reported allowance</string>
+    <string name="account40PercentUsed">%1$d%% used</string>
+    <string name="account40WindowUnknown">Window duration unavailable</string>
+    <string name="account40WindowMinutes">%1$d-minute window</string>
+    <string name="account40WindowHours">%1$d-hour window</string>
+    <string name="account40WindowDays">%1$d-day window</string>
+    <string name="account40ResetUnknown">Reset time unavailable</string>
+    <string name="account40ScopeLostTitle">This server changed</string>
+    <string name="account40BackToServers">Back to Servers</string>
+    <string name="account40NotConnected">Connect to this server to see its Codex account.</string>
+    <string name="account40SignInMethod">Signed in with</string>
+    <string name="account40PlanTitle">Plan</string>
+    <string name="account40CopyCode">Copy sign-in code</string>
+    <string name="account40LimitReached">You’ve reached a Codex limit. %1$s</string>
+    <string name="account40ResetDue">Resets any moment</string>
+    <string name="account40ResetWhen">%1$s (%2$s)</string>
+    <plurals name="account40ResetInDays">
+        <item quantity="one">Resets in 1 day</item>
+        <item quantity="other">Resets in %1$d days</item>
+    </plurals>
+    <plurals name="account40ResetInHours">
+        <item quantity="one">Resets in 1 h</item>
+        <item quantity="other">Resets in %1$d h</item>
+    </plurals>
+    <plurals name="account40ResetInMinutes">
+        <item quantity="one">Resets in 1 min</item>
+        <item quantity="other">Resets in %1$d min</item>
+    </plurals>
+    <string name="account40Back">Back</string>
+    <string name="account40Details">Details</string>
+    <string name="account40CopyDetails">Copy details</string>
+    <string name="account40Copied">Code copied</string>
+    <string name="account40OpenQuestion">Open the official sign-in page at %1$s?</string>
+    <string name="account40OpenPage">Open sign-in page</string>
+    <string name="account40OpenFailed">The sign-in page or clipboard could not be opened.</string>
+</resources>

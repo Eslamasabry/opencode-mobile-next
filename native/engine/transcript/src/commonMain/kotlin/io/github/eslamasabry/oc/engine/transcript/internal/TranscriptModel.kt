@@ -505,8 +505,10 @@ internal class TranscriptModel(
         for (m in members) {
             if (m.info.role == Role.Assistant) {
                 hasAssistant = true
-                // B-CHAT-101: the turn's outcome is its newest assistant step's (Flutter). A step that failed and
-                // was followed by one that finished is not a failed turn: each step resets what the last one said.
+                // B-CHAT-101: the turn's outcome is its newest assistant step's (Flutter). A step
+                // that failed and
+                // was followed by one that finished is not a failed turn: each step resets what the
+                // last one said.
                 val error = m.info.errorText
                 stopped = error != null && isStopError(error)
                 failed = error != null && !stopped
@@ -517,7 +519,7 @@ internal class TranscriptModel(
                 when (p.type) {
                     PartType.Text ->
                         if (m.info.role == Role.User) {
-                            rows += promptRowOf(pe, m.info.id, turnId)
+                            rows += promptRowOf(pe, m.info.id, turnId, m.info.createdMs)
                         } else {
                             addBlocks(rows, turnId, pe, live = !p.ended && !finished)
                         }
@@ -526,7 +528,13 @@ internal class TranscriptModel(
                         val first = text.lineSequence().firstOrNull { it.isNotBlank() } ?: continue
                         rows +=
                             reuse(
-                                ThoughtRow("thought:${p.messageId}/${p.id}", turnId, first.trim())
+                                ThoughtRow(
+                                    "thought:${p.messageId}/${p.id}",
+                                    turnId,
+                                    first.trim(),
+                                    text = text.toString(),
+                                    live = !p.ended && !finished,
+                                )
                             )
                     }
                     PartType.Tool -> {
@@ -564,18 +572,44 @@ internal class TranscriptModel(
             rows.add(workAt, reuse(WorkLineRow("work:$turnId", turnId, calls, failedCalls, state)))
         }
         if (finished && hasAssistant) {
-            rows += reuse(FooterRow("footer:$turnId", turnId, failed, reason, stopped = stopped && !failed))
+            rows +=
+                reuse(
+                    FooterRow(
+                        "footer:$turnId",
+                        turnId,
+                        failed,
+                        reason,
+                        stopped = stopped && !failed,
+                        createdMs =
+                            members.lastOrNull { it.info.role == Role.Assistant }?.info?.createdMs,
+                    )
+                )
         }
         return TurnEntry(turnId, members, LongArray(members.size) { members[it].version }, rows)
     }
 
-    private fun promptRowOf(pe: PartEntry, messageId: String, turnId: String): PromptRow {
+    private fun promptRowOf(
+        pe: PartEntry,
+        messageId: String,
+        turnId: String,
+        createdMs: Long?,
+    ): PromptRow {
         val cached = pe.promptRow
-        if (cached != null && pe.promptVersion == pe.version && cached.turnId == turnId)
+        if (
+            cached != null &&
+                pe.promptVersion == pe.version &&
+                cached.turnId == turnId &&
+                cached.createdMs == createdMs
+        )
             return cached
         val row =
             reuse(
-                PromptRow("prompt:$messageId", turnId, pe.blocks?.text?.toString() ?: pe.part.text)
+                PromptRow(
+                    "prompt:$messageId",
+                    turnId,
+                    pe.blocks?.text?.toString() ?: pe.part.text,
+                    createdMs,
+                )
             )
         pe.promptRow = row
         pe.promptVersion = pe.version
@@ -669,10 +703,14 @@ internal class TranscriptModel(
     }
 }
 
-/** QA wave 4 N3: the error a stopped step carries (OC2 `Step interrupted`, OC1 `MessageAbortedError`). */
+/**
+ * QA wave 4 N3: the error a stopped step carries (OC2 `Step interrupted`, OC1
+ * `MessageAbortedError`).
+ */
 internal fun isStopError(text: String): Boolean = STOP_TEXT.containsMatchIn(text)
 
-private val STOP_TEXT = Regex(
-    "^\\s*(the )?(step|run|tool execution|operation|request)?\\s*(was )?(interrupted|aborted)\\b|MessageAbortedError",
-    RegexOption.IGNORE_CASE,
-)
+private val STOP_TEXT =
+    Regex(
+        "^\\s*(the )?(step|run|tool execution|operation|request)?\\s*(was )?(interrupted|aborted)\\b|MessageAbortedError",
+        RegexOption.IGNORE_CASE,
+    )

@@ -62,6 +62,7 @@ public class ChatEntries(
     private val navigator: AppNavigator,
     private val readers: Set<KitReplyReader>,
     private val forms: ConnectionForms,
+    private val transcriptPreferences: Set<io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences> = emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ConnectionFormRoute> { route ->
@@ -92,6 +93,8 @@ public class ChatEntries(
                 requests?.state?.collectAsStateWithLifecycle()?.value
                     ?: io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi()
             val facts by vm.facts.collectAsStateWithLifecycle()
+            val display = transcriptPreferences.singleOrNull()?.value?.collectAsStateWithLifecycle()?.value
+                ?: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices()
             val headerVm =
                 assistedMetroViewModel<ChatHeaderViewModel, ChatHeaderViewModel.Factory> {
                     create(route)
@@ -159,6 +162,7 @@ public class ChatEntries(
                             },
                         prompts = prompts,
                         facts = facts,
+                        transcriptDisplay = display,
                         onOpenSession = vm::openSession,
                         header =
                             ChatHeaderSlot(header, headerVm, ApprovalChipSlot(approval, headerVm)),

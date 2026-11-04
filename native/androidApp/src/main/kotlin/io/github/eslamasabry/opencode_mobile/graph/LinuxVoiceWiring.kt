@@ -663,7 +663,9 @@ internal constructor(
         }
     }
 
-    private suspend fun startNow(): Outcome<Unit> = lane.withLock {
+    private suspend fun startNow(expectedOwner: ProfileId? = null): Outcome<Unit> = lane.withLock {
+        if (expectedOwner != null && ownerId() != expectedOwner)
+            return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
         if (withContext(io) { BuiltinDiscovery.presence(filesDir) } != LinuxPresence.Ready) {
             return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
         }
@@ -682,7 +684,11 @@ internal constructor(
             val failure =
                 starter.start(
                     target,
-                    stillWanted = { actionEpoch == epoch && target.profile.raw !in closedProfiles },
+                    stillWanted = {
+                        actionEpoch == epoch &&
+                            target.profile.raw !in closedProfiles &&
+                            (expectedOwner == null || ownerId() == expectedOwner)
+                    },
                 )
             facts.update {
                 it.copy(
@@ -771,7 +777,10 @@ internal constructor(
             current?.serverRunning == true && port.probe(password) == ProbeAnswer.Answered
         if (!request.openCodeChanged && !migrating && answered) return@withLock Outcome.Ok(id)
         if (current?.serverRunning == true) {
-            val stopped = mutation { linux.stopServer() }
+            val stopped = mutation {
+                check(ownerId() == id)
+                linux.stopServer()
+            }
             if (stopped is Outcome.Failed) return@withLock stopped
         }
         val epoch = actionEpoch
@@ -1148,14 +1157,29 @@ internal constructor(
         closedProfiles.remove(profile)
     }
 
-    private suspend fun stopNow(): Outcome<Unit> {
+    /** A folder-access restart may never be redirected to a newly selected phone owner. */
+    suspend fun restartOwned(profile: ProfileId): Outcome<Unit> =
+        when (val stopped = stopNow(profile)) {
+            is Outcome.Failed -> stopped
+            is Outcome.Ok -> startNow(profile)
+        }
+
+    private suspend fun stopNow(expectedOwner: ProfileId? = null): Outcome<Unit> {
+        if (expectedOwner != null && ownerId() != expectedOwner)
+            return Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
         // Withdraw a suspended probe before waiting for the lane; persistence and process drain
         // stay on IO.
         actionEpoch++
-        val revoked = mutation { linux.requestServerStop() }
+        val revoked = mutation {
+            check(expectedOwner == null || ownerId() == expectedOwner)
+            linux.requestServerStop()
+        }
         if (revoked is Outcome.Failed) return revoked
         return lane.withLock {
-            val stopped = mutation { linux.stopServer() }
+            val stopped = mutation {
+                check(expectedOwner == null || ownerId() == expectedOwner)
+                linux.stopServer()
+            }
             publish()
             stopped
         }

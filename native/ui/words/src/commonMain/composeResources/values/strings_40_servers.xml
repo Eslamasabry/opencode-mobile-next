@@ -89,4 +89,7 @@
     <string name="remove40DeleteQueueHelp">Leave this off to keep their words and attachments in Saved prompts.</string>
     <string name="remove40Refresh">Review the saved data again</string>
     <string name="queue40UndoFailed">Could not undo the move. Review the destination conversation before trying again; prompts that already started sending stay there.</string>
+    <string name="editor40SaveChanges">Save changes</string>
+    <string name="editor40Stale">This saved server or its sign-in changed. Close this page and open the server again before trying.</string>
+    <string name="editor40Deleted">This server was removed. Close this page to return to your saved servers.</string>
 </resources>

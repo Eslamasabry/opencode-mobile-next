@@ -21,10 +21,7 @@ import io.github.eslamasabry.oc.core.domain.PromptRunIdentityGateway
 import io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
-import io.github.eslamasabry.oc.core.model.ModelSelection
-import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.SessionSelection
-import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.PermissionReply
@@ -36,6 +33,7 @@ import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.ui.kit.platform.androidWidgetThemeColors
 import io.github.eslamasabry.oc.engine.delivery.SendRoute
 import io.github.eslamasabry.oc.engine.delivery.SteerPolicy
 import java.util.UUID
@@ -43,7 +41,10 @@ import java.util.IdentityHashMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,6 +52,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
@@ -68,6 +71,8 @@ class NativeWidgetActions(
     private val app: Application,
     private val stores: PreviewStores,
     private val registry: ConnectionRegistry,
+    private val preferences: AppPreferences,
+    private val serverDefaults: NativeServerDefaults,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : WidgetLiveDispatcher {
@@ -79,6 +84,9 @@ class NativeWidgetActions(
     @Volatile private var target: Target? = null
     @Volatile private var runs: Map<String, Run> = emptyMap()
     private var epochs: Map<String, Long> = emptyMap()
+    private val proofSlots = Semaphore(2)
+    private val proofJobs = mutableMapOf<ProofKey, Job>()
+    private val attemptedProofs = mutableSetOf<ProofKey>()
     private val graphFingerprints = IdentityHashMap<ConnectionGraph, String>()
     private var started = false
 
@@ -92,6 +100,7 @@ class NativeWidgetActions(
             else DartJson.sha256Hex("$token|project")
     }
     private data class Run(val marker: String, val started: Long)
+    private data class ProofKey(val targetToken: String, val session: String, val epoch: Long)
 
     fun stamp(): Long = mutableRevision.value
 
@@ -100,6 +109,7 @@ class NativeWidgetActions(
         if (started) return
         started = true
         WidgetFeed.liveDispatcher = this
+        scope.launch { preferences.appearance.collect { bump() } }
         scope.launch {
             if (stores.warm() is Outcome.Failed) return@launch
             combine(registry.live, stores.profiles.activeId, stores.profiles.profiles) { live, id, _ ->
@@ -143,8 +153,7 @@ class NativeWidgetActions(
                                     is GatewayEvent.MessageUpserted -> event.message.takeIf { it.role == Role.User }?.sessionId
                                     else -> null
                                 } ?: return@collect
-                                epochs = epochs + (id to ((epochs[id] ?: 0) + 1))
-                                runs = runs - id
+                                invalidateRun(id)
                                 bump()
                             }
                         }
@@ -156,7 +165,10 @@ class NativeWidgetActions(
     private fun setTarget(next: Target?) {
         val previous = target
         target = next
-        if (previous?.key != next?.key) {
+        if (previous?.key != next?.key || previous?.connected != next?.connected) {
+            proofJobs.values.forEach { it.cancel() }
+            proofJobs.clear()
+            attemptedProofs.clear()
             runs = emptyMap()
             epochs = emptyMap()
         }
@@ -172,6 +184,7 @@ class NativeWidgetActions(
         json.put("scopeToken", t?.token.orEmpty())
         json.put("lastProjectID", t?.project.orEmpty())
         json.put("connected", t?.let(::current) == true)
+        json.put("appTheme", JSONObject(androidWidgetThemeColors(app, preferences.appearance.value)))
         json.remove("onDemand") // This live-only adapter never promises a headless connection.
         val rows = json.optJSONArray("sessions") ?: JSONArray()
         for (index in 0 until rows.length()) {
@@ -184,7 +197,7 @@ class NativeWidgetActions(
                 row.put("steerMode", "unknown")
                 continue
             }
-            if (!row.optBoolean("busy")) runs = runs - row.optString("id")
+            if (!row.optBoolean("busy")) clearRun(row.optString("id"))
             val run = if (t != null && row.optBoolean("busy") && current(t)) cachedRun(t, row.optString("id")) else null
             row.put("startedAt", run?.started ?: 0L)
             row.put("steerMode", if (run == null || t == null) "unknown" else steerMode(t, SessionId(row.optString("id"))))
@@ -197,13 +210,45 @@ class NativeWidgetActions(
         NativeWidgetSnapshot(json.toString(), privateTarget)
     }
 
-    private suspend fun cachedRun(t: Target, session: String): Run? {
+    /** A publication never waits for network proof. Each run epoch receives one bounded read, at most two at once. */
+    private fun cachedRun(t: Target, session: String): Run? {
         runs[session]?.let { return it }
-        val epoch = epochs[session] ?: 0
-        val read = withTimeoutOrNull(1200) { readRun(t, SessionId(session)) } ?: return null
-        if (!current(t) || (epochs[session] ?: 0) != epoch) return null
-        runs = runs + (session to read)
-        return read
+        val key = ProofKey(t.token, session, epochs[session] ?: 0)
+        if (!attemptedProofs.add(key)) return null
+        proofJobs[key] = scope.launch {
+            try {
+                val read = try {
+                    proofSlots.withPermit {
+                        if (!current(t) || (epochs[session] ?: 0) != key.epoch) return@withPermit null
+                        withTimeoutOrNull(1200) { readRun(t, SessionId(session)) }
+                    }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    null
+                }
+                currentCoroutineContext().ensureActive()
+                if (read != null && current(t) && (epochs[session] ?: 0) == key.epoch) {
+                    runs = runs + (session to read)
+                    bump()
+                }
+            } finally {
+                if (proofJobs[key] === currentCoroutineContext()[Job]) proofJobs.remove(key)
+            }
+        }
+        return null
+    }
+
+    private fun clearRun(session: String) {
+        runs = runs - session
+        val keys = proofJobs.keys.filter { it.session == session }
+        keys.forEach { proofJobs.remove(it)?.cancel() }
+        attemptedProofs.removeAll { it.session == session }
+    }
+
+    private fun invalidateRun(session: String) {
+        epochs = epochs + (session to ((epochs[session] ?: 0) + 1))
+        clearRun(session)
     }
 
     private suspend fun readRun(t: Target, session: SessionId): Run? {
@@ -252,7 +297,7 @@ class NativeWidgetActions(
                     val run = readRun(t, session) ?: return result(payload, "rejected", "unavailable")
                     if (!current(t) || !privateMatches(t) || expected <= 0 || run.started != expected || runs[session.raw] != run) {
                         // A missed volatile transition never reuses an old turn; one explicit stale tap refreshes proof.
-                        runs = runs - session.raw
+                        invalidateRun(session.raw)
                         bump()
                         return result(payload, "rejected", "staleRequest")
                     }
@@ -285,12 +330,11 @@ class NativeWidgetActions(
                     if (t.gateway.capabilities.value.serverCatalog && defaultsRead is Outcome.Failed) return result(payload, "rejected", "unavailable")
                     val defaults = (defaultsRead as? Outcome.Ok)?.value
                     if (!current(t) || !privateMatches(t)) return result(payload, "rejected", "staleRequest")
-                    val selection = t.gateway as? SessionSelectionGateway
-                    val created = if (selection != null && defaults != null) {
-                        selection.createSelectedSession(SessionSelection(defaults.model, "", defaults.agent, modelKnown = true, agentKnown = true))
-                    } else t.gateway.createSession(NewSession(location = t.key.location))
+                    val created = serverDefaults.create(t.graph, defaults?.let {
+                        SessionSelection(it.model, "", it.agent, modelKnown = true, agentKnown = true)
+                    })
                     if (created !is Outcome.Ok || !current(t) || !privateMatches(t)) return result(payload, "uncertain", "uncertainDelivery")
-                    val prompt = OutgoingPrompt(text, model = defaults?.model?.let { ModelSelection(it) }, agent = defaults?.agent)
+                    val prompt = OutgoingPrompt(text)
                     val check = { current(t) && privateMatches(t) && payload["lastProjectID"] == t.project }
                     val admission = if (fenced != null) {
                         fenced.promptNewSessionWithMessageId(created.value.id, fenced.createPromptMessageId(), prompt, check)

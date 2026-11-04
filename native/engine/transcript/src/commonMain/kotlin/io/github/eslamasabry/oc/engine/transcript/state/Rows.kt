@@ -48,6 +48,7 @@ public data class PromptRow(
     override val key: String,
     override val turnId: String,
     val text: String,
+    val createdMs: Long? = null,
 ) : TranscriptRow {
     override val kind: RowKind
         get() = RowKind.Prompt
@@ -83,6 +84,9 @@ public data class ThoughtRow(
     override val key: String,
     override val turnId: String,
     val firstLine: String,
+    /** Complete reasoning, including streamed deltas; the collapsed title never replaces this body. */
+    val text: String = firstLine,
+    val live: Boolean = false,
 ) : TranscriptRow {
     override val kind: RowKind
         get() = RowKind.Thought
@@ -123,6 +127,8 @@ public data class FooterRow(
     val reason: String? = null,
     /** QA wave 4 N3: the user (or another client) stopped this reply; shown as "Stopped", never as an error. */
     val stopped: Boolean = false,
+    /** Creation time of the actual newest assistant message represented by this turn footer. */
+    val createdMs: Long? = null,
 ) : TranscriptRow {
     override val kind: RowKind
         get() = RowKind.Footer

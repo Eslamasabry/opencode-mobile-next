@@ -97,6 +97,7 @@ open class WidgetRouteActivity : ComponentActivity() {
         setContent {
             val appearance by settings.appPreferences.appearance.collectAsState()
             val state by vm.state.collectAsState()
+            LaunchedEffect(appearance) { vm.refreshPalette() }
             LaunchedEffect(state.saved, state.dismissed) {
                 if (state.saved) setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
                 if (state.saved || state.dismissed) finish()

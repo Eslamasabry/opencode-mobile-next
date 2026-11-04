@@ -2,8 +2,10 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
@@ -65,7 +67,7 @@ class NativeSetupJourney(
         if (!platform.builtinLinux) return Failure.Unavailable(FeatureId("builtinLinux")).failed()
         val components = setup.components()
         if (components is Outcome.Failed) return components
-        val all = (components as Outcome.Ok).value
+        val all = (components as Outcome.Ok).value.filter { !it.app || voice.lastOffer != null }
         val installed =
             if (adding) {
                 when (val value = setup.optionalIds()) {
@@ -116,7 +118,7 @@ class NativeSetupJourney(
 
     override suspend fun resume(): Outcome<Unit> = setup.continueSelection()
 
-    override suspend fun cancel(): Outcome<Unit> = setup.cancel()
+    override suspend fun cancel(jobId: String): Outcome<Unit> = setup.cancelExpected(jobId)
 
     override suspend fun removeVoice(): Outcome<Unit> = setup.removeVoice()
 
@@ -128,7 +130,7 @@ class NativeSetupJourney(
  * another job.
  */
 @SingleIn(AppScope::class)
-@ContributesBinding(AppScope::class)
+@ContributesIntoSet(AppScope::class, binding = binding<PhoneWelcomeSource>())
 @Inject
 class NativePhoneWelcome(
     private val journey: SetupJourneySource,
@@ -144,10 +146,12 @@ class NativePhoneWelcome(
         if (!platform.builtinLinux) return@withLock
         withTimeoutOrNull(3_000) {
             if (journey.restore() is Outcome.Ok) {
+                show(journey.progress.value)
+                watchKnownJob()
                 val options = journey.options(false)
                 if (options is Outcome.Ok) {
                     val defaults =
-                        SetupSelection.install(options.value, journey.selection.value, false)
+                        SetupSelection.install(options.value, defaultIds(options.value), false)
                     mutable.update {
                         it.copy(
                             seconds = SetupSelection.seconds(defaults),
@@ -155,13 +159,17 @@ class NativePhoneWelcome(
                         )
                     }
                 }
-                show(journey.progress.value)
-                if (journey.progress.value.state != SetupState.Idle && watcher == null) {
-                    watcher = scope.launch { journey.progress.collect(::show) }
-                }
             }
         }
         Unit
+    }
+
+    private fun defaultIds(options: SetupOptions): Set<String> =
+        options.components.filter { !it.required && it.defaultOn }.map { it.id }.toSet()
+
+    private fun watchKnownJob() {
+        if (journey.progress.value.state != SetupState.Idle && watcher == null)
+            watcher = scope.launch { journey.progress.collect(::show) }
     }
 
     private fun show(progress: SetupProgress) {
@@ -197,10 +205,12 @@ class NativePhoneWelcome(
                     when (val options = journey.options(false)) {
                         is Outcome.Failed -> options
                         is Outcome.Ok -> {
+                            val ids = defaultIds(options.value)
+                            journey.choose(ids)
                             val job =
                                 SetupSelection.install(
                                     options.value,
-                                    journey.selection.value,
+                                    ids,
                                     false,
                                 )
                             val preflight =
@@ -215,7 +225,7 @@ class NativePhoneWelcome(
                             )
                                 Outcome.Ok(WelcomeSetupLaunch.Setup)
                             else
-                                when (val began = journey.run(journey.selection.value, false)) {
+                                when (val began = journey.run(ids, false)) {
                                     is Outcome.Failed -> began
                                     is Outcome.Ok -> Outcome.Ok(WelcomeSetupLaunch.Progress)
                                 }
@@ -227,8 +237,7 @@ class NativePhoneWelcome(
             }
         mutable.update { it.copy(failure = (result as? Outcome.Failed)?.failure) }
         show(journey.progress.value)
-        if (journey.progress.value.state != SetupState.Idle && watcher == null)
-            watcher = scope.launch { journey.progress.collect(::show) }
+        watchKnownJob()
         result
     }
 

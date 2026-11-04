@@ -48,6 +48,27 @@ class ServerQueueDeletionCleaner(
                         else
                             DartJson.decodeOrNull((keptValue as PrefValue.Str).value) as? List<*>
                                 ?: return Failure.StorageRefused().failed()
+                    if (list.size > QueueLimits.MAX_ENTRIES)
+                        return Failure.StorageRefused().failed()
+                    val seen = HashSet<Pair<String, String>>()
+                    for (existing in list) {
+                        val decoded =
+                            attempt({ Failure.StorageRefused() }) {
+                                QueuedPromptCodec.fromJson(existing)
+                            }
+                        val entry =
+                            (decoded as? Outcome.Ok)?.value
+                                ?: return Failure.StorageRefused().failed()
+                        if (
+                            !seen.add(entry.profileId.raw to entry.id) ||
+                                entry.payloadBytes > QueueLimits.MAX_ENTRY_BYTES
+                        )
+                            return Failure.StorageRefused().failed()
+                    }
+                    if (
+                        DartJson.encode(list).encodeToByteArray().size > QueueLimits.MAX_TOTAL_BYTES
+                    )
+                        return Failure.StorageRefused().failed()
                     val saved = list.toMutableList()
                     fun redact(value: Any?): Any? =
                         when (value) {
@@ -66,7 +87,8 @@ class ServerQueueDeletionCleaner(
                             (decoded as? Outcome.Ok)?.value
                                 ?: return Failure.StorageRefused().failed()
                         if (
-                            next.id != entry.id ||
+                            next.payloadBytes > QueueLimits.MAX_ENTRY_BYTES ||
+                                next.id != entry.id ||
                                 next.profileId != entry.profileId ||
                                 next.sessionId != entry.sessionId
                         )

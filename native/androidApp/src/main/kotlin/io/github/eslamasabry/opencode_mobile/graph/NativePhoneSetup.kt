@@ -224,24 +224,28 @@ class NativePhoneSetup(
                             estimatedSeconds = 10,
                         ),
                     ) +
-                        if (
-                            voiceComponent.lastOffer != null ||
-                                params.containsKey(SetupComponentIds.VOICE)
-                        )
-                            listOf(
-                                SetupComponent(
-                                    SetupComponentIds.VOICE,
-                                    getVoiceTitle,
-                                    getVoiceTitle,
-                                    "",
-                                    "",
-                                    app = true,
-                                    summary = getVoiceSummary,
-                                    estimatedSeconds = 45,
-                                    downloadBytes = voiceComponent.lastOffer?.downloadSize?.bytes,
-                                )
+                        listOf(
+                            SetupComponent(
+                                SetupComponentIds.VOICE,
+                                getVoiceTitle,
+                                getVoiceTitle,
+                                "",
+                                "",
+                                app = true,
+                                summary = getVoiceSummary,
+                                estimatedSeconds = 45,
+                                downloadBytes = voiceComponent.lastOffer?.downloadSize?.bytes,
+                                installedBytes =
+                                    voiceComponent.lastOffer
+                                        ?.takeIf { it.installed }
+                                        ?.downloadBytes,
+                                downloadSize =
+                                    voiceComponent.lastOffer?.downloadSize
+                                        ?: io.github.eslamasabry.oc.engine.runtime.setup
+                                            .DownloadSize
+                                            .Unknown,
                             )
-                        else emptyList()
+                        )
                 },
                 words,
                 scope,
@@ -388,6 +392,28 @@ class NativePhoneSetup(
     override suspend fun resume(): Outcome<Unit> = command { it.resume() }
 
     override suspend fun cancel(): Outcome<Unit> = command { it.cancel() }
+
+    suspend fun cancelExpected(jobId: String): Outcome<Unit> =
+        withContext(serial) {
+            lane.withLock {
+                when (val warm = stores.warm()) {
+                    is Outcome.Failed -> warm
+                    is Outcome.Ok -> {
+                        val setup = get()
+                        val read = setup.restore()
+                        if (read is Outcome.Failed) return@withLock read
+                        val current = setup.progress.value
+                        if (current.jobId != jobId || current.state != SetupState.Running)
+                            Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
+                        else {
+                            setup.cancel()
+                            shown.value = setup.progress.value
+                            Outcome.Ok(Unit)
+                        }
+                    }
+                }
+            }
+        }
 
     suspend fun update(): Outcome<Unit> {
         if (!runtime.mayUpdate()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))

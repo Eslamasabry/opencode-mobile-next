@@ -20,6 +20,7 @@ public data class ServerEditorRecord(
     val certificateOrigin: String?,
     /** Opaque, memory-only identity of the exact stored edit baseline; contains no credential. */
     val editToken: Any? = null,
+    val reconnectOnSave: Boolean = false,
 )
 
 /**

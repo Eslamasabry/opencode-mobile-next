@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.model.IntegrationAuthState
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,7 +36,7 @@ public class PlanSignInViewModel(
     public val state: StateFlow<PlanAuthenticationUi> = local.asStateFlow()
     private var generation = 0
 
-    public fun open(providerId: String, connectionId: String? = null) {
+    public fun open(providerId: String, connectionId: String? = null, pinned: Boolean = false) {
         if (local.value.busy || local.value.active) return
         val mine = ++generation
         local.value =
@@ -58,18 +59,24 @@ public class PlanSignInViewModel(
                         }
                 is Outcome.Ok ->
                     if (mine == generation) {
+                        val choices =
+                            if (pinned)
+                                result.value
+                                    .filter { it.id == connectionId && !it.phone }
+                                    .toImmutableList()
+                            else result.value
                         local.update {
                             it.copy(
-                                choices = result.value,
+                                choices = choices,
                                 busy = false,
                                 step =
-                                    if (result.value.isEmpty()) PlanSignInStep.Unavailable
+                                    if (choices.isEmpty()) PlanSignInStep.Unavailable
                                     else PlanSignInStep.Places,
                             )
                         }
                         val choice =
-                            result.value.firstOrNull { it.id == connectionId }
-                                ?: result.value.singleOrNull()
+                            choices.firstOrNull { it.id == connectionId }
+                                ?: if (pinned) null else choices.singleOrNull()
                         if (choice != null) choosePlace(choice.id)
                     }
             }

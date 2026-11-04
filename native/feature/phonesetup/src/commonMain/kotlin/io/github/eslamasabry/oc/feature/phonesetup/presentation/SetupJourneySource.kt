@@ -25,7 +25,7 @@ public interface SetupJourneySource {
 
     public suspend fun resume(): Outcome<Unit>
 
-    public suspend fun cancel(): Outcome<Unit>
+    public suspend fun cancel(jobId: String): Outcome<Unit>
 
     public suspend fun removeVoice(): Outcome<Unit>
 

@@ -33,6 +33,7 @@ class AndroidProjectStorageAccess(
     private val app: Application,
     private val stores: PreviewStores,
     private val phoneSource: Lazy<PhoneServerSource>,
+    private val runtime: Lazy<BuiltinRuntime>,
     private val dispatchers: AppDispatchers,
 ) : ProjectStorageAccess {
     private val server
@@ -121,10 +122,13 @@ class AndroidProjectStorageAccess(
             is Outcome.Ok -> Unit
         }
         if (!owns(profile)) return@withLock Failure.Refused(RefusalReason.OriginChanged).failed()
-        when (val result = server.restart()) {
+        when (val result = runtime.value.restartOwned(profile)) {
             is Outcome.Failed -> result
-            is Outcome.Ok ->
+            is Outcome.Ok -> {
+                if (!owns(profile))
+                    return@withLock Failure.Refused(RefusalReason.OriginChanged).failed()
                 stores.prefs.commit(stores.lanes.forProfile(profile)) { remove(pending(profile)) }
+            }
         }
     }
 

@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 public enum class LocalDataKind {
@@ -15,6 +18,8 @@ public data class LocalDataFacts(
     val drafts: Int = 0,
     val draftBytes: Long = 0,
     val draftsReadable: Boolean = true,
+    val servers: ImmutableList<ProfileId> = persistentListOf(),
+    val sharing: Int = 0,
 )
 
 public data class LocalDeleteResult(

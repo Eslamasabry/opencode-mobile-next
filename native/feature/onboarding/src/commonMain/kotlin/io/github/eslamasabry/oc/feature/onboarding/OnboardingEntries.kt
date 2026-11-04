@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.onboarding
 
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import dev.zacsweers.metro.AppScope
@@ -12,11 +14,18 @@ import io.github.eslamasabry.oc.feature.onboarding.ui.WelcomeScreen
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.OnboardingRoute
 
-/** The welcome route; the ONLY file in the module that imports androidx.navigation3.runtime (Konsist K1). */
+/**
+ * The welcome route; the ONLY file in the module that imports androidx.navigation3.runtime (Konsist
+ * K1).
+ */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class OnboardingEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
-        entry<OnboardingRoute.Welcome> { WelcomeScreen(metroViewModel<WelcomeViewModel>()) }
+        entry<OnboardingRoute.Welcome> {
+            val vm = metroViewModel<WelcomeViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            WelcomeScreen(state, vm)
+        }
     }
 }

@@ -4,6 +4,8 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLane
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -49,6 +51,10 @@ public class OfflineQueueStore(private val store: KeyValueStore, private val lan
      */
     public fun version(): PrefValue? = store.get(KEY)
 
+    public fun profilesVersion(): PrefValue? = store.get("oc.profiles")
+
+    public val updates: Flow<Set<String>> = store.changes.filter { KEY in it }
+
     public fun encodedVersion(entries: List<QueuedPrompt>): PrefValue? =
         if (entries.isEmpty()) null else PrefValue.Str(QueuedPromptCodec.encodeQueue(entries))
 
@@ -56,11 +62,15 @@ public class OfflineQueueStore(private val store: KeyValueStore, private val lan
      * A stale connection cache may not reintroduce entries removed by Settings or another
      * connection.
      */
-    public suspend fun saveIfUnchanged(entries: List<QueuedPrompt>, expected: PrefValue?): Boolean {
+    public suspend fun saveIfUnchanged(
+        entries: List<QueuedPrompt>,
+        expected: PrefValue?,
+        expectedProfiles: PrefValue?,
+    ): Boolean {
         if (!readable) return false
         val next = encodedVersion(entries)
         return store
-            .compareAndCommit(lane, mapOf(KEY to expected)) {
+            .compareAndCommit(lane, mapOf(KEY to expected, "oc.profiles" to expectedProfiles)) {
                 if (next == null) remove(KEY) else putString(KEY, (next as PrefValue.Str).value)
             }
             .let { it is Outcome.Ok && it.value }

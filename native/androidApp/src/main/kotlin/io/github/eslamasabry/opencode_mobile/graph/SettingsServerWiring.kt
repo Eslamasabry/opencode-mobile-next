@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.model.BackendKind
@@ -26,6 +27,7 @@ import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerEditorInput
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerEditorPort
 import io.github.eslamasabry.oc.feature.settings.presentation.*
+import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoGateway
 import kotlin.time.TimeSource
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -299,4 +301,29 @@ class NativeServerSettings(
     }
 
     override suspend fun connect(profile: ProfileId): Outcome<Unit> = connections.connect(profile)
+
+    override suspend fun disconnect(profile: ProfileId): Outcome<Unit> =
+        connections.disconnect(profile)
+
+    override suspend fun recheckAgents(profile: ProfileId): Outcome<ImmutableList<String>> {
+        when (val warm = stores.warm()) {
+            is Outcome.Failed -> return warm
+            is Outcome.Ok -> Unit
+        }
+        val graph =
+            when (val read = live(profile)) {
+                is Outcome.Failed -> return read
+                is Outcome.Ok -> read.value
+            }
+        if (!graph.session.capabilities.value.hostAgentProviders)
+            return Failure.Unavailable(FeatureId("hostAgentProviders")).failed()
+        val gateway =
+            graph.session.server as? PaseoGateway
+                ?: return Failure.Unavailable(FeatureId("hostAgentProviders")).failed()
+        val location = gateway.location.value
+        val result = gateway.hostAgentProviders(refresh = true)
+        return if (current(profile, graph) && gateway.location.value == location)
+            result.map { it.selectable.map { p -> p.displayName }.toImmutableList() }
+        else Failure.Refused(RefusalReason.StaleScope).failed()
+    }
 }

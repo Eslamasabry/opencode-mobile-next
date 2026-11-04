@@ -66,6 +66,9 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptBubble
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitThoughtBlock
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageTimestamp
+import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -211,6 +214,7 @@ internal fun ChatTranscriptList(
     onOpenSession: ((String) -> Unit)? = null,
     reply: ReplyActions? = null,
     onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -> Unit)? = null,
+    display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
 ) {
     val folds = rememberTranscriptFolds()
     val currentRows by rememberUpdatedState(rows)
@@ -269,13 +273,23 @@ internal fun ChatTranscriptList(
             }
         }
         items(unique, key = { it.key }, contentType = { it.kind }) { row ->
-            // A table longer than one chunk is drawn whole by its first chunk; its later chunks draw nothing.
-            if (reply != null && row is BlockRow && row.key in tables) {
-                val whole = tables[row.key]
-                if (whole != null)
-                    ChatRow(row.copy(text = whole, continues = false), words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession, reply, copyCode, onOpenFile)
-            } else {
-                ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession, reply, copyCode, onOpenFile)
+            Column {
+                // A table longer than one chunk is drawn whole by its first chunk; its later chunks draw nothing.
+                if (reply != null && row is BlockRow && row.key in tables) {
+                    val whole = tables[row.key]
+                    if (whole != null)
+                        ChatRow(row.copy(text = whole, continues = false), words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession, reply, copyCode, onOpenFile, display)
+                } else {
+                    ChatRow(row, words, listWords, reveal, motion, onOpenMenu, facts, folds, onOpenSession, reply, copyCode, onOpenFile, display)
+                }
+                if (display.timestampsVisible) {
+                    val created = when (row) {
+                        is PromptRow -> row.createdMs
+                        is FooterRow -> row.createdMs
+                        else -> null
+                    }
+                    if (created != null) KitMessageTimestamp(created, facts.nowMs)
+                }
             }
         }
     }
@@ -334,6 +348,7 @@ private fun ChatRow(
     reply: ReplyActions? = null,
     copyCode: (String, (String) -> String) -> Unit = { _, _ -> },
     onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -> Unit)? = null,
+    display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
 ) {
     when (row) {
         is BlockRow ->
@@ -367,7 +382,27 @@ private fun ChatRow(
             } else {
                 KitPromptBubble(CardAnswerDisplay.text(row.text))
             }
-        is ThoughtRow -> KitQuietLine(words.thought(row.firstLine))
+        is ThoughtRow -> {
+            val key = "reasoning:${row.key}"
+            val expanded = if (folds != null && folds.open["$key@default"] == display.reasoningExpanded)
+                folds.open[key] ?: display.reasoningExpanded else display.reasoningExpanded
+            val preview = row.firstLine.replace(Regex("[*_`#]+"), "").trim().let {
+                if (it.length <= 80) it else it.take(80).trimEnd() + "…"
+            }
+            KitThoughtBlock(
+                key = row.key,
+                title = words.thought(if (row.live) "" else preview),
+                text = row.text,
+                live = row.live,
+                expanded = expanded,
+                onExpandedChange = { open ->
+                    folds?.open?.set(key, open)
+                    folds?.open?.set("$key@default", display.reasoningExpanded)
+                },
+                actions = reply?.markdown ?: KitMarkdownActions(onLink = {}),
+                modifier = Modifier.testTag("chat-reasoning"),
+            )
+        }
         is WorkLineRow ->
             // P12-CHAT-CARDS: a turn's agent cards stand right under its work line, in the reply (never folded in).
             Column {

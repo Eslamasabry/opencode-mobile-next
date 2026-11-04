@@ -11,4 +11,11 @@ public data class ServerSettingsRoute(
 ) : AppRoute
 
 @Serializable
-public enum class ServerSettingsPage { Home, Check, Shell, Capabilities, Reach }
+public enum class ServerSettingsPage {
+    Home,
+    Check,
+    Shell,
+    Capabilities,
+    Reach,
+    Model,
+}

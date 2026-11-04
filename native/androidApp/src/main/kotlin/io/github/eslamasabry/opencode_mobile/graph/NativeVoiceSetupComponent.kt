@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.engine.voice.models.AutomaticPack
 import io.github.eslamasabry.oc.engine.voice.models.ModelPackSpec
 import io.github.eslamasabry.oc.engine.voice.state.PackJobPhase
 import io.github.eslamasabry.oc.engine.voice.state.PackStatus
+import io.github.eslamasabry.oc.engine.voice.state.VoiceState
 import io.github.eslamasabry.oc.feature.voice.presentation.SpeechEngineKind
 import io.github.eslamasabry.oc.feature.voice.presentation.VoiceHub
 import io.github.eslamasabry.oc.feature.voice.presentation.VoiceModels
@@ -29,6 +30,8 @@ import io.github.eslamasabry.oc.ui.words.res.r40SetupVoiceVerifying
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
@@ -164,7 +167,10 @@ class NativeVoiceSetupComponent(private val hub: VoiceHub, private val scope: Ap
         } catch (cancelled: CancellationException) {
             if (operation.cancelled || epoch != cancellationEpoch.get())
                 Failure.Refused(RefusalReason.StaleScope).failed()
-            else throw cancelled
+            else {
+                currentCoroutineContext().ensureActive()
+                Failure.Media(MediaProblem.DownloadClosed).failed()
+            }
         } finally {
             reporter.cancel()
             if (owned === operation) owned = null
@@ -185,6 +191,14 @@ class NativeVoiceSetupComponent(private val hub: VoiceHub, private val scope: Ap
         val voice = (parts as Outcome.Ok).value
         if (voice.models.state.value.job != null || owned != null)
             return Failure.Media(MediaProblem.DownloadBusy).failed()
+        when (voice.dictation.state.value) {
+            VoiceState.Starting,
+            is VoiceState.PreparingModel,
+            is VoiceState.Listening,
+            is VoiceState.Writing,
+            VoiceState.Cancelling -> return Failure.Media(MediaProblem.DownloadBusy).failed()
+            else -> Unit
+        }
         for (pack in voice.models.speechPacks) when (val result = voice.models.remove(pack.id)) {
             is Outcome.Failed -> return result
             is Outcome.Ok -> Unit

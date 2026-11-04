@@ -247,7 +247,7 @@ class AndroidSettingsHost(
                     opens = OPENS,
                     surfaceStyles = true,
                     phraseSuggestions = phraseFacts?.available == true,
-                    transcriptDisplay = false,
+                    transcriptDisplay = true,
                 )
             }
             .stateIn(
@@ -260,7 +260,7 @@ class AndroidSettingsHost(
                     opens = OPENS,
                     surfaceStyles = true,
                     phraseSuggestions = false,
-                    transcriptDisplay = false,
+                    transcriptDisplay = true,
                 ),
             )
 
@@ -329,6 +329,9 @@ class AndroidSettingsHost(
                 nav.open(BackgroundRoute.Home) // BUILD-ANDROID-BG-PLATFORM
             SettingsOutside.VoiceNotices ->
                 application.view("$REPO/blob/master/THIRD_PARTY_NOTICES.md")
+            SettingsOutside.ReadState -> nav.open(ServersRoute.Home)
+            SettingsOutside.KeptPrompts ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.KeptPromptsRoute)
             SettingsOutside.KeptDiagnostics -> nav.open(DiagnosticsRoute.Kept)
             SettingsOutside.ReportOnGitHub ->
                 gitHubReports.send(
@@ -436,6 +439,7 @@ class AndroidSettingsHost(
                 SettingsOutside.VoiceNotices,
                 SettingsOutside.ReportOnGitHub,
                 SettingsOutside.KeptDiagnostics,
+                SettingsOutside.KeptPrompts,
                 SettingsOutside.KeepRunning,
                 SettingsOutside.ThisPhone,
                 SettingsOutside.Agents,

@@ -178,7 +178,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 actions.keepDraft(input())
                 actions.changed()
                 if (
-                    state.record != null ||
+                    !state.newServer ||
                         state.step != ServerEditorStep.Connect ||
                         address.text.isBlank()
                 )
@@ -191,8 +191,10 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
             }
     }
     fun leave() {
-        if (state.step == ServerEditorStep.Connect && tailscale && state.record == null)
+        if (state.step == ServerEditorStep.Connect && tailscale && state.newServer)
             actions.step(ServerEditorStep.Tailscale)
+        else if (state.step == ServerEditorStep.Tailscale && !state.newServer)
+            actions.step(ServerEditorStep.Connect)
         else actions.back(dirty)
     }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
@@ -266,7 +268,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
             KitTopBar(
                 title =
                     stringResource(
-                        if (state.record == null) Res.string.serversAdd else Res.string.editor40Edit
+                        if (state.newServer) Res.string.serversAdd else Res.string.editor40Edit
                     ),
                 exit = KitTopBarExit.Close,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
@@ -357,11 +359,17 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 }
                 ServerEditorStep.Ready -> {
                     KitNotice(stringResource(Res.string.editor40Ready))
-                    KitButton(stringResource(Res.string.editor40Open), actions::openReady)
+                    state.failure?.let { KitErrorNotice(editorFailureWords(it), failure = it) }
+                    KitButton(
+                        stringResource(Res.string.editor40Open),
+                        actions::openReady,
+                        enabled = enabled,
+                        working = state.saving,
+                    )
                 }
                 ServerEditorStep.Connect -> {
                     KitText(backendName(backend))
-                    if (state.record == null) {
+                    if (state.newServer) {
                         KitCodeBlock(SetupCommands.startFor(backend), KitCodeKind.Command)
                         KitExpandRow(
                             stringResource(Res.string.editor40OtherCommands),
@@ -412,7 +420,21 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                             kind = KitFieldKind.Path,
                             enabled = enabled,
                         )
-                    if (tailscale) KitText(stringResource(Res.string.editor40TailscaleBody))
+                    if (tailscale) {
+                        KitText(stringResource(Res.string.editor40TailscaleBody))
+                        if (state.canTailscale)
+                            KitButton(
+                                stringResource(Res.string.tailscaleTitle),
+                                {
+                                    actions.keepDraft(input())
+                                    actions.step(ServerEditorStep.Tailscale)
+                                },
+                                role = KitButtonRole.Tertiary,
+                                enabled = enabled,
+                            )
+                    }
+                    if (state.record?.needsSecret == true)
+                        KitNotice(stringResource(Res.string.rows40Secret))
                     if (backend == BackendKind.OpenCode2) {
                         KitSwitchRow(
                             stringResource(Res.string.serversCleartext),
@@ -516,7 +538,10 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                             enabled = enabled,
                         )
                     KitButton(
-                        stringResource(Res.string.editor40SaveConnect),
+                        stringResource(
+                            if (state.connectOnSave) Res.string.editor40SaveConnect
+                            else Res.string.editor40SaveChanges
+                        ),
                         { actions.save(input()) },
                         enabled = enabled,
                         working = state.saving,
@@ -546,9 +571,12 @@ private fun editorFailureWords(failure: Failure): String =
             is Failure.TimedOut -> Res.string.serverFailureTimeout
             is Failure.Network -> Res.string.serverFailureNetwork
             is Failure.Refused ->
-                if (failure.reason == RefusalReason.CleartextNotConfirmed)
-                    Res.string.serversCleartextRequired
-                else Res.string.serversInvalidAddress
+                when (failure.reason) {
+                    RefusalReason.CleartextNotConfirmed -> Res.string.serversCleartextRequired
+                    RefusalReason.StaleScope -> Res.string.editor40Stale
+                    RefusalReason.ProfileDeleted -> Res.string.editor40Deleted
+                    else -> Res.string.serversInvalidAddress
+                }
             is Failure.Incompatible -> Res.string.serverFailureIncompatible
             is Failure.SecretUnavailable -> Res.string.serverFailureSecret
             else -> Res.string.serverFailureOther

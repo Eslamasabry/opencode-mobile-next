@@ -45,6 +45,12 @@ public object EditorRules {
     ): Pair<Recurrence?, EditIssue?> {
         if (fields.prompt.isBlank()) return null to EditIssue.PromptRequired
         if (fields.project.isBlank()) return null to EditIssue.ProjectRequired
+        if (fields.kind == RecurrenceKind.Interval) {
+            val hours =
+                fields.hours.trim().toIntOrNull()?.takeIf { it in 1..168 }
+                    ?: return null to EditIssue.HoursInvalid
+            return Recurrence.interval(hours, nowMs + hours * 3_600_000L) to null
+        }
         val (hour, minute) = time(fields.time) ?: return null to EditIssue.TimeInvalid
         return when (fields.kind) {
             RecurrenceKind.Daily -> Recurrence.daily(hour, minute) to null
@@ -56,12 +62,7 @@ public object EditorRules {
                 if (at <= nowMs) return null to EditIssue.FutureRequired
                 Recurrence.once(at) to null
             }
-            RecurrenceKind.Interval -> {
-                val hours =
-                    fields.hours.trim().toIntOrNull()?.takeIf { it in 1..168 }
-                        ?: return null to EditIssue.HoursInvalid
-                Recurrence.interval(hours, nowMs + hours * 3_600_000L) to null
-            }
+            RecurrenceKind.Interval -> error("Interval handled above")
         }
     }
 

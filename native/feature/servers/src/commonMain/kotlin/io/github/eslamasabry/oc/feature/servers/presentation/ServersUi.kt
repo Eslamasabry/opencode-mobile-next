@@ -36,11 +36,13 @@ public enum class ServerIssue {
 }
 
 public interface ServersActions {
-    public fun moveQueued(id: ProfileId) {}
+    public fun openAccount(id: ProfileId)
 
-    public fun edit(id: ProfileId?) {}
+    public fun moveQueued(id: ProfileId)
 
-    public fun settings(id: ProfileId) {}
+    public fun edit(id: ProfileId?)
+
+    public fun settings(id: ProfileId)
 
     public fun back()
 

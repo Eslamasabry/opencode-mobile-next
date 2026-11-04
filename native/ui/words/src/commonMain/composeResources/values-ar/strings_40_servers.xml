@@ -89,4 +89,7 @@
     <string name="remove40DeleteQueueHelp">اترك هذا الخيار مغلقًا للاحتفاظ بالنصوص والمرفقات في الطلبات المحفوظة.</string>
     <string name="remove40Refresh">مراجعة البيانات المحفوظة مجددًا</string>
     <string name="queue40UndoFailed">تعذّر التراجع عن النقل. راجع المحادثة الوجهة قبل إعادة المحاولة؛ تبقى فيها الطلبات التي بدأ إرسالها بالفعل.</string>
+    <string name="editor40SaveChanges">حفظ التغييرات</string>
+    <string name="editor40Stale">تغيّر هذا الخادم المحفوظ أو بيانات دخوله. أغلق هذه الصفحة وافتح الخادم مجددًا قبل المحاولة.</string>
+    <string name="editor40Deleted">أُزيل هذا الخادم. أغلق هذه الصفحة للعودة إلى الخوادم المحفوظة.</string>
 </resources>

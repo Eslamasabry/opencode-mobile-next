@@ -44,3 +44,10 @@ public interface PhoneWelcomeSource {
 
     public suspend fun start(): Outcome<WelcomeSetupLaunch>
 }
+
+/** Platforms contribute a real local runtime when one exists; desktop keeps an empty set. */
+@dev.zacsweers.metro.ContributesTo(dev.zacsweers.metro.AppScope::class)
+public interface PhoneWelcomeBindings {
+    @dev.zacsweers.metro.Multibinds(allowEmpty = true)
+    public val phoneWelcomeSources: Set<PhoneWelcomeSource>
+}

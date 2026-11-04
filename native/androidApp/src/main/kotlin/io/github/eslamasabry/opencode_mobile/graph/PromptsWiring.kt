@@ -12,8 +12,8 @@ import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.failed
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.composer.stash.PromptShelf
@@ -24,6 +24,8 @@ import io.github.eslamasabry.oc.engine.composer.vault.PayloadStore
 import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
 import io.github.eslamasabry.oc.engine.profiles.DeletionStep
 import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
+import io.github.eslamasabry.oc.feature.prompts.presentation.KeptAwareSavedPrompts
+import io.github.eslamasabry.oc.feature.prompts.presentation.KeptQueuedPrompts
 import io.github.eslamasabry.oc.feature.prompts.presentation.SavedPromptsStore
 import io.github.eslamasabry.oc.feature.prompts.presentation.ShelfReady
 import io.github.eslamasabry.oc.feature.prompts.presentation.ShelfSavedPrompts
@@ -32,14 +34,15 @@ import kotlin.time.Clock
 import kotlinx.io.files.Path
 
 /**
- * P12-PROMPTS Android bindings: the composer engine's PromptShelf over the app's preference store and the
- * `prompt-stash-attachments-v1` vault under files/, the same keys and folder the Flutter app uses, so a migrated
- * shelf reads unchanged.
+ * P12-PROMPTS Android bindings: the composer engine's PromptShelf over the app's preference store
+ * and the `prompt-stash-attachments-v1` vault under files/, the same keys and folder the Flutter
+ * app uses, so a migrated shelf reads unchanged.
  *
- * Profile deletion: the preview's deletion command (PreviewRuntime) does not call the shelf yet, so every shelf use
- * first retires what a removed server left behind: its remaining shelf keys (PromptShelf.clearForProfile, which also
- * closes admission for that id) and stash files whose owner is no live server. Integrator: call
- * `PromptShelf.clearForProfile` inside the deletion command, before the secret goes (B-SEC-172).
+ * Profile deletion: the preview's deletion command (PreviewRuntime) does not call the shelf yet, so
+ * every shelf use first retires what a removed server left behind: its remaining shelf keys
+ * (PromptShelf.clearForProfile, which also closes admission for that id) and stash files whose
+ * owner is no live server. Integrator: call `PromptShelf.clearForProfile` inside the deletion
+ * command, before the secret goes (B-SEC-172).
  */
 @BindingContainer
 @ContributesTo(AppScope::class)
@@ -48,24 +51,42 @@ object PromptsBindings {
     @SingleIn(AppScope::class)
     fun stashFiles(application: Application, dispatchers: AppDispatchers): StashPayloads =
         StashPayloads(
-            FilePayloadStore(Path(application.filesDir.absolutePath, AttachmentVault.STASH_ROOT), dispatchers.io)
+            FilePayloadStore(
+                Path(application.filesDir.absolutePath, AttachmentVault.STASH_ROOT),
+                dispatchers.io,
+            )
         )
 
     @Provides
     @SingleIn(AppScope::class)
     fun promptShelf(stores: PreviewStores, files: StashPayloads, redactor: Redactor): PromptShelf =
-        PromptShelf(ShelfPrefs(PreviewComposerPrefs(stores)), AttachmentVault(files.store), PreviewComposerProfiles(stores), redactor)
+        PromptShelf(
+            ShelfPrefs(PreviewComposerPrefs(stores)),
+            AttachmentVault(files.store),
+            PreviewComposerProfiles(stores),
+            redactor,
+        )
 
     @Provides
     @SingleIn(AppScope::class)
-    fun savedPrompts(stores: PreviewStores, shelf: PromptShelf, files: StashPayloads, clock: Clock): SavedPromptsStore =
-        ShelfSavedPrompts(shelf, PreviewShelfReady(stores, shelf, files.store), clock)
+    fun savedPrompts(
+        stores: PreviewStores,
+        shelf: PromptShelf,
+        files: StashPayloads,
+        clock: Clock,
+        kept: KeptQueuedPrompts,
+    ): SavedPromptsStore =
+        KeptAwareSavedPrompts(
+            ShelfSavedPrompts(shelf, PreviewShelfReady(stores, shelf, files.store), clock),
+            kept,
+        )
 }
 
 /**
- * Profile deletion, step 6 (plan 05 §3.5; B-SEC-172, B-STATE-140): the removed server's saved prompts, their attachment
- * files and the owner marker go before the generic sweep. If anything cannot be deleted the server is kept (the sweep
- * is guarded, so the marker that finds orphan files stays) and its shelf opens again.
+ * Profile deletion, step 6 (plan 05 §3.5; B-SEC-172, B-STATE-140): the removed server's saved
+ * prompts, their attachment files and the owner marker go before the generic sweep. If anything
+ * cannot be deleted the server is kept (the sweep is guarded, so the marker that finds orphan files
+ * stays) and its shelf opens again.
  */
 @ContributesIntoSet(AppScope::class, binding = binding<ProfileResourceCleaner>())
 @Inject
@@ -82,9 +103,10 @@ class StashDeletionCleaner(private val shelf: PromptShelf) : ProfileResourceClea
 }
 
 /**
- * The shelf's view of the preference file: an adopted shelf record of the wrong type (a Boolean where Flutter wrote
- * JSON text) reads as an unreadable shelf, named on the page with Retry, instead of throwing out of the page's load
- * (Codex prompts #7; Flutter catches the read failure). Other keys behave exactly as [inner].
+ * The shelf's view of the preference file: an adopted shelf record of the wrong type (a Boolean
+ * where Flutter wrote JSON text) reads as an unreadable shelf, named on the page with Retry,
+ * instead of throwing out of the page's load (Codex prompts #7; Flutter catches the read failure).
+ * Other keys behave exactly as [inner].
  */
 internal class ShelfPrefs(private val inner: ComposerPrefs) : ComposerPrefs by inner {
     override fun string(key: String): String? =
@@ -111,7 +133,8 @@ internal class ShelfPrefs(private val inner: ComposerPrefs) : ComposerPrefs by i
 /** The stash vault's file store, typed so it is never confused with the draft vault's. */
 class StashPayloads(val store: PayloadStore)
 
-private val SHELF_PREFIXES = listOf("oc.promptStash.", "oc.promptHistory.", "oc.stashAttachmentVault.")
+private val SHELF_PREFIXES =
+    listOf("oc.promptStash.", "oc.promptHistory.", "oc.stashAttachmentVault.")
 
 /** Warms the stores, then retires shelf data of servers that are gone. */
 internal class PreviewShelfReady(
@@ -140,7 +163,8 @@ internal class PreviewShelfReady(
         for (id in left) {
             // A dotted live id ("a.b") also starts with "a."; never touch a live server's records.
             val removed =
-                stores.profiles.profile(ProfileId(id)) == null && liveIds.none { it == id || it.startsWith("$id.") }
+                stores.profiles.profile(ProfileId(id)) == null &&
+                    liveIds.none { it == id || it.startsWith("$id.") }
             if (removed) shelf.clearForProfile(id)
         }
         val live = liveIds.map { AttachmentVault.ownerKey(it) }.toSet()

@@ -29,16 +29,19 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
+import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
+import io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsPage
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
@@ -50,11 +53,27 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
         when (state.page) {
             ServerSettingsPage.Home ->
                 state.facts?.name ?: stringResource(Res.string.serverSettingsTitle)
+            ServerSettingsPage.Model -> stringResource(Res.string.settingsV3ModelNew)
             ServerSettingsPage.Check -> stringResource(Res.string.connCheckTitle)
             ServerSettingsPage.Shell -> stringResource(Res.string.serverSettingsShell)
             ServerSettingsPage.Capabilities -> stringResource(Res.string.settingsV3Supports)
             ServerSettingsPage.Reach -> stringResource(Res.string.reachTitle)
         }
+    KitConfirm(
+        if (state.disconnectConfirm)
+            KitConfirmSpec(
+                title =
+                    stringResource(
+                        Res.string.server40DisconnectConfirm,
+                        state.facts?.name.orEmpty(),
+                    ),
+                confirmLabel = stringResource(Res.string.server40Disconnect),
+                body = stringResource(Res.string.server40DisconnectBody),
+            )
+        else null,
+        actions::disconnect,
+        actions::cancelDisconnect,
+    )
     LifecycleResumeEffect(actions) {
         if (state.page == ServerSettingsPage.Shell) actions.refresh()
         onPauseOrDispose {}
@@ -69,7 +88,12 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
             )
         },
         width = KitScreenWidth.Reading,
-        loading = state.loading || state.checkingHealth || state.checking || state.working,
+        loading =
+            state.loading ||
+                state.checkingHealth ||
+                state.checking ||
+                state.working ||
+                state.modelWorking,
     ) {
         Column(
             Modifier.verticalScroll(rememberScrollState())
@@ -91,6 +115,7 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
                 state.facts == null -> KitNotice(stringResource(Res.string.settingsV3ServerGone))
                 else ->
                     when (state.page) {
+                        ServerSettingsPage.Model -> ServerModelBody(state, actions)
                         ServerSettingsPage.Home -> ServerHome(state, actions)
                         ServerSettingsPage.Check -> ConnectionCheckBody(state, actions)
                         ServerSettingsPage.Shell -> ShellBody(state, actions)
@@ -156,9 +181,44 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
                 trailing = KitRowTrailing.Chevron,
             )
     }
+    ServerLocalBody(state, actions)
     if (facts.connected) {
+        if (facts.capabilities?.hostAgentProviders == true) {
+            KitRow(
+                title = stringResource(Res.string.serverSettingsRecheckAgents),
+                supporting =
+                    state.agents?.let {
+                        if (it.isEmpty()) stringResource(Res.string.server40AgentsNone)
+                        else it.joinToString(", ")
+                    } ?: stringResource(Res.string.serverSettingsRecheckAgentsDetail),
+                onClick = actions::recheckAgents,
+                enabled = !state.working,
+                disabledReason = stringResource(Res.string.serverSettingsSaving),
+            )
+        }
         KitNotice(stringResource(Res.string.serverSettingsOnServer, facts.name))
         KitRowGroup {
+            val flags = facts.capabilities
+            if (flags?.serverCatalog == true || flags?.agentAccount == true)
+                IntegrationDoor(
+                    Res.string.settingsV3Providers,
+                    ServerIntegrationPage.Providers,
+                    actions,
+                )
+            IntegrationDoor(Res.string.settingsHubToolsRow, ServerIntegrationPage.Tools, actions)
+            IntegrationDoor(
+                Res.string.settingsV3Permissions,
+                ServerIntegrationPage.Permissions,
+                actions,
+            )
+            if (flags?.setupConfigRead == true)
+                IntegrationDoor(Res.string.aiSetupTitle, ServerIntegrationPage.Setup, actions)
+            if (flags?.pluginInventory == true)
+                IntegrationDoor(Res.string.server40Plugins, ServerIntegrationPage.Plugins, actions)
+            if (flags?.serverCatalog == true && flags.hostAgentProviders != true)
+                IntegrationDoor(Res.string.e7SettingsUi65, ServerIntegrationPage.Host, actions)
+            if (flags?.remoteUpgrade != true && flags?.hostAgentProviders != true)
+                KitNotice(stringResource(Res.string.e7SettingsUi68))
             if (facts.capabilities?.shellSettings == true)
                 KitRow(
                     title = stringResource(Res.string.serverSettingsShell),
@@ -193,6 +253,27 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
         title = stringResource(Res.string.serverSettingsAddressLabel),
         supporting = facts.address,
     )
+    if (facts.connected) {
+        KitButton(
+            stringResource(Res.string.server40Reconnect),
+            actions::connect,
+            role = KitButtonRole.Tertiary,
+            enabled =
+                if (state.working)
+                    KitEnabled.Disabled(stringResource(Res.string.serverSettingsSaving))
+                else KitEnabled.Enabled,
+        )
+        KitButton(
+            stringResource(Res.string.server40Disconnect),
+            actions::askDisconnect,
+            role = KitButtonRole.Tertiary,
+            destructive = true,
+            enabled =
+                if (state.working)
+                    KitEnabled.Disabled(stringResource(Res.string.serverSettingsSaving))
+                else KitEnabled.Enabled,
+        )
+    }
     KitButton(
         label = stringResource(Res.string.serverSettingsRemoveTitle, facts.name),
         destructive = true,
@@ -201,6 +282,123 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
         enabled =
             if (state.working) KitEnabled.Disabled(stringResource(Res.string.serverSettingsSaving))
             else KitEnabled.Enabled,
+    )
+}
+
+@Composable
+private fun IntegrationDoor(
+    title: org.jetbrains.compose.resources.StringResource,
+    page: ServerIntegrationPage,
+    actions: ServerSettingsActions,
+) {
+    KitRow(
+        title = stringResource(title),
+        onClick = { actions.integration(page) },
+        trailing = KitRowTrailing.Chevron,
+    )
+}
+
+@Composable
+private fun ServerLocalBody(state: ServerSettingsUi, actions: ServerSettingsActions) {
+    val local = state.local ?: return
+    val enabled =
+        if (state.working) KitEnabled.Disabled(stringResource(Res.string.serverSettingsSaving))
+        else KitEnabled.Enabled
+    KitSectionLabel(stringResource(Res.string.settingsV3SectionInApp))
+    KitRowGroup {
+        KitRow(
+            title = stringResource(Res.string.settingsV3ModelNew),
+            supporting =
+                local.model?.let { it.providerId + " / " + it.modelId }
+                    ?: stringResource(Res.string.settingsV3ServerPick),
+            onClick = if (state.facts?.connected == true) actions::showModels else null,
+            trailing =
+                if (state.facts?.connected == true) KitRowTrailing.Chevron else KitRowTrailing.None,
+        )
+        KitSwitchRow(
+            stringResource(Res.string.settingsV3Watch),
+            checked = local.watching,
+            onCheckedChange = actions::watching,
+            enabled =
+                if (!local.monitorSupported)
+                    KitEnabled.Disabled(stringResource(Res.string.e7ProjectMonitorUnsupported))
+                else enabled,
+        )
+        KitSwitchRow(
+            stringResource(Res.string.settingsV3Notifications),
+            checked = local.notifications,
+            onCheckedChange = actions::notifications,
+            enabled =
+                if (!local.monitorSupported)
+                    KitEnabled.Disabled(stringResource(Res.string.e7ProjectMonitorUnsupported))
+                else enabled,
+        )
+        KitSwitchRow(
+            stringResource(Res.string.settingsV3ShareRead),
+            checked = local.sharingRead,
+            onCheckedChange = actions::shareRead,
+            enabled =
+                if (local.sharingSaving)
+                    KitEnabled.Disabled(stringResource(Res.string.privacySaving))
+                else enabled,
+        )
+    }
+    if (state.resetDone) KitNotice(stringResource(Res.string.server40ResetDone))
+    if (local.hasOverrides)
+        KitRow(
+            title = stringResource(Res.string.settingsV3UseMyDefault),
+            supporting =
+                stringResource(
+                    Res.string.settingsV3UseMyDefaultDetail,
+                    state.facts?.name.orEmpty(),
+                ),
+            onClick = actions::resetDefaults,
+            enabled = !state.working,
+            disabledReason = stringResource(Res.string.serverSettingsSaving),
+        )
+}
+
+@Composable
+private fun ServerModelBody(state: ServerSettingsUi, actions: ServerSettingsActions) {
+    KitNotice(stringResource(Res.string.server40ModelHelp))
+    val enabled =
+        if (state.working || state.modelWorking)
+            KitEnabled.Disabled(stringResource(Res.string.serverSettingsSaving))
+        else KitEnabled.Enabled
+    val rows =
+        buildList<KitChoice<Pair<io.github.eslamasabry.oc.core.model.ModelRef?, String>>> {
+            add(
+                KitChoice(
+                    null to "",
+                    stringResource(Res.string.settingsV3ServerPick),
+                    enabled = enabled,
+                )
+            )
+            for (choice in state.modelChoices) {
+                add(
+                    KitChoice(
+                        choice.model to "",
+                        choice.name,
+                        supporting = choice.provider,
+                        enabled = enabled,
+                    )
+                )
+                for (variant in choice.variants) add(
+                    KitChoice(
+                        choice.model to variant,
+                        choice.name + " · " + variant,
+                        supporting = choice.provider,
+                        enabled = enabled,
+                    )
+                )
+            }
+        }
+    val local = state.local
+    KitChoiceList(
+        choices = rows,
+        selected = local?.model to local?.variant.orEmpty(),
+        semanticsLabel = stringResource(Res.string.settingsV3ModelNew),
+        onSelect = { (model, variant) -> actions.selectModel(model, variant) },
     )
 }
 
