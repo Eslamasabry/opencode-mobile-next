@@ -67,10 +67,11 @@ import io.github.eslamasabry.oc.ui.words.res.settingsV3Background
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Settings › Notifications › Background (the background section of Flutter's `NotificationsSettingsScreen` plus the
- * app-wide pause line of `background_pause_notice.dart`): Android's time-limit notice first (it needs the person),
- * then the pause with Resume, the switch with its cost spelled out, the battery row while it is on, the status row
- * where the choice and the service disagree, and Keep running settings.
+ * Settings › Notifications › Background (the background section of Flutter's
+ * `NotificationsSettingsScreen` plus the app-wide pause line of `background_pause_notice.dart`):
+ * Android's time-limit notice first (it needs the person), then the pause with Resume, the switch
+ * with its cost spelled out, the battery row while it is on, the status row where the choice and
+ * the service disagree, and Keep running settings.
  */
 @Composable
 public fun BackgroundScreen(
@@ -89,7 +90,9 @@ public fun BackgroundScreen(
         width = KitScreenWidth.Reading,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = Space.S3.dp),
+            Modifier.fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             if (state.timeoutNotice) {
@@ -107,15 +110,27 @@ public fun BackgroundScreen(
                     checked = state.switchOn,
                     supporting = stringResource(Res.string.e7SettingsUi26),
                     modifier = Modifier.testTag("background-live-switch"),
-                    enabled = if (state.switchEnabled) KitEnabled.Enabled else KitEnabled.Disabled(stringResource(Res.string.commandRunning)),
+                    enabled =
+                        if (state.switchEnabled) KitEnabled.Enabled
+                        else KitEnabled.Disabled(stringResource(Res.string.commandRunning)),
                     onCheckedChange = actions::onSwitch,
                 )
                 if (state.batteryRow) {
                     KitRow(
-                        title = stringResource(if (state.batteryUnrestricted) Res.string.e7SettingsUi27 else Res.string.e7SettingsUi28),
-                        supporting = stringResource(if (state.batteryUnrestricted) Res.string.e7SettingsUi29 else Res.string.e7SettingsUi30),
+                        title =
+                            stringResource(
+                                if (state.batteryUnrestricted) Res.string.e7SettingsUi27
+                                else Res.string.e7SettingsUi28
+                            ),
+                        supporting =
+                            stringResource(
+                                if (state.batteryUnrestricted) Res.string.e7SettingsUi29
+                                else Res.string.e7SettingsUi30
+                            ),
                         supportingMaxLines = 3,
-                        trailing = if (state.batteryUnrestricted) KitRowTrailing.None else KitRowTrailing.Chevron,
+                        trailing =
+                            if (state.batteryUnrestricted) KitRowTrailing.None
+                            else KitRowTrailing.Chevron,
                         onClick = if (state.batteryUnrestricted) null else actions::onAllowBattery,
                     )
                 }
@@ -126,7 +141,9 @@ public fun BackgroundScreen(
                     supportingMaxLines = 2,
                     modifier = Modifier.testTag("background-status-row"),
                     trailing =
-                        if (state.restart) KitRowTrailing.Action(KitLineAction(restart, actions::onRestart)) else KitRowTrailing.None,
+                        if (state.restart)
+                            KitRowTrailing.Action(KitLineAction(restart, actions::onRestart))
+                        else KitRowTrailing.None,
                     onClick = if (state.restart) actions::onRestart else null,
                 )
             }
@@ -170,16 +187,33 @@ private fun PauseNotice(pause: PauseFacts, resuming: Boolean, actions: Backgroun
             PauseReason.AppUpdated -> stringResource(Res.string.backgroundPauseAppUpdated, at)
             PauseReason.Interrupted -> stringResource(Res.string.backgroundPauseInterrupted)
         }
-    val resume = KitLineAction(stringResource(Res.string.backgroundPauseResumeShort), actions::onResume)
+    val resume =
+        KitLineAction(stringResource(Res.string.backgroundPauseResumeShort), actions::onResume)
     KitNotice(
         message = message,
         tone = StatusTone.Attention,
         modifier = Modifier.testTag("background-pause"),
-        // A resume Android did not confirm keeps the pause and points at Keep running (B-ANDR-016, -018).
-        notes = if (pause.resumeFailed) listOf(stringResource(Res.string.backgroundPauseResumeFailed)) else emptyList(),
+        // A resume Android did not confirm keeps the pause and points at Keep running (B-ANDR-016,
+        // -018).
+        notes =
+            if (pause.resumeFailed) listOf(stringResource(Res.string.backgroundPauseResumeFailed))
+            else emptyList(),
         actions =
-            if (pause.resumeFailed) {
-                listOf(KitLineAction(stringResource(Res.string.backgroundPauseOpenKeepRunning), actions::onOpenKeepRunning), resume)
+            if (!pause.canResume) {
+                listOf(
+                    KitLineAction(
+                        stringResource(Res.string.backgroundPauseOpenKeepRunning),
+                        actions::onOpenKeepRunning,
+                    )
+                )
+            } else if (pause.resumeFailed) {
+                listOf(
+                    KitLineAction(
+                        stringResource(Res.string.backgroundPauseOpenKeepRunning),
+                        actions::onOpenKeepRunning,
+                    ),
+                    resume,
+                )
             } else {
                 listOf(resume)
             },
@@ -203,7 +237,8 @@ private fun statusTitle(status: LiveStatusLine) =
 
 private fun failureWords(failure: SwitchFailure) =
     when (failure) {
-        SwitchFailure.NotEnabled, SwitchFailure.Unavailable -> Res.string.e7SettingsUi22
+        SwitchFailure.NotEnabled,
+        SwitchFailure.Unavailable -> Res.string.e7SettingsUi22
         SwitchFailure.NotDisabled -> Res.string.settingsBackgroundOffFailed
         SwitchFailure.NotificationsDenied -> Res.string.notifyBlockedMessage
     }

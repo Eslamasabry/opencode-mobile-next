@@ -19,14 +19,17 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * The process-wide facts the live service shell publishes and the port reads (the Flutter
- * `BackgroundConnectionService.active` / `lastStartFailure` companions). One instance per process, held in the app
- * graph and handed to both [LiveServiceBody] and [AndroidLiveServicePort].
+ * `BackgroundConnectionService.active` / `lastStartFailure` companions). One instance per process,
+ * held in the app graph and handed to both [LiveServiceBody] and [AndroidLiveServicePort].
  */
 public class LiveServiceSignals {
     /** The service ran `startForeground` and saved a running receipt. */
     @Volatile public var active: Boolean = false
 
-    /** Why the last start did not run, in fixed words ([START_REFUSED], [START_RECEIPT_UNSAVED]); null = none. */
+    /**
+     * Why the last start did not run, in fixed words ([START_REFUSED], [START_RECEIPT_UNSAVED]);
+     * null = none.
+     */
     @Volatile public var lastStartFailure: String? = null
 
     public companion object {
@@ -38,7 +41,10 @@ public class LiveServiceSignals {
     }
 }
 
-/** Starts and stops the one live service. The Android binding addresses the frozen shell by its FQCN. */
+/**
+ * Starts and stops the one live service. The Android binding addresses the frozen shell by its
+ * FQCN.
+ */
 public interface LiveServiceStarter {
     public fun start()
 
@@ -46,9 +52,10 @@ public interface LiveServiceStarter {
 }
 
 /**
- * `BackgroundConnectionService` in `:androidApp` at its frozen FQCN (the same service reply watch and sign-in share,
- * plan 11 §2.2); this module never declares a second service. A start may throw on Android 12+ when the app is not
- * allowed to start a foreground service (the port reports `foreground_service_failed`).
+ * `BackgroundConnectionService` in `:androidApp` at its frozen FQCN (the same service reply watch
+ * and sign-in share, plan 11 §2.2); this module never declares a second service. A start may throw
+ * on Android 12+ when the app is not allowed to start a foreground service (the port reports
+ * `foreground_service_failed`).
  */
 public class ComponentLiveServiceStarter(private val context: Context) : LiveServiceStarter {
     override fun start() {
@@ -62,14 +69,16 @@ public class ComponentLiveServiceStarter(private val context: Context) : LiveSer
     private fun intent(): Intent = Intent().setClassName(context.packageName, SERVICE_FQCN)
 
     public companion object {
-        public const val SERVICE_FQCN: String = "io.github.eslamasabry.opencode_mobile.BackgroundConnectionService"
+        public const val SERVICE_FQCN: String =
+            "io.github.eslamasabry.opencode_mobile.BackgroundConnectionService"
     }
 }
 
 /**
- * The Android [LiveServicePort] (port of `MainActivityBackground` + the `oc/background` channel handler): the
- * notification permission first (API 33+), then a service start whose foreground activation is awaited for at most
- * [ackWait] and never retried. One start at a time: a second while one is pending is `permission_in_progress`.
+ * The Android [LiveServicePort] (port of `MainActivityBackground` + the `oc/background` channel
+ * handler): the notification permission first (API 33+), then a service start whose foreground
+ * activation is awaited for at most [ackWait] and never retried. One start at a time: a second
+ * while one is pending is `permission_in_progress`.
  */
 public class AndroidLiveServicePort(
     private val context: Context,
@@ -82,15 +91,17 @@ public class AndroidLiveServicePort(
 ) : LiveServicePort {
     @Volatile private var starting = false
 
-    override suspend fun pause(): ServiceReply<PauseState> = ServiceReply.Ok(receipts.status(signals.active))
+    override suspend fun pause(): ServiceReply<PauseState> =
+        ServiceReply.Ok(receipts.status(signals.active))
 
     override suspend fun enable(): ServiceReply<ServiceStatus> {
         if (starting) return refused(ServiceRefusal.PERMISSION_IN_PROGRESS)
         starting = true
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                permissions.status(AppPermission.Notifications) != PermissionStatus.Granted &&
-                permissions.request(AppPermission.Notifications) != PermissionStatus.Granted
+            if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    permissions.status(AppPermission.Notifications) != PermissionStatus.Granted &&
+                    permissions.request(AppPermission.Notifications) != PermissionStatus.Granted
             ) {
                 return refused(ServiceRefusal.NOTIFICATION_DENIED)
             }
@@ -109,7 +120,11 @@ public class AndroidLiveServicePort(
             val status = statusOf(signals.active)
             return ServiceReply.Ok(
                 if (signals.active) status
-                else status.copy(startFailure = signals.lastStartFailure ?: LiveServiceSignals.START_ACK_TIMEOUT),
+                else
+                    status.copy(
+                        startFailure =
+                            signals.lastStartFailure ?: LiveServiceSignals.START_ACK_TIMEOUT
+                    )
             )
         } finally {
             starting = false
@@ -123,15 +138,19 @@ public class AndroidLiveServicePort(
         return ServiceReply.Ok(statusOf(enabled = false))
     }
 
-    override suspend fun status(): ServiceReply<ServiceStatus> = ServiceReply.Ok(statusOf(signals.active))
+    override suspend fun status(): ServiceReply<ServiceStatus> =
+        ServiceReply.Ok(statusOf(signals.active))
 
     override suspend fun requestBatteryOptimizationExemption(): ServiceReply<ServiceStatus> {
         val power = context.getSystemService(PowerManager::class.java)
         if (power != null && !power.isIgnoringBatteryOptimizations(context.packageName)) {
             try {
                 context.startActivity(
-                    Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${context.packageName}"))
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    Intent(
+                            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                            Uri.parse("package:${context.packageName}"),
+                        )
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             } catch (_: RuntimeException) {
                 return refused(ServiceRefusal.UNKNOWN)
@@ -146,19 +165,22 @@ public class AndroidLiveServicePort(
             enabled = enabled,
             active = signals.active,
             notificationGranted = NotificationManagerCompat.from(context).areNotificationsEnabled(),
-            batteryOptimizationIgnored = power?.isIgnoringBatteryOptimizations(context.packageName) == true,
+            batteryOptimizationIgnored =
+                power?.isIgnoringBatteryOptimizations(context.packageName) == true,
             pause = receipts.status(signals.active),
         )
     }
 
-    private fun refused(code: String): ServiceReply<Nothing> = ServiceReply.Refused(ServiceRefusal(code))
+    private fun refused(code: String): ServiceReply<Nothing> =
+        ServiceReply.Refused(ServiceRefusal(code))
 }
 
 /**
- * The live-mode half of the `BackgroundConnectionService` shell (the Flutter `beginLive`, `onTimeout(startId, type)`,
- * `onTaskRemoved` and `LivePauseReceiver.pause` bodies). The shell keeps the foreground promise itself
- * (`ServiceCompat.startForeground(…, dataSync)` with the `:android:notifications` row, owner `live`) and forwards the
- * outcome here; [onStopped] reaches the [LiveModeController] (`onServiceStopped`) when the app is alive.
+ * The live-mode half of the `BackgroundConnectionService` shell (the Flutter `beginLive`,
+ * `onTimeout(startId, type)`, `onTaskRemoved` and `LivePauseReceiver.pause` bodies). The shell
+ * keeps the foreground promise itself (`ServiceCompat.startForeground(…, dataSync)` with the
+ * `:android:notifications` row, owner `live`) and forwards the outcome here; [onStopped] reaches
+ * the [LiveModeController] (`onServiceStopped`) when the app is alive.
  */
 public class LiveServiceBody(
     private val signals: LiveServiceSignals,
@@ -166,16 +188,17 @@ public class LiveServiceBody(
     private val onStopped: (reason: String, pause: PauseState?) -> Unit,
 ) {
     /**
-     * After the shell's `startForeground`: [promised] false (ForegroundServiceStartNotAllowedException, the API 34+
-     * type checks) is a refused start. Accepted is not enough either: the pause clears only once the running receipt is
-     * saved. False tells the shell to release its row and `stopSelf`.
+     * After the shell's `startForeground`: [promised] false
+     * (ForegroundServiceStartNotAllowedException, the API 34+ type checks) is a refused start.
+     * Accepted is not enough either: the pause clears only once the running receipt is saved. False
+     * tells the shell to release its row and `stopSelf`.
      */
     public suspend fun onForegroundResult(promised: Boolean): Boolean {
         if (!promised) {
             signals.lastStartFailure = LiveServiceSignals.START_REFUSED
             return false
         }
-        if (!receipts.confirmedStarted()) {
+        if (!receipts.confirmedStarted(persistOptIn = false)) {
             signals.lastStartFailure = LiveServiceSignals.START_RECEIPT_UNSAVED
             return false
         }
@@ -185,8 +208,9 @@ public class LiveServiceBody(
     }
 
     /**
-     * `onTimeout(startId, fgsType)` (API 35+, the 6 h `dataSync` budget): save the pause before stopping (neither the
-     * engine nor onDestroy is guaranteed afterwards), so an old opt-in never restarts it, then tell the app.
+     * `onTimeout(startId, fgsType)` (API 35+, the 6 h `dataSync` budget): save the pause before
+     * stopping (neither the engine nor onDestroy is guaranteed afterwards), so an old opt-in never
+     * restarts it, then tell the app.
      */
     public suspend fun onTimeout() {
         receipts.timeout()
@@ -194,7 +218,10 @@ public class LiveServiceBody(
         onStopped(LiveModeController.REASON_SYSTEM_TIMEOUT, receipts.status(active = false))
     }
 
-    /** The notification's (or the tile's) "Pause background": intentional, so the receipt is cleared, not paused. */
+    /**
+     * The notification's (or the tile's) "Pause background": intentional, so the receipt is
+     * cleared, not paused.
+     */
     public suspend fun onUserPause() {
         receipts.clear()
         signals.active = false
@@ -212,8 +239,8 @@ public class LiveServiceBody(
 }
 
 /**
- * "Open notification settings" (P0.6): only where the platform has them, called once, and a failure is swallowed (the
- * person is already looking at the page around it).
+ * "Open notification settings" (P0.6): only where the platform has them, called once, and a failure
+ * is swallowed (the person is already looking at the page around it).
  */
 public object NotificationSettingsShortcut {
     public fun open(supported: Boolean, open: () -> Unit) {
@@ -232,9 +259,15 @@ public object NotificationSettingsShortcut {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 }
 
-/** QA main-thread work always returns to the instrumentation framework (port of the Flutter `Bb8MainCallback`). */
+/**
+ * QA main-thread work always returns to the instrumentation framework (port of the Flutter
+ * `Bb8MainCallback`).
+ */
 public object MainCallback {
-    /** Runs [action] inside [sync]'s Runnable; a throw is caught there and reported as false, never escaping. */
+    /**
+     * Runs [action] inside [sync]'s Runnable; a throw is caught there and reported as false, never
+     * escaping.
+     */
     public fun run(sync: (Runnable) -> Unit, action: () -> Unit): Boolean {
         var succeeded = true
         sync(
@@ -244,7 +277,7 @@ public object MainCallback {
                 } catch (_: Throwable) {
                     succeeded = false
                 }
-            },
+            }
         )
         return succeeded
     }

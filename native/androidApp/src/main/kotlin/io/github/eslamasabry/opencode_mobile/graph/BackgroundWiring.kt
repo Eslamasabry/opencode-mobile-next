@@ -15,34 +15,48 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.android.background.AndroidLiveServicePort
 import io.github.eslamasabry.oc.android.background.AndroidPauseFacts
+import io.github.eslamasabry.oc.android.background.FirstReplyNotifyOffer
 import io.github.eslamasabry.oc.android.background.KeyValueDismissedPause
 import io.github.eslamasabry.oc.android.background.KeyValueLiveOptIn
+import io.github.eslamasabry.oc.android.background.KeyValueNotifyAsk
 import io.github.eslamasabry.oc.android.background.LiveModeController
 import io.github.eslamasabry.oc.android.background.LiveModeError
 import io.github.eslamasabry.oc.android.background.LiveModeState
 import io.github.eslamasabry.oc.android.background.LiveServiceBody
 import io.github.eslamasabry.oc.android.background.LiveServiceSignals
+import io.github.eslamasabry.oc.android.background.NeedsYouConsent
+import io.github.eslamasabry.oc.android.background.NotifyOfferHost
 import io.github.eslamasabry.oc.android.background.PauseNotice
 import io.github.eslamasabry.oc.android.background.PauseNoticePhase
 import io.github.eslamasabry.oc.android.background.PauseNoticeState
+import io.github.eslamasabry.oc.android.background.PauseReason as NativePauseReason
 import io.github.eslamasabry.oc.android.background.PauseReceiptStore
 import io.github.eslamasabry.oc.android.background.SharedPreferencesReceiptFile
 import io.github.eslamasabry.oc.android.background.pauseGateway
-import io.github.eslamasabry.oc.android.background.PauseReason as NativePauseReason
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.platform.AppPermission
 import io.github.eslamasabry.oc.core.domain.platform.PermissionGate
 import io.github.eslamasabry.oc.core.domain.platform.PermissionStatus
+import io.github.eslamasabry.oc.engine.settings.consent.InFlowConsentKind
+import io.github.eslamasabry.oc.engine.settings.consent.InFlowConsentStore
 import io.github.eslamasabry.oc.feature.background.presentation.BackgroundLive
 import io.github.eslamasabry.oc.feature.background.presentation.BackgroundLiveFacts
 import io.github.eslamasabry.oc.feature.background.presentation.PauseFacts
 import io.github.eslamasabry.oc.feature.background.presentation.PauseReason
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -52,21 +66,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.Locale
 
 /**
- * Unit BUILD-ANDROID-BG-PLATFORM: the live background connection made real in the app. One [LiveModeController] per
- * process over the frozen `BackgroundConnectionService` shell (`../BackgroundConnectionService.kt`), its durable pause
- * receipt and the Flutter opt-in key; the Background page (`:feature:background`) reads it through [BackgroundLive].
+ * Unit BUILD-ANDROID-BG-PLATFORM: the live background connection made real in the app. One
+ * [LiveModeController] per process over the frozen `BackgroundConnectionService` shell
+ * (`../BackgroundConnectionService.kt`), its durable pause receipt and the Flutter opt-in key; the
+ * Background page (`:feature:background`) reads it through [BackgroundLive].
  *
- * Confinement (LiveModeController's rule): every call runs on the main dispatcher, so [main] is the app scope moved to
- * `dispatchers.main`. The controller is built only after the Flutter prefs file is warm (its opt-in is read at once).
+ * Confinement (LiveModeController's rule): every call runs on the main dispatcher, so [main] is the
+ * app scope moved to `dispatchers.main`. The controller is built only after the Flutter prefs file
+ * is warm (its opt-in is read at once).
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -81,14 +90,23 @@ class BackgroundHub(
     private val main = CoroutineScope(appScope.coroutineContext + dispatchers.main)
     val signals = LiveServiceSignals()
     private val optIn by lazy { KeyValueLiveOptIn(stores.prefs, stores.lanes.app) }
+    private val notifyAsk by lazy { KeyValueNotifyAsk(stores.prefs, stores.lanes.app) }
+    val inFlowConsents by lazy { InFlowConsentStore(stores.prefs, stores.lanes) }
     val receipts: PauseReceiptStore by lazy {
-        PauseReceiptStore(SharedPreferencesReceiptFile(application), AndroidPauseFacts(application, clock), optIn)
+        PauseReceiptStore(
+            SharedPreferencesReceiptFile(application),
+            AndroidPauseFacts(application, clock),
+            optIn,
+        )
     }
     private val ready = CompletableDeferred<Pair<LiveModeController, PauseNotice>>()
     private val facts = MutableStateFlow(BackgroundLiveFacts(supported = true))
     val live: StateFlow<BackgroundLiveFacts> = facts.asStateFlow()
 
-    /** The service shell's body; its stop callback reaches the controller once the app graph built it. */
+    /**
+     * The service shell's body; its stop callback reaches the controller once the app graph built
+     * it.
+     */
     val serviceBody: LiveServiceBody by lazy {
         LiveServiceBody(signals, receipts) { reason, pause ->
             main.launch { ready.await().first.onServiceStopped(reason, pause) }
@@ -97,17 +115,34 @@ class BackgroundHub(
 
     private var started = false
 
-    /** Called once from OcApplication-time warm-up (the first [BackgroundLive] use triggers it too). */
+    /**
+     * Called once from OcApplication-time warm-up (the first [BackgroundLive] use triggers it too).
+     */
     fun start() {
         if (started) return
         started = true
         main.launch {
             stores.warm()
-            val port = AndroidLiveServicePort(application, signals, receipts, NotificationPermission(application, activities))
+            val port =
+                AndroidLiveServicePort(
+                    application,
+                    signals,
+                    receipts,
+                    NotificationPermission(application, activities),
+                )
             val controller = LiveModeController(port, optIn, { true }, main, clock)
-            val notice = PauseNotice(controller.pauseGateway(main), KeyValueDismissedPause(stores.prefs, stores.lanes.app), main, clock)
+            val notice =
+                PauseNotice(
+                    controller.pauseGateway(main),
+                    KeyValueDismissedPause(stores.prefs, stores.lanes.app),
+                    main,
+                    clock,
+                )
             ready.complete(controller to notice)
-            launch { combine(controller.state, notice.notices) { s, n -> project(s, n) }.collect { facts.value = it } }
+            launch {
+                combine(controller.state, notice.notices) { s, n -> project(s, n) }
+                    .collect { facts.value = it }
+            }
             controller.restore()
         }
     }
@@ -126,6 +161,44 @@ class BackgroundHub(
         main.launch(block = block)
     }
 
+    /** One chat's first-reply offer. The app's neutral chat port owns it and calls it on [main]. */
+    suspend fun notifyOffer(profileId: String?, isolated: Boolean = false): FirstReplyNotifyOffer {
+        val liveMode = controller()
+        return FirstReplyNotifyOffer(
+            host =
+                object : NotifyOfferHost {
+                    override val isolated: Boolean = isolated
+                    override val profileId: String? = profileId
+
+                    override fun supportsNotifications(): Boolean = true
+
+                    override suspend fun enableRequestNotifications() {
+                        enableRequestNotificationsSaved()
+                    }
+
+                    override suspend fun enableRequestNotificationsSaved(): Boolean =
+                        stores.prefs.commit(stores.lanes.app) {
+                            putBool("oc.notify.requests", true)
+                        } is Outcome.Ok
+                },
+            liveMode = liveMode,
+            ask = notifyAsk,
+            consent =
+                object : NeedsYouConsent {
+                    override suspend fun claim(profileId: String): Outcome<Boolean> =
+                        inFlowConsents.requestNeedsYouPreset(ProfileId(profileId))
+
+                    override suspend fun answer(profileId: String, allow: Boolean): Outcome<Unit> =
+                        inFlowConsents.answer(
+                            ProfileId(profileId),
+                            InFlowConsentKind.NeedsYouNotifications,
+                            allow,
+                        )
+                },
+            scope = main,
+        )
+    }
+
     private fun project(s: LiveModeState, n: PauseNoticeState?): BackgroundLiveFacts =
         BackgroundLiveFacts(
             supported = true,
@@ -137,14 +210,19 @@ class BackgroundHub(
             pause =
                 n?.let {
                     val at = java.time.Instant.ofEpochMilli(it.atMs).atZone(ZoneId.systemDefault())
-                    val today = java.time.Instant.ofEpochMilli(clock.now().toEpochMilliseconds()).atZone(ZoneId.systemDefault())
+                    val today =
+                        java.time.Instant.ofEpochMilli(clock.now().toEpochMilliseconds())
+                            .atZone(ZoneId.systemDefault())
                     PauseFacts(
                         reason = reasonOf(it.reason),
                         clock = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).format(at),
                         day =
                             if (at.toLocalDate() == today.toLocalDate()) null
-                            else DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()).format(at),
+                            else
+                                DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
+                                    .format(at),
                         resumeFailed = it.phase == PauseNoticePhase.Failed,
+                        canResume = it.canResume,
                     )
                 },
             resuming = n?.phase == PauseNoticePhase.Resuming,
@@ -157,7 +235,8 @@ class BackgroundHub(
             NativePauseReason.UserStopped -> PauseReason.UserStopped
             NativePauseReason.AppUpdated -> PauseReason.AppUpdated
             NativePauseReason.DeviceRestarted -> PauseReason.DeviceRestarted
-            NativePauseReason.Interrupted, NativePauseReason.None -> PauseReason.Interrupted
+            NativePauseReason.Interrupted,
+            NativePauseReason.None -> PauseReason.Interrupted
         }
 }
 
@@ -170,11 +249,15 @@ interface BackgroundAccessors {
 internal val Context.backgroundHub: BackgroundHub
     get() = (appGraph as BackgroundAccessors).background
 
-/** The Background page's port over the controller. Each command waits for Android, never for the page. */
+/**
+ * The Background page's port over the controller. Each command waits for Android, never for the
+ * page.
+ */
 @ContributesBinding(AppScope::class)
 @Inject
 class AndroidBackgroundLive(private val hub: BackgroundHub) : BackgroundLive {
-    override val facts: StateFlow<BackgroundLiveFacts> get() = hub.live
+    override val facts: StateFlow<BackgroundLiveFacts>
+        get() = hub.live
 
     init {
         hub.start()
@@ -185,8 +268,10 @@ class AndroidBackgroundLive(private val hub: BackgroundHub) : BackgroundLive {
         val landed = onMain { controller.setEnabled(on) }
         return when (controller.state.value.lastError) {
             null -> landed.ok()
-            LiveModeError.NotificationsRequired -> Failure.Refused(RefusalReason.NotificationsBlocked).failed()
-            LiveModeError.CouldNotChange, LiveModeError.AndroidAppOnly -> landed.ok()
+            LiveModeError.NotificationsRequired ->
+                Failure.Refused(RefusalReason.NotificationsBlocked).failed()
+            LiveModeError.CouldNotChange,
+            LiveModeError.AndroidAppOnly -> landed.ok()
         }
     }
 
@@ -220,16 +305,20 @@ class AndroidBackgroundLive(private val hub: BackgroundHub) : BackgroundLive {
 }
 
 /**
- * The notification permission (API 33+): a request shows Android's prompt on the resumed activity and waits a bounded
- * time for the person's answer; the switch is tried again by the person, never automatically.
+ * The notification permission (API 33+): a request shows Android's prompt on the resumed activity
+ * and waits a bounded time for the person's answer; the switch is tried again by the person, never
+ * automatically.
  */
-private class NotificationPermission(private val app: Application, private val activities: ResumedActivities) : PermissionGate {
+private class NotificationPermission(
+    private val app: Application,
+    private val activities: ResumedActivities,
+) : PermissionGate {
     override suspend fun status(permission: AppPermission): PermissionStatus =
         when {
             permission != AppPermission.Notifications -> PermissionStatus.NotApplicable
             Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU -> PermissionStatus.Granted
-            app.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED ->
-                PermissionStatus.Granted
+            app.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED -> PermissionStatus.Granted
             else -> PermissionStatus.Denied
         }
 
@@ -260,13 +349,16 @@ private class NotificationPermission(private val app: Application, private val a
 }
 
 /**
- * Where a phone-setup notification tap lands (B-ANDR-050; Flutter `phone_setup_routes.dart`). The ongoing setup row
- * (`phone_setup`) opens the setup's progress, which in this build is the Linux page that shows it; a tap while that
- * page is already on top changes nothing. The result row (`phone_setup_done`) just brings the app back (null = land).
+ * Where a phone-setup notification tap lands (B-ANDR-050; Flutter `phone_setup_routes.dart`). The
+ * ongoing setup row (`phone_setup`) opens the setup's progress, which in this build is the Linux
+ * page that shows it; a tap while that page is already on top changes nothing. The result row
+ * (`phone_setup_done`) just brings the app back (null = land).
  */
 internal object SetupTapRoutes {
-    fun routeFor(action: io.github.eslamasabry.oc.android.tiles.LaunchAction, top: io.github.eslamasabry.oc.ui.routes.AppRoute?):
-        SetupTap =
+    fun routeFor(
+        action: io.github.eslamasabry.oc.android.tiles.LaunchAction,
+        top: io.github.eslamasabry.oc.ui.routes.AppRoute?,
+    ): SetupTap =
         when (action) {
             io.github.eslamasabry.oc.android.tiles.LaunchAction.PhoneSetup ->
                 if (top == io.github.eslamasabry.oc.ui.routes.LinuxRoute.Home) SetupTap.Stay
@@ -286,4 +378,28 @@ internal sealed interface SetupTap {
     data object Land : SetupTap
 
     data object NotSetup : SetupTap
+}
+
+/** Close and drain the actual offer's consent writer before the generic profile sweep. */
+@dev.zacsweers.metro.ContributesIntoSet(
+    AppScope::class,
+    binding = dev.zacsweers.metro.binding<io.github.eslamasabry.oc.engine.profiles.ProfileCloser>(),
+)
+@Inject
+class BackgroundConsentCloser(private val hub: BackgroundHub) :
+    io.github.eslamasabry.oc.engine.profiles.ProfileCloser {
+    override val owner: String = ":engine:settings:in-flow"
+
+    override fun stopAdmission(profile: ProfileId) {
+        hub.inFlowConsents.closeProfile(profile)
+    }
+
+    override suspend fun drain(profile: ProfileId): Outcome<Unit> {
+        hub.inFlowConsents.drainProfile(profile)
+        return Unit.ok()
+    }
+
+    override fun reopen(profile: ProfileId) {
+        hub.inFlowConsents.reopenProfile(profile)
+    }
 }

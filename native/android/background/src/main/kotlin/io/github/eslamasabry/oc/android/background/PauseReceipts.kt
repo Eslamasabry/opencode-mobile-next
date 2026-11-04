@@ -1,8 +1,9 @@
 package io.github.eslamasabry.oc.android.background
 
 /**
- * The durable pause receipt (port of the Flutter app's `BackgroundPauseReceipt.kt` and `BackgroundPauseStore.kt`).
- * Only fixed categories and timestamps are persisted; never an OS description.
+ * The durable pause receipt (port of the Flutter app's `BackgroundPauseReceipt.kt` and
+ * `BackgroundPauseStore.kt`). Only fixed categories and timestamps are persisted; never an OS
+ * description.
  */
 public data class PauseReceipt(
     val phase: String = PHASE_NONE,
@@ -19,7 +20,9 @@ public data class PauseReceipt(
 /** One process exit Android recorded: `ApplicationExitInfo.reason` and its wall-clock timestamp. */
 public data class PauseExit(val reason: Int, val at: Long)
 
-/** What the app sees now. [bootAt] is the wall-clock boot time (now − elapsedRealtime); 0 = unknown. */
+/**
+ * What the app sees now. [bootAt] is the wall-clock boot time (now − elapsedRealtime); 0 = unknown.
+ */
 public data class PauseObservation(
     val active: Boolean,
     val restricted: Boolean,
@@ -53,9 +56,11 @@ public object PausePolicy {
 
     private fun interrupted(receipt: PauseReceipt, seen: PauseObservation): PauseReceipt {
         val reason = interruptionReason(receipt, seen)
-        // Battery policy is observed now. The exit timestamp is evidence only when it followed this running period.
+        // Battery policy is observed now. The exit timestamp is evidence only when it followed this
+        // running period.
         val at =
-            if (reason == PauseReason.UserStopped || reason == PauseReason.AppUpdated) checkNotNull(seen.exit).at
+            if (reason == PauseReason.UserStopped || reason == PauseReason.AppUpdated)
+                checkNotNull(seen.exit).at
             else seen.now
         return PauseReceipt(PauseReceipt.PHASE_PAUSED, reason.wire, at)
     }
@@ -63,11 +68,13 @@ public object PausePolicy {
     private fun interruptionReason(receipt: PauseReceipt, seen: PauseObservation): PauseReason =
         when {
             seen.restricted -> PauseReason.BatteryRestricted
-            isExitAfter(seen.exit, receipt.at, USER_REQUESTED_EXIT, USER_STOPPED_EXIT) -> PauseReason.UserStopped
+            isExitAfter(seen.exit, receipt.at, USER_REQUESTED_EXIT, USER_STOPPED_EXIT) ->
+                PauseReason.UserStopped
             // An app update ends the process: a known cause, not "unknown".
             isExitAfter(seen.exit, receipt.at, PACKAGE_UPDATED_EXIT) -> PauseReason.AppUpdated
             // The receipt was written before the phone booted: it restarted.
-            seen.bootAt > 0L && receipt.at < seen.bootAt - BOOT_SLACK_MS -> PauseReason.DeviceRestarted
+            seen.bootAt > 0L && receipt.at < seen.bootAt - BOOT_SLACK_MS ->
+                PauseReason.DeviceRestarted
             else -> PauseReason.Interrupted
         }
 
@@ -76,9 +83,9 @@ public object PausePolicy {
 }
 
 /**
- * The receipt's own private file (`shared_prefs/oc_background_pause.xml` on Android, the Flutter-era file and keys).
- * Synchronous: a receipt must survive the service stopping with no engine around. [commit] is true only when the
- * platform acknowledged the write.
+ * The receipt's own private file (`shared_prefs/oc_background_pause.xml` on Android, the
+ * Flutter-era file and keys). Synchronous: a receipt must survive the service stopping with no
+ * engine around. [commit] is true only when the platform acknowledged the write.
  */
 public interface PauseReceiptFile {
     public fun phase(): String?
@@ -93,7 +100,9 @@ public interface PauseReceiptFile {
     public fun recordTaskRemoval(at: Long)
 }
 
-/** Reads of the system the receipt is judged against. Read only: nothing here writes another file. */
+/**
+ * Reads of the system the receipt is judged against. Read only: nothing here writes another file.
+ */
 public interface PauseSystemFacts {
     public fun now(): Long
 
@@ -106,8 +115,9 @@ public interface PauseSystemFacts {
 }
 
 /**
- * The saved live-mode opt-in, `oc.keepLiveInBackground` (the Flutter key, verbatim, so a migrated install keeps it).
- * [read] is null when nothing was saved. [write] is true only on an acknowledged commit.
+ * The saved live-mode opt-in, `oc.keepLiveInBackground` (the Flutter key, verbatim, so a migrated
+ * install keeps it). [read] is null when nothing was saved. [write] is true only on an acknowledged
+ * commit.
  */
 public interface LiveOptInStore {
     public fun read(): Boolean?
@@ -120,9 +130,10 @@ public interface LiveOptInStore {
 }
 
 /**
- * Port of `BackgroundPauseStore`: the receipt plus the opt-in it turns off. Every method is serialised on one lock in
- * the receipt file's own order; [status] answers [PauseState.Unsupported] when the receipt cannot be read or saved
- * (the Flutter store threw "Background state could not be saved or read.", and the channel answered unsupported).
+ * Port of `BackgroundPauseStore`: the receipt plus the opt-in it turns off. Every method is
+ * serialised on one lock in the receipt file's own order; [status] answers [PauseState.Unsupported]
+ * when the receipt cannot be read or saved (the Flutter store threw "Background state could not be
+ * saved or read.", and the channel answered unsupported).
  */
 public class PauseReceiptStore(
     private val file: PauseReceiptFile,
@@ -131,17 +142,29 @@ public class PauseReceiptStore(
 ) {
     private val lock = Any()
 
-    /** The service ran its foreground start: the receipt says running and the opt-in is on. */
-    public suspend fun confirmedStarted(): Boolean {
-        val saved = synchronized(lock) { file.commit(PauseReceipt(PauseReceipt.PHASE_RUNNING, at = facts.now())) }
-        return saved && optIn.write(true)
+    /**
+     * The service ran its foreground start. A temporary sign-in claim records running without
+     * changing the saved preference; the live-mode controller persists its explicit choice only
+     * after this acknowledgement.
+     */
+    public suspend fun confirmedStarted(persistOptIn: Boolean = true): Boolean {
+        val saved =
+            synchronized(lock) {
+                file.commit(PauseReceipt(PauseReceipt.PHASE_RUNNING, at = facts.now()))
+            }
+        return saved && (!persistOptIn || optIn.write(true))
     }
 
-    /** Android's time limit stopped the service. Restore is always turned off, even if the receipt failed. */
+    /**
+     * Android's time limit stopped the service. Restore is always turned off, even if the receipt
+     * failed.
+     */
     public suspend fun timeout(): Boolean {
         val saved =
             synchronized(lock) {
-                file.commit(PauseReceipt(PauseReceipt.PHASE_PAUSED, PauseReason.TimeLimit.wire, facts.now()))
+                file.commit(
+                    PauseReceipt(PauseReceipt.PHASE_PAUSED, PauseReason.TimeLimit.wire, facts.now())
+                )
             }
         val disabled = optIn.write(false)
         return saved && disabled
@@ -164,7 +187,9 @@ public class PauseReceiptStore(
             synchronized(lock) {
                 val previous = read() ?: return PauseState.Unsupported
                 val restricted = facts.backgroundRestricted()
-                val exit = if (!active && previous.phase == PauseReceipt.PHASE_RUNNING) facts.latestExit() else null
+                val exit =
+                    if (!active && previous.phase == PauseReceipt.PHASE_RUNNING) facts.latestExit()
+                    else null
                 val receipt =
                     PausePolicy.reconcile(
                         previous,
@@ -189,13 +214,14 @@ public class PauseReceiptStore(
         val phase = file.phase() ?: PauseReceipt.PHASE_NONE
         val reason = file.reason() ?: PauseReason.None.wire
         val at = file.at()
-        if (phase !in PHASES || PauseReason.fromWire(reason) == null) return null
+        if (phase !in PHASES || PauseReason.fromWire(reason) == null || at < 0L) return null
         if (phase != PauseReceipt.PHASE_NONE && at <= 0L) return null
         if (phase == PauseReceipt.PHASE_PAUSED && reason == PauseReason.None.wire) return null
         return PauseReceipt(phase, reason, at)
     }
 
     private companion object {
-        val PHASES = setOf(PauseReceipt.PHASE_NONE, PauseReceipt.PHASE_RUNNING, PauseReceipt.PHASE_PAUSED)
+        val PHASES =
+            setOf(PauseReceipt.PHASE_NONE, PauseReceipt.PHASE_RUNNING, PauseReceipt.PHASE_PAUSED)
     }
 }
