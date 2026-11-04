@@ -28,3 +28,6 @@ fetch() { # <relative path under third_party> <url>
 
 fetch maven/com/k2fsa/sherpa/onnx/sherpa-onnx-android/2.0.1/sherpa-onnx-android-2.0.1.aar \
   https://jitpack.io/com/github/k2-fsa/sherpa-onnx/sherpa-onnx/v2.0.1/sherpa-onnx-v2.0.1.aar
+
+# Termux v0.118.3 resolves from JitPack; its emulator AAR pin in SHA256SUMS is checked by the build-logic
+# TermuxSessionFork transform, which strips the upstream TerminalSession classes at resolve time.

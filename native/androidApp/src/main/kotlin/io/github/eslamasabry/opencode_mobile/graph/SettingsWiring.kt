@@ -60,7 +60,6 @@ import io.github.eslamasabry.oc.feature.onboarding.presentation.FirstRunPreferen
 import io.github.eslamasabry.oc.feature.settings.presentation.AboutFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.AnalyticsChoices
 import io.github.eslamasabry.oc.feature.settings.presentation.DiagnosticsExport
-import io.github.eslamasabry.oc.feature.settings.presentation.DiagnosticsReport
 import io.github.eslamasabry.oc.feature.settings.presentation.EngineAnalyticsChoices
 import io.github.eslamasabry.oc.feature.settings.presentation.HandledErrors
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationChange
@@ -70,8 +69,6 @@ import io.github.eslamasabry.oc.feature.settings.presentation.NotificationSettin
 import io.github.eslamasabry.oc.feature.settings.presentation.PersonalChoices
 import io.github.eslamasabry.oc.feature.settings.presentation.PreferenceMapping
 import io.github.eslamasabry.oc.feature.settings.presentation.PreferencesChoices
-import io.github.eslamasabry.oc.feature.settings.presentation.ReportError
-import io.github.eslamasabry.oc.feature.settings.presentation.ReportFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerLine
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsHost
@@ -83,8 +80,11 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
+import io.github.eslamasabry.oc.ui.routes.IntegrationsRoute
+import io.github.eslamasabry.oc.ui.routes.ProvidersRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
+import io.github.eslamasabry.oc.ui.routes.LibraryRoute
 import io.github.eslamasabry.oc.ui.routes.TeachingRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.routes.VoiceRoute
@@ -202,6 +202,10 @@ class AndroidSettingsHost(
     analyticsEngine: AnalyticsEngine,
     private val dispatchers: AppDispatchers,
     private val diagnosticsLog: Diagnostics,
+    private val crashSettings: AppCrashDiagnostics,
+    private val configurationInspection: AndroidConfigurationInspection,
+    private val reportRedactor: Redactor,
+    private val reportRegistry: io.github.eslamasabry.oc.engine.connection.ConnectionRegistry,
     updateSettings:
         AppUpdateSettings, // P12-FIX-PLATFORM-GIT: Settings › Updates on the real updater
     private val voiceSettings: AndroidVoiceSettings,
@@ -222,10 +226,12 @@ class AndroidSettingsHost(
         )
 
     override val facts: StateFlow<SettingsFacts> =
-        combine(connections.servers, stores.profiles.activeId, motion.animatorScale) {
-                servers,
-                active,
-                scale ->
+        combine(
+                connections.servers,
+                stores.profiles.activeId,
+                motion.animatorScale,
+                configurationInspection.available,
+            ) { servers, active, scale, configAvailable ->
                 val live =
                     servers.firstOrNull { it.id == active && it.connected }
                         ?: servers.firstOrNull { it.connected }
@@ -235,8 +241,9 @@ class AndroidSettingsHost(
                     dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                     systemMotionOff = scale == 0f,
                     diagnostics = true,
+                    configurationInspection = configAvailable,
                     opens = OPENS,
-                    surfaceStyles = false,
+                    surfaceStyles = true,
                     transcriptDisplay = false,
                 )
             }
@@ -248,7 +255,7 @@ class AndroidSettingsHost(
                     dynamicColour = Build.VERSION.SDK_INT >= 31,
                     diagnostics = true,
                     opens = OPENS,
-                    surfaceStyles = false,
+                    surfaceStyles = true,
                     transcriptDisplay = false,
                 ),
             )
@@ -259,8 +266,27 @@ class AndroidSettingsHost(
     override val openers: SettingsOpeners = SettingsOpeners { place ->
         when (place) {
             SettingsOutside.Servers -> nav.open(ServersRoute.Home)
-            SettingsOutside.Tools -> nav.open(ToolsRoute())
-            SettingsOutside.Providers -> nav.open(ToolsRoute(tab = "providers"))
+            SettingsOutside.Tools,
+            SettingsOutside.Providers -> {
+                val live = connections.servers.value
+                val active = stores.profiles.activeId.value
+                val target =
+                    live.firstOrNull { it.id == active && it.connected }
+                        ?: live.firstOrNull { it.connected }
+                if (target != null) {
+                    nav.open(
+                        if (place == SettingsOutside.Providers) ProvidersRoute(target.id)
+                        else ToolsRoute(target.id)
+                    )
+                } else {
+                    // PORT-SCREENS-2: with no connected server, the tabbed library answers (it picks its own
+                    // server). SEC-2's integrations page stays reachable from Servers.
+                    nav.open(
+                        if (place == SettingsOutside.Providers) LibraryRoute(tab = "providers")
+                        else LibraryRoute()
+                    )
+                }
+            }
             SettingsOutside.StarOnGitHub -> application.view(REPO)
             SettingsOutside.WhatsNew,
             SettingsOutside.ReleaseNotes -> application.view("$REPO/releases")
@@ -301,37 +327,92 @@ class AndroidSettingsHost(
             notices = false,
         )
 
+    override val configuration:
+        io.github.eslamasabry.oc.feature.settings.presentation.ConfigurationInspection =
+        configurationInspection
+    override val crashes: io.github.eslamasabry.oc.feature.settings.presentation.CrashSettings =
+        crashSettings
+
     override val diagnostics: DiagnosticsExport =
         object : DiagnosticsExport {
-            override suspend fun report(): Outcome<String> {
+            private fun connectionWords(): String {
                 val servers = connections.servers.value
                 val p = prefs.value.value
-                val facts =
-                    ReportFacts(
-                        appVersion = buildInfo.versionName,
-                        build = buildInfo.versionCode.toString(),
-                        platform =
-                            "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
-                        language = p.locale.code ?: "system",
-                        textSize = p.textSize.wire,
-                        motion = p.effects.motion.wire,
-                        savedServers = servers.size,
-                        connectedServers = servers.count { it.connected },
-                        errors =
-                            gitHubReports.keptErrors()?.map { (at, source, message) ->
-                                ReportError(at, source, message)
-                            }
-                                ?: diagnosticsLog.errors.value.map {
-                                    ReportError(
-                                        it.at.toString(),
-                                        it.source,
-                                        it.message,
-                                        it.occurrences,
-                                    )
-                                },
-                    )
-                return DiagnosticsReport.text(facts).ok()
+                val connected = servers.count { it.connected }
+                return "${if (connected > 0) "Connected to a server" else "Not connected"} · " +
+                    "${servers.size} saved · $connected connected · Language: ${p.locale.code ?: "system"} · " +
+                    "Text size: ${p.textSize.wire} · Motion: ${p.effects.motion.wire}"
             }
+
+            override suspend fun report(): Outcome<String> = report("")
+
+            override suspend fun report(description: String): Outcome<String> =
+                (listOf(gitHubReports.preview(connectionWords(), description)) +
+                        failureAttachments())
+                    .joinToString("\n\n")
+                    .ok()
+
+            /**
+             * AGENT-1: a failed phone setup and failed development services, redacted, as report
+             * attachments.
+             */
+            private suspend fun failureAttachments(): List<String> {
+                val setup =
+                    withContext(dispatchers.io) {
+                        val status =
+                            io.github.eslamasabry.opencode_mobile.SetupRunner.get(application)
+                                .status()
+                        io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord.parse(
+                                status
+                            )
+                            ?.let {
+                                io.github.eslamasabry.oc.engine.runtime.setup.FailedSetupReport
+                                    .from(it, reportRedactor::redact)
+                                    ?.attachment()
+                            }
+                    }
+                val development = mutableListOf<String>()
+                for ((id, graph) in reportRegistry.live.value) {
+                    val gateway = graph.session.server
+                    val key =
+                        io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServiceStore
+                            .keyFor(id.raw)
+                    val saved =
+                        (stores.prefs.get(key)
+                                as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)
+                            ?.value
+                    if (saved == null) continue
+                    val reports =
+                        io.github.eslamasabry.oc.engine.runtime.services.DevelopmentFailureReports
+                            .capture(
+                                saved = saved,
+                                current = {
+                                    reportRegistry.live.value[id] === graph &&
+                                        stores.profiles.profile(id) != null &&
+                                        (stores.prefs.get(key)
+                                                as?
+                                                io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)
+                                            ?.value == saved
+                                },
+                                inspect = { run, directory, workspace ->
+                                    io.github.eslamasabry.oc.protocol.oc2.live.Oc2ServiceReports
+                                        .inspect(gateway, run, directory, workspace)
+                                },
+                                output = { run, directory, workspace ->
+                                    io.github.eslamasabry.oc.protocol.oc2.live.Oc2ServiceReports
+                                        .output(gateway, run, directory, workspace)
+                                },
+                                redact = reportRedactor::redact,
+                            )
+                    development += reports.map { it.attachment() }
+                }
+                return listOfNotNull(setup) + development
+            }
+
+            override fun endReport() = gitHubReports.clearAttachment()
+
+            override suspend fun send(description: String): Outcome<Unit> =
+                gitHubReports.sendReport(connectionWords(), description)
 
             override suspend fun copy(text: String): Outcome<Unit> =
                 withContext(dispatchers.main) {
@@ -363,7 +444,13 @@ class AndroidSettingsHost(
             Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                 .putExtra(Settings.EXTRA_APP_PACKAGE, application.packageName)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        application.startActivity(intent)
+        try {
+            application.startActivity(intent)
+        } catch (_: android.content.ActivityNotFoundException) {
+            // Some phone settings apps do not expose this page.
+        } catch (_: SecurityException) {
+            // A platform restriction does not escape into the settings action.
+        }
     }
 
     private companion object {
@@ -383,6 +470,8 @@ class AndroidSettingsHost(
                 SettingsOutside.ReportOnGitHub,
                 SettingsOutside.KeptDiagnostics,
                 SettingsOutside.KeepRunning,
+                SettingsOutside.Tools,
+                SettingsOutside.Providers,
                 SettingsOutside.Tips,
             )
     }

@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.engine.integrations.catalog.SessionSkillFailure
+import io.github.eslamasabry.oc.engine.integrations.catalog.SkillActivation
 import io.github.eslamasabry.oc.feature.prompts.presentation.CommandsActions
 import io.github.eslamasabry.oc.feature.prompts.presentation.CommandsUi
 import io.github.eslamasabry.oc.feature.prompts.presentation.ListPhase
@@ -27,7 +29,9 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -49,6 +53,14 @@ import io.github.eslamasabry.oc.ui.words.res.mobileTasksNoUnfinished
 import io.github.eslamasabry.oc.ui.words.res.mobileTasksProgress
 import io.github.eslamasabry.oc.ui.words.res.mobileTasksUnfinished
 import io.github.eslamasabry.oc.ui.words.res.runningWorkOffline
+import io.github.eslamasabry.oc.ui.words.res.stateSkillsBusy
+import io.github.eslamasabry.oc.ui.words.res.stateSkillsChanged
+import io.github.eslamasabry.oc.ui.words.res.stateSkillsDone
+import io.github.eslamasabry.oc.ui.words.res.stateSkillsStaged
+import io.github.eslamasabry.oc.ui.words.res.stateSkillsTitle
+import io.github.eslamasabry.oc.ui.words.res.stateSkillsUncertain
+import io.github.eslamasabry.oc.ui.words.res.stateSkillsUnsupported
+import io.github.eslamasabry.oc.ui.words.res.stateSkillsUse
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -80,12 +92,17 @@ private fun ListFrame(title: String, onBack: () -> Unit, content: @Composable ()
 private fun notOnServer(feature: String, server: String): String =
     pluralStringResource(Res.plurals.kitCapNotOnHost, 1, 1, feature, server)
 
-/** Offline reads as the reconnect line; anything else as the could-not-load state with Details and Try again. */
+/**
+ * Offline reads as the reconnect line; anything else as the could-not-load state with Details and
+ * Try again.
+ */
 @Composable
 private fun Failed(failure: Failure, title: String, onRetry: () -> Unit) {
     KitStateView(
         kind = KitStateKind.Error,
-        title = if (failure is Failure.Network) stringResource(Res.string.runningWorkOffline) else title,
+        title =
+            if (failure is Failure.Network) stringResource(Res.string.runningWorkOffline)
+            else title,
         failure = failure,
         onRetry = onRetry,
         modifier = Modifier.testTag("prompts-list-error"),
@@ -93,21 +110,26 @@ private fun Failed(failure: Failure, title: String, onRetry: () -> Unit) {
 }
 
 /**
- * The server's slash commands. Tapping one puts `/name ` into the conversation's composer and goes back there; the
- * person adds anything else and sends it. A server that does not share its commands says so in plain words.
+ * The server's slash commands. Tapping one puts `/name ` into the conversation's composer and goes
+ * back there; the person adds anything else and sends it. A server that does not share its commands
+ * says so in plain words.
  */
 @Composable
 public fun CommandsScreen(state: CommandsUi, actions: CommandsActions) {
     val title = stringResource(Res.string.chatUiSlashCommandsAndAgents)
     ListFrame(title, actions::back) {
         when (val phase = state.phase) {
-            ListPhase.Loading -> KitSkeletonRows(Modifier.testTag("prompts-list-loading"), count = 5)
+            ListPhase.Loading ->
+                KitSkeletonRows(Modifier.testTag("prompts-list-loading"), count = 5)
             is ListPhase.Failed -> Failed(phase.failure, title, actions::retry)
             is ListPhase.NotOnServer ->
                 KitStateView(kind = KitStateKind.Missing, title = notOnServer(title, phase.server))
             is ListPhase.Shown ->
                 if (phase.items.isEmpty()) {
-                    KitStateView(kind = KitStateKind.Empty, title = notOnServer(title, phase.server))
+                    KitStateView(
+                        kind = KitStateKind.Empty,
+                        title = notOnServer(title, phase.server),
+                    )
                 } else {
                     for (command in phase.items) {
                         KitRow(
@@ -119,6 +141,37 @@ public fun CommandsScreen(state: CommandsUi, actions: CommandsActions) {
                         )
                     }
                 }
+        }
+        if (state.skillsLoading) KitSkeletonRows(count = 2)
+        state.skillsFailure?.let {
+            Failed(it, stringResource(Res.string.stateSkillsTitle), actions::retry)
+        }
+        if (state.skills.isNotEmpty())
+            KitRowGroup(label = stringResource(Res.string.stateSkillsTitle)) {
+                for (skill in state.skills) {
+                    val id = skill.id ?: continue
+                    KitRow(
+                        title = skill.name,
+                        supporting = stringResource(Res.string.stateSkillsUse),
+                        onClick = { actions.activateSkill(id) },
+                    )
+                }
+            }
+        state.skillResult?.let { result ->
+            val key =
+                when (result) {
+                    SkillActivation.Done -> Res.string.stateSkillsDone
+                    is SkillActivation.Failed -> Res.string.stateSkillsUncertain
+                    is SkillActivation.Refused ->
+                        when (result.reason) {
+                            SessionSkillFailure.Changed -> Res.string.stateSkillsChanged
+                            SessionSkillFailure.Staged -> Res.string.stateSkillsStaged
+                            SessionSkillFailure.Busy -> Res.string.stateSkillsBusy
+                            SessionSkillFailure.Unsupported -> Res.string.stateSkillsUnsupported
+                            SessionSkillFailure.Uncertain -> Res.string.stateSkillsUncertain
+                        }
+                }
+            KitNotice(stringResource(key))
         }
     }
 }
@@ -144,19 +197,26 @@ private fun priorityWords(priority: TaskPriority): String =
         }
     )
 
-/** The agent's task list (Flutter `MobileTaskView`): progress, "Show unfinished only", one row per task. */
+/**
+ * The agent's task list (Flutter `MobileTaskView`): progress, "Show unfinished only", one row per
+ * task.
+ */
 @Composable
 public fun TasksScreen(state: TasksUi, actions: TasksActions) {
     val title = stringResource(Res.string.chatUiTodos)
     ListFrame(title, actions::back) {
         when (val phase = state.phase) {
-            ListPhase.Loading -> KitSkeletonRows(Modifier.testTag("prompts-list-loading"), count = 5)
+            ListPhase.Loading ->
+                KitSkeletonRows(Modifier.testTag("prompts-list-loading"), count = 5)
             is ListPhase.Failed -> Failed(phase.failure, title, actions::retry)
             is ListPhase.NotOnServer ->
                 KitStateView(kind = KitStateKind.Missing, title = notOnServer(title, phase.server))
             is ListPhase.Shown ->
                 if (phase.items.isEmpty()) {
-                    KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.externalAgentsNoTasksTitle))
+                    KitStateView(
+                        kind = KitStateKind.Empty,
+                        title = stringResource(Res.string.externalAgentsNoTasksTitle),
+                    )
                 } else {
                     val (done, tracked) = TaskRules.progress(phase.items)
                     KitText(stringResource(Res.string.mobileTasksProgress, done, tracked))
@@ -166,7 +226,8 @@ public fun TasksScreen(state: TasksUi, actions: TasksActions) {
                         onCheckedChange = { actions.toggleUnfinished() },
                     )
                     val visible = state.visible
-                    if (visible.isEmpty()) KitText(stringResource(Res.string.mobileTasksNoUnfinished))
+                    if (visible.isEmpty())
+                        KitText(stringResource(Res.string.mobileTasksNoUnfinished))
                     for ((index, task) in visible.withIndex()) TaskRow(index, task)
                 }
         }
@@ -176,7 +237,8 @@ public fun TasksScreen(state: TasksUi, actions: TasksActions) {
 @Composable
 private fun TaskRow(index: Int, task: TaskItem) {
     val supporting =
-        listOfNotNull(stateWords(task.state), task.priority?.let { priorityWords(it) }).joinToString(" · ")
+        listOfNotNull(stateWords(task.state), task.priority?.let { priorityWords(it) })
+            .joinToString(" · ")
     KitRow(
         title = task.content.ifBlank { stateWords(task.state) },
         supporting = supporting,

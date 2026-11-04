@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.ui.kit.row
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -14,7 +16,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -45,10 +54,18 @@ public fun KitRowGroup(
     val tokens = LocalKitTokens.current
     val hairline = LocalKitColors.current.hairline
     val inset = (tokens.gutter + if (leadingTiles) tokens.iconTile + Space.S3 else 0).dp
+    val colors = LocalKitColors.current
+    // Solid and Signal run lists flat on the page; Soft and Brutal set a group on a panel with 18 dp corners.
+    val panel = !LocalKitStyle.current.spec.tokens.flatLists
+    val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1))
+    val panelModifier =
+        if (panel) Modifier.padding(horizontal = tokens.gutter.dp).then(look.modifier).clip(KitShapeId.Panel.shape()) else Modifier
     Column(modifier.kitMaxWidth(CapRole.List).fillMaxWidth().testTag("kit-row-group")) {
         label?.let { KitSectionLabel(it) }
-        HairlineColumn(inset, hairline, rows)
-        destructive?.let { HairlineColumn(0.dp, hairline, it, ruleAbove = true) }
+        Column(panelModifier) {
+            HairlineColumn(inset, hairline, rows)
+            destructive?.let { HairlineColumn(0.dp, hairline, it, ruleAbove = true) }
+        }
         note?.let { KitGroupNote(it) }
     }
 }

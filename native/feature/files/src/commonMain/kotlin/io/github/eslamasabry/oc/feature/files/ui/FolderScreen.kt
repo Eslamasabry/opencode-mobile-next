@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
@@ -126,6 +127,7 @@ import io.github.eslamasabry.oc.ui.words.res.storageAccessWhyAgent
 import io.github.eslamasabry.oc.ui.words.res.storageAccessWhyOff
 import io.github.eslamasabry.oc.ui.words.res.storageAccessWhyScope
 import org.jetbrains.compose.resources.pluralStringResource
+import io.github.eslamasabry.oc.ui.words.res.stateReaderSaveFailed
 import org.jetbrains.compose.resources.stringResource
 
 /** The project's real file, text and symbol reads; every uncommon act also has a visible button. */

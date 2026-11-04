@@ -18,7 +18,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -53,11 +53,11 @@ public fun KitSkeletonRows(modifier: Modifier = Modifier, count: Int = 4) {
                 horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
             ) {
                 Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
-                    Box(Modifier.size(20.dp).clip(KitShapeId.Circle.toShape()).background(shape))
+                    Box(Modifier.size(20.dp).clip(KitShapeId.Circle.shape()).background(shape))
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                    Box(Modifier.fillMaxWidth(TITLE_WIDTHS[i % TITLE_WIDTHS.size]).height(12.dp).clip(KitShapeId.Pill.toShape()).background(shape))
-                    Box(Modifier.fillMaxWidth(LINE_WIDTH).height(9.dp).clip(KitShapeId.Pill.toShape()).background(line))
+                    Box(Modifier.fillMaxWidth(TITLE_WIDTHS[i % TITLE_WIDTHS.size]).height(12.dp).clip(KitShapeId.Pill.shape()).background(shape))
+                    Box(Modifier.fillMaxWidth(LINE_WIDTH).height(9.dp).clip(KitShapeId.Pill.shape()).background(line))
                 }
             }
         }

@@ -1,0 +1,13 @@
+<resources>
+    <string name="linuxQuotaTitle">Plan usage on this phone</string>
+    <string name="linuxQuotaSetup">Set up plan usage</string>
+    <string name="linuxQuotaEnabled">Plan usage is set up</string>
+    <string name="linuxQuotaBody">Read Codex, GLM and MiniMax limits from the sign-ins already on this phone. The helper runs only while usage is being read.</string>
+    <string name="linuxQuotaTurnOff">Turn off plan usage</string>
+    <string name="linuxQuotaLinuxNotReady">Set up Linux on This phone first.</string>
+    <string name="linuxQuotaNoNode">Install Node from Linux components, then try again.</string>
+    <string name="linuxQuotaOldNode">Update Node to version 20 or later, then try again.</string>
+    <string name="linuxQuotaPrepareFailed">Usage files could not be prepared. Try again.</string>
+    <string name="linuxQuotaStartFailed">The usage helper did not answer. Try again.</string>
+    <string name="linuxQuotaRemoveFailed">The usage helper could not be removed. Try again.</string>
+</resources>

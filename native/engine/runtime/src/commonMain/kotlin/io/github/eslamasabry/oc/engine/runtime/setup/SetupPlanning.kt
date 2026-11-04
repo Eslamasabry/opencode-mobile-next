@@ -56,6 +56,37 @@ public object SetupPlanning {
         return result
     }
 
+    /**
+     * Installation metadata only: unknown keys, credentials and shell text never reach a script
+     * builder.
+     */
+    public fun validParams(
+        params: Map<String, Map<String, String>>,
+        redact: (String) -> String,
+        allowLegacy: Boolean = false,
+    ): Boolean = params.all { (group, values) ->
+        val allowed =
+            when (group) {
+                SetupComponentIds.OPENCODE -> setOf("runtime", "version")
+                SetupJobParams.KEY -> setOf("first", "adding")
+                else -> return@all false
+            }
+        values.all { (key, value) ->
+            key in allowed &&
+                redact(value) == value &&
+                when (key) {
+                    "runtime" -> value == RUNTIME_OPENCODE2 || (allowLegacy && value == "opencode1")
+                    "version" ->
+                        Regex("^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$").matches(value)
+                    "first" -> value == "0" || value == "1"
+                    "adding" ->
+                        value.isEmpty() ||
+                            Regex("^[a-z][a-z0-9_-]*(?:,[a-z][a-z0-9_-]*)*$").matches(value)
+                    else -> false
+                }
+        }
+    }
+
     public const val RUNTIME_OPENCODE2: String = "opencode2"
 
     /**

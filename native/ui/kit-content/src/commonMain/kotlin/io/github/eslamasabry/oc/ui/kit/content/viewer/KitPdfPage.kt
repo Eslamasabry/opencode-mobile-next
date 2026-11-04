@@ -32,7 +32,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.content.foundation.ContentTextAction
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
@@ -83,7 +83,7 @@ public fun KitPdfPage(
 ) {
     val colors = LocalKitColors.current
     val caption = stringResource(Res.string.kitViewerPage, page.toString(), pageCount.toString())
-    val shape = KitShapeId.Square.toShape()
+    val shape = KitShapeId.Square.shape()
     BoxWithConstraints(modifier.fillMaxWidth().testTag("$KIT_PDF_PAGE_TAG$page"), contentAlignment = Alignment.TopCenter) {
         val width: Dp = minOf(maxWidth - (Space.S3 * 2).dp, PAGE_MAX_WIDTH_DP.dp).coerceAtLeast(0.dp)
         Column(Modifier.width(width), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {

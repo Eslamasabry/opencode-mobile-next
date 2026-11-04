@@ -18,17 +18,17 @@ import io.github.eslamasabry.oc.feature.chat.header.approval.NoApprovals
 import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeNoteStore
 import io.github.eslamasabry.oc.feature.chat.header.world.ChatHeaderPorts
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatLauncher
-import kotlin.time.Clock
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 /**
- * One per chat entry, beside the ChatViewModel: shares the conversation's world (ref-counted by [ChatWorlds]) and owns
- * the header's port. All behaviour is [ChatHeaderPresenter]'s.
+ * One per chat entry, beside the ChatViewModel: shares the conversation's world (ref-counted by
+ * [ChatWorlds]) and owns the header's port. All behaviour is [ChatHeaderPresenter]'s.
  */
 @AssistedInject
 public class ChatHeaderViewModel(
@@ -38,19 +38,40 @@ public class ChatHeaderViewModel(
     nav: AppNavigator,
     approvalStores: Set<ApprovalStore>,
     freeNoteStores: Set<FreeNoteStore>,
+    handoffSources: Set<io.github.eslamasabry.oc.feature.chat.header.world.ChatHandoffs>,
     clock: Clock,
 ) : ViewModel(), ChatHeaderActions, ApprovalChipActions {
     private val world = worlds.open(route.ref)
     private val port = ports.open(route.ref)
     private val launcher = ChatLauncher { block -> viewModelScope.launch { block() } }
-    private val presenter = ChatHeaderPresenter(world, port, nav, launcher, freeNoteStores.singleOrNull())
+    private val presenter =
+        ChatHeaderPresenter(
+            world,
+            port,
+            nav,
+            launcher,
+            freeNoteStores.singleOrNull(),
+            handoffSources.singleOrNull(),
+        )
     private val approvals =
-        ApprovalPresenter(route.ref, approvalStores.singleOrNull(), world.capabilities, port.approvals ?: NoApprovals, launcher, clock)
+        ApprovalPresenter(
+            route.ref,
+            approvalStores.singleOrNull(),
+            world.capabilities,
+            port.approvals ?: NoApprovals,
+            launcher,
+            clock,
+        )
 
-    public val state: StateFlow<ChatHeaderUi> = presenter.states(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS))
+    public val state: StateFlow<ChatHeaderUi> =
+        presenter.states(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS))
 
-    /** The sweep must run while the chat is open even before the chip is drawn, so this one starts eagerly. */
-    public val approval: StateFlow<ApprovalChipUi> = approvals.states(viewModelScope, SharingStarted.Eagerly)
+    /**
+     * The sweep must run while the chat is open even before the chip is drawn, so this one starts
+     * eagerly.
+     */
+    public val approval: StateFlow<ApprovalChipUi> =
+        approvals.states(viewModelScope, SharingStarted.Eagerly)
 
     override fun openApprovalMenu(): Unit = approvals.openApprovalMenu()
 
@@ -89,6 +110,25 @@ public class ChatHeaderViewModel(
     override fun retryContinueWith(): Unit = presenter.retryContinueWith()
 
     override fun copyResumeCommand(): Unit = presenter.copyResumeCommand()
+
+    override fun handoffSelect(choice: ContinueChoice): Unit = presenter.handoffSelect(choice)
+
+    override fun handoffSend(prompt: String): Unit = presenter.handoffSend(prompt)
+
+    override fun handoffRetryLink(): Unit = presenter.handoffRetryLink()
+
+    override fun handoffOpen(): Unit = presenter.handoffOpen()
+
+    override fun importChoose(): Unit = presenter.importChoose()
+
+    override fun importReview(text: String): Unit = presenter.importReview(text)
+
+    override fun importDestination(directory: String, workspace: String): Unit =
+        presenter.importDestination(directory, workspace)
+
+    override fun importSend(): Unit = presenter.importSend()
+
+    override fun importOpen(): Unit = presenter.importOpen()
 
     override fun confirm(): Unit = presenter.confirm()
 

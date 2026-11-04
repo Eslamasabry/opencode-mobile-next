@@ -14,15 +14,25 @@ import io.github.eslamasabry.oc.feature.usage.ui.UsageScreen
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.UsageRoute
 
-/** The EntryInstaller; the only file in the module that imports androidx.navigation3.runtime (Konsist K1). */
+/**
+ * The EntryInstaller; the only file in the module that imports androidx.navigation3.runtime
+ * (Konsist K1).
+ */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class UsageEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<UsageRoute.Hub> { route ->
-            val vm = assistedMetroViewModel<UsageViewModel, UsageViewModel.Factory> { create(route) }
+            val vm =
+                assistedMetroViewModel<UsageViewModel, UsageViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
             UsageScreen(state, vm)
         }
     }
+}
+
+@dev.zacsweers.metro.ContributesTo(AppScope::class)
+public interface UsageBudgetBindings {
+    @dev.zacsweers.metro.Multibinds(allowEmpty = true)
+    public val budgets: Set<io.github.eslamasabry.oc.feature.usage.presentation.UsageBudgetAccess>
 }

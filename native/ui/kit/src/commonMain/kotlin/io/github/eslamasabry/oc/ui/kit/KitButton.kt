@@ -11,6 +11,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
@@ -19,26 +21,36 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.style.LocalKitSignalInSlip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
 /** Dart `KitButtonRole`: primary = accent fill, secondary = surface3, tertiary = words only. */
-public enum class KitButtonRole { Primary, Secondary, Tertiary }
+public enum class KitButtonRole {
+    Primary,
+    Secondary,
+    Tertiary,
+}
 
 /**
- * One action a block or menu can offer (Dart `KitAction`). [onClick] null means the action cannot run now, and then
- * [enabled] must carry the reason. [working] marks the tap in flight: the action stays its enabled colour but ignores
- * taps (STATE-7). [destructive] is never red: a strong neutral, and it is offered apart (B-KIT-011).
+ * One action a block or menu can offer (Dart `KitAction`). [onClick] null means the action cannot
+ * run now, and then [enabled] must carry the reason. [working] marks the tap in flight: the action
+ * stays its enabled colour but ignores taps (STATE-7). [destructive] is never red: a strong
+ * neutral, and it is offered apart (B-KIT-011).
  */
 @Immutable
 public data class KitAction(
@@ -53,21 +65,22 @@ public data class KitAction(
     val semanticsLabel: String? = null,
 ) {
     /** True when a tap would run the action now. */
-    val runnable: Boolean get() = onClick != null && enabled.isEnabled
+    val runnable: Boolean
+        get() = onClick != null && enabled.isEnabled
 }
 
 /**
- * A button (Dart `KitButton`; plan 06 §7.5). Primary = accent fill with `onAccent` words; a destructive primary is the
- * strong neutral (text1 fill, ground words), never red; secondary = `surface3`; tertiary = `text1` words. Disabled =
- * `surface3` with `text3` words (tertiary: `text3` words) and its reason as the state a screen reader hears. [working]
- * shows the working mark before the words and makes taps no-ops while the button keeps its colour. Labels wrap to two
- * lines. Plain presses are silent; pass [haptic] only when the action's meaning calls for one (plan 06 §4.9).
+ * A button (Dart `KitButton`; plan 06 §7.5). Primary = accent fill with `onAccent` words; a
+ * destructive primary is the strong neutral (text1 fill, ground words), never red; secondary =
+ * `surface3`; tertiary = `text1` words. Disabled = `surface3` with `text3` words (tertiary: `text3`
+ * words) and its reason as the state a screen reader hears. [working] shows the working mark before
+ * the words and makes taps no-ops while the button keeps its colour. Labels wrap to two lines.
+ * Plain presses are silent; pass [haptic] only when the action's meaning calls for one (plan 06
+ * §4.9).
  *
- * States: default, pressed, disabled, working
- * Text: frame
- * Cap: Control
- * Motion: fill eases between enabled and disabled (QUICK); Off = instant; the working mark is still under Off
- * Replaces: KitButton, KitButton.primary/secondary/tertiary (lib/ui/kit/kit_buttons.dart)
+ * States: default, pressed, disabled, working Text: frame Cap: Control Motion: fill eases between
+ * enabled and disabled (QUICK); Off = instant; the working mark is still under Off Replaces:
+ * KitButton, KitButton.primary/secondary/tertiary (lib/ui/kit/kit_buttons.dart)
  */
 @Composable
 public fun KitButton(
@@ -91,6 +104,7 @@ public fun KitButton(
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
     val on = enabled.isEnabled
+    val signalKey = LocalKitSignalInSlip.current
     val fill: Color =
         when {
             role == KitButtonRole.Tertiary -> Color.Transparent
@@ -109,6 +123,24 @@ public fun KitButton(
     val easedFill by animateColorAsState(fill, specs.quick(), label = "kit-button-fill")
     val easedWords by animateColorAsState(words, specs.quick(), label = "kit-button-words")
     val ink = if (role == KitButtonRole.Primary && !destructive) TextTone.OnAccent else TextTone.Primary
+    // The style decides the face (B-KIT-043..045); Solid keeps the fill above. A tertiary button has no face.
+    val look =
+        if (role == KitButtonRole.Tertiary) {
+            null
+        } else {
+            kitSurfaceLook(
+                KitSurfaceInput(
+                    role = SurfaceRole.Control,
+                    shape = KitShapeId.Button,
+                    level = SurfaceLevel.Surface3,
+                    ownFill = easedFill,
+                    color = if (role == KitButtonRole.Primary && on) easedFill else null,
+                    disabled = !on,
+                    action = true,
+                ),
+            )
+        }
+    val wordsColor = look?.words?.takeIf { on } ?: easedWords
     val minHeight = if (role == KitButtonRole.Tertiary) tokens.minTarget else tokens.buttonHeight
     val pad = if (role == KitButtonRole.Tertiary) Space.S2 else Space.S6
     Row(
@@ -127,22 +159,40 @@ public fun KitButton(
                     if (working) disabled()
                     if (semanticsLabel != null) contentDescription = semanticsLabel
                 }
-                .background(easedFill)
+                .then(if (look != null) look.modifier else Modifier.background(easedFill))
+                .then(
+                    if (signalKey)
+                        Modifier.drawBehind {
+                            val stroke = 1.dp.toPx()
+                            drawRect(
+                                colors.text1.copy(alpha = .25f),
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(stroke),
+                            )
+                            drawLine(
+                                colors.text1.copy(alpha = .35f),
+                                Offset(0f, size.height - stroke),
+                                Offset(size.width, size.height - stroke),
+                                2.dp.toPx(),
+                            )
+                        }
+                    else Modifier
+                )
                 .padding(horizontal = pad.dp),
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         when {
-            working -> KitWorkingMark(easedWords, size = tokens.smallIcon.dp)
-            icon != null -> KitGlyph(icon, easedWords, tokens.smallIcon.dp)
+            working -> KitWorkingMark(wordsColor, size = tokens.smallIcon.dp)
+            icon != null -> KitGlyph(icon, wordsColor, tokens.smallIcon.dp)
         }
-        KitButtonWords(label, easedWords, maxLines)
+        KitButtonWords(label, wordsColor, maxLines)
     }
 }
 
 /**
- * The slice-0 bridge: `enabled` + `disabledReason` as two values. New code passes [KitEnabled]; this overload keeps the
- * P1/P7 call sites (`:feature:chats`, `:ui:shell`, the P7 scenes) compiling unchanged.
+ * The slice-0 bridge: `enabled` + `disabledReason` as two values. New code passes [KitEnabled];
+ * this overload keeps the P1/P7 call sites (`:feature:chats`, `:ui:shell`, the P7 scenes) compiling
+ * unchanged.
  */
 @Composable
 public fun KitButton(
@@ -164,7 +214,11 @@ public fun KitButton(
 
 /** Runs a [KitAction] as a button of [role]. */
 @Composable
-public fun KitButton(action: KitAction, modifier: Modifier = Modifier, role: KitButtonRole = KitButtonRole.Primary) {
+public fun KitButton(
+    action: KitAction,
+    modifier: Modifier = Modifier,
+    role: KitButtonRole = KitButtonRole.Primary,
+) {
     val run = action.onClick
     kitAssert(run != null || !action.enabled.isEnabled) {
         "KitAction: an action without a callback must say why it cannot run (B-KIT-011)"
@@ -177,7 +231,9 @@ public fun KitButton(action: KitAction, modifier: Modifier = Modifier, role: Kit
         icon = action.icon,
         destructive = action.destructive,
         semanticsLabel = action.semanticsLabel,
-        enabled = if (run == null && action.enabled.isEnabled) KitEnabled.Disabled(action.label) else action.enabled,
+        enabled =
+            if (run == null && action.enabled.isEnabled) KitEnabled.Disabled(action.label)
+            else action.enabled,
         working = action.working,
         haptic = action.haptic,
     )
@@ -185,14 +241,15 @@ public fun KitButton(action: KitAction, modifier: Modifier = Modifier, role: Kit
 
 @Composable
 private fun KitButtonWords(label: String, color: Color, maxLines: Int) {
-    // Tone is resolved by the caller's eased colour; KitText takes a tone, so the words draw through a tone-free path.
+    // Tone is resolved by the caller's eased colour; KitText takes a tone, so the words draw
+    // through a tone-free path.
     KitTextColored(label, color, maxLines)
 }
 
 @Composable
 private fun KitTextColored(text: String, color: Color, maxLines: Int) {
     androidx.compose.runtime.CompositionLocalProvider(
-        LocalKitColors provides LocalKitColors.current.copy(text1 = color),
+        LocalKitColors provides LocalKitColors.current.copy(text1 = color)
     ) {
         KitText(
             text,

@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Slice 0: only the components already built (plan 03 §22.1). Every later component keeps its frozen FQCN. -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- Raw project paths inside selected proot mounts require Android file access. Requested only from a visible folder action. -->
+    <!-- Phone storage browsing is enabled only after the person grants folder access in Settings. -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
     <!-- Settings › Notifications: Android 13+ lets the app notify only with this declared (P12-SETTINGS). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
 
     <!-- P12-VOICE: voice typing uses the phone's speech recognizer; Android 11+ hides the service without this. -->
     <queries>
@@ -28,7 +33,7 @@
         android:label="@string/app_label_preview"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Material.NoActionBar">
+        android:theme="@style/NativeAppTheme">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -63,6 +68,15 @@
             android:excludeFromRecents="true"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize" />
+        <!-- Widget trampoline (B-AGENT-317): shows nothing, like ScheduleOpenActivity. -->
+        <activity android:name=".WidgetRouteActivity" android:exported="false" android:excludeFromRecents="true"
+            android:noHistory="true" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <activity android:name=".WidgetOverlayActivity" android:exported="false" android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize" />
+        <meta-data android:name="io.github.eslamasabry.opencode_mobile.WIDGET_OVERLAY_READY" android:value="true" />
+        <activity
+            android:name="io.github.eslamasabry.opencode_mobile.graph.ScheduleOpenActivity"
+            android:theme="@style/NativeTrampolineTheme"
+            tools:replace="android:theme" />
         <service android:name="io.github.eslamasabry.oc.android.termux.GitRepairResultService" android:exported="false" />
         <!-- Notification buttons (P12-PLATFORM); frozen Flutter FQCNs. Tiles, widgets and the update receiver merge
              from :android:tiles and :android:widgets. -->
@@ -76,7 +90,7 @@
         <service
             android:name=".BackgroundConnectionService"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync|shortService" />
         <!-- P12 fix (Codex files #3, plan 10 §11.6 S4): untrusted PDFs are parsed only in this isolated process. -->
         <service
             android:name=".LocalPdfService"
@@ -93,5 +107,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/oc_files_paths" />
         </provider>
+        <receiver android:name=".LivePauseReceiver" android:exported="false" />
     </application>
 </manifest>

@@ -112,6 +112,10 @@ public data class FileUi(
     val opening: Boolean = false,
     val share: ShareSheetUi? = null,
     val notice: FileNotice? = null,
+    /** STATE: a reader choice is being saved (the head saves at once; kept for the screen). */
+    val preferencesSaving: Boolean = false,
+    val linkUrl: String? = null,
+    val linkHost: String? = null,
     /**
      * PDF: the shown page count (at most 200) once the document opened; pages fill in as they
      * render.
@@ -128,6 +132,12 @@ public data class FileUi(
 }
 
 public interface FileActions {
+    public fun openLink(url: String)
+
+    public fun confirmLink()
+
+    public fun cancelLink()
+
     public fun back()
 
     public fun retry()
@@ -150,11 +160,10 @@ public interface FileActions {
 
     public fun review() {}
 
-    public fun openLink(url: String) {}
+    /** PORT-SCREENS-2 names for the one link confirmation (the head's [confirmLink]/[cancelLink]). */
+    public fun confirmOpenLink(): Unit = confirmLink()
 
-    public fun confirmOpenLink() {}
-
-    public fun cancelOpenLink() {}
+    public fun cancelOpenLink(): Unit = cancelLink()
 
     public fun copyText(text: String) {}
 
@@ -192,9 +201,28 @@ public class FileViewModel(
     private val nav: AppNavigator,
     private val appScope: AppCoroutineScope,
     private val savers: Set<FileSaver>,
+    private val links: FileLinks,
     private val preferences: Set<FilesReaderPreferences>,
-    private val links: Set<FilesExternalLinks>,
 ) : ViewModel(), FileActions {
+    override fun openLink(url: String) {
+        val host = links.host(url)
+        local.update {
+            if (host == null) it.copy(notice = FileNotice.LinkRefused)
+            else it.copy(linkUrl = url, linkHost = host)
+        }
+    }
+
+    override fun confirmLink() {
+        val url = local.value.linkUrl ?: return
+        cancelLink()
+        if (links.openConfirmed(url) is Outcome.Failed)
+            local.update { it.copy(notice = FileNotice.LinkRefused) }
+    }
+
+    override fun cancelLink() {
+        local.update { it.copy(linkUrl = null, linkHost = null) }
+    }
+
     private val local =
         MutableStateFlow(
             FileUi(
@@ -220,7 +248,6 @@ public class FileViewModel(
     private var loads = 0
     private var shareWanted = false
     private var clips = 0L
-    private var pendingLink: Pair<FilesExternalLinks, Any>? = null
     private val reader = preferences.singleOrNull()?.open(route.from.profileId)
 
     /** The share this viewer started; another viewer's share is never adopted or stopped here. */
@@ -417,33 +444,6 @@ public class FileViewModel(
 
     override fun toggleSource() {
         local.update { it.copy(source = !it.source) }
-    }
-
-    override fun openLink(url: String) {
-        val opener = links.singleOrNull()
-        when (val ticket = opener?.check(url) ?: FilesLinkTicket.Refused) {
-            is FilesLinkTicket.Open ->
-                if (opener?.open(ticket.token) != true)
-                    local.update { it.copy(notice = FileNotice.LinkRefused) }
-            is FilesLinkTicket.AskFirst -> {
-                if (opener == null) return
-                pendingLink = opener to ticket.token
-                local.update { it.copy(confirmLinkHost = ticket.host) }
-            }
-            FilesLinkTicket.Refused -> local.update { it.copy(notice = FileNotice.LinkRefused) }
-        }
-    }
-
-    override fun cancelOpenLink() {
-        pendingLink = null
-        local.update { it.copy(confirmLinkHost = null) }
-    }
-
-    override fun confirmOpenLink() {
-        val pending = pendingLink ?: return
-        cancelOpenLink()
-        if (!pending.first.open(pending.second))
-            local.update { it.copy(notice = FileNotice.LinkRefused) }
     }
 
     override fun copyText(text: String) {

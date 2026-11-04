@@ -79,8 +79,6 @@ dependencies {
             ":core:model",
             ":core:domain",
             ":engine:connection",
-            ":engine:integrations-catalog",
-            ":engine:setupassist",
             ":engine:transcript",
             ":ui:design",
             ":ui:words",
@@ -90,6 +88,7 @@ dependencies {
             ":feature:chats",
             ":feature:chat",
             ":feature:servers",
+            ":feature:setupassistant",
             ":core:data",
             ":core:net",
             ":protocol:oc2",
@@ -108,8 +107,9 @@ dependencies {
             ":engine:settings",
             ":engine:analytics",
             ":engine:diagnostics",
+            ":android:platform", // SEC: the adopted category-only native crash handler/store
             ":android:notifications",
-            ":android:platform",
+            ":android:platform", // ANDR: real default-network tracker for consented monitors
             ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
             ":android:termux",
@@ -122,6 +122,7 @@ dependencies {
             ":engine:runtime",
             ":feature:phone",
             ":feature:linux",
+            ":feature:setup", // BUILD-RUNTIME-B: Set up OpenCode on this phone
             ":engine:git",
             ":feature:git",
             ":engine:updates", // P12-PLATFORM: in-app update notice
@@ -131,6 +132,7 @@ dependencies {
             ":engine:entry", // B-ANDR-072: exact-shape opencode-mobile:// link parser
             ":android:tiles", // P12-PLATFORM: QS tiles, shortcuts, share, update installer
             ":android:widgets", // P12-PLATFORM: home-screen widgets
+            ":android:platform",
             ":feature:preview", // PREVIEW-QR
             ":android:webview", // PREVIEW-QR
             ":android:camera", // PREVIEW-QR (pairing scanner)
@@ -155,9 +157,29 @@ dependencies {
             ":engine:lifecycle", // P12-BUILD-RUNTIME-C: this-phone mark and lifecycle rules
             ":feature:phonesetup", // P12-BUILD-RUNTIME-C: Set up OpenCode on this phone
             ":feature:diagnostics", // BUILD-DIAGNOSTICS-ATTENTION
-            ":feature:devservices", // BUILD-RUNTIME-A: Development services (commands, servers)
+            ":feature:devservices", // BUILD-RUNTIME-A: Development services (saved commands, dev
+            // servers found)
+            ":engine:integrations-catalog",
+            ":engine:integrations-quota",
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
+            ":engine:setupassist",
+            ":feature:integrations",
+            ":engine:project-terminal",
+            ":android:terminal",
+            ":feature:terminal",
             ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
+            ":engine:integrations-catalog",
+            ":feature:integrations-catalog",
+            ":feature:setupreview",
+            ":feature:agenttools",
+            ":feature:widgetactions",
+            ":feature:monitor",
+            ":protocol:codex",
+            ":feature:codexprobe",
+            ":feature:handoff",
+            ":android:terminal",
+            ":engine:integrations-quota",
+            ":engine:setupassist",
         )
         .forEach { implementation(project(it)) }
     implementation(libs.androidx.activity.compose)

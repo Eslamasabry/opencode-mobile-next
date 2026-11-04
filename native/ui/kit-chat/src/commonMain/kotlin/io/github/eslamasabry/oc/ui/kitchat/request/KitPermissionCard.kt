@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,28 +29,29 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitMonoLtr
 
-/** Plan 09 R13 / plan 06 §8: the card's width cap, and its height share of the window (more at very large text). */
-private val CARD_MAX_WIDTH: Dp = 700.dp
+/** Plan 09 R13 / plan 06 §8: the card height share grows at very large text. */
 private const val HEIGHT_SHARE = 0.45f
 private const val HEIGHT_SHARE_LARGE_TEXT = 0.60f
 private const val LARGE_TEXT = 2.0f
 
 /**
- * The permission card's shell (plan 09 §5.1–§5.2, plan 06 §7.8 `KitRequestCard` decide form): the engine words the
- * ask and decides what happens; this card only draws it. The needs-you look (attention surface and line), the
- * [title], an optional [summary], the [subject] (the command or the paths) in mono reading left to right and
- * redacted, then the answers as visible buttons (R9): Allow once is the primary answer, Deny is never drawn in the
- * primary colour, and Always allow shows only when [alwaysLabel] and [onAlways] are given.
+ * The permission card's shell (plan 09 §5.1–§5.2, plan 06 §7.8 `KitRequestCard` decide form): the
+ * engine words the ask and decides what happens; this card only draws it. The needs-you look
+ * (attention surface and line), the [title], an optional [summary], the [subject] (the command or
+ * the paths) in mono reading left to right and redacted, then the answers as visible buttons (R9):
+ * Allow once is the primary answer, Deny is never drawn in the primary colour, and Always allow
+ * shows only when [alwaysLabel] and [onAlways] are given.
  *
- * The card is at most 700 dp wide and 45 % of the window tall (60 % at 2× text and above); longer words scroll
- * inside it while the answers stay in sight. While it cannot answer ([enabled] false, e.g. an answer is being sent)
- * the buttons are disabled and say why ([disabledReason], required then).
+ * The card is at most 700 dp wide and 45 % of the window tall (60 % at 2× text and above); longer
+ * words scroll inside it while the answers stay in sight. While it cannot answer ([enabled] false,
+ * e.g. an answer is being sent) the buttons are disabled and say why ([disabledReason], required
+ * then).
  *
  * Text: title and summary reading (full size); buttons frame (≤ 1.3×); subject mono, left to right.
  */
@@ -71,66 +69,65 @@ public fun KitPermissionCard(
     enabled: Boolean = true,
     disabledReason: String? = null,
     modifier: Modifier = Modifier,
+    targets: List<KitRequestTarget> = emptyList(),
 ) {
-    require(enabled || disabledReason != null) { "KitPermissionCard: a card that cannot answer must say why" }
+    require(enabled || disabledReason != null) {
+        "KitPermissionCard: a card that cannot answer must say why"
+    }
     val colors = LocalKitColors.current
-    val shape = KitShapeId.Card.toShape()
     val reason = if (enabled) null else disabledReason
-    Column(
-        modifier
-            .widthIn(max = CARD_MAX_WIDTH)
-            .fillMaxWidth()
-            .heightIn(max = maxCardHeight())
-            .clip(shape)
-            .background(colors.surface1)
-            .background(colors.attentionSurface)
-            .border(1.dp, colors.attentionLine, shape)
-            .padding(Space.S4.dp),
-        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+    KitRequestFrame(
+        modifier = modifier,
+        answers = {
+            Answers(
+                allowOnceLabel,
+                alwaysLabel?.takeIf { onAlways != null },
+                denyLabel,
+                onAllowOnce,
+                onAlways,
+                onDeny,
+                enabled,
+                reason,
+            )
+        },
     ) {
-        // The words scroll together when they do not fit; the answers below never leave the card.
-        Column(
-            Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        ) {
+        KitText(
+            title,
+            Modifier.semantics {
+                heading()
+                liveRegion = LiveRegionMode.Polite
+            },
+            role = TypeRole.Headline,
+            tone = TextTone.Primary,
+            kind = KitTextKind.Reading,
+        )
+        if (!summary.isNullOrEmpty()) {
             KitText(
-                title,
-                Modifier.semantics {
-                    heading()
-                    liveRegion = LiveRegionMode.Polite
-                },
-                role = TypeRole.Headline,
-                tone = TextTone.Primary,
+                summary,
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
                 kind = KitTextKind.Reading,
             )
-            if (!summary.isNullOrEmpty()) {
-                KitText(summary, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading)
-            }
-            if (!subject.isNullOrEmpty()) {
-                Box(
-                    Modifier.fillMaxWidth()
-                        .clip(KitShapeId.Code.toShape())
-                        .background(colors.ground)
-                        .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp),
-                ) {
-                    KitMonoLtr(subject, Modifier.fillMaxWidth(), TextTone.Primary)
-                }
+        }
+        if (targets.isNotEmpty()) {
+            KitRequestTargets(targets)
+        } else if (!subject.isNullOrEmpty()) {
+            Box(
+                Modifier.fillMaxWidth()
+                    .clip(KitShapeId.Code.shape())
+                    .background(colors.ground)
+                    .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp)
+            ) {
+                KitMonoLtr(subject, Modifier.fillMaxWidth(), TextTone.Primary)
             }
         }
-        Answers(
-            allowOnceLabel = allowOnceLabel,
-            alwaysLabel = alwaysLabel?.takeIf { onAlways != null },
-            denyLabel = denyLabel,
-            onAllowOnce = onAllowOnce,
-            onAlways = onAlways,
-            onDeny = onDeny,
-            enabled = enabled,
-            reason = reason,
-        )
     }
 }
 
-/** Deny and Allow once side by side (Allow at the end, under the thumb); Always allow as a quiet answer under them. */
+/**
+ * Deny and Allow once side by side (Allow at the end, under the thumb); Always allow as a quiet
+ * answer under them.
+ */
 @Composable
 private fun Answers(
     allowOnceLabel: String,
@@ -143,9 +140,18 @@ private fun Answers(
     reason: String?,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             SecondaryAnswer(denyLabel, onDeny, enabled, reason, Modifier.weight(1f))
-            KitButton(allowOnceLabel, onAllowOnce, Modifier.weight(1f), enabled = enabled, disabledReason = reason)
+            KitButton(
+                allowOnceLabel,
+                onAllowOnce,
+                Modifier.weight(1f),
+                enabled = enabled,
+                disabledReason = reason,
+            )
         }
         if (alwaysLabel != null && onAlways != null) {
             SecondaryAnswer(alwaysLabel, onAlways, enabled, reason, Modifier.fillMaxWidth())
@@ -154,14 +160,20 @@ private fun Answers(
 }
 
 /**
- * A secondary answer: the card's own face with a hairline, primary words; never the accent fill. (`:ui:kit` has no
- * secondary button yet; when it lands this becomes it.)
+ * A secondary answer: the card's own face with a hairline, primary words; never the accent fill.
+ * (`:ui:kit` has no secondary button yet; when it lands this becomes it.)
  */
 @Composable
-private fun SecondaryAnswer(label: String, onClick: () -> Unit, enabled: Boolean, reason: String?, modifier: Modifier) {
+private fun SecondaryAnswer(
+    label: String,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    reason: String?,
+    modifier: Modifier,
+) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val shape = KitShapeId.Button.toShape()
+    val shape = KitShapeId.Button.shape()
     KitTappable(
         onClick = onClick,
         modifier =
@@ -184,9 +196,11 @@ private fun SecondaryAnswer(label: String, onClick: () -> Unit, enabled: Boolean
     }
 }
 
-/** 45 % of the window's height (60 % at 2× text and above); no cap while the window has no size yet. */
+/**
+ * 45 % of the window's height (60 % at 2× text and above); no cap while the window has no size yet.
+ */
 @Composable
-private fun maxCardHeight(): Dp {
+internal fun maxCardHeight(): Dp {
     val density = LocalDensity.current
     val heightPx = LocalWindowInfo.current.containerSize.height
     if (heightPx <= 0) return Dp.Infinity

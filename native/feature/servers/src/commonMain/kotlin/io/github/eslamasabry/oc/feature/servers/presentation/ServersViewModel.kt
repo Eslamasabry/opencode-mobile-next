@@ -23,9 +23,12 @@ import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.McpCatalogRoute
 import io.github.eslamasabry.oc.ui.routes.PairingRoute
 import io.github.eslamasabry.oc.ui.routes.PlansRoute
 import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
+import io.github.eslamasabry.oc.ui.routes.ServersRoute
+import io.github.eslamasabry.oc.ui.routes.SetupReviewRoute
 import io.github.eslamasabry.oc.ui.routes.UsageRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,11 +52,19 @@ public class ServersViewModel(
      */
     private val probe: PairingProbe = NoPairingProbe,
     private val monitoring: Set<ServerMonitoring> = emptySet(),
-) : ViewModel(), ServersActions {
+    private val imported: ImportedProviderReview? = null,
+) : ViewModel(), ServersActions, ServerDisconnectActions {
     private val local = MutableStateFlow(ServersUi(newConversation = route != null))
     public val state: StateFlow<ServersUi> =
         combine(local, connections.servers, connections.busy) { own, servers, busy ->
-                own.copy(servers = servers, busy = own.busy || busy)
+                own.copy(
+                    servers = servers,
+                    busy = own.busy || busy,
+                    importedSignIns =
+                        own.importedSignIns?.takeIf { review ->
+                            servers.any { it.id == review.profile }
+                        },
+                )
             }
             .stateIn(
                 viewModelScope,
@@ -94,11 +105,14 @@ public class ServersViewModel(
 
     private fun choose(fill: PairingFill) {
         val generation = ++choosing
-        if (probe === NoPairingProbe || fill.candidates.size < 2) return publish(fill)
+        if (probe === NoPairingProbe || fill.fromLink) return publish(fill)
         viewModelScope.launch {
-            val chosen = PairingChoice.choose(fill.candidates, probe)
-            if (generation == choosing)
+            val checks = PairingChoice.inspect(fill.candidates, probe, fill.credentials())
+            if (generation == choosing) {
+                local.update { it.copy(pairingChecks = checks.outcomes) }
+                val chosen = checks.chosen
                 publish(if (chosen == null || chosen == fill.address) fill else fill.at(chosen))
+            }
         }
     }
 
@@ -136,6 +150,56 @@ public class ServersViewModel(
     override fun openUsage(id: ProfileId): Unit = nav.open(UsageRoute.Hub(id))
 
     override fun openPlans(): Unit = nav.open(PlansRoute)
+
+    override fun openSetup(id: ProfileId): Unit = nav.open(ServersRoute.SetupAssist(id))
+
+    override fun reviewImportedSignIns(id: ProfileId) = operation {
+        when (
+            val result =
+                imported?.read(id)
+                    ?: Outcome.Failed(
+                        Failure.Unavailable(
+                            io.github.eslamasabry.oc.core.common.FeatureId(
+                                "migration.providerReview"
+                            )
+                        )
+                    )
+        ) {
+            is Outcome.Ok ->
+                local.update { it.copy(importedSignIns = ImportedSignInUi(id, result.value)) }
+            is Outcome.Failed ->
+                local.update {
+                    it.copy(importedSignIns = ImportedSignInUi(id, emptyList(), failed = true))
+                }
+        }
+    }
+
+    override fun closeImportedSignIns() {
+        local.update { it.copy(importedSignIns = null) }
+    }
+
+    override fun openProviderSignIn() {
+        closeImportedSignIns()
+        nav.open(io.github.eslamasabry.oc.ui.routes.IntegrationsRoute)
+    }
+
+    override fun openConnectorCatalog(id: ProfileId) {
+        val location = connections.currentLocation(id)
+        nav.open(McpCatalogRoute(id, location?.directory, location?.workspace))
+    }
+
+    override fun openSetupReview(id: ProfileId) {
+        val location = connections.currentLocation(id)
+        nav.open(SetupReviewRoute(id, location?.directory, location?.workspace))
+    }
+
+    override fun openAgentTools(id: ProfileId) =
+        nav.open(io.github.eslamasabry.oc.ui.routes.AgentToolsRoute(id))
+
+    override fun openMonitor(id: ProfileId) =
+        nav.open(io.github.eslamasabry.oc.ui.routes.MonitorRoute(id))
+
+    override fun openCodexProbe() = nav.open(io.github.eslamasabry.oc.ui.routes.CodexProbeRoute())
 
     private var consentAddress: String? = null
 
@@ -182,6 +246,19 @@ public class ServersViewModel(
         }
     }
 
+    override val disconnectSupported: Boolean
+        get() = connections is io.github.eslamasabry.oc.engine.connection.ServerDisconnects
+
+    override fun disconnect(id: ProfileId) = operation {
+        val owner =
+            connections as? io.github.eslamasabry.oc.engine.connection.ServerDisconnects
+                ?: return@operation
+        when (val result = owner.disconnect(id)) {
+            is Outcome.Ok -> local.update { it.copy(issue = null, failure = null) }
+            is Outcome.Failed -> failed(ServerIssue.ConnectFailed, result.failure)
+        }
+    }
+
     override fun connect(id: ProfileId) = operation {
         when (val result = connections.connect(id)) {
             is Outcome.Ok -> local.update { it.copy(issue = ServerIssue.Connected) }
@@ -189,16 +266,42 @@ public class ServersViewModel(
         }
     }
 
-    override fun create(id: ProfileId) = operation {
-        when (val connected = connections.connect(id)) {
-            is Outcome.Ok -> createNow(id)
-            is Outcome.Failed -> failed(ServerIssue.ConnectFailed, connected.failure)
+    override fun create(id: ProfileId) {
+        // Every explicit New chat gets its own saved route owner. A retry stays on that route.
+        if (route == null) {
+            if (!local.value.busy && !connections.busy.value && nav.top.value !is ChatsRoute.New)
+                nav.open(ChatsRoute.New(id))
+            return
+        }
+        operation {
+            when (val connected = connections.connect(id)) {
+                is Outcome.Ok -> createNow(id)
+                is Outcome.Failed -> failed(ServerIssue.ConnectFailed, connected.failure)
+            }
         }
     }
 
     private suspend fun createNow(id: ProfileId) {
-        when (val result = connections.createConversation(id)) {
+        val owner = route ?: return
+        // Save the chosen profile in navigation before dispatch. Restore cannot retarget the
+        // same command to a newly active server when the original chooser had profile=null.
+        if (owner.profile == null) {
+            if (nav.top.value == owner) {
+                nav.back()
+                nav.open(owner.copy(profile = id))
+            }
+            return
+        }
+        if (owner.profile != id) {
+            failed(
+                ServerIssue.CreateFailed,
+                Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope),
+            )
+            return
+        }
+        when (val result = connections.createConversation(id, owner.commandId, owner.tabId)) {
             is Outcome.Ok -> {
+                if (nav.top.value != owner) return
                 // The chooser is done: Back from the new chat returns to where New chat was tapped.
                 if (route != null && nav.top.value == route) nav.back()
                 nav.openChat(result.value, focusComposer = true)
@@ -223,7 +326,14 @@ public class ServersViewModel(
             local.update { it.copy(pairingProblem = (read as? PairingRead.Problem)?.problem) }
             return
         }
-        local.update { it.copy(pairingProblem = null, issue = null, failure = null) }
+        local.update {
+            it.copy(
+                pairingProblem = null,
+                pairingChecks = kotlinx.collections.immutable.persistentListOf(),
+                issue = null,
+                failure = null,
+            )
+        }
         pairing.put(fill)
     }
 
@@ -240,6 +350,11 @@ public class ServersViewModel(
     }
 
     override fun heldPassword(): String = draftPassword
+
+    override fun openStateSetup(id: ProfileId): Unit =
+        nav.open(io.github.eslamasabry.oc.ui.routes.SetupRoute.Home(id))
+
+    override fun tryOffline(): Unit = nav.open(io.github.eslamasabry.oc.ui.routes.DemoRoute)
 
     override fun openSchedules(id: ProfileId) {
         nav.open(SchedulesRoute.List(id))

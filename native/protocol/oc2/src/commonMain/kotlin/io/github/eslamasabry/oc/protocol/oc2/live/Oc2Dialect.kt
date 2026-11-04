@@ -125,6 +125,8 @@ internal enum class Oc2Dialect {
 
     companion object {
         private val BetaVersion = Regex("0[.]0[.]0-beta-[0-9]+")
+        private val StableVersion =
+            Regex("[0-9]+[.][0-9]+[.][0-9]+(?:-[0-9A-Za-z.-]+)?(?:[+][0-9A-Za-z.-]+)?")
         private val SessionScoped = Regex("^/session/([^/]+)/(.+)$")
         private val PermissionReply = Regex("^permission/[^/]+/reply$")
         private val InboxDelivery = Regex("^/session/([^/]+)/inbox/([^/]+)/(steer|queue)$")
@@ -144,7 +146,8 @@ internal enum class Oc2Dialect {
             when {
                 version == null -> null
                 BetaVersion.matches(version) -> Beta
-                (version.substringBefore('.').toIntOrNull() ?: 0) >= 2 -> Stable
+                StableVersion.matches(version) &&
+                    (version.substringBefore('.').toIntOrNull() ?: 0) >= 2 -> Stable
                 else -> null
             }
     }

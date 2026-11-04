@@ -107,8 +107,10 @@ internal class P3Bridge(private val sessionId: String) {
             errorText = m.errorText,
         )
 
-    private fun part(p: CorePart): Part =
-        Part(
+    private fun part(raw: CorePart): Part {
+        val p =
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.backgroundShellToolPart(raw) ?: raw
+        return Part(
             id = p.id,
             messageId = p.messageId,
             sessionId = p.sessionId,
@@ -148,6 +150,7 @@ internal class P3Bridge(private val sessionId: String) {
                     )
                     .joinToString("\n"),
         )
+    }
 
     private fun type(t: CorePartType): PartType =
         when (t) {

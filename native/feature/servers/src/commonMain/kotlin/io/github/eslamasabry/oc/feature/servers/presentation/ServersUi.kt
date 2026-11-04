@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.servers.presentation
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.SavedServer
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingCheck
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingFill
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingProblem
 import kotlinx.collections.immutable.ImmutableList
@@ -24,6 +25,8 @@ public data class ServersUi(
      */
     val pairingArrival: Int = 0,
     val pairingProblem: PairingProblem? = null,
+    val pairingChecks: ImmutableList<PairingCheck> = persistentListOf(),
+    val importedSignIns: ImportedSignInUi? = null,
 )
 
 public enum class ServerIssue {
@@ -85,4 +88,35 @@ public interface ServersActions {
 
     /** Usage › Plans across every connection (:feature:plans, unit P12-BUILD-INTEGRATIONS-B). */
     public fun openPlans() {}
+
+    public fun openSetup(id: ProfileId) {}
+
+    /** STATE: the setup inspection page (SetupRoute.Home). */
+    public fun openStateSetup(id: ProfileId) {}
+
+    public fun reviewImportedSignIns(id: ProfileId) {}
+
+    public fun closeImportedSignIns() {}
+
+    public fun openProviderSignIn() {}
+
+    /** STATE: the offline demo conversation. */
+    public fun tryOffline() {}
+
+    public fun openConnectorCatalog(id: ProfileId) {}
+
+    public fun openSetupReview(id: ProfileId) {}
+
+    public fun openAgentTools(id: ProfileId) {}
+
+    public fun openMonitor(id: ProfileId) {}
+
+    public fun openCodexProbe() {}
+}
+
+/** Visible only on a host that can close a live saved connection. */
+public interface ServerDisconnectActions {
+    public val disconnectSupported: Boolean
+
+    public fun disconnect(id: ProfileId)
 }

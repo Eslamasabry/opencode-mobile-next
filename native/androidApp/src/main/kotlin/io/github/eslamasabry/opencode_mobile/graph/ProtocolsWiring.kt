@@ -38,7 +38,7 @@ import io.github.eslamasabry.oc.protocol.codex.gateway.CodexGatewayFactory
 import io.github.eslamasabry.oc.protocol.codex.transport.CodexSocket
 import io.github.eslamasabry.oc.protocol.codex.transport.CodexSocketFactory
 import io.github.eslamasabry.oc.protocol.codex.transport.CodexTransport
-import io.github.eslamasabry.oc.protocol.paseo.gateway.HostUpdatePhase
+import io.github.eslamasabry.oc.core.model.HostUpdatePhase
 import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoGateway
 import io.github.eslamasabry.oc.protocol.paseo.gateway.updateHostDaemon
 import java.util.concurrent.ConcurrentHashMap

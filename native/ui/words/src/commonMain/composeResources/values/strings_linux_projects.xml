@@ -1,0 +1,18 @@
+<resources>
+    <string name="linuxFindProjects">Find projects on this phone</string>
+    <string name="linuxFindProjectsBody">Look in the project space and shared phone storage. Folders stay where they are.</string>
+    <string name="linuxStopFinding">Stop looking</string>
+    <string name="linuxFindProjectsDone">Finished looking</string>
+    <string name="linuxFindProjectsLimited">Stopped at the scan limit. These are the first results.</string>
+    <string name="linuxProjectDart">Dart / Flutter</string>
+    <string name="linuxProjectNode">Node</string>
+    <string name="linuxProjectPython">Python</string>
+    <string name="linuxProjectRust">Rust</string>
+    <string name="linuxProjectGo">Go</string>
+    <string name="linuxProjectJava">Java / Gradle</string>
+    <string name="linuxProjectRuby">Ruby</string>
+    <string name="linuxProjectPhp">PHP</string>
+    <string name="linuxProjectDotnet">.NET</string>
+    <string name="linuxProjectCpp">C / C++</string>
+    <string name="linuxProjectFolder">Project folder</string>
+</resources>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sessionTransferTitle">Conversation tools</string>
+    <string name="sessionTransferWait">Finishing this action…</string>
+    <string name="sessionTransferExport">Save a complete copy</string>
+    <string name="sessionTransferRedact">Hide private values</string>
+    <string name="sessionTransferRedactBody">The server replaces sensitive values in the exported copy.</string>
+    <string name="sessionTransferSave">Save JSON file</string>
+    <string name="sessionTransferImport">Import a conversation</string>
+    <string name="sessionTransferChoose">Choose JSON file</string>
+    <string name="sessionTransferRecords">%1$d message records</string>
+    <string name="sessionTransferRedacted">This copy includes hidden values. Import keeps those placeholders.</string>
+    <string name="sessionTransferDestination">Import into this server folder</string>
+    <string name="sessionTransferDestinationRequired">Choose a destination folder first.</string>
+    <string name="sessionTransferImportAction">Import reviewed conversation</string>
+    <string name="sessionTransferNote">Conversation note</string>
+    <string name="sessionTransferLoadNote">Read current note</string>
+    <string name="sessionTransferSaveNote">Save note</string>
+    <string name="sessionTransferRemoveNote">Remove note</string>
+    <string name="sessionTransferNoteLimit">The note must fit within %1$d encoded bytes. Shorten it and try again.</string>
+    <string name="sessionTransferSaved">Conversation saved.</string>
+    <string name="sessionTransferImported">Conversation imported.</string>
+    <string name="sessionTransferNoteSaved">Note saved.</string>
+    <string name="sessionTransferNoteRemoved">Note removed.</string>
+    <string name="sessionTransferInvalid">Choose a valid OpenCode JSON export.</string>
+    <string name="sessionTransferLarge">Choose an export smaller than 128 MiB.</string>
+    <string name="sessionTransferChanged">The server connection changed. Open these tools again before continuing.</string>
+    <string name="sessionTransferSignIn">The server denied access. Check your server sign-in and try again.</string>
+    <string name="sessionTransferConflict">A conversation with this identity already exists. Choose another destination or review it on the server.</string>
+    <string name="sessionTransferUnsupported">This server does not offer conversation transfer.</string>
+    <string name="sessionTransferFailed">This action could not be completed. Check the connection and try again.</string>
+    <string name="sessionTransferReference">Reference a server folder</string>
+    <string name="sessionTransferReferencePath">Full folder path on this server</string>
+    <string name="sessionTransferReferenceBody">Adds a folder reference to your next prompt. The folder stays on the server.</string>
+    <string name="sessionTransferReferenceAdd">Add folder reference</string>
+    <string name="sessionTransferReferenceRequired">Enter the server folder path first.</string>
+    <string name="sessionTransferReferenceAdded">Folder reference added to your draft.</string>
+    <string name="sessionTransferReferenceInvalid">Enter an absolute folder path on the server.</string>
+</resources>

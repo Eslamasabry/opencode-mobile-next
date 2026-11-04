@@ -40,7 +40,7 @@ import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
@@ -212,7 +212,7 @@ public fun KitStateView(
         ) {
             if (kind != KitStateKind.Calm) {
                 Box(
-                    Modifier.size((tokens.iconTile + Space.S4).dp).clip(KitShapeId.Tile.toShape()).background(colors.surface3),
+                    Modifier.size((tokens.iconTile + Space.S4).dp).clip(KitShapeId.Tile.shape()).background(colors.surface3),
                     contentAlignment = Alignment.Center,
                 ) { KitGlyph(glyph, tint, tokens.smallIcon.dp) }
             }

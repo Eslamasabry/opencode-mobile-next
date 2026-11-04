@@ -11,9 +11,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -30,17 +37,24 @@ import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
+import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmKeepEditing
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmKeepRunning
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmTypeName
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmTypeNameReason
+import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -69,6 +83,9 @@ public data class KitConfirmSpec(
     val consequences: List<String> = emptyList(),
     val typedName: String? = null,
     val cancelLabel: String? = null,
+    val consequenceItems: List<KitConsequence> = emptyList(),
+    val alternative: KitAction? = null,
+    val details: List<KitTechnicalValue> = emptyList(),
 )
 
 /** Pure rules of [KitConfirm] (B-KIT-015). */
@@ -118,6 +135,9 @@ public fun KitConfirm(
     spec: KitConfirmSpec?,
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
+    working: Boolean = false,
+    failed: Boolean = false,
+    /** PORT-SCREENS-2: a third answer offered beside Cancel (it cancels first, then runs). */
     alternative: KitAction? = null,
 ) {
     if (spec != null) {
@@ -131,6 +151,8 @@ public fun KitConfirm(
     val shown = spec ?: return KitDialogFrame(false, "", onCancel, sheetOnCompact = true) {}
     val typed = rememberTextFieldState()
     val on = ConfirmRules.confirmEnabled(shown.typedName, typed.text.toString())
+    val confirm = { if (on && !working) onConfirm() }
+    val cancelAction = { if (!working) onCancel() }
     val reason = stringResource(Res.string.kitConfirmTypeNameReason)
     val cancel =
         shown.cancelLabel
@@ -142,8 +164,9 @@ public fun KitConfirm(
     KitDialogFrame(
         visible = true,
         title = shown.title,
-        onDismissRequest = onCancel,
+        onDismissRequest = cancelAction,
         sheetOnCompact = true,
+        dismissible = !working,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -166,22 +189,43 @@ public fun KitConfirm(
             )
         }
         shown.body?.let { KitText(it, role = TypeRole.Body, tone = TextTone.Secondary) }
-        if (shown.consequences.isNotEmpty()) KitConsequences(shown.consequences)
+        // Plain consequence lines keep the neutral bullet: the kit cannot tell a loss from a
+        // kept fact, so only callers that say so ([KitConfirmSpec.consequenceItems]) get marks.
+        if (shown.consequenceItems.isNotEmpty()) KitMarkedConsequences(shown.consequenceItems)
+        else if (shown.consequences.isNotEmpty()) KitConsequences(shown.consequences)
         shown.typedName?.let { name ->
             KitField(
                 state = typed,
                 label = stringResource(Res.string.kitConfirmTypeName, name),
                 kind = KitFieldKind.Mono,
+                enabled = KitEnabled.of(!working, stringResource(Res.string.kitTurnLiveWorking)),
                 imeAction =
                     if (ConfirmRules.enterConfirms(shown.kind)) ImeAction.Done else ImeAction.None,
-                onSubmit = if (ConfirmRules.enterConfirms(shown.kind) && on) onConfirm else null,
+                onSubmit = if (ConfirmRules.enterConfirms(shown.kind) && on) confirm else null,
             )
         }
+        if (failed) KitNotice(stringResource(Res.string.kitConfirmFailed))
         KitActionBlock(
+            modifier =
+                Modifier.onKeyEvent { event ->
+                    when {
+                        event.type != KeyEventType.KeyDown -> false
+                        event.key == Key.Escape -> {
+                            cancelAction()
+                            true
+                        }
+                        event.key == Key.Enter && ConfirmRules.enterConfirms(shown.kind) -> {
+                            confirm()
+                            true
+                        }
+                        else -> false
+                    }
+                },
             primary =
                 KitAction(
                     label = shown.confirmLabel,
-                    onClick = onConfirm,
+                    onClick = confirm,
+                    working = working,
                     enabled = if (on) KitEnabled.Enabled else KitEnabled.Disabled(reason),
                     destructive =
                         true, // the strong neutral fill for every kind (never red, never the
@@ -190,20 +234,86 @@ public fun KitConfirm(
                 ),
             tertiary =
                 listOfNotNull(
+                    shown.alternative?.let { alternative ->
+                        alternative.copy(
+                            onClick =
+                                if (working) null
+                                else
+                                    ({
+                                        onCancel()
+                                        alternative.onClick?.invoke()
+                                    }),
+                            enabled =
+                                if (working) KitEnabled.Disabled(cancel) else alternative.enabled,
+                        )
+                    },
                     alternative?.let { action ->
                         action.copy(
                             onClick =
-                                action.onClick?.let { click ->
-                                    {
-                                        onCancel()
-                                        click()
-                                    }
-                                }
+                                if (working) null
+                                else
+                                    action.onClick?.let { click ->
+                                        {
+                                            onCancel()
+                                            click()
+                                        }
+                                    },
+                            enabled = if (working) KitEnabled.Disabled(cancel) else action.enabled,
                         )
                     },
-                    KitAction(cancel, onClick = onCancel),
+                    KitAction(
+                        cancel,
+                        onClick = cancelAction,
+                        enabled = if (working) KitEnabled.Disabled(cancel) else KitEnabled.Enabled,
+                    ),
                 ),
         )
+        if (shown.details.isNotEmpty())
+            KitDetailsFold(
+                label = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
+                values = shown.details,
+            )
+    }
+}
+
+public enum class KitConsequenceMark {
+    Neutral,
+    Lost,
+    Kept,
+    Info,
+}
+
+@Immutable
+public data class KitConsequence(
+    val text: String,
+    val mark: KitConsequenceMark = KitConsequenceMark.Neutral,
+)
+
+/** Counted facts distinguish losses from retained data without using colour alone. */
+@Composable
+public fun KitMarkedConsequences(items: List<KitConsequence>, modifier: Modifier = Modifier) {
+    Column(
+        modifier.fillMaxWidth().testTag("kit-consequences"),
+        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+    ) {
+        items.forEach { item ->
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+            ) {
+                KitText(
+                    when (item.mark) {
+                        KitConsequenceMark.Lost -> "−"
+                        KitConsequenceMark.Kept -> "✓"
+                        KitConsequenceMark.Info -> "i"
+                        KitConsequenceMark.Neutral -> "•"
+                    },
+                    role = TypeRole.Body,
+                )
+                KitText(item.text, Modifier.weight(1f), role = TypeRole.Body)
+            }
+        }
     }
 }
 
@@ -223,7 +333,7 @@ public fun KitConsequences(lines: List<String>, modifier: Modifier = Modifier) {
                 Box(
                     Modifier.padding(top = 9.dp)
                         .size(6.dp)
-                        .clip(KitShapeId.Circle.toShape())
+                        .clip(KitShapeId.Circle.shape())
                         .background(colors.text2)
                 )
                 KitText(line, Modifier.weight(1f), role = TypeRole.Body)

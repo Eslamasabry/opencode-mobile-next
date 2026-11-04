@@ -1,0 +1,4 @@
+<resources>
+    <string name="statePromptMigrationPending">تعذّر نقل بعض المسودات أو المرفقات القديمة بعد. عملك المحفوظ باقٍ. أخلِ بعض المساحة عند الحاجة، ثم أعد المحاولة.</string>
+    <string name="statePromptFilesUnavailable">تعذّر استعادة هذه الملفات هنا: %1$s. الطلب المحفوظ باقٍ.</string>
+</resources>

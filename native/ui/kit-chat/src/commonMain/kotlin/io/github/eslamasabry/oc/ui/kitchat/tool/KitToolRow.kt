@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -39,28 +41,34 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveSweep
 
 /** Plan 09 R13: a step sits in the conversation column, capped at 700 dp, on the page gutter. */
 private val ConversationColumn =
     Modifier.fillMaxWidth().widthIn(max = 700.dp).padding(horizontal = Space.S4.dp)
 
-/** From this text scale the title, subject and detail may take two lines (Dart `_kWrapTextScale`, A11Y-8). */
+/**
+ * From this text scale the title, subject and detail may take two lines (Dart `_kWrapTextScale`,
+ * A11Y-8).
+ */
 private const val WRAP_TEXT_SCALE = 1.3f
 
 /** The status words never take more than this share of the line (Dart `KitToolRow`). */
 private const val END_SHARE = 0.45f
 
 /**
- * One step of the agent's work as a line of the reply (plan 09 §9.5; Dart `KitToolRow`): no frame, no fill. The kind
- * glyph, the plain title, the subject in mono reading left to right, the detail, the status in the caller's words,
- * the duration and the "+n −n" counts. A failed step is drawn neutral (no danger colour, R8); a stopped one reads as
- * the quiet status it is.
+ * One step of the agent's work as a line of the reply (plan 09 §9.5; Dart `KitToolRow`): no frame,
+ * no fill. The kind glyph, the plain title, the subject in mono reading left to right, the detail,
+ * the status in the caller's words, the duration and the "+n −n" counts. A failed step is drawn
+ * neutral (no danger colour, R8); a stopped one reads as the quiet status it is.
  *
- * With a [body], the whole header is one tappable row that asks to open or fold the step ([onToggle]; the caller owns
- * [opened]); the body (a command box, a diff) is drawn only while [opened]. Without one the row is plain text.
- * [KitToolView.subject] and [KitToolView.detail] display redacted (R18).
+ * With a [body], the whole header is one tappable row that asks to open or fold the step
+ * ([onToggle]; the caller owns [opened]); the body (a command box, a diff) is drawn only while
+ * [opened]. Without one the row is plain text. [KitToolView.subject] and [KitToolView.detail]
+ * display redacted (R18).
  *
  * Text: frame (≤ 1.3×) for title, detail and status; the subject is mono, left to right.
  */
@@ -71,9 +79,28 @@ public fun KitToolRow(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
     body: (@Composable () -> Unit)? = null,
+    rail: KitToolRail? = null,
 ) {
     val tokens = LocalKitTokens.current
-    Column(modifier.then(ConversationColumn)) {
+    val colors = LocalKitColors.current
+    val railModifier =
+        if (rail == null) Modifier
+        else
+            Modifier.drawBehind {
+                // The node leads the line: on the right in a right-to-left layout.
+                val inset = (tokens.smallIcon / 2f).dp.toPx()
+                val x = if (layoutDirection == LayoutDirection.Rtl) size.width - inset else inset
+                val center = (Space.S1 + tokens.smallIcon / 2f).dp.toPx()
+                val from = if (rail.first) center else 0f
+                val to = if (rail.last) center else size.height
+                drawLine(
+                    colors.text3.copy(alpha = .5f),
+                    Offset(x, from),
+                    Offset(x, to),
+                    1.dp.toPx(),
+                )
+            }
+    Column(modifier.then(ConversationColumn).then(railModifier)) {
         if (body != null) {
             KitTappable(
                 onClick = onToggle,
@@ -97,7 +124,11 @@ public fun KitToolRow(
                 StepLine(view, opened = opened)
             }
         } else {
-            Box(Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).semantics(mergeDescendants = true) {}) {
+            Box(
+                Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).semantics(
+                    mergeDescendants = true
+                ) {}
+            ) {
                 StepLine(view, opened = null)
             }
         }
@@ -125,18 +156,37 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
         modifier = Modifier.fillMaxWidth().padding(vertical = Space.S1.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        KitToolGlyph(view.kind, colors.text2, glyph, Modifier.padding(top = Space.S1.dp / 2))
+        // B-KIT-036: a running step's node carries the step light (one 2 s lap; still under reduced motion);
+        // the node itself is the style's (Signal draws its lamp).
+        Box(Modifier.padding(top = Space.S1.dp / 2), contentAlignment = Alignment.Center) {
+            KitToolNode(view, glyph)
+            KitStepLight(
+                state = if (view.status == KitToolStatus.Running) KitStepLightState.Working else KitStepLightState.Idle,
+                color = colors.accent,
+                size = glyph,
+                animate = !LocalKitMotion.current.reduced,
+            )
+        }
         Spacer(Modifier.width(Space.S3.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp / 2)) {
-            KitText(
-                view.title,
-                role = TypeRole.Secondary,
-                tone = TextTone.Primary,
-                kind = KitTextKind.Frame,
-                maxLines = lines,
-            )
+            KitLiveSweep(working = view.status == KitToolStatus.Running) {
+                KitText(
+                    view.title,
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Primary,
+                    kind = KitTextKind.Frame,
+                    maxLines = lines,
+                )
+            }
             if (subject != null) {
-                KitFrameText { KitMonoLtr(subject, Modifier.fillMaxWidth(), TextTone.Secondary, maxLines = lines) }
+                KitFrameText {
+                    KitMonoLtr(
+                        subject,
+                        Modifier.fillMaxWidth(),
+                        TextTone.Secondary,
+                        maxLines = lines,
+                    )
+                }
             }
             if (detail != null) {
                 KitText(
@@ -149,13 +199,22 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
             }
         }
         Spacer(Modifier.width(Space.S2.dp))
-        StepEnd(view, lines, Modifier.layout { m, c ->
-            val p = m.measure(c.copy(minWidth = 0, maxWidth = (c.maxWidth * END_SHARE).toInt()))
-            layout(p.width, p.height) { p.place(0, 0) }
-        })
+        StepEnd(
+            view,
+            lines,
+            Modifier.layout { m, c ->
+                val p = m.measure(c.copy(minWidth = 0, maxWidth = (c.maxWidth * END_SHARE).toInt()))
+                layout(p.width, p.height) { p.place(0, 0) }
+            },
+        )
         if (opened != null) {
             Spacer(Modifier.width(Space.S1.dp))
-            KitFoldChevron(opened, colors.text2, tokens.smallIcon.dp, Modifier.padding(top = Space.S1.dp / 2))
+            KitFoldChevron(
+                opened,
+                colors.text2,
+                tokens.smallIcon.dp,
+                Modifier.padding(top = Space.S1.dp / 2),
+            )
         }
     }
 }
@@ -165,7 +224,11 @@ private fun StepLine(view: KitToolView, opened: Boolean?) {
 private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
     val done = view.status == KitToolStatus.Done
     val duration = view.durationLabel?.takeIf { it.isNotEmpty() }
-    Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(Space.S1.dp / 2)) {
+    Column(
+        modifier,
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(Space.S1.dp / 2),
+    ) {
         if (view.added != null || view.removed != null) Counts(view.added, view.removed)
         if (done && duration != null) {
             // A finished step shows how long it took; its status is still read out.
@@ -181,40 +244,53 @@ private fun StepEnd(view: KitToolView, lines: Int, modifier: Modifier) {
             KitText(
                 view.statusLabel,
                 role = TypeRole.Secondary,
-                // LOOK-5: a failed step's word is plain text1, never a danger colour; the rest are quiet.
-                tone = if (view.status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary,
+                // LOOK-5: a failed step's word is plain text1, never a danger colour; the rest are
+                // quiet.
+                tone =
+                    if (view.status == KitToolStatus.Failed) TextTone.Primary
+                    else TextTone.Secondary,
                 kind = KitTextKind.Frame,
                 maxLines = lines,
             )
             if (duration != null) {
-                KitText(duration, role = TypeRole.Caption, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1)
+                KitText(
+                    duration,
+                    role = TypeRole.Caption,
+                    tone = TextTone.Tertiary,
+                    kind = KitTextKind.Frame,
+                    maxLines = 1,
+                )
             }
         }
     }
 }
 
 /**
- * "+4 −1": the signs carry the meaning, the colours only repeat it (never colour alone, STATE-9); left to right in any
- * interface language.
+ * "+4 −1": the signs carry the meaning, the colours only repeat it (never colour alone, STATE-9);
+ * left to right in any interface language.
  */
 @Composable
 private fun Counts(added: Int?, removed: Int?) {
     val colors = LocalKitColors.current
-    val text =
-        buildAnnotatedString {
-            if (added != null) withStyle(SpanStyle(color = colors.success)) { append("+$added") }
-            if (added != null && removed != null) append(' ')
-            if (removed != null) withStyle(SpanStyle(color = colors.text2)) { append("−$removed") }
-        }
+    val text = buildAnnotatedString {
+        if (added != null) withStyle(SpanStyle(color = colors.success)) { append("+$added") }
+        if (added != null && removed != null) append(' ')
+        if (removed != null) withStyle(SpanStyle(color = colors.text2)) { append("−$removed") }
+    }
     val style =
-        LocalKitTypography.current.style(TypeRole.Secondary).copy(
-            color = colors.text2,
-            textDirection = TextDirection.Ltr,
-            fontFeatureSettings = "tnum",
-        )
+        LocalKitTypography.current
+            .style(TypeRole.Secondary)
+            .copy(
+                color = colors.text2,
+                textDirection = TextDirection.Ltr,
+                fontFeatureSettings = "tnum",
+            )
     KitFrameText {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             BasicText(text, style = style, maxLines = 1)
         }
     }
 }
+
+/** Position in the expanded work timeline; an open output stays beside its connecting rail. */
+public data class KitToolRail(val first: Boolean, val last: Boolean)

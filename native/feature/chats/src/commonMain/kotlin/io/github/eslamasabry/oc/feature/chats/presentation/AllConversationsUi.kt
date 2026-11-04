@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Inject
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import kotlinx.collections.immutable.ImmutableList
@@ -15,19 +16,29 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * One live connection All conversations reads (07 §5 B12). [gateway] is that exact live graph's gateway; a row's
- * actions go to the server it came from, never to whichever server is active when the tap lands.
+ * One live connection All conversations reads (07 §5 B12). [gateway] is that exact live graph's
+ * gateway; a row's actions go to the server it came from, never to whichever server is active when
+ * the tap lands.
  */
 public class ConversationServer(
     public val profile: ProfileId,
     public val name: String,
     public val gateway: ServerGateway,
     public val operations: ServerOperationsGateway?,
+    /** Sessions a direct read confirmed gone (404); their rows are removed and stay removed. */
+    public val missing: StateFlow<Set<SessionId>> = MutableStateFlow(emptySet()),
 )
 
-/** The live connections. The app binds the real one (ProjectsWiring) with `replaces = [NoConversationServers::class]`. */
+/**
+ * The live connections. The app binds the real one (ProjectsWiring) with `replaces =
+ * [NoConversationServers::class]`.
+ */
 public interface ConversationServers {
     public val servers: StateFlow<ImmutableList<ConversationServer>>
+
+    public fun prefetch(ref: ConversationRef) {}
+
+    public fun forget(ref: ConversationRef) {}
 }
 
 @ContributesBinding(AppScope::class)
@@ -56,7 +67,9 @@ public enum class AllPhase {
     List,
 }
 
-/** One row. [key] is `<profile>/<session>`; [project] null = the server did not say where it works. */
+/**
+ * One row. [key] is `<profile>/<session>`; [project] null = the server did not say where it works.
+ */
 public data class AllRowUi(
     val key: String,
     val ref: ConversationRef,
@@ -66,8 +79,14 @@ public data class AllRowUi(
     val running: Boolean,
     val archived: Boolean,
     val selected: Boolean,
-    /** Its server can archive conversations (`sessionArchive`); otherwise Archive says why it can't. */
+    /**
+     * Its server can archive conversations (`sessionArchive`); otherwise Archive says why it can't.
+     */
     val canArchive: Boolean = false,
+    val pinAvailable: Boolean = false,
+    val pinned: Boolean = false,
+    val contextPercent: Int? = null,
+    val readOnly: Boolean = false,
 )
 
 /** The rename dialog for one row; [initial] is the readable title the field starts with. */
@@ -76,12 +95,20 @@ public data class RenameUi(val key: String, val initial: String)
 /** The one undo offer after a delete; [title] is the row's title when exactly one was deleted. */
 public data class DeleteUndoUi(val id: Int, val count: Int, val title: RowTitle?)
 
-public enum class AllProblemKind { Rename, Delete, Archive }
+public enum class AllProblemKind {
+    Rename,
+    Delete,
+    Archive,
+    Pin,
+}
 
 /** An action that did not happen: a plain line by [kind], the failure only under Details. */
 public data class AllProblem(val kind: AllProblemKind, val failure: Failure)
 
-/** All conversations (ChatsRoute.All): every conversation on every connected server, paged, newest first. */
+/**
+ * All conversations (ChatsRoute.All): every conversation on every connected server, paged, newest
+ * first.
+ */
 public data class AllConversationsUi(
     val phase: AllPhase = AllPhase.Opening,
     val rows: ImmutableList<AllRowUi> = persistentListOf(),
@@ -97,7 +124,10 @@ public data class AllConversationsUi(
     val archiveAvailable: Boolean = false,
     val canLoadMore: Boolean = false,
     val loadingMore: Boolean = false,
-    /** Older pages read so far; it moves on with the cursor, so reaching the end asks again after each one. */
+    /**
+     * Older pages read so far; it moves on with the cursor, so reaching the end asks again after
+     * each one.
+     */
     val loadedPages: Int = 0,
     val loadMoreFailure: Failure? = null,
     /** The first-page failure when every server failed. */
@@ -135,6 +165,10 @@ public interface ChatsAllActions {
     public fun rename(key: String)
 
     public fun renameSelected()
+
+    public fun togglePin(key: String) {}
+
+    public fun toggleSelectedPin() {}
 
     /** The dialog's answer; null = cancelled or unchanged. */
     public fun finishRename(title: String?)

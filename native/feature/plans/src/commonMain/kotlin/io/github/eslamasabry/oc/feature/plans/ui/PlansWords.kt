@@ -1,104 +1,137 @@
 package io.github.eslamasabry.oc.feature.plans.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
+import io.github.eslamasabry.oc.engine.integrations.usage.ComputerUsageProblem
 import io.github.eslamasabry.oc.engine.integrations.usage.SignInState
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindowKind
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanConnectionUi
+import io.github.eslamasabry.oc.ui.words.res.*
+import org.jetbrains.compose.resources.stringResource
 
-/**
- * TODO(words): copy that `:ui:words` does not have yet (this unit may not edit `:ui:words`; the l10n owner moves these
- * into `strings_plans.xml` and deletes this file). English and Arabic, after the Flutter Usage › Plans copy
- * (`usage_plans_page.dart`, `app_en.arb`/`app_ar.arb`), in plain words. Nothing else in this module holds copy.
- */
-public class PlansWords internal constructor(private val ar: Boolean) {
-    private fun t(en: String, ar: String): String = if (this.ar) ar else en
-
-    public companion object {
-        public val English: PlansWords = PlansWords(false)
-        public val Arabic: PlansWords = PlansWords(true)
+/** Native resource copy for Usage plans; formatting stays in the UI layer. */
+public class PlansWords
+internal constructor(
+    private val strings: List<String>,
+    /** AGENT-1: the computer usage readers' copy, by key. */
+    private val readerWords: Map<String, String> = emptyMap(),
+) {
+    private fun r(key: String, vararg args: Any): String {
+        var value = readerWords[key].orEmpty()
+        args.forEachIndexed { index, arg ->
+            value = value.replace("%${index + 1}\$s", arg.toString())
+        }
+        return value.replace("%%", "%")
     }
 
-    val title: String get() = t("Plans and limits", "الخطط والحدود")
-    val back: String get() = t("Back", "رجوع")
-    val loading: String get() = t("Reading your plans", "جارٍ قراءة خططك")
-    val refresh: String get() = t("Refresh", "تحديث")
-    val refreshing: String get() = t("Refreshing", "جارٍ التحديث")
-    val emptyTitle: String get() = t("No plans signed in yet", "لا توجد خطط مسجّلة بعد")
+    private fun t(index: Int, vararg values: Any?): String {
+        var value = strings[index]
+        for ((i, part) in values.withIndex()) value =
+            value.replace("%" + (i + 1) + "$" + "s", part.toString())
+        return value
+    }
+
+    val title: String
+        get() = t(0)
+
+    val back: String
+        get() = t(1)
+
+    val loading: String
+        get() = t(2)
+
+    val refresh: String
+        get() = t(3)
+
+    val refreshing: String
+        get() = t(4)
+
+    val emptyTitle: String
+        get() = t(5)
+
     val emptyBody: String
-        get() = t(
-            "Sign in to Codex, Claude, GLM or MiniMax on a server or on this phone to see what is left.",
-            "سجّل الدخول إلى Codex أو Claude أو GLM أو MiniMax على خادم أو على هذا الهاتف لترى ما تبقّى.",
-        )
-    val keysLabel: String get() = t("API keys (no plan limits)", "مفاتيح API (بلا حدود خطة)")
-    val addLabel: String get() = t("Not signed in anywhere", "غير مسجّل في أي مكان")
-    val thisPhone: String get() = t("This phone", "هذا الهاتف")
+        get() = t(6)
 
-    fun connection(c: PlanConnectionUi): String = if (c.isPhone || c.name.isBlank()) thisPhone else c.name
+    val keysLabel: String
+        get() = t(7)
 
-    fun cardTitle(name: String, connection: PlanConnectionUi?): String = if (connection == null) name else "$name · ${connection(connection)}"
+    val addLabel: String
+        get() = t(8)
+
+    val thisPhone: String
+        get() = t(9)
+
+    fun connection(c: PlanConnectionUi): String =
+        if (c.isPhone || c.name.isBlank()) thisPhone else c.name
+
+    fun cardTitle(name: String, connection: PlanConnectionUi?): String =
+        if (connection == null) name else "$name · ${connection(connection)}"
 
     fun state(s: SubscriptionState): String =
         when (s) {
-            SubscriptionState.Ok -> t("Plenty left", "متبقٍّ الكثير")
-            SubscriptionState.NearLimit -> t("Getting close to the limit", "يقترب من الحد")
-            SubscriptionState.Exhausted -> t("Limit reached", "تم بلوغ الحد")
-            SubscriptionState.CantReadYet -> t("Signed in, but its numbers can't be read yet", "مسجّل، لكن لا يمكن قراءة أرقامه بعد")
-            SubscriptionState.SignInExpired -> t("The sign-in ran out", "انتهت صلاحية تسجيل الدخول")
-            SubscriptionState.NotSignedIn -> t("Not signed in", "غير مسجّل الدخول")
-            SubscriptionState.ReaderBroken -> t("The numbers couldn't be read this time", "تعذّرت قراءة الأرقام هذه المرة")
-            SubscriptionState.OfflineStale -> t("Offline. These are the last numbers.", "غير متصل. هذه آخر الأرقام.")
-            SubscriptionState.NoLimits -> t("No limits reported", "لم يُبلَّغ عن حدود")
-            SubscriptionState.ApiKeyOnly -> t("API key, no plan limits", "مفتاح API بلا حدود خطة")
+            SubscriptionState.Ok -> t(10)
+            SubscriptionState.NearLimit -> t(11)
+            SubscriptionState.Exhausted -> t(12)
+            SubscriptionState.CantReadYet -> t(13)
+            SubscriptionState.SignInExpired -> t(14)
+            SubscriptionState.NotSignedIn -> t(15)
+            SubscriptionState.ReaderBroken -> t(16)
+            SubscriptionState.OfflineStale -> t(17)
+            SubscriptionState.NoLimits -> t(18)
+            SubscriptionState.ApiKeyOnly -> t(19)
         }
 
     fun fix(fix: UsageFix, where: PlanConnectionUi?): String? {
         val place = where?.let { connection(it) }
         return when (fix) {
             UsageFix.None -> null
-            UsageFix.SignIn -> if (place == null) t("Sign in to see the numbers", "سجّل الدخول لرؤية الأرقام") else t("Sign in on $place to see the numbers", "سجّل الدخول على $place لرؤية الأرقام")
-            UsageFix.AddKey -> if (place == null) t("Add the key to see the numbers", "أضف المفتاح لرؤية الأرقام") else t("Add the key on $place to see the numbers", "أضف المفتاح على $place لرؤية الأرقام")
-            UsageFix.SetUp -> if (place == null) t("Set up reading to see the numbers", "اضبط القراءة لرؤية الأرقام") else t("Set up reading on $place to see the numbers", "اضبط القراءة على $place لرؤية الأرقام")
-            UsageFix.TryAgain -> t("Try again", "حاول مرة أخرى")
+            UsageFix.SignIn -> if (place == null) t(20) else t(21, place)
+            UsageFix.AddKey -> if (place == null) t(22) else t(23, place)
+            UsageFix.SetUp -> if (place == null) t(24) else t(25, place)
+            UsageFix.TryAgain -> t(26)
         }
     }
 
     fun window(kind: UsageWindowKind, label: String): String =
         when (kind) {
-            UsageWindowKind.FiveHour -> t("5 hours", "5 ساعات")
-            UsageWindowKind.Weekly -> t("This week", "هذا الأسبوع")
-            UsageWindowKind.Monthly -> t("This month", "هذا الشهر")
-            UsageWindowKind.Other -> label.ifBlank { t("Limit", "الحد") }
+            UsageWindowKind.FiveHour -> t(27)
+            UsageWindowKind.Weekly -> t(28)
+            UsageWindowKind.Monthly -> t(29)
+            UsageWindowKind.Other -> label.ifBlank { t(30) }
         }
 
-    fun left(percent: Int): String = t("$percent% left", "متبقٍّ $percent%")
+    fun left(percent: Int): String = t(31, percent)
 
     fun resetsIn(minutes: Long): String =
         when {
-            minutes <= 0 -> t("resets now", "يُعاد الآن")
-            minutes < 60 -> t("resets in $minutes min", "يُعاد بعد $minutes دقيقة")
-            minutes < 48 * 60 -> t("resets in ${minutes / 60} h", "يُعاد بعد ${minutes / 60} ساعة")
-            else -> t("resets in ${minutes / (24 * 60)} days", "يُعاد بعد ${minutes / (24 * 60)} يوم")
+            minutes <= 0 -> t(32)
+            minutes < 60 -> t(33, minutes)
+            minutes < 48 * 60 -> t(34, minutes / 60)
+            else -> t(35, minutes / (24 * 60))
         }
 
-    val resetSince: String get() = t("It has reset since these numbers were read.", "أُعيد ضبطه منذ قراءة هذه الأرقام.")
+    val resetSince: String
+        get() = t(36)
 
-    fun plan(name: String): String = t("Plan: $name", "الخطة: $name")
+    fun plan(name: String): String = t(37, name)
 
-    fun alertAt(percent: Int): String = t("Alert at $percent% used", "تنبيه عند استخدام $percent%")
+    fun alertAt(percent: Int): String = t(38, percent)
 
-    fun signedIn(connection: PlanConnectionUi, state: SignInState, online: Boolean, readsHere: Boolean): String {
+    fun signedIn(
+        connection: PlanConnectionUi,
+        state: SignInState,
+        online: Boolean,
+        readsHere: Boolean,
+    ): String {
         val place = connection(connection)
         val what =
             when {
-                !online -> t("offline", "غير متصل")
-                state == SignInState.Expired -> t("sign-in ran out", "انتهى تسجيل الدخول")
-                state == SignInState.NotSignedIn -> t("not signed in", "غير مسجّل")
-                readsHere -> t("numbers read here", "تُقرأ الأرقام من هنا")
-                else -> t("signed in", "مسجّل")
+                !online -> t(39)
+                state == SignInState.Expired -> t(40)
+                state == SignInState.NotSignedIn -> t(41)
+                readsHere -> t(42)
+                else -> t(43)
             }
         return "$place: $what"
     }
@@ -113,8 +146,104 @@ public class PlansWords internal constructor(private val ar: Boolean) {
         }
 
     val viaOpenCode: String
-        get() = t("Claude's plan limits can't be read through OpenCode", "لا يمكن قراءة حدود خطة Claude عبر OpenCode")
+        get() = t(44)
+
+    // ---- AGENT-1: explicit computer usage readers.
+
+    val readers: String
+        get() = r("Readers")
+
+    val readerExplanation: String
+        get() = r("ReaderExplanation")
+
+    val readerOn: String
+        get() = r("ReaderOn")
+
+    val readerOff: String
+        get() = r("ReaderOff")
+
+    val reading: String
+        get() = r("Reading")
+
+    val readerFailed: String
+        get() = r("ReaderFailed")
+
+    fun readerAction(name: String, enabled: Boolean): String =
+        r(if (enabled) "DisableReader" else "EnableReader", name)
+
+    fun readNow(name: String): String = r("ReadNow", name)
+
+    fun readerProblem(problem: ComputerUsageProblem): String = r(problem.name)
+
+    fun found(providers: List<String>): String =
+        r("Found", providers.joinToString(", ") { providerName(it) })
 }
 
 @Composable
-public fun plansWords(): PlansWords = if (LocalLayoutDirection.current == LayoutDirection.Rtl) PlansWords.Arabic else PlansWords.English
+public fun plansWords(): PlansWords =
+    PlansWords(
+        listOf(
+            stringResource(Res.string.statePlansCopy0),
+            stringResource(Res.string.statePlansCopy1),
+            stringResource(Res.string.statePlansCopy2),
+            stringResource(Res.string.statePlansCopy3),
+            stringResource(Res.string.statePlansCopy4),
+            stringResource(Res.string.statePlansCopy5),
+            stringResource(Res.string.statePlansCopy6),
+            stringResource(Res.string.statePlansCopy7),
+            stringResource(Res.string.statePlansCopy8),
+            stringResource(Res.string.statePlansCopy9),
+            stringResource(Res.string.statePlansCopy10),
+            stringResource(Res.string.statePlansCopy11),
+            stringResource(Res.string.statePlansCopy12),
+            stringResource(Res.string.statePlansCopy13),
+            stringResource(Res.string.statePlansCopy14),
+            stringResource(Res.string.statePlansCopy15),
+            stringResource(Res.string.statePlansCopy16),
+            stringResource(Res.string.statePlansCopy17),
+            stringResource(Res.string.statePlansCopy18),
+            stringResource(Res.string.statePlansCopy19),
+            stringResource(Res.string.statePlansCopy20),
+            stringResource(Res.string.statePlansCopy21),
+            stringResource(Res.string.statePlansCopy22),
+            stringResource(Res.string.statePlansCopy23),
+            stringResource(Res.string.statePlansCopy24),
+            stringResource(Res.string.statePlansCopy25),
+            stringResource(Res.string.statePlansCopy26),
+            stringResource(Res.string.statePlansCopy27),
+            stringResource(Res.string.statePlansCopy28),
+            stringResource(Res.string.statePlansCopy29),
+            stringResource(Res.string.statePlansCopy30),
+            stringResource(Res.string.statePlansCopy31),
+            stringResource(Res.string.statePlansCopy32),
+            stringResource(Res.string.statePlansCopy33),
+            stringResource(Res.string.statePlansCopy34),
+            stringResource(Res.string.statePlansCopy35),
+            stringResource(Res.string.statePlansCopy36),
+            stringResource(Res.string.statePlansCopy37),
+            stringResource(Res.string.statePlansCopy38),
+            stringResource(Res.string.statePlansCopy39),
+            stringResource(Res.string.statePlansCopy40),
+            stringResource(Res.string.statePlansCopy41),
+            stringResource(Res.string.statePlansCopy42),
+            stringResource(Res.string.statePlansCopy43),
+            stringResource(Res.string.statePlansCopy44),
+        ),
+        mapOf(
+            "Readers" to stringResource(Res.string.p12PlansReaders),
+            "ReaderExplanation" to stringResource(Res.string.p12PlansReaderExplanation),
+            "ReaderOn" to stringResource(Res.string.p12PlansReaderOn),
+            "ReaderOff" to stringResource(Res.string.p12PlansReaderOff),
+            "EnableReader" to stringResource(Res.string.p12PlansEnableReader),
+            "DisableReader" to stringResource(Res.string.p12PlansDisableReader),
+            "ReadNow" to stringResource(Res.string.p12PlansReadNow),
+            "Reading" to stringResource(Res.string.p12PlansReading),
+            "ReaderFailed" to stringResource(Res.string.p12PlansReaderFailed),
+            "NodeMissing" to stringResource(Res.string.p12PlansNodeMissing),
+            "NodeTooOld" to stringResource(Res.string.p12PlansNodeTooOld),
+            "ServerTooOld" to stringResource(Res.string.p12PlansServerTooOld),
+            "Unreachable" to stringResource(Res.string.p12PlansUnreachable),
+            "NoAnswer" to stringResource(Res.string.p12PlansNoAnswer),
+            "Found" to stringResource(Res.string.p12PlansFound),
+        ),
+    )

@@ -4,30 +4,53 @@ import android.app.Application
 import android.os.Build
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
+import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.core.common.failed
+import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.auth.AuthProjectionJson
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentAvailability
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
+import io.github.eslamasabry.oc.engine.agents.diagnostics.AgentHelperStatus
+import io.github.eslamasabry.oc.engine.agents.host.AuthProbeError
+import io.github.eslamasabry.oc.engine.agents.host.AuthProjection
+import io.github.eslamasabry.oc.engine.agents.host.AuthState
 import io.github.eslamasabry.oc.engine.agents.install.AgentInstaller
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupPhase
 import io.github.eslamasabry.oc.engine.agents.install.InstallRefusal
 import io.github.eslamasabry.oc.engine.agents.install.InstallStart
+import io.github.eslamasabry.oc.engine.agents.probe.AgentAuthScripts
+import io.github.eslamasabry.oc.engine.agents.probe.AuthScriptAction
 import io.github.eslamasabry.oc.engine.agents.removal.AgentRemoval
 import io.github.eslamasabry.oc.engine.agents.removal.AgentRemovalRunner
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalReceipt
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalRefusal
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalResult
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalRun
+import io.github.eslamasabry.oc.engine.agents.scripts.AgentPhoneScripts
 import io.github.eslamasabry.oc.engine.agents.scripts.AgentRemovalScripts
 import io.github.eslamasabry.oc.engine.agents.store.SecureBytes
+import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.profiles.ProfileCloser
+import io.github.eslamasabry.oc.engine.profiles.SignInReset
+import io.github.eslamasabry.oc.engine.profiles.SignInResetParticipant
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallResult
@@ -46,24 +69,39 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.json.JSONObject
 
 /**
  * The Agents hub reads the real shared payloads and removes only catalog-owned files, keeping
- * profile homes.
+ * profile homes. "Check phone agents" also runs the read-only sign-in probe for the runtime owner:
+ * no helper, sign-in or installer is started.
  */
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class, binding = binding<PhoneAgents>())
+@ContributesIntoSet(AppScope::class, binding = binding<ProfileCloser>())
 class AppPhoneAgents(
     private val app: Application,
     private val dispatchers: AppDispatchers,
     private val stores: PreviewStores,
     private val setupJobs: NativeAgentSetupJobs,
-) : PhoneAgents {
+    private val registry: ConnectionRegistry,
+    private val redactor: Redactor,
+    private val payloads: PhonePayloadGuard,
+) : PhoneAgents, ProfileCloser {
+    override val owner: String = ":engine:agents:auth"
+    private val admission = Any()
+    private val denied = HashSet<ProfileId>()
+    private val accounts = HashMap<Pair<ProfileId, AgentId>, AuthProjection>()
+    @Volatile private var needsRestart = false
     private val mutable = MutableStateFlow(PhoneAgentsState())
     override val state = mutable.asStateFlow()
     private val lane = Mutex()
@@ -90,6 +128,13 @@ class AppPhoneAgents(
         } catch (e: Exception) {
             null
         }
+
+    private fun agentOwner(profile: ProfileId?): ProfileId? = profile?.let {
+        (stores.prefs.get("oc.phoneAgentOwner.${it.raw}") as? PrefValue.Str)
+            ?.value
+            ?.takeIf { value -> Regex("[A-Za-z0-9_-]{1,80}").matches(value) }
+            ?.let(::ProfileId) ?: it
+    }
 
     private fun architecture(): AgentArchitecture? =
         when {
@@ -126,14 +171,23 @@ class AppPhoneAgents(
             SecureBytes { count -> ByteArray(count).also(SecureRandom()::nextBytes) },
         )
 
+    /**
+     * "Check phone agents" (AGENT-1) re-reads the payloads; each installed agent's read-only
+     * sign-in probe runs inside the read ([signInStatus], keyed by the runtime owner).
+     */
     override suspend fun refresh(): Outcome<Unit> = lane.withLock { refreshLocked() }
 
     private suspend fun refreshLocked(): Outcome<Unit> {
+        if (needsRestart) {
+            mutable.value = PhoneAgentsState(needsRestart = true)
+            return Outcome.Ok(Unit)
+        }
         when (val warm = stores.warm()) {
             is Outcome.Failed -> return warm
             is Outcome.Ok -> Unit
         }
         val owner = ownerId()
+        val authOwner = agentOwner(owner)
         val progress = owner?.let { id ->
             when (val restored = installation(id).restore(id)) {
                 is Outcome.Ok -> restored.value
@@ -154,9 +208,27 @@ class AppPhoneAgents(
         }
         val rows = native {
             val installed = linux.installed
+            val helper =
+                if (authOwner != null && synchronized(admission) { authOwner !in denied }) {
+                    val record = linux.agentHost.status(authOwner.raw)
+                    AgentHelperStatus.fromRecord(
+                        JsonObject(
+                            record.mapValues { (_, value) ->
+                                when (value) {
+                                    null -> JsonNull
+                                    is Boolean -> JsonPrimitive(value)
+                                    is Number -> JsonPrimitive(value)
+                                    else -> JsonPrimitive(value as? String ?: "")
+                                }
+                            }
+                        )
+                    )
+                } else null
             PhoneAgentsState(
                 available = installed,
                 installation = shown,
+                helperStoppedUnexpectedly = helper?.unexpectedStop == true,
+                helperMayHaveBeenStoppedByAndroid = helper?.possibleResourceKill == true,
                 agents =
                     if (!installed) emptyList<PhoneAgentRow>().toImmutableList()
                     else
@@ -169,10 +241,15 @@ class AppPhoneAgents(
                                     agent.id.raw,
                                     agent.name,
                                     when (present) {
-                                        true -> PhoneAgentStatus.PhoneCheck
+                                        true -> signInStatus(authOwner, agent)
                                         false -> PhoneAgentStatus.NotInstalled
                                         null -> PhoneAgentStatus.Unavailable
                                     },
+                                    previousVersionAvailable =
+                                        agent.id == AgentId.CLAUDE &&
+                                            present == true &&
+                                            shown?.phase != PhoneAgentInstallPhase.Installing &&
+                                            previousAvailable(agent),
                                     removable =
                                         removal.removable(agent.id) &&
                                             present == true &&
@@ -188,7 +265,10 @@ class AppPhoneAgents(
         }
         return when (rows) {
             is Outcome.Ok -> {
-                mutable.value = rows.value
+                mutable.value =
+                    if (owner != null && synchronized(admission) { owner in denied })
+                        PhoneAgentsState(needsRestart = needsRestart)
+                    else rows.value
                 Outcome.Ok(Unit)
             }
             is Outcome.Failed -> rows
@@ -196,6 +276,10 @@ class AppPhoneAgents(
     }
 
     override suspend fun install(id: String): Outcome<PhoneAgentInstallResult> = lane.withLock {
+        if (needsRestart)
+            return@withLock Outcome.Ok(
+                PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable)
+            )
         val owner =
             ownerId()
                 ?: return@withLock Outcome.Ok(
@@ -237,7 +321,21 @@ class AppPhoneAgents(
         }
     }
 
-    override suspend fun remove(id: String): Outcome<PhoneAgentRemoval> = lane.withLock {
+    override suspend fun remove(id: String): Outcome<PhoneAgentRemoval> {
+        val mutation =
+            when (val claim = payloads.beginMutation(ownerId())) {
+                is Outcome.Failed ->
+                    return Outcome.Ok(PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Busy))
+                is Outcome.Ok -> claim.value
+            }
+        try {
+            return removeLocked(id)
+        } finally {
+            mutation.release()
+        }
+    }
+
+    private suspend fun removeLocked(id: String): Outcome<PhoneAgentRemoval> = lane.withLock {
         val owner =
             try {
                 (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value
@@ -280,6 +378,228 @@ class AppPhoneAgents(
             }
         refreshLocked()
         Outcome.Ok(answer)
+    }
+
+    private fun previousAvailable(agent: AgentDescriptor): Boolean =
+        try {
+            linux.run(AgentPhoneScripts.previousVersion(agent), 30, agentUser = true).exitCode == 0
+        } catch (_: Exception) {
+            false
+        }
+
+    override suspend fun usePreviousVersion(id: String): Outcome<Unit> = lane.withLock {
+        if (needsRestart || id != AgentId.CLAUDE.raw)
+            return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+        val owner =
+            agentOwner(ownerId())
+                ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+        val agent =
+            catalog.byId(AgentId.CLAUDE)
+                ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+        val result = native {
+            check(synchronized(admission) { owner !in denied })
+            // Both the busy check and the official backup verification are fresh after
+            // confirmation.
+            linux.agentHost.prepareUpdate(owner.raw)
+            check(previousAvailable(agent))
+            linux.agentHost.stop(owner.raw, true)
+            check(
+                linux
+                    .run(
+                        AgentPhoneScripts.usePreviousVersion(
+                            agent,
+                            AgentPhoneScripts.previousClaudeVersion,
+                        ),
+                        90,
+                        agentUser = true,
+                    )
+                    .exitCode == 0
+            )
+        }
+        if (result is Outcome.Failed) return@withLock result
+        synchronized(admission) { accounts.remove(owner to agent.id) }
+        refreshLocked()
+    }
+
+    /** Reset closes clients first; only the engine's allowlisted secure slots are erased. */
+    override suspend fun resetSavedSignIns(): Outcome<Unit> = lane.withLock {
+        when (val warm = stores.warm()) {
+            is Outcome.Failed -> return@withLock warm
+            is Outcome.Ok -> Unit
+        }
+        val owners = buildSet {
+            ownerId()?.let {
+                add(it)
+                agentOwner(it)?.let(::add)
+            }
+            stores.prefs.keys("oc.phoneAgentOwner.").forEach { key ->
+                (stores.prefs.get(key) as? PrefValue.Str)
+                    ?.value
+                    ?.takeIf { Regex("[A-Za-z0-9_-]{1,80}").matches(it) }
+                    ?.let { add(ProfileId(it)) }
+            }
+        }
+        needsRestart = true
+        synchronized(admission) {
+            denied.addAll(owners)
+            accounts.clear()
+        }
+        mutable.value = PhoneAgentsState(needsRestart = true)
+        registry.live.value.keys.toList().forEach { registry.close(it) }
+        val participant =
+            object : SignInResetParticipant {
+                override val owner: String = ":engine:agents"
+
+                override suspend fun reset(found: Set<String>): Outcome<Unit> {
+                    val allOwners =
+                        owners +
+                            found.mapNotNull { key ->
+                                key.takeIf { it.startsWith("oc.agentHostSecret.") }
+                                    ?.removePrefix("oc.agentHostSecret.")
+                                    ?.takeIf { Regex("[A-Za-z0-9_-]{1,80}").matches(it) }
+                                    ?.let(::ProfileId)
+                            }
+                    for (id in allOwners) {
+                        setupJobs.stopAdmission(id)
+                        when (val cancelled = setupJobs.drain(id)) {
+                            is Outcome.Failed -> return cancelled
+                            is Outcome.Ok -> Unit
+                        }
+                        when (
+                            val closed = native {
+                                linux.blockAgentProfile(id.raw)
+                                linux.agentSignIn.deleteProfile(id.raw)
+                                linux.agentHost.stop(id.raw, false)
+                            }
+                        ) {
+                            is Outcome.Failed -> return closed
+                            is Outcome.Ok -> Unit
+                        }
+                    }
+                    return Outcome.Ok(Unit)
+                }
+            }
+        SignInReset(
+                stores.profiles,
+                stores.prefs,
+                stores.secrets,
+                stores.lanes,
+                redactor,
+                setOf(participant),
+            )
+            .reset()
+    }
+
+    /**
+     * Private status reads are keyed by the runtime owner, never by the selected remote profile.
+     */
+    private fun signInStatus(owner: ProfileId?, agent: AgentDescriptor): PhoneAgentStatus {
+        if (agent.signInMethod == AgentSignInMethod.None) return PhoneAgentStatus.PhoneCheck
+        if (owner == null) return PhoneAgentStatus.Unavailable
+        val authored =
+            AgentAuthScripts.script(agent, AuthScriptAction.Probe)
+                ?: return PhoneAgentStatus.Unavailable
+        val key = owner to agent.id
+        if (synchronized(admission) { owner in denied }) return PhoneAgentStatus.Unavailable
+        val response =
+            linux.agentAuthProbe(
+                mapOf(
+                    "profileId" to owner.raw,
+                    "agentId" to agent.id.raw,
+                    "action" to "probe",
+                    "script" to AgentAuthScripts.forProfile(owner, authored),
+                    "timeoutSeconds" to if (agent.id == AgentId.CLAUDE) 65L else 10L,
+                )
+            )
+        val probed =
+            AuthProjectionJson.decode(
+                JsonObject(
+                    response.mapValues { (_, value) ->
+                        if (value == null) JsonNull else JsonPrimitive(value as? String ?: "")
+                    }
+                )
+            )
+        val fresh =
+            if (agent.id == AgentId.CLAUDE && probed.error == AuthProbeError.ProbeUnsupported) {
+                // A legacy host can still answer Claude's direct native status without starting a
+                // helper.
+                when (
+                    linux.agentSignIn
+                        .status(
+                            owner.raw,
+                            agent.id.raw,
+                            "native-status-${owner.raw}",
+                            "browserOAuthHost",
+                        )["phase"]
+                ) {
+                    "signedIn",
+                    "limitReached" -> AuthProjection(AuthState.SignedIn)
+                    "signedOut" -> AuthProjection(AuthState.SignedOut)
+                    else -> AuthProjectionJson.failed(AuthProbeError.HostUnavailable)
+                }
+            } else probed
+        val answer =
+            synchronized(admission) {
+                // Deletion can revoke while the native reader drains. A late read never repopulates
+                // it.
+                if (owner in denied) return PhoneAgentStatus.Unavailable
+                val previous = accounts[key]
+                if (
+                    fresh.error in setOf(AuthProbeError.HostUnavailable, AuthProbeError.TimedOut) &&
+                        previous != null &&
+                        previous.state != AuthState.Error
+                )
+                    previous
+                else fresh.also { accounts[key] = it }
+            }
+        return when (answer.state) {
+            AuthState.SignedOut -> PhoneAgentStatus.SignInNeeded
+            AuthState.SignedIn -> PhoneAgentStatus.PhoneCheck
+            AuthState.Error -> PhoneAgentStatus.Unavailable
+        }
+    }
+
+    override fun stopAdmission(profile: ProfileId) {
+        synchronized(admission) {
+            denied.add(profile)
+            accounts.keys.removeAll { it.first == profile }
+        }
+    }
+
+    override suspend fun drain(profile: ProfileId): Outcome<Unit> = lane.withLock {
+        synchronized(admission) { accounts.keys.removeAll { it.first == profile } }
+        val nativeOwner = agentOwner(profile) ?: profile
+        if (!Regex("[A-Za-z0-9_-]{1,80}").matches(nativeOwner.raw)) return@withLock Outcome.Ok(Unit)
+        val retained =
+            (nativeOwner != profile && stores.profiles.profile(nativeOwner) != null) ||
+                stores.prefs.keys("oc.phoneAgentOwner.").any { key ->
+                    val alias = key.removePrefix("oc.phoneAgentOwner.")
+                    alias != profile.raw &&
+                        (stores.prefs.get(key) as? PrefValue.Str)?.value == nativeOwner.raw &&
+                        stores.profiles.profile(ProfileId(alias)) != null
+                }
+        if (retained) return@withLock Outcome.Ok(Unit)
+        synchronized(admission) {
+            denied.add(nativeOwner)
+            accounts.keys.removeAll { it.first == nativeOwner }
+        }
+        // The native revocation drains private probe children and closes any retired sign-in relay.
+        // It keeps the home and conversations; the profile deletion transaction owns stored
+        // cleanup.
+        val result = native {
+            linux.blockAgentProfile(nativeOwner.raw)
+            linux.agentSignIn.deleteProfile(nativeOwner.raw)
+            linux.agentHost.stop(nativeOwner.raw, false)
+        }
+        mutable.value = PhoneAgentsState(needsRestart = needsRestart)
+        when (result) {
+            is Outcome.Failed -> result
+            is Outcome.Ok -> Outcome.Ok(Unit)
+        }
+    }
+
+    override fun reopen(profile: ProfileId) {
+        synchronized(admission) { denied.remove(profile) }
     }
 
     private suspend fun <T> native(block: () -> T): Outcome<T> =

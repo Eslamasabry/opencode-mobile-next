@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quotaCollectorService">قراءة استخدام الخطة</string>
+    <string name="plansNativeCollectors">قراءة حدود الخطط</string>
+    <string name="plansNativeCollectorOn">القراءة مفعّلة</string>
+    <string name="plansNativeCollectorOff">القراءة متوقفة</string>
+    <string name="plansNativeCollectorSetup">إعداد القراءة على هذا الهاتف</string>
+    <string name="plansNativeCollectorRemote">السماح بالقراءة من هذا الخادم</string>
+    <string name="plansNativeCollectorWorking">جارٍ تحديث قراءة الخطط</string>
+    <string name="plansNativeCollectorFailed">تعذّر تغيير قراءة الخطط. تحقق من الخادم وحاول مجددًا.</string>
+    <string name="plansNativeAlerts">تنبيهات حدود الخطط</string>
+    <string name="plansNativeAlertsBody">تنبيه عندما تبلغ خطة قابلة للقراءة المستوى المحدد. تبقى القراءة البعيدة بحاجة إلى إذنك.</string>
+    <string name="plansNativeSetupQuestion">هل تريد إعداد قراءة الخطط على %1$s؟</string>
+    <string name="plansNativeRemoteQuestion">هل تريد السماح بقراءة الخطط من %1$s؟</string>
+    <string name="plansNativeOffQuestion">هل تريد إيقاف قراءة الخطط على %1$s؟</string>
+    <string name="plansNativeSetupBody">يثبّت التطبيق قارئ الخطط داخل أوبونتو المدمج. تبقى بيانات اعتماد المزوّد على الهاتف.</string>
+    <string name="plansNativeRemoteBody">قراءة حدود الخطط من المجمّع المثبّت مسبقًا على هذا الخادم. يقتصر هذا الإذن على هذا الخادم وحسابات المزوّدين التي يبلّغ عنها.</string>
+    <string name="plansNativeOffBody">إيقاف قراءة هذا المصدر وإزالة إذن قراءته. يُحتفظ بتسجيلات دخول المزوّدين.</string>
+    <string name="plansNativeSetUp">إعداد القراءة</string>
+    <string name="plansNativeAllow">السماح بالقراءة</string>
+    <string name="plansNativeTurnOff">إيقاف القراءة</string>
+    <string name="plansNativeCancel">إلغاء</string>
+</resources>

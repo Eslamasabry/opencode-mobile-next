@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.linux.ui
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.engine.runtime.setup.ComponentState
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupError
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupProgressRules
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHomeActions
@@ -15,6 +16,15 @@ import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.time.Duration.Companion.seconds
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupAddPython
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupAddingPython
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupContinue
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupDone
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupFailed
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupStart
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupStop
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupWorking
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -28,7 +38,9 @@ internal fun LinuxSetupPanel(
     openAppSettings: (() -> Unit)? = null,
 ) {
     val progress = state.setup
+    SetupOutput(progress.logTail)
     val running = progress.state == SetupState.Running
+    val ownershipRecovery = SetupProgressRules.needsOwnershipRecovery(progress)
     if (running) {
         KitProgressView(
             progress =
@@ -67,14 +79,23 @@ internal fun LinuxSetupPanel(
         if (progress.canContinue)
             KitNotice(
                 message =
-                    if (ownership) SetupError.OwnershipUnknown.words()
-                    else progress.error?.words() ?: stringResource(Res.string.linuxSetupFailed),
+                    when {
+                        ownership -> SetupError.OwnershipUnknown.words()
+                        ownershipRecovery -> stringResource(Res.string.inAppServerOwnershipRecoveryBody)
+                        else -> progress.error?.words() ?: stringResource(Res.string.linuxSetupFailed)
+                    },
                 actions =
-                    if (ownership)
-                        listOfNotNull(
+                    if (ownership || ownershipRecovery)
+                        listOf(
+                            // The app's own settings page (Force stop) when the screen can open it; else LINUX-2's
+                            // ownership-recovery path.
                             openAppSettings?.let {
                                 KitLineAction(stringResource(Res.string.e7SetupOpenAppSettings), it)
                             }
+                                ?: KitLineAction(
+                                    stringResource(Res.string.linuxSetupOpenSettings),
+                                    actions::openOwnershipSettings,
+                                )
                         )
                     else
                         listOf(

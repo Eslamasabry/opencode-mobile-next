@@ -1,0 +1,15 @@
+<resources>
+    <string name="widgetActionTitle">أرسل رسالة إلى هذه المحادثة</string>
+    <string name="widgetActionMessage">الرسالة</string>
+    <string name="widgetActionHint">وجّه الرد الحالي. إذا كان الوكيل لا يقبل التوجيه أثناء العمل، تُرسل رسالتك بعد رده.</string>
+    <string name="widgetActionSend">إرسال الرسالة</string>
+    <string name="widgetActionClose">إغلاق</string>
+    <string name="widgetActionOpen">فتح المحادثة</string>
+    <string name="widgetActionAccepted">أُرسلت الرسالة</string>
+    <string name="widgetActionRejected">تعذّر إرسال الرسالة إلى هذه المحادثة</string>
+    <string name="widgetActionUncertain">تعذّر تأكيد إرسال الرسالة</string>
+    <string name="widgetActionCheckFirst">تحقّق من المحادثة قبل الإرسال مجددًا.</string>
+    <string name="widgetActionOpenHint">افتح المحادثة لقراءة آخر رد.</string>
+    <string name="widgetActionSending">جارٍ إرسال الرسالة…</string>
+    <string name="widgetActionEnterMessage">اكتب رسالة أولًا</string>
+</resources>

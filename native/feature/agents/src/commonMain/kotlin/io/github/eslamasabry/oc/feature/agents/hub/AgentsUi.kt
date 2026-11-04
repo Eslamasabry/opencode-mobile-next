@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.agents.hub
 
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.engine.agents.account.AccountPanelState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -22,13 +24,57 @@ public data class AgentsUi(
     /** Moves after a save so the screen can clear the password field. */
     val savedGeneration: Int = 0,
     val adding: Boolean = false,
+    val computerKind: AgentComputerKind = AgentComputerKind.Paseo,
+    val accounts: ImmutableList<AgentAccountTarget> = persistentListOf(),
+    val accountTarget: AgentAccountTarget? = null,
+    val accountPanel: AccountPanelState? = null,
+    val accountOpening: Boolean = false,
+    val accountFailed: Boolean = false,
+    val draftSources: ImmutableList<AgentDraftSource> = persistentListOf(),
+    val draftSource: AgentDraftSource? = null,
+    val draftConversations: ImmutableList<AgentDraftConversation> = persistentListOf(),
+    val draftRecord: AgentDraftRecord? = null,
+    val draftLoading: Boolean = false,
+    val draftFailed: Boolean = false,
+    val draftTooLarge: Boolean = false,
+    val draftCopied: Boolean = false,
     val removingAgent: PhoneAgentRow? = null,
     val removal: PhoneAgentRemoval? = null,
     val installIssue: PhoneAgentInstallIssue? = null,
+    val revertingAgent: PhoneAgentRow? = null,
+    val previousVersionFailed: Boolean = false,
+    val previousVersionRestored: Boolean = false,
+    val helperOffered: Boolean = false,
+    val helperConnectFailed: Boolean = false,
+    val helperConnected: Boolean = false,
+    val resettingSignIns: Boolean = false,
+    val resetFailed: Boolean = false,
 )
 
 public interface AgentsActions {
     public fun back()
+
+    public fun openAccount(id: ProfileId) {}
+
+    public fun closeAccount() {}
+
+    public fun refreshAccount() {}
+
+    public fun signInAccount() {}
+
+    public fun cancelAccountSignIn() {}
+
+    public fun openAccountSignIn() {}
+
+    public fun selectComputerKind(kind: AgentComputerKind) {}
+
+    public fun openDrafts(id: ProfileId) {}
+
+    public fun closeDrafts() {}
+
+    public fun prepareDraft(id: SessionId) {}
+
+    public fun copyDraft() {}
 
     public fun startAdding()
 
@@ -40,6 +86,8 @@ public interface AgentsActions {
     public fun check(address: String, password: String, folder: String)
 
     public fun add(name: String, address: String, password: String, folder: String)
+
+    public fun checkPhoneAgents() {}
 
     public fun readAgents(id: ProfileId)
 
@@ -53,6 +101,20 @@ public interface AgentsActions {
     public fun cancelPhoneInstall() {}
 
     public fun refreshPhone()
+
+    public fun requestPreviousVersion(id: String) {}
+
+    public fun cancelPreviousVersion() {}
+
+    public fun confirmPreviousVersion() {}
+
+    public fun connectPhoneHelper() {}
+
+    public fun requestSignInReset() {}
+
+    public fun cancelSignInReset() {}
+
+    public fun confirmSignInReset() {}
 
     public fun requestRemoval(id: String)
 

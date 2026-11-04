@@ -12,6 +12,6 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:runtime"))
-        implementation(project(":ui:kit-content"))
+        implementation(project(":ui:kit-content")) // KitLogBuffer: the program log is split into lines, bounded and counted (B-KIT-021)
     }
 }

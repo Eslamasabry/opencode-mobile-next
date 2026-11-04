@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateFolderNameEmpty">أدخل اسم مجلد.</string>
+    <string name="stateFolderNameSegment">استخدم اسم مجلد واحدًا دون شرطات مائلة.</string>
+    <string name="stateFolderNameCharacters">استخدم الأحرف والأرقام والنقاط والشرطات والشرطات السفلية، وابدأ بحرف أو رقم (حتى 64 محرفًا).</string>
+    <string name="stateFolderCreating">جارٍ إنشاء مجلد المشروع…</string>
+</resources>

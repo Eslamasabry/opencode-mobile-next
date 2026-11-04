@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plansCollectors">قراءة حدود الخطط</string>
+    <string name="plansCollectorTarget">%1$s · %2$s</string>
+    <string name="plansCollectorEnabled">القراءة مفعلة. اضغط لإيقافها ومسح هذه الأرقام.</string>
+    <string name="plansCollectorDisabled">القراءة من جامع الاستخدام المثبت على هذا الخادم</string>
+    <string name="plansCollectorQuestion">هل تريد قراءة حدود %1$s من هذا الخادم؟</string>
+    <string name="plansCollectorAllow">الوثوق بالجامع والقراءة</string>
+    <string name="plansCollectorTrust">تابع فقط إذا كنت تثق بجامع الاستخدام المثبت على %1$s. سيتلقى بيانات تسجيل الدخول المحفوظة لهذا الخادم في عنوان ثابت للاستخدام. لا تتبع الطلبات إعادة التوجيه. يمكنك إيقاف القراءة هنا. يتطلب تغيير العنوان أو تسجيل الدخول إذناً جديداً.</string>
+    <string name="plansCollectorFailed">تعذّر حفظ هذا الاختيار. أعد الاتصال بالخادم وحاول مرة أخرى.</string>
+    <string name="plansPaseoDisabled">قراءة الاستخدام من خادم Paseo هذا</string>
+    <string name="plansPaseoQuestion">هل تريد قراءة استخدام الخطط من Paseo؟</string>
+    <string name="plansPaseoTrust">اقرأ حدود الخطط التي يبلّغ عنها %1$s أثناء ظهور هذا التطبيق. يمسح إيقاف القراءة أرقامه المحفوظة في الودجت. لن تبدأ قراءة في الخلفية.</string>
+    <string name="plansBuiltinReader">قارئ الاستخدام على الهاتف</string>
+    <string name="plansBuiltinDisabled">إعداد قارئ الاستخدام داخل أوبونتو على هذا الهاتف</string>
+    <string name="plansBuiltinQuestion">هل تريد قراءة حدود الخطط على هذا الهاتف؟</string>
+    <string name="plansBuiltinTrust">ثبّت قارئ الاستخدام المرفق في %1$s واقرأ بيانات دخول المزوّدين المحفوظة هناك. يبقى رمز القراءة في التخزين الآمن وملفات خاصة. يبقى جمع استخدام Claude غير متاح. يؤدي إيقافه إلى إيقاف خدمته ومسح أرقام الودجت.</string>
+</resources>

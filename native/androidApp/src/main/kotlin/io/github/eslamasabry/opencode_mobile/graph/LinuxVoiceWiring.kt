@@ -21,10 +21,13 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import io.github.eslamasabry.oc.engine.agents.host.PaseoConfig
+import io.github.eslamasabry.oc.engine.agents.phonecontext.PhoneAgentContext
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
@@ -50,6 +53,7 @@ import io.github.eslamasabry.oc.feature.linux.presentation.LinuxSetupSource
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 import io.github.eslamasabry.oc.feature.phone.presentation.RecoveryFacts
+import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProfileName
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
@@ -184,8 +188,7 @@ internal object PhoneServerScripts {
      * Flutter `BuiltinLinux.serverScript(runtime = opencode2)`: started in /root/projects, bound to
      * 127.0.0.1 only, Basic auth `opencode` + the password read from the root-only file, OpenCode
      * 2's isolated XDG folders, and the OpenCode 1 history copy before the first start. Deviation:
-     * the agent-context block (`PhoneAgentContext`), which Flutter runs with `|| true` and which
-     * never blocks the start, is left out; the AGENTS.md it wrote stays.
+     * the phone-context block is refreshed without making its failure a startup blocker.
      */
     fun server(port: Int = PORT): String {
         require(port in 1024..65535) { "Must be between 1024 and 65535." }
@@ -205,6 +208,7 @@ internal object PhoneServerScripts {
             "cd $PROJECTS_DIR\n" +
             "[ -s $PASSWORD_FILE ] || { echo \"[oc] The server password is missing\" >&2; exit 78; }\n" +
             isolated +
+            "(\n${PhoneAgentContext.builtinScript}) || true\n" +
             "password=\$(cat $PASSWORD_FILE)\n" +
             "export OPENCODE_SERVER_USERNAME=$USERNAME\n" +
             "export OPENCODE_SERVER_PASSWORD=\"\$password\"\n" +
@@ -370,6 +374,7 @@ internal constructor(
 
     private val lane = Mutex()
     private val recovery by lazy { NativeRuntimeRecovery(stores, linux, io) }
+    private val helperLane = io.limitedParallelism(1)
     private val closedProfiles = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     @Volatile private var foreground = false
     @Volatile private var actionEpoch = 0L
@@ -378,6 +383,8 @@ internal constructor(
     private var pendingStatus: Deferred<Outcome<RuntimeStatus>>? = null
     private var pendingStatusRevision = -1L
     private var presenceResetThisVisit = false
+    private var idleBudgetHeld = false
+    internal var onManualReady: (suspend () -> Unit)? = null
     val isForeground: Boolean
         get() = foreground
 
@@ -479,9 +486,10 @@ internal constructor(
                         .admission()
                 ) {
                     HistorySwitchAdmission.Allowed -> Outcome.Ok(Unit)
-                    HistorySwitchAdmission.SeparateHistory,
+                    HistorySwitchAdmission.SeparateHistory ->
+                        Outcome.Failed(Failure.Refused(RefusalReason.MigrationPending))
                     HistorySwitchAdmission.Unavailable ->
-                        Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                        Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
                 }
 
             override suspend fun writePassword(password: String): Outcome<Unit> =
@@ -640,8 +648,50 @@ internal constructor(
         ?.takeIf { it.isNotEmpty() }
         ?.let(::ProfileId)
 
-    private suspend fun target(): StartTarget? {
-        val id = ownerId() ?: return null
+    internal fun healingOwner(): ProfileId? {
+        val key = "oc.builtinServerOwner"
+        return try {
+            if (key in stores.prefs.keys(key)) {
+                val raw = (stores.prefs.get(key) as? PrefValue.Str)?.value ?: return null
+                if (!Regex("[A-Za-z0-9_-]{1,80}").matches(raw)) return null
+                ProfileId(raw).takeIf(::readable)
+            } else {
+                profiles.profiles.value
+                    .filter {
+                        readable(it.id) &&
+                            !it.profile.usesAgentSocket &&
+                            it.profile.baseUrl.trimEnd('/') in
+                                listOf(
+                                    "http://127.0.0.1:${PhoneServerScripts.PORT}",
+                                    "http://localhost:${PhoneServerScripts.PORT}",
+                                )
+                    }
+                    .singleOrNull()
+                    ?.id
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    internal fun readable(profile: ProfileId): Boolean =
+        profile.raw !in closedProfiles && profiles.profile(profile) != null
+
+    private suspend fun target(manual: Boolean = false): StartTarget? {
+        val selected =
+            if (manual)
+                profiles.activeId.value?.takeIf { id ->
+                    profiles.profile(id)?.profile?.let {
+                        !it.usesAgentSocket &&
+                            it.baseUrl.trimEnd('/') in
+                                listOf(
+                                    "http://127.0.0.1:${PhoneServerScripts.PORT}",
+                                    "http://localhost:${PhoneServerScripts.PORT}",
+                                )
+                    } == true
+                }
+            else null
+        val id = selected ?: healingOwner() ?: return null
         val loaded =
             profiles.profile(id)
                 ?: (profiles.load() as? Outcome.Ok)?.value?.firstOrNull { it.id == id }
@@ -672,21 +722,30 @@ internal constructor(
             return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
         }
         val target =
-            target()
+            target(manual = true)
                 ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
-        if (target.profile.raw in closedProfiles)
-            return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
-        val admission = recovery.bind(target.profile)
-        if (admission is Outcome.Failed) return@withLock admission
-        if (target.profile.raw in closedProfiles)
+        if (!readable(target.profile))
             return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
         val epoch = actionEpoch
+        val claimed =
+            stores.prefs.commit(stores.lanes.forProfile(target.profile)) {
+                putString("oc.builtinServerOwner", target.profile.raw)
+            }
+        if (claimed is Outcome.Failed) return@withLock claimed
+        val admission = recovery.bind(target.profile)
+        if (admission is Outcome.Failed) return@withLock admission
+        if (epoch != actionEpoch || healingOwner() != target.profile || !readable(target.profile))
+            return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
         facts.update { it.copy(starting = true, startProblem = null) }
         try {
             val failure =
                 starter.start(
                     target,
-                    stillWanted = { actionEpoch == epoch && target.profile.raw !in closedProfiles },
+                    stillWanted = {
+                        actionEpoch == epoch &&
+                            healingOwner() == target.profile &&
+                            readable(target.profile)
+                    },
                 )
             facts.update {
                 it.copy(
@@ -697,6 +756,10 @@ internal constructor(
             if (failure == null) {
                 val confirmed = blocking { linux.confirmManualServerStart(target.profile.raw) }
                 if (confirmed is Outcome.Failed) return@withLock confirmed
+                val lifted = recovery.confirmManualStart(target.profile)
+                if (lifted is Outcome.Failed) return@withLock lifted
+                idleBudgetHeld = false
+                onManualReady?.invoke()
             }
             publish()
             if (failure == null) Outcome.Ok(Unit)
@@ -861,18 +924,88 @@ internal constructor(
                 !recovery.policyAllows(target.profile.raw)
         )
             return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
-        if (before.serverIdleHelperStopped)
+        val epoch = actionEpoch
+        fun current() =
+            foreground &&
+                epoch == actionEpoch &&
+                healingOwner() == target.profile &&
+                readable(target.profile)
+        idleBudgetHeld = true
+        val receipt =
+            if (before.serverIdleStopped) {
+                when (
+                    val resumed = mutation {
+                        linux.resumeIdleStoppedPhoneServer(target.profile.raw, generation)
+                    }
+                ) {
+                    is Outcome.Failed -> return@withLock resumed
+                    is Outcome.Ok -> NativeRuntimeStatus.read(resumed.value)
+                }
+            } else before
+        if (!current())
             return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
-        val resumed = mutation {
-            linux.resumeIdleStoppedPhoneServer(target.profile.raw, generation)
-        }
-        if (resumed is Outcome.Failed) return@withLock resumed
-        val receipt = NativeRuntimeStatus.read((resumed as Outcome.Ok).value)
         if (
             !receipt.serverIdleReceiptValid ||
                 receipt.serverIdleGeneration != generation ||
                 !receipt.serverRunning ||
                 port.probe(target.password) != ProbeAnswer.Answered
+        )
+            return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
+        if (before.serverIdleHelperStopped) {
+            val helper =
+                (stores.prefs.get("oc.phoneAgentOwner.${target.profile.raw}") as? PrefValue.Str)
+                    ?.value ?: target.profile.raw
+            if (!Regex("[A-Za-z0-9_-]{1,80}").matches(helper))
+                return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
+            val password =
+                when (val read = stores.secrets.read("oc.agentHostSecret.$helper")) {
+                    is Outcome.Failed -> return@withLock read
+                    is Outcome.Ok ->
+                        read.value?.takeIf { Regex("[a-f0-9]{64}").matches(it) }
+                            ?: return@withLock Outcome.Failed(
+                                Failure.Runtime(RuntimeProblem.RecoveryUnavailable)
+                            )
+                }
+            if (!current())
+                return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
+            val restored = mutation {
+                linux.resumeIdleStoppedAgentHost(
+                    helper,
+                    generation,
+                    password,
+                    PaseoConfig.render().json,
+                )
+            }
+            if (restored is Outcome.Failed) return@withLock restored
+            val handshake =
+                PaseoTransport(
+                    "ws://127.0.0.1:4099/ws",
+                    password,
+                    OkHttpPaseoSockets(),
+                    scope,
+                    helperLane,
+                    requestTimeoutMs = 8_000,
+                )
+            val ready =
+                try {
+                    attempt(::classifyRuntime) { handshake.connect() }
+                } finally {
+                    handshake.close()
+                }
+            if (ready is Outcome.Failed) return@withLock ready
+        }
+        if (!current())
+            return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
+        val live =
+            (runtimeStatus() as? Outcome.Ok)?.value
+                ?: return@withLock Outcome.Failed(
+                    Failure.Runtime(RuntimeProblem.RecoveryUnavailable)
+                )
+        if (
+            !live.serverIdleReceiptValid ||
+                live.serverIdleGeneration != generation ||
+                !live.serverRunning ||
+                live.serverIdleStopped
         )
             return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
         when (
@@ -884,7 +1017,8 @@ internal constructor(
             is Outcome.Ok ->
                 NativeRuntimeStatus.read(completed.value).let { after ->
                     if (
-                        !after.serverIdleReceiptValid ||
+                        !current() ||
+                            !after.serverIdleReceiptValid ||
                             !after.serverRunning ||
                             after.serverIdleStopped ||
                             after.serverIdleHelperStopped
@@ -989,6 +1123,50 @@ internal constructor(
         publish()
         if (failure == null) Outcome.Ok(Unit)
         else Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable, failure.details))
+    }
+
+    /** One foreground check; the native generation and retry budget own every restart. */
+    internal suspend fun foregroundHealth(): Outcome<Boolean> {
+        val owner = healingOwner() ?: return Outcome.Ok(false)
+        if (!foreground || !readable(owner)) return Outcome.Ok(false)
+        var status =
+            (runtimeStatus() as? Outcome.Ok)?.value
+                ?: return Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
+        if (status.serverIdlePolicySupported) {
+            if (!status.serverIdleReceiptValid)
+                return Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
+            if (status.serverIdleStopped || status.serverIdleHelperStopped) {
+                when (val resumed = idleResume()) {
+                    is Outcome.Failed -> return resumed
+                    is Outcome.Ok -> status = resumed.value
+                }
+            }
+        }
+        if (!foreground || !readable(owner) || healingOwner() != owner) return Outcome.Ok(false)
+        if (!openStartDone && !idleBudgetHeld) {
+            if (openStart()) openStartDone = true
+            status = (runtimeStatus() as? Outcome.Ok)?.value ?: return Outcome.Ok(false)
+        }
+        if (
+            !status.serverRunning &&
+                status.serverRestartWanted &&
+                !status.serverRecoveryScheduled &&
+                !status.idleBlocks
+        ) {
+            when (val recovered = recoverAfterExit(owner.raw)) {
+                is Outcome.Failed -> return recovered
+                is Outcome.Ok -> Unit
+            }
+        }
+        refreshNow()
+        val target = target() ?: return Outcome.Ok(false)
+        if (!foreground || !readable(owner) || target.profile != owner) return Outcome.Ok(false)
+        status = (runtimeStatus() as? Outcome.Ok)?.value ?: return Outcome.Ok(false)
+        return Outcome.Ok(
+            status.serverRunning &&
+                !status.idleBlocks &&
+                port.probe(target.password) == ProbeAnswer.Answered
+        )
     }
 
     private suspend fun refreshNow() = lane.withLock {
@@ -1102,6 +1280,7 @@ internal constructor(
         if (
             foreground &&
                 !presenceResetThisVisit &&
+                !idleBudgetHeld &&
                 (budget["attempts"] as? Number)?.toInt() != 0 &&
                 budget["pending"] == false &&
                 status.serverRunning &&
@@ -1165,6 +1344,11 @@ internal constructor(
         }
     }
 
+    /** BUILD-RUNTIME-B: the setup job's finish step starts or re-reads the server through the one lane. */
+    suspend fun startServer(): Outcome<Unit> = startNow()
+
+    suspend fun refreshServer() = refreshNow()
+
     fun serverSource(update: suspend () -> Outcome<Unit>): PhoneServerSource =
         object : PhoneServerSource {
             override val facts: StateFlow<PhoneServerFacts> =
@@ -1215,7 +1399,7 @@ internal constructor(
      * up.
      */
     private fun resumed(on: Boolean) {
-        if (on && !foreground) presenceResetThisVisit = false
+        if (on && !foreground) presenceResetThisVisit = idleBudgetHeld
         foreground = on
         if (!readyMarkerPresent()) return
         try {
@@ -1227,7 +1411,16 @@ internal constructor(
         if (on)
             scope.launch {
                 if (!openStartDone) {
-                    if (openStart()) openStartDone = true
+                    val state = (runtimeStatus() as? Outcome.Ok)?.value
+                    if (
+                        state?.serverIdlePolicySupported == true &&
+                            (!state.serverIdleReceiptValid ||
+                                state.serverIdleStopped ||
+                                state.serverIdleHelperStopped)
+                    ) {
+                        if (state.serverIdleReceiptValid && idleResume() is Outcome.Ok)
+                            openStartDone = true
+                    } else if (openStart()) openStartDone = true
                 } else refreshNow()
             }
     }

@@ -55,7 +55,10 @@ public interface HealthGateway {
 
 public interface SessionGateway {
     /** Newest first; the opaque continuation always requests older rows. */
-    public suspend fun sessionPage(cursor: String? = null, limit: Int = 100): Outcome<ServerPage<Session>>
+    public suspend fun sessionPage(
+        cursor: String? = null,
+        limit: Int = 100,
+    ): Outcome<ServerPage<Session>>
 
     public suspend fun createSession(spec: NewSession = NewSession()): Outcome<Session>
 
@@ -69,7 +72,11 @@ public interface SessionGateway {
     public suspend fun sessionStatuses(): Outcome<ImmutableMap<SessionId, SessionStatus>>
 
     /** Chronological items of one page; the continuation requests older rows. */
-    public suspend fun messagePage(id: SessionId, cursor: String? = null, limit: Int = 100): Outcome<ServerPage<MessageWithParts>>
+    public suspend fun messagePage(
+        id: SessionId,
+        cursor: String? = null,
+        limit: Int = 100,
+    ): Outcome<ServerPage<MessageWithParts>>
 
     public suspend fun todos(id: SessionId): Outcome<ImmutableList<Todo>>
 
@@ -78,22 +85,37 @@ public interface SessionGateway {
 
 public interface PromptGateway {
     /**
-     * Sends one prompt. [commandId] is the app's dispatch identity for command receipts; it never authorises a
-     * resend. A lost response is [PromptAdmission.Uncertain], never a retry (plan 04 §13).
+     * Sends one prompt. [commandId] is the app's dispatch identity for command receipts; it never
+     * authorises a resend. A lost response is [PromptAdmission.Uncertain], never a retry (plan 04
+     * §13).
      */
-    public suspend fun prompt(session: SessionId, prompt: OutgoingPrompt, commandId: String? = null): Outcome<PromptAdmission>
+    public suspend fun prompt(
+        session: SessionId,
+        prompt: OutgoingPrompt,
+        commandId: String? = null,
+    ): Outcome<PromptAdmission>
 
-    public suspend fun shell(session: SessionId, command: String, agent: String, model: ModelSelection? = null): Outcome<Unit>
+    public suspend fun shell(
+        session: SessionId,
+        command: String,
+        agent: String,
+        model: ModelSelection? = null,
+    ): Outcome<Unit>
 
-    public suspend fun slashCommand(session: SessionId, command: String, args: String, model: ModelSelection? = null): Outcome<Unit>
+    public suspend fun slashCommand(
+        session: SessionId,
+        command: String,
+        args: String,
+        model: ModelSelection? = null,
+    ): Outcome<Unit>
 
     /** Dart `abort`. [resume] asks a backend that supports it to continue after stopping. */
     public suspend fun stop(session: SessionId, resume: Boolean = false): Outcome<StopResult>
 }
 
 /**
- * Permission replies. [message] rides only on OpenCode 2 rejections (shown to the model); other backends accept and
- * ignore it, so callers need no protocol branch.
+ * Permission replies. [message] rides only on OpenCode 2 rejections (shown to the model); other
+ * backends accept and ignore it, so callers need no protocol branch.
  */
 public interface PermissionGateway {
     public suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>>
@@ -108,39 +130,66 @@ public interface PermissionGateway {
 
 /** OpenCode 2 structured forms. Inert by default (capability `forms` = false). */
 public interface FormGateway {
-    public suspend fun sessionForms(session: SessionId): Outcome<ImmutableList<FormSpec>> = persistentListOf<FormSpec>().ok()
+    public suspend fun sessionForms(session: SessionId): Outcome<ImmutableList<FormSpec>> =
+        persistentListOf<FormSpec>().ok()
 
     /** Across every session of the pinned location, including global (MCP elicitation) forms. */
-    public suspend fun pendingForms(): Outcome<ImmutableList<FormSpec>> = persistentListOf<FormSpec>().ok()
+    public suspend fun pendingForms(): Outcome<ImmutableList<FormSpec>> =
+        persistentListOf<FormSpec>().ok()
 
-    public suspend fun formState(session: SessionId, form: FormId): Outcome<FormState> = unavailable("forms")
+    public suspend fun formState(session: SessionId, form: FormId): Outcome<FormState> =
+        unavailable("forms")
 
-    /** 400 invalid answer and 409 already settled arrive as Failure.Rejected / Failure.Conflict with their tag. */
-    public suspend fun replyForm(session: SessionId, form: FormId, answer: FormAnswer): Outcome<Unit> = unavailable("forms")
+    /**
+     * 400 invalid answer and 409 already settled arrive as Failure.Rejected / Failure.Conflict with
+     * their tag.
+     */
+    public suspend fun replyForm(
+        session: SessionId,
+        form: FormId,
+        answer: FormAnswer,
+    ): Outcome<Unit> = unavailable("forms")
 
-    public suspend fun cancelForm(session: SessionId, form: FormId): Outcome<Unit> = unavailable("forms")
+    public suspend fun cancelForm(session: SessionId, form: FormId): Outcome<Unit> =
+        unavailable("forms")
 }
 
-/** OpenCode 2 session inbox: durably admitted, not-yet-delivered work. Inert by default (capability `inbox`). */
+/**
+ * OpenCode 2 session inbox: durably admitted, not-yet-delivered work. Inert by default (capability
+ * `inbox`).
+ */
 public interface InboxGateway {
-    public suspend fun inbox(session: SessionId): Outcome<ImmutableList<InboxItem>> = persistentListOf<InboxItem>().ok()
+    public suspend fun inbox(session: SessionId): Outcome<ImmutableList<InboxItem>> =
+        persistentListOf<InboxItem>().ok()
 
     /** Conflict when already delivered. */
-    public suspend fun cancelInboxItem(session: SessionId, item: InboxItemId): Outcome<Unit> = unavailable("inbox")
+    public suspend fun cancelInboxItem(session: SessionId, item: InboxItemId): Outcome<Unit> =
+        unavailable("inbox")
 
     /** Dart steerInboxItem / queueInboxItem. */
-    public suspend fun setInboxDelivery(session: SessionId, item: InboxItemId, delivery: InboxDelivery): Outcome<Unit> =
-        unavailable("inbox")
+    public suspend fun setInboxDelivery(
+        session: SessionId,
+        item: InboxItemId,
+        delivery: InboxDelivery,
+    ): Outcome<Unit> = unavailable("inbox")
 }
 
-/** Legacy question dialogs through session-scoped endpoints. Inert by default (capability `legacyQuestionRequests`). */
+/**
+ * Legacy question dialogs through session-scoped endpoints. Inert by default (capability
+ * `legacyQuestionRequests`).
+ */
 public interface QuestionGateway {
-    public suspend fun pendingQuestions(): Outcome<ImmutableList<PendingQuestion>> = persistentListOf<PendingQuestion>().ok()
+    public suspend fun pendingQuestions(): Outcome<ImmutableList<PendingQuestion>> =
+        persistentListOf<PendingQuestion>().ok()
 
-    public suspend fun answerQuestion(session: SessionId, request: RequestId, answers: ImmutableList<ImmutableList<String>>): Outcome<Unit> =
+    public suspend fun answerQuestion(
+        session: SessionId,
+        request: RequestId,
+        answers: ImmutableList<ImmutableList<String>>,
+    ): Outcome<Unit> = unavailable("legacyQuestionRequests")
+
+    public suspend fun rejectQuestion(session: SessionId, request: RequestId): Outcome<Unit> =
         unavailable("legacyQuestionRequests")
-
-    public suspend fun rejectQuestion(session: SessionId, request: RequestId): Outcome<Unit> = unavailable("legacyQuestionRequests")
 }
 
 /** Provider and agent inventories backing the model picker. */
@@ -182,6 +231,13 @@ public interface ServerGateway :
     /** Computed from the probed server version and runtime latches, not fixed per backend. */
     public val capabilities: StateFlow<ServerCapabilities>
 
+    /**
+     * Changes on every location transition, including a move away and back, and on transport
+     * replacement.
+     */
+    public val scopeRevision: Long
+        get() = events.connects.value.toLong()
+
     public val location: StateFlow<ServerLocation>
 
     public fun setLocation(location: ServerLocation)
@@ -194,7 +250,7 @@ public interface ServerGateway :
 }
 
 /**
- * Optional facets (separate interfaces) are tested for by ENGINES only; features gate on capabilities.
- * `gateway.facet<CorrelatedPromptGateway>()`.
+ * Optional facets (separate interfaces) are tested for by ENGINES only; features gate on
+ * capabilities. `gateway.facet<CorrelatedPromptGateway>()`.
  */
 public inline fun <reified F : Any> ServerGateway.facet(): F? = this as? F

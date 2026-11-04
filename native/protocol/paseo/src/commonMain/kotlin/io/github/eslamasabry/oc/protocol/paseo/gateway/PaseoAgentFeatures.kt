@@ -3,6 +3,9 @@ package io.github.eslamasabry.oc.protocol.paseo.gateway
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.model.AgentFeature
+import io.github.eslamasabry.oc.core.model.AgentFeatureKind
+import io.github.eslamasabry.oc.core.model.AgentFeatureOption
 import io.github.eslamasabry.oc.protocol.paseo.PaseoFailureKind
 import io.github.eslamasabry.oc.protocol.paseo.arrayOrNull
 import io.github.eslamasabry.oc.protocol.paseo.boolOrNull
@@ -12,6 +15,7 @@ import io.github.eslamasabry.oc.protocol.paseo.paseoFail
 import io.github.eslamasabry.oc.protocol.paseo.requests.isPaseoProviderId
 import io.github.eslamasabry.oc.protocol.paseo.str
 import io.github.eslamasabry.oc.protocol.paseo.stringOrNull
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -23,21 +27,7 @@ import kotlinx.serialization.json.JsonPrimitive
  * is sent when the conversation starts.
  */
 
-public enum class AgentFeatureKind { Toggle, Choice }
-
-public data class AgentFeatureOption(val id: String, val label: String)
-
-public data class AgentFeature(
-    val id: String,
-    val label: String,
-    val description: String?,
-    val kind: AgentFeatureKind,
-    /** A toggle's state. */
-    val on: Boolean = false,
-    /** A choice's selected option id. */
-    val selected: String? = null,
-    val options: List<AgentFeatureOption> = emptyList(),
-)
+// AgentFeature, AgentFeatureKind and AgentFeatureOption are the shared core.model types (AgentToolsGateway).
 
 private val FEATURE_ID = Regex("^[A-Za-z0-9_.:-]{1,64}$")
 private val CONTROL = Regex("[\\x00-\\x1f\\x7f]")
@@ -71,7 +61,7 @@ internal fun parseAgentFeatures(raw: JsonElement?): List<AgentFeature> {
                     AgentFeatureOption(optionId, featureText(option["label"], 80) ?: return@mapNotNull null)
                 }
                 if (options.isEmpty()) continue
-                out += AgentFeature(id, label, description, AgentFeatureKind.Choice, selected = item.str("value"), options = options)
+                out += AgentFeature(id, label, description, AgentFeatureKind.Choice, selected = item.str("value"), options = options.toImmutableList())
             }
         }
     }

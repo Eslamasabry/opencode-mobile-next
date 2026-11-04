@@ -85,6 +85,8 @@ public interface LinuxServicesActions {
 
     public fun report(id: String)
 
+    public fun sendReport() {}
+
     public fun ask(kind: ServiceAskKind, id: String)
 
     public fun confirm()
@@ -109,6 +111,7 @@ public class LinuxServicesViewModel(
     private var visible = false
     private var generation = 0L
     private var detectorWatch: Job? = null
+    private var reportTarget: String? = null
 
     init {
         viewModelScope.launch { source.changes.collect { if (visible) open() } }
@@ -121,6 +124,7 @@ public class LinuxServicesViewModel(
     }
 
     private fun invalidate() {
+        reportTarget = null
         generation++
         detectorWatch?.cancel()
         session?.services?.dispose()
@@ -288,8 +292,43 @@ public class LinuxServicesViewModel(
 
     override fun report(id: String) = perform { live ->
         live.services.readLogs(id)
-        if (live === session && visible)
-            mutable.update { it.copy(report = live.services.failedReport(id)) }
+        if (live === session && visible) {
+            val report = live.services.failedReport(id)
+            reportTarget = id.takeIf { report != null }
+            mutable.update { it.copy(report = report) }
+        }
+    }
+
+    override fun sendReport() {
+        val id = reportTarget ?: return
+        val displayed = mutable.value.report ?: return
+        perform { live ->
+            live.services.readLogs(id)
+            if (live !== session || !visible) return@perform
+            val fresh = live.services.failedReport(id)
+            if (
+                fresh == null ||
+                    fresh.jobId != displayed.jobId ||
+                    fresh.status != displayed.status ||
+                    fresh.exitCode != displayed.exitCode
+            ) {
+                mutable.update {
+                    it.copy(
+                        report = null,
+                        failure =
+                            Failure.Refused(
+                                io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope
+                            ),
+                    )
+                }
+                return@perform
+            }
+            when (val opened = live.openReport(fresh)) {
+                is Outcome.Ok -> mutable.update { it.copy(report = null) }
+                is Outcome.Failed ->
+                    mutable.update { it.copy(report = null, failure = opened.failure) }
+            }
+        }
     }
 
     override fun detectedLogs(id: String) = perform { live ->
@@ -327,6 +366,7 @@ public class LinuxServicesViewModel(
     }
 
     override fun dismiss() {
+        reportTarget = null
         mutable.update {
             it.copy(
                 selected = null,

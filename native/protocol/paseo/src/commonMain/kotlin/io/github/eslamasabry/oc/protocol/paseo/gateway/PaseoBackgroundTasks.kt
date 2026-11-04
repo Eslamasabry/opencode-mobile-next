@@ -12,6 +12,8 @@ import io.github.eslamasabry.oc.protocol.paseo.stringOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.JsonObject
 
 /*
@@ -35,7 +37,13 @@ internal fun paseoTurnFailedAfter(message: MessageWithParts): Boolean? {
     return if (message.parts.any { it.type == PartType.Text && it.text.isNotBlank() }) false else null
 }
 
-internal class PaseoBackgroundTaskBook {
+/**
+ * [shared] (AGENT-2): the server-wide book the app keeps across this server's reconnects. Every
+ * observation is mirrored into it, and its answers count too.
+ */
+internal class PaseoBackgroundTaskBook(
+    private val shared: io.github.eslamasabry.oc.protocol.paseo.work.PaseoBackgroundTasks? = null
+) {
     private class Started(val callId: String, val taskId: String?, val sinceMs: Long)
 
     private class Agent {
@@ -105,6 +113,7 @@ internal class PaseoBackgroundTaskBook {
         val before = agent.signature()
         messages.forEach(fresh::observe)
         agents[key] = fresh
+        shared?.replace(key, messages.toList())
         if (fresh.signature() != before) revisionState.value++
     }
 
@@ -113,6 +122,7 @@ internal class PaseoBackgroundTaskBook {
         val agent = agent(key)
         val before = agent.signature()
         agent.observe(message)
+        shared?.observe(key, message)
         if (agent.signature() != before) revisionState.value++
     }
 
@@ -122,14 +132,25 @@ internal class PaseoBackgroundTaskBook {
         val had = agent.running(atMs)
         val gap = agent.gapMs
         if (gap == null || atMs > gap) agent.gapMs = atMs
+        shared?.runtimeGap(key, atMs)
         if (had && !agent.running(atMs)) revisionState.value++
     }
 
     fun gapAt(key: String): Long? = agents[key]?.gapMs
 
-    fun turnFailed(key: String): Boolean = agents[key]?.failed ?: false
+    fun turnFailed(key: String): Boolean =
+        (agents[key]?.failed ?: false) || shared?.turnFailed(key) == true
 
-    fun running(key: String, nowMs: Long): Boolean = agents[key]?.running(nowMs) ?: false
+    fun running(key: String, nowMs: Long): Boolean =
+        (agents[key]?.running(nowMs) ?: false) || shared?.running(key, nowMs) == true
+
+    /** Changes of this book and of the shared one (the feed's refresh signal). */
+    val changes: kotlinx.coroutines.flow.Flow<Unit>
+        get() =
+            kotlinx.coroutines.flow.merge(
+                revision.drop(1).map {},
+                shared?.changes ?: kotlinx.coroutines.flow.emptyFlow(),
+            )
 
     fun forget(key: String) {
         if (agents.remove(key) != null) revisionState.value++

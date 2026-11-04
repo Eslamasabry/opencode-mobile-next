@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
@@ -23,9 +25,11 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.frame.ExitGlyph
 import io.github.eslamasabry.oc.ui.kit.frame.KitExitGlyph
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -35,8 +39,19 @@ public sealed interface KitRowLeading {
     /** A kit glyph in its 28 dp `surface3` tile (Dart `KitRow.icon`). */
     public data class Glyph(val icon: ImageVector) : KitRowLeading
 
-    /** Two letters in the tile, for a thing with no glyph (a server, a project). Never coloured by identity. */
+    /**
+     * Two letters in the tile, for a thing with no glyph (a server, a project). Never coloured by
+     * identity.
+     */
     public data class Initials(val text: String) : KitRowLeading
+
+    /**
+     * A bounded static provider mark. A missing or refused picture displays [fallback]'s initials.
+     */
+    public data class Svg(val text: String, val fallback: String) : KitRowLeading
+
+    public data class Logo(val id: String, val name: String, val agent: Boolean = false) :
+        KitRowLeading
 }
 
 /** What ends a row (Dart `KitRowValue`, `KitChevron`, the row's own action). */
@@ -47,10 +62,15 @@ public sealed interface KitRowTrailing {
     /** The row opens a page. */
     public data object Chevron : KitRowTrailing
 
-    /** A value in quiet words, optionally with the chevron. It goes under the title when it cannot share the line. */
+    /**
+     * A value in quiet words, optionally with the chevron. It goes under the title when it cannot
+     * share the line.
+     */
     public data class Value(val text: String, val chevron: Boolean = true) : KitRowTrailing
 
-    /** The row's one act ("Turn on"): a trailing tertiary; under the supporting line from 1.3× text. */
+    /**
+     * The row's one act ("Turn on"): a trailing tertiary; under the supporting line from 1.3× text.
+     */
     public data class Action(val action: KitLineAction) : KitRowTrailing
 }
 
@@ -61,24 +81,59 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
     val tone = if (dim) TextTone.Tertiary else TextTone.Primary
     val tile = tokens.iconTile * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)
     Box(
-        Modifier.size(tile.dp).background(colors.surface3, KitShapeId.Tile.toShape()).clearAndSetSemantics {},
+        Modifier.size(tile.dp).background(colors.surface3, KitShapeId.Tile.shape()).clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
         when (leading) {
             is KitRowLeading.Glyph ->
                 Image(
-                    leading.icon, null,
-                    Modifier.size((tokens.smallIcon * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)).dp),
+                    leading.icon,
+                    null,
+                    Modifier.size(
+                        (tokens.smallIcon * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)).dp
+                    ),
                     colorFilter = ColorFilter.tint(colors.tone(tone)),
                 )
-            is KitRowLeading.Initials -> KitText(leading.text.take(2), role = TypeRole.Label, tone = tone, maxLines = 1)
+            is KitRowLeading.Logo -> KitProviderLogo(leading.id, leading.name, leading.agent)
+            is KitRowLeading.Initials ->
+                KitText(leading.text.take(2), role = TypeRole.Label, tone = tone, maxLines = 1)
+            is KitRowLeading.Svg -> {
+                val platform = LocalKitPlatform.current
+                val size = (tokens.smallIcon * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)).dp
+                val pixels = with(LocalDensity.current) { size.roundToPx() }.coerceIn(1, 256)
+                // One mark per row composition. No process-wide cache retains server-controlled
+                // text.
+                val painter =
+                    remember(leading.text, platform, pixels) {
+                        platform.svgPainter(leading.text, pixels)
+                    }
+                if (painter == null) {
+                    KitText(
+                        leading.fallback.take(2),
+                        role = TypeRole.Label,
+                        tone = tone,
+                        maxLines = 1,
+                    )
+                } else {
+                    Image(
+                        painter,
+                        null,
+                        Modifier.size(size),
+                        colorFilter = ColorFilter.tint(colors.tone(tone)),
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
 internal fun RowValue(value: KitRowTrailing.Value, modifier: Modifier = Modifier) {
-    Row(modifier.testTag("kit-row-value"), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+    Row(
+        modifier.testTag("kit-row-value"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+    ) {
         KitText(value.text, role = TypeRole.Secondary, tone = TextTone.Tertiary, maxLines = 1)
         if (value.chevron) RowChevron()
     }
@@ -86,5 +141,9 @@ internal fun RowValue(value: KitRowTrailing.Value, modifier: Modifier = Modifier
 
 @Composable
 internal fun RowChevron() {
-    KitExitGlyph(ExitGlyph.Chevron, LocalKitColors.current.text3, Modifier.testTag("kit-row-chevron"))
+    KitExitGlyph(
+        ExitGlyph.Chevron,
+        LocalKitColors.current.text3,
+        Modifier.testTag("kit-row-chevron"),
+    )
 }

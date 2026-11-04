@@ -39,35 +39,42 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import kotlinx.coroutines.launch
 
 /**
- * The transcript list's scroll state (plan 09 §7.3, plan 08 §5.1 follow-scroll). Hoisted per chat entry.
- * - [following] is true at open and after the person's own send; their drag turns it off; reaching the live edge or the
- *   jump control turns it back on.
- * - [awayFromLatest] drives the jump control and is read only by it, so scrolling never recomposes the screen.
+ * The transcript list's scroll state (plan 09 §7.3, plan 08 §5.1 follow-scroll). Hoisted per chat
+ * entry.
+ * - [following] is true at open and after the person's own send; their drag turns it off; reaching
+ *   the live edge or the jump control turns it back on.
+ * - [awayFromLatest] drives the jump control and is read only by it, so scrolling never recomposes
+ *   the screen.
  */
 @Stable
-public class TranscriptListState internal constructor(
+public class TranscriptListState
+internal constructor(
     public val lazy: LazyListState,
     followingState: MutableState<Boolean>,
     private val density: Density,
 ) {
     /**
-     * P12-CHAT-FEEL: backed by the saveable state itself, so rotation and coming back restore the reader's choice as it
-     * is now (a copy synced on recomposition went stale and pulled a reader back to the bottom).
+     * P12-CHAT-FEEL: backed by the saveable state itself, so rotation and coming back restore the
+     * reader's choice as it is now (a copy synced on recomposition went stale and pulled a reader
+     * back to the bottom).
      */
     public var following: Boolean by followingState
 
     /** Index 0 (the newest row) is at the bottom, within the 48 dp follow slack (plan 08 §5.1). */
     public val atLiveEdge: Boolean by derivedStateOf {
-        lazy.firstVisibleItemIndex == 0 && lazy.firstVisibleItemScrollOffset <= with(density) { FOLLOW_SLACK_DP.dp.roundToPx() }
+        lazy.firstVisibleItemIndex == 0 &&
+            lazy.firstVisibleItemScrollOffset <= with(density) { FOLLOW_SLACK_DP.dp.roundToPx() }
     }
 
     /** Plan 09 §7.3: away once index 0 left the bottom or it is scrolled more than 480 dp. */
     public val awayFromLatest: Boolean by derivedStateOf {
-        lazy.firstVisibleItemIndex > 0 || lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
+        lazy.firstVisibleItemIndex > 0 ||
+            lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
     }
 
     internal companion object {
@@ -85,11 +92,13 @@ public fun rememberTranscriptListState(): TranscriptListState {
 }
 
 /**
- * `LazyColumn(reverseLayout = true)` over block rows, newest first (plan 09 §7.1), with follow-bottom and the
- * "Jump to latest" control. Callers add items with stable String keys and a contentType (§7.2).
+ * `LazyColumn(reverseLayout = true)` over block rows, newest first (plan 09 §7.1), with
+ * follow-bottom and the "Jump to latest" control. Callers add items with stable String keys and a
+ * contentType (§7.2).
  *
- * Follow: growth of the bottom item keeps it glued for free; a NEW item at index 0 would land out of view (the list
- * anchors on the old first key), so while following the list asks for index 0 in the same frame as the insert.
+ * Follow: growth of the bottom item keeps it glued for free; a NEW item at index 0 would land out
+ * of view (the list anchors on the old first key), so while following the list asks for index 0 in
+ * the same frame as the insert.
  */
 @Composable
 public fun KitTranscriptList(
@@ -103,39 +112,68 @@ public fun KitTranscriptList(
 ) {
     val lastKey = remember { arrayOfNulls<String>(1) }
     SideEffect {
-        // Runs after this composition applies and before its layout: same frame as the insert (§7.3 rule 2).
+        // Runs after this composition applies and before its layout: same frame as the insert (§7.3
+        // rule 2).
         if (newestKey != lastKey[0]) {
             lastKey[0] = newestKey
             if (state.following && newestKey != null) state.lazy.requestScrollToItem(0)
         }
     }
     LaunchedEffect(state) {
-        state.lazy.interactionSource.interactions.collect { if (it is DragInteraction.Start) state.following = false }
+        state.lazy.interactionSource.interactions.collect {
+            if (it is DragInteraction.Start) state.following = false
+        }
     }
     LaunchedEffect(state) {
-        snapshotFlow { state.atLiveEdge }.collect { if (it && !state.lazy.isScrollInProgress) state.following = true }
+        snapshotFlow { state.atLiveEdge }
+            .collect { if (it && !state.lazy.isScrollInProgress) state.following = true }
     }
+    val chrome = kitScreenChromePadding()
+    val insetPadding =
+        PaddingValues(
+            top = contentPadding.calculateTopPadding() + chrome.calculateTopPadding(),
+            bottom = contentPadding.calculateBottomPadding() + chrome.calculateBottomPadding(),
+        )
     Box(modifier) {
         LazyColumn(
             state = state.lazy,
             reverseLayout = true,
-            contentPadding = contentPadding,
+            contentPadding = insetPadding,
             modifier = Modifier.fillMaxSize().testTag("transcript-list"),
             content = content,
         )
-        KitJumpToLatest(state, jumpLabel, motion, Modifier.align(Alignment.BottomCenter).padding(bottom = Space.S4.dp))
+        KitJumpToLatest(
+            state,
+            jumpLabel,
+            motion,
+            Modifier.align(Alignment.BottomCenter)
+                .padding(bottom = Space.S4.dp + chrome.calculateBottomPadding()),
+        )
     }
 }
 
-/** The pill (plan 08 §5.1 "Jump pill"). It alone reads [TranscriptListState.awayFromLatest]. Plain tap: no haptic. */
+/**
+ * The pill (plan 08 §5.1 "Jump pill"). It alone reads [TranscriptListState.awayFromLatest]. Plain
+ * tap: no haptic.
+ */
 @Composable
-private fun KitJumpToLatest(state: TranscriptListState, label: String, motion: KitMotionLevel, modifier: Modifier) {
+private fun KitJumpToLatest(
+    state: TranscriptListState,
+    label: String,
+    motion: KitMotionLevel,
+    modifier: Modifier,
+) {
     val scope = rememberCoroutineScope()
     val full = motion == KitMotionLevel.Full
     AnimatedVisibility(
         visible = state.awayFromLatest,
-        enter = fadeIn(tween(MotionTokens.STANDARD)) + (if (full) slideInVertically(tween(MotionTokens.STANDARD)) { it / 4 } else fadeIn()),
-        exit = fadeOut(tween(MotionTokens.QUICK)) + (if (full) slideOutVertically(tween(MotionTokens.QUICK)) { it / 4 } else fadeOut()),
+        enter =
+            fadeIn(tween(MotionTokens.STANDARD)) +
+                (if (full) slideInVertically(tween(MotionTokens.STANDARD)) { it / 4 }
+                else fadeIn()),
+        exit =
+            fadeOut(tween(MotionTokens.QUICK)) +
+                (if (full) slideOutVertically(tween(MotionTokens.QUICK)) { it / 4 } else fadeOut()),
         modifier = modifier,
     ) {
         Surface(
@@ -148,7 +186,9 @@ private fun KitJumpToLatest(state: TranscriptListState, label: String, motion: K
                         motion == KitMotionLevel.Off -> lazy.scrollToItem(0)
                         lazy.firstVisibleItemIndex <= viewport * 2 -> lazy.animateScrollToItem(0)
                         else -> {
-                            lazy.scrollToItem(2) // jump close, glide the last stretch (never animate across thousands)
+                            lazy.scrollToItem(
+                                2
+                            ) // jump close, glide the last stretch (never animate across thousands)
                             lazy.animateScrollToItem(0)
                         }
                     }
@@ -159,7 +199,11 @@ private fun KitJumpToLatest(state: TranscriptListState, label: String, motion: K
             tonalElevation = 2.dp,
             modifier = Modifier.testTag("jump-to-latest"),
         ) {
-            Text(label, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
+            )
         }
     }
 }

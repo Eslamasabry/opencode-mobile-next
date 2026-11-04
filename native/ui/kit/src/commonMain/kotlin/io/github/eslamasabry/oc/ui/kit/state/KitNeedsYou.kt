@@ -21,7 +21,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitNeedsYouReasonBlocked
@@ -55,7 +55,7 @@ public fun KitNeedsYou(reason: KitNeedsYouReason, modifier: Modifier = Modifier,
             KitNeedsYouReason.Blocked -> stringResource(Res.string.kitNeedsYouReasonBlocked)
             KitNeedsYouReason.Consent -> stringResource(Res.string.kitNeedsYouReasonConsent)
         }
-    val shape = KitShapeId.Pill.toShape()
+    val shape = KitShapeId.Pill.shape()
     Row(
         modifier
             .heightIn(min = 24.dp)
@@ -68,7 +68,7 @@ public fun KitNeedsYou(reason: KitNeedsYouReason, modifier: Modifier = Modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
-        Box(Modifier.size(DOT_DP.dp).clip(KitShapeId.Circle.toShape()).background(colors.attention))
+        Box(Modifier.size(DOT_DP.dp).clip(KitShapeId.Circle.shape()).background(colors.attention))
         KitText(words, role = TypeRole.Label, tone = TextTone.Attention, kind = KitTextKind.Frame, maxLines = 1)
         waiting?.let {
             KitText(stringResource(Res.string.kitNeedsYouWaiting, it), role = TypeRole.Caption, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)

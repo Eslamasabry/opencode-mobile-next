@@ -8,12 +8,14 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * What the connected server can do (PROTOCOLS-38). 86 flags with names, order and defaults identical to Dart's
- * `ServerCapabilities` (lib/domain/server_gateway/capabilities.dart); `CapabilitySnapshotTest` checks it against
- * `capabilities/default.json`. Generated once from the Dart constructor, hand-owned from here (S0-CORE).
+ * What the connected server can do (PROTOCOLS-38). 86 flags with names, order and defaults
+ * identical to Dart's `ServerCapabilities` (lib/domain/server_gateway/capabilities.dart);
+ * `CapabilitySnapshotTest` checks it against `capabilities/default.json`. Generated once from the
+ * Dart constructor, hand-owned from here (S0-CORE).
  *
- * Per-backend bases (`Oc2Capabilities.Base`, …) live in their protocol modules (plan 04 §11.4). The UI gates on
- * these flags and [PlatformCapabilities], never on BackendKind (AGENTS.md). Field documentation is the Dart file's.
+ * Per-backend bases (`Oc2Capabilities.Base`, …) live in their protocol modules (plan 04 §11.4). The
+ * UI gates on these flags and [PlatformCapabilities], never on BackendKind (AGENTS.md). Field
+ * documentation is the Dart file's.
  */
 @Serializable
 public data class ServerCapabilities(
@@ -103,20 +105,29 @@ public data class ServerCapabilities(
     val projectsAreGitRepositories: Boolean = true,
     val remoteShell: Boolean = false,
     val claudeAgent: Boolean = false,
+    val agentFeatures: Boolean = false,
+    val worktreeInspection: Boolean = false,
 ) {
     /** Whether a conversation runs shell commands here (Dart `conversationShellOn`). */
-    public val conversationShellOn: Boolean get() = terminal && conversationShell
+    public val conversationShellOn: Boolean
+        get() = terminal && conversationShell
 
-    /** Preserve every protocol capability while applying managed-host readiness (Dart `withGenUi`). */
+    /**
+     * Preserve every protocol capability while applying managed-host readiness (Dart `withGenUi`).
+     */
     public fun withGenUi(value: Boolean, agentHandoffFiles: Boolean? = null): ServerCapabilities =
         copy(genUi = value, agentHandoffFiles = agentHandoffFiles ?: this.agentHandoffFiles)
 
     /** Preserve every protocol capability while applying [claudeAgent] (Dart `withClaudeAgent`). */
     public fun withClaudeAgent(value: Boolean): ServerCapabilities = copy(claudeAgent = value)
 
-    /** Every flag by name, in declaration order. Derived from the serial form, so it cannot drift. */
+    /**
+     * Every flag by name, in declaration order. Derived from the serial form, so it cannot drift.
+     */
     public fun flags(): Map<String, Boolean> =
-        FlagJson.encodeToJsonElement(serializer(), this).jsonObject.mapValues { it.value.jsonPrimitive.boolean }
+        FlagJson.encodeToJsonElement(serializer(), this).jsonObject.mapValues {
+            it.value.jsonPrimitive.boolean
+        }
 
     /** The flag a [FeatureId] names; null when no flag has that name. */
     public fun flag(name: String): Boolean? = flags()[name]
@@ -124,8 +135,66 @@ public data class ServerCapabilities(
     public fun has(feature: FeatureId): Boolean = flag(feature.name) == true
 
     public companion object {
-        /** "Unknown/offline": used before a gateway exists and while an OC1 history import is pending. */
-        public val Unknown: ServerCapabilities = ServerCapabilities()
+        /**
+         * No gateway has confirmed any capability yet. Keep constructor defaults for legacy
+         * snapshots only.
+         */
+        public val Unknown: ServerCapabilities =
+            ServerCapabilities(
+                promptAttachments = false,
+                subagentReplies = false,
+                promptAgentMentions = false,
+                offlinePromptQueue = false,
+                fileBrowsing = false,
+                terminal = false,
+                conversationShell = false,
+                projectManagement = false,
+                globalSessionSearch = false,
+                sessionDiff = false,
+                sessionFork = false,
+                sessionCompact = false,
+                persistentPermissionGrants = false,
+                permissionRequests = false,
+                savedPermissionList = false,
+                messageCompletionEndsRun = false,
+                sessionRevert = false,
+                sessionImportExport = false,
+                sessionNotes = false,
+                serverCatalog = false,
+                sessionModelProviderSwitching = false,
+                agentSelection = false,
+                slashCommands = false,
+                profileAttentionPolling = false,
+                managedWorkspaces = false,
+                workspaceWarp = false,
+                sessionSteal = false,
+                consoleOrganizations = false,
+                mcpOAuth = false,
+                mcpConfigWrites = false,
+                sessionShare = false,
+                sessionArchive = false,
+                sessionDelete = false,
+                sessionTodos = false,
+                messageDelete = false,
+                workspaceSymbols = false,
+                textSearch = false,
+                languageServiceStatus = false,
+                formatterStatus = false,
+                toolInventory = false,
+                experimentalCapabilities = false,
+                shellSettings = false,
+                remoteUpgrade = false,
+                clientDiagnostics = false,
+                gitInit = false,
+                providerRuntimeRefresh = false,
+                configuredProviderFallback = false,
+                globalEventStream = false,
+                worktreeReset = false,
+                worktreeCreate = false,
+                legacyQuestionRequests = false,
+                cliSessionResume = false,
+                projectsAreGitRepositories = false,
+            )
 
         private val FlagJson = Json { encodeDefaults = true }
     }

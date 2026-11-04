@@ -14,7 +14,7 @@ import io.github.eslamasabry.oc.engine.integrations.catalog.*
 import io.github.eslamasabry.oc.engine.setupassist.*
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
-import io.github.eslamasabry.oc.ui.routes.ToolsRoute
+import io.github.eslamasabry.oc.ui.routes.LibraryRoute
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -176,7 +176,7 @@ public interface LibraryActions {
 
 @AssistedInject
 public class LibraryViewModel(
-    @Assisted private val route: ToolsRoute,
+    @Assisted private val route: LibraryRoute,
     hosts: Set<LibraryHost>,
     private val nav: AppNavigator,
 ) : ViewModel(), LibraryActions {
@@ -504,7 +504,7 @@ public class LibraryViewModel(
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)
     public fun interface Factory : ManualViewModelAssistedFactory {
-        public fun create(route: ToolsRoute): LibraryViewModel
+        public fun create(route: LibraryRoute): LibraryViewModel
     }
 }
 

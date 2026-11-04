@@ -13,10 +13,12 @@ import android.os.Bundle
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.android.notifications.AlertFacts
 import io.github.eslamasabry.oc.android.notifications.AlertKeys
 import io.github.eslamasabry.oc.android.notifications.AlertKind
@@ -30,15 +32,18 @@ import io.github.eslamasabry.oc.android.notifications.FrozenExtras
 import io.github.eslamasabry.oc.android.notifications.NotificationActionBody
 import io.github.eslamasabry.oc.android.notifications.NotificationText
 import io.github.eslamasabry.oc.android.notifications.NotifyWords
+import io.github.eslamasabry.oc.android.notifications.QuestionShape
 import io.github.eslamasabry.oc.android.notifications.ReplyStopper
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswer
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswerer
+import io.github.eslamasabry.oc.android.notifications.ShadeReply
 import io.github.eslamasabry.oc.android.tiles.AttentionTileCache
 import io.github.eslamasabry.oc.android.tiles.LaunchAction
 import io.github.eslamasabry.oc.android.tiles.LaunchActions
 import io.github.eslamasabry.oc.android.tiles.PinnedSession
 import io.github.eslamasabry.oc.android.tiles.PinnedShortcuts
 import io.github.eslamasabry.oc.android.tiles.SharedTextIntake
+import io.github.eslamasabry.oc.android.tiles.ShortcutClear
 import io.github.eslamasabry.oc.android.tiles.updates.AndroidUpdateFeed
 import io.github.eslamasabry.oc.android.tiles.updates.AndroidUpdatePlatform
 import io.github.eslamasabry.oc.android.tiles.updates.PrefsUpdateStore
@@ -58,8 +63,10 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
-import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
+import io.github.eslamasabry.oc.core.data.kv.string
+import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
@@ -72,11 +79,16 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
+import io.github.eslamasabry.oc.engine.attention.identity.RunIdentity
+import io.github.eslamasabry.oc.engine.attention.identity.RunMessage
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.entry.EntryLinkParser
 import io.github.eslamasabry.oc.engine.entry.ParsedLink
+import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
+import io.github.eslamasabry.oc.engine.profiles.DeletionStep
+import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.AppUpdates
@@ -131,6 +143,22 @@ import org.json.JSONObject
 @BindingContainer
 @ContributesTo(AppScope::class)
 object PlatformBindings {
+    @Provides
+    @SingleIn(AppScope::class)
+    fun widgetPersistence(
+        stores: PreviewStores,
+        appScope: AppCoroutineScope,
+        clock: Clock,
+        profileScope: ProfileScope,
+    ): WidgetPersistence =
+        WidgetPersistence(
+            stores.prefs,
+            stores.lanes,
+            profileScope,
+            appScope,
+            clock,
+        )
+
     @Provides
     @SingleIn(AppScope::class)
     fun appUpdates(
@@ -250,7 +278,8 @@ internal data class Waiting(val profile: ProfileId, val request: PendingRequest)
 @Inject
 class PlatformHub(
     private val application: Application,
-    private val appScope: AppCoroutineScope,
+    appScope: AppCoroutineScope,
+    dispatchers: AppDispatchers,
     private val clock: Clock,
     private val updates: AppUpdates,
     private val registry: ConnectionRegistry,
@@ -261,8 +290,13 @@ class PlatformHub(
     private val appPreferences: AppPreferences,
     private val monitoring: AndroidProfileMonitoring,
     private val sharedProjectFolders: NativeSharedProjectFolders,
-    redactor: Redactor,
+    private val widgetRunner: NativeWidgetRunner,
+    private val widgetPersistence: WidgetPersistence,
+    private val redactor: Redactor,
+    private val background: BackgroundHub,
 ) {
+    private val mainDispatcher = dispatchers.main
+    private val appScope = CoroutineScope(appScope.coroutineContext + mainDispatcher)
     private val log = AppLog.tagged("Platform")
     private val prefs = application.getSharedPreferences("oc_platform", Context.MODE_PRIVATE)
     // P12-FIX-SETTINGS: alerts speak the language chosen in Settings, not only the phone's
@@ -271,27 +305,29 @@ class PlatformHub(
     private val channels =
         ChannelRegistry(application.getSystemService(NotificationManager::class.java), words)
     val shade = AndroidAlertShade(application, words, channels)
-    private val widgetPersistence =
-        WidgetPersistence(
-            stores.prefs,
-            stores.lanes,
-            DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app),
-            appScope,
-            clock,
-        )
     private val widgets = AndroidWidgetSurface(application, widgetPersistence)
     private val widgetPresentation = WidgetPresentation(application, redactor)
+    private val widgetSafe = io.github.eslamasabry.oc.engine.attention.widget.WidgetText(redactor)
 
     @Volatile private var started = 0
     private val visible = MutableStateFlow(0)
     private val alerted = mutableMapOf<String, String>() // alert key -> request id (or turn marker)
     private val running = mutableMapOf<ConversationRef, Boolean>()
+    private val runEvents =
+        mutableMapOf<ConversationRef, io.github.eslamasabry.oc.core.domain.events.RunOutcome>()
+    private val runWatchers = mutableMapOf<ProfileId, kotlinx.coroutines.Job>()
+    private val eventStarted = mutableSetOf<ConversationRef>()
+    private val endedKinds = mutableMapOf<ConversationRef, AlertKind>()
+    private val endedReasons =
+        mutableMapOf<ConversationRef, io.github.eslamasabry.oc.android.notifications.StopReason>()
+    private var lastWaiting: List<Waiting> = emptyList()
     private var wasVisible = false
     private val statusPosted =
         mutableSetOf<String>() // finished / stopped alerts still in the shade
     private var knownProfiles: Set<ProfileId> = emptySet()
     private val share = ShareSeed()
     private var widgetModel: WidgetModel? = null
+    private var widgetBaseModel: WidgetModel? = null
     private var widgetStampMs = 0L
     private val serverSince = mutableMapOf<String, Pair<Boolean, Long>>()
     private var publishedPins: Pair<String, List<PinnedSession>>? = null
@@ -300,8 +336,50 @@ class PlatformHub(
     val actionBody: NotificationActionBody =
         NotificationActionBody(
             shade = shade,
-            answerer = ShadeAnswerer { answer -> answer(answer) },
-            stopper = ReplyStopper { Outcome.Failed(Failure.NotFound()) },
+            answerer =
+                io.github.eslamasabry.oc.android.notifications.GuardedShadeAnswerer(
+                    questionOf = { answer ->
+                        val pending =
+                            (registry.live.value[answer.profile] as? ChatGraphAccessors)
+                                ?.chatRequests
+                                ?.engine
+                                ?.pending
+                                ?.value
+                        val question =
+                            pending
+                                ?.filterIsInstance<PendingRequest.Question>()
+                                ?.firstOrNull {
+                                    it.id == answer.request && it.sessionId == answer.session
+                                }
+                                ?.question
+                        question?.let { q ->
+                            io.github.eslamasabry.oc.android.notifications.QuestionShape(
+                                q.prompts.map {
+                                    io.github.eslamasabry.oc.android.notifications.QuestionShape
+                                        .Prompt(
+                                            it.choices.map { c -> c.label },
+                                            it.multiple,
+                                            it.custom,
+                                        )
+                                }
+                            )
+                        }
+                    },
+                    delegate = ShadeAnswerer { answer -> answer(answer) },
+                ),
+            stopper =
+                ReplyStopper { ref ->
+                    val graph = registry.live.value[ref.profileId]
+                    val stillRunning =
+                        runtime.snapshot.value.items.any {
+                            // A run waiting on a permission or question is still a run to stop.
+                            it.ref == ref &&
+                                (it.status == ChatStatus.Running ||
+                                    it.status == ChatStatus.NeedsYou)
+                        }
+                    if (graph == null || !stillRunning) Outcome.Failed(Failure.NotFound())
+                    else graph.session.server.stop(ref.sessionId).map { Unit }
+                },
             lock =
                 object : DeviceLock {
                     override val sdkInt: Int = Build.VERSION.SDK_INT
@@ -316,6 +394,7 @@ class PlatformHub(
     fun start() {
         if (started++ > 0) return
         WidgetFeed.persistence = widgetPersistence
+        WidgetFeed.backgroundRunner = widgetRunner
         sharedProjectFolders.start()
         monitoring.start()
         channels.ensure()
@@ -325,12 +404,26 @@ class PlatformHub(
         application.registerActivityLifecycleCallbacks(Visibility())
         appScope.launch { updates.start() }
         appScope.launch { watchFeed() }
+        appScope.launch { watchRunEvents() }
         appScope.launch { watchProfiles() }
+        // A pin or active-server change need not change any feed row. Observe the acknowledged
+        // preference save too.
+        appScope.launch {
+            stores.prefs.changes.collect { keys ->
+                if (keys.any { it.startsWith(PINS_PREFIX) }) publishPins(runtime.snapshot.value)
+            }
+        }
+        appScope.launch {
+            stores.profiles.activeId.collect { publishPins(runtime.snapshot.value) }
+        }
         appScope.launch { navigator.top.collect { top -> seedShare(top) } }
     }
 
     val scope: CoroutineScope
         get() = appScope
+
+    val appLocaleTag: String?
+        get() = appPreferences.localeTag.value
 
     // ---- Activity
     // -------------------------------------------------------------------------------------------------
@@ -340,7 +433,6 @@ class PlatformHub(
      */
     fun onResumed(activity: Activity) {
         appScope.launch { updates.onResumed() }
-        askNotificationsOnce(activity)
     }
 
     /**
@@ -370,7 +462,13 @@ class PlatformHub(
             return
         }
         LaunchActions.consumeSessionShortcut(intent)?.let { tap ->
-            navigator.openChat(ConversationRef(ProfileId(tap.profileId), SessionId(tap.sessionId)))
+            val profile = ProfileId(tap.profileId)
+            if (
+                profile == stores.profiles.activeId.value &&
+                    stores.profiles.profile(profile) != null
+            ) {
+                navigator.openChat(ConversationRef(profile, SessionId(tap.sessionId)))
+            }
             return
         }
         alertTap(intent)?.let { ref ->
@@ -439,23 +537,6 @@ class PlatformHub(
         return ConversationRef(ProfileId(profile), SessionId(session))
     }
 
-    private fun askNotificationsOnce(activity: Activity) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-        if (prefs.getBoolean(ASKED_NOTIFY, false)) return
-        if (stores.profiles.profiles.value.isEmpty()) return // nothing to tell yet
-        // QA wave 4 N4: never mid-task (it popped up on the way back from the file picker into a
-        // chat); the calm
-        // place is the conversation list, where the alerts it enables are about.
-        if (navigator.top.value != ChatsRoute.Home) return
-        if (
-            activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
-        )
-            return
-        prefs.edit().putBoolean(ASKED_NOTIFY, true).apply()
-        activity.requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFY)
-    }
-
     private fun notificationsAllowed(): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
             application.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
@@ -510,6 +591,7 @@ class PlatformHub(
         for (key in alerted.keys) shade.dismiss(key)
         for (key in statusPosted) shade.dismiss(key)
         statusPosted.clear()
+        alerted.clear()
     }
 
     // ---- Feed: alerts, widgets, tile
@@ -543,6 +625,90 @@ class PlatformHub(
             }
     }
 
+    /**
+     * End events and polled state share one run identity: late errors replace a completion in
+     * place.
+     */
+    private suspend fun watchRunEvents() {
+        registry.live.collect { live ->
+            for (id in (runWatchers.keys - live.keys).toList()) {
+                runWatchers.remove(id)?.cancel()
+                runEvents.keys.removeAll { it.profileId == id }
+                eventStarted.removeAll { it.profileId == id }
+            }
+            for ((id, graph) in live) if (id !in runWatchers)
+                runWatchers[id] = appScope.launch {
+                    graph.session.server.events.all.collect { envelope ->
+                        if (registry.live.value[id] !== graph) return@collect
+                        when (val event = envelope.event) {
+                            is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.RunStarted -> {
+                                val ref = ConversationRef(id, event.sessionId)
+                                eventStarted += ref
+                                endedKinds.remove(ref)
+                                endedReasons.remove(ref)
+                                runEvents.remove(ref)
+                                shade.dismiss(AlertKeys.status(id.raw, event.sessionId.raw))
+                            }
+                            is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.RunEnded -> {
+                                val ref = ConversationRef(id, event.sessionId)
+                                val prior = runEvents[ref]
+                                if (
+                                    prior
+                                        !is
+                                        io.github.eslamasabry.oc.core.domain.events.RunOutcome.Failed
+                                )
+                                    runEvents[ref] = event.outcome
+                                val failed =
+                                    event.outcome
+                                        as?
+                                        io.github.eslamasabry.oc.core.domain.events.RunOutcome.Failed
+                                if (failed != null)
+                                    endedReasons[ref] =
+                                        when (failed.kind) {
+                                            io.github.eslamasabry.oc.core.model.transcript
+                                                .MessageErrorKind
+                                                .ProviderAuth ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Auth
+                                            io.github.eslamasabry.oc.core.model.transcript
+                                                .MessageErrorKind
+                                                .ContextOverflow ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Context
+                                            io.github.eslamasabry.oc.core.model.transcript
+                                                .MessageErrorKind
+                                                .OutputLength ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Length
+                                            io.github.eslamasabry.oc.core.model.transcript
+                                                .MessageErrorKind
+                                                .ContentFilter ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Filter
+                                            io.github.eslamasabry.oc.core.model.transcript
+                                                .MessageErrorKind
+                                                .ModelNotFound ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Model
+                                            else ->
+                                                io.github.eslamasabry.oc.android.notifications
+                                                    .StopReason
+                                                    .Other
+                                        }
+                                alerts(runtime.snapshot.value, lastWaiting, visible.value > 0)
+                            }
+                            else -> Unit
+                        }
+                    }
+                }
+        }
+    }
+
     private suspend fun watchProfiles() {
         stores.profiles.profiles.collect { list ->
             val now = list.map { it.id }.toSet()
@@ -553,43 +719,100 @@ class PlatformHub(
                 // behind (B-STATE-063).
                 AttentionTileCache.clearOwner(application, id.raw)
                 PinnedShortcuts.withdrawProfile(application, id.raw)
-                widgets.clearProfile(id.raw)
+                clearProfile(id)
             }
         }
     }
 
     private fun publishTile(waiting: List<Waiting>) {
-        val owner =
-            stores.profiles.activeId.value?.raw ?: waiting.firstOrNull()?.profile?.raw ?: return
+        val profile = stores.profiles.activeId.value ?: return
+        if (!registry.live.value.containsKey(profile)) return
         AttentionTileCache.write(
             application,
-            waiting.size,
-            owner,
+            waiting.count { it.profile == profile },
+            profile.raw,
             clock.now().toEpochMilliseconds(),
         )
     }
 
+    /**
+     * Explicit disconnect withdraws the launcher promises; a lifecycle suspension never calls this.
+     */
+    suspend fun onExplicitDisconnect(profile: ProfileId) =
+        kotlinx.coroutines.withContext(mainDispatcher) {
+            // The launcher shows the active server only: another server's disconnect leaves it.
+            if (profile != stores.profiles.activeId.value) return@withContext
+            if (PinnedShortcuts.withdrawAll(application)) publishedPins = null
+            AttentionTileCache.clear(application)
+        }
+
     private suspend fun publishWidgets(feed: ChatFeedSnapshot, waiting: List<Waiting>) {
         val profile = stores.profiles.activeId.value ?: return
+        // Startup's empty feed is not a server read: keep the saved target until a real listing
+        // arrives.
+        if (
+            feed.items.isEmpty() &&
+                feed.revision == 0L &&
+                !feed.loading &&
+                registry.live.value[profile] == null
+        )
+            return
         val savedProfiles = stores.profiles.profiles.value
         val names = savedProfiles.associate { it.id to it.profile.name }
-        val model =
+        val base =
             PlatformRules.widgetModel(feed, waiting, profile, names, registry.live.value.keys)
-        if (model == widgetModel) return
+        val loaded = stores.profiles.profile(profile) ?: return
+        if (!stores.lanes.forProfile(profile).isAdmitting) return
+        val location =
+            registry.live.value[profile]?.session?.server?.location?.value
+                ?: io.github.eslamasabry.oc.core.model.ServerLocation.Default
+        val fingerprint = widgetFingerprint(loaded)
+        val scopeToken =
+            widgetDigest(
+                "${profile.raw}\u0000${location.directory.orEmpty()}\u0000${location.workspace.orEmpty()}"
+            )
+        val target =
+            JSONObject()
+                .put("profileID", profile.raw)
+                .put("scopeToken", scopeToken)
+                .put("fingerprint", fingerprint)
+        location.directory?.let { target.put("directory", it) }
+        location.workspace?.let { target.put("workspace", it) }
+        // Unchanged content is not rewritten or redrawn: clock stamps move only when the content
+        // does (B-ANDR-117).
+        if (
+            base == widgetBaseModel &&
+                stores.prefs.string("oc.widgetTarget.${profile.raw}") == target.toString()
+        )
+            return
+        val graph = registry.live.value[profile]
+        // A failed or bounded-out read leaves the marker absent. Unknown identity never authorizes
+        // a status patch.
+        val rows =
+            withTimeoutOrNull(WIDGET_IDENTITIES_WAIT_MS) {
+                base.rows.map { row ->
+                    if (row.profile != profile.raw || graph == null) row
+                    else widgetIdentity(graph, row)
+                }
+            } ?: base.rows
+        if (stores.profiles.activeId.value != profile || registry.live.value[profile] !== graph)
+            return
+        val model = base.copy(rows = rows)
         val details = mutableMapOf<Pair<String, String>, WidgetDetail>()
         // Only the four launcher-visible rows. Each read is bounded and never mutates the server.
         for (row in model.rows.take(4)) {
             if (row.profile != profile.raw) continue
             val id = ProfileId(row.profile)
-            val graph = registry.live.value[id] ?: continue
-            val location = graph.session.server.location.value
-            if (row.project != location.directory.orEmpty()) continue
+            val rowGraph = registry.live.value[id] ?: continue
+            val rowLocation = rowGraph.session.server.location.value
+            if (row.project != rowLocation.directory.orEmpty()) continue
             val page =
                 withTimeoutOrNull(2_000L) {
-                    graph.session.server.messagePage(SessionId(row.id), limit = EXCERPT_MESSAGES)
+                    rowGraph.session.server.messagePage(SessionId(row.id), limit = EXCERPT_MESSAGES)
                 }
             if (
-                registry.live.value[id] !== graph || graph.session.server.location.value != location
+                registry.live.value[id] !== rowGraph ||
+                    rowGraph.session.server.location.value != rowLocation
             )
                 continue
             val messages =
@@ -605,7 +828,7 @@ class PlatformHub(
                         ?.parts
                         ?.firstOrNull { it.type == PartType.Tool && it.callId == named.callId }
                 }
-            val target =
+            val callTarget =
                 call?.tool?.input?.let { input ->
                     val keys =
                         if (call.toolName in listOf("bash", "shell")) listOf("command")
@@ -625,7 +848,7 @@ class PlatformHub(
                                     it.permission,
                                     it.patterns,
                                     call?.toolName,
-                                    target,
+                                    callTarget,
                                 )
                             }
                             .orEmpty(),
@@ -633,8 +856,8 @@ class PlatformHub(
         }
         // A read must never publish a result against a replaced profile, location, request or feed.
         val freshWaiting =
-            registry.live.value.flatMap { (id, graph) ->
-                (graph as? ChatGraphAccessors)?.chatRequests?.engine?.pending?.value.orEmpty().map {
+            registry.live.value.flatMap { (id, live) ->
+                (live as? ChatGraphAccessors)?.chatRequests?.engine?.pending?.value.orEmpty().map {
                     Waiting(id, it)
                 }
             }
@@ -647,13 +870,180 @@ class PlatformHub(
                 stores.profiles.profiles.value.associate { it.id to it.profile.name },
                 registry.live.value.keys,
             )
-        if (current != model || stores.profiles.activeId.value != profile) return
+        if (current != base || stores.profiles.activeId.value != profile) return
         val now = clock.now().toEpochMilliseconds()
-        val payload = widgetJson(model, now, details)
-        if (widgets.publish(payload, profile.raw, null) != PublishResult.Refused) {
+        val json =
+            JSONObject(widgetJson(model, now, details))
+                .put("scopeToken", scopeToken)
+                .put("onDemand", JSONObject().put("fingerprint", fingerprint))
+        val jsonRows = json.getJSONArray("sessions")
+        for (i in 0 until jsonRows.length()) {
+            val row = jsonRows.getJSONObject(i)
+            if (row.optString("profileID") != profile.raw) continue
+            if (row.optBoolean("busy") && row.optString("requestID").isBlank()) {
+                if (row.has("runMarker") && row.has("startedAt")) {
+                    // The bounded identity read already found the run.
+                    row.put("onDemandActions", JSONArray(listOf("stop")))
+                } else {
+                    val gateway = registry.live.value[profile]?.session?.server
+                    val page =
+                        gateway?.let {
+                            withTimeoutOrNull(2_000) {
+                                it.messagePage(SessionId(row.getString("id")), limit = 6)
+                            }
+                        } as? Outcome.Ok
+                    val marker = page?.value?.items?.let(::widgetRunMessage)
+                    val markerTime = marker?.info?.time?.createdMs
+                    if (marker != null && markerTime != null && markerTime > 0) {
+                        row.put("runMarker", marker.info.id)
+                            .put("startedAt", markerTime)
+                            .put("onDemandActions", JSONArray(listOf("stop")))
+                    }
+                }
+            }
+            val permission =
+                waiting
+                    .firstOrNull {
+                        it.profile == profile && it.request.id.raw == row.optString("requestID")
+                    }
+                    ?.request as? PendingRequest.Permission ?: continue
+            val ask = permission.request
+            val command =
+                metadataString(permission, "command")
+                    ?: metadataString(permission, "cmd")
+                    ?: ask.patterns
+                        .firstOrNull { it != "*" && it.isNotBlank() }
+                        ?.takeIf { ask.permission in setOf("bash", "shell") }
+            val file =
+                FILE_KEYS.firstNotNullOfOrNull { metadataString(permission, it) }
+                    ?: ask.patterns
+                        .firstOrNull { it != "*" && it.isNotBlank() }
+                        ?.takeIf {
+                            ask.permission in
+                                setOf(
+                                    "edit",
+                                    "read",
+                                    "write",
+                                    "patch",
+                                    "multiedit",
+                                    "external_directory",
+                                )
+                        }
+            val title =
+                NotificationText.permissionAsk(
+                    ask.permission,
+                    command?.let(redactor::redact),
+                    file?.let(redactor::redact),
+                )
+            if (title != null && title.target.isNotBlank()) {
+                row.put("askAction", title.action.wire)
+                    .put("askTarget", title.target)
+                    .put(
+                        "ask",
+                        JSONObject()
+                            .put(
+                                "kind",
+                                if (title.action.wire == "edit") "write" else title.action.wire,
+                            )
+                            .put(
+                                "q",
+                                words.text(
+                                    when (title.action) {
+                                        io.github.eslamasabry.oc.android.notifications.AskAction
+                                            .Run ->
+                                            io.github.eslamasabry.oc.android.notifications.R.string
+                                                .notify_ask_run
+                                        io.github.eslamasabry.oc.android.notifications.AskAction
+                                            .Read ->
+                                            io.github.eslamasabry.oc.android.notifications.R.string
+                                                .notify_ask_read
+                                        io.github.eslamasabry.oc.android.notifications.AskAction
+                                            .Edit ->
+                                            io.github.eslamasabry.oc.android.notifications.R.string
+                                                .notify_ask_edit
+                                        io.github.eslamasabry.oc.android.notifications.AskAction
+                                            .Folder ->
+                                            io.github.eslamasabry.oc.android.notifications.R.string
+                                                .notify_ask_folder
+                                    },
+                                    title.target,
+                                ),
+                            )
+                            .put("file", shadeText(command ?: file.orEmpty())),
+                    )
+                    .put("onDemandActions", JSONArray(listOf("allowOnce", "reject")))
+            }
+        }
+        if (
+            widgets.publish(json.toString(), profile.raw, target.toString()) !=
+                io.github.eslamasabry.oc.android.widgets.PublishResult.Refused
+        ) {
+            widgetBaseModel = base
             widgetModel = model
             widgetStampMs = now
         }
+    }
+
+    /**
+     * The transaction calls even without a cached snapshot; a failed native clear stops the generic
+     * sweep.
+     */
+    suspend fun clearProfile(profile: ProfileId): Outcome<Unit> {
+        return when (widgets.clearProfile(profile.raw)) {
+            io.github.eslamasabry.oc.android.widgets.ClearOutcome.Failed ->
+                Outcome.Failed(Failure.StorageRefused())
+            else -> {
+                widgetModel = null
+                Outcome.Ok(Unit)
+            }
+        }
+    }
+
+    suspend fun runWidgetAction(raw: String) {
+        stores.warm()
+        io.github.eslamasabry.oc.android.widgets.NativeWidgetActions.execute(application, raw)
+    }
+
+    private suspend fun widgetIdentity(graph: ConnectionGraph, row: WidgetRow): WidgetRow {
+        val gateway = graph.session.server
+        val messages = ArrayList<RunMessage>()
+        var cursor: String? = null
+        val seen = HashSet<String>()
+        repeat(WIDGET_IDENTITY_PAGES) {
+            val page =
+                when (
+                    val read =
+                        gateway.messagePage(SessionId(row.id), cursor, WIDGET_IDENTITY_PAGE_SIZE)
+                ) {
+                    is Outcome.Failed -> return row
+                    is Outcome.Ok -> read.value
+                }
+            if (registry.live.value[graph.profile.id] !== graph) return row
+            messages +=
+                page.items
+                    .filter { it.info.sessionId == row.id }
+                    .map { message ->
+                        RunMessage(
+                            id = message.info.id,
+                            role = if (message.info.role == Role.User) "user" else "assistant",
+                            createdAt = message.info.time?.createdMs,
+                            partTypes = message.parts.map { it.rawType },
+                        )
+                    }
+            val marker = RunIdentity.marker(messages)
+            if (marker != null) {
+                val started =
+                    messages.firstOrNull { it.id == marker && it.role == "user" }?.createdAt
+                return row.copy(
+                    runMarker = marker,
+                    startedAt = started?.takeIf { it > 0 },
+                    promptCount = RunIdentity.promptCount(messages),
+                )
+            }
+            cursor = page.nextCursor ?: return row
+            if (!seen.add(cursor!!)) return row
+        }
+        return row
     }
 
     private data class WidgetDetail(val preview: String, val ask: Map<String, String>)
@@ -669,20 +1059,36 @@ class PlatformHub(
                 JSONObject()
                     .put("id", row.id)
                     .put("profileID", row.profile)
-                    .put("title", widgetPresentation.title(row.title))
-                    .put("project", widgetPresentation.project(row.project))
-                    .put("server", row.server)
+                    .put(
+                        "title",
+                        widgetSafe.sessionTitle(
+                            row.title,
+                            words
+                                .localized()
+                                .getString(
+                                    io.github.eslamasabry.oc.android.widgets.R.string.widget_v2_new
+                                ),
+                        ),
+                    )
+                    .put("preview", widgetSafe.preview(row.preview))
+                    .put("project", widgetSafe.project(row.project))
+                    .put("server", widgetSafe.title(row.server))
                     .put("busy", row.busy)
                     .put("needsYou", row.needsYou)
                     .put("onDemandActions", JSONArray())
+                    .put("requestID", row.requestId)
                     .put("updatedAt", row.updatedAt)
                     .apply {
                         val detail = details[row.profile to row.id]
                         if (detail != null) {
-                            if (row.requestId.isNotEmpty()) put("requestID", row.requestId)
                             if (detail.preview.isNotEmpty()) put("preview", detail.preview)
                             if (detail.ask.isNotEmpty()) put("ask", JSONObject(detail.ask))
                         }
+                    }
+                    .apply {
+                        row.runMarker?.let { put("runMarker", it) }
+                        row.startedAt?.let { put("startedAt", it) }
+                        row.promptCount?.let { put("promptCount", it) }
                     }
             )
         }
@@ -717,26 +1123,32 @@ class PlatformHub(
      */
     private fun publishPins(feed: ChatFeedSnapshot) {
         val profile = stores.profiles.activeId.value ?: return
+        if (!registry.live.value.containsKey(profile)) return
         val raw =
             try {
                 (stores.prefs.get(PINS_PREFIX + profile.raw) as? PrefValue.Str)?.value
             } catch (_: IllegalStateException) {
                 return // preferences not warm yet: the next feed change publishes
             }
-        val titles =
-            feed.items
-                .filter { it.profileId == profile }
-                .associate { it.sessionId.raw to it.title.orEmpty() }
+        val pinned = PlatformRules.pinnedIds(raw).toSet()
         val pins =
-            PlatformRules.pinnedIds(raw).map {
-                PinnedSession(it, PlatformRules.widgetText(titles[it]))
-            }
+            feed.items
+                .filter {
+                    it.profileId == profile &&
+                        it.sessionId.raw in pinned &&
+                        !it.isSubagent &&
+                        !it.inOtherFolder
+                }
+                .sortedByDescending { it.lastActivityMs }
+                .map { PinnedSession(it.sessionId.raw, PlatformRules.widgetText(it.title)) }
+                .take(PinnedShortcuts.MAX_SHORTCUTS)
         val next = profile.raw to pins
         if (next == publishedPins) return
         if (PinnedShortcuts.publish(application, profile.raw, pins)) publishedPins = next
     }
 
     private fun alerts(feed: ChatFeedSnapshot, waiting: List<Waiting>, appVisible: Boolean) {
+        lastWaiting = waiting
         // Back in the app (launcher, list or a tap): what the alerts said is on screen now (Flutter
         // clears them on
         // resume; B-ANDR-011/-040). The request ids stay remembered so the same request is not
@@ -747,14 +1159,14 @@ class PlatformHub(
         val names = stores.profiles.profiles.value.associate { it.id to it.profile.name }
         val facts =
             AlertFacts(
-                liveModeActive = false,
+                liveModeActive = background.live.value.enabled && background.live.value.active,
                 // The process is alive with a live connection: this is the reply watch of the
                 // preview (no service).
-                replyWatchActive = registry.live.value.isNotEmpty(),
+                replyWatchActive = false,
                 appVisible = appVisible,
                 permissionGranted = notificationsAllowed(),
                 serverAlertsOn = true, // narrowed per kind below by the person's Settings choices
-                quietHours = false,
+                quietHours = quietNow(),
                 onWifi = null,
                 wifiOnly = false,
             )
@@ -764,7 +1176,12 @@ class PlatformHub(
         val current = mutableMapOf<String, Waiting>()
         for (w in waiting) {
             val key = AlertKeys.input(w.profile.raw, w.request.sessionId.raw)
-            if (key !in current) current[key] = w
+            if (
+                key !in current ||
+                    (current[key]?.request !is PendingRequest.Permission &&
+                        w.request is PendingRequest.Permission)
+            )
+                current[key] = w
         }
         for ((key, w) in current) {
             if (alerted[key] == w.request.id.raw) continue
@@ -776,8 +1193,12 @@ class PlatformHub(
                 )
             when (val route = AlertPolicy.route(alert, allowed)) {
                 is AlertRoute.Post -> {
-                    shade.show(alert, route)
-                    alerted[key] = w.request.id.raw
+                    if (
+                        shade.show(alert, route)
+                            is io.github.eslamasabry.oc.android.notifications.AlertShown.Shown
+                    ) {
+                        alerted[key] = w.request.id.raw
+                    }
                 }
                 is AlertRoute.Skip -> Unit
             }
@@ -790,10 +1211,38 @@ class PlatformHub(
         // Finished replies (B-ANDR-040, -048) and stopped runs (B-ANDR-011) while the app is not on
         // screen.
         for (item in feed.items) {
-            val was = running[item.ref] == true
-            running[item.ref] = item.status == ChatStatus.Running
-            val kind = PlatformRules.endedAlertKind(was, item.status) ?: continue
-            val alert = endedAlert(kind, item, names[item.profileId])
+            val ref = item.ref
+            val busyNow = item.status == ChatStatus.Running || item.status == ChatStatus.NeedsYou
+            val was = running[ref] == true || ref in eventStarted
+            if (busyNow && running[ref] != true && ref !in runEvents) endedKinds.remove(ref)
+            val ending = runEvents[ref]
+            val kind =
+                when {
+                    ending is io.github.eslamasabry.oc.core.domain.events.RunOutcome.Failed ->
+                        AlertKind.Error
+                    ending is io.github.eslamasabry.oc.core.domain.events.RunOutcome.Interrupted ->
+                        null
+                    ending != null && was -> AlertKind.Complete
+                    else -> PlatformRules.endedAlertKind(was, item.status)
+                }
+            running[ref] = busyNow && ending == null
+            if (kind == null || item.isSubagent) continue
+            if (
+                endedKinds[ref] == kind ||
+                    (endedKinds[ref] == AlertKind.Error && kind == AlertKind.Complete)
+            )
+                continue
+            // Claim even when suppressed (foreground/quiet/off): a later repaint never replays a
+            // finished run.
+            endedKinds[ref] = kind
+            eventStarted.remove(ref)
+            val alert =
+                endedAlert(kind, item, names[item.profileId])
+                    .copy(
+                        reason =
+                            endedReasons[ref]
+                                ?: io.github.eslamasabry.oc.android.notifications.StopReason.Other
+                    )
             val allowed =
                 facts.copy(
                     subAgentSession = item.isSubagent,
@@ -806,7 +1255,15 @@ class PlatformHub(
                 appScope.launch {
                     val line =
                         withTimeoutOrNull(EXCERPT_WAIT_MS) { lastReplyLine(item.ref) }.orEmpty()
-                    shade.show(alert.copy(detail = line), route)
+                    // A late excerpt may not overwrite an error, a new run or a foreground return.
+                    if (
+                        endedKinds[item.ref] == kind &&
+                            visible.value == 0 &&
+                            background.live.value.enabled &&
+                            background.live.value.active &&
+                            registry.live.value.containsKey(item.profileId)
+                    )
+                        shade.show(alert.copy(detail = line), route)
                 }
             } else {
                 shade.show(alert, route)
@@ -815,17 +1272,38 @@ class PlatformHub(
         }
     }
 
+    private fun shadeText(value: String): String = NotificationText.redact(redactor.redact(value))
+
     private fun requestAlert(
         key: String,
         w: Waiting,
         item: ChatFeedItem?,
         server: String?,
     ): CodingAlert {
-        val subtext = NotificationText.subtitle(server, item?.projectName)
+        val subtext = shadeText(NotificationText.subtitle(server, item?.projectName))
         return when (val r = w.request) {
             is PendingRequest.Permission -> {
-                val command = metadataString(r, "command")
-                val file = FILE_KEYS.firstNotNullOfOrNull { metadataString(r, it) }
+                val command =
+                    metadataString(r, "command")
+                        ?: metadataString(r, "cmd")
+                        ?: r.request.patterns
+                            .firstOrNull { it != "*" && it.isNotBlank() }
+                            ?.takeIf { r.request.permission in setOf("bash", "shell") }
+                val file =
+                    FILE_KEYS.firstNotNullOfOrNull { metadataString(r, it) }
+                        ?: r.request.patterns
+                            .firstOrNull { it != "*" && it.isNotBlank() }
+                            ?.takeIf {
+                                r.request.permission in
+                                    setOf(
+                                        "edit",
+                                        "read",
+                                        "write",
+                                        "patch",
+                                        "multiedit",
+                                        "external_directory",
+                                    )
+                            }
                 CodingAlert(
                     kind = AlertKind.Permission,
                     sessionId = r.sessionId.raw,
@@ -833,9 +1311,14 @@ class PlatformHub(
                     requestId = r.id.raw,
                     profileId = w.profile.raw,
                     subtext = subtext,
-                    chatTitle = item?.title.orEmpty(),
-                    detail = NotificationText.redact(command ?: file ?: r.request.permission),
-                    ask = NotificationText.permissionAsk(r.request.permission, command, file),
+                    chatTitle = shadeText(item?.title.orEmpty()),
+                    detail = shadeText(command ?: file ?: r.request.permission),
+                    ask =
+                        NotificationText.permissionAsk(
+                            r.request.permission,
+                            command?.let(redactor::redact),
+                            file?.let(redactor::redact),
+                        ),
                 )
             }
             is PendingRequest.Question -> {
@@ -847,9 +1330,22 @@ class PlatformHub(
                     requestId = r.id.raw,
                     profileId = w.profile.raw,
                     subtext = subtext,
-                    chatTitle = item?.title.orEmpty(),
-                    detail = NotificationText.redact(prompt?.question.orEmpty()),
-                    options = prompt?.choices?.map { it.label }.orEmpty(),
+                    chatTitle = shadeText(item?.title.orEmpty()),
+                    detail = shadeText(prompt?.question.orEmpty()),
+                    options =
+                        io.github.eslamasabry.oc.android.notifications
+                            .QuestionShape(
+                                r.question.prompts.map {
+                                    io.github.eslamasabry.oc.android.notifications.QuestionShape
+                                        .Prompt(
+                                            it.choices.map { choice -> choice.label },
+                                            it.multiple,
+                                            it.custom,
+                                        )
+                                }
+                            )
+                            .shadeOptions
+                            .map { NotificationText.redact(redactor.redact(it), 24) },
                 )
             }
         }
@@ -874,6 +1370,26 @@ class PlatformHub(
             true // not warm yet
         }
 
+    /** The shared stored quiet-hours choice is authoritative for requests and finished replies. */
+    private fun quietNow(): Boolean {
+        fun minute(key: String): Int? =
+            try {
+                (stores.prefs.get(key) as? PrefValue.Int64)?.value?.toInt()?.takeIf {
+                    it in 0 until 1440
+                }
+            } catch (_: IllegalStateException) {
+                null
+            }
+        val start = minute("oc.notify.quietStart") ?: return false
+        val end = minute("oc.notify.quietEnd") ?: return false
+        val local =
+            java.time.Instant.ofEpochMilli(clock.now().toEpochMilliseconds())
+                .atZone(java.time.ZoneId.systemDefault())
+        val now = local.hour * 60 + local.minute
+        return start == end ||
+            if (start < end) now in start until end else now >= start || now < end
+    }
+
     private fun endedAlert(kind: AlertKind, item: ChatFeedItem, server: String?): CodingAlert =
         CodingAlert(
             kind = kind,
@@ -882,10 +1398,9 @@ class PlatformHub(
             profileId = item.profileId.raw,
             subtext = NotificationText.subtitle(server, item.projectName),
             chatTitle = item.title.orEmpty(),
-            detail =
-                if (kind == AlertKind.Complete)
-                    NotificationText.firstReplyLine(listOf(item.preview))
-                else "",
+            // A feed preview can be the person's prompt: finished text is fetched from assistant
+            // messages only.
+            detail = "",
         )
 
     private fun metadataString(r: PendingRequest.Permission, key: String): String? =
@@ -906,18 +1421,48 @@ class PlatformHub(
         val engine =
             (graph as? ChatGraphAccessors)?.chatRequests?.engine
                 ?: return Outcome.Failed(Failure.Unexpected())
-        val reply = ShadeReplyAnswers.of(answer.kind, answer.reply) // B-PROTO-046 (BuildRestWiring)
+        val pending =
+            engine.pending.value.firstOrNull {
+                it.id == answer.request && it.sessionId == answer.session
+            }
+        val matches =
+            when (answer.kind) {
+                AlertKind.Permission -> pending is PendingRequest.Permission
+                AlertKind.Question -> pending is PendingRequest.Question
+                else -> false
+            }
+        if (!matches) return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        val typedReply = answer.reply as? ShadeReply.Text
+        if (pending is PendingRequest.Question && typedReply != null) {
+            val shape =
+                QuestionShape(
+                    pending.question.prompts.map { prompt ->
+                        QuestionShape.Prompt(
+                            prompt.choices.map { it.label },
+                            prompt.multiple,
+                            prompt.custom,
+                        )
+                    }
+                )
+            if (!shape.accepts(typedReply.text))
+                return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        }
+        // Flutter trims the shade reply before sending; the accepted text is the trimmed text.
+        val shadeReply = typedReply?.let { ShadeReply.Text(it.text.trim()) } ?: answer.reply
+        val reply = ShadeReplyAnswers.of(answer.kind, shadeReply) // B-PROTO-046 (BuildRestWiring)
         val result = engine.answerNow(answer.request, reply)
         log.i { "shade answer ${answer.kind} ${if (result is Outcome.Ok) "sent" else "not sent"}" }
         return result
     }
 
     private companion object {
-        const val ASKED_NOTIFY = "oc.notify.asked"
         const val REQUEST_NOTIFY = 4747
         const val EXCERPT_WAIT_MS = 5_000L
         const val EXCERPT_MESSAGES = 6
         const val SEED_WAIT_MS = 10_000L
+        const val WIDGET_IDENTITIES_WAIT_MS = 8_000L
+        const val WIDGET_IDENTITY_PAGES = 3
+        const val WIDGET_IDENTITY_PAGE_SIZE = 100
         const val REQUESTS_ON = "oc.notify.requests"
         const val FINISHED_ON = "oc.notify.finishedRuns"
         const val PINS_PREFIX = "oc.sessionPins."
@@ -943,6 +1488,11 @@ internal data class WidgetRow(
      */
     val requestId: String,
     val updatedAt: Long,
+    val runMarker: String? = null,
+    val startedAt: Long? = null,
+    /** Real user prompts in the bounded identity read; OC2 timeline records never count. */
+    val promptCount: Int? = null,
+    val preview: String = "",
 )
 
 internal data class WidgetServer(val name: String, val online: Boolean, val id: String = name)
@@ -1004,6 +1554,7 @@ internal object PlatformRules {
                         needsYou = item.status == ChatStatus.NeedsYou || request != null,
                         requestId = if (own) request?.request?.id?.raw.orEmpty() else "",
                         updatedAt = item.lastActivityMs,
+                        preview = widgetText(item.preview),
                     )
                 }
         return WidgetModel(
@@ -1180,4 +1731,63 @@ internal class ShareSeed {
     /** The words added to what the draft already holds, never replacing it. */
     fun merged(existing: String, shared: String): String =
         if (existing.isBlank()) shared else existing.trimEnd() + "\n\n" + shared
+}
+
+/**
+ * Launcher records are deleted before the profile's credentials, and a failed withdrawal refuses
+ * deletion.
+ */
+@ContributesIntoSet(AppScope::class, binding = binding<ProfileResourceCleaner>())
+@Inject
+class LauncherProfileCleaner(
+    private val application: Application,
+    private val stores: PreviewStores,
+) : ProfileResourceCleaner {
+    override val owner: String = ":android:tiles"
+    override val order: Int = DeletionStep.DEVICE_SURFACES
+    override val guardsSweep: Boolean = true
+
+    override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> {
+        // Flutter stored both surfaces as app-wide values with their owner inside the JSON. The
+        // generic
+        // dotted-key sweep cannot find them. Unknown ownership is withdrawn rather than retaining
+        // private titles.
+        val legacyPins = stores.prefs.get("oc.pinnedShortcuts")
+        val pinOwner = legacyOwner(legacyPins)
+        val removePins = legacyPins != null && (pinOwner == null || pinOwner == profileId.raw)
+        val legacyTile = stores.prefs.get("oc.attentionTile")
+        val tileOwner = legacyOwner(legacyTile)
+        val removeTile = legacyTile != null && (tileOwner == null || tileOwner == profileId.raw)
+        if (removePins && pinOwner == null && !PinnedShortcuts.withdrawAll(application)) {
+            return Outcome.Failed(Failure.StorageRefused())
+        }
+        val shortcuts = PinnedShortcuts.withdrawProfile(application, profileId.raw)
+        if (shortcuts == ShortcutClear.Failed) return Outcome.Failed(Failure.StorageRefused())
+        val tile = AttentionTileCache.clearOwner(application, profileId.raw)
+        if (AttentionTileCache.hasOwner(application, profileId.raw))
+            return Outcome.Failed(Failure.StorageRefused())
+        if (removePins || removeTile) {
+            val saved =
+                stores.prefs.commit(stores.lanes.app) {
+                    if (removePins) remove("oc.pinnedShortcuts")
+                    if (removeTile) remove("oc.attentionTile")
+                }
+            if (saved is Outcome.Failed) return saved
+        }
+        return Outcome.Ok(
+            (if (shortcuts == ShortcutClear.Cleared) 1 else 0) +
+                (if (tile) 1 else 0) +
+                (if (removePins) 1 else 0) +
+                (if (removeTile) 1 else 0)
+        )
+    }
+
+    private fun legacyOwner(value: PrefValue?): String? {
+        val raw = (value as? PrefValue.Str)?.value ?: return null
+        return try {
+            JSONObject(raw).optString("profileID", "").takeIf { it.isNotBlank() }
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

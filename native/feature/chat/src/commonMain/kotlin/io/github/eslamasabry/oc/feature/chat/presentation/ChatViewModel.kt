@@ -9,10 +9,10 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
-import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.transcript.ledger.latest
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
@@ -48,6 +48,7 @@ public class ChatViewModel(
             { block -> viewModelScope.launch { block() } },
             focusComposer = route.focusComposer,
             outside = outside,
+            clock = clock,
         )
 
     public val requests = world.requests
@@ -93,6 +94,9 @@ public class ChatViewModel(
 
     override fun openGit(): Unit = nav.open(GitRoute(route.ref))
 
+    override fun openSignInSettings(): Unit =
+        nav.open(io.github.eslamasabry.oc.ui.routes.SettingsRoute.Home)
+
     override fun confirmLeave(): Unit = presenter.confirmLeave()
 
     override fun dismissConfirm(): Unit = presenter.dismissConfirm()
@@ -106,7 +110,7 @@ public class ChatViewModel(
     override fun openFiles(): Unit = nav.open(FilesRoute.Folder(presenter.ref))
 
     override fun openTools(): Unit =
-        nav.open(io.github.eslamasabry.oc.ui.routes.ToolsRoute(ref = route.ref))
+        nav.open(io.github.eslamasabry.oc.ui.routes.LibraryRoute(ref = route.ref))
 
     override fun stop(): Unit = presenter.stop()
 
@@ -154,6 +158,10 @@ public class ChatViewModel(
 
     override fun liveEdgeChanged(atLiveEdge: Boolean): Unit = presenter.liveEdgeChanged(atLiveEdge)
 
+    override fun continueReply(words: String): Unit = presenter.continueReply(words)
+
+    override fun checkReceipt(localId: Long): Unit = presenter.checkReceipt(localId)
+
     override fun retrySend(localId: Long): Unit = presenter.retrySend(localId)
 
     override fun dismissStatus(id: String): Unit = presenter.dismissStatus(id)
@@ -169,6 +177,8 @@ public class ChatViewModel(
     override fun insertDone(id: Long): Unit = presenter.insertDone(id)
 
     override fun confirmUndo(): Unit = presenter.confirmUndo()
+
+    override suspend fun readPicture(path: String): ByteArray? = presenter.readPicture(path)
 
     override fun openPicture(path: String, name: String): Unit = presenter.openPicture(path, name)
 

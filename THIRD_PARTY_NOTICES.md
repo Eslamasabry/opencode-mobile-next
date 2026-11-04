@@ -65,6 +65,13 @@ still falls back to its models.dev logo, downloaded by provider name.
 
 ### Local SVG previews
 
+The native kit renders bounded provider marks on Android with `com.caverock:androidsvg-aar:1.4`,
+maintained by Paul LeBeau, Cave Rock Software Ltd., under Apache 2.0. Its source headers name
+Copyright 2013 Paul LeBeau, Cave Rock Software Ltd.; the full license is bundled at
+[`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt). Version and rendering API provenance:
+[the maintainer's AndroidSVG documentation](https://bigbadaboom.github.io/androidsvg/).
+The renderer receives static SVG text only and has no external file resolver.
+
 `flutter_svg` 2.3.0 is maintained in Flutter's packages repository and is
 distributed under the MIT license, with Copyright (c) 2018 Dan Field.
 Its complete license is bundled unchanged at `LICENSES/MIT-flutter-svg.txt`.

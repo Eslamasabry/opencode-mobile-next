@@ -26,6 +26,10 @@ import kotlinx.coroutines.flow.StateFlow
  * One instance per open conversation, shared by the chat and its composer through [ChatWorlds].
  */
 public interface ChatWorld {
+    /** A helper conversation reports to its parent and cannot accept independent replies. */
+    public val readOnly: StateFlow<ReadOnlyChat?>
+        get() = NoReadOnly
+
     public val requests:
         StateFlow<io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestsModel?>
         get() = NoRequests
@@ -60,6 +64,14 @@ public interface ChatWorld {
 
     /** The composer's words against the last saved draft (07 §3.4 Back guard). */
     public val draft: StateFlow<DraftFacts>
+
+    /** A confirmed send could not be added to local prompt history. Never a send failure. */
+    public val historyFailure: StateFlow<Failure?>
+        get() = kotlinx.coroutines.flow.MutableStateFlow(null)
+
+    /** Looks up the original admission receipt only; never dispatches the prompt again. */
+    public suspend fun checkReceipt(localId: Long): Outcome<Boolean> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("commandReceipts")))
 
     /**
      * The models this conversation's server offers, safe for display; empty until [loadModels]
@@ -129,6 +141,10 @@ public interface ChatWorld {
      */
     public suspend fun selectModel(choice: ComposerModel?, variant: String = ""): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
+
+    /** Changes only the personal shortcut; never the conversation's model. */
+    public suspend fun toggleModelFavorite(choice: ComposerModel): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("modelFavorites")))
 
     /**
      * Moves the conversation to the primary [agent] in the server session, verified by readback.
@@ -249,6 +265,8 @@ public data class PendingSend(
     val text: String,
     val state: PendingState,
     val failure: Failure? = null,
+    /** The exact dispatched queue record has a receipt on this connection. */
+    val canCheckReceipt: Boolean = false,
 )
 
 public enum class PendingState {
@@ -319,3 +337,7 @@ private val NoModels = kotlinx.coroutines.flow.MutableStateFlow(ComposerModels()
 
 private val NoCommands =
     kotlinx.coroutines.flow.MutableStateFlow<List<ComposerCommand>>(emptyList())
+
+public data class ReadOnlyChat(val parent: ConversationRef? = null)
+
+private val NoReadOnly = kotlinx.coroutines.flow.MutableStateFlow<ReadOnlyChat?>(null)

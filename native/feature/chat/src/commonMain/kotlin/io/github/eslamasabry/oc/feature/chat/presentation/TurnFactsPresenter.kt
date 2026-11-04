@@ -28,6 +28,8 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.isCompactionLineLive
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.retryBannerFacts
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.runResult
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.runningBackgroundTasks
+import io.github.eslamasabry.oc.feature.chat.tasks.presentation.ChatTaskList
+import io.github.eslamasabry.oc.feature.chat.tasks.presentation.latestChatTasks
 import io.github.eslamasabry.oc.feature.chat.world.ChatLink
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import kotlin.time.Clock
@@ -89,6 +91,7 @@ public data class TurnFactsUi(
     /** The clock these facts were read at (a running step's own time). */
     val nowMs: Long = 0,
     val reading: TranscriptReadingUi = TranscriptReadingUi(),
+    val tasks: ChatTaskList? = null,
 ) {
     public companion object {
         public val Empty: TurnFactsUi = TurnFactsUi()
@@ -168,6 +171,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
             background = runningBackgroundTasks(snapshot.messages, nowMs),
             nowMs = nowMs,
             reading = reading,
+            tasks = latestChatTasks(snapshot.messages),
         )
     }
 

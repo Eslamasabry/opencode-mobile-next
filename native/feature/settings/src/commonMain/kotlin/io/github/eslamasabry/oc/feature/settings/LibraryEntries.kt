@@ -16,7 +16,7 @@ import io.github.eslamasabry.oc.ui.routes.*
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class LibraryEntries(private val environment: KitChatEnvironment) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
-        entry<ToolsRoute> { route ->
+        entry<LibraryRoute> { route ->
             val vm =
                 assistedMetroViewModel<LibraryViewModel, LibraryViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()

@@ -252,7 +252,12 @@ class BuiltinLinux(private val context: Context) {
     }
 
     /** Runs [script] with /bin/sh inside Ubuntu as root (faked by proot). */
-    fun run(script: String, timeoutSeconds: Long = 600, agentUser: Boolean = false): Result {
+    fun run(
+        script: String,
+        timeoutSeconds: Long = 600,
+        agentUser: Boolean = false,
+        logOutput: Boolean = true,
+    ): Result {
         val began = SystemClock.elapsedRealtime()
         val timeoutMillis = TimeUnit.SECONDS.toMillis(timeoutSeconds).coerceAtLeast(0L)
         val process = admitCheckProcess(script, timeoutMillis, began, agentUser)
@@ -271,7 +276,7 @@ class BuiltinLinux(private val context: Context) {
                                             if (agentUser) PhoneAgentCheckOutput.accept(line)
                                             else line
                                         if (projected != null) {
-                                            if (!agentUser) Log.i(TAG, projected)
+                                            if (!agentUser && logOutput) Log.i(TAG, projected)
                                             synchronized(output) {
                                                 output.appendLine(projected)
                                                 if (output.length > OUTPUT_CAP * 2) {
@@ -2995,14 +3000,26 @@ class BuiltinLinux(private val context: Context) {
         return serverIdleStatus()
     }
 
-    internal data class AgentHostTicket(
-        val profile: String,
-        val owner: String?,
-        val revision: Long,
-        val epoch: Long,
-        val idleGeneration: Long?,
-    )
+    /** Explicit helper start shares native owner, idle and foreground admission. */
+    fun startPhoneAgentHelper(profile: String, password: String, config: String, port: Int = 4099,
+        expectedHelperVersion: String? = null): Map<String, Any?> {
+        val ticket = captureAgentHostStart(profile, false, null) ?: error("agent_host_unavailable")
+        return withAgentHostStart(ticket) {
+            agentHost.start(PhoneAgentHost.StartRequest(profile, password, port, config,
+                PhoneAgentHost.HelperPolicy(expectedVersion = expectedHelperVersion)))
+        }
+    }
 
+    /** Foreground idle restoration uses the receipt's exact helper and generation. */
+    fun resumeIdleStoppedAgentHost(profile: String, generation: Long, password: String, config: String): Map<String, Any?> {
+        val ticket = captureAgentHostStart(profile, true, generation) ?: error("idle_resume_stale")
+        return withAgentHostStart(ticket) {
+            agentHost.start(PhoneAgentHost.StartRequest(profile, password, 4099, config))
+        }
+    }
+
+    internal data class AgentHostTicket(val profile: String, val owner: String?, val revision: Long,
+        val epoch: Long, val idleGeneration: Long?)
     private val agentHostTicket = ThreadLocal<AgentHostTicket?>()
     private val agentHostAdmissions = java.util.IdentityHashMap<Process, AgentHostTicket>()
 
@@ -5010,6 +5027,125 @@ class BuiltinLinux(private val context: Context) {
         }
     }
 
+    /**
+     * Installed rootfs identity for handoff only; every unknown or changed field refuses sharing.
+     */
+    @Synchronized
+    fun captureHandoffFilesystem(owner: String): NativeHandoffFilesystem? {
+        if (
+            !Regex("[A-Za-z0-9_-]{1,80}").matches(owner) ||
+                !installed ||
+                installingRuntime ||
+                owner in blockedAgentProfiles
+        )
+            return null
+        fun identity(): String? =
+            try {
+                val root = rootfs.canonicalFile
+                val marker = ready.canonicalFile
+                if (root != rootfs.absoluteFile || marker != ready.absoluteFile) null
+                else {
+                    val r = Os.lstat(root.absolutePath)
+                    val m = Os.lstat(marker.absolutePath)
+                    val generation = installerPreferences.getString("rootfsGeneration", null)
+                    if (
+                        !OsConstants.S_ISDIR(r.st_mode) ||
+                            !OsConstants.S_ISREG(m.st_mode) ||
+                            m.st_size !in 1..4096 ||
+                            generation != null && !Regex("[0-9a-f]{64}").matches(generation)
+                    )
+                        null
+                    else
+                        listOf(
+                                root.absolutePath,
+                                r.st_dev,
+                                r.st_ino,
+                                m.st_dev,
+                                m.st_ino,
+                                m.st_mtime,
+                                m.st_size,
+                                ready.readText(),
+                                generation ?: "legacy",
+                            )
+                            .joinToString("\u0000")
+                }
+            } catch (_: Exception) {
+                null
+            }
+        val captured = identity() ?: return null
+        val opaque =
+            MessageDigest.getInstance("SHA-256")
+                .digest(captured.toByteArray(Charsets.UTF_8))
+                .joinToString("") { (it.toInt() and 255).toString(16).padStart(2, '0') }
+        return NativeHandoffFilesystem(opaque) {
+            synchronized(this) {
+                installed &&
+                    !installingRuntime &&
+                    owner !in blockedAgentProfiles &&
+                    identity() == captured
+            }
+        }
+    }
+
+    /** Only the exact tracked, authenticated OpenCode process can establish a managed source. */
+    @Synchronized
+    fun captureManagedHandoffSource(
+        owner: String,
+        sourcePort: Int,
+        sourcePassword: String,
+        filesystem: NativeHandoffFilesystem,
+    ): NativeHandoffIdentity? {
+        val service =
+            services[SERVER]?.takeIf { it.process.isAlive && it.port == sourcePort } ?: return null
+        val password = File(rootfs, "root/.oc-builtin/server.password")
+        fun authenticated(): Boolean =
+            try {
+                val stat = Os.lstat(password.absolutePath)
+                OsConstants.S_ISREG(stat.st_mode) &&
+                    stat.st_size in 1..4096 &&
+                    password.canonicalFile == password.absoluteFile &&
+                    sourcePassword.isNotEmpty() &&
+                    password.readText().trimEnd() == sourcePassword
+            } catch (_: Exception) {
+                false
+            }
+        fun current(): Boolean =
+            filesystem.isCurrent() &&
+                supervisionProfile?.let { it == owner || helperOwner(it) == owner } == true &&
+                services[SERVER] === service &&
+                service.process.isAlive &&
+                service.port == sourcePort &&
+                authenticated()
+        if (!current()) return null
+        return NativeHandoffIdentity { synchronized(this) { current() } }
+    }
+
+    /**
+     * Explicit foreground handoff/open-chat only; the existing native lifecycle ticket admits the
+     * start.
+     */
+    fun startTrustedAgentHelper(
+        owner: String,
+        password: String,
+        config: String,
+        expectedVersion: String,
+    ): Map<String, Any?> {
+        val ticket =
+            captureAgentHostStart(owner, false, null)
+                ?: throw IllegalStateException("The agent host is unavailable.")
+        return withAgentHostStart(ticket) {
+            agentHost.start(
+                PhoneAgentHost.StartRequest(
+                    owner,
+                    password,
+                    4099,
+                    config,
+                    PhoneAgentHost.HelperPolicy(expectedVersion, false, false),
+                )
+            )
+        }
+    }
+
     val serverLog = File(home, "server.log")
 
     val serverRunning: Boolean
@@ -5710,10 +5846,11 @@ class BuiltinLinux(private val context: Context) {
         val targets =
             pids.distinct().take(MAX_STOP_PIDS).mapNotNull { pid ->
                 val entry = NativeProcScan.read(pid, uid)
+                // A pid whose start identity is missing or changed is never signalled.
                 val reason =
                     if (
                         expectedStarts != null &&
-                            (entry == null || expectedStarts[pid] != entry.startTicks)
+                            (expectedStarts[pid] == null || entry == null || expectedStarts[pid] != entry.startTicks)
                     )
                         "changed"
                     else NativeProcessList.stopRefusal(pid, entry, uid, appPids, roots)

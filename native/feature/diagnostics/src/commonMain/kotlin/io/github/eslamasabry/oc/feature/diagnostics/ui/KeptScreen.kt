@@ -24,9 +24,9 @@ import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptNotice
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
+import io.github.eslamasabry.oc.ui.kit.content.log.KitLogPanel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -312,9 +312,7 @@ private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) 
             )
         )
         KitGroupNote(stringResource(Res.string.crashReportPreviewBody))
-        Box(gutter.testTag("kept-preview-text")) {
-            KitSelectableText(preview.text, role = TypeRole.Mono)
-        }
+        Box(gutter.testTag("kept-preview-text")) { KitLogPanel(redactedText = preview.text, live = false) }
         Box(gutter) {
             KitActionBlock(
                 primary =

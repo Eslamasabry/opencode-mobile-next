@@ -1,9 +1,9 @@
 package io.github.eslamasabry.oc.ui.routes
 
-import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import kotlinx.serialization.Serializable
 
-/** The server's real tools and provider accounts; a conversation keeps its own profile/location. */
+/** The connected server's tools; a conversation target also permits skill activation. */
 @Serializable
-public data class ToolsRoute(val tab: String = "commands", val ref: ConversationRef? = null) :
-    AppRoute
+public data class ToolsRoute(val profile: ProfileId, val session: SessionId? = null) : AppRoute

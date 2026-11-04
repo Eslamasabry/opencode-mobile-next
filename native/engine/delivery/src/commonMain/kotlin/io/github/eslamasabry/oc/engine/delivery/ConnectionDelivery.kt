@@ -14,12 +14,18 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
 import io.github.eslamasabry.oc.core.domain.ServerGateway
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.ServerProfile
+import io.github.eslamasabry.oc.core.model.StreamStatus
+import io.github.eslamasabry.oc.engine.delivery.live.InboxProjection
 import io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy
 import io.github.eslamasabry.oc.engine.delivery.port.ConversationFacts
 import io.github.eslamasabry.oc.engine.delivery.port.DeliveryConnection
@@ -37,6 +43,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 
 /**
  * The storage owner supplies the adopted, gated store. Absence refuses admission; never substitute
@@ -46,7 +58,12 @@ public class DeliveryStorage(
     public val store: KeyValueStore,
     public val lanes: WriterLanes,
     public val profiles: ProfileDirectory,
-)
+) {
+    /**
+     * One process owner survives connection replacement and keeps closed profile admission closed.
+     */
+    public val journals: PendingCommandJournals = PendingCommandJournals(store, lanes, profiles)
+}
 
 @ContributesTo(AppScope::class)
 public interface DeliveryStorageBindings {
@@ -71,8 +88,10 @@ public class ConnectionDelivery(
     clock: Clock,
     stores: Set<DeliveryStorage>,
     dispatchers: AppDispatchers,
+    tracers: Set<PromptTracing> = emptySet(),
     private val interactiveSendChecks: Set<InteractiveSendCheck> = emptySet(),
 ) {
+    private val tracing: PromptTracing? = tracers.firstOrNull()
     private val running = MutableStateFlow<Set<ConversationRef>>(emptySet())
     private val stopped = MutableStateFlow<Set<ConversationRef>>(emptySet())
     public val stoppedByPerson: kotlinx.coroutines.flow.StateFlow<Set<ConversationRef>> = stopped
@@ -87,39 +106,23 @@ public class ConnectionDelivery(
     }
 
     private val link =
-        GatewaySendLink(profile.id, profile.origin.toString(), gateway) { admission(profile) }
+        GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing) { admission(profile) }
     private val connection =
         object : DeliveryConnection {
             override val link = MutableStateFlow<SendLink?>(this@ConnectionDelivery.link)
             override val activeProfile = MutableStateFlow<ProfileId?>(profile.id)
         }
 
-    init {
-        var connects = gateway.events.connects.value
-        var status = gateway.events.status.value
-        scope.launch {
-            combine(gateway.events.connects, gateway.events.status) { n, s -> n to s }
-                .collect { (n, s) ->
-                    if (n != connects || s != status) {
-                        connects = n
-                        status = s
-                        connection.link.value =
-                            GatewaySendLink(profile.id, profile.origin.toString(), gateway) {
-                                admission(profile)
-                            }
-                    }
-                }
-        }
-    }
-
     private val storage = stores.singleOrNull()
-    private val journals = storage?.let { PendingCommandJournals(it.store, it.lanes, it.profiles) }
+    private val journals = storage?.journals
     public val queue: OfflineQueue? = storage?.let {
         OfflineQueue(
             OfflineQueueStore(it.store, it.lanes.app),
             journals!!,
             connection,
-            AutomationPolicy { false },
+            AutomationPolicy { target ->
+                target == profile.id && queueAutomationAllowed(it.store, profile.id)
+            },
             clock,
             scope,
             dispatchers,
@@ -152,6 +155,61 @@ public class ConnectionDelivery(
             clock,
             scope,
         )
+    }
+
+    private fun feed(trace: PromptTracing, event: GatewayEvent) {
+        when (event) {
+            is GatewayEvent.MessageUpserted ->
+                trace.message(event.message.sessionId, event.message.id, event.message.role == Role.Assistant)
+            is GatewayEvent.PartUpserted -> trace.part(event.part.sessionId, event.part.messageId, event.part.rawType)
+            is GatewayEvent.PartDelta -> trace.delta(event.sessionId.raw)
+            is GatewayEvent.RunStarted -> trace.busy(event.sessionId.raw)
+            is GatewayEvent.RunEnded ->
+                if (event.outcome is RunOutcome.Failed) trace.error(event.sessionId.raw) else trace.idle(event.sessionId.raw)
+            else -> Unit
+        }
+    }
+
+    /**
+     * Server-admitted sends, separate from the device's offline queue. The connection owns their
+     * live projection.
+     */
+    public val inbox: InboxProjection = InboxProjection(gateway)
+
+    init {
+        tracing?.let { trace -> scope.launch { gateway.events.project.collect { feed(trace, it.event) } } }
+        val lane = dispatchers.serial("delivery-reconcile")
+        scope.launch(lane) {
+            gateway.events.project.collect { envelope ->
+                val event = envelope.event
+                if (event is GatewayEvent.InboxChanged && gateway.capabilities.value.inbox)
+                    inbox.onEvent(event)
+            }
+        }
+        scope.launch(lane) {
+            var first = true
+            var connects = gateway.events.connects.value
+            var status = gateway.events.status.value
+            combine(gateway.events.connects, gateway.events.status) { n, s -> n to s }
+                .collect { (n, s) ->
+                    val changed = first || n != connects || s != status
+                    first = false
+                    connects = n
+                    status = s
+                    if (changed) {
+                        connection.link.value =
+                            GatewaySendLink(profile.id, profile.origin.toString(), gateway, tracing) {
+                                admission(profile)
+                            }
+                        if (s == StreamStatus.Connected) {
+                            // A reconnect reconciles admitted sends and receipts; marked/uncertain
+                            // sends are never replayed.
+                            if (gateway.capabilities.value.inbox) inbox.refreshKnown()
+                            queue?.flush()
+                        }
+                    }
+                }
+        }
     }
 
     public fun running(ref: ConversationRef, busy: Boolean) {
@@ -194,4 +252,27 @@ public class ConnectionDelivery(
             SendRequest(ref, text, attachments = attachments, model = model, mentions = mentions)
         return if (insteadOfDraft) engine.sendInsteadOfDraft(request) else engine.send(request)
     }
+}
+
+/**
+ * The existing Flutter consent record. A missing record uses its default; an unreadable record
+ * grants nothing.
+ */
+private fun queueAutomationAllowed(store: KeyValueStore, profile: ProfileId): Boolean {
+    val value = store.get("oc.automation.${profile.raw}") ?: return true
+    val text = (value as? PrefValue.Str)?.value ?: return false
+    val root =
+        try {
+            Json.parseToJsonElement(text) as? JsonObject
+        } catch (_: IllegalArgumentException) {
+            null
+        } ?: return false
+    if ((root["version"] as? JsonPrimitive)?.intOrNull != 1) return false
+    if (
+        (root["supervision"] as? JsonPrimitive)?.contentOrNull !in
+            setOf("high", "balanced", "autonomous")
+    )
+        return false
+    val behaviors = root["behaviors"] as? JsonObject ?: return false
+    return (behaviors["reconcileQueuedSends"] as? JsonPrimitive)?.booleanOrNull == true
 }

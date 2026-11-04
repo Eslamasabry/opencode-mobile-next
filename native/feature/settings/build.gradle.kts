@@ -18,6 +18,7 @@ kotlin {
         implementation(project(":engine:integrations-catalog"))
         implementation(project(":engine:setupassist"))
         implementation(project(":ui:kit-chat"))
+        implementation(project(":engine:diagnostics"))
         // P12-SETTINGS: personal choices over the device Preferences facade (PreferencesChoices).
         implementation(project(":engine:settings"))
     }

@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.runtime.procs.detectedDevelopmentServers
 import io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServices
+import io.github.eslamasabry.oc.engine.runtime.services.FailedServiceReport
 import io.github.eslamasabry.oc.engine.runtime.services.ManagedShell
 import io.github.eslamasabry.oc.engine.runtime.services.ManagedShellGateway
 import io.github.eslamasabry.oc.engine.runtime.services.ManagedShellOutput
@@ -27,6 +28,8 @@ import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxServicesSession
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxServicesSource
+import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlinx.coroutines.async
@@ -34,6 +37,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 /**
  * One project-bound service panel. Only the captured live graph may dispatch, and only its profile
@@ -50,7 +54,9 @@ class LiveLinuxServices(
     private val clock: Clock,
     private val appScope: AppCoroutineScope,
     private val random: Random,
-    dispatchers: AppDispatchers,
+    private val dispatchers: AppDispatchers,
+    private val reports: GitHubProblemReporter,
+    private val nav: AppNavigator,
 ) : LinuxServicesSource {
     private val lane = dispatchers.serial("development-services")
     private val commands = Mutex()
@@ -138,6 +144,19 @@ class LiveLinuxServices(
                     get() = supported()
 
                 override fun redact(text: String): String = redactor.redact(text)
+
+                override suspend fun openReport(report: FailedServiceReport): Outcome<Unit> =
+                    withContext(dispatchers.main) {
+                        if (!supported()) return@withContext refused()
+                        reports.attachFailure(
+                            report.title,
+                            report.detail,
+                            "failedJob",
+                            report.logExcerpt,
+                        )
+                        nav.open(SettingsRoute.ReportProblem)
+                        Outcome.Ok(Unit)
+                    }
 
                 override suspend fun command(block: suspend () -> Unit) {
                     appScope.async(lane) { commands.withLock { block() } }.await()

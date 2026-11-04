@@ -26,12 +26,31 @@ public class ThisPhoneViewModel(
     nav: PhoneNavigator,
     clock: Clock,
     pacer: Pacer,
+    details: Set<PhoneStateDetails>,
+    phoneStorage: PhoneStorageReadings = NoPhoneStorageReadings(),
     exits: PhoneExitNotices,
+    processes: PhoneProcessSource,
 ) : ViewModel(), ThisPhoneActions {
-    private val model = ThisPhoneModel(source, settings, nav, viewModelScope, clock, pacer, exits)
+    private val model =
+        ThisPhoneModel(
+            source,
+            settings,
+            nav,
+            viewModelScope,
+            clock,
+            pacer,
+            details = details,
+            phoneStorage = phoneStorage,
+            exits = exits,
+            processes = processes,
+        )
     public val state: StateFlow<ThisPhoneUi> = model.state
 
     override fun act(act: PhoneAct): Unit = model.act(act)
+
+    override fun dismissRecovery(): Unit = model.dismissRecovery()
+
+    override fun refreshStorage(): Unit = model.refreshStorage()
 
     override fun stopServer(): Unit = model.stopServer()
 
@@ -43,11 +62,15 @@ public class ThisPhoneViewModel(
 
     override fun dismiss(): Unit = model.dismiss()
 
+    override fun measureStorage(): Unit = model.measureStorage()
+
     override fun openRunning(): Unit = model.openRunning()
 
     override fun openKeepRunning(): Unit = model.openKeepRunning()
 
     override fun openLinux(): Unit = model.openLinux()
+
+    override fun openTerminal(): Unit = model.openTerminal()
 
     override fun back(): Unit = model.back()
 

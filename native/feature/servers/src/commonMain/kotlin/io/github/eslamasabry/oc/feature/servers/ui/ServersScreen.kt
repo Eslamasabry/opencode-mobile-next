@@ -20,17 +20,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingAnswer
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.ShareLink
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerDisconnectActions
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerFailureKind
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerIssue
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerMonitorStatus
@@ -43,7 +43,10 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
+import io.github.eslamasabry.oc.ui.kit.frame.KitServerName
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitField
@@ -56,26 +59,42 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
+import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
+import io.github.eslamasabry.oc.ui.words.res.e7SetupNoServerAnswer
+import io.github.eslamasabry.oc.ui.words.res.e7SetupPairAddressUnusable
+import io.github.eslamasabry.oc.ui.words.res.e7SetupPairTestFailed
+import io.github.eslamasabry.oc.ui.words.res.codexNativeTitle
+import io.github.eslamasabry.oc.ui.words.res.e7SettingsDisconnectTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
+import io.github.eslamasabry.oc.ui.words.res.e7SetupRefused
+import io.github.eslamasabry.oc.ui.words.res.e7SetupTimeout
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.linuxHostSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
+import io.github.eslamasabry.oc.ui.words.res.monitorOptIn
+import io.github.eslamasabry.oc.ui.words.res.monitorOptInDetail
 import io.github.eslamasabry.oc.ui.words.res.monitorServerCheckInMinutes
 import io.github.eslamasabry.oc.ui.words.res.monitorServerCheckInOff
 import io.github.eslamasabry.oc.ui.words.res.monitorServerCurrent
-import io.github.eslamasabry.oc.ui.words.res.monitorOptIn
-import io.github.eslamasabry.oc.ui.words.res.monitorOptInDetail
 import io.github.eslamasabry.oc.ui.words.res.monitorServerPaused
 import io.github.eslamasabry.oc.ui.words.res.monitorServerUnavailable
 import io.github.eslamasabry.oc.ui.words.res.monitorServerWaiting
 import io.github.eslamasabry.oc.ui.words.res.monitorServerWifi
 import io.github.eslamasabry.oc.ui.words.res.monitorServerWifiRequired
+import io.github.eslamasabry.oc.ui.words.res.mcpNativeTitle
+import io.github.eslamasabry.oc.ui.words.res.monitorNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
+import io.github.eslamasabry.oc.ui.words.res.protoPairingCheck
+import io.github.eslamasabry.oc.ui.words.res.secImportedSignInsTitle
+import io.github.eslamasabry.oc.ui.words.res.secSetupTitle
+import io.github.eslamasabry.oc.ui.words.res.safetyDisconnectBody
+import io.github.eslamasabry.oc.ui.words.res.safetyDisconnectBodyPhone
+import io.github.eslamasabry.oc.ui.words.res.serverDisconnectFrom
 import io.github.eslamasabry.oc.ui.words.res.serverFailureCertificate
 import io.github.eslamasabry.oc.ui.words.res.serverFailureIncompatible
 import io.github.eslamasabry.oc.ui.words.res.serverFailureNetwork
@@ -98,10 +117,13 @@ import io.github.eslamasabry.oc.ui.words.res.serversConnected
 import io.github.eslamasabry.oc.ui.words.res.serversCreate
 import io.github.eslamasabry.oc.ui.words.res.serversCreateFailed
 import io.github.eslamasabry.oc.ui.words.res.serversEmpty
+import io.github.eslamasabry.oc.ui.words.res.serversInspectSetup
 import io.github.eslamasabry.oc.ui.words.res.serversInvalidAddress
 import io.github.eslamasabry.oc.ui.words.res.serversName
 import io.github.eslamasabry.oc.ui.words.res.serversNewTitle
+import io.github.eslamasabry.oc.ui.words.res.serversPairingAnswered
 import io.github.eslamasabry.oc.ui.words.res.serversPassword
+import io.github.eslamasabry.oc.ui.words.res.serversRemoteTerminal
 import io.github.eslamasabry.oc.ui.words.res.serversRemove
 import io.github.eslamasabry.oc.ui.words.res.serversRemoveConfirm
 import io.github.eslamasabry.oc.ui.words.res.serversRemoveFailed
@@ -113,6 +135,11 @@ import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.serversUsername
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
+import io.github.eslamasabry.oc.ui.words.res.tailscaleTitle
+import io.github.eslamasabry.oc.ui.words.res.stateDemoTryOffline
+import io.github.eslamasabry.oc.ui.words.res.stateServerSchedules
+import io.github.eslamasabry.oc.ui.words.res.stateSetupTitle
+import io.github.eslamasabry.oc.ui.words.res.setupNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
@@ -131,6 +158,9 @@ public fun ServersScreen(
      * Linux.
      */
     onThisPhone: (() -> Unit)? = null,
+    onInspectSetup: ((ProfileId) -> Unit)? = null,
+    onTerminal: ((ProfileId) -> Unit)? = null,
+    tailscale: io.github.eslamasabry.oc.feature.servers.presentation.TailscaleSetup? = null,
 ) {
     // The unsaved draft survives a page on top (Scan code) and the form leaving composition: the
     // plain fields are
@@ -144,10 +174,12 @@ public fun ServersScreen(
     }
     var removing by remember { mutableStateOf<ProfileId?>(null) }
     var hostSetup by rememberSaveable { mutableStateOf(false) }
+    var tailscaleSetup by rememberSaveable { mutableStateOf(false) }
     // PREVIEW-QR: a scanned or pasted pairing code (or share link) fills the form once; the
     // password is taken, not kept.
     var filledFromLink by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var clearedGeneration by rememberSaveable { mutableIntStateOf(0) }
+    var confirmingDisconnect by rememberSaveable { mutableStateOf<String?>(null) }
     // A pairing code carries a password, so it goes in a secret field (the kit's Paste lives there
     // too).
     val code = remember { TextFieldState() }
@@ -189,6 +221,12 @@ public fun ServersScreen(
             }
     }
     HostSetupSheet(hostSetup) { hostSetup = false }
+    ImportedSignInsSheet(state.importedSignIns, actions)
+
+    TailscaleSetupSheet(tailscaleSetup, tailscale, { tailscaleSetup = false }) { reviewed ->
+        address.edit { replace(0, length, reviewed) }
+        actions.allowCleartext(false, reviewed)
+    }
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else KitEnabled.Enabled
@@ -200,6 +238,7 @@ public fun ServersScreen(
                         if (state.newConversation) Res.string.serversNewTitle
                         else Res.string.serversTitle
                     ),
+                centred = state.newConversation,
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
@@ -241,11 +280,45 @@ public fun ServersScreen(
                 trailing = KitRowTrailing.Chevron,
                 onClick = { hostSetup = true },
             )
+            KitRow(
+                title =
+                    stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.tailscaleTitle),
+                trailing = KitRowTrailing.Chevron,
+                onClick = { tailscaleSetup = true },
+            )
+            KitButton(
+                stringResource(Res.string.stateDemoTryOffline),
+                actions::tryOffline,
+                role = KitButtonRole.Tertiary,
+            )
             if (state.servers.isEmpty()) KitText(stringResource(Res.string.serversEmpty))
             else KitText(stringResource(Res.string.serversSaved))
+            // Flutter confirmDisconnectServer: the person confirms before live updates stop.
+            val confirming =
+                state.servers.firstOrNull { it.connected && it.id.raw == confirmingDisconnect }
+            KitConfirm(
+                spec =
+                    confirming?.let {
+                        KitConfirmSpec(
+                            title = stringResource(Res.string.e7SettingsDisconnectTitle, it.name),
+                            confirmLabel = stringResource(Res.string.serverDisconnectFrom, it.name),
+                            body =
+                                stringResource(
+                                    if (it.address.startsWith("http://127.0.0.1:"))
+                                        Res.string.safetyDisconnectBodyPhone
+                                    else Res.string.safetyDisconnectBody
+                                ),
+                        )
+                    },
+                onConfirm = {
+                    confirmingDisconnect = null
+                    confirming?.let { (actions as? ServerDisconnectActions)?.disconnect(it.id) }
+                },
+                onCancel = { confirmingDisconnect = null },
+            )
             for (server in state.servers) {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    KitText(server.name)
+                    KitServerName(server.name)
                     KitText(server.address)
                     // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded
                     // loopback is a server.
@@ -263,6 +336,13 @@ public fun ServersScreen(
                     if (server.connected) KitText(stringResource(Res.string.serversConnected))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                         KitButton(
+                            stringResource(Res.string.secImportedSignInsTitle),
+                            { actions.reviewImportedSignIns(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+
+                        KitButton(
                             stringResource(Res.string.serversCreate),
                             { actions.create(server.id) },
                             enabled = enabled,
@@ -277,7 +357,35 @@ public fun ServersScreen(
                                 enabled = enabled,
                             )
                         }
+                        val disconnect = actions as? ServerDisconnectActions
+                        if (server.connected && disconnect?.disconnectSupported == true) {
+                            KitButton(
+                                stringResource(Res.string.serverDisconnectFrom, server.name),
+                                { confirmingDisconnect = server.id.raw },
+                                role = KitButtonRole.Tertiary,
+                                enabled = enabled,
+                            )
+                        }
                         if (server.connected) {
+                            onTerminal?.let { terminal ->
+                                KitButton(
+                                    stringResource(Res.string.serversRemoteTerminal),
+                                    { terminal(server.id) },
+                                    role = KitButtonRole.Secondary,
+                                )
+                            }
+                            onInspectSetup?.let { inspect ->
+                                KitButton(
+                                    stringResource(Res.string.serversInspectSetup),
+                                    { inspect(server.id) },
+                                    role = KitButtonRole.Secondary,
+                                )
+                            }
+                            KitButton(
+                                stringResource(Res.string.secSetupTitle),
+                                { actions.openSetup(server.id) },
+                                role = KitButtonRole.Tertiary,
+                            )
                             KitButton(
                                 stringResource(Res.string.usageTitle),
                                 { actions.openUsage(server.id) },
@@ -288,6 +396,30 @@ public fun ServersScreen(
                             schedulesLabel(),
                             { actions.openSchedules(server.id) },
                             role = KitButtonRole.Secondary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.mcpNativeTitle),
+                            { actions.openConnectorCatalog(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.setupNativeTitle),
+                            { actions.openSetupReview(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.agentToolsTitle),
+                            { actions.openAgentTools(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.monitorNativeTitle),
+                            { actions.openMonitor(server.id) },
+                            role = KitButtonRole.Tertiary,
                             enabled = enabled,
                         )
                         KitButton(
@@ -355,6 +487,11 @@ public fun ServersScreen(
                             }
                         } else KitText(stringResource(Res.string.monitorServerUnavailable))
                     }
+                    KitButton(
+                        stringResource(Res.string.stateSetupTitle),
+                        { actions.openStateSetup(server.id) },
+                        role = KitButtonRole.Tertiary,
+                    )
                     if (removing == server.id) {
                         KitNotice(stringResource(Res.string.serversRemoveConfirm, server.name))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
@@ -386,6 +523,11 @@ public fun ServersScreen(
                 actions::openPlans,
                 role = KitButtonRole.Secondary,
             )
+            KitButton(
+                stringResource(Res.string.codexNativeTitle),
+                actions::openCodexProbe,
+                role = KitButtonRole.Secondary,
+            )
             KitText(stringResource(Res.string.serversAdd))
             KitButton(
                 stringResource(Res.string.addServerScan),
@@ -406,6 +548,26 @@ public fun ServersScreen(
                 },
             )
             state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
+            for (check in state.pairingChecks) {
+                val verdict =
+                    when (check.answer) {
+                        PairingAnswer.Works -> Res.string.serversConnected
+                        PairingAnswer.Answers -> Res.string.serversPairingAnswered
+                        PairingAnswer.NoAnswer -> Res.string.e7SetupNoServerAnswer
+                        PairingAnswer.TimedOut -> Res.string.e7SetupTimeout
+                        PairingAnswer.Refused -> Res.string.e7SetupRefused
+                        PairingAnswer.ProbeFailed -> Res.string.e7SetupPairTestFailed
+                        PairingAnswer.InvalidAddress -> Res.string.e7SetupPairAddressUnusable
+                        PairingAnswer.NeedsCleartextConsent -> Res.string.serversCleartextHelp
+                    }
+                KitNotice(
+                    stringResource(
+                        Res.string.protoPairingCheck,
+                        check.origin,
+                        stringResource(verdict),
+                    )
+                )
+            }
             filledFromLink?.let { link ->
                 KitNotice(
                     stringResource(
@@ -484,9 +646,4 @@ private fun issueWords(issue: ServerIssue, failure: Failure?): String =
         }
     )
 
-// TODO(words): `serversSchedules` belongs in :ui:words (P12-SCHEDULES may not edit it); the l10n
-// owner moves it.
-@Composable
-private fun schedulesLabel(): String =
-    if (LocalLayoutDirection.current == LayoutDirection.Rtl) "الطلبات المجدولة"
-    else "Scheduled prompts"
+@Composable private fun schedulesLabel(): String = stringResource(Res.string.stateServerSchedules)

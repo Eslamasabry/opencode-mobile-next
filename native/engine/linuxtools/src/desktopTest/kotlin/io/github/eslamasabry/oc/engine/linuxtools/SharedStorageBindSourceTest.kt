@@ -16,7 +16,7 @@ class SharedStorageBindSourceTest {
         val linux = File(ANDROID_LINUX_SOURCES, "BuiltinLinux.kt").readText()
         assertTrue(linux.contains("--bind=/storage\""))
         assertTrue(linux.contains(":/sdcard\""))
-        assertTrue(linux.contains("sharedStorageBinds() + fakeProcBinds"))
+        assertTrue(Regex("""sharedStorageBinds\(\)\s*\+\s*fakeProcBinds""").containsMatchIn(linux))
         // Confined (AI Team on): only the folders the person opened, bound and allowed by exact path.
         assertTrue(linux.contains("object SharedStorageBinds"))
         assertTrue(linux.contains("SharedStorageBinds.binds(sharedProjectRoots(), prootIsConfined)"))

@@ -1,0 +1,31 @@
+<resources>
+    <string name="protoProvidersTitle">تسجيل الدخول إلى المزوّدين</string>
+    <string name="protoProvidersRefresh">تحديث المزوّدين</string>
+    <string name="protoProvidersEmpty">لا توجد طرق لتسجيل الدخول إلى المزوّدين على هذا الخادم.</string>
+    <string name="protoProvidersConnected">متصل</string>
+    <string name="protoProvidersNotConnected">غير متصل</string>
+    <string name="protoProvidersUseKey">استخدام مفتاح API</string>
+    <string name="protoProvidersDisconnect">إزالة تسجيل الدخول المحفوظ</string>
+    <string name="protoProvidersStart">بدء تسجيل الدخول</string>
+    <string name="protoProvidersKey">مفتاح API</string>
+    <string name="protoProvidersConnect">توصيل المزوّد</string>
+    <string name="protoProvidersFinishBrowser">أكمل تسجيل الدخول في المتصفح، ثم تحقّق من النتيجة هنا.</string>
+    <string name="protoProvidersCode">رمز تسجيل الدخول</string>
+    <string name="protoProvidersComplete">إكمال تسجيل الدخول</string>
+    <string name="protoProvidersCheck">التحقّق من تسجيل الدخول</string>
+    <string name="protoProvidersCancel">إلغاء تسجيل الدخول</string>
+    <string name="protoProvidersOpenTitle">فتح صفحة تسجيل الدخول؟</string>
+    <string name="protoProvidersOpenHost">سيفتح المتصفح %1$s.</string>
+    <string name="protoProvidersOpenInsecure">تستخدم الصفحة على %1$s اتصالاً غير مشفّر.</string>
+    <string name="protoProvidersOpen">فتح المتصفح</string>
+    <string name="protoProvidersUnavailable">تسجيل الدخول إلى المزوّدين غير متاح على هذا الخادم.</string>
+    <string name="protoProvidersLoadFailed">تعذّر تحميل طرق تسجيل الدخول إلى المزوّدين. حاول مجددًا.</string>
+    <string name="protoProvidersChanged">تغيّر هذا الخادم أو المشروع. حدّث الصفحة قبل بدء تسجيل دخول آخر.</string>
+    <string name="protoProvidersInvalidInput">أدخل بيانات تسجيل الدخول المطلوبة.</string>
+    <string name="protoProvidersFailed">تعذّر إكمال تسجيل الدخول. تحقّق من حالته أو حاول مجددًا.</string>
+    <string name="protoProvidersPending">بانتظار إكمال تسجيل الدخول لدى المزوّد.</string>
+    <string name="protoProvidersCompleteStatus">أكّد الخادم تسجيل الدخول. حدّث الصفحة لعرض المزوّدين المتصلين.</string>
+    <string name="protoProvidersExpired">انتهت صلاحية تسجيل الدخول هذا. ابدأ تسجيل دخول جديدًا.</string>
+    <string name="protoProvidersCancelled">أُلغي تسجيل الدخول.</string>
+    <string name="protoProvidersDisconnected">أُزيل تسجيل الدخول المحفوظ. حدّث الصفحة لعرض الاتصالات الحالية.</string>
+</resources>

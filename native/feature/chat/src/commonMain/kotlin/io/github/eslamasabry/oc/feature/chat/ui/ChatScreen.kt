@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
+import io.github.eslamasabry.oc.feature.chat.context.ActiveContextSheet
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,11 +49,17 @@ import io.github.eslamasabry.oc.feature.chat.presentation.MessageOrder
 import io.github.eslamasabry.oc.feature.chat.presentation.PictureUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
+import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
+import io.github.eslamasabry.oc.ui.design.effects.FrostRole
+import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartActions
+import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartUi
+import io.github.eslamasabry.oc.feature.chat.start.ui.ChatStartArea
+import io.github.eslamasabry.oc.feature.chat.tasks.ui.ChatTasksSheet
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -59,9 +67,13 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFrost
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
@@ -84,6 +96,7 @@ import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureView
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownSelection
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import io.github.eslamasabry.oc.ui.kitchat.stream.KitPromptLiftHost
 import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitFindExcerpt
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
@@ -105,6 +118,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatFeelShare
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoTitle
+import io.github.eslamasabry.oc.ui.words.res.agentErrorOpenSettings
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedBody
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.chatLoadingConversation
@@ -139,6 +153,11 @@ import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
 import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
+import io.github.eslamasabry.oc.ui.words.res.e7SharedHTTPIsNotEncryptedOtherDevicesOn
+import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenHTTPLink
+import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenInsecureHTTPLink
+import io.github.eslamasabry.oc.ui.words.res.externalLinkDontOpen
+import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
@@ -159,16 +178,21 @@ import io.github.eslamasabry.oc.ui.words.res.kitWorkSteps
 import io.github.eslamasabry.oc.ui.words.res.kitWorkStopped
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWorking
 import io.github.eslamasabry.oc.ui.words.res.nlibTitle
+import io.github.eslamasabry.oc.ui.words.res.mobileTasksProgress
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.queuedDiscardUnconfirmedMessage
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
+import io.github.eslamasabry.oc.ui.words.res.queuedReceiptConfirmed
+import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
+import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
 import io.github.eslamasabry.oc.ui.words.res.revertFromHere
 import io.github.eslamasabry.oc.ui.words.res.schedulePhoneBusy
 import io.github.eslamasabry.oc.ui.words.res.schedulePhoneCheckFailed
 import io.github.eslamasabry.oc.ui.words.res.sessionInstructionsUpdated
 import io.github.eslamasabry.oc.ui.words.res.skillApplied
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindAll
+import io.github.eslamasabry.oc.ui.words.res.stateDemoDisclosure
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindClose
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindCount
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindHint
@@ -205,8 +229,18 @@ public fun ChatScreen(
     onOpenSession: ((String) -> Unit)? = null,
     header: ChatHeaderSlot? = null,
     replyReader: KitReplyReader? = null,
+    /** B-CHAT-001..003: the active-context inspector this conversation opens from its bar (null where the server has none). */
+    activeContext: ActiveContextModel? = null,
+    start: ChatStartUi = ChatStartUi(),
+    startActions: ChatStartActions? = null,
+    demoMode: Boolean = false,
+    appStatus: KitStatus? = null,
+    replyOffer: (@Composable () -> Unit)? = null,
 ) {
     var contextOpen by remember { mutableStateOf(false) }
+    var tasksOpen by remember(state.ref) { mutableStateOf(false) }
+    val startState by rememberUpdatedState(start)
+    val currentStartActions by rememberUpdatedState(startActions)
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
     val requestState by rememberUpdatedState(requests)
     val headerState by rememberUpdatedState(header)
@@ -255,6 +289,15 @@ public fun ChatScreen(
         if (!arrival.focusComposer) actions.arrivalShown(arrival.id)
     }
 
+    val frost = rememberKitFrostState()
+    val overlays = state.phase == ChatPhase.Live && state.status == null && state.find == null
+    val composerUnder by
+        remember(list) {
+            derivedStateOf {
+                list.lazy.firstVisibleItemIndex > 0 || list.lazy.firstVisibleItemScrollOffset > 0
+            }
+        }
+    val headerUnder by remember(list) { derivedStateOf { list.lazy.canScrollForward } }
     val chrome =
         remember(actions, prompts) {
             ComposerChrome(
@@ -267,10 +310,17 @@ public fun ChatScreen(
                 // with cards (S5).
                 pendingInsert = {
                     latest.insert?.let { InsertRequest(it.id, it.text, replace = true) }
+                        ?: startState.insert?.let {
+                            InsertRequest(it.id, it.text, replace = true, onlyIfEmpty = true)
+                        }
                         ?: prompts?.pending()
                 },
                 insertDone = { id ->
-                    if (latest.insert?.id == id) actions.insertDone(id) else prompts?.done(id)
+                    when {
+                        latest.insert?.id == id -> actions.insertDone(id)
+                        startState.insert?.id == id -> currentStartActions?.insertDone(id)
+                        else -> prompts?.done(id)
+                    }
                 },
                 focusRequest = { latest.arrival?.takeIf { it.focusComposer }?.id },
                 focusDone = actions::arrivalShown,
@@ -282,191 +332,259 @@ public fun ChatScreen(
 
     // The frame, its sibling menu and its confirmation share one modal layer. KitScreen
     // reuses this ancestor rather than creating a host scoped only to its own content.
-    KitSheetHost(modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize()) {
-            KitScreen(
-                modifier = Modifier.fillMaxSize(),
-                page = true,
-                topBar = {
-                    // CHAT-TRANSCRIPT (B-CHAT-019): the context reading folds into the bar's
-                    // actions.
-                    val context =
-                        facts.context?.let { context ->
-                            KitLineAction(
-                                stringResource(
-                                    Res.string.kitContextRingSemantics,
-                                    Numbers.format(context.percent),
-                                ),
-                                { contextOpen = true },
-                                testTag = "chat-context-open",
-                            )
-                        }
-                    val unitActions =
-                        listOfNotNull(
-                            KitLineAction(
-                                stringResource(
-                                    if (state.reasoningExpanded) Res.string.chatUiCollapseReasoning
-                                    else Res.string.chatUiExpandReasoning
-                                ),
-                                actions::toggleReasoning,
-                                testTag = "chat-reasoning-toggle",
-                            ),
-                            KitLineAction(
-                                stringResource(Res.string.nlibTitle),
-                                actions::openTools,
-                                testTag = "chat-tools-open",
-                            ),
-                            KitLineAction(
-                                stringResource(Res.string.gitSheetTitle),
-                                actions::openGit,
-                                testTag = "chat-git-chip",
-                            ),
-                            KitLineAction(
-                                stringResource(Res.string.chatUiFiles),
-                                actions::openFiles,
-                                testTag = "chat-files-open",
-                            ),
-                            KitLineAction(
-                                stringResource(Res.string.chatUiChanges),
-                                actions::openChanges,
-                                testTag = "chat-changes-open",
-                            ),
-                            prompts?.let {
-                                KitLineAction(
-                                    stringResource(Res.string.promptStashTitle),
-                                    it::open,
-                                    testTag = "chat-saved-prompts-open",
-                                )
-                            },
-                        ) + extraActions
-                    if (header != null) {
-                        // CHAT-HEADER replaces the plain bar; Find lives in its ⋯ menu, the other
-                        // units' actions stay.
-                        ChatHeaderTopBar(
-                            header,
-                            actions::leaveRequested,
-                            { actions.find(state.find?.query ?: "") },
-                            extraActions = listOfNotNull(context) + unitActions,
-                        )
-                    } else
-                        KitTopBar(
-                            title = state.title ?: stringResource(Res.string.commandUntitledChat),
-                            exit = KitTopBarExit.Back,
-                            exitLabel = stringResource(Res.string.kitTopBarBack),
-                            onExit = actions::leaveRequested,
-                            actions =
-                                listOfNotNull(
-                                    context,
-                                    KitLineAction(
-                                        stringResource(Res.string.kitTopBarSearch),
-                                        { actions.find(state.find?.query ?: "") },
-                                        testTag = "chat-find-open",
-                                    ),
-                                ) + unitActions,
-                        )
-                },
-                status = state.status?.let { statusLine(it, actions) },
-                search = state.find?.let { find -> @Composable { FindBar(find, actions) } },
-                loading = state.phase == ChatPhase.Loading,
-                loadingLabel = stringResource(Res.string.chatLoadingConversation),
-                bottom = {
-                    Column {
-                        // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone
-                        // consent.
-                        replyReader?.Reader(
-                            state.readAloud?.let { KitReadRequest(it.id, it.rowKey, it.text) },
-                            actions::readAloudDone,
-                            Modifier.padding(horizontal = Space.S4.dp),
-                        )
-                        if (requestActions != null)
-                            ChatRequestSlot(
-                                requests,
-                                requestActions,
-                                nowMs = null,
-                                modifier = Modifier.padding(horizontal = Space.S4.dp),
-                            )
-                        composerHost.Composer(
-                            ComposerTarget(state.ref.profileId.raw, state.ref.sessionId.raw),
-                            chrome,
+    KitPromptLiftHost {
+        KitSheetHost(modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize()) {
+                KitScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    page = true,
+                    overlayChrome = overlays,
+                    topBar = {
+                        Box(
                             Modifier.fillMaxWidth()
-                                .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
-                        )
-                    }
-                },
-            ) {
-                when (val phase = state.phase) {
-                    // First load: the skeleton under the loading line, never an empty-state text
-                    // (plan 09 §6.5).
-                    ChatPhase.Loading ->
-                        KitSkeletonRows(Modifier.testTag("chat-loading"), count = 6)
-                    is ChatPhase.Failed ->
-                        KitStateView(
-                            kind = KitStateKind.Error,
-                            title = stringResource(Res.string.chatLoadFailedTitle),
-                            body = stringResource(Res.string.chatLoadFailedBody),
-                            failure = phase.failure,
-                            onRetry = actions::retryLoad,
-                            modifier = Modifier.testTag("chat-load-error"),
-                        )
-                    ChatPhase.Live ->
-                        Box(Modifier.fillMaxSize()) {
-                            ChatTranscriptList(
-                                rows = state.rows,
-                                live = state.live,
-                                pending = state.pending,
-                                words = words,
-                                listWords = listWords,
-                                list = list,
-                                reveal = reveal,
-                                motion = motion,
-                                onOpenMenu = actions::openMessageMenu,
-                                onRetrySend = actions::retrySend,
-                                modifier = Modifier.fillMaxSize(),
-                                facts = facts,
-                                onOpenSession = onOpenSession,
-                                reply = rememberReplyActions(actions, state.confirmedPaths),
-                                onOpenFile = { file -> openArtifact(actions, file) },
-                                reasoningExpanded = state.reasoningExpanded,
-                                onCompactAgain =
-                                    if (state.capabilities.compact) actions::compactAgain else null,
+                                .kitFrost(
+                                    FrostRole.ChatHeader,
+                                    frost,
+                                    shown = overlays && headerUnder,
+                                )
+                        ) {
+                            // CHAT-TRANSCRIPT (B-CHAT-019): the context reading folds into the
+                            // bar's
+                            // actions.
+                            val context =
+                                facts.context?.let { context ->
+                                    KitLineAction(
+                                        stringResource(
+                                            Res.string.kitContextRingSemantics,
+                                            Numbers.format(context.percent),
+                                        ),
+                                        { contextOpen = true },
+                                        testTag = "chat-context-open",
+                                    )
+                                }
+                            val unitActions =
+                                // STATE: the offline demo offers no server actions.
+                                (if (demoMode) emptyList()
+                                else
+                                listOfNotNull(
+                                    facts.tasks?.let { tasks ->
+                                        KitLineAction(
+                                            stringResource(
+                                                Res.string.mobileTasksProgress,
+                                                tasks.done,
+                                                tasks.total,
+                                            ),
+                                            { tasksOpen = true },
+                                            testTag = "chat-tasks-open",
+                                        )
+                                    },
+                                    KitLineAction(
+                                        stringResource(Res.string.gitSheetTitle),
+                                        actions::openGit,
+                                        testTag = "chat-git-chip",
+                                    ),
+                                    KitLineAction(
+                                        stringResource(Res.string.chatUiFiles),
+                                        actions::openFiles,
+                                        testTag = "chat-files-open",
+                                    ),
+                                    KitLineAction(
+                                        stringResource(Res.string.chatUiChanges),
+                                        actions::openChanges,
+                                        testTag = "chat-changes-open",
+                                    ),
+                                    prompts?.let {
+                                        KitLineAction(
+                                            stringResource(Res.string.promptStashTitle),
+                                            it::open,
+                                            testTag = "chat-saved-prompts-open",
+                                        )
+                                    },
+                                    KitLineAction(
+                                        stringResource(
+                                            if (state.reasoningExpanded) Res.string.chatUiCollapseReasoning
+                                            else Res.string.chatUiExpandReasoning
+                                        ),
+                                        actions::toggleReasoning,
+                                        testTag = "chat-reasoning-toggle",
+                                    ),
+                                    KitLineAction(
+                                        stringResource(Res.string.nlibTitle),
+                                        actions::openTools,
+                                        testTag = "chat-tools-open",
+                                    ),
+                                )) + extraActions
+                            if (header != null) {
+                                // CHAT-HEADER replaces the plain bar; Find lives in its ⋯ menu, the
+                                // other
+                                // units' actions stay.
+                                ChatHeaderTopBar(
+                                    header,
+                                    actions::leaveRequested,
+                                    { actions.find(state.find?.query ?: "") },
+                                    extraActions = listOfNotNull(context) + unitActions,
+                                    onProject = actions::openFiles,
+                                )
+                            } else
+                                KitTopBar(
+                                    title =
+                                        state.title
+                                            ?: stringResource(Res.string.commandUntitledChat),
+                                    exit = KitTopBarExit.Back,
+                                    exitLabel = stringResource(Res.string.kitTopBarBack),
+                                    onExit = actions::leaveRequested,
+                                    actions =
+                                        listOfNotNull(
+                                            context,
+                                            KitLineAction(
+                                                stringResource(Res.string.kitTopBarSearch),
+                                                { actions.find(state.find?.query ?: "") },
+                                                testTag = "chat-find-open",
+                                            ),
+                                        ) + unitActions,
+                                )
+                        }
+                    },
+                    status =
+                        if (demoMode)
+                            KitStatus(
+                                KitStatusKind.Info,
+                                stringResource(Res.string.stateDemoDisclosure),
+                                id = "offline-demo",
                             )
-                            EarlierMessagesPill(
-                                state,
-                                list,
-                                itemsBelowRows,
-                                actions,
-                                Modifier.align(Alignment.TopCenter).padding(top = Space.S2.dp),
+                        else
+                            KitStatus.highest(
+                                listOf(state.status?.let { statusLine(it, actions) }, appStatus)
+                            ),
+                    search = state.find?.let { find -> @Composable { FindBar(find, actions) } },
+                    loading = state.phase == ChatPhase.Loading,
+                    loadingLabel = stringResource(Res.string.chatLoadingConversation),
+                    bottom = {
+                        Column {
+                            replyOffer?.invoke()
+                            // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone
+                            // consent.
+                            replyReader?.Reader(
+                                state.readAloud?.let { KitReadRequest(it.id, it.rowKey, it.text) },
+                                actions::readAloudDone,
+                                Modifier.padding(horizontal = Space.S4.dp),
+                            )
+                            if (requestActions != null)
+                                ChatRequestSlot(
+                                    requests,
+                                    requestActions,
+                                    nowMs = null,
+                                    modifier = Modifier.padding(horizontal = Space.S4.dp),
+                                )
+                            composerHost.Composer(
+                                ComposerTarget(state.ref.profileId.raw, state.ref.sessionId.raw),
+                                chrome,
+                                Modifier.fillMaxWidth()
+                                    .kitFrost(
+                                        FrostRole.Composer,
+                                        frost,
+                                        shown = overlays && composerUnder,
+                                    )
+                                    .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
                             )
                         }
-                }
-            }
-
-            // The menu opens over the composer's end, where the action that opened it is under the
-            // thumb.
-            MessageMenu(
-                state.menu,
-                actions,
-                Modifier.align(Alignment.BottomEnd),
-                reads = replyReader != null,
-            )
-            ChatTimelineSheet(state.timeline, actions)
-            ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
-            SelectTextSheet(state.select, actions)
-            PictureSheet(state.picture, actions)
-            KitConfirm(
-                spec = confirmSpec(state.confirm),
-                onConfirm = {
-                    when (latest.confirm) {
-                        is ChatConfirm.DeleteMessage -> actions.confirmDelete()
-                        ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
-                        is ChatConfirm.UndoFrom -> actions.confirmUndo()
-                        is ChatConfirm.OpenLink -> actions.confirmOpenLink()
-                        null -> Unit
+                    },
+                ) {
+                    when (val phase = state.phase) {
+                        // First load: the skeleton under the loading line, never an empty-state
+                        // text
+                        // (plan 09 §6.5).
+                        ChatPhase.Loading ->
+                            KitSkeletonRows(Modifier.testTag("chat-loading"), count = 6)
+                        is ChatPhase.Failed ->
+                            KitStateView(
+                                kind = KitStateKind.Error,
+                                title = stringResource(Res.string.chatLoadFailedTitle),
+                                body = stringResource(Res.string.chatLoadFailedBody),
+                                failure = phase.failure,
+                                onRetry = actions::retryLoad,
+                                modifier = Modifier.testTag("chat-load-error"),
+                            )
+                        ChatPhase.Live ->
+                            Box(Modifier.fillMaxSize().kitFrostSource(frost)) {
+                                // PORT-SCREENS-1: an empty conversation offers its starters instead.
+                                if (
+                                    state.rows.isEmpty() &&
+                                        state.pending.isEmpty() &&
+                                        state.live == null &&
+                                        start.emptyEligible &&
+                                        startActions != null
+                                ) {
+                                    ChatStartArea(start, startActions)
+                                } else
+                                ChatTranscriptList(
+                                    rows = state.rows,
+                                    live = state.live,
+                                    pending = state.pending,
+                                    words = words,
+                                    listWords = listWords,
+                                    list = list,
+                                    reveal = reveal,
+                                    motion = motion,
+                                    onOpenMenu = actions::openMessageMenu,
+                                    onRetrySend = actions::retrySend,
+                                    receiptChecks = state.receiptChecks,
+                                    onCheckReceipt = actions::checkReceipt,
+                                    modifier = Modifier.fillMaxSize(),
+                                    facts = facts,
+                                    onOpenSession = onOpenSession,
+                                    reply = rememberReplyActions(actions, state.confirmedPaths),
+                                    onOpenFile = { file -> openArtifact(actions, file) },
+                                    reasoningExpanded = state.reasoningExpanded,
+                                    onCompactAgain =
+                                        if (state.capabilities.compact) actions::compactAgain else null,
+                                )
+                                EarlierMessagesPill(
+                                    state,
+                                    list,
+                                    itemsBelowRows,
+                                    actions,
+                                    Modifier.align(Alignment.TopCenter)
+                                        .padding(
+                                            top =
+                                                Space.S2.dp +
+                                                    kitScreenChromePadding().calculateTopPadding()
+                                        ),
+                                )
+                            }
                     }
-                },
-                onCancel = actions::dismissConfirm,
-            )
-            header?.let { ChatHeaderOverlays(it) }
+                }
+
+                // The menu opens over the composer's end, where the action that opened it is under
+                // the
+                // thumb.
+                MessageMenu(
+                    state.menu,
+                    actions,
+                    Modifier.align(Alignment.BottomEnd),
+                    reads = replyReader != null,
+                )
+                ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
+                ChatTasksSheet(facts.tasks, tasksOpen) { tasksOpen = false }
+                if (activeContext != null) ActiveContextSheet(activeContext)
+                SelectTextSheet(state.select, actions)
+                PictureSheet(state.picture, actions)
+                ChatTimelineSheet(state.timeline, actions)
+                KitConfirm(
+                    spec = confirmSpec(state.confirm),
+                    onConfirm = {
+                        when (latest.confirm) {
+                            is ChatConfirm.DeleteMessage -> actions.confirmDelete()
+                            ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
+                            is ChatConfirm.UndoFrom -> actions.confirmUndo()
+                            is ChatConfirm.OpenLink -> actions.confirmOpenLink()
+                            null -> Unit
+                        }
+                    },
+                    onCancel = actions::dismissConfirm,
+                )
+                header?.let { ChatHeaderOverlays(it) }
+            }
         }
     }
 }
@@ -707,9 +825,24 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
             )
         is ChatConfirm.OpenLink ->
             KitConfirmSpec(
-                title = stringResource(Res.string.chatFeelOpenLinkTitle),
-                confirmLabel = stringResource(Res.string.chatFeelOpenLinkAction),
+                title =
+                    stringResource(
+                        if (confirm.insecure) Res.string.e7SharedOpenInsecureHTTPLink
+                        else Res.string.chatFeelOpenLinkTitle
+                    ),
+                confirmLabel =
+                    stringResource(
+                        if (confirm.insecure) Res.string.e7SharedOpenHTTPLink
+                        else Res.string.chatFeelOpenLinkAction
+                    ),
                 body = stringResource(Res.string.chatFeelOpenLinkBody, confirm.host),
+                kind = if (confirm.insecure) KitConfirmKind.Destructive else KitConfirmKind.Neutral,
+                consequences =
+                    if (confirm.insecure)
+                        listOf(stringResource(Res.string.e7SharedHTTPIsNotEncryptedOtherDevicesOn))
+                    else emptyList(),
+                cancelLabel =
+                    if (confirm.insecure) stringResource(Res.string.externalLinkDontOpen) else null,
             )
     }
 
@@ -752,6 +885,21 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                 stringResource(Res.string.queuedDiscardUnconfirmedMessage),
                 id = "chat-status-${line.id}",
             )
+        ChatStatusKind.ReceiptChecked ->
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(
+                    when (line.receiptResult) {
+                        ReceiptCheckResult.Confirmed -> Res.string.queuedReceiptConfirmed
+                        ReceiptCheckResult.StorageProblem -> Res.string.queuedReceiptStorageProblem
+                        ReceiptCheckResult.StillUnknown,
+                        null -> Res.string.queuedReceiptStillUncertain
+                    }
+                ),
+                id = "chat-status-${line.id}",
+                onDismiss = { actions.dismissStatus(line.id) },
+                dismissLabel = stringResource(Res.string.kitSheetDismiss),
+            )
         ChatStatusKind.RunFailed ->
             KitStatus(
                 KitStatusKind.Info,
@@ -792,6 +940,8 @@ internal fun rememberReplyActions(
     val onServer = stringResource(Res.string.chatFeelPictureOnServer, "\u0000")
     val onWeb = stringResource(Res.string.chatFeelPictureOnWeb, "\u0000")
     val continueLabel = stringResource(Res.string.returnBriefContinue)
+    val signInSettings =
+        stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.agentErrorOpenSettings)
     return remember(
         actions,
         copy,
@@ -801,6 +951,7 @@ internal fun rememberReplyActions(
         onWeb,
         confirmedPaths,
         continueLabel,
+        signInSettings,
     ) {
         ReplyActions(
             copiedLabel = copied,
@@ -823,6 +974,7 @@ internal fun rememberReplyActions(
                         }
                     },
                     openFilePictures = true,
+                    readPicture = actions::readPicture,
                     pictureLabel = { p ->
                         p.label
                             ?: p.path?.let { onServer.replace("\u0000", it) }
@@ -835,6 +987,8 @@ internal fun rememberReplyActions(
             checkPaths = actions::checkPaths,
             continueLabel = continueLabel,
             onContinue = actions::continueReply,
+            signInSettingsLabel = signInSettings,
+            onSignInSettings = actions::openSignInSettings,
         )
     }
 }
@@ -973,21 +1127,19 @@ private fun rememberReplyFailedWords(): (ReplyFailureKind) -> String {
 /** B2: why a send did not leave, in plain words (the code goes under Details). */
 @Composable
 private fun rememberSendFailureWords(): (Failure) -> String {
-    val offline = stringResource(Res.string.chatSendFailedOffline)
+    val authored = rememberProductFailureWords()
     val changed = stringResource(Res.string.chatSendFailedChanged)
-    val refused = stringResource(Res.string.chatSendFailedRefused)
     val phoneBusy = stringResource(Res.string.schedulePhoneBusy)
     val phoneCheckFailed = stringResource(Res.string.schedulePhoneCheckFailed)
-    return remember(offline, changed, refused, phoneBusy, phoneCheckFailed) {
+    return remember(authored, changed, phoneBusy, phoneCheckFailed) {
         { failure ->
             when {
                 failure is Failure.Unavailable && failure.feature.name == "schedulePhoneBusy" ->
                     phoneBusy
                 failure is Failure.Unavailable &&
                     failure.feature.name == "schedulePhoneCheckFailed" -> phoneCheckFailed
-                failure is Failure.Network || failure is Failure.TimedOut -> offline
                 failure is Failure.Refused && failure.reason == RefusalReason.StaleScope -> changed
-                else -> refused
+                else -> authored(failure)
             }
         }
     }

@@ -26,7 +26,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -95,7 +95,7 @@ internal fun NavNeedsYouBadge(count: Int, modifier: Modifier = Modifier) {
     Box(
         modifier
             .sizeIn(minWidth = LocalKitTokens.current.smallIcon.dp)
-            .background(colors.attentionFill, KitShapeId.Pill.toShape())
+            .background(colors.attentionFill, KitShapeId.Pill.shape())
             .padding(horizontal = 6.dp)
             .clearAndSetSemantics {},
         contentAlignment = Alignment.Center,

@@ -37,7 +37,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -114,7 +114,7 @@ public fun KitUndoBar(offer: KitUndoOffer?, onUndo: () -> Unit, onTimeout: () ->
         exit = fadeOut(specs.exit()) + slideOutVertically(specs.exit<IntOffset>()) { it / 2 },
     ) {
         val o = shown ?: return@AnimatedVisibility
-        val shape = KitShapeId.Panel.toShape()
+        val shape = KitShapeId.Panel.shape()
         Row(
             Modifier.widthIn(max = UNDO_MAX_DP.dp)
                 .fillMaxWidth()

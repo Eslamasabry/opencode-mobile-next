@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.*
 
 /** Every mutation makes exactly one request. An uncertain prompt receipt is never replayed. */
@@ -43,6 +44,7 @@ internal class Oc2Gateway(
     initialLocation: ServerLocation = ServerLocation.Default,
     random: Random = Random.Default,
     initialDialect: Oc2Dialect? = null,
+    private val requireDispatchAdmission: Boolean = false,
 ) :
     ServerGateway,
     ServerOperationsGateway,
@@ -51,13 +53,209 @@ internal class Oc2Gateway(
     StagedRevertGateway,
     LocatedFileGateway,
     LocatedVcsGateway,
-    WebSearchGateway,
     LocatedManagedShellGateway,
+    WebSearchGateway,
+    SessionPermissionModeGateway,
+    SessionTransferGateway,
+    SessionNotesGateway,
+    SetupInspectionGateway,
+    LibraryGateway,
+    SessionDispatchAdmissionGateway,
+    SessionTransferImportGateway,
     SessionSkillGateway,
+    SessionNoteGateway,
     McpRemovalGateway,
     IntegrationCredentialGateway,
     IntegrationCommandGateway,
-    IntegrationAuthRecoveryGateway {
+    IntegrationAuthRecoveryGateway,
+    ApiRouteGateway,
+    SessionCreationGateway,
+    WorktreeInspectionGateway,
+    ConfigurationGateway {
+    // AGENT-2: worktree inspection reads (WorktreeInspectionGateway). Its MCP calls are served once
+    // by PROTO's Oc2Library and SEC-2's integrations below.
+    private val inspection = Oc2WorktreeInspection(this)
+
+    // STATE: the safe setup summary of the current location (beside PROTO's pinned inspector below).
+    override suspend fun inspectSetup(): Outcome<SetupInspection> = Oc2SetupSnapshot.read(this, redactor)
+
+    private val transfer by lazy {
+        Oc2SessionTransfer(this, { location.value }) { feature ->
+            val caps = capabilities as MutableStateFlow<ServerCapabilities>
+            caps.value =
+                when (feature) {
+                    "sessionNotes" -> caps.value.copy(sessionNotes = false)
+                    else -> caps.value.copy(sessionImportExport = false)
+                }
+        }
+    }
+
+    override suspend fun exportSession(session: SessionId, sanitize: Boolean): Outcome<ByteArray> =
+        transfer.exportSession(session, sanitize)
+
+    override suspend fun importSession(body: JsonObject): Outcome<Session> =
+        transfer.importSession(body)
+
+    override suspend fun loadSessionNote(session: SessionId): Outcome<String?> =
+        transfer.loadSessionNote(session)
+
+    override suspend fun saveSessionNote(
+        session: SessionId,
+        text: String,
+    ): Outcome<SessionNoteSaveResult> = transfer.saveSessionNote(session, text)
+
+    override suspend fun removeSessionNote(session: SessionId): Outcome<Unit> =
+        transfer.removeSessionNote(session)
+
+    override fun setupInspection(location: ServerLocation): SetupInspector =
+        Oc2SetupInspection(this, redactor, location)
+
+    private val signIns by lazy { Oc2ProviderSignIn(this, { location.value }, redactor) }
+
+    override suspend fun integrations(): Outcome<ImmutableList<IntegrationInfo>> =
+        signIns.integrations()
+
+    override suspend fun connectIntegrationKey(
+        id: String,
+        key: String,
+        label: String?,
+    ): Outcome<Unit> = signIns.connectIntegrationKey(id, key, label)
+
+    override suspend fun disconnectIntegration(integration: IntegrationInfo): Outcome<Unit> =
+        signIns.disconnectIntegration(integration)
+
+    override suspend fun startIntegrationOAuth(
+        id: String,
+        methodId: String,
+        inputs: ImmutableMap<String, String>,
+        label: String?,
+    ): Outcome<IntegrationAuthLaunch> = signIns.startIntegrationOAuth(id, methodId, inputs, label)
+
+    override suspend fun integrationOAuthStatus(attemptId: String): Outcome<IntegrationAuthStatus> =
+        signIns.integrationOAuthStatus(attemptId)
+
+    override suspend fun completeIntegrationOAuth(attemptId: String, code: String?): Outcome<Unit> =
+        signIns.completeIntegrationOAuth(attemptId, code)
+
+    override suspend fun cancelIntegrationOAuth(attemptId: String): Outcome<Unit> =
+        signIns.cancelIntegrationOAuth(attemptId)
+
+    private var skillsSupported = true
+
+    private fun library() = Oc2Library(this, location.value, redactor)
+
+    override suspend fun plugins(): Outcome<ImmutableList<LibraryPlugin>> = library().plugins()
+
+    override suspend fun skills(): Outcome<ImmutableList<SkillInfo>> = library().skills()
+
+    override suspend fun mcpServers(): Outcome<ImmutableList<McpServerInfo>> =
+        library().mcpServers()
+
+    override suspend fun disconnectMcp(name: String): Outcome<Unit> = library().disconnectMcp(name)
+
+    override suspend fun connectMcp(name: String): Outcome<Unit> = library().connectMcp(name)
+
+    override suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope): Outcome<Unit> =
+        library().addMcpServer(draft, scope)
+
+    override suspend fun activateSkill(
+        session: SessionId,
+        skillId: String,
+        resume: Boolean,
+    ): Outcome<Unit> {
+        if (!skillsSupported) return Failure.Unavailable(FeatureId("sessionSkills")).failed()
+        val result = library().activateSkill(session, skillId, resume)
+        if (result is Outcome.Failed && result.failure is Failure.Unavailable)
+            skillsSupported = false
+        return result
+    }
+
+    private fun terminals() =
+        Oc2Terminals(this, location.value) { id, cursor, at -> connectTerminalAt(id, cursor, at) }
+
+    override suspend fun listTerminals(): Outcome<ImmutableList<TerminalProcess>> =
+        terminals().listTerminals()
+
+    override suspend fun createTerminal(title: String?): Outcome<TerminalProcess> =
+        terminals().createTerminal(title)
+
+    override suspend fun createCommandTerminal(
+        command: String,
+        arguments: List<String>,
+        title: String,
+    ): Outcome<TerminalProcess> = terminals().createCommandTerminal(command, arguments, title)
+
+    override suspend fun renameTerminal(id: String, title: String): Outcome<Unit> =
+        terminals().renameTerminal(id, title)
+
+    override suspend fun resizeTerminal(id: String, rows: Int, cols: Int): Outcome<Unit> =
+        terminals().resizeTerminal(id, rows, cols)
+
+    override suspend fun removeTerminal(id: String): Outcome<Unit> = terminals().removeTerminal(id)
+
+    override suspend fun connectTerminal(id: String, cursor: Long?): Outcome<TerminalChannel> =
+        terminals().connectTerminal(id, cursor)
+
+    internal fun terminalRedact(value: String): String = redactor.redact(value)
+
+    internal fun terminalRegisterSecret(value: String) {
+        redactor.registerSecret(value)
+    }
+
+    internal val terminalNet: NetClient
+        get() = net
+
+    internal val terminalOrigin: ServerOrigin
+        get() = origin
+
+    internal val terminalAuthHeaders: Map<String, String>
+        get() = auth?.let { mapOf(HttpHeaders.Authorization to it) } ?: emptyMap()
+
+    internal val terminalClock: Clock
+        get() = clock
+
+    internal var terminalScope: kotlinx.coroutines.CoroutineScope? = null
+        private set
+
+    internal var terminalDispatchers: AppDispatchers? = null
+        private set
+
+    private data class DispatchAdmission(
+        val enter: suspend (SessionId) -> Outcome<Unit>,
+        val settle: (SessionId) -> Unit,
+    )
+
+    private val dispatchAdmission = MutableStateFlow<DispatchAdmission?>(null)
+
+    override fun setSessionDispatchAdmission(
+        admit: suspend (SessionId) -> Outcome<Unit>,
+        settled: (SessionId) -> Unit,
+    ) {
+        dispatchAdmission.value = DispatchAdmission(admit, settled)
+    }
+
+    private suspend fun <T> admitted(
+        session: SessionId,
+        action: suspend () -> Outcome<T>,
+    ): Outcome<T> {
+        // The phone-server owner installs its admission right after the graph goes live; a send
+        // in that gap waits briefly for it instead of failing.
+        val admission =
+            dispatchAdmission.value
+                ?: if (requireDispatchAdmission)
+                    withTimeoutOrNull(ADMISSION_WAIT_MS) {
+                        dispatchAdmission.filterNotNull().first()
+                    } ?: return Failure.Refused(RefusalReason.ConsentMissing).failed()
+                else return action()
+        val accepted = admission.enter(session)
+        if (accepted is Outcome.Failed) return accepted
+        return try {
+            action()
+        } finally {
+            admission.settle(session)
+        }
+    }
+
     private val worktrees = Oc2Worktrees(this)
 
     override suspend fun listProjects(): Outcome<ImmutableList<WorkspaceProject>> =
@@ -73,11 +271,6 @@ internal class Oc2Gateway(
         projectDirectory: String,
         projectId: String?,
     ): Outcome<ImmutableList<WorktreeInfo>> = worktrees.list(projectDirectory, projectId)
-
-    override suspend fun createWorktree(
-        projectDirectory: String,
-        name: String?,
-    ): Outcome<WorktreeInfo> = worktrees.create(projectDirectory, name)
 
     override suspend fun removeWorktree(
         projectDirectory: String,
@@ -102,10 +295,15 @@ internal class Oc2Gateway(
      * Re-installs the session's permission layer now (automatic approval switched on or off
      * mid-reply).
      */
-    suspend fun syncSessionPermissions(session: SessionId): Outcome<Unit> =
+    override suspend fun syncSessionPermissions(session: SessionId): Outcome<Unit> =
         preparePermissions(session)
 
-    override val capabilities: StateFlow<ServerCapabilities> = MutableStateFlow(Capabilities)
+    override fun setAutomaticApprovalResolver(resolver: (SessionId) -> Boolean) {
+        serverRunsTools = resolver
+    }
+
+    private val mutableCapabilities = MutableStateFlow(Capabilities)
+    override val capabilities: StateFlow<ServerCapabilities> = mutableCapabilities.asStateFlow()
     override val location = MutableStateFlow(initialLocation)
     private val status = MutableStateFlow<StreamStatus>(StreamStatus.Connecting)
     private val connects = MutableStateFlow(0)
@@ -142,18 +340,29 @@ internal class Oc2Gateway(
             }
         }
 
+    private var locationRevision = 0L
+    override val scopeRevision: Long
+        get() = (locationRevision shl 32) + connects.value
+
     override fun setLocation(location: ServerLocation) {
+        if (this.location.value != location) locationRevision++
         this.location.value = location
     }
 
-    internal fun start(spec: GatewaySpec, dispatchers: AppDispatchers) {
+    internal fun start(
+        spec: GatewaySpec,
+        dispatchers: AppDispatchers,
+        network: NetworkStatus = UnknownNetworkStatus,
+    ) {
+        terminalScope = spec.scope
+        terminalDispatchers = dispatchers
         val connector = KtorSseConnector(net.http) { request("/event", HttpMethod.Get) }
         val live =
             EventStreamLoop(
                 connector,
                 BackoffPolicy(500, 16_000, true, null, stallTimeoutMs = 45_000),
                 AddressRules.classify(origin.host),
-                NetworkGate(UnknownNetworkStatus),
+                NetworkGate(network),
                 clock,
                 Random.Default,
                 reconnectAllowed = spec.reconnectAllowed,
@@ -213,6 +422,7 @@ internal class Oc2Gateway(
         verb: HttpMethod = HttpMethod.Get,
         body: JsonObject? = null,
         query: Map<String, String?> = emptyMap(),
+        headers: Map<String, String> = emptyMap(),
     ): Outcome<JsonElement> {
         if (dialect.value == null) {
             when (val health = health()) {
@@ -225,7 +435,30 @@ internal class Oc2Gateway(
         val route = settled.route(path, verb, body, query)
         // dialect.dart Api2RemovedInStable: fail clearly, nothing is sent.
         route.removed?.let { return Failure.Unavailable(FeatureId(it)).failed() }
-        return rawJson(route.path, route.method, route.body, route.query).map { settled.response(verb, path, it) }
+        return rawJson(route.path, route.method, route.body, route.query, headers).map {
+            settled.response(verb, path, it)
+        }
+    }
+
+    /** Complete response bytes; dialect is already settled before this read-only download. */
+    internal suspend fun rawBytes(
+        path: String,
+        query: Map<String, String?> = emptyMap(),
+    ): Outcome<ByteArray> {
+        if (dialect.value == null) {
+            val health = health()
+            if (health is Outcome.Failed) return health
+        }
+        val settled = dialect.value ?: return Failure.UnreadableReply().failed()
+        val route = settled.route(path, HttpMethod.Get, null, query)
+        // dialect.dart Api2RemovedInStable: fail clearly, nothing is sent.
+        route.removed?.let { return Failure.Unavailable(FeatureId(it)).failed() }
+        return net.exchange(
+            { request(route.path, route.method, route.query) },
+            readFailure = ::readFailure,
+        ) {
+            it.bodyAsBytes()
+        }
     }
 
     private suspend fun rawJson(
@@ -233,16 +466,21 @@ internal class Oc2Gateway(
         verb: HttpMethod = HttpMethod.Get,
         body: JsonObject? = null,
         query: Map<String, String?> = emptyMap(),
+        headers: Map<String, String> = emptyMap(),
     ): Outcome<JsonElement> {
         val response =
-            net.exchange({
-                request(path, verb, query)
-                header(HttpHeaders.Accept, "application/json")
-                if (body != null) {
-                    contentType(ContentType.Application.Json)
-                    setBody(body.toString())
-                }
-            }) { reply ->
+            net.exchange(
+                {
+                    request(path, verb, query)
+                    headers.forEach { (name, value) -> header(name, value) }
+                    header(HttpHeaders.Accept, "application/json")
+                    if (body != null) {
+                        contentType(ContentType.Application.Json)
+                        setBody(body.toString())
+                    }
+                },
+                readFailure = ::readFailure,
+            ) { reply ->
                 if (reply.status == HttpStatusCode.NoContent) "null" else reply.bodyAsText()
             }
         return when (response) {
@@ -258,6 +496,50 @@ internal class Oc2Gateway(
             }
             is Outcome.Ok ->
                 Oc2Wire.parse(response.value)?.ok() ?: Failure.UnreadableReply().failed()
+        }
+    }
+
+    /**
+     * Only symbolic tags and documented bounded fields survive error envelopes; server prose is
+     * discarded.
+     */
+    private suspend fun readFailure(reply: io.ktor.client.statement.HttpResponse): Failure? {
+        val status = reply.status.value
+        val fallback = StatusMapping.failureFor(status, auth != null)
+        if (status == 401 || status == 403) return fallback
+        val bytes = reply.bodyAsBytes()
+        if (bytes.size > 65_536) return fallback
+        val obj = Oc2Wire.parse(bytes.decodeToString()) as? JsonObject ?: return fallback
+        val text = obj.str("_tag") ?: obj.str("code")
+        val tag =
+            text
+                ?.takeIf { it.length <= 100 && it.all { c -> c.isLetterOrDigit() || c == '_' } }
+                ?.let(::WireTag)
+        val extras =
+            buildMap<String, String> {
+                    (obj["maxBytes"] as? JsonPrimitive)
+                        ?.intOrNull
+                        ?.takeIf { it > 0 }
+                        ?.let { put("maxBytes", it.toString()) }
+                }
+                .toImmutableMap()
+        return when (fallback) {
+            is Failure.NotFound -> fallback.copy(tag = tag)
+            is Failure.Conflict -> fallback.copy(tag = tag)
+            is Failure.Server -> fallback.copy(tag = tag)
+            is Failure.Rejected -> fallback.copy(tag = tag, extras = WireExtras(extras))
+            is Failure.Busy ->
+                fallback.copy(
+                    tag = tag,
+                    kind =
+                        when (tag?.raw) {
+                            "service_starting" -> BusyKind.Starting
+                            "service_stopping" -> BusyKind.Stopping
+                            "service_failed" -> BusyKind.Failed
+                            else -> fallback.kind
+                        },
+                )
+            else -> fallback
         }
     }
 
@@ -296,6 +578,100 @@ internal class Oc2Gateway(
         verb: HttpMethod,
         body: JsonObject? = null,
     ): Outcome<Unit> = json(path, verb, body).map {}
+
+    /** B-STATE-113: only mobile.note crosses the protocol boundary, in the captured location. */
+    override suspend fun loadSessionNote(
+        session: SessionId,
+        location: ServerLocation,
+    ): Outcome<String?> {
+        val result =
+            noteRequest("/session/${sid(session)}/instructions/entries", HttpMethod.Get, location)
+        if (result is Outcome.Failed) return result
+        val rows =
+            ((result as Outcome.Ok).value as? JsonObject)?.get("data") as? JsonArray
+                ?: return Failure.UnreadableReply().failed()
+        val owned =
+            rows.filterIsInstance<JsonObject>().filter { it["key"] == JsonPrimitive("mobile.note") }
+        if (owned.isEmpty()) return Outcome.Ok(null)
+        val value = owned.singleOrNull()?.get("value") as? JsonPrimitive
+        return if (value?.isString == true) Outcome.Ok(value.content)
+        else Failure.UnreadableReply().failed()
+    }
+
+    override suspend fun saveSessionNote(
+        session: SessionId,
+        location: ServerLocation,
+        value: String?,
+        beforeSend: () -> Boolean,
+    ): Outcome<Unit> {
+        if (value != null && JsonPrimitive(value).toString().encodeToByteArray().size > 8192)
+            return Failure.Rejected(413).failed()
+        // Negotiate before the final admission check; a wake must not redirect this mutation.
+        if (dialect.value == null) {
+            val ready = health()
+            if (ready is Outcome.Failed) return ready
+        }
+        if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
+        return noteRequest(
+                "/session/${sid(session)}/instructions/entries/mobile.note",
+                if (value == null) HttpMethod.Delete else HttpMethod.Put,
+                location,
+                value?.let { buildJsonObject { put("value", it) } },
+            )
+            .map {}
+    }
+
+    private suspend fun noteRequest(
+        path: String,
+        method: HttpMethod,
+        at: ServerLocation,
+        body: JsonObject? = null,
+    ): Outcome<JsonElement> {
+        val result = json(path, method, body, locationQuery(at))
+        val failure = (result as? Outcome.Failed)?.failure
+        val unsupported =
+            (failure is Failure.NotFound && failure.tag?.raw != "SessionNotFoundError") ||
+                (failure is Failure.Rejected && failure.status in listOf(405, 501)) ||
+                (failure is Failure.Server && failure.status == 501)
+        if (unsupported) {
+            (capabilities as MutableStateFlow<ServerCapabilities>).update {
+                it.copy(sessionNotes = false)
+            }
+            return Failure.Unavailable(FeatureId("sessionNotes")).failed()
+        }
+        return result
+    }
+
+    @kotlin.concurrent.Volatile private var skillsAvailable = true
+
+    override val sessionSkillsAvailable: Boolean
+        get() = skillsAvailable
+
+    override suspend fun sessionSkills(): Outcome<ImmutableList<SkillInfo>> =
+        Oc2SessionSkills.list(this, locationQuery())
+
+    override suspend fun activateSessionSkill(
+        session: SessionId,
+        skillId: String,
+        resume: Boolean,
+        beforeSend: () -> Boolean,
+    ): Outcome<Unit> {
+        if (!skillsAvailable)
+            return Failure.Unavailable(FeatureId("sessionSkills")).failed()
+        // Resolve the dialect before admission: a wake cannot redirect a skill into a changed
+        // location.
+        if (dialect.value == null) {
+            val ready = health()
+            if (ready is Outcome.Failed) return ready
+        }
+        if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
+        val result = Oc2SessionSkills.activate(this, session, skillId, resume)
+        if (Oc2SessionSkills.unsupported(result)) {
+            skillsAvailable = false
+            return Failure.Unavailable(FeatureId("sessionSkills")).failed()
+        }
+        return result
+    }
 
     private fun sid(id: SessionId): String = id.raw.encodeURLPathPart()
 
@@ -389,6 +765,23 @@ internal class Oc2Gateway(
             obj.str("version") != null
     }
 
+    override suspend fun inspectionProject(location: ServerLocation): Outcome<WorkspaceProject?> =
+        inspection.inspectionProject(location)
+
+    override suspend fun inspectionWorktrees(
+        projectId: String
+    ): Outcome<ImmutableList<WorktreeInfo>> = inspection.inspectionWorktrees(projectId)
+
+    override suspend fun inspectionChanges(
+        location: ServerLocation
+    ): Outcome<ImmutableList<VersionControlFile>> = inspection.inspectionChanges(location)
+
+    override suspend fun inspectionSessions(
+        cursor: String?,
+        limit: Int,
+        includeArchived: Boolean,
+    ): Outcome<ServerPage<Session>> = inspection.inspectionSessions(cursor, limit, includeArchived)
+
     override suspend fun sessionPage(cursor: String?, limit: Int): Outcome<ServerPage<Session>> =
         read(
             "/session",
@@ -429,6 +822,49 @@ internal class Oc2Gateway(
         ) {
             sessionValue(data(it))
         }
+
+    override fun newSessionCreationId(): SessionId = SessionId(ids.session())
+
+    override suspend fun createSessionWithId(
+        id: SessionId,
+        location: ServerLocation,
+    ): Outcome<SessionId> {
+        if (!id.raw.startsWith("ses_") || !Oc2ClientIds.isClientId(id.raw))
+            return Failure.Rejected(400).failed()
+        return when (
+            val answer =
+                json(
+                    "/session",
+                    HttpMethod.Post,
+                    buildJsonObject {
+                        put("id", id.raw)
+                        if (location.directory != null || location.workspace != null)
+                            put(
+                                "location",
+                                buildJsonObject {
+                                    location.directory?.let { put("directory", it) }
+                                    location.workspace?.let { put("workspaceID", it) }
+                                },
+                            )
+                    },
+                )
+        ) {
+            is Outcome.Failed -> answer
+            is Outcome.Ok -> {
+                val admitted = sessionValue(data(answer.value))?.id
+                if (admitted == id) admitted.ok() else Failure.UnreadableReply().failed()
+            }
+        }
+    }
+
+    override suspend fun lookupCreatedSession(id: SessionId): Outcome<Boolean> {
+        if (!id.raw.startsWith("ses_") || !Oc2ClientIds.isClientId(id.raw))
+            return Failure.Rejected(400).failed()
+        return when (val found = session(id)) {
+            is Outcome.Ok -> (found.value.id == id).ok()
+            is Outcome.Failed -> if (found.failure is Failure.NotFound) false.ok() else found
+        }
+    }
 
     override suspend fun session(id: SessionId): Outcome<Session> =
         read("/session/${sid(id)}") { sessionValue(data(it)) }
@@ -545,6 +981,15 @@ internal class Oc2Gateway(
     ): Outcome<PromptAdmission> {
         if (prompt.delivery == PromptDelivery.Queue)
             return Failure.Unavailable(FeatureId("queue")).failed()
+        return admitted(session) { sendPreparedPrompt(session, prompt, clientId, beforeSend) }
+    }
+
+    private suspend fun sendPreparedPrompt(
+        session: SessionId,
+        prompt: OutgoingPrompt,
+        clientId: String,
+        beforeSend: () -> Boolean,
+    ): Outcome<PromptAdmission> {
         val prepared = preparePermissions(session)
         if (prepared is Outcome.Failed) return prepared
         if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
@@ -669,6 +1114,10 @@ internal class Oc2Gateway(
         agent: String,
         model: ModelSelection?,
     ): Outcome<Unit> {
+        return admitted(session) { sendPreparedShell(session, command) }
+    }
+
+    private suspend fun sendPreparedShell(session: SessionId, command: String): Outcome<Unit> {
         val prepared = preparePermissions(session)
         if (prepared is Outcome.Failed) return prepared
         return unit(
@@ -687,6 +1136,14 @@ internal class Oc2Gateway(
         command: String,
         args: String,
         model: ModelSelection?,
+    ): Outcome<Unit> {
+        return admitted(session) { sendPreparedCommand(session, command, args) }
+    }
+
+    private suspend fun sendPreparedCommand(
+        session: SessionId,
+        command: String,
+        args: String,
     ): Outcome<Unit> {
         val prepared = preparePermissions(session)
         if (prepared is Outcome.Failed) return prepared
@@ -714,68 +1171,33 @@ internal class Oc2Gateway(
         }
 
     // Migration 40: the native Tools and Providers pages use the same location-bound contracts as
-    // Flutter.
-    private val library = Oc2Library(this, redactor)
+    // Flutter. Mass merge: skills, the MCP list and connect/disconnect/add, and the sign-in methods are
+    // implemented once above (PROTO's Oc2ProviderSignIn and Oc2Library; mcpResources by SEC-2's
+    // Oc2Integrations). Migration 40 adds what only it provides.
+    private val libraryOps = Oc2LibraryOps(this, redactor)
 
-    override suspend fun skills() = library.skills()
+    override suspend fun references() = libraryOps.references()
 
-    override suspend fun references() = library.references()
-
-    override suspend fun mcpServers() = library.mcpServers()
-
-    override suspend fun mcpResources() = library.mcpResources()
-
-    override suspend fun connectMcp(name: String) = library.connectMcp(name)
-
-    override suspend fun disconnectMcp(name: String) = library.disconnectMcp(name)
-
-    override suspend fun removeMcpServer(name: String) = library.removeMcpServer(name)
-
-    override suspend fun addMcpServer(draft: McpServerDraft, scope: McpConfigScope) =
-        library.addMcpServer(draft, scope)
-
-    override suspend fun integrations() = library.integrations()
-
-    override suspend fun connectIntegrationKey(id: String, key: String, label: String?) =
-        library.connectIntegrationKey(id, key, label)
-
-    override suspend fun disconnectIntegration(integration: IntegrationInfo) =
-        library.disconnectIntegration(integration)
+    override suspend fun removeMcpServer(name: String) = libraryOps.removeMcpServer(name)
 
     override suspend fun renameCredential(id: String, label: String) =
-        library.renameCredential(id, label)
+        libraryOps.renameCredential(id, label)
 
-    override suspend fun activateCredential(id: String) = library.activateCredential(id)
+    override suspend fun activateCredential(id: String) = libraryOps.activateCredential(id)
 
-    override suspend fun removeCredential(id: String) = library.removeCredential(id)
-
-    override suspend fun startIntegrationOAuth(
-        id: String,
-        methodId: String,
-        inputs: ImmutableMap<String, String>,
-        label: String?,
-    ) = library.startIntegrationOAuth(id, methodId, inputs, label)
-
-    override suspend fun integrationOAuthStatus(attemptId: String) =
-        library.integrationOAuthStatus(attemptId)
-
-    override suspend fun completeIntegrationOAuth(attemptId: String, code: String?) =
-        library.completeIntegrationOAuth(attemptId, code)
-
-    override suspend fun cancelIntegrationOAuth(attemptId: String) =
-        library.cancelIntegrationOAuth(attemptId)
+    override suspend fun removeCredential(id: String) = libraryOps.removeCredential(id)
 
     override suspend fun startIntegrationCommand(
         integrationId: String,
         methodId: String,
         label: String?,
-    ) = library.startIntegrationCommand(integrationId, methodId, label)
+    ) = libraryOps.startIntegrationCommand(integrationId, methodId, label)
 
     override suspend fun integrationCommandStatus(integrationId: String, attemptId: String) =
-        library.integrationCommandStatus(integrationId, attemptId)
+        libraryOps.integrationCommandStatus(integrationId, attemptId)
 
     override suspend fun cancelIntegrationCommand(integrationId: String, attemptId: String) =
-        library.cancelIntegrationCommand(integrationId, attemptId)
+        libraryOps.cancelIntegrationCommand(integrationId, attemptId)
 
     override fun restoreIntegrationAuthAttempt(
         integrationId: String,
@@ -784,7 +1206,7 @@ internal class Oc2Gateway(
         directory: String?,
         workspace: String?,
     ) =
-        library.restoreIntegrationAuthAttempt(
+        libraryOps.restoreIntegrationAuthAttempt(
             integrationId,
             attemptId,
             command,
@@ -793,13 +1215,13 @@ internal class Oc2Gateway(
         )
 
     override val sessionSkillsSupported: Boolean
-        get() = library.sessionSkillsSupported
+        get() = libraryOps.sessionSkillsSupported
 
     override suspend fun activateSessionSkill(
         session: SessionId,
         skillId: String,
         resume: Boolean,
-    ) = library.activateSessionSkill(session, skillId, resume)
+    ) = libraryOps.activateSessionSkill(session, skillId, resume)
 
     override suspend fun todos(id: SessionId): Outcome<ImmutableList<Todo>> =
         unavailable("sessionTodos")
@@ -972,20 +1394,55 @@ internal class Oc2Gateway(
     override suspend fun managedShellServerIdentity(): Outcome<String?> =
         managedShellsAt(location.value).managedShellServerIdentity()
 
-    private fun locationQuery(at: ServerLocation = location.value): Map<String, String?> =
+    override suspend fun initializeGitRepository(): Outcome<Unit> =
+        Oc2HostTools(this, location.value).initializeGit()
+
+    override suspend fun createWorktree(
+        projectDirectory: String,
+        name: String?,
+    ): Outcome<WorktreeInfo> =
+        Oc2HostTools(this, location.value).createWorktree(projectDirectory, name)
+
+    override suspend fun terminalShellSettings(): Outcome<TerminalShellSettings> =
+        Oc2HostTools(this, location.value).shellSettings()
+
+    override suspend fun selectTerminalShell(value: String): Outcome<Unit> =
+        Oc2HostTools(this, location.value).selectShell(value)
+
+    // AGENT-2: the setup review's raw config sources (SetupInspectionGateway, one interface).
+    override suspend fun setupConfigSources(): Outcome<JsonObject> = readSetupSources(redactor)
+
+    internal fun locationQuery(at: ServerLocation = location.value): Map<String, String?> =
         mapOf(
             "location[directory]" to at.directory,
             "location[workspace]" to at.workspace,
         )
 
+    // SEC-2's integration reads. The sign-in and MCP overrides above (PROTO: Oc2ProviderSignIn, Oc2Library) are the
+    // one implementation of those methods; SEC-2 alone adds the MCP resource list.
+    private val integrationOps = Oc2Integrations(this, { location.value }, redactor)
+
+    override suspend fun mcpResources(): Outcome<ImmutableList<McpResourceInfo>> =
+        integrationOps.mcpResources()
+
     override suspend fun providers(): Outcome<ProvidersResponse> {
-        val providerReply = json("/provider", query = locationQuery())
+        val scope = locationQuery()
+        val providerReply = json("/provider", query = scope)
         if (providerReply is Outcome.Failed) return providerReply
-        val modelReply = json("/model", query = locationQuery())
-        if (modelReply is Outcome.Failed) return modelReply
-        val defaultReply = json("/model/default", query = locationQuery())
-        if (defaultReply is Outcome.Failed) return defaultReply
         val providerJson = (providerReply as Outcome.Ok).value
+        redactor.registerCredentialValues(providerJson)
+        val providerPayload = data(providerJson)
+        // Older provider inventories include their models and an explicit connected list. An empty
+        // connected list is authoritative, never a reason to offer the catalog's models.
+        if (
+            providerPayload is JsonObject &&
+                ("all" in providerPayload || "providers" in providerPayload)
+        )
+            return Oc2ProviderInventory.parse(providerPayload) ?: Failure.UnreadableReply().failed()
+        val modelReply = json("/model", query = scope)
+        if (modelReply is Outcome.Failed) return modelReply
+        val defaultReply = json("/model/default", query = scope)
+        if (defaultReply is Outcome.Failed) return defaultReply
         val modelJson = (modelReply as Outcome.Ok).value
         val defaultJson = (defaultReply as Outcome.Ok).value
         redactor.registerCredentialValues(providerJson)
@@ -1035,6 +1492,15 @@ internal class Oc2Gateway(
     // keys).
     override suspend fun configuredProviders(): Outcome<ProvidersResponse> = providers()
 
+    override suspend fun configurationPreview(
+        location: ServerLocation
+    ): Outcome<ConfigurationPreview> =
+        read(
+            "/config",
+            query = locationQuery(location),
+            decode = Oc2ConfigurationPreview(redactor)::read,
+        )
+
     override suspend fun agents(): Outcome<ImmutableList<AgentInfo>> =
         read("/agent", query = locationQuery()) { root ->
             entries(root)
@@ -1050,11 +1516,12 @@ internal class Oc2Gateway(
      * config is kept.
      */
     override suspend fun catalog(): Outcome<CatalogSnapshot> {
-        val providerReply = json("/provider", query = locationQuery())
+        val scope = locationQuery()
+        val providerReply = json("/provider", query = scope)
         if (providerReply is Outcome.Failed) return providerReply
-        val modelReply = json("/model", query = locationQuery())
+        val modelReply = json("/model", query = scope)
         if (modelReply is Outcome.Failed) return modelReply
-        val agentReply = json("/agent", query = locationQuery())
+        val agentReply = json("/agent", query = scope)
         if (agentReply is Outcome.Failed) return agentReply
         val providerJson = (providerReply as Outcome.Ok).value
         val modelJson = (modelReply as Outcome.Ok).value
@@ -1161,10 +1628,10 @@ internal class Oc2Gateway(
         fileContent(path, location.value)
 
     private suspend fun fileContent(path: String, at: ServerLocation): Outcome<FileContent> {
-        val bytes =
+        val downloaded =
             when (
                 val reply =
-                    rawBytes(
+                    rawFile(
                         "/fs/read/" + path.split('/').joinToString("/") { it.encodeURLPathPart() },
                         at,
                     )
@@ -1172,6 +1639,7 @@ internal class Oc2Gateway(
                 is Outcome.Failed -> return reply
                 is Outcome.Ok -> reply.value
             }
+        val (bytes, mime) = downloaded
         val sniff = minOf(bytes.size, 8192)
         var binary = false
         for (i in 0 until sniff) if (bytes[i] == 0.toByte()) binary = true
@@ -1183,8 +1651,8 @@ internal class Oc2Gateway(
                 } catch (_: CharacterCodingException) {
                     null
                 }
-        return if (text != null) FileContent(text, "text", null, null).ok()
-        else FileContent(Base64.encode(bytes), "binary", "base64", null).ok()
+        return if (text != null) FileContent(text, "text", null, mime).ok()
+        else FileContent(Base64.encode(bytes), "binary", "base64", mime).ok()
     }
 
     /** `GET /fs/find?query=&type=file` (Flutter `Api2Gateway.findFile`): project-relative paths. */
@@ -1242,22 +1710,28 @@ internal class Oc2Gateway(
     override suspend fun findText(pattern: String): Outcome<ImmutableList<FindMatch>> =
         unavailable("textSearch")
 
-    /** One GET whose body is raw bytes, through the same dialect routing as [json]. */
-    private suspend fun rawBytes(
+    /** Raw file download preserves the server MIME type alongside its complete response bytes. */
+    private suspend fun rawFile(
         path: String,
-        at: ServerLocation = location.value,
-    ): Outcome<ByteArray> {
+        at: ServerLocation,
+    ): Outcome<Pair<ByteArray, String?>> {
         if (dialect.value == null) {
-            when (val health = health()) {
-                is Outcome.Failed -> return health
-                is Outcome.Ok ->
-                    if (!health.value.healthy) return Failure.UnreadableReply().failed()
+            when (val checked = health()) {
+                is Outcome.Failed -> return checked
+                is Outcome.Ok -> if (!checked.value.healthy) return Failure.UnreadableReply().failed()
             }
         }
         val settled = dialect.value ?: return Failure.UnreadableReply().failed()
         val route = settled.route(path, HttpMethod.Get, null, locationQuery(at))
         route.removed?.let { return Failure.Unavailable(FeatureId(it)).failed() }
-        val response = net.exchange({ request(route.path, route.method, route.query) }) { reply -> reply.bodyAsBytes() }
+        val response =
+            net.exchange(
+                { request(route.path, route.method, route.query) },
+                readFailure = ::readFailure,
+            ) { reply ->
+                reply.bodyAsBytes() to
+                    reply.headers[HttpHeaders.ContentType]?.substringBefore(';')?.trim()
+            }
         if (response is Outcome.Failed) {
             val failure = response.failure
             if (
@@ -1271,16 +1745,24 @@ internal class Oc2Gateway(
         return response
     }
 
+    /**
+     * An optional `/api` route with its own origin and Basic credentials (no location query: its routes name their session) (the active-context inspector,
+     * session export/import). Any status is an answer; a mutation is one request and never retried.
+     */
+    override suspend fun apiRoute(method: String, path: String, jsonBody: String?): Outcome<ApiRouteReply> {
+        val verb = HttpMethod.parse(method.uppercase())
+        return net.exchangeAnswer({
+            request(path, verb)
+            header(HttpHeaders.Accept, "application/json")
+            if (jsonBody != null) {
+                contentType(ContentType.Application.Json)
+                setBody(jsonBody)
+            }
+        }) { reply -> ApiRouteReply(reply.status.value, reply.bodyAsText().takeIf { it.isNotEmpty() }) }
+    }
+
     // ---- Stable-line features and operations (new files Oc2Operations / Oc2WebSearch / Oc2HistoryMigration /
     // Oc2Terminal; Flutter lib/api2/gateway_operations). Each delegates; the request shapes live there.
-
-    override suspend fun initializeGitRepository(): Outcome<Unit> = gitInit()
-
-    // createWorktree and addMcpServer are implemented once, by Oc2Worktrees and Oc2Library (migration 40).
-
-    override suspend fun terminalShellSettings(): Outcome<TerminalShellSettings> = shellSettings()
-
-    override suspend fun selectTerminalShell(value: String): Outcome<Unit> = selectShell(value)
 
     override suspend fun webSearchProviders(): Outcome<ImmutableList<WebSearchProvider>> = searchProviders()
 
@@ -1299,7 +1781,53 @@ internal class Oc2Gateway(
         }
     }
 
-    private fun sessionValue(value: JsonElement): Session? {
+    /** Flutter ops_extras: source ids are retained; location is explicit and never a query. */
+    override suspend fun importSessionDocument(body: JsonObject): Outcome<Session> {
+        if (!capabilities.value.sessionImportExport) return unavailable("sessionImportExport")
+        val info =
+            body["info"] as? JsonObject
+                ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val id = info.str("id") ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val target =
+            body["location"] as? JsonObject
+                ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val directory =
+            target.str("directory")?.takeIf { it.isNotBlank() }
+                ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val workspace = target.str("workspaceID")
+        val response = json("/session/import", HttpMethod.Post, body)
+        if (response is Outcome.Failed) {
+            val f = response.failure
+            val status =
+                when (f) {
+                    is Failure.Server -> f.status
+                    is Failure.Rejected -> f.status
+                    else -> null
+                }
+            if (
+                status == 405 ||
+                    status == 501 ||
+                    (f is Failure.NotFound && f.tag?.raw != "SessionNotFoundError")
+            ) {
+                mutableCapabilities.update { it.copy(sessionImportExport = false) }
+                return unavailable("sessionImportExport")
+            }
+            return response
+        }
+        val imported =
+            sessionValue(data((response as Outcome.Ok).value))
+                ?: return Failure.UnreadableReply().failed()
+        if (
+            imported.id.raw != id ||
+                imported.directory != directory ||
+                imported.workspaceId?.raw != workspace
+        ) {
+            return Failure.UnreadableReply().failed()
+        }
+        return imported.ok()
+    }
+
+    internal fun sessionValue(value: JsonElement): Session? {
         val wire = Oc2Session.fromJson(value as? JsonObject ?: return null) ?: return null
         return Session(
             SessionId(wire.id),
@@ -1337,12 +1865,12 @@ internal class Oc2Gateway(
                 genUi = false,
                 sessionAddressHandoff = false,
                 agentHandoffFiles = false,
-                setupConfigRead = false,
+                setupConfigRead = true,
                 setupConfigWrite = false,
-                setupMcpInventory = false,
+                setupMcpInventory = true,
                 setupAssistantSession = false,
                 clientPromptMessageID = true,
-                commandReceipts = false,
+                commandReceipts = true,
                 agentAccount = false,
                 hostAgentProviders = false,
                 hostAgentPermissionActions = false,
@@ -1355,7 +1883,7 @@ internal class Oc2Gateway(
                 promptSteering = true,
                 offlinePromptQueue = false,
                 fileBrowsing = true,
-                terminal = false,
+                terminal = true,
                 conversationShell = true,
                 projectManagement = false,
                 globalSessionSearch = false,
@@ -1367,8 +1895,8 @@ internal class Oc2Gateway(
                 savedPermissionList = false,
                 messageCompletionEndsRun = false,
                 sessionRevert = true,
-                sessionImportExport = false,
-                sessionNotes = false,
+                sessionImportExport = true,
+                sessionNotes = true,
                 serverCatalog = true,
                 sessionModelProviderSwitching = true,
                 agentSelection = true,
@@ -1387,7 +1915,7 @@ internal class Oc2Gateway(
                 mcpRuntimeRemovals = true,
                 integrationCredentials = true,
                 integrationCommandAuth = true,
-                pluginInventory = false,
+                pluginInventory = true,
                 webSearch = true,
                 sessionShare = false,
                 sessionArchive = false,
@@ -1411,6 +1939,7 @@ internal class Oc2Gateway(
                 worktreeReset = false,
                 worktreeCreate = true,
                 worktreeBrowsing = false,
+                worktreeInspection = true,
                 legacyQuestionRequests = false,
                 forms = false,
                 inbox = false,
@@ -1424,3 +1953,4 @@ internal class Oc2Gateway(
 }
 
 private const val AGENT_BOOT_RETRY_MS = 500L
+private const val ADMISSION_WAIT_MS = 5_000L

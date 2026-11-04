@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.log.KitLogPanel
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
@@ -72,6 +73,9 @@ import io.github.eslamasabry.oc.ui.words.res.devPreviewRetry
 import io.github.eslamasabry.oc.ui.words.res.devPreviewTitle
 import io.github.eslamasabry.oc.ui.words.res.devPreviewUnsupportedBody
 import io.github.eslamasabry.oc.ui.words.res.devPreviewUnsupportedTitle
+import io.github.eslamasabry.oc.ui.words.res.e7SharedHTTPIsNotEncryptedOtherDevicesOn
+import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenHTTPLink
+import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenInsecureHTTPLink
 import io.github.eslamasabry.oc.ui.words.res.externalLinkBlockedBody
 import io.github.eslamasabry.oc.ui.words.res.externalLinkBlockedTitle
 import io.github.eslamasabry.oc.ui.words.res.externalLinkDontOpen
@@ -388,8 +392,25 @@ public fun DevPreviewScreen(
             KitConfirm(
                 state.leaveHost?.let { host ->
                     KitConfirmSpec(
-                        title = stringResource(Res.string.previewQrLeaveTitle),
-                        confirmLabel = browser,
+                        title =
+                            stringResource(
+                                if (state.leaveInsecure) Res.string.e7SharedOpenInsecureHTTPLink
+                                else Res.string.previewQrLeaveTitle
+                            ),
+                        confirmLabel =
+                            if (state.leaveInsecure) stringResource(Res.string.e7SharedOpenHTTPLink)
+                            else browser,
+                        kind =
+                            if (state.leaveInsecure) KitConfirmKind.Destructive
+                            else KitConfirmKind.Neutral,
+                        consequences =
+                            if (state.leaveInsecure)
+                                listOf(
+                                    stringResource(
+                                        Res.string.e7SharedHTTPIsNotEncryptedOtherDevicesOn
+                                    )
+                                )
+                            else emptyList(),
                         body = stringResource(Res.string.externalLinkOpensHost, host),
                         cancelLabel = stringResource(Res.string.externalLinkDontOpen),
                     )

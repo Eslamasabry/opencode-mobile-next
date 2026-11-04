@@ -4,6 +4,7 @@ import com.android.build.api.dsl.ApplicationExtension
 import java.util.Properties
 import oc.buildlogic.LintPolicy.ocLint
 import oc.buildlogic.Sdk.ocCompileSdk
+import oc.buildlogic.TermuxSessionFork.applyTermuxSessionFork
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -64,6 +65,7 @@ class OcAndroidApplicationPlugin : Plugin<Project> {
             tasks.withType<KotlinJvmCompile>().configureEach {
                 compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
             }
+            applyTermuxSessionFork()
             enforceModuleRules()
         }
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="agentsResetSavedSignIns">إعادة تعيين تسجيلات الدخول المحفوظة</string>
+    <string name="agentsResetSavedSignInsBody">هل تريد فصل جميع الخوادم وحذف كلمات مرور الخوادم ومفاتيح وصول المساعد المحفوظة في هذا التطبيق؟ تبقى ملفاتك الشخصية ومحادثاتك ومشاريعك وتسجيلات دخول الوكلاء أنفسهم. أعد تشغيل التطبيق بعد ذلك.</string>
+    <string name="agentsResetSavedSignInsFailed">تعذرت إعادة تعيين جميع تسجيلات الدخول المحفوظة. حاول مجددًا ثم أعد تشغيل التطبيق.</string>
+    <string name="agentsRestartAfterReset">أعد تشغيل التطبيق قبل الاتصال أو استخدام وكلاء الهاتف مجددًا.</string>
+    <string name="agentsHelperStopped">توقف مساعد الوكلاء بشكل غير متوقع. تحقق من إعداد الهاتف قبل بدء محادثة أخرى.</string>
+    <string name="agentsHelperMayHaveStopped">توقف مساعد الوكلاء. ربما أوقفه Android لتحرير الذاكرة أو للحد من العمليات في الخلفية.</string>
+    <string name="agentsConnectPhoneHelper">الاتصال بوكلاء الهاتف</string>
+    <string name="agentsConnectPhoneHelperFailed">تعذر الاتصال بوكلاء الهاتف. ثبّت وكيلًا ومساعده ثم حاول مجددًا.</string>
+    <string name="agentsPhoneHelperConnected">وكلاء الهاتف متصلون. تظهر محادثاتهم الآن في المحادثات.</string>
+    <string name="agentsPhoneHelperProfile">وكلاء الهاتف</string>
+    <string name="agentsPreviousVersion">استخدام إصدار أقدم من %1$s</string>
+    <string name="agentsPreviousVersionBody">هل تريد التبديل إلى الإصدار الأقدم الموثّق المحفوظ على هذا الهاتف؟ سيتوقف المساعد أولًا. تبقى تسجيلات الدخول والمحادثات. أعد الاتصال بوكلاء الهاتف بعد ذلك.</string>
+    <string name="agentsPreviousVersionFailed">تعذرت استعادة الإصدار الأقدم. أنهِ العمل الجاري ثم حاول مجددًا.</string>
+    <string name="agentsPreviousVersionRestored">تمت استعادة الإصدار الأقدم. أعد الاتصال بوكلاء الهاتف للمتابعة.</string>
+</resources>

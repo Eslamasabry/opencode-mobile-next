@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="importNativePaste">أو الصق ملف تصدير JSON</string>
+    <string name="importNativeReview">مراجعة JSON الملصق</string>
+    <string name="importNativeWorkspaceOptional">اختياري. اتركه فارغًا لمجلد مشروع.</string>
+    <string name="importNativeAttemptDone">أغلق الاستيراد وافتحه مجددًا لمراجعة محاولة أخرى. تحقق من كل المحادثات أولًا إذا لم تتأكد النتيجة.</string>
+</resources>

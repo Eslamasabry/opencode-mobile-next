@@ -166,6 +166,8 @@ public interface ChatsActions {
      * The Projects page (P12): New project, Open a folder, Opened before, then the server's
      * projects.
      */
+    public fun openAttention() {}
+
     public fun openProjects()
 
     public fun showProjectChoices() {}

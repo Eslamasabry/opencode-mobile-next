@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.feature.linux.manager.LinuxPort
@@ -64,6 +65,9 @@ import io.github.eslamasabry.oc.ui.words.res.linuxPortOwnerResult
 import io.github.eslamasabry.oc.ui.words.res.linuxPortOwnerStop
 import io.github.eslamasabry.oc.ui.words.res.linuxPortOwnerStopBody
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
+import io.github.eslamasabry.oc.ui.kit.content.log.KitLogBuffer
+import io.github.eslamasabry.oc.ui.words.res.kitLogDropped
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -136,7 +140,9 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
                             )
                         KitRow(
                             title =
-                                server.command.takeIf { it.isNotBlank() }?.take(100)
+                                io.github.eslamasabry.oc.engine.runtime.procs.CommandNames
+                                    .serverName(server.command)
+                                    .takeIf { it.isNotBlank() }
                                     ?: stringResource(Res.string.linuxDevProgram, server.pid),
                             supporting =
                                 ports +
@@ -255,7 +261,7 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
                 state.logLoading -> stringResource(Res.string.linuxDevLogLoading)
                 state.logFailed -> stringResource(Res.string.linuxDevLogFailed)
                 state.logText.isNullOrEmpty() -> stringResource(Res.string.linuxDevLogEmpty)
-                else -> state.logText
+                else -> boundedLog(state.logText)
             },
         onDismissRequest = actions::dismiss,
     )
@@ -303,4 +309,15 @@ private fun PortRow(port: LinuxPort, actions: LinuxPortsActions) {
                 )
             ),
     )
+}
+
+private const val LOG_LINES = 200
+
+/** The log as the kit's bounded line buffer shows it (B-KIT-021): the newest lines, with the dropped count said in words. */
+@Composable
+private fun boundedLog(text: String): String {
+    val buffer = remember(text) { KitLogBuffer(LOG_LINES).also { it.replaceText(text) } }
+    val kept = buffer.lines.joinToString("\n") { it.text }
+    if (buffer.dropped == 0) return kept
+    return pluralStringResource(Res.plurals.kitLogDropped, buffer.dropped, buffer.dropped) + "\n" + kept
 }

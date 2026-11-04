@@ -47,7 +47,8 @@ internal class BuiltinGitShell(
                     try {
                         val seconds =
                             ((timeout.inWholeMilliseconds.coerceIn(1, 600_000) + 999) / 1000)
-                        val result = linux.run(script, seconds)
+                        // The runtime captures Git output without logging it.
+                        val result = linux.run(script, seconds, logOutput = false)
                         if (result.exitCode == -1) LinuxBridgeAnswer.TimedOut
                         else LinuxBridgeAnswer.Ran(result.exitCode, result.output)
                     } catch (e: CancellationException) {

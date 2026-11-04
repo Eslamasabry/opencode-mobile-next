@@ -11,19 +11,36 @@ import io.github.eslamasabry.oc.core.data.scope.KeyScope
 import io.github.eslamasabry.oc.core.data.scope.KeyShape
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.data.secret.SecretStore
+import kotlin.io.encoding.Base64
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
-import kotlin.io.encoding.Base64
 
-/** Why setting up usage on In-app Ubuntu stopped. [QuotaSetupError.detail] is Details text; never a token or a key. */
-public enum class QuotaSetupFailure { LinuxNotReady, NoNode, NodeTooOld, Copy, Prepare, Start, Remove }
+/**
+ * Why setting up usage on In-app Ubuntu stopped. [QuotaSetupError.detail] is Details text; never a
+ * token or a key.
+ */
+public enum class QuotaSetupFailure {
+    LinuxNotReady,
+    NoNode,
+    NodeTooOld,
+    Copy,
+    Prepare,
+    Start,
+    Remove,
+}
 
 public data class QuotaSetupError(val failure: QuotaSetupFailure, val detail: String? = null) {
     override fun toString(): String = "QuotaSetupError($failure)"
 }
 
 /** Where set-up is, for the progress the page shows. */
-public enum class QuotaSetupStep { Checking, Copying, SignIns, Starting, Reading }
+public enum class QuotaSetupStep {
+    Checking,
+    Copying,
+    SignIns,
+    Starting,
+    Reading,
+}
 
 /** The profile facts the collector needs (a copy, never the live profile). */
 public data class QuotaServerProfile(
@@ -33,7 +50,9 @@ public data class QuotaServerProfile(
     val isOpenCode: Boolean,
 )
 
-/** In-app Ubuntu as the collector host sees it (the Android binding is :android:linux's runtime). */
+/**
+ * In-app Ubuntu as the collector host sees it (the Android binding is :android:linux's runtime).
+ */
 public interface QuotaLinuxHost {
     public data class Status(val installed: Boolean, val ready: Boolean, val services: List<String>)
 
@@ -58,11 +77,13 @@ public interface QuotaRootfs {
 }
 
 /**
- * Runs the optional quota collector (`tool/quota/collector.mjs`) inside the app's own In-app Ubuntu (Flutter
- * `InAppQuotaCollector`). Security:
- * - The read token is made here from [randomBytes] (a secure source in the app graph), kept in [secrets] under
- *   `oc.quotaToken.<profileId>` and staged as a file locked to 0600. It is never in a command line or a log.
- * - Provider keys never reach the app: a helper inside Ubuntu writes 0600 key files; the app only sees counts.
+ * Runs the optional quota collector (`tool/quota/collector.mjs`) inside the app's own In-app Ubuntu
+ * (Flutter `InAppQuotaCollector`). Security:
+ * - The read token is made here from [randomBytes] (a secure source in the app graph), kept in
+ *   [secrets] under `oc.quotaToken.<profileId>` and staged as a file locked to 0600. It is never in
+ *   a command line or a log.
+ * - Provider keys never reach the app: a helper inside Ubuntu writes 0600 key files; the app only
+ *   sees counts.
  * - It listens on 127.0.0.1:4195 only.
  */
 public class InAppQuotaCollector(
@@ -73,14 +94,18 @@ public class InAppQuotaCollector(
     private val rootfs: QuotaRootfs,
     private val randomBytes: (Int) -> ByteArray,
     private val loadCollector: suspend () -> String,
-    /** The keys helper (Flutter `keysHelperSource`) ships with the app; the Android binding loads its text. */
+    /**
+     * The keys helper (Flutter `keysHelperSource`) ships with the app; the Android binding loads
+     * its text.
+     */
     private val loadKeysHelper: suspend () -> String,
     private val probe: suspend (token: String) -> Boolean,
     private val supported: Boolean,
     private val probeAttempts: Int = 20,
     private val probeDelayMs: Long = 1_000,
 ) {
-    public fun appliesTo(profile: QuotaServerProfile?): Boolean = supported && looksLikeInAppServer(profile)
+    public fun appliesTo(profile: QuotaServerProfile?): Boolean =
+        supported && looksLikeInAppServer(profile)
 
     public fun isEnabled(profileId: ProfileId): Boolean = prefs.bool(enabledKey(profileId)) ?: false
 
@@ -102,43 +127,69 @@ public class InAppQuotaCollector(
             "exec node $COLLECTOR_PATH\n"
     }
 
-    /** Sets usage up. Safe to run again: it keeps the token and rewrites only files that changed. Null when done. */
-    public suspend fun setUp(profile: QuotaServerProfile, onStep: (QuotaSetupStep) -> Unit = {}): QuotaSetupError? {
+    /**
+     * Sets usage up. Safe to run again: it keeps the token and rewrites only files that changed.
+     * Null when done.
+     */
+    public suspend fun setUp(
+        profile: QuotaServerProfile,
+        onStep: (QuotaSetupStep) -> Unit = {},
+    ): QuotaSetupError? {
+        if (!appliesTo(profile)) return QuotaSetupError(QuotaSetupFailure.LinuxNotReady)
         val id = profile.id
         onStep(QuotaSetupStep.Checking)
-        checkLinux()?.let { return it }
+        checkLinux()?.let {
+            return it
+        }
         val node = linux.run(NODE_CHECK, 30_000)
         val major = parseNodeMajor(node.output) ?: return QuotaSetupError(QuotaSetupFailure.NoNode)
         if (major < 20) {
-            return QuotaSetupError(QuotaSetupFailure.NodeTooOld, "Node $major is installed; the collector needs 20 or later.")
+            return QuotaSetupError(
+                QuotaSetupFailure.NodeTooOld,
+                "Node $major is installed; the collector needs 20 or later.",
+            )
         }
 
         onStep(QuotaSetupStep.Copying)
         val token: String
         try {
             installFiles()
-            var stored = secrets.read(tokenKey(id)).getOrNull()
-            if (stored == null || stored.length < TOKEN_MIN_LENGTH) {
+            val existing = secrets.read(tokenKey(id))
+            if (existing is Outcome.Failed) return QuotaSetupError(QuotaSetupFailure.Copy)
+            var stored = (existing as Outcome.Ok).value
+            if (stored == null) {
                 stored = newToken()
                 if (secrets.write(tokenKey(id), stored) is Outcome.Failed) {
-                    return QuotaSetupError(QuotaSetupFailure.Copy, "Copying into In-app Ubuntu failed (secret).")
+                    return QuotaSetupError(
+                        QuotaSetupFailure.Copy,
+                        "Copying into In-app Ubuntu failed (secret).",
+                    )
                 }
             }
+            if (stored.length < TOKEN_MIN_LENGTH) return QuotaSetupError(QuotaSetupFailure.Prepare)
             token = stored
             rootfs.write(TOKEN_PATH, "$token\n".encodeToByteArray())
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            return QuotaSetupError(QuotaSetupFailure.Copy, "Copying into In-app Ubuntu failed (${e::class.simpleName}).")
+            return QuotaSetupError(QuotaSetupFailure.Copy)
         }
         val modes = linux.run(LOCK_FILES, 30_000)
         if ("qc files=ok" !in modes.output) {
-            return QuotaSetupError(QuotaSetupFailure.Prepare, "The files in In-app Ubuntu could not be locked down.")
+            return QuotaSetupError(
+                QuotaSetupFailure.Prepare,
+                "The files in In-app Ubuntu could not be locked down.",
+            )
         }
 
         onStep(QuotaSetupStep.SignIns)
-        val keys = linux.run("umask 077; node $KEYS_PATH $DIR $AGENT_PROFILES_ROOT ${authCandidates().joinToString(" ")}", 30_000)
-        if ("qc keys=ok" !in keys.output) return QuotaSetupError(QuotaSetupFailure.Prepare, "The sign-in helper did not finish.")
+        val keys =
+            linux.run(
+                "umask 077; node $KEYS_PATH $DIR $AGENT_PROFILES_ROOT ${authCandidates().joinToString(" ")}",
+                30_000,
+            )
+        if ("qc keys=ok" !in keys.output)
+            return QuotaSetupError(QuotaSetupFailure.Prepare, "The sign-in helper did not finish.")
 
         onStep(QuotaSetupStep.Starting)
         try {
@@ -146,7 +197,7 @@ public class InAppQuotaCollector(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            return QuotaSetupError(QuotaSetupFailure.Start, "The collector did not start (${e::class.simpleName}).")
+            return QuotaSetupError(QuotaSetupFailure.Start)
         }
         var answered = false
         var attempt = 0
@@ -164,7 +215,10 @@ public class InAppQuotaCollector(
                 } catch (_: Exception) {
                     ""
                 }
-            return QuotaSetupError(QuotaSetupFailure.Start, log.trim().ifEmpty { "The collector did not answer in time." })
+            return QuotaSetupError(
+                QuotaSetupFailure.Start,
+                log.trim().ifEmpty { "The collector did not answer in time." },
+            )
         }
         if (prefs.commit(lane) { putBool(enabledKey(id), true) } is Outcome.Failed) {
             return QuotaSetupError(QuotaSetupFailure.Prepare, "The setting could not be saved.")
@@ -181,7 +235,13 @@ public class InAppQuotaCollector(
             val changed = installFiles()
             if (!changed && SERVICE_NAME in linux.status().services) return true
             rootfs.write(TOKEN_PATH, "$token\n".encodeToByteArray())
-            linux.run("chmod 700 $DIR && chmod 600 $TOKEN_PATH $COLLECTOR_PATH $KEYS_PATH", 30_000)
+            val modes =
+                linux.run(
+                    "chmod 700 $DIR && chmod 600 $TOKEN_PATH $COLLECTOR_PATH $KEYS_PATH",
+                    30_000,
+                )
+            if (modes.exitCode != 0) return false
+            if (changed && SERVICE_NAME in linux.status().services) linux.stopService(SERVICE_NAME)
             linux.startService(SERVICE_NAME, serviceScript(), PORT)
             true
         } catch (e: CancellationException) {
@@ -191,19 +251,25 @@ public class InAppQuotaCollector(
         }
     }
 
-    /** Turns usage off: stops the service, removes its files, key copies, the token and the switch. */
+    /**
+     * Turns usage off: stops the service, removes its files, key copies, the token and the switch.
+     */
     public suspend fun turnOff(profileId: ProfileId): QuotaSetupError? {
         linux.stopService(SERVICE_NAME)
         val result = linux.run("rm -rf $DIR && echo \"qc removed\"", 60_000)
         if ("qc removed" !in result.output) return QuotaSetupError(QuotaSetupFailure.Remove)
-        secrets.delete(tokenKey(profileId))
-        prefs.commit(lane) { remove(enabledKey(profileId)) }
+        if (secrets.delete(tokenKey(profileId)) is Outcome.Failed)
+            return QuotaSetupError(QuotaSetupFailure.Remove)
+        if (prefs.commit(lane) { remove(enabledKey(profileId)) } is Outcome.Failed)
+            return QuotaSetupError(QuotaSetupFailure.Remove)
         return null
     }
 
     private suspend fun checkLinux(): QuotaSetupError? {
         val status = linux.status()
-        return if (!status.installed || !status.ready) QuotaSetupError(QuotaSetupFailure.LinuxNotReady) else null
+        return if (!status.installed || !status.ready)
+            QuotaSetupError(QuotaSetupFailure.LinuxNotReady)
+        else null
     }
 
     private suspend fun installFiles(): Boolean {
@@ -244,7 +310,8 @@ public class InAppQuotaCollector(
         public const val IN_APP_SERVER_PORT: Int = 4097
         private const val TOKEN_MIN_LENGTH = 48
 
-        private const val NODE_CHECK = "v=\$(node -p \"process.versions.node\" 2>/dev/null) || v=; echo \"qc node=\${v%%.*}\""
+        private const val NODE_CHECK =
+            "v=\$(node -p \"process.versions.node\" 2>/dev/null) || v=; echo \"qc node=\${v%%.*}\""
         private const val LOCK_FILES =
             "umask 077; chmod 700 $DIR && chmod 600 $TOKEN_PATH $COLLECTOR_PATH $KEYS_PATH && echo \"qc files=ok\""
 
@@ -255,11 +322,20 @@ public class InAppQuotaCollector(
 
         /** Registers the switch and the secure slot with the per-profile deletion registry. */
         public fun register(scope: ProfileScope) {
-            scope.register(KeyShape(ENABLED_PREFIX, KeyScope.Profile, PrefType.Bool, OWNER, "usage collector set up on In-app Ubuntu"))
+            scope.register(
+                KeyShape(
+                    ENABLED_PREFIX,
+                    KeyScope.Profile,
+                    PrefType.Bool,
+                    OWNER,
+                    "usage collector set up on In-app Ubuntu",
+                )
+            )
             scope.registerSecret(TOKEN_PREFIX, OWNER)
         }
 
-        public fun parseNodeMajor(output: String): Int? = Regex("qc node=(\\d+)").find(output)?.groupValues?.get(1)?.toIntOrNull()
+        public fun parseNodeMajor(output: String): Int? =
+            Regex("qc node=(\\d+)").find(output)?.groupValues?.get(1)?.toIntOrNull()
 
         /** Shape only: an OpenCode profile at http://127.0.0.1:4097. */
         public fun looksLikeInAppServer(profile: QuotaServerProfile?): Boolean {
@@ -270,13 +346,17 @@ public class InAppQuotaCollector(
             return port == IN_APP_SERVER_PORT
         }
 
-        /** The token for [profileId], or null when usage was never set up (or storage cannot answer). */
+        /**
+         * The token for [profileId], or null when usage was never set up (or storage cannot
+         * answer).
+         */
         public suspend fun readToken(secrets: SecretStore, profileId: ProfileId): String? =
             secrets.read(tokenKey(profileId)).getOrNull()?.takeIf { it.isNotEmpty() }
 
         /**
-         * A token reader for the quota gateway when [profile] is the app's own server; null for every other server.
-         * [onUse] wakes the collector before a read (Flutter `QuotaCollectorDemand.use`).
+         * A token reader for the quota gateway when [profile] is the app's own server; null for
+         * every other server. [onUse] wakes the collector before a read (Flutter
+         * `QuotaCollectorDemand.use`).
          */
         public fun tokenReaderFor(
             profile: QuotaServerProfile,

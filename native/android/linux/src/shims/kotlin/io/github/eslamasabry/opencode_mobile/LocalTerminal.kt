@@ -1,34 +1,112 @@
-// S1-LINUX shim (native-authored, not a twin). TODO(S3/S5 :android:terminal): the Flutter LocalTerminal imports
-// io.flutter (banned in native/) and Termux's terminal-emulator (allowed only in :android:terminal, ExternalRules), so it
-// is not copied in slice 1. Until :android:terminal exists there are no terminal sessions, which is what this answers.
 package io.github.eslamasabry.opencode_mobile
 
 import android.content.Context
 
-/** The members BuiltinLinux reads, with the Flutter class's signatures. It never holds a session. */
+/**
+ * The runtime's terminal inventory, registered without a reverse dependency. Two units register drivers: LINUX-2's
+ * local terminal ([Backend] through [install]) and AGENT-2's terminal manager ([Driver] through [bind]). The
+ * inventory is every driver's sessions; a new session starts on AGENT-2's manager when it is present.
+ */
 class LocalTerminal private constructor() {
-    /** Mirror of `LocalTerminal.Session`'s members that BuiltinLinux reads. */
-    class Session(val id: Int, val pid: Int, val confined: Boolean) {
-        val running: Boolean get() = false
-        fun stop() = Unit
-        fun toMap(): Map<String, Any?> = mapOf("id" to id, "pid" to pid, "running" to running, "confined" to confined)
+    interface Control {
+        val running: Boolean
+        val exitCode: Int?
+
+        fun stop()
     }
 
-    /**
-     * Same signature as the Flutter class (BuiltinWorkLeaseAcceptance calls it). There is no PTY in this module, so it
-     * refuses; that acceptance step stays red on a device until :android:terminal replaces this shim.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    fun start(rows: Int, cols: Int, signInProfile: String? = null, signInProgram: List<String>? = null): Session =
-        throw UnsupportedOperationException("The local terminal is not part of :android:linux yet")
+    class Session(
+        val id: Int,
+        val pid: Int,
+        val confined: Boolean,
+        private val control: Control,
+        private val signIn: Boolean,
+    ) {
+        /** LINUX-2's shape: liveness and stop as functions. */
+        constructor(
+            id: Int,
+            pid: Int,
+            confined: Boolean,
+            live: () -> Boolean,
+            stopSession: () -> Unit,
+        ) : this(
+            id,
+            pid,
+            confined,
+            object : Control {
+                override val running: Boolean
+                    get() = live()
 
-    @Synchronized fun list(): List<Session> = emptyList()
+                override val exitCode: Int? = null
 
-    @Synchronized fun hasLiveSessions(): Boolean = false
+                override fun stop() = stopSession()
+            },
+            false,
+        )
 
-    @Synchronized fun hasUnconfinedSessions(): Boolean = false
+        val running: Boolean
+            get() = control.running
 
-    fun remove(@Suppress("UNUSED_PARAMETER") id: Int) = Unit
+        fun stop() = control.stop()
+
+        fun toMap(): Map<String, Any?> =
+            mapOf(
+                "id" to id,
+                "pid" to pid,
+                "running" to running,
+                "exitCode" to control.exitCode,
+                "confined" to confined,
+                "signIn" to signIn,
+            )
+    }
+
+    interface Driver {
+        fun start(
+            rows: Int,
+            cols: Int,
+            signInProfile: String?,
+            signInProgram: List<String>?,
+        ): Session
+
+        fun list(): List<Session>
+
+        fun remove(id: Int)
+    }
+
+    /** LINUX-2's name for a driver. */
+    interface Backend : Driver
+
+    @Volatile private var drivers: List<Driver> = emptyList()
+
+    fun bind(value: Driver) {
+        synchronized(this) { if (drivers.none { it === value }) drivers = drivers + value }
+    }
+
+    fun install(value: Backend) = bind(value)
+
+    fun start(
+        rows: Int,
+        cols: Int,
+        signInProfile: String? = null,
+        signInProgram: List<String>? = null,
+    ): Session {
+        val current = drivers
+        val driver =
+            checkNotNull(current.firstOrNull { it !is Backend } ?: current.firstOrNull()) {
+                "The terminal host is unavailable."
+            }
+        return driver.start(rows, cols, signInProfile, signInProgram)
+    }
+
+    fun list(): List<Session> = drivers.flatMap { it.list() }
+
+    fun hasLiveSessions(): Boolean = list().any { it.running }
+
+    fun hasUnconfinedSessions(): Boolean = list().any { it.running && !it.confined }
+
+    fun remove(id: Int) {
+        drivers.firstOrNull { driver -> driver.list().any { it.id == id } }?.remove(id)
+    }
 
     companion object {
         private val instance = LocalTerminal()

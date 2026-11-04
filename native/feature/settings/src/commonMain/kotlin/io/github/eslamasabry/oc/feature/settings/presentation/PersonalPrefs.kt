@@ -3,7 +3,9 @@ package io.github.eslamasabry.oc.feature.settings.presentation
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
+import io.github.eslamasabry.oc.ui.design.tokens.Density
 
 /** The five styles (B-KIT-037), in picker order; stored as `oc.effectsSurfaceStyle` by `:engine:settings`. */
 public enum class SurfaceStyle { Solid, Soft, Brutal, Paper, Signal }
@@ -18,6 +20,12 @@ public data class PersonalPrefs(
     val style: SurfaceStyle = SurfaceStyle.Solid,
     /** Fine-tune knobs are set (corners or density); a new style clears them. */
     val fineTuned: Boolean = false,
+    /** The person's Corners choice over the style's own; null = the style's (B-KIT-017). */
+    val corners: Corners? = null,
+    /** The person's Spacing choice over the style's own; null = the style's. */
+    val spacing: Density? = null,
+    /** `oc.appearanceAccent` swatch id; null = Match theme (B-KIT-049). */
+    val accent: String? = null,
     val motion: MotionLevel = MotionLevel.Full,
     val reasoning: Boolean = false,
     val timestamps: Boolean = false,
@@ -39,6 +47,15 @@ public sealed interface PersonalChange {
     public data class Style(val style: SurfaceStyle) : PersonalChange
 
     public data class Motion(val motion: MotionLevel) : PersonalChange
+
+    /** Fine-tune Corners; null puts the style's own back. */
+    public data class Corner(val corners: Corners?) : PersonalChange
+
+    /** Fine-tune Spacing; null puts the style's own back. */
+    public data class Spacing(val spacing: Density?) : PersonalChange
+
+    /** The Accent swatch by id; null = Match theme. */
+    public data class Accent(val id: String?) : PersonalChange
 
     public data class Reasoning(val on: Boolean) : PersonalChange
 

@@ -13,13 +13,18 @@ import io.github.eslamasabry.oc.feature.files.presentation.FileViewModel
 import io.github.eslamasabry.oc.feature.files.presentation.FolderViewModel
 import io.github.eslamasabry.oc.feature.files.ui.FileScreen
 import io.github.eslamasabry.oc.feature.files.ui.FolderScreen
+import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
 
-/** Project Files for a conversation: each folder and each file is its own entry (predictive back per level). */
+/**
+ * Project Files for a conversation: each folder and each file is its own entry (predictive back per
+ * level). The file viewer draws Markdown code blocks and syntax lines, which need the app's redactor
+ * and work context.
+ */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class FilesEntries : EntryInstaller {
+public class FilesEntries(private val environment: KitChatEnvironment) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<FilesRoute.Folder> { route ->
             val vm = assistedMetroViewModel<FolderViewModel, FolderViewModel.Factory> { create(route) }
@@ -29,7 +34,7 @@ public class FilesEntries : EntryInstaller {
         entry<FilesRoute.File> { route ->
             val vm = assistedMetroViewModel<FileViewModel, FileViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
-            FileScreen(state, vm)
+            environment.Provide { FileScreen(state, vm) }
         }
     }
 }

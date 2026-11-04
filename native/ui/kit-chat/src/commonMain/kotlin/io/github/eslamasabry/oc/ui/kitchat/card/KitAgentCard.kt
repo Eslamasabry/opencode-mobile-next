@@ -44,7 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -140,7 +140,7 @@ public fun KitAgentCard(
     announcement: String? = null,
 ) {
     val colors = LocalKitColors.current
-    val shape = KitShapeId.Card.toShape()
+    val shape = KitShapeId.Card.shape()
     val asks = mode == KitAgentCardMode.Ask
     var open by rememberSaveable { mutableStateOf(false) }
     Column(
@@ -252,7 +252,7 @@ public fun KitCardBody(nodes: ImmutableList<KitCardNode>, onLink: (String) -> Un
                                     Box(
                                         Modifier.fillMaxWidth((v / max).coerceIn(0.0, 1.0).toFloat().coerceAtLeast(0.02f))
                                             .height(Space.S3.dp)
-                                            .clip(KitShapeId.Pill.toShape())
+                                            .clip(KitShapeId.Pill.shape())
                                             .background(colors.accent)
                                     )
                                 }
@@ -279,7 +279,7 @@ public fun KitCardBody(nodes: ImmutableList<KitCardNode>, onLink: (String) -> Un
                             KitText(node.label, Modifier.weight(1f), role = TypeRole.Secondary)
                             KitText(node.valueLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame)
                         }
-                        Box(Modifier.fillMaxWidth().height(Space.S1.dp).clip(KitShapeId.Pill.toShape()).background(colors.surface2)) {
+                        Box(Modifier.fillMaxWidth().height(Space.S1.dp).clip(KitShapeId.Pill.shape()).background(colors.surface2)) {
                             Box(Modifier.fillMaxWidth(node.value.toFloat().coerceIn(0f, 1f)).height(Space.S1.dp).background(colors.accent))
                         }
                     }
@@ -429,7 +429,7 @@ public fun KitCardPhoto(
 @Composable
 public fun KitCardListSlot(eyebrow: String, title: String, openLabel: String, onOpen: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
-    val shape = KitShapeId.Card.toShape()
+    val shape = KitShapeId.Card.shape()
     Row(
         modifier
             .fillMaxWidth()

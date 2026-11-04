@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.engine.requests.consent.AutoApprovalSweep
 import io.github.eslamasabry.oc.engine.requests.consent.EffectiveApproval
 import io.github.eslamasabry.oc.engine.requests.consent.SessionApproval
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatLauncher
+import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,12 +21,17 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlin.time.Clock
 
 /** The three modes the chip offers, least to most permissive (Flutter `_ApprovalChoice`). */
-public enum class ApprovalChoice { Ask, Auto, Everything }
+public enum class ApprovalChoice {
+    Ask,
+    Auto,
+    Everything,
+}
 
-/** The approval chip beside the model in the composer row (no new bar). [offered] false hides it. */
+/**
+ * The approval chip beside the model in the composer row (no new bar). [offered] false hides it.
+ */
 public data class ApprovalChipUi(
     val offered: Boolean = false,
     val choice: ApprovalChoice = ApprovalChoice.Ask,
@@ -52,10 +58,11 @@ public interface ApprovalChipActions {
 }
 
 /**
- * The approval mode of one conversation (plan 09 §5.3; Flutter approval_mode_menu.dart). The chip reads and writes the
- * Flutter-format [ApprovalStore]; while the conversation is open, every waiting permission ask of a conversation whose
- * effective mode is automatic is answered "once" through the requests engine (never "always"). Gated on
- * `permissionRequests`, never on the backend kind.
+ * The approval mode of one conversation (plan 09 §5.3; Flutter approval_mode_menu.dart). The chip
+ * reads and writes the Flutter-format [ApprovalStore]; while the conversation is open, every
+ * waiting permission ask of a conversation whose effective mode is automatic is answered "once"
+ * through the requests engine (never "always"). Gated on `permissionRequests`, never on the backend
+ * kind.
  */
 public class ApprovalPresenter(
     private val ref: ConversationRef,
@@ -104,18 +111,24 @@ public class ApprovalPresenter(
             autoAnswered = l.autoAnswered,
         )
 
-    /** The chip's state, plus the sweep: every waiting ask and every mode change re-applies the effective mode. */
+    /**
+     * The chip's state, plus the sweep: every waiting ask and every mode change re-applies the
+     * effective mode.
+     */
     public fun states(scope: CoroutineScope, started: SharingStarted): StateFlow<ApprovalChipUi> {
         val revision = store?.revision ?: MutableStateFlow(0L)
         combine(port.waiting, revision) { waiting, _ -> waiting }
             .onEach { waiting ->
                 if (store == null || !capabilities.value.permissionRequests) return@onEach
                 val answered = sweep.sweep(waiting)
-                val mine = answered.count { id -> waiting.any { it.id == id && it.sessionId == ref.sessionId } }
+                val mine = answered.count { id ->
+                    waiting.any { it.id == id && it.sessionId == ref.sessionId }
+                }
                 if (mine > 0) local.update { it.copy(autoAnswered = it.autoAnswered + mine) }
             }
             .launchIn(scope)
-        return combine(capabilities, local, revision) { c, l, _ -> present(c, l) }.stateIn(scope, started, current())
+        return combine(capabilities, local, revision) { c, l, _ -> present(c, l) }
+            .stateIn(scope, started, current())
     }
 
     override fun openApprovalMenu() {
@@ -126,7 +139,9 @@ public class ApprovalPresenter(
         local.update { it.copy(menuOpen = false) }
     }
 
-    /** Only "Approve everything" asks first; this conversation's own modes apply at once (Flutter). */
+    /**
+     * Only "Approve everything" asks first; this conversation's own modes apply at once (Flutter).
+     */
     override fun chooseApproval(choice: ApprovalChoice) {
         local.update { it.copy(menuOpen = false) }
         val now = choiceOf(effective(ref.sessionId))
@@ -158,22 +173,38 @@ public class ApprovalPresenter(
         val session = ref.sessionId.raw
         launcher.launch {
             val leavingEverything =
-                choice != ApprovalChoice.Everything && choiceOf(effective(ref.sessionId)) == ApprovalChoice.Everything
+                choice != ApprovalChoice.Everything &&
+                    choiceOf(effective(ref.sessionId)) == ApprovalChoice.Everything
             var result: Outcome<Unit> = Outcome.Ok(Unit)
-            // Leaving "Approve everything" turns the server-wide switch off: there is no other place to undo it.
+            // Leaving "Approve everything" turns the server-wide switch off: there is no other
+            // place to undo it.
             if (leavingEverything) result = s.set(profile, ApprovalModes.SERVER_WIDE, null)
             if (result is Outcome.Ok) {
                 result =
                     when (choice) {
-                        ApprovalChoice.Ask -> s.set(profile, session, SessionApproval(ApprovalMode.Ask))
-                        ApprovalChoice.Auto -> s.set(profile, session, SessionApproval(ApprovalMode.AutoOnce))
+                        ApprovalChoice.Ask ->
+                            s.set(profile, session, SessionApproval(ApprovalMode.Ask))
+                        ApprovalChoice.Auto ->
+                            s.set(profile, session, SessionApproval(ApprovalMode.AutoOnce))
                         ApprovalChoice.Everything -> {
-                            val all = s.set(profile, ApprovalModes.SERVER_WIDE, SessionApproval(ApprovalMode.AutoOnce, inheritToChildren = true))
-                            // A conversation's own choice outranks the server-wide one: drop it so this one follows.
-                            if (all is Outcome.Ok && session in s.settings(profile)) s.set(profile, session, null) else all
+                            val all =
+                                s.set(
+                                    profile,
+                                    ApprovalModes.SERVER_WIDE,
+                                    SessionApproval(
+                                        ApprovalMode.AutoOnce,
+                                        inheritToChildren = true,
+                                    ),
+                                )
+                            // A conversation's own choice outranks the server-wide one: drop it so
+                            // this one follows.
+                            if (all is Outcome.Ok && session in s.settings(profile))
+                                s.set(profile, session, null)
+                            else all
                         }
                     }
             }
+            if (result is Outcome.Ok) result = port.syncPermissions()
             local.update { it.copy(saveFailure = (result as? Outcome.Failed)?.failure) }
         }
     }

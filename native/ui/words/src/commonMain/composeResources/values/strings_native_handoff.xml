@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nativeHandoffTitle">Continue in a new agent</string>
+    <string name="nativeHandoffIntro">Choose an agent on this server. Review the masked conversation record and the first prompt before starting. The source conversation stays unchanged.</string>
+    <string name="nativeHandoffPreparing">Preparing the conversation record…</string>
+    <string name="nativeHandoffReview">This record will be saved in a new ignored folder in the same project. Credentials are masked; reasoning and attachment contents are excluded.</string>
+    <string name="nativeHandoffPrompt">First message to the new agent</string>
+    <string name="nativeHandoffSend">Start the new agent</string>
+    <string name="nativeHandoffSending">Saving the record and starting the new conversation…</string>
+    <string name="nativeHandoffSucceeded">The new agent received the conversation record.</string>
+    <string name="nativeHandoffFailed">The transfer could not finish. The source is unchanged. Check the connection and project, then reopen this sheet.</string>
+    <string name="nativeHandoffUnconfirmed">The new conversation could not be confirmed. Check All conversations before starting another: the agent may have received it.</string>
+    <string name="nativeHandoffLinkFailed">The new agent received the record, but the conversation link could not be saved. Retry saving the link; no message will be sent again.</string>
+    <string name="nativeHandoffSaveLink">Save the conversation link</string>
+</resources>

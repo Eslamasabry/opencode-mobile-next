@@ -12,7 +12,9 @@ import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ConnectorSearchOutcome
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolDetail
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
@@ -24,6 +26,7 @@ import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolOutput
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRail
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
@@ -32,6 +35,10 @@ import io.github.eslamasabry.oc.ui.kitchat.turn.KIT_WORK_STEP_CAP
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchEmpty
+import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchNotLoaded
+import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchOff
+import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchUnavailable
 import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
 import io.github.eslamasabry.oc.ui.words.res.kitCodeShowAll
 import io.github.eslamasabry.oc.ui.words.res.kitToolFailed
@@ -114,13 +121,17 @@ internal fun TurnWorkLine(
         modifier = Modifier.testTag("chat-work-line"),
     ) {
         if (entries.isEmpty()) {
-            for (step in work.steps.drop(hidden)) StepRow(
-                step,
-                nowMs,
-                folds,
-                onOpenSession,
-                onOpenFile,
-            )
+            val shown = work.steps.drop(hidden)
+            shown.forEachIndexed { index, step ->
+                StepRow(
+                    step,
+                    nowMs,
+                    folds,
+                    onOpenSession,
+                    onOpenFile,
+                    KitToolRail(index == 0, index == shown.lastIndex),
+                )
+            }
         } else {
             var skipped = 0
             val stepQueues = work.steps.groupBy { it.partId }.mapValues { ArrayDeque(it.value) }
@@ -161,6 +172,7 @@ private fun StepRow(
     folds: TranscriptFolds,
     onOpenSession: ((String) -> Unit)?,
     onOpenFile: ((ToolArtifact) -> Unit)?,
+    rail: KitToolRail? = null,
 ) {
     val key = "step:${step.partId}"
     val f = step.facts
@@ -187,13 +199,19 @@ private fun StepRow(
     // B-CHAT-114: an explicit file the step produced (an attachment, a `filePath` output) is a
     // visible action.
     val files = if (onOpenFile == null) emptyList() else out.artifacts.filter(::canOpenArtifact)
+    val connector = f.details.filterIsInstance<ToolDetail.ConnectorSearch>().firstOrNull()
     val hasBody =
-        text != null || (shell && !f.subject.isNullOrBlank()) || child != null || files.isNotEmpty()
+        connector != null ||
+            text != null ||
+            (shell && !f.subject.isNullOrBlank()) ||
+            child != null ||
+            files.isNotEmpty()
     val full = folds.full[key] == true
     val lines = text?.lines()?.size ?: 0
     val more = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines)
     KitToolRow(
         view = view,
+        rail = rail,
         opened = folds.open[key] == true,
         onToggle = { folds.open[key] = !(folds.open[key] ?: false) },
         modifier = Modifier.testTag("chat-step-${step.partId}"),
@@ -201,6 +219,21 @@ private fun StepRow(
             if (!hasBody) null
             else {
                 {
+                    if (connector != null)
+                        KitQuietLine(
+                            stringResource(
+                                when (connector.outcome) {
+                                    ConnectorSearchOutcome.Empty ->
+                                        Res.string.chatUiConnectorSearchEmpty
+                                    ConnectorSearchOutcome.NotLoaded ->
+                                        Res.string.chatUiConnectorSearchNotLoaded
+                                    ConnectorSearchOutcome.Off ->
+                                        Res.string.chatUiConnectorSearchOff
+                                    ConnectorSearchOutcome.Unavailable ->
+                                        Res.string.chatUiConnectorSearchUnavailable
+                                }
+                            )
+                        )
                     if (child != null && onOpenSession != null)
                         KitButton(
                             stringResource(Res.string.kitToolOpenConversation),

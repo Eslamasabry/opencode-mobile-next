@@ -1,0 +1,5 @@
+<resources>
+    <string name="chat_model_favorite_add">Add favorite</string>
+    <string name="chat_model_favorite_remove">Remove favorite</string>
+    <string name="chat_model_favorites">Favorites</string>
+</resources>

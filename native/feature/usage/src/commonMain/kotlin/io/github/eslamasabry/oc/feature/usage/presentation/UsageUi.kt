@@ -39,13 +39,25 @@ public data class UsageUi(
     val projects: ImmutableList<UsageProject> = persistentListOf(),
     val projectsFailed: Boolean = false,
     val phase: UsagePhase = UsagePhase.Loading,
-    /** Shown while [phase] is Ready, or kept from the last reading of the same filters after a failed refresh. */
+    /**
+     * Shown while [phase] is Ready, or kept from the last reading of the same filters after a
+     * failed refresh.
+     */
     val report: UsageReport? = null,
     /** True when [report] is the previous reading for these filters because the refresh failed. */
     val previous: Boolean = false,
     val refreshing: Boolean = false,
     val timezone: String? = null,
     val failure: Failure? = null,
+    val budgetsAvailable: Boolean = false,
+    val hasSavedBudgets: Boolean = false,
+    val usdBudget: Double? = null,
+    val tokenBudget: Double? = null,
+    val budgetUnit: io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetUnit? = null,
+    val budgetInput: String = "",
+    val budgetSaving: Boolean = false,
+    val budgetFailed: Boolean = false,
+    val budgetInvalid: Boolean = false,
 ) {
     val serverName: String?
         get() = servers.firstOrNull { it.id == server }?.name
@@ -64,6 +76,18 @@ public interface UsageActions {
     public fun chooseScope(scope: UsageScope)
 
     public fun chooseServer(id: ProfileId)
+
+    public fun editBudget(unit: io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetUnit)
+
+    public fun budgetChanged(value: String)
+
+    public fun saveBudget()
+
+    public fun removeBudget()
+
+    public fun closeBudget()
+
+    public fun clearBudgets()
 
     public fun openServers()
 }

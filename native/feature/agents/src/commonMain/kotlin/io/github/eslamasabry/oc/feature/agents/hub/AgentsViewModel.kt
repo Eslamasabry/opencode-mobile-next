@@ -7,10 +7,20 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute
 import io.github.eslamasabry.oc.ui.routes.ComputerRoute
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * `AgentsRoute.Home`. All logic is in [AgentsPresenter]; this only gives it a lifecycle scope and
@@ -22,8 +32,13 @@ import kotlinx.coroutines.flow.StateFlow
 public class AgentsViewModel(
     computers: AgentComputers,
     phone: PhoneAgents,
-    nav: AppNavigator,
-) : ViewModel(), AgentsActions {
+    private val nav: AppNavigator,
+    private val hub: AgentsHubConnection,
+    phoneHosts: Set<PhoneAgentHostStarter>,
+    accounts: AgentAccounts,
+    drafts: AgentHandoffDrafts,
+    clock: Clock,
+) : ViewModel(), AgentsActions, AgentsHubActions {
     private val presenter =
         AgentsPresenter(
             viewModelScope,
@@ -32,11 +47,68 @@ public class AgentsViewModel(
             onBack = nav::back,
             openChat = { nav.openChat(it, focusComposer = true) },
             openComputerPage = { nav.open(ComputerRoute(it)) },
+            phoneHost = phoneHosts.singleOrNull(),
+            accounts = accounts,
+            clock = clock,
+            drafts = drafts,
         )
 
     public val state: StateFlow<AgentsUi> = presenter.state
 
+    private val localHub = MutableStateFlow(AgentsHubControlsUi())
+    public val hubState: StateFlow<AgentsHubControlsUi> =
+        combine(localHub, hub.state) { own, connection -> own.copy(connection = connection) }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Eagerly,
+                localHub.value.copy(connection = hub.state.value),
+            )
+
+    override fun openCardsSettings(): Unit = nav.open(CardsSettingsRoute)
+
+    override fun switchToBuiltIn() {
+        if (localHub.value.working || !hub.state.value.builtInAvailable) return
+        localHub.update { it.copy(working = true, failure = null) }
+        viewModelScope.launch {
+            try {
+                when (val answer = hub.switchToBuiltIn()) {
+                    is Outcome.Ok -> presenter.refreshPhone()
+                    is Outcome.Failed -> localHub.update { it.copy(failure = answer.failure) }
+                }
+            } finally {
+                localHub.update { it.copy(working = false) }
+            }
+        }
+    }
+
     override fun back(): Unit = presenter.back()
+
+    override fun openAccount(id: ProfileId): Unit = presenter.openAccount(id)
+
+    override fun closeAccount(): Unit = presenter.closeAccount()
+
+    override fun refreshAccount(): Unit = presenter.refreshAccount()
+
+    override fun signInAccount(): Unit = presenter.signInAccount()
+
+    override fun cancelAccountSignIn(): Unit = presenter.cancelAccountSignIn()
+
+    override fun openAccountSignIn(): Unit = presenter.openAccountSignIn()
+
+    override fun onCleared() {
+        presenter.close()
+    }
+
+    override fun selectComputerKind(kind: AgentComputerKind): Unit =
+        presenter.selectComputerKind(kind)
+
+    override fun openDrafts(id: ProfileId): Unit = presenter.openDrafts(id)
+
+    override fun closeDrafts(): Unit = presenter.closeDrafts()
+
+    override fun prepareDraft(id: SessionId): Unit = presenter.prepareDraft(id)
+
+    override fun copyDraft(): Unit = presenter.copyDraft()
 
     override fun startAdding(): Unit = presenter.startAdding()
 
@@ -50,6 +122,8 @@ public class AgentsViewModel(
     override fun add(name: String, address: String, password: String, folder: String): Unit =
         presenter.add(name, address, password, folder)
 
+    override fun checkPhoneAgents(): Unit = presenter.checkPhoneAgents()
+
     override fun readAgents(id: ProfileId): Unit = presenter.readAgents(id)
 
     override fun newConversation(id: ProfileId): Unit = presenter.newConversation(id)
@@ -61,6 +135,20 @@ public class AgentsViewModel(
     override fun cancelPhoneInstall(): Unit = presenter.cancelPhoneInstall()
 
     override fun refreshPhone(): Unit = presenter.refreshPhone()
+
+    override fun requestPreviousVersion(id: String): Unit = presenter.requestPreviousVersion(id)
+
+    override fun cancelPreviousVersion(): Unit = presenter.cancelPreviousVersion()
+
+    override fun confirmPreviousVersion(): Unit = presenter.confirmPreviousVersion()
+
+    override fun connectPhoneHelper(): Unit = presenter.connectPhoneHelper()
+
+    override fun requestSignInReset(): Unit = presenter.requestSignInReset()
+
+    override fun cancelSignInReset(): Unit = presenter.cancelSignInReset()
+
+    override fun confirmSignInReset(): Unit = presenter.confirmSignInReset()
 
     override fun requestRemoval(id: String): Unit = presenter.requestRemoval(id)
 

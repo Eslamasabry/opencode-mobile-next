@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.engine.files.WifiShare
 import io.github.eslamasabry.oc.feature.files.presentation.FileNotice
 import io.github.eslamasabry.oc.feature.files.presentation.FilePhase
 import io.github.eslamasabry.oc.feature.files.presentation.FileViewModel
+import io.github.eslamasabry.oc.feature.files.presentation.NoFileLinks
 import io.github.eslamasabry.oc.feature.files.presentation.PdfPageUi
 import io.github.eslamasabry.oc.feature.files.presentation.ShareSheetUi
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
@@ -124,6 +125,7 @@ class FileViewModelTest {
                 nav,
                 AppCoroutineScope(scope.backgroundScope.coroutineContext),
                 setOfNotNull(saver),
+                NoFileLinks(),
             )
     }
 

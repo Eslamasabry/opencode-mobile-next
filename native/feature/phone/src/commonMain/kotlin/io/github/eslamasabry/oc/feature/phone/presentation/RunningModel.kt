@@ -32,6 +32,11 @@ public data class ProcessRowUi(
     val memoryBytes: Long? = null,
     val elapsedSeconds: Long? = null,
     val stopIdentities: Map<Int, Long> = emptyMap(),
+    val cpuWords: io.github.eslamasabry.oc.engine.runtime.procs.CpuWords? = null,
+    val heavy: Boolean = false,
+    val memoryMb: Long? = null,
+    val memberCount: Int = 1,
+    val identity: String? = null,
 ) {
     val stoppable: Boolean
         get() = protectedAs == null
@@ -51,6 +56,8 @@ public data class RunningUi(
     val stopping: Int? = null,
     val stopFailed: Boolean = false,
     val selected: ProcessRowUi? = null,
+    val status: io.github.eslamasabry.oc.engine.runtime.procs.RunningRowStatus? = null,
+    val leftover: io.github.eslamasabry.oc.engine.runtime.procs.RunawayNotice? = null,
 )
 
 public interface RunningActions {
@@ -128,6 +135,8 @@ public class RunningModel(
                         count = reading.count,
                         cap = ProcessBudget.ceiling(reading.limitLifted),
                         nearLimit = ProcessBudget.nearLimit(reading.count),
+                        status = reading.status,
+                        leftover = reading.leftover,
                     )
                 }
             }
@@ -154,6 +163,14 @@ public class RunningModel(
             memoryBytes = p.memoryBytes,
             elapsedSeconds = p.elapsedSeconds,
             stopIdentities = p.stopIdentities,
+            cpuWords =
+                p.cpuPercent?.let {
+                    io.github.eslamasabry.oc.engine.runtime.procs.runningCpuWords(it)
+                },
+            heavy = p.heavy,
+            memoryMb = p.memoryMb,
+            memberCount = p.memberCount,
+            identity = p.identity,
         )
 
     override fun details(pid: Int) {
@@ -171,7 +188,11 @@ public class RunningModel(
         val row = ui.value.confirmStop ?: return
         ui.update { it.copy(confirmStop = null, stopping = row.pid) }
         scope.launch {
-            val stopped = source.stop(row.pid, row.stopIdentities)
+            // A guest-scan group stops by its displayed identity (LINUX-2); a native row by its frozen tree.
+            val stopped =
+                if (row.memberCount > 1 || row.stopIdentities.isEmpty())
+                    source.stop(row.pid, row.identity)
+                else source.stop(row.pid, row.stopIdentities)
             ui.update { it.copy(stopping = null, stopFailed = stopped is Outcome.Failed) }
             load()
         }

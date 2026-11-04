@@ -40,7 +40,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.choice.kitSelectTap
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
@@ -177,14 +177,16 @@ internal fun KitSwitchTrack(checked: Boolean, active: Boolean) {
         when {
             checked && active -> colors.accent
             checked -> colors.accent.copy(alpha = Alphas.DISABLED).compositeOver(colors.surface3) // on, but fixed
+            // B-KIT-004: an off switch that cannot be used reads unavailable too, not just an on one.
+            !active -> colors.surface3.copy(alpha = Alphas.DISABLED).compositeOver(colors.ground)
             else -> colors.surface3
         },
         specs.quick(),
         label = "switch-track",
     )
-    val thumbColor = if (checked) colors.onAccent else colors.text2
+    val thumbColor = if (checked) colors.onAccent else if (active) colors.text2 else colors.text3
     val x by animateDpAsState(if (checked) (TRACK_W - THUMB - 4).dp else 4.dp, specs.quick(), label = "switch-thumb")
-    Box(Modifier.size(TRACK_W.dp, TRACK_H.dp).clip(KitShapeId.Pill.toShape()).background(track)) {
-        Box(Modifier.offset(x = x, y = ((TRACK_H - THUMB) / 2).dp).size(THUMB.dp).clip(KitShapeId.Circle.toShape()).background(thumbColor))
+    Box(Modifier.size(TRACK_W.dp, TRACK_H.dp).clip(KitShapeId.Pill.shape()).background(track)) {
+        Box(Modifier.offset(x = x, y = ((TRACK_H - THUMB) / 2).dp).size(THUMB.dp).clip(KitShapeId.Circle.shape()).background(thumbColor))
     }
 }

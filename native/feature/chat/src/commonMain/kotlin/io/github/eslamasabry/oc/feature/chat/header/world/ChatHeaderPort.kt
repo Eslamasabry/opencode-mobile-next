@@ -5,13 +5,17 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * What the conversation header reads and does beyond the shared [io.github.eslamasabry.oc.feature.chat.world.ChatWorld]
- * (P12 CHAT-HEADER): the conversation's server and place, and the conversation-level acts of the ⋯ menu. Every act is
- * one gateway call on the conversation's own connection; a closed or replaced connection answers a Failure, never a
+ * What the conversation header reads and does beyond the shared
+ * [io.github.eslamasabry.oc.feature.chat.world.ChatWorld] (P12 CHAT-HEADER): the conversation's
+ * server and place, and the conversation-level acts of the ⋯ menu. Every act is one gateway call on
+ * the conversation's own connection; a closed or replaced connection answers a Failure, never a
  * retry on another server.
  */
 public interface ChatHeaderPort {
-    /** The conversation's server and session facts, safe for display; refreshed by [refresh] and after each act. */
+    /**
+     * The conversation's server and session facts, safe for display; refreshed by [refresh] and
+     * after each act.
+     */
     public val facts: StateFlow<HeaderFacts>
 
     /** Reads the session again (share link, folder, model, context use). */
@@ -31,26 +35,45 @@ public interface ChatHeaderPort {
 
     public suspend fun delete(): Outcome<Unit>
 
-    /** Who is signed in and the catalog, for the free-model note (never logged: provider config can carry keys). */
-    public suspend fun freeModelFacts(): Outcome<io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModelFacts> =
-        Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("serverCatalog")))
+    /**
+     * Who is signed in and the catalog, for the free-model note (never logged: provider config can
+     * carry keys).
+     */
+    public suspend fun freeModelFacts():
+        Outcome<io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModelFacts> =
+        Outcome.Failed(
+            io.github.eslamasabry.oc.core.common.Failure.Unavailable(
+                io.github.eslamasabry.oc.core.common.FeatureId("serverCatalog")
+            )
+        )
 
-    /** The connection's permission asks for the approval chip; null where the host has no requests engine. */
+    /**
+     * The connection's permission asks for the approval chip; null where the host has no requests
+     * engine.
+     */
     public val approvals: io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalPort?
         get() = null
+
+    /**
+     * A local review pinned to this conversation's live server; null if the graph is unavailable.
+     */
+    public fun openImport():
+        io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportEngine? = null
 
     /** Stops watching the connection (the header's entry left). */
     public fun close() {}
 }
 
 /**
- * The header's facts. [serverName] is the saved server's own name; [directory] is the session's folder (or the
- * connection's location). Server text, shown as is.
+ * The header's facts. [serverName] is the saved server's own name; [directory] is the session's
+ * folder (or the connection's location). Server text, shown as is.
  */
 public data class HeaderFacts(
     val serverName: String? = null,
     val directory: String? = null,
-    /** The OpenCode 2 managed workspace the conversation runs in, if any (no resume command then). */
+    /**
+     * The OpenCode 2 managed workspace the conversation runs in, if any (no resume command then).
+     */
     val workspaceId: String? = null,
     val shareUrl: String? = null,
     val model: String? = null,

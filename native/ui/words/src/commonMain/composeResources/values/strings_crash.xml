@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="secCrashTitle">Saved crash evidence</string>
+    <string name="secCrashCapture">Keep crash categories on this phone</string>
+    <string name="secCrashPrivacy">Off by default. Saves only error categories and times, never messages, stacks or conversations.</string>
+    <string name="secCrashClear">Clear saved evidence</string>
+    <string name="secCrashPreview">Preview crash report</string>
+    <string name="secCrashEmpty">No crash evidence has been saved.</string>
+    <string name="secCrashDisabled">Turn on crash capture to keep future error categories.</string>
+    <string name="secCrashStale">Evidence changed. Preview the report again before sharing.</string>
+    <string name="secCrashBusy">A share sheet is already opening.</string>
+    <string name="secCrashUnavailable">Crash evidence is unavailable. Try again.</string>
+    <string name="secCrashShareUnavailable">Sharing is unavailable. Try again.</string>
+    <string name="secAppExits">Android app exits</string>
+    <string name="secHelperExits">Agent helper exits</string>
+    <string name="secHistoryRefresh">Refresh exit history</string>
+    <string name="secHistoryEmpty">No recent exits were recorded.</string>
+    <string name="secHistoryUnavailable">Exit history is unavailable.</string>
+    <string name="secHistoryEntry">%1$s · code %2$d</string>
+    <string name="secCrashReportHeader">OpenCode Mobile crash report\nCaptured error categories and times only.\nNo messages, stacks or conversations are included.\n\n</string>
+</resources>

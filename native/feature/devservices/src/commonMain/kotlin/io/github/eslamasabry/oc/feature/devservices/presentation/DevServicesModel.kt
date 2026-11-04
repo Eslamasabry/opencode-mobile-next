@@ -11,8 +11,10 @@ import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServ
 import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServiceStatus
 import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServiceStore
 import io.github.eslamasabry.oc.engine.runtime.services.commands.DevelopmentServices
+import io.github.eslamasabry.oc.engine.runtime.services.commands.ShellOutput
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -157,6 +159,9 @@ public class DevServicesModel(
     }
 
     private val foundLogs = mutableMapOf<String, String>()
+    private var output: ShellOutput? = null
+    private var outputObserver: Job? = null
+    private var outputOpening = false
 
     private fun republish() =
         publish(services?.state?.value?.services.orEmpty(), detected?.servers.orEmpty())
@@ -165,6 +170,7 @@ public class DevServicesModel(
         this.visible = visible
         shownFlow.value = visible
         if (!visible) {
+            closeOutput()
             services?.invalidateRuntime()
             detected?.invalidate()
             return
@@ -317,9 +323,55 @@ public class DevServicesModel(
     }
 
     override fun logs(id: String) {
-        val row = ui.value.services.firstOrNull { it.id == id } ?: return
-        ui.update { it.copy(log = DevServiceLog(id, false, row.name, row.log.orEmpty())) }
-        refreshLogs()
+        // AGENT-2: a service run in a server shell opens its live shell output; any other service
+        // shows its kept log (HEAD).
+        val c = context
+        val shellId = services?.state?.value?.services?.firstOrNull { it.id == id }?.run?.shellId
+        if (c == null || shellId == null) {
+            val row = ui.value.services.firstOrNull { it.id == id } ?: return
+            ui.update { it.copy(log = DevServiceLog(id, false, row.name, row.log.orEmpty())) }
+            refreshLogs()
+            return
+        }
+        if (outputOpening) return
+        outputOpening = true
+        scope.launch {
+            try {
+                val port = c.shells()
+                if (!visible || !c.isCurrent()) return@launch
+                if (port == null) {
+                    ui.update { it.copy(problem = DevServicesProblem.Offline) }
+                    return@launch
+                }
+                closeOutput()
+                val viewer = ShellOutput(shellId, port) { visible && c.isCurrent() }
+                output = viewer
+                ui.update { it.copy(output = viewer.state.value) }
+                outputObserver = scope.launch { viewer.state.collect { state -> if (output === viewer) ui.update { it.copy(output = state) } } }
+                viewer.refresh()
+            } finally {
+                outputOpening = false
+            }
+        }
+    }
+
+    override fun refreshOutput() {
+        val viewer = output ?: return
+        val c = context ?: return
+        scope.launch {
+            // Adopt the live connection before each read so a reconnect retires the old one
+            // (B-AGENT-239); a missing connection keeps the loaded output.
+            c.shells()?.let { if (output === viewer) viewer.bind(it) }
+            viewer.refresh()
+        }
+    }
+
+    override fun closeOutput() {
+        output?.close()
+        output = null
+        outputObserver?.cancel()
+        outputObserver = null
+        ui.update { it.copy(output = null) }
     }
 
     override fun foundLogs(id: String) {
@@ -395,6 +447,7 @@ public class DevServicesModel(
     override fun back(): Unit = onBack()
 
     public fun close() {
+        closeOutput()
         shownFlow.value = false
         services?.close()
         detected?.close()

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="andrStorageInternal">وحدة التخزين الداخلية</string>
+    <string name="andrStorageUp">المجلد الأعلى</string>
+    <string name="andrStorageUseFolder">فتح هذا المجلد</string>
+    <string name="andrStorageFoldersEmpty">لا توجد مجلدات هنا.</string>
+    <string name="andrStorageFolderMissing">لم يعد هذا المجلد موجودًا. انتقل إلى المجلد الأعلى واختر مجلدًا آخر.</string>
+    <string name="andrStorageFolderDenied">اسمح بالوصول إلى المجلدات في إعدادات أندرويد، ثم حاول مجددًا.</string>
+    <string name="andrStorageFolderFailed">تعذّرت قراءة هذا المجلد. حاول مجددًا.</string>
+    <string name="andrStorageAccess">السماح بالوصول إلى المجلدات</string>
+    <string name="andrStorageWorking">انتظر حتى يكتمل تحميل المجلد.</string>
+    <string name="andrStorageTitle">مساحة تخزين الهاتف</string>
+    <string name="andrStorageNearlyFull">مساحة التخزين أوشكت على النفاد: المتاح %1$s. أفرغ بعض المساحة قبل تثبيت الأدوات أو بدء مهمة كبيرة.</string>
+    <string name="andrStorageAvailable">المتاح لهذا التطبيق %1$s.</string>
+    <string name="andrStorageUnknown">تعذّر قراءة المساحة المتاحة. حاول القياس مجددًا.</string>
+    <string name="andrStorageMeasure">قياس مساحة التخزين وملفات لينكس</string>
+    <string name="andrStorageMeasuring">جارٍ قياس مساحة التخزين…</string>
+    <string name="andrStorageHostSizes">لينكس والأدوات: %1$s · المشاريع: %2$s. هذه أحجام الملفات وليست مساحة التطبيق كاملة.</string>
+    <string name="andrStorageHostUnknown">تعذّر قياس أحجام ملفات لينكس. ملفاتك محفوظة.</string>
+    <string name="andrStorageRootHere">لا يمكن أن تكون وحدة التخزين الداخلية نفسها مشروعًا. افتح مجلدًا بداخلها.</string>
+</resources>

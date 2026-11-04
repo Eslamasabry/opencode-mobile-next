@@ -79,7 +79,14 @@ public class WidgetActionAdmission(
                         }
                     ) {
                         when (val begun = foreground.begin(ForegroundKind.WidgetAction)) {
-                            is Outcome.Failed -> return@withTimeoutOrNull begun
+                            is Outcome.Failed -> {
+                                WidgetActionBridge.publishResult(
+                                    app,
+                                    payload,
+                                    WidgetActionBridge.result(payload, "rejected", "unavailable"),
+                                )
+                                return@withTimeoutOrNull begun
+                            }
                             is Outcome.Ok -> ticket = begun.value
                         }
                     }

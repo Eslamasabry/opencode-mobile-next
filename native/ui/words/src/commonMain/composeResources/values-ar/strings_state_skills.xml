@@ -1,0 +1,10 @@
+<resources>
+    <string name="stateSkillsTitle">المهارات</string>
+    <string name="stateSkillsUse">استخدم في هذه المحادثة</string>
+    <string name="stateSkillsDone">أُضيفت المهارة إلى هذه المحادثة.</string>
+    <string name="stateSkillsChanged">تغيّرت المحادثة أو المجلد. افتح القائمة مجددًا.</string>
+    <string name="stateSkillsBusy">تجري إضافة مهارة. انتظر حتى تنتهي.</string>
+    <string name="stateSkillsStaged">أكمل التراجع المعلّق أو ألغِه قبل إضافة مهارة.</string>
+    <string name="stateSkillsUnsupported">لا يستطيع هذا الخادم إضافة مهارات إلى المحادثات.</string>
+    <string name="stateSkillsUncertain">تعذّر تأكيد النتيجة. حدّث قبل المحاولة مجددًا.</string>
+</resources>

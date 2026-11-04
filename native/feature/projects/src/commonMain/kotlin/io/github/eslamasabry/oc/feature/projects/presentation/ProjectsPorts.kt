@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.engine.attention.ElsewhereSnapshot
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -22,6 +23,9 @@ public class ProjectServer(
     public val name: String,
     public val gateway: ServerGateway,
     public val operations: ServerOperationsGateway?,
+    /** Capability to open shared folders on this phone for this connection. */
+    public val phoneFolders: Boolean = false,
+    public val attention: StateFlow<ElsewhereSnapshot>? = null,
 )
 
 /** The live connections and the active one. The app binds the real one (ProjectsWiring). */
@@ -40,8 +44,9 @@ public class NoProjectServers : ProjectServers {
 }
 
 /**
- * The folders the person opened on this phone, newest first, per server (B-ANDR-078). The app stores them under
- * `oc.openedProjects.<profileId>`, so the profile sweep removes them with the server.
+ * The folders the person opened on this phone, newest first, per server (B-ANDR-078). The app
+ * stores them under `oc.openedProjects.<profileId>`, so the profile sweep removes them with the
+ * server.
  */
 public interface OpenedFolders {
     public fun recent(profile: ProfileId): ImmutableList<String>
@@ -56,11 +61,36 @@ public interface OpenedFolders {
 public class SessionOpenedFolders : OpenedFolders {
     private val byProfile = MutableStateFlow<Map<ProfileId, List<String>>>(emptyMap())
 
-    override fun recent(profile: ProfileId): ImmutableList<String> = byProfile.value[profile].orEmpty().toImmutableList()
+    override fun recent(profile: ProfileId): ImmutableList<String> =
+        byProfile.value[profile].orEmpty().toImmutableList()
 
     override suspend fun remember(profile: ProfileId, directory: String): Outcome<Unit> {
         val old = byProfile.value[profile].orEmpty()
         byProfile.value = byProfile.value + (profile to ProjectRules.remembered(old, directory))
         return Unit.ok()
     }
+}
+
+/** Local discovery is available only for this phone's managed server. */
+public interface PhoneProjectDiscovery {
+    public fun available(profile: ProfileId): Boolean
+
+    public suspend fun scan(
+        profile: ProfileId
+    ): io.github.eslamasabry.oc.engine.files.ProjectScanResult
+}
+
+@ContributesBinding(AppScope::class)
+@Inject
+public class NoPhoneProjectDiscovery : PhoneProjectDiscovery {
+    override fun available(profile: ProfileId): Boolean = false
+
+    override suspend fun scan(
+        profile: ProfileId
+    ): io.github.eslamasabry.oc.engine.files.ProjectScanResult =
+        io.github.eslamasabry.oc.engine.files.ProjectScanResult(
+            emptyList(),
+            0,
+            io.github.eslamasabry.oc.engine.files.ProjectScanEnd.Completed,
+        )
 }

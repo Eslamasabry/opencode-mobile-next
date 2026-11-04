@@ -517,4 +517,25 @@
     <string name="localAssistantStopped">أُوقف. هذا ما كُتب حتى الآن.</string>
     <string name="localAssistantRunFailed">تعذّر إكمال الملخص. حاول مجددًا.</string>
     <string name="localAssistantStats">أولى الكلمات بعد %1$s ث · %2$s كلمة في الثانية</string>
+    <string name="agentAccountsTitle">حسابات الأجهزة</string>
+    <string name="agentAccountLoginCancelled">أُلغي تسجيل الدخول.</string>
+    <string name="agentComputerPaseo">Paseo</string>
+    <string name="agentComputerCodex">Codex</string>
+    <string name="agentComputerCodexNote">اتصل بخادم تطبيق Codex الرسمي عبر WebSocket. أدخل عنوانه ومسار مجلد المشروع الكامل على ذلك الجهاز.</string>
+    <string name="agentErrorOpenSettings">فتح الإعدادات</string>
+    <string name="agentDraftTitle">سجلات المحادثات</string>
+    <string name="agentDraftReadOnly">راجع السجل قبل نسخه إلى وكيل آخر. لا يؤدي هذا إلى بدء محادثة أو استئنافها أو تغييرها.</string>
+    <string name="agentDraftGuide">1. اختر محادثة أدناه.
+2. راجع السجل وأي تنبيه بشأن الأدوار القديمة المحذوفة منه.
+3. انسخه عندما تكون مستعدًا لمشاركته.</string>
+    <string name="agentDraftLoading">قراءة المحادثة</string>
+    <string name="agentDraftFailed">تعذّر إعداد السجل الكامل. تحقّق من الاتصال واختر المحادثة مجددًا.</string>
+    <string name="agentDraftReview">مراجعة السجل</string>
+    <string name="agentDraftOmitted">استُبعدت %1$d رسائل قديمة لتناسب حجم السجل. احتُفظ بأحدث دور كاملًا.</string>
+    <string name="agentDraftMasked">أُخفيت بيانات الدخول. تحقّق من السجل قبل مشاركته.</string>
+    <string name="agentDraftCopy">نسخ السجل بعد مراجعته</string>
+    <string name="agentDraftCopied">نُسخ السجل.</string>
+    <string name="agentDraftEmpty">لا توجد محادثات في هذا المشروع.</string>
+    <string name="agentDraftTooLarge">أحدث دور في هذه المحادثة أكبر من أن يتّسع له السجل دون فقدان نص.</string>
+    <string name="agentPhoneCheck">فحص وكلاء الهاتف</string>
 </resources>

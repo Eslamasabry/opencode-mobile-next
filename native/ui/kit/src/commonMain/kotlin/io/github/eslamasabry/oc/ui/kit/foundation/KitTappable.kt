@@ -95,7 +95,7 @@ internal fun Modifier.kitTappable(
     val hapticsOn = appearance.haptics
     return this
         .sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
-        .clip(shape.toShape())
+        .clip(shape.shape())
         .semantics { if (!enabled && disabledReason != null) stateDescription = disabledReason }
         .combinedClickable(
             interactionSource = interactions,

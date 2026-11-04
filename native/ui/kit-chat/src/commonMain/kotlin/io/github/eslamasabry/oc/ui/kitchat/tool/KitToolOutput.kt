@@ -20,7 +20,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
 /**
@@ -39,7 +39,7 @@ public fun KitToolOutput(
     errorLabel: String? = null,
 ) {
     val colors = LocalKitColors.current
-    val shape = KitShapeId.Code.toShape()
+    val shape = KitShapeId.Code.shape()
     val shown = redacted(text)
     val lines = shown.lines()
     Column(

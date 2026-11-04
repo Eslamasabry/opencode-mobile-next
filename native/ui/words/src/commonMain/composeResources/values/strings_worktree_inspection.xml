@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="worktreeInspectionTitle">Inspect a copy</string>
+    <string name="worktreeInspectionExactScope">Changes and conversations are read for the exact project, folder and workspace.</string>
+    <string name="worktreeInspectionReadFailed">Could not inspect this copy. Its state is unknown.</string>
+    <string name="worktreeInspectionWorkspace">Workspace: %1$s</string>
+    <string name="worktreeInspectionHostScope">On this server</string>
+    <string name="worktreeInspectionConversations">Conversations in this copy</string>
+    <string name="worktreeInspectionNoPageMatches">No matching conversations on this page. Load more to keep looking.</string>
+    <string name="worktreeInspectionNoConversations">No matching conversations in this copy.</string>
+</resources>

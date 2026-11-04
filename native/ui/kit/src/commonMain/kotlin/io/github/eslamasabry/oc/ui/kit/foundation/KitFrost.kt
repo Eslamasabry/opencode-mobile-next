@@ -25,10 +25,13 @@ import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.design.style.Style
 
 /**
- * What scrolls behind a frost surface, recorded once per frame (plan 06 K12). Compose cannot blur "what is behind"
- * without a source, so `KitScreen` hoists this and the transcript list wears [kitFrostSource].
+ * What scrolls behind a frost surface, recorded once per frame (plan 06 K12). Compose cannot blur
+ * "what is behind" without a source, so `KitScreen` hoists this and the transcript list wears
+ * [kitFrostSource].
  */
 @Stable
 public class KitFrostState internal constructor(internal val layer: GraphicsLayer) {
@@ -41,7 +44,9 @@ public fun rememberKitFrostState(): KitFrostState {
     return remember(layer) { KitFrostState(layer) }
 }
 
-/** Records the content into [state] and draws it as usual. A kit modifier on the feature allowlist. */
+/**
+ * Records the content into [state] and draws it as usual. A kit modifier on the feature allowlist.
+ */
 public fun Modifier.kitFrostSource(state: KitFrostState): Modifier =
     this.onGloballyPositioned { state.sourceOrigin = it.positionInRoot() }
         .drawWithContent {
@@ -50,22 +55,36 @@ public fun Modifier.kitFrostSource(state: KitFrostState): Modifier =
         }
 
 /**
- * Frost behind a part (the composer or the chat header only, owner rule R3). The content recorded by
- * [kitFrostSource] is drawn through the platform's blur + saturation effect (Android API 31+), then the role's tint at
- * the strength's alpha, then the role's edge line. Solid — the tint colour, opaque — when the platform has no effect
- * (below API 31, desktop) or a hold applies (Saver, reduced motion, high contrast, a Style other than Solid).
+ * Frost behind a part (the composer or the chat header only, owner rule R3). The content recorded
+ * by [kitFrostSource] is drawn through the platform's blur + saturation effect (Android API 31+),
+ * then the role's tint at the strength's alpha, then the role's edge line. Solid — the tint colour,
+ * opaque — when the platform has no effect (below API 31, desktop) or a hold applies (Saver,
+ * reduced motion, high contrast, a Style other than Solid).
  */
 @Composable
-public fun Modifier.kitFrost(role: FrostRole, state: KitFrostState): Modifier {
+public fun Modifier.kitFrost(
+    role: FrostRole,
+    state: KitFrostState,
+    shown: Boolean = true,
+): Modifier {
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
     val colors = LocalKitColors.current
     val reduced = LocalKitMotion.current.reduced
     val signals by platform.signals.collectAsState()
     val density = LocalDensity.current.density
-    val conditions = FrostConditions(appearance.saver, reduced, signals.highContrast, styleAllows = true)
-    val spec = FrostPolicy.spec(role, appearance.frost, colors.dark, conditions)
-    val effect = remember(spec, density, platform) { spec?.let { platform.frostEffect(it, density) } }
+    val conditions =
+        FrostConditions(
+            appearance.saver,
+            reduced,
+            signals.highContrast,
+            // Plan 06: non-Solid styles (the style actually drawn) hold frost solid.
+            styleAllows = LocalKitStyle.current.style == Style.Solid,
+        )
+    val spec =
+        if (shown) FrostPolicy.spec(role, appearance.frost, colors.dark, conditions) else null
+    val effect =
+        remember(spec, density, platform) { spec?.let { platform.frostEffect(it, density) } }
     val tint = if (role == FrostRole.ChatHeader) colors.ground else colors.surface2
     val edge: Color =
         if (role == FrostRole.ChatHeader) colors.text1.copy(alpha = FrostPolicy.HEADER_EDGE_ALPHA)
@@ -84,7 +103,9 @@ public fun Modifier.kitFrost(role: FrostRole, state: KitFrostState): Modifier {
                 drawLayer(blur)
                 drawRect(tint.copy(alpha = spec.tintAlpha))
             }
-            val y = if (role == FrostRole.ChatHeader) size.height - 1f else 0f
-            drawLine(edge, Offset(0f, y), Offset(size.width, y), strokeWidth = 1f)
+            if (effect != null && spec != null) {
+                val y = if (role == FrostRole.ChatHeader) size.height - 1f else 0f
+                drawLine(edge, Offset(0f, y), Offset(size.width, y), strokeWidth = 1f)
+            }
         }
 }

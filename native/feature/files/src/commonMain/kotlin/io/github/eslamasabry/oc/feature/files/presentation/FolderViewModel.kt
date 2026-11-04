@@ -53,6 +53,8 @@ public data class FolderUi(
     val path: String,
     val phase: FolderPhase = FolderPhase.Loading,
     val entries: ImmutableList<FileNode> = persistentListOf(),
+    val sourceFirst: Boolean = false,
+    val preferencesFailed: Boolean = false,
     val hiddenCount: Int = 0,
     val showHidden: Boolean = false,
     val failure: Failure? = null,
@@ -67,9 +69,7 @@ public data class FolderUi(
     val textMatches: ImmutableList<FindMatch> = persistentListOf(),
     val symbols: ImmutableList<WorkspaceSymbol> = persistentListOf(),
     val resultsLimited: Boolean = false,
-    val sourceFirst: Boolean = false,
     val canOrder: Boolean = false,
-    val preferencesFailed: Boolean = false,
     val changes: ImmutableMap<String, VersionControlFile> = persistentMapOf(),
     val changesFailure: Failure? = null,
     val actionsFor: FileNode? = null,
@@ -100,6 +100,8 @@ public interface FolderActions {
     public fun retry()
 
     public fun open(node: FileNode)
+
+    public fun toggleSourceFirst()
 
     public fun toggleHidden()
 
@@ -234,6 +236,9 @@ public class FolderViewModel(
             )
         }
     }
+
+    /** STATE's name for the one persisted source-first switch (the reader preferences store). */
+    override fun toggleSourceFirst(): Unit = sourceFirst()
 
     override fun open(node: FileNode) {
         if (local.value.changes[node.path]?.status == "deleted") {

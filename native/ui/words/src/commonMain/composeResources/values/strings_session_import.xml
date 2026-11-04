@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="importNativePaste">Or paste a JSON export</string>
+    <string name="importNativeReview">Review pasted JSON</string>
+    <string name="importNativeWorkspaceOptional">Optional. Leave empty for a project folder.</string>
+    <string name="importNativeAttemptDone">Close and reopen import to review another attempt. Check All conversations first if the result was not confirmed.</string>
+</resources>

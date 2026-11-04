@@ -1,0 +1,7 @@
+<resources>
+    <string name="stateReaderWrap">التفاف أسطر الشيفرة</string>
+    <string name="stateReaderNoWrap">إبقاء الشيفرة في سطر واحد</string>
+    <string name="stateReaderSaveFailed">تعذّر حفظ خيار العرض. حاول مرة أخرى.</string>
+    <string name="stateUsageBudgets">ميزانيات الاستهلاك الشخصية</string>
+    <string name="stateUsageUsd">دولار أمريكي</string>
+</resources>

@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.data.kv.GateNotOpen
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
@@ -35,6 +36,7 @@ import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputer
+import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputers
 import io.github.eslamasabry.oc.feature.agents.hub.ComputerCheck
 import io.github.eslamasabry.oc.protocol.paseo.PaseoEndpoint
@@ -57,7 +59,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -76,10 +77,12 @@ import okio.ByteString
  */
 
 /**
- * The daemon socket on OkHttp (plan 04 §5.2): redirects off, no proxy, WS ping every 20 s, a message cap, and the
- * password only as `Sec-WebSocket-Protocol: paseo.bearer.<pw>` + `Authorization: Bearer <pw>` when non-empty.
+ * The daemon socket on OkHttp (plan 04 §5.2): redirects off, no proxy, WS ping every 20 s, a
+ * message cap, and the password only as `Sec-WebSocket-Protocol: paseo.bearer.<pw>` +
+ * `Authorization: Bearer <pw>` when non-empty.
  */
-class OkHttpPaseoSockets(private val maxMessageBytes: Int = PaseoTransport.MAX_FRAME_BYTES) : PaseoSocketFactory {
+class OkHttpPaseoSockets(private val maxMessageBytes: Int = PaseoTransport.MAX_FRAME_BYTES) :
+    PaseoSocketFactory {
     private val client =
         OkHttpClient.Builder()
             .proxy(Proxy.NO_PROXY)
@@ -91,19 +94,24 @@ class OkHttpPaseoSockets(private val maxMessageBytes: Int = PaseoTransport.MAX_F
             .build()
 
     override suspend fun open(endpoint: PaseoEndpoint, password: String): PaseoSocket {
-        // B-SEC-113: the password goes only to the host the rules checked. If OkHttp reads the address as another
-        // host (an authority it ends earlier than our parser did), refuse before any header is attached.
+        // B-SEC-113: the password goes only to the host the rules checked. If OkHttp reads the
+        // address as another
+        // host (an authority it ends earlier than our parser did), refuse before any header is
+        // attached.
         val url = endpoint.httpUrl.toHttpUrlOrNull()
         if (url == null || url.host.lowercase() != endpoint.host.lowercase()) {
             throw PaseoException(PaseoFailureKind.InvalidEndpoint)
         }
         val request =
-            Request.Builder().url(url).apply {
-                if (password.isNotEmpty()) {
-                    header("Sec-WebSocket-Protocol", "paseo.bearer.$password")
-                    header("Authorization", "Bearer $password")
+            Request.Builder()
+                .url(url)
+                .apply {
+                    if (password.isNotEmpty()) {
+                        header("Sec-WebSocket-Protocol", "paseo.bearer.$password")
+                        header("Authorization", "Bearer $password")
+                    }
                 }
-            }.build()
+                .build()
         val socket = OkHttpPaseoSocket(maxMessageBytes, password.isNotEmpty())
         socket.ws = client.newWebSocket(request, socket.listener)
         socket.opened.await()
@@ -111,11 +119,15 @@ class OkHttpPaseoSockets(private val maxMessageBytes: Int = PaseoTransport.MAX_F
     }
 }
 
-private class OkHttpPaseoSocket(private val maxMessageBytes: Int, private val sentPassword: Boolean) : PaseoSocket {
+private class OkHttpPaseoSocket(
+    private val maxMessageBytes: Int,
+    private val sentPassword: Boolean,
+) : PaseoSocket {
     private val channel = Channel<PaseoFrame>(Channel.UNLIMITED)
     val opened = CompletableDeferred<Unit>()
     lateinit var ws: WebSocket
-    override val incoming: ReceiveChannel<PaseoFrame> get() = channel
+    override val incoming: ReceiveChannel<PaseoFrame>
+        get() = channel
 
     @Volatile override var closeCode: Int? = null
 
@@ -160,13 +172,17 @@ private class OkHttpPaseoSocket(private val maxMessageBytes: Int, private val se
                     val kind =
                         when {
                             status == 401 -> PaseoFailureKind.Authentication
-                            // 403: a refused password when one was sent, else a host outside the daemon's allowlist.
+                            // 403: a refused password when one was sent, else a host outside the
+                            // daemon's allowlist.
                             status == 403 ->
-                                if (sentPassword) PaseoFailureKind.Authentication else PaseoFailureKind.HostRefused
+                                if (sentPassword) PaseoFailureKind.Authentication
+                                else PaseoFailureKind.HostRefused
                             response != null -> PaseoFailureKind.InvalidResponse
                             else -> PaseoFailureKind.Disconnected
                         }
-                    opened.completeExceptionally(PaseoException(kind, passwordMissing = status == 401 && !sentPassword))
+                    opened.completeExceptionally(
+                        PaseoException(kind, passwordMissing = status == 401 && !sentPassword)
+                    )
                 }
                 response?.close()
                 channel.close()
@@ -185,8 +201,9 @@ private class OkHttpPaseoSocket(private val maxMessageBytes: Int, private val se
 }
 
 /**
- * The Paseo backend for the ConnectionRegistry. A saved Paseo profile keeps its project folder in `codexDirectory`
- * (the Flutter format); the gateway is pinned to it unless the restored location names one.
+ * The Paseo backend for the ConnectionRegistry. A saved Paseo profile keeps its project folder in
+ * `codexDirectory` (the Flutter format); the gateway is pinned to it unless the restored location
+ * names one.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -196,15 +213,40 @@ class AppPaseoGatewayFactory(
     clock: Clock,
     private val profiles: ProfileStore,
     stores: PreviewStores,
+    payloads: PhonePayloadGuard,
 ) : GatewayFactory {
-    /** B-AGENT-181: titles the app saved per server (`oc.conversationTitles.<id>`, carried over from Flutter). */
+    /**
+     * B-AGENT-181: titles the app saved per server (`oc.conversationTitles.<id>`, carried over from
+     * Flutter).
+     */
     private val titles = ConversationTitleMemory(KvAgentPrefs(stores.prefs, stores.lanes.app))
+
+    /**
+     * One background-work book per server for the app's lifetime (Flutter's shared book, B-AGENT-151),
+     * so a reconnect keeps a still-running command visible. Keyed by profile and origin; a small
+     * access-ordered bound drops the least recently used server.
+     */
+    private val backgroundBooks =
+        object : LinkedHashMap<String, PaseoBackgroundWork>(16, 0.75f, true) {
+            override fun removeEldestEntry(
+                eldest: MutableMap.MutableEntry<String, PaseoBackgroundWork>?
+            ): Boolean = size > 32
+        }
+
+    private fun backgroundBook(spec: GatewaySpec): PaseoBackgroundWork =
+        synchronized(backgroundBooks) {
+            backgroundBooks.getOrPut("${spec.profile.id.raw}|${spec.profile.origin}") {
+                PaseoBackgroundWork(spec)
+            }
+        }
 
     val paseo =
         PaseoGatewayFactory(
             OkHttpPaseoSockets(),
             dispatchers,
             clock,
+            backgroundTasks = ::backgroundBook,
+            payloadUse = payloads::callbackFor,
             savedTitles = { profile, key ->
                 // Before the migration gate opens the store refuses reads: no saved title then.
                 try {
@@ -220,43 +262,58 @@ class AppPaseoGatewayFactory(
     override suspend fun probe(target: ProbeTarget): Outcome<ProbeResult> = paseo.probe(target)
 
     override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> {
-        val folder = profiles.profile(spec.profile.id)?.profile?.codexDirectory?.takeIf { it.isNotBlank() }
+        val folder =
+            profiles.profile(spec.profile.id)?.profile?.codexDirectory?.takeIf { it.isNotBlank() }
         val pinned =
             if (spec.location.directory == null && folder != null)
-                spec.copy(location = ServerLocation(directory = folder, workspace = spec.location.workspace))
+                spec.copy(
+                    location =
+                        ServerLocation(directory = folder, workspace = spec.location.workspace)
+                )
             else spec
         return paseo.connect(pinned)
     }
 }
 
-/** The agents engine's preferences port over the app's one key-value store (the Flutter file on the real package). */
+/**
+ * The agents engine's preferences port over the app's one key-value store (the Flutter file on the
+ * real package).
+ */
 class KvAgentPrefs(private val store: KeyValueStore, private val lane: WriterLane) : AgentPrefs {
     override fun string(key: String): String? = (store.get(key) as? PrefValue.Str)?.value
 
     override fun bool(key: String): Boolean? = (store.get(key) as? PrefValue.Bool)?.value
 
-    override fun stringList(key: String): List<String>? = (store.get(key) as? PrefValue.StrList)?.value
+    override fun stringList(key: String): List<String>? =
+        (store.get(key) as? PrefValue.StrList)?.value
 
     override fun keys(prefix: String): Set<String> = store.keys(prefix)
 
-    override val changes: Flow<Set<String>> get() = store.changes
+    override val changes: Flow<Set<String>>
+        get() = store.changes
 
     override suspend fun commit(edit: AgentPrefsEdit.() -> Unit): Outcome<Unit> =
         store.commit(lane) {
             val target = this
             object : AgentPrefsEdit {
-                override fun putString(key: String, value: String) = target.putString(key, value)
+                    override fun putString(key: String, value: String) =
+                        target.putString(key, value)
 
-                override fun putBool(key: String, value: Boolean) = target.putBool(key, value)
+                    override fun putBool(key: String, value: Boolean) = target.putBool(key, value)
 
-                override fun putStringList(key: String, value: List<String>) = target.putStringList(key, value)
+                    override fun putStringList(key: String, value: List<String>) =
+                        target.putStringList(key, value)
 
-                override fun remove(key: String) = target.remove(key)
-            }.edit()
+                    override fun remove(key: String) = target.remove(key)
+                }
+                .edit()
         }
 }
 
-/** The Agents hub's computers: the saved Paseo profiles, checked, saved and connected through the real graph. */
+/**
+ * The Agents hub's computers: the saved Paseo profiles, checked, saved and connected through the
+ * real graph.
+ */
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class, binding = binding<AgentComputers>())
@@ -265,12 +322,16 @@ class AppAgentComputers(
     private val connections: ServerConnections,
     private val registry: ConnectionRegistry,
     private val factory: AppPaseoGatewayFactory,
+    private val codexFactory: AgentCodexGatewayFactory,
     appScope: AppCoroutineScope,
 ) : AgentComputers {
     override val computers: StateFlow<ImmutableList<AgentComputer>> =
         combine(profiles.profiles, registry.live) { saved, live ->
                 saved
-                    .filter { it.profile.backend == BackendKind.Paseo }
+                    .filter {
+                        it.profile.backend == BackendKind.Paseo ||
+                            it.profile.backend == BackendKind.Codex
+                    }
                     .map {
                         AgentComputer(
                             id = it.id,
@@ -278,23 +339,46 @@ class AppAgentComputers(
                             address = it.profile.baseUrl,
                             folder = it.profile.codexDirectory,
                             connected = live.containsKey(it.id),
+                            kind =
+                                if (it.profile.backend == BackendKind.Codex) AgentComputerKind.Codex
+                                else AgentComputerKind.Paseo,
                         )
                     }
                     .toImmutableList()
             }
-            .stateIn(appScope, SharingStarted.Eagerly, kotlinx.collections.immutable.persistentListOf())
+            .stateIn(
+                appScope,
+                SharingStarted.Eagerly,
+                kotlinx.collections.immutable.persistentListOf(),
+            )
 
-    override suspend fun check(address: String, password: String, folder: String): Outcome<ComputerCheck> =
+    override suspend fun check(
+        address: String,
+        password: String,
+        folder: String,
+    ): Outcome<ComputerCheck> =
         when (val result = factory.paseo.checkConnection(address, password, folder)) {
-            is PaseoProbeResult.Verified -> ComputerCheck.Ready(result.version, result.runtimes).ok()
+            is PaseoProbeResult.Verified ->
+                ComputerCheck.Ready(result.version, result.runtimes).ok()
             is PaseoProbeResult.InvalidInput ->
-                ComputerCheck.Invalid(address = result.url != null, folder = result.directory, password = result.password).ok()
+                ComputerCheck.Invalid(
+                        address = result.url != null,
+                        folder = result.directory,
+                        password = result.password,
+                    )
+                    .ok()
             is PaseoProbeResult.Refused -> Outcome.Failed(result.failure)
         }
 
-    override suspend fun add(name: String, address: String, password: String, folder: String): Outcome<ProfileId> {
+    override suspend fun add(
+        name: String,
+        address: String,
+        password: String,
+        folder: String,
+    ): Outcome<ProfileId> {
         val url = PaseoProfileRules.normalizeUrl(address)
-        if (PaseoProfileRules.validateUrl(url) != null) return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        if (PaseoProfileRules.validateUrl(url) != null)
+            return Failure.Refused(RefusalReason.InvalidAddress).failed()
         if (!PaseoProfileRules.passwordAcceptable(password) || !folder.startsWith("/"))
             return Failure.Refused(RefusalReason.InvalidAddress).failed()
         val id = ProfileId(UUID.randomUUID().toString())
@@ -310,7 +394,53 @@ class AppAgentComputers(
                 if (password.isEmpty()) SecretEdit.Clear else SecretEdit.Set(password),
             )
         if (saved is Outcome.Failed) return saved
-        // Saved even when the computer is away right now: the person can connect later from the list.
+        // Saved even when the computer is away right now: the person can connect later from the
+        // list.
+        return when (val connected = connections.connect(id)) {
+            is Outcome.Ok -> id.ok()
+            is Outcome.Failed -> connected
+        }
+    }
+
+    override suspend fun check(
+        address: String,
+        password: String,
+        folder: String,
+        kind: AgentComputerKind,
+    ): Outcome<ComputerCheck> {
+        if (kind == AgentComputerKind.Paseo) return check(address, password, folder)
+        return codexFactory.codex.checkConnection(address, password, folder).map { result ->
+            ComputerCheck.Ready(null, kotlinx.collections.immutable.persistentListOf("Codex"))
+        }
+    }
+
+    override suspend fun add(
+        name: String,
+        address: String,
+        password: String,
+        folder: String,
+        kind: AgentComputerKind,
+    ): Outcome<ProfileId> {
+        if (kind == AgentComputerKind.Paseo) return add(name, address, password, folder)
+        if (
+            !io.github.eslamasabry.oc.protocol.codex.validCodexEndpoint(address.trim()) ||
+                !folder.startsWith("/")
+        )
+            return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val normalized = address.trim()
+        val id = ProfileId(UUID.randomUUID().toString())
+        val saved =
+            profiles.upsert(
+                StoredProfile(
+                    id = id,
+                    name = name.ifBlank { "Codex" },
+                    baseUrl = normalized,
+                    backend = BackendKind.Codex,
+                    codexDirectory = folder,
+                ),
+                if (password.isEmpty()) SecretEdit.Clear else SecretEdit.Set(password),
+            )
+        if (saved is Outcome.Failed) return saved
         return when (val connected = connections.connect(id)) {
             is Outcome.Ok -> id.ok()
             is Outcome.Failed -> connected
@@ -322,12 +452,14 @@ class AppAgentComputers(
             val connected = connections.connect(id)
             if (connected is Outcome.Failed) return connected
         }
-        val graph = registry.live.value[id] ?: return Failure.Refused(RefusalReason.StaleScope).failed()
+        val graph =
+            registry.live.value[id] ?: return Failure.Refused(RefusalReason.StaleScope).failed()
         return when (val providers = graph.session.server.providers()) {
             is Outcome.Ok -> providers.value.providers.map { it.name }.toImmutableList().ok()
             is Outcome.Failed -> providers
         }
     }
 
-    override suspend fun newConversation(id: ProfileId): Outcome<ConversationRef> = connections.createConversation(id)
+    override suspend fun newConversation(id: ProfileId): Outcome<ConversationRef> =
+        connections.createConversation(id)
 }

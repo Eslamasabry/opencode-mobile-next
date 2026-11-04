@@ -1,0 +1,37 @@
+<resources>
+    <string name="stateSetupTitle">سجل الإعداد والدليل</string>
+    <string name="stateSetupNoWrites">يمكن فحص الإعداد هنا. التطبيق والتراجع غير متاحين لأن الخادم لا يوفّر نقطة استعادة ذرية موثّقة.</string>
+    <string name="stateSetupUnsupported">اتصل بخادم يدعم فحص الإعداد لقراءة مصادر إعداده.</string>
+    <string name="stateSetupSaveFailed">تعذّر حفظ التغيير. حاول مرة أخرى.</string>
+    <string name="stateSetupReadFailed">تعذّرت قراءة معلومات الإعداد. حاول مرة أخرى.</string>
+    <string name="stateSetupOffline">أعد الاتصال لتحديث معلومات الإعداد.</string>
+    <string name="stateSetupSources">مصادر الإعداد</string>
+    <string name="stateSetupMcp">الأدوات المتصلة</string>
+    <string name="stateSetupRecordReview">حفظ أنني راجعت هذا الإعداد</string>
+    <string name="stateSetupRefresh">تحديث الإعداد</string>
+    <string name="stateSetupHistory">سجل الإعداد</string>
+    <string name="stateSetupHistoryUnavailable">السجل المحفوظ غير متاح. تم الاحتفاظ به للاستعادة.</string>
+    <string name="stateSetupHistoryEmpty">لم تُحفظ مراجعات إعداد بعد</string>
+    <string name="stateSetupRegistryConsent">تصفح دليل الأدوات العام</string>
+    <string name="stateSetupRegistryPrivacy">متوقف افتراضيًا. يرسل التحديث طلبًا عامًا واحدًا. تُرسل كلمات البحث إلى الدليل دون بيانات دخول الخادم. لا تشغّل القوائم أي شيء ولا تثبّته.</string>
+    <string name="stateSetupRegistrySearch">البحث في الدليل</string>
+    <string name="stateSetupRegistryRefresh">تحديث الدليل</string>
+    <string name="stateSetupRegistrySaved">عرض القوائم المحفوظة</string>
+    <string name="stateSetupRegistryClear">نسيان موافقة الدليل والقائمة المحفوظة</string>
+    <string name="stateSetupRegistryOffline">غير متصل. تُعرض القائمة المحفوظة.</string>
+    <string name="stateSetupRegistryFailed">تعذّر تحميل الدليل. تم الاحتفاظ بقائمتك المحفوظة.</string>
+    <string name="stateSetupRegistryEmpty">لا توجد قوائم لعرضها. حدّث أو جرّب بحثًا آخر.</string>
+    <string name="stateSetupMcpConnected">متصل</string>
+    <string name="stateSetupMcpPending">جارٍ الاتصال</string>
+    <string name="stateSetupMcpDisabled">متوقف</string>
+    <string name="stateSetupMcpFailed">تعذّر الاتصال</string>
+    <string name="stateSetupMcpSignIn">يلزم تسجيل الدخول</string>
+    <string name="stateSetupMcpUnknown">الحالة غير معروفة</string>
+    <string name="stateSetupAuditProposed">تم اقتراح تغيير</string>
+    <string name="stateSetupAuditPending">تغيير قيد الانتظار</string>
+    <string name="stateSetupAuditAccepted">تم قبول التغيير</string>
+    <string name="stateSetupAuditVerified">تم التحقق من المراجعة</string>
+    <string name="stateSetupAuditUncertain">النتيجة غير مؤكدة</string>
+    <string name="stateSetupAuditRejected">تم رفض التغيير</string>
+    <string name="stateServerSchedules">الطلبات المجدولة</string>
+</resources>

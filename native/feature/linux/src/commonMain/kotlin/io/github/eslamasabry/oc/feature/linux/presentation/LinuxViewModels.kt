@@ -133,6 +133,12 @@ public class LinuxHomeViewModel(
 
     override fun continueSetup(): Unit = model.continueSetup()
 
+    override fun refreshComponents(): Unit = model.refreshComponents()
+
+    override fun askRemoveComponent(id: String): Unit = model.askRemoveComponent(id)
+
+    override fun openOwnershipSettings(): Unit = model.openOwnershipSettings()
+
     override fun askStopSetup(): Unit = model.askStopSetup()
 
     override fun refreshLifetimes(): Unit = model.refreshLifetimes()

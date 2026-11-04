@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BUILD-RUNTIME-B: the phone setup page's sentences that Flutter wrote only in English (setup_engine.dart). -->
+<resources>
+    <string name="setupRbStatusUnreadable">The saved setup could not be read. Try Continue setup.</string>
+    <string name="setupRbToolsUncheckable">Installed tools could not be checked. Try again.</string>
+</resources>

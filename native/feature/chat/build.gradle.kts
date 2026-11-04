@@ -9,6 +9,7 @@ kotlin {
         implementation(libs.compose.desktop.currentos)
     }
     sourceSets.commonMain.dependencies {
+        implementation(project(":engine:settings"))
         implementation(project(":engine:delivery"))
         implementation(project(":engine:voice"))
         implementation(project(":engine:composer"))
@@ -21,6 +22,8 @@ kotlin {
             project(":engine:requests")
         ) // S2-REQ: the request slot (permissions, one-question asks)
         implementation(libs.kotlinx.collections.immutable)
+        implementation(libs.kotlinx.datetime)
+        implementation(project(":engine:integrations-catalog"))
         implementation(project(":engine:cards")) // P12-CHAT-CARDS: the agent card slot
         implementation(
             project(":engine:agents")

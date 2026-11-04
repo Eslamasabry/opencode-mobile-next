@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mcpNativeTitle">Connector catalogue</string>
+    <string name="mcpNativeConsent">Browse the public MCP registry. Your search is sent to the registry only after you turn this on.</string>
+    <string name="mcpNativeTurnOn">Turn on</string>
+    <string name="mcpNativeTurnOff">Turn off catalogue</string>
+    <string name="mcpNativeRefresh">Refresh</string>
+    <string name="mcpNativeSearch">Search connectors</string>
+    <string name="mcpNativeEmpty">No connectors found.</string>
+    <string name="mcpNativeLoadFailed">Could not refresh. Showing saved listings when available.</string>
+    <string name="mcpNativeUnsupported">This connection cannot add connectors. You can still review the listings.</string>
+    <string name="mcpNativeReview">Review connector</string>
+    <string name="mcpNativeRuntimeOnly">This adds the connector to this project until the server restarts. Review the address or command first.</string>
+    <string name="mcpNativeAdd">Add connector</string>
+    <string name="mcpNativeAdded">The server lists this connector. Tool availability is not confirmed yet.</string>
+    <string name="mcpNativeCheck">Check connection</string>
+    <string name="mcpNativeAddUncertain">Could not confirm the addition. Check the connection before trying again.</string>
+    <string name="mcpNativeConflict">That connector name already exists. Choose another name.</string>
+    <string name="mcpNativeName">Name</string>
+    <string name="mcpNativeAddress">Address</string>
+    <string name="mcpNativeCommand">Command</string>
+    <string name="mcpNativeNeedsSettings">This listing needs more connection details or command arguments. Set it up manually on your server.</string>
+    <string name="mcpNativeNotAddable">This listing cannot be added from the catalogue.</string>
+    <string name="mcpNativeBack">Back</string>
+    <string name="mcpNativeSaveFailed">Could not save the catalogue preference. Try again.</string>
+    <string name="mcpNativeSourceChanged">The connection changed. Reopen the catalogue.</string>
+    <string name="mcpNativeToolsReady">Connector tools are ready for the next turn.</string>
+    <string name="mcpNativeSignIn">Sign in to connector</string>
+    <string name="mcpNativeCode">Return URL or code</string>
+    <string name="mcpNativeFinishSignIn">Finish sign-in</string>
+    <string name="mcpNativeCancelSignIn">Cancel sign-in</string>
+</resources>

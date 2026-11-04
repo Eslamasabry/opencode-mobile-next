@@ -53,6 +53,10 @@ public class DevServicesViewModel(
 
     override fun logs(id: String): Unit = model.logs(id)
 
+    override fun refreshOutput(): Unit = model.refreshOutput()
+
+    override fun closeOutput(): Unit = model.closeOutput()
+
     override fun visit(id: String): Unit = model.visit(id)
 
     override fun askStopFound(id: String): Unit = model.askStopFound(id)

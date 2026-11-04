@@ -22,6 +22,7 @@ public data class FolderRowUi(
     val conversations: Int = 0,
     val running: Int = 0,
     val isGit: Boolean? = null,
+    val kind: io.github.eslamasabry.oc.engine.files.PhoneProjectKind? = null,
 )
 
 /**
@@ -37,12 +38,27 @@ public data class ProjectsPickerUi(
     val openedBefore: ImmutableList<FolderRowUi> = persistentListOf(),
     val projects: ImmutableList<FolderRowUi> = persistentListOf(),
     val projectsLoading: Boolean = false,
+    val canFindPhoneProjects: Boolean = false,
+    val findingPhoneProjects: Boolean = false,
+    val phoneProjects: ImmutableList<FolderRowUi> = persistentListOf(),
+    val scanEnd: io.github.eslamasabry.oc.engine.files.ProjectScanEnd? = null,
     val projectsFailure: Failure? = null,
     val query: String = "",
     val showSearch: Boolean = false,
     val askingPath: Boolean = false,
+    val canCreate: Boolean = false,
+    val askingCreate: Boolean = false,
+    val createName: String = "",
+    val creatingFolder: Boolean = false,
+    val folderFailure: Failure? = null,
     /** The folder used last, so the path field starts next to it. */
     val pathStart: String = "",
+    val canBrowsePhone: Boolean = false,
+    val phonePath: String? = null,
+    val phoneParent: String? = null,
+    val phoneFolders: ImmutableList<PhoneFolderUi> = persistentListOf(),
+    val phoneLoading: Boolean = false,
+    val phoneFailure: Failure? = null,
 )
 
 public interface ProjectsPickerActions {
@@ -50,7 +66,29 @@ public interface ProjectsPickerActions {
 
     public fun chooseServer(profile: ProfileId)
 
+    public fun findPhoneProjects()
+
+    public fun cancelPhoneScan()
+
     public fun askPath()
+
+    public fun askCreate() {}
+
+    public fun changeCreateName(name: String) {}
+
+    public fun closeCreate() {}
+
+    public fun createFolder() {}
+
+    public fun browsePhone()
+
+    public fun enterPhoneFolder(path: String)
+
+    public fun closePhoneFolders()
+
+    public fun usePhoneFolder()
+
+    public fun allowPhoneFolderAccess()
 
     /** The path dialog's answer; null = cancelled. */
     public fun finishPath(path: String?)
@@ -72,6 +110,15 @@ public data class ProjectChatUi(
     val running: Boolean,
 )
 
+public data class ProjectAttentionUi(
+    val directory: String,
+    val name: String,
+    val waiting: Int,
+    val running: Int,
+    val failed: Int = 0,
+    val stale: Boolean = false,
+)
+
 public enum class ProjectPagePhase {
     Opening,
     NoServer,
@@ -90,6 +137,7 @@ public data class ProjectPageUi(
     val phase: ProjectPagePhase = ProjectPagePhase.Opening,
     val conversations: ImmutableList<ProjectChatUi> = persistentListOf(),
     val elsewhere: ImmutableList<ProjectChatUi> = persistentListOf(),
+    val elsewhereAttention: ImmutableList<ProjectAttentionUi> = persistentListOf(),
     val canLoadMore: Boolean = false,
     val loadingMore: Boolean = false,
     val loadMoreFailure: Failure? = null,
@@ -109,9 +157,10 @@ public data class ProjectPageUi(
     val isolatedDraftFailed: Boolean = false,
     val confirmRemoveCopy: Boolean = false,
     val isolatedDetails: io.github.eslamasabry.oc.core.common.Redacted? = null,
+    val workspace: ProjectWorkspaceUi = ProjectWorkspaceUi(),
 )
 
-public interface ProjectPageActions {
+public interface ProjectPageActions : ProjectWorkspaceActions {
     public fun refreshCopies() {}
 
     public fun openCopy(directory: String) {}
@@ -139,6 +188,9 @@ public interface ProjectPageActions {
     public fun developmentServices()
 
     public fun back()
+
+    /** AGENT-1: open another project that needs attention ("In other projects"). */
+    public fun openOtherProject(directory: String) {}
 
     public fun newConversationHere()
 

@@ -12,9 +12,10 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import kotlinx.coroutines.CoroutineScope
 
 /**
- * What the Git page needs from the app, in one place: the workspace resolver, one [GitHubAccount] per profile (kept for
- * the app's life so a sign-in survives leaving the page), Details text through the [Redactor], and GitHub pages opened
- * only through [ExternalLinkPolicy] → [ExternalLinkOpener] (AGENTS.md security invariant).
+ * What the Git page needs from the app, in one place: the workspace resolver, one [GitHubAccount]
+ * per profile (kept for the app's life so a sign-in survives leaving the page), Details text
+ * through the [Redactor], and GitHub pages opened only through [ExternalLinkPolicy] →
+ * [ExternalLinkOpener] (AGENTS.md security invariant).
  */
 public class GitServices(
     public val workspaces: GitWorkspaces,
@@ -28,26 +29,34 @@ public class GitServices(
 ) {
     private val accounts = HashMap<ProfileId, GitHubAccount>()
 
-    public fun page(ref: ConversationRef): GitPage = GitPage(ref, workspaces)
+    public fun page(ref: ConversationRef): GitPage =
+        GitPage(ref, workspaces, account(ref.profileId))
 
     public fun account(profile: ProfileId): GitHubAccount =
         accounts.getOrPut(profile) { GitHubAccount(profile, tokens, flow, scope, nowMs) }
 
     /** Git's own text, redacted, for the Details fold only; null when there is none. */
     public fun details(failure: GitFailure?): Redacted? =
-        failure?.details?.takeIf { it.isNotBlank() }?.let { redactor.details(scrubGitText(it, emptyList())) }
+        failure
+            ?.details
+            ?.takeIf { it.isNotBlank() }
+            ?.let { redactor.details(scrubGitText(it, emptyList())) }
 
     /** GitHub's sign-in words, redacted, for Details only. */
-    public fun details(text: String): Redacted? = text.takeIf { it.isNotBlank() }?.let(redactor::details)
+    public fun details(text: String): Redacted? =
+        text.takeIf { it.isNotBlank() }?.let(redactor::details)
 
     /**
-     * Opens the verification page GitHub named. It came from the network, so it is checked as server content; only an
-     * `https://github.com/…` page is opened (the button already says "Open GitHub", which is the person's consent).
+     * Opens the verification page GitHub named. It came from the network, so it is checked as
+     * server content; only an `https://github.com/…` page is opened (the button already says "Open
+     * GitHub", which is the person's consent).
      */
     public fun openVerification(uri: String): Boolean =
         when (val decision = links.check(uri, LinkOrigin.ServerContent)) {
             is LinkDecision.AskFirst ->
-                decision.shownHost == "github.com" && uri.startsWith("https://") && opener.open(decision.link) is Outcome.Ok
+                decision.shownHost == "github.com" &&
+                    uri.startsWith("https://") &&
+                    opener.open(decision.link) is Outcome.Ok
             is LinkDecision.Open -> opener.open(decision.link) is Outcome.Ok
             is LinkDecision.Refuse -> false
         }
@@ -61,7 +70,8 @@ public class GitServices(
 
     /** A removed server's GitHub sign-in goes with it (B-SEC-085). */
     public suspend fun forgetRemovedProfiles(existing: Set<ProfileId>) {
-        // Stop a removed profile's waiting sign-in first, so it cannot write its token after the sweep.
+        // Stop a removed profile's waiting sign-in first, so it cannot write its token after the
+        // sweep.
         val gone = accounts.filterKeys { it !in existing }
         for (account in gone.values) account.forget()
         accounts.keys.retainAll(existing)

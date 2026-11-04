@@ -1,0 +1,4 @@
+<resources>
+    <string name="statePromptMigrationPending">Some older drafts or attachments could not be moved yet. Your saved work is kept. Make room if needed, then try again.</string>
+    <string name="statePromptFilesUnavailable">These files could not be restored here: %1$s. The saved prompt is kept.</string>
+</resources>

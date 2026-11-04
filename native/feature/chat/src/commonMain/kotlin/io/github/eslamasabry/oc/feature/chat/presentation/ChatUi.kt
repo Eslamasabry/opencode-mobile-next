@@ -5,8 +5,10 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
 
 /*
@@ -61,6 +63,8 @@ public data class ChatUi(
     val confirmedPaths: ImmutableSet<String> = persistentSetOf(),
     val timeline: TimelineUi? = null,
     val reasoningExpanded: Boolean = false,
+    /** Lookup-only receipt checks, kept for this visit; never authorizes another send. */
+    val receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -104,7 +108,21 @@ public data class ChatStatusUi(
     val kind: ChatStatusKind,
     val failure: Failure? = null,
     val localId: Long? = null,
+    val receiptResult: ReceiptCheckResult? = null,
 )
+
+/** A receipt check is only a read. Its timestamp is intentionally not persisted. */
+public data class ReceiptCheckUi(
+    val checking: Boolean = false,
+    val checkedAtMs: Long? = null,
+    val result: ReceiptCheckResult? = null,
+)
+
+public enum class ReceiptCheckResult {
+    Confirmed,
+    StillUnknown,
+    StorageProblem,
+}
 
 /**
  * Lower ordinal = more urgent. Connection first (07 §10.1), then the chat's own lines in plan 09
@@ -131,6 +149,9 @@ public enum class ChatStatusKind {
 
     /** P12-CHAT-FEEL: a link in a reply the app's link policy will not open. */
     LinkRefused,
+
+    /** The result of the person's lookup; dismissing it never changes the receipt. */
+    ReceiptChecked,
 }
 
 /**
@@ -239,7 +260,8 @@ public sealed interface ChatConfirm {
      * A link from a reply asks first, naming where it goes (R17: policy → opener, never straight to
      * the platform).
      */
-    public data class OpenLink(val url: String, val host: String) : ChatConfirm
+    public data class OpenLink(val url: String, val host: String, val insecure: Boolean = false) :
+        ChatConfirm
 }
 
 /**
@@ -352,6 +374,9 @@ public interface ChatActions {
     /** The list reached or left the live edge (read acknowledgement, plan 09 §6.7). */
     public fun liveEdgeChanged(atLiveEdge: Boolean)
 
+    /** Looks up an unconfirmed send. Never sends the prompt again. */
+    public fun checkReceipt(localId: Long) {}
+
     public fun retrySend(localId: Long)
 
     /**
@@ -385,6 +410,9 @@ public interface ChatActions {
     /** A picture tile that names a file on the server: read it and show it in the viewer. */
     public fun openPicture(path: String, name: String) {}
 
+    /** A server image thumbnail uses the same bounded, identity-fenced read as the viewer. */
+    public suspend fun readPicture(path: String): ByteArray? = null
+
     /**
      * B-CHAT-064 / B-CHAT-114: a file a reply names (a confirmed path) or a step produced: a
      * picture opens in the viewer, any other file in the file viewer (which offers Open with and
@@ -406,4 +434,7 @@ public interface ChatActions {
      * (Flutter `_continueTruncated`).
      */
     public fun continueReply(words: String) {}
+
+    /** Recovery for a missing/rejected provider credential; opens the visible settings path. */
+    public fun openSignInSettings() {}
 }

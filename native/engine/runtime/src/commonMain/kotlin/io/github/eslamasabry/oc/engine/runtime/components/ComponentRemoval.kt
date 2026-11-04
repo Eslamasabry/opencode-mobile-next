@@ -226,6 +226,8 @@ public class ComponentRemoval(
                 component.native ||
                     removeScript == null ||
                     removeScript.isBlank() ||
+                    (component.id == ComponentIds.PYTHON &&
+                        removeScript != ComponentRemovalScripts.PYTHON_REMOVE) ||
                     (component.id == ComponentIds.AITEAM &&
                         (removeScript != AiTeamRemovalScripts.REMOVE_SCRIPT || team == null)) ->
                     ComponentRemovalBlock.Unsupported

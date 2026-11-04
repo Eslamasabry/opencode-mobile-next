@@ -23,6 +23,9 @@
 :protocol:paseo	S	backend-owner	slice-3
 :engine:analytics	S	diagnostics-owner	slice-1
 :android:linux	S	runtime-owner	slice-1
+:android:terminal	S	runtime-owner (26-build-LINUX-2)	slice-5
+:engine:project-terminal	F	26-build-LINUX-2	slice-5
+:feature:terminal	F	26-build-LINUX-2	slice-5
 :tools:strings	S	l10n-owner	slice-1
 :tools:flutter-migration-readers	S	migration-owner	slice-0
 :engine:settings	S	core-owner (S1-ENG)	slice-1
@@ -77,6 +80,7 @@
 :feature:projects	F	P12-PROJECTS	slice-5
 :feature:review	F	(slice brief names the agent)	slice-4
 :feature:voice	F	(slice brief names the agent)	slice-12
+:feature:setup	F	build-runtime-b	parity
 :protocol:codex	F	build-protocols	parity-p12
 :feature:computer	F	build-protocols	parity-p12
 :engine:linuxsetup	F	build-runtime-c (P12-BUILD-RUNTIME-C)	parity-p12
@@ -96,3 +100,16 @@
 :engine:integrations-catalog	F	build-integrations-b	parity-p12
 :engine:integrations-host	F	build-integrations-b	parity-p12
 :feature:plans	F	build-integrations-b	parity-p12
+:feature:integrations	F	28-build-SEC-2	parity-p12
+
+:feature:setupassistant	F	state-setup	P12-STATE
+:feature:integrations-catalog	F	27-build-AGENT-2	parity-p12
+:feature:setupreview	F	27-build-AGENT-2	parity-p12
+:feature:agenttools	F	27-build-AGENT-2	parity-p12
+:feature:widgetactions	F	27-build-AGENT-2	parity-p12
+:feature:monitor	F	27-build-AGENT-2	parity-p12
+:android:terminal	F	27-build-AGENT-2	parity-p12
+:core:net-okhttp	F	27-build-AGENT-2	parity-p12
+:protocol:codex	F	27-build-AGENT-2	parity-p12
+:feature:codexprobe	F	27-build-AGENT-2	parity-p12
+:feature:handoff	F	27-build-AGENT-2	parity-p12

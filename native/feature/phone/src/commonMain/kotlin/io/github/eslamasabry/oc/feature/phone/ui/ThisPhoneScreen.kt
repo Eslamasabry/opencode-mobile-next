@@ -8,13 +8,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneAct
-import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitKind
+import io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReadiness
+import io.github.eslamasabry.oc.engine.runtime.storage.HostStorageAvailability
+import io.github.eslamasabry.oc.engine.runtime.storage.StoragePressure
 import io.github.eslamasabry.oc.feature.phone.presentation.ServerRow
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitKind
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneActions
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneConfirm
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneNotice
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneUi
 import io.github.eslamasabry.oc.feature.phone.presentation.UpdateRow
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -30,10 +34,23 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesB
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesGb
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesKb
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesMb
+import io.github.eslamasabry.oc.ui.words.res.andrStorageAvailable
+import io.github.eslamasabry.oc.ui.words.res.andrStorageHostSizes
+import io.github.eslamasabry.oc.ui.words.res.andrStorageHostUnknown
+import io.github.eslamasabry.oc.ui.words.res.andrStorageMeasure
+import io.github.eslamasabry.oc.ui.words.res.andrStorageMeasuring
+import io.github.eslamasabry.oc.ui.words.res.andrStorageNearlyFull
+import io.github.eslamasabry.oc.ui.words.res.andrStorageTitle
+import io.github.eslamasabry.oc.ui.words.res.andrStorageUnknown
 import io.github.eslamasabry.oc.ui.words.res.keepRunningOpenFailed
 import io.github.eslamasabry.oc.ui.words.res.keepRunningRowSubtitle
 import io.github.eslamasabry.oc.ui.words.res.keepRunningTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.libraryTerminalTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxExitCheckStatus
 import io.github.eslamasabry.oc.ui.words.res.linuxExitCrash
 import io.github.eslamasabry.oc.ui.words.res.linuxExitForceStop
@@ -51,6 +68,20 @@ import io.github.eslamasabry.oc.ui.words.res.runningPhoneRowNearLimit
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
 import io.github.eslamasabry.oc.ui.words.res.sharedFoldersTitle
+import io.github.eslamasabry.oc.ui.words.res.stateLifecycleChecking
+import io.github.eslamasabry.oc.ui.words.res.stateLifecyclePartial
+import io.github.eslamasabry.oc.ui.words.res.stateLifecycleReady
+import io.github.eslamasabry.oc.ui.words.res.stateLifecycleStopped
+import io.github.eslamasabry.oc.ui.words.res.stateLifecycleUnavailable
+import io.github.eslamasabry.oc.ui.words.res.stateLifecycleUnreachable
+import io.github.eslamasabry.oc.ui.words.res.stateStorageEmpty
+import io.github.eslamasabry.oc.ui.words.res.stateStorageFailed
+import io.github.eslamasabry.oc.ui.words.res.stateStoragePrivate
+import io.github.eslamasabry.oc.ui.words.res.stateStorageProject
+import io.github.eslamasabry.oc.ui.words.res.stateStorageRefresh
+import io.github.eslamasabry.oc.ui.words.res.stateStorageSavedServers
+import io.github.eslamasabry.oc.ui.words.res.stateStorageServer
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneBusy
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneExportProjects
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneRestartBusy
@@ -64,6 +95,7 @@ import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateBusy
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateDetail
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateKept
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateTitle
+import io.github.eslamasabry.oc.ui.words.res.workRunawaySeeRunning
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import org.jetbrains.compose.resources.stringResource
 
@@ -149,6 +181,31 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                 title = if (state.answer.line != null) state.answer.headline.words() else null,
                 tone = state.answer.tone.status(),
             )
+            state.lifecycle
+                ?.takeIf { it.showNotice }
+                ?.let { report ->
+                    KitNotice(
+                        message =
+                            stringResource(
+                                when (report.readiness) {
+                                    LifecycleReadiness.Unchecked,
+                                    LifecycleReadiness.Checking -> Res.string.stateLifecycleChecking
+                                    LifecycleReadiness.Unavailable ->
+                                        Res.string.stateLifecycleUnavailable
+                                    LifecycleReadiness.Stopped -> Res.string.stateLifecycleStopped
+                                    LifecycleReadiness.Unreachable ->
+                                        Res.string.stateLifecycleUnreachable
+                                    LifecycleReadiness.Partial -> Res.string.stateLifecyclePartial
+                                    LifecycleReadiness.Ready -> Res.string.stateLifecycleReady
+                                }
+                            ),
+                        dismiss =
+                            KitLineAction(
+                                stringResource(Res.string.workspaceDismissNotice),
+                                actions::dismissRecovery,
+                            ),
+                    )
+                }
             when (val notice = state.notice) {
                 null -> Unit
                 is ThisPhoneNotice.Failed -> PhoneNoticeLine(notice.op.failedWords(), actions)
@@ -223,6 +280,107 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                     }
                 }
             }
+            state.storage?.let { storage ->
+                KitRowGroup(label = stringResource(Res.string.stateStorageTitle)) {
+                    if (
+                        storage.projects.isEmpty() &&
+                            !storage.serverInstalled &&
+                            storage.serverBytes == 0L
+                    )
+                        KitRow(title = stringResource(Res.string.stateStorageEmpty))
+                    KitRow(
+                        title = stringResource(Res.string.stateStorageServer),
+                        supporting = storageSize(storage.serverBytes),
+                    )
+                    KitRow(
+                        title = stringResource(Res.string.stateStoragePrivate),
+                        supporting = storageSize(storage.privateDataBytes),
+                    )
+                    for (project in storage.projects) KitRow(
+                        title = project.name,
+                        supporting =
+                            stringResource(
+                                Res.string.stateStorageProject,
+                                storageSize(project.bytes),
+                                project.files,
+                                project.privateFiles,
+                            ),
+                    )
+                    KitRow(
+                        title =
+                            stringResource(
+                                Res.string.stateStorageSavedServers,
+                                storage.savedServers,
+                            )
+                    )
+                    KitRow(
+                        title = stringResource(Res.string.stateStorageRefresh),
+                        onClick = actions::refreshStorage,
+                    )
+                }
+            }
+            if (state.storageFailed)
+                KitNotice(
+                    message = stringResource(Res.string.stateStorageFailed),
+                    dismiss =
+                        KitLineAction(
+                            stringResource(Res.string.stateStorageRefresh),
+                            actions::refreshStorage,
+                        ),
+                )
+            if (state.storageSupported) {
+                val storage = state.phoneStorage
+                val bytes = storage?.availableBytes
+                val host = storage?.builtinHost
+                KitNotice(
+                    title = stringResource(Res.string.andrStorageTitle),
+                    message =
+                        when {
+                            // Unknown only after a reading finished; the first one is still running.
+                            storage == null && state.measuringStorage ->
+                                stringResource(Res.string.andrStorageMeasuring)
+                            bytes == null -> stringResource(Res.string.andrStorageUnknown)
+                            storage?.pressure == StoragePressure.NearlyFull ->
+                                stringResource(
+                                    Res.string.andrStorageNearlyFull,
+                                    PhoneSizes.text(bytes),
+                                )
+                            else ->
+                                stringResource(
+                                    Res.string.andrStorageAvailable,
+                                    PhoneSizes.text(bytes),
+                                )
+                        },
+                    tone =
+                        if (storage?.pressure == StoragePressure.NearlyFull) StatusTone.Attention
+                        else StatusTone.Neutral,
+                    notes =
+                        when {
+                            host != null ->
+                                listOf(
+                                    stringResource(
+                                        Res.string.andrStorageHostSizes,
+                                        PhoneSizes.text(host.runtimeBytes),
+                                        PhoneSizes.text(host.projectsBytes),
+                                    )
+                                )
+                            storage?.builtinAvailability == HostStorageAvailability.Unavailable ->
+                                listOf(stringResource(Res.string.andrStorageHostUnknown))
+                            else -> emptyList()
+                        },
+                    actions =
+                        listOf(
+                            KitLineAction(
+                                if (state.measuringStorage)
+                                    stringResource(Res.string.andrStorageMeasuring)
+                                else stringResource(Res.string.andrStorageMeasure),
+                                actions::measureStorage,
+                                enabled = !state.measuringStorage,
+                                disabledReason = stringResource(Res.string.andrStorageMeasuring),
+                            )
+                        ),
+                )
+            }
             KitRowGroup {
                 KitRow(
                     title = stringResource(Res.string.thisPhoneExportProjects),
@@ -234,12 +392,31 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                     trailing = KitRowTrailing.Chevron,
                     onClick = { actions.act(PhoneAct.SharedFolders) },
                 )
+                state.leftover?.let { notice ->
+                    KitNotice(
+                        message = notice.message.words(),
+                        actions =
+                            listOf(
+                                KitLineAction(
+                                    stringResource(Res.string.workRunawaySeeRunning),
+                                    actions::openRunning,
+                                )
+                            ),
+                        dismiss =
+                            KitLineAction(
+                                stringResource(Res.string.workspaceDismissNotice),
+                                actions::dismiss,
+                            ),
+                    )
+                }
                 val running = state.running
                 val count = running.count
                 KitRow(
                     title = stringResource(Res.string.runningPhoneTitle),
                     supporting =
-                        if (running.nearLimit && count != null) {
+                        if (running.status != null) {
+                            running.status.words()
+                        } else if (running.nearLimit && count != null) {
                             stringResource(Res.string.runningPhoneRowNearLimit, count, running.cap)
                         } else {
                             stringResource(Res.string.runningPhoneRowIdle)
@@ -261,6 +438,11 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                     supportingMaxLines = 2,
                     trailing = KitRowTrailing.Chevron,
                     onClick = actions::openLinux,
+                )
+                KitRow(
+                    title = stringResource(Res.string.libraryTerminalTitle),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openTerminal,
                 )
             }
         }
@@ -299,3 +481,20 @@ private fun PhoneNoticeLine(words: String, actions: ThisPhoneActions) {
             KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss),
     )
 }
+
+@Composable
+private fun storageSize(bytes: Long): String =
+    when {
+        bytes >= 1_073_741_824L ->
+            stringResource(
+                Res.string.termuxStorageBytesGb,
+                "${bytes / 1_073_741_824L}.${bytes % 1_073_741_824L * 10 / 1_073_741_824L}",
+            )
+        bytes >= 1_048_576L ->
+            stringResource(
+                Res.string.termuxStorageBytesMb,
+                "${bytes / 1_048_576L}.${bytes % 1_048_576L * 10 / 1_048_576L}",
+            )
+        bytes >= 1_024L -> stringResource(Res.string.termuxStorageBytesKb, "${bytes / 1_024L}")
+        else -> stringResource(Res.string.termuxStorageBytesB, "$bytes")
+    }

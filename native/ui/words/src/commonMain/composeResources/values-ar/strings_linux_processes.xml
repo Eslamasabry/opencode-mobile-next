@@ -1,0 +1,4 @@
+<resources>
+    <string name="linuxProcessMembers">%1$d عمليات</string>
+    <string name="linuxProcessHeavy">استخدام كثيف</string>
+</resources>

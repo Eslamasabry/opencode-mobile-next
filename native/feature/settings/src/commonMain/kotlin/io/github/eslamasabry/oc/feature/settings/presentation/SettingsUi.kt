@@ -4,7 +4,9 @@ import io.github.eslamasabry.oc.engine.analytics.WhatWeCollect
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
+import io.github.eslamasabry.oc.ui.design.tokens.Density
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -24,10 +26,13 @@ public data class SettingsUi(
     val language: AppLanguage = AppLanguage.System,
     /** Report a problem's preview; null until the page opens. */
     val report: ReportUi? = null,
+    val reportDescription: String = "",
+    val crash: CrashUi? = null,
     /** One plain line about the last save that did not stick, if any. */
     val note: SettingsNote? = null,
 ) {
-    val page: SettingsPage get() = stack.last()
+    val page: SettingsPage
+        get() = stack.last()
 }
 
 public data class HubUi(
@@ -42,7 +47,10 @@ public data class HubUi(
 
 public data class GroupUi(val id: SettingsGroupId, val rows: ImmutableList<SettingsRowUi>)
 
-/** The Appearance page (plan 07 I04, plan 06 K4): mode, colours, style, motion. Every choice applies at once. */
+/**
+ * The Appearance page (plan 07 I04, plan 06 K4): mode, colours, style, motion. Every choice applies
+ * at once.
+ */
 public data class AppearanceUi(
     val mode: AppearanceMode = AppearanceMode.Dark,
     val pack: PackId = PackId.Opencode,
@@ -51,6 +59,13 @@ public data class AppearanceUi(
     /** How many packs "See all" shows in total; 0 when everything is already listed. */
     val seeAllCount: Int = 0,
     val style: SurfaceStyle = SurfaceStyle.Solid,
+    /** The Corners shown as chosen: the person's choice, else the style's own (a choice equal to it does not differ). */
+    val corners: Corners = Corners.Round,
+    val spacing: Density = Density.Comfortable,
+    /** Corners or Spacing differ from the style's own: "Reset to <style> defaults" is offered (B-KIT-017). */
+    val fineTuned: Boolean = false,
+    /** The Accent swatch id; null = Match theme (B-KIT-049). */
+    val accent: String? = null,
     val motion: MotionLevel = MotionLevel.Full,
     val textSize: AppTextSize = AppTextSize.Normal,
     /** The five styles are listed only where the app draws them ([SettingsFacts.surfaceStyles]). */
@@ -78,20 +93,35 @@ public data class VoiceFacts(
     val readAloudOn: Boolean = false,
 )
 
-/** Minutes after midnight, local. The same start and end mean quiet all day (Flutter `SharedNotifyRules`). */
+/**
+ * Minutes after midnight, local. The same start and end mean quiet all day (Flutter
+ * `SharedNotifyRules`).
+ */
 public data class QuietHours(val start: Int, val end: Int) {
-    val allDay: Boolean get() = start == end
+    val allDay: Boolean
+        get() = start == end
 
     public companion object {
-        /** What turning quiet hours on starts with (Flutter `defaultQuietStart` / `defaultQuietEnd`). */
+        /**
+         * What turning quiet hours on starts with (Flutter `defaultQuietStart` /
+         * `defaultQuietEnd`).
+         */
         public val Default: QuietHours = QuietHours(22 * 60, 8 * 60)
 
-        /** The times the start and end pages offer: every half hour, plus [current] when it is between them. */
-        public fun choices(current: Int): List<Int> = ((0 until 24 * 60 step 30) + current).distinct().sorted()
+        /**
+         * The times the start and end pages offer: every half hour, plus [current] when it is
+         * between them.
+         */
+        public fun choices(current: Int): List<Int> =
+            ((0 until 24 * 60 step 30) + current).distinct().sorted()
     }
 }
 
-public enum class BackgroundState { Off, Running, StoppedByAndroid }
+public enum class BackgroundState {
+    Off,
+    Running,
+    StoppedByAndroid,
+}
 
 public data class NotificationFacts(
     /** Android does not let the app notify: the page leads with the fix. */
@@ -111,18 +141,33 @@ public sealed interface NotificationChange {
 
     public data class WifiOnly(val on: Boolean) : NotificationChange
 
-    /** Quiet hours for every server (`oc.notify.quietStart` / `quietEnd`, minutes after midnight); null turns them off. */
+    /**
+     * Quiet hours for every server (`oc.notify.quietStart` / `quietEnd`, minutes after midnight);
+     * null turns them off.
+     */
     public data class Quiet(val hours: QuietHours?) : NotificationChange
 }
 
-public enum class UpdateFailure { Network, NoFile, Checksum, Signer, Package, Version, Storage, Installer }
+public enum class UpdateFailure {
+    Network,
+    NoFile,
+    Checksum,
+    Signer,
+    Package,
+    Version,
+    Storage,
+    Installer,
+}
 
 public sealed interface UpdateState {
     public data object NeverChecked : UpdateState
 
     public data object Checking : UpdateState
 
-    /** [checked] is a date already formatted for the person's locale (data, not copy); null = just now. */
+    /**
+     * [checked] is a date already formatted for the person's locale (data, not copy); null = just
+     * now.
+     */
     public data class UpToDate(val checked: String?) : UpdateState
 
     public data class Available(val version: String, val sizeMb: String) : UpdateState
@@ -154,7 +199,13 @@ public data class AboutFacts(
 public data class PrivacyUi(val collect: WhatWeCollect, val saving: Boolean = false)
 
 public enum class SettingsNote {
-    AppearanceNotSaved, ChoiceNotSaved, ConsentNotSaved, TestNotSent, UpdateFailed, ReportCopied, ShareFailed,
+    AppearanceNotSaved,
+    ChoiceNotSaved,
+    ConsentNotSaved,
+    TestNotSent,
+    UpdateFailed,
+    ReportCopied,
+    ShareFailed,
 }
 
 /** Report a problem's preview (B-SEC-060: the exact safe text that is shared). */

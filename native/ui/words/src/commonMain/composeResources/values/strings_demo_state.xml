@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateDemoTryOffline">Try it offline</string>
+    <string name="stateDemoTitle">Offline demo</string>
+    <string name="stateDemoDisclosure">Simulated session. No server, files or saved settings are changed. Leaving forgets this demo.</string>
+    <string name="stateDemoPrompt">Make the welcome message friendlier.</string>
+    <string name="stateDemoReply">This is a simulated reply. The sample welcome message can change from “Hello” to “Welcome aboard!”. Allow the simulated edit below, or deny it. No real file will be written.</string>
+    <string name="stateDemoAllowed">You allowed the simulated edit. The sample now says “Welcome aboard!”. No real files were changed.</string>
+    <string name="stateDemoDenied">You denied the simulated edit. The sample still says “Hello”. No real files were changed.</string>
+    <string name="stateDemoAllow">Allow simulated edit</string>
+    <string name="stateDemoDeny">Deny simulated edit</string>
+    <string name="stateDemoReset">Reset demo</string>
+    <string name="stateDemoLeave">Leave demo</string>
+</resources>

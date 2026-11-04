@@ -39,20 +39,23 @@ class AndroidChatOutside(
     private val navigator: AppNavigator,
 ) : ChatOutside {
 
-    /** Links the policy approved and the person is being asked about (one at a time on the screen). */
+    /**
+     * Links the policy approved and the person is being asked about (one at a time on the screen).
+     */
     private val asked = LinkedHashMap<String, ApprovedLink>()
 
-    override fun copy(text: String): Boolean =
-        platformCall {
-            val clipboard = application.getSystemService(ClipboardManager::class.java)
-            clipboard.setPrimaryClip(ClipData.newPlainText("OpenCode Mobile", text))
-        }
+    override fun copy(text: String): Boolean = platformCall {
+        val clipboard = application.getSystemService(ClipboardManager::class.java)
+        clipboard.setPrimaryClip(ClipData.newPlainText("OpenCode Mobile", text))
+    }
 
-    override fun share(text: String): Boolean =
-        platformCall {
-            val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
-            application.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        }
+    override fun share(text: String): Boolean = platformCall {
+        val send =
+            Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
+        application.startActivity(
+            Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
 
     /** The platform's expected refusals (no app, a system policy) are a plain "it did not work". */
     private inline fun platformCall(block: () -> Unit): Boolean =
@@ -68,18 +71,22 @@ class AndroidChatOutside(
         }
 
     override fun checkLink(url: String): LinkCheck {
-        // P12-FIX-PREVIEWQR: `http://localhost:5173` in a reply is the conversation's dev server, not the phone's:
-        // it opens in the in-app preview against that conversation's server (Flutter claims these links).
+        // P12-FIX-PREVIEWQR: `http://localhost:5173` in a reply is the conversation's dev server,
+        // not the phone's:
+        // it opens in the in-app preview against that conversation's server (Flutter claims these
+        // links).
         PreviewRoute.Page.claim(url, (navigator.top.value as? ChatRoute)?.ref)?.let { page ->
             navigator.open(page)
             return LinkCheck.Opened
         }
         return when (val decision = policy.check(url, LinkOrigin.Markdown)) {
-            is LinkDecision.Open -> if (opener.open(decision.link) is Outcome.Ok) LinkCheck.Opened else LinkCheck.Refused
+            is LinkDecision.Open ->
+                if (opener.open(decision.link) is Outcome.Ok) LinkCheck.Opened
+                else LinkCheck.Refused
             is LinkDecision.AskFirst -> {
                 if (asked.size >= MAX_ASKED) asked.remove(asked.keys.first())
                 asked[url] = decision.link
-                LinkCheck.Ask(decision.shownHost)
+                LinkCheck.Ask(decision.shownHost, decision.insecure)
             }
             is LinkDecision.Refuse -> LinkCheck.Refused
         }

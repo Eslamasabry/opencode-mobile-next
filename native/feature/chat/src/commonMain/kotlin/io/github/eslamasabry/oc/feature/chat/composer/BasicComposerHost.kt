@@ -31,6 +31,8 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.platform.PromptFilePicker
+import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistorySheet
+import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistoryUi
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.AttachKind
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerActions
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerUi
@@ -43,7 +45,6 @@ import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.KitRow
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
@@ -62,8 +63,16 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerGlow
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerTray
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerVoice
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitGlowChoice
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayAction
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitTrayKind
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
+import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
+import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptOrigin
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
@@ -74,7 +83,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatModelsCurrent
 import io.github.eslamasabry.oc.ui.words.res.chatModelsNoMatch
 import io.github.eslamasabry.oc.ui.words.res.chatModelsRecent
 import io.github.eslamasabry.oc.ui.words.res.chatModelsSearch
-import io.github.eslamasabry.oc.ui.words.res.composerFullAddTitle
 import io.github.eslamasabry.oc.ui.words.res.composerFullAgent
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttach
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttachmentsLocal
@@ -89,6 +97,16 @@ import io.github.eslamasabry.oc.ui.words.res.composerFullSteerHint
 import io.github.eslamasabry.oc.ui.words.res.composerFullTakePhoto
 import io.github.eslamasabry.oc.ui.words.res.composerFullThinking
 import io.github.eslamasabry.oc.ui.words.res.composerFullThinkingDefault
+import io.github.eslamasabry.oc.ui.kit.KitRow
+import io.github.eslamasabry.oc.ui.words.res.composerFullAddTitle
+import io.github.eslamasabry.oc.ui.kit.row.KitRow as KitActionRow
+import io.github.eslamasabry.oc.ui.words.res.chatHistoryTitle
+import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_add
+import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_remove
+import io.github.eslamasabry.oc.ui.words.res.chat_model_favorites
+import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
+import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
+import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachModelWithoutFiles
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachNoPicker
@@ -114,8 +132,11 @@ import io.github.eslamasabry.oc.ui.words.res.kitComposerField
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSend
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSendAfter
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSending
+import io.github.eslamasabry.oc.ui.words.res.kitComposerTrayClose
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStopShort
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
+import io.github.eslamasabry.oc.ui.words.res.promptHistorySaveFailed
+import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
@@ -136,6 +157,7 @@ public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : Comp
                 create(target)
             }
         val state by vm.state.collectAsStateWithLifecycle()
+        val history by vm.history.collectAsStateWithLifecycle()
         BasicComposer(
             state,
             vm,
@@ -146,6 +168,8 @@ public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : Comp
                 target.sessionId?.let {
                     ConversationRef(ProfileId(target.profileId), SessionId(it))
                 },
+            history = history,
+            refreshHistory = vm::loadHistory,
         )
     }
 }
@@ -169,7 +193,27 @@ public fun BasicComposer(
     modifier: Modifier = Modifier,
     voice: KitComposerVoice? = null,
     conversationRef: ConversationRef? = null,
+    history: ComposerHistoryUi = ComposerHistoryUi(),
+    refreshHistory: (() -> Unit)? = null,
 ) {
+    if (state.readOnly != null) {
+        Column(modifier) {
+            KitNotice(
+                stringResource(
+                    io.github.eslamasabry.oc.ui.words.res.Res.string.chatSubagentReadOnly
+                )
+            )
+            if (state.readOnly.parent != null)
+                KitButton(
+                    stringResource(
+                        io.github.eslamasabry.oc.ui.words.res.Res.string.chatUiOpenParentSession
+                    ),
+                    actions::openParent,
+                    role = KitButtonRole.Secondary,
+                )
+        }
+        return
+    }
     val field = remember(state.targetKey) { TextFieldState() }
     val focus = remember(state.targetKey) { FocusRequester() }
     var editorReady by remember(state.targetKey) { mutableStateOf(false) }
@@ -219,6 +263,10 @@ public fun BasicComposer(
         val request = insert ?: return@LaunchedEffect
         if (!editorReady || !state.draft.ready) return@LaunchedEffect
         val current = field.text.toString()
+        if (request.onlyIfEmpty && (current.isNotBlank() || state.draft.attachments.isNotEmpty())) {
+            chrome.insertDone(request.id)
+            return@LaunchedEffect
+        }
         val next =
             if (request.replace || current.isBlank()) request.text
             else current.trimEnd() + "\n" + request.text
@@ -232,14 +280,16 @@ public fun BasicComposer(
     }
     val busy = chrome.busy()
     val scope = rememberCoroutineScope()
+    val lift = LocalKitPromptLift.current
     val send: () -> Unit = {
         val text = field.text.toString()
+        val liftId = lift?.offer(text)
         scope.launch {
             if (actions.send(text)) {
                 // A local admission is not a server acknowledgement. The draft owner publishes its
                 // clear revision.
                 chrome.onSent()
-            }
+            } else if (liftId != null) lift?.cancel(liftId)
         }
     }
     // P12-VOICE: the voice slot types into this field and sends through this composer's one send
@@ -270,6 +320,7 @@ public fun BasicComposer(
     var modelsOpen by remember(state.targetKey) { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
+    var historyOpen by remember(state.targetKey) { mutableStateOf(false) }
     val selectAndClose: (ComposerModel?) -> Unit = { choice ->
         scope.launch { if (actions.selectModel(choice)) modelsOpen = false }
     }
@@ -282,6 +333,19 @@ public fun BasicComposer(
         actions.draftChanged(now)
     }
     Column(modifier) {
+        // A one-off note, as in Flutter: dismissing hides this failure until a new one arrives.
+        var dismissedSave by remember { mutableStateOf<Failure?>(null) }
+        if (history.saveFailure != null && history.saveFailure !== dismissedSave)
+            KitNotice(
+                message = stringResource(Res.string.promptHistorySaveFailed),
+                tone = StatusTone.Failure,
+                dismiss =
+                    KitLineAction(
+                        stringResource(Res.string.workspaceDismissNotice),
+                        { dismissedSave = history.saveFailure },
+                    ),
+                modifier = Modifier.testTag("prompt-history-save-failed"),
+            )
         if (state.draft.failure != null || state.draft.sendBlocked) {
             KitErrorNotice(
                 message =
@@ -356,31 +420,78 @@ public fun BasicComposer(
                 modifier = Modifier.weight(1f, fill = false).testTag("chat-model-button"),
                 maxLines = 1,
             )
-            val attachReason =
-                when {
-                    !state.filesAvailable ->
-                        stringResource(Res.string.composerPreviewAttachNoPicker)
-                    state.models.selected?.supportsAttachments == false ->
-                        stringResource(Res.string.composerPreviewAttachModelWithoutFiles)
-                    else -> null
-                }
             KitButton(
                 label =
                     stringResource(
-                        if (state.attachKinds.isEmpty()) Res.string.composerPreviewAttachFile
+                        if (addOpen) Res.string.kitComposerTrayClose
+                        else if (state.attachKinds.isEmpty()) Res.string.composerPreviewAttachFile
                         else Res.string.composerFullAttach
                     ),
                 onClick = {
-                    if (state.attachKinds.isEmpty()) actions.attachFile() else addOpen = true
+                    if (state.attachKinds.isEmpty()) actions.attachFile() else addOpen = !addOpen
                 },
                 role = KitButtonRole.Secondary,
-                enabled =
-                    if (attachReason != null) KitEnabled.Disabled(attachReason)
-                    else KitEnabled.Enabled,
                 working = state.pickingFile,
                 modifier = Modifier.testTag("chat-attach-button"),
             )
             chrome.rowChips()
+        }
+        if (addOpen) {
+            val choices = buildList {
+                if (state.filesAvailable)
+                    add(
+                        KitTrayAction(
+                            stringResource(Res.string.composerPreviewAttachFile),
+                            KitTrayKind.File,
+                        ) {
+                            addOpen = false
+                            actions.attachFile()
+                        }
+                    )
+                if (AttachKind.Photos in state.attachKinds)
+                    add(
+                        KitTrayAction(
+                            stringResource(Res.string.composerFullPhotoLibrary),
+                            KitTrayKind.Photo,
+                        ) {
+                            addOpen = false
+                            actions.attach(AttachKind.Photos)
+                        }
+                    )
+                if (AttachKind.Camera in state.attachKinds)
+                    add(
+                        KitTrayAction(
+                            stringResource(Res.string.composerFullTakePhoto),
+                            KitTrayKind.Camera,
+                        ) {
+                            addOpen = false
+                            actions.attach(AttachKind.Camera)
+                        }
+                    )
+                if (AttachKind.Clipboard in state.attachKinds)
+                    add(
+                        KitTrayAction(
+                            stringResource(Res.string.composerFullPasteImage),
+                            KitTrayKind.Clipboard,
+                        ) {
+                            addOpen = false
+                            actions.attach(AttachKind.Clipboard)
+                        }
+                    )
+                // PORT-SCREENS-1: reuse a prompt from this conversation or recent sends.
+                if (refreshHistory != null)
+                    add(
+                        KitTrayAction(
+                            stringResource(Res.string.chatHistoryTitle),
+                            KitTrayKind.History,
+                        ) {
+                            addOpen = false
+                            refreshHistory()
+                            historyOpen = true
+                        }
+                    )
+            }
+            KitComposerTray(choices)
         }
         voice?.Panel(voiceField, Modifier.fillMaxWidth())
         if (state.draft.attachments.isNotEmpty()) {
@@ -455,7 +566,7 @@ public fun BasicComposer(
                     repeatRevision = null
                     actions.draftChanged(accepted)
                 },
-                modifier = fieldModifier.testTag("chat-composer-field"),
+                modifier = fieldModifier.kitPromptOrigin().testTag("chat-composer-field"),
             )
         }
         val stopPart: @Composable () -> Unit = {
@@ -499,26 +610,35 @@ public fun BasicComposer(
                     modifier = Modifier.testTag("chat-send-button"),
                 )
         }
-        if (stopShown) {
-            if (!chrome.requestWaiting()) fieldPart(Modifier.fillMaxWidth())
-            Row(
-                Modifier.fillMaxWidth().testTag("chat-composer-turn-controls"),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.End),
-            ) {
-                if (!chrome.requestWaiting()) voice?.Mic(voiceField, Modifier) // P12-VOICE
-                stopPart()
-                sendPart()
-            }
-        } else {
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-            ) {
-                fieldPart(Modifier.weight(1f))
-                voice?.Mic(voiceField, Modifier) // P12-VOICE
-                sendPart()
+        val appearance = LocalKitAppearance.current
+        KitComposerGlow(
+            active = busy,
+            choice = KitGlowChoice.of(appearance.activityGlow, appearance.softGlow),
+        ) {
+            if (stopShown) {
+                // The glow holds its content in a Box: the field and the turn controls stack here.
+                Column(Modifier.fillMaxWidth()) {
+                    if (!chrome.requestWaiting()) fieldPart(Modifier.fillMaxWidth())
+                    Row(
+                        Modifier.fillMaxWidth().testTag("chat-composer-turn-controls"),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.End),
+                    ) {
+                        if (!chrome.requestWaiting()) voice?.Mic(voiceField, Modifier) // P12-VOICE
+                        stopPart()
+                        sendPart()
+                    }
+                }
+            } else {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                ) {
+                    fieldPart(Modifier.weight(1f))
+                    voice?.Mic(voiceField, Modifier) // P12-VOICE
+                    sendPart()
+                }
             }
         }
     }
@@ -586,20 +706,49 @@ public fun BasicComposer(
                     sections.forEach { section ->
                         KitRowGroup(
                             label =
-                                section.providerName ?: stringResource(Res.string.chatModelsRecent)
+                                if (section.favorites)
+                                    stringResource(Res.string.chat_model_favorites)
+                                else
+                                    section.providerName
+                                        ?: stringResource(Res.string.chatModelsRecent)
                         ) {
                             section.rows.forEach { pick ->
-                                KitChoiceRow(
-                                    title = pick.model.label,
-                                    selected = pick.current,
-                                    // In "Recent" the provider tells equal names apart.
-                                    supporting =
-                                        if (section.providerName == null) pick.model.providerName
-                                        else null,
-                                    tag = if (pick.current) currentTag else null,
-                                    onClick = { selectAndClose(pick.model) },
-                                    modifier = Modifier.testTag("chat-model-choice"),
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    KitChoiceRow(
+                                        title = pick.model.label,
+                                        leading = {
+                                            KitProviderLogo(
+                                                pick.model.providerId,
+                                                pick.model.providerName,
+                                            )
+                                        },
+                                        selected = pick.current,
+                                        // In "Recent" the provider tells equal names apart.
+                                        supporting =
+                                            if (section.providerName == null)
+                                                pick.model.providerName
+                                            else null,
+                                        tag = if (pick.current) currentTag else null,
+                                        onClick = { selectAndClose(pick.model) },
+                                        modifier = Modifier.weight(1f).testTag("chat-model-choice"),
+                                    )
+                                    val favorite =
+                                        models.favorites.any {
+                                            it.providerId == pick.model.providerId &&
+                                                it.modelId == pick.model.modelId
+                                        }
+                                    KitButton(
+                                        label =
+                                            stringResource(
+                                                if (favorite) Res.string.chat_model_favorite_remove
+                                                else Res.string.chat_model_favorite_add
+                                            ),
+                                        role = KitButtonRole.Tertiary,
+                                        onClick = {
+                                            scope.launch { actions.toggleModelFavorite(pick.model) }
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
@@ -637,51 +786,23 @@ public fun BasicComposer(
             }
         }
     }
-    KitSheet(
-        visible = addOpen,
-        onDismissRequest = { addOpen = false },
-        title = stringResource(Res.string.composerFullAddTitle),
-        closeLabel = stringResource(Res.string.composerPreviewModelsClose),
-    ) {
-        Column(Modifier.fillMaxWidth().testTag("chat-add-sheet")) {
-            if (state.filesAvailable)
-                KitRow(
-                    stringResource(Res.string.composerPreviewAttachFile),
-                    null,
-                    {
-                        addOpen = false
-                        actions.attachFile()
-                    },
-                )
-            if (AttachKind.Photos in state.attachKinds)
-                KitRow(
-                    stringResource(Res.string.composerFullPhotoLibrary),
-                    null,
-                    {
-                        addOpen = false
-                        actions.attach(AttachKind.Photos)
-                    },
-                )
-            if (AttachKind.Camera in state.attachKinds)
-                KitRow(
-                    stringResource(Res.string.composerFullTakePhoto),
-                    null,
-                    {
-                        addOpen = false
-                        actions.attach(AttachKind.Camera)
-                    },
-                )
-            if (AttachKind.Clipboard in state.attachKinds)
-                KitRow(
-                    stringResource(Res.string.composerFullPasteImage),
-                    null,
-                    {
-                        addOpen = false
-                        actions.attach(AttachKind.Clipboard)
-                    },
-                )
-        }
-    }
+    ComposerHistorySheet(
+        visible = historyOpen,
+        state = history,
+        onDismiss = { historyOpen = false },
+        onRetry = { refreshHistory?.invoke() },
+        onChoose = { words ->
+            val current = field.text.toString().trimEnd()
+            val next = if (current.isEmpty()) words else "$current\n\n$words"
+            field.edit { replace(0, length, next) }
+            editor.userEditSerial += 1
+            editor.lastReported = next
+            repeatRevision = null
+            actions.draftChanged(next)
+            historyOpen = false
+            focus.requestFocus()
+        },
+    )
     LaunchedEffect(state.targetKey, state.draft.editRevision, state.canRepeat) {
         if (!state.canRepeat || repeatRevision != state.draft.editRevision) repeatRevision = null
     }

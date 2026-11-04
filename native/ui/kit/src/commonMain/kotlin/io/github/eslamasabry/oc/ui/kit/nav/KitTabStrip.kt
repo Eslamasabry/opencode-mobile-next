@@ -53,7 +53,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.frame.kitScrollFade
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwapCount
@@ -233,11 +233,11 @@ public fun KitTabStrip(
 private fun NeedsYouMark(count: Int) {
     val colors = LocalKitColors.current
     Row(
-        Modifier.background(colors.attentionSurface, KitShapeId.Pill.toShape()).padding(horizontal = Space.S1.dp),
+        Modifier.background(colors.attentionSurface, KitShapeId.Pill.shape()).padding(horizontal = Space.S1.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
-        Box(Modifier.size(DOT_DP.dp).background(colors.attention, KitShapeId.Circle.toShape()))
+        Box(Modifier.size(DOT_DP.dp).background(colors.attention, KitShapeId.Circle.shape()))
         KitSwapCount(count) { n ->
             KitText(n.toString(), role = TypeRole.Caption, tone = TextTone.Attention, kind = KitTextKind.Frame, maxLines = 1)
         }
