@@ -142,3 +142,34 @@ local-only `~/.gradle/init.d/mirror.gradle` put Google's Maven Central mirror fi
   access to `:android:notifications` and `:android:widgets`.
 - Register the per-profile keys `oc.automaticActivity.<id>`, `oc.widgetTarget.<id>` and
   `ProfileMonitor.profileScopedKeys(id)` with ProfileScope when those engines are wired.
+
+
+## Integration conflict repair — 2026-11-04
+
+Compile-only verification of unit `ecde9a395c9744c99ca20be287d740c4b74238d4` merged with integration head
+`526ea644bfab1cd1c74aa4b4d6caadcd73ff25ef` on `p12x/diagnostics-attention-ecde9a3`.
+
+- Resolved both conflicts: `native/MODULE_OWNERS` retains every ownership row from both parents;
+  `SettingsWiring.kt` retains Background navigation alongside kept diagnostics and GitHub reporting.
+- Checked the app project dependency union: no dependencies from either parent were lost.
+- Removed the extra blank line at the end of this unit's `DiagnosticsAttentionWiring.kt`.
+- Fetched the ignored sherpa-onnx AAR with `native/tools/vendor/fetch.sh`; its pinned SHA-256 passed.
+- No tests were run, weakened or deleted. No other unit's behavior was changed.
+
+Ran in `native/`, under `/home/eslam/Storage/tmp/oc-build.lock`:
+
+```bash
+export JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk"
+nice -n 5 ./gradlew --console=plain --continue \
+  -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
+  -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' \
+  :androidApp:assemblePreviewDebug compileKotlinDesktop compileTestKotlinDesktop
+```
+
+Result: **BUILD SUCCESSFUL**, exit 0 in 2m 46s. **3/3 requested targets passed**, including preview APK native-library
+verification. **1,238 actionable tasks: 911 executed, 327 from cache; 0 failed; 0 tests run.**
+The log contains 0 Kotlin compiler errors and 200 Kotlin compiler warnings (warnings are not errors in this gate).
+The three diagnostics/attention modules' desktop production and test sources compiled. This is compile evidence only;
+the earlier test results above are historical and were not rerun during this repair.
+
+Local build log: `/tmp/fx-diagnostics-attention-compile.log`. No push, release or device qualification performed.

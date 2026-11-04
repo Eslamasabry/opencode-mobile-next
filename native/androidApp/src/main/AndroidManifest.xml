@@ -49,6 +49,11 @@
         <receiver
             android:name=".StatusActionReceiver"
             android:exported="false" />
+        <!-- BUILD-ANDROID-BG-PLATFORM: the live background connection (frozen Flutter FQCN, dataSync, 6 h/24 h). -->
+        <service
+            android:name=".BackgroundConnectionService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
         <!-- P12 fix (Codex files #3, plan 10 §11.6 S4): untrusted PDFs are parsed only in this isolated process. -->
         <service
             android:name=".LocalPdfService"

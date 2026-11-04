@@ -44,6 +44,22 @@ import io.github.eslamasabry.oc.ui.kitchat.header.KitChatMoreMenu
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.engine.agents.resume.SessionResumeUnavailable
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
+import io.github.eslamasabry.oc.ui.words.res.handoffSheetCopyCommand
+import io.github.eslamasabry.oc.ui.words.res.handoffUiComputerCommandLabel
+import io.github.eslamasabry.oc.ui.words.res.handoffUiComputerDirectoryNote
+import io.github.eslamasabry.oc.ui.words.res.handoffUiComputerIntro
+import io.github.eslamasabry.oc.ui.words.res.handoffUiComputerTitle
+import io.github.eslamasabry.oc.ui.words.res.handoffUiComputerVerify
+import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableDirectory
+import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableReference
+import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableWorkspace
+import io.github.eslamasabry.oc.ui.words.res.kitCopied
+import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.chatFreeModelNote
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderArchiveFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderContext
@@ -264,6 +280,14 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
     ) {
         (sheet as? HeaderSheet.ContinueWith)?.let { ContinueBody(it, state.working == HeaderAction.ContinueWith, actions) }
     }
+    KitSheet(
+        visible = sheet is HeaderSheet.ContinueOnComputer,
+        onDismissRequest = actions::closeSheet,
+        title = stringResource(Res.string.handoffUiComputerTitle),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        (sheet as? HeaderSheet.ContinueOnComputer)?.let { ComputerBody(it, actions) }
+    }
     val clip = state.clip
     KitClipboardEffect(clip?.id, clip?.text, actions::clipDone)
 }
@@ -293,6 +317,47 @@ private fun DetailsBody(facts: DetailsUi) {
         }
     }
 }
+
+/** Flutter `_ContinueOnComputerBody`: the whole command, wrapped, with its own Copy; or why there is none. */
+@Composable
+private fun ComputerBody(sheet: HeaderSheet.ContinueOnComputer, actions: ChatHeaderActions) {
+    val command = sheet.command
+    Column(Modifier.fillMaxWidth().testTag("continue-on-computer-sheet")) {
+        KitNotice(message = stringResource(Res.string.handoffUiComputerIntro, command.binary))
+        val text = command.command
+        if (text != null) {
+            KitSectionLabel(stringResource(Res.string.handoffUiComputerCommandLabel))
+            KitCodeBlock(
+                source = text,
+                kind = KitCodeKind.Command,
+                modifier = Modifier.testTag("continue-on-computer-command"),
+                wrap = true,
+                copyLabel = stringResource(Res.string.handoffSheetCopyCommand),
+                copiedLabel = stringResource(Res.string.kitCopied),
+                onCopy = { actions.copyResumeCommand() },
+            )
+            KitNotice(message = stringResource(Res.string.handoffUiComputerDirectoryNote))
+            KitDetailsFold(
+                label = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
+                notes = listOf(stringResource(Res.string.handoffUiComputerVerify, RESUME_VERIFIED_VERSIONS, command.binary)),
+            )
+        } else {
+            KitNotice(
+                modifier = Modifier.testTag("continue-on-computer-unavailable"),
+                message =
+                    when (command.unavailable) {
+                        SessionResumeUnavailable.ManagedWorkspace -> stringResource(Res.string.handoffUiUnavailableWorkspace)
+                        SessionResumeUnavailable.InvalidSessionId -> stringResource(Res.string.handoffUiUnavailableReference)
+                        else -> stringResource(Res.string.handoffUiUnavailableDirectory)
+                    },
+            )
+        }
+    }
+}
+
+/** The CLI versions the resume syntax was verified against (Flutter `sessionResumeVerifiedVersions`). */
+private const val RESUME_VERIFIED_VERSIONS = "opencode 1.18.25, opencode2 beta-19242"
 
 @Composable
 private fun ContinueBody(sheet: HeaderSheet.ContinueWith, working: Boolean, actions: ChatHeaderActions) {
@@ -382,6 +447,7 @@ private fun menuWords(action: HeaderAction): String =
         HeaderAction.Fork -> stringResource(Res.string.chatUiForkSession)
         HeaderAction.Rename -> stringResource(Res.string.chatUiRenameSession)
         HeaderAction.ContinueWith -> stringResource(Res.string.continueWithMenu)
+        HeaderAction.ContinueOnComputer -> stringResource(Res.string.handoffUiComputerTitle)
         HeaderAction.CopyTranscript -> stringResource(Res.string.chatUiCopyTranscript)
         HeaderAction.Archive -> stringResource(Res.string.sessionMenuArchive)
         HeaderAction.Delete -> stringResource(Res.string.sessionMenuDelete)

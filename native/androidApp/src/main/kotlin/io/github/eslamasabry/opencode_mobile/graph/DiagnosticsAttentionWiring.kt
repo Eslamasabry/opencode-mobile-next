@@ -369,4 +369,3 @@ class AndroidLifecycleSource(private val application: Application) : LifecycleSo
         return Outcome.Ok(RawLaunchReport(exit = newest))
     }
 }
-

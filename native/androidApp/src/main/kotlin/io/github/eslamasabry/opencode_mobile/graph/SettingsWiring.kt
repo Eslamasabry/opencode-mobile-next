@@ -79,6 +79,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.UpdateSettings
 import io.github.eslamasabry.oc.feature.settings.presentation.VoiceSettings
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
@@ -194,7 +195,7 @@ class AndroidSettingsHost(
     /** Rows whose page or engine is not in this build are absent (02 §3.7), never dead. */
     private val shipped =
         platform.copy(
-            builtinLinux = false, voice = voiceSettings.offered, readAloud = false, backgroundService = false,
+            builtinLinux = false, voice = voiceSettings.offered, readAloud = false, backgroundService = true,
             inAppUpdater = true, desktopReleaseCheck = false,
         )
 
@@ -233,6 +234,7 @@ class AndroidSettingsHost(
             SettingsOutside.ShareApp -> scope.launch { shareApp() }
             SettingsOutside.AndroidNotificationSettings -> openNotificationSettings()
             SettingsOutside.VoiceSetup -> nav.open(VoiceRoute.Settings)
+            SettingsOutside.KeepRunning -> nav.open(BackgroundRoute.Home) // BUILD-ANDROID-BG-PLATFORM
             SettingsOutside.VoiceNotices -> application.view("$REPO/blob/master/THIRD_PARTY_NOTICES.md")
             SettingsOutside.KeptDiagnostics -> nav.open(DiagnosticsRoute.Kept)
             SettingsOutside.ReportOnGitHub ->
@@ -307,6 +309,7 @@ class AndroidSettingsHost(
                 SettingsOutside.ReleaseNotes, SettingsOutside.PrivacyPolicy, SettingsOutside.ShareApp,
                 SettingsOutside.AndroidNotificationSettings, SettingsOutside.VoiceSetup, SettingsOutside.VoiceNotices,
                 SettingsOutside.ReportOnGitHub, SettingsOutside.KeptDiagnostics,
+                SettingsOutside.KeepRunning,
             )
     }
 }

@@ -45,7 +45,7 @@ internal val S2 = SessionId("ses_2")
 internal const val NOW_MS = 1_767_225_600_000L
 
 /** A preferences file that can refuse (or throw on) chosen commits, and remembers what a restart would load. */
-internal class Disk(initial: Map<String, RawPref> = emptyMap()) : InMemoryPrefsBackend(initial) {
+internal open class Disk(initial: Map<String, RawPref> = emptyMap()) : InMemoryPrefsBackend(initial) {
     /** Return true to refuse this commit (the platform answered false). */
     var refuse: (Map<String, RawPref?>) -> Boolean = { false }
     var commits = 0

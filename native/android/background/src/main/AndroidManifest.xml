@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- :android:background declares no component: BackgroundConnectionService is a shell in :androidApp. -->
+<manifest />

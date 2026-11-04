@@ -35,7 +35,6 @@ import io.github.eslamasabry.oc.android.notifications.NotifyWords
 import io.github.eslamasabry.oc.android.notifications.ReplyStopper
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswer
 import io.github.eslamasabry.oc.android.notifications.ShadeAnswerer
-import io.github.eslamasabry.oc.android.notifications.ShadeReply
 import io.github.eslamasabry.oc.android.tiles.AttentionTileCache
 import io.github.eslamasabry.oc.android.tiles.LaunchAction
 import io.github.eslamasabry.oc.android.tiles.LaunchActions
@@ -66,7 +65,6 @@ import io.github.eslamasabry.oc.core.security.ExternalLinkOpener
 import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
 import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
-import io.github.eslamasabry.oc.core.model.PermissionReply
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
@@ -77,7 +75,6 @@ import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
-import io.github.eslamasabry.oc.engine.requests.RequestAnswer
 import io.github.eslamasabry.oc.engine.updates.AppUpdates
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
@@ -97,7 +94,6 @@ import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.UpdatesRoute
 import kotlin.time.Clock
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -312,7 +308,13 @@ class PlatformHub(
             navigator.openChat(ref)
             return
         }
-        when (LaunchActions.consume(intent)) {
+        when (val action = LaunchActions.consume(intent)) {
+            LaunchAction.PhoneSetup, LaunchAction.PhoneSetupDone ->
+                when (val tap = SetupTapRoutes.routeFor(action, navigator.top.value)) { // B-ANDR-050
+                    is SetupTap.Open -> navigator.open(tap.route)
+                    SetupTap.Stay -> Unit
+                    SetupTap.Land, SetupTap.NotSetup -> navigator.land()
+                }
             LaunchAction.Connect -> navigator.open(ServersRoute.Home)
             LaunchAction.NewTask -> navigator.open(ChatsRoute.New(profile = stores.profiles.activeId.value))
             null -> Unit
@@ -639,14 +641,7 @@ class PlatformHub(
                 ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline)) // reposted with Open only
         val engine =
             (graph as? ChatGraphAccessors)?.chatRequests?.engine ?: return Outcome.Failed(Failure.Unexpected())
-        val reply =
-            when (val r = answer.reply) {
-                ShadeReply.AllowOnce -> RequestAnswer.Permission(PermissionReply.Once)
-                ShadeReply.Reject ->
-                    if (answer.kind == AlertKind.Question) RequestAnswer.Decline
-                    else RequestAnswer.Permission(PermissionReply.Reject)
-                is ShadeReply.Text -> RequestAnswer.Question(persistentListOf(persistentListOf(r.text)))
-            }
+        val reply = ShadeReplyAnswers.of(answer.kind, answer.reply) // B-PROTO-046 (BuildRestWiring)
         val result = engine.answerNow(answer.request, reply)
         log.i { "shade answer ${answer.kind} ${if (result is Outcome.Ok) "sent" else "not sent"}" }
         return result
