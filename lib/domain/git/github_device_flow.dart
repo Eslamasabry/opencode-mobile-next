@@ -22,6 +22,7 @@ const gitHubScope = 'repo';
 const gitHubDeviceCodeUrl = 'https://github.com/login/device/code';
 const gitHubAccessTokenUrl = 'https://github.com/login/oauth/access_token';
 const gitHubUserUrl = 'https://api.github.com/user';
+const gitHubUserReposUrl = 'https://api.github.com/user/repos';
 
 /// Where people review or revoke the app's access.
 const gitHubAuthorizedAppsUrl =
@@ -70,6 +71,46 @@ class GitHubProfile {
   /// users.noreply.github.com): a push keeps the real email out of history.
   String? get commitEmail =>
       id == null ? null : '$id+$login@users.noreply.github.com';
+}
+
+class GitHubRepository {
+  const GitHubRepository({
+    required this.fullName,
+    required this.htmlUrl,
+    required this.cloneUrl,
+    required this.defaultBranch,
+    required this.isPrivate,
+  });
+
+  final String fullName;
+  final String htmlUrl;
+  final String cloneUrl;
+  final String defaultBranch;
+  final bool isPrivate;
+
+  String get remoteUrl => cloneUrl.isNotEmpty
+      ? cloneUrl
+      : htmlUrl.endsWith('.git')
+      ? htmlUrl
+      : '$htmlUrl.git';
+
+  factory GitHubRepository.fromJson(Map<String, Object?> json) {
+    final fullName = json['full_name'];
+    final htmlUrl = json['html_url'];
+    final cloneUrl = json['clone_url'];
+    final defaultBranch = json['default_branch'];
+    final isPrivate = json['private'];
+    if (fullName is! String || fullName.trim().isEmpty) {
+      throw const FormatException('GitHub repository missing full_name');
+    }
+    return GitHubRepository(
+      fullName: fullName,
+      htmlUrl: htmlUrl is String ? htmlUrl : '',
+      cloneUrl: cloneUrl is String ? cloneUrl : '',
+      defaultBranch: defaultBranch is String ? defaultBranch : 'main',
+      isPrivate: isPrivate is bool ? isPrivate : false,
+    );
+  }
 }
 
 class GitHubCredential {
@@ -374,6 +415,52 @@ class GitHubDeviceFlow {
       id: id is int ? id : null,
       name: name is String && name.trim().isNotEmpty ? name.trim() : null,
     );
+  }
+
+  /// The signed-in account's visible repositories (`GET /user/repos`).
+  Future<List<GitHubRepository>> fetchUserRepositories(
+    String token, {
+    int perPage = 100,
+  }) async {
+    final Response<Object?> response;
+    try {
+      response = await _dio.get<Object?>(
+        gitHubUserReposUrl,
+        queryParameters: {'per_page': perPage, 'sort': 'updated'},
+        options: Options(
+          headers: {
+            'Accept': 'application/vnd.github+json',
+            'Authorization': 'Bearer $token',
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+          responseType: ResponseType.json,
+          validateStatus: (_) => true,
+          receiveTimeout: _timeout,
+        ),
+      );
+    } on DioException {
+      throw const GitHubSignInException(GitHubSignInProblem.network);
+    }
+    if (response.statusCode == 401) {
+      throw const GitHubSignInException(GitHubSignInProblem.tokenRejected);
+    }
+    final data = response.data;
+    if (response.statusCode != 200 || data is! List) {
+      throw GitHubSignInException(
+        GitHubSignInProblem.unexpected,
+        details: 'GET /user/repos answered ${response.statusCode}',
+      );
+    }
+    final repos = <GitHubRepository>[];
+    for (final item in data) {
+      if (item is! Map) continue;
+      try {
+        repos.add(GitHubRepository.fromJson(item.cast<String, Object?>()));
+      } on FormatException {
+        // Skip broken entries; the caller can still use the rest.
+      }
+    }
+    return repos;
   }
 
   GitHubCredential _credential(Map<String, Object?> body) {

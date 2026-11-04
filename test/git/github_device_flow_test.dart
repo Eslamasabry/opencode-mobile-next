@@ -12,6 +12,22 @@ class _GitHub implements HttpClientAdapter {
   final codeAnswers = <Object>[];
   final tokenAnswers = <Object>[];
   Object userAnswer = {'login': 'octocat'};
+  List<Object> reposAnswer = const [
+    {
+      'full_name': 'octocat/alpha',
+      'html_url': 'https://github.com/octocat/alpha',
+      'clone_url': 'https://github.com/octocat/alpha.git',
+      'private': false,
+      'default_branch': 'main',
+    },
+    {
+      'full_name': 'octocat/beta',
+      'html_url': 'https://github.com/octocat/beta',
+      'clone_url': 'https://github.com/octocat/beta.git',
+      'private': true,
+      'default_branch': 'dev',
+    },
+  ];
   int userStatus = 200;
   final requests = <({String method, String url, String body, Map headers})>[];
 
@@ -32,7 +48,8 @@ class _GitHub implements HttpClientAdapter {
     ));
     Object answer;
     var status = 200;
-    switch (options.uri.toString()) {
+    // The repo list adds query parameters; match on the address without them.
+    switch ('${options.uri.origin}${options.uri.path}') {
       case gitHubDeviceCodeUrl:
         answer = codeAnswers.removeAt(0);
       case gitHubAccessTokenUrl:
@@ -40,6 +57,8 @@ class _GitHub implements HttpClientAdapter {
       case gitHubUserUrl:
         answer = userAnswer;
         status = userStatus;
+      case gitHubUserReposUrl:
+        answer = reposAnswer;
       default:
         throw StateError('unexpected ${options.uri}');
     }
@@ -139,6 +158,20 @@ void main() {
     final user = github.requests.last;
     expect(user.headers['Authorization'], 'Bearer $fakeGitHubToken');
   });
+
+  test(
+    'user repos are listed with remote URLs ready for a Git remote',
+    () async {
+      final repos = await flow().fetchUserRepositories(fakeGitHubToken);
+      expect(repos.map((r) => r.fullName), ['octocat/alpha', 'octocat/beta']);
+      expect(repos.first.remoteUrl, 'https://github.com/octocat/alpha.git');
+      expect(repos.last.remoteUrl, 'https://github.com/octocat/beta.git');
+      final request = github.requests.last;
+      expect(request.method, 'GET');
+      expect(request.url, contains(gitHubUserReposUrl));
+      expect(request.headers['Authorization'], 'Bearer $fakeGitHubToken');
+    },
+  );
 
   test('slow_down without an interval adds five seconds', () async {
     github.codeAnswers.add({..._code, 'interval': 2});

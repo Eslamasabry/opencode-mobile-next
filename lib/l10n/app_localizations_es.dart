@@ -33577,6 +33577,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gitRemoteAddTitle => 'Add a remote';
 
   @override
+  String get gitRemotePickGitHub => 'Choose from GitHub';
+
+  @override
+  String get gitRemotePickGitHubTitle => 'Choose a repository';
+
+  @override
+  String get gitRemotePickGitHubNone =>
+      'No repositories on this GitHub account yet.';
+
+  @override
+  String get gitRemoteRepoPrivate => 'Private';
+
+  @override
   String get gitRemoteNameLabel => 'Name';
 
   @override

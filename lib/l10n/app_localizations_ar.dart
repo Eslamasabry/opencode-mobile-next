@@ -33473,6 +33473,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gitRemoteAddTitle => 'إضافة مستودع بعيد';
 
   @override
+  String get gitRemotePickGitHub => 'اختر من GitHub';
+
+  @override
+  String get gitRemotePickGitHubTitle => 'اختر مستودعًا';
+
+  @override
+  String get gitRemotePickGitHubNone =>
+      'لا توجد مستودعات في حساب GitHub هذا بعد.';
+
+  @override
+  String get gitRemoteRepoPrivate => 'خاص';
+
+  @override
   String get gitRemoteNameLabel => 'الاسم';
 
   @override

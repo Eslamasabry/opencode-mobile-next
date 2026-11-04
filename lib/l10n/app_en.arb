@@ -40587,6 +40587,14 @@
     "description": "Git remotes step: empty"
   },
   "gitRemoteAddTitle": "Add a remote",
+  "gitRemotePickGitHub": "Choose from GitHub",
+  "@gitRemotePickGitHub": {"description": "Button on the Git remotes step: pick the remote address from the signed-in GitHub account's repositories."},
+  "gitRemotePickGitHubTitle": "Choose a repository",
+  "@gitRemotePickGitHubTitle": {"description": "Title of the sheet listing the GitHub account's repositories."},
+  "gitRemotePickGitHubNone": "No repositories on this GitHub account yet.",
+  "@gitRemotePickGitHubNone": {"description": "Shown under the button when the GitHub account has no repositories (or they could not be listed)."},
+  "gitRemoteRepoPrivate": "Private",
+  "@gitRemoteRepoPrivate": {"description": "Supporting line on a private repository in the GitHub repository list."},
   "@gitRemoteAddTitle": {
     "description": "Git remotes step: form heading"
   },
