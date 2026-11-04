@@ -1,6 +1,6 @@
 # Migration 46 — Flutter platform, Linux, protocol and other code (part 1)
 
-Counts (51/78 files recorded): already there **14**; ported now **11**; not needed **20**; blocked **6**.
+Counts (61/78 files recorded): already there **14**; ported now **11**; not needed **20**; blocked **16**.
 
 Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`; branch `p12x/46-port-rest-1`.
 Finish line: all 78 source files have a behavior-based disposition and missing feasible native behavior is wired.
@@ -58,6 +58,16 @@ Non-goals: tests, APKs, pushes, signing, releases, and features explicitly defer
 - `lib/api2/gateway_operations/ops_integrations.dart` — blocked: native protocol/feature wiring for provider key/external/OAuth/command sign-in, attempt recovery, credential labeling/activation/removal and original-location fencing is missing; OC2 `integrationCredentials`/`integrationCommandAuth` stay false rather than accepting credentials into an unbound flow.
 - `lib/api2/gateway_operations/ops_projects.dart` — blocked: ported real `/project` inventory and current-project reads into the existing Projects picker on this branch, preserving beta sandboxes/canonical names; global search and create-worktree already exist, but rename/remove/worktree-browser and move-session user journeys are missing (stable deliberately removes managed-workspace routes).
 - `lib/api2/gateway_operations/ops_sessions.dart` — blocked: ported the existing native Fork action to real exclusive-before/through OC2 requests and enabled its capability; staged revert already exists, but compact, read acknowledgements, saved-grant management, child-session inventory and location-reminder wiring are incomplete; Flutter OC2 share/archive/legacy questions are deliberately unsupported and remain unavailable.
+- `lib/api2/gateway_operations/ops_shells.dart` — blocked: the real managed-shell inventory/start/output/stop/timeouts/server identity already serve native Linux services (`native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2ManagedShells.kt:42`), but native Send running work to background has no feature caller/command binding.
+- `lib/api2/gen_ui_history.dart` — blocked: ported bounded page reads/source guards into real chat card recovery on this branch, but no native app handoff consumer reads the whole conversation with the 64 MiB/100-page admission contract; the whole file cannot be claimed complete.
+- `lib/background/signin_foreground.dart` — blocked: the matching lease state exists at native/android/background/src/main/kotlin/io/github/eslamasabry/oc/android/background/SignInForeground.kt:67, but no production sign-in terminal consumes it; native/android/linux/src/shims/kotlin/io/github/eslamasabry/opencode_mobile/LocalTerminal.kt:25 refuses PTY start and AgentsEntries registers only Home.
+- `lib/builtin/agents/agent_host_cleanup.dart` — blocked: AndroidAgentHost.kt:89 and AgentHomeCleaner.kt:27 implement exact drain/erase contracts, but no production AgentHost adapter or ProfileResourceCleaner binds them; LinuxProfileDeletion only fences server recovery.
+- `lib/builtin/agents/gen_ui_connector_search_js.dart` — blocked: CardToolJs.kt:132 contains the search bridge and validation, but no production managed CardToolServer installer writes its bearer/endpoint bridge; GraphCardsQualifier.managed=false leaves this path unavailable.
+- `lib/builtin/linux_backup/linux_backup.dart` — blocked: Native Linux manager has package jobs but no backup controller, SAF ZIP save/restore binding, manifest confirmation or device-backup preference lifecycle; no runnable complete backup journey exists.
+- `lib/builtin/linux_backup/linux_backup_plan.dart` — blocked: Native Linux backup manifest, credential-exclusion pack/restore scripts and package restoration planning are absent; generic LinuxJobKind.Backup is only a job tag, not this behavior.
+- `lib/builtin/linux_backup/zip_reader.dart` — blocked: No native Linux backup reader consumes the allowlisted ZIP entries or streams them into guarded restore staging; migration S0Backup backs up app state and does not implement user Linux restore.
+- `lib/builtin/linux_services/linux_service_files.dart` — blocked: Native project DevelopmentServices models managed server shells, not device oc-svd definitions/want/state files, reserved names/ports, restart policies, urgency ordering or rotated marker logs.
+- `lib/builtin/linux_services/linux_services.dart` — blocked: Native LinuxServicesScreen is a project-managed-shell panel; the phone-wide kept-on services API with supervisor state/watch/start/stop/restart/removal and restart policies has no production owner.
 
 The native implementations include shared-storage file/APK handoff with a visible permission retry, localized age labels, retained assistant-model deletion, advisory agent build caps/full-speed settings, native thermal scheduling, visible-only Linux vitals, bounded card history, staged-history pagination, typed error fallback copy, Fork, project inventory and guarded launcher routing. Partial protocol/launch changes remain marked blocked where the rest of that file still lacks a complete native journey.
 
@@ -72,6 +82,7 @@ Validation: from `native/`, JDK 21, serialized with the shared machine build loc
 - `build/native-rest-46/compile-31.log`: both requested compilation tasks passed together (1s).
 - `build/native-rest-46/compile-41.log`: both requested compilation tasks passed together (1s).
 - `build/native-rest-46/compile-51.log`: both requested compilation tasks passed together (1s).
+- `build/native-rest-46/compile-61.log`: both requested compilation tasks passed together (1s).
 
 The first two attempts exposed an unavailable resource-environment import and a void Android Intent setter; both were corrected before the successful checkpoint. No tests were written, run, weakened or removed; no Flutter/preflight/test runner, APK, signing, push, publication or release command was run. Existing compiler warnings remain in untouched code. Kotlin/XML diff and source-manifest checks are static review only.
 
