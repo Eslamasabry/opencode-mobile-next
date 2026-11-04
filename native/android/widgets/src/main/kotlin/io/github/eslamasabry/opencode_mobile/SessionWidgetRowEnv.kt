@@ -4,29 +4,35 @@ import android.app.PendingIntent
 import android.content.Context
 import android.view.View
 import android.widget.RemoteViews
-import org.json.JSONObject
-import io.github.eslamasabry.oc.android.widgets.R
 import io.github.eslamasabry.oc.android.widgets.NativeStrings
+import io.github.eslamasabry.oc.android.widgets.R
+import org.json.JSONObject
 
-/** What every card, strip, tiny and list binder shares: the snapshot, its connection and the common paints. */
+/**
+ * What every card, strip, tiny and list binder shares: the snapshot, its connection and the common
+ * paints.
+ */
 internal class WidgetRowEnv(
     val context: Context,
     val id: Int,
     val snapshot: JSONObject,
     val state: SessionWidgetSnapshot,
-    val g: WidgetGraphite
+    val g: WidgetGraphite,
 ) {
     val copy = WidgetCopy(context)
     val connection = state.connection
-    val offline = connection == WidgetV2Policy.Connection.OFFLINE ||
-        connection == WidgetV2Policy.Connection.BACKGROUND_SETTINGS
+    val offline =
+        connection == WidgetV2Policy.Connection.OFFLINE ||
+            connection == WidgetV2Policy.Connection.BACKGROUND_SETTINGS
     val settings = connection == WidgetV2Policy.Connection.BACKGROUND_SETTINGS
     val overlays = WidgetV2Bridge.overlayReady(context)
-    val lastSeen: Long = listOf(
-        snapshot.optLong("lastSeenAt"),
-        snapshot.optLong("pausedAt"),
-        state.sessions.firstOrNull()?.optLong("updatedAt") ?: 0L
-    ).firstOrNull { it > 0 } ?: 0L
+    val lastSeen: Long =
+        listOf(
+                snapshot.optLong("lastSeenAt"),
+                snapshot.optLong("pausedAt"),
+                state.sessions.firstOrNull()?.optLong("updatedAt") ?: 0L,
+            )
+            .firstOrNull { it > 0 } ?: 0L
 
     fun str(resId: Int): String = NativeStrings.get(context, resId)
 
@@ -35,9 +41,13 @@ internal class WidgetRowEnv(
     fun open(session: JSONObject?) = SessionWidgetIntents.chatIntent(context, id, snapshot, session)
 
     /** The conversation, opened to answer: composer focused, keyboard up. */
-    fun reply(session: JSONObject) = SessionWidgetIntents.chatIntent(context, id, snapshot, session, reply = true)
+    fun reply(session: JSONObject) =
+        SessionWidgetIntents.chatIntent(context, id, snapshot, session, reply = true)
 
-    /** The mic: dictate into the working turn when that can be done live, else open the conversation. */
+    /**
+     * The mic: dictate into the working turn when that can be done live, else open the
+     * conversation.
+     */
     fun micIntent(m: WidgetRowModel?): PendingIntent {
         val live = connection == WidgetV2Policy.Connection.CONNECTED && overlays
         if (m != null && live && m.steerable) {
@@ -47,9 +57,10 @@ internal class WidgetRowEnv(
     }
 
     fun newConversationIntent(): PendingIntent {
-        val voiceReady = overlays &&
-            connection == WidgetV2Policy.Connection.CONNECTED &&
-            snapshot.optString("lastProjectID").isNotBlank()
+        val voiceReady =
+            overlays &&
+                connection == WidgetV2Policy.Connection.CONNECTED &&
+                snapshot.optString("lastProjectID").isNotBlank()
         return when {
             settings -> SessionWidgetIntents.backgroundSettingsIntent(context, id)
             voiceReady -> WidgetV2Bridge.routeIntent(context, id, snapshot, null, "voice")
@@ -63,18 +74,24 @@ internal class WidgetRowEnv(
     fun dot(v: RemoteViews, viewId: Int, color: Int) = v.setInt(viewId, "setColorFilter", color)
 }
 
-/** Shows or hides [id]; a launcher re-applies updates onto old views, so every update says which. */
-internal fun RemoteViews.show(id: Int, shown: Boolean) = setViewVisibility(id, if (shown) View.VISIBLE else View.GONE)
+/**
+ * Shows or hides [id]; a launcher re-applies updates onto old views, so every update says which.
+ */
+internal fun RemoteViews.show(id: Int, shown: Boolean) =
+    setViewVisibility(id, if (shown) View.VISIBLE else View.GONE)
 
 /** What one conversation is, read once. */
 internal class WidgetRowModel(private val env: WidgetRowEnv, val session: JSONObject) {
     val title = session.optString("title")
     val project = session.optString("project")
+    val model = session.optString("modelName")
     /** The server's display name ("This phone", the name it was saved under); never an address. */
     val server = session.optString("server")
     val request = session.optString("requestID").isNotBlank()
-    /** Waiting on the person: an answerable request, or a question or another server's ask that
-     * only the app can answer. */
+    /**
+     * Waiting on the person: an answerable request, or a question or another server's ask that only
+     * the app can answer.
+     */
     val needs = request || session.optBoolean("needsYou")
     val busy = session.optBoolean("busy")
     val ask: JSONObject? = session.optJSONObject("ask")
@@ -87,23 +104,28 @@ internal class WidgetRowModel(private val env: WidgetRowEnv, val session: JSONOb
     val lead = WidgetStatusRules.lead(needs, busy, env.offline)
     val valid = SessionWidgetActions.validActions(env.snapshot, session)
     val advertised =
-        if (env.snapshot.optJSONObject("onDemand")?.optString("fingerprint")?.isNotBlank() == true) {
+        if (
+            env.snapshot.optJSONObject("onDemand")?.optString("fingerprint")?.isNotBlank() == true
+        ) {
             SessionWidgetActions.advertisedActions(session)
         } else {
             emptySet()
         }
     val question = ask?.optString("q").orEmpty().ifBlank { title }
-    val ticking = !needs && WidgetStatusRules.timerTicks(
-        busy,
-        startedAt,
-        env.connection == WidgetV2Policy.Connection.CONNECTED
-    )
+    val ticking =
+        !needs &&
+            WidgetStatusRules.timerTicks(
+                busy,
+                startedAt,
+                env.connection == WidgetV2Policy.Connection.CONNECTED,
+            )
 
     /** A working turn that accepts steering while the widget is live. */
     val steerable: Boolean
         get() = busy && !needs && session.optString("steerMode") in STEER_MODES
 
-    fun can(name: String) = WidgetV2Policy.actionEnabled(env.connection, name, advertised, name in valid)
+    fun can(name: String) =
+        WidgetV2Policy.actionEnabled(env.connection, name, advertised, name in valid)
 
     private companion object {
         val STEER_MODES = setOf("steer", "afterReply")
@@ -113,57 +135,78 @@ internal class WidgetRowModel(private val env: WidgetRowEnv, val session: JSONOb
 /** The words and dot colours a conversation shows. */
 internal class WidgetRowText(private val env: WidgetRowEnv) {
     fun notice(): String? =
-        when (WidgetV2Policy.actionResultNotice(env.snapshot.optJSONObject("actionResult")?.optString("status"))) {
+        when (
+            WidgetV2Policy.actionResultNotice(
+                env.snapshot.optJSONObject("actionResult")?.optString("status")
+            )
+        ) {
             "rejected" -> env.str(R.string.widget_v2_failed)
             "uncertain" -> env.str(R.string.widget_v2_uncertain)
             else -> null
         }
 
-    /** One status phrase per conversation: the sending state or a failed action outranks the ordinary words. */
+    /**
+     * One status phrase per conversation: the sending state or a failed action outranks the
+     * ordinary words.
+     */
     fun statusText(m: WidgetRowModel, top: Boolean): String {
         val notice = if (top) notice() else null
         return when {
-            env.connection == WidgetV2Policy.Connection.PENDING && m.request -> env.str(R.string.widget_v2_pending)
+            env.connection == WidgetV2Policy.Connection.PENDING && m.request ->
+                env.str(R.string.widget_v2_pending)
             notice != null -> notice
             else -> leadText(m)
         }
     }
 
-    private fun leadText(m: WidgetRowModel): String = when (m.lead) {
-        WidgetLayoutPolicy.Lead.NEEDS_YOU -> env.copy.needsYou()
-        WidgetLayoutPolicy.Lead.OFFLINE -> env.copy.offline(env.lastSeen)
-        WidgetLayoutPolicy.Lead.WORKING -> env.copy.working()
-        WidgetLayoutPolicy.Lead.READY -> env.copy.ready()
-    }
+    private fun leadText(m: WidgetRowModel): String =
+        when (m.lead) {
+            WidgetLayoutPolicy.Lead.NEEDS_YOU -> env.copy.needsYou()
+            WidgetLayoutPolicy.Lead.OFFLINE -> env.copy.offline(env.lastSeen)
+            WidgetLayoutPolicy.Lead.WORKING -> env.copy.working()
+            WidgetLayoutPolicy.Lead.READY -> env.copy.ready()
+        }
 
-    /** The live line's words without the clock: the activity ("Editing files"), else "Working".
-     * The app's activity sentences end in an ellipsis; the clock follows here instead. */
+    /**
+     * The live line's words without the clock: the activity ("Editing files"), else "Working". The
+     * app's activity sentences end in an ellipsis; the clock follows here instead.
+     */
     fun liveWords(m: WidgetRowModel): String =
         m.step.trim().removeSuffix("…").removeSuffix("...").trim().ifBlank { env.copy.working() }
 
-    /** The live line when the clock cannot count. Not connected, a cached turn cannot be shown as
-     * still running: "Offline · last seen 5 min ago". Connected but without a start time:
-     * "Editing files · 3 min", or the words alone. */
+    /**
+     * The live line when the clock cannot count. Not connected, a cached turn cannot be shown as
+     * still running: "Offline · last seen 5 min ago". Connected but without a start time: "Editing
+     * files · 3 min", or the words alone.
+     */
     fun liveStatic(m: WidgetRowModel): String {
-        if (env.connection != WidgetV2Policy.Connection.CONNECTED) return env.copy.offline(env.lastSeen)
+        if (env.connection != WidgetV2Policy.Connection.CONNECTED)
+            return env.copy.offline(env.lastSeen)
         val since = WidgetElapsedPolicy.sinceUnit(System.currentTimeMillis(), m.startedAt)
-        val span = when {
-            since == null -> ""
-            since.first == "min" -> env.str(R.string.widget_v2_span_min, since.second)
-            else -> env.str(R.string.widget_v2_span_hour, since.second)
-        }
+        val span =
+            when {
+                since == null -> ""
+                since.first == "min" -> env.str(R.string.widget_v2_span_min, since.second)
+                else -> env.str(R.string.widget_v2_span_hour, since.second)
+            }
         return env.copy.join(liveWords(m), span)
     }
 
-    /** Starts [viewId] (a Chronometer) counting up from the turn's start after [words], or stops it
-     * and shows [still]. A launcher re-applies updates onto running views, so it is always set. */
+    /**
+     * Starts [viewId] (a Chronometer) counting up from the turn's start after [words], or stops it
+     * and shows [still]. A launcher re-applies updates onto running views, so it is always set.
+     */
     fun clock(v: RemoteViews, viewId: Int, m: WidgetRowModel, words: String, still: String) {
         // A Chronometer speaks its own elapsed time (TalkBack read "3 min ago" as "211 hours"), and
-        // setContentDescription does not override that. So a stopped clock is a plain TextView twin.
+        // setContentDescription does not override that. So a stopped clock is a plain TextView
+        // twin.
         val twin = stillId(viewId)
-        val base = WidgetStatusRules.chronometerBase(
-            m.startedAt, System.currentTimeMillis(), android.os.SystemClock.elapsedRealtime()
-        )
+        val base =
+            WidgetStatusRules.chronometerBase(
+                m.startedAt,
+                System.currentTimeMillis(),
+                android.os.SystemClock.elapsedRealtime(),
+            )
         if (m.ticking) {
             v.setChronometer(viewId, base, words.replace("%", "%%") + " · %s", true)
             v.setViewVisibility(viewId, android.view.View.VISIBLE)
@@ -177,12 +220,13 @@ internal class WidgetRowText(private val env: WidgetRowEnv) {
     }
 
     /** The plain TextView that stands in for the Chronometer [viewId] while it is stopped. */
-    fun stillId(viewId: Int): Int = when (viewId) {
-        R.id.wc_live -> R.id.wc_live_still
-        R.id.wc_row_state -> R.id.wc_row_state_still
-        R.id.wc_sub -> R.id.wc_sub_still
-        else -> error("no still twin for view $viewId")
-    }
+    fun stillId(viewId: Int): Int =
+        when (viewId) {
+            R.id.wc_live -> R.id.wc_live_still
+            R.id.wc_row_state -> R.id.wc_row_state_still
+            R.id.wc_sub -> R.id.wc_sub_still
+            else -> error("no still twin for view $viewId")
+        }
 
     /** Colors the clock and its twin alike. */
     fun tintClock(v: RemoteViews, viewId: Int, color: Int) {

@@ -125,6 +125,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -295,6 +296,7 @@ class PlatformHub(
     private val redactor: Redactor,
     private val background: BackgroundHub,
     private val quotaTargets: QuotaAlertTargets,
+    private val widgetTeams: NativeWidgetTeam,
 ) {
     private val mainDispatcher = dispatchers.main
     private val appScope = CoroutineScope(appScope.coroutineContext + mainDispatcher)
@@ -317,6 +319,7 @@ class PlatformHub(
     private val runEvents =
         mutableMapOf<ConversationRef, io.github.eslamasabry.oc.core.domain.events.RunOutcome>()
     private val runWatchers = mutableMapOf<ProfileId, kotlinx.coroutines.Job>()
+    private val runObservedGraphs = mutableMapOf<ProfileId, ConnectionGraph>()
     private val eventStarted = mutableSetOf<ConversationRef>()
     private val endedKinds = mutableMapOf<ConversationRef, AlertKind>()
     private val endedReasons =
@@ -329,6 +332,15 @@ class PlatformHub(
     private val share = ShareSeed()
     private var widgetModel: WidgetModel? = null
     private var widgetBaseModel: WidgetModel? = null
+    private val widgetPublishLane = kotlinx.coroutines.sync.Mutex()
+    private var widgetDetailRevision = 0L
+    private var widgetPublishedRevision = -1L
+    private var widgetDetailJob: kotlinx.coroutines.Job? = null
+    private var widgetScopeOwner:
+        Triple<ConnectionGraph?, io.github.eslamasabry.oc.core.model.ServerLocation, Int>? =
+        null
+    private var widgetScopeProfile: ProfileId? = null
+    private var widgetScope = ""
     private var widgetStampMs = 0L
     private val serverSince = mutableMapOf<String, Pair<Boolean, Long>>()
     private var publishedPins: Pair<String, List<PinnedSession>>? = null
@@ -642,16 +654,31 @@ class PlatformHub(
      */
     private suspend fun watchRunEvents() {
         registry.live.collect { live ->
-            for (id in (runWatchers.keys - live.keys).toList()) {
+            for (id in runWatchers.keys.filter { runObservedGraphs[it] !== live[it] }) {
                 runWatchers.remove(id)?.cancel()
+                runObservedGraphs.remove(id)
                 runEvents.keys.removeAll { it.profileId == id }
                 eventStarted.removeAll { it.profileId == id }
             }
-            for ((id, graph) in live) if (id !in runWatchers)
+            for ((id, graph) in live) if (id !in runWatchers) {
+                runObservedGraphs[id] = graph
                 runWatchers[id] = appScope.launch {
+                    launch {
+                        combine(
+                                graph.session.server.location,
+                                graph.session.server.events.connects,
+                            ) { _, _ ->
+                                Unit
+                            }
+                            .collect { widgetDetailsChanged() }
+                    }
                     graph.session.server.events.all.collect { envelope ->
                         if (registry.live.value[id] !== graph) return@collect
                         when (val event = envelope.event) {
+                            is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.MessageUpserted,
+                            is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.PartUpserted,
+                            is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.TranscriptStale ->
+                                widgetDetailsChanged()
                             is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.RunStarted -> {
                                 val ref = ConversationRef(id, event.sessionId)
                                 eventStarted += ref
@@ -717,6 +744,7 @@ class PlatformHub(
                         }
                     }
                 }
+            }
         }
     }
 
@@ -757,7 +785,24 @@ class PlatformHub(
             AttentionTileCache.clear(application)
         }
 
-    private suspend fun publishWidgets(feed: ChatFeedSnapshot, waiting: List<Waiting>) {
+    private suspend fun publishWidgets(feed: ChatFeedSnapshot, waiting: List<Waiting>) =
+        widgetPublishLane.withLock {
+            publishWidgetsLocked(feed, waiting)
+        }
+
+    private fun widgetDetailsChanged() {
+        widgetDetailRevision++
+        if (widgetDetailJob?.isActive == true) return
+        widgetDetailJob = appScope.launch {
+            do {
+                kotlinx.coroutines.delay(500)
+                val before = widgetDetailRevision
+                publishWidgets(runtime.snapshot.value, lastWaiting)
+            } while (before != widgetDetailRevision)
+        }
+    }
+
+    private suspend fun publishWidgetsLocked(feed: ChatFeedSnapshot, waiting: List<Waiting>) {
         val profile = stores.profiles.activeId.value ?: return
         // Startup's empty feed is not a server read: keep the saved target until a real listing
         // arrives.
@@ -778,10 +823,19 @@ class PlatformHub(
             registry.live.value[profile]?.session?.server?.location?.value
                 ?: io.github.eslamasabry.oc.core.model.ServerLocation.Default
         val fingerprint = widgetFingerprint(loaded)
-        val scopeToken =
-            widgetDigest(
-                "${profile.raw}\u0000${location.directory.orEmpty()}\u0000${location.workspace.orEmpty()}"
+        val scopeOwner =
+            Triple(
+                registry.live.value[profile],
+                location,
+                registry.live.value[profile]?.session?.server?.events?.connects?.value ?: 0,
             )
+        if (widgetScopeOwner != scopeOwner || widgetScopeProfile != profile) {
+            widgetScopeOwner = scopeOwner
+            widgetScopeProfile = profile
+            widgetScope = java.util.UUID.randomUUID().toString()
+        }
+        val scopeToken = widgetScope
+        val detailRevision = widgetDetailRevision
         val target =
             JSONObject()
                 .put("profileID", profile.raw)
@@ -793,6 +847,7 @@ class PlatformHub(
         // does (B-ANDR-117).
         if (
             base == widgetBaseModel &&
+                detailRevision == widgetPublishedRevision &&
                 stores.prefs.string("oc.widgetTarget.${profile.raw}") == target.toString()
         )
             return
@@ -838,6 +893,10 @@ class PlatformHub(
                         .firstOrNull { it.info.id == named.messageId.raw }
                         ?.parts
                         ?.firstOrNull { it.type == PartType.Tool && it.callId == named.callId }
+                        ?: messages
+                            .flatMap { it.parts }
+                            .filter { it.type == PartType.Tool && it.callId == named.callId }
+                            .singleOrNull()
                 }
             val callTarget =
                 call?.tool?.input?.let { input ->
@@ -848,8 +907,42 @@ class PlatformHub(
                         (input[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
                     }
                 }
+            val assistant = messages.lastOrNull { it.info.role == Role.Assistant }
+            val info = assistant?.info
+            val providers =
+                if (info?.modelId != null)
+                    withTimeoutOrNull(1_000L) { rowGraph.session.server.providers() }
+                else null
+            val provider =
+                (providers as? Outcome.Ok)
+                    ?.value
+                    ?.let { it.providers + it.availableProviders }
+                    ?.firstOrNull { it.id == info?.providerId }
+            val modelName =
+                (provider?.modelData?.get(info?.modelId)?.get("name") as? JsonPrimitive)
+                    ?.takeIf { it.isString }
+                    ?.content
+                    ?.let(widgetSafe::title)
+                    .orEmpty()
+            val tool =
+                assistant?.parts?.lastOrNull {
+                    it.type == PartType.Tool &&
+                        it.tool?.status in
+                            setOf(
+                                io.github.eslamasabry.oc.core.model.transcript.ToolStatus.Running,
+                                io.github.eslamasabry.oc.core.model.transcript.ToolStatus.Pending,
+                            )
+                }
             details[row.profile to row.id] =
                 WidgetDetail(
+                    modelName = modelName,
+                    step =
+                        if (tool != null)
+                            words.text(
+                                io.github.eslamasabry.oc.android.notifications.R.string
+                                    .notify_status_working
+                            )
+                        else "",
                     preview = widgetPresentation.assistantPreview(messages),
                     ask =
                         permission
@@ -881,11 +974,20 @@ class PlatformHub(
                 stores.profiles.profiles.value.associate { it.id to it.profile.name },
                 registry.live.value.keys,
             )
-        if (current != base || stores.profiles.activeId.value != profile) return
+        if (
+            current != base ||
+                stores.profiles.activeId.value != profile ||
+                registry.live.value[profile] !== scopeOwner.first ||
+                registry.live.value[profile]?.session?.server?.location?.value != location ||
+                (registry.live.value[profile]?.session?.server?.events?.connects?.value ?: 0) !=
+                    scopeOwner.third
+        )
+            return
         val now = clock.now().toEpochMilliseconds()
         val json =
             JSONObject(widgetJson(model, now, details))
                 .put("scopeToken", scopeToken)
+                .apply { if (!location.directory.isNullOrBlank()) put("lastProjectID", scopeToken) }
                 .put("onDemand", JSONObject().put("fingerprint", fingerprint))
         val jsonRows = json.getJSONArray("sessions")
         for (i in 0 until jsonRows.length()) {
@@ -985,11 +1087,37 @@ class PlatformHub(
                     .put("onDemandActions", JSONArray(listOf("allowOnce", "reject")))
             }
         }
+        widgetTeams.augment(json, profile)
+        val latestWaiting =
+            registry.live.value.flatMap { (id, live) ->
+                (live as? ChatGraphAccessors)?.chatRequests?.engine?.pending?.value.orEmpty().map {
+                    Waiting(id, it)
+                }
+            }
+        if (
+            !stores.lanes.forProfile(profile).isAdmitting ||
+                stores.profiles.profiles.value != savedProfiles ||
+                stores.profiles.activeId.value != profile ||
+                registry.live.value[profile] !== scopeOwner.first ||
+                registry.live.value[profile]?.session?.server?.location?.value != location ||
+                (registry.live.value[profile]?.session?.server?.events?.connects?.value ?: 0) !=
+                    scopeOwner.third ||
+                latestWaiting != waiting ||
+                PlatformRules.widgetModel(
+                    runtime.snapshot.value,
+                    latestWaiting,
+                    profile,
+                    stores.profiles.profiles.value.associate { it.id to it.profile.name },
+                    registry.live.value.keys,
+                ) != base
+        )
+            return
         if (
             widgets.publish(json.toString(), profile.raw, target.toString()) !=
                 io.github.eslamasabry.oc.android.widgets.PublishResult.Refused
         ) {
             widgetBaseModel = base
+            widgetPublishedRevision = detailRevision
             widgetModel = model
             widgetStampMs = now
         }
@@ -1057,7 +1185,12 @@ class PlatformHub(
         return row
     }
 
-    private data class WidgetDetail(val preview: String, val ask: Map<String, String>)
+    private data class WidgetDetail(
+        val preview: String,
+        val ask: Map<String, String>,
+        val modelName: String = "",
+        val step: String = "",
+    )
 
     private fun widgetJson(
         model: WidgetModel,
@@ -1093,6 +1226,8 @@ class PlatformHub(
                         val detail = details[row.profile to row.id]
                         if (detail != null) {
                             if (detail.preview.isNotEmpty()) put("preview", detail.preview)
+                            if (detail.modelName.isNotEmpty()) put("modelName", detail.modelName)
+                            if (detail.step.isNotEmpty()) put("step", detail.step)
                             if (detail.ask.isNotEmpty()) put("ask", JSONObject(detail.ask))
                         }
                     }

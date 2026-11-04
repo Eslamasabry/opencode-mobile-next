@@ -11,20 +11,26 @@ import io.github.eslamasabry.oc.android.widgets.WidgetTextActions
 class WidgetRouteActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val target = WidgetTextActions.target(intent)
-        if (target != null) {
+        val mode = intent.getStringExtra(WidgetTextActions.EXTRA_MODE)
+        val chosen =
+            mode.takeIf { it in setOf("configure", "project", "steer", "voice") } ?: "configure"
+        if (chosen in setOf("configure", "project") || WidgetTextActions.target(intent) != null) {
             startActivity(
                 Intent(this, WidgetOverlayActivity::class.java).apply {
-                    putExtra(WidgetTextActions.EXTRA_MODE, "steer")
+                    putExtra(WidgetTextActions.EXTRA_MODE, chosen)
                     putExtra(
-                        WidgetTextActions.EXTRA_PAYLOAD,
-                        intent.getStringExtra(WidgetTextActions.EXTRA_PAYLOAD),
+                        android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_ID,
+                        intent.getIntExtra(
+                            android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_ID,
+                            android.appwidget.AppWidgetManager.INVALID_APPWIDGET_ID,
+                        ),
                     )
+                    if (chosen in setOf("steer", "voice"))
+                        putExtra(
+                            WidgetTextActions.EXTRA_PAYLOAD,
+                            intent.getStringExtra(WidgetTextActions.EXTRA_PAYLOAD),
+                        )
                 }
-            )
-        } else {
-            startActivity(
-                Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
             )
         }
         finish()

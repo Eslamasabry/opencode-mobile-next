@@ -25,6 +25,7 @@ internal object WidgetActionSnapshot {
     ): Boolean {
         val rows = current.optJSONArray("sessions")
         val updated = (value["sessions"] as? List<*>)?.filterIsInstance<Map<*, *>>()
+        if (value["connected"] == false) current.put("connected", false)
         return rows != null &&
             updated != null &&
             patchRows(context, payload, rows, updated) &&
@@ -87,6 +88,7 @@ internal object WidgetActionSnapshot {
                 (patch["team"] as? Map<*, *>)?.get("action").let { it == null || it == "" }
         ) {
             row.optJSONObject("team")?.remove("action")
+            row.put("needsYou", false)
         }
         val allowed =
             (patch["onDemandActions"] as? List<*>)?.filterIsInstance<String>()?.filter {
@@ -153,7 +155,8 @@ internal object WidgetActionSnapshot {
         current.put(
             "pendingCount",
             (0 until rows.length()).count {
-                !rows.optJSONObject(it)?.optString("requestID").isNullOrEmpty()
+                val row = rows.optJSONObject(it)
+                row?.optBoolean("needsYou") == true || !row?.optString("requestID").isNullOrEmpty()
             },
         )
         return WidgetFeed.persistence?.cas(

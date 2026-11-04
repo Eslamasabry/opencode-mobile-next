@@ -67,7 +67,7 @@ object WidgetV2Bridge {
         session: JSONObject?,
         mode: String,
     ): PendingIntent {
-        require(mode in setOf("configure", "steer", "voice"))
+        require(mode in setOf("configure", "project", "steer", "voice"))
         val payload =
             identity(snapshot, session).toMutableMap().apply {
                 put("steerMode", session?.optString("steerMode").orEmpty())

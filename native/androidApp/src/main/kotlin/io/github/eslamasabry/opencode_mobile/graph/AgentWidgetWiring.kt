@@ -8,15 +8,14 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.android.widgets.*
 import io.github.eslamasabry.oc.core.common.*
-import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.common.ids.*
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.domain.*
 import io.github.eslamasabry.oc.core.model.*
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.Role
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.connection.*
-import io.github.eslamasabry.oc.engine.profiles.StoredProfileJson
 import java.util.UUID
 import kotlin.time.Clock
 import kotlinx.coroutines.*
@@ -47,10 +46,13 @@ class AgentWidgetWiring(
     private val appScope: AppCoroutineScope,
     private val dispatchers: AppDispatchers,
     private val clock: Clock,
+    redactor: Redactor,
+    private val widgetTeams: NativeWidgetTeam,
 ) {
     private val scope =
         CoroutineScope(appScope.coroutineContext + dispatchers.serial("widget-actions"))
     private val publications = Mutex()
+    private val presentation = WidgetPresentation(application, redactor)
     private var started = false
     private var identity: List<Any?>? = null
     private var scopeToken = ""
@@ -59,6 +61,7 @@ class AgentWidgetWiring(
     fun start() {
         if (started) return
         started = true
+        widgetTeams.start()
         WidgetFeed.liveDispatcher = WidgetLiveDispatcher { payload, complete ->
             scope.launch {
                 val deadline =
@@ -72,11 +75,15 @@ class AgentWidgetWiring(
                     ) {
                         attempt.run()
                     }
-                        ?: result(
-                            payload,
-                            if (attempt.dispatched) "uncertain" else "rejected",
-                            if (attempt.dispatched) "uncertainDelivery" else "unavailable",
-                        )
+                        ?: if (attempt.acknowledged) attempt.acknowledgedWithoutStatus()
+                        else
+                            result(
+                                payload,
+                                if (attempt.acknowledged) "accepted"
+                                else if (attempt.dispatched) "uncertain" else "rejected",
+                                if (attempt.acknowledged) null
+                                else if (attempt.dispatched) "uncertainDelivery" else "unavailable",
+                            )
                 complete(answer)
             }
         }
@@ -116,11 +123,14 @@ class AgentWidgetWiring(
                         val answer =
                             withTimeoutOrNull(budget) { attempt.run() }
                                 ?: if (operation == "checkStatus") mapOf("status" to "unavailable")
+                                else if (attempt.acknowledged) attempt.acknowledgedWithoutStatus()
                                 else
                                     result(
                                         payload,
-                                        if (attempt.dispatched) "uncertain" else "rejected",
-                                        if (attempt.dispatched) "uncertainDelivery"
+                                        if (attempt.acknowledged) "accepted"
+                                        else if (attempt.dispatched) "uncertain" else "rejected",
+                                        if (attempt.acknowledged) null
+                                        else if (attempt.dispatched) "uncertainDelivery"
                                         else "unavailable",
                                     )
                         complete(answer)
@@ -280,10 +290,8 @@ class AgentWidgetWiring(
     }
 
     private fun fingerprint(profile: String): String? {
-        val saved = stores.profiles.profile(ProfileId(profile))?.profile ?: return null
-        return DartJson.sha256Hex(
-            DartJson.encode(StoredProfileJson.encode(saved).apply { remove("name") })
-        )
+        val saved = stores.profiles.profile(ProfileId(profile)) ?: return null
+        return widgetFingerprint(saved)
     }
 
     private inner class Action(
@@ -293,6 +301,7 @@ class AgentWidgetWiring(
         val deadlineMs: Long,
     ) {
         var dispatched = false
+        var acknowledged = false
         private var owned: ServerGateway? = null
         private var ownedScope: ConnectionCoroutineScope? = null
         private var graph: ConnectionGraph? = null
@@ -312,13 +321,31 @@ class AgentWidgetWiring(
         suspend fun run(): Map<String, Any?> {
             try {
                 if (stores.warm() !is Outcome.Ok) throw Refused("unavailable")
-                if (profile.isBlank() || sid.isBlank()) throw Refused("invalidRequest")
+                if (profile.isBlank() || (sid.isBlank() && !(live && action == "voice")))
+                    throw Refused("invalidRequest")
+                if (
+                    !statusOnly &&
+                        action !in
+                            setOf(
+                                "allowOnce",
+                                "reject",
+                                "stop",
+                                "steer",
+                                "voice",
+                                "approvePlan",
+                                "resume",
+                            )
+                )
+                    throw Refused("unsupported")
                 snapshot = parse(stored("oc.widgetSessions")) ?: throw Refused("staleRequest")
                 val rows = snapshot.optJSONArray("sessions") ?: throw Refused("staleRequest")
                 row =
-                    (0 until rows.length()).mapNotNull(rows::optJSONObject).singleOrNull {
-                        it.optString("id") == sid && it.optString("profileID", profile) == profile
-                    } ?: throw Refused("staleRequest")
+                    if (live && action == "voice") JSONObject()
+                    else
+                        (0 until rows.length()).mapNotNull(rows::optJSONObject).singleOrNull {
+                            it.optString("id") == sid &&
+                                it.optString("profileID", profile) == profile
+                        } ?: throw Refused("staleRequest")
                 fingerprint =
                     this@AgentWidgetWiring.fingerprint(profile) ?: throw Refused("staleRequest")
                 val target = parse(stored("oc.widgetTarget.$profile"))
@@ -331,6 +358,46 @@ class AgentWidgetWiring(
                 location =
                     ServerLocation(target.nullable("directory"), target.nullable("workspace"))
                 guard()
+                if (!statusOnly && action in setOf("approvePlan", "resume")) {
+                    if (action !in row.optJSONArray("onDemandActions").strings())
+                        throw Refused("unsupported")
+                    guardTarget()
+                    val status =
+                        widgetTeams.execute(
+                            payload,
+                            row,
+                            {
+                                currentCoroutineContext().ensureActive()
+                                guardTarget()
+                            },
+                            { dispatched = true },
+                        )
+                    if (status == "accepted") acknowledged = true
+                    return result(
+                        payload,
+                        status,
+                        if (status == "rejected") "staleRequest" else null,
+                    ) +
+                        if (status == "accepted")
+                            mapOf(
+                                "snapshot" to
+                                    mapOf(
+                                        "version" to 2,
+                                        "profileID" to profile,
+                                        "scopeToken" to payload["scopeToken"],
+                                        "connected" to false,
+                                        "sessions" to
+                                            listOf(
+                                                mapOf(
+                                                    "id" to sid,
+                                                    "team" to emptyMap<String, String>(),
+                                                    "onDemandActions" to emptyList<String>(),
+                                                )
+                                            ),
+                                    )
+                            )
+                        else emptyMap()
+                }
                 val gateway =
                     if (live) {
                         graph =
@@ -350,39 +417,66 @@ class AgentWidgetWiring(
                         openPrivate()
                     }
                 guard()
+                if (!read { gateway.health() }.healthy) throw Refused("unavailable")
                 if (statusOnly) return status(gateway)
+                if (action == "voice") return voice(gateway)
                 return execute(gateway)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Refused) {
-                return if (statusOnly) mapOf("status" to "unavailable")
+                return if (statusOnly)
+                    mapOf("status" to if (e.code == "staleRequest") "stale" else "unavailable")
+                else if (acknowledged) acknowledgedWithoutStatus()
                 else
                     result(
                         payload,
-                        if (dispatched) "uncertain" else "rejected",
-                        if (dispatched) "uncertainDelivery" else e.code,
+                        if (acknowledged) "accepted"
+                        else if (dispatched) "uncertain" else "rejected",
+                        if (acknowledged) null else if (dispatched) "uncertainDelivery" else e.code,
                     )
             } catch (e: Exception) {
                 return if (statusOnly) mapOf("status" to "unavailable")
+                else if (acknowledged) acknowledgedWithoutStatus()
                 else
                     result(
                         payload,
-                        if (dispatched) "uncertain" else "rejected",
-                        if (dispatched) "uncertainDelivery" else "unavailable",
+                        if (acknowledged) "accepted"
+                        else if (dispatched) "uncertain" else "rejected",
+                        if (acknowledged) null
+                        else if (dispatched) "uncertainDelivery" else "unavailable",
                     )
             } finally {
                 withContext(NonCancellable) {
                     try {
-                        owned?.close()
+                        try {
+                            withTimeoutOrNull(1_000) { owned?.close() }
+                        } catch (_: Exception) {
+                            /* Cleanup never changes an acknowledged command. */
+                        }
                     } finally {
-                        ownedScope?.coroutineContext?.get(Job)?.cancelAndJoin()
+                        ownedScope?.coroutineContext?.get(Job)?.cancel()
                     }
                 }
             }
         }
 
+        fun acknowledgedWithoutStatus(): Map<String, Any?> =
+            result(payload, "accepted") +
+                mapOf(
+                    "snapshot" to
+                        mapOf(
+                            "version" to 2,
+                            "profileID" to profile,
+                            "scopeToken" to payload["scopeToken"],
+                            "connected" to false,
+                            "sessions" to emptyList<Map<String, Any?>>(),
+                        )
+                )
+
         private fun guard() {
             if (clock.now().toEpochMilliseconds() >= deadlineMs) throw Refused("unavailable")
+            if (!stores.lanes.forProfile(ProfileId(profile)).isAdmitting)
+                throw Refused("staleRequest")
             if (
                 stores.profiles.activeId.value?.raw != profile ||
                     this@AgentWidgetWiring.fingerprint(profile) != fingerprint
@@ -407,6 +501,13 @@ class AgentWidgetWiring(
                         location
             )
                 throw Refused("staleRequest")
+            val activeGraph = registry.live.value[ProfileId(profile)]
+            if (
+                location != null &&
+                    activeGraph != null &&
+                    activeGraph.session.server.location.value != location
+            )
+                throw Refused("staleRequest")
             if (
                 live &&
                     graph != null &&
@@ -427,15 +528,22 @@ class AgentWidgetWiring(
                     it.optString("id") == sid && it.optString("profileID", profile) == profile
                 } ?: throw Refused("staleRequest")
             if (
-                listOf("requestID", "runMarker").any { now.optString(it) != row.optString(it) } ||
+                (row.has("team") &&
+                    now.optJSONObject("team")?.toString() !=
+                        row.optJSONObject("team")?.toString()) ||
+                    listOf("requestID", "runMarker").any {
+                        now.optString(it) != row.optString(it)
+                    } ||
                     now.optLong("startedAt") != row.optLong("startedAt")
             )
                 throw Refused("staleRequest")
         }
 
         private suspend fun <T> read(block: suspend () -> Outcome<T>): T {
+            currentCoroutineContext().ensureActive()
             guard()
             val reply = block()
+            currentCoroutineContext().ensureActive()
             guard()
             return when (reply) {
                 is Outcome.Ok -> reply.value
@@ -454,7 +562,8 @@ class AgentWidgetWiring(
             )
                 throw Refused("unsupported")
             val server = loaded.toServerProfile() ?: throw Refused("unsupported")
-            if (server.backend != BackendKind.OpenCode2) throw Refused("unsupported")
+            if (loaded.profile.usesAgentSocket || loaded.reentry.agentToken)
+                throw Refused("unsupported")
             val credentials =
                 when (val found = credentialSources.singleOrNull()?.resolve(server)) {
                     is Outcome.Ok -> found.value
@@ -491,13 +600,40 @@ class AgentWidgetWiring(
             return pair.live
         }
 
+        private suspend fun voice(gateway: ServerGateway): Map<String, Any?> {
+            val project = payload["lastProjectID"] as? String ?: throw Refused("staleRequest")
+            val text = payload["text"] as? String ?: throw Refused("invalidRequest")
+            if (
+                project.isBlank() ||
+                    project != snapshot.optString("lastProjectID") ||
+                    location?.directory.isNullOrBlank() ||
+                    text.isBlank() ||
+                    text.length > 8000
+            )
+                throw Refused("staleRequest")
+            guard()
+            dispatched = true
+            val created = gateway.createSession(NewSession(location = location))
+            if (created !is Outcome.Ok) throw Refused("uncertainDelivery")
+            guard()
+            if (parse(stored("oc.widgetSessions"))?.optString("lastProjectID") != project)
+                throw Refused("uncertainDelivery")
+            val sent =
+                gateway.prompt(created.value.id, OutgoingPrompt(text), payload["id"] as? String)
+            if (sent !is Outcome.Ok || sent.value is PromptAdmission.Uncertain)
+                throw Refused("uncertainDelivery")
+            acknowledged = true
+            return result(payload, "accepted")
+        }
+
         private suspend fun execute(gateway: ServerGateway): Map<String, Any?> {
             val session = SessionId(sid)
             read { gateway.session(session) }
                 .let {
                     if (
-                        it.directory != location?.directory ||
-                            it.workspaceId?.raw != location?.workspace
+                        (location?.directory != null && it.directory != location?.directory) ||
+                            (location?.workspace != null &&
+                                it.workspaceId?.raw != location?.workspace)
                     )
                         throw Refused("staleRequest")
                 }
@@ -505,6 +641,7 @@ class AgentWidgetWiring(
             when (action) {
                 "allowOnce",
                 "reject" -> {
+                    if (!gateway.capabilities.value.permissionRequests) throw Refused("unsupported")
                     val request = payload["requestID"] as? String ?: throw Refused("staleRequest")
                     if (request.isBlank() || request != row.optString("requestID"))
                         throw Refused("staleRequest")
@@ -583,20 +720,11 @@ class AgentWidgetWiring(
                 }
                 else -> throw Refused("unsupported")
             }
-            // Acknowledgement authorizes only the bounded status patch. Failed follow-up reads
-            // cannot resend.
-            val busy =
-                (gateway.sessionStatuses() as? Outcome.Ok)?.value?.get(session)?.let {
-                    it != SessionStatus.Idle
-                } ?: true
-            val permission =
-                (gateway.pendingPermissions() as? Outcome.Ok)
-                    ?.value
-                    ?.firstOrNull { it.sessionId == session }
-                    ?.id
-                    ?.raw
-                    .orEmpty()
-            guard()
+            // Once acknowledged, a failed or timed-out reconciliation never permits a resend.
+            acknowledged = true
+            val statuses = withTimeoutOrNull(2_000) { gateway.sessionStatuses() } as? Outcome.Ok
+            val busy = statuses?.value?.get(session)?.let { it != SessionStatus.Idle }
+            guardTarget()
             return result(payload, "accepted") +
                 mapOf(
                     "snapshot" to
@@ -604,19 +732,17 @@ class AgentWidgetWiring(
                             "version" to 2,
                             "profileID" to profile,
                             "scopeToken" to payload["scopeToken"],
+                            "connected" to (statuses != null),
                             "sessions" to
                                 listOf(
                                     mapOf(
                                         "id" to sid,
                                         "busy" to busy,
                                         "runMarker" to marker,
-                                        "requestID" to permission,
-                                        "onDemandActions" to
-                                            buildList {
-                                                if (permission.isNotBlank())
-                                                    addAll(listOf("allowOnce", "reject"))
-                                                if (busy && marker.isNotBlank()) add("stop")
-                                            },
+                                        "requestID" to
+                                            if (action in setOf("allowOnce", "reject")) ""
+                                            else row.optString("requestID"),
+                                        "onDemandActions" to emptyList<String>(),
                                     )
                                 ),
                         )
@@ -625,23 +751,41 @@ class AgentWidgetWiring(
 
         private suspend fun status(gateway: ServerGateway): Map<String, Any?> {
             val marker = payload["runMarker"] as? String ?: throw Refused("staleRequest")
-            if (
-                marker.isBlank() ||
-                    marker != row.optString("runMarker") ||
-                    (payload["startedAt"] as? Number)?.toLong() != row.optLong("startedAt")
-            )
-                throw Refused("staleRequest")
+            fun ticketCurrent() {
+                guardTarget()
+                val saved = parse(stored("oc.widgetFollowup.$profile"))?.optJSONObject(sid)
+                if (
+                    payload["token"] !is String ||
+                        saved?.optString("token") != payload["token"] ||
+                        payload["fingerprint"] != fingerprint ||
+                        marker.isBlank() ||
+                        marker != row.optString("runMarker") ||
+                        !row.optBoolean("busy") ||
+                        row.optString("requestID").isNotEmpty() ||
+                        (payload["startedAt"] as? Number)?.toLong() != row.optLong("startedAt")
+                )
+                    throw Refused("staleRequest")
+            }
+            ticketCurrent()
             val session = SessionId(sid)
             val messages = read { gateway.messagePage(session, limit = HISTORY_LIMIT) }.items
             if (runMarker(messages)?.first != marker) throw Refused("staleRequest")
-            if (read { gateway.pendingPermissions() }.any { it.sessionId == session })
-                return mapOf("status" to "busy")
             val statuses = read { gateway.sessionStatuses() }
-            return mapOf(
-                "status" to
-                    if (statuses[session]?.let { it != SessionStatus.Idle } == true) "busy"
-                    else "idle"
-            )
+            if (read { gateway.pendingPermissions() }.any { it.sessionId == session })
+                throw Refused("staleRequest")
+            val finalMessages = read { gateway.messagePage(session, limit = HISTORY_LIMIT) }.items
+            if (runMarker(finalMessages)?.first != marker) throw Refused("staleRequest")
+            ticketCurrent()
+            return when (statuses[session]) {
+                SessionStatus.Idle ->
+                    mapOf(
+                        "status" to "idle",
+                        "preview" to presentation.assistantPreview(finalMessages),
+                    )
+                SessionStatus.Busy,
+                SessionStatus.Retry -> mapOf("status" to "busy")
+                else -> mapOf("status" to "unavailable")
+            }
         }
     }
 

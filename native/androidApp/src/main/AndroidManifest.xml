@@ -77,6 +77,9 @@
         <activity android:name=".WidgetRouteActivity" android:exported="false" android:excludeFromRecents="true"
             android:noHistory="true" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity android:name=".WidgetOverlayActivity" android:exported="false" android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".WidgetConfigureActivity" android:exported="true" android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
+        </activity>
         <meta-data android:name="io.github.eslamasabry.opencode_mobile.WIDGET_OVERLAY_READY" android:value="true" />
         <activity
             android:name="io.github.eslamasabry.opencode_mobile.graph.ScheduleOpenActivity"

@@ -57,6 +57,8 @@ internal object WidgetActionBridge {
         BackgroundConnectionService.dispatchWidgetAction(payload) { result ->
             WidgetFeed.persistence?.scope?.launch {
                 if (result["status"] == "rejected") releaseClaim(app, payload)
+                if (result["status"] == "accepted")
+                    applyActionSnapshot(app, payload, result["snapshot"] as? Map<*, *>)
                 publishResult(app, payload, result)
                 done(result)
             }
