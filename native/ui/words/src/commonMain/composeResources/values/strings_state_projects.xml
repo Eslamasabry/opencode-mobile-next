@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateFolderNameEmpty">Enter a folder name.</string>
+    <string name="stateFolderNameSegment">Use a single folder name without slashes.</string>
+    <string name="stateFolderNameCharacters">Use letters, digits, dots, dashes or underscores, starting with a letter or digit (up to 64 characters).</string>
+    <string name="stateFolderCreating">Creating the project folder…</string>
+</resources>

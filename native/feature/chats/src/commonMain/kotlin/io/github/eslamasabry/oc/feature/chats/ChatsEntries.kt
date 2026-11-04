@@ -30,6 +30,14 @@ public class ChatsEntries : EntryInstaller {
             val state by vm.state.collectAsStateWithLifecycle()
             ChatsScreen(state, vm)
         }
+        entry<ChatsRoute.Attention> {
+            val vm =
+                metroViewModel<
+                    io.github.eslamasabry.oc.feature.chats.attention.AttentionViewModel
+                >()
+            val state by vm.state.collectAsStateWithLifecycle()
+            io.github.eslamasabry.oc.feature.chats.attention.AttentionScreen(state, vm)
+        }
         entry<ChatsRoute.All> { route ->
             val vm =
                 assistedMetroViewModel<ChatsAllViewModel, ChatsAllViewModel.Factory> {

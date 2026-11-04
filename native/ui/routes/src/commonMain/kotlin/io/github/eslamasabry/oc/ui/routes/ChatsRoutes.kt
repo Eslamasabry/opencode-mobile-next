@@ -12,6 +12,8 @@ public sealed interface ChatsRoute : AppRoute {
             get() = RouteMotion.Root
     }
 
+    @Serializable public data object Attention : ChatsRoute
+
     @Serializable public data class All(val filter: String? = null) : ChatsRoute
 
     @Serializable

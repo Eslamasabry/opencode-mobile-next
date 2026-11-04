@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateAttentionTitle">النشاط</string>
+    <string name="stateAttentionRefresh">تحديث</string>
+    <string name="stateAttentionNeedsYou">بانتظارك</string>
+    <string name="stateAttentionHistory">أثناء غيابك</string>
+    <string name="stateAttentionIncomplete">لم يتم فحص بعض الخوادم. قد تكون الملاحظات المحفوظة قديمة.</string>
+    <string name="stateAttentionCorrupt">تعذّرت قراءة بعض الأنشطة المحفوظة. تم الاحتفاظ بها على هذا الهاتف.</string>
+    <string name="stateAttentionSaveFailed">تعذّر حفظ هذا التغيير. حدّث وحاول مرة أخرى.</string>
+    <string name="stateAttentionNoneKnown">لا توجد طلبات معروفة من الخوادم التي استجابت.</string>
+    <string name="stateAttentionNone">لا توجد طلبات معلّقة.</string>
+    <string name="stateAttentionNoHistory">لا يوجد نشاط تلقائي لعرضه.</string>
+    <string name="stateAttentionPermission">طلب إذن</string>
+    <string name="stateAttentionQuestion">سؤال بانتظارك</string>
+    <string name="stateAttentionForm">نموذج بانتظارك</string>
+    <string name="stateAttentionFailure">محادثة تحتاج إلى مراجعة</string>
+    <string name="stateAttentionTeam">الفريق بانتظارك</string>
+    <string name="stateAttentionStale">آخر حالة معروفة</string>
+    <string name="stateAttentionAcknowledge">إخفاء النشاط المعروض</string>
+    <string name="stateActReconnect">أُعيد الاتصال تلقائيًا</string>
+    <string name="stateActRestart">أُعيد التشغيل تلقائيًا</string>
+    <string name="stateActHeatPause">أُوقف مؤقتًا بسبب الحرارة</string>
+    <string name="stateActHeatStop">توقّف بسبب الحرارة</string>
+    <string name="stateActHeatResume">استُؤنف بعد انخفاض الحرارة</string>
+    <string name="stateActUpdate">حُدّث تلقائيًا</string>
+    <string name="stateActPermission">سُمح بالإذن تلقائيًا</string>
+    <string name="stateActQueued">أُرسلت الرسالة المحفوظة</string>
+    <string name="stateActOther">نشاط تلقائي</string>
+    <string name="stateAttentionMonitorTitle">خوادم أخرى</string>
+    <string name="stateAttentionMonitorCopy">اختر الخوادم المحفوظة الأخرى التي تسمح لهذا الهاتف بفحص طلباتها المعلّقة. لا يؤدي ذلك إلى الرد على الطلبات أو تغيير تلك الخوادم.</string>
+    <string name="stateAttentionMonitorChoice">فحص الطلبات المعلّقة</string>
+</resources>

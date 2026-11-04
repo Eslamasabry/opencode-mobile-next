@@ -123,7 +123,12 @@ public interface ChatsActions {
     /** Search conversations across the server (unit P12-SEARCH-USAGE). */
     public fun openSearch() {}
 
-    /** The Projects page (P12): New project, Open a folder, Opened before, then the server's projects. */
+    /**
+     * The Projects page (P12): New project, Open a folder, Opened before, then the server's
+     * projects.
+     */
+    public fun openAttention() {}
+
     public fun openProjects()
 }
 

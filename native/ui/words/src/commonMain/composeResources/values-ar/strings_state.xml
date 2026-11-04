@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="statePin">تثبيت المحادثة</string>
+    <string name="stateUnpin">إلغاء تثبيت المحادثة</string>
+    <string name="statePinFailed">تعذّر حفظ التثبيت. حاول مرة أخرى.</string>
+    <string name="stateContextUsage">آخر استخدام للسياق: %1$d٪</string>
+    <string name="stateSavedPreview">قائمة محفوظة. اتصل لفتح هذه المحادثة.</string>
+</resources>

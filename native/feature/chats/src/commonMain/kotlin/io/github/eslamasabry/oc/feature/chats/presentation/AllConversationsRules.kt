@@ -17,9 +17,15 @@ public data class SourcePages(
     val failure: Failure? = null,
     val moreFailure: Failure? = null,
     val running: Set<SessionId> = emptySet(),
+    val pinned: Set<SessionId> = emptySet(),
+    val contextUsage: Map<SessionId, Double> = emptyMap(),
+    val preview: Boolean = false,
 )
 
-/** A row deleted inside the undo window, with what its DELETE needs: kept apart from the pages, which a reload clears. */
+/**
+ * A row deleted inside the undo window, with what its DELETE needs: kept apart from the pages,
+ * which a reload clears.
+ */
 public data class PendingDelete(val key: String, val session: Session)
 
 /** Everything the page knows; [AllConversationsRules.build] turns it into what it shows. */
@@ -35,7 +41,10 @@ public data class AllModel(
     val selected: Set<String> = emptySet(),
     /** Rows deleted inside the undo window: hidden, not yet sent. */
     val pending: List<PendingDelete> = emptyList(),
-    /** Rows whose delete was sent and has not answered yet: still hidden; a refusal brings them back. */
+    /**
+     * Rows whose delete was sent and has not answered yet: still hidden; a refusal brings them
+     * back.
+     */
     val hiddenSent: Set<String> = emptySet(),
     val undoId: Int = 0,
     val titles: Map<String, String> = emptyMap(),
@@ -65,9 +74,12 @@ public object AllConversationsRules {
     public fun isRunning(status: SessionStatus): Boolean =
         status == SessionStatus.Busy || status == SessionStatus.Retry
 
-    public fun updatedAt(session: Session): Long = session.time?.updatedMs ?: session.time?.createdMs ?: 0L
+    public fun updatedAt(session: Session): Long =
+        session.time?.updatedMs ?: session.time?.createdMs ?: 0L
 
-    /** The project words of a row: the folder name, or "Home"/"/" for folders that are not projects. */
+    /**
+     * The project words of a row: the folder name, or "Home"/"/" for folders that are not projects.
+     */
     public fun projectName(directory: String?): String? =
         when {
             directory.isNullOrBlank() -> null
@@ -75,7 +87,9 @@ public object AllConversationsRules {
             else -> FeedFolders.folderName(directory)
         }
 
-    /** Appends an older page, dropping any session already shown (a page boundary can repeat a row). */
+    /**
+     * Appends an older page, dropping any session already shown (a page boundary can repeat a row).
+     */
     public fun append(old: List<Session>, page: List<Session>): List<Session> {
         val seen = old.mapTo(HashSet()) { it.id }
         return old + page.filter { seen.add(it.id) }
@@ -96,7 +110,8 @@ public object AllConversationsRules {
         val names = model.servers.associate { it.profile to it.name }
         val many = model.servers.size > 1
         val hidden = model.pending.map { it.key }.toSet() + model.hiddenSent
-        // Subagent sessions belong to their parent's page, never this list (Dart rootsOnly: true); the AI Team's own
+        // Subagent sessions belong to their parent's page, never this list (Dart rootsOnly: true);
+        // the AI Team's own
         // conversations belong to the AI Team screen (Dart isAiTeamConversation).
         val entries =
             model.servers.flatMap { server ->
@@ -109,48 +124,69 @@ public object AllConversationsRules {
             }
         fun archivedOf(e: Entry): Boolean =
             e.session.time?.archivedMs != null || key(e.profile, e.session.id) in model.archivedNow
-        fun titleOf(e: Entry): String? = model.titles[key(e.profile, e.session.id)] ?: e.session.title
-        val sorted = entries.sortedByDescending { updatedAt(it.session) }
+        fun titleOf(e: Entry): String? =
+            model.titles[key(e.profile, e.session.id)] ?: e.session.title
+        val sorted =
+            entries.sortedWith(
+                compareByDescending<Entry> {
+                        it.session.id in model.sources[it.profile]?.pinned.orEmpty()
+                    }
+                    .thenByDescending { updatedAt(it.session) }
+            )
         val scoped = sorted.filter { archivedOf(it) == model.archived }
         val query = model.query.trim().lowercase()
-        val shown =
-            scoped.filter { e ->
-                (!model.running || e.running) &&
-                    (model.project == null || e.session.directory == model.project) &&
-                    (query.isEmpty() ||
-                        SessionTitles.text(titleOf(e)).lowercase().contains(query) ||
-                        (projectName(e.session.directory)?.lowercase()?.contains(query) == true))
-            }
-        val rows =
-            shown.map { e ->
-                val k = key(e.profile, e.session.id)
-                AllRowUi(
-                    key = k,
-                    ref = ConversationRef(e.profile, e.session.id),
-                    title = SessionTitles.present(titleOf(e)),
-                    project = projectName(e.session.directory),
-                    server = if (many) names[e.profile] else null,
-                    running = e.running,
-                    archived = archivedOf(e),
-                    selected = model.selecting && k in model.selected,
-                    canArchive = e.profile in model.archiveCapable && !archivedOf(e),
-                )
-            }
+        val shown = scoped.filter { e ->
+            (!model.running || e.running) &&
+                (model.project == null || e.session.directory == model.project) &&
+                (query.isEmpty() ||
+                    SessionTitles.text(titleOf(e)).lowercase().contains(query) ||
+                    (projectName(e.session.directory)?.lowercase()?.contains(query) == true))
+        }
+        val rows = shown.map { e ->
+            val k = key(e.profile, e.session.id)
+            AllRowUi(
+                key = k,
+                ref = ConversationRef(e.profile, e.session.id),
+                title = SessionTitles.present(titleOf(e)),
+                project = projectName(e.session.directory),
+                server = if (many) names[e.profile] else null,
+                running = e.running,
+                archived = archivedOf(e),
+                selected = model.selecting && k in model.selected,
+                canArchive =
+                    e.profile in model.archiveCapable &&
+                        !archivedOf(e) &&
+                        model.sources[e.profile]?.preview != true,
+                readOnly = model.sources[e.profile]?.preview == true,
+                pinned = e.session.id in model.sources[e.profile]?.pinned.orEmpty(),
+                contextPercent =
+                    model.sources[e.profile]?.contextUsage?.get(e.session.id)?.let {
+                        (it * 100).toInt()
+                    },
+            )
+        }
         val chipDirs =
-            scoped.mapNotNull { it.session.directory }
+            scoped
+                .mapNotNull { it.session.directory }
                 .filterNot { FeedFolders.isOtherFolder(it) }
                 .distinct()
                 .take(PROJECT_CHIPS)
-                .let { if (model.project != null && model.project !in it) it + model.project else it }
+                .let {
+                    if (model.project != null && model.project !in it) it + model.project else it
+                }
         val sources = model.servers.mapNotNull { model.sources[it.profile] }
-        val allLoaded = model.known && sources.size == model.servers.size && sources.all { it.loaded }
+        val allLoaded =
+            model.known && sources.size == model.servers.size && sources.all { it.loaded }
         val allFailed = allLoaded && sources.all { it.failure != null && it.sessions.isEmpty() }
         val phase =
             when {
-                !allLoaded -> AllPhase.Opening
+                !allLoaded && rows.isEmpty() -> AllPhase.Opening
                 allFailed -> AllPhase.Failed
-                scoped.isEmpty() && !model.archived && query.isEmpty() && !model.running && model.project == null ->
-                    AllPhase.Empty
+                scoped.isEmpty() &&
+                    !model.archived &&
+                    query.isEmpty() &&
+                    !model.running &&
+                    model.project == null -> AllPhase.Empty
                 rows.isEmpty() -> AllPhase.NoMatch
                 else -> AllPhase.List
             }
@@ -160,7 +196,9 @@ public object AllConversationsRules {
             rows = rows.toImmutableList(),
             query = model.query,
             projects =
-                chipDirs.map { ProjectChipUi(it, FeedFolders.folderName(it), it == model.project) }.toImmutableList(),
+                chipDirs
+                    .map { ProjectChipUi(it, FeedFolders.folderName(it), it == model.project) }
+                    .toImmutableList(),
             running = model.running,
             archived = model.archived,
             hasArchived = model.archived || sorted.any { archivedOf(it) },
@@ -176,7 +214,9 @@ public object AllConversationsRules {
             failure = if (allFailed) sources.firstNotNullOfOrNull { it.failure } else null,
             incomplete =
                 model.servers
-                    .filter { s -> model.sources[s.profile]?.let { it.failure != null && !allFailed } == true }
+                    .filter { s ->
+                        model.sources[s.profile]?.let { it.failure != null && !allFailed } == true
+                    }
                     .map { it.name }
                     .toImmutableList(),
             problem = model.problem,
@@ -187,27 +227,34 @@ public object AllConversationsRules {
                     DeleteUndoUi(
                         model.undoId,
                         model.pending.size,
-                        model.pending.singleOrNull()?.let { p -> SessionTitles.present(model.titles[p.key] ?: p.session.title) },
+                        model.pending.singleOrNull()?.let { p ->
+                            SessionTitles.present(model.titles[p.key] ?: p.session.title)
+                        },
                     ),
         )
     }
 
-    /** The server a key belongs to (keys are `<profile>/<session>`; session ids never hold a slash). */
+    /**
+     * The server a key belongs to (keys are `<profile>/<session>`; session ids never hold a slash).
+     */
     public fun profileOf(key: String): ProfileId = ProfileId(key.substringBeforeLast('/'))
 
     /** The session a key names, with its server. */
     public fun find(model: AllModel, key: String): Pair<ProfileId, Session>? {
         val profile = profileOf(key)
+        if (model.sources[profile]?.preview == true) return null
         val id = key.substringAfterLast('/')
-        val session = model.sources[profile]?.sessions?.firstOrNull { it.id.raw == id } ?: return null
+        val session =
+            model.sources[profile]?.sessions?.firstOrNull { it.id.raw == id } ?: return null
         return profile to session
     }
 }
 
 /**
- * The AI Team's own folders (Dart `isAiTeamDirectory`, lib/domain/team_directories.dart): the team's home
- * `/root/aiteam` and below, anything inside a Gas City state folder `.gc`, and anything inside `.oc/aiteam`. A
- * person's project the team works on matches none of these. `.` is dropped and `..` applied first.
+ * The AI Team's own folders (Dart `isAiTeamDirectory`, lib/domain/team_directories.dart): the
+ * team's home `/root/aiteam` and below, anything inside a Gas City state folder `.gc`, and anything
+ * inside `.oc/aiteam`. A person's project the team works on matches none of these. `.` is dropped
+ * and `..` applied first.
  */
 public object TeamFolders {
     private val home = listOf("root", "aiteam")
@@ -227,7 +274,8 @@ public object TeamFolders {
         val out = ArrayList<String>()
         value.split('/').forEach { part ->
             when (part) {
-                "", "." -> Unit
+                "",
+                "." -> Unit
                 ".." -> if (out.isNotEmpty()) out.removeAt(out.lastIndex)
                 else -> out += part
             }

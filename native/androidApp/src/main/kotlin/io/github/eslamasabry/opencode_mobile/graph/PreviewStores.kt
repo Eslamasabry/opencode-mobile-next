@@ -3,7 +3,9 @@ package io.github.eslamasabry.opencode_mobile.graph
 import android.app.Application
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.android.AndroidDataStores
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.DefaultWriterLanes
 import io.github.eslamasabry.oc.core.data.migration.MigrationGate
 import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
@@ -15,6 +17,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
 import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileDirectory
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
+import io.github.eslamasabry.oc.engine.profiles.StoredProfileJson
 import java.security.SecureRandom
 import kotlin.random.Random
 import kotlin.random.asKotlinRandom
@@ -22,8 +25,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * The app's stores behind the migration gate (P12: MigrationWiring). On the preview package the gate is open from the
- * start; on the real package it opens when the day-1 migration of the Flutter data has finished.
+ * The app's stores behind the migration gate (P12: MigrationWiring). On the preview package the
+ * gate is open from the start; on the real package it opens when the day-1 migration of the Flutter
+ * data has finished.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -35,7 +39,8 @@ class PreviewStores(
     migration: MigrationWiring,
 ) {
     val prefs = AndroidDataStores.flutterPrefs(application, gate, dispatchers.io)
-    val secrets = migration.ledgered(AndroidDataStores.secrets(application, gate, redactor, dispatchers.io))
+    val secrets =
+        migration.ledgered(AndroidDataStores.secrets(application, gate, redactor, dispatchers.io))
     val lanes = DefaultWriterLanes()
     val profiles = ProfileStore(prefs, secrets, lanes, redactor)
     private val warming = Mutex()
@@ -44,7 +49,8 @@ class PreviewStores(
     /** Every synchronous composer read follows both preference warm-up and profile restoration. */
     suspend fun warm(): Outcome<Unit> = warming.withLock {
         if (prepared) return@withLock Unit.ok()
-        gate.awaitOpen() // nothing reads the adopted file before the migration has finished (plan 05 §7.3)
+        gate.awaitOpen() // nothing reads the adopted file before the migration has finished (plan
+        // 05 §7.3)
         when (
             val result =
                 attempt({ Failure.StorageRefused() }) {
@@ -69,11 +75,24 @@ object PreviewBindings {
 
     @Provides
     @IntoSet
+    @SingleIn(AppScope::class)
     fun delivery(stores: PreviewStores): DeliveryStorage =
         DeliveryStorage(
             stores.prefs,
             stores.lanes,
-            ProfileDirectory { stores.profiles.profile(it) != null },
+            ProfileDirectory { id ->
+                val raw = (stores.prefs.get("oc.profiles") as? PrefValue.Str)?.value
+                val saved = raw?.let(DartJson::decodeOrNull) as? List<*>
+                val decoded = saved?.map { row ->
+                    (row as? Map<*, *>)?.let(StoredProfileJson::decode)
+                }
+                val current = stores.profiles.profile(id)?.profile
+                current != null &&
+                    decoded != null &&
+                    decoded.all { it != null && it.id.raw.isNotEmpty() } &&
+                    decoded.map { it?.id }.distinct().size == decoded.size &&
+                    decoded.singleOrNull { it?.id == id } == current
+            },
         )
 
     @Provides
