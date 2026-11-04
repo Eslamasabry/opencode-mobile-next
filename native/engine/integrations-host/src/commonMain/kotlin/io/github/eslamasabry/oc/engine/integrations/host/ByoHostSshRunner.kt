@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.engine.integrations.host
 
 import io.github.eslamasabry.oc.core.common.dart.DartJson
+import kotlin.coroutines.cancellation.CancellationException
+import kotlin.io.encoding.Base64
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -9,10 +11,11 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
-import kotlin.coroutines.cancellation.CancellationException
-import kotlin.io.encoding.Base64
 
-/** Flutter `ByoHostSshRunner`: every method answers a fixed code; no remote stderr or body becomes a failure. */
+/**
+ * Flutter `ByoHostSshRunner`: every method answers a fixed code; no remote stderr or body becomes a
+ * failure.
+ */
 public interface ByoHostSshRunner {
     public suspend fun available(): Boolean
 
@@ -38,7 +41,11 @@ public interface ByoHostSshRunner {
         remotePort: Int,
     ): HostResult<ByoHostTunnel>
 
-    public suspend fun describe(tunnel: ByoHostTunnel, deviceId: String, deviceToken: String): HostResult<ByoHostDescriptor>
+    public suspend fun describe(
+        tunnel: ByoHostTunnel,
+        deviceId: String,
+        deviceToken: String,
+    ): HostResult<ByoHostDescriptor>
 
     /** True only when the supervisor confirmed the revocation; every failure is false. */
     public suspend fun revoke(tunnel: ByoHostTunnel, deviceId: String, deviceToken: String): Boolean
@@ -49,10 +56,11 @@ public interface ByoHostSshRunner {
 }
 
 /**
- * OpenSSH inside the built-in Ubuntu (Flutter `BuiltinByoHostSshRunner`). No process receives a secret in its argv,
- * no imported private key ever touches disk (the device key lives in the Keystore and signs through the native agent),
- * the host key is pinned, the installer is authenticated by the reviewed archive digest before it runs, and the
- * supervisor is reached over authenticated loopback without redirects. The caller serializes work per profile.
+ * OpenSSH inside the built-in Ubuntu (Flutter `BuiltinByoHostSshRunner`). No process receives a
+ * secret in its argv, no imported private key ever touches disk (the device key lives in the
+ * Keystore and signs through the native agent), the host key is pinned, the installer is
+ * authenticated by the reviewed archive digest before it runs, and the supervisor is reached over
+ * authenticated loopback without redirects. The caller serializes work per profile.
  */
 public class BuiltinByoHostSshRunner(
     private val shell: HostLocalShell,
@@ -69,7 +77,8 @@ public class BuiltinByoHostSshRunner(
     private val activePaths = mutableSetOf<String>()
     private var disposed = false
 
-    private fun nonce(): String = random.bytes(12).joinToString("") { (it.toInt() and 0xff).toString(16).padStart(2, '0') }
+    private fun nonce(): String =
+        random.bytes(12).joinToString("") { (it.toInt() and 0xff).toString(16).padStart(2, '0') }
 
     override suspend fun available(): Boolean =
         try {
@@ -99,7 +108,8 @@ public class BuiltinByoHostSshRunner(
     private suspend fun cleanupProfile(profileId: String, root: String) {
         val prefix = profilePrefix(profileId)
         val orphan = Regex("^${Regex.escape(prefix)}[a-f0-9]{24}$")
-        // Recover only this profile's abandoned directories. Stop the exact native tunnel service before deleting its
+        // Recover only this profile's abandoned directories. Stop the exact native tunnel service
+        // before deleting its
         // key; never match processes by pattern.
         for (leaf in files.list("$root/tmp")) {
             val path = "$root/tmp/$leaf"
@@ -109,6 +119,20 @@ public class BuiltinByoHostSshRunner(
             files.deleteTree(path)
         }
     }
+
+    /**
+     * Fresh-process recovery: erase this profile's dead work only; keep its Keystore identity and
+     * live tunnel.
+     */
+    public suspend fun recoverOrphans(profileId: String): HostResult<Unit> =
+        hostResult(ByoHostFailureCode.Storage) {
+            val root = privateRoot(profileId)
+            cleanupProfile(profileId, root)
+            if (profileId !in forwardingProfiles && profileId !in agentDirectories) {
+                val stale = "$root/tmp/.oa-${digest16(profileId)}"
+                if (files.kind(stale) != HostEntryKind.Missing) files.deleteTree(stale)
+            }
+        }
 
     override suspend fun cleanup(profileId: String): HostResult<Unit> =
         hostResult(ByoHostFailureCode.Storage) {
@@ -140,7 +164,11 @@ public class BuiltinByoHostSshRunner(
         // mkdir/chmod run before any sensitive byte is written. Random exclusive path.
         val remote = "/tmp/$name"
         activePaths += local
-        val code = shell.run("umask 077; mkdir ${q(remote)} >/dev/null 2>&1 && chmod 700 ${q(remote)} >/dev/null 2>&1", SHORT)
+        val code =
+            shell.run(
+                "umask 077; mkdir ${q(remote)} >/dev/null 2>&1 && chmod 700 ${q(remote)} >/dev/null 2>&1",
+                SHORT,
+            )
         if (code != 0 || files.kind(local) != HostEntryKind.Directory) {
             activePaths -= local
             abort(ByoHostFailureCode.Storage)
@@ -153,13 +181,17 @@ public class BuiltinByoHostSshRunner(
             val resolved = tailnet.resolve(target).orAbort()
             val work = work("scan")
             try {
-                val result = work.execute("ssh-keyscan -T 10 -t ed25519 -p ${resolved.port} ${q(resolved.host)}")
+                val result =
+                    work.execute(
+                        "ssh-keyscan -T 10 -t ed25519 -p ${resolved.port} ${q(resolved.host)}"
+                    )
                 if (result.code != 0) abort(ByoHostFailureCode.Transport)
                 val keys = mutableSetOf<String>()
                 for (line in result.output.lines()) {
                     if (line.startsWith("#") || line.isBlank()) continue
                     val fields = line.trim().split(Regex("\\s+"))
-                    if (fields.size == 3 && fields[1] == "ssh-ed25519") keys += "${fields[1]} ${fields[2]}"
+                    if (fields.size == 3 && fields[1] == "ssh-ed25519")
+                        keys += "${fields[1]} ${fields[2]}"
                 }
                 if (keys.size != 1) abort(ByoHostFailureCode.NeedsTrust)
                 ByoHostKey.fromPublicKey(keys.single()) ?: abort(ByoHostFailureCode.NeedsTrust)
@@ -177,20 +209,30 @@ public class BuiltinByoHostSshRunner(
             ByoHostIdentity(identity.keyAlias, identity.publicKey)
         }
 
-    private suspend fun openAgent(profileId: String, target: ByoHostTarget, identity: ByoHostIdentity): String {
+    private suspend fun openAgent(
+        profileId: String,
+        target: ByoHostTarget,
+        identity: ByoHostIdentity,
+    ): String {
         val actual = signer.ensureIdentity(profileId)
-        if (actual.keyAlias != identity.keyAlias || actual.publicKey != identity.publicKey) abort(ByoHostFailureCode.IdentityChanged)
+        if (actual.keyAlias != identity.keyAlias || actual.publicKey != identity.publicKey)
+            abort(ByoHostFailureCode.IdentityChanged)
         closeAgent(profileId)
         val root = privateRoot(profileId)
         val leaf = ".oa-${digest16(profileId)}"
         val local = "$root/tmp/$leaf"
         when (files.kind(local)) {
             HostEntryKind.Missing -> Unit
-            HostEntryKind.Directory -> files.deleteTree(local) // a previous process's dead socket, no key bytes
+            HostEntryKind.Directory ->
+                files.deleteTree(local) // a previous process's dead socket, no key bytes
             else -> abort(ByoHostFailureCode.Storage)
         }
         val remote = "/tmp/$leaf"
-        val code = shell.run("umask 077; mkdir ${q(remote)} >/dev/null 2>&1 && chmod 700 ${q(remote)} >/dev/null 2>&1", SHORT)
+        val code =
+            shell.run(
+                "umask 077; mkdir ${q(remote)} >/dev/null 2>&1 && chmod 700 ${q(remote)} >/dev/null 2>&1",
+                SHORT,
+            )
         if (code != 0) abort(ByoHostFailureCode.Storage)
         agentDirectories[profileId] = local
         try {
@@ -207,7 +249,8 @@ public class BuiltinByoHostSshRunner(
     private suspend fun closeAgent(profileId: String) {
         signer.closeAgent(profileId)
         val directory = agentDirectories.remove(profileId)
-        if (directory != null && files.kind(directory) != HostEntryKind.Missing) files.deleteTree(directory)
+        if (directory != null && files.kind(directory) != HostEntryKind.Missing)
+            files.deleteTree(directory)
     }
 
     private suspend fun ssh(
@@ -218,42 +261,80 @@ public class BuiltinByoHostSshRunner(
         agentSocket: String? = null,
         publicKey: String? = null,
     ): String {
-        if (ByoHostKey.fromPublicKey(pin.publicKey)?.fingerprint != pin.fingerprint) abort(ByoHostFailureCode.HostKeyChanged)
+        if (ByoHostKey.fromPublicKey(pin.publicKey)?.fingerprint != pin.fingerprint)
+            abort(ByoHostFailureCode.HostKeyChanged)
         work.write("known_hosts", "oc-byo-host ${pin.publicKey}\n")
         val args =
             mutableListOf(
-                "ssh", "-F", "/dev/null", "-T", "-p", "${target.port}",
-                "-o", "HostKeyAlias=oc-byo-host",
-                "-o", "UserKnownHostsFile=${work.remote}/known_hosts",
-                "-o", "GlobalKnownHostsFile=/dev/null",
-                "-o", "StrictHostKeyChecking=yes",
-                "-o", "HostKeyAlgorithms=ssh-ed25519",
-                "-o", "UpdateHostKeys=no",
-                "-o", "VerifyHostKeyDNS=no",
-                "-o", "IdentityAgent=${agentSocket ?: "none"}",
-                "-o", "IdentityFile=none",
-                "-o", "IdentitiesOnly=yes",
-                "-o", "ForwardAgent=no",
-                "-o", "ForwardX11=no",
-                "-o", "PermitLocalCommand=no",
-                "-o", "ProxyCommand=none",
-                "-o", "ProxyJump=none",
-                "-o", "ControlMaster=no",
-                "-o", "ControlPath=none",
-                "-o", "ConnectionAttempts=1",
-                "-o", "ConnectTimeout=15",
-                "-o", "ServerAliveInterval=15",
-                "-o", "ServerAliveCountMax=2",
-                "-o", "NumberOfPasswordPrompts=1",
-                "-o", "LogLevel=ERROR",
-                "-o", "EscapeChar=none",
-                "-o", "RequestTTY=no",
+                "ssh",
+                "-F",
+                "/dev/null",
+                "-T",
+                "-p",
+                "${target.port}",
+                "-o",
+                "HostKeyAlias=oc-byo-host",
+                "-o",
+                "UserKnownHostsFile=${work.remote}/known_hosts",
+                "-o",
+                "GlobalKnownHostsFile=/dev/null",
+                "-o",
+                "StrictHostKeyChecking=yes",
+                "-o",
+                "HostKeyAlgorithms=ssh-ed25519",
+                "-o",
+                "UpdateHostKeys=no",
+                "-o",
+                "VerifyHostKeyDNS=no",
+                "-o",
+                "IdentityAgent=${agentSocket ?: "none"}",
+                "-o",
+                "IdentityFile=none",
+                "-o",
+                "IdentitiesOnly=yes",
+                "-o",
+                "ForwardAgent=no",
+                "-o",
+                "ForwardX11=no",
+                "-o",
+                "PermitLocalCommand=no",
+                "-o",
+                "ProxyCommand=none",
+                "-o",
+                "ProxyJump=none",
+                "-o",
+                "ControlMaster=no",
+                "-o",
+                "ControlPath=none",
+                "-o",
+                "ConnectionAttempts=1",
+                "-o",
+                "ConnectTimeout=15",
+                "-o",
+                "ServerAliveInterval=15",
+                "-o",
+                "ServerAliveCountMax=2",
+                "-o",
+                "NumberOfPasswordPrompts=1",
+                "-o",
+                "LogLevel=ERROR",
+                "-o",
+                "EscapeChar=none",
+                "-o",
+                "RequestTTY=no",
             )
         // Imported bootstrap keys are unsupported: no private key may touch disk.
-        if (login.privateKey != null || login.passphrase != null) abort(ByoHostFailureCode.Authentication)
+        if (login.privateKey != null || login.passphrase != null)
+            abort(ByoHostFailureCode.Authentication)
         if (agentSocket != null && publicKey != null) {
             work.write("device.pub", "$publicKey\n")
-            args += listOf("-i", "${work.remote}/device.pub", "-o", "PubkeyAcceptedAlgorithms=ecdsa-sha2-nistp256")
+            args +=
+                listOf(
+                    "-i",
+                    "${work.remote}/device.pub",
+                    "-o",
+                    "PubkeyAcceptedAlgorithms=ecdsa-sha2-nistp256",
+                )
         } else {
             args += listOf("-o", "PubkeyAuthentication=no")
         }
@@ -267,7 +348,8 @@ public class BuiltinByoHostSshRunner(
                 "#!/bin/sh\ncase \"\$1\" in *assword*) exec cat ${q("${work.remote}/password")};; *) exit 1;; esac\n",
                 executable = true,
             )
-            environment = "DISPLAY=oc-byo SSH_ASKPASS_REQUIRE=force SSH_ASKPASS=${q("${work.remote}/askpass")} "
+            environment =
+                "DISPLAY=oc-byo SSH_ASKPASS_REQUIRE=force SSH_ASKPASS=${q("${work.remote}/askpass")} "
             args += listOf("-o", "BatchMode=no", "-o", "PreferredAuthentications=password")
         } else {
             args += listOf("-o", "BatchMode=yes", "-o", "PreferredAuthentications=publickey")
@@ -291,7 +373,8 @@ public class BuiltinByoHostSshRunner(
         try {
             return hostResult(ByoHostFailureCode.Uncertain) {
                 val resolved = tailnet.resolve(target).orAbort()
-                if (login.privateKey != null || login.passphrase != null) abort(ByoHostFailureCode.Authentication)
+                if (login.privateKey != null || login.passphrase != null)
+                    abort(ByoHostFailureCode.Authentication)
                 val job = work(profileId).also { work = it }
                 if (!TOKEN.matches(deviceToken)) abort(ByoHostFailureCode.Authentication)
                 var agentSocket: String? = null
@@ -299,7 +382,15 @@ public class BuiltinByoHostSshRunner(
                     agentSocket = openAgent(profileId, resolved, identity)
                     usesAgent = true
                 }
-                val ssh = ssh(job, resolved, hostKey, login, agentSocket, if (agentSocket == null) null else identity.publicKey)
+                val ssh =
+                    ssh(
+                        job,
+                        resolved,
+                        hostKey,
+                        login,
+                        agentSocket,
+                        if (agentSocket == null) null else identity.publicKey,
+                    )
                 val architecture = job.execute("$ssh ${q(resolved.host)} uname -m")
                 if (architecture.code != 0) abort(sshFailure(architecture.output))
                 val arch =
@@ -311,13 +402,15 @@ public class BuiltinByoHostSshRunner(
                 val artifact = bundle.artifacts[arch] ?: abort(ByoHostFailureCode.BundleUnavailable)
                 val payload =
                     JsonObject(
-                        mapOf(
-                            "deviceId" to JsonPrimitive(profileId),
-                            "token" to JsonPrimitive(deviceToken),
-                            "publicKey" to JsonPrimitive(identity.publicKey),
-                        ),
-                    ).toString()
-                // The entire remote script is a private file carried over SSH stdin. The reviewed archive digest
+                            mapOf(
+                                "deviceId" to JsonPrimitive(profileId),
+                                "token" to JsonPrimitive(deviceToken),
+                                "publicKey" to JsonPrimitive(identity.publicKey),
+                            )
+                        )
+                        .toString()
+                // The entire remote script is a private file carried over SSH stdin. The reviewed
+                // archive digest
                 // authenticates the installer before it executes.
                 val script =
                     """set -eu
@@ -332,10 +425,17 @@ $payload
 OC_BYO_INPUT
 """
                 job.write("input", script)
-                val result = job.execute("$ssh ${q(resolved.host)} sh -s < ${q("${job.remote}/input")}", timeoutMs = 15 * 60_000L)
+                val result =
+                    job.execute(
+                        "$ssh ${q(resolved.host)} sh -s < ${q("${job.remote}/input")}",
+                        timeoutMs = 15 * 60_000L,
+                    )
                 if (result.code != 0) abort(installFailure(result.output))
                 val descriptor = descriptor(result.output)
-                if (descriptor.bundleVersion != bundle.version || descriptor.openCodeVersion != bundle.openCodeVersion) {
+                if (
+                    descriptor.bundleVersion != bundle.version ||
+                        descriptor.openCodeVersion != bundle.openCodeVersion
+                ) {
                     abort(ByoHostFailureCode.Protocol)
                 }
                 descriptor
@@ -361,7 +461,15 @@ OC_BYO_INPUT
             val work = work(profileId)
             val name = "byo-${work.remote.takeLast(24)}"
             try {
-                val ssh = ssh(work, resolved, hostKey, ByoHostLogin(), openAgent(profileId, resolved, identity), identity.publicKey)
+                val ssh =
+                    ssh(
+                        work,
+                        resolved,
+                        hostKey,
+                        ByoHostLogin(),
+                        openAgent(profileId, resolved, identity),
+                        identity.publicKey,
+                    )
                 val port = ports.freePort()
                 val output = work.empty("result")
                 val script =
@@ -379,7 +487,8 @@ OC_BYO_INPUT
                         tunnels -= tunnel
                     }
                 tunnels += tunnel
-                // The native start can precede SSH readiness. Bound the wait; never fall back to a public endpoint.
+                // The native start can precede SSH readiness. Bound the wait; never fall back to a
+                // public endpoint.
                 for (attempt in 0 until 40) {
                     if (ports.canConnect(port)) {
                         if (shell.running(name)) {
@@ -390,7 +499,12 @@ OC_BYO_INPUT
                     }
                     delay(100)
                 }
-                val failure = sshFailure(if (files.kind("${work.local}/result") == HostEntryKind.File) work.read("result") else "")
+                val failure =
+                    sshFailure(
+                        if (files.kind("${work.local}/result") == HostEntryKind.File)
+                            work.read("result")
+                        else ""
+                    )
                 tunnel.close()
                 abort(failure)
             } catch (e: CancellationException) {
@@ -409,13 +523,23 @@ OC_BYO_INPUT
         forwardingProfiles -= profileId
     }
 
-    private suspend fun request(tunnel: ByoHostTunnel, deviceId: String, token: String, path: String, method: String): String {
-        if (!byoHostSafeId(deviceId) || !TOKEN.matches(token) || tunnel.localPort !in 1..65535) abort(ByoHostFailureCode.Authentication)
+    private suspend fun request(
+        tunnel: ByoHostTunnel,
+        deviceId: String,
+        token: String,
+        path: String,
+        method: String,
+    ): String {
+        if (!byoHostSafeId(deviceId) || !TOKEN.matches(token) || tunnel.localPort !in 1..65535)
+            abort(ByoHostFailureCode.Authentication)
         if (tunnel is SshTunnel && !tunnel.alive()) abort(ByoHostFailureCode.Transport)
         val authorization = "Basic " + Base64.encode("$deviceId:$token".encodeToByteArray())
         val reply =
             try {
-                http.exchange(LoopbackRequest(method, tunnel.localPort, path, authorization), MAX_REPLY)
+                http.exchange(
+                    LoopbackRequest(method, tunnel.localPort, path, authorization),
+                    MAX_REPLY,
+                )
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
@@ -425,15 +549,28 @@ OC_BYO_INPUT
         return reply.body.decodeToString()
     }
 
-    override suspend fun describe(tunnel: ByoHostTunnel, deviceId: String, deviceToken: String): HostResult<ByoHostDescriptor> =
-        hostResult(ByoHostFailureCode.Transport) { descriptor(request(tunnel, deviceId, deviceToken, "/_oc/host", "GET")) }
-
-    override suspend fun revoke(tunnel: ByoHostTunnel, deviceId: String, deviceToken: String): Boolean =
+    override suspend fun describe(
+        tunnel: ByoHostTunnel,
+        deviceId: String,
+        deviceToken: String,
+    ): HostResult<ByoHostDescriptor> =
         hostResult(ByoHostFailureCode.Transport) {
-            val body = request(tunnel, deviceId, deviceToken, "/_oc/revoke", "POST")
-            val json = Json.parseToJsonElement(body) as? JsonObject ?: abort(ByoHostFailureCode.Protocol)
-            json["revoked"]?.jsonPrimitive?.booleanOrNull == true
-        }.valueOrNull() == true
+            descriptor(request(tunnel, deviceId, deviceToken, "/_oc/host", "GET"))
+        }
+
+    override suspend fun revoke(
+        tunnel: ByoHostTunnel,
+        deviceId: String,
+        deviceToken: String,
+    ): Boolean =
+        hostResult(ByoHostFailureCode.Transport) {
+                val body = request(tunnel, deviceId, deviceToken, "/_oc/revoke", "POST")
+                val json =
+                    Json.parseToJsonElement(body) as? JsonObject
+                        ?: abort(ByoHostFailureCode.Protocol)
+                json["revoked"]?.jsonPrimitive?.booleanOrNull == true
+            }
+            .valueOrNull() == true
 
     override suspend fun dispose() {
         disposed = true
@@ -479,13 +616,21 @@ OC_BYO_INPUT
                 } catch (_: IllegalArgumentException) {
                     null
                 } ?: abort(ByoHostFailureCode.Protocol)
-            fun str(key: String): String? = (data[key] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
+            fun str(key: String): String? =
+                (data[key] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
             val id = str("hostId")
             val bundle = str("bundleVersion")
             val version = str("openCodeVersion")
             val port = (data["port"] as? JsonPrimitive)?.takeIf { !it.isString }?.intOrNull
-            if (id == null || bundle == null || version == null || port == null || !byoHostSafeId(id) ||
-                !SEMVER.matches(bundle) || !SEMVER.matches(version) || port !in 1..65535
+            if (
+                id == null ||
+                    bundle == null ||
+                    version == null ||
+                    port == null ||
+                    !byoHostSafeId(id) ||
+                    !SEMVER.matches(bundle) ||
+                    !SEMVER.matches(version) ||
+                    port !in 1..65535
             ) {
                 abort(ByoHostFailureCode.Protocol)
             }
@@ -493,41 +638,48 @@ OC_BYO_INPUT
         }
 
         /**
-         * stderr may precede the installer's final fixed JSON error. Never expose server text, and never infer a code
-         * from a substring of it.
+         * stderr may precede the installer's final fixed JSON error. Never expose server text, and
+         * never infer a code from a substring of it.
          */
         internal fun installFailure(output: String): ByoHostFailureCode {
             for (line in output.lines().asReversed()) {
                 val code =
                     try {
-                        ((Json.parseToJsonElement(line) as? JsonObject)?.get("error") as? JsonPrimitive)?.takeIf { it.isString }?.content
+                        ((Json.parseToJsonElement(line) as? JsonObject)?.get("error")
+                                as? JsonPrimitive)
+                            ?.takeIf { it.isString }
+                            ?.content
                     } catch (_: IllegalArgumentException) {
                         continue
                     }
                 val failure =
                     when {
-                        code == "checksum" || code == "checksumMismatch" -> ByoHostFailureCode.Checksum
+                        code == "checksum" || code == "checksumMismatch" ->
+                            ByoHostFailureCode.Checksum
                         code == "unsupportedHost" -> ByoHostFailureCode.UnsupportedHost
                         code == "userServiceUnavailable" -> ByoHostFailureCode.Unavailable
                         code == "hostBusy" -> ByoHostFailureCode.Busy
-                        code == "sshPolicyRequired" || code == "forwardingPolicyRequired" -> ByoHostFailureCode.SshPolicyRequired
+                        code == "sshPolicyRequired" || code == "forwardingPolicyRequired" ->
+                            ByoHostFailureCode.SshPolicyRequired
                         code == "lingerRequired" -> ByoHostFailureCode.LingerRequired
                         code == "unsupportedBundle" -> ByoHostFailureCode.BundleUnavailable
                         code == "hostConflict" -> ByoHostFailureCode.IdentityChanged
-                        code == "unsafeArchive" || code == "unsafePath" -> ByoHostFailureCode.Protocol
+                        code == "unsafeArchive" || code == "unsafePath" ->
+                            ByoHostFailureCode.Protocol
                         code != null && code.startsWith("invalid") -> ByoHostFailureCode.Protocol
                         else -> null
                     }
                 if (failure != null) return failure
             }
             val failure = sshFailure(output)
-            return if (failure == ByoHostFailureCode.Transport) ByoHostFailureCode.Uncertain else failure
+            return if (failure == ByoHostFailureCode.Transport) ByoHostFailureCode.Uncertain
+            else failure
         }
 
         internal fun sshFailure(output: String): ByoHostFailureCode =
             when {
-                "REMOTE HOST IDENTIFICATION HAS CHANGED" in output || "Host key verification failed" in output ->
-                    ByoHostFailureCode.HostKeyChanged
+                "REMOTE HOST IDENTIFICATION HAS CHANGED" in output ||
+                    "Host key verification failed" in output -> ByoHostFailureCode.HostKeyChanged
                 "Permission denied" in output -> ByoHostFailureCode.Authentication
                 else -> ByoHostFailureCode.Transport
             }
@@ -560,7 +712,11 @@ internal class PrivateWork(
 ) {
     suspend fun empty(name: String, executable: Boolean = false): String {
         val path = "$remote/$name"
-        val code = shell.run("umask 077; : > ${q(path)} && chmod ${if (executable) "700" else "600"} ${q(path)}", 10_000)
+        val code =
+            shell.run(
+                "umask 077; : > ${q(path)} && chmod ${if (executable) "700" else "600"} ${q(path)}",
+                10_000,
+            )
         if (code != 0) abort(ByoHostFailureCode.Storage)
         return path
     }
@@ -572,7 +728,8 @@ internal class PrivateWork(
 
     suspend fun read(name: String): String {
         val path = "$local/$name"
-        if (files.kind(path) != HostEntryKind.File || files.size(path) > 65_536) abort(ByoHostFailureCode.Protocol)
+        if (files.kind(path) != HostEntryKind.File || files.size(path) > 65_536)
+            abort(ByoHostFailureCode.Protocol)
         return files.read(path)
     }
 

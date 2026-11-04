@@ -33,7 +33,11 @@ import org.jetbrains.compose.resources.stringResource
  * saved state.
  */
 @Composable
-public fun IntegrationsScreen(state: IntegrationsUi, actions: IntegrationsActions) {
+public fun IntegrationsScreen(
+    state: IntegrationsUi,
+    actions: IntegrationsActions,
+    hostPanel: @Composable () -> Unit = {},
+) {
     val back = stringResource(Res.string.intBack)
     val disabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.intConnecting))
@@ -52,6 +56,7 @@ public fun IntegrationsScreen(state: IntegrationsUi, actions: IntegrationsAction
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
+            hostPanel()
             if (state.servers.isEmpty()) KitText(stringResource(Res.string.intNoServer))
             else {
                 KitRowGroup(label = stringResource(Res.string.intServers)) {

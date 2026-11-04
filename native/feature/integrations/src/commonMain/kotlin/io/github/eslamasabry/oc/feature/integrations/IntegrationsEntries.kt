@@ -9,7 +9,9 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import io.github.eslamasabry.oc.feature.integrations.presentation.HostPanelViewModel
 import io.github.eslamasabry.oc.feature.integrations.presentation.IntegrationsViewModel
+import io.github.eslamasabry.oc.feature.integrations.ui.HostPanel
 import io.github.eslamasabry.oc.feature.integrations.ui.IntegrationsScreen
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.IntegrationsRoute
@@ -21,7 +23,9 @@ public class IntegrationsEntries : EntryInstaller {
         entry<IntegrationsRoute> {
             val vm = metroViewModel<IntegrationsViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
-            IntegrationsScreen(state, vm)
+            val hosts = metroViewModel<HostPanelViewModel>()
+            val hostState by hosts.state.collectAsStateWithLifecycle()
+            IntegrationsScreen(state, vm) { HostPanel(hostState, hosts) }
         }
     }
 }

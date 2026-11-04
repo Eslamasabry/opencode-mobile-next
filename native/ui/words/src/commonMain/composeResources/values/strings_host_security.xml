@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hostSecTitle">A machine on your private network</string>
+    <string name="hostSecIntro">Inspect its SSH identity, prepare this phone’s public key, or recover a saved host.</string>
+    <string name="hostSecBundleMissing">New host installation is unavailable until a reviewed OpenCode 2 host bundle is published. These preparation commands run only when you copy and run them on your machine.</string>
+    <string name="hostSecWorking">Working…</string>
+    <string name="hostSecRefresh">Refresh saved machines</string>
+    <string name="hostSecSaved">Saved machines</string>
+    <string name="hostSecAddress">SSH account and tailnet address (user@host)</string>
+    <string name="hostSecPort">SSH port</string>
+    <string name="hostSecInspect">Inspect machine identity</string>
+    <string name="hostSecTrustHelp">Compare this fingerprint in an independent session on the machine using ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256. Continue only when it matches exactly.</string>
+    <string name="hostSecTrust">Fingerprint matches — prepare public key</string>
+    <string name="hostSecPublicHelp">This public key is safe to copy. The private key stays in the Android Keystore. Installation and enrollment still require the reviewed host bundle.</string>
+    <string name="hostSecCopy">Copy command</string>
+    <string name="hostSecResume">Verify saved connection</string>
+    <string name="hostSecVerified">The pinned SSH identity and saved supervisor identity were verified over the private tunnel.</string>
+    <string name="hostSecNotConnected">No verified host connection is open.</string>
+    <string name="hostSecRevoke">Revoke this phone and remove</string>
+    <string name="hostSecForget">Forget local host data</string>
+    <string name="hostSecRemoveConfirm">Remove</string>
+    <string name="hostSecRevokeHelp">The app must confirm revocation with the pinned host before erasing local access. A failed revocation keeps the saved data for retry. Sessions on the machine keep running.</string>
+    <string name="hostSecForgetHelp">Remove this phone’s local tunnel, key and saved host data. This does not revoke remote access or stop sessions on the machine.</string>
+    <string name="hostSecTargetFailure">Use a machine address on your Tailscale network and a valid SSH account and port. Public, local and mixed DNS routes are refused.</string>
+    <string name="hostSecIdentityFailure">The machine identity changed. Nothing was adopted. Verify the machine independently before trying again.</string>
+    <string name="hostSecRevokeFailure">Access revocation could not be confirmed. Saved access is kept so you can retry.</string>
+    <string name="hostSecStorageFailure">Host data could not be safely read or changed. Keep the saved machine and try again.</string>
+    <string name="hostSecFailure">The private host operation could not finish. Check the phone’s Linux setup and private network, then retry.</string>
+    <string name="hostSecStepTailnet">Connect both devices to your Tailscale. These checks show status and addresses; they do not prove VPN membership. DNS is resolved once, every answer must be in the tailnet ranges, and SSH uses the validated numeric address with a pinned key.</string>
+    <string name="hostSecStepAccount">Use a separate Ubuntu 24.04 account without root access. Check these tools first. Setup checks the system, nonroot UID, architecture, Python and user service manager; it does not install packages with sudo.</string>
+    <string name="hostSecStepNetwork">Keep a rescue session open. Replace MACHINE_TAILSCALE_IP with the actual numeric address and remove public or wildcard ListenAddress entries. These owner commands change the whole SSH daemon. The installer only reads actual listening sockets on the selected SSH port and refuses public, wildcard or ordinary LAN listeners; it does not change the firewall or SSH bindings. Verify every other SSH port separately.</string>
+    <string name="hostSecStepLinger">Run the first command once with administrator access. The installer reads Linger and requires yes, then checks that systemctl --user works. It never enables linger itself or requests a sudo password.</string>
+    <string name="hostSecStepPolicy">Keep an administrator session open. Replace PHONE_TAILSCALE_IP and MACHINE_TAILSCALE_IP with the actual numeric addresses. Validate before reload. Earlier SSH directives may override this file. The installer checks local TCP forwarding, disabled reverse and socket forwarding, no tunnel devices, UseDNS no, DisableForwarding no, public-key login and the standard authorized_keys path. Parsing settings does not prove the running daemon loaded them; verify the reload yourself.</string>
+    <string name="hostSecStepIdentity">Compare this output with the app in an independent machine session before trusting it. The app computes the Ed25519 SHA256 fingerprint and blocks later identity changes.</string>
+</resources>
