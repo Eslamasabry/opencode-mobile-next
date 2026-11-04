@@ -50,6 +50,9 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
@@ -233,6 +236,11 @@ public fun ServersScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                     KitText(server.name)
                     KitText(server.address)
+                    // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded loopback is a server.
+                    val support = if (onThisPhone != null) PhoneHostSupport.Android else PhoneHostSupport.Elsewhere
+                    if (PhoneOwnServers.isPhoneOwnServer(PhoneServerCandidate(server.id.raw, server.address), support)) {
+                        KitText(stringResource(Res.string.settingsV3ThisPhone))
+                    }
                     if (server.connected) KitText(stringResource(Res.string.serversConnected))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                         KitButton(

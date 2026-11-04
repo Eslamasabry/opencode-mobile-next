@@ -41,6 +41,7 @@ import io.github.eslamasabry.oc.feature.phone.presentation.PhonePage
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.LinuxRoute
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
+import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobBackingUp
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrJobNoticeInstall
@@ -218,7 +219,7 @@ object LinuxWiring {
             }
         }
 
-    /** PhonePage → routes. Setup pages are not in this build: they open the Linux page, which says so plainly. */
+    /** PhonePage → routes. Setup opens the real setup page (P12-BUILD-RUNTIME-C, PhoneSetupWiring). */
     @Provides
     fun phoneNavigator(nav: AppNavigator): PhoneNavigator =
         object : PhoneNavigator {
@@ -228,7 +229,9 @@ object LinuxWiring {
                         PhonePage.Running -> PhoneRoute.Running
                         PhonePage.KeepRunning -> PhoneRoute.KeepRunning
                         PhonePage.Linux -> LinuxRoute.Home
-                        PhonePage.SetupStart, PhonePage.SetupProgress -> io.github.eslamasabry.oc.ui.routes.SetupRoute.Phone // BUILD-RUNTIME-B
+                        // P12-BUILD-RUNTIME-C: the real setup journey (PhoneSetupWiring). BUILD-RUNTIME-B's
+                        // SetupRoute.Phone (SetupWiring) stays registered; only one page can own these two entries.
+                        PhonePage.SetupStart, PhonePage.SetupProgress -> PhoneSetupRoute.Setup
                     },
                 )
             }
