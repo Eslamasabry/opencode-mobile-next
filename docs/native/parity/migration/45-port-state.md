@@ -1,4 +1,4 @@
-Already there: 6 | Ported now: 5 | Not needed: 9 | Blocked: 32
+Already there: 6 | Ported now: 6 | Not needed: 9 | Blocked: 41
 
 # Migration step 4: Flutter state and connection logic
 
@@ -6,7 +6,7 @@ Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`; branch `p12x/45-port-state`.
 
 Finish line: read all 87 assigned Flutter sources, map reachable native behavior, port missing runnable slices, and identify prerequisites which still prevent full-file parity. Non-goals: tests, APKs, pushes, signing and releases. A dormant engine is not an implementation a person can use. A blocked row may contain a completed partial port; it stays blocked while other behavior in that source is missing.
 
-Checkpoint: 52/87 dispositions recorded; the remaining review reports are being integrated. Counts above cover recorded rows only. All Flutter source is read-only.
+Checkpoint: 62/87 dispositions recorded; the remaining review reports are being integrated. Counts above cover recorded rows only. All Flutter source is read-only.
 
 - `lib/state/connection/activity.dart` — blocked: AutomaticActivityRegistry has no production owner or Inbox history binding; confirmed-act recording/dismiss/undo cannot reach the person (native/engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/activity/AutomaticActivity.kt:430).
 - `lib/state/connection/agent_handoff.dart` — blocked: no production phone-agent target gateway/host lease/adoption binding exists; the standalone HandoffEngine cannot safely open or retain the target conversation.
@@ -65,6 +65,17 @@ Checkpoint: 52/87 dispositions recorded; the remaining review reports are being 
 - `lib/state/connection/models.dart` — blocked: native `feature/chat/world/GraphChatWorld.kt:747` loads current selection and `:852` verifies mutations, but ModelChoices favorites/cycling and AgentSelection cold name/display-model caches have no production consumers; provider reload deliberately unsupported on OC2 (Flutter itself skips it), not the blocker.
 - `lib/state/connection/monitors.dart` — blocked: profile monitoring is real (`native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/MonitorWiring.kt:43`), but `graph/PlansWiring.kt:46` explicitly documents absent quota collector, Paseo/phone usage adapters and alert bridge; UsageSubscriptionsEngine is bound only to connected OpenCode sign-in names, alertsOnRule=false.
 
+- `lib/state/connection/pending_reads.dart` — ported now: native/engine/requests/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/requests/RequestsEngine.kt:189 coalesces pending reads by stream epoch and rejects late old reads; graph-owned timers/reconnect events hydrate the same permission/question/form owners.
+- `lib/state/connection/permissions.dart` — blocked: graph request replies now fence held/sending decisions, refreshed snapshots and late completions against immutable request contents; a posted shade action still carries only the wire request id, so reviewed-notification identity across same-id replacement and the shared automatic-activity/history owner remain unimplemented.
+- `lib/state/connection/phone_agents.dart` — blocked: native `AppPhoneAgents.kt:68` installs/removes payloads, but no production `PhoneAgentSessions`/live phone `AgentHost` binding owns helper startup, sign-in, agent selection and per-folder Paseo conversation feeds.
+- `lib/state/connection/phone_agents_auto_update.dart` — blocked: no production phone `AgentHost` self-check/update port exists to perform the pinned, idle-only, Wi-Fi-gated update with yielding; readiness helper rules alone are not runnable.
+- `lib/state/connection/phone_agents_backend.dart` — blocked: native saved remote Paseo profiles are wired (`AgentsWiring.kt:206`), but no owned transient phone Paseo connection/helper lifecycle is constructed for agent chats or recovery.
+- `lib/state/connection/phone_agents_cache.dart` — blocked: native `AgentFeedCache` equivalent/production reader for `oc.agentFeed`, `oc.mainFeed`, `oc.sideFeed`, signed-out hints and can-reopen flags is absent.
+- `lib/state/connection/phone_agents_check.dart` — blocked: native `engine/agents/.../check/PhoneCheck.kt:74` exists but is never constructed by the native graph; CLI authentication/version evidence cannot reach agent rows.
+- `lib/state/connection/phone_agents_idle.dart` — blocked: native idle service receipts exist, but the phone-agent graph has no local-work truth/subscription or matching owned helper resume path; not replaceable with a lease deadline.
+- `lib/state/connection/phone_agents_routes.dart` — blocked: live phone-agent feeds/backend are absent, so captured-source resume/replacement/teardown paths cannot be safely routed; native install/remove covers only part of this source.
+- `lib/state/connection/phone_agents_saved.dart` — blocked: no phone-feed cache is integrated into first paint, folder-by-folder replacement, signed-out hints or process-to-conversation title mapping.
+
 Compile checkpoint 1: requested command passed for Android and desktop, 592 actionable tasks, 0 test tasks, 14 seconds after the shared build lock became available. Log: `/tmp/45-port-state-compile-2.log`. The fresh-cache initial compile also passed (596 actionable tasks; 18m56s). No tests were written, modified or run; no APK was built.
 
 Compile checkpoint 2: requested Android/desktop targets passed, 592 actionable tasks, 0 test tasks, 52 seconds; `/tmp/45-port-state-compile-5.log`. Two integration retries corrected an internal kit icon reference; the guide now uses public KitStepChip and keeps glyph drawing in the kit. Changed Kotlin files were formatted with the plan-pinned ktfmt 0.64 fat jar after verifying its documented SHA-256. No tests changed or run.
@@ -74,3 +85,5 @@ Compile checkpoint 3: graph-bound OC2 forms and real form transport, durable loc
 Compile checkpoint 4: reviewed-card identity, identical-content request reincarnation, both automatic-approval callers and session-specific form hydration/preflight passed both requested targets. 592 actionable tasks, 0 test tasks, 23 seconds; `/tmp/45-port-state-compile-7.log`. The only integration conflict was formatter layout in three request files; the source changes were retained and reformatted. Existing test files and doubles were not edited.
 
 Compile checkpoint 5: unchanged native source snapshot passed both requested targets before the next ten-file ledger commit; 592 actionable tasks, 0 test tasks, 1 second; `/tmp/45-port-state-compile-8.log`.
+
+Compile checkpoint 6: both requested targets passed after adding the consent authority’s provenance/owner keys to the real deletion-scope registry; 592 actionable tasks, 0 test tasks, 10 seconds; `/tmp/45-port-state-compile-9.log`.

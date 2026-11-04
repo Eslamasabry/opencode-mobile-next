@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.engine.agents.feed.ReturnBriefStore
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.profiles.ProfileCloser
+import io.github.eslamasabry.oc.engine.settings.consent.ConsentKeys
 import io.github.eslamasabry.oc.engine.settings.consent.ReadStateConsentStore
 import io.github.eslamasabry.oc.engine.settings.scope.SettingsOwners
 import io.github.eslamasabry.oc.feature.chat.world.SessionReadRecorder
@@ -365,7 +366,7 @@ class NativeSessionReads(
                     ":engine:connection",
                     "exact return brief dismissals",
                 ),
-            )
+            ) + ConsentKeys.shapes
     }
 }
 
