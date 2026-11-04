@@ -45,6 +45,7 @@ public data class ConversationRowUi(
     val running: io.github.eslamasabry.oc.engine.agents.feed.FeedRunning? = null,
     val permission: io.github.eslamasabry.oc.engine.agents.feed.FeedPermission? = null,
     val observedAtMs: Long = 0,
+    val updatedAtMs: Long? = null,
 )
 
 /**
@@ -112,6 +113,7 @@ public data class ChatsFilters(
  */
 public data class ChatsUi(
     val phase: ChatsPhase = ChatsPhase.Opening,
+    val nowMs: Long = 0,
     val today: ImmutableList<ConversationRowUi> = persistentListOf(),
     val earlier: ImmutableList<ConversationRowUi> = persistentListOf(),
     val needsYou: Int = 0,

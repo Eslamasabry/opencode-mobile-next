@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="phoneSharedAccessTitle">Did you allow access to this phone’s files?</string>
+    <string name="phoneSharedAccessBody">Allow access in Android’s settings, then try opening the file again.</string>
+</resources>

@@ -36,6 +36,7 @@ public data class SettingsUi(
     val focusedRow: SettingsRowId? = null,
     val focusedAnchor: String? = null,
     val crash: CrashUi? = null,
+    val localModels: LocalModelStorageFacts? = null,
     /** One plain line about the last save that did not stick, if any. */
     val note: SettingsNote? = null,
 ) {

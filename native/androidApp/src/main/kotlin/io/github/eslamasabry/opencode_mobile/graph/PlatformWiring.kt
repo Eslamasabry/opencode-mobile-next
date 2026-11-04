@@ -41,6 +41,7 @@ import io.github.eslamasabry.oc.android.notifications.ShadeReply
 import io.github.eslamasabry.oc.android.tiles.AttentionTileCache
 import io.github.eslamasabry.oc.android.tiles.LaunchAction
 import io.github.eslamasabry.oc.android.tiles.LaunchActions
+import io.github.eslamasabry.oc.android.tiles.SessionShortcutTap
 import io.github.eslamasabry.oc.android.tiles.PinnedSession
 import io.github.eslamasabry.oc.android.tiles.PinnedShortcuts
 import io.github.eslamasabry.oc.android.tiles.SharedTextIntake
@@ -105,6 +106,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.UpdateState as Set
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateLinks
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.PlansRoute
@@ -369,6 +371,7 @@ class PlatformHub(
     private var widgetStampMs = 0L
     private val serverSince = mutableMapOf<String, Pair<Boolean, Long>>()
     private var publishedPins: Pair<String, List<PinnedSession>>? = null
+    private var pinnedLaunchGeneration = 0L
 
     /** Answers a shade tap on the exact pending request of the live connection (plan 11 §10.6). */
     val actionBody: NotificationActionBody =
@@ -479,6 +482,7 @@ class PlatformHub(
      */
     fun route(intent: Intent?) {
         if (intent == null) return
+        pinnedLaunchGeneration++ // Any newer launch invalidates a pin still waiting for startup.
         if (intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID) == "quota") {
             val profile =
                 intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID).orEmpty()
@@ -509,13 +513,7 @@ class PlatformHub(
             return
         }
         LaunchActions.consumeSessionShortcut(intent)?.let { tap ->
-            val profile = ProfileId(tap.profileId)
-            if (
-                profile == stores.profiles.activeId.value &&
-                    stores.profiles.profile(profile) != null
-            ) {
-                navigator.openChat(ConversationRef(profile, SessionId(tap.sessionId)))
-            }
+            openPinnedSession(tap)
             return
         }
         alertTap(intent)?.let { ref ->
@@ -534,6 +532,7 @@ class PlatformHub(
                     SetupTap.Land,
                     SetupTap.NotSetup -> navigator.land()
                 }
+            LaunchAction.BackgroundSettings -> navigator.open(BackgroundRoute.Home)
             LaunchAction.Linux -> navigator.open(io.github.eslamasabry.oc.ui.routes.LinuxRoute.Home)
             LaunchAction.Connect -> navigator.open(ServersRoute.Home)
             LaunchAction.NewTask ->
@@ -549,8 +548,36 @@ class PlatformHub(
     }
 
     /**
-     * Flutter `_openSessionForLink`: a saved server opens that exact session (connecting first); an
-     * unknown server, one that needs its secret again, or a failed connection shows Servers.
+     * A pinned shortcut names the active saved server only. Wait for its existing startup/connection work, then
+     * recheck ownership and readiness. Never connect or switch a server merely because a shortcut named it.
+     */
+    private fun openPinnedSession(tap: SessionShortcutTap) {
+        val generation = ++pinnedLaunchGeneration
+        val id = ProfileId(tap.profileId)
+        appScope.launch {
+            if (stores.warm() !is Outcome.Ok) {
+                if (generation == pinnedLaunchGeneration) navigator.open(ServersRoute.Home)
+                return@launch
+            }
+            runtime.awaitInitialConnection()
+            runtime.busy.first { !it }
+            if (generation != pinnedLaunchGeneration) return@launch
+            val saved = stores.profiles.profile(id)
+            val graph = registry.live.value[id]
+            if (stores.profiles.activeId.value != id || saved == null ||
+                saved.reentry.password || saved.reentry.agentToken ||
+                graph?.session?.status?.value != io.github.eslamasabry.oc.core.model.StreamStatus.Connected
+            ) {
+                navigator.open(ServersRoute.Home)
+                return@launch
+            }
+            navigator.openChat(ConversationRef(id, SessionId(tap.sessionId)))
+        }
+    }
+
+    /**
+     * Flutter `_openSessionForLink`: a saved server opens that exact session (connecting first);
+     * an unknown server, one that needs its secret again, or a failed connection shows Servers.
      * Nothing is sent, created or resumed.
      */
     private fun openSessionLink(link: ParsedLink.Session) {

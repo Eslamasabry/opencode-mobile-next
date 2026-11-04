@@ -139,4 +139,12 @@ public interface SettingsActions {
      * outside.
      */
     public fun onResume() {}
+
+    public fun onAskDeleteLocalModel() {}
+
+    public fun onDeleteLocalModel() {}
+
+    public fun onCancelDeleteLocalModel() {}
+
+    public fun onRefreshLocalModels() {}
 }

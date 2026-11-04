@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import io.github.eslamasabry.oc.ui.design.tokens.Density
+import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailChecksum
@@ -153,6 +154,7 @@ internal fun rowWords(row: SettingsRowId): String =
             SettingsRowId.Language -> Res.string.settingsV3Language
             SettingsRowId.Privacy -> Res.string.settingsHubPrivacyRow
             SettingsRowId.Updates -> Res.string.appUpdatesTitle
+            SettingsRowId.Storage -> Res.string.migrationStorageTitle
             SettingsRowId.Guide -> Res.string.onboardingSetupGuide
             SettingsRowId.Tips -> Res.string.tipsTitle
             SettingsRowId.Capabilities -> Res.string.nativeCapabilitiesTitle
@@ -188,6 +190,7 @@ internal fun aliasWords(row: SettingsRowId): String {
             SettingsRowId.Guide -> Res.string.settingsHubSearchGuideAliases
             SettingsRowId.ReportProblem -> Res.string.settingsHubSearchBugAliases
             SettingsRowId.About -> Res.string.settingsHubSearchAboutAliases
+            SettingsRowId.Storage,
             SettingsRowId.ServerCapabilities,
             SettingsRowId.ServerConfiguration,
             SettingsRowId.Agents,

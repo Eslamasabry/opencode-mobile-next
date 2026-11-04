@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.aboutAllLicences
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
@@ -210,6 +211,10 @@ public fun SettingsScreen(
                     )
             }
         SettingsPage.ServerConfiguration -> ServerConfigurationPage(onBack = back)
+        SettingsPage.Storage ->
+            SettingsFrame(stringResource(Res.string.migrationStorageTitle), back, state, actions, modifier) {
+                state.localModels?.let { LocalModelsBody(it, actions) }
+            }
         SettingsPage.ReportProblem ->
             SettingsFrame(
                 stringResource(Res.string.kitReportProblem),

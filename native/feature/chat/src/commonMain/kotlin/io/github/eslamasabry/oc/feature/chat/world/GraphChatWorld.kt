@@ -20,9 +20,11 @@ import io.github.eslamasabry.oc.core.domain.ReadOnlySessionsGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
+import io.github.eslamasabry.oc.core.domain.StagedRevertGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent as CoreEvent
 import io.github.eslamasabry.oc.core.domain.facet
+import io.github.eslamasabry.oc.core.domain.readHistoryAtStagedBoundary
 import io.github.eslamasabry.oc.core.model.ChatDefaults
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ModelSelection
@@ -860,6 +862,9 @@ internal class GraphChatWorld(
                         // deltas need no second snapshot.
                         if (event !is CoreEvent.PartDelta) publishVoiceConversation()
                         bridge.event(event)?.let(handle::submit)
+                        if (event is CoreEvent.RevertChanged && event.sessionId == sid) {
+                            readHistory(gateway, handle, bridge)
+                        }
                     }
                 },
                 scope.launch(registry.mainContext) {
@@ -980,9 +985,42 @@ internal class GraphChatWorld(
         val a =
             currentAttached()?.takeIf { it.gateway === gateway && it.handle === handle }
                 ?: return Outcome.Failed(STALE)
-        return when (
-            val page = a.graph.session.reads.tail(sid, cursor = cursor, limit = HISTORY_PAGE)
-        ) {
+        val at = gateway.location.value
+        // Only a backend with V2's staged revert can hide its newest pages; others read history
+        // through the shared session reads, as before.
+        val boundary =
+            if (gateway.facet<StagedRevertGateway>() == null) null
+            else {
+                val session = gateway.session(sid)
+                if (session is Outcome.Failed) {
+                    if (currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live) {
+                        mutableLoad.value = ChatLoad.Failed(session.failure)
+                    }
+                    return session
+                }
+                if (currentAttached()?.handle !== handle || gateway.location.value != at) {
+                    return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+                }
+                val details = (session as Outcome.Ok).value
+                if (details.id != sid) {
+                    val failure = Failure.UnreadableReply()
+                    if (mutableLoad.value !is ChatLoad.Live) mutableLoad.value = ChatLoad.Failed(failure)
+                    return Outcome.Failed(failure)
+                }
+                details.stagedRevert?.messageId
+            }
+        val read =
+            if (boundary == null) a.graph.session.reads.tail(sid, cursor = cursor, limit = HISTORY_PAGE)
+            else
+                readHistoryAtStagedBoundary(
+                    gateway,
+                    sid,
+                    boundary = boundary,
+                    cursor = cursor,
+                    limit = HISTORY_PAGE,
+                    isCurrent = { currentAttached()?.handle === handle && gateway.location.value == at },
+                )
+        return when (val page = read) {
             is Outcome.Ok -> {
                 if (currentAttached()?.handle !== handle)
                     return Outcome.Failed(Failure.Network(NetworkWhy.Offline))

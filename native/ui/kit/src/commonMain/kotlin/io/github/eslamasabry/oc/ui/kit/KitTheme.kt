@@ -42,6 +42,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.KitStyleState
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitLocaleTag
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
@@ -144,6 +145,7 @@ public fun KitTheme(
         LocalKitAppearance provides effectiveAppearance,
         LocalKitStyle provides styleState,
         LocalKitRoles provides roles,
+        LocalKitLocaleTag provides localeTag,
         LocalKitColors provides colors,
         LocalKitTypography provides typography,
         LocalKitTokens provides tokens,

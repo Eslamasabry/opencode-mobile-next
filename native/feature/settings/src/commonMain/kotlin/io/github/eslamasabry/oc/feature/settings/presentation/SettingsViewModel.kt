@@ -37,6 +37,9 @@ public interface SettingsHost {
     public val phrases: PhraseSettings?
         get() = null
 
+    public val localModels: LocalModelStorage?
+        get() = null
+
     public val diagnostics: DiagnosticsExport?
 }
 
@@ -64,6 +67,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.phrases,
             host.appearanceGuide,
             nav::back,
+            host.localModels,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

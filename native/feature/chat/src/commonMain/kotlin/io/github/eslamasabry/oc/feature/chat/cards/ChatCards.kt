@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.AgentFeaturesGateway
 import io.github.eslamasabry.oc.core.domain.CachedAgentRecoveryGateway
 import io.github.eslamasabry.oc.core.domain.McpGateway
+import io.github.eslamasabry.oc.core.domain.BoundedHistoryGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
@@ -644,17 +645,16 @@ internal constructor(
             )
         }
         if (!explicit && !CardRecovery.needsRead(target(), thisCoverage)) return current()
+        // Agent-card recovery reads only through the bounded facet (1 MiB, 10 s): a backend without
+        // it cannot supply authoritative recovery through an unbounded fallback.
+        val bounded = gateway.facet<BoundedHistoryGateway>() ?: return false
         val source = CardHistorySource { session, cursor, limit ->
             when (
-                val page = gateway.messagePage(SessionId(session), cursor = cursor, limit = limit)
+                val page = bounded.boundedHistoryPage(SessionId(session), cursor = cursor, limit = limit)
             ) {
                 is Outcome.Ok ->
                     Outcome.Ok(
-                        CardHistoryPage(
-                            page.value.items,
-                            page.value.nextCursor,
-                            page.value.nextCursor != null,
-                        )
+                        CardHistoryPage(page.value.items, page.value.nextCursor, page.value.hasMore)
                     )
                 is Outcome.Failed -> page
             }

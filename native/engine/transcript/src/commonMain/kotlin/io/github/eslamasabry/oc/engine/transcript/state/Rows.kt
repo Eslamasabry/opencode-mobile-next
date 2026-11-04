@@ -123,6 +123,7 @@ public data class FooterRow(
     val reason: String? = null,
     /** QA wave 4 N3: the user (or another client) stopped this reply; shown as "Stopped", never as an error. */
     val stopped: Boolean = false,
+    val errorKind: io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind? = null,
 ) : TranscriptRow {
     override val kind: RowKind
         get() = RowKind.Footer

@@ -140,11 +140,14 @@ public class KeepRunningViewModel(
     settings: KeepAliveSettings,
     nav: PhoneNavigator,
     thermal: ThermalSettings,
-) : ViewModel(), ThermalKeepRunningActions {
-    private val model = KeepRunningModel(settings, nav, viewModelScope, thermal)
+    budgets: Set<PhoneBudgetSource>,
+) : ViewModel(), ThermalKeepRunningActions, PhoneBudgetActions {
+    private val model = KeepRunningModel(settings, nav, viewModelScope, thermal, budgets.singleOrNull())
     public val state: StateFlow<KeepRunningUi> = model.state
 
     override fun resumed(): Unit = model.resumed()
+
+    override fun setFullSpeed(enabled: Boolean): Unit = model.setFullSpeed(enabled)
 
     override fun open(step: KeepAliveStepKind): Unit = model.open(step)
 

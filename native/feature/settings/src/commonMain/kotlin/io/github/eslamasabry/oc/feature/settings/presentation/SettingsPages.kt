@@ -57,6 +57,9 @@ public sealed interface SettingsPage {
      */
     public data object ReportProblem : SettingsPage
 
+    /** Local files kept for the deferred assistant, with a measured Delete action. */
+    public data object Storage : SettingsPage
+
     /**
      * Settings › This app › Notifications › Quiet hours start ([start]) or end: one check-mark
      * choice per time.

@@ -37,6 +37,14 @@ import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
+import io.github.eslamasabry.oc.ui.words.res.phoneSharedAccessTitle
+import io.github.eslamasabry.oc.ui.words.res.phoneSharedAccessBody
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallAction
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallBody
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallTitle
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenAction
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenBody
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenTitle
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusKind
@@ -49,6 +57,14 @@ import io.github.eslamasabry.oc.feature.chat.presentation.MessageOrder
 import io.github.eslamasabry.oc.feature.chat.presentation.PictureUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
+import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
+import io.github.eslamasabry.oc.ui.words.res.chatErrorModelNotFound
+import io.github.eslamasabry.oc.ui.words.res.chatErrorContextOverflow
+import io.github.eslamasabry.oc.ui.words.res.chatErrorProviderAuth
+import io.github.eslamasabry.oc.ui.words.res.chatErrorOutputLength
+import io.github.eslamasabry.oc.ui.words.res.chatErrorContentFilter
+import io.github.eslamasabry.oc.ui.words.res.chatErrorUnknown
+
 import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
 import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
@@ -258,6 +274,7 @@ public fun ChatScreen(
             unconfirmed = stringResource(Res.string.queuedDiscardUnconfirmedMessage),
             tryAgain = stringResource(Res.string.commonRetry),
             replyFailed = rememberReplyFailedWords(),
+            messageError = rememberMessageErrorWords(),
             details = stringResource(Res.string.chatReplyFailedDetails),
             copyDetails = stringResource(Res.string.chatReplyFailedCopy),
             sendFailure = rememberSendFailureWords(),
@@ -587,6 +604,8 @@ public fun ChatScreen(
                             ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
                             is ChatConfirm.UndoFrom -> actions.confirmUndo()
                             is ChatConfirm.OpenLink -> actions.confirmOpenLink()
+                            is ChatConfirm.PhoneFile, is ChatConfirm.PhoneFileAccess ->
+                                actions.confirmPhoneFile()
                             null -> Unit
                         }
                     },
@@ -831,6 +850,27 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
                 confirmLabel = stringResource(Res.string.chatFeelUndoAction),
                 kind = KitConfirmKind.Destructive,
                 body = stringResource(Res.string.chatFeelUndoBody),
+            )
+        is ChatConfirm.PhoneFile -> {
+            val name = confirm.path.substringAfterLast('/')
+            if (confirm.install)
+                KitConfirmSpec(
+                    title = stringResource(Res.string.phoneFileInstallTitle, name),
+                    confirmLabel = stringResource(Res.string.phoneFileInstallAction),
+                    body = stringResource(Res.string.phoneFileInstallBody),
+                )
+            else
+                KitConfirmSpec(
+                    title = stringResource(Res.string.phoneFileOpenTitle, name),
+                    confirmLabel = stringResource(Res.string.phoneFileOpenAction),
+                    body = stringResource(Res.string.phoneFileOpenBody),
+                )
+        }
+        is ChatConfirm.PhoneFileAccess ->
+            KitConfirmSpec(
+                title = stringResource(Res.string.phoneSharedAccessTitle),
+                body = stringResource(Res.string.phoneSharedAccessBody),
+                confirmLabel = stringResource(Res.string.commonRetry),
             )
         is ChatConfirm.OpenLink ->
             KitConfirmSpec(
@@ -1149,6 +1189,29 @@ private fun rememberSendFailureWords(): (Failure) -> String {
                     failure.feature.name == "schedulePhoneCheckFailed" -> phoneCheckFailed
                 failure is Failure.Refused && failure.reason == RefusalReason.StaleScope -> changed
                 else -> authored(failure)
+            }
+        }
+    }
+}
+
+/** Typed failures use existing native resources even when the provider sent no message. */
+@Composable
+private fun rememberMessageErrorWords(): (MessageErrorKind) -> String {
+    val model = stringResource(Res.string.chatErrorModelNotFound)
+    val context = stringResource(Res.string.chatErrorContextOverflow)
+    val auth = stringResource(Res.string.chatErrorProviderAuth)
+    val length = stringResource(Res.string.chatErrorOutputLength)
+    val filter = stringResource(Res.string.chatErrorContentFilter)
+    val unknown = stringResource(Res.string.chatErrorUnknown)
+    return remember(model, context, auth, length, filter, unknown) {
+        { kind ->
+            when (kind) {
+                MessageErrorKind.ModelNotFound -> model
+                MessageErrorKind.ContextOverflow -> context
+                MessageErrorKind.ProviderAuth -> auth
+                MessageErrorKind.OutputLength -> length
+                MessageErrorKind.ContentFilter -> filter
+                MessageErrorKind.Aborted, MessageErrorKind.Unknown -> unknown
             }
         }
     }

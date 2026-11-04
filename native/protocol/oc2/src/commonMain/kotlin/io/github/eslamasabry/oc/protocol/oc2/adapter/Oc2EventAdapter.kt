@@ -105,6 +105,8 @@ internal data class Oc2AdaptedTool(
      */
     public val startedAtMs: Long? = null,
     public val completedAtMs: Long? = null,
+    /** The server removed this output from the model context. */
+    public val pruned: Boolean = false,
 )
 
 internal enum class Oc2SettleReason {
@@ -903,6 +905,7 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
             executed = item.executed,
             startedAtMs = item.time.ran ?: item.time.created,
             completedAtMs = item.time.completed,
+            pruned = item.time.pruned != null,
         )
     }
 

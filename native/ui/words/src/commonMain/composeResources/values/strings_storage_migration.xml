@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="migrationStorageTitle">Storage</string>
+    <string name="migrationStorageAssistant">Assistant model on this phone</string>
+    <string name="migrationStorageDelete">Delete model</string>
+    <string name="migrationStorageDeleteTitle">Delete the assistant model?</string>
+    <string name="migrationStorageDeleteBody">This removes the saved model and incomplete downloads from this phone, freeing %1$s.</string>
+    <string name="migrationStorageEmpty">No assistant model is stored on this phone</string>
+    <string name="migrationStorageFailed">Could not change the saved model. Try again.</string>
+</resources>
