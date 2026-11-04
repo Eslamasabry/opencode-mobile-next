@@ -78,7 +78,7 @@ import org.jetbrains.compose.resources.stringResource
  * part; every word comes from :ui:words; Git's own text only ever appears under Details.
  */
 @Composable
-public fun GitScreen(state: GitUi, actions: GitActions) {
+public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable () -> Unit = {}) {
     val message = remember { TextFieldState() }
     LaunchedEffect(state.generation) {
         val saved = state.result?.let { it.ok && it.note != null && it.commit != null } ?: false
@@ -121,6 +121,7 @@ public fun GitScreen(state: GitUi, actions: GitActions) {
                 .padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
+            serverTools()
             GitRepairPanel(state, actions)
             when (val view = state.view) {
                 GitPageView.Loading -> Unit
