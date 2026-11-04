@@ -1,0 +1,23 @@
+<resources>
+    <string name="linuxComponentsTitle">مكونات لينكس</string>
+    <string name="linuxComponentsRefresh">التحقق من المكونات المثبتة</string>
+    <string name="linuxComponentsTeam">فريق الذكاء الاصطناعي</string>
+    <string name="linuxComponentsUnknown">مكوّن</string>
+    <string name="linuxComponentsInstalled">مثبّت</string>
+    <string name="linuxComponentsDependents">تحتاجه المكونات التالية: %1$s. أزلها أولاً.</string>
+    <string name="linuxComponentsDependencyUnknown">تعذر التحقق من %1$s. أعد التحقق قبل إزالة هذا المكوّن.</string>
+    <string name="linuxComponentsRequired">مطلوب للخادم على هذا الهاتف.</string>
+    <string name="linuxComponentsUnsupported">لا يمكن إزالة هذا المكوّن بمفرده.</string>
+    <string name="linuxComponentsAbsent">غير مثبّت</string>
+    <string name="linuxComponentsUnknownPresence">تعذر التحقق من المكونات المثبتة. حاول مجدداً.</string>
+    <string name="linuxComponentsBusy">انتظر حتى يكتمل الإعداد أو العملية الحالية.</string>
+    <string name="linuxComponentsFailed">تعذرت إزالة المكوّن. أعد التحقق وحاول مجدداً.</string>
+    <string name="linuxComponentsRemove">إزالة %1$s</string>
+    <string name="linuxComponentsRemoveQuestion">هل تريد إزالة %1$s؟</string>
+    <string name="linuxComponentsRemoveBody">سيُزال هذا المكوّن فقط. ستبقى مشاريعك ومحادثاتك. سيُعاد التحقق من الاعتماديات قبل إزالته.</string>
+    <string name="linuxSetupOpenSettings">فتح إعدادات التطبيق</string>
+    <string name="linuxSetupStepWaiting">بانتظار البدء</string>
+    <string name="linuxSetupStepKept">مثبّت مسبقاً</string>
+    <string name="linuxSetupSwitchBusy">أنهِ العمل الجاري وأجب عن الطلبات المعلقة على هذا الهاتف، ثم حاول الإعداد مجدداً.</string>
+    <string name="linuxSetupSwitchFailed">تعذر تجهيز هذا الهاتف بأمان للإعداد. محادثاتك ورسائلك المحفوظة باقية. تحقق من الاتصال والمساحة المتاحة، ثم حاول مجدداً.</string>
+</resources>

@@ -2,6 +2,9 @@ package io.github.eslamasabry.oc.feature.linux.presentation
 
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.pace.Pacer
+import io.github.eslamasabry.oc.engine.runtime.components.ComponentRemovalBlock
+import io.github.eslamasabry.oc.engine.runtime.components.ComponentRemovalEntry
+import io.github.eslamasabry.oc.engine.runtime.components.RemovalResult
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupProgress
 import io.github.eslamasabry.oc.engine.runtime.storage.LinuxFolder
 import io.github.eslamasabry.oc.engine.runtime.storage.LinuxLocalStorage
@@ -35,6 +38,8 @@ public sealed interface LinuxConfirm {
 
     public data object StopSetup : LinuxConfirm
 
+    public data class RemoveComponent(val id: String) : LinuxConfirm
+
     public data class StopJob(val kind: LinuxJobKind, val names: List<String>) : LinuxConfirm
 }
 
@@ -50,6 +55,9 @@ public sealed interface LinuxHomeNotice {
 
     /** Repair (or setting Linux up again) is not available in this build. */
     public data object SetupUnavailable : LinuxHomeNotice
+
+    public data class SetupRefused(val failure: io.github.eslamasabry.oc.core.common.Failure) :
+        LinuxHomeNotice
 
     public data object StorageFailed : LinuxHomeNotice
 
@@ -75,6 +83,9 @@ public data class LinuxHomeUi(
     val askingIdleMinutes: Boolean = false,
     val lifetimes: LinuxLifetimesUi = LinuxLifetimesUi(),
     val askingCreateProject: Boolean = false,
+    val components: List<ComponentRemovalEntry> = emptyList(),
+    val componentsLoading: Boolean = false,
+    val componentBlock: ComponentRemovalBlock? = null,
 ) {
     /** The rows that act on Linux are offered only when it answers. */
     val ready: Boolean
@@ -95,6 +106,12 @@ public interface LinuxHomeActions : LinuxJobActions {
     public fun addPython()
 
     public fun continueSetup()
+
+    public fun refreshComponents()
+
+    public fun askRemoveComponent(id: String)
+
+    public fun openOwnershipSettings()
 
     public fun askStopSetup()
 
@@ -172,6 +189,7 @@ public class LinuxHomeModel(
                         val presence = manager.presence()
                         ui.update { it.copy(presence = presence) }
                         watch.refresh()
+                        loadComponents()
                     }
                 }
             }
@@ -192,6 +210,7 @@ public class LinuxHomeModel(
                 ui.update { it.copy(presence = manager.presence()) }
                 watch.refresh()
                 setupSource?.refresh()
+                loadComponents()
                 idleSource?.refresh()
                 lifetimes?.refresh()
             }
@@ -237,6 +256,47 @@ public class LinuxHomeModel(
         }
     }
 
+    private suspend fun loadComponents() {
+        val setup = setupSource ?: return
+        ui.update { it.copy(componentsLoading = true) }
+        val result = setup.components()
+        ui.update {
+            it.copy(
+                componentsLoading = false,
+                components = (result as? Outcome.Ok)?.value ?: it.components,
+                componentBlock =
+                    if (result is Outcome.Failed) ComponentRemovalBlock.InventoryUnavailable
+                    else null,
+            )
+        }
+    }
+
+    override fun refreshComponents() {
+        if (ui.value.componentsLoading || ui.value.working) return
+        scope.launch { loadComponents() }
+    }
+
+    override fun askRemoveComponent(id: String) {
+        if (
+            ui.value.working ||
+                ui.value.job.running ||
+                ui.value.setup.state ==
+                    io.github.eslamasabry.oc.engine.runtime.setup.SetupState.Running
+        )
+            return
+        val entry = ui.value.components.firstOrNull { it.component.id == id } ?: return
+        if (entry.canRemove)
+            ui.update { it.copy(confirm = LinuxConfirm.RemoveComponent(id), componentBlock = null) }
+    }
+
+    override fun openOwnershipSettings() {
+        val setup = setupSource ?: return
+        scope.launch {
+            if (setup.openOwnershipSettings() is Outcome.Failed)
+                ui.update { it.copy(notice = LinuxHomeNotice.SetupUnavailable) }
+        }
+    }
+
     override fun startSetup() = setupCommand { it.start() }
 
     override fun addPython() = setupCommand { it.addPython() }
@@ -266,7 +326,8 @@ public class LinuxHomeModel(
                 it.copy(
                     working = false,
                     notice =
-                        if (result is Outcome.Failed) LinuxHomeNotice.SetupUnavailable else null,
+                        if (result is Outcome.Failed) LinuxHomeNotice.SetupRefused(result.failure)
+                        else null,
                 )
             }
         }
@@ -403,6 +464,11 @@ public class LinuxHomeModel(
                             else ui.update { it.copy(notice = LinuxHomeNotice.ResetSetupPending) }
                     }
                 LinuxConfirm.StopSetup -> setupSource?.cancel()
+                is LinuxConfirm.RemoveComponent -> {
+                    val result = setupSource?.removeComponent(asked.id)
+                    loadComponents()
+                    ui.update { it.copy(componentBlock = (result as? RemovalResult.Blocked)?.code) }
+                }
                 is LinuxConfirm.Remove -> {
                     val files = storage
                     val result =

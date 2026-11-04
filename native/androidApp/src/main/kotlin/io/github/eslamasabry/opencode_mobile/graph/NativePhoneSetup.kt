@@ -13,12 +13,15 @@ import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
+import io.github.eslamasabry.oc.engine.runtime.components.*
 import io.github.eslamasabry.oc.engine.runtime.install.InstallPrelude
 import io.github.eslamasabry.oc.engine.runtime.install.OpenCodeInstallScripts
 import io.github.eslamasabry.oc.engine.runtime.install.SetupHost
 import io.github.eslamasabry.oc.engine.runtime.setup.*
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifecycle
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxSetupSource
+import io.github.eslamasabry.oc.feature.phone.presentation.KeepAliveSetting
+import io.github.eslamasabry.oc.feature.phone.presentation.KeepAliveSettings
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.SetupRunner
@@ -48,6 +51,8 @@ class NativePhoneSetup(
     appScope: AppCoroutineScope,
     private val clock: Clock,
     private val redactor: Redactor,
+    private val settings: KeepAliveSettings,
+    private val switchGate: NativeRuntimeSwitch,
 ) : LinuxSetupSource {
     private val serial = dispatchers.serial("phone-setup")
     private val scope = CoroutineScope(appScope.coroutineContext + serial)
@@ -117,6 +122,56 @@ class NativePhoneSetup(
                 version: String?,
             ): Outcome<Unit> = native { runner.completeStep(jobId, id, ok, error, version) }
         }
+
+    private val removal by lazy {
+        ComponentRemoval(
+            shell =
+                LinuxShell { script, timeout ->
+                    native {
+                        linux.run(script, timeout.inWholeSeconds).let {
+                            ShellResult(it.exitCode, it.output)
+                        }
+                    }
+                },
+            status =
+                object : SetupStatusReader {
+                    override suspend fun linuxState(): Outcome<LinuxInstallState> = native {
+                        LinuxInstallState(linux.installed, linux.phase == "installing")
+                    }
+
+                    override suspend fun setupRecord(): Outcome<String?> = native {
+                        runner.status()
+                    }
+                },
+            registry = RemovableComponents.builtin,
+            toolsChanged = ToolsChangedListener { changed.value += 1 },
+        )
+    }
+
+    override suspend fun components(): Outcome<List<ComponentRemovalEntry>> =
+        withContext(serial) {
+            lane.withLock {
+                when (val warm = stores.warm()) {
+                    is Outcome.Failed -> warm
+                    is Outcome.Ok -> Outcome.Ok(removal.inventory())
+                }
+            }
+        }
+
+    override suspend fun removeComponent(id: String): RemovalResult =
+        withContext(serial) {
+            lane.withLock {
+                when (stores.warm()) {
+                    is Outcome.Failed ->
+                        RemovalResult.Blocked(ComponentRemovalBlock.InventoryUnavailable)
+                    is Outcome.Ok -> removal.remove(id)
+                }
+            }
+        }
+
+    override suspend fun openOwnershipSettings(): Outcome<Unit> =
+        if (settings.open(KeepAliveSetting.AppDetails)) Outcome.Ok(Unit)
+        else Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
 
     private suspend fun get(): SetupEngine {
         engine?.let {
@@ -225,7 +280,7 @@ class NativePhoneSetup(
                 words,
                 scope,
                 clock,
-                InstallPrelude.SETUP,
+                InstallPrelude.SETUP + InstallPrelude.COMPONENT_UPDATE,
                 { redactor.diagnostics(it) },
                 foreground = { runtime.isForeground },
                 finisher =
@@ -243,12 +298,30 @@ class NativePhoneSetup(
             }
     }
 
-    private suspend fun command(action: suspend (SetupEngine) -> Unit): Outcome<Unit> =
+    private suspend fun command(
+        prepareMigration: Boolean = true,
+        action: suspend (SetupEngine) -> Unit,
+    ): Outcome<Unit> =
         withContext(serial) {
             lane.withLock {
                 when (val warm = stores.warm()) {
                     is Outcome.Failed -> warm
                     is Outcome.Ok -> {
+                        val migrating =
+                            stores.profiles.profiles.value.any { loaded ->
+                                loaded.profile.requiresOpenCode2Migration &&
+                                    loaded.profile.backend ==
+                                        io.github.eslamasabry.oc.core.model.BackendKind.OpenCode2 &&
+                                    !loaded.profile.usesAgentSocket &&
+                                    io.github.eslamasabry.oc.engine.runtime.switching
+                                        .ManagedLocalServer
+                                        .isBuiltin(loaded.profile.baseUrl)
+                            }
+                        if (prepareMigration && migrating)
+                            when (val prepared = switchGate.prepare()) {
+                                is Outcome.Failed -> return@withLock prepared
+                                is Outcome.Ok -> Unit
+                            }
                         val setup = get()
                         action(setup)
                         shown.value = setup.progress.value
@@ -283,7 +356,7 @@ class NativePhoneSetup(
 
     override suspend fun resume(): Outcome<Unit> = command { it.resume() }
 
-    override suspend fun cancel(): Outcome<Unit> = command { it.cancel() }
+    override suspend fun cancel(): Outcome<Unit> = command(prepareMigration = false) { it.cancel() }
 
     suspend fun update(): Outcome<Unit> {
         if (!runtime.mayUpdate()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))

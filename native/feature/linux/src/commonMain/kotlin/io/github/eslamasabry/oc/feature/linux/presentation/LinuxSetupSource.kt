@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.linux.presentation
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.engine.runtime.components.ComponentRemovalEntry
+import io.github.eslamasabry.oc.engine.runtime.components.RemovalResult
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupProgress
 import kotlinx.coroutines.flow.StateFlow
 
@@ -18,4 +20,10 @@ public interface LinuxSetupSource {
     public suspend fun resume(): Outcome<Unit>
 
     public suspend fun cancel(): Outcome<Unit>
+
+    public suspend fun components(): Outcome<List<ComponentRemovalEntry>>
+
+    public suspend fun removeComponent(id: String): RemovalResult
+
+    public suspend fun openOwnershipSettings(): Outcome<Unit>
 }

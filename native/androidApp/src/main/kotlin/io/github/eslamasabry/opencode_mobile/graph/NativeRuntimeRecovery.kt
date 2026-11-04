@@ -60,6 +60,15 @@ internal class NativeRuntimeRecovery(
     }
 
     fun policyAllows(profile: String): Boolean {
+        val suspended = stores.prefs.get("oc.managedServerRecovery.$profile")
+        if (suspended != null) {
+            if (suspended !is PrefValue.Str) return false
+            try {
+                if (JSONObject(suspended.value).opt("manuallySuspended") == true) return false
+            } catch (_: Exception) {
+                return false
+            }
+        }
         val value = stores.prefs.get("oc.automation.$profile") ?: return true
         if (value !is PrefValue.Str) return false
         return try {
