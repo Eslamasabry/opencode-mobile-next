@@ -36,6 +36,7 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.Base64
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -178,8 +179,11 @@ class AndroidPhoneStateDetails(
     override val recovery = controller.value
 
     init {
-        appScope.launch {
+        // The controller is confined to the main thread, like the page that refreshes it: its
+        // epoch fence is unsynchronized, so a profile-change invalidation must not race a refresh.
+        appScope.launch(dispatchers.main) {
             combine(stores.profiles.activeId, stores.profiles.profiles) { _, _ -> target() }
+                .distinctUntilChanged()
                 .collect { controller.invalidate() }
         }
     }

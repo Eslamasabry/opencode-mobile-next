@@ -166,18 +166,6 @@ class AndroidAdditionalUsageSources(
             .filter { it.profile.backend == BackendKind.Paseo }
             .map { UsageConnection(it.id.raw, it.profile.name, UsageConnectionKind.PaseoServer) }
 
-    fun paseoEnabled(id: String): Boolean = stores.prefs.bool(PaseoUsageMonitor.key(id)) == true
-
-    suspend fun setPaseoEnabled(id: String, value: Boolean): Boolean {
-        if (stores.warm() !is Outcome.Ok) return false
-        val profile = stores.profiles.profile(ProfileId(id)) ?: return false
-        if (profile.profile.backend != BackendKind.Paseo) return false
-        return stores.prefs.commit(stores.lanes.forProfile(ProfileId(id))) {
-            if (value) putBool(PaseoUsageMonitor.key(id), true)
-            else remove(PaseoUsageMonitor.key(id))
-        } is Outcome.Ok
-    }
-
     override suspend fun read(context: UsageReadContext): Outcome<UsageSourceResult> {
         if (stores.warm() !is Outcome.Ok) return Outcome.Failed(Failure.StorageRefused())
         val readings = ArrayList<UsageReading>()
@@ -214,18 +202,10 @@ class AndroidAdditionalUsageSources(
                     unreached += id.raw
                     continue
                 }
-                authoritative += id.raw
-                for (reading in response.value) {
-                    readings += reading.asUsage(id.raw)
-                    if (!reading.needsSignIn)
-                        signIns +=
-                            UsageSignIn(
-                                reading.providerId,
-                                id.raw,
-                                method = SignInMethod.Plan,
-                                displayName = reading.displayName,
-                            )
-                }
+                // Flutter's PaseoUsageSource reports readings only, never sign-ins or authority:
+                // the parser drops errored/rate-limited providers, so claiming authority here would
+                // turn their cached numbers into "Not signed in".
+                for (reading in response.value) readings += reading.asUsage(id.raw)
                 continue
             }
             if (saved.profile.backend != BackendKind.OpenCode2 || saved.reentry.password) continue

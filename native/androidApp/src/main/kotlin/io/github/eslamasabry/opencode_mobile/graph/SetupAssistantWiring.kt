@@ -73,22 +73,15 @@ class AndroidSetupHost(
                 stores.profiles.profile(profile) == null
         )
             return@withLock stale()
-        val graph = registry.live.value[profile]
-        val server = graph?.session?.server
-        val location = server?.location?.value
-        val gateway =
-            if (graph?.session?.capabilities?.value?.setupConfigRead == true)
-                server?.facet<SetupInspectionGateway>()
-            else null
-        val controller = gateway?.let {
-            SetupInspectionController(it) {
-                profile !in blocked &&
-                    stores.profiles.profile(profile) != null &&
-                    registry.live.value[profile] === graph &&
-                    server?.location?.value == location
+        val controller =
+            if (bind(profile) == null) null
+            else SetupInspectionController { bind(profile) }
+        controller?.let {
+            inspections.getOrPut(profile) { CopyOnWriteArrayList() }.apply {
+                removeAll { old -> old.isClosed }
+                add(it)
             }
         }
-        controller?.let { inspections.getOrPut(profile) { CopyOnWriteArrayList() }.add(it) }
         val publicRegistry =
             registries.getOrPut(profile) {
                 SetupRegistryStore(
@@ -112,6 +105,21 @@ class AndroidSetupHost(
                 ::newId,
             )
         )
+    }
+
+    /** The connection live now, fenced to its graph and location until the reply arrives. */
+    private fun bind(profile: ProfileId): SetupInspectionBinding? {
+        val graph = registry.live.value[profile] ?: return null
+        val server = graph.session.server
+        val location = server.location.value
+        if (graph.session.capabilities.value.setupConfigRead != true) return null
+        val gateway = server.facet<SetupInspectionGateway>() ?: return null
+        return SetupInspectionBinding(gateway) {
+            profile !in blocked &&
+                stores.profiles.profile(profile) != null &&
+                registry.live.value[profile] === graph &&
+                server.location.value == location
+        }
     }
 
     fun stop(profile: ProfileId) {

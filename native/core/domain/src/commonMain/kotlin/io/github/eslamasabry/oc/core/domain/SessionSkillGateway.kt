@@ -7,6 +7,12 @@ import kotlinx.collections.immutable.ImmutableList
 
 /** Session-targeted skills, with final generation admission immediately before the one mutation. */
 public interface SessionSkillGateway {
+    /**
+     * False once the server proved it has no session skills. Kept off ServerCapabilities
+     * because those flags mirror Dart's 86 exactly (CapabilitySnapshotTest).
+     */
+    public val sessionSkillsAvailable: Boolean
+
     public suspend fun sessionSkills(): Outcome<ImmutableList<SkillInfo>>
 
     public suspend fun activateSessionSkill(

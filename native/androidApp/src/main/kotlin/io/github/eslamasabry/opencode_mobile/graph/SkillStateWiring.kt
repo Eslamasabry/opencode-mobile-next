@@ -59,7 +59,8 @@ class AndroidConversationSkills(
     }
 
     override fun available(ref: ConversationRef): Boolean =
-        registry.graphFor(ref)?.session?.capabilities?.value?.sessionSkills == true
+        (registry.graphFor(ref)?.session?.server as? SessionSkillGateway)?.sessionSkillsAvailable ==
+            true
 
     override suspend fun list(ref: ConversationRef): Outcome<List<SkillInfo>> {
         val graph = registry.graphFor(ref) ?: return Failure.Network().failed()
@@ -67,7 +68,7 @@ class AndroidConversationSkills(
         val skillGateway =
             gateway as? SessionSkillGateway
                 ?: return Failure.Unavailable(FeatureId("sessionSkills")).failed()
-        if (!gateway.capabilities.value.sessionSkills)
+        if (!skillGateway.sessionSkillsAvailable)
             return Failure.Unavailable(FeatureId("sessionSkills")).failed()
         val location = gateway.location.value
         val review = reviews.review(ref)

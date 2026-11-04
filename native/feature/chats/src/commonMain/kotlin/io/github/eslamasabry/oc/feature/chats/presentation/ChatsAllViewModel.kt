@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 /**
@@ -142,7 +143,16 @@ public class ChatsAllViewModel(
      * Running follows the server's live run events (Flutter rebuilds on controller changes). The
      * stream is volatile: after every (re)connect the statuses are read again, never replayed.
      */
-    private suspend fun follow(server: ConversationServer, run: Int) {
+    private suspend fun follow(server: ConversationServer, run: Int): Unit = coroutineScope {
+        launch {
+            server.missing.collect { ids ->
+                if (run != generation) return@collect
+                ids.forEach { id ->
+                    if (id !in tombstones[server.profile].orEmpty())
+                        removeSession(server.profile, id)
+                }
+            }
+        }
         server.gateway.events.all.collect { envelope ->
             if (run != generation) return@collect
             when (val event = envelope.event) {
@@ -203,6 +213,9 @@ public class ChatsAllViewModel(
                     }
                 }
                 GatewayEvent.Connected -> {
+                    // Reconcile by refetch: run ends missed while disconnected never replay, so
+                    // the old live overlay must not override the fresh status read.
+                    liveRunning.remove(server.profile)
                     val statuses = server.gateway.sessionStatuses()
                     if (run != generation || statuses !is Outcome.Ok) return@collect
                     val running = statuses.value.filterValues(AllConversationsRules::isRunning).keys
@@ -303,10 +316,27 @@ public class ChatsAllViewModel(
             cur.copy(sources = cur.sources + (server.profile to source))
         }
         if (page is Outcome.Ok && savedScope != null && run == generation) {
+            // Dart saves sortedSessions(): visible roots only, pinned first, then newest, so the
+            // capped restart preview never shows subagent, archived or AI Team rows.
+            val source = model.value.sources[server.profile]
+            val pinned = source?.pinned.orEmpty()
             previews.save(
                 server,
                 savedScope,
-                model.value.sources[server.profile]?.sessions.orEmpty(),
+                source
+                    ?.sessions
+                    .orEmpty()
+                    .filter {
+                        it.parentId == null &&
+                            it.time?.archivedMs == null &&
+                            !TeamFolders.isTeamFolder(it.directory)
+                    }
+                    .sortedWith(
+                        compareByDescending<io.github.eslamasabry.oc.core.model.Session> {
+                                it.id in pinned
+                            }
+                            .thenByDescending(AllConversationsRules::updatedAt)
+                    ),
             )
         }
     }

@@ -30,14 +30,18 @@ public data class SetupInspectionState(
     val failure: Failure? = null,
 )
 
+/** One refresh's gateway, and the check that it still belongs to the live connection and folder. */
+public class SetupInspectionBinding(
+    public val gateway: SetupInspectionGateway,
+    public val current: () -> Boolean,
+)
+
 /**
- * Location-bound inspection. Offline, close, or a new location invalidates a pending response
- * before publication.
+ * Location-bound inspection. Each refresh binds to the connection live at that moment, so a
+ * reconnect is picked up; offline, close, or a new location invalidates a pending response before
+ * publication.
  */
-public class SetupInspectionController(
-    private val gateway: SetupInspectionGateway,
-    private val current: () -> Boolean,
-) {
+public class SetupInspectionController(private val bind: () -> SetupInspectionBinding?) {
     private val operation = Mutex()
     private val mutable = MutableStateFlow(SetupInspectionState())
     public val state: StateFlow<SetupInspectionState> = mutable.asStateFlow()
@@ -56,11 +60,15 @@ public class SetupInspectionController(
     public suspend fun refresh(): Outcome<Unit> {
         if (!operation.tryLock()) return Outcome.Failed(Failure.Busy(BusyKind.Overloaded))
         try {
-            if (closed || !online || !current()) return stale()
+            val bound = bind()
+            if (closed || !online || bound == null || !bound.current()) return stale()
+            val current = bound.current
             val mine = generation.load()
             mutable.value = SetupInspectionState(SetupInspectionPhase.Loading)
             val reply =
-                when (val inspected = attempt({ Failure.Device() }) { gateway.inspectSetup() }) {
+                when (
+                    val inspected = attempt({ Failure.Device() }) { bound.gateway.inspectSetup() }
+                ) {
                     is Outcome.Ok -> inspected.value
                     is Outcome.Failed -> inspected
                 }
@@ -81,6 +89,9 @@ public class SetupInspectionController(
         }
     }
 
+    public val isClosed: Boolean
+        get() = closed
+
     public fun stopAdmission() {
         closed = true
         generation.incrementAndFetch()
@@ -93,7 +104,13 @@ public class SetupInspectionController(
     }
 
     private fun stale(): Outcome.Failed {
-        if (!closed) mutable.value = SetupInspectionState(SetupInspectionPhase.Offline)
+        // Offline only when the connection is really gone; a superseded refresh yields to the newer.
+        if (!closed)
+            mutable.value =
+                SetupInspectionState(
+                    if (online && bind() != null) SetupInspectionPhase.Idle
+                    else SetupInspectionPhase.Offline
+                )
         return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
     }
 }

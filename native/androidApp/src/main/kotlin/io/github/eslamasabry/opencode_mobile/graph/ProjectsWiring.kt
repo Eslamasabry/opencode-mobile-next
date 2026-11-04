@@ -77,7 +77,13 @@ class LiveConversationServers(
     override val servers: StateFlow<ImmutableList<ConversationServer>> =
         combine(registry.live, stores.profiles.profiles) { live, saved ->
                 liveRows(live, saved) { id, name, graph ->
-                    ConversationServer(id, name, graph.session.server, graph.operations())
+                    ConversationServer(
+                        id,
+                        name,
+                        graph.session.server,
+                        graph.operations(),
+                        graph.session.reads.missing,
+                    )
                 }
             }
             .stateIn(appScope, SharingStarted.Eagerly, persistentListOf())

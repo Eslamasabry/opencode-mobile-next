@@ -10,8 +10,12 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.*
 
 internal object Oc2SessionSkills {
-    suspend fun list(gateway: Oc2Gateway): Outcome<ImmutableList<SkillInfo>> {
-        val read = gateway.json("/skill")
+    /** Skills are location-scoped: without the query the server lists its default project's. */
+    suspend fun list(
+        gateway: Oc2Gateway,
+        location: Map<String, String?>,
+    ): Outcome<ImmutableList<SkillInfo>> {
+        val read = gateway.json("/skill", query = location)
         if (read is Outcome.Failed) return read
         val body = (read as Outcome.Ok).value
         val rows =

@@ -330,8 +330,13 @@ internal class Oc2Gateway(
         return result
     }
 
+    @kotlin.concurrent.Volatile private var skillsAvailable = true
+
+    override val sessionSkillsAvailable: Boolean
+        get() = skillsAvailable
+
     override suspend fun sessionSkills(): Outcome<ImmutableList<SkillInfo>> =
-        Oc2SessionSkills.list(this)
+        Oc2SessionSkills.list(this, locationQuery())
 
     override suspend fun activateSessionSkill(
         session: SessionId,
@@ -339,7 +344,7 @@ internal class Oc2Gateway(
         resume: Boolean,
         beforeSend: () -> Boolean,
     ): Outcome<Unit> {
-        if (!capabilities.value.sessionSkills)
+        if (!skillsAvailable)
             return Failure.Unavailable(FeatureId("sessionSkills")).failed()
         // Resolve the dialect before admission: a wake cannot redirect a skill into a changed
         // location.
@@ -350,9 +355,7 @@ internal class Oc2Gateway(
         if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
         val result = Oc2SessionSkills.activate(this, session, skillId, resume)
         if (Oc2SessionSkills.unsupported(result)) {
-            (capabilities as MutableStateFlow<ServerCapabilities>).update {
-                it.copy(sessionSkills = false)
-            }
+            skillsAvailable = false
             return Failure.Unavailable(FeatureId("sessionSkills")).failed()
         }
         return result
@@ -902,7 +905,7 @@ internal class Oc2Gateway(
             },
         )
 
-    private fun locationQuery(at: ServerLocation = location.value): Map<String, String?> =
+    internal fun locationQuery(at: ServerLocation = location.value): Map<String, String?> =
         mapOf(
             "location[directory]" to at.directory,
             "location[workspace]" to at.workspace,
@@ -1243,7 +1246,6 @@ internal class Oc2Gateway(
     companion object {
         val Capabilities =
             ServerCapabilities(
-                sessionSkills = true,
                 scheduledPrompts =
                     true, // Flutter api2 parity (gateway_mappers.dart): schedules run client-side
                 // over the normal session API

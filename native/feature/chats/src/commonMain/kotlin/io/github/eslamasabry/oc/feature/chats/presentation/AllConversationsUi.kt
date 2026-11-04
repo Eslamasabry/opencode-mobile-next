@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Inject
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import kotlinx.collections.immutable.ImmutableList
@@ -24,6 +25,8 @@ public class ConversationServer(
     public val name: String,
     public val gateway: ServerGateway,
     public val operations: ServerOperationsGateway?,
+    /** Sessions a direct read confirmed gone (404); their rows are removed and stay removed. */
+    public val missing: StateFlow<Set<SessionId>> = MutableStateFlow(emptySet()),
 )
 
 /**

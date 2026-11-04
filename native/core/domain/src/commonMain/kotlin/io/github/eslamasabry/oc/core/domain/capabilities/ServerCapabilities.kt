@@ -57,7 +57,6 @@ public data class ServerCapabilities(
     val sessionImportExport: Boolean = true,
     val sessionNotes: Boolean = true,
     val serverCatalog: Boolean = true,
-    val sessionSkills: Boolean = false,
     val sessionModelProviderSwitching: Boolean = true,
     val agentSelection: Boolean = true,
     val slashCommands: Boolean = true,

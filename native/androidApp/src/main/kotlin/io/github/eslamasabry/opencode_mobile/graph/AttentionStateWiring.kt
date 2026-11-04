@@ -212,14 +212,20 @@ class AppAttentionState(
                                 tracker.handle(wire("session.status", event.sessionId.raw, "busy"))
                             is GatewayEvent.RunRetrying ->
                                 tracker.handle(wire("session.status", event.sessionId.raw, "retry"))
-                            is GatewayEvent.RunEnded ->
+                            is GatewayEvent.RunEnded -> {
+                                val outcome = event.outcome
                                 tracker.handle(
-                                    wire(
-                                        if (event.outcome is RunOutcome.Failed) "session.error"
-                                        else "session.idle",
-                                        event.sessionId.raw,
-                                    )
+                                    if (outcome is RunOutcome.Failed)
+                                        // The error name lets the tracker skip a person's own Stop
+                                        // (sessionErrorIsStop); no error prose is carried.
+                                        wire(
+                                            "session.error",
+                                            event.sessionId.raw,
+                                            errorName = outcome.tag?.raw ?: outcome.kind?.name,
+                                        )
+                                    else wire("session.idle", event.sessionId.raw)
                                 )
+                            }
                             is GatewayEvent.MessageUpserted ->
                                 if (
                                     event.message.role ==
@@ -263,7 +269,12 @@ class AppAttentionState(
             )
     }
 
-    private fun wire(type: String, session: String, status: String? = null): AttentionEvent =
+    private fun wire(
+        type: String,
+        session: String,
+        status: String? = null,
+        errorName: String? = null,
+    ): AttentionEvent =
         AttentionEvent(
             type,
             null,
@@ -271,6 +282,8 @@ class AppAttentionState(
                 buildMap {
                     put("sessionID", JsonPrimitive(session))
                     if (status != null) put("status", JsonPrimitive(status))
+                    if (errorName != null)
+                        put("error", JsonObject(mapOf("name" to JsonPrimitive(errorName))))
                 }
             ),
         )

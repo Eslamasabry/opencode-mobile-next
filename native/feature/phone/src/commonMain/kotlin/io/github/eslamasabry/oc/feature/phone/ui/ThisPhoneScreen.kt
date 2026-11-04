@@ -29,6 +29,10 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesB
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesGb
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesKb
+import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesMb
 import io.github.eslamasabry.oc.ui.words.res.keepRunningOpenFailed
 import io.github.eslamasabry.oc.ui.words.res.keepRunningRowSubtitle
 import io.github.eslamasabry.oc.ui.words.res.keepRunningTitle
@@ -330,11 +334,19 @@ private fun PhoneNoticeLine(words: String, actions: ThisPhoneActions) {
     )
 }
 
+@Composable
 private fun storageSize(bytes: Long): String =
     when {
         bytes >= 1_073_741_824L ->
-            "${bytes / 1_073_741_824L}.${bytes % 1_073_741_824L * 10 / 1_073_741_824L} GB"
-        bytes >= 1_048_576L -> "${bytes / 1_048_576L}.${bytes % 1_048_576L * 10 / 1_048_576L} MB"
-        bytes >= 1_024L -> "${bytes / 1_024L} KB"
-        else -> "$bytes B"
+            stringResource(
+                Res.string.termuxStorageBytesGb,
+                "${bytes / 1_073_741_824L}.${bytes % 1_073_741_824L * 10 / 1_073_741_824L}",
+            )
+        bytes >= 1_048_576L ->
+            stringResource(
+                Res.string.termuxStorageBytesMb,
+                "${bytes / 1_048_576L}.${bytes % 1_048_576L * 10 / 1_048_576L}",
+            )
+        bytes >= 1_024L -> stringResource(Res.string.termuxStorageBytesKb, "${bytes / 1_024L}")
+        else -> stringResource(Res.string.termuxStorageBytesB, "$bytes")
     }

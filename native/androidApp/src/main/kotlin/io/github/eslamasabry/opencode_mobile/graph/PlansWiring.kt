@@ -207,8 +207,12 @@ class AndroidUsageBudgets(private val stores: PreviewStores) :
             stores.lanes.forProfile(profile),
             locks,
             profile.raw,
-            saved.baseUrl,
-            isCurrent = { stores.profiles.profile(profile)?.profile?.baseUrl == saved.baseUrl },
+            // Dart hashes '$origin\n$username' (usage_screen.dart), so Flutter-saved budgets match.
+            "${saved.baseUrl}\n${saved.username}",
+            isCurrent = {
+                val now = stores.profiles.profile(profile)?.profile
+                now?.baseUrl == saved.baseUrl && now.username == saved.username
+            },
             isProfilePresent = { stores.profiles.profile(profile) != null },
         )
     }
