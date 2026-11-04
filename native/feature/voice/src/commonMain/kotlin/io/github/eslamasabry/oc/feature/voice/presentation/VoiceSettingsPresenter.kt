@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.voice.language.VoiceLanguage
 import io.github.eslamasabry.oc.engine.voice.models.DeviceProbeResult
 import io.github.eslamasabry.oc.engine.voice.models.ModelPackSpec
+import io.github.eslamasabry.oc.engine.voice.models.SetupNetwork
 import io.github.eslamasabry.oc.engine.voice.state.ModelPacksState
 import io.github.eslamasabry.oc.engine.voice.state.PackId
 import io.github.eslamasabry.oc.engine.voice.state.PackJobPhase
@@ -22,18 +23,30 @@ public data class PackRowUi(
     val id: PackId,
     val bytes: Long,
     val status: PackStatus,
-    /** The phone's memory, in MB, and what the pack needs, for "needs about 2000 MB; this one has 1500 MB". */
+    /**
+     * The phone's memory, in MB, and what the pack needs, for "needs about 2000 MB; this one has
+     * 1500 MB".
+     */
     val needsRamMb: Long,
     val phoneRamMb: Long?,
 ) {
-    val installed: Boolean get() = status == PackStatus.Installed
-    val unsupported: Boolean get() = status is PackStatus.Unsupported
+    val installed: Boolean
+        get() = status == PackStatus.Installed
+
+    val unsupported: Boolean
+        get() = status is PackStatus.Unsupported
 }
 
 /** The running download or verification. */
-public data class PackJobUi(val pack: PackId, val received: Long, val total: Long, val verifying: Boolean) {
+public data class PackJobUi(
+    val pack: PackId,
+    val received: Long,
+    val total: Long,
+    val verifying: Boolean,
+) {
     /** 0..1, or null while verifying. */
-    val fraction: Float? get() = if (verifying || total <= 0) null else (received.toFloat() / total).coerceIn(0f, 1f)
+    val fraction: Float?
+        get() = if (verifying || total <= 0) null else (received.toFloat() / total).coerceIn(0f, 1f)
 }
 
 /** The read-aloud voice: the phone's, or the downloadable natural voice. */
@@ -42,12 +55,22 @@ public data class NaturalVoiceUi(
     val installed: Boolean,
     val chosen: Boolean,
     val downloading: Boolean,
-    /** False while the offline speech engine is not in the app: the row says so instead of offering a dead choice. */
+    /**
+     * False while the offline speech engine is not in the app: the row says so instead of offering
+     * a dead choice.
+     */
     val available: Boolean,
 )
 
 public sealed interface VoiceConfirm {
     public data class DeletePack(val pack: PackId, val bytes: Long) : VoiceConfirm
+
+    public data class Download(
+        val pack: PackId,
+        val bytes: Long,
+        val replaceExisting: Boolean,
+        val network: SetupNetwork,
+    ) : VoiceConfirm
 
     public data object RemoveNatural : VoiceConfirm
 }
@@ -69,15 +92,19 @@ public data class VoiceSettingsUi(
     val natural: NaturalVoiceUi? = null,
     val confirm: VoiceConfirm? = null,
 ) {
-    val busy: Boolean get() = job != null
-    val selectedRow: PackRowUi? get() = packs.firstOrNull { it.id == selected }
+    val busy: Boolean
+        get() = job != null
+
+    val selectedRow: PackRowUi?
+        get() = packs.firstOrNull { it.id == selected }
 }
 
 /**
- * Settings › Voice typing (Flutter `VoiceSettingsScreen` + `NaturalVoiceSection`, plan 10 §7.8): choose a speech model
- * (a tap only chooses; the one primary action downloads it), see the download and the SHA-256 verification with Cancel,
- * download again or delete, pick the transcription language, turn "Send when I stop talking" on or off (off by
- * default), and choose the read-aloud voice. A download keeps running when the page closes.
+ * Settings › Voice typing (Flutter `VoiceSettingsScreen` + `NaturalVoiceSection`, plan 10 §7.8):
+ * choose a speech model (a tap only chooses; the one primary action downloads it), see the download
+ * and the SHA-256 verification with Cancel, download again or delete, pick the transcription
+ * language, turn "Send when I stop talking" on or off (off by default), and choose the read-aloud
+ * voice. A download keeps running when the page closes.
  */
 public class VoiceSettingsPresenter(
     private val hub: VoiceHub,
@@ -127,7 +154,8 @@ public class VoiceSettingsPresenter(
         val job =
             s.job?.let { j ->
                 when (val phase = j.phase) {
-                    is PackJobPhase.Downloading -> PackJobUi(j.pack, phase.received, phase.total, verifying = false)
+                    is PackJobPhase.Downloading ->
+                        PackJobUi(j.pack, phase.received, phase.total, verifying = false)
                     PackJobPhase.Verifying -> PackJobUi(j.pack, 0, 0, verifying = true)
                 }
             }
@@ -158,18 +186,43 @@ public class VoiceSettingsPresenter(
 
     public fun back(): Unit = leave()
 
-    /** A tap only chooses; the primary action downloads (Flutter: a list that acts on tap would mark a missing pack). */
+    /**
+     * A tap only chooses; the primary action downloads (Flutter: a list that acts on tap would mark
+     * a missing pack).
+     */
     public fun choose(pack: PackId) {
         act { it.select(pack) }
     }
 
     /** The one primary action: download and verify the chosen pack. */
     public fun downloadSelected() {
-        act { it.download(mutable.value.selected) }
+        askDownload(mutable.value.selected, replaceExisting = false)
     }
 
     public fun downloadAgain() {
-        act { it.download(mutable.value.selected, replaceExisting = true) }
+        askDownload(mutable.value.selected, replaceExisting = true)
+    }
+
+    private fun askDownload(pack: PackId, replaceExisting: Boolean) {
+        val models = parts?.models ?: return
+        if (mutable.value.busy) return
+        scope.launch {
+            val network = models.downloadNetwork()
+            if (network == SetupNetwork.Offline) {
+                ownProblem.value = MediaProblem.DownloadOffline
+                mutable.update { it.copy(problem = MediaProblem.DownloadOffline) }
+            } else {
+                val spec =
+                    (models.speechPacks + models.naturalPack).firstOrNull { it.id == pack }
+                        ?: return@launch
+                mutable.update {
+                    it.copy(
+                        confirm =
+                            VoiceConfirm.Download(pack, spec.totalBytes, replaceExisting, network)
+                    )
+                }
+            }
+        }
     }
 
     public fun cancelDownload() {
@@ -196,6 +249,14 @@ public class VoiceSettingsPresenter(
         val pending = mutable.value.confirm ?: return
         mutable.update { it.copy(confirm = null) }
         when (pending) {
+            is VoiceConfirm.Download ->
+                act {
+                    it.downloadConsented(
+                        pending.pack,
+                        pending.replaceExisting,
+                        pending.network != SetupNetwork.Unmetered,
+                    )
+                }
             is VoiceConfirm.DeletePack -> act { it.remove(pending.pack) }
             VoiceConfirm.RemoveNatural -> {
                 val p = parts ?: return
@@ -230,7 +291,12 @@ public class VoiceSettingsPresenter(
     public fun setNaturalVoice(on: Boolean) {
         val natural = mutable.value.natural ?: return
         if (on && !natural.available) return
-        act { it.setNaturalVoice(on) }
+        if (on && !natural.installed) {
+            val pack = parts?.models?.naturalPack ?: return
+            askDownload(pack.id, replaceExisting = false)
+        } else {
+            act { it.setNaturalVoice(on) }
+        }
     }
 
     public fun dismissProblem() {
@@ -252,7 +318,8 @@ public class VoiceSettingsPresenter(
                             is Failure.StorageRefused -> MediaProblem.DownloadNoSpace
                             else -> MediaProblem.DownloadIncomplete
                         }
-                    // Another download already running is not an error the person caused: the progress says it.
+                    // Another download already running is not an error the person caused: the
+                    // progress says it.
                     if (problem != MediaProblem.DownloadBusy) {
                         ownProblem.value = problem
                         mutable.update { it.copy(problem = problem) }
