@@ -1,6 +1,6 @@
 # Migration 43: Flutter kit parts
 
-Counts: already there **0**; ported now **0**; not needed **20**; blocked **0**. Assessed **20/76**.
+Counts: already there **0**; ported now **0**; not needed **29**; blocked **0**. Assessed **29/76**.
 
 Implementation-only review from P12 `f00dbf8e9b0948f0caad4db96c4170f841977401`. No tests written or run. Deferred means deliberately excluded by the binding native plan, not missing by accident. Plan references below are under `docs/design/native-rewrite-2026-11-01/`.
 
@@ -28,8 +28,20 @@ Implementation-only review from P12 `f00dbf8e9b0948f0caad4db96c4170f841977401`. 
 | `lib/ui/kit/live_background/styles/kit_live_mesh.dart` | not needed | Breathing interpolated colour mesh; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
 | `lib/ui/kit/live_background/styles/kit_live_oscilloscope.dart` | not needed | Scope grid and running waveform; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
 
+| `lib/ui/kit/live_background/styles/kit_live_radar.dart` | not needed | Sweeping radar rings and fading contacts; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_silk.dart` | not needed | Folding satin ribbons; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_support.dart` | not needed | Deterministic noise, clocks and geometry caches used only by deferred looks; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_toolkit.dart` | not needed | Noise, colour-field mesh and text-contrast helpers used only by deferred looks; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/live_background/styles/kit_live_topo.dart` | not needed | Animated noise contour lines; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/scenes/servers_cast.dart` | not needed | Phone/laptop/portal/sparkle path drawing serves deferred illustration scenes; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/scenes/setup_cast.dart` | not needed | Portal/phone/prompt/check/sparkle path drawing serves deferred illustration scenes; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/scenes/states_parts.dart` | not needed | Wash/paper/fold/spark/tick drawing serves deferred illustration scenes; deliberately outside the switch under ADR 01 §12 D11 (`plan/01-architecture-decision.md:881`), explicit kit exclusion `plan/06-ui-kit-design-system.md:946`/`:1018`; preferences remain retained. |
+| `lib/ui/kit/team/team_parts.dart` | not needed | AI Team state rows/cards, progress and stale/loading mutation holds belong to the deliberately deferred AI Team feature: ADR 01 §12 D6 (`plan/01-architecture-decision.md:875`), explicit `team/*` exclusion `plan/06-ui-kit-design-system.md:948`/`:1196`; team data remains untouched. |
+
 ## Verification
 
 Batch 1: documentation only; Kotlin/Gradle unchanged in this commit, compile gate skipped as instructed.
 
 Batch 2: documentation only; compile gate skipped (no Kotlin/Gradle changes in commit).
+
+Batch 3: documentation only; compile gate skipped (no Kotlin/Gradle changes in commit).
