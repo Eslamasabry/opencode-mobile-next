@@ -49,6 +49,11 @@ public sealed interface ComputerCheck {
 /** This phone's built-in agents (Claude Code, Codex, … in the phone's Linux). */
 public interface PhoneAgents {
     public val state: StateFlow<PhoneAgentsState>
+
+    public suspend fun refresh(): Outcome<Unit> = Outcome.Ok(Unit)
+
+    public suspend fun remove(id: String): Outcome<PhoneAgentRemoval> =
+        Outcome.Ok(PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable))
 }
 
 public data class PhoneAgentsState(
@@ -57,7 +62,15 @@ public data class PhoneAgentsState(
     val agents: ImmutableList<PhoneAgentRow> = persistentListOf(),
 )
 
-public data class PhoneAgentRow(val id: String, val name: String, val status: PhoneAgentStatus)
+public data class PhoneAgentRow(val id: String, val name: String, val status: PhoneAgentStatus, val removable: Boolean = false)
+
+public sealed interface PhoneAgentRemoval {
+    public data class Removed(val freedBytes: Long) : PhoneAgentRemoval
+
+    public data class Refused(val issue: PhoneAgentRemovalIssue) : PhoneAgentRemoval
+}
+
+public enum class PhoneAgentRemovalIssue { Busy, Unsafe, Unconfirmed, Unavailable }
 
 /** The row states of Flutter `agentsState*` (17 §1.4 order); the words live in the screen. */
 public enum class PhoneAgentStatus { Ready, NotInstalled, SignInNeeded, Checking, PhoneCheck, Stopped, Limit, Unavailable }

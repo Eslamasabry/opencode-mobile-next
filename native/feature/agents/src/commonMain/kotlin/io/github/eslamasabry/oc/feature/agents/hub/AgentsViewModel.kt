@@ -41,4 +41,12 @@ public class AgentsViewModel(
     override fun readAgents(id: ProfileId): Unit = presenter.readAgents(id)
 
     override fun newConversation(id: ProfileId): Unit = presenter.newConversation(id)
+
+    override fun refreshPhone(): Unit = presenter.refreshPhone()
+
+    override fun requestRemoval(id: String): Unit = presenter.requestRemoval(id)
+
+    override fun cancelRemoval(): Unit = presenter.cancelRemoval()
+
+    override fun confirmRemoval(): Unit = presenter.confirmRemoval()
 }

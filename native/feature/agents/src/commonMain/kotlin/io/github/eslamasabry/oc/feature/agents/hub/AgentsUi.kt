@@ -19,6 +19,8 @@ public data class AgentsUi(
     /** Moves after a save so the screen can clear the password field. */
     val savedGeneration: Int = 0,
     val adding: Boolean = false,
+    val removingAgent: PhoneAgentRow? = null,
+    val removal: PhoneAgentRemoval? = null,
 )
 
 public interface AgentsActions {
@@ -38,4 +40,12 @@ public interface AgentsActions {
     public fun readAgents(id: ProfileId)
 
     public fun newConversation(id: ProfileId)
+
+    public fun refreshPhone()
+
+    public fun requestRemoval(id: String)
+
+    public fun cancelRemoval()
+
+    public fun confirmRemoval()
 }

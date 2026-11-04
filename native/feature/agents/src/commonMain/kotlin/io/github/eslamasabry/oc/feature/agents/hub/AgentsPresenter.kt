@@ -22,11 +22,13 @@ import kotlinx.coroutines.launch
 public class AgentsPresenter(
     private val scope: CoroutineScope,
     private val computers: AgentComputers,
-    phone: PhoneAgents,
+    private val phone: PhoneAgents,
     private val onBack: () -> Unit,
     private val openChat: (ConversationRef) -> Unit,
 ) : AgentsActions {
     private val local = MutableStateFlow(AgentsUi())
+
+    init { refreshPhone() }
 
     public val state: StateFlow<AgentsUi> =
         combine(local, computers.computers, phone.state) { own, saved, phoneState ->
@@ -89,6 +91,35 @@ public class AgentsPresenter(
         when (val result = computers.newConversation(id)) {
             is Outcome.Ok -> openChat(result.value)
             is Outcome.Failed -> failed(AgentsIssue.StartFailed, result.failure)
+        }
+    }
+
+    override fun refreshPhone(): Unit = operation {
+        when (phone.refresh()) {
+            is Outcome.Ok -> Unit
+            is Outcome.Failed -> local.update { it.copy(removal = PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable)) }
+        }
+    }
+
+    override fun requestRemoval(id: String) {
+        if (local.value.busy) return
+        val agent = phone.state.value.agents.firstOrNull { it.id == id && it.removable } ?: return
+        local.update { it.copy(removingAgent = agent, removal = null) }
+    }
+
+    override fun cancelRemoval() {
+        if (!local.value.busy) local.update { it.copy(removingAgent = null) }
+    }
+
+    override fun confirmRemoval() {
+        val agent = local.value.removingAgent ?: return
+        operation {
+            local.update { it.copy(removingAgent = null, removal = null) }
+            val result = when (val removed = phone.remove(agent.id)) {
+                is Outcome.Ok -> removed.value
+                is Outcome.Failed -> PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable)
+            }
+            local.update { it.copy(removal = result) }
         }
     }
 

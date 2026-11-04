@@ -1,0 +1,11 @@
+<resources>
+    <string name="linuxAgentPayloadRefresh">تحديث الوكلاء على الهاتف</string>
+    <string name="linuxAgentPayloadRemove">إزالة %1$s</string>
+    <string name="linuxAgentPayloadRemoveTitle">إزالة %1$s من هذا الهاتف؟</string>
+    <string name="linuxAgentPayloadRemoveBody">يزيل البرنامج الذي تم تنزيله والتنزيلات غير المكتملة. تبقى حساباتك ومحادثاتك والأدوات المشتركة على هذا الهاتف.</string>
+    <string name="linuxAgentPayloadRemoved">تمت إزالة البرنامج. تم تحرير %1$d بايت.</string>
+    <string name="linuxAgentPayloadBusy">الوكيل أو إعداد آخر للهاتف قيد التشغيل. أوقفه ثم حاول مجددًا.</string>
+    <string name="linuxAgentPayloadUnsafe">هذه الملفات لا تطابق تثبيتًا يملكه التطبيق. لم تتم إزالة أي شيء.</string>
+    <string name="linuxAgentPayloadUnconfirmed">تعذر تأكيد الإزالة. حدّث القائمة قبل المحاولة مجددًا.</string>
+    <string name="linuxAgentPayloadUnavailable">تعذر قراءة ملفات وكلاء الهاتف أو إزالتها. حدّث وحاول مجددًا.</string>
+</resources>
