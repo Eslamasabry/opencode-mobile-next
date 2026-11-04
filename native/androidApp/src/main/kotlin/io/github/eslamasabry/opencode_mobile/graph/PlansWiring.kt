@@ -1,6 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import android.app.Activity
 import android.app.Application
+import android.os.Bundle
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.ContributesIntoSet
@@ -107,10 +109,56 @@ class AndroidPlansSource(
         monitorStates.asStateFlow()
     private var monitorLoopStarted = false
 
+    /**
+     * App visibility for the usage monitors (B-AGENT-191/313): reads pause while no activity is
+     * started, as Flutter gates them on the app lifecycle. This source can be built after the first
+     * activity started, so it starts visible and only follows real start/stop transitions; a stop
+     * that is part of a configuration change does not count.
+     */
+    private val appVisible = MutableStateFlow(true)
+    private var startedActivities = 0
+    private var changingConfiguration = false
+
     init {
         // Loading saved monitor choices never reads a daemon. Only an explicit opt-in admits its
         // timer reads.
         scope.launch { engine() }
+        application.registerActivityLifecycleCallbacks(
+            object : Application.ActivityLifecycleCallbacks {
+                override fun onActivityStarted(activity: Activity) {
+                    if (changingConfiguration) changingConfiguration = false
+                    else startedActivities++
+                    appVisible.value = true
+                }
+
+                override fun onActivityStopped(activity: Activity) {
+                    if (activity.isChangingConfigurations) {
+                        changingConfiguration = true
+                        return
+                    }
+                    startedActivities = (startedActivities - 1).coerceAtLeast(0)
+                    appVisible.value = startedActivities > 0
+                }
+
+                override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) =
+                    Unit
+
+                override fun onActivityResumed(activity: Activity) = Unit
+
+                override fun onActivityPaused(activity: Activity) = Unit
+
+                override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) =
+                    Unit
+
+                override fun onActivityDestroyed(activity: Activity) = Unit
+            }
+        )
+        scope.launch {
+            appVisible.collect { visible ->
+                paseo?.setRuntime(visible, false)
+                explicitMonitor?.setRuntime(visible, false)
+            }
+        }
     }
 
     private fun openCodeServers() =
@@ -228,6 +276,10 @@ class AndroidPlansSource(
                 clock = { clock.now() },
                 autoRead = false,
             )
+        appVisible.value.let { visible ->
+            daemonUsage.setRuntime(visible, false)
+            explicitMonitor?.setRuntime(visible, false)
+        }
         if (!monitorLoopStarted) {
             monitorLoopStarted = true
             scope.launch {

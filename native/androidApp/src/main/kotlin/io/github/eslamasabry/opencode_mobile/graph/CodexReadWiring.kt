@@ -159,7 +159,8 @@ public class AppCodexReads(
                 is Outcome.Failed -> return failed(result.failure)
                 is Outcome.Ok -> result.value
             }
-        val accountRef = account.email?.let { DartJson.sha256Hex("codex-account:$it") }
+        val accountRef =
+            account.email?.takeIf { it.isNotEmpty() }?.let { DartJson.sha256Hex("codex-account:$it") }
         if (live.get() !== current) return UsageSourceResult(unreached = setOf(current.id)).ok()
         val accountType = account.type
         if (accountType == null) {
@@ -174,6 +175,7 @@ public class AppCodexReads(
                                     current.id,
                                     UsageReadingStatus.NotSignedIn,
                                     context.now,
+                                    method = SignInMethod.Plan,
                                 )
                             )
                         else emptyList(),

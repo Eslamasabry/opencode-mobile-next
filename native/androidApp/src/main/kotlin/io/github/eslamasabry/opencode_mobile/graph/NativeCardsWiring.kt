@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.integrations.catalog.AgentConnectorSearch
 import io.github.eslamasabry.oc.engine.integrations.catalog.ConnectorSearchServers
+import io.github.eslamasabry.oc.feature.chat.cards.GraphCardsQualifier
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.io.File
 import java.net.URI
@@ -35,7 +36,8 @@ import kotlinx.serialization.json.*
 
 /**
  * Resolves only an authenticated connection to the existing, app-owned phone helper. No host is
- * started here.
+ * started here. Any other (remote) profile keeps the connected-server qualification
+ * ([GraphCardsQualifier], B-CHAT-035/036), so binding this class never hides OpenCode 2 cards.
  */
 @SingleIn(AppScope::class)
 @ContributesIntoSet(AppScope::class, binding = binding<CardsQualifier>())
@@ -48,6 +50,11 @@ class NativeCardsQualifier(
     private val dispatchers: AppDispatchers,
 ) : CardsQualifier {
     private val linux by lazy { BuiltinLinux.get(app) }
+    private val remote = GraphCardsQualifier(registry)
+
+    /** True for the phone helper (or its owner); everything else is a connected remote server. */
+    private fun phone(profileId: String): Boolean =
+        registry.ownerOfTransient(ProfileId(profileId)) != null || owner(profileId) != null
     private val installer =
         ManagedCardsInstaller(
             CardsSetupRunner { profile, agent, enabled ->
@@ -69,7 +76,8 @@ class NativeCardsQualifier(
     }
 
     override fun activeSettingsOwner(profileId: String): Boolean =
-        stores.profiles.activeId.value?.raw == profileId
+        if (!phone(profileId)) remote.activeSettingsOwner(profileId)
+        else stores.profiles.activeId.value?.raw == profileId
 
     fun graph(profile: String): ConnectionGraph? {
         val id = ProfileId(profile)
@@ -105,9 +113,14 @@ class NativeCardsQualifier(
     override fun managed(profileId: String): Boolean = graph(profileId) != null
 
     override fun agentsHere(profileId: String): List<CardAgent> =
-        if (managed(profileId)) listOf(CardAgent.Claude) else emptyList()
+        when {
+            !phone(profileId) -> remote.agentsHere(profileId)
+            managed(profileId) -> listOf(CardAgent.Claude)
+            else -> emptyList()
+        }
 
     override fun permitsSession(profileId: String, sessionId: String): Boolean {
+        if (!phone(profileId)) return remote.permitsSession(profileId, sessionId)
         val id = ProfileId(profileId)
         if (registry.ownerOfTransient(id) == null) return false
         val graph = graph(profileId)?.takeIf { it.profile.id == id } ?: return false
@@ -157,6 +170,9 @@ class NativeCardsQualifier(
     }
 
     override suspend fun verify(profileId: String): Outcome<CardsVerdict> =
+        if (!phone(profileId)) remote.verify(profileId) else verifyPhone(profileId)
+
+    private suspend fun verifyPhone(profileId: String): Outcome<CardsVerdict> =
         CardsVerdict(
                 if (run(profileId, true, true) == 0) listOf(CardAgent.Claude) else emptyList(),
                 if (managed(profileId)) CardsProblem.VerificationFailed
@@ -171,6 +187,7 @@ class NativeCardsQualifier(
             }
 
     override suspend fun install(profileId: String): Outcome<CardsVerdict> {
+        if (!phone(profileId)) return remote.install(profileId)
         if (!managed(profileId))
             return CardsVerdict(emptyList(), CardsProblem.UnsupportedHost, agentsHere(profileId))
                 .ok()
@@ -188,7 +205,8 @@ class NativeCardsQualifier(
     }
 
     override suspend fun remove(profileId: String): Outcome<Unit> =
-        when (installer.setEnabled(profileId, listOf(CardAgent.Claude), false)) {
+        if (!phone(profileId)) remote.remove(profileId)
+        else when (installer.setEnabled(profileId, listOf(CardAgent.Claude), false)) {
             is CardsStatus.Failed,
             is CardsStatus.Unavailable -> Failure.Refused(RefusalReason.StaleScope).failed()
             else -> Unit.ok()

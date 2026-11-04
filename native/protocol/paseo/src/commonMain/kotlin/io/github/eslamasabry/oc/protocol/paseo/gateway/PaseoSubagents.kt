@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoTimeline
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -26,6 +27,7 @@ internal class PaseoSubagents(private val g: PaseoGateway) {
     private val children = LinkedHashMap<String, Child>()
     private val byCall = LinkedHashMap<String, String>()
     private val shown = LinkedHashMap<String, Part>()
+    private val loaded = HashSet<String>()
 
     fun contains(id: String): Boolean = id in children
 
@@ -33,6 +35,7 @@ internal class PaseoSubagents(private val g: PaseoGateway) {
         children.clear()
         byCall.clear()
         shown.clear()
+        loaded.clear()
     }
 
     fun forget(id: String) {
@@ -142,6 +145,12 @@ internal class PaseoSubagents(private val g: PaseoGateway) {
                 val old = byCall.put(call, id)
                 if (old != id) shown[call]?.let { g.emit(GatewayEvent.PartUpserted(linked(it))) }
             }
+    }
+
+    /** Starts [load] for [parent] the first time only, off the caller's path (Flutter parity). */
+    fun loadOnce(parent: String) {
+        if (parent in g.drafts || contains(parent) || !loaded.add(parent)) return
+        g.scope.launch { load(parent) }
     }
 
     suspend fun load(parent: String) {

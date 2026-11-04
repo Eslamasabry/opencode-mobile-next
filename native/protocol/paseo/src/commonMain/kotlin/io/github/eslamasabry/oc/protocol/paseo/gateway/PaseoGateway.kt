@@ -720,11 +720,18 @@ public class PaseoGateway(
         id: SessionId,
         cursor: String?,
         limit: Int,
-    ): Outcome<ServerPage<MessageWithParts>> = withPayloadUse {
-        call {
-            if (cursor != null) paseoFail(PaseoFailureKind.Unavailable)
-            ServerPage(readMessages(id.raw), null)
+    ): Outcome<ServerPage<MessageWithParts>> {
+        val page: suspend () -> Outcome<ServerPage<MessageWithParts>> = {
+            call {
+                if (cursor != null) paseoFail(PaseoFailureKind.Unavailable)
+                ServerPage(readMessages(id.raw), null)
+            }
         }
+        // A timeline read loads the saved agent on the helper (the in-place resume), so it takes
+        // the payload lease (B-AGENT-173). Read-only sub-agent children and unstarted drafts load
+        // nothing there and stay readable while the host refuses new agent work.
+        val loadsNothing = isReadOnlySession(id) || (id.raw in drafts && id.raw !in uncertain)
+        return if (loadsNothing) page() else withPayloadUse(page)
     }
 
     internal suspend fun readMessages(id: String): ImmutableList<MessageWithParts> {
@@ -779,7 +786,9 @@ public class PaseoGateway(
                 uncertain.remove(id)
                 timeline.messages
             }
-        subagents.load(id)
+        // Once per parent and off the read path, as Flutter does: a daemon without a child inventory
+        // never delays history; a later upsert re-links the cards already shown (B-AGENT-165).
+        subagents.loadOnce(id)
         return subagents.linkMessages(loaded)
     }
 

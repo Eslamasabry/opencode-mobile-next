@@ -10,7 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
 /**
- * One bounded book per authenticated connection; profile/origin identities cannot share agent ids.
+ * One bounded book per server (profile and origin), shared by its reconnects; identities cannot
+ * share agent ids.
  */
 class PaseoBackgroundWork(spec: GatewaySpec) : PaseoBackgroundTasks {
     private val prefix =

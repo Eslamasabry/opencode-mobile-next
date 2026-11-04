@@ -215,6 +215,10 @@ private class PaseoTerminalChannel(
     private fun frame(frame: PaseoBinaryFrame) {
         if (closed) return
         if (slot == null) {
+            // Only frames that could belong to this terminal are held until the subscribe ack;
+            // another terminal's traffic or an old connection must not exhaust the buffer.
+            if (frame.opcode != 0x01 && frame.opcode != 0x05) return
+            if (frame.epoch != g.transport.epoch) return
             if (early.size >= 64 || earlyBytes + frame.payload.size > 1024 * 1024) {
                 fail()
                 return

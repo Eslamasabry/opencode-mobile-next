@@ -71,7 +71,12 @@ class AppEntryContractTest {
         val activities = shippedActivities()
         val names = activities.map { it.second.getAttributeNS(ns, "name") }.toSet()
         assertEquals(
-            setOf(".MainActivity", "io.github.eslamasabry.opencode_mobile.graph.ScheduleOpenActivity"),
+            setOf(
+                ".MainActivity",
+                ".WidgetRouteActivity",
+                ".WidgetOverlayActivity",
+                "io.github.eslamasabry.opencode_mobile.graph.ScheduleOpenActivity",
+            ),
             names,
             "a new activity needs its focus highlight checked here",
         )
@@ -88,6 +93,16 @@ class AppEntryContractTest {
         val body = schedules.substring(schedules.indexOf("class ScheduleOpenActivity"))
         assertTrue(body.contains("finish()"))
         assertTrue(!body.contains("setContent") && !body.contains("setContentView"))
+        // The widget trampoline (B-AGENT-317) shows nothing either; its overlay is a Compose host.
+        val widgetRoute = activities.single { it.second.getAttributeNS(ns, "name") == ".WidgetRouteActivity" }.second
+        assertEquals("@android:style/Theme.Translucent.NoTitleBar", widgetRoute.getAttributeNS(ns, "theme"))
+        assertEquals("true", widgetRoute.getAttributeNS(ns, "noHistory"))
+        val route = RepoFiles.text("androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/WidgetRouteActivity.kt")
+        assertTrue(route.contains("finish()"))
+        assertTrue(!route.contains("setContent") && !route.contains("setContentView"))
+        val overlay = RepoFiles.text("androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/WidgetOverlayActivity.kt")
+        assertTrue(overlay.contains("class WidgetOverlayActivity : ComponentActivity()"))
+        assertTrue(overlay.contains("setContent {") && !overlay.contains("setContentView("))
     }
 
     @Test

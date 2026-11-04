@@ -138,6 +138,7 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                         if (
                             selected.patch
                                 .orEmpty()
+                                .trimEnd('\n')
                                 .lineSequence()
                                 .drop((state.diffPage + 1) * 200)
                                 .any()

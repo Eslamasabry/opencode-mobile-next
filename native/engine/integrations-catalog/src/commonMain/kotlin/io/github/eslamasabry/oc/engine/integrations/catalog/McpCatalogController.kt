@@ -108,7 +108,7 @@ public class McpCatalogController(
                     McpCatalogState(
                         loading = false,
                         optedIn = optedIn,
-                        entries = saved,
+                        entries = orderMcpCatalog(saved, state.value.installed),
                         canAdd = supported(),
                     )
                 if (optedIn) refresh()
@@ -169,7 +169,12 @@ public class McpCatalogController(
             val result = withTimeoutOrNull(20_000) { host.fetchRegistry(search) }
             if (!active(run) || !state.value.optedIn) return
             if (result !is Outcome.Ok || result.value["servers"] !is JsonArray) {
-                mutable.update { it.copy(entries = saved, notice = McpCatalogNotice.LoadFailed) }
+                mutable.update {
+                    it.copy(
+                        entries = orderMcpCatalog(saved, it.installed),
+                        notice = McpCatalogNotice.LoadFailed,
+                    )
+                }
                 return
             }
             val entries = parseMcpCatalog(result.value, redactor)

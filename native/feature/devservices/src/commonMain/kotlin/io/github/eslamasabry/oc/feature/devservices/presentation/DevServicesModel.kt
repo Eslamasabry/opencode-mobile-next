@@ -306,7 +306,13 @@ public class DevServicesModel(
 
     override fun refreshOutput() {
         val viewer = output ?: return
-        scope.launch { viewer.refresh() }
+        val c = context ?: return
+        scope.launch {
+            // Adopt the live connection before each read so a reconnect retires the old one
+            // (B-AGENT-239); a missing connection keeps the loaded output.
+            c.shells()?.let { if (output === viewer) viewer.bind(it) }
+            viewer.refresh()
+        }
     }
 
     override fun closeOutput() {

@@ -56,6 +56,12 @@ class BackgroundConnectionService : Service() {
         ) {
             val request = WidgetActionExtras.read(intent)
             if (request == null) {
+                // Started through getForegroundService: keep the start-foreground promise even for
+                // a malformed request, then drop the row at once.
+                if (!livePromised) {
+                    widgetForeground.promote()
+                    ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+                }
                 if (!hasLiveOwner()) stopSelfResult(startId)
                 return START_NOT_STICKY
             }
@@ -203,7 +209,9 @@ class BackgroundConnectionService : Service() {
         fun syncOwners() {
             mutable.value =
                 when {
-                    hasLiveOwner() -> persistentSetOf(ForegroundKind.LiveMode)
+                    // Only this instance's own live promise counts: the live signal alone has not
+                    // called startForeground here.
+                    livePromised -> persistentSetOf(ForegroundKind.LiveMode)
                     tickets.isNotEmpty() -> persistentSetOf(ForegroundKind.WidgetAction)
                     else -> persistentSetOf()
                 }
@@ -211,7 +219,7 @@ class BackgroundConnectionService : Service() {
 
         fun promote(): Boolean =
             try {
-                if (!hasLiveOwner()) {
+                if (!livePromised) {
                     val type =
                         when {
                             Build.VERSION.SDK_INT >= 34 ->
@@ -246,7 +254,7 @@ class BackgroundConnectionService : Service() {
         override suspend fun end(ticket: ForegroundTicket) {
             if (ticket.kind != ForegroundKind.WidgetAction || !tickets.remove(ticket.id)) return
             syncOwners()
-            if (tickets.isEmpty() && !hasLiveOwner()) {
+            if (tickets.isEmpty() && !livePromised) {
                 ServiceCompat.stopForeground(
                     this@BackgroundConnectionService,
                     ServiceCompat.STOP_FOREGROUND_REMOVE,

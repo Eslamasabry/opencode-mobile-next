@@ -466,7 +466,9 @@ internal class ProjectWorkspace(
 
     override fun workspaceDiffPage(delta: Int) {
         val selected = state.changes.firstOrNull { it.file == state.selectedDiff } ?: return
-        val pages = (selected.patch.orEmpty().count { it == '\n' } / 200).coerceAtLeast(0)
+        // A patch ends with a newline: count real lines so exactly 200 lines is one page.
+        val lines = selected.patch.orEmpty().trimEnd('\n').lineSequence().count()
+        val pages = ((lines - 1) / 200).coerceAtLeast(0)
         set(state.copy(diffPage = (state.diffPage + delta).coerceIn(0, pages)))
     }
 }

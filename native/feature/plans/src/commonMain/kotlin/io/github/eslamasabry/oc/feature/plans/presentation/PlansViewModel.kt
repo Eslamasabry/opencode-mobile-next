@@ -135,7 +135,10 @@ public class PlansViewModel(
         controls.value = controls.value.copy(ask = null)
         perform {
             when {
-                !ask.enable -> source.turnOffCollector(ask.collector.profile)
+                // A remote collector is withdrawn by revoking consent; only In-app Ubuntu runs
+                // the local turn-off script (B-AGENT-314).
+                !ask.enable && ask.collector.inApp -> source.turnOffCollector(ask.collector.profile)
+                !ask.enable -> source.consentRemoteCollector(ask.collector.profile, false)
                 ask.collector.inApp -> source.setUpCollector(ask.collector.profile)
                 else -> source.consentRemoteCollector(ask.collector.profile, true)
             }

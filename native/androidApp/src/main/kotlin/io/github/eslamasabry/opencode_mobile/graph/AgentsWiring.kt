@@ -219,12 +219,31 @@ class AppPaseoGatewayFactory(
      */
     private val titles = ConversationTitleMemory(KvAgentPrefs(stores.prefs, stores.lanes.app))
 
+    /**
+     * One background-work book per server for the app's lifetime (Flutter's shared book, B-AGENT-151),
+     * so a reconnect keeps a still-running command visible. Keyed by profile and origin; a small
+     * access-ordered bound drops the least recently used server.
+     */
+    private val backgroundBooks =
+        object : LinkedHashMap<String, PaseoBackgroundWork>(16, 0.75f, true) {
+            override fun removeEldestEntry(
+                eldest: MutableMap.MutableEntry<String, PaseoBackgroundWork>?
+            ): Boolean = size > 32
+        }
+
+    private fun backgroundBook(spec: GatewaySpec): PaseoBackgroundWork =
+        synchronized(backgroundBooks) {
+            backgroundBooks.getOrPut("${spec.profile.id.raw}|${spec.profile.origin}") {
+                PaseoBackgroundWork(spec)
+            }
+        }
+
     val paseo =
         PaseoGatewayFactory(
             OkHttpPaseoSockets(),
             dispatchers,
             clock,
-            backgroundTasks = ::PaseoBackgroundWork,
+            backgroundTasks = ::backgroundBook,
             payloadUse = payloads::callbackFor,
             savedTitles = { profile, key ->
                 // Before the migration gate opens the store refuses reads: no saved title then.

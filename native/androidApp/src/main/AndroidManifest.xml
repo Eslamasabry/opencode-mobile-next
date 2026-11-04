@@ -43,7 +43,9 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
-        <activity android:name=".WidgetRouteActivity" android:exported="false" android:excludeFromRecents="true" />
+        <!-- Widget trampoline (B-AGENT-317): shows nothing, like ScheduleOpenActivity. -->
+        <activity android:name=".WidgetRouteActivity" android:exported="false" android:excludeFromRecents="true"
+            android:noHistory="true" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity android:name=".WidgetOverlayActivity" android:exported="false" android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize" />
         <meta-data android:name="io.github.eslamasabry.opencode_mobile.WIDGET_OVERLAY_READY" android:value="true" />
         <service android:name="io.github.eslamasabry.oc.android.termux.GitRepairResultService" android:exported="false" />

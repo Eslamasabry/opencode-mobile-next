@@ -91,7 +91,7 @@ class ProjectLifecycleGuardTest {
     @Test
     fun `B-LINUX-028 a reinstall recreates the proc bindings instead of reusing deleted files`() {
         val linux = source("BuiltinLinux.kt") ?: return
-        assertTrue("private val fakeProcBinds: List<String> get()" in linux)
+        assertTrue(Regex("""private val fakeProcBinds: List<String>\s+get\(\)""").containsMatchIn(linux))
         assertTrue("private val fakeProcBinds: List<String> by lazy" !in linux)
     }
 
