@@ -42,12 +42,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.intOrNull
 
 /**
  * Activity uses the adopted preferences and the profile deletion lane; no optimistic writes reach
@@ -58,7 +54,8 @@ import kotlinx.serialization.json.intOrNull
 @Inject
 class AppAttentionState(
     private val stores: PreviewStores,
-    private val activities: AppAutomaticActivities,
+    private val activities: AppActivityHistory,
+    private val policies: AppAutomationPolicies,
     private val connections: ConnectionRegistry,
     private val redactor: Redactor,
     private val clock: Clock,
@@ -97,8 +94,9 @@ class AppAttentionState(
                     val ids = saved.map { it.id }.toSet()
                     for (id in (histories.keys - ids).toList()) {
                         historyJobs.remove(id)?.cancel()
-                        histories.remove(id)?.dispose()
-                        activities.forget(id)
+                        histories.remove(id)
+                        // The after-row cleaner owns erasure and retry; never dispose its owner here.
+                        activities.forgetRemoved(id)
                         undoResults.keys.removeAll { it.profile == id.raw }
                     }
                     for (owner in saved) {
@@ -270,17 +268,10 @@ class AppAttentionState(
                 ?.value
                 ?.let(MonitorNotifyRules::fromJson)
         if (rules?.enabled != true) return false
-        val raw =
-            (stores.prefs.get("oc.automation.${id.raw}") as? PrefValue.Str)?.value ?: return false
-        val policy =
-            try {
-                Json.parseToJsonElement(raw) as? JsonObject
-            } catch (_: IllegalArgumentException) {
-                null
-            } ?: return false
-        return (policy["version"] as? JsonPrimitive)?.intOrNull == 1 &&
-            ((policy["behaviors"] as? JsonObject)?.get("monitorOtherServers") as? JsonPrimitive)
-                ?.booleanOrNull == true
+        return policies.allows(
+            id,
+            io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior.MonitorOtherServers,
+        )
     }
 
     private suspend fun refreshGraph(id: ProfileId, graph: ConnectionGraph) {
@@ -376,36 +367,6 @@ class AppAttentionState(
             val id = ProfileId(profile)
             if (stores.profiles.profile(id) == null)
                 return@withContext Outcome.Failed(Failure.StorageRefused())
-            val key = "oc.automation." + profile
-            val existing = stores.prefs.get(key)
-            val raw = (existing as? PrefValue.Str)?.value
-            val previous =
-                if (raw == null) null
-                else
-                    try {
-                        Json.parseToJsonElement(raw) as? JsonObject
-                    } catch (_: IllegalArgumentException) {
-                        null
-                    }
-            if (
-                existing != null &&
-                    (previous == null || (previous["version"] as? JsonPrimitive)?.intOrNull != 1)
-            ) {
-                settingsSaveFailed = true
-                publish()
-                return@withContext Outcome.Failed(Failure.StorageRefused())
-            }
-            val values: MutableMap<String, JsonElement> =
-                previous?.toMutableMap()
-                    ?: mutableMapOf(
-                        "version" to JsonPrimitive(1),
-                        "supervision" to JsonPrimitive("high"),
-                        "autoApprove" to JsonPrimitive(false),
-                        "autoMergeOnGreen" to JsonPrimitive(false),
-                    )
-            val behaviors = (values["behaviors"] as? JsonObject)?.toMutableMap() ?: mutableMapOf()
-            behaviors["monitorOtherServers"] = JsonPrimitive(enabled)
-            values["behaviors"] = JsonObject(behaviors)
             val rulesKey = "oc.notifyRules." + profile
             val oldRules = (stores.prefs.get(rulesKey) as? PrefValue.Str)?.value
             val rules = oldRules?.let(MonitorNotifyRules::fromJson)
@@ -414,9 +375,20 @@ class AppAttentionState(
                 publish()
                 return@withContext Outcome.Failed(Failure.StorageRefused())
             }
+            val policySaved =
+                policies.setBehavior(
+                    id,
+                    io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior
+                        .MonitorOtherServers,
+                    enabled,
+                )
+            if (policySaved is Outcome.Failed) {
+                settingsSaveFailed = true
+                publish()
+                return@withContext policySaved
+            }
             val result =
                 stores.prefs.commit(stores.lanes.forProfile(id)) {
-                    putString(key, JsonObject(values).toString())
                     putString(
                         rulesKey,
                         (rules ?: MonitorNotifyRules()).copy(enabled = enabled).toJson(),

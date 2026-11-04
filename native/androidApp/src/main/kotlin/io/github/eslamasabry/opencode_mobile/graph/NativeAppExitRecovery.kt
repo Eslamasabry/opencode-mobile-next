@@ -21,7 +21,6 @@ import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitKind
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitRecord
 import io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior
-import io.github.eslamasabry.oc.engine.requests.consent.AutomationPolicy
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitKind
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitNotice
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitNotices
@@ -45,6 +44,7 @@ class NativeAppExitRecovery(
     private val dispatchers: AppDispatchers,
     private val scope: AppCoroutineScope,
     private val stores: PreviewStores,
+    private val policies: AppAutomationPolicies,
     private val runtime: BuiltinRuntime,
     private val phoneServer: PhoneServerSource,
     private val diagnostics: Diagnostics,
@@ -139,11 +139,8 @@ class NativeAppExitRecovery(
         if (mutable.value === shown && shown != null) mutable.value = shown.copy(restored = true)
     }
 
-    private fun policyAllows(profile: String): Boolean {
-        val value = stores.prefs.get("oc.automation.$profile") ?: return true
-        val raw = (value as? PrefValue.Str)?.value ?: return false
-        return AutomationPolicy.fromJson(raw).allows(AutomationBehavior.RestartPhoneServer)
-    }
+    private fun policyAllows(profile: String): Boolean =
+        policies.allows(ProfileId(profile), AutomationBehavior.RestartPhoneServer)
 
     /** Matches Flutter's seen watermark; only numeric metadata crosses the OS boundary. */
     private fun lastExit(): ExitRecord? {

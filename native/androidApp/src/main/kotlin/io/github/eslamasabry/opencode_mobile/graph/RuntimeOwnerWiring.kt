@@ -47,7 +47,7 @@ class RuntimeProfileOwner(
             }
         )
     override val owner: String = ":engine:runtime (phone server owner)"
-    override val order: Int = DeletionStep.DEVICE_SURFACES
+    override val order: Int = DeletionStep.AFTER_ROW
     override val guardsSweep: Boolean = true
 
     suspend fun claim(profile: ProfileId, origin: ServerOrigin): Outcome<Unit> {

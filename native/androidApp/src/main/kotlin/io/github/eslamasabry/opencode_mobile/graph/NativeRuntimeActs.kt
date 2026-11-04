@@ -6,18 +6,22 @@ import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.attention.activity.AutomaticActKind
 import kotlin.time.Instant
 import kotlinx.coroutines.withContext
 
-/** Confirmed restarts use Activity's durable writer; archived receipts never revive an inverse. */
+/**
+ * Confirmed restarts use the same admitted history owner as the Inbox (Activity's durable writer);
+ * archived receipts never revive an inverse.
+ */
 @Inject
 @SingleIn(AppScope::class)
 class NativeRuntimeActs(
     private val stores: PreviewStores,
-    private val activities: AppAutomaticActivities,
+    private val activities: AppActivityHistory,
     private val dispatchers: AppDispatchers,
 ) {
     suspend fun recordRestart(
@@ -35,8 +39,12 @@ class NativeRuntimeActs(
             )
                 return@withContext refused()
             val id = ProfileId(profileId)
-            val profile = stores.profiles.profile(id) ?: return@withContext refused()
-            val activity = activities.forProfile(id) ?: return@withContext refused()
+            val profile =
+                stores.profiles.profile(id)
+                    ?: return@withContext Outcome.Failed(Failure.Refused(RefusalReason.ProfileDeleted))
+            val activity =
+                activities.forProfile(id)
+                    ?: return@withContext Outcome.Failed(Failure.Refused(RefusalReason.ProfileDeleted))
             val recorded =
                 activity.record(
                     eventId = eventId,

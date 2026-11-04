@@ -55,6 +55,10 @@ public class SignInTerminalViewModel(
 
     override fun openSignInPage(): Unit = presenter.openSignInPage()
 
+    override fun confirmSignInPage(): Unit = presenter.confirmSignInPage()
+
+    override fun dismissSignInPage(): Unit = presenter.dismissSignInPage()
+
     override fun copyCode(): Unit = presenter.copyCode()
 
     override fun send(line: String): Unit = presenter.send(line)

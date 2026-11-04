@@ -6,18 +6,8 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
-// The seams the sign-in terminal (plan 07 G03, plan 17 §1.5 "Sign in", AGENTS-BACKENDS-13/14)
-// needs. Each mirrors an
-// engine contract that does not compile or exist yet in this tree; the binding above both adapts
-// one to the other.
-//   - TerminalHost / TerminalTarget / TerminalModel: plan 17 §2.6 (owner :engine:project, frozen in
-// contracts/s3.md).
-//     TODO(S3-TERMMIN → :engine:project): replace with the engine's types when they land.
-//   - SignInAgents: :engine:agents AgentSignIn + SignInOutputReader + AgentAuth (S3-AGENTSE), which
-// uses Failure.Net and
-//     does not compile on the flat core contract until INTEGRATE-W2.
-//   - SignInForeground: plan 11 §9.1 ForegroundWork.begin(SignIn) (W11-09).
-//   - SignInLinks: ExternalLinkPolicy → ExternalLinkOpener (16 SI-1, CR11-14).
+// The sign-in screen's ports are bound to the agents engine, native terminal and foreground
+// owner by AgentTerminalWiring. Every page handoff passes the external-link policy.
 
 /** The phone's terminal sessions (plan 17 §2.6). Sessions belong to the host, not a screen. */
 public interface TerminalHost {
@@ -195,6 +185,20 @@ public sealed interface SignInAdmission {
  */
 public fun interface SignInLinks {
     public suspend fun open(url: String): Outcome<Unit>
+
+    /** A platform can require a visible host confirmation before opening an untrusted page. */
+    public fun check(url: String): SignInLinkCheck = SignInLinkCheck.Direct
+
+    /** Called only after the person confirms the exact page named by [check]. */
+    public suspend fun openConfirmed(url: String): Outcome<Unit> = open(url)
+}
+
+public sealed interface SignInLinkCheck {
+    public data object Direct : SignInLinkCheck
+
+    public data object Refused : SignInLinkCheck
+
+    public data class Ask(val host: String, val insecure: Boolean) : SignInLinkCheck
 }
 
 /**
