@@ -68,6 +68,8 @@ public enum class FileNotice {
     MentionFailed,
     Saved,
     SaveFailed,
+    /** A Markdown link the link policy refused (or the opener could not hand over). */
+    LinkRefused,
 }
 
 public sealed interface PdfPageUi {
@@ -168,7 +170,7 @@ public class FileViewModel(
     override fun openLink(url: String) {
         val host = links.host(url)
         local.update {
-            if (host == null) it.copy(notice = FileNotice.OpenWithFailed)
+            if (host == null) it.copy(notice = FileNotice.LinkRefused)
             else it.copy(linkUrl = url, linkHost = host)
         }
     }
@@ -177,7 +179,7 @@ public class FileViewModel(
         val url = local.value.linkUrl ?: return
         cancelLink()
         if (links.openConfirmed(url) is Outcome.Failed)
-            local.update { it.copy(notice = FileNotice.OpenWithFailed) }
+            local.update { it.copy(notice = FileNotice.LinkRefused) }
     }
 
     override fun cancelLink() {

@@ -51,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkBody
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkTitle
@@ -341,4 +342,5 @@ private fun noticeWords(notice: FileNotice, name: String): String =
         FileNotice.MentionFailed -> stringResource(Res.string.filesMentionFailed)
         FileNotice.Saved -> stringResource(Res.string.readerUiSavedDevice, name)
         FileNotice.SaveFailed -> stringResource(Res.string.filesSaveFailed)
+        FileNotice.LinkRefused -> stringResource(Res.string.chatFeelLinkRefused)
     }
