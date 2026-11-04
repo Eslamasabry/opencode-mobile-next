@@ -121,6 +121,7 @@ dependencies {
             ":engine:updates", // P12-PLATFORM: in-app update notice
             ":feature:updates", // P12-PLATFORM: Updates page
             ":feature:background", // BUILD-ANDROID-BG-PLATFORM: Settings › Background
+            ":android:platform", // Android share chooser and activity ports
             ":android:tiles", // P12-PLATFORM: QS tiles, shortcuts, share, update installer
             ":android:widgets", // P12-PLATFORM: home-screen widgets
             ":feature:preview", // PREVIEW-QR
@@ -141,14 +142,16 @@ dependencies {
             ":engine:voice",
             ":android:voice",
             ":feature:voice",
-            ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its native libraries)
+            ":android:linux", // P12-FIX-LINUX-VOICE: the real built-in Linux (proot runtime + its
+                              // native libraries)
             ":engine:linuxsetup", // P12-BUILD-RUNTIME-C: the phone setup engine
-            ":engine:setupscripts", // P12-BUILD-RUNTIME-C: the setup prelude the job scripts run under
+            ":engine:setupscripts", // P12-BUILD-RUNTIME-C: the setup prelude the job scripts run
+                                    // under
             ":engine:lifecycle", // P12-BUILD-RUNTIME-C: this-phone mark and lifecycle rules
             ":feature:phonesetup", // P12-BUILD-RUNTIME-C: Set up OpenCode on this phone
             ":feature:diagnostics", // BUILD-DIAGNOSTICS-ATTENTION
             ":feature:devservices", // BUILD-RUNTIME-A: Development services (saved commands, dev
-                                    // servers found)
+            // servers found)
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
             ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
         )

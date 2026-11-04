@@ -12,12 +12,16 @@ import kotlinx.collections.immutable.persistentListOf
 public data class ServersUi(
     val servers: ImmutableList<SavedServer> = persistentListOf(),
     val busy: Boolean = false,
+    val monitoring: Map<ProfileId, ServerMonitorUi> = emptyMap(),
     val newConversation: Boolean = false,
     val cleartextAllowed: Boolean = false,
     val issue: ServerIssue? = null,
     val failure: Failure? = null,
     val savedGeneration: Int = 0,
-    /** Ticks when a pairing code or share link waits in the inbox (PREVIEW-QR); the form takes it once. */
+    /**
+     * Ticks when a pairing code or share link waits in the inbox (PREVIEW-QR); the form takes it
+     * once.
+     */
     val pairingArrival: Int = 0,
     val pairingProblem: PairingProblem? = null,
 )
@@ -32,6 +36,12 @@ public enum class ServerIssue {
 }
 
 public interface ServersActions {
+    public fun monitor(id: ProfileId, enabled: Boolean) {}
+
+    public fun monitorWifi(id: ProfileId, enabled: Boolean) {}
+
+    public fun monitorCheckIn(id: ProfileId, minutes: Int?) {}
+
     public fun back()
 
     public fun allowCleartext(allowed: Boolean, address: String)
@@ -46,22 +56,30 @@ public interface ServersActions {
 
     /** Settings › Agents (agents on this phone and on Paseo computers). */
     public fun openAgents() {}
+
     /** Opens the pairing scanner (PREVIEW-QR). */
     public fun scanPairing() {}
 
-    /** Pasted text: a pairing code or a share link fills the form; anything else is a plain problem. */
+    /**
+     * Pasted text: a pairing code or a share link fills the form; anything else is a plain problem.
+     */
     public fun pastePairing(text: String?) {}
 
     /** The waiting pairing, once; it carries the password, so it never enters [ServersUi]. */
     public fun takePairing(): PairingFill? = null
 
-    /** The unsaved password, kept in memory only while the form is under another page (never saved state). */
+    /**
+     * The unsaved password, kept in memory only while the form is under another page (never saved
+     * state).
+     */
     public fun holdPassword(text: String) {}
 
     /** What [holdPassword] kept; empty when nothing was typed. */
     public fun heldPassword(): String = ""
+
     /** The server's scheduled prompts (:feature:schedules). */
     public fun openSchedules(id: ProfileId) {}
+
     /** Usage and cost this connected server reports (unit P12-SEARCH-USAGE). */
     public fun openUsage(id: ProfileId) {}
 
