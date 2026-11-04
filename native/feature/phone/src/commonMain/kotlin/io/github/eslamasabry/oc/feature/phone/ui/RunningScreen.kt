@@ -45,14 +45,16 @@ import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.linuxProcessHeavy
+import io.github.eslamasabry.oc.ui.words.res.linuxProcessMembers
 import io.github.eslamasabry.oc.ui.words.res.runningDetailBusy
 import io.github.eslamasabry.oc.ui.words.res.runningDetailElapsed
 import io.github.eslamasabry.oc.ui.words.res.runningDetailHelpers
 import io.github.eslamasabry.oc.ui.words.res.runningDetailIdle
 import io.github.eslamasabry.oc.ui.words.res.runningDetailMemory
 import io.github.eslamasabry.oc.ui.words.res.runningDetailPid
-import io.github.eslamasabry.oc.ui.words.res.linuxProcessHeavy
-import io.github.eslamasabry.oc.ui.words.res.linuxProcessMembers
+import io.github.eslamasabry.oc.ui.words.res.runningOrphanCpuWithoutOwner
+import io.github.eslamasabry.oc.ui.words.res.runningOrphanParentGone
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneEmpty
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneEmptyBody
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneLimitBody
@@ -234,14 +236,25 @@ private fun ProcessRow(row: ProcessRowUi, stopping: Boolean, actions: RunningAct
                 row.cpuPercent?.let { "⁦$it %⁩" },
                 row.memoryMb?.let { stringResource(Res.string.termuxProcsMemoryMb, it) }
                     ?: row.memoryBytes?.let {
-                        stringResource(Res.string.runningDetailMemory, (it / 1048576).coerceAtLeast(1))
+                        stringResource(
+                            Res.string.runningDetailMemory,
+                            (it / 1048576).coerceAtLeast(1),
+                        )
                     },
                 row.elapsedSeconds?.let { DurationWords.of(it).words() },
                 if (row.memberCount > 1)
                     stringResource(Res.string.linuxProcessMembers, row.memberCount)
                 else null,
                 if (row.heavy) stringResource(Res.string.linuxProcessHeavy) else null,
-                if (row.leftBehind) stringResource(Res.string.runningPhoneMarkStuck) else null,
+                when (row.orphanReason) {
+                    io.github.eslamasabry.oc.feature.phone.presentation.ProcessOrphanReason
+                        .ParentGone -> stringResource(Res.string.runningOrphanParentGone)
+                    io.github.eslamasabry.oc.feature.phone.presentation.ProcessOrphanReason
+                        .CpuWithoutOwner -> stringResource(Res.string.runningOrphanCpuWithoutOwner)
+                    null ->
+                        if (row.leftBehind) stringResource(Res.string.runningPhoneMarkStuck)
+                        else null
+                },
             )
             .joinToString(" · ")
     val supporting =
