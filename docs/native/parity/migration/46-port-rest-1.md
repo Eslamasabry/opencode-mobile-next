@@ -1,6 +1,6 @@
 # Migration 46 — Flutter platform, Linux, protocol and other code (part 1)
 
-Counts (11/78 files recorded): already there **0**; ported now **11**; not needed **0**; blocked **0**.
+Counts (21/78 files recorded): already there **10**; ported now **11**; not needed **0**; blocked **0**.
 
 Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`; branch `p12x/46-port-rest-1`.
 Finish line: all 78 source files have a behavior-based disposition and missing feasible native behavior is wired.
@@ -18,6 +18,16 @@ Non-goals: tests, APKs, pushes, signing, releases, and features explicitly defer
 - `lib/domain/session_history.dart` — ported now: `native/core/domain/src/commonMain/kotlin/io/github/eslamasabry/oc/core/domain/SessionHistory.kt:17` and the real chat reader `native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/world/GraphChatWorld.kt:657` now skip fully staged-away pages, retain the raw boundary page, refuse cursor cycles/source replacement and rehydrate after staged-revert changes; failed session snapshots show a retryable load failure.
 - `lib/local_llm/local_llm_controller.dart` — ported now — retained model inventory/deletion runs through `native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/LocalModelStorageWiring.kt:30`; Gemma download/load/generation is deliberately deferred by plan/02 §3.5 S02-3.
 - `lib/local_llm/local_llm_ui.dart` — ported now — Settings › This app › Storage exposes measured retained model files with kit Delete/confirmation and native EN/AR copy at `native/feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/ui/LocalModelsPage.kt:31`; assistant settings/summary runtime UI remains deferred by plan/02 §3.5.
+- `lib/api2/http_keep_alive_io.dart` — already there: `native/core/net/src/jvmShared/kotlin/io/github/eslamasabry/oc/core/net/okhttp/OkHttpEngineFactory.kt:49` and `native/core/net/src/jvmShared/kotlin/io/github/eslamasabry/oc/core/net/okhttp/TrustGate.kt:69` enforce per-connection keepalive, consent, pins and latched certificate mismatch.
+- `lib/api2/models/models_catalog.dart` — already there: `native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/wire/Catalog.kt:66` retains catalog/provider/agent/skill/config semantics, used by the live picker projection in `native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2Gateway.kt:976`.
+- `lib/api2/models/models_inbox.dart` — already there: `native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/wire/Requests.kt:13` preserves inbox/permission/forms and conditional fields; live requests are wired by `native/engine/requests/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/requests/RequestsEngine.kt:51`.
+- `lib/api2/reconnect_backoff.dart` — already there: `native/core/net/src/commonMain/kotlin/io/github/eslamasabry/oc/core/net/stream/BackoffPolicy.kt:52` implements foreground doubling/16s cap, two quick hidden retries then 60–120s jitter, used by the native OC2 event loop.
+- `lib/builtin/deliberate_stop.dart` — already there: native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/LinuxVoiceWiring.kt:596 reads native wanted/userStopped authority; :1151 persists the explicit stop before draining and confirmed starts clear native stop intent, preventing accidental revival and misleading recovery notices.
+- `lib/builtin/phone_agent_work_watch.dart` — already there: native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/NativeChatLeases.kt:96 captures helper owner and :111 dispatches real named leases; bounded renewals, retained capped names and owed releases reconcile actual chat statuses and native monotonic lifetime.
+- `lib/builtin/setup/setup_engine/job_record.dart` — already there: native/engine/runtime/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/runtime/setup/SetupJobRecord.kt:17 parses persisted jobs/components/params and persistence failures; NativePhoneSetup.kt:71 reads the actual SetupRunner record.
+- `lib/builtin/setup/setup_engine/progress_helpers.dart` — already there: native/engine/runtime/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/runtime/setup/SetupPlanning.kt:33 preserves resume parameters, dependency order, monotonic progress, ETA and typed errors; NativePhoneSetup.kt:140 supplies localized job copy.
+- `lib/domain/genui/gen_ui_mapping.dart` — already there: `native/engine/cards/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/cards/CardCodec.kt:77` and `native/engine/cards/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/cards/CardAnswers.kt:6` decode all card body/ask variants for the live chat card projection; interactive availability remains independently qualification-gated.
+- `lib/domain/genui/gen_ui_validation.dart` — already there: `native/engine/cards/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/cards/CardValidator.kt:411` enforces bounded trees, canonical values, secret-field refusal, schema/ask constraints and safe HTTPS nodes through `CardCodec.fromPart`; interactive availability remains independently qualification-gated.
 
 The native implementations include shared-storage file/APK handoff with a visible permission retry, localized age labels, retained assistant-model deletion, advisory agent build caps/full-speed settings, native thermal scheduling, visible-only Linux vitals, bounded card history, staged-history pagination, typed error fallback copy, Fork, project inventory and guarded launcher routing. Partial protocol/launch changes remain marked blocked where the rest of that file still lacks a complete native journey.
 
@@ -28,6 +38,7 @@ Validation: from `native/`, JDK 21, serialized with the shared machine build loc
 ```
 
 - `build/native-rest-46/compile-3.log`: both requested compilation tasks passed together (39s).
+- `build/native-rest-46/compile-21.log`: both requested compilation tasks passed together (3s).
 
 The first two attempts exposed an unavailable resource-environment import and a void Android Intent setter; both were corrected before the successful checkpoint. No tests were written, run, weakened or removed; no Flutter/preflight/test runner, APK, signing, push, publication or release command was run. Existing compiler warnings remain in untouched code. Kotlin/XML diff and source-manifest checks are static review only.
 
