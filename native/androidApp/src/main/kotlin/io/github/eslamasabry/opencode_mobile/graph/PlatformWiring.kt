@@ -739,6 +739,8 @@ class PlatformHub(
             )
         }
         val servers = JSONArray()
+        // A deleted server leaves no remembered online/offline stamp behind.
+        serverSince.keys.retainAll(model.servers.map { it.id }.toSet())
         for (server in model.servers) {
             val since = serverSince[server.id]?.takeIf { it.first == server.online }?.second ?: now
             serverSince[server.id] = server.online to since
