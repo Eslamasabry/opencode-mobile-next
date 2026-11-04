@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -49,8 +50,9 @@ public class ServersViewModel(
      */
     private val probe: PairingProbe = NoPairingProbe,
     private val monitoring: Set<ServerMonitoring> = emptySet(),
+    private val connectionChecks: Set<ServerConnectionCheck> = emptySet(),
 ) : ViewModel(), ServersActions {
-    private val local = MutableStateFlow(ServersUi(newConversation = route != null))
+    private val local = MutableStateFlow(ServersUi(newConversation = route != null, connectionCheckAvailable = connectionChecks.size == 1))
     public val state: StateFlow<ServersUi> =
         combine(local, connections.servers, connections.busy) { own, servers, busy ->
                 own.copy(servers = servers, busy = own.busy || busy)
@@ -105,6 +107,36 @@ public class ServersViewModel(
     private fun publish(fill: PairingFill) {
         ready = fill
         local.update { it.copy(pairingArrival = it.pairingArrival + 1) }
+    }
+
+    private var checkJob: Job? = null
+    private var checkRevision = 0
+
+    override fun checkConnection(id: ProfileId) {
+        val checker = connectionChecks.singleOrNull() ?: return
+        val server = connections.servers.value.firstOrNull { it.id == id } ?: return
+        checkJob?.cancel()
+        val revision = ++checkRevision
+        val initial = ConnectionCheckUi(id, server.name)
+        local.update { it.copy(connectionCheck = initial) }
+        checkJob = viewModelScope.launch {
+            val facts = when (val result = checker.inspect(id)) {
+                is Outcome.Ok -> result.value
+                is Outcome.Failed -> ConnectionCheckFacts(result, ConnectionCheckStream.NotConnected, 0)
+            }
+            if (revision == checkRevision) {
+                local.update {
+                    it.copy(connectionCheck = if (connections.servers.value.any { saved -> saved.id == id }) initial.finish(facts) else null)
+                }
+            }
+        }
+    }
+
+    override fun closeConnectionCheck() {
+        ++checkRevision
+        checkJob?.cancel()
+        checkJob = null
+        local.update { it.copy(connectionCheck = null) }
     }
 
     override fun monitor(id: ProfileId, enabled: Boolean) = monitorOperation {

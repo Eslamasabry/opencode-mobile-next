@@ -551,13 +551,16 @@ public fun BasicComposer(
                     }
                     if (sections.isEmpty()) KitText(stringResource(Res.string.chatModelsNoMatch))
                     sections.forEach { section ->
-                        KitRowGroup(label = section.providerName ?: stringResource(Res.string.chatModelsRecent)) {
+                        KitRowGroup(label = section.providerName?.let {
+                            providerRouteName(section.rows.first().model.providerId, it)
+                        } ?: stringResource(Res.string.chatModelsRecent)) {
                             section.rows.forEach { pick ->
                                 KitChoiceRow(
                                     title = pick.model.label,
                                     selected = pick.current,
                                     // In "Recent" the provider tells equal names apart.
-                                    supporting = if (section.providerName == null) pick.model.providerName else null,
+                                    supporting = if (section.providerName == null)
+                                        providerRouteName(pick.model.providerId, pick.model.providerName) else null,
                                     tag = if (pick.current) currentTag else null,
                                     onClick = { selectAndClose(pick.model) },
                                     modifier = Modifier.testTag("chat-model-choice"),

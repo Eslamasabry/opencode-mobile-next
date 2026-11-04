@@ -86,6 +86,7 @@ import io.github.eslamasabry.oc.ui.words.res.serverFailureServer
 import io.github.eslamasabry.oc.ui.words.res.serverFailureStorage
 import io.github.eslamasabry.oc.ui.words.res.serverFailureTimeout
 import io.github.eslamasabry.oc.ui.words.res.serverFailureUnreadableReply
+import io.github.eslamasabry.oc.ui.words.res.connectionCheckAction
 import io.github.eslamasabry.oc.ui.words.res.serversAdd
 import io.github.eslamasabry.oc.ui.words.res.serversAddress
 import io.github.eslamasabry.oc.ui.words.res.serversCancel
@@ -189,6 +190,7 @@ public fun ServersScreen(
             }
     }
     HostSetupSheet(hostSetup) { hostSetup = false }
+    ConnectionCheckSheet(state.connectionCheck, actions)
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else KitEnabled.Enabled
@@ -262,6 +264,14 @@ public fun ServersScreen(
                     }
                     if (server.connected) KitText(stringResource(Res.string.serversConnected))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                        if (state.connectionCheckAvailable) {
+                            KitButton(
+                                stringResource(Res.string.connectionCheckAction),
+                                { actions.checkConnection(server.id) },
+                                role = KitButtonRole.Secondary,
+                                enabled = enabled,
+                            )
+                        }
                         KitButton(
                             stringResource(Res.string.serversCreate),
                             { actions.create(server.id) },

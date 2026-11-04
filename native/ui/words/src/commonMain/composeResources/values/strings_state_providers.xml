@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateProviderZaiGlobal">Z.AI · Global</string>
+    <string name="stateProviderZaiChina">Z.AI · China</string>
+    <string name="stateProviderZaiPlanGlobal">Z.AI Coding Plan · Global</string>
+    <string name="stateProviderZaiPlanChina">Z.AI Coding Plan · China</string>
+</resources>

@@ -7,6 +7,8 @@ import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.core.model.StreamStatus
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +36,10 @@ public class ConnectionSession(
     public val status: StateFlow<StreamStatus> = mutableStatus.asStateFlow()
     public val capabilities: StateFlow<ServerCapabilities>
         get() = gateway.capabilities
+
+    internal fun followTransport(scope: CoroutineScope) {
+        scope.launch { gateway.events.status.collect { mutableStatus.value = it } }
+    }
 
     internal fun markConnected() {
         mutableStatus.value = StreamStatus.Connected

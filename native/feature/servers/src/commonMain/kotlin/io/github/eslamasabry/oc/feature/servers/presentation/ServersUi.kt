@@ -12,6 +12,8 @@ import kotlinx.collections.immutable.persistentListOf
 public data class ServersUi(
     val servers: ImmutableList<SavedServer> = persistentListOf(),
     val busy: Boolean = false,
+    val connectionCheckAvailable: Boolean = false,
+    val connectionCheck: ConnectionCheckUi? = null,
     val monitoring: Map<ProfileId, ServerMonitorUi> = emptyMap(),
     val newConversation: Boolean = false,
     val cleartextAllowed: Boolean = false,
@@ -36,6 +38,10 @@ public enum class ServerIssue {
 }
 
 public interface ServersActions {
+    public fun checkConnection(id: ProfileId) {}
+
+    public fun closeConnectionCheck() {}
+
     public fun monitor(id: ProfileId, enabled: Boolean) {}
 
     public fun monitorWifi(id: ProfileId, enabled: Boolean) {}

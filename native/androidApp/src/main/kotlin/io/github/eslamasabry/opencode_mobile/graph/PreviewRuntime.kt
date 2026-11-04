@@ -5,6 +5,9 @@ import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.*
 import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.model.SessionStatus
+import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -56,6 +59,14 @@ class PreviewRuntime(
     private var feed: ChatFeed? = null
     private var feedJob: Job? = null
     private val eventJobs = mutableMapOf<ProfileId, Job>()
+    private val refreshJobs = mutableMapOf<ProfileId, Job>()
+    private val refreshRevision = mutableMapOf<ProfileId, Long>()
+    private val requestRevision = mutableMapOf<ProfileId, Long>()
+    private val runRevision = mutableMapOf<ProfileId, Long>()
+    private val failedRuns = mutableMapOf<ProfileId, MutableSet<SessionId>>()
+    private val sessionSignals = mutableMapOf<ProfileId, MutableMap<SessionId, Long>>()
+    private val runSignals = mutableMapOf<ProfileId, MutableMap<SessionId, Long>>()
+    private val requests = mutableMapOf<ProfileId, MutableMap<Pair<String, String>, SessionId>>()
     // Retained only for a saved profile whose deletion reached the draft fence.
     private val draftRecovery = mutableSetOf<ProfileId>()
 
@@ -80,7 +91,7 @@ class PreviewRuntime(
                         it.id,
                         it.profile.name,
                         it.profile.baseUrl,
-                        registry.live.value.containsKey(it.id),
+                        registry.live.value[it.id]?.session?.status?.value == StreamStatus.Connected,
                     )
                 }
                 .toImmutableList()
@@ -186,25 +197,101 @@ class PreviewRuntime(
                     listings[id] = MutableStateFlow(OpenCodeListing(loading = true))
                     rebuildFeed()
                     eventJobs[id] = scope.launch {
+                        launch { graph.session.status.collect { publishServers() } }
                         graph.session.server.events.all.collect { envelope ->
-                            when (envelope.event) {
-                                GatewayEvent.Connected,
-                                is GatewayEvent.SessionUpserted,
-                                is GatewayEvent.SessionChanged,
-                                is GatewayEvent.SessionDeleted,
-                                is GatewayEvent.RunStarted,
-                                is GatewayEvent.RunEnded ->
-                                    order.withLock {
-                                        if (registry.live.value[id] === graph) refreshOne(id)
-                                    }
-                                else -> Unit
-                            }
+                            if (registry.live.value[id] !== graph) return@collect
+                            if (observeFeedEvent(id, envelope.event)) scheduleRefresh(id)
                         }
                     }
                 }
                 return refreshOne(id)
             }
         }
+    }
+
+    /** A first-event deadline: busy streams cannot postpone reconciliation indefinitely. */
+    private fun scheduleRefresh(id: ProfileId) {
+        refreshRevision[id] = (refreshRevision[id] ?: 0) + 1
+        if (refreshJobs[id]?.isActive == true) return
+        refreshJobs[id] = scope.launch {
+            try {
+                do {
+                    delay(2_000)
+                    val revision = refreshRevision[id]
+                    order.withLock { if (listings.containsKey(id)) refreshOne(id) }
+                } while (listings.containsKey(id) && refreshRevision[id] != revision)
+            } finally {
+                refreshJobs.remove(id)
+            }
+        }
+    }
+
+    /** Live evidence outranks reads which left before it, including run ends during slow inventory reads. */
+    private fun observeFeedEvent(id: ProfileId, event: GatewayEvent): Boolean {
+        val listing = listings[id] ?: return false
+        val current = listing.value
+        fun status(session: SessionId, status: SessionStatus, failed: Boolean? = null) {
+            val next = (runRevision[id] ?: 0) + 1
+            runRevision[id] = next
+            runSignals.getOrPut(id) { mutableMapOf() }[session] = next
+            if (failed == true) failedRuns.getOrPut(id) { mutableSetOf() }.add(session)
+            if (failed == false) failedRuns[id]?.remove(session)
+            listing.value = listing.value.copy(
+                statuses = listing.value.statuses + (session to status),
+                sessions = if (failed == null) listing.value.sessions else listing.value.sessions.map {
+                    if (it.id == session) it.copy(lastRunFailed = failed) else it
+                },
+            )
+        }
+        fun request(kind: String, request: String, session: SessionId?) {
+            requestRevision[id] = (requestRevision[id] ?: 0) + 1
+            val pending = requests.getOrPut(id) { mutableMapOf() }
+            if (session == null) pending.remove(kind to request) else pending[kind to request] = session
+            listing.value = listing.value.copy(needsYou = pending.values.toSet())
+        }
+        val sessionEvent = when (event) {
+            is GatewayEvent.SessionDeleted -> event.sessionId
+            is GatewayEvent.SessionUpserted -> event.session.id
+            is GatewayEvent.SessionChanged -> event.sessionId
+            else -> null
+        }
+        sessionEvent?.let { sessionSignals.getOrPut(id) { mutableMapOf() }[it] = (refreshRevision[id] ?: 0) + 1 }
+        when (event) {
+            is GatewayEvent.RunStarted -> status(event.sessionId, SessionStatus.Busy, false)
+            is GatewayEvent.RunRetrying -> status(event.sessionId, SessionStatus.Retry, false)
+            is GatewayEvent.RunEnded -> status(event.sessionId, SessionStatus.Idle, when (event.outcome) {
+                is RunOutcome.Failed -> true
+                RunOutcome.Idle -> null
+                else -> false
+            })
+            is GatewayEvent.PermissionAsked -> request("permission", event.request.id.raw, event.request.sessionId)
+            is GatewayEvent.PermissionSettled -> request("permission", event.requestId.raw, null)
+            is GatewayEvent.FormCreated -> request("form", event.form.id.raw, event.form.sessionId)
+            is GatewayEvent.FormSettled -> request("form", event.formId.raw, null)
+            is GatewayEvent.SessionDeleted -> {
+                runSignals[id]?.remove(event.sessionId)
+                failedRuns[id]?.remove(event.sessionId)
+                requests[id]?.entries?.removeAll { it.value == event.sessionId }
+                listing.value = current.copy(
+                    sessions = current.sessions.filterNot { it.id == event.sessionId },
+                    statuses = current.statuses - event.sessionId,
+                    needsYou = requests[id].orEmpty().values.toSet(),
+                )
+            }
+            is GatewayEvent.SessionUpserted -> listing.value = current.copy(
+                sessions = current.sessions.filterNot { it.id == event.session.id } +
+                    event.session.copy(lastRunFailed = event.session.lastRunFailed || event.session.id in failedRuns[id].orEmpty()),
+            )
+            is GatewayEvent.SessionChanged -> listing.value = current.copy(sessions = current.sessions.map {
+                if (it.id != event.sessionId) it else it.copy(
+                    title = event.title ?: it.title,
+                    directory = if (event.replacesLocation) event.directory else it.directory,
+                )
+            })
+            GatewayEvent.Connected, is GatewayEvent.SessionViewed, is GatewayEvent.RefreshHint -> Unit
+            else -> return false
+        }
+        return true
     }
 
     private fun rebuildFeed() {
@@ -235,6 +322,9 @@ class PreviewRuntime(
                 ?: return Failure.Refused(RefusalReason.StaleScope)
                     .failed()
                     .atStage(ConnectionStage.LoadConversations)
+        val readEventRevision = refreshRevision[id] ?: 0
+        val readRunRevision = runRevision[id] ?: 0
+        val readRequestRevision = requestRevision[id] ?: 0
         when (val page = readSessionPages(graph.session.server)) {
             is Outcome.Failed -> {
                 listing.value = listing.value.copy(loading = false, failed = true)
@@ -246,16 +336,48 @@ class PreviewRuntime(
                         .failed()
                         .atStage(ConnectionStage.LoadConversations)
                 val statuses = graph.session.server.sessionStatuses()
+                val caps = graph.session.server.capabilities.value
+                val permissions = if (caps.permissionRequests) graph.session.server.pendingPermissions() else null
+                val questions = if (caps.legacyQuestionRequests) graph.session.server.pendingQuestions() else null
+                val forms = if (caps.forms) graph.session.server.pendingForms() else null
+                if (registry.live.value[id] !== graph) return Failure.Refused(RefusalReason.StaleScope).failed()
+                val pending = requests.getOrPut(id) { mutableMapOf() }
+                if ((requestRevision[id] ?: 0) == readRequestRevision) {
+                    fun replace(kind: String, entries: List<Pair<String, SessionId>>?) {
+                        if (entries == null) return // Unknown retains the last known asks.
+                        pending.keys.removeAll { it.first == kind }
+                        entries.forEach { (request, session) -> pending[kind to request] = session }
+                    }
+                    replace("permission", (permissions as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId })
+                    replace("question", (questions as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId })
+                    replace("form", (forms as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId })
+                }
+                val resolvedStatuses = ((statuses as? Outcome.Ok)?.value ?: listing.value.statuses).toMutableMap()
+                val newer = runSignals[id].orEmpty().filterValues { it > readRunRevision }.keys
+                for (session in newer) listing.value.statuses[session]?.let { resolvedStatuses[session] = it }
+                val liveSessions = listing.value.sessions.associateBy { it.id }
+                val changedSessions = sessionSignals[id].orEmpty().filterValues { it > readEventRevision }.keys
+                val inventory = page.value.sessions.filterNot { it.id in changedSessions } +
+                    changedSessions.mapNotNull { liveSessions[it] }
+                val sessions = inventory.map {
+                    if (it.id in failedRuns[id].orEmpty()) it.copy(lastRunFailed = true)
+                    else if (it.id in newer) it.copy(lastRunFailed = liveSessions[it.id]?.lastRunFailed ?: it.lastRunFailed) else it
+                }
+                runSignals[id]?.entries?.removeAll { it.value <= readRunRevision }
+                sessionSignals[id]?.entries?.removeAll { it.value <= readEventRevision }
                 listing.value =
                     OpenCodeListing(
-                        sessions = page.value.sessions,
-                        statuses = (statuses as? Outcome.Ok)?.value ?: listing.value.statuses,
+                        sessions = sessions,
+                        statuses = resolvedStatuses,
+                        needsYou = pending.values.toSet(),
                         // B1: more pages on the server is not "couldn't load".
                         complete = page.value.complete,
-                        failed = statuses is Outcome.Failed,
+                        failed = statuses is Outcome.Failed || permissions is Outcome.Failed ||
+                            questions is Outcome.Failed || forms is Outcome.Failed,
                         acrossProjects =
                             graph.session.server.capabilities.value.globalSessionSearch,
                     )
+                // Unknown optional asks affect the feed's completeness, never healthy connect/create admission.
                 return statuses.map { Unit }.atStage(ConnectionStage.LoadActivity)
             }
         }
@@ -310,6 +432,14 @@ class PreviewRuntime(
         }
         registry.close(id)
         eventJobs.remove(id)?.cancel()
+        refreshJobs.remove(id)?.cancel()
+        refreshRevision.remove(id)
+        requestRevision.remove(id)
+        runRevision.remove(id)
+        runSignals.remove(id)
+        sessionSignals.remove(id)
+        failedRuns.remove(id)
+        requests.remove(id)
         listings.remove(id)
         rebuildFeed()
         // Queue admission is fenced above and close joins connection work. A send may have written

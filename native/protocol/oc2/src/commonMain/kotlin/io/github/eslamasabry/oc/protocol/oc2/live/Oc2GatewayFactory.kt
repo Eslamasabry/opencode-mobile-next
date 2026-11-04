@@ -26,12 +26,17 @@ public class Oc2GatewayFactory(
     override val backend: BackendKind = BackendKind.OpenCode2
 
     override suspend fun probe(target: ProbeTarget): Outcome<ProbeResult> {
-        // A probe has no cleartext-consent record. Never transmit a credential over HTTP here.
-        if (target.origin.scheme != "https" && !AddressRules.isLoopback(target.origin.host))
+        // Unsaved addresses have no trust. Saved targets carry only trust bound to this origin.
+        val cleartext = AddressRules.isLoopback(target.origin.host) || target.trust?.cleartextConsentAtMs != null
+        if (target.origin.scheme != "https" && !cleartext)
             return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
+        val pin = target.trust?.pinnedLeafSha256
+        val pinBytes = pin?.let { decodePin(it) ?: return Failure.UnreadableReply().failed() }
+        if (target.origin.scheme != "https" && pinBytes != null)
+            return Failure.Refused(RefusalReason.PinNeedsHttps).failed()
         val client =
             clients.create(
-                TransportSpec(target.origin, AddressRules.classify(target.origin.host), true)
+                TransportSpec(target.origin, AddressRules.classify(target.origin.host), cleartext, pinBytes)
             )
         return try {
             val gateway =

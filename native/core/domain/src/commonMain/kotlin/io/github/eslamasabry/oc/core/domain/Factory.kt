@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.BackendKind
+import io.github.eslamasabry.oc.core.model.ProfileTrust
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.ServerOrigin
 import io.github.eslamasabry.oc.core.model.ServerProfile
@@ -38,6 +39,8 @@ public data class ProbeTarget(
     val origin: ServerOrigin,
     /** Null until the origin is trusted: a probe never sends a credential to an untrusted origin (B-SEC-124). */
     val credentials: ConnectionCredentials?,
+    /** Origin-bound trust of this saved target; absent for an unsaved address. */
+    val trust: ProfileTrust? = null,
 )
 
 /** What a probe proved about the server. */

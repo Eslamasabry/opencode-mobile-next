@@ -114,6 +114,7 @@ public class ConnectionRegistry(
             is Outcome.Ok -> {
                 val graph = graphFactory.create(profile, pair.value, scope)
                 graph.session.markConnected()
+                graph.session.followTransport(scope)
                 mutableLive.update { it.putting(profile.id, graph) }
                 Outcome.Ok(graph)
             }
