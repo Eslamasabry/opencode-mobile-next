@@ -32,7 +32,7 @@ public class KitPromptLiftState {
 
     public fun offer(text: String): Long {
         serial += 1
-        offered = editor?.let { text to it }
+        offered = editor?.let { text.trim() to it } // the composer sends trimmed words
         return serial
     }
 
@@ -41,7 +41,7 @@ public class KitPromptLiftState {
     }
 
     internal fun take(text: String): Rect? {
-        val offer = offered?.takeIf { it.first == text } ?: return null
+        val offer = offered?.takeIf { it.first == text.trim() } ?: return null
         offered = null
         return offer.second
     }

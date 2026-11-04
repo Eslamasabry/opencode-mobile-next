@@ -357,7 +357,6 @@ public fun ChatScreen(
                                     { actions.find(state.find?.query ?: "") },
                                     extraActions = listOfNotNull(context) + unitActions,
                                     onProject = actions::openFiles,
-                                    onBranch = actions::openGit,
                                 )
                             } else
                                 KitTopBar(

@@ -571,7 +571,7 @@ public class StagedPresenter(
         val target = reviewed ?: return
         if (state.value.working) return
         acting = true
-        mutable.update { it.copy(working = true) }
+        mutable.update { it.copy(working = true, failure = null) }
         scope.launch {
             val result =
                 if (choice == StagedConfirm.Keep) review.keep(target) else review.putBack(target)
@@ -589,10 +589,12 @@ public class StagedPresenter(
                     }
                 is Outcome.Failed -> {
                     val stale = !review.isCurrent(target)
+                    // Like Undo all: a failed answer keeps its question open for a retry; a
+                    // review that went stale closes it (there is nothing current to retry).
                     mutable.update {
                         it.copy(
                             working = false,
-                            confirm = null,
+                            confirm = if (stale) null else choice,
                             failure = result.failure,
                             phase = if (stale) StagedPhase.Stale else it.phase,
                         )

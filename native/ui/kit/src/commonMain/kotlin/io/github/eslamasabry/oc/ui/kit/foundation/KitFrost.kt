@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalDensity
 import io.github.eslamasabry.oc.ui.design.effects.FrostConditions
 import io.github.eslamasabry.oc.ui.design.effects.FrostPolicy
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
+import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -76,7 +77,8 @@ public fun Modifier.kitFrost(
             appearance.saver,
             reduced,
             signals.highContrast,
-            styleAllows = appearance.style.name == "Solid",
+            // Plan 06: non-Solid styles hold frost solid.
+            styleAllows = appearance.style == KitSurfaceStyle.Solid,
         )
     val spec =
         if (shown) FrostPolicy.spec(role, appearance.frost, colors.dark, conditions) else null

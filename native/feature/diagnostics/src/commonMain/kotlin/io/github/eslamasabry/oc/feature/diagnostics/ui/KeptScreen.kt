@@ -243,7 +243,7 @@ private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) 
     state.preview?.let { preview ->
         KitGroupNote(stringResource(Res.string.diagnosticsReportPrivacy))
         KitGroupNote(stringResource(Res.string.crashReportPreviewBody))
-        Box(gutter.testTag("kept-preview-text")) { KitLogPanel(redactedText = preview.text) }
+        Box(gutter.testTag("kept-preview-text")) { KitLogPanel(redactedText = preview.text, live = false) }
         Box(gutter) {
             KitActionBlock(
                 primary =

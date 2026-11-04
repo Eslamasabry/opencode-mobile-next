@@ -187,18 +187,10 @@ public fun KitConfirm(
             )
         }
         shown.body?.let { KitText(it, role = TypeRole.Body, tone = TextTone.Secondary) }
-        val facts =
-            shown.consequenceItems.ifEmpty {
-                shown.consequences.mapIndexed { index, text ->
-                    KitConsequence(
-                        text,
-                        if (index == 0 && shown.kind != KitConfirmKind.Neutral)
-                            KitConsequenceMark.Lost
-                        else KitConsequenceMark.Info,
-                    )
-                }
-            }
-        if (facts.isNotEmpty()) KitMarkedConsequences(facts)
+        // Plain consequence lines keep the neutral bullet: the kit cannot tell a loss from a
+        // kept fact, so only callers that say so ([KitConfirmSpec.consequenceItems]) get marks.
+        if (shown.consequenceItems.isNotEmpty()) KitMarkedConsequences(shown.consequenceItems)
+        else if (shown.consequences.isNotEmpty()) KitConsequences(shown.consequences)
         shown.typedName?.let { name ->
             KitField(
                 state = typed,

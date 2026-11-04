@@ -47,6 +47,7 @@ public fun KitRequestFrame(
         else
             Modifier.clip(shape)
                 .background(colors.surface1)
+                .background(colors.attentionSurface)
                 .border(1.dp, colors.attentionLine, shape)
                 .padding(Space.S4.dp)
     KitSignalSlip(

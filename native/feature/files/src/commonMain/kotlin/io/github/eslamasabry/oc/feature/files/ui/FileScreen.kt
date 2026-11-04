@@ -193,20 +193,22 @@ private fun Body(state: FileUi, actions: FileActions) {
         FilePhase.Ready ->
             when (val body = state.body) {
                 null -> KitSkeletonRows()
-                is FileBody.Text ->
-                    Partial(body.truncated) {
-                        val separator = DelimitedText.separator(state.name, null)
-                        val table =
-                            remember(body.text, separator) {
-                                separator
-                                    ?.let { DelimitedText.parse(body.text, it) }
-                                    ?.takeIf { it.failure == null }
-                            }
+                is FileBody.Text -> {
+                    val separator = DelimitedText.separator(state.name, null)
+                    val table =
+                        remember(body.text, separator) {
+                            separator
+                                ?.let { DelimitedText.parse(body.text, it) }
+                                ?.takeIf { it.failure == null }
+                        }
+                    // A table shows its first rows only: say so, as for a truncated read.
+                    Partial(body.truncated || table?.hasMore == true) {
                         KitViewerDocument(
                             body.text,
                             formatted = table?.let { data -> { KitViewerTableBody(data.rows) } },
                         )
                     }
+                }
                 is FileBody.Markdown ->
                     Partial(body.truncated) {
                         val blocks =
@@ -237,18 +239,15 @@ private fun Body(state: FileUi, actions: FileActions) {
                                     StaticSvg.parse(body.text)
                                 else null
                             }
+                        val highlight =
+                            remember(body.text) { body.text.count { it == '\n' } < 2000 }
+                        val language = remember(body.language) { CodeLanguage.of(body.language) }
                         KitViewerDocument(
                             body.text,
                             code = true,
                             initialLine = body.line,
                             lineContent = { text, modifier, wrap ->
-                                KitCodeLine(
-                                    text,
-                                    CodeLanguage.of(body.language),
-                                    modifier,
-                                    wrap,
-                                    highlight = body.text.count { it == '\n' } < 2000,
-                                )
+                                KitCodeLine(text, language, modifier, wrap, highlight = highlight)
                             },
                             formatted =
                                 svg?.let { data -> { KitViewerSvgBody(data.source, state.name) } },

@@ -61,18 +61,25 @@ import org.jetbrains.compose.resources.stringResource
  * the newest matching line, Previous/Next wrap, and Pause holds the reading position while new
  * output arrives. Follow resumes at the newest line; scrolling up also stops following. The host
  * supplies updates, never an internal poll.
+ *
+ * [live] false is a finished document (a report preview): every line is kept, it opens at the top
+ * and there is nothing to pause or follow.
  */
 @Composable
 public fun KitLogPanel(
     redactedText: String,
     modifier: Modifier = Modifier,
+    live: Boolean = true,
 ) {
     val safe = redactedText
-    val lines = remember(safe) { safe.lines().takeLast(KitLogBuffer.DEFAULT_CAPACITY) }
+    val lines =
+        remember(safe, live) {
+            if (live) safe.lines().takeLast(KitLogBuffer.DEFAULT_CAPACITY) else safe.lines()
+        }
     var query by remember { mutableStateOf("") }
     var current by remember { mutableIntStateOf(-1) }
     var paused by remember { mutableStateOf(false) }
-    var following by remember { mutableStateOf(true) }
+    var following by remember { mutableStateOf(live) }
     var wrap by remember { mutableStateOf(true) }
     val matches =
         remember(lines, query) {
@@ -97,7 +104,7 @@ public fun KitLogPanel(
         }
     }
     LaunchedEffect(safe, paused, following) {
-        if (!paused && following && safe.isNotEmpty()) list.scrollToItem(lines.lastIndex)
+        if (live && !paused && following && safe.isNotEmpty()) list.scrollToItem(lines.lastIndex)
     }
     LaunchedEffect(current) {
         if (current in matches.indices) list.scrollToItem(matches[current])
@@ -105,7 +112,7 @@ public fun KitLogPanel(
     LaunchedEffect(list) {
         snapshotFlow { list.isScrollInProgress to list.canScrollForward }
             .collect { (scrolling, more) ->
-                if (scrolling) following = !more
+                if (scrolling && live) following = !more
             }
     }
     val active = matches.getOrNull(current)
@@ -140,7 +147,7 @@ public fun KitLogPanel(
                     role = KitButtonRole.Tertiary,
                 )
             }
-            KitButton(
+            if (live) KitButton(
                 stringResource(
                     if (paused || !following) Res.string.kitLogFollow else Res.string.kitLogPause
                 ),

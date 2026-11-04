@@ -86,7 +86,9 @@ public fun KitToolRow(
         if (rail == null) Modifier
         else
             Modifier.drawBehind {
-                val x = (tokens.smallIcon / 2f).dp.toPx()
+                // The node leads the line: on the right in a right-to-left layout.
+                val inset = (tokens.smallIcon / 2f).dp.toPx()
+                val x = if (layoutDirection == LayoutDirection.Rtl) size.width - inset else inset
                 val center = (Space.S1 + tokens.smallIcon / 2f).dp.toPx()
                 val from = if (rail.first) center else 0f
                 val to = if (rail.last) center else size.height

@@ -827,6 +827,8 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
                 )
             null -> null
         },
+        working = state.working,
+        failed = state.confirm != null && state.failure != null,
         onConfirm = actions::confirm,
         onCancel = actions::dismissConfirm,
     )

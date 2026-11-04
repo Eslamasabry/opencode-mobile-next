@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kitchat.diff
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,10 +14,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -39,6 +42,12 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 private const val TINT_ALPHA = .12f
+
+/** Gutter padding and sign column of one unwrapped cell, beyond its characters. */
+private val CELL_SLACK = 40.dp
+
+/** Unwrapped rows are at most this many characters wide; longer lines are cut at the edge. */
+private const val MAX_CHARS = 4000
 
 private data class SelectedLines(val old: Boolean, val anchor: Int, val end: Int) {
     fun contains(oldSide: Boolean, n: Int?): Boolean =
@@ -97,6 +106,9 @@ public fun KitDiffView(
     val digits = file.maxLineNumber.toString().length
     val language = CodeLanguage.forPath(file.path)
     val highlight = file.totalLines <= 2000
+    val density = LocalDensity.current
+    val measurer = rememberTextMeasurer()
+    val charPx = remember(mono, density) { measurer.measure("0", style = mono).size.width.coerceAtLeast(1) }
     val list = rememberLazyListState()
     val changeSegment = file.changeStarts.getOrNull(change)
     LaunchedEffect(change, file) {
@@ -113,6 +125,8 @@ public fun KitDiffView(
                 }
             }
         }
+    val longest =
+        remember(allLines) { (allLines.maxOfOrNull { it.text.length } ?: 0).coerceAtMost(MAX_CHARS) }
     val selectedLines = allLines.filter { line ->
         line.kind != DiffLineKind.Hunk &&
             selection?.let { it.contains(it.old, if (it.old) line.oldNo else line.newNo) } == true
@@ -310,14 +324,27 @@ public fun KitDiffView(
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             KitMarkdownSelection {
                 if (full) {
-                    val horizontal =
-                        if (wrap || formatted) Modifier
-                        else Modifier.horizontalScroll(rememberScrollState()).widthIn(min = 960.dp)
-                    LazyColumn(
-                        Modifier.fillMaxWidth().heightIn(max = 560.dp).then(horizontal),
-                        state = list,
-                    ) {
-                        itemsIndexed(display) { _, item -> rowContent(item) }
+                    // Unwrapped lines scroll sideways together. A lazy list cannot size itself to
+                    // its widest row, so it gets a definite width from the longest source line
+                    // (with weights, an unbounded width would measure the side-by-side cells at 0).
+                    BoxWithConstraints(Modifier.fillMaxWidth()) {
+                        val horizontal =
+                            if (wrap || formatted) Modifier.fillMaxWidth()
+                            else {
+                                val cellChars = longest + digits + 2
+                                val chars = if (split) 2 * cellChars else cellChars + digits
+                                val cells = if (split) 2 else 1
+                                val needed =
+                                    with(density) { (charPx * chars).toDp() } + CELL_SLACK * cells
+                                Modifier.horizontalScroll(rememberScrollState())
+                                    .width(
+                                        if (constraints.hasBoundedWidth) maxOf(maxWidth, needed)
+                                        else needed
+                                    )
+                            }
+                        LazyColumn(Modifier.heightIn(max = 560.dp).then(horizontal), state = list) {
+                            itemsIndexed(display) { _, item -> rowContent(item) }
+                        }
                     }
                 } else {
                     Column(
@@ -396,9 +423,14 @@ private fun NumberCell(
                 style = mono,
             )
         else
-            KitTappable({ onSelect(number) }, onClickLabel = label) {
-                BasicText(number.toString().padStart(digits), style = mono)
-            }
+            // Flutter selects from the line's gutter without a 48 dp box (a tap target that size
+            // would triple every diff row); the accessibility action names what it does.
+            BasicText(
+                number.toString().padStart(digits),
+                Modifier.clickable(onClickLabel = label, role = Role.Button) { onSelect(number) }
+                    .padding(start = Space.S2.dp),
+                style = mono,
+            )
     }
 }
 

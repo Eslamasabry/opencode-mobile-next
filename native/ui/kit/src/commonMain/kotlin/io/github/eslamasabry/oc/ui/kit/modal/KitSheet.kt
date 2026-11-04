@@ -461,7 +461,10 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
                     verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
                 ) {
                     if (scrollHeader) SheetHeader(entry)
-                    Column(Modifier.padding(tokens.gutter.dp)) {
+                    Column(
+                        Modifier.padding(tokens.gutter.dp),
+                        verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
+                    ) {
                         if (entry.framed) {
                             Column(
                                 Modifier.fillMaxWidth()

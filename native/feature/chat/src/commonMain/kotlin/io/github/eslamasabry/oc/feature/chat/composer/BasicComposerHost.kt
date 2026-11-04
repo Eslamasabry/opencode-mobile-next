@@ -545,15 +545,18 @@ public fun BasicComposer(
             choice = KitGlowChoice.of(appearance.activityGlow, appearance.softGlow),
         ) {
             if (stopShown) {
-                if (!chrome.requestWaiting()) fieldPart(Modifier.fillMaxWidth())
-                Row(
-                    Modifier.fillMaxWidth().testTag("chat-composer-turn-controls"),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.End),
-                ) {
-                    if (!chrome.requestWaiting()) voice?.Mic(voiceField, Modifier) // P12-VOICE
-                    stopPart()
-                    sendPart()
+                // The glow holds its content in a Box: the field and the turn controls stack here.
+                Column(Modifier.fillMaxWidth()) {
+                    if (!chrome.requestWaiting()) fieldPart(Modifier.fillMaxWidth())
+                    Row(
+                        Modifier.fillMaxWidth().testTag("chat-composer-turn-controls"),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.End),
+                    ) {
+                        if (!chrome.requestWaiting()) voice?.Mic(voiceField, Modifier) // P12-VOICE
+                        stopPart()
+                        sendPart()
+                    }
                 }
             } else {
                 Row(

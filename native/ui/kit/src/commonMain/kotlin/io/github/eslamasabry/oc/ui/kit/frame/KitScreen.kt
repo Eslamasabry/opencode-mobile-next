@@ -26,8 +26,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -109,6 +111,19 @@ public fun KitScreen(
     val framed = topBar != null || page
     val window = LocalKitWindow.current
     val cap = if (window.cls == WindowClass.Compact) CapRole.Fill else width.cap
+    // Overlaid chrome swaps between the overlay Box and the plain Column (a status line, Find,
+    // loading): the bar, body and bottom move between them instead of being rebuilt, so the
+    // composer keeps its field, focus and keyboard and the body keeps its scroll position.
+    val latestTop = rememberUpdatedState(topBar)
+    val latestBottom = rememberUpdatedState(bottom)
+    val latestBody = rememberUpdatedState(body)
+    val movableTop = remember { movableContentOf { latestTop.value?.invoke() } }
+    val movableBottom = remember { movableContentOf { latestBottom.value?.invoke() } }
+    val movableBody = remember { movableContentOf { latestBody.value() } }
+    val topPart: (@Composable () -> Unit)? = topBar?.let { if (overlayChrome) movableTop else it }
+    val bottomPart: (@Composable () -> Unit)? =
+        bottom?.let { if (overlayChrome) movableBottom else it }
+    val bodyPart: @Composable () -> Unit = if (overlayChrome) movableBody else body
     val inner: @Composable (line: KitStatus?, ownsLine: Boolean) -> Unit = { line, ownsLine ->
         val insets =
             LocalKitScreenInsets.current ?: WindowInsets.safeDrawing.union(WindowInsets.ime)
@@ -124,9 +139,9 @@ public fun KitScreen(
                     .testTag("kit-screen")
             ) {
                 CompositionLocalProvider(LocalChromePadding provides padding) {
-                    Box(Modifier.fillMaxSize().kitMaxWidth(cap)) { body() }
+                    Box(Modifier.fillMaxSize().kitMaxWidth(cap)) { bodyPart() }
                 }
-                topBar?.let {
+                topPart?.let {
                     Box(
                         Modifier.align(Alignment.TopCenter).fillMaxWidth().onSizeChanged {
                             topPx = it.height
@@ -135,7 +150,7 @@ public fun KitScreen(
                         it()
                     }
                 }
-                bottom?.let {
+                bottomPart?.let {
                     Box(
                         Modifier.align(Alignment.BottomCenter)
                             .fillMaxWidth()
@@ -156,7 +171,7 @@ public fun KitScreen(
                     .then(if (framed) Modifier.windowInsetsPadding(insets) else Modifier)
                     .testTag("kit-screen")
             ) {
-                if (topBar != null) {
+                if (topPart != null) {
                     Box(
                         Modifier.windowInsetsPadding(
                             WindowInsets.safeDrawing.only(
@@ -164,7 +179,7 @@ public fun KitScreen(
                             )
                         )
                     ) {
-                        topBar()
+                        topPart()
                     }
                 }
                 if (ownsLine) KitStatusLineFold(line)
@@ -176,8 +191,8 @@ public fun KitScreen(
                     }
                     header?.invoke(this)
                     if (loading) ScreenLoadingLine(loadingLabel)
-                    Box(Modifier.fillMaxWidth().weight(1f)) { body() }
-                    bottom?.let {
+                    Box(Modifier.fillMaxWidth().weight(1f)) { bodyPart() }
+                    bottomPart?.let {
                         Box(
                             Modifier.fillMaxWidth()
                                 .windowInsetsPadding(
