@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sharedFoldersTitle">مساحة التخزين المشتركة</string>
+    <string name="sharedFoldersSelected">يستطيع Linux رؤية مجلدات المشاريع التي تفتحها ومجلد التنزيلات › OpenCode فقط. يتيح إذن الملفات للتطبيق قراءة هذه المجلدات؛ ولا يشارك مساحة التخزين كلها مع Linux.</string>
+    <string name="sharedFoldersAll">السماح لـ Linux برؤية مساحة التخزين المشتركة كلها</string>
+    <string name="sharedFoldersAllDetail">استخدام طريقة الوصول القديمة بدلًا من مجلدات المشاريع المحددة. تُطبّق التغييرات عند تشغيل خادم الهاتف مجددًا.</string>
+    <string name="sharedFoldersAllRisk">ستتمكن الوكلاء التي تعمل في Linux من قراءة الملفات وتغييرها خارج المشاريع المفتوحة.</string>
+    <string name="sharedFoldersProtection">تُبقي الحماية وصول Linux محصورًا في مجلدات المشاريع المحددة.</string>
+    <string name="sharedFoldersRestart">حُفظ الوصول إلى المجلدات. أعد تشغيل خادم الهاتف من «هذا الهاتف» عندما يكون عملك جاهزًا، ثم حدّث الملفات. لم يُوقَف أي خادم.</string>
+    <string name="sharedFoldersFailed">تعذّرت قراءة إعدادات الوصول إلى المجلدات أو حفظها. حاول مجددًا.</string>
+    <string name="sharedFoldersAndroid">إذن الملفات في Android</string>
+    <string name="sharedFoldersAndroidDetail">اسمح بالوصول عند فتح مشاريع في مساحة التخزين المشتركة.</string>
+    <string name="sharedFoldersGranted">مسموح. يظل Linux ملتزمًا باختيار المجلدات أدناه.</string>
+    <string name="sharedFoldersWorking">جارٍ تحديث الوصول إلى المجلدات…</string>
+</resources>

@@ -10,11 +10,15 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import io.github.eslamasabry.oc.feature.linux.presentation.KeptServicesViewModel
+import io.github.eslamasabry.oc.feature.linux.presentation.LinuxBackupsViewModel
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHomeViewModel
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxPackagesViewModel
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxPortsViewModel
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxServicesViewModel
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxStorageViewModel
+import io.github.eslamasabry.oc.feature.linux.ui.KeptServicesScreen
+import io.github.eslamasabry.oc.feature.linux.ui.LinuxBackupsScreen
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsViewModel
 import io.github.eslamasabry.oc.feature.linux.ui.LinuxHomeScreen
 import io.github.eslamasabry.oc.feature.linux.ui.LinuxPackagesScreen
@@ -39,6 +43,16 @@ public class LinuxEntries : EntryInstaller {
                 }
             val state by vm.state.collectAsStateWithLifecycle()
             LinuxServicesScreen(state, vm)
+        }
+        entry<LinuxRoute.Backups> {
+            val vm = metroViewModel<LinuxBackupsViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            LinuxBackupsScreen(state, vm)
+        }
+        entry<LinuxRoute.KeptServices> {
+            val vm = metroViewModel<KeptServicesViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            KeptServicesScreen(state, vm)
         }
         entry<LinuxRoute.Home> {
             val vm = metroViewModel<LinuxHomeViewModel>()

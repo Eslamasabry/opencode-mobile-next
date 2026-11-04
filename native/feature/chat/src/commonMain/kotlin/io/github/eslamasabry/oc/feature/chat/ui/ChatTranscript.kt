@@ -221,6 +221,8 @@ internal fun ChatTranscriptList(
     reply: ReplyActions? = null,
     onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -> Unit)? =
         null,
+    reasoningExpanded: Boolean = false,
+    onCompactAgain: (() -> Unit)? = null,
 ) {
     val folds = rememberTranscriptFolds()
     val currentRows by rememberUpdatedState(rows)
@@ -286,6 +288,16 @@ internal fun ChatTranscriptList(
             }
         }
         items(unique, key = { it.key }, contentType = { it.kind }) { row ->
+            // Keep the engine's item indices: a folded source has an empty item, not a removed list
+            // position.
+            val source =
+                when (row) {
+                    is BlockRow -> row.key.removePrefix("b:").substringBeforeLast(':')
+                    is ThoughtRow -> row.key.removePrefix("thought:")
+                    is NoticeRow -> row.key.removePrefix("notice:")
+                    else -> null
+                }
+            if (source in facts.reading.hiddenPartKeys) return@items
             // A table longer than one chunk is drawn whole by its first chunk; its later chunks
             // draw nothing.
             if (reply != null && row is BlockRow && row.key in tables) {
@@ -304,6 +316,8 @@ internal fun ChatTranscriptList(
                         reply,
                         copyCode,
                         onOpenFile,
+                        reasoningExpanded,
+                        onCompactAgain,
                     )
             } else {
                 ChatRow(
@@ -319,6 +333,8 @@ internal fun ChatTranscriptList(
                     reply,
                     copyCode,
                     onOpenFile,
+                    reasoningExpanded,
+                    onCompactAgain,
                 )
             }
         }
@@ -382,6 +398,8 @@ private fun ChatRow(
     copyCode: (String, (String) -> String) -> Unit = { _, _ -> },
     onOpenFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -> Unit)? =
         null,
+    reasoningExpanded: Boolean = false,
+    onCompactAgain: (() -> Unit)? = null,
 ) {
     when (row) {
         is BlockRow ->
@@ -400,29 +418,56 @@ private fun ChatRow(
                     continues = row.continues,
                 )
         is PromptRow ->
-            if (onOpenMenu != null && listWords != null) {
-                // Tap is the visible way to the message's actions; long-press is the familiar
-                // hidden twin (06 §11.1).
-                KitTappable(
-                    onClick = { onOpenMenu(row.key) },
-                    onClickLabel = listWords.messageActions,
-                    onLongClick = { onOpenMenu(row.key) },
-                    onLongClickLabel = listWords.messageActions,
-                    role = KitTappableRole.Row,
-                ) {
+            Column {
+                if (onOpenMenu != null && listWords != null) {
+                    // Tap is the visible way to the message's actions; long-press is the familiar
+                    // hidden twin (06 §11.1).
+                    KitTappable(
+                        onClick = { onOpenMenu(row.key) },
+                        onClickLabel = listWords.messageActions,
+                        onLongClick = { onOpenMenu(row.key) },
+                        onLongClickLabel = listWords.messageActions,
+                        role = KitTappableRole.Row,
+                    ) {
+                        KitPromptBubble(CardAnswerDisplay.text(row.text))
+                    }
+                } else {
                     KitPromptBubble(CardAnswerDisplay.text(row.text))
                 }
-            } else {
-                KitPromptBubble(CardAnswerDisplay.text(row.text))
+                // A turn with no assistant row still has an explicit end next to its prompt.
+                if (facts.reading.metadata[row.turnId] == null)
+                    facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
             }
-        is ThoughtRow -> KitQuietLine(words.thought(row.firstLine))
+        is ThoughtRow -> {
+            val detail = facts.reading.details[row.key]
+            if (detail != null && folds != null)
+                TranscriptDetail(
+                    detail,
+                    folds,
+                    reasoningExpanded,
+                    reply,
+                    onCompactAgain,
+                    onOpenSession,
+                )
+            else KitQuietLine(words.thought(row.firstLine))
+        }
         is WorkLineRow ->
             // P12-CHAT-CARDS: a turn's agent cards stand right under its work line, in the reply
             // (never folded in).
             Column {
                 val work = facts.work[row.turnId]
                 if (work != null && folds != null)
-                    TurnWorkLine(work, facts.nowMs, folds, onOpenSession, onOpenFile)
+                    TurnWorkLine(
+                        work,
+                        facts.nowMs,
+                        folds,
+                        onOpenSession,
+                        onOpenFile,
+                        facts.reading.workEntries[row.turnId].orEmpty(),
+                        reasoningExpanded,
+                        reply,
+                        onCompactAgain,
+                    )
                 else
                     KitQuietLine(
                         if (listWords != null) workLineWords(row.calls, row.state)
@@ -430,7 +475,19 @@ private fun ChatRow(
                     )
                 ChatTurnCards(row.turnId)
             }
-        is NoticeRow -> KitQuietLine(words.notice(row.notice))
+        is NoticeRow -> {
+            val detail = facts.reading.details[row.key]
+            if (detail != null && folds != null)
+                TranscriptDetail(
+                    detail,
+                    folds,
+                    reasoningExpanded,
+                    reply,
+                    onCompactAgain,
+                    onOpenSession,
+                )
+            else KitQuietLine(words.notice(row.notice))
+        }
         is FooterRow ->
             Column {
                 if (
@@ -495,6 +552,10 @@ private fun ChatRow(
                     KitQuietLine(
                         if (row.stopped) words.stoppedFooter() else words.footer(row.failed)
                     )
+                }
+                facts.reading.endNotes[row.turnId]?.let { TurnEndNote(it) }
+                facts.reading.metadata[row.turnId]?.let { metadata ->
+                    TurnMetadata(metadata)
                 }
                 val result = facts.results[row.turnId]
                 if (result != null && folds != null) TurnResultLine(row.turnId, result, folds)

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="runningDetailMemory">ذاكرة %1$d MB</string>
+    <string name="runningDetailElapsed">تعمل منذ %1$d دقيقة</string>
+    <string name="runningDetailPid">العملية %1$d</string>
+    <string name="runningDetailHelpers">تتوقف أيضًا عملياتها المساعدة وعددها %1$d، بعد التحقق من هوية كل عملية مجددًا.</string>
+    <string name="runningDetailBusy">مشغولة</string>
+    <string name="runningDetailIdle">خاملة</string>
+</resources>

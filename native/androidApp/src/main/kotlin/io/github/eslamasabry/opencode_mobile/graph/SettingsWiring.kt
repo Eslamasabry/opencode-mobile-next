@@ -84,6 +84,8 @@ import io.github.eslamasabry.oc.ui.routes.IntegrationsRoute
 import io.github.eslamasabry.oc.ui.routes.ProvidersRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
+import io.github.eslamasabry.oc.ui.routes.LibraryRoute
+import io.github.eslamasabry.oc.ui.routes.TeachingRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.routes.VoiceRoute
 import io.github.eslamasabry.oc.ui.shell.nav.SystemMotion
@@ -270,8 +272,12 @@ class AndroidSettingsHost(
                         else ToolsRoute(target.id)
                     )
                 } else {
-                    // SEC-2: with no connected server, the integrations page (sign-ins and connectors) answers.
-                    nav.open(IntegrationsRoute)
+                    // PORT-SCREENS-2: with no connected server, the tabbed library answers (it picks its own
+                    // server). SEC-2's integrations page stays reachable from Servers.
+                    nav.open(
+                        if (place == SettingsOutside.Providers) LibraryRoute(tab = "providers")
+                        else LibraryRoute()
+                    )
                 }
             }
             SettingsOutside.StarOnGitHub -> application.view(REPO)
@@ -285,6 +291,7 @@ class AndroidSettingsHost(
             SettingsOutside.ShareApp -> scope.launch { shareApp() }
             SettingsOutside.AndroidNotificationSettings -> openNotificationSettings()
             SettingsOutside.VoiceSetup -> nav.open(VoiceRoute.Settings)
+            SettingsOutside.Tips -> nav.open(TeachingRoute.Tips)
             SettingsOutside.KeepRunning ->
                 nav.open(BackgroundRoute.Home) // BUILD-ANDROID-BG-PLATFORM
             SettingsOutside.VoiceNotices ->
@@ -370,6 +377,8 @@ class AndroidSettingsHost(
     private companion object {
         val OPENS: Set<SettingsOutside> =
             setOf(
+                SettingsOutside.Tools,
+                SettingsOutside.Providers,
                 SettingsOutside.Servers,
                 SettingsOutside.StarOnGitHub,
                 SettingsOutside.WhatsNew,
@@ -384,6 +393,7 @@ class AndroidSettingsHost(
                 SettingsOutside.KeepRunning,
                 SettingsOutside.Tools,
                 SettingsOutside.Providers,
+                SettingsOutside.Tips,
             )
     }
 }

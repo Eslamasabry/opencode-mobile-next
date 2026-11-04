@@ -22,7 +22,8 @@ public class DevServicesViewModel(
     pacer: Pacer,
     nav: AppNavigator,
 ) : ViewModel(), DevServicesActions {
-    private val model = DevServicesModel(route.profile, route.directory, host, pacer, viewModelScope, nav::back)
+    private val model =
+        DevServicesModel(route.profile, route.directory, host, pacer, viewModelScope, nav::back)
     public val state: StateFlow<DevServicesUi> = model.state
 
     override fun shown(visible: Boolean): Unit = model.shown(visible)
@@ -33,7 +34,8 @@ public class DevServicesViewModel(
 
     override fun saveFound(id: String): Unit = model.saveFound(id)
 
-    override fun edit(name: String, command: String, url: String): Unit = model.edit(name, command, url)
+    override fun edit(name: String, command: String, url: String): Unit =
+        model.edit(name, command, url)
 
     override fun save(): Unit = model.save()
 
@@ -56,6 +58,10 @@ public class DevServicesViewModel(
     override fun askStopFound(id: String): Unit = model.askStopFound(id)
 
     override fun foundLogs(id: String): Unit = model.foundLogs(id)
+
+    override fun refreshLogs(): Unit = model.refreshLogs()
+
+    override fun closeLogs(): Unit = model.closeLogs()
 
     override fun confirm(): Unit = model.confirm()
 

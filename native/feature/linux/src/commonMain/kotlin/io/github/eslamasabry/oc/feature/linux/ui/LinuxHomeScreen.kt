@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHomeNotice
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHomeUi
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxPage
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -27,7 +28,11 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.keptSvcKeepsRunning
+import io.github.eslamasabry.oc.ui.words.res.keptSvcTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.linuxBackupRow
+import io.github.eslamasabry.oc.ui.words.res.linuxBackupSetupProjectsDetail
 import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveAll
 import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveAllBody
 import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveAllQuestion
@@ -49,6 +54,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrRepairDetail
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRepairKept
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRepairTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrReset
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrResetBackUpFirst
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrResetBody
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrResetCleanupTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrResetDetail
@@ -102,6 +108,7 @@ public fun LinuxHomeScreen(
         loading = state.presence == null || state.working,
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+            state.vitals?.let { LinuxVitalsPanel(it) { actions.open(LinuxPage.Running) } }
             val dismiss =
                 KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
             when (val notice = state.notice) {
@@ -183,6 +190,18 @@ public fun LinuxHomeScreen(
             }
             if (state.ready) {
                 KitRowGroup {
+                    PageRow(
+                        stringResource(Res.string.keptSvcTitle),
+                        stringResource(Res.string.keptSvcKeepsRunning),
+                    ) {
+                        actions.open(LinuxPage.KeptServices)
+                    }
+                    PageRow(
+                        stringResource(Res.string.linuxBackupRow),
+                        stringResource(Res.string.linuxBackupSetupProjectsDetail),
+                    ) {
+                        actions.open(LinuxPage.Backups)
+                    }
                     PageRow(
                         stringResource(Res.string.linuxMgrRunning),
                         stringResource(Res.string.linuxMgrRunningDetail),
@@ -291,7 +310,18 @@ public fun LinuxHomeScreen(
                 )
             }
         }
-    KitConfirm(spec = spec, onConfirm = actions::confirm, onCancel = actions::dismiss)
+    KitConfirm(
+        spec = spec,
+        onConfirm = actions::confirm,
+        onCancel = actions::dismiss,
+        alternative =
+            if (state.confirm == LinuxConfirm.Reset)
+                KitAction(
+                    stringResource(Res.string.linuxMgrResetBackUpFirst),
+                    { actions.open(LinuxPage.Backups) },
+                )
+            else null,
+    )
 }
 
 @Composable

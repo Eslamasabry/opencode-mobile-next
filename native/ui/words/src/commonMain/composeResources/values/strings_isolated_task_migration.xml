@@ -1,0 +1,9 @@
+<resources>
+    <string name="isolatedTaskCreateUnknown">The server did not confirm whether the copy was made. Check the project before starting another.</string>
+    <string name="isolatedTaskOpenUnknown">The server did not confirm the conversation. Check Conversations before starting another. Your task stays saved here.</string>
+    <string name="isolatedTaskProgress">Step %1$d of 3</string>
+    <string name="isolatedTaskOperationFailed">That step could not finish. Your task stays saved here.</string>
+    <string name="isolatedTaskCopies">Separate copies</string>
+    <string name="isolatedTaskRefreshCopies">Refresh copies</string>
+    <string name="isolatedTaskSendUnconfirmed">Could not confirm whether your task was sent. It stays saved here. Open the conversation and check before sending it again.</string>
+</resources>

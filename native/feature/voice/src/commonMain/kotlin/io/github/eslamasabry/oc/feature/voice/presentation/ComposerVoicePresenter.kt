@@ -3,11 +3,23 @@ package io.github.eslamasabry.oc.feature.voice.presentation
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.engine.settings.teaching.TeachingIds
+import io.github.eslamasabry.oc.engine.settings.teaching.TeachingRegistry
+import io.github.eslamasabry.oc.engine.settings.teaching.TipController
+import io.github.eslamasabry.oc.engine.settings.teaching.TipMoment
+import io.github.eslamasabry.oc.engine.settings.teaching.TipVisit
+import io.github.eslamasabry.oc.engine.settings.teaching.offer
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceConversationSnapshot
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceReplyDecision
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceReplyWatch
 import io.github.eslamasabry.oc.engine.voice.dictation.AutoSendCountdown
 import io.github.eslamasabry.oc.engine.voice.dictation.DraftMerge
 import io.github.eslamasabry.oc.engine.voice.dictation.VoiceStart
 import io.github.eslamasabry.oc.engine.voice.dictation.mayAutoSend
 import io.github.eslamasabry.oc.engine.voice.dictation.stopsOnSilence
+import io.github.eslamasabry.oc.engine.voice.readaloud.ReadRequest
+import io.github.eslamasabry.oc.engine.voice.state.ReadAloudState
 import io.github.eslamasabry.oc.engine.voice.state.VoiceEnd
 import io.github.eslamasabry.oc.engine.voice.state.VoiceHost
 import io.github.eslamasabry.oc.engine.voice.state.VoiceMode
@@ -17,6 +29,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,17 +49,29 @@ public interface VoiceFieldPort {
     public fun send()
 
     public fun canSend(): Boolean
+
+    public val dictationOnly: Boolean
+        get() = false
 }
 
 /** What the mic and the pill show. */
-public enum class MicPhase { Idle, Starting, Listening, Writing, Countdown }
+public enum class MicPhase {
+    Idle,
+    Starting,
+    Listening,
+    Writing,
+    Countdown,
+}
 
 /** One plain line under the composer after voice ends; never exception text. */
 public sealed interface VoiceNote {
     /** The recording ended with no words: the field is as it was. */
     public data object NothingHeard : VoiceNote
 
-    /** "Send when I stop talking" stopped the recording after a pause, but the words were not sendable by themselves. */
+    /**
+     * "Send when I stop talking" stopped the recording after a pause, but the words were not
+     * sendable by themselves.
+     */
     public data object StoppedAfterPause : VoiceNote
 
     /** The microphone is not allowed; [blocked] = only Android settings can allow it now. */
@@ -59,6 +84,16 @@ public sealed interface VoiceNote {
 
     /** Voice could not start at all on this phone or build. */
     public data object Unavailable : VoiceNote
+}
+
+public enum class ConversationReplyNote {
+    Review,
+    Interrupted,
+    NoProse,
+    Failed,
+    DraftFirst,
+    Paused,
+    CommandsOnly,
 }
 
 public data class ComposerVoiceUi(
@@ -77,17 +112,31 @@ public data class ComposerVoiceUi(
     /** "Sending in 3…"; null when no countdown runs. */
     val secondsLeft: Int? = null,
     val note: VoiceNote? = null,
+    val conversationAvailable: Boolean = false,
+    val conversation: Boolean = false,
+    val speakReplies: Boolean = false,
+    val askingReplyConsent: Boolean = false,
+    val pickingReplyVoice: Boolean = false,
+    val replyVoices: List<io.github.eslamasabry.oc.engine.voice.readaloud.TtsVoice> = emptyList(),
+    val waitingReply: Boolean = false,
+    val speakingReply: Boolean = false,
+    val canListen: Boolean = false,
+    val canReadReply: Boolean = false,
+    val replyNote: ConversationReplyNote? = null,
+    val tutorialStep: Int? = null,
 ) {
-    val active: Boolean get() = phase != MicPhase.Idle
+    val active: Boolean
+        get() = phase != MicPhase.Idle
 }
 
 /**
- * Voice typing in one conversation's composer (Flutter `chat_voice.dart` P10.3, plan 10 §6): tap to talk until Done
- * (or until a pause when "Send when I stop talking" is on), hold to talk and let go to finish, slide away and let go to
- * cancel. The words heard so far are shown live; when the recording ends they are merged into the field around its
- * selection ([DraftMerge], B-MEDIA-024). A recording that stopped on a pause, with the setting on and sendable words,
- * waits [AutoSendCountdown] (3 s) with Send now / Don't send, then goes through the composer's one send path
- * (B-MEDIA-016, B-MEDIA-017). A touch shorter than 400 ms is a slip, not a message.
+ * Voice typing in one conversation's composer (Flutter `chat_voice.dart` P10.3, plan 10 §6): tap to
+ * talk until Done (or until a pause when "Send when I stop talking" is on), hold to talk and let go
+ * to finish, slide away and let go to cancel. The words heard so far are shown live; when the
+ * recording ends they are merged into the field around its selection ([DraftMerge], B-MEDIA-024). A
+ * recording that stopped on a pause, with the setting on and sendable words, waits
+ * [AutoSendCountdown] (3 s) with Send now / Don't send, then goes through the composer's one send
+ * path (B-MEDIA-016, B-MEDIA-017). A touch shorter than 400 ms is a slip, not a message.
  *
  * The [Dictation] is app-wide; this presenter reacts only to the recordings it started.
  */
@@ -105,7 +154,10 @@ public class ComposerVoicePresenter(
     /** 0..1 while listening; read in the draw phase only. */
     public val level: StateFlow<Float> = levelMirror.asStateFlow()
 
-    private enum class EarlyEnd { Finish, Discard }
+    private enum class EarlyEnd {
+        Finish,
+        Discard,
+    }
 
     private var parts: VoiceParts? = null
     private var field: VoiceFieldPort? = null
@@ -115,10 +167,392 @@ public class ComposerVoicePresenter(
     private var earlyEnd: EarlyEnd? = null
     private var countdown: AutoSendCountdown? = null
 
-    /** Bumped to end the running clock, level mirror and countdown (they stop at their next tick). */
+    /**
+     * Bumped to end the running clock, level mirror and countdown (they stop at their next tick).
+     */
     private var ticking = 0
     private var counting = 0
     private var foreground = true
+    private var conversationRef: ConversationRef? = null
+    private var conversationHandle: VoiceConversationHandle? = null
+    private var conversationJob: Job? = null
+    private var replyJob: Job? = null
+    private var replyWatch: VoiceReplyWatch? = null
+    private var conversationEpoch = 0L
+    private var conversationSending = false
+    private var selectedReplyVoice: String? = null
+    private var observed = VoiceConversationSnapshot()
+    private var conversationAttached = false
+    private var tips: TipController? = null
+    private val visit = TipVisit()
+    private var teachingAttached = false
+
+    public fun attachTeaching(hub: VoiceTeachingHub) {
+        if (teachingAttached) return
+        teachingAttached = true
+        scope.launch {
+            val controller = hub.controller() ?: return@launch
+            tips = controller
+            controller.active.collect { active ->
+                mutable.update {
+                    it.copy(
+                        tutorialStep =
+                            if (active?.id == TeachingIds.VoiceConversation) it.tutorialStep ?: 0
+                            else null
+                    )
+                }
+            }
+        }
+    }
+
+    public fun nextTutorial() {
+        val step = mutable.value.tutorialStep ?: return
+        if (step >= 2) dismissTutorial() else mutable.update { it.copy(tutorialStep = step + 1) }
+    }
+
+    public fun dismissTutorial() {
+        tips?.markUsed(TeachingIds.VoiceConversation)
+        mutable.update { it.copy(tutorialStep = null) }
+    }
+
+    private val replyPrefix: String
+        get() = "${conversationRef?.sessionId?.raw}/voice-reply/"
+
+    public fun attachConversation(ref: ConversationRef?, conversations: VoiceConversations) {
+        if (conversationAttached && ref == conversationRef) return
+        conversationAttached = true
+        exitConversation()
+        conversationJob?.cancel()
+        conversationHandle?.release?.invoke()
+        conversationRef = ref
+        val handle = ref?.let(conversations::open)
+        conversationHandle = handle
+        mutable.update { it.copy(conversationAvailable = handle != null) }
+        if (handle != null)
+            conversationJob = scope.launch {
+                handle.session.voiceConversation.collect { snapshot ->
+                    val previous = observed
+                    observed = snapshot
+                    if (mutable.value.conversation && previous.generation != snapshot.generation) {
+                        exitConversation()
+                        mutable.update { it.copy(replyNote = ConversationReplyNote.Review) }
+                    }
+                    if (
+                        mutable.value.conversation &&
+                            mutable.value.speakingReply &&
+                            (snapshot.requestWaiting || !snapshot.connected)
+                    ) {
+                        stopReply()
+                        mutable.update {
+                            it.copy(
+                                replyNote =
+                                    if (snapshot.requestWaiting) ConversationReplyNote.Interrupted
+                                    else ConversationReplyNote.Review
+                            )
+                        }
+                    }
+                    checkReply()
+                    refreshConversation()
+                }
+            }
+    }
+
+    /** Visible entry beside voice typing. Drafts and attached files must be dealt with first. */
+    public fun startConversation() {
+        if (!mutable.value.available || conversationHandle == null || mutable.value.active) return
+        if (field?.text()?.isNotEmpty() == true || observed.hasAttachments) {
+            mutable.update { it.copy(replyNote = ConversationReplyNote.DraftFirst) }
+            return
+        }
+        if (!mayListen()) {
+            mutable.update { it.copy(replyNote = ConversationReplyNote.Paused) }
+            return
+        }
+        mutable.update { it.copy(conversation = true, replyNote = null) }
+        tips?.offer(
+            TeachingRegistry.defaults,
+            TeachingIds.VoiceConversation,
+            visit,
+            TipMoment(questionWaiting = observed.requestWaiting),
+        )
+        listenConversation()
+    }
+
+    public fun listenConversation() {
+        if (
+            !mutable.value.conversation ||
+                !mayListen() ||
+                mutable.value.active ||
+                conversationSending
+        )
+            return
+        if (field?.text()?.isNotEmpty() == true || observed.hasAttachments) {
+            mutable.update { it.copy(replyNote = ConversationReplyNote.DraftFirst) }
+            return
+        }
+        stopReply()
+        mutable.update { it.copy(replyNote = null) }
+        start(VoiceMode.Conversation)
+    }
+
+    public fun exitConversation(cleanup: CoroutineScope = scope) {
+        conversationEpoch++
+        selectedReplyVoice = null
+        tips?.dismiss(TeachingIds.VoiceConversation)
+        replyWatch = null
+        conversationSending = false
+        replyJob?.cancel()
+        replyJob = null
+        if (mutable.value.conversation && owner) {
+            owner = false
+            parts?.let { p -> cleanup.launch { p.dictation.cancel(keepWords = false) } }
+            endUi(null)
+        }
+        mutable.update {
+            it.copy(
+                conversation = false,
+                speakReplies = false,
+                askingReplyConsent = false,
+                pickingReplyVoice = false,
+                replyVoices = emptyList(),
+                waitingReply = false,
+                speakingReply = false,
+                replyNote = null,
+            )
+        }
+    }
+
+    public fun speakReplies(enabled: Boolean) {
+        if (!enabled) {
+            replyWatch = null
+            mutable.update {
+                it.copy(
+                    speakReplies = false,
+                    askingReplyConsent = false,
+                    pickingReplyVoice = false,
+                    replyVoices = emptyList(),
+                    waitingReply = false,
+                )
+            }
+            stopReply()
+            return
+        }
+        if (!mutable.value.conversation) return
+        val reader = parts?.reader ?: return
+        if (!reader.consentGiven()) mutable.update { it.copy(askingReplyConsent = true) }
+        else chooseReplyVoice()
+    }
+
+    public fun consentToReplies() {
+        val reader = parts?.reader ?: return
+        val epoch = conversationEpoch
+        mutable.update { it.copy(askingReplyConsent = false) }
+        scope.launch {
+            val result = reader.giveConsent()
+            if (epoch != conversationEpoch || !mutable.value.conversation || !foreground)
+                return@launch
+            if (result is Outcome.Ok) chooseReplyVoice()
+            else mutable.update { it.copy(replyNote = ConversationReplyNote.Failed) }
+        }
+    }
+
+    private fun chooseReplyVoice() {
+        val reader = parts?.reader ?: return
+        val epoch = conversationEpoch
+        scope.launch {
+            when (val voices = reader.voices()) {
+                is Outcome.Failed ->
+                    if (epoch == conversationEpoch)
+                        mutable.update { it.copy(replyNote = ConversationReplyNote.Failed) }
+                is Outcome.Ok ->
+                    if (epoch == conversationEpoch && mutable.value.conversation) {
+                        mutable.update {
+                            it.copy(
+                                pickingReplyVoice = voices.value.isNotEmpty(),
+                                replyVoices = voices.value,
+                                replyNote =
+                                    if (voices.value.isEmpty()) ConversationReplyNote.Failed
+                                    else null,
+                            )
+                        }
+                    }
+            }
+        }
+    }
+
+    public fun pickReplyVoice(id: String) {
+        if (mutable.value.replyVoices.none { it.id == id } || !mutable.value.conversation) return
+        selectedReplyVoice = id
+        mutable.update {
+            it.copy(
+                speakReplies = true,
+                pickingReplyVoice = false,
+                replyVoices = emptyList(),
+                replyNote = null,
+            )
+        }
+    }
+
+    public fun closeReplyVoices() {
+        mutable.update { it.copy(pickingReplyVoice = false, replyVoices = emptyList()) }
+    }
+
+    public fun declineReplyConsent() {
+        mutable.update { it.copy(askingReplyConsent = false) }
+    }
+
+    public fun readReply() {
+        if (!mutable.value.conversation || replyWatch != null) return
+        val reply =
+            observed.messages.lastOrNull {
+                !it.user && it.settled && SpeechProse.of(it.text).isNotBlank()
+            } ?: return
+        val reader = parts?.reader ?: return
+        if (!reader.consentGiven()) {
+            mutable.update { it.copy(askingReplyConsent = true) }
+            return
+        }
+        readReply(reply.id, automatic = false)
+    }
+
+    public fun stopReply() {
+        replyJob?.cancel()
+        replyJob = null
+        mutable.update { it.copy(speakingReply = false) }
+    }
+
+    private fun mayListen(): Boolean =
+        foreground &&
+            observed.connected &&
+            observed.ready &&
+            !observed.busy &&
+            !observed.requestWaiting
+
+    private fun refreshConversation() {
+        mutable.update {
+            it.copy(
+                canListen = mayListen() && !conversationSending && replyWatch == null,
+                waitingReply = conversationSending || replyWatch != null || observed.busy,
+                canReadReply =
+                    !observed.busy &&
+                        replyWatch == null &&
+                        !it.speakingReply &&
+                        observed.messages.any { message ->
+                            !message.user &&
+                                message.settled &&
+                                SpeechProse.of(message.text).isNotBlank()
+                        },
+            )
+        }
+    }
+
+    private fun sendConversation(words: String) {
+        val handle = conversationHandle ?: return
+        if (field?.text()?.isNotEmpty() == true || observed.hasAttachments) {
+            keepConversationWords(words)
+            mutable.update { it.copy(replyNote = ConversationReplyNote.DraftFirst) }
+            return
+        }
+        if (!mutable.value.conversation || !mayListen()) {
+            keepConversationWords(words)
+            mutable.update { it.copy(replyNote = ConversationReplyNote.Paused) }
+            return
+        }
+        if (words.trimStart().startsWith("/")) {
+            keepConversationWords(words)
+            mutable.update { it.copy(replyNote = ConversationReplyNote.CommandsOnly) }
+            return
+        }
+        val epoch = conversationEpoch
+        conversationSending = true
+        replyWatch = if (mutable.value.speakReplies) VoiceReplyWatch(observed) else null
+        refreshConversation()
+        scope.launch {
+            val result = handle.session.sendVoice(words)
+            if (epoch != conversationEpoch) return@launch
+            conversationSending = false
+            if (result is Outcome.Failed) {
+                keepConversationWords(words)
+                replyWatch = null
+                mutable.update { it.copy(replyNote = ConversationReplyNote.Review) }
+            }
+            checkReply()
+            refreshConversation()
+        }
+    }
+
+    private fun keepConversationWords(words: String) {
+        if (field?.text() != words) merge(words)
+    }
+
+    private fun checkReply() {
+        val watch = replyWatch ?: return
+        val decision = watch.decide(observed)
+        if (decision == VoiceReplyDecision.Wait) return
+        replyWatch = null
+        mutable.update { it.copy(waitingReply = false) }
+        when (decision) {
+            VoiceReplyDecision.Wait -> Unit
+            VoiceReplyDecision.Review ->
+                mutable.update { it.copy(replyNote = ConversationReplyNote.Review) }
+            VoiceReplyDecision.Interrupted ->
+                mutable.update { it.copy(replyNote = ConversationReplyNote.Interrupted) }
+            VoiceReplyDecision.NoProse ->
+                mutable.update { it.copy(replyNote = ConversationReplyNote.NoProse) }
+            is VoiceReplyDecision.Read -> readReply(decision.id, automatic = true, watch = watch)
+        }
+    }
+
+    private fun readReply(id: String, automatic: Boolean, watch: VoiceReplyWatch? = null) {
+        val reader = parts?.reader ?: return
+        if (
+            !foreground || !mutable.value.conversation || (automatic && !mutable.value.speakReplies)
+        )
+            return
+        val epoch = conversationEpoch
+        stopReply()
+        mutable.update { it.copy(speakingReply = true, replyNote = null) }
+        replyJob = scope.launch {
+            val session = conversationHandle?.session ?: return@launch
+            val complete = session.readVoiceReply(id, automatic)
+            if (epoch != conversationEpoch || !foreground || !mutable.value.conversation)
+                return@launch
+            if (
+                complete is Outcome.Failed ||
+                    (automatic && (watch?.decide(observed) as? VoiceReplyDecision.Read)?.id != id)
+            ) {
+                mutable.update {
+                    it.copy(speakingReply = false, replyNote = ConversationReplyNote.Review)
+                }
+                return@launch
+            }
+            val prose = SpeechProse.of((complete as Outcome.Ok).value)
+            if (prose.isBlank()) {
+                mutable.update {
+                    it.copy(speakingReply = false, replyNote = ConversationReplyNote.NoProse)
+                }
+                return@launch
+            }
+            val result =
+                reader.read(
+                    ReadRequest(
+                        "$replyPrefix$id",
+                        prose,
+                        voiceId = selectedReplyVoice,
+                        automatic = automatic,
+                    )
+                )
+            if (epoch != conversationEpoch) return@launch
+            mutable.update {
+                it.copy(
+                    speakingReply = false,
+                    replyNote =
+                        if (result is Outcome.Failed) ConversationReplyNote.Failed else null,
+                )
+            }
+            refreshConversation()
+        }
+    }
 
     init {
         scope.launch { load() }
@@ -131,6 +565,17 @@ public class ComposerVoicePresenter(
                 val p = loaded.value
                 parts = p
                 mutable.update { it.copy(available = p.micAvailable) }
+                scope.launch {
+                    p.reader.state.collect { reading ->
+                        if (reading is ReadAloudState.Failed && mutable.value.speakingReply)
+                            mutable.update {
+                                it.copy(
+                                    speakingReply = false,
+                                    replyNote = ConversationReplyNote.Failed,
+                                )
+                            }
+                    }
+                }
                 p.dictation.state.collect { onDictation(it) }
             }
         }
@@ -145,9 +590,12 @@ public class ComposerVoicePresenter(
 
     public fun tapMic() {
         when (mutable.value.phase) {
-            MicPhase.Idle -> start(VoiceMode.Tap)
-            MicPhase.Starting, MicPhase.Listening -> done()
-            MicPhase.Writing, MicPhase.Countdown -> Unit
+            MicPhase.Idle ->
+                if (mutable.value.conversation) listenConversation() else start(VoiceMode.Tap)
+            MicPhase.Starting,
+            MicPhase.Listening -> done()
+            MicPhase.Writing,
+            MicPhase.Countdown -> Unit
         }
     }
 
@@ -189,7 +637,8 @@ public class ComposerVoicePresenter(
     public fun cancel() {
         when (mutable.value.phase) {
             MicPhase.Starting -> earlyEnd = EarlyEnd.Discard
-            MicPhase.Listening, MicPhase.Writing -> discard()
+            MicPhase.Listening,
+            MicPhase.Writing -> discard()
             MicPhase.Countdown -> dontSend()
             MicPhase.Idle -> Unit
         }
@@ -206,7 +655,10 @@ public class ComposerVoicePresenter(
         clearCountdown()
     }
 
-    /** The field changed while the countdown ran: anything else than the counted words cancels the send. */
+    /**
+     * The field changed while the countdown ran: anything else than the counted words cancels the
+     * send.
+     */
     public fun fieldChanged(text: String) {
         val counted = countdown ?: return
         if (text != counted.text) clearCountdown()
@@ -230,19 +682,33 @@ public class ComposerVoicePresenter(
         if (note.blocked) hub.openAppSettings() else start(VoiceMode.Tap)
     }
 
-    /** The chat left the screen or came back (plan 10 §6.5): leaving ends a recording, keeping the words written. */
+    /**
+     * The chat left the screen or came back (plan 10 §6.5): leaving ends a recording, keeping the
+     * words written.
+     */
     public fun hostChanged(inForeground: Boolean) {
         foreground = inForeground
-        parts?.dictation?.onHostChanged(if (inForeground) VoiceHost.Foreground else VoiceHost.Background)
-        if (!inForeground) clearCountdown()
+        parts
+            ?.dictation
+            ?.onHostChanged(if (inForeground) VoiceHost.Foreground else VoiceHost.Background)
+        parts?.reader?.onHostChanged(inForeground)
+        if (!inForeground) {
+            clearCountdown()
+            exitConversation()
+        }
     }
 
     /**
-     * The conversation's composer went away: a recording it started is cancelled, keeping nothing. [cleanup] outlives
-     * this presenter's own scope (the ViewModel's scope is already cancelled when it is cleared).
+     * The conversation's composer went away: a recording it started is cancelled, keeping nothing.
+     * [cleanup] outlives this presenter's own scope (the ViewModel's scope is already cancelled
+     * when it is cleared).
      */
     public fun close(cleanup: CoroutineScope = scope) {
         clearCountdown()
+        conversationJob?.cancel()
+        conversationHandle?.release?.invoke()
+        conversationHandle = null
+        exitConversation(cleanup)
         if (owner) {
             val p = parts
             owner = false
@@ -315,7 +781,8 @@ public class ComposerVoicePresenter(
                 mutable.update { it.copy(phase = MicPhase.Listening, words = s.words) }
                 when (earlyEnd.also { earlyEnd = null }) {
                     EarlyEnd.Finish -> {
-                        if (mutable.value.mode == VoiceMode.Hold) discard() else finish() // a hold released while starting is a slip
+                        if (mutable.value.mode == VoiceMode.Hold) discard()
+                        else finish() // a hold released while starting is a slip
                     }
                     EarlyEnd.Discard -> discard()
                     null -> Unit
@@ -355,12 +822,24 @@ public class ComposerVoicePresenter(
             endUi(VoiceNote.NothingHeard)
             return
         }
+        if (mode == VoiceMode.Conversation) {
+            endUi(null)
+            sendConversation(words.trim())
+            return
+        }
         val merged = merge(words) ?: return endUi(null)
-        if (endedBy == VoiceEnd.Silence && mode == VoiceMode.Tap) {
-            // B-MEDIA-016: the spoken words must be sendable by themselves (Flutter `mayAutoSend(voice.draft)`); a
+        if (endedBy == VoiceEnd.Silence && mode == VoiceMode.Tap && field?.dictationOnly != true) {
+            // B-MEDIA-016: the spoken words must be sendable by themselves (Flutter
+            // `mayAutoSend(voice.draft)`); a
             // rejected transcript never sends a draft that was already in the box.
             val counted =
-                if (mayAutoSend(words)) AutoSendCountdown.startIfAllowed(merged, stoppedBySilence = true, now = clock.now()) else null
+                if (mayAutoSend(words))
+                    AutoSendCountdown.startIfAllowed(
+                        merged,
+                        stoppedBySilence = true,
+                        now = clock.now(),
+                    )
+                else null
             if (counted != null) {
                 startCountdown(counted)
                 return
@@ -386,7 +865,15 @@ public class ComposerVoicePresenter(
         listeningSince = null
         earlyEnd = null
         mutable.update {
-            it.copy(phase = MicPhase.Idle, mode = null, holding = false, cancelArmed = false, words = "", elapsedSeconds = 0, note = note)
+            it.copy(
+                phase = MicPhase.Idle,
+                mode = null,
+                holding = false,
+                cancelArmed = false,
+                words = "",
+                elapsedSeconds = 0,
+                note = note,
+            )
         }
     }
 
@@ -398,11 +885,13 @@ public class ComposerVoicePresenter(
             p.dictation.level.takeWhile { generation == ticking }.collect { levelMirror.value = it }
         }
         scope.launch {
-            hub.ticks(TICK).takeWhile { generation == ticking && listeningSince != null }.collect {
-                val since = listeningSince ?: return@collect
-                val seconds = (clock.now() - since).inWholeSeconds.toInt()
-                mutable.update { it.copy(elapsedSeconds = seconds) }
-            }
+            hub.ticks(TICK)
+                .takeWhile { generation == ticking && listeningSince != null }
+                .collect {
+                    val since = listeningSince ?: return@collect
+                    val seconds = (clock.now() - since).inWholeSeconds.toInt()
+                    mutable.update { it.copy(elapsedSeconds = seconds) }
+                }
         }
     }
 
@@ -427,11 +916,13 @@ public class ComposerVoicePresenter(
         }
         val generation = ++counting
         scope.launch {
-            hub.ticks(COUNTDOWN_STEP).takeWhile { generation == counting && countdown === counted }.collect {
-                val left = counted.secondsLeft(clock.now())
-                mutable.update { it.copy(secondsLeft = left) }
-                if (left == 0) decide(sendNow = false)
-            }
+            hub.ticks(COUNTDOWN_STEP)
+                .takeWhile { generation == counting && countdown === counted }
+                .collect {
+                    val left = counted.secondsLeft(clock.now())
+                    mutable.update { it.copy(secondsLeft = left) }
+                    if (left == 0) decide(sendNow = false)
+                }
         }
     }
 

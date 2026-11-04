@@ -1,0 +1,25 @@
+<resources>
+    <string name="filesViewOptions">View</string>
+    <string name="filesSearchNames">File names</string>
+    <string name="filesRowActions">Actions</string>
+    <string name="filesChangeDeleted">Deleted</string>
+    <string name="filesChangeAdded">Added</string>
+    <string name="filesChangeModified">Changed</string>
+    <string name="filesWrapCode">Wrap lines</string>
+    <string name="filesUnwrapCode">Scroll lines sideways</string>
+    <string name="filesShowPreview">Preview</string>
+    <string name="filesMoreActions">More file actions</string>
+    <string name="filesAttachFailed">Couldn't attach this file. Try again.</string>
+    <string name="filesPreferencesFailed">Couldn't save this display choice. Try again.</string>
+    <string name="filesLinkRefused">This link can't be opened safely.</string>
+    <string name="filesOpenLinkQuestion">Open %1$s?</string>
+    <string name="filesOpenLinkBody">This link opens outside the app.</string>
+    <string name="filesOpenLink">Open link</string>
+    <string name="filesAttachmentReady">File attached. Return to the conversation to add your comment.</string>
+    <string name="filesScopedEmpty">This is the folder shared by this conversation’s server. Check its folder access, then refresh.</string>
+    <string name="filesStorageFailed">Folder access was not changed. Try again.</string>
+    <string name="filesStorageRestart">Folder access is saved. Restart this phone’s server, then refresh.</string>
+    <string name="filesOpenPhone">Open This phone</string>
+    <string name="filesReviewStorage">Review shared folders</string>
+    <string name="filesSelectedStorageBody">Allow this project folder, or review shared folders. Access to a whole storage volume stays off unless you enable it there.</string>
+</resources>

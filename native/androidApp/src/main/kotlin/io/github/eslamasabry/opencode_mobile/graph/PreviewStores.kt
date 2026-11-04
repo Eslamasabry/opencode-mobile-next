@@ -22,8 +22,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * The app's stores behind the migration gate (P12: MigrationWiring). On the preview package the gate is open from the
- * start; on the real package it opens when the day-1 migration of the Flutter data has finished.
+ * The app's stores behind the migration gate (P12: MigrationWiring). On the preview package the
+ * gate is open from the start; on the real package it opens when the day-1 migration of the Flutter
+ * data has finished.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -35,7 +36,8 @@ class PreviewStores(
     migration: MigrationWiring,
 ) {
     val prefs = AndroidDataStores.flutterPrefs(application, gate, dispatchers.io)
-    val secrets = migration.ledgered(AndroidDataStores.secrets(application, gate, redactor, dispatchers.io))
+    val secrets =
+        migration.ledgered(AndroidDataStores.secrets(application, gate, redactor, dispatchers.io))
     val lanes = DefaultWriterLanes()
     val profiles = ProfileStore(prefs, secrets, lanes, redactor)
     private val warming = Mutex()
@@ -44,7 +46,9 @@ class PreviewStores(
     /** Every synchronous composer read follows both preference warm-up and profile restoration. */
     suspend fun warm(): Outcome<Unit> = warming.withLock {
         if (prepared) return@withLock Unit.ok()
-        gate.awaitOpen() // nothing reads the adopted file before the migration has finished (plan 05 §7.3)
+        gate
+            .awaitOpen() // nothing reads the adopted file before the migration has finished (plan
+                         // 05 §7.3)
         when (
             val result =
                 attempt({ Failure.StorageRefused() }) {
@@ -65,6 +69,31 @@ class PreviewStores(
 @BindingContainer
 @ContributesTo(AppScope::class)
 object PreviewBindings {
+    @Provides
+    fun preferences(stores: PreviewStores): io.github.eslamasabry.oc.core.data.kv.KeyValueStore =
+        stores.prefs
+
+    @Provides
+    fun writerLanes(stores: PreviewStores): io.github.eslamasabry.oc.core.data.lane.WriterLanes =
+        stores.lanes
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun network(application: Application): io.github.eslamasabry.oc.core.model.NetworkStatus =
+        io.github.eslamasabry.oc.android.platform.AndroidNetworkStatus(application).also {
+            it.start()
+        }
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun deviceFacts(
+        application: Application,
+        network: io.github.eslamasabry.oc.core.model.NetworkStatus,
+    ): io.github.eslamasabry.oc.core.domain.platform.DeviceFacts =
+        io.github.eslamasabry.oc.android.platform.AndroidDeviceFacts(application, network).also {
+            it.start()
+        }
+
     @Provides fun profiles(stores: PreviewStores): ProfileStore = stores.profiles
 
     @Provides

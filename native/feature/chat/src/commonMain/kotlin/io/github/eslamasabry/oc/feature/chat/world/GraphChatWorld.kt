@@ -45,6 +45,10 @@ import io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.engine.transcript.transcript
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceConversationSession
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceConversationSnapshot
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceDispatchProof
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceReplyMessage
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestsModel
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestPlace
 import kotlin.coroutines.ContinuationInterceptor
@@ -143,7 +147,7 @@ internal class GraphChatWorld(
     private val registry: ConnectionRegistry,
     private val draftStore: ConversationDrafts? = null,
     private val recentModels: RecentModels = RecentModels(),
-) : ChatWorld, TurnFeedSource {
+) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
     private val feedKeeper = TurnFeedKeeper(ref.sessionId.raw)
@@ -205,11 +209,170 @@ internal class GraphChatWorld(
     private val mutableCommands = MutableStateFlow<List<ComposerCommand>>(emptyList())
     override val commands: StateFlow<List<ComposerCommand>> = mutableCommands.asStateFlow()
 
+    private val mutableVoiceConversation = MutableStateFlow(VoiceConversationSnapshot())
+    override val voiceConversation: StateFlow<VoiceConversationSnapshot> =
+        mutableVoiceConversation.asStateFlow()
+    private var voiceGeneration = 0L
+    private var voiceBusyCount = 0L
+    private var voiceIdleCount = 0L
+    private val voiceLiveUsers = LinkedHashSet<String>()
+    private var voiceProof: VoiceDispatchProof? = null
+
+    private fun publishVoiceConversation() {
+        val feed = feedKeeper.feed.value
+        val draft = mutableDraft.value
+        mutableVoiceConversation.value =
+            VoiceConversationSnapshot(
+                generation = voiceGeneration,
+                connected = currentAttached() != null && mutableLink.value == ChatLink.Live,
+                ready =
+                    mutableLoad.value is ChatLoad.Live &&
+                        draft.ready &&
+                        draft.failure == null &&
+                        !draft.sendBlocked,
+                busy = feed.busy || mutablePending.value.any { it.state == PendingState.Sending },
+                requestWaiting = mutableRequests.value?.state?.value?.card != null,
+                hasAttachments = draft.attachments.isNotEmpty(),
+                busyCount = voiceBusyCount,
+                idleCount = voiceIdleCount,
+                liveUserIds = voiceLiveUsers.toSet(),
+                messages =
+                    feed.ledger.messages.map { message ->
+                        val info = message.info
+                        VoiceReplyMessage(
+                            info.id,
+                            info.role == io.github.eslamasabry.oc.core.model.transcript.Role.User,
+                            info.parentId,
+                            info.time?.completedMs != null || info.errorText != null,
+                            message.parts
+                                .filter {
+                                    !it.synthetic &&
+                                        it.type ==
+                                            io.github.eslamasabry.oc.core.model.transcript.PartType
+                                                .Text
+                                }
+                                .joinToString("\n") { it.text },
+                        )
+                    },
+                dispatch = voiceProof,
+            )
+    }
+
+    override suspend fun sendVoice(text: String): Outcome<Unit> {
+        publishVoiceConversation()
+        val before = voiceConversation.value
+        if (
+            !before.connected ||
+                !before.ready ||
+                before.busy ||
+                before.requestWaiting ||
+                before.hasAttachments ||
+                mutableDraft.value.text.isNotEmpty()
+        )
+            return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        val id = nextLocalId
+        voiceProof = VoiceDispatchProof(id)
+        publishVoiceConversation()
+        val result = send(text, draftFiles = false)
+        if (result is Outcome.Failed && voiceProof?.localId == id)
+            voiceProof = voiceProof?.copy(uncertain = true)
+        publishVoiceConversation()
+        return result
+    }
+
+    override suspend fun readVoiceReply(id: String, automatic: Boolean): Outcome<String> {
+        val owner = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val connects = owner.gateway.events.connects.value
+        val generation = voiceGeneration
+        fun current(): Boolean =
+            currentAttached() === owner &&
+                voiceGeneration == generation &&
+                owner.gateway.events.connects.value == connects &&
+                mutableLink.value == ChatLink.Live
+        fun refused(): Outcome.Failed =
+            Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
+        if (
+            automatic &&
+                (voiceProof?.messageId != id ||
+                    voiceProof?.accepted != true ||
+                    voiceProof?.uncertain == true)
+        )
+            return refused()
+        var cursor: String? = null
+        val cursors = HashSet<String>()
+        var messages: List<io.github.eslamasabry.oc.core.model.transcript.MessageWithParts> =
+            emptyList()
+        repeat(8) {
+            if (!current()) return Outcome.Failed(STALE)
+            val page = owner.gateway.messagePage(sid, cursor = cursor, limit = 100)
+            if (!current()) return Outcome.Failed(STALE)
+            when (page) {
+                is Outcome.Failed -> return page
+                is Outcome.Ok -> {
+                    val ids = messages.mapTo(HashSet()) { it.info.id }
+                    messages = page.value.items.filter { it.info.id !in ids } + messages
+                    val start = messages.indexOfFirst { it.info.id == id }
+                    if (start >= 0) {
+                        val selected =
+                            if (automatic) {
+                                if (
+                                    messages[start].info.role !=
+                                        io.github.eslamasabry.oc.core.model.transcript.Role.User
+                                )
+                                    return refused()
+                                messages.drop(start + 1).takeWhile {
+                                    it.info.role !=
+                                        io.github.eslamasabry.oc.core.model.transcript.Role.User
+                                }
+                            } else listOf(messages[start])
+                        if (
+                            selected.isEmpty() ||
+                                selected.any { message ->
+                                    message.info.role !=
+                                        io.github.eslamasabry.oc.core.model.transcript.Role
+                                            .Assistant ||
+                                        (automatic && message.info.parentId != id) ||
+                                        (message.info.time?.completedMs == null &&
+                                            message.info.errorText == null)
+                                }
+                        )
+                            return refused()
+                        if (
+                            automatic &&
+                                (feedKeeper.feed.value.busy ||
+                                    mutableRequests.value?.state?.value?.card != null)
+                        )
+                            return refused()
+                        return Outcome.Ok(
+                            selected.joinToString("\n\n") { message ->
+                                message.parts
+                                    .filter {
+                                        !it.synthetic &&
+                                            it.type ==
+                                                io.github.eslamasabry.oc.core.model.transcript
+                                                    .PartType
+                                                    .Text
+                                    }
+                                    .joinToString("\n") { it.text }
+                            }
+                        )
+                    }
+                    cursor = page.value.nextCursor ?: return refused()
+                    if (!cursors.add(cursor!!)) return refused()
+                }
+            }
+        }
+        return refused()
+    }
+
     private var attached: Attached? = null
     private var stopWatching: (() -> Unit)? = null
     private val mutableOlder = MutableStateFlow(false)
     override val hasOlder: StateFlow<Boolean> = mutableOlder
     private var nextCursor: String? = null
+    override val olderPageKey: String?
+        get() = nextCursor
+
     private val baselines = HashMap<Long, Set<String>>()
     private val canonical = HashMap<Long, String>()
     private val admitted = HashSet<Long>()
@@ -259,6 +422,7 @@ internal class GraphChatWorld(
                             savedAttachments = saved.savedAttachments,
                         )
                     refreshDraftProtection()
+                    publishVoiceConversation()
                 }
             }
         stopDraftDisplay = { draftDisplayJob.cancel() }
@@ -446,6 +610,8 @@ internal class GraphChatWorld(
     }
 
     private fun bind(graph: ConnectionGraph?) {
+        voiceGeneration++
+        voiceLiveUsers.clear()
         unbind()
         mutableCaps.value = ServerCapabilities()
         // Another server owns another catalog and selection; a stale graph publishes nothing.
@@ -461,6 +627,7 @@ internal class GraphChatWorld(
         if (graph == null) {
             mutableLink.value = ChatLink.Offline
             mutableLoad.value = ChatLoad.Failed(Failure.Network(NetworkWhy.Offline))
+            publishVoiceConversation()
             return
         }
         val gateway = (graph as ChatGraphAccessors).chatGateway
@@ -522,6 +689,9 @@ internal class GraphChatWorld(
         val jobs =
             listOf(
                 scope.launch(registry.mainContext) {
+                    mutableRequests.value?.state?.collect { publishVoiceConversation() }
+                },
+                scope.launch(registry.mainContext) {
                     services.chatRequests.engine.refresh()
                 },
                 scope.launch(registry.mainContext) {
@@ -567,7 +737,26 @@ internal class GraphChatWorld(
                             userMessageKeys += "prompt:${event.message.id}"
                         if (event is CoreEvent.SessionSelection && event.sessionId == sid)
                             adoptRemoteSelection(event)
+                        if (
+                            event is CoreEvent.MessageUpserted &&
+                                event.message.sessionId == sid.raw &&
+                                event.message.role ==
+                                    io.github.eslamasabry.oc.core.model.transcript.Role.User
+                        ) {
+                            voiceLiveUsers += event.message.id
+                            while (voiceLiveUsers.size > 512) voiceLiveUsers.remove(
+                                voiceLiveUsers.first()
+                            )
+                        }
+                        if (event is CoreEvent.RunStarted && event.sessionId == sid)
+                            voiceBusyCount++
+                        if (event is CoreEvent.RunRetrying && event.sessionId == sid)
+                            voiceBusyCount++
+                        if (event is CoreEvent.RunEnded && event.sessionId == sid) voiceIdleCount++
                         feedKeeper.event(event, envelope.receivedAtMs)
+                        // Voice watches final identities and lifecycle events; volatile token
+                        // deltas need no second snapshot.
+                        if (event !is CoreEvent.PartDelta) publishVoiceConversation()
                         bridge.event(event)?.let(handle::submit)
                     }
                 },
@@ -575,11 +764,16 @@ internal class GraphChatWorld(
                     gateway.events.status.collect {
                         mutableLink.value = linkOf(it)
                         feedKeeper.link(mutableLink.value)
+                        publishVoiceConversation()
                     }
                 },
                 scope.launch(registry.mainContext) {
                     gateway.events.connects.collect { n ->
-                        if (n > connects) handle.submit(GatewayEvent.Connected)
+                        if (n > connects) {
+                            voiceGeneration++
+                            handle.submit(GatewayEvent.Connected)
+                            publishVoiceConversation()
+                        }
                         connects = n
                     }
                 },
@@ -610,6 +804,7 @@ internal class GraphChatWorld(
                     }
                     readHistory(gateway, handle, bridge)
                     feedKeeper.loadWindows { services.chatOperations.catalog() }
+                    publishVoiceConversation()
                 },
             )
         jobs.forEach { job -> stops += { job.cancel() } }
@@ -650,6 +845,7 @@ internal class GraphChatWorld(
         if (flushHeld && model != null) a.graph.scope.launch(registry.mainContext) { model.leave() }
         a.stop()
         a.handle.close()
+        publishVoiceConversation()
     }
 
     private suspend fun readHistory(
@@ -666,6 +862,7 @@ internal class GraphChatWorld(
                     return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
                 handle.loadHistory(page.value.items.map(bridge::message), version)
                 feedKeeper.history(page.value.items, feedVersion)
+                publishVoiceConversation()
                 nextCursor = page.value.nextCursor
                 mutableOlder.value = nextCursor != null
                 page.value.items
@@ -1149,7 +1346,15 @@ internal class GraphChatWorld(
         // its range (B-CHAT-087); other files pass through untouched.
         val files = Mentions.resolveFileMentions(text, sent.files).toImmutableList()
         val mentions = Mentions.agentMentions(text, subagentNames).toImmutableList()
-        val result = delivery.send(ref, text, files, sent.model, mentions)
+        val result =
+            delivery.send(
+                ref,
+                text,
+                files,
+                sent.model,
+                mentions,
+                insteadOfDraft = voiceProof?.localId == localId,
+            )
         return when (result) {
             is Outcome.Failed -> fail(localId, result.failure)
             is Outcome.Ok -> {
@@ -1176,6 +1381,14 @@ internal class GraphChatWorld(
         val engine = delivery.engine ?: return
         for ((localId, id) in deliveryIds) {
             val bubble = engine.pending.value.firstOrNull { it.localId == id }
+            if (voiceProof?.localId == localId && bubble != null) {
+                voiceProof =
+                    voiceProof?.copy(
+                        messageId = bubble.dispatchedMessageId?.raw ?: voiceProof?.messageId,
+                        accepted =
+                            bubble.phase == SendPhase.Accepted || voiceProof?.accepted == true,
+                    )
+            }
             bubble?.reviewId?.let { recoveryIds[it] = localId }
             bubble?.dispatchedMessageId?.let { canonical[localId] = "prompt:${it.raw}" }
             if (bubble?.phase == SendPhase.Accepted) {
@@ -1186,27 +1399,35 @@ internal class GraphChatWorld(
             for (outcome in engine.outcomes.value.filter { it.ref == ref }) when (outcome) {
                 is SendOutcome.Accepted ->
                     if (outcome.localId == id) {
+                        if (voiceProof?.localId == localId)
+                            voiceProof = voiceProof?.copy(accepted = true)
                         acknowledgedDraft(localId)
                         delivered += localId
                     }
                 is SendOutcome.Unconfirmed ->
                     if (outcome.localId == id) {
+                        if (voiceProof?.localId == localId)
+                            voiceProof = voiceProof?.copy(uncertain = true)
                         outcome.reviewId?.let { recoveryIds[it] = localId }
                         setPending(localId) {
                             it.copy(state = PendingState.Unconfirmed, failure = outcome.reason)
                         }
                     }
                 is SendOutcome.PutBack ->
-                    if (outcome.localId == id)
+                    if (outcome.localId == id) {
+                        if (voiceProof?.localId == localId)
+                            voiceProof = voiceProof?.copy(uncertain = true)
                         setPending(localId) {
                             it.copy(state = PendingState.Failed, failure = outcome.reason)
                         }
+                    }
                 else -> Unit
             }
         }
         delivered.forEach(::retireFailedTwins)
         delivered.clear()
         settlePending(mutableTranscript.value)
+        publishVoiceConversation()
     }
 
     /**
@@ -1334,6 +1555,30 @@ internal class GraphChatWorld(
             is ChatLoad.Failed -> Outcome.Failed(l.failure)
             else -> Outcome.Ok(Unit)
         }
+    }
+
+    override suspend fun isChildSession(id: String): Outcome<Boolean> {
+        if (!Regex("^[A-Za-z0-9_-]+$").matches(id) || id == sid.raw) return Outcome.Ok(false)
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        return when (val read = a.gateway.session(SessionId(id))) {
+            is Outcome.Failed -> read
+            is Outcome.Ok ->
+                Outcome.Ok(
+                    currentAttached() === a && read.value.id.raw == id && read.value.parentId == sid
+                )
+        }
+    }
+
+    override suspend fun compact(): Outcome<Unit> {
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        if (!capabilities.value.sessionCompact || mutableTranscript.value.run.busy)
+            return Outcome.Failed(Failure.Busy(BusyKind.Starting))
+        val choice =
+            models.value.selected
+                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("sessionCompact")))
+        return (a.graph as ChatGraphAccessors)
+            .chatOperations
+            .compactSession(sid, ModelRef(choice.providerId, choice.modelId))
     }
 
     override suspend fun fork(from: MessageId): Outcome<SessionId> {

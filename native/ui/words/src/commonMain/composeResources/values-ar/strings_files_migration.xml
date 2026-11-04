@@ -1,0 +1,25 @@
+<resources>
+    <string name="filesViewOptions">العرض</string>
+    <string name="filesSearchNames">أسماء الملفات</string>
+    <string name="filesRowActions">الإجراءات</string>
+    <string name="filesChangeDeleted">محذوف</string>
+    <string name="filesChangeAdded">مضاف</string>
+    <string name="filesChangeModified">تم تغييره</string>
+    <string name="filesWrapCode">التفاف السطور</string>
+    <string name="filesUnwrapCode">تمرير السطور أفقيًا</string>
+    <string name="filesShowPreview">معاينة</string>
+    <string name="filesMoreActions">المزيد من إجراءات الملف</string>
+    <string name="filesAttachFailed">تعذّر إرفاق هذا الملف. حاول مجددًا.</string>
+    <string name="filesPreferencesFailed">تعذّر حفظ خيار العرض. حاول مجددًا.</string>
+    <string name="filesLinkRefused">لا يمكن فتح هذا الرابط بأمان.</string>
+    <string name="filesOpenLinkQuestion">فتح %1$s؟</string>
+    <string name="filesOpenLinkBody">يفتح هذا الرابط خارج التطبيق.</string>
+    <string name="filesOpenLink">فتح الرابط</string>
+    <string name="filesAttachmentReady">تم إرفاق الملف. عُد إلى المحادثة لإضافة تعليقك.</string>
+    <string name="filesScopedEmpty">هذا هو المجلد الذي يشاركه خادم المحادثة. تحقّق من صلاحية الوصول إليه، ثم حدّث القائمة.</string>
+    <string name="filesStorageFailed">لم يتغيّر الوصول إلى المجلد. حاول مجددًا.</string>
+    <string name="filesStorageRestart">تم حفظ صلاحية الوصول إلى المجلد. أعد تشغيل خادم هذا الهاتف، ثم حدّث القائمة.</string>
+    <string name="filesOpenPhone">فتح هذا الهاتف</string>
+    <string name="filesReviewStorage">مراجعة المجلدات المشتركة</string>
+    <string name="filesSelectedStorageBody">اسمح بالوصول إلى مجلد المشروع هذا، أو راجع المجلدات المشتركة. يظل الوصول إلى وحدة التخزين كاملة متوقفًا ما لم تُفعّله هناك.</string>
+</resources>

@@ -12,6 +12,7 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.transcript.ledger.latest
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
@@ -74,8 +75,14 @@ public class ChatViewModel(
      * profile).
      */
     public fun openSession(sessionId: String) {
-        if (sessionId.isNotBlank())
-            nav.openChat(ConversationRef(world.ref.profileId, SessionId(sessionId)))
+        if (sessionId.isBlank()) return
+        // The id is server-authored text: open it only when the server says it is this
+        // conversation's own child (Flutter `isKnownChild` / `requireChild: true`).
+        viewModelScope.launch {
+            val child = world.isChildSession(sessionId)
+            if (child is Outcome.Ok && child.value)
+                nav.openChat(ConversationRef(world.ref.profileId, SessionId(sessionId)))
+        }
     }
 
     override fun onCleared() {
@@ -98,6 +105,9 @@ public class ChatViewModel(
      */
     override fun openFiles(): Unit = nav.open(FilesRoute.Folder(presenter.ref))
 
+    override fun openTools(): Unit =
+        nav.open(io.github.eslamasabry.oc.ui.routes.LibraryRoute(ref = route.ref))
+
     override fun stop(): Unit = presenter.stop()
 
     override fun find(query: String?): Unit = presenter.find(query)
@@ -108,7 +118,22 @@ public class ChatViewModel(
 
     override fun loadOlder(): Unit = presenter.loadOlder()
 
+    override fun toggleReasoning(): Unit = presenter.toggleReasoning()
+
+    override fun compactAgain(): Unit = presenter.compactAgain()
+
     override fun openTimeline(): Unit = presenter.openTimeline()
+
+    override fun closeTimeline(): Unit = presenter.closeTimeline()
+
+    override fun timelineQuery(query: String): Unit = presenter.timelineQuery(query)
+
+    override fun timelineSelect(messageId: String, fork: Boolean): Unit =
+        presenter.timelineSelect(messageId, fork)
+
+    override fun searchAllHistory(): Unit = presenter.searchAllHistory()
+
+    override fun cancelSearchAll(): Unit = presenter.cancelSearchAll()
 
     override fun openMessageMenu(rowKey: String): Unit = presenter.openMessageMenu(rowKey)
 

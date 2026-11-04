@@ -13,6 +13,8 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
+import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
+import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
@@ -48,6 +50,11 @@ internal data class ChatLocal(
     val findQuery: String? = null,
     val findKey: FindHit? = null,
     val findCursor: Int = -1,
+    val timelineQuery: String? = null,
+    val reasoningExpanded: Boolean = false,
+    val searchingAll: Boolean = false,
+    val loadingOlder: Boolean = false,
+    val olderFailure: Failure? = null,
     val menu: MessageMenuUi? = null,
     val confirm: ChatConfirm? = null,
     val clip: ClipUi? = null,
@@ -68,6 +75,7 @@ internal data class PendingArrival(
     val id: Long,
     val focusComposer: Boolean,
     val landOnFailure: Boolean,
+    val rowKey: String? = null,
 )
 
 /** One snapshot of everything the screen reads from the world. */
@@ -110,6 +118,8 @@ public class ChatPresenter(
     private var readAllowed = false
     private var readBusy = false
     private var stopInFlight = false
+    private var historySearchGeneration = 0L
+    private val feed = (world as? TurnFeedSource)?.turnFeed ?: MutableStateFlow(TurnFeed.Empty)
 
     public val ref: ConversationRef
         get() = world.ref
@@ -156,7 +166,9 @@ public class ChatPresenter(
                 settleStop()
             }
             .launchIn(scope)
-        return combine(inputs, local, hits, world.hasOlder) { i, l, h, _ -> present(i, l, h) }
+        return combine(inputs, local, hits, world.hasOlder, feed) { i, l, h, _, _ ->
+                present(i, l, h)
+            }
             .stateIn(scope, started, ChatUi.loading(world.ref))
     }
 
@@ -193,14 +205,18 @@ public class ChatPresenter(
                     hit?.rowKey,
                     hit?.let { t.indexOf(it.rowKey) } ?: -1,
                     partial = world.hasOlder.value,
+                    searchingAll = l.searchingAll,
+                    loadingOlder = l.loadingOlder,
+                    olderFailure = l.olderFailure,
+                    excerpt = hit?.let { findExcerpt(t, it) },
                 )
             }
         val arrival =
             l.arrival?.let { a ->
                 val land =
-                    if (a.landOnFailure)
-                        Landing.newestFailedKey(t.rows)?.let(t::indexOf)?.takeIf { it >= 0 }
-                    else null
+                    (a.rowKey ?: if (a.landOnFailure) Landing.newestFailedKey(t.rows) else null)
+                        ?.let(t::indexOf)
+                        ?.takeIf { it >= 0 }
                 ChatArrivalUi(a.id, a.focusComposer, land)
             }
         return ChatUi(
@@ -237,6 +253,17 @@ public class ChatPresenter(
             picture = l.picture,
             readAloud = l.readAloud,
             confirmedPaths = l.confirmedPaths,
+            reasoningExpanded = l.reasoningExpanded,
+            timeline =
+                l.timelineQuery?.let { query ->
+                    TimelineUi(
+                        query,
+                        timelineEntries(feed.value, t, query, i.capabilities.sessionFork),
+                        world.hasOlder.value,
+                        l.loadingOlder,
+                        l.olderFailure,
+                    )
+                },
         )
     }
 
@@ -257,6 +284,10 @@ public class ChatPresenter(
 
     override fun leaveRequested() {
         val l = local.value
+        if (l.timelineQuery != null) {
+            closeTimeline()
+            return
+        }
         when (
             BackOrder.next(
                 l.menu != null || l.select != null || l.picture != null,
@@ -356,11 +387,13 @@ public class ChatPresenter(
             deleteMessage = c.messageDelete,
             undo = c.sessionRevert,
             changes = true,
+            compact = c.sessionCompact,
         )
 
     // ---- Find (plan 09 §6.6) ----
 
     override fun find(query: String?) {
+        if (query == null) cancelSearchAll()
         local.update {
             it.copy(findQuery = query, findKey = null, findCursor = if (query == null) -1 else 0)
         }
@@ -380,16 +413,120 @@ public class ChatPresenter(
         local.update { it.copy(findKey = hits[next], findCursor = next) }
     }
 
-    /**
-     * Slice 2: the timeline sheet is S4's; until it lands the pill opens find, the in-chat way to a
-     * message.
-     */
     override fun loadOlder() {
-        launcher.launch { world.loadOlder() }
+        if (local.value.loadingOlder) return
+        local.update { it.copy(loadingOlder = true, olderFailure = null) }
+        launcher.launch {
+            try {
+                val result = world.loadOlder()
+                if (result is Outcome.Failed)
+                    local.update { it.copy(olderFailure = result.failure) }
+            } finally {
+                local.update { it.copy(loadingOlder = false) }
+            }
+        }
+    }
+
+    override fun searchAllHistory() {
+        if (local.value.findQuery == null || local.value.loadingOlder || local.value.searchingAll)
+            return
+        val generation = ++historySearchGeneration
+        local.update { it.copy(searchingAll = true, olderFailure = null) }
+        launcher.launch {
+            try {
+                val visited = HashSet<String?>()
+                while (
+                    generation == historySearchGeneration &&
+                        local.value.findQuery != null &&
+                        world.hasOlder.value
+                ) {
+                    val page = world.olderPageKey
+                    if (!visited.add(page)) {
+                        local.update { it.copy(olderFailure = Failure.Unexpected()) }
+                        break
+                    }
+                    local.update { it.copy(loadingOlder = true) }
+                    when (val result = world.loadOlder()) {
+                        is Outcome.Failed -> {
+                            local.update { it.copy(olderFailure = result.failure) }
+                            break
+                        }
+                        is Outcome.Ok -> Unit
+                    }
+                }
+            } finally {
+                local.update { it.copy(loadingOlder = false, searchingAll = false) }
+            }
+        }
+    }
+
+    override fun cancelSearchAll() {
+        historySearchGeneration++
+        local.update { it.copy(searchingAll = false) }
+    }
+
+    override fun toggleReasoning() {
+        local.update { it.copy(reasoningExpanded = !it.reasoningExpanded) }
+    }
+
+    override fun compactAgain() {
+        if (world.transcript.value.run.busy || !world.capabilities.value.sessionCompact) return
+        launcher.launch {
+            val result = world.compact()
+            if (result is Outcome.Failed) local.update { it.copy(actionFailure = result.failure) }
+        }
     }
 
     override fun openTimeline() {
-        if (local.value.findQuery == null) find("")
+        local.update { it.copy(timelineQuery = "", olderFailure = null) }
+    }
+
+    override fun closeTimeline() {
+        local.update { it.copy(timelineQuery = null) }
+    }
+
+    override fun timelineQuery(query: String) {
+        if (local.value.timelineQuery != null) local.update { it.copy(timelineQuery = query) }
+    }
+
+    override fun timelineSelect(messageId: String, fork: Boolean) {
+        val query = local.value.timelineQuery ?: return
+        val t = world.transcript.value
+        val entry =
+            timelineEntries(feed.value, t, query, world.capabilities.value.sessionFork)
+                .firstOrNull { it.messageId == messageId } ?: return
+        closeTimeline()
+        if (fork) {
+            if (entry.forkable)
+                messageAction(
+                    MessageTarget(
+                        t.rows.firstOrNull { it.key == entry.rowKey }?.turnId ?: return,
+                        entry.rowKey,
+                        TargetKind.Prompt,
+                        messageId,
+                    ),
+                    MessageAction.Fork,
+                )
+        } else {
+            if (query.isNotBlank()) {
+                find(query)
+                val hits = TranscriptFind.search(t, query)
+                val cursor = hits.indexOfFirst { it.rowKey == entry.rowKey }
+                if (cursor >= 0)
+                    local.update { it.copy(findKey = hits[cursor], findCursor = cursor) }
+            }
+            local.update {
+                it.copy(
+                    arrival =
+                        PendingArrival(
+                            nextId++,
+                            false,
+                            false,
+                            rowKey = entry.rowKey,
+                        )
+                )
+            }
+        }
     }
 
     // ---- Message actions (plan 09 §6.6) ----

@@ -62,6 +62,11 @@ internal class Oc2Gateway(
     LibraryGateway,
     SessionDispatchAdmissionGateway,
     SessionTransferImportGateway,
+    SessionSkillGateway,
+    McpRemovalGateway,
+    IntegrationCredentialGateway,
+    IntegrationCommandGateway,
+    IntegrationAuthRecoveryGateway,
     ApiRouteGateway {
     private val transfer by lazy {
         Oc2SessionTransfer(this, { location.value }) { feature ->
@@ -233,6 +238,27 @@ internal class Oc2Gateway(
             admission.settle(session)
         }
     }
+
+    private val worktrees = Oc2Worktrees(this)
+
+    override suspend fun listProjects(): Outcome<ImmutableList<WorkspaceProject>> =
+        worktrees.projects()
+
+    override suspend fun currentProject(): Outcome<WorkspaceProject?> = worktrees.current()
+
+    override suspend fun listProjectDirectories(
+        projectId: String
+    ): Outcome<ImmutableList<ProjectDirectoryInfo>> = worktrees.directories(projectId)
+
+    override suspend fun listWorktrees(
+        projectDirectory: String,
+        projectId: String?,
+    ): Outcome<ImmutableList<WorktreeInfo>> = worktrees.list(projectDirectory, projectId)
+
+    override suspend fun removeWorktree(
+        projectDirectory: String,
+        directory: String,
+    ): Outcome<Unit> = worktrees.remove(projectDirectory, directory)
 
     private val ids = Oc2ClientIds(clock, random)
     private val dialect = MutableStateFlow(initialDialect)
@@ -968,6 +994,59 @@ internal class Oc2Gateway(
                 .toImmutableList()
         }
 
+    // Migration 40: the native Tools and Providers pages use the same location-bound contracts as
+    // Flutter. Mass merge: skills, the MCP list and connect/disconnect/add, and the sign-in methods are
+    // implemented once above (PROTO's Oc2ProviderSignIn and Oc2Library; mcpResources by SEC-2's
+    // Oc2Integrations). Migration 40 adds what only it provides.
+    private val libraryOps = Oc2LibraryOps(this, redactor)
+
+    override suspend fun references() = libraryOps.references()
+
+    override suspend fun removeMcpServer(name: String) = libraryOps.removeMcpServer(name)
+
+    override suspend fun renameCredential(id: String, label: String) =
+        libraryOps.renameCredential(id, label)
+
+    override suspend fun activateCredential(id: String) = libraryOps.activateCredential(id)
+
+    override suspend fun removeCredential(id: String) = libraryOps.removeCredential(id)
+
+    override suspend fun startIntegrationCommand(
+        integrationId: String,
+        methodId: String,
+        label: String?,
+    ) = libraryOps.startIntegrationCommand(integrationId, methodId, label)
+
+    override suspend fun integrationCommandStatus(integrationId: String, attemptId: String) =
+        libraryOps.integrationCommandStatus(integrationId, attemptId)
+
+    override suspend fun cancelIntegrationCommand(integrationId: String, attemptId: String) =
+        libraryOps.cancelIntegrationCommand(integrationId, attemptId)
+
+    override fun restoreIntegrationAuthAttempt(
+        integrationId: String,
+        attemptId: String,
+        command: Boolean,
+        directory: String?,
+        workspace: String?,
+    ) =
+        libraryOps.restoreIntegrationAuthAttempt(
+            integrationId,
+            attemptId,
+            command,
+            directory,
+            workspace,
+        )
+
+    override val sessionSkillsSupported: Boolean
+        get() = libraryOps.sessionSkillsSupported
+
+    override suspend fun activateSessionSkill(
+        session: SessionId,
+        skillId: String,
+        resume: Boolean,
+    ) = libraryOps.activateSessionSkill(session, skillId, resume)
+
     override suspend fun todos(id: SessionId): Outcome<ImmutableList<Todo>> =
         unavailable("sessionTodos")
 
@@ -1645,9 +1724,9 @@ internal class Oc2Gateway(
                 mcpChatToolRefresh = false,
                 mcpConfigWrites = false,
                 mcpRuntimeAdds = true,
-                mcpRuntimeRemovals = false,
+                mcpRuntimeRemovals = true,
                 integrationCredentials = true,
-                integrationCommandAuth = false,
+                integrationCommandAuth = true,
                 pluginInventory = true,
                 webSearch = true,
                 sessionShare = false,

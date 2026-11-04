@@ -22,8 +22,8 @@ kotlin {
         implementation(project(":ui:design"))
         implementation(project(":ui:kit"))
         implementation(project(":ui:words")) // kit-internal words (strings_kit.xml), plan 06 §16.1
-        implementation("io.coil-kt.coil3:coil-compose:3.6.3")
-        implementation("io.coil-kt.coil3:coil-svg:3.6.3")
+        implementation("io.coil-kt.coil3:coil-compose:${libs.versions.coil.get()}")
+        implementation("io.coil-kt.coil3:coil-svg:${libs.versions.coil.get()}")
         implementation(libs.compose.material3) // kit modules only (ExternalRules)
     }
     sourceSets.getByName("desktopTest").dependencies {

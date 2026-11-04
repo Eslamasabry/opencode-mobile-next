@@ -54,5 +54,43 @@ object SecurityFeatureBindings {
             )
             // REST-1: per-profile monitoring keys.
             AndroidProfileMonitoring.registerKeys(this)
+            // PORT-SCREENS-2: reader choices, new-chat project, shared project folders, list sources, opening titles.
+            io.github.eslamasabry.oc.engine.settings.reader.ReaderPreferencesStore.register(this)
+            register(
+                KeyShape(
+                    "oc.newChatProject.",
+                    KeyScope.Profile,
+                    PrefType.Str,
+                    ":feature:chats",
+                    "last project for new conversation",
+                )
+            )
+            register(
+                KeyShape(
+                    "oc.sharedProjects.",
+                    KeyScope.Profile,
+                    PrefType.StrList,
+                    ":engine:runtime",
+                    "selected shared-storage project folders",
+                )
+            )
+            register(
+                KeyShape(
+                    "oc.chatListShown.",
+                    KeyScope.Profile,
+                    PrefType.Bool,
+                    ":feature:chats",
+                    "conversation source visibility",
+                )
+            )
+            register(
+                KeyShape(
+                    "oc.sessionInventory.",
+                    KeyScope.Profile,
+                    PrefType.Str,
+                    ":feature:chats",
+                    "read-only opening conversation titles",
+                )
+            )
         }
 }

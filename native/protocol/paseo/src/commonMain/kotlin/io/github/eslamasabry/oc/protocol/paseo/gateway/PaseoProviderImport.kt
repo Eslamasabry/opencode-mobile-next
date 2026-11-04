@@ -1,94 +1,142 @@
 package io.github.eslamasabry.oc.protocol.paseo.gateway
 
-import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.domain.ImportableConversation
+import io.github.eslamasabry.oc.core.domain.ImportableConversations
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.protocol.paseo.PaseoFailureKind
-import io.github.eslamasabry.oc.protocol.paseo.arrayOrNull
+import io.github.eslamasabry.oc.protocol.paseo.arr
 import io.github.eslamasabry.oc.protocol.paseo.jsonOf
 import io.github.eslamasabry.oc.protocol.paseo.longOrNull
-import io.github.eslamasabry.oc.protocol.paseo.objectOrNull
+import io.github.eslamasabry.oc.protocol.paseo.obj
 import io.github.eslamasabry.oc.protocol.paseo.paseoFail
 import io.github.eslamasabry.oc.protocol.paseo.paseoMillis
 import io.github.eslamasabry.oc.protocol.paseo.requests.isPaseoProviderId
 import io.github.eslamasabry.oc.protocol.paseo.str
-import io.github.eslamasabry.oc.protocol.paseo.stringOrNull
-import kotlinx.serialization.json.JsonElement
+import kotlin.time.Instant
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.JsonObject
 
-/*
- * Importing a conversation started in Claude Code's own app, a port of lib/paseo/gateway/provider_import.dart and
- * lib/domain/provider_conversation_import.dart (B-AGENT-174): the daemon lists this project's conversations, newest
- * first; importing sends the agent, its handle and folder, then reads the agent the ordinary way.
- */
+/** Actual Paseo provider-import requests, ported from lib/paseo/gateway/provider_import.dart. */
+internal class PaseoProviderImport(private val gateway: PaseoGateway) {
+    private val mutex = Mutex()
+    private var listedScope: String? = null
+    private var listedEpoch = -1
+    private var candidates: Map<Pair<String, String>, ImportableConversation> = emptyMap()
 
-public data class ImportableConversation(
-    /** The runtime (`claude`). */
-    val agentId: String,
-    /** The runtime's own session handle. */
-    val handle: String,
-    val directory: String,
-    val lastUsedMs: Long,
-    val title: String? = null,
-    val firstPrompt: String? = null,
-) {
-    public val displayTitle: String? get() = title ?: firstPrompt
-}
+    fun clear() {
+        listedScope = null
+        listedEpoch = -1
+        candidates = emptyMap()
+    }
 
-public data class ImportableConversations(val items: List<ImportableConversation>, val alreadyImported: Int)
-
-private val CONTROL = Regex("[\\x00-\\x1f\\x7f]")
-private val BLANKS = Regex("\\s+")
-
-private fun importText(value: JsonElement?, max: Int): String? {
-    val clean = value.stringOrNull()?.replace(CONTROL, " ")?.replace(BLANKS, " ")?.trim() ?: return null
-    if (clean.isEmpty()) return null
-    return if (clean.length > max) clean.substring(0, max) + "…" else clean
-}
-
-/** The folder imports are listed for (the gateway's own). */
-public val PaseoGateway.providerImportDirectory: String? get() = directory
-
-/** This project's Claude Code conversations the daemon can import, newest first. */
-public suspend fun PaseoGateway.importableConversations(): Outcome<ImportableConversations> = laneCall {
-    val scope = scopeDir
-    val result = workspaceRequest(
-        "fetch_recent_provider_sessions_request",
-        jsonOf("cwd" to scope, "providers" to listOf("claude"), "limit" to 50),
-        timeoutMs = 45_000,
-    )
-    val items = ArrayList<ImportableConversation>()
-    for (raw in result["entries"].arrayOrNull().orEmpty().take(200)) {
-        val entry = raw.objectOrNull() ?: continue
-        val agentId = entry.str("providerId")
-        val handle = entry.str("providerHandleId")
-        val directory = entry.str("cwd")
-        val last = paseoMillis(entry["lastActivityAt"])
-        if (agentId == null || !isPaseoProviderId(agentId) || handle == null || handle.isEmpty() || handle.length > 256 ||
-            CONTROL.containsMatchIn(handle) || directory.isNullOrEmpty() || last == null
-        ) {
-            continue
-        }
-        items += ImportableConversation(
-            agentId, handle, directory, last,
-            title = importText(entry["title"], 120),
-            firstPrompt = importText(entry["firstPromptPreview"], 120),
+    suspend fun list(): ImportableConversations = mutex.withLock {
+        val directory = gateway.scopeDir
+        val epoch = gateway.locationEpoch
+        val result =
+            gateway.transport.request(
+                "fetch_recent_provider_sessions_request",
+                jsonOf("cwd" to directory, "providers" to listOf("claude"), "limit" to 50),
+                timeoutMs = 45_000,
+                beforeSend = { gateway.checkLocation(directory, epoch) },
+            )
+        gateway.checkLocation(directory, epoch)
+        val items =
+            result
+                .arr("entries")
+                .orEmpty()
+                .take(200)
+                .mapNotNull { raw ->
+                    val entry = raw as? JsonObject ?: return@mapNotNull null
+                    val provider = entry.str("providerId") ?: return@mapNotNull null
+                    val handle = entry.str("providerHandleId") ?: return@mapNotNull null
+                    val cwd = entry.str("cwd") ?: return@mapNotNull null
+                    val last = paseoMillis(entry["lastActivityAt"]) ?: return@mapNotNull null
+                    if (
+                        !isPaseoProviderId(provider) ||
+                            handle.isEmpty() ||
+                            handle.length > 256 ||
+                            handle.any(::isControl) ||
+                            cwd.isEmpty() ||
+                            cwd.length > 4096 ||
+                            cwd.any(::isControl)
+                    )
+                        return@mapNotNull null
+                    // The list and imported record must both belong to this exact project, as
+                    // ordinary session reads do.
+                    if (cwd != directory) return@mapNotNull null
+                    ImportableConversation(
+                        agentId = provider,
+                        handle = handle,
+                        directory = cwd,
+                        lastUsed = Instant.fromEpochMilliseconds(last),
+                        title = importText(entry.str("title")),
+                        firstPrompt = importText(entry.str("firstPromptPreview")),
+                    )
+                }
+                .distinctBy { it.agentId to it.handle }
+                .sortedByDescending { it.lastUsed }
+                .toImmutableList()
+        candidates = items.associateBy { it.agentId to it.handle }
+        listedScope = directory
+        listedEpoch = epoch
+        ImportableConversations(
+            items = items,
+            alreadyImported =
+                result["filteredAlreadyImportedCount"]
+                    .longOrNull()
+                    ?.coerceIn(0, Int.MAX_VALUE.toLong())
+                    ?.toInt() ?: 0,
         )
     }
-    items.sortByDescending { it.lastUsedMs }
-    val already = result["filteredAlreadyImportedCount"].longOrNull()?.takeIf { it > 0 }?.toInt() ?: 0
-    ImportableConversations(items, already)
-}
 
-/** Brings [conversation] into this project's list; a refusal is a failure, never a conversation. */
-public suspend fun PaseoGateway.importConversation(conversation: ImportableConversation): Outcome<Session> = laneCall {
-    val result = workspaceRequest(
-        "import_agent_request",
-        jsonOf("providerId" to conversation.agentId, "providerHandleId" to conversation.handle, "cwd" to conversation.directory),
-        mutation = true,
-        timeoutMs = 90_000,
-    )
-    val id = result["agent"].objectOrNull()?.str("id")
-    if (result.str("status") != "agent_resumed" || id == null) paseoFail(PaseoFailureKind.Unavailable)
-    // The ordinary read of one agent: scope, archive and local-work checks all apply.
-    fetchAgent(id)
-    sessions[app(id)] ?: paseoFail(PaseoFailureKind.ScopeMismatch)
+    suspend fun importConversation(conversation: ImportableConversation): Session = mutex.withLock {
+        val directory = gateway.scopeDir
+        val epoch = gateway.locationEpoch
+        val key = conversation.agentId to conversation.handle
+        if (listedScope != directory || listedEpoch != epoch || candidates[key] != conversation) {
+            paseoFail(PaseoFailureKind.StaleRequest)
+        }
+        // Retire the selection before dispatch: an uncertain answer can be reconciled by a fresh
+        // list, never replayed.
+        candidates = candidates - key
+        val result =
+            gateway.transport.request(
+                "import_agent_request",
+                jsonOf(
+                    "providerId" to conversation.agentId,
+                    "providerHandleId" to conversation.handle,
+                    "cwd" to conversation.directory,
+                ),
+                mutation = true,
+                timeoutMs = 90_000,
+                beforeSend = { gateway.checkLocation(directory, epoch) },
+            )
+        gateway.checkLocation(directory, epoch)
+        val id = result.obj("agent")?.str("id")
+        if (
+            result.str("status") != "agent_resumed" ||
+                id.isNullOrEmpty() ||
+                id.length > 256 ||
+                id.any(::isControl)
+        ) {
+            paseoFail(PaseoFailureKind.Unavailable)
+        }
+        gateway.fetchAgent(id)
+        gateway.checkLocation(directory, epoch)
+        gateway.sessions[gateway.app(id)] ?: paseoFail(PaseoFailureKind.ScopeMismatch)
+    }
+
+    private fun importText(raw: String?): String? {
+        val text =
+            raw?.map { if (isControl(it)) ' ' else it }
+                ?.joinToString("")
+                ?.replace(Regex("\\s+"), " ")
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() } ?: return null
+        return if (text.length > 120) text.take(120) + "…" else text
+    }
+
+    private fun isControl(char: Char): Boolean = char.code <= 0x1f || char.code == 0x7f
 }

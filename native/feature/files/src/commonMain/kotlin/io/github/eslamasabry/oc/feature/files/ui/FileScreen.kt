@@ -12,6 +12,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
@@ -50,29 +53,53 @@ import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeLine
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerCodeBody
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerTextBody
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownSelection
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkBody
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkTitle
+import io.github.eslamasabry.oc.ui.words.res.fileLineOutsidePreview
 import io.github.eslamasabry.oc.ui.words.res.filePdfEncrypted
 import io.github.eslamasabry.oc.ui.words.res.filePdfFailed
 import io.github.eslamasabry.oc.ui.words.res.filePdfLimit
 import io.github.eslamasabry.oc.ui.words.res.filePdfUnavailable
 import io.github.eslamasabry.oc.ui.words.res.fileSave
 import io.github.eslamasabry.oc.ui.words.res.fileShareAction
+import io.github.eslamasabry.oc.ui.words.res.fileReload
+import io.github.eslamasabry.oc.ui.words.res.fileSource
 import io.github.eslamasabry.oc.ui.words.res.filesAskAboutFile
+import io.github.eslamasabry.oc.ui.words.res.filesAttachFailed
+import io.github.eslamasabry.oc.ui.words.res.filesLinkRefused
 import io.github.eslamasabry.oc.ui.words.res.filesMentionFailed
+import io.github.eslamasabry.oc.ui.words.res.filesMoreActions
 import io.github.eslamasabry.oc.ui.words.res.filesNotConnected
 import io.github.eslamasabry.oc.ui.words.res.filesOpenFailed
+import io.github.eslamasabry.oc.ui.words.res.filesOpenLink
+import io.github.eslamasabry.oc.ui.words.res.filesOpenLinkBody
+import io.github.eslamasabry.oc.ui.words.res.filesOpenLinkQuestion
 import io.github.eslamasabry.oc.ui.words.res.filesOpenWith
 import io.github.eslamasabry.oc.ui.words.res.filesOpenWithFailed
 import io.github.eslamasabry.oc.ui.words.res.filesOpenWithNone
 import io.github.eslamasabry.oc.ui.words.res.filesSaveFailed
+import io.github.eslamasabry.oc.ui.words.res.filesPreferencesFailed
+import io.github.eslamasabry.oc.ui.words.res.filesShowPreview
 import io.github.eslamasabry.oc.ui.words.res.filesUnavailable
+import io.github.eslamasabry.oc.ui.words.res.filesUnwrapCode
+import io.github.eslamasabry.oc.ui.words.res.filesWrapCode
+import io.github.eslamasabry.oc.ui.words.res.kitCodeCopyCode
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarClose
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.kitViewerPartial
+import io.github.eslamasabry.oc.ui.words.res.readerUiAttachPrompt
+import io.github.eslamasabry.oc.ui.words.res.readerUiAttached
+import io.github.eslamasabry.oc.ui.words.res.readerUiCopyPath
+import io.github.eslamasabry.oc.ui.words.res.readerUiOpenReview
 import io.github.eslamasabry.oc.ui.words.res.readerUiPathLine
 import io.github.eslamasabry.oc.ui.words.res.readerUiSavedDevice
 import org.jetbrains.compose.resources.stringResource
@@ -85,6 +112,8 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun FileScreen(state: FileUi, actions: FileActions) {
+    var more by remember { mutableStateOf(false) }
+    KitClipboardEffect(state.clipId, state.clipText, actions::clipDone)
     // One modal layer for the frame and the share sheet (the chat's KitSheetHost pattern).
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(modifier = Modifier.fillMaxSize(), page = true) {
@@ -127,6 +156,13 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                             ),
                     )
                 }
+                if (ready)
+                    KitButton(
+                        stringResource(Res.string.filesMoreActions),
+                        { more = true },
+                        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp),
+                        role = KitButtonRole.Tertiary,
+                    )
                 if (ready && state.canOpenWith) {
                     KitButton(
                         stringResource(Res.string.filesOpenWith),
@@ -163,6 +199,72 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
             actions::confirmLink,
             actions::cancelLink,
         )
+        KitSheet(
+            visible = more,
+            onDismissRequest = { more = false },
+            title =
+                if (state.name.isEmpty()) stringResource(Res.string.filesMoreActions)
+                else state.name,
+            closeLabel = stringResource(Res.string.kitTopBarClose),
+        ) {
+            Column {
+                if (state.canReview)
+                    KitRow(
+                        stringResource(Res.string.readerUiOpenReview),
+                        onClick = {
+                            more = false
+                            actions.review()
+                        },
+                    )
+                if (state.canAttach)
+                    KitRow(
+                        stringResource(Res.string.readerUiAttachPrompt),
+                        onClick = {
+                            more = false
+                            actions.attach()
+                        },
+                    )
+                KitRow(
+                    stringResource(Res.string.readerUiCopyPath),
+                    onClick = {
+                        more = false
+                        actions.copyPath()
+                    },
+                )
+                KitRow(
+                    stringResource(Res.string.fileReload),
+                    onClick = {
+                        more = false
+                        actions.retry()
+                    },
+                )
+                if (state.canChooseWrap && (state.body is FileBody.Code || state.source))
+                    KitRow(
+                        stringResource(
+                            if (state.wrapCode) Res.string.filesUnwrapCode
+                            else Res.string.filesWrapCode
+                        ),
+                        onClick = {
+                            more = false
+                            actions.toggleWrap()
+                        },
+                    )
+                if (
+                    state.body is FileBody.Delimited ||
+                        state.body is FileBody.Svg ||
+                        state.body is FileBody.Markdown
+                )
+                    KitRow(
+                        stringResource(
+                            if (state.source) Res.string.filesShowPreview else Res.string.fileSource
+                        ),
+                        onClick = {
+                            more = false
+                            actions.toggleSource()
+                        },
+                    )
+            }
+        }
     }
 }
 
@@ -211,26 +313,44 @@ private fun Body(state: FileUi, actions: FileActions) {
                 }
                 is FileBody.Markdown ->
                     Partial(body.truncated) {
-                        val blocks =
-                            remember(body.text) {
-                                KitMdSource.blocks(state.path, body.text, streaming = false)
-                            }
-                        KitViewerDocument(
-                            body.text,
-                            formatted = {
-                                Box(
-                                    Modifier.fillMaxSize()
-                                        .verticalScroll(rememberScrollState())
-                                        .padding(Space.S4.dp)
-                                ) {
-                                    KitMarkdown(
-                                        blocks,
-                                        KitMarkdownActions(onLink = actions::openLink),
-                                    )
+                        if (state.source) KitViewerCodeBody(body.text, wrap = state.wrapCode)
+                        else {
+                            val blocks =
+                                remember(body.text) {
+                                    KitMdSource.blocks(state.path, body.text, streaming = false)
                                 }
-                            },
-                        )
+                            KitViewerDocument(
+                                body.text,
+                                formatted = {
+                                    KitMarkdownSelection(
+                                        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                                    ) {
+                                        KitMarkdown(
+                                            blocks,
+                                            KitMarkdownActions(
+                                                onLink = actions::openLink,
+                                                onCopyCode = actions::copyText,
+                                                copyCodeLabel = stringResource(Res.string.kitCodeCopyCode),
+                                            ),
+                                            Modifier.padding(Space.S4.dp),
+                                        )
+                                    }
+                                },
+                            )
+                        }
                     }
+                is FileBody.Delimited ->
+                    Partial(body.truncated) {
+                        if (state.source) KitViewerCodeBody(body.original, wrap = state.wrapCode)
+                        else KitViewerTableBody(body.rows)
+                    }
+                is FileBody.Svg -> {
+                    if (state.source) KitViewerCodeBody(body.original, wrap = state.wrapCode)
+                    else
+                        KitViewerSvgBody(body.source, state.name) {
+                            KitViewerCodeBody(body.original, wrap = state.wrapCode)
+                        }
+                }
                 is FileBody.Code ->
                     Partial(body.truncated) {
                         val svg =
@@ -242,16 +362,24 @@ private fun Body(state: FileUi, actions: FileActions) {
                         val highlight =
                             remember(body.text) { body.text.count { it == '\n' } < 2000 }
                         val language = remember(body.language) { CodeLanguage.of(body.language) }
-                        KitViewerDocument(
-                            body.text,
-                            code = true,
-                            initialLine = body.line,
-                            lineContent = { text, modifier, wrap ->
-                                KitCodeLine(text, language, modifier, wrap, highlight = highlight)
-                            },
-                            formatted =
-                                svg?.let { data -> { KitViewerSvgBody(data.source, state.name) } },
-                        )
+                        val count = remember(body.text) { body.text.lineSequence().count() }
+                        val line = body.line
+                        Column(Modifier.fillMaxSize()) {
+                            if (line != null && line !in 1..count)
+                                KitNotice(stringResource(Res.string.fileLineOutsidePreview, line))
+                            Box(Modifier.weight(1f)) {
+                                KitViewerDocument(
+                                    body.text,
+                                    code = true,
+                                    initialLine = body.line,
+                                    lineContent = { text, modifier, wrap ->
+                                        KitCodeLine(text, language, modifier, wrap, highlight = highlight)
+                                    },
+                                    formatted =
+                                        svg?.let { data -> { KitViewerSvgBody(data.source, state.name) } },
+                                )
+                            }
+                        }
                     }
                 is FileBody.Image ->
                     KitViewerImageBody(body.bytes, state.name) {
@@ -342,4 +470,7 @@ private fun noticeWords(notice: FileNotice, name: String): String =
         FileNotice.Saved -> stringResource(Res.string.readerUiSavedDevice, name)
         FileNotice.SaveFailed -> stringResource(Res.string.filesSaveFailed)
         FileNotice.LinkRefused -> stringResource(Res.string.chatFeelLinkRefused)
+        FileNotice.Attached -> stringResource(Res.string.readerUiAttached, name)
+        FileNotice.AttachFailed -> stringResource(Res.string.filesAttachFailed)
+        FileNotice.PreferencesFailed -> stringResource(Res.string.filesPreferencesFailed)
     }

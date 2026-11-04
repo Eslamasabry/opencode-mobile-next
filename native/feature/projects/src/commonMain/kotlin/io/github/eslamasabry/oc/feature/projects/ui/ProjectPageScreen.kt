@@ -33,6 +33,10 @@ import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMore
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMoreFailed
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsUnknownLocation
+import io.github.eslamasabry.oc.ui.words.res.isolatedTaskCopies
+import io.github.eslamasabry.oc.ui.words.res.isolatedTaskIntro
+import io.github.eslamasabry.oc.ui.words.res.isolatedTaskRefreshCopies
+import io.github.eslamasabry.oc.ui.words.res.isolatedTaskTitle
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -57,7 +61,11 @@ import org.jetbrains.compose.resources.stringResource
  * then this project's conversations with a visible Load more, then "In other projects" (B-NAV-010).
  */
 @Composable
-public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, onDevServices: (() -> Unit)? = null) {
+public fun ProjectPageScreen(
+    state: ProjectPageUi,
+    actions: ProjectPageActions,
+    onDevServices: (() -> Unit)? = null,
+) {
     KitScreen(
         topBar = {
             KitTopBar(
@@ -70,6 +78,7 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, 
         },
         width = KitScreenWidth.Reading,
     ) {
+        IsolatedTaskSheet(state, actions)
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             if (state.phase == ProjectPagePhase.NoServer) {
                 item(key = "no-server") {
@@ -94,6 +103,40 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, 
                     working = state.creating,
                 )
             }
+            if (state.canStartIsolated)
+                item(key = "isolated-task") {
+                    KitRow(
+                        title = stringResource(Res.string.isolatedTaskTitle),
+                        supporting = stringResource(Res.string.isolatedTaskIntro),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = actions::startIsolatedTask,
+                    )
+                }
+            if (state.canStartIsolated)
+                item(key = "copies") {
+                    KitRowGroup(label = stringResource(Res.string.isolatedTaskCopies)) {
+                        state.copies.forEach { copy ->
+                            KitRow(
+                                title = copy.name,
+                                supporting = copy.branch,
+                                trailing = KitRowTrailing.Chevron,
+                                onClick = { actions.openCopy(copy.directory) },
+                            )
+                        }
+                        state.copiesFailure?.let {
+                            KitErrorNotice(
+                                stringResource(Res.string.isolatedTaskCopies),
+                                failure = it,
+                            )
+                        }
+                        KitButton(
+                            stringResource(Res.string.isolatedTaskRefreshCopies),
+                            actions::refreshCopies,
+                            role = KitButtonRole.Tertiary,
+                            working = state.copiesLoading,
+                        )
+                    }
+                }
             item(key = "development-services") {
                 KitRow(
                     title = stringResource(Res.string.linuxSvcTitle),

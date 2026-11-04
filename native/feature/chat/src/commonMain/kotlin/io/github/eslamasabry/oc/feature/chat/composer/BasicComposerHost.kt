@@ -27,6 +27,9 @@ import dev.zacsweers.metro.Multibinds
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.platform.PromptFilePicker
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.AttachKind
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerActions
@@ -92,6 +95,8 @@ import io.github.eslamasabry.oc.ui.words.res.composerFullSteerHint
 import io.github.eslamasabry.oc.ui.words.res.composerFullTakePhoto
 import io.github.eslamasabry.oc.ui.words.res.composerFullThinking
 import io.github.eslamasabry.oc.ui.words.res.composerFullThinkingDefault
+import io.github.eslamasabry.oc.ui.kit.KitRow
+import io.github.eslamasabry.oc.ui.words.res.composerFullAddTitle
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachModelWithoutFiles
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachNoPicker
@@ -140,7 +145,17 @@ public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : Comp
                 create(target)
             }
         val state by vm.state.collectAsStateWithLifecycle()
-        BasicComposer(state, vm, chrome, modifier, voice = voices.firstOrNull())
+        BasicComposer(
+            state,
+            vm,
+            chrome,
+            modifier,
+            voice = voices.firstOrNull(),
+            conversationRef =
+                target.sessionId?.let {
+                    ConversationRef(ProfileId(target.profileId), SessionId(it))
+                },
+        )
     }
 }
 
@@ -162,6 +177,7 @@ public fun BasicComposer(
     chrome: ComposerChrome,
     modifier: Modifier = Modifier,
     voice: KitComposerVoice? = null,
+    conversationRef: ConversationRef? = null,
 ) {
     val field = remember(state.targetKey) { TextFieldState() }
     val focus = remember(state.targetKey) { FocusRequester() }
@@ -260,6 +276,7 @@ public fun BasicComposer(
             },
             send = send,
             canSend = { canSend },
+            conversationRef = conversationRef,
         )
     var modelsOpen by remember(state.targetKey) { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current

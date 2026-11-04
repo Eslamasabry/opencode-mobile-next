@@ -36,8 +36,11 @@ import kotlinx.coroutines.flow.StateFlow
 public object LinuxBindings {
     @Provides
     @SingleIn(AppScope::class)
-    public fun linuxManager(host: LinuxHost, wait: LinuxRetryWait): LinuxManager =
-        LinuxManager(host, wait)
+    public fun linuxManager(
+        host: LinuxHost,
+        wait: LinuxRetryWait,
+        details: io.github.eslamasabry.oc.feature.linux.host.LinuxLogDetails,
+    ): LinuxManager = LinuxManager(host, wait, details)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -64,6 +67,8 @@ public class RoutedLinuxNavigator(private val nav: AppNavigator) : LinuxNavigato
                 LinuxPage.Ports -> LinuxRoute.Ports
                 LinuxPage.Storage -> LinuxRoute.Storage
                 LinuxPage.Packages -> LinuxRoute.Packages
+                LinuxPage.Backups -> LinuxRoute.Backups
+                LinuxPage.KeptServices -> LinuxRoute.KeptServices
                 LinuxPage.Running -> PhoneRoute.Running
                 LinuxPage.ThisPhone -> PhoneRoute.ThisPhone
             }
@@ -85,6 +90,7 @@ public class LinuxHomeViewModel(
     setup: LinuxSetupSource,
     idle: LinuxIdleSource,
     lifetimes: LinuxLifetimesSource,
+    vitals: LinuxVitalsSource,
     nav: LinuxNavigator,
     pacer: Pacer,
 ) : ViewModel(), LinuxHomeActions {
@@ -101,6 +107,7 @@ public class LinuxHomeViewModel(
             setup,
             idle,
             lifetimes,
+            vitals,
         )
     public val state: StateFlow<LinuxHomeUi> = model.state
 
@@ -160,13 +167,22 @@ public class LinuxPortsViewModel(
     manager: LinuxManager,
     opener: PortPreviewOpener,
     nav: LinuxNavigator,
+    addressCopy: LinuxAddressCopy,
 ) : ViewModel(), LinuxPortsActions {
-    private val model = LinuxPortsModel(manager, opener, nav, viewModelScope)
+    private val model = LinuxPortsModel(manager, opener, nav, viewModelScope, addressCopy)
     public val state: StateFlow<LinuxPortsUi> = model.state
 
     override fun shown(visible: Boolean): Unit = model.shown(visible)
 
     override fun retry(): Unit = model.retry()
+
+    override fun selectPort(port: Int): Unit = model.selectPort(port)
+
+    override fun copyAddress(port: Int): Unit = model.copyAddress(port)
+
+    override fun askStopOwner(port: Int): Unit = model.askStopOwner(port)
+
+    override fun confirmStopOwner(): Unit = model.confirmStopOwner()
 
     override fun preview(port: Int): Unit = model.preview(port)
 

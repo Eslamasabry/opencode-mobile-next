@@ -59,6 +59,8 @@ public data class ChatUi(
     val readAloud: ReadAloudUi? = null,
     /** B-CHAT-064: file paths in replies the server confirmed exist; only these become tappable. */
     val confirmedPaths: ImmutableSet<String> = persistentSetOf(),
+    val timeline: TimelineUi? = null,
+    val reasoningExpanded: Boolean = false,
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -150,6 +152,27 @@ public data class FindUi(
     val currentIndex: Int,
     /** Some history is not loaded, so not all of it was searched. */
     val partial: Boolean,
+    val searchingAll: Boolean = false,
+    val loadingOlder: Boolean = false,
+    val olderFailure: Failure? = null,
+    val excerpt: String? = null,
+)
+
+public data class TimelineEntryUi(
+    val messageId: String,
+    val rowKey: String,
+    val prompt: Boolean,
+    val preview: String,
+    val createdMs: Long?,
+    val forkable: Boolean,
+)
+
+public data class TimelineUi(
+    val query: String,
+    val entries: ImmutableList<TimelineEntryUi>,
+    val partial: Boolean,
+    val loadingOlder: Boolean,
+    val olderFailure: Failure?,
 )
 
 /**
@@ -255,6 +278,7 @@ public data class ChatCapabilitiesUi(
     val undo: Boolean = false,
     /** A reply's turn can list its changed files (P12-REVIEW). */
     val changes: Boolean = false,
+    val compact: Boolean = false,
 )
 
 /** Intents, named after what the person wants (ADR §9.1), never after widgets. */
@@ -274,6 +298,8 @@ public interface ChatActions {
     /** Opens Project Files for this conversation (P12-FILES). */
     public fun openFiles() {}
 
+    public fun openTools() {}
+
     public fun stop()
 
     /** Opens find with [query]; null closes it. */
@@ -287,6 +313,20 @@ public interface ChatActions {
     public fun loadOlder() {}
 
     public fun openTimeline()
+
+    public fun closeTimeline() {}
+
+    public fun timelineQuery(query: String) {}
+
+    public fun timelineSelect(messageId: String, fork: Boolean = false) {}
+
+    public fun searchAllHistory() {}
+
+    public fun cancelSearchAll() {}
+
+    public fun toggleReasoning() {}
+
+    public fun compactAgain() {}
 
     /**
      * From a prompt (tap or long-press) or a reply's footer; the ViewModel resolves the message.

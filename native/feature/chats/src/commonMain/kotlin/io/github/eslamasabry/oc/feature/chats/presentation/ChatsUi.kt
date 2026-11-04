@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chats.presentation
 
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.engine.agents.feed.ProjectSummary
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -62,10 +63,12 @@ public data class ChatsFilters(
     val needsYou: Boolean = false,
     val query: String = "",
     val identities: ImmutableSet<String>? = null,
+    val otherFolders: Boolean = false,
 ) {
     val any: Boolean
         get() =
             projectDirectory != null ||
+                otherFolders ||
                 running ||
                 needsYou ||
                 query.isNotBlank() ||
@@ -90,6 +93,16 @@ public data class ChatsUi(
     val settingsAvailable: Boolean = false,
     /** A newer app release waits (the Flutter gear dot): the bar offers Update. */
     val updateReady: Boolean = false,
+    val projectChoices: ImmutableList<ProjectSummary> = persistentListOf(),
+    val projectNeedsYou: ImmutableSet<String> = persistentSetOf(),
+    val allCount: Int = 0,
+    val otherFoldersCount: Int = 0,
+    val otherFoldersSelected: Boolean = false,
+    val sheet: ChatsHomeSheet? = null,
+    val home: ChatsHomeExtraState = ChatsHomeExtraState(),
+    val inbox: ImmutableList<ConversationRowUi> = persistentListOf(),
+    val finished: ImmutableList<ConversationRowUi> = persistentListOf(),
+    val confirmWatched: ChatsWatchedRequestUi? = null,
 )
 
 /** Methods are intents, never widget names (ADR §9.1). */
@@ -123,8 +136,53 @@ public interface ChatsActions {
     /** Search conversations across the server (unit P12-SEARCH-USAGE). */
     public fun openSearch() {}
 
-    /** The Projects page (P12): New project, Open a folder, Opened before, then the server's projects. */
+    /**
+     * The Projects page (P12): New project, Open a folder, Opened before, then the server's
+     * projects.
+     */
     public fun openProjects()
+
+    public fun showProjectChoices() {}
+
+    public fun showSources() {}
+
+    public fun showInbox() {}
+
+    public fun closeHomeSheet() {}
+
+    public fun allProjects() {}
+
+    public fun otherFolders() {}
+
+    public fun showSource(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        shown: Boolean,
+    ) {}
+
+    public fun retrySource(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) {}
+
+    public fun retryOpening() {}
+
+    public fun openServers() {}
+
+    public fun openFilterProject() {}
+
+    public fun finishFilterProject(directory: String?) {}
+
+    public fun showMonitoring() {}
+
+    public fun setWatched(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        enabled: Boolean,
+    ) {}
+
+    public fun refreshWatched() {}
+
+    public fun openWatched(key: String) {}
+
+    public fun confirmWatched() {}
+
+    public fun dismissWatched() {}
 }
 
 /** P2 proof page for ChatRoute until :feature:chat installs the real one. */

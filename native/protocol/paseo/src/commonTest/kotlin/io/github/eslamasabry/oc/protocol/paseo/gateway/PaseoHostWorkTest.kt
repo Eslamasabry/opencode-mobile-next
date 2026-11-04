@@ -5,6 +5,7 @@ package io.github.eslamasabry.oc.protocol.paseo.gateway
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.ServerLocation
@@ -154,14 +155,20 @@ class PaseoHostWorkTest {
         assertEquals(DIR, h.gateway.providerImportDirectory)
     }
 
-    private val one = ImportableConversation("claude", "native-1", DIR, 0)
+    /** An import sends exactly a conversation this project's list just offered. */
+    private suspend fun listedOne(h: GatewayHarness): ImportableConversation {
+        h.daemon.handlers["fetch_recent_provider_sessions_request"] = {
+            "fetch_recent_provider_sessions_response" to jsonOf("entries" to listOf(importEntry("native-1", first = "x")))
+        }
+        return h.gateway.importableConversations().ok().items.single()
+    }
 
     @Test
     fun `B-AGENT-174 importing sends the agent, its handle and folder, then reads it`() = runTest {
         val h = GatewayHarness(this)
         h.daemon.handlers["import_agent_request"] = { "status" to jsonOf("status" to "agent_resumed", "agentId" to "imp-1", "agent" to agentJson("imp-1")) }
         h.daemon.handlers["fetch_agent_request"] = { "fetch_agent_response" to jsonOf("agent" to agentJson("imp-1")) }
-        val session = h.gateway.importConversation(one).ok()
+        val session = h.gateway.importConversation(listedOne(h)).ok()
         val sent = h.daemon.of("import_agent_request").single()
         assertEquals("claude", sent.str("providerId"))
         assertEquals("native-1", sent.str("providerHandleId"))
@@ -174,10 +181,10 @@ class PaseoHostWorkTest {
     fun `B-AGENT-174 a refusal is a failure, not a conversation`() = runTest {
         val h = GatewayHarness(this)
         h.daemon.handlers["import_agent_request"] = { "status" to jsonOf("status" to "agent_create_failed", "error" to "session file is gone") }
-        assertIs<Outcome.Failed>(h.gateway.importConversation(one))
+        assertIs<Outcome.Failed>(h.gateway.importConversation(listedOne(h)))
         // A status the daemon answers without an error is a failure too.
         h.daemon.handlers["import_agent_request"] = { "status" to jsonOf("status" to "agent_create_failed") }
-        assertIs<Outcome.Failed>(h.gateway.importConversation(one))
+        assertIs<Outcome.Failed>(h.gateway.importConversation(listedOne(h)))
         assertTrue(h.daemon.of("fetch_agent_request").isEmpty())
     }
 

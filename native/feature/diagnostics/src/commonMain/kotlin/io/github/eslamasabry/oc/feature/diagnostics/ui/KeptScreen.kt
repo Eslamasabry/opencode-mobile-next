@@ -8,11 +8,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.engine.diagnostics.crash.CrashSource
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitKind
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptActions
+import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptCrashRow
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptExits
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptNotice
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptUi
@@ -27,16 +33,20 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.log.KitSelectableText
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appDiagnosticsClearBody
 import io.github.eslamasabry.oc.ui.words.res.appDiagnosticsClearConfirm
@@ -132,7 +142,14 @@ public fun KeptScreen(state: KeptUi, actions: KeptActions) {
                     title = stringResource(Res.string.crashReportsDeleteTitle),
                     confirmLabel = stringResource(Res.string.crashReportsDeleteConfirm),
                     kind = KitConfirmKind.Destructive,
-                    body = stringResource(Res.string.crashReportsDeleteBody),
+                    body =
+                        if (state.errorsKept > 0)
+                            pluralStringResource(
+                                Res.plurals.crashReportsDeleteBodyWithErrors,
+                                state.errorsKept,
+                                state.errorsKept,
+                            )
+                        else stringResource(Res.string.crashReportsDeleteBody),
                 )
             } else if (state.confirmClear) {
                 KitConfirmSpec(
@@ -193,6 +210,7 @@ private fun ErrorsSection(state: KeptUi, actions: KeptActions) {
 
 @Composable
 private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) {
+    var selected by remember { mutableStateOf<KeptCrashRow?>(null) }
     KitSectionLabel(stringResource(Res.string.crashReportsLabel))
     val unavailable = stringResource(Res.string.crashReportsUnavailable)
     KitRowGroup {
@@ -211,12 +229,11 @@ private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) 
                 supportingMaxLines = 2,
             )
         }
-        val category = stringResource(Res.string.crashReportDetailCategory)
         state.crashRows.forEach { row ->
             KitRow(
-                title = row.time,
-                supporting = "$category · ${row.category}",
-                supportingMaxLines = 2,
+                title = crashKind(row.source),
+                supporting = row.time,
+                onClick = { selected = row },
             )
         }
         if (state.crashRows.isNotEmpty()) {
@@ -236,12 +253,64 @@ private fun CrashSection(state: KeptUi, actions: KeptActions, gutter: Modifier) 
             )
         }
     }
-    KitGroupNote(
-        if (state.crashOn) stringResource(Res.string.crashReportsOffDeletes)
-        else stringResource(Res.string.crashReportsNote)
-    )
+    KitGroupNote(stringResource(Res.string.crashReportsNote))
+    val effect =
+        when {
+            state.crashOn && state.crashRows.isNotEmpty() && state.errorsKept > 0 ->
+                pluralStringResource(
+                    Res.plurals.crashReportsOffDeletesAndClears,
+                    state.errorsKept,
+                    state.errorsKept,
+                )
+            state.crashOn && state.crashRows.isNotEmpty() ->
+                stringResource(Res.string.crashReportsOffDeletes)
+            state.crashOn && state.errorsKept > 0 ->
+                pluralStringResource(
+                    Res.plurals.crashReportsOffClears,
+                    state.errorsKept,
+                    state.errorsKept,
+                )
+            !state.crashOn && state.errorsKept > 0 ->
+                pluralStringResource(
+                    Res.plurals.crashReportsOnClears,
+                    state.errorsKept,
+                    state.errorsKept,
+                )
+            else -> null
+        }
+    effect?.let { KitGroupNote(it) }
+    val record = selected?.takeIf { it in state.crashRows }
+    KitSheet(
+        visible = record != null,
+        onDismissRequest = { selected = null },
+        title =
+            record?.let { crashKind(it.source) } ?: stringResource(Res.string.crashReportsLabel),
+        subtitle = record?.time,
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        record?.let { row ->
+            KitGroupNote(stringResource(Res.string.crashReportPreviewBody))
+            KitDetailsFold(
+                label = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
+                notes =
+                    listOf(
+                        "${stringResource(Res.string.crashReportDetailSource)}: crash.${row.source.wire}",
+                        "${stringResource(Res.string.crashReportDetailCategory)}: ${row.category}",
+                    ),
+            )
+        }
+    }
     state.preview?.let { preview ->
         KitGroupNote(stringResource(Res.string.diagnosticsReportPrivacy))
+        KitGroupNote(
+            pluralStringResource(
+                Res.plurals.diagnosticsReportSize,
+                preview.records,
+                preview.records,
+                "${preview.bytes} B",
+            )
+        )
         KitGroupNote(stringResource(Res.string.crashReportPreviewBody))
         Box(gutter.testTag("kept-preview-text")) { KitLogPanel(redactedText = preview.text, live = false) }
         Box(gutter) {
@@ -318,5 +387,16 @@ private fun noticeWords(notice: KeptNotice): String =
             KeptNotice.ShareFailed -> Res.string.diagnosticsReportShareFailed
             KeptNotice.DetailsUnavailable -> Res.string.diagnosticsUnavailable
             KeptNotice.ClearFailed -> Res.string.reportProblemClearFailed
+        }
+    )
+
+@Composable
+private fun crashKind(source: CrashSource): String =
+    stringResource(
+        when (source) {
+            CrashSource.Widget -> Res.string.crashKindScreen
+            CrashSource.Native -> Res.string.crashKindClosed
+            CrashSource.Anr -> Res.string.crashKindNotResponding
+            else -> Res.string.crashKindError
         }
     )

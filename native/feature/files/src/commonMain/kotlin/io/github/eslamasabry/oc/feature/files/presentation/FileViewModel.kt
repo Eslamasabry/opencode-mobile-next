@@ -17,14 +17,18 @@ import io.github.eslamasabry.oc.engine.files.FileBody
 import io.github.eslamasabry.oc.engine.files.FileData
 import io.github.eslamasabry.oc.engine.files.FileHandoff
 import io.github.eslamasabry.oc.engine.files.FilePaths
+import io.github.eslamasabry.oc.engine.files.FilePreview
 import io.github.eslamasabry.oc.engine.files.FileSaver
 import io.github.eslamasabry.oc.engine.files.PdfDocument
 import io.github.eslamasabry.oc.engine.files.PdfLimits
 import io.github.eslamasabry.oc.engine.files.PdfPages
 import io.github.eslamasabry.oc.engine.files.ProjectFiles
 import io.github.eslamasabry.oc.engine.files.WifiShare
+import io.github.eslamasabry.oc.engine.media.preview.DelimitedText
+import io.github.eslamasabry.oc.engine.media.preview.StaticSvg
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
+import io.github.eslamasabry.oc.ui.routes.ReviewRoute
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toPersistentMap
@@ -68,7 +72,9 @@ public enum class FileNotice {
     MentionFailed,
     Saved,
     SaveFailed,
-    /** A Markdown link the link policy refused (or the opener could not hand over). */
+    Attached,
+    AttachFailed,
+    PreferencesFailed,
     LinkRefused,
 }
 
@@ -93,6 +99,15 @@ public data class FileUi(
     /** Save the exact original bytes (B-MEDIA-001), where the platform can. */
     val canSave: Boolean = false,
     val saving: Boolean = false,
+    val attaching: Boolean = false,
+    val canAttach: Boolean = false,
+    val wrapCode: Boolean = false,
+    val canChooseWrap: Boolean = false,
+    val source: Boolean = false,
+    val confirmLinkHost: String? = null,
+    val canReview: Boolean = false,
+    val clipId: Long? = null,
+    val clipText: String? = null,
     val asking: Boolean = false,
     val opening: Boolean = false,
     val share: ShareSheetUi? = null,
@@ -131,6 +146,25 @@ public interface FileActions {
      */
     public fun ask()
 
+    public fun attach() {}
+
+    public fun copyPath() {}
+
+    public fun clipDone(id: Long) {}
+
+    public fun toggleWrap() {}
+
+    public fun toggleSource() {}
+
+    public fun review() {}
+
+    /** PORT-SCREENS-2 names for the one link confirmation (the head's [confirmLink]/[cancelLink]). */
+    public fun confirmOpenLink(): Unit = confirmLink()
+
+    public fun cancelOpenLink(): Unit = cancelLink()
+
+    public fun copyText(text: String) {}
+
     public fun openWith()
 
     /** Save the original bytes to a place the person picks. */
@@ -166,6 +200,7 @@ public class FileViewModel(
     private val appScope: AppCoroutineScope,
     private val savers: Set<FileSaver>,
     private val links: FileLinks,
+    private val preferences: Set<FilesReaderPreferences>,
 ) : ViewModel(), FileActions {
     override fun openLink(url: String) {
         val host = links.host(url)
@@ -194,6 +229,15 @@ public class FileViewModel(
                 canShare = share.supported,
                 canOpenWith = handoffs.isNotEmpty(),
                 canSave = savers.isNotEmpty(),
+                canAttach = mentions.canAttach(),
+                canChooseWrap = preferences.size == 1,
+                wrapCode =
+                    preferences
+                        .singleOrNull()
+                        ?.open(route.from.profileId)
+                        ?.value
+                        ?.value
+                        ?.wrapCode == true,
             )
         )
     public val state: StateFlow<FileUi> = local.asStateFlow()
@@ -201,6 +245,8 @@ public class FileViewModel(
     private var pdf: PdfDocument? = null
     private var loads = 0
     private var shareWanted = false
+    private var clips = 0L
+    private val reader = preferences.singleOrNull()?.open(route.from.profileId)
 
     /** The share this viewer started; another viewer's share is never adopted or stopped here. */
     private var shareId: Long? = null
@@ -254,7 +300,7 @@ public class FileViewModel(
                 local.update { it.copy(phase = FilePhase.Loading, failure = null) }
                 viewModelScope.launch {
                     val opened = ProjectFiles.open(gateway, route.path, route.line)
-                    if (mine != loads) return@launch
+                    if (mine != loads || !connections.isCurrent(route.from, gateway)) return@launch
                     when (opened) {
                         is Outcome.Failed ->
                             local.update {
@@ -265,17 +311,47 @@ public class FileViewModel(
                             local.update {
                                 it.copy(
                                     phase = FilePhase.Ready,
-                                    body = opened.value.body,
+                                    body = visualBody(opened.value.data, opened.value.body),
                                     sizeBytes = opened.value.data.bytes.size.toLong(),
                                     failure = null,
                                 )
                             }
                             (opened.value.body as? FileBody.Pdf)?.let { openPdf(it.bytes) }
+                            val changes = connections.changes(route.from)
+                            if (
+                                mine == loads &&
+                                    connections.isCurrent(route.from, gateway) &&
+                                    changes is Outcome.Ok
+                            ) {
+                                local.update {
+                                    it.copy(
+                                        canReview =
+                                            changes.value.any { change ->
+                                                FilePaths.normalize(change.path) == it.path
+                                            }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    private fun visualBody(data: FileData, original: FileBody): FileBody {
+        if (route.line != null) return original
+        val text = FilePreview.strictText(data.bytes) ?: return original
+        val separator = DelimitedText.separator(data.name, data.mime)
+        if (separator != null) {
+            val table = DelimitedText.parse(text, separator)
+            if (table.failure == null) return FileBody.Delimited(table.rows, text, table.hasMore)
+        }
+        if (data.mime == "image/svg+xml") {
+            val svg = StaticSvg.parse(text)
+            if (svg != null) return FileBody.Svg(svg.source, text)
+        }
+        return original
     }
 
     private suspend fun openPdf(bytes: ByteArray) {
@@ -350,11 +426,59 @@ public class FileViewModel(
         local.update { it.copy(asking = true, notice = null) }
         viewModelScope.launch {
             val directory = connections.directory(route.from)
-            val result = mentions.mention(route.from, local.value.path, directory)
+            val result = mentions.mentionAt(route.from, local.value.path, directory, route.line)
             local.update { it.copy(asking = false) }
             when (result) {
                 is Outcome.Failed -> local.update { it.copy(notice = FileNotice.MentionFailed) }
                 is Outcome.Ok -> returnToConversation()
+            }
+        }
+    }
+
+    override fun review() {
+        if (local.value.canReview)
+            nav.open(ReviewRoute.File(route.from, local.value.path, workingTree = true))
+    }
+
+    override fun toggleSource() {
+        local.update { it.copy(source = !it.source) }
+    }
+
+    override fun copyText(text: String) {
+        local.update { it.copy(clipId = ++clips, clipText = text) }
+    }
+
+    override fun attach() {
+        val file = data ?: return
+        if (local.value.attaching) return
+        local.update { it.copy(attaching = true, notice = null) }
+        viewModelScope.launch {
+            val result = mentions.attach(route.from, file)
+            local.update {
+                it.copy(
+                    attaching = false,
+                    notice =
+                        if (result is Outcome.Ok) FileNotice.Attached else FileNotice.AttachFailed,
+                )
+            }
+        }
+    }
+
+    override fun copyPath() {
+        local.update { it.copy(clipId = ++clips, clipText = it.path) }
+    }
+
+    override fun clipDone(id: Long) {
+        local.update { if (it.clipId == id) it.copy(clipId = null, clipText = null) else it }
+    }
+
+    override fun toggleWrap() {
+        val store = reader ?: return
+        viewModelScope.launch {
+            val saved = store.update(wrapCode = !local.value.wrapCode)
+            local.update {
+                if (saved) it.copy(wrapCode = store.value.value.wrapCode == true)
+                else it.copy(notice = FileNotice.PreferencesFailed)
             }
         }
     }

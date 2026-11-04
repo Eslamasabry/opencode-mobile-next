@@ -7,7 +7,10 @@ import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.CorrelatedPromptGateway
+import io.github.eslamasabry.oc.core.domain.ImportableConversation
+import io.github.eslamasabry.oc.core.domain.ImportableConversations
 import io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway
+import io.github.eslamasabry.oc.core.domain.ProviderConversationImportGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
 import io.github.eslamasabry.oc.core.domain.WorkspaceTransferGateway
@@ -164,7 +167,8 @@ public class PaseoGateway(
     SessionSelectionGateway,
     CorrelatedPromptGateway,
     MidTurnPromptGateway,
-    WorkspaceTransferGateway {
+    WorkspaceTransferGateway,
+    ProviderConversationImportGateway {
     private val job = SupervisorJob(scope.coroutineContext[Job])
     internal val scope: CoroutineScope = CoroutineScope(scope.coroutineContext + job + lane)
     public val defaultProviderModes: Map<String, String> = defaultProviderModes.toMap()
@@ -175,6 +179,7 @@ public class PaseoGateway(
     internal var locationEpoch = 0
     internal val agents = LinkedHashMap<String, JsonObject>()
     internal val sessions = LinkedHashMap<String, Session>()
+    private val providerImport = PaseoProviderImport(this)
     internal val statuses = LinkedHashMap<String, SessionStatus>()
     internal val drafts = LinkedHashSet<String>()
     internal val draftProviders = HashMap<String, String>()
@@ -402,6 +407,7 @@ public class PaseoGateway(
         providerRevision++
         agents.clear()
         sessions.clear()
+        providerImport.clear()
         statuses.clear()
         cancelRecordBusyExpiry()
         drafts.clear()
@@ -440,6 +446,20 @@ public class PaseoGateway(
     }
 
     // ---- sessions
+
+    override val providerImportSupported: Boolean
+        get() = !closed
+
+    override val providerImportDirectory: String
+        get() = directoryValue.orEmpty()
+
+    override suspend fun importableConversations(): Outcome<ImportableConversations> = call {
+        providerImport.list()
+    }
+
+    override suspend fun importConversation(
+        conversation: ImportableConversation
+    ): Outcome<Session> = call { providerImport.importConversation(conversation) }
 
     /** Every page of this folder's agents (at most 20 pages of 200). */
     public suspend fun allSessions(): Outcome<ImmutableList<Session>> = call { readAllSessions() }
@@ -519,6 +539,12 @@ public class PaseoGateway(
      * its first prompt.
      */
     override suspend fun createSession(spec: NewSession): Outcome<Session> = call {
+        val requested = spec.location
+        if (
+            !requested?.workspace.isNullOrEmpty() ||
+                (!requested?.directory.isNullOrEmpty() && requested?.directory != scopeDir)
+        )
+            paseoFail(PaseoFailureKind.ScopeMismatch)
         createDraft(spec.title)
     }
 

@@ -6,6 +6,7 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:files"))
+        implementation(project(":engine:settings"))
         implementation(project(":engine:media"))
         implementation(project(":ui:kit-chat"))
         implementation(project(":engine:connection")) // the conversation's own connection graph

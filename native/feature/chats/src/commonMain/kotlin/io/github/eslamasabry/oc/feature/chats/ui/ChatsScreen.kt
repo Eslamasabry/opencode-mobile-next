@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeClearFilters
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEarlier
@@ -52,10 +53,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNeedsYou
-import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewChat
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewShort
-import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
@@ -66,10 +65,12 @@ import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefMore
 import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefUnknown
 import io.github.eslamasabry.oc.ui.words.res.chats_back
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
-import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
+import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
+import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
+import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.pluralStringResource
@@ -82,13 +83,17 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
-    // B15 (QA wave 1): short words so "Conversations" is never cut, and the door says where it goes (Settings).
+    // B15 (QA wave 1): short words so "Conversations" is never cut, and the door says where it goes
+    // (Settings).
     val newLabel = stringResource(Res.string.chatsHomeNewShort)
     val settingsLabel = stringResource(Res.string.librarySettingsTitle)
     val updateLabel = stringResource(Res.string.appUpdateUpdate)
     val barActions = buildList {
         // Hidden while the empty state offers it (one way, not two).
-        if (state.phase != ChatsPhase.Empty) add(KitLineAction(newLabel, actions::newConversation))
+        if (state.phase != ChatsPhase.Empty && state.home.opening == null)
+            add(KitLineAction(newLabel, actions::newConversation))
+        if (state.home.opening != null)
+            add(KitLineAction(stringResource(Res.string.serversTitle), actions::openServers))
         if (state.settingsAvailable) add(KitLineAction(settingsLabel, actions::openSettings))
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate))
     }
@@ -102,9 +107,18 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
         width = KitScreenWidth.Reading,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+            state.home.opening?.let { opening ->
+                item(key = "opening-status") { OpeningStatus(opening, actions) }
+                items(opening.rows, key = { "cached:${it.key}" }) { row -> OpeningRow(row) }
+                if (opening.rows.isEmpty()) item(key = "opening") { KitSkeletonRows() }
+                return@LazyColumn
+            }
             state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions) } }
             if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) {
                 item(key = "filters") { Filters(state, actions) }
+            }
+            if (state.phase == ChatsPhase.Empty) {
+                item(key = "home-controls") { KitChipWrap { HomeFilterChips(state, actions) } }
             }
             if (state.incomplete.isNotEmpty()) {
                 item(key = "incomplete") {
@@ -124,7 +138,11 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
                             kind = KitStateKind.Calm,
                             title = stringResource(Res.string.chatsHomeEmptyTitle),
                             body = stringResource(Res.string.chatsHomeEmptyCalmBody),
-                            primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.chatsHomeNewChat),
+                                    actions::newConversation,
+                                ),
                         )
                     }
                 ChatsPhase.NoMatch ->
@@ -181,6 +199,7 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
                 }
             }
         }
+        ChatsHomeSheets(state, actions)
     }
 }
 
@@ -197,6 +216,7 @@ private fun SearchField(actions: ChatsActions) {
 @Composable
 private fun Filters(state: ChatsUi, actions: ChatsActions) {
     KitChipWrap {
+        HomeFilterChips(state, actions)
         if (state.needsYou > 0) {
             KitChip(
                 label =

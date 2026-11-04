@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.devservices.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -39,6 +40,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.log.KitLogPanel
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -49,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
@@ -117,8 +120,9 @@ import org.jetbrains.compose.resources.stringResource
 private const val LOG_LINES = 60
 
 /**
- * DevServicesRoute.Home (Flutter DevelopmentServicesScreen): the project folder, the saved services with Start or Stop
- * and their other acts, then "Also running" — dev servers found on the phone or among the server's shells.
+ * DevServicesRoute.Home (Flutter DevelopmentServicesScreen): the project folder, the saved services
+ * with Start or Stop and their other acts, then "Also running" — dev servers found on the phone or
+ * among the server's shells.
  */
 @Composable
 public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) {
@@ -143,10 +147,17 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             if (!state.available) {
-                KitNotice(message = stringResource(Res.string.servicesOffline), tone = StatusTone.Attention)
+                KitNotice(
+                    message = stringResource(Res.string.servicesOffline),
+                    tone = StatusTone.Attention,
+                )
                 return@Column
             }
-            KitText(stringResource(Res.string.servicesIntro), role = TypeRole.Secondary, tone = TextTone.Secondary)
+            KitText(
+                stringResource(Res.string.servicesIntro),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
             KitRowGroup {
                 KitRow(
                     title = stringResource(Res.string.servicesProjectFolder),
@@ -154,14 +165,20 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
                     supportingMaxLines = 3,
                 )
             }
-            if (!state.supported) KitNotice(message = stringResource(Res.string.servicesUnavailable), liveRegion = false)
+            if (!state.supported)
+                KitNotice(
+                    message = stringResource(Res.string.servicesUnavailable),
+                    liveRegion = false,
+                )
             Notices(state, actions)
             KitButton(
                 stringResource(Res.string.servicesAdd),
                 onClick = actions::add,
                 modifier = Modifier.fillMaxWidth(),
                 role = KitButtonRole.Secondary,
-                enabled = if (state.readable && !state.busy) KitEnabled.Enabled else KitEnabled.Disabled(stringResource(Res.string.servicesWorking)),
+                enabled =
+                    if (state.readable && !state.busy) KitEnabled.Enabled
+                    else KitEnabled.Disabled(stringResource(Res.string.servicesWorking)),
             )
             if (state.services.isEmpty() && !state.loading) {
                 KitNotice(
@@ -174,8 +191,29 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
             Found(state, actions)
         }
     }
+    KitSheet(
+        visible = state.log != null,
+        onDismissRequest = actions::closeLogs,
+        title = state.log?.title ?: stringResource(Res.string.servicesLogs),
+        subtitle = stringResource(Res.string.servicesLogs),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        state.log?.let { log ->
+            if (log.failed) KitNotice(stringResource(Res.string.servicesLogFailed))
+            KitLogPanel(
+                log.text,
+                rememberKitMask(),
+                actions::refreshLogs,
+                Modifier.fillMaxWidth().height(560.dp),
+            )
+        }
+    }
     Editor(state.editor, actions)
-    KitConfirm(state.ask?.let { spec(it) }, onConfirm = actions::confirm, onCancel = actions::cancel)
+    KitConfirm(
+        state.ask?.let { spec(it) },
+        onConfirm = actions::confirm,
+        onCancel = actions::cancel,
+    )
 }
 
 @Composable
@@ -191,11 +229,14 @@ private fun Notices(state: DevServicesUi, actions: DevServicesActions) {
         KitNotice(
             message =
                 when (receipt) {
-                    is DevServicesReceipt.Started -> stringResource(Res.string.servicesStarted, receipt.name)
-                    is DevServicesReceipt.Removed -> stringResource(Res.string.servicesRemoved, receipt.name)
+                    is DevServicesReceipt.Started ->
+                        stringResource(Res.string.servicesStarted, receipt.name)
+                    is DevServicesReceipt.Removed ->
+                        stringResource(Res.string.servicesRemoved, receipt.name)
                 },
             tone = StatusTone.Ok,
-            dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss),
+            dismiss =
+                KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss),
         )
     }
 }
@@ -207,7 +248,8 @@ private fun problemWords(problem: DevServicesProblem): String =
         DevServicesProblem.Unavailable -> stringResource(Res.string.servicesUnavailable)
         DevServicesProblem.Offline -> stringResource(Res.string.servicesOffline)
         DevServicesProblem.LogFailed -> stringResource(Res.string.servicesLogFailed)
-        DevServicesProblem.NotSaved, DevServicesProblem.Failed -> stringResource(Res.string.linuxMgrProblemFailed)
+        DevServicesProblem.NotSaved,
+        DevServicesProblem.Failed -> stringResource(Res.string.linuxMgrProblemFailed)
     }
 
 @Composable
@@ -216,21 +258,26 @@ private fun statusWords(row: ServiceRowUi): String =
         DevelopmentServiceStatus.NotStarted -> stringResource(Res.string.servicesNotStarted)
         DevelopmentServiceStatus.Running -> stringResource(Res.string.servicesRunning)
         DevelopmentServiceStatus.Stopped ->
-            row.exitCode?.let { stringResource(Res.string.servicesExit, it) } ?: stringResource(Res.string.servicesStopped)
+            row.exitCode?.let { stringResource(Res.string.servicesExit, it) }
+                ?: stringResource(Res.string.servicesStopped)
         DevelopmentServiceStatus.Unknown -> stringResource(Res.string.servicesUnknown)
     }
 
 @Composable
 private fun ServiceBlock(row: ServiceRowUi, state: DevServicesUi, actions: DevServicesActions) {
     val idle = !state.busy
-    val ports = row.ports.joinToString(", ").takeIf { it.isNotEmpty() }?.let { stringResource(Res.string.servicesPreviewPort, it) }
+    val ports =
+        row.ports
+            .joinToString(", ")
+            .takeIf { it.isNotEmpty() }
+            ?.let { stringResource(Res.string.servicesPreviewPort, it) }
     KitRowGroup(
         note =
             when (row.status) {
                 DevelopmentServiceStatus.Running -> stringResource(Res.string.servicesStatusHint)
                 DevelopmentServiceStatus.Unknown -> stringResource(Res.string.servicesUnknownHint)
                 else -> null
-            },
+            }
     ) {
         KitRow(
             title = row.name,
@@ -238,10 +285,21 @@ private fun ServiceBlock(row: ServiceRowUi, state: DevServicesUi, actions: DevSe
             supportingMaxLines = 3,
             trailing =
                 when {
-                    row.canStop -> KitRowTrailing.Action(KitLineAction(stringResource(Res.string.servicesStop), { actions.askStop(row.id) }, enabled = idle))
+                    row.canStop ->
+                        KitRowTrailing.Action(
+                            KitLineAction(
+                                stringResource(Res.string.servicesStop),
+                                { actions.askStop(row.id) },
+                                enabled = idle,
+                            )
+                        )
                     state.supported && row.status != DevelopmentServiceStatus.Unknown ->
                         KitRowTrailing.Action(
-                            KitLineAction(stringResource(Res.string.servicesStart), { actions.start(row.id) }, enabled = idle && row.canStart),
+                            KitLineAction(
+                                stringResource(Res.string.servicesStart),
+                                { actions.start(row.id) },
+                                enabled = idle && row.canStart,
+                            )
                         )
                     else -> KitRowTrailing.None
                 },
@@ -250,15 +308,30 @@ private fun ServiceBlock(row: ServiceRowUi, state: DevServicesUi, actions: DevSe
     KitActionBlock(
         tertiary =
             listOfNotNull(
-                KitAction(stringResource(Res.string.servicesLogs), { actions.logs(row.id) }.takeIf { idle && state.supported && row.status != DevelopmentServiceStatus.NotStarted }),
-                KitAction(stringResource(Res.string.servicesRestart), { actions.askRestart(row.id) }.takeIf { idle }).takeIf { row.canStop },
-                KitAction(stringResource(Res.string.servicesVisit), { actions.visit(row.id) }).takeIf { row.url.isNotBlank() },
-                KitAction(stringResource(Res.string.servicesForget), { actions.askForget(row.id) }.takeIf { idle })
+                KitAction(
+                    stringResource(Res.string.servicesLogs),
+                    { actions.logs(row.id) }.takeIf {
+                        idle && state.supported && row.status != DevelopmentServiceStatus.NotStarted
+                    },
+                ),
+                KitAction(
+                        stringResource(Res.string.servicesRestart),
+                        { actions.askRestart(row.id) }.takeIf { idle },
+                    )
+                    .takeIf { row.canStop },
+                KitAction(stringResource(Res.string.servicesVisit), { actions.visit(row.id) })
+                    .takeIf { row.url.isNotBlank() },
+                KitAction(
+                        stringResource(Res.string.servicesForget),
+                        { actions.askForget(row.id) }.takeIf { idle },
+                    )
                     .takeIf { row.status == DevelopmentServiceStatus.Unknown },
-                KitAction(stringResource(Res.string.servicesRemove), { actions.askRemove(row.id) }.takeIf { idle }),
-            ),
+                KitAction(
+                    stringResource(Res.string.servicesRemove),
+                    { actions.askRemove(row.id) }.takeIf { idle },
+                ),
+            )
     )
-    row.log?.let { LogText(it) }
 }
 
 @Composable
@@ -276,8 +349,18 @@ private fun LogText(log: String) {
 private fun Found(state: DevServicesUi, actions: DevServicesActions) {
     if (state.found.isEmpty() && !state.foundFailed) return
     KitSectionLabel(stringResource(Res.string.servicesAlsoRunning))
-    if (state.foundFailed) KitNotice(message = stringResource(Res.string.servicesAlsoPhoneFailed), tone = StatusTone.Attention)
-    KitRowGroup(note = stringResource(if (state.scansPhone) Res.string.servicesAlsoPhoneHint else Res.string.servicesAlsoServerHint)) {
+    if (state.foundFailed)
+        KitNotice(
+            message = stringResource(Res.string.servicesAlsoPhoneFailed),
+            tone = StatusTone.Attention,
+        )
+    KitRowGroup(
+        note =
+            stringResource(
+                if (state.scansPhone) Res.string.servicesAlsoPhoneHint
+                else Res.string.servicesAlsoServerHint
+            )
+    ) {
         state.found.forEach { FoundRow(it, actions) }
     }
     state.found.forEach { row ->
@@ -285,12 +368,19 @@ private fun Found(state: DevServicesUi, actions: DevServicesActions) {
             KitActionBlock(
                 tertiary =
                     listOfNotNull(
-                        KitAction("${stringResource(Res.string.servicesLogs)} · ${row.name}", { actions.foundLogs(row.id) }).takeIf { row.hasLogs },
-                        KitAction("${stringResource(Res.string.servicesSaveCommand)} · ${row.name}", { actions.saveFound(row.id) }).takeIf { row.canSave },
-                    ),
+                        KitAction(
+                                "${stringResource(Res.string.servicesLogs)} · ${row.name}",
+                                { actions.foundLogs(row.id) },
+                            )
+                            .takeIf { row.hasLogs },
+                        KitAction(
+                                "${stringResource(Res.string.servicesSaveCommand)} · ${row.name}",
+                                { actions.saveFound(row.id) },
+                            )
+                            .takeIf { row.canSave },
+                    )
             )
         }
-        row.log?.let { LogText(it) }
     }
 }
 
@@ -299,11 +389,22 @@ private fun FoundRow(row: FoundRowUi, actions: DevServicesActions) {
     val ports = row.ports.joinToString(", ").takeIf { it.isNotEmpty() }
     KitRow(
         title = row.name,
-        supporting = listOf(ports?.let { stringResource(Res.string.servicesPreviewPort, it) } ?: stringResource(Res.string.servicesNoPortYet), row.command).joinToString(" · "),
+        supporting =
+            listOf(
+                    ports?.let { stringResource(Res.string.servicesPreviewPort, it) }
+                        ?: stringResource(Res.string.servicesNoPortYet),
+                    row.command,
+                )
+                .joinToString(" · "),
         supportingMaxLines = 2,
         trailing =
             if (row.canStop) {
-                KitRowTrailing.Action(KitLineAction(stringResource(Res.string.servicesStop), { actions.askStopFound(row.id) }))
+                KitRowTrailing.Action(
+                    KitLineAction(
+                        stringResource(Res.string.servicesStop),
+                        { actions.askStopFound(row.id) },
+                    )
+                )
             } else {
                 KitRowTrailing.None
             },
@@ -313,7 +414,8 @@ private fun FoundRow(row: FoundRowUi, actions: DevServicesActions) {
 @Composable
 private fun Editor(editor: EditorUi?, actions: DevServicesActions) {
     val open = editor != null
-    // A fresh form each time it opens, filled from what opened it (a found server's command, or empty).
+    // A fresh form each time it opens, filled from what opened it (a found server's command, or
+    // empty).
     val name = remember(open) { TextFieldState(editor?.name.orEmpty()) }
     val command = remember(open) { TextFieldState(editor?.command.orEmpty()) }
     val url = remember(open) { TextFieldState(editor?.url.orEmpty()) }
@@ -345,14 +447,19 @@ private fun Editor(editor: EditorUi?, actions: DevServicesActions) {
             label = stringResource(Res.string.servicesCommand),
             kind = KitFieldKind.Mono,
             helper = stringResource(Res.string.servicesCommandHint),
-            error = if (editor?.commandMissing == true) stringResource(Res.string.servicesCommandRequired) else null,
+            error =
+                if (editor?.commandMissing == true)
+                    stringResource(Res.string.servicesCommandRequired)
+                else null,
         )
         KitField(
             url,
             label = stringResource(Res.string.servicesUrl),
             kind = KitFieldKind.Url,
             helper = stringResource(Res.string.servicesUrlHint),
-            error = if (editor?.urlInvalid == true) stringResource(Res.string.servicesUrlInvalid) else null,
+            error =
+                if (editor?.urlInvalid == true) stringResource(Res.string.servicesUrlInvalid)
+                else null,
             onSubmit = save,
         )
     }
@@ -387,7 +494,8 @@ private fun spec(ask: DevServicesAsk): KitConfirmSpec =
                 title = stringResource(Res.string.servicesRemoveTitle, ask.name),
                 confirmLabel = stringResource(Res.string.servicesRemove),
                 kind = KitConfirmKind.Destructive,
-                body = if (ask.running) stringResource(Res.string.servicesRemoveRunningHint) else null,
+                body =
+                    if (ask.running) stringResource(Res.string.servicesRemoveRunningHint) else null,
             )
         is DevServicesAsk.StopFound ->
             KitConfirmSpec(

@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
 import io.github.eslamasabry.oc.core.domain.GatewayPair
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
+import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.domain.ProbeResult
 import io.github.eslamasabry.oc.core.domain.ProbeTarget
 import io.github.eslamasabry.oc.core.model.BackendKind
@@ -38,11 +39,7 @@ import io.github.eslamasabry.oc.protocol.codex.transport.CodexSocket
 import io.github.eslamasabry.oc.protocol.codex.transport.CodexSocketFactory
 import io.github.eslamasabry.oc.protocol.codex.transport.CodexTransport
 import io.github.eslamasabry.oc.protocol.paseo.gateway.HostUpdatePhase
-import io.github.eslamasabry.oc.protocol.paseo.gateway.ImportableConversation
 import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoGateway
-import io.github.eslamasabry.oc.protocol.paseo.gateway.importConversation
-import io.github.eslamasabry.oc.protocol.paseo.gateway.importableConversations
-import io.github.eslamasabry.oc.protocol.paseo.gateway.providerImportDirectory
 import io.github.eslamasabry.oc.protocol.paseo.gateway.updateHostDaemon
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.collections.immutable.toImmutableList
@@ -258,10 +255,10 @@ class AppComputerTools(
             is Outcome.Failed -> read
             is Outcome.Ok -> {
                 val now = clock.now().toEpochMilliseconds()
-                val items = read.value.items.sortedByDescending { it.lastUsedMs }
+                val items = read.value.items.sortedByDescending { it.lastUsed }
                 listed[profile] = items.associateBy(::keyOf)
                 ImportList(
-                        project = gateway.providerImportDirectory.orEmpty(),
+                        project = gateway.providerImportDirectory,
                         items =
                             items
                                 .map {
@@ -271,7 +268,7 @@ class AppComputerTools(
                                         folder = it.directory,
                                         whenLabel =
                                             DateUtils.getRelativeTimeSpanString(
-                                                    it.lastUsedMs,
+                                                    it.lastUsed.toEpochMilliseconds(),
                                                     now,
                                                     DateUtils.MINUTE_IN_MILLIS,
                                                 )

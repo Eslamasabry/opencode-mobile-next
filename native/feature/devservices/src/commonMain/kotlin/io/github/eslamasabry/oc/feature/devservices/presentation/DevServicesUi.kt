@@ -33,11 +33,24 @@ public data class FoundRowUi(
     val log: String? = null,
 )
 
-/** Why the page or the last act did not work, in plain words; the failure itself is for Details only. */
-public enum class DevServicesProblem { ScopeChanged, Unavailable, Offline, LogFailed, NotSaved, Failed }
+/**
+ * Why the page or the last act did not work, in plain words; the failure itself is for Details
+ * only.
+ */
+public enum class DevServicesProblem {
+    ScopeChanged,
+    Unavailable,
+    Offline,
+    LogFailed,
+    NotSaved,
+    Failed,
+}
 
 /** The add form's checks (Flutter `_ServiceEditor.save`). */
-public enum class NameError { Required, Duplicate }
+public enum class NameError {
+    Required,
+    Duplicate,
+}
 
 public data class EditorUi(
     val name: String = "",
@@ -58,7 +71,8 @@ public sealed interface DevServicesAsk {
 
     public data class Forget(val id: String, override val name: String) : DevServicesAsk
 
-    public data class Remove(val id: String, override val name: String, val running: Boolean) : DevServicesAsk
+    public data class Remove(val id: String, override val name: String, val running: Boolean) :
+        DevServicesAsk
 
     public data class StopFound(val id: String, override val name: String) : DevServicesAsk
 }
@@ -70,19 +84,33 @@ public sealed interface DevServicesReceipt {
     public data class Removed(val name: String) : DevServicesReceipt
 }
 
+public data class DevServiceLog(
+    val id: String,
+    val found: Boolean,
+    val title: String,
+    val text: String = "",
+    val failed: Boolean = false,
+)
+
 public data class DevServicesUi(
     /** False when the server or folder is not loaded: only the notice shows. */
     val available: Boolean = true,
     val directory: String = "",
     val workspace: String? = null,
-    /** The server can start and track commands; without it services are saved and listed only (B-LINUX-061). */
+    /**
+     * The server can start and track commands; without it services are saved and listed only
+     * (B-LINUX-061).
+     */
     val supported: Boolean = false,
     val readable: Boolean = true,
     val busy: Boolean = false,
     val loading: Boolean = true,
     val services: ImmutableList<ServiceRowUi> = persistentListOf(),
     val found: ImmutableList<FoundRowUi> = persistentListOf(),
-    /** The phone is scanned (this phone's own server with the in-app Linux) rather than only the server's shells. */
+    /**
+     * The phone is scanned (this phone's own server with the in-app Linux) rather than only the
+     * server's shells.
+     */
     val scansPhone: Boolean = false,
     /** The last phone scan failed; the list shown is the one before it (B-LINUX-056). */
     val foundFailed: Boolean = false,
@@ -91,6 +119,7 @@ public data class DevServicesUi(
     val editor: EditorUi? = null,
     val ask: DevServicesAsk? = null,
     val receipt: DevServicesReceipt? = null,
+    val log: DevServiceLog? = null,
 )
 
 public interface DevServicesActions {
@@ -126,6 +155,10 @@ public interface DevServicesActions {
     public fun askStopFound(id: String)
 
     public fun foundLogs(id: String)
+
+    public fun refreshLogs() {}
+
+    public fun closeLogs() {}
 
     public fun confirm()
 

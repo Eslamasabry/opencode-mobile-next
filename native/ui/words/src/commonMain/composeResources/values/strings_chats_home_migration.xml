@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="homeOpeningConnecting">Connecting to %1$s</string>
+    <string name="homeOpeningFailed">%1$s isn’t answering</string>
+    <string name="homeOpeningSavedTitles">These are the conversation titles saved last time. They open once the server answers.</string>
+    <string name="homeWatchedServers">Watched servers</string>
+    <string name="homeInboxCount">Inbox · %1$s</string>
+    <string name="homeSourcesFailed">Could not change this list’s connections. Try again.</string>
+    <string name="homeWatchedOpenBody">We will check that this exact request still waits on this server before opening its conversation.</string>
+    <string name="homeWatchedOpenFailed">This request could not be opened. Refresh the watched servers and try again.</string>
+    <string name="homeRefreshWatched">Refresh watched servers</string>
+    <string name="homeMonitorOff">Off. Turn on to check this server’s pending requests.</string>
+    <string name="homeMonitorWaiting">Waiting for the next check</string>
+    <string name="homeMonitorChecking">Checking pending requests</string>
+    <string name="homeMonitorCurrent">Pending requests are up to date</string>
+    <string name="homeMonitorUnavailable">Isn’t answering. Its requests are not shown.</string>
+    <string name="homeMonitorWifi">Waiting for Wi-Fi</string>
+    <string name="homeMonitorPaused">Checks are paused while the app and background service are stopped.</string>
+</resources>

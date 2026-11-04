@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chatHistoryReadFailed">Older messages could not be loaded. Your loaded messages are still here. Try again.</string>
+    <string name="chatTranscriptTokens">%1$s tokens</string>
+    <string name="chatTranscriptCost">Estimated cost: $%1$s</string>
+</resources>

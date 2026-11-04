@@ -8,8 +8,8 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.pace.Pacer
-import kotlinx.coroutines.flow.StateFlow
 import kotlin.time.Clock
+import kotlinx.coroutines.flow.StateFlow
 
 /*
  * Thin Metro ViewModels (plan 03 §13.7): each hands viewModelScope to its plain state holder, whose rules are tested
@@ -71,6 +71,8 @@ public class RunningViewModel(
 
     override fun retry(): Unit = model.retry()
 
+    override fun details(pid: Int): Unit = model.details(pid)
+
     override fun askStop(pid: Int): Unit = model.askStop(pid)
 
     override fun confirmStop(): Unit = model.confirmStop()
@@ -87,7 +89,8 @@ public class RunningViewModel(
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-public class KeepRunningViewModel(settings: KeepAliveSettings, nav: PhoneNavigator) : ViewModel(), KeepRunningActions {
+public class KeepRunningViewModel(settings: KeepAliveSettings, nav: PhoneNavigator) :
+    ViewModel(), KeepRunningActions {
     private val model = KeepRunningModel(settings, nav, viewModelScope)
     public val state: StateFlow<KeepRunningUi> = model.state
 

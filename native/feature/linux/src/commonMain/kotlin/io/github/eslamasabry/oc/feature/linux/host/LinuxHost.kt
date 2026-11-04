@@ -18,12 +18,14 @@ public enum class LinuxPresence {
 }
 
 /**
- * The narrow face of the built-in Linux the manager needs (plan 11 §5.4 `GuestLauncher` + the service table), shaped
- * after `BuiltinLinux.run / startService / stopService / serviceRunning / serviceLogTail / setupStatus`. Each call runs
- * off the main thread in the binding. Failures are flat [io.github.eslamasabry.oc.core.common.Failure] values:
+ * The narrow face of the built-in Linux the manager needs (plan 11 §5.4 `GuestLauncher` + the
+ * service table), shaped after `BuiltinLinux.run / startService / stopService / serviceRunning /
+ * serviceLogTail / setupStatus`. Each call runs off the main thread in the binding. Failures are
+ * flat [io.github.eslamasabry.oc.core.common.Failure] values:
  *
- * - `Failure.Runtime(OwnershipUnknown)` or `Failure.Runtime(SlotBusy)`: a passing state (another phone task holds the
- *   installer slot, or a program is starting or ending); the manager tries twice more before it says "busy".
+ * - `Failure.Runtime(OwnershipUnknown)` or `Failure.Runtime(SlotBusy)`: a passing state (another
+ *   phone task holds the installer slot, or a program is starting or ending); the manager tries
+ *   twice more before it says "busy".
  * - `Failure.Runtime(NotInstalled)` / anything else: Linux is not available right now.
  *
  * No guest output reaches a Failure's main text; `details` carries only what the Redactor allowed.
@@ -31,7 +33,10 @@ public enum class LinuxPresence {
 public interface LinuxHost {
     public suspend fun presence(): LinuxPresence
 
-    /** Runs [script] with `/bin/sh` inside Linux as root, in the installer slot, for at most [timeoutSeconds]. */
+    /**
+     * Runs [script] with `/bin/sh` inside Linux as root, in the installer slot, for at most
+     * [timeoutSeconds].
+     */
     public suspend fun run(script: String, timeoutSeconds: Long): Outcome<ShellRun>
 
     /** True while phone setup (or repair) runs: the setup journal says `running`. */
@@ -39,7 +44,9 @@ public interface LinuxHost {
 
     public suspend fun serviceRunning(name: String): Boolean
 
-    /** Starts [script] as the long-lived service [name] with the foreground notice text [notice]. */
+    /**
+     * Starts [script] as the long-lived service [name] with the foreground notice text [notice].
+     */
     public suspend fun startService(name: String, script: String, notice: String): Outcome<Unit>
 
     public suspend fun stopService(name: String): Outcome<Unit>
@@ -48,8 +55,16 @@ public interface LinuxHost {
     public suspend fun serviceLog(name: String, tailBytes: Int): String
 }
 
-/** The honest binding where there is no built-in Linux: every page says so, nothing is pretended. */
-public class AbsentLinuxHost(private val why: LinuxPresence = LinuxPresence.NotOnThisBuild) : LinuxHost {
+/** Redaction stays in the application binding; a feature cannot construct technical copy. */
+public fun interface LinuxLogDetails {
+    public fun redact(text: String): io.github.eslamasabry.oc.core.common.Redacted
+}
+
+/**
+ * The honest binding where there is no built-in Linux: every page says so, nothing is pretended.
+ */
+public class AbsentLinuxHost(private val why: LinuxPresence = LinuxPresence.NotOnThisBuild) :
+    LinuxHost {
     override suspend fun presence(): LinuxPresence = why
 
     override suspend fun run(script: String, timeoutSeconds: Long): Outcome<ShellRun> = absent()
@@ -58,7 +73,8 @@ public class AbsentLinuxHost(private val why: LinuxPresence = LinuxPresence.NotO
 
     override suspend fun serviceRunning(name: String): Boolean = false
 
-    override suspend fun startService(name: String, script: String, notice: String): Outcome<Unit> = absent()
+    override suspend fun startService(name: String, script: String, notice: String): Outcome<Unit> =
+        absent()
 
     override suspend fun stopService(name: String): Outcome<Unit> = absent()
 
@@ -66,6 +82,8 @@ public class AbsentLinuxHost(private val why: LinuxPresence = LinuxPresence.NotO
 
     private fun absent(): Outcome<Nothing> =
         Outcome.Failed(
-            io.github.eslamasabry.oc.core.common.Failure.Runtime(io.github.eslamasabry.oc.core.common.RuntimeProblem.NotInstalled),
+            io.github.eslamasabry.oc.core.common.Failure.Runtime(
+                io.github.eslamasabry.oc.core.common.RuntimeProblem.NotInstalled
+            )
         )
 }

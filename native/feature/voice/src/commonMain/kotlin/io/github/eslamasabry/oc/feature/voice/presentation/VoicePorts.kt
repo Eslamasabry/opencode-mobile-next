@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.voice.presentation
 
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.engine.voice.dictation.VoiceController
@@ -150,6 +152,11 @@ public interface Reader {
 
     public suspend fun giveConsent(): Outcome<Unit>
 
+    /** Enumerates offline voices only, after consent, before enabling automatic playback. */
+    public suspend fun voices():
+        Outcome<List<io.github.eslamasabry.oc.engine.voice.readaloud.TtsVoice>> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("readAloudVoices")))
+
     public suspend fun read(request: ReadRequest): Outcome<Unit>
 
     public suspend fun stop()
@@ -165,6 +172,10 @@ public fun ReadAloud.asReader(): Reader =
         override fun consentGiven(): Boolean = this@asReader.consentGiven()
 
         override suspend fun giveConsent(): Outcome<Unit> = this@asReader.giveConsent()
+
+        override suspend fun voices():
+            Outcome<List<io.github.eslamasabry.oc.engine.voice.readaloud.TtsVoice>> =
+            this@asReader.voices().map { it.toList() }
 
         override suspend fun read(request: ReadRequest): Outcome<Unit> = this@asReader.read(request)
 

@@ -63,6 +63,7 @@ public fun interface LinuxRetryWait {
 public class LinuxManager(
     private val host: LinuxHost,
     private val retryWait: LinuxRetryWait,
+    private val details: io.github.eslamasabry.oc.feature.linux.host.LinuxLogDetails? = null,
 ) {
     private val storageLane = Mutex()
     private var storageScanned = false
@@ -125,6 +126,29 @@ public class LinuxManager(
             run(LinuxPortScan.script(LinuxPortScan.candidates(cmds))).then {
                 LinuxAnswer.Ok(LinuxPortScan.parse(it, cmds))
             }
+        }
+
+    /** Full identities are captured before a port-owner stop is offered. */
+    public suspend fun scanProcesses():
+        LinuxAnswer<io.github.eslamasabry.oc.engine.runtime.procs.LinuxProcessScan> =
+        run(io.github.eslamasabry.oc.engine.runtime.procs.LINUX_PROCESS_SCAN_SCRIPT).then {
+            LinuxAnswer.Ok(io.github.eslamasabry.oc.engine.runtime.procs.LinuxProcessScan.parse(it))
+        }
+
+    public suspend fun stopIdentities(
+        identities: List<String>
+    ): LinuxAnswer<io.github.eslamasabry.oc.engine.runtime.procs.LinuxStopResult> =
+        when (
+            val script = io.github.eslamasabry.oc.engine.runtime.procs.linuxStopScript(identities)
+        ) {
+            is Outcome.Failed -> LinuxAnswer.Problem(LinuxProblem.Failed)
+            is Outcome.Ok ->
+                run(script.value).then { output ->
+                    val result =
+                        io.github.eslamasabry.oc.engine.runtime.procs.LinuxStopResult.parse(output)
+                    if (result.outcomes.keys.containsAll(identities)) LinuxAnswer.Ok(result)
+                    else LinuxAnswer.Problem(LinuxProblem.Failed)
+                }
         }
 
     // --- Storage
@@ -253,7 +277,11 @@ public class LinuxManager(
      */
     public suspend fun readJob(): LinuxJobState {
         val running = host.serviceRunning(JOB_SERVICE)
-        return LinuxJobState.fromLog(host.serviceLog(JOB_SERVICE, JOB_LOG_TAIL), running = running)
+        val state =
+            LinuxJobState.fromLog(host.serviceLog(JOB_SERVICE, JOB_LOG_TAIL), running = running)
+        return state.copy(
+            details = state.tail.takeIf { it.isNotBlank() }?.let { details?.redact(it) }
+        )
     }
 
     public companion object {

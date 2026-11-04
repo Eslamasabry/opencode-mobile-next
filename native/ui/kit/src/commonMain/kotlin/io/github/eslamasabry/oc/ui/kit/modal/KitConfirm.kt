@@ -137,6 +137,8 @@ public fun KitConfirm(
     onCancel: () -> Unit,
     working: Boolean = false,
     failed: Boolean = false,
+    /** PORT-SCREENS-2: a third answer offered beside Cancel (it cancels first, then runs). */
+    alternative: KitAction? = null,
 ) {
     if (spec != null) {
         kitAssert(ConfirmRules.titleIsQuestion(spec.title)) {
@@ -243,6 +245,20 @@ public fun KitConfirm(
                                     }),
                             enabled =
                                 if (working) KitEnabled.Disabled(cancel) else alternative.enabled,
+                        )
+                    },
+                    alternative?.let { action ->
+                        action.copy(
+                            onClick =
+                                if (working) null
+                                else
+                                    action.onClick?.let { click ->
+                                        {
+                                            onCancel()
+                                            click()
+                                        }
+                                    },
+                            enabled = if (working) KitEnabled.Disabled(cancel) else action.enabled,
                         )
                     },
                     KitAction(

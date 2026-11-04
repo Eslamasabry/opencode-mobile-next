@@ -143,6 +143,19 @@ public class ConnectionRegistry(
     public fun graphFor(ref: ConversationRef): ConnectionGraph? = live.value[ref.profileId]
 
     /**
+     * Retires only the captured generation; an edited-source reconnect must never close a
+     * replacement.
+     */
+    public suspend fun closeIfCurrent(profile: ProfileId, expected: ConnectionGraph): Boolean =
+        admission.withLock {
+            if (live.value[profile] !== expected) return@withLock false
+            mutableLive.update { it.removing(profile) }
+            (expected.scope.coroutineContext[Job])?.cancelAndJoin()
+            expected.session.close()
+            true
+        }
+
+    /**
      * Stop admission → cancel streams (and join) → release (ADR §9.1). Writer-lane drain joins in
      * slice 1.
      */

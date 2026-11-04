@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolDetail
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
+import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -85,6 +86,10 @@ internal fun TurnWorkLine(
     folds: TranscriptFolds,
     onOpenSession: ((String) -> Unit)? = null,
     onOpenFile: ((ToolArtifact) -> Unit)? = null,
+    entries: List<WorkEntryUi> = emptyList(),
+    reasoningExpanded: Boolean = false,
+    reply: ReplyActions? = null,
+    onCompactAgain: (() -> Unit)? = null,
 ) {
     val key = "work:${work.turnId}"
     val kitState = work.state.toKit()
@@ -92,7 +97,10 @@ internal fun TurnWorkLine(
     val summary = workSummary(work.counts)
     val now = work.now
     val label = if (now != null && !expanded) nowWords(now) else summary
-    val hidden = (work.steps.size - KIT_WORK_STEP_CAP - (folds.earlier[key] ?: 0)).coerceAtLeast(0)
+    val hidden =
+        if (work.state == WorkLineState.Running)
+            (work.steps.size - KIT_WORK_STEP_CAP - (folds.earlier[key] ?: 0)).coerceAtLeast(0)
+        else 0
     val earlier =
         if (expanded && hidden > 0) {
             val n = minOf(hidden, KIT_WORK_STEP_CAP)
@@ -112,16 +120,37 @@ internal fun TurnWorkLine(
         earlier = earlier,
         modifier = Modifier.testTag("chat-work-line"),
     ) {
-        val shown = work.steps.drop(hidden)
-        shown.forEachIndexed { index, step ->
-            StepRow(
-                step,
-                nowMs,
-                folds,
-                onOpenSession,
-                onOpenFile,
-                KitToolRail(index == 0, index == shown.lastIndex),
-            )
+        if (entries.isEmpty()) {
+            val shown = work.steps.drop(hidden)
+            shown.forEachIndexed { index, step ->
+                StepRow(
+                    step,
+                    nowMs,
+                    folds,
+                    onOpenSession,
+                    onOpenFile,
+                    KitToolRail(index == 0, index == shown.lastIndex),
+                )
+            }
+        } else {
+            var skipped = 0
+            val stepQueues = work.steps.groupBy { it.partId }.mapValues { ArrayDeque(it.value) }
+            for (entry in entries) when (entry) {
+                is WorkEntryUi.Step -> {
+                    val step = stepQueues[entry.partId]?.removeFirstOrNull() ?: continue
+                    if (skipped++ >= hidden) StepRow(step, nowMs, folds, onOpenSession, onOpenFile)
+                }
+                is WorkEntryUi.Detail ->
+                    if (skipped >= hidden)
+                        TranscriptDetail(
+                            entry.value,
+                            folds,
+                            reasoningExpanded,
+                            reply,
+                            onCompactAgain,
+                            onOpenSession,
+                        )
+            }
         }
     }
 }
