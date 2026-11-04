@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.chip
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,17 +24,21 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -82,17 +86,32 @@ public fun KitChip(
             else -> colors.surface3 to TextTone.Primary
         }
     val edge = if (tone == KitChipTone.Attention) colors.attentionLine else Color.Transparent
-    val shape = KitShapeId.Pill.toShape()
+    val shape = KitShapeId.Pill.shape()
+    val chosen = tone == KitChipTone.Active || selected == true
+    // The style draws the chip (B-KIT-043..045); Solid keeps the fill above.
+    val look =
+        kitSurfaceLook(
+            KitSurfaceInput(
+                role = SurfaceRole.Control,
+                shape = KitShapeId.Pill,
+                level = SurfaceLevel.Surface3,
+                ownFill = fill,
+                color = if (chosen || tone == KitChipTone.Attention) fill else null,
+                selected = chosen,
+            ),
+        )
+    val inkColors = look.words?.let { w -> colors.copy(text1 = w, onAccent = w, attention = w) } ?: colors
     val face: @Composable () -> Unit = {
+      CompositionLocalProvider(LocalKitColors provides inkColors) {
         Row(
             Modifier.heightIn(min = tokens.chipHeight.dp)
-                .background(fill, shape)
+                .then(look.modifier)
                 .border(1.dp, edge, shape)
                 .padding(horizontal = Space.S3.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
-            icon?.let { KitGlyph(it, colors.tone(words), (tokens.smallIcon - 4).dp) }
+            icon?.let { KitGlyph(it, inkColors.tone(words), (tokens.smallIcon - 4).dp) }
             KitText(label, role = TypeRole.Label, tone = words, kind = KitTextKind.Frame, maxLines = 1)
             if (kind == KitChipKind.Count && count != null) {
                 KitText(count.toString(), role = TypeRole.Label, tone = words, kind = KitTextKind.Frame)
@@ -107,10 +126,11 @@ public fun KitChip(
                             .testTag("kit-chip-remove")
                             .semantics { contentDescription = removeLabel.orEmpty() },
                     shape = KitShapeId.Circle,
-                ) { KitGlyph(KitPartGlyphs.Close, colors.tone(words), (tokens.smallIcon - 6).dp) }
+                ) { KitGlyph(KitPartGlyphs.Close, inkColors.tone(words), (tokens.smallIcon - 6).dp) }
                 }
             }
         }
+      }
     }
     val target = modifier.heightIn(min = tokens.minTarget.dp)
     if (onClick != null) {

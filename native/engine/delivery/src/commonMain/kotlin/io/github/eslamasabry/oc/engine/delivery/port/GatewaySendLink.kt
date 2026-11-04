@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.core.model.PromptAdmission
 import io.github.eslamasabry.oc.core.model.StopResult
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.transcript.Role
+import io.github.eslamasabry.oc.engine.delivery.PromptTracing
 import io.github.eslamasabry.oc.engine.delivery.receipts.DispatchScope
 
 /**
@@ -34,6 +35,8 @@ public class GatewaySendLink(
     /** The profile's stored address (Dart `profile.baseUrl`), part of the receipt scope. Never logged. */
     private val baseUrl: String,
     private val gateway: ServerGateway,
+    /** B-BUILD-027: the prompt timeline; null records nothing. */
+    private val tracing: PromptTracing? = null,
 ) : SendLink {
     /** One gateway is one connection epoch; a status-change wrapper over it is the same target. */
     override val epoch: Any get() = gateway
@@ -103,6 +106,14 @@ public class GatewaySendLink(
     override fun newClientMessageId(): MessageId? = correlatedGateway?.takeIf { correlated }?.createPromptMessageId()
 
     override suspend fun prompt(session: SessionId, prompt: OutgoingPrompt, beforeSend: () -> Boolean): Outcome<PromptAdmission> {
+        val tracing = tracing ?: return admit(session, prompt, beforeSend)
+        tracing.sent(session.raw)
+        val result = admit(session, prompt, beforeSend)
+        tracing.accepted(session.raw, error = result is Outcome.Failed)
+        return result
+    }
+
+    private suspend fun admit(session: SessionId, prompt: OutgoingPrompt, beforeSend: () -> Boolean): Outcome<PromptAdmission> {
         val id = prompt.clientMessageId
         val correlatedGateway = correlatedGateway
         if (id != null && correlatedGateway != null) return correlatedGateway.promptWithMessageId(session, id, prompt, beforeSend)

@@ -77,6 +77,11 @@ import io.github.eslamasabry.oc.ui.words.res.usageNoModels
 import io.github.eslamasabry.oc.ui.words.res.usageNoTools
 import io.github.eslamasabry.oc.ui.words.res.usageOutput
 import io.github.eslamasabry.oc.ui.words.res.usagePeriod
+import io.github.eslamasabry.oc.ui.words.res.usageSpentAllTime
+import io.github.eslamasabry.oc.ui.words.res.usageSpentPeriod
+import io.github.eslamasabry.oc.ui.words.res.usageSpentThirtyDays
+import io.github.eslamasabry.oc.ui.words.res.usageSpentToday
+import io.github.eslamasabry.oc.ui.words.res.usageSpentYear
 import io.github.eslamasabry.oc.ui.words.res.usagePreviousResult
 import io.github.eslamasabry.oc.ui.words.res.usagePrompts
 import io.github.eslamasabry.oc.ui.words.res.usageProviderCostUnavailable
@@ -154,7 +159,7 @@ public fun UsageScreen(state: UsageUi, actions: UsageActions) {
                 }
                 return@LazyColumn
             }
-            state.report?.let { report -> item(key = "total") { Total(report, state.timezone) } }
+            state.report?.let { report -> item(key = "total") { Total(report, state.range, state.timezone) } }
             item(key = "filters") { Filters(state, actions) }
             item(key = "status") { Status(state, actions) }
             state.report?.let { report -> breakdowns(report) }
@@ -170,23 +175,33 @@ public fun UsageScreen(state: UsageUi, actions: UsageActions) {
 }
 
 @Composable
-private fun Total(report: UsageReport, timezone: String?) {
+private fun Total(report: UsageReport, range: UsageRange, timezone: String?) {
     val gutter = LocalKitTokens.current.gutter
     Column(
         Modifier.padding(horizontal = gutter.dp, vertical = Space.S3.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
-        KitText(stringResource(Res.string.p12UsageCost), role = TypeRole.Label, tone = TextTone.Secondary)
-        KitText(cost(report.cost), role = TypeRole.LargeTitle)
         val zone = timezone?.takeIf { UsageCalendar.isReadable(it) }
         val first = zone?.let { UsageCalendar.dayLabel(report.fromMs, it) }
         val last = zone?.let { UsageCalendar.dayLabel(report.toMs - 1, it) }
-        if (zone != null && first != null && last != null) {
-            KitText(
-                stringResource(Res.string.usagePeriod, first, last),
-                role = TypeRole.Secondary,
-                tone = TextTone.Secondary,
-            )
+        val days = if (first != null && last != null) stringResource(Res.string.usagePeriod, first, last) else null
+        // The label names the days the server actually covered when they differ from the range asked for.
+        val label =
+            when {
+                !report.coversRequest && days != null -> stringResource(Res.string.usageSpentPeriod, days)
+                !report.coversRequest -> stringResource(Res.string.p12UsageCost)
+                else ->
+                    when (range) {
+                        UsageRange.Today -> stringResource(Res.string.usageSpentToday)
+                        UsageRange.ThirtyDays -> stringResource(Res.string.usageSpentThirtyDays)
+                        UsageRange.Year -> stringResource(Res.string.usageSpentYear)
+                        UsageRange.AllTime -> stringResource(Res.string.usageSpentAllTime)
+                    }
+            }
+        KitText(label, role = TypeRole.Label, tone = TextTone.Secondary)
+        KitText(cost(report.cost), role = TypeRole.LargeTitle)
+        if (zone != null && days != null) {
+            if (report.coversRequest) KitText(days, role = TypeRole.Secondary, tone = TextTone.Secondary)
             KitText(stringResource(Res.string.usageTimezone, zone), role = TypeRole.Caption, tone = TextTone.Tertiary)
         }
     }

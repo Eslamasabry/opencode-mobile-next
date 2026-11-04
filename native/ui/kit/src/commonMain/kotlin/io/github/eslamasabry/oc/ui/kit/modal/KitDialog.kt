@@ -47,7 +47,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -57,7 +61,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -150,11 +154,12 @@ internal fun DialogLayer(state: KitSheetHostState) {
                     enter = still.enter { slideInVertically(specs.spatial<IntOffset>()) { it } },
                     exit = still.exit { slideOutVertically(specs.exit<IntOffset>()) { it } },
                 ) {
+                    val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Sheet, KitShapeId.Sheet, SurfaceLevel.Surface2, ownFill = colors.surface2))
                     Box(
                         panel.widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp).fillMaxWidth().heightIn(max = cap)
                             .predictiveShrink(back, TransformOrigin(0.5f, 1f))
-                            .clip(KitShapeId.Sheet.toShape())
-                            .background(colors.surface2)
+                            .then(look.modifier)
+                            .clip(KitShapeId.Sheet.shape())
                             .navigationBarsPadding()
                             .imePadding(),
                     ) { body() }
@@ -163,11 +168,12 @@ internal fun DialogLayer(state: KitSheetHostState) {
         } else {
             Box(Modifier.fillMaxSize().padding(Space.S6.dp).imePadding(), contentAlignment = Alignment.Center) {
                 AnimatedVisibility(state.dialogShown, enter = still.enter { fadeIn(specs.enter()) + scaleIn(specs.enter(), initialScale = 0.96f) }, exit = still.exit { fadeOut(specs.exit()) }) {
+                    val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Floating, KitShapeId.Dialog, SurfaceLevel.Surface2, ownFill = colors.surface2))
                     Box(
                         panel.widthIn(max = DIALOG_MAX_DP.dp).fillMaxWidth().heightIn(max = cap)
                             .predictiveShrink(back, TransformOrigin.Center)
-                            .clip(KitShapeId.Dialog.toShape())
-                            .background(colors.surface2),
+                            .then(look.modifier)
+                            .clip(KitShapeId.Dialog.shape()),
                     ) { body() }
                 }
             }

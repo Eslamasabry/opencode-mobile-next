@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -27,7 +28,9 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -36,9 +39,11 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
@@ -134,10 +139,11 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
+    val track = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Track, KitShapeId.Button, SurfaceLevel.Surface3, ownFill = colors.surface3))
     Row(
         Modifier.fillMaxWidth()
-            .clip(KitShapeId.Button.toShape())
-            .background(colors.surface3)
+            .clip(KitShapeId.Button.shape())
+            .then(track.modifier)
             .padding(Space.S1.dp)
             .selectableGroup(),
         horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
@@ -151,6 +157,21 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                 chosen -> TextTone.OnAccent
                 else -> TextTone.Primary
             }
+            // The style draws the chosen segment (B-KIT-043..045); Solid keeps the accent fill above.
+            val thumb =
+                kitSurfaceLook(
+                    KitSurfaceInput(
+                        role = SurfaceRole.Control,
+                        shape = KitShapeId.Tile,
+                        level = SurfaceLevel.Surface3,
+                        ownFill = fill,
+                        color = if (chosen) colors.accent else null,
+                        selected = chosen,
+                        disabled = !segEnabled.isEnabled,
+                    ),
+                )
+            val inkColors = thumb.words?.takeIf { chosen }?.let { w -> colors.copy(onAccent = w) } ?: colors
+            CompositionLocalProvider(LocalKitColors provides inkColors) {
             Row(
                 Modifier.weight(1f)
                     .heightIn(min = (tokens.minTarget - Space.S2).dp)
@@ -160,13 +181,14 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                             onChange(it)
                         }
                     }
-                    .background(fill)
+                    .then(if (chosen) thumb.modifier else Modifier)
                     .padding(horizontal = Space.S2.dp),
                 horizontalArrangement = Arrangement.spacedBy(Space.S1.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                s.icon?.let { KitGlyph(it, colors.tone(words), tokens.smallIcon.dp) }
+                s.icon?.let { KitGlyph(it, inkColors.tone(words), tokens.smallIcon.dp) }
                 KitText(s.label, role = TypeRole.Label, tone = words, kind = KitTextKind.Frame, maxLines = 1, textAlign = TextAlign.Center)
+            }
             }
         }
     }

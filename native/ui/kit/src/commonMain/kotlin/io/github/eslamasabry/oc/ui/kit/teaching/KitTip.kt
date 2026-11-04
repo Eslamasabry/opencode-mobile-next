@@ -47,7 +47,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
@@ -144,7 +144,7 @@ public fun KitTip(
 @Composable
 public fun KitTipBubble(message: String, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
-    val shape = KitShapeId.Panel.toShape()
+    val shape = KitShapeId.Panel.shape()
     Box(
         modifier
             .testTag("kit-tip")

@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.ui.design.tokens.Density
+import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.feature.settings.presentation.BackgroundState
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsNote
@@ -92,6 +94,18 @@ import io.github.eslamasabry.oc.ui.words.res.settingsV3Servers
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
 import io.github.eslamasabry.oc.ui.words.res.signalStyleName
 import io.github.eslamasabry.oc.ui.words.res.tipsTitle
+import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersRound
+import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSoft
+import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSharp
+import io.github.eslamasabry.oc.ui.words.res.appearanceSpacingRoomy
+import io.github.eslamasabry.oc.ui.words.res.appearanceSpacingCompact
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentMint
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentTeal
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentBlue
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentViolet
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentPink
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentMono
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentSilver
 import org.jetbrains.compose.resources.stringResource
 
 /** Enum → `:ui:words` copy for the Settings pages. Lines `:ui:words` lacks are in [PendingWords]. */
@@ -253,3 +267,36 @@ internal fun textSizeWords(size: AppTextSize): String =
             AppTextSize.Large -> Res.string.textSizeLarge
         },
     )
+
+@Composable
+internal fun cornersWords(corners: Corners): String =
+    stringResource(
+        when (corners) {
+            Corners.Round -> Res.string.appearanceFineTuneCornersRound
+            Corners.Soft -> Res.string.appearanceFineTuneCornersSoft
+            Corners.Sharp -> Res.string.appearanceFineTuneCornersSharp
+        },
+    )
+
+@Composable
+internal fun spacingWords(spacing: Density): String =
+    stringResource(
+        when (spacing) {
+            Density.Comfortable -> Res.string.appearanceSpacingRoomy
+            Density.Compact -> Res.string.appearanceSpacingCompact
+        },
+    )
+
+/** An Accent swatch's name by its stored id; an unknown id reads as its own id (never blank). */
+@Composable
+internal fun accentWords(id: String): String =
+    when (id) {
+        "mint" -> stringResource(Res.string.appearanceAccentMint)
+        "teal" -> stringResource(Res.string.appearanceAccentTeal)
+        "blue" -> stringResource(Res.string.appearanceAccentBlue)
+        "violet" -> stringResource(Res.string.appearanceAccentViolet)
+        "pink" -> stringResource(Res.string.appearanceAccentPink)
+        "mono" -> stringResource(Res.string.appearanceAccentMono)
+        "silver" -> stringResource(Res.string.appearanceAccentSilver)
+        else -> id
+    }

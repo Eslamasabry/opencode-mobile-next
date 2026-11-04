@@ -22,7 +22,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -41,7 +41,7 @@ public fun KitStopAndSendPill(label: String, onClick: () -> Unit, modifier: Modi
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val style = LocalKitTypography.current.style(TypeRole.Label).copy(color = colors.onAttentionFill)
-    val shape = KitShapeId.Pill.toShape()
+    val shape = KitShapeId.Pill.shape()
     KitTappable(
         onClick = onClick,
         modifier = modifier.testTag(PILL_TAG).semantics { contentDescription = label },

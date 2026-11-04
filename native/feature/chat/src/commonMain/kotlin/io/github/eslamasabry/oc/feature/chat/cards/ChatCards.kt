@@ -65,6 +65,9 @@ public interface ChatCardsBindings {
 
     /** Where answers that may have left are remembered (`oc.genui.journal.<profileId>`, B-CHAT-051). */
     @Multibinds(allowEmpty = true) public val cardJournalStores: Set<CardJournalStore>
+
+    /** The phone's own built-in Linux: installs and verifies the card tools where the app manages the host (B-CHAT-040). */
+    @Multibinds(allowEmpty = true) public val phoneCardsQualifiers: Set<CardsQualifier>
 }
 
 /** In-memory prefs where the app binds none (desktop preview, tests): cards stay off after a restart. */
@@ -99,6 +102,24 @@ public class GraphCardsQualifier(private val registry: ConnectionRegistry) : Car
     }
 }
 
+/**
+ * Routes by host: the phone's own server is managed (setup, verification and removal run in the built-in Linux through
+ * [phone]); every other connection is verified over its connected server and never installed to (B-CHAT-036).
+ */
+internal class RoutedCardsQualifier(private val graph: CardsQualifier, private val phone: CardsQualifier?) : CardsQualifier {
+    private fun pick(profileId: String): CardsQualifier = phone?.takeIf { it.managed(profileId) } ?: graph
+
+    override fun managed(profileId: String): Boolean = pick(profileId).managed(profileId)
+
+    override fun agentsHere(profileId: String): List<CardAgent> = pick(profileId).agentsHere(profileId)
+
+    override suspend fun verify(profileId: String): Outcome<CardsVerdict> = pick(profileId).verify(profileId)
+
+    override suspend fun install(profileId: String): Outcome<CardsVerdict> = pick(profileId).install(profileId)
+
+    override suspend fun remove(profileId: String): Outcome<Unit> = pick(profileId).remove(profileId)
+}
+
 /** One per app: the availability state and the per-conversation models. */
 @SingleIn(AppScope::class)
 @Inject
@@ -106,8 +127,10 @@ public class ChatCards(
     private val registry: ConnectionRegistry,
     prefs: Set<CardsPrefs> = emptySet(),
     journals: Set<CardJournalStore> = emptySet(),
+    phone: Set<CardsQualifier> = emptySet(),
 ) {
-    public val setup: CardsSetup = CardsSetup(prefs.firstOrNull() ?: MemoryCardsPrefs(), GraphCardsQualifier(registry))
+    public val setup: CardsSetup =
+        CardsSetup(prefs.firstOrNull() ?: MemoryCardsPrefs(), RoutedCardsQualifier(GraphCardsQualifier(registry), phone.firstOrNull()))
     private val journal: CardJournal = journals.firstOrNull()?.let(::StoredCardJournal) ?: MemoryCardJournal()
 
     public fun open(ref: ConversationRef): ChatCardsModel = ChatCardsModel(ref, registry, setup, journal).also { it.attach() }

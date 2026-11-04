@@ -25,7 +25,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
@@ -52,7 +52,7 @@ public fun KitCommandBox(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalKitColors.current
-    val shape = KitShapeId.Code.toShape()
+    val shape = KitShapeId.Code.shape()
     val printed = output?.let { redacted(it) }?.trimEnd().orEmpty()
     val lines = if (printed.isEmpty()) emptyList() else printed.lines()
     Column(

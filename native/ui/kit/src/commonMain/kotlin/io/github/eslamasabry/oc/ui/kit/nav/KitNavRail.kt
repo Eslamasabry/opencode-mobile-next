@@ -29,7 +29,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
 /**
@@ -97,7 +97,7 @@ private fun RailItem(d: KitNavDestination, chosen: Boolean, onClick: () -> Unit)
         Column(
             Modifier
                 .fillMaxWidth()
-                .then(if (chosen) Modifier.background(colors.surface3, KitShapeId.Panel.toShape()) else Modifier)
+                .then(if (chosen) Modifier.background(colors.surface3, KitShapeId.Panel.shape()) else Modifier)
                 .padding(vertical = Space.S2.dp, horizontal = Space.S1.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Space.S1.dp),

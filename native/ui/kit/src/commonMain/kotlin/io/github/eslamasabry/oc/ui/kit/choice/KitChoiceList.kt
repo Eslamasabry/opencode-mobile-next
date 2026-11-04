@@ -32,7 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -212,17 +212,17 @@ private fun ChoiceMarkGlyph(mark: KitChoiceMark, selected: Boolean, on: Boolean)
     val colors = LocalKitColors.current
     val size = 22.dp
     val edge = if (!on) colors.text3 else if (selected) colors.accent else colors.text2
-    val shape = if (mark == KitChoiceMark.Radio) KitShapeId.Circle.toShape() else KitShapeId.Square.toShape()
+    val shape = if (mark == KitChoiceMark.Radio) KitShapeId.Circle.shape() else KitShapeId.Square.shape()
     if (mark == KitChoiceMark.Check && selected) {
-        Box(Modifier.size(size).clip(KitShapeId.Code.toShape()).background(edge), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(size).clip(KitShapeId.Code.shape()).background(edge), contentAlignment = Alignment.Center) {
             KitGlyph(KitPartGlyphs.Check, colors.onAccent, 16.dp)
         }
         return
     }
     Box(
-        Modifier.size(size).clip(if (mark == KitChoiceMark.Check) KitShapeId.Code.toShape() else shape).border(2.dp, edge, if (mark == KitChoiceMark.Check) KitShapeId.Code.toShape() else shape),
+        Modifier.size(size).clip(if (mark == KitChoiceMark.Check) KitShapeId.Code.shape() else shape).border(2.dp, edge, if (mark == KitChoiceMark.Check) KitShapeId.Code.shape() else shape),
         contentAlignment = Alignment.Center,
     ) {
-        if (selected) Box(Modifier.size(10.dp).clip(KitShapeId.Circle.toShape()).background(edge))
+        if (selected) Box(Modifier.size(10.dp).clip(KitShapeId.Circle.shape()).background(edge))
     }
 }

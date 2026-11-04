@@ -25,6 +25,11 @@ import io.github.eslamasabry.oc.engine.settings.prefs.MotionLevel as StoredMotio
 import io.github.eslamasabry.oc.engine.settings.prefs.SurfaceStyle as StoredStyle
 import io.github.eslamasabry.oc.ui.design.effects.FrostStrength as KitFrost
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel as KitMotion
+import io.github.eslamasabry.oc.ui.design.style.Corners as KitCorners
+import io.github.eslamasabry.oc.ui.design.style.FineTuneChoice as KitFineTune
+import io.github.eslamasabry.oc.ui.design.style.Style as KitStyle
+import io.github.eslamasabry.oc.engine.settings.prefs.Corners as StoredCorners
+import io.github.eslamasabry.oc.engine.settings.prefs.Density as StoredDensity
 
 /**
  * `:engine:settings` [Preferences] as [PersonalChoices]: field-for-field over the acknowledged snapshot. Nothing is
@@ -57,6 +62,9 @@ public object PreferenceMapping {
             pack = pack(p.themePack),
             style = SurfaceStyle.entries.first { it.name == p.effects.surfaceStyle.name },
             fineTuned = !p.effects.fineTune.isNone,
+            corners = p.effects.fineTune.corners?.let { c -> KitCorners.entries.first { it.name == c.name } },
+            spacing = p.effects.fineTune.density?.let { d -> Density.entries.first { it.name == d.name } },
+            accent = p.accent,
             motion = motion(p.effects.motion),
             reasoning = p.reasoningExpanded,
             timestamps = p.timestampsVisible,
@@ -75,6 +83,19 @@ public object PreferenceMapping {
                 PreferenceChange.SetEffects(current.effects.withSurfaceStyle(StoredStyle.entries.first { it.name == change.style.name }))
             is PersonalChange.Motion ->
                 PreferenceChange.SetEffects(current.effects.copy(motion = StoredMotion.entries.first { it.name == change.motion.name }))
+            is PersonalChange.Corner ->
+                PreferenceChange.SetEffects(
+                    current.effects.copy(
+                        fineTune = current.effects.fineTune.copy(corners = change.corners?.let { c -> StoredCorners.entries.first { it.name == c.name } }),
+                    ),
+                )
+            is PersonalChange.Spacing ->
+                PreferenceChange.SetEffects(
+                    current.effects.copy(
+                        fineTune = current.effects.fineTune.copy(density = change.spacing?.let { d -> StoredDensity.entries.first { it.name == d.name } }),
+                    ),
+                )
+            is PersonalChange.Accent -> PreferenceChange.Accent(change.id)
             is PersonalChange.Reasoning -> PreferenceChange.ReasoningExpanded(change.on)
             is PersonalChange.Timestamps -> PreferenceChange.TimestampsVisible(change.on)
             is PersonalChange.TextSize ->
@@ -91,6 +112,12 @@ public object PreferenceMapping {
             textSize = textSize(p.textSize),
             motion = motion(p.effects.motion),
             density = p.effects.fineTune.density?.let { d -> Density.entries.firstOrNull { it.name == d.name } } ?: Density.Comfortable,
+            style = KitStyle.entries.first { it.storageName == p.effects.surfaceStyle.wire },
+            fineTune =
+                KitFineTune(
+                    corners = p.effects.fineTune.corners?.let { c -> KitCorners.entries.first { it.name == c.name } },
+                    density = p.effects.fineTune.density?.let { d -> Density.entries.first { it.name == d.name } },
+                ),
             frost = KitFrost.fromStorage(p.frost.wire),
         )
 

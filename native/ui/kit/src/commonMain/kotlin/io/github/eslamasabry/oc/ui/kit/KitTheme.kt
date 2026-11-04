@@ -24,8 +24,10 @@ import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionSignals
+import io.github.eslamasabry.oc.ui.design.style.StyleResolver
 import io.github.eslamasabry.oc.ui.design.motion.resolveMotion
 import io.github.eslamasabry.oc.ui.design.tokens.Alphas
+import io.github.eslamasabry.oc.ui.design.tokens.Density
 import io.github.eslamasabry.oc.ui.design.tokens.Tokens
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberAppTextDensity
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
@@ -35,7 +37,10 @@ import io.github.eslamasabry.oc.ui.kit.theme.KitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.KitStyleState
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
@@ -72,16 +77,36 @@ public fun KitTheme(
         }
     // Called once per composition of the theme, and only for Material You (plan 06 §5.5).
     val dynamic = if (appearance.pack == PackId.Dynamic) remember(platform, dark) { platform.dynamicSource() } else null
+    // The style actually drawn: Solid under Saver and under platform high contrast unless the style keeps itself.
+    val styleState =
+        remember(appearance.style, appearance.fineTune, appearance.density, appearance.saver, signals.highContrast) {
+            val style = StyleResolver.effectiveStyle(appearance.style, signals.highContrast, appearance.saver)
+            // The older `density` field is a Fine-tune Spacing choice too.
+            val tune =
+                if (appearance.fineTune.density == null && appearance.density != Density.Comfortable) {
+                    appearance.fineTune.copy(density = appearance.density)
+                } else {
+                    appearance.fineTune
+                }
+            KitStyleState(
+                style,
+                StyleResolver.spec(style),
+                StyleResolver.knobsFor(appearance.style, tune, signals.highContrast, appearance.saver),
+            )
+        }
     val roles =
-        remember(appearance.pack, appearance.accent, dark, appearance.saver, dynamic) {
-            ThemeResolver.roles(appearance.pack, appearance.accent, dark, appearance.saver, dynamic)
+        remember(appearance.pack, appearance.accent, dark, appearance.saver, dynamic, styleState.style) {
+            StyleResolver.adjust(
+                ThemeResolver.roles(appearance.pack, appearance.accent, dark, appearance.saver, dynamic),
+                styleState.style,
+            )
         }
     val colors = remember(roles) { roles.toKitColors() }
     val arabic = isArabic(localeTag)
     val fonts = rememberKitFonts(arabic)
     val typography = remember(fonts, arabic) { KitTypography(fonts, arabic) }
     // Saver makes the effective knobs none (Dart KitEffects.underSaver).
-    val tokens = if (appearance.saver) Tokens.Comfortable else Tokens.of(appearance.density)
+    val tokens = Tokens.of(styleState.knobs.density)
     val level =
         resolveMotion(
             MotionSignals(signals.animatorScale, signals.powerSave, signals.severeHeat),
@@ -104,6 +129,8 @@ public fun KitTheme(
     CompositionLocalProvider(
         LocalKitPlatform provides platform,
         LocalKitAppearance provides appearance,
+        LocalKitStyle provides styleState,
+        LocalKitRoles provides roles,
         LocalKitColors provides colors,
         LocalKitTypography provides typography,
         LocalKitTokens provides tokens,

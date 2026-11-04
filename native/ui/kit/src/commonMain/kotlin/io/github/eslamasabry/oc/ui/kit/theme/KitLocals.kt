@@ -6,7 +6,12 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.color.Roles
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
+import io.github.eslamasabry.oc.ui.design.style.Knobs
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.style.StyleSpec
+import io.github.eslamasabry.oc.ui.design.style.SolidSpec
 import io.github.eslamasabry.oc.ui.design.tokens.Tokens
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 
@@ -48,3 +53,19 @@ public data class KitWindowInfo(
 }
 
 public val LocalKitWindow: ProvidableCompositionLocal<KitWindowInfo> = compositionLocalOf { KitWindowInfo.Phone }
+
+/**
+ * The style in force and the Fine-tune knobs in force (plan 06 §5.1): Saver and platform high contrast are already
+ * applied, so a part reads one answer. Kit parts only.
+ */
+@Immutable
+public data class KitStyleState(val style: Style, val spec: StyleSpec, val knobs: Knobs) {
+    public companion object {
+        public val Solid: KitStyleState = KitStyleState(Style.Solid, SolidSpec, Knobs())
+    }
+}
+
+public val LocalKitStyle: ProvidableCompositionLocal<KitStyleState> = staticCompositionLocalOf { KitStyleState.Solid }
+
+/** The resolved roles (after the style's `adjustRoles`), for the style resolver; parts read [LocalKitColors]. */
+public val LocalKitRoles: ProvidableCompositionLocal<Roles> = staticCompositionLocalOf { missing("Roles") }

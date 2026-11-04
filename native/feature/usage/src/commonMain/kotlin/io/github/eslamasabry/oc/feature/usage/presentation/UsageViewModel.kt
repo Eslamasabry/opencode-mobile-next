@@ -147,9 +147,14 @@ public class UsageViewModel(
             if (mine != generation) return@launch
             when (result) {
                 is Outcome.Ok -> {
-                    lastGood = filters to result.value
+                    val value = result.value
+                    val covers =
+                        value.toMs == query.toMs &&
+                            (value.fromMs == query.fromMs || (s.range == UsageRange.AllTime && query.fromMs == null))
+                    val answer = value.copy(coversRequest = covers)
+                    lastGood = filters to answer
                     local.update {
-                        it.copy(phase = UsagePhase.Ready, report = result.value, previous = false, refreshing = false)
+                        it.copy(phase = UsagePhase.Ready, report = answer, previous = false, refreshing = false)
                     }
                 }
                 is Outcome.Failed -> {

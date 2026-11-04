@@ -23,7 +23,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.frame.ExitGlyph
 import io.github.eslamasabry.oc.ui.kit.frame.KitExitGlyph
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -61,7 +61,7 @@ internal fun RowLeadingTile(leading: KitRowLeading, dim: Boolean) {
     val tone = if (dim) TextTone.Tertiary else TextTone.Primary
     val tile = tokens.iconTile * minOf(kitTextScale(), TextScalePolicy.ICON_CAP)
     Box(
-        Modifier.size(tile.dp).background(colors.surface3, KitShapeId.Tile.toShape()).clearAndSetSemantics {},
+        Modifier.size(tile.dp).background(colors.surface3, KitShapeId.Tile.shape()).clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
         when (leading) {

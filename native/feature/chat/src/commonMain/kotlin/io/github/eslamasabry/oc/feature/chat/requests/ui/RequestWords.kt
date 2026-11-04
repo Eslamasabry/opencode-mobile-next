@@ -1,6 +1,12 @@
 package io.github.eslamasabry.oc.feature.chat.requests.ui
 
 import androidx.compose.runtime.Composable
+import kotlin.time.Duration.Companion.milliseconds
+import io.github.eslamasabry.oc.ui.words.res.kitDurationHoursMinutes
+import io.github.eslamasabry.oc.ui.words.res.kitDurationHours
+import io.github.eslamasabry.oc.ui.words.res.kitDurationDaysHours
+import io.github.eslamasabry.oc.ui.words.res.kitDurationDays
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitElapsed
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.requests.ask.AlwaysGrant
 import io.github.eslamasabry.oc.engine.requests.ask.AskTarget
@@ -162,13 +168,27 @@ internal fun answerWords(words: AnswerWords): String =
         is AnswerWords.Chose -> words.answer
     }
 
-/** "20 seconds", "4 minutes": how long the card has waited on this phone. */
+/**
+ * How long the card has waited on this phone (B-KIT-033): seconds under a minute, minutes under an hour, then hours and
+ * minutes, then days and hours (never "2,715 minutes").
+ */
 @Composable
 internal fun waitedWords(waitedMs: Long): String {
     val seconds = (waitedMs / 1_000).coerceAtLeast(0).toInt()
-    return if (seconds < 60) {
-        pluralStringResource(Res.plurals.kitToolTookSeconds, seconds, Numbers.format(seconds))
-    } else {
-        pluralStringResource(Res.plurals.kitToolTookMinutes, seconds / 60, Numbers.format(seconds / 60))
+    if (seconds < 60) return pluralStringResource(Res.plurals.kitToolTookSeconds, seconds, Numbers.format(seconds))
+    return when (val e = KitElapsed.of(waitedMs.milliseconds)) {
+        is KitElapsed.Minutes -> pluralStringResource(Res.plurals.kitToolTookMinutes, e.minutes, Numbers.format(e.minutes))
+        is KitElapsed.Hours ->
+            if (e.minutes == 0) {
+                stringResource(Res.string.kitDurationHours, Numbers.format(e.hours))
+            } else {
+                stringResource(Res.string.kitDurationHoursMinutes, Numbers.format(e.hours), Numbers.format(e.minutes))
+            }
+        is KitElapsed.Days ->
+            if (e.hours == 0) {
+                stringResource(Res.string.kitDurationDays, Numbers.format(e.days))
+            } else {
+                stringResource(Res.string.kitDurationDaysHours, Numbers.format(e.days), Numbers.format(e.hours))
+            }
     }
 }

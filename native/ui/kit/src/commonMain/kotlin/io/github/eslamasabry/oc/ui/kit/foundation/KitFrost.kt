@@ -25,6 +25,8 @@ import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.design.style.Style
 
 /**
  * What scrolls behind a frost surface, recorded once per frame (plan 06 K12). Compose cannot blur "what is behind"
@@ -63,7 +65,7 @@ public fun Modifier.kitFrost(role: FrostRole, state: KitFrostState): Modifier {
     val reduced = LocalKitMotion.current.reduced
     val signals by platform.signals.collectAsState()
     val density = LocalDensity.current.density
-    val conditions = FrostConditions(appearance.saver, reduced, signals.highContrast, styleAllows = true)
+    val conditions = FrostConditions(appearance.saver, reduced, signals.highContrast, styleAllows = LocalKitStyle.current.style == Style.Solid)
     val spec = FrostPolicy.spec(role, appearance.frost, colors.dark, conditions)
     val effect = remember(spec, density, platform) { spec?.let { platform.frostEffect(it, density) } }
     val tint = if (role == FrostRole.ChatHeader) colors.ground else colors.surface2

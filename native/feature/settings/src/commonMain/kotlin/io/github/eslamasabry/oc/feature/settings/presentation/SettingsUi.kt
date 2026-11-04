@@ -4,7 +4,9 @@ import io.github.eslamasabry.oc.engine.analytics.WhatWeCollect
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
+import io.github.eslamasabry.oc.ui.design.tokens.Density
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -51,6 +53,13 @@ public data class AppearanceUi(
     /** How many packs "See all" shows in total; 0 when everything is already listed. */
     val seeAllCount: Int = 0,
     val style: SurfaceStyle = SurfaceStyle.Solid,
+    /** The Corners shown as chosen: the person's choice, else the style's own (a choice equal to it does not differ). */
+    val corners: Corners = Corners.Round,
+    val spacing: Density = Density.Comfortable,
+    /** Corners or Spacing differ from the style's own: "Reset to <style> defaults" is offered (B-KIT-017). */
+    val fineTuned: Boolean = false,
+    /** The Accent swatch id; null = Match theme (B-KIT-049). */
+    val accent: String? = null,
     val motion: MotionLevel = MotionLevel.Full,
     val textSize: AppTextSize = AppTextSize.Normal,
     /** The five styles are listed only where the app draws them ([SettingsFacts.surfaceStyles]). */

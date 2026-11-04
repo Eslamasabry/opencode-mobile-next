@@ -67,7 +67,7 @@ import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -296,7 +296,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                             entry,
                             Modifier.widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp).fillMaxWidth().then(sized)
                                 .predictiveShrink(back, TransformOrigin(0.5f, 1f))
-                                .clip(KitShapeId.Sheet.toShape()),
+                                .clip(KitShapeId.Sheet.shape()),
                             handle = true,
                         )
                     }
@@ -308,7 +308,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                             entry,
                             Modifier.widthIn(max = SheetLayout.CENTRED_MAX_DP.dp).fillMaxWidth().heightIn(max = maxSheet)
                                 .predictiveShrink(back, TransformOrigin.Center)
-                                .clip(KitShapeId.Dialog.toShape()),
+                                .clip(KitShapeId.Dialog.shape()),
                             handle = false,
                         )
                     }
@@ -360,7 +360,7 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
     ) {
         if (handle) {
             Box(Modifier.fillMaxWidth().height(tokens.handleBand.dp), contentAlignment = Alignment.Center) {
-                Box(Modifier.size(tokens.handleWidth.dp, tokens.handleThickness.dp).clip(KitShapeId.Pill.toShape()).background(colors.text3))
+                Box(Modifier.size(tokens.handleWidth.dp, tokens.handleThickness.dp).clip(KitShapeId.Pill.shape()).background(colors.text3))
             }
         } else {
             Box(Modifier.height(Space.S3.dp))
@@ -372,7 +372,7 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
         ) {
             if (entry.framed) {
                 Column(
-                    Modifier.fillMaxWidth().clip(KitShapeId.Panel.toShape()).background(colors.surface1).padding(tokens.panelPadding.dp),
+                    Modifier.fillMaxWidth().clip(KitShapeId.Panel.shape()).background(colors.surface1).padding(tokens.panelPadding.dp),
                     verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
                     content = entry.body,
                 )
@@ -425,7 +425,7 @@ private fun SheetHeader(entry: SheetEntry) {
 internal fun IconTile(glyph: ImageVector, size: Dp) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    Box(Modifier.size(size).clip(KitShapeId.Tile.toShape()).background(colors.surface3), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(size).clip(KitShapeId.Tile.shape()).background(colors.surface3), contentAlignment = Alignment.Center) {
         KitGlyph(glyph, colors.text1, tokens.smallIcon.dp)
     }
 }

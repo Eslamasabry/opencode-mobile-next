@@ -30,7 +30,7 @@ import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitPartGlyphs
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
-import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -156,7 +156,7 @@ public fun KitConsequences(lines: List<String>, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth().testTag("kit-consequences").semantics(mergeDescendants = false) {}, verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         lines.forEach { line ->
             Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                Box(Modifier.padding(top = 9.dp).size(6.dp).clip(KitShapeId.Circle.toShape()).background(colors.text2))
+                Box(Modifier.padding(top = 9.dp).size(6.dp).clip(KitShapeId.Circle.shape()).background(colors.text2))
                 KitText(line, Modifier.weight(1f), role = TypeRole.Body)
             }
         }

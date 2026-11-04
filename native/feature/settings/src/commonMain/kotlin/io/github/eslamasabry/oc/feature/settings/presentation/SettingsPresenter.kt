@@ -7,6 +7,10 @@ import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.color.Packs
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.Corners
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.style.StyleResolver
+import io.github.eslamasabry.oc.ui.design.tokens.Density
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -110,12 +114,17 @@ public class SettingsPresenter(
         val available = PackId.entries.filter { it != PackId.Dynamic || f.dynamicColour }
         val first = (Packs.mostUsed + p.pack).distinct().filter { it in available }
         val listed = if (all) available else first
+        val ownKnobs = StyleResolver.spec(Style.entries.first { it.name == p.style.name }).tokens.defaults
         return AppearanceUi(
             mode = p.mode,
             pack = p.pack,
             packs = listed.toImmutableList(),
             seeAllCount = if (listed.size < available.size) available.size else 0,
             style = p.style,
+            corners = p.corners ?: ownKnobs.corners,
+            spacing = p.spacing ?: ownKnobs.density,
+            fineTuned = (p.corners != null && p.corners != ownKnobs.corners) || (p.spacing != null && p.spacing != ownKnobs.density),
+            accent = p.accent,
             motion = p.motion,
             textSize = p.textSize,
             styles = f.surfaceStyles,
@@ -206,6 +215,31 @@ public class SettingsPresenter(
         if (p.saver || p.style == style) return
         write(PersonalChange.Style(style), SettingsNote.AppearanceNotSaved)
     }
+
+    override fun onCorners(corners: Corners) {
+        val p = prefs.value
+        if (p.saver || (p.corners ?: ownKnobs(p).corners) == corners) return
+        write(PersonalChange.Corner(corners), SettingsNote.AppearanceNotSaved)
+    }
+
+    override fun onSpacing(spacing: Density) {
+        val p = prefs.value
+        if (p.saver || (p.spacing ?: ownKnobs(p).density) == spacing) return
+        write(PersonalChange.Spacing(spacing), SettingsNote.AppearanceNotSaved)
+    }
+
+    override fun onResetFineTune() {
+        run(SettingsNote.AppearanceNotSaved) {
+            val corners = choices.set(PersonalChange.Corner(null))
+            if (corners is Outcome.Failed) corners.map { } else choices.set(PersonalChange.Spacing(null)).map { }
+        }
+    }
+
+    override fun onAccent(id: String?) {
+        if (prefs.value.accent != id) write(PersonalChange.Accent(id), SettingsNote.AppearanceNotSaved)
+    }
+
+    private fun ownKnobs(p: PersonalPrefs) = StyleResolver.spec(Style.entries.first { it.name == p.style.name }).tokens.defaults
 
     override fun onMotion(motion: MotionLevel) {
         val p = prefs.value

@@ -45,14 +45,14 @@ public class Oc2BasicAuth(public val user: String, private val password: String)
 }
 
 /** The `/api` prefix and Basic auth for every route (AGENTS.md: "Basic auth, `/api` prefix"). */
-public class Oc2Routes(private val transport: RouteTransport, private val auth: Oc2BasicAuth) {
+public class Oc2Routes(private val transport: RouteTransport, private val auth: Oc2BasicAuth? = null) {
     public suspend fun get(path: String): Outcome<RouteAnswer> = send("GET", path, null)
 
     public suspend fun post(path: String, body: JsonElement): Outcome<RouteAnswer> = send("POST", path, body)
 
     private suspend fun send(method: String, path: String, body: JsonElement?): Outcome<RouteAnswer> {
         val headers = buildMap {
-            put("authorization", auth.header)
+            if (auth != null) put("authorization", auth.header)
             if (body != null) put("content-type", "application/json")
         }.toImmutableMap()
         return transport.send(RouteRequest(method, "/api$path", headers = headers, body = body))

@@ -27,6 +27,12 @@ public data class UsageReport(
     val tools: UsageTools?,
     val models: ImmutableList<UsageModel>,
     val activity: ImmutableList<UsageDay>,
+    /**
+     * True when the answer covers the interval that was asked for (B-CHAT-091). A narrower or shifted answer is labelled
+     * with the days it actually covers, never with the range requested. All time accepts the first record as its start
+     * but still checks the upper bound.
+     */
+    val coversRequest: Boolean = true,
 ) {
     val empty: Boolean
         get() = sessions == 0L && prompts == 0L && steps == 0L && tokens.total == 0L && cost == 0.0
