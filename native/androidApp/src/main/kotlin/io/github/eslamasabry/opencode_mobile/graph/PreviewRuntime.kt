@@ -414,6 +414,8 @@ class PreviewRuntime(
                     NativeConnectionForms.register(this)
                     PlansLegacyCollectors.register(this)
                     NativeServerDefaults.register(this)
+                    // Session relations now write pins (40-port-screens-3); the key documents this.
+                    register(io.github.eslamasabry.oc.engine.settings.pins.SessionPinStore.SHAPE)
                     registerSecret("pw.", "profiles")
                     registerSecret("oc.codexToken.", "profiles")
                 }
