@@ -5,7 +5,10 @@ package io.github.eslamasabry.oc.engine.runtime.services
  * lib/domain/ansi_text.dart (`withoutTerminalCodes`).
  */
 
-/** Terminal output as plain text: colour and cursor codes removed, line endings `\n`, other control characters dropped. */
+/**
+ * Terminal output as plain text: colour and cursor codes removed, line endings `\n`, other control
+ * characters dropped.
+ */
 public object TerminalText {
     private val osc = Regex("\u001B\\][^\u0007\u001B]*(?:\u0007|\u001B\\\\)?")
     private val csi = Regex("\u001B\\[[0-?]*[ -/]*[@-~]")
@@ -26,29 +29,40 @@ public object TerminalText {
 }
 
 /**
- * An immutable, redacted preview of one failed, owned service run. Creating one neither saves nor uploads it.
- * [detail] is the plain technical attachment line (`exited (exit 2)`), not localized copy: the Report page shows it
- * inside the report text. [logExcerpt] is redacted with the injected redactor before it is bounded.
+ * An immutable, redacted preview of one failed, owned service run. Creating one neither saves nor
+ * uploads it. [detail] is the plain technical attachment line (`exited (exit 2)`), not localized
+ * copy: the Report page shows it inside the report text. [logExcerpt] is redacted with the injected
+ * redactor before it is bounded.
  */
-public class FailedServiceReport private constructor(
+public class FailedServiceReport
+private constructor(
     public val jobId: String,
     public val title: String,
     public val status: ManagedShellStatus,
     public val exitCode: Int?,
     public val logExcerpt: String,
 ) {
-    public val hasLog: Boolean get() = logExcerpt.isNotEmpty()
+    public val hasLog: Boolean
+        get() = logExcerpt.isNotEmpty()
 
     public val detail: String
         get() = statusName(status) + (exitCode?.let { " (exit $it)" } ?: "")
+
+    public fun attachment(): String = buildString {
+        appendLine("Failed development service: $title")
+        appendLine("Job: $jobId")
+        appendLine("Outcome: $detail")
+        append(if (hasLog) "Log excerpt:\n$logExcerpt" else "Log excerpt: unavailable")
+    }
 
     public companion object {
         public const val MAX_LOG_LINES: Int = 120
         public const val MAX_LOG_CHARACTERS: Int = 16384
 
         /**
-         * Requires an owned, terminal failure. Unknown exits and deliberate stops are not failures; a receipt that
-         * does not match the shell exactly (owner, id, start, command, directory) reports nothing.
+         * Requires an owned, terminal failure. Unknown exits and deliberate stops are not failures;
+         * a receipt that does not match the shell exactly (owner, id, start, command, directory)
+         * reports nothing.
          */
         public fun of(
             service: DevelopmentService,
@@ -57,19 +71,22 @@ public class FailedServiceReport private constructor(
             redact: (String) -> String,
         ): FailedServiceReport? {
             val run = service.run ?: return null
-            if (run.stopped ||
-                run.ownerToken != shell.ownerToken ||
-                run.shellId != shell.id ||
-                run.startedAt != shell.startedAt ||
-                service.command != shell.command ||
-                service.directory != shell.directory
+            if (
+                run.stopped ||
+                    run.ownerToken != shell.ownerToken ||
+                    run.shellId != shell.id ||
+                    run.startedAt != shell.startedAt ||
+                    service.command != shell.command ||
+                    service.directory != shell.directory
             ) {
                 return null
             }
             val failed =
                 shell.status == ManagedShellStatus.Timeout ||
                     shell.status == ManagedShellStatus.Killed ||
-                    (shell.status == ManagedShellStatus.Exited && shell.exitCode != null && shell.exitCode != 0)
+                    (shell.status == ManagedShellStatus.Exited &&
+                        shell.exitCode != null &&
+                        shell.exitCode != 0)
             if (!failed) return null
             return FailedServiceReport(
                 jobId = bounded(shell.id, 256, redact),
@@ -93,19 +110,35 @@ public class FailedServiceReport private constructor(
         private val csiCodes = Regex("\u001B\\[[0-?]*[ -/]*[@-~]")
 
         private fun clean(value: String, redact: (String) -> String): String =
-            redact(value.replace(oscCodes, "").replace(csiCodes, "").replace("\r\n", "\n").replace("\r", "\n"))
+            redact(
+                value
+                    .replace(oscCodes, "")
+                    .replace(csiCodes, "")
+                    .replace("\r\n", "\n")
+                    .replace("\r", "\n")
+            )
 
         private fun bounded(value: String, limit: Int, redact: (String) -> String): String {
             val safe = clean(value, redact)
             return if (safe.length <= limit) safe else safe.substring(0, limit)
         }
 
-        /** Timing lines (`OCTRACE`) stay in the device log: in an excerpt they would push the real error out. */
+        /**
+         * Timing lines (`OCTRACE`) stay in the device log: in an excerpt they would push the real
+         * error out.
+         */
         private fun excerpt(log: String, redact: (String) -> String): String {
-            val forPeople = if (!log.contains("OCTRACE")) log else log.split('\n').filterNot { it.contains("OCTRACE") }.joinToString("\n")
-            val lines = clean(forPeople, redact).trimEnd().split('\n')
-            val tail = lines.drop(if (lines.size > MAX_LOG_LINES) lines.size - MAX_LOG_LINES else 0).joinToString("\n")
-            return if (tail.length <= MAX_LOG_CHARACTERS) tail else tail.substring(tail.length - MAX_LOG_CHARACTERS)
+            val safe = clean(log, redact)
+            val forPeople =
+                if (!safe.contains("OCTRACE")) safe
+                else safe.split('\n').filterNot { it.contains("OCTRACE") }.joinToString("\n")
+            val lines = forPeople.trimEnd().split('\n')
+            val tail =
+                lines
+                    .drop(if (lines.size > MAX_LOG_LINES) lines.size - MAX_LOG_LINES else 0)
+                    .joinToString("\n")
+            return if (tail.length <= MAX_LOG_CHARACTERS) tail
+            else tail.substring(tail.length - MAX_LOG_CHARACTERS)
         }
     }
 }

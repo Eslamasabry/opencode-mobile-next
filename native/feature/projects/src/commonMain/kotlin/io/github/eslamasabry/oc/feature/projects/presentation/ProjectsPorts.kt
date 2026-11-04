@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.engine.attention.ElsewhereSnapshot
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -22,6 +23,7 @@ public class ProjectServer(
     public val name: String,
     public val gateway: ServerGateway,
     public val operations: ServerOperationsGateway?,
+    public val attention: StateFlow<ElsewhereSnapshot>? = null,
 )
 
 /** The live connections and the active one. The app binds the real one (ProjectsWiring). */
@@ -40,8 +42,9 @@ public class NoProjectServers : ProjectServers {
 }
 
 /**
- * The folders the person opened on this phone, newest first, per server (B-ANDR-078). The app stores them under
- * `oc.openedProjects.<profileId>`, so the profile sweep removes them with the server.
+ * The folders the person opened on this phone, newest first, per server (B-ANDR-078). The app
+ * stores them under `oc.openedProjects.<profileId>`, so the profile sweep removes them with the
+ * server.
  */
 public interface OpenedFolders {
     public fun recent(profile: ProfileId): ImmutableList<String>
@@ -56,7 +59,8 @@ public interface OpenedFolders {
 public class SessionOpenedFolders : OpenedFolders {
     private val byProfile = MutableStateFlow<Map<ProfileId, List<String>>>(emptyMap())
 
-    override fun recent(profile: ProfileId): ImmutableList<String> = byProfile.value[profile].orEmpty().toImmutableList()
+    override fun recent(profile: ProfileId): ImmutableList<String> =
+        byProfile.value[profile].orEmpty().toImmutableList()
 
     override suspend fun remember(profile: ProfileId, directory: String): Outcome<Unit> {
         val old = byProfile.value[profile].orEmpty()

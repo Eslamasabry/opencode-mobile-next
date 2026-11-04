@@ -5,6 +5,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.projects.presentation.ChatTitle
+import io.github.eslamasabry.oc.feature.projects.presentation.IsolatedPhase
+import io.github.eslamasabry.oc.feature.projects.presentation.IsolatedTaskUi
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectChatUi
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectPageActions
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectPagePhase
@@ -27,7 +29,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
-import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMore
@@ -50,8 +52,8 @@ import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * One project (07 §5 D15). Kit parts only (K1). "New conversation here" is the first, visible act; then this
- * project's conversations with a visible Load more, then "In other projects" (B-NAV-010).
+ * One project (07 §5 D15). Kit parts only (K1). "New conversation here" is the first, visible act;
+ * then this project's conversations with a visible Load more, then "In other projects" (B-NAV-010).
  */
 @Composable
 public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions) {
@@ -74,7 +76,11 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions) 
                         kind = KitStateKind.Calm,
                         title = stringResource(Res.string.p12NoServerTitle),
                         body = stringResource(Res.string.p12NoServerBody),
-                        primary = KitAction(stringResource(Res.string.serversTitle), actions::openServers),
+                        primary =
+                            KitAction(
+                                stringResource(Res.string.serversTitle),
+                                actions::openServers,
+                            ),
                     )
                 }
                 return@LazyColumn
@@ -88,7 +94,22 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions) 
                 )
             }
             item(key = "new-body") {
-                KitText(stringResource(Res.string.p12NewHereBody, state.name), KitTextRole.Supporting)
+                KitText(
+                    stringResource(Res.string.p12NewHereBody, state.name),
+                    KitTextRole.Supporting,
+                )
+            }
+            if (state.canIsolate && state.isolated == null) {
+                item(key = "isolated-start") {
+                    KitRow(
+                        title = stringResource(Res.string.agentIsolatedStart),
+                        supporting = stringResource(Res.string.agentIsolatedIntro),
+                        onClick = actions::startIsolated,
+                    )
+                }
+            }
+            state.isolated?.let { isolated ->
+                item(key = "isolated") { IsolatedTask(isolated, actions) }
             }
             state.createFailure?.let { failure ->
                 item(key = "create-failed") {
@@ -97,7 +118,11 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions) 
                         failure = failure,
                         detailsLabel = stringResource(Res.string.kitDetails),
                         copyLabel = stringResource(Res.string.kitCopyDetails),
-                        retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::newConversationHere),
+                        retry =
+                            KitLineAction(
+                                stringResource(Res.string.kitTryAgain),
+                                actions::newConversationHere,
+                            ),
                     )
                 }
             }
@@ -118,16 +143,42 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions) 
                     item(key = "here") {
                         KitRowGroup(label = stringResource(Res.string.p12ProjectConversations)) {
                             if (state.conversations.isEmpty()) {
-                                KitText(stringResource(Res.string.p12ProjectNoConversations), KitTextRole.Supporting)
+                                KitText(
+                                    stringResource(Res.string.p12ProjectNoConversations),
+                                    KitTextRole.Supporting,
+                                )
                             }
-                            state.conversations.forEach { ChatRow(it, showProject = false, actions = actions) }
+                            state.conversations.forEach {
+                                ChatRow(it, showProject = false, actions = actions)
+                            }
                         }
                     }
                     if (state.canLoadMore) item(key = "more") { LoadMore(state, actions) }
-                    if (state.elsewhere.isNotEmpty()) {
+                    if (state.elsewhere.isNotEmpty() || state.elsewhereAttention.isNotEmpty()) {
                         item(key = "elsewhere") {
                             KitRowGroup(label = stringResource(Res.string.p12ElsewhereTitle)) {
-                                state.elsewhere.forEach { ChatRow(it, showProject = true, actions = actions) }
+                                state.elsewhereAttention.forEach { project ->
+                                    KitRow(
+                                        title = project.name,
+                                        supporting =
+                                            stringResource(
+                                                Res.string.agentElsewhereCounts,
+                                                project.waiting,
+                                                project.running,
+                                                project.failed,
+                                            ) +
+                                                if (project.stale)
+                                                    " · " +
+                                                        stringResource(
+                                                            Res.string.agentElsewhereStale
+                                                        )
+                                                else "",
+                                        onClick = { actions.openOtherProject(project.directory) },
+                                    )
+                                }
+                                state.elsewhere.forEach {
+                                    ChatRow(it, showProject = true, actions = actions)
+                                }
                             }
                         }
                     }
@@ -169,9 +220,76 @@ private fun ChatRow(row: ProjectChatUi, showProject: Boolean, actions: ProjectPa
     val running = stringResource(Res.string.chatsHomeRunning)
     KitRow(
         title = title,
-        supporting = if (showProject) row.project ?: stringResource(Res.string.globalSessionsUnknownLocation) else null,
-        trailing = if (row.running) KitRowTrailing.Value(running, chevron = false) else KitRowTrailing.None,
+        supporting =
+            if (showProject) row.project ?: stringResource(Res.string.globalSessionsUnknownLocation)
+            else null,
+        trailing =
+            if (row.running) KitRowTrailing.Value(running, chevron = false)
+            else KitRowTrailing.None,
         growKey = row.ref,
         onClick = { actions.openConversation(row.ref) },
     )
+}
+
+@Composable
+private fun IsolatedTask(state: IsolatedTaskUi, actions: ProjectPageActions) {
+    val phase =
+        stringResource(
+            when (state.phase) {
+                IsolatedPhase.Creating -> Res.string.agentIsolatedCreating
+                IsolatedPhase.Preparing -> Res.string.agentIsolatedPreparing
+                IsolatedPhase.Ready -> Res.string.agentIsolatedReady
+                IsolatedPhase.Unconfirmed -> Res.string.agentIsolatedUnconfirmed
+                IsolatedPhase.Failed -> Res.string.agentIsolatedFailed
+                IsolatedPhase.Opening -> Res.string.agentIsolatedOpening
+                IsolatedPhase.Opened -> Res.string.agentIsolatedOpened
+                IsolatedPhase.Cancelled -> Res.string.agentIsolatedCancelled
+            }
+        )
+    KitRowGroup(label = stringResource(Res.string.agentIsolatedTitle)) {
+        KitText(phase, KitTextRole.Supporting)
+        state.copy?.let { KitText(it.directory, KitTextRole.Supporting) }
+        state.failure?.let { failure ->
+            KitErrorNotice(
+                message = stringResource(Res.string.agentIsolatedFailed),
+                failure = failure,
+                detailsLabel = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
+            )
+        }
+        when (state.phase) {
+            IsolatedPhase.Ready ->
+                KitButton(stringResource(Res.string.agentIsolatedOpen), { actions.openIsolated() })
+            IsolatedPhase.Unconfirmed -> {
+                KitButton(
+                    stringResource(Res.string.agentIsolatedKeepWaiting),
+                    actions::keepWaitingForCopy,
+                )
+                KitButton(
+                    stringResource(Res.string.agentIsolatedOpenAnyway),
+                    { actions.openIsolated(acceptUnconfirmed = true) },
+                    role = KitButtonRole.Tertiary,
+                )
+            }
+            IsolatedPhase.Failed ->
+                if (state.copy != null) {
+                    KitText(
+                        stringResource(Res.string.agentIsolatedFailedBody),
+                        KitTextRole.Supporting,
+                    )
+                    KitButton(
+                        stringResource(Res.string.agentIsolatedStartAnyway),
+                        { actions.openIsolated(acceptFailedSetup = true) },
+                        role = KitButtonRole.Tertiary,
+                    )
+                }
+            else -> Unit
+        }
+        if (state.canCancel)
+            KitButton(
+                stringResource(Res.string.agentIsolatedCancel),
+                actions::cancelIsolated,
+                role = KitButtonRole.Tertiary,
+            )
+    }
 }

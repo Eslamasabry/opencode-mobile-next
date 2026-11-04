@@ -25,9 +25,10 @@ public data class FolderRowUi(
 )
 
 /**
- * Projects (07 §5 D15/D16): obvious options first as visible rows (New project, Open a folder on the server,
- * Folder on this phone), then Opened before, then the server's projects. New project and the phone folder say why
- * they can't run when the server can't make folders or the phone's own server isn't set up.
+ * Projects (07 §5 D15/D16): obvious options first as visible rows (New project, Open a folder on
+ * the server, Folder on this phone), then Opened before, then the server's projects. New project
+ * and the phone folder say why they can't run when the server can't make folders or the phone's own
+ * server isn't set up.
  */
 public data class ProjectsPickerUi(
     val phase: ProjectsPhase = ProjectsPhase.NoServer,
@@ -71,9 +72,26 @@ public data class ProjectChatUi(
     val running: Boolean,
 )
 
-public enum class ProjectPagePhase { Opening, NoServer, Failed, Ready }
+public data class ProjectAttentionUi(
+    val directory: String,
+    val name: String,
+    val waiting: Int,
+    val running: Int,
+    val failed: Int = 0,
+    val stale: Boolean = false,
+)
 
-/** One project's page (07 §5 D15): New conversation here first, its conversations, then "In other projects". */
+public enum class ProjectPagePhase {
+    Opening,
+    NoServer,
+    Failed,
+    Ready,
+}
+
+/**
+ * One project's page (07 §5 D15): New conversation here first, its conversations, then "In other
+ * projects".
+ */
 public data class ProjectPageUi(
     val directory: String,
     val name: String,
@@ -81,16 +99,29 @@ public data class ProjectPageUi(
     val phase: ProjectPagePhase = ProjectPagePhase.Opening,
     val conversations: ImmutableList<ProjectChatUi> = persistentListOf(),
     val elsewhere: ImmutableList<ProjectChatUi> = persistentListOf(),
+    val elsewhereAttention: ImmutableList<ProjectAttentionUi> = persistentListOf(),
     val canLoadMore: Boolean = false,
     val loadingMore: Boolean = false,
     val loadMoreFailure: Failure? = null,
     val failure: Failure? = null,
+    val canIsolate: Boolean = false,
+    val isolated: IsolatedTaskUi? = null,
     val creating: Boolean = false,
     val createFailure: Failure? = null,
 )
 
 public interface ProjectPageActions {
     public fun back()
+
+    public fun openOtherProject(directory: String)
+
+    public fun startIsolated()
+
+    public fun openIsolated(acceptUnconfirmed: Boolean = false, acceptFailedSetup: Boolean = false)
+
+    public fun keepWaitingForCopy()
+
+    public fun cancelIsolated()
 
     public fun newConversationHere()
 

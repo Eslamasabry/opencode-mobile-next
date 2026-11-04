@@ -1013,4 +1013,23 @@
     <string name="fileShareNoWifi">هذا الهاتف غير متصل بشبكة Wi-Fi. اتصل بشبكة Wi-Fi لمشاركة هذا الملف مع جهاز قريب.</string>
     <string name="fileSharePrivate">لا يمكن مشاركة هذا الملف لأنه قد يحتوي على مفاتيح أو كلمات مرور.</string>
     <string name="fileShareUnavailable">تعذّر بدء المشاركة. حاول مرة أخرى بعد قليل.</string>
+    <string name="agentIsolatedTitle">مهمة في نسخة منفصلة</string>
+    <string name="agentIsolatedStart">بدء مهمة في نسخة منفصلة</string>
+    <string name="agentIsolatedIntro">١. أنشئ نسخة منفصلة من المشروع. ٢. انتظر الإعداد، ثم افتح محادثة جديدة فيها. يبقى مشروعك الأصلي في مكانه.</string>
+    <string name="agentIsolatedCreating">جارٍ إنشاء النسخة…</string>
+    <string name="agentIsolatedPreparing">جارٍ انتظار اكتمال إعداد النسخة…</string>
+    <string name="agentIsolatedReady">النسخة جاهزة.</string>
+    <string name="agentIsolatedUnconfirmed">النسخة موجودة، لكن لم يتأكد اكتمال الإعداد. انتظر أو اختر فتحها على أي حال.</string>
+    <string name="agentIsolatedFailed">تعذّر بدء المهمة.</string>
+    <string name="agentIsolatedFailedBody">تم الاحتفاظ بالنسخة. فشل إعدادها؛ ابدأ فيها فقط إذا كنت تقبل أنها قد تكون غير مكتملة.</string>
+    <string name="agentIsolatedOpening">جارٍ فتح محادثة في النسخة…</string>
+    <string name="agentIsolatedOpened">تم فتح المحادثة في النسخة.</string>
+    <string name="agentIsolatedCancelled">توقف الانتظار. سيتم الاحتفاظ بأي نسخة أنشأها الخادم.</string>
+    <string name="agentIsolatedOpen">فتح المهمة</string>
+    <string name="agentIsolatedKeepWaiting">متابعة الانتظار</string>
+    <string name="agentIsolatedOpenAnyway">فتح على أي حال</string>
+    <string name="agentIsolatedStartAnyway">بدء على أي حال</string>
+    <string name="agentIsolatedCancel">إيقاف الانتظار</string>
+    <string name="agentElsewhereCounts">%1$d بانتظارك · %2$d قيد التشغيل · %3$d فشل</string>
+    <string name="agentElsewhereStale">بانتظار تحديث</string>
 </resources>
