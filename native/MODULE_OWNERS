@@ -85,3 +85,5 @@
 :engine:integrations-catalog	F	build-integrations-b	parity-p12
 :engine:integrations-host	F	build-integrations-b	parity-p12
 :feature:plans	F	build-integrations-b	parity-p12
+
+:protocol:codex	F	21-build-AGENT-1	parity-p12

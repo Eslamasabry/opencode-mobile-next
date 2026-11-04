@@ -50,19 +50,23 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.JsonObject
 
 /**
- * Projects the adapter's OC2-shaped output onto core's neutral [GatewayEvent] (plan 04 §11.2, N4-D11): the only event
- * type that leaves `:protocol:oc2`. Written by INTEGRATE-W1 so core stays the single source of truth while the
- * adapter's rules stay a line-for-line port of Dart `Api2EventAdapter`.
+ * Projects the adapter's OC2-shaped output onto core's neutral [GatewayEvent] (plan 04 §11.2,
+ * N4-D11): the only event type that leaves `:protocol:oc2`. Written by INTEGRATE-W1 so core stays
+ * the single source of truth while the adapter's rules stay a line-for-line port of Dart
+ * `Api2EventAdapter`.
  *
- * [redact] turns server prose into Details text (`Redactor::details`); nothing else here carries server text.
+ * [redact] turns server prose into Details text (`Redactor::details`); nothing else here carries
+ * server text.
  *
  * What core does not carry, and why that is safe (each is a refetch or a words-only detail):
  * - `RevertChanged.revert` / `toMessageId`: a revert resets history cursors and the chat refetches.
- * - `PermissionSettled.reply`, `InboxChanged.delivery`: the owners refetch the pending lists on settle.
- * - `WorktreeOutcome.workspace`: both kinds are the same freshness hint.
- * - `RunRetrying`'s server message goes to `details` only; a failed run's type becomes a [WireTag], its message
- *   `details`. `MessageErrorKind` stays null until S2-MODEL ports `fromName` (the words come from the tag).
- * - A tool the adapter settled itself (`settledBy`) becomes `Error` with no output: plan 09 words it as "failed".
+ * - `PermissionSettled.reply`, `InboxChanged.delivery`: the owners refetch the pending lists on
+ *   settle.
+ * - `RunRetrying`'s server message goes to `details` only; a failed run's type becomes a [WireTag],
+ *   its message `details`. `MessageErrorKind` stays null until S2-MODEL ports `fromName` (the words
+ *   come from the tag).
+ * - A tool the adapter settled itself (`settledBy`) becomes `Error` with no output: plan 09 words
+ *   it as "failed".
  * - `SessionViewed` without an idle time reads as idle 0 ms (just viewed).
  */
 internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
@@ -82,7 +86,7 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                         time = SessionTime(createdMs = event.createdMs),
                         agent = event.agent,
                         model = event.model?.let { "${it.providerID}/${it.id}" },
-                    ),
+                    )
                 )
             is Oc2Adapted.SessionChanged ->
                 GatewayEvent.SessionChanged(
@@ -97,12 +101,22 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                 )
             is Oc2Adapted.SessionDeleted -> GatewayEvent.SessionDeleted(SessionId(event.sessionId))
             is Oc2Adapted.SessionSelection ->
-                GatewayEvent.SessionSelection(SessionId(event.sessionId), event.model?.toCore(), event.agent)
+                GatewayEvent.SessionSelection(
+                    SessionId(event.sessionId),
+                    event.model?.toCore(),
+                    event.agent,
+                )
             is Oc2Adapted.SessionUsage ->
-                GatewayEvent.SessionUsage(SessionId(event.sessionId), event.cost, event.tokens.toCore())
-            is Oc2Adapted.SessionViewed -> GatewayEvent.SessionViewed(SessionId(event.sessionId), event.idleMs ?: 0L)
+                GatewayEvent.SessionUsage(
+                    SessionId(event.sessionId),
+                    event.cost,
+                    event.tokens.toCore(),
+                )
+            is Oc2Adapted.SessionViewed ->
+                GatewayEvent.SessionViewed(SessionId(event.sessionId), event.idleMs ?: 0L)
             is Oc2Adapted.RunStarted -> GatewayEvent.RunStarted(SessionId(event.sessionId))
-            is Oc2Adapted.RunIdle -> GatewayEvent.RunEnded(SessionId(event.sessionId), RunOutcome.Idle)
+            is Oc2Adapted.RunIdle ->
+                GatewayEvent.RunEnded(SessionId(event.sessionId), RunOutcome.Idle)
             is Oc2Adapted.RunRetrying ->
                 GatewayEvent.RunRetrying(
                     sessionId = SessionId(event.sessionId),
@@ -111,7 +125,8 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                     tag = null,
                     details = event.message?.let(redact),
                 )
-            is Oc2Adapted.RunEnded -> GatewayEvent.RunEnded(SessionId(event.sessionId), event.outcome.toCore())
+            is Oc2Adapted.RunEnded ->
+                GatewayEvent.RunEnded(SessionId(event.sessionId), event.outcome.toCore())
             is Oc2Adapted.MessageUpserted -> GatewayEvent.MessageUpserted(event.message.toCore())
             is Oc2Adapted.PartUpserted -> GatewayEvent.PartUpserted(event.part.toCore())
             is Oc2Adapted.PartDelta ->
@@ -127,9 +142,14 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                         },
                     delta = event.delta,
                 )
-            is Oc2Adapted.TranscriptStale -> GatewayEvent.TranscriptStale(SessionId(event.sessionId))
+            is Oc2Adapted.TranscriptStale ->
+                GatewayEvent.TranscriptStale(SessionId(event.sessionId))
             is Oc2Adapted.Notice ->
-                GatewayEvent.Notice(SessionId(event.sessionId), event.messageId?.let(::MessageId), event.kind.toCore())
+                GatewayEvent.Notice(
+                    SessionId(event.sessionId),
+                    event.messageId?.let(::MessageId),
+                    event.kind.toCore(),
+                )
             is Oc2Adapted.RevertChanged ->
                 GatewayEvent.RevertChanged(
                     SessionId(event.sessionId),
@@ -139,13 +159,21 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                         Oc2RevertKind.Committed -> RevertKind.Committed
                     },
                 )
-            is Oc2Adapted.SessionCompacted -> GatewayEvent.SessionCompacted(SessionId(event.sessionId))
+            is Oc2Adapted.SessionCompacted ->
+                GatewayEvent.SessionCompacted(SessionId(event.sessionId))
             is Oc2Adapted.PermissionAsked -> GatewayEvent.PermissionAsked(event.request.toCore())
             is Oc2Adapted.PermissionSettled ->
-                GatewayEvent.PermissionSettled(SessionId(event.sessionId), RequestId(event.requestId))
+                GatewayEvent.PermissionSettled(
+                    SessionId(event.sessionId),
+                    RequestId(event.requestId),
+                )
             is Oc2Adapted.FormCreated -> GatewayEvent.FormCreated(event.form.toCore())
             is Oc2Adapted.FormSettled ->
-                GatewayEvent.FormSettled(SessionId(event.sessionId), FormId(event.formId), event.answered)
+                GatewayEvent.FormSettled(
+                    SessionId(event.sessionId),
+                    FormId(event.formId),
+                    event.answered,
+                )
             is Oc2Adapted.InboxChanged ->
                 GatewayEvent.InboxChanged(
                     SessionId(event.sessionId),
@@ -158,7 +186,8 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                     },
                 )
             is Oc2Adapted.RefreshHint -> GatewayEvent.RefreshHint(HintKind(event.kind.wireFamily()))
-            is Oc2Adapted.CredentialSwitched -> GatewayEvent.CredentialSwitched(event.integrationId, event.credentialId)
+            is Oc2Adapted.CredentialSwitched ->
+                GatewayEvent.CredentialSwitched(event.integrationId, event.credentialId)
             is Oc2Adapted.Installation ->
                 GatewayEvent.Installation(
                     when (event.kind) {
@@ -178,7 +207,16 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                     },
                 )
             is Oc2Adapted.ShellChanged -> GatewayEvent.ShellChanged(event.shellId)
-            is Oc2Adapted.WorktreeOutcome -> GatewayEvent.WorktreeOutcome(event.ready)
+            is Oc2Adapted.WorktreeOutcome ->
+                GatewayEvent.WorktreeOutcome(
+                    ready = event.ready,
+                    directory = event.directory,
+                    projectId = event.projectId,
+                    name = event.name,
+                    branch = event.branch,
+                    details = event.message?.let(redact),
+                    workspace = event.workspace,
+                )
         }
 
     private fun Oc2RunOutcome.toCore(): RunOutcome =
@@ -192,9 +230,14 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                         "shutdown" -> InterruptReason.Shutdown
                         "superseded" -> InterruptReason.Superseded
                         else -> InterruptReason.Unknown
-                    },
+                    }
                 )
-            is Oc2RunOutcome.Failed -> RunOutcome.Failed(kind = null, tag = type?.let(::WireTag), details = message?.let(redact))
+            is Oc2RunOutcome.Failed ->
+                RunOutcome.Failed(
+                    kind = null,
+                    tag = type?.let(::WireTag),
+                    details = message?.let(redact),
+                )
         }
 
     private fun Oc2AdaptedMessage.toCore(): MessageInfo =
@@ -236,7 +279,8 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
             toolName = tool?.name,
             tool = tool?.toCore(),
             ended = endedAtMs != null,
-            noticeMetadata = notice?.let { persistentMapOf("kind" to it.toCore().raw) } ?: persistentMapOf(),
+            noticeMetadata =
+                notice?.let { persistentMapOf("kind" to it.toCore().raw) } ?: persistentMapOf(),
         )
 
     private fun Oc2AdaptedTool.toCore(): ToolState =
@@ -250,10 +294,21 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
                 },
             input = input ?: EmptyJsonObject,
             inputRaw = raw,
-            // Plan 09 §2.2: a failed call's server text is its output (ToolState.declined reads it there).
+            // Plan 09 §2.2: a failed call's server text is its output (ToolState.declined reads it
+            // there).
             output = if (status == Oc2ToolStatus.Error) error else output,
             metadata = metadata,
-            outputFiles = attachments.map { ToolOutputFile(path = null, filename = it.name, mime = it.mime, url = it.url) }.toImmutableList(),
+            outputFiles =
+                attachments
+                    .map {
+                        ToolOutputFile(
+                            path = null,
+                            filename = it.name,
+                            mime = it.mime,
+                            url = it.url,
+                        )
+                    }
+                    .toImmutableList(),
             executedFlag = executed ?: true,
             startedAtMs = startedAtMs,
             completedAtMs = completedAtMs,
@@ -266,7 +321,10 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
             Oc2NoticeKind.ShellChanged -> NoticeKind.ShellChanged
         }
 
-    /** The wire family core's open [HintKind] keeps (N4-D22's six: agent, config, catalog, integration, plugin, websearch). */
+    /**
+     * The wire family core's open [HintKind] keeps (N4-D22's six: agent, config, catalog,
+     * integration, plugin, websearch).
+     */
     private fun Oc2HintKind.wireFamily(): String =
         when (this) {
             Oc2HintKind.Agents -> "agent"
@@ -292,7 +350,10 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
             patterns = resources.toImmutableList(),
             metadata = metadata ?: EmptyJsonObject,
             always = save.toImmutableList(),
-            tool = if (messageId != null && callId != null) PermissionTool(MessageId(messageId), callId) else null,
+            tool =
+                if (messageId != null && callId != null)
+                    PermissionTool(MessageId(messageId), callId)
+                else null,
             canAlwaysAllow = true, // Dart PermissionRequest default; OC2 has no grantable flag
             message = message,
         )
@@ -314,8 +375,11 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
             title = title,
             description = description,
             required = required,
-            options = options.map { FormOption(it.value, it.label, it.description) }.toImmutableList(),
+            options =
+                options.map { FormOption(it.value, it.label, it.description) }.toImmutableList(),
             // The complete wire field (conditions, limits, pattern, default) for the forms engine.
-            raw = Oc2Wire.json.encodeToJsonElement(Oc2FormField.serializer(), this) as? JsonObject ?: EmptyJsonObject,
+            raw =
+                Oc2Wire.json.encodeToJsonElement(Oc2FormField.serializer(), this) as? JsonObject
+                    ?: EmptyJsonObject,
         )
 }
