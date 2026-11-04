@@ -38,6 +38,7 @@ import io.github.eslamasabry.oc.ui.words.res.keepRunningOpenFailed
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupSavedFailed
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorCannotStart
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorChecksum
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorInstall
@@ -250,6 +251,7 @@ private fun failureLine(line: SetupFailureLine): String =
                 SetupError.OwnershipUnknown -> stringResource(Res.string.inAppServerOwnershipRecoveryBody)
                 SetupError.StatusUnreadable -> stringResource(Res.string.setupRbStatusUnreadable)
                 SetupError.ToolsUncheckable -> stringResource(Res.string.setupRbToolsUncheckable)
+                SetupError.PersistenceFailure -> stringResource(Res.string.linuxSetupSavedFailed)
                 SetupError.PackageRepair -> stringResource(Res.string.phoneSetupErrorPackageRepair)
                 SetupError.CannotStart -> stringResource(Res.string.phoneSetupErrorCannotStart)
                 SetupError.OpenCodeNoProgram -> stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
