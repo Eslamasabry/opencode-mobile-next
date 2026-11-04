@@ -1,6 +1,6 @@
 # Migration 46 — Flutter platform, Linux, protocol and other code (part 1)
 
-Counts (61/78 files recorded): already there **14**; ported now **11**; not needed **20**; blocked **16**.
+Counts (71/78 files recorded): already there **14**; ported now **11**; not needed **20**; blocked **26**.
 
 Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`; branch `p12x/46-port-rest-1`.
 Finish line: all 78 source files have a behavior-based disposition and missing feasible native behavior is wired.
@@ -68,6 +68,16 @@ Non-goals: tests, APKs, pushes, signing, releases, and features explicitly defer
 - `lib/builtin/linux_backup/zip_reader.dart` — blocked: No native Linux backup reader consumes the allowlisted ZIP entries or streams them into guarded restore staging; migration S0Backup backs up app state and does not implement user Linux restore.
 - `lib/builtin/linux_services/linux_service_files.dart` — blocked: Native project DevelopmentServices models managed server shells, not device oc-svd definitions/want/state files, reserved names/ports, restart policies, urgency ordering or rotated marker logs.
 - `lib/builtin/linux_services/linux_services.dart` — blocked: Native LinuxServicesScreen is a project-managed-shell panel; the phone-wide kept-on services API with supervisor state/watch/start/stop/restart/removal and restart policies has no production owner.
+- `lib/builtin/linux_services/linux_services_heat.dart` — blocked: runtime/heat/ServicesHeatHold.kt:22 preserves critical/cool hysteresis, but no oc-svd hold-file adapter or production thermal consumer binds it; AI Team deferral does not remove Linux-service protection.
+- `lib/builtin/linux_services/oc_svd_script.dart` — blocked: No native oc-svd script installation/launch owns device service process groups, restart/backoff/give-up, rotated logs, keep-on choices and notification Stop semantics; project server shells are a different behavior.
+- `lib/builtin/linux_services/rootfs_linux_services.dart` — blocked: No native production rootfs service-definition store validates no-follow paths, atomically saves want/kick/hold files, reconciles supervisor versions, removes stopped rows and reads rotated logs.
+- `lib/builtin/phone_server_idle.dart` — blocked: LinuxVoiceWiring.kt:837 supplies guarded visible Resume, but :1213 foreground handling invokes openStart/refresh without the Flutter foreground idle-receipt restoration or stopped-helper resume/completion path.
+- `lib/builtin/process_budget.dart` — blocked: runtime/budget/ProcessBudgetGuard.kt:76 contains admission/FIFO/reservations, but setup jobs, local sessions and service starts have no shared production budget caller, visible waiter reason or cancellation-before-dispatch binding.
+- `lib/builtin/project_export_controller.dart` — blocked: engine/lifecycle/AppStorageFacts.kt:136 only plans export entries; no native production SAF export/progress/cancel/private-data confirmation, cache-clear controller or manage-space UI wires the complete journey.
+- `lib/builtin/setup/setup_engine/poll.dart` — blocked: native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/NativePhoneSetup.kt:239 streams durable progress/completion, but optional app-side voice-install progress/completion is omitted from the production setup engine; Termux setup polling is outside plan/01 D7 scope.
+- `lib/builtin/setup/setup_engine/start.dart` — blocked: native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/NativePhoneSetup.kt:79 wires real built-in setup checks/skips/specs/free-space/runner handoff, but optional VoiceSetupComponent app-side install integration is absent; Termux setup execution is deliberately dropped by plan/01 D7 (migrate-out only).
+- `lib/domain/pty_terminal_channel.dart` — blocked: the real hardened socket adapter, byte/control-frame cursor handling and source/closure fencing were ported at `native/protocol/oc2/src/commonMain/kotlin/io/github/eslamasabry/oc/protocol/oc2/live/Oc2Terminal.kt:125`, but no production native terminal screen calls the gateway terminal operations.
+- `lib/domain/session_command_handoff.dart` — blocked: the optional verified CLI attach-command facet and its visible copy/open-terminal handoff are absent natively; native cliSessionResume alone does not supply the safe-address/local-address/directory/workspace rejection contract.
 
 The native implementations include shared-storage file/APK handoff with a visible permission retry, localized age labels, retained assistant-model deletion, advisory agent build caps/full-speed settings, native thermal scheduling, visible-only Linux vitals, bounded card history, staged-history pagination, typed error fallback copy, Fork, project inventory and guarded launcher routing. Partial protocol/launch changes remain marked blocked where the rest of that file still lacks a complete native journey.
 
@@ -83,6 +93,7 @@ Validation: from `native/`, JDK 21, serialized with the shared machine build loc
 - `build/native-rest-46/compile-41.log`: both requested compilation tasks passed together (1s).
 - `build/native-rest-46/compile-51.log`: both requested compilation tasks passed together (1s).
 - `build/native-rest-46/compile-61.log`: both requested compilation tasks passed together (1s).
+- `build/native-rest-46/compile-71.log`: both requested compilation tasks passed together (1s).
 
 The first two attempts exposed an unavailable resource-environment import and a void Android Intent setter; both were corrected before the successful checkpoint. No tests were written, run, weakened or removed; no Flutter/preflight/test runner, APK, signing, push, publication or release command was run. Existing compiler warnings remain in untouched code. Kotlin/XML diff and source-manifest checks are static review only.
 
