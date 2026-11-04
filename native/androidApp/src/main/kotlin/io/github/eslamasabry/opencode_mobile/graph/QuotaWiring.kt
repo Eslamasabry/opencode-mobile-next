@@ -282,10 +282,11 @@ class AndroidQuotaCollector(
                         as HttpURLConnection
                 try {
                     connection.instanceFollowRedirects = false
-                    connection.connectTimeout = 1_000
-                    connection.readTimeout = 1_000
+                    connection.connectTimeout = 3_000
+                    connection.readTimeout = 12_000
                     connection.setRequestProperty("Authorization", "Bearer $token")
-                    connection.responseCode == 200
+                    // Any answer proves it listens; the readings say the rest.
+                    connection.responseCode > 0
                 } finally {
                     connection.disconnect()
                 }
@@ -294,26 +295,23 @@ class AndroidQuotaCollector(
             }
         }
 
-    suspend fun removeProfile(id: ProfileId): Outcome<Int> = lane.withLock {
-        if (stores.prefs.bool(InAppQuotaCollector.enabledKey(id)) != true) return@withLock 0.ok()
-        idle?.cancel()
-        idle = null
-        if (linux.stopService(InAppQuotaCollector.SERVICE_NAME) is Outcome.Failed)
-            return@withLock Failure.StorageRefused().failed()
-        val removed = linux.run("rm -rf ${InAppQuotaCollector.DIR} && echo 'qc removed'", 60)
-        if (
-            removed !is Outcome.Ok ||
-                removed.value.exitCode != 0 ||
-                "qc removed" !in removed.value.output
-        )
-            return@withLock Failure.StorageRefused().failed()
-        if (stores.secrets.delete(InAppQuotaCollector.tokenKey(id)) is Outcome.Failed)
-            return@withLock Failure.StorageRefused().failed()
-        hosts.remove(id)
-        // The deletion transaction already closed the profile lane; its generic scope sweep removes
-        // the switch.
-        1.ok()
-    }
+    suspend fun removeProfile(id: ProfileId, options: DeletionOptions): Outcome<Int> =
+        lane.withLock {
+            val wasOn = stores.prefs.bool(InAppQuotaCollector.enabledKey(id)) == true
+            if (wasOn && !options.linuxGone) {
+                idle?.cancel()
+                idle = null
+                // Best effort, as in Flutter: a leftover folder is guarded by the token removed below.
+                if (linux.stopService(InAppQuotaCollector.SERVICE_NAME) is Outcome.Ok)
+                    linux.run("rm -rf ${InAppQuotaCollector.DIR} && echo 'qc removed'", 60)
+            }
+            if (stores.secrets.delete(InAppQuotaCollector.tokenKey(id)) is Outcome.Failed)
+                return@withLock Failure.StorageRefused().failed()
+            hosts.remove(id)
+            // The deletion transaction already closed the profile lane; its generic scope sweep
+            // removes the switch.
+            (if (wasOn) 1 else 0).ok()
+        }
 
     fun usageSource(): UsageSource = UsageSource { context ->
         val readings = ArrayList<UsageReading>()
@@ -478,5 +476,5 @@ class QuotaCollectorDeletionCleaner(private val collector: AndroidQuotaCollector
     override val order: Int = DeletionStep.DEVICE_SURFACES
 
     override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> =
-        collector.removeProfile(profileId)
+        collector.removeProfile(profileId, options)
 }

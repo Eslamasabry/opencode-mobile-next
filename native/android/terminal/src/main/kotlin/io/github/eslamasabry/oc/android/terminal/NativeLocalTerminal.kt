@@ -103,19 +103,31 @@ class NativeLocalTerminal(
     }
 
     override suspend fun start(rows: Int, cols: Int): Outcome<Int> = lane.withLock {
-        withContext(dispatchers.main) { startNow(rows, cols) }
+        if (rows !in 1..1000 || cols !in 1..1000) return@withLock failed()
+        // Guest preparation reads and writes the Linux tree: keep it off the main thread.
+        val facts = withContext(dispatchers.io) { launchFacts() }
+        withContext(dispatchers.main) { startWith(rows, cols, facts) }
     }
 
-    private fun startNow(rows: Int, cols: Int): Outcome<Int> {
-        if (rows !in 1..1000 || cols !in 1..1000) return failed()
-        val facts =
-            try {
-                launchShell()
-            } catch (_: TerminalLinuxMissing) {
-                return Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
-            } catch (_: Exception) {
-                return failed()
-            }
+    /** The launch facts, `null` when Linux is missing, [Unit] when preparation failed. */
+    private fun launchFacts(): Any? =
+        try {
+            launchShell()
+        } catch (_: TerminalLinuxMissing) {
+            null
+        } catch (_: Exception) {
+            Unit
+        }
+
+    private fun startWith(rows: Int, cols: Int, facts: Any?): Outcome<Int> =
+        when (facts) {
+            null -> Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
+            is TerminalLaunch ->
+                if (rows !in 1..1000 || cols !in 1..1000) failed() else startNow(rows, cols, facts)
+            else -> failed()
+        }
+
+    private fun startNow(rows: Int, cols: Int, facts: TerminalLaunch): Outcome<Int> {
         val id = nextId++
         val held = Held(id, id, facts.confined)
         val client =
@@ -248,12 +260,17 @@ class NativeLocalTerminal(
     }
 
     override suspend fun restart(id: Int): Outcome<Int> = lane.withLock {
+        val size =
+            withContext(dispatchers.main) {
+                val old = sessions[id] ?: return@withContext null
+                if (old.session.isRunning) null
+                else old.session.emulator.mRows to old.session.emulator.mColumns
+            } ?: return@withLock failed()
+        val facts = withContext(dispatchers.io) { launchFacts() }
         withContext(dispatchers.main) {
             val old = sessions[id] ?: return@withContext failed()
             if (old.session.isRunning) return@withContext failed()
-            val rows = old.session.emulator.mRows
-            val cols = old.session.emulator.mColumns
-            val restarted = startNow(rows, cols)
+            val restarted = startWith(size.first, size.second, facts)
             if (restarted is Outcome.Ok) {
                 sessions.remove(id)
                 publish()
@@ -271,10 +288,13 @@ class NativeLocalTerminal(
             }
 
     /** Runtime cleanup calls this synchronous bridge from its own background lane. */
-    fun startFromBridge(rows: Int, cols: Int): Int = onMainBlocking {
-        when (val started = startNow(rows, cols)) {
-            is Outcome.Ok -> started.value
-            is Outcome.Failed -> error("terminal_start_failed")
+    fun startFromBridge(rows: Int, cols: Int): Int {
+        val facts = launchFacts()
+        return onMainBlocking { startWith(rows, cols, facts) }.let { started ->
+            when (started) {
+                is Outcome.Ok -> started.value
+                is Outcome.Failed -> error("terminal_start_failed")
+            }
         }
     }
 

@@ -752,6 +752,8 @@ internal constructor(
             if (failure == null) {
                 val confirmed = blocking { linux.confirmManualServerStart(target.profile.raw) }
                 if (confirmed is Outcome.Failed) return@withLock confirmed
+                val lifted = recovery.confirmManualStart(target.profile)
+                if (lifted is Outcome.Failed) return@withLock lifted
                 idleBudgetHeld = false
                 onManualReady?.invoke()
             }

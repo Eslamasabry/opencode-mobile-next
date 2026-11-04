@@ -237,6 +237,8 @@ public class PaseoRequestBook(
         resolveQuestion(id)
         if (previous == null && permissions.size >= MAX_PENDING)
             resolvePermission(permissions.keys.first())
+        // A replacement revision never earns a second automatic allow-once (Flutter genUiAttempted).
+        if (previous != null) pending.cardAttempted = previous.cardAttempted || previous.cardApproving
         permissions[id] = pending
         if (tryAllowDisplayCard(pending)) {
             changed()
@@ -601,7 +603,9 @@ public class PaseoRequestBook(
         if (!host.connected) return null
         val pending =
             permissions.values.firstOrNull {
-                it.permission.sessionId.raw == sessionId && it.epoch == host.epoch
+                !it.cardApproving &&
+                    it.permission.sessionId.raw == sessionId &&
+                    it.epoch == host.epoch
             } ?: return null
         return PaseoPermissionSnapshot(pending.permission, pending)
     }
@@ -611,6 +615,7 @@ public class PaseoRequestBook(
         return host.connected &&
             pending != null &&
             pending === revision &&
+            !pending.cardApproving &&
             pending.epoch == host.epoch &&
             pending.permission.sessionId.raw == sessionId
     }

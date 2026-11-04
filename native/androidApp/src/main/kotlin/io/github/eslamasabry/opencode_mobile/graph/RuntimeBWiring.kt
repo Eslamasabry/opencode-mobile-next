@@ -117,8 +117,9 @@ internal class NativePhoneProcesses(
                 when (val result = host.run(LINUX_PROCESS_SCAN_SCRIPT, 25)) {
                     is Outcome.Ok ->
                         if (result.value.exitCode == 0) LinuxProcessScan.parse(result.value.output)
-                        else return@withLock refusedStop()
-                    is Outcome.Failed -> return@withLock result
+                        else null
+                    // A failed guest scan keeps the native rows rather than failing the page.
+                    is Outcome.Failed -> null
                 }
             } else null
         val protectedPids = rawRows.filter { it.role != ProcessRole.Normal }.map { it.pid }.toSet()

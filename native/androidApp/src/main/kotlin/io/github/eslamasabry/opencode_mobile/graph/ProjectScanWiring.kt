@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import io.github.eslamasabry.oc.engine.files.PhoneProjectScanner
 import io.github.eslamasabry.oc.engine.files.ProjectScanFiles
+import io.github.eslamasabry.oc.engine.files.ProjectScanEnd
 import io.github.eslamasabry.oc.engine.files.ProjectScanResult
 import io.github.eslamasabry.oc.engine.files.ProjectScanRoot
 import io.github.eslamasabry.oc.engine.files.ScanEntry
@@ -41,7 +42,8 @@ class AndroidPhoneProjectDiscovery(
 
     override suspend fun scan(profile: ProfileId): ProjectScanResult =
         withContext(dispatchers.io) {
-            check(available(profile))
+            if (!available(profile))
+                return@withContext ProjectScanResult(emptyList(), 0, ProjectScanEnd.Completed)
             val files = ProjectScanFiles { path ->
                 try {
                     val root = File(path)

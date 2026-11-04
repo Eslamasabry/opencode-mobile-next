@@ -127,6 +127,8 @@ class NativeRuntimeSwitch(
                     HistorySwitchAdmission.fromResult(history.value.exitCode, history.value.output)
                 ) {
                     HistorySwitchAdmission.Allowed -> Unit
+                    // B-LINUX-108: callers still run setup and a normal OpenCode 2 start; only the
+                    // move (fenced again by the start path) stays refused.
                     HistorySwitchAdmission.SeparateHistory ->
                         return@withLock Outcome.Failed(
                             Failure.Refused(RefusalReason.MigrationPending)

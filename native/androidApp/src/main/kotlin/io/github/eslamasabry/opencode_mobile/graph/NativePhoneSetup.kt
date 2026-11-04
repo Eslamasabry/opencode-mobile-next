@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -317,9 +318,18 @@ class NativePhoneSetup(
                                         .ManagedLocalServer
                                         .isBuiltin(loaded.profile.baseUrl)
                             }
+                        // Two histories refuse only the move: setup still runs and then reports
+                        // the protection notice (B-LINUX-108/142).
+                        var separateHistory: Outcome.Failed? = null
                         if (prepareMigration && migrating)
                             when (val prepared = switchGate.prepare()) {
-                                is Outcome.Failed -> return@withLock prepared
+                                is Outcome.Failed ->
+                                    if (
+                                        (prepared.failure as? Failure.Refused)?.reason ==
+                                            RefusalReason.MigrationPending
+                                    )
+                                        separateHistory = prepared
+                                    else return@withLock prepared
                                 is Outcome.Ok -> Unit
                             }
                         val setup = get()
@@ -327,7 +337,7 @@ class NativePhoneSetup(
                         shown.value = setup.progress.value
                         if (shown.value.state == SetupState.Failed)
                             Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
-                        else Outcome.Ok(Unit)
+                        else separateHistory ?: Outcome.Ok(Unit)
                     }
                 }
             }

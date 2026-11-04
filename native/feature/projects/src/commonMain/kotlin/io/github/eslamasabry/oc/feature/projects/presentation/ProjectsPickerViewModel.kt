@@ -213,6 +213,7 @@ public class ProjectsPickerViewModel(
                                             p.path,
                                             ProjectRules.name(p.path),
                                             isGit = p.hasGit,
+                                            kind = p.kind,
                                         )
                                     }
                                     .toImmutableList(),
