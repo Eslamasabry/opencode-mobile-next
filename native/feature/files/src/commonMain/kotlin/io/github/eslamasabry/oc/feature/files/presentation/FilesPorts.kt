@@ -16,6 +16,9 @@ import kotlinx.collections.immutable.ImmutableList
  * What Files needs from the conversation's connection. Bound to the live graph in `FilesGraph.kt`.
  */
 public interface FilesConnections {
+    /** Opaque identity of this exact live source; checked again after every permission wait. */
+    public fun sourceIdentity(ref: ConversationRef): Any? = null
+
     /** The conversation's own gateway, or null while that server is not connected. */
     public fun gateway(ref: ConversationRef): FileGateway?
 

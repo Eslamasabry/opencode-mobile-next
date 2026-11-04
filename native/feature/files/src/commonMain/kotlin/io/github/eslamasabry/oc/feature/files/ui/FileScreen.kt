@@ -17,8 +17,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
 import io.github.eslamasabry.oc.engine.files.FileBody
 import io.github.eslamasabry.oc.engine.media.preview.DelimitedText
 import io.github.eslamasabry.oc.engine.media.preview.StaticSvg
@@ -28,6 +30,7 @@ import io.github.eslamasabry.oc.feature.files.presentation.FilePhase
 import io.github.eslamasabry.oc.feature.files.presentation.FileUi
 import io.github.eslamasabry.oc.feature.files.presentation.PdfPageUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitPdfPngPage
@@ -105,6 +108,12 @@ import io.github.eslamasabry.oc.ui.words.res.readerUiSavedDevice
 import io.github.eslamasabry.oc.ui.words.res.stateReaderNoWrap
 import io.github.eslamasabry.oc.ui.words.res.stateReaderSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.stateReaderWrap
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppAction
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppBody
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppTitle
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxAction
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxBody
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -117,6 +126,10 @@ import org.jetbrains.compose.resources.stringResource
 public fun FileScreen(state: FileUi, actions: FileActions) {
     var more by remember { mutableStateOf(false) }
     KitClipboardEffect(state.clipId, state.clipText, actions::clipDone)
+    LifecycleResumeEffect(actions) {
+        actions.onResume()
+        onPauseOrDispose {}
+    }
     // One modal layer for the frame and the share sheet (the chat's KitSheetHost pattern).
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(modifier = Modifier.fillMaxSize(), page = true) {
@@ -285,6 +298,10 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
 
 @Composable
 private fun Body(state: FileUi, actions: FileActions) {
+    if (state.storageBlock != SharedStorageBlock.None) {
+        SharedStorageNotice(state, actions)
+        return
+    }
     when (state.phase) {
         FilePhase.Loading -> KitSkeletonRows()
         FilePhase.NotConnected ->
@@ -489,3 +506,39 @@ private fun noticeWords(notice: FileNotice, name: String): String =
         FileNotice.AttachFailed -> stringResource(Res.string.filesAttachFailed)
         FileNotice.PreferencesFailed -> stringResource(Res.string.filesPreferencesFailed)
     }
+
+@Composable
+private fun SharedStorageNotice(state: FileUi, actions: FileActions) {
+    val block = state.storageBlock
+    val title =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppTitle
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxTitle
+            SharedStorageBlock.None -> return
+        }
+    val body =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppBody
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxBody
+            SharedStorageBlock.None -> return
+        }
+    val action =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppAction
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxAction
+            SharedStorageBlock.None -> return
+        }
+    KitStateView(
+        kind = KitStateKind.Calm,
+        title = stringResource(title),
+        body = stringResource(body),
+        failure = state.failure,
+        primary =
+            KitAction(
+                stringResource(action),
+                actions::requestStorage,
+                working = state.requestingStorage,
+            ),
+        secondary = KitAction(stringResource(Res.string.kitTryAgain), actions::retry),
+    )
+}

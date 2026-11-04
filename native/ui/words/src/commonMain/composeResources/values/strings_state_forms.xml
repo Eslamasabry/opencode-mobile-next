@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateFormTitle">Answer the agent</string>
+    <string name="stateFormAnswer">Answer</string>
+    <string name="stateFormHeld">Your answer will be sent shortly.</string>
+    <string name="stateFormUndo">Undo</string>
+    <string name="stateFormInvalid">Check the marked answers before sending.</string>
+    <string name="stateFormOther">Something else</string>
+    <string name="stateFormOpenLink">Open link</string>
+    <string name="stateFormRestoring">Restoring your saved answers…</string>
+    <string name="stateFormSend">Send answers</string>
+    <string name="stateFormDecline">Decline this request</string>
+    <string name="stateFormDeclineTitle">Decline this request?</string>
+    <string name="stateFormDeclineBody">The agent will continue without your answers. This request cannot be restored.</string>
+    <string name="stateFormKeepEditing">Keep editing</string>
+    <string name="stateFormStorageFailed">Your saved answers could not be read or saved. Close and reopen this request to try again.</string>
+    <string name="stateFormUncertain">Delivery is unconfirmed. Check the conversation before answering again.</string>
+    <string name="stateFormChanged">This request changed. Reopen the current request.</string>
+    <string name="stateFormNotAccepted">Your answer was not accepted. Review the request before trying again.</string>
+    <string name="stateFormDismiss">Dismiss</string>
+</resources>

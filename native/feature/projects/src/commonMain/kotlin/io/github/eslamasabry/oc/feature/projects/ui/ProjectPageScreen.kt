@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
 import io.github.eslamasabry.oc.feature.projects.presentation.ChatTitle
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectChatUi
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectPageActions
@@ -58,6 +60,12 @@ import io.github.eslamasabry.oc.ui.words.res.p12ProjectNoConversations
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.servicesSubtitle
 import io.github.eslamasabry.oc.ui.words.res.servicesTitle
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppAction
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppBody
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppTitle
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxAction
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxBody
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.stringResource
 
@@ -71,6 +79,10 @@ public fun ProjectPageScreen(
     actions: ProjectPageActions,
     onDevServices: (() -> Unit)? = null,
 ) {
+    LifecycleResumeEffect(actions) {
+        actions.onResume()
+        onPauseOrDispose {}
+    }
     KitScreen(
         topBar = {
             KitTopBar(
@@ -85,6 +97,14 @@ public fun ProjectPageScreen(
     ) {
         IsolatedTaskSheet(state, actions)
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+            if (state.storageBlock != SharedStorageBlock.None) {
+                item(key = "shared-storage-access") { SharedStorageNotice(state, actions) }
+                return@LazyColumn
+            }
+            if (state.phase == ProjectPagePhase.Opening) {
+                item(key = "opening") { KitSkeletonRows() }
+                return@LazyColumn
+            }
             if (state.phase == ProjectPagePhase.NoServer) {
                 item(key = "no-server") {
                     KitStateView(
@@ -306,5 +326,41 @@ private fun ChatRow(row: ProjectChatUi, showProject: Boolean, actions: ProjectPa
             else KitRowTrailing.None,
         growKey = row.ref,
         onClick = { actions.openConversation(row.ref) },
+    )
+}
+
+@Composable
+private fun SharedStorageNotice(state: ProjectPageUi, actions: ProjectPageActions) {
+    val block = state.storageBlock
+    val title =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppTitle
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxTitle
+            SharedStorageBlock.None -> return
+        }
+    val body =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppBody
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxBody
+            SharedStorageBlock.None -> return
+        }
+    val action =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppAction
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxAction
+            SharedStorageBlock.None -> return
+        }
+    KitStateView(
+        kind = KitStateKind.Calm,
+        title = stringResource(title),
+        body = stringResource(body),
+        failure = state.failure,
+        primary =
+            KitAction(
+                stringResource(action),
+                actions::requestStorage,
+                working = state.requestingStorage,
+            ),
+        secondary = KitAction(stringResource(Res.string.kitTryAgain), actions::retry),
     )
 }

@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGroup
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -9,6 +11,24 @@ import io.github.eslamasabry.oc.ui.design.tokens.Density
 
 /** Everything a person can do on the Settings pages. Each call names its target (rule 15). */
 public interface SettingsActions {
+    public fun onAppearanceQuestion(question: AppearanceQuestion?) {}
+
+    public fun onAppearanceGroup(group: AppearanceGroup) {}
+
+    public fun onAppearanceNext() {}
+
+    public fun onAppearanceSkip() {}
+
+    public fun onAppearanceAgain() {}
+
+    public fun onWhatsNewNext() {}
+
+    public fun onWhatsNewPrevious() {}
+
+    public fun onWhatsNewClose() {}
+
+    public fun onWhatsNewShowMe() {}
+
     public fun onOpen(page: SettingsPage)
 
     /**

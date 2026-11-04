@@ -21,4 +21,5 @@ public sealed interface SettingsRoute : AppRoute {
     public data class ModelDefaults(
         val profile: io.github.eslamasabry.oc.core.common.ids.ProfileId? = null
     ) : SettingsRoute
+    @Serializable public data object WhatsNew : SettingsRoute
 }

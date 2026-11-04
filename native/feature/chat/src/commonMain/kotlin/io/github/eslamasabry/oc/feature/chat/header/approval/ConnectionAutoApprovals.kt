@@ -70,7 +70,11 @@ public class ConnectionAutoApprovals(
                         .automatic
                 },
                 reply = { request ->
-                    engine.answerNow(request.id, RequestAnswer.Permission(PermissionReply.Once))
+                    engine.answerNow(
+                        request.id,
+                        RequestAnswer.Permission(PermissionReply.Once),
+                        PendingRequest.Permission(request),
+                    )
                 },
                 clock = clock,
             )

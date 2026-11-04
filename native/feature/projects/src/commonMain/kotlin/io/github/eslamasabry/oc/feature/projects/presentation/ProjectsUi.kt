@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.projects.presentation
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -164,6 +165,8 @@ public data class ProjectPageUi(
     val workspace: ProjectWorkspaceUi = ProjectWorkspaceUi(),
     val changesCount: Int? = null,
     val devServerPort: Int? = null,
+    val storageBlock: SharedStorageBlock = SharedStorageBlock.None,
+    val requestingStorage: Boolean = false,
 )
 
 public interface ProjectPageActions : ProjectWorkspaceActions {
@@ -190,6 +193,10 @@ public interface ProjectPageActions : ProjectWorkspaceActions {
     public fun confirmRemoveCopy(remove: Boolean) {}
 
     public fun openUnsentConversation() {}
+
+    public fun requestStorage() {}
+
+    public fun onResume() {}
 
     public fun developmentServices()
 

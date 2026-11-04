@@ -27,6 +27,8 @@ import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
 import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffSheet
 import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffViewModel
+import io.github.eslamasabry.oc.feature.chat.forms.ChatFormSlot
+import io.github.eslamasabry.oc.feature.chat.forms.ChatForms
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
@@ -90,6 +92,7 @@ public class ChatEntries(
     private val inbox: ComposerInbox,
     private val cards: ChatCards,
     private val registry: ConnectionRegistry,
+    private val forms: ChatForms,
     private val navigator: AppNavigator,
     private val readers: Set<KitReplyReader>,
 ) : EntryInstaller {
@@ -230,6 +233,9 @@ public class ChatEntries(
                 }
             val queueMoveState by queueMove.state.collectAsStateWithLifecycle()
             val queueMoveAvailable by queueMove.available.collectAsStateWithLifecycle()
+            val formModel = remember(route.ref) { forms.open(route.ref) }
+            val formState by formModel.state.collectAsStateWithLifecycle()
+            DisposableEffect(formModel) { onDispose { formModel.close() } }
             val prompts = remember(route.ref) { ChatPromptsDoor(route.ref, inbox, navigator) }
             // P12-CHAT-CARDS: the conversation's agent cards, read by the transcript's card slot.
             val cardModel = remember(route.ref) { cards.open(route.ref) }
@@ -252,6 +258,10 @@ public class ChatEntries(
                             composerHost,
                             requests = slot,
                             requestActions = requests,
+                            formWaiting = formState.form != null,
+                            formSlot = { modifier ->
+                                ChatFormSlot(formState, formModel, vm::openLink, modifier)
+                            },
                             extraActions =
                                 listOfNotNull(
                                     preview,

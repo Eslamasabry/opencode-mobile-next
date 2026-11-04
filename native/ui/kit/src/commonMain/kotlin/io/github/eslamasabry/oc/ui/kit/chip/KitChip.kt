@@ -165,3 +165,20 @@ public fun KitChipWrap(modifier: Modifier = Modifier, content: @Composable () ->
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) { content() }
 }
+
+/**
+ * A guide step chip (appearance walkthrough): an action chip whose visited mark stays inside the
+ * kit's icon vocabulary, heard as a selectable step.
+ *
+ * Cap: Chip. Replaces: the step row of lib/ui/screens/appearance_screen.dart.
+ */
+@Composable
+public fun KitStepChip(label: String, checked: Boolean, selected: Boolean, onClick: () -> Unit) {
+    KitChip(
+        label = label,
+        kind = KitChipKind.Action,
+        icon = if (checked) KitPartGlyphs.Check else null,
+        selected = selected,
+        onClick = onClick,
+    )
+}

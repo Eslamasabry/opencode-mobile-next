@@ -88,6 +88,13 @@ public class ReturnBriefStore(private val prefs: BriefPreferences) {
         }
     }
 
+    /**
+     * Deletion already owns the storage sweep; discard only this process's cached acknowledgement.
+     */
+    public suspend fun forgetProfile(profile: ProfileId) {
+        lane(profile).withLock { loaded.remove(profile) }
+    }
+
     private fun decode(raw: String?): Map<String, ReturnBriefAck> {
         if (raw == null) return emptyMap()
         val obj = parseOrNull(raw) as? JsonObject ?: return emptyMap()

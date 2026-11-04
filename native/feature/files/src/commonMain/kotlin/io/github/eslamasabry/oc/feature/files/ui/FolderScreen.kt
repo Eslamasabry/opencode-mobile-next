@@ -13,6 +13,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
 import io.github.eslamasabry.oc.core.model.FileNode
 import io.github.eslamasabry.oc.feature.files.presentation.FileNotice
 import io.github.eslamasabry.oc.feature.files.presentation.FileSearchSurface
@@ -128,11 +130,21 @@ import io.github.eslamasabry.oc.ui.words.res.storageAccessWhyOff
 import io.github.eslamasabry.oc.ui.words.res.storageAccessWhyScope
 import org.jetbrains.compose.resources.pluralStringResource
 import io.github.eslamasabry.oc.ui.words.res.stateReaderSaveFailed
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppAction
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppBody
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppTitle
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxAction
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxBody
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxTitle
 import org.jetbrains.compose.resources.stringResource
 
 /** The project's real file, text and symbol reads; every uncommon act also has a visible button. */
 @Composable
 public fun FolderScreen(state: FolderUi, actions: FolderActions) {
+    LifecycleResumeEffect(actions) {
+        actions.onResume()
+        onPauseOrDispose {}
+    }
     var viewOptions by remember { mutableStateOf(false) }
     val title =
         if (state.path.isEmpty()) stringResource(Res.string.filesProjectRoot) else state.name
@@ -169,7 +181,10 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                 )
             },
             search =
-                if (state.phase == FolderPhase.Ready || state.query != null)
+                if (
+                    state.sharedStorageBlock == SharedStorageBlock.None &&
+                        (state.phase == FolderPhase.Ready || state.query != null)
+                )
                     ({
                         KitSearchField(
                             surfaceLabel,
@@ -241,6 +256,8 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                         KitNotice(stringResource(Res.string.readerUiIndicatorsFailed))
                     }
                 when {
+                    state.sharedStorageBlock != SharedStorageBlock.None ->
+                        item("shared-storage-access") { SharedStorageNotice(state, actions) }
                     state.query != null || state.surface != FileSearchSurface.Files ->
                         searchItems(state, actions, loadingSince)
                     state.phase == FolderPhase.Loading ->
@@ -622,3 +639,39 @@ private fun symbolKind(kind: Int): String =
             else -> Res.string.readerUiSymbolSymbol
         }
     )
+
+@Composable
+private fun SharedStorageNotice(state: FolderUi, actions: FolderActions) {
+    val block = state.sharedStorageBlock
+    val title =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppTitle
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxTitle
+            SharedStorageBlock.None -> return
+        }
+    val body =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppBody
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxBody
+            SharedStorageBlock.None -> return
+        }
+    val action =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppAction
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxAction
+            SharedStorageBlock.None -> return
+        }
+    KitStateView(
+        kind = KitStateKind.Calm,
+        title = stringResource(title),
+        body = stringResource(body),
+        failure = state.failure,
+        primary =
+            KitAction(
+                stringResource(action),
+                actions::requestStorage,
+                working = state.requestingSharedStorage,
+            ),
+        secondary = KitAction(stringResource(Res.string.kitTryAgain), actions::retry),
+    )
+}

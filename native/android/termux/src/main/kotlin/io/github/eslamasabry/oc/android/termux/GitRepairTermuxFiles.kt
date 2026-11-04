@@ -253,7 +253,21 @@ OC_GIT_REPAIR_LIST
             }
         }
 
+    /** A bounded, read-only probe under Termux's own UID. No output leaves the bridge. */
+    public suspend fun sharedStorageReadable(): Boolean? {
+        val answer = command("ls -A /storage/emulated/0 >/dev/null 2>&1", 12_000L) ?: return null
+        if (!answer.containsKey("exitCode") || answer.getInt("err", -1) != -1) return null
+        return answer.getInt("exitCode", -1) == 0
+    }
+
     private suspend fun run(script: String): Boolean {
+        val answer = command(script, 300_000L) ?: return false
+        return answer.containsKey("exitCode") &&
+            answer.getInt("exitCode", -1) == 0 &&
+            answer.getInt("err", -1) == -1
+    }
+
+    private suspend fun command(script: String, timeoutMs: Long): Bundle? {
         val id = UUID.randomUUID().toString()
         val result = GitRepairCallbacks.register(id)
         val callback =
@@ -266,7 +280,7 @@ OC_GIT_REPAIR_LIST
                 PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_MUTABLE,
             )
         try {
-            if (available() != GitRepairTermuxState.Ready) return false
+            if (available() != GitRepairTermuxState.Ready) return null
             context.startService(
                 Intent("com.termux.RUN_COMMAND").apply {
                     component = ComponentName("com.termux", "com.termux.app.RunCommandService")
@@ -281,14 +295,11 @@ OC_GIT_REPAIR_LIST
                     putExtra("com.termux.RUN_COMMAND_PENDING_INTENT", callback)
                 }
             )
-            val answer = withTimeoutOrNull(300_000L) { result.await() } ?: return false
-            return answer.containsKey("exitCode") &&
-                answer.getInt("exitCode", -1) == 0 &&
-                answer.getInt("err", -1) == -1
+            return withTimeoutOrNull(timeoutMs) { result.await() }
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            return false
+            return null
         } finally {
             GitRepairCallbacks.remove(id)
             callback.cancel()

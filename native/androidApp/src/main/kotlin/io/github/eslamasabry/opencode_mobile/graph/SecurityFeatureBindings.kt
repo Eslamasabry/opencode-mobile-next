@@ -122,5 +122,9 @@ object SecurityFeatureBindings {
             // and session pins are already registered above by AndroidProfileMonitoring.registerKeys
             // and registerStateKeys).
             io.github.eslamasabry.oc.engine.settings.consent.ConsentKeys.shapes.forEach { register(it) }
+            // 45-PORT-STATE: native form drafts and device-only viewed watermarks / return briefs
+            // (moved here from PreviewRuntime's local scope).
+            SavedStateFormDrafts.registerKeys(this)
+            NativeSessionReads.shapes.forEach { register(it) }
         }
 }

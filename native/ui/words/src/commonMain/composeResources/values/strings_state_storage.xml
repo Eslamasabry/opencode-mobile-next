@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateStorageAppTitle">Allow access to this phone’s files</string>
+    <string name="stateStorageAppBody">This project is in shared storage. Turn on All files access for OpenCode Mobile, then return here.</string>
+    <string name="stateStorageAppAction">Open file access settings</string>
+    <string name="stateStorageTermuxTitle">Allow Termux to read shared storage</string>
+    <string name="stateStorageTermuxBody">Open Termux, run termux-setup-storage, and allow storage access. Return here and check again. This app’s file access does not grant Termux access.</string>
+    <string name="stateStorageTermuxAction">Open Termux</string>
+</resources>

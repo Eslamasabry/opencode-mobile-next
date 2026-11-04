@@ -3,6 +3,12 @@ package io.github.eslamasabry.oc.feature.settings.presentation
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.engine.analytics.WhatWeCollect
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGroup
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGuideMemory
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGuideRecord
+import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
+import io.github.eslamasabry.oc.engine.settings.walkthrough.WhatsNewCatalog
+import io.github.eslamasabry.oc.engine.settings.walkthrough.WhatsNewTarget
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.color.Packs
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -47,6 +53,8 @@ public class SettingsPresenter(
     private val diagnostics: DiagnosticsExport? = null,
     private val crashes: CrashSettings? = null,
     private val phrases: PhraseSettings? = null,
+    private val appearanceGuide: AppearanceGuideMemory? = null,
+    private val exitWhatsNew: () -> Unit = {},
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -61,6 +69,9 @@ public class SettingsPresenter(
         val focusedRow: SettingsRowId? = null,
         val focusedAnchor: String? = null,
         val phraseChips: Boolean = true,
+        val appearanceQuestion: AppearanceQuestion? = null,
+        val whatsNewIndex: Int = 0,
+        val standaloneWhatsNew: Boolean = false,
     )
 
     private data class Engines(
@@ -93,14 +104,28 @@ public class SettingsPresenter(
         )
 
     public val state: StateFlow<SettingsUi> =
-        combine(local, facts, prefs, engines) { l, f, p, e -> build(l, f, p, e) }
+        combine(local, facts, prefs, engines, appearanceGuide?.record ?: flowOf(null)) {
+                l,
+                f,
+                p,
+                e,
+                guide ->
+                build(l, f, p, e, guide)
+            }
             .stateIn(
                 scope,
                 SharingStarted.Eagerly,
-                build(local.value, facts.value, prefs.value, engineNow()),
+                build(
+                    local.value,
+                    facts.value,
+                    prefs.value,
+                    engineNow(),
+                    appearanceGuide?.record?.value,
+                ),
             )
 
     init {
+        scope.launch { appearanceGuide?.load() }
         phrases?.let { port ->
             scope.launch {
                 port.enabled.collect { enabled -> local.update { it.copy(phraseChips = enabled) } }
@@ -179,7 +204,13 @@ public class SettingsPresenter(
         local.update { it.copy(entries = entries) }
     }
 
-    private fun build(l: Local, f: SettingsFacts, p: PersonalPrefs, e: Engines): SettingsUi {
+    private fun build(
+        l: Local,
+        f: SettingsFacts,
+        p: PersonalPrefs,
+        e: Engines,
+        guide: AppearanceGuideRecord?,
+    ): SettingsUi {
         val searchable = SettingsStructure.searchable(f)
         val results =
             if (l.query.isBlank()) persistentListOf()
@@ -192,11 +223,17 @@ public class SettingsPresenter(
             stack = l.stack,
             hub = HubUi(SettingsStructure.groups(f), f.server, l.query, results, searchable),
             group = group,
-            appearance = appearance(p, f, l.allPacks),
+            appearance =
+                appearance(p, f, l.allPacks)
+                    .copy(
+                        guide = guide,
+                        question = l.appearanceQuestion?.takeIf { it in appearanceQuestions(f) },
+                    ),
             voice = e.voice,
             notifications = e.notifications,
             updates = e.updates,
             about = about,
+            whatsNew = whatsNew(l, f),
             privacy = e.collect?.let { PrivacyUi(it, l.consentSaving) },
             language = p.language,
             capabilities =
@@ -243,10 +280,148 @@ public class SettingsPresenter(
             styles = f.surfaceStyles,
             heldBySaver = p.saver,
             systemMotionOff = f.systemMotionOff,
+            questions = appearanceQuestions(f),
         )
     }
 
+    private fun appearanceQuestions(f: SettingsFacts): List<AppearanceQuestion> = buildList {
+        add(AppearanceQuestion.Mode)
+        add(AppearanceQuestion.Theme)
+        if (f.surfaceStyles) add(AppearanceQuestion.Style)
+        add(AppearanceQuestion.Text)
+        add(AppearanceQuestion.Motion)
+    }
+
+    override fun onAppearanceQuestion(question: AppearanceQuestion?) {
+        if (question != null && question !in appearanceQuestions(currentFacts.value)) return
+        local.update { it.copy(appearanceQuestion = question) }
+        if (question != null)
+            scope.launch {
+                appearanceGuide?.update { old ->
+                    old.copy(
+                        seen = if (question in old.seen) old.seen else old.seen + question,
+                        lastIn = old.lastIn + (question.group to question),
+                    )
+                }
+            }
+    }
+
+    override fun onAppearanceGroup(group: AppearanceGroup) {
+        val questions = appearanceQuestions(currentFacts.value).filter { it.group == group }
+        if (questions.isEmpty()) return
+        val old = appearanceGuide?.record?.value
+        val last =
+            old?.lastIn?.get(group)?.takeIf {
+                it in questions && !(prefs.value.saver && it.heldBySaver)
+            }
+        val first =
+            questions.firstOrNull { !(prefs.value.saver && it.heldBySaver) } ?: questions.first()
+        onAppearanceQuestion(if (old?.done == true) last ?: first else first)
+    }
+
+    override fun onAppearanceNext() {
+        val old = appearanceGuide?.record?.value ?: return
+        if (old.done) return
+        val from =
+            local.value.appearanceQuestion
+                ?: AppearanceQuestion.entries.lastOrNull { it in old.seen }
+        val next =
+            AppearanceQuestion.after(
+                from,
+                prefs.value.saver,
+                appearanceQuestions(currentFacts.value),
+            )
+        if (next != null) onAppearanceQuestion(next)
+        else {
+            local.update { it.copy(appearanceQuestion = null) }
+            scope.launch {
+                appearanceGuide?.update { it.copy(done = true, seen = AppearanceQuestion.entries) }
+            }
+        }
+    }
+
+    override fun onAppearanceSkip() {
+        local.update { it.copy(appearanceQuestion = null) }
+        scope.launch { appearanceGuide?.update { it.copy(done = true) } }
+    }
+
+    override fun onAppearanceAgain() {
+        local.update { it.copy(appearanceQuestion = null) }
+        scope.launch {
+            appearanceGuide?.update { AppearanceGuideRecord(lastIn = it.lastIn, last = it.last) }
+        }
+    }
+
+    private fun changedAppearance(question: AppearanceQuestion) {
+        scope.launch { appearanceGuide?.update { it.copy(last = question) } }
+    }
+
+    private fun whatsNew(l: Local, f: SettingsFacts): WhatsNewUi? {
+        val version = WhatsNewCatalog.versionFor(about.version) ?: return null
+        val changes = WhatsNewCatalog.byVersion.getValue(version)
+        val index = l.whatsNewIndex.coerceIn(changes.indices)
+        val canShow =
+            when (changes[index].target) {
+                WhatsNewTarget.Updates -> updates != null
+                WhatsNewTarget.Agents -> f.canOpen(SettingsOutside.Agents)
+                WhatsNewTarget.AppearanceText -> true
+                WhatsNewTarget.PasteImage,
+                WhatsNewTarget.HoldToTalk -> false
+            }
+        return WhatsNewUi(version, changes, index, canShow)
+    }
+
+    public fun showWhatsNew(standalone: Boolean = false) {
+        local.update {
+            it.copy(
+                stack = (it.stack + SettingsPage.WhatsNew).distinct().toImmutableList(),
+                whatsNewIndex = 0,
+                standaloneWhatsNew = standalone,
+            )
+        }
+    }
+
+    override fun onWhatsNewNext() {
+        val notes = state.value.whatsNew ?: return
+        if (!notes.last) local.update { it.copy(whatsNewIndex = notes.index + 1) }
+    }
+
+    override fun onWhatsNewPrevious() {
+        local.update { it.copy(whatsNewIndex = (it.whatsNewIndex - 1).coerceAtLeast(0)) }
+    }
+
+    override fun onWhatsNewClose() {
+        onBack()
+    }
+
+    override fun onWhatsNewShowMe() {
+        val notes = state.value.whatsNew?.takeIf { it.canShow } ?: return
+        when (notes.change.target) {
+            WhatsNewTarget.Updates,
+            WhatsNewTarget.AppearanceText -> {
+                val page =
+                    if (notes.change.target == WhatsNewTarget.Updates) SettingsPage.Updates
+                    else SettingsPage.Appearance
+                // A standalone launch stays standalone: Back from the shown page leaves the
+                // route instead of revealing a Settings hub the person never opened (Flutter
+                // closes the sheet back to the launch screen).
+                local.update { it.copy(stack = (it.stack.dropLast(1) + page).toImmutableList()) }
+                if (page == SettingsPage.Appearance) onAppearanceQuestion(AppearanceQuestion.Text)
+            }
+            WhatsNewTarget.Agents -> {
+                onWhatsNewClose()
+                openers.open(SettingsOutside.Agents)
+            }
+            WhatsNewTarget.PasteImage,
+            WhatsNewTarget.HoldToTalk -> Unit
+        }
+    }
+
     override fun onOpen(page: SettingsPage) {
+        if (page == SettingsPage.WhatsNew) {
+            showWhatsNew()
+            return
+        }
         local.update {
             if (it.stack.last() == page) it
             else it.copy(stack = (it.stack + page).toImmutableList())
@@ -279,6 +454,10 @@ public class SettingsPresenter(
     override fun onBack(): Boolean {
         val l = local.value
         return when {
+            l.standaloneWhatsNew && l.stack.size <= 2 -> {
+                exitWhatsNew()
+                true
+            }
             l.stack.size > 1 -> {
                 if (l.stack.last() == SettingsPage.ReportProblem) closeReport()
                 local.update { it.copy(stack = it.stack.dropLast(1).toImmutableList()) }
@@ -347,7 +526,7 @@ public class SettingsPresenter(
             onOpen(SettingsPage.PrivacyPolicy)
             return
         }
-        openers.open(place)
+        if (place == SettingsOutside.WhatsNew) showWhatsNew() else openers.open(place)
     }
 
     override fun onMode(mode: AppearanceMode) {
@@ -522,7 +701,19 @@ public class SettingsPresenter(
     }
 
     private fun write(change: PersonalChange, failed: SettingsNote) {
-        run(failed) { choices.set(change).map {} }
+        run(failed) {
+            choices.set(change).map {
+                when (change) {
+                    is PersonalChange.Mode -> AppearanceQuestion.Mode
+                    is PersonalChange.Pack -> AppearanceQuestion.Theme
+                    is PersonalChange.Style -> AppearanceQuestion.Style
+                    is PersonalChange.Motion -> AppearanceQuestion.Motion
+                    is PersonalChange.TextSize -> AppearanceQuestion.Text
+                    else -> null
+                }?.let(::changedAppearance)
+                Unit
+            }
+        }
     }
 
     private fun run(failed: SettingsNote, call: suspend () -> Outcome<Unit>) {

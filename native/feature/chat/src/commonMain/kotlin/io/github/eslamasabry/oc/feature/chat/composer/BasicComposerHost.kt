@@ -741,8 +741,9 @@ public fun BasicComposer(
                                 if (section.favorites)
                                     stringResource(Res.string.chat_model_favorites)
                                 else
-                                    section.providerName
-                                        ?: stringResource(Res.string.chatModelsRecent)
+                                    section.providerName?.let {
+                                        providerRouteName(section.rows.first().model.providerId, it)
+                                    } ?: stringResource(Res.string.chatModelsRecent)
                         ) {
                             section.rows.forEach { pick ->
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -758,7 +759,10 @@ public fun BasicComposer(
                                         // In "Recent" the provider tells equal names apart.
                                         supporting =
                                             if (section.providerName == null)
-                                                pick.model.providerName
+                                                providerRouteName(
+                                                    pick.model.providerId,
+                                                    pick.model.providerName,
+                                                )
                                             else null,
                                         tag = if (pick.current) currentTag else null,
                                         onClick = { selectAndClose(pick.model) },

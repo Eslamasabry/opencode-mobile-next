@@ -45,6 +45,7 @@ public class NotificationActionBody(
         val session: String,
         val kind: AlertKind,
         val request: String,
+        val token: String,
     )
 
     private val inFlight = mutableSetOf<AnswerClaim>()
@@ -64,7 +65,8 @@ public class NotificationActionBody(
         if (tap.requestId.isBlank() || tap.profileId.isBlank()) return repost(tap)
         if (tap.decision.needsUnlock && lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked())
             return repost(tap)
-        val claimKey = AnswerClaim(tap.profileId, tap.sessionId, tap.kind, tap.requestId)
+        val claimKey =
+            AnswerClaim(tap.profileId, tap.sessionId, tap.kind, tap.requestId, tap.actionToken)
         if (!claim(claimKey)) return ShadeOutcome.IgnoredDuplicate
         try {
             val answer =
@@ -74,6 +76,7 @@ public class NotificationActionBody(
                     RequestId(tap.requestId),
                     tap.kind,
                     reply,
+                    tap.actionToken,
                 )
             val outcome = withTimeoutOrNull(answerDeadline) { answerer.answer(answer) }
             return when {

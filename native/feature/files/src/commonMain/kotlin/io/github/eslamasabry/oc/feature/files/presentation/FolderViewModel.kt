@@ -11,6 +11,8 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
 import io.github.eslamasabry.oc.core.model.FileNode
 import io.github.eslamasabry.oc.core.model.FindMatch
 import io.github.eslamasabry.oc.core.model.VersionControlFile
@@ -81,6 +83,9 @@ public data class FolderUi(
     val storageBlock: FilesStorageBlock = FilesStorageBlock.None,
     val requestingStorage: Boolean = false,
     val confirmingStorage: Boolean = false,
+    /** The phone host's shared-storage gate (Termux / app access), checked before any read. */
+    val sharedStorageBlock: SharedStorageBlock = SharedStorageBlock.None,
+    val requestingSharedStorage: Boolean = false,
     val storageResult: FilesStorageResult? = null,
     val actionFailure: Failure? = null,
 ) {
@@ -95,6 +100,11 @@ public data class FolderUi(
 }
 
 public interface FolderActions {
+    /** Asks the person for the phone host's shared-storage access ([FolderUi.sharedStorageBlock]). */
+    public fun requestStorage() {}
+
+    public fun onResume() {}
+
     public fun back()
 
     public fun retry()
@@ -156,6 +166,7 @@ public class FolderViewModel(
     private val preferences: Set<FilesReaderPreferences>,
     private val mentions: ComposerMentions,
     private val storageAccess: Set<FilesStorageAccess>,
+    private val sharedStorage: Set<SharedStorageAccess> = emptySet(),
 ) : ViewModel(), FolderActions {
     private val local = MutableStateFlow(FolderUi(FilePaths.normalize(route.path)))
     public val state: StateFlow<FolderUi> = local.asStateFlow()
@@ -178,6 +189,7 @@ public class FolderViewModel(
                 canAttach = mentions.canAttach(),
             )
         }
+        check(sharedStorage.size <= 1) { "multiple shared-storage hosts" }
         load()
     }
 
@@ -189,6 +201,7 @@ public class FolderViewModel(
 
     private fun load() {
         val mine = ++loads
+        val identity = connections.sourceIdentity(route.from)
         val gateway = connections.gateway(route.from)
         when {
             gateway == null ->
@@ -201,11 +214,20 @@ public class FolderViewModel(
                         phase = FolderPhase.Loading,
                         failure = null,
                         storageBlock = FilesStorageBlock.None,
+                        requestingSharedStorage = false,
                     )
                 }
                 viewModelScope.launch {
+                    if (!checkSharedStorage(identity) { mine == loads }) return@launch
+                    if (mine != loads || connections.sourceIdentity(route.from) !== identity)
+                        return@launch
                     val listed = ProjectFiles.list(gateway, route.path)
-                    if (mine != loads || !connections.isCurrent(route.from, gateway)) return@launch
+                    if (
+                        mine != loads ||
+                            !connections.isCurrent(route.from, gateway) ||
+                            connections.sourceIdentity(route.from) !== identity
+                    )
+                        return@launch
                     when (listed) {
                         is Outcome.Failed ->
                             local.update {
@@ -220,6 +242,98 @@ public class FolderViewModel(
                     }
                 }
             }
+        }
+    }
+
+    private var projectDirectory: String? = null
+
+    private suspend fun checkSharedStorage(
+        identity: Any?,
+        wanted: () -> Boolean = { true },
+    ): Boolean {
+        val access = sharedStorage.singleOrNull() ?: return true
+        val directory = connections.directory(route.from)
+        if (!wanted()) return false
+        if (!sourceCurrent(identity)) return false
+        val checked = access.check(route.from.profileId, directory, identity)
+        if (!wanted()) return false
+        if (!sourceCurrent(identity)) return false
+        projectDirectory = directory
+        return when (checked) {
+            is Outcome.Failed -> {
+                local.update {
+                    it.copy(
+                        phase = FolderPhase.Failed,
+                        sharedStorageBlock = SharedStorageBlock.None,
+                        failure = checked.failure,
+                        searching = false,
+                    )
+                }
+                false
+            }
+            is Outcome.Ok -> {
+                local.update { it.copy(sharedStorageBlock = checked.value) }
+                if (checked.value == SharedStorageBlock.None) true
+                else {
+                    all = emptyList()
+                    local.update {
+                        it.copy(
+                            phase = FolderPhase.Failed,
+                            entries = persistentListOf(),
+                            results = persistentListOf(),
+                            searching = false,
+                            failure = null,
+                        )
+                    }
+                    false
+                }
+            }
+        }
+    }
+
+    private fun sourceCurrent(identity: Any?): Boolean {
+        if (connections.sourceIdentity(route.from) === identity) return true
+        local.update {
+            it.copy(
+                phase = FolderPhase.NotConnected,
+                sharedStorageBlock = SharedStorageBlock.None,
+                requestingSharedStorage = false,
+                failure = null,
+                searching = false,
+            )
+        }
+        return false
+    }
+
+    override fun onResume() {
+        // Re-check only a folder still blocked by shared storage (back from the permission page).
+        val l = local.value
+        if (
+            l.sharedStorageBlock != SharedStorageBlock.None &&
+                !l.requestingSharedStorage &&
+                l.phase != FolderPhase.Loading
+        )
+            retry()
+    }
+
+    override fun requestStorage() {
+        val access = sharedStorage.singleOrNull() ?: return
+        val block = local.value.sharedStorageBlock
+        val identity = connections.sourceIdentity(route.from)
+        val run = loads
+        if (block == SharedStorageBlock.None || local.value.requestingSharedStorage) return
+        local.update { it.copy(requestingSharedStorage = true) }
+        viewModelScope.launch {
+            val asked = access.request(route.from.profileId, projectDirectory, block, identity)
+            if (run != loads) return@launch
+            if (!sourceCurrent(identity)) return@launch
+            local.update {
+                it.copy(
+                    requestingSharedStorage = false,
+                    failure = (asked as? Outcome.Failed)?.failure,
+                )
+            }
+            if (asked is Outcome.Ok) retry()
         }
     }
 
@@ -286,8 +400,12 @@ public class FolderViewModel(
             }
             return
         }
+        val identity = connections.sourceIdentity(route.from)
         local.update { it.copy(query = trimmed, searching = true, searchFailure = null) }
         viewModelScope.launch {
+            if (!checkSharedStorage(identity) { mine == searches }) return@launch
+            if (mine != searches || connections.sourceIdentity(route.from) !== identity)
+                return@launch
             when (surface) {
                 FileSearchSurface.Files -> {
                     loadChanges(loads)
@@ -508,19 +626,19 @@ public class FolderViewModel(
     override fun allowStorage() {
         if (local.value.storageBlock == FilesStorageBlock.AppPermission)
             local.update { it.copy(confirmingStorage = true) }
-        else requestStorage()
+        else requestFolderStorage()
     }
 
     override fun confirmStorage() {
         local.update { it.copy(confirmingStorage = false) }
-        requestStorage()
+        requestFolderStorage()
     }
 
     override fun cancelStorage() {
         local.update { it.copy(confirmingStorage = false) }
     }
 
-    private fun requestStorage() {
+    private fun requestFolderStorage() {
         val access = storageAccess.singleOrNull() ?: return
         val block = local.value.storageBlock
         if (block == FilesStorageBlock.None || local.value.requestingStorage) return
