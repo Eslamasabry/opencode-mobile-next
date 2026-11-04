@@ -17,17 +17,24 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FolderProblem
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import io.github.eslamasabry.oc.engine.runtime.paths.PhoneFolderChild
 import io.github.eslamasabry.oc.engine.runtime.paths.PhoneFolderFiles
 import io.github.eslamasabry.oc.engine.runtime.paths.PhoneStorageFolders
+import io.github.eslamasabry.oc.engine.runtime.projects.NodeKind
+import io.github.eslamasabry.oc.engine.runtime.projects.PhoneFiles
+import io.github.eslamasabry.oc.engine.runtime.projects.PhoneFolderLocations
+import io.github.eslamasabry.oc.engine.runtime.projects.ProjectFolders
 import io.github.eslamasabry.oc.engine.runtime.projects.ProjectStorage
 import io.github.eslamasabry.oc.engine.runtime.storage.PhoneStorage
 import io.github.eslamasabry.oc.engine.runtime.storage.PhoneStorageSnapshot
 import io.github.eslamasabry.oc.engine.runtime.storage.PhoneStorageSources
+import io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer
 import io.github.eslamasabry.oc.engine.voice.models.DeviceProbeResult
 import io.github.eslamasabry.oc.feature.phone.presentation.NoPhoneStorageReadings
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneStorageReadings
@@ -100,7 +107,79 @@ class AndroidPhoneStorageReadings(
 class AndroidPhoneFolders(
     private val application: Application,
     private val dispatchers: AppDispatchers,
+    private val stores: PreviewStores,
+    private val capabilities: PlatformCapabilities,
 ) : PhoneFolders {
+    private val localFiles =
+        object : PhoneFiles {
+            override suspend fun kind(path: String): NodeKind {
+                val target = localPath(path) ?: return NodeKind.Link
+                if (!Files.exists(target, LinkOption.NOFOLLOW_LINKS)) return NodeKind.Missing
+                if (Files.isSymbolicLink(target)) return NodeKind.Link
+                return if (Files.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) NodeKind.Directory
+                else NodeKind.Other
+            }
+
+            override suspend fun names(path: String): Outcome<List<String>> =
+                attempt(::folderFailure) {
+                    val target = localPath(path) ?: throw AccessDeniedException(path)
+                    if (!Files.exists(target, LinkOption.NOFOLLOW_LINKS))
+                        throw NoSuchFileException(path)
+                    if (!Files.isDirectory(target, LinkOption.NOFOLLOW_LINKS))
+                        throw AccessDeniedException(path)
+                    Files.newDirectoryStream(target).use { children ->
+                        val names = children.map { it.fileName.toString() }.toList()
+                        if (localPath(path) == null) throw AccessDeniedException(path)
+                        names
+                    }
+                }
+        }
+    private val locations = PhoneFolderLocations(localFiles, application.filesDir.absolutePath)
+    private val builtinFolders =
+        ProjectFolders(
+            localFiles,
+            locate = locations::rootfs,
+            locateProjects = { locations.projectStorage() },
+        )
+
+    override fun builtinAvailable(profile: ProfileId): Boolean =
+        capabilities.builtinLinux &&
+            stores.profiles
+                .profile(profile)
+                ?.profile
+                ?.baseUrl
+                ?.let(ManagedLocalServer::isBuiltin) == true
+
+    override suspend fun listBuiltin(path: String): Outcome<ImmutableList<PhoneFolderUi>> =
+        withContext(dispatchers.io) {
+            if (!capabilities.builtinLinux)
+                return@withContext Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+            when (val listed = attempt(::folderFailure) { builtinFolders.list(path) }) {
+                is Outcome.Failed -> listed
+                is Outcome.Ok ->
+                    listed.value.map { entries ->
+                        entries.map { PhoneFolderUi(it.name, it.path) }.toImmutableList()
+                    }
+            }
+        }
+
+    /**
+     * Check every host-side component before reading; never follow a rootfs or retained-root link.
+     */
+    private fun localPath(path: String): java.nio.file.Path? {
+        if ('\u0000' in path || ".." in path.split('/')) return null
+        val root = application.filesDir.toPath().toAbsolutePath().normalize()
+        val target = Paths.get(path).toAbsolutePath().normalize()
+        if (!target.startsWith(root)) return null
+        var current = root
+        if (Files.isSymbolicLink(current)) return null
+        for (part in root.relativize(target)) {
+            current = current.resolve(part)
+            if (Files.isSymbolicLink(current)) return null
+        }
+        return target
+    }
+
     private val folders =
         PhoneStorageFolders(
             object : PhoneFolderFiles {

@@ -38,14 +38,35 @@ class LinuxOwnerPointerCleaner(private val stores: PreviewStores) :
             stores.prefs,
             stores.lanes.app,
             io.github.eslamasabry.oc.engine.profiles.FlutterEraEdits.BuiltinServerOwner,
-            io.github.eslamasabry.oc.engine.profiles.DeletionStep.DEVICE_SURFACES,
+            io.github.eslamasabry.oc.engine.profiles.DeletionStep.AFTER_ROW,
         )
     override val owner: String = ":engine:runtime"
-    override val order: Int = io.github.eslamasabry.oc.engine.profiles.DeletionStep.DEVICE_SURFACES
+    override val order: Int = io.github.eslamasabry.oc.engine.profiles.DeletionStep.AFTER_ROW
     override val guardsSweep: Boolean = true
 
     override suspend fun clear(
         profileId: ProfileId,
         options: io.github.eslamasabry.oc.engine.profiles.DeletionOptions,
     ): Outcome<Int> = cleaner.clear(profileId, options)
+}
+
+/** Budget and restart recipe disappear only after the profile removal commits. */
+@Inject
+@ContributesIntoSet(
+    AppScope::class,
+    binding = binding<io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner>(),
+)
+class LinuxRecoveryCleaner(private val runtime: BuiltinRuntime) :
+    io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner {
+    override val owner: String = ":engine:runtime (recovery budget)"
+    override val order: Int = io.github.eslamasabry.oc.engine.profiles.DeletionStep.AFTER_ROW
+
+    override suspend fun clear(
+        profileId: ProfileId,
+        options: io.github.eslamasabry.oc.engine.profiles.DeletionOptions,
+    ): Outcome<Int> =
+        when (val result = runtime.eraseProfileRecovery(profileId.raw)) {
+            is Outcome.Failed -> result
+            is Outcome.Ok -> Outcome.Ok(1)
+        }
 }

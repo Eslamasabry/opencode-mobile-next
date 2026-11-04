@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="secAutomationTitle">ما يعمل تلقائيًا</string>
+    <string name="secAutomationDetail">اختر ما يُسمح لهذا الخادم بتنفيذه تلقائيًا. يسمح الخيار بالعمل الموجود ولا يبدأه.</string>
+    <string name="secAutomationReconnect">إعادة الاتصال</string>
+    <string name="secAutomationRetryIntake">إعادة محاولة العمل الوارد</string>
+    <string name="secAutomationReconcileQueuedSends">مزامنة الرسائل المنتظرة</string>
+    <string name="secAutomationRetryProviderErrors">إعادة محاولة أخطاء المزوّد</string>
+    <string name="secAutomationRestartPhoneServer">إعادة تشغيل خادم الهاتف</string>
+    <string name="secAutomationResumeSetup">استئناف الإعداد</string>
+    <string name="secAutomationRecheckEnvironment">إعادة فحص البيئة</string>
+    <string name="secAutomationPollRestartHealth">فحص سلامة إعادة التشغيل</string>
+    <string name="secAutomationThermalRecovery">التعافي بعد ارتفاع الحرارة</string>
+    <string name="secAutomationReduceEffects">تقليل التأثيرات</string>
+    <string name="secAutomationChooseDefaults">اختيار الإعدادات الافتراضية</string>
+    <string name="secAutomationDetectInstallations">اكتشاف التثبيتات</string>
+    <string name="secAutomationPreserveDrafts">حفظ المسودات</string>
+    <string name="secAutomationFollowOutput">متابعة المخرجات</string>
+    <string name="secAutomationPollOpenPages">تحديث الصفحات المفتوحة</string>
+    <string name="secAutomationBoundedPaging">تحميل نتائج إضافية</string>
+    <string name="secAutomationRouteReadyWork">توجيه العمل الجاهز</string>
+    <string name="secAutomationWakeStalledPool">تنشيط العاملين المتوقفين</string>
+    <string name="secAutomationRestartWorkers">إعادة تشغيل العاملين</string>
+    <string name="secAutomationRecycleWorkers">تجديد العاملين</string>
+    <string name="secAutomationHoldAtProviderLimit">الانتظار عند حدود المزوّد</string>
+    <string name="secAutomationRetryUnconfirmedAnswer">إعادة محاولة الإجابات غير المؤكدة</string>
+    <string name="secAutomationRetryTransientTask">إعادة محاولة إخفاقات المهام المؤقتة</string>
+    <string name="secAutomationFallBackToDirectTask">استخدام مهمة مباشرة بديلة</string>
+    <string name="secAutomationApplyCodePush">تطبيق تحديثات الشفرة</string>
+    <string name="secAutomationRestartDevServices">إعادة تشغيل خدمات التطوير</string>
+    <string name="secAutomationStopIdleHelpers">إيقاف المساعدين الخاملين</string>
+    <string name="secAutomationCleanCaches">تنظيف الذاكرة المؤقتة</string>
+    <string name="secAutomationUpdateWhenIdle">التحديث عند الخمول</string>
+    <string name="secAutomationMonitorOtherServers">مراقبة الخوادم الأخرى</string>
+    <string name="secAutomationMonitorQuota">مراقبة الحصة</string>
+</resources>

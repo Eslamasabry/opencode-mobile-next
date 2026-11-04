@@ -365,6 +365,20 @@ class NativeAgentSignInLinks(
     private val opener: ExternalLinkOpener,
     private val policy: ExternalLinkPolicy,
 ) : SignInLinks {
+    override fun check(url: String): SignInLinkCheck =
+        when (val decision = policy.checkSignInPage(url)) {
+            is LinkDecision.Open -> SignInLinkCheck.Direct
+            is LinkDecision.AskFirst -> SignInLinkCheck.Ask(decision.shownHost, decision.insecure)
+            is LinkDecision.Refuse -> SignInLinkCheck.Refused
+        }
+
+    override suspend fun openConfirmed(url: String): Outcome<Unit> =
+        when (val decision = policy.checkSignInPage(url)) {
+            is LinkDecision.Open -> opener.open(decision.link)
+            is LinkDecision.AskFirst -> opener.open(decision.link)
+            is LinkDecision.Refuse -> Failure.Refused(RefusalReason.InvalidAddress).failed()
+        }
+
     override suspend fun open(url: String): Outcome<Unit> =
         when (val decision = policy.checkSignInPage(url)) {
             is LinkDecision.Open -> opener.open(decision.link)

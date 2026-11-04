@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.feature.agents.signin.SignInClipboard
 import io.github.eslamasabry.oc.feature.agents.signin.SignInCommand
 import io.github.eslamasabry.oc.feature.agents.signin.SignInForeground
 import io.github.eslamasabry.oc.feature.agents.signin.SignInFound
+import io.github.eslamasabry.oc.feature.agents.signin.SignInLinkCheck
 import io.github.eslamasabry.oc.feature.agents.signin.SignInLinks
 import io.github.eslamasabry.oc.feature.agents.signin.SignInPlan
 import io.github.eslamasabry.oc.feature.agents.signin.SignInProblem
@@ -49,6 +50,7 @@ public class SignInTerminalPresenter(
     private var watched: TerminalModel? = null
     private var found = SignInFound()
     private var checking = false
+    private var pendingPage: String? = null
     private val sessionWatchers = mutableListOf<() -> Unit>()
     private val terminalWatchers = mutableListOf<() -> Unit>()
 
@@ -89,7 +91,7 @@ public class SignInTerminalPresenter(
             cleared(it).copy(step = SignInStep.Starting, failureCode = null, stopFailed = false)
         }
         val states = scope.launch { next.state.collect { onSession(next, it) } }
-        val urls = scope.launch { next.openUrls.collect { links.open(it) } }
+        val urls = scope.launch { next.openUrls.collect { requestPage(it, next) } }
         sessionWatchers += { states.cancel() }
         sessionWatchers += { urls.cancel() }
         next.start(run)
@@ -164,6 +166,7 @@ public class SignInTerminalPresenter(
             ui.update { it.copy(stopFailed = true) }
             return
         }
+        dismissSignInPage()
         ui.update { it.copy(step = SignInStep.Checking, inputEnabled = false) }
         val signedIn = agents.confirmSignedIn(owner, agent)
         val stopped = stopFirst || owned.end() is Outcome.Ok
@@ -178,7 +181,36 @@ public class SignInTerminalPresenter(
     override fun openSignInPage() {
         val page = found.page ?: return
         if (ui.value.terminal == null || session?.canOpenLinks != true) return
-        scope.launch { if (session?.canOpenLinks == true) links.open(page) }
+        val owned = session ?: return
+        scope.launch { requestPage(page, owned) }
+    }
+
+    private suspend fun requestPage(page: String, owned: SignInTerminalSession) {
+        if (session !== owned || !owned.canOpenLinks || ui.value.linkPrompt != null) return
+        when (val decision = links.check(page)) {
+            SignInLinkCheck.Direct -> links.open(page)
+            SignInLinkCheck.Refused -> Unit
+            is SignInLinkCheck.Ask -> {
+                pendingPage = page
+                ui.update {
+                    it.copy(linkPrompt = SignInPagePrompt(decision.host, decision.insecure))
+                }
+            }
+        }
+    }
+
+    override fun confirmSignInPage() {
+        val page = pendingPage ?: return
+        val owned = session ?: return
+        dismissSignInPage()
+        scope.launch {
+            if (session === owned && owned.canOpenLinks) links.openConfirmed(page)
+        }
+    }
+
+    override fun dismissSignInPage() {
+        pendingPage = null
+        ui.update { it.copy(linkPrompt = null) }
     }
 
     override fun copyCode() {
@@ -215,6 +247,7 @@ public class SignInTerminalPresenter(
     }
 
     override fun leave() {
+        dismissSignInPage()
         val owned = session
         scope.launch {
             if (owned != null && owned.end() is Outcome.Failed) {
@@ -227,13 +260,22 @@ public class SignInTerminalPresenter(
 
     /** Host-owned cleanup survives a ViewModel being removed while native admission is pending. */
     public suspend fun close(): io.github.eslamasabry.oc.core.common.Outcome<Unit> {
+        dismissSignInPage()
         stop(sessionWatchers)
         stop(terminalWatchers)
         return session?.end() ?: io.github.eslamasabry.oc.core.common.Outcome.Ok(Unit)
     }
 
-    private fun cleared(now: SignInTerminalUi): SignInTerminalUi =
-        now.copy(terminal = null, inputEnabled = false, canOpenPage = false, code = null)
+    private fun cleared(now: SignInTerminalUi): SignInTerminalUi {
+        pendingPage = null
+        return now.copy(
+            terminal = null,
+            inputEnabled = false,
+            canOpenPage = false,
+            code = null,
+            linkPrompt = null,
+        )
+    }
 
     private fun stop(watchers: MutableList<() -> Unit>) {
         watchers.forEach { it() }

@@ -11,7 +11,6 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
@@ -25,7 +24,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.json.JSONObject
 
 /** App-lifetime health follows lifecycle and link changes, never streamed message updates. */
 @Inject
@@ -34,6 +32,7 @@ class NativePhoneHealing(
     private val app: Application,
     private val runtime: BuiltinRuntime,
     private val stores: PreviewStores,
+    private val policies: AppAutomationPolicies,
     private val connections: PreviewRuntime,
     private val registry: ConnectionRegistry,
     private val clock: Clock,
@@ -166,17 +165,11 @@ class NativePhoneHealing(
         }
     }
 
-    private fun reconnectAllowed(owner: ProfileId): Boolean {
-        val value = stores.prefs.get("oc.automation.${owner.raw}") ?: return true
-        if (value !is PrefValue.Str) return false
-        return try {
-            val policy = JSONObject(value.value)
-            policy.opt("version") == 1 &&
-                policy.optJSONObject("behaviors")?.opt("reconnect") == true
-        } catch (_: Exception) {
-            false
-        }
-    }
+    private fun reconnectAllowed(owner: ProfileId): Boolean =
+        policies.allows(
+            owner,
+            io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior.Reconnect,
+        )
 }
 
 @ContributesTo(AppScope::class)

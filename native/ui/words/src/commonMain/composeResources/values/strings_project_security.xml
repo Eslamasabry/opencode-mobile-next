@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="secBuiltinFolders">Built-in Linux folders</string>
+    <string name="secBuiltinFoldersBody">Browse project storage and Linux folders on this phone.</string>
+    <string name="secBuiltinFolderLinked">This folder is a link. Choose a real folder.</string>
+    <string name="secBuiltinFolderNotInstalled">Install Linux on this phone to browse these folders.</string>
+</resources>

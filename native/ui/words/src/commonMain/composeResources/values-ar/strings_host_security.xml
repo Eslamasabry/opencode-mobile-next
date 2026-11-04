@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hostSecTitle">جهاز على شبكتك الخاصة</string>
+    <string name="hostSecIntro">تحقّق من هوية SSH وجهّز المفتاح العام لهذا الهاتف أو استعد جهازًا محفوظًا.</string>
+    <string name="hostSecBundleMissing">تثبيت جهاز جديد غير متاح حتى نشر حزمة OpenCode 2 مراجعة. لا تعمل أوامر التجهيز هذه إلا عند نسخها وتشغيلها على جهازك.</string>
+    <string name="hostSecWorking">جارٍ العمل…</string>
+    <string name="hostSecRefresh">تحديث الأجهزة المحفوظة</string>
+    <string name="hostSecSaved">الأجهزة المحفوظة</string>
+    <string name="hostSecAddress">حساب SSH وعنوان الشبكة الخاصة (user@host)</string>
+    <string name="hostSecPort">منفذ SSH</string>
+    <string name="hostSecInspect">التحقّق من هوية الجهاز</string>
+    <string name="hostSecTrustHelp">قارن هذه البصمة في جلسة مستقلة على الجهاز باستخدام ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256. تابع فقط إذا تطابقت تمامًا.</string>
+    <string name="hostSecTrust">البصمة متطابقة — تجهيز المفتاح العام</string>
+    <string name="hostSecPublicHelp">يمكن نسخ هذا المفتاح العام. يبقى المفتاح الخاص في مخزن مفاتيح Android. لا يزال التثبيت والإقران يتطلبان حزمة الجهاز المراجعة.</string>
+    <string name="hostSecCopy">نسخ الأمر</string>
+    <string name="hostSecResume">التحقّق من الاتصال المحفوظ</string>
+    <string name="hostSecVerified">تم التحقّق من هوية SSH المثبّتة وهوية المشرف المحفوظة عبر النفق الخاص.</string>
+    <string name="hostSecNotConnected">لا يوجد اتصال جهاز مفتوح تم التحقّق منه.</string>
+    <string name="hostSecRevoke">إلغاء وصول هذا الهاتف وإزالة الجهاز</string>
+    <string name="hostSecForget">نسيان بيانات الجهاز المحلية</string>
+    <string name="hostSecRemoveConfirm">إزالة</string>
+    <string name="hostSecRevokeHelp">يجب تأكيد إلغاء الوصول مع الجهاز المثبّت قبل مسح الوصول المحلي. تُحفظ البيانات لإعادة المحاولة إذا فشل الإلغاء. تستمر جلسات الجهاز في العمل.</string>
+    <string name="hostSecForgetHelp">إزالة النفق والمفتاح وبيانات الجهاز المحفوظة على هذا الهاتف. لا يلغي ذلك الوصول البعيد ولا يوقف جلسات الجهاز.</string>
+    <string name="hostSecTargetFailure">استخدم عنوان جهاز على شبكة Tailscale وحساب SSH ومنفذًا صالحين. تُرفض العناوين العامة والمحلية ومسارات DNS المختلطة.</string>
+    <string name="hostSecIdentityFailure">تغيّرت هوية الجهاز. لم يتم اعتماد أي شيء. تحقّق من الجهاز بشكل مستقل قبل إعادة المحاولة.</string>
+    <string name="hostSecRevokeFailure">تعذّر تأكيد إلغاء الوصول. تم الاحتفاظ بالوصول المحفوظ لتتمكن من إعادة المحاولة.</string>
+    <string name="hostSecStorageFailure">تعذّرت قراءة بيانات الجهاز أو تغييرها بأمان. احتفظ بالجهاز المحفوظ وأعد المحاولة.</string>
+    <string name="hostSecFailure">تعذّر إكمال العملية. تحقّق من إعداد Linux على الهاتف والشبكة الخاصة، ثم أعد المحاولة.</string>
+    <string name="hostSecStepTailnet">صِل الجهازين بشبكة Tailscale. تعرض هذه الفحوص الحالة والعناوين ولا تثبت عضوية VPN. يُحل DNS مرة واحدة ويجب أن تكون كل الإجابات ضمن نطاقات الشبكة الخاصة. يستخدم SSH العنوان الرقمي المتحقّق منه والمفتاح المثبّت.</string>
+    <string name="hostSecStepAccount">استخدم حساب Ubuntu 24.04 منفصلًا دون صلاحية root. افحص هذه الأدوات أولًا. يفحص الإعداد النظام ومعرّف المستخدم غير الجذري والمعمارية وPython ومدير خدمات المستخدم ولا يثبّت حزمًا باستخدام sudo.</string>
+    <string name="hostSecStepNetwork">أبقِ جلسة إنقاذ مفتوحة. استبدل MACHINE_TAILSCALE_IP بالعنوان الرقمي الفعلي وأزل قيم ListenAddress العامة أو الشاملة. تغيّر أوامر المالك هذه خادم SSH بالكامل. يقرأ المثبّت مقابس الاستماع الفعلية على المنفذ المحدد ويرفض العناوين العامة والشاملة وعناوين LAN العادية؛ ولا يغيّر جدار الحماية أو ربط SSH. افحص كل منفذ SSH آخر بشكل منفصل.</string>
+    <string name="hostSecStepLinger">شغّل الأمر الأول مرة واحدة بصلاحية المسؤول. يقرأ المثبّت قيمة Linger ويتطلب yes ثم يتحقّق من عمل systemctl --user. لا يفعّل linger بنفسه ولا يطلب كلمة مرور sudo.</string>
+    <string name="hostSecStepPolicy">أبقِ جلسة مسؤول مفتوحة. استبدل PHONE_TAILSCALE_IP وMACHINE_TAILSCALE_IP بالعنوانين الرقميين الفعليين. تحقّق قبل إعادة التحميل؛ فقد تتجاوز تعليمات SSH السابقة هذا الملف. يفحص المثبّت تحويل TCP المحلي وتعطيل التحويل العكسي وتحويل المقابس وأجهزة الأنفاق، وقيم UseDNS no وDisableForwarding no وتسجيل الدخول بالمفتاح العام ومسار authorized_keys المعتاد. لا يثبت تحليل الإعدادات أن الخادم العامل حمّلها؛ تحقّق من إعادة التحميل بنفسك.</string>
+    <string name="hostSecStepIdentity">قارن الناتج مع التطبيق في جلسة مستقلة على الجهاز قبل الوثوق به. يحسب التطبيق بصمة Ed25519 SHA256 ويمنع تغييرات الهوية اللاحقة.</string>
+</resources>

@@ -163,6 +163,7 @@ dependencies {
             ":feature:diagnostics", // BUILD-DIAGNOSTICS-ATTENTION
             ":feature:devservices", // BUILD-RUNTIME-A: Development services (saved commands, dev
             // servers found)
+            ":engine:integrations-host",
             ":engine:integrations-catalog",
             ":engine:integrations-quota",
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine

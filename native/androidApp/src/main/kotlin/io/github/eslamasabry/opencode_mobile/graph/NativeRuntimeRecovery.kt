@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -15,6 +16,7 @@ internal class NativeRuntimeRecovery(
     private val stores: PreviewStores,
     private val linux: BuiltinLinux,
     private val io: CoroutineDispatcher,
+    private val policies: AppAutomationPolicies,
 ) {
     suspend fun bind(profile: ProfileId): Outcome<Unit> {
         if (!Regex("[A-Za-z0-9_-]{1,80}").matches(profile.raw)) return unavailable()
@@ -61,7 +63,8 @@ internal class NativeRuntimeRecovery(
 
     /**
      * A confirmed manual start lifts the runtime-switch suspension (Flutter
-     * `managed_server_recovery.dart` clears `_manuallySuspended` there) and rebinds with the policy.
+     * `managed_server_recovery.dart` clears `_manuallySuspended` there) and rebinds with the
+     * policy.
      */
     suspend fun confirmManualStart(profile: ProfileId): Outcome<Unit> {
         val key = "oc.managedServerRecovery.${profile.raw}"
@@ -92,18 +95,15 @@ internal class NativeRuntimeRecovery(
                 return false
             }
         }
-        val value = stores.prefs.get("oc.automation.$profile") ?: return true
-        if (value !is PrefValue.Str) return false
-        return try {
-            val policy = JSONObject(value.value)
-            policy.opt("version") == 1 &&
-                policy.opt("supervision") in listOf("high", "balanced", "autonomous") &&
-                policy.optJSONObject("behaviors")?.let {
-                    it.opt("restartPhoneServer") == true && it.opt("pollRestartHealth") == true
-                } == true
-        } catch (_: Exception) {
-            false
-        }
+        val id = ProfileId(profile)
+        return policies.allows(
+            id,
+            AutomationBehavior.RestartPhoneServer,
+        ) &&
+            policies.allows(
+                id,
+                AutomationBehavior.PollRestartHealth,
+            )
     }
 
     private fun JSONObject.toMap(): Map<String, Any?> =

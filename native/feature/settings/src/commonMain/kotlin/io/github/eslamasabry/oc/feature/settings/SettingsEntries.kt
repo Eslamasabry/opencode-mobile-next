@@ -10,6 +10,8 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import io.github.eslamasabry.oc.feature.settings.automation.AutomationSection
+import io.github.eslamasabry.oc.feature.settings.automation.AutomationViewModel
 import io.github.eslamasabry.oc.feature.settings.monitor.MonitoringSection
 import io.github.eslamasabry.oc.feature.settings.monitor.MonitoringViewModel
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsHost
@@ -33,6 +35,8 @@ public class SettingsEntries(private val host: SettingsHost) : EntryInstaller {
         entry<SettingsRoute.Home> {
             val vm = metroViewModel<SettingsViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
+            val automation = metroViewModel<AutomationViewModel>()
+            val automationState by automation.state.collectAsStateWithLifecycle()
             val monitoring = metroViewModel<MonitoringViewModel>()
             val monitoringState by monitoring.state.collectAsStateWithLifecycle()
             KitBackGuard(
@@ -44,7 +48,10 @@ public class SettingsEntries(private val host: SettingsHost) : EntryInstaller {
                     state,
                     vm.actions,
                     onExit = vm::exit,
-                    monitoring = { MonitoringSection(monitoringState, monitoring) },
+                    monitoring = {
+                        MonitoringSection(monitoringState, monitoring)
+                        AutomationSection(automationState, automation)
+                    },
                 )
             }
         }
@@ -54,20 +61,29 @@ public class SettingsEntries(private val host: SettingsHost) : EntryInstaller {
                 vm.actions.onAnchor(target.rowTag)
             }
             val state by vm.state.collectAsStateWithLifecycle()
+            val automation = metroViewModel<AutomationViewModel>()
+            val automationState by automation.state.collectAsStateWithLifecycle()
             val monitoring = metroViewModel<MonitoringViewModel>()
             val monitoringState by monitoring.state.collectAsStateWithLifecycle()
             KitBackGuard(enabled = state.page != SettingsPage.Hub, onBack = vm::back)
-            SettingsScreen(
-                state,
-                vm.actions,
-                onExit = vm::exit,
-                monitoring = { MonitoringSection(monitoringState, monitoring) },
-            )
+            SettingsCapabilityFlows(host) {
+                SettingsScreen(
+                    state,
+                    vm.actions,
+                    onExit = vm::exit,
+                    monitoring = {
+                        MonitoringSection(monitoringState, monitoring)
+                        AutomationSection(automationState, automation)
+                    },
+                )
+            }
         }
         entry<SettingsRoute.ReportProblem> {
             val vm = metroViewModel<SettingsViewModel>()
             LaunchedEffect(vm) { vm.actions.onOpen(SettingsPage.ReportProblem) }
             val state by vm.state.collectAsStateWithLifecycle()
+            val automation = metroViewModel<AutomationViewModel>()
+            val automationState by automation.state.collectAsStateWithLifecycle()
             val monitoring = metroViewModel<MonitoringViewModel>()
             val monitoringState by monitoring.state.collectAsStateWithLifecycle()
             KitBackGuard(
@@ -79,7 +95,10 @@ public class SettingsEntries(private val host: SettingsHost) : EntryInstaller {
                     state,
                     vm.actions,
                     onExit = vm::exit,
-                    monitoring = { MonitoringSection(monitoringState, monitoring) },
+                    monitoring = {
+                        MonitoringSection(monitoringState, monitoring)
+                        AutomationSection(automationState, automation)
+                    },
                 )
             }
         }

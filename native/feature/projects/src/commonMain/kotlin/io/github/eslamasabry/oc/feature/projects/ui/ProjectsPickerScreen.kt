@@ -3,16 +3,16 @@ package io.github.eslamasabry.oc.feature.projects.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName
-import io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FolderProblem
+import io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName
+import io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem
 import io.github.eslamasabry.oc.feature.projects.presentation.FolderRowUi
 import io.github.eslamasabry.oc.feature.projects.presentation.PathProblem
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectRules
@@ -263,6 +263,15 @@ private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
             trailing = KitRowTrailing.Chevron,
             onClick = actions::askPath,
         )
+        if (state.canBrowseBuiltin) {
+            KitRow(
+                title = stringResource(Res.string.secBuiltinFolders),
+                supporting = stringResource(Res.string.secBuiltinFoldersBody),
+                supportingMaxLines = 2,
+                trailing = KitRowTrailing.Chevron,
+                onClick = actions::browseBuiltin,
+            )
+        }
         KitRow(
             title = stringResource(Res.string.p12PhoneFolder),
             enabled = state.canBrowsePhone,
@@ -417,7 +426,11 @@ private fun PhoneFolderSheet(state: ProjectsPickerUi, actions: ProjectsPickerAct
     KitSheet(
         visible = path != null,
         onDismissRequest = actions::closePhoneFolders,
-        title = stringResource(Res.string.andrStorageInternal),
+        title =
+            stringResource(
+                if (state.browsingBuiltin) Res.string.secBuiltinFolders
+                else Res.string.andrStorageInternal
+            ),
         subtitle = path,
         height = KitSheetHeight.Full,
         primary =
@@ -461,6 +474,11 @@ private fun PhoneFolderSheet(state: ProjectsPickerUi, actions: ProjectsPickerAct
                                 Res.string.andrStorageFolderMissing
                             failure is Failure.Folder && failure.problem == FolderProblem.Denied ->
                                 Res.string.andrStorageFolderDenied
+                            failure is Failure.Folder && failure.problem == FolderProblem.Linked ->
+                                Res.string.secBuiltinFolderLinked
+                            failure is Failure.Folder &&
+                                failure.problem == FolderProblem.NotInstalled ->
+                                Res.string.secBuiltinFolderNotInstalled
                             else -> Res.string.andrStorageFolderFailed
                         }
                     KitNotice(
@@ -468,7 +486,8 @@ private fun PhoneFolderSheet(state: ProjectsPickerUi, actions: ProjectsPickerAct
                         actions =
                             buildList {
                                 if (
-                                    failure is Failure.Folder &&
+                                    !state.browsingBuiltin &&
+                                        failure is Failure.Folder &&
                                         failure.problem == FolderProblem.Denied
                                 )
                                     add(
