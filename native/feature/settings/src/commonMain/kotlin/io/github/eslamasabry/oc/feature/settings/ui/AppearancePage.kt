@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
+import io.github.eslamasabry.oc.ui.kit.style.KitSignalSample
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appearanceAskMode
@@ -38,9 +39,10 @@ import io.github.eslamasabry.oc.ui.words.res.textSizeTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * I04, one page (plan 06 K4): light or dark, the colour pack (most used first, "See all 31 themes" for the rest), the
- * five styles and Motion. Every choice applies at once (no Apply). Saver holds Style and Motion and says so.
- * Text size is the last question (B-KIT-059). Fine-tune, accent, glow and the guided first visit are S4-APPEAR's.
+ * I04, one page (plan 06 K4): light or dark, the colour pack (most used first, "See all 31 themes"
+ * for the rest), the five styles and Motion. Every choice applies at once (no Apply). Saver holds
+ * Style and Motion and says so. Text size is the last question (B-KIT-059). Fine-tune, accent, glow
+ * and the guided first visit are S4-APPEAR's.
  */
 @Composable
 internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions) {
@@ -79,17 +81,29 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         )
     }
 
-    // A style the app does not draw would be a choice that changes nothing: listed only where it is drawn.
+    // A style the app does not draw would be a choice that changes nothing: listed only where it is
+    // drawn.
     if (ui.styles) {
         KitSectionLabel(stringResource(Res.string.appearanceAskStyle))
-        val styleHeld = if (ui.heldBySaver) KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle)) else KitEnabled.Enabled
+        val styleHeld =
+            if (ui.heldBySaver)
+                KitEnabled.Disabled(stringResource(Res.string.appearanceSaverHoldsStyle))
+            else KitEnabled.Enabled
         KitChoiceList(
-            choices = SurfaceStyle.entries.map { KitChoice(it, styleWords(it), enabled = if (it == ui.style) KitEnabled.Enabled else styleHeld) },
-            selected = ui.style,
+            choices =
+                listOf(SurfaceStyle.Solid, SurfaceStyle.Signal).map {
+                    KitChoice(
+                        it,
+                        styleWords(it),
+                        enabled = if (it == ui.style) KitEnabled.Enabled else styleHeld,
+                    )
+                },
+            selected = ui.style.takeIf { it == SurfaceStyle.Signal } ?: SurfaceStyle.Solid,
             semanticsLabel = stringResource(Res.string.appearanceAskStyle),
             modifier = Modifier.testTag("appearance-styles"),
             onSelect = actions::onStyle,
         )
+        KitSignalSample(modifier = gutter)
         if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
     }
 
@@ -100,7 +114,10 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
             selected = ui.motion,
             semanticsLabel = stringResource(Res.string.appearanceAskMotion),
             modifier = Modifier.testTag("appearance-motion"),
-            enabled = if (ui.heldBySaver) KitEnabled.Disabled(stringResource(Res.string.appearanceSaverMotion)) else KitEnabled.Enabled,
+            enabled =
+                if (ui.heldBySaver)
+                    KitEnabled.Disabled(stringResource(Res.string.appearanceSaverMotion))
+                else KitEnabled.Enabled,
             onChange = actions::onMotion,
         )
     }

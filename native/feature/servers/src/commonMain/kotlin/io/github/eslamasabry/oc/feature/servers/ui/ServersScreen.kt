@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
+import io.github.eslamasabry.oc.ui.kit.frame.KitServerName
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitField
@@ -63,11 +64,11 @@ import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.linuxHostSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
+import io.github.eslamasabry.oc.ui.words.res.monitorOptIn
+import io.github.eslamasabry.oc.ui.words.res.monitorOptInDetail
 import io.github.eslamasabry.oc.ui.words.res.monitorServerCheckInMinutes
 import io.github.eslamasabry.oc.ui.words.res.monitorServerCheckInOff
 import io.github.eslamasabry.oc.ui.words.res.monitorServerCurrent
-import io.github.eslamasabry.oc.ui.words.res.monitorOptIn
-import io.github.eslamasabry.oc.ui.words.res.monitorOptInDetail
 import io.github.eslamasabry.oc.ui.words.res.monitorServerPaused
 import io.github.eslamasabry.oc.ui.words.res.monitorServerUnavailable
 import io.github.eslamasabry.oc.ui.words.res.monitorServerWaiting
@@ -200,6 +201,7 @@ public fun ServersScreen(
                         if (state.newConversation) Res.string.serversNewTitle
                         else Res.string.serversTitle
                     ),
+                centred = state.newConversation,
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
@@ -245,7 +247,7 @@ public fun ServersScreen(
             else KitText(stringResource(Res.string.serversSaved))
             for (server in state.servers) {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    KitText(server.name)
+                    KitServerName(server.name)
                     KitText(server.address)
                     // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded
                     // loopback is a server.

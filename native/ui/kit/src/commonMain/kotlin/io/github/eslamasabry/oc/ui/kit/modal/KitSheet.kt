@@ -5,13 +5,13 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -49,7 +49,9 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.dismiss
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
@@ -80,17 +82,28 @@ import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import org.jetbrains.compose.resources.stringResource
 
 /** How tall a sheet is (Dart `KitSheetHeight`). */
-public enum class KitSheetHeight { Content, Half, Full }
+public enum class KitSheetHeight {
+    Content,
+    Half,
+    Full,
+}
 
 /** Where a sheet sits for the window it is in (plan 06 §7.4, §10.1). */
-public enum class KitSheetPlacement { Bottom, Centred, End }
+public enum class KitSheetPlacement {
+    Bottom,
+    Centred,
+    End,
+}
 
 /** Plan 06 §7.4 and §10.1: sizes that decide where a sheet sits and how wide it is. */
 public object SheetLayout {
     /** Compact and medium windows keep the bottom sheet, capped at 640 dp. */
     public const val BOTTOM_MAX_DP: Int = 640
 
-    /** From an expanded window (840 dp) a sheet is a centred 560 dp panel; `Full` is a 440 dp end sheet. */
+    /**
+     * From an expanded window (840 dp) a sheet is a centred 560 dp panel; `Full` is a 440 dp end
+     * sheet.
+     */
     public const val EXPANDED_FROM_DP: Int = 840
     public const val CENTRED_MAX_DP: Int = 560
     public const val END_WIDTH_DP: Int = 440
@@ -110,18 +123,21 @@ public object SheetLayout {
 }
 
 /**
- * Where a screen's sheets and dialogs render: in-window, above the screen's content (plan 06 K9, §7.4). `KitScreen`
- * places one; `:ui:shell` places one root host for app-level overlays. It holds one sheet at a time (a second replaces
- * the first: no sheet on a sheet) and, above it, one dialog (confirm, input, alert, the discard question).
+ * Where a screen's sheets and dialogs render: in-window, above the screen's content (plan 06 K9,
+ * §7.4). `KitScreen` places one; `:ui:shell` places one root host for app-level overlays. It holds
+ * one sheet at a time (a second replaces the first: no sheet on a sheet) and, above it, one dialog
+ * (confirm, input, alert, the discard question).
  */
 @Stable
 public class KitSheetHostState internal constructor() {
     internal var entry: SheetEntry? by mutableStateOf(null)
         private set
+
     internal val shown: MutableTransitionState<Boolean> = MutableTransitionState(false)
 
     internal var dialog: DialogEntry? by mutableStateOf(null)
         private set
+
     internal val dialogShown: MutableTransitionState<Boolean> = MutableTransitionState(false)
 
     internal fun show(e: SheetEntry) {
@@ -147,10 +163,12 @@ public class KitSheetHostState internal constructor() {
     }
 
     /** True while a sheet is up or animating (tests and `KitScreenAudit`). */
-    public val isShowing: Boolean get() = shown.currentState || shown.targetState
+    public val isShowing: Boolean
+        get() = shown.currentState || shown.targetState
 
     /** True while a dialog is up or animating. */
-    public val isDialogShowing: Boolean get() = dialogShown.currentState || dialogShown.targetState
+    public val isDialogShowing: Boolean
+        get() = dialogShown.currentState || dialogShown.targetState
 }
 
 internal class SheetEntry {
@@ -177,7 +195,10 @@ internal class SheetEntry {
     }
 }
 
-public val LocalKitSheetHost: ProvidableCompositionLocal<KitSheetHostState?> = staticCompositionLocalOf { null }
+public val LocalKitSheetHost: ProvidableCompositionLocal<KitSheetHostState?> =
+    staticCompositionLocalOf {
+        null
+    }
 
 /** Places the host around [content]. */
 @Composable
@@ -193,21 +214,22 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
 }
 
 /**
- * A sheet as screen state (Dart `showKitSheet`, `KitSheet`, `showKitFramedSheet`; plan 06 §7.4): shown while
- * [visible]. A handle, a header (an optional [icon] tile, the title ≤ 4 words and [subtitle], frame text) with Close at
- * the end, the scrolling [body] (inside a panel when [framed]), then the pinned actions ([primary], [secondary],
- * [tertiary] in one `KitActionBlock`, stacking on compact). It closes from the scrim, Close and Back — including the
- * predictive back gesture, which shrinks it toward its edge as the gesture moves. With [dirty] input and no [draft]
- * keeping it, a dismiss attempt first asks "Discard your changes?". [dismissible] false keeps it until answered (no
- * Close, scrim or Back). The window decides the shape: a bottom sheet capped at 640 dp; from an expanded window a
- * centred 560 dp panel, or a 440 dp end sheet when [height] is `Full`. "Closes when answered elsewhere" is the owning
- * ViewModel's job: it sets [visible] false (B-KIT-032).
+ * A sheet as screen state (Dart `showKitSheet`, `KitSheet`, `showKitFramedSheet`; plan 06 §7.4):
+ * shown while [visible]. A handle, a header (an optional [icon] tile, the title ≤ 4 words and
+ * [subtitle], frame text) with Close at the end, the scrolling [body] (inside a panel when
+ * [framed]), then the pinned actions ([primary], [secondary], [tertiary] in one `KitActionBlock`,
+ * stacking on compact). It closes from the scrim, Close and Back — including the predictive back
+ * gesture, which shrinks it toward its edge as the gesture moves. With [dirty] input and no [draft]
+ * keeping it, a dismiss attempt first asks "Discard your changes?". [dismissible] false keeps it
+ * until answered (no Close, scrim or Back). The window decides the shape: a bottom sheet capped at
+ * 640 dp; from an expanded window a centred 560 dp panel, or a 440 dp end sheet when [height] is
+ * `Full`. "Closes when answered elsewhere" is the owning ViewModel's job: it sets [visible] false
+ * (B-KIT-032).
  *
- * States: closed, open, asking (discard), predictive back
- * Text: frame (header), reading (body)
- * Cap: Sheet (640 / 560 / 440)
- * Motion: rises on the spatial spring, scrim fades STANDARD; back gesture shrinks it; Off = instant
- * Replaces: showKitSheet, KitSheet, KitSheetHeight, showKitFramedSheet (lib/ui/kit/kit_sheet*.dart)
+ * States: closed, open, asking (discard), predictive back Text: frame (header), reading (body) Cap:
+ * Sheet (640 / 560 / 440) Motion: rises on the spatial spring, scrim fades STANDARD; back gesture
+ * shrinks it; Off = instant Replaces: showKitSheet, KitSheet, KitSheetHeight, showKitFramedSheet
+ * (lib/ui/kit/kit_sheet*.dart)
  */
 @Composable
 public fun KitSheet(
@@ -249,7 +271,8 @@ public fun KitSheet(
         entry.body = body
     }
     DisposableEffect(host, visible) {
-        if (visible) host.show(entry) else {
+        if (visible) host.show(entry)
+        else {
             entry.asking = false
             host.hide(entry)
         }
@@ -263,15 +286,21 @@ private fun SheetLayer(state: KitSheetHostState) {
     val colors = LocalKitColors.current
     val specs = KitMotion.specs
     val still = ModalMotion(KitMotion.state.reduced)
-    val back = KitPredictiveBack(enabled = state.isShowing && !state.isDialogShowing) {
-        if (state.shown.targetState) entry.requestDismiss()
-    }
-    AnimatedVisibility(state.shown, enter = still.enter { fadeIn(specs.enter()) }, exit = still.exit { fadeOut(specs.exit()) }) {
+    val back =
+        KitPredictiveBack(enabled = state.isShowing && !state.isDialogShowing) {
+            if (state.shown.targetState) entry.requestDismiss()
+        }
+    AnimatedVisibility(
+        state.shown,
+        enter = still.enter { fadeIn(specs.enter()) },
+        exit = still.exit { fadeOut(specs.exit()) },
+    ) {
         Box(
-            Modifier.fillMaxSize()
-                .background(colors.scrim)
-                .testTag("kit-sheet-scrim")
-                .pointerInput(entry) { detectTapGestures { entry.requestDismiss() } },
+            Modifier.fillMaxSize().background(colors.scrim).testTag("kit-sheet-scrim").pointerInput(
+                entry
+            ) {
+                detectTapGestures { entry.requestDismiss() }
+            }
         )
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -283,7 +312,8 @@ private fun SheetLayer(state: KitSheetHostState) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                     AnimatedVisibility(
                         state.shown,
-                        enter = still.enter { slideInVertically(specs.spatial<IntOffset>()) { it } },
+                        enter =
+                            still.enter { slideInVertically(specs.spatial<IntOffset>()) { it } },
                         exit = still.exit { slideOutVertically(specs.exit<IntOffset>()) { it } },
                     ) {
                         val sized =
@@ -294,7 +324,9 @@ private fun SheetLayer(state: KitSheetHostState) {
                             }
                         SheetPanel(
                             entry,
-                            Modifier.widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp).fillMaxWidth().then(sized)
+                            Modifier.widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp)
+                                .fillMaxWidth()
+                                .then(sized)
                                 .predictiveShrink(back, TransformOrigin(0.5f, 1f))
                                 .clip(KitShapeId.Sheet.toShape()),
                             handle = true,
@@ -302,11 +334,23 @@ private fun SheetLayer(state: KitSheetHostState) {
                     }
                 }
             KitSheetPlacement.Centred ->
-                Box(Modifier.fillMaxSize().padding(Space.S6.dp), contentAlignment = Alignment.Center) {
-                    AnimatedVisibility(state.shown, enter = still.enter { fadeIn(specs.enter()) + scaleIn(specs.enter(), initialScale = 0.96f) }, exit = still.exit { fadeOut(specs.exit()) }) {
+                Box(
+                    Modifier.fillMaxSize().padding(Space.S6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    AnimatedVisibility(
+                        state.shown,
+                        enter =
+                            still.enter {
+                                fadeIn(specs.enter()) + scaleIn(specs.enter(), initialScale = 0.96f)
+                            },
+                        exit = still.exit { fadeOut(specs.exit()) },
+                    ) {
                         SheetPanel(
                             entry,
-                            Modifier.widthIn(max = SheetLayout.CENTRED_MAX_DP.dp).fillMaxWidth().heightIn(max = maxSheet)
+                            Modifier.widthIn(max = SheetLayout.CENTRED_MAX_DP.dp)
+                                .fillMaxWidth()
+                                .heightIn(max = maxSheet)
                                 .predictiveShrink(back, TransformOrigin.Center)
                                 .clip(KitShapeId.Dialog.toShape()),
                             handle = false,
@@ -317,12 +361,15 @@ private fun SheetLayer(state: KitSheetHostState) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
                     AnimatedVisibility(
                         state.shown,
-                        enter = still.enter { slideInHorizontally(specs.spatial<IntOffset>()) { it } },
+                        enter =
+                            still.enter { slideInHorizontally(specs.spatial<IntOffset>()) { it } },
                         exit = still.exit { slideOutHorizontally(specs.exit<IntOffset>()) { it } },
                     ) {
                         SheetPanel(
                             entry,
-                            Modifier.width(SheetLayout.END_WIDTH_DP.dp).fillMaxHeight().predictiveShrink(back, TransformOrigin(1f, 0.5f)),
+                            Modifier.width(SheetLayout.END_WIDTH_DP.dp)
+                                .fillMaxHeight()
+                                .predictiveShrink(back, TransformOrigin(1f, 0.5f)),
                             handle = false,
                         )
                     }
@@ -332,7 +379,10 @@ private fun SheetLayer(state: KitSheetHostState) {
     if (entry.asking) DiscardQuestion(entry)
 }
 
-/** Reads the back gesture in the draw phase: the modal shrinks toward its edge while the gesture moves. */
+/**
+ * Reads the back gesture in the draw phase: the modal shrinks toward its edge while the gesture
+ * moves.
+ */
 internal fun Modifier.predictiveShrink(back: KitBackProgress, origin: TransformOrigin): Modifier =
     graphicsLayer {
         val p = back.value()
@@ -349,44 +399,98 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
     Column(
         modifier
             .background(colors.surface2)
-            .pointerInput(Unit) { detectTapGestures { } } // taps on the sheet never reach the scrim
+            .pointerInput(Unit) { detectTapGestures {} } // taps on the sheet never reach the scrim
             .semantics {
                 paneTitle = entry.title
                 isTraversalGroup = true
             }
             .testTag("kit-sheet")
             .navigationBarsPadding()
-            .imePadding(),
+            .imePadding()
     ) {
         if (handle) {
-            Box(Modifier.fillMaxWidth().height(tokens.handleBand.dp), contentAlignment = Alignment.Center) {
-                Box(Modifier.size(tokens.handleWidth.dp, tokens.handleThickness.dp).clip(KitShapeId.Pill.toShape()).background(colors.text3))
+            val density = LocalDensity.current
+            Box(
+                Modifier.fillMaxWidth()
+                    .height(tokens.handleBand.dp)
+                    .semantics {
+                        if (entry.dismissible)
+                            dismiss {
+                                entry.requestDismiss()
+                                true
+                            }
+                    }
+                    .pointerInput(entry, entry.dismissible) {
+                        var pulled = 0f
+                        detectVerticalDragGestures(
+                            onDragStart = { pulled = 0f },
+                            onVerticalDrag = { change, amount ->
+                                change.consume()
+                                pulled += amount
+                            },
+                            onDragEnd = {
+                                if (pulled > with(density) { 48.dp.toPx() }) entry.requestDismiss()
+                            },
+                            onDragCancel = { pulled = 0f },
+                        )
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    Modifier.size(tokens.handleWidth.dp, tokens.handleThickness.dp)
+                        .clip(KitShapeId.Pill.toShape())
+                        .background(colors.text3)
+                )
             }
         } else {
             Box(Modifier.height(Space.S3.dp))
         }
-        SheetHeader(entry)
-        Column(
-            Modifier.weight(1f, fill = false).fillMaxWidth().verticalScroll(rememberScrollState()).padding(tokens.gutter.dp),
-            verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
-        ) {
-            if (entry.framed) {
+        BoxWithConstraints(Modifier.weight(1f, fill = false)) {
+            // Under a large font or the keyboard, let the header join the scroll. Pinned actions
+            // keep their
+            // own space and the words always have room instead of sitting under an oversized fixed
+            // heading.
+            val frameHeight = maxHeight
+            val scrollHeader = frameHeight < 400.dp || LocalDensity.current.fontScale >= 2f
+            Column {
+                if (!scrollHeader) SheetHeader(entry)
                 Column(
-                    Modifier.fillMaxWidth().clip(KitShapeId.Panel.toShape()).background(colors.surface1).padding(tokens.panelPadding.dp),
+                    Modifier.weight(1f, fill = false)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
-                    content = entry.body,
-                )
-            } else {
-                entry.body(this)
+                ) {
+                    if (scrollHeader) SheetHeader(entry)
+                    Column(Modifier.padding(tokens.gutter.dp)) {
+                        if (entry.framed) {
+                            Column(
+                                Modifier.fillMaxWidth()
+                                    .clip(KitShapeId.Panel.toShape())
+                                    .background(colors.surface1)
+                                    .padding(tokens.panelPadding.dp),
+                                verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
+                                content = entry.body,
+                            )
+                        } else entry.body(this)
+                    }
+                }
+                if (
+                    entry.primary != null || entry.secondary != null || entry.tertiary.isNotEmpty()
+                ) {
+                    KitActionBlock(
+                        Modifier.heightIn(max = (frameHeight - 64.dp).coerceAtLeast(0.dp))
+                            .verticalScroll(rememberScrollState())
+                            .padding(
+                                start = tokens.gutter.dp,
+                                end = tokens.gutter.dp,
+                                bottom = tokens.gutter.dp,
+                            ),
+                        primary = entry.primary,
+                        secondary = entry.secondary,
+                        tertiary = entry.tertiary,
+                    )
+                }
             }
-        }
-        if (entry.primary != null || entry.secondary != null || entry.tertiary.isNotEmpty()) {
-            KitActionBlock(
-                Modifier.padding(start = tokens.gutter.dp, end = tokens.gutter.dp, bottom = tokens.gutter.dp),
-                primary = entry.primary,
-                secondary = entry.secondary,
-                tertiary = entry.tertiary,
-            )
         }
     }
 }
@@ -404,7 +508,14 @@ private fun SheetHeader(entry: SheetEntry) {
         }
         Column(Modifier.weight(1f)) {
             KitText(entry.title, role = TypeRole.Title, kind = KitTextKind.Frame, maxLines = 2)
-            entry.subtitle?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame) }
+            entry.subtitle?.let {
+                KitText(
+                    it,
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                    kind = KitTextKind.Frame,
+                )
+            }
         }
         if (entry.dismissible) {
             KitTappable(onClick = { entry.requestDismiss() }, shape = KitShapeId.Pill) {
@@ -425,7 +536,10 @@ private fun SheetHeader(entry: SheetEntry) {
 internal fun IconTile(glyph: ImageVector, size: Dp) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    Box(Modifier.size(size).clip(KitShapeId.Tile.toShape()).background(colors.surface3), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier.size(size).clip(KitShapeId.Tile.toShape()).background(colors.surface3),
+        contentAlignment = Alignment.Center,
+    ) {
         KitGlyph(glyph, colors.text1, tokens.smallIcon.dp)
     }
 }

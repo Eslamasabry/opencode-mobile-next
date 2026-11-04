@@ -23,6 +23,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
@@ -68,9 +70,10 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Settings › Agents › a computer: update its agents (Flutter host-update row and sheet, B-AGENT-167) and import
- * Claude Code conversations from its project (Flutter `ClaudeImportScreen`, B-AGENT-174). Kit parts only; both acts are
- * visible rows; the computer's own failure text is never shown.
+ * Settings › Agents › a computer: update its agents (Flutter host-update row and sheet,
+ * B-AGENT-167) and import Claude Code conversations from its project (Flutter `ClaudeImportScreen`,
+ * B-AGENT-174). Kit parts only; both acts are visible rows; the computer's own failure text is
+ * never shown.
  */
 @Composable
 public fun ComputerScreen(state: ComputerUi, actions: ComputerActions) {
@@ -86,7 +89,9 @@ public fun ComputerScreen(state: ComputerUi, actions: ComputerActions) {
         width = KitScreenWidth.Reading,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = Space.S3.dp),
+            Modifier.fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
@@ -101,10 +106,16 @@ public fun ComputerScreen(state: ComputerUi, actions: ComputerActions) {
                     title = stringResource(Res.string.hostUpdateConfirmTitle),
                     confirmLabel = stringResource(Res.string.hostUpdateConfirmAction),
                     body = stringResource(Res.string.hostUpdateConfirmBody, state.name),
-                    consequences =
+                    consequenceItems =
                         listOf(
-                            stringResource(Res.string.hostUpdateConfirmPauses, state.name),
-                            stringResource(Res.string.hostUpdateConfirmKept),
+                            KitConsequence(
+                                stringResource(Res.string.hostUpdateConfirmPauses, state.name),
+                                KitConsequenceMark.Info,
+                            ),
+                            KitConsequence(
+                                stringResource(Res.string.hostUpdateConfirmKept),
+                                KitConsequenceMark.Kept,
+                            ),
                         ),
                     cancelLabel = stringResource(Res.string.serversCancel),
                 )
@@ -142,7 +153,8 @@ private fun UpdatePart(state: ComputerUi, actions: ComputerActions, gutter: Modi
                     ?: stringResource(Res.string.hostUpdateDoneNoVersion),
                 gutter,
             )
-        UpdateLine.Current -> KitNotice(stringResource(Res.string.hostUpdateCurrent, state.name), gutter)
+        UpdateLine.Current ->
+            KitNotice(stringResource(Res.string.hostUpdateCurrent, state.name), gutter)
         UpdateLine.Dropped -> KitNotice(stringResource(Res.string.hostUpdateDropped), gutter)
         is UpdateLine.Failed ->
             KitErrorNotice(
@@ -168,7 +180,8 @@ private fun ImportPart(state: ComputerUi, actions: ComputerActions, gutter: Modi
         )
     }
     when (val phase = state.imports) {
-        ImportPhase.Loading -> KitLoadingBar(true, stringResource(Res.string.claudeImportTitle), gutter)
+        ImportPhase.Loading ->
+            KitLoadingBar(true, stringResource(Res.string.claudeImportTitle), gutter)
         is ImportPhase.Failed ->
             KitErrorNotice(
                 stringResource(Res.string.claudeImportLoadFailedBody),
@@ -177,7 +190,8 @@ private fun ImportPart(state: ComputerUi, actions: ComputerActions, gutter: Modi
                 failure = phase.failure,
                 detailsLabel = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.kitCopyDetails),
-                retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::reloadImports),
+                retry =
+                    KitLineAction(stringResource(Res.string.kitTryAgain), actions::reloadImports),
             )
         is ImportPhase.Ready -> {
             val list = phase.list
@@ -196,7 +210,12 @@ private fun ImportPart(state: ComputerUi, actions: ComputerActions, gutter: Modi
                     title = item.title ?: stringResource(Res.string.claudeImportUntitled),
                     supporting =
                         if (state.importing == item.key) working
-                        else stringResource(Res.string.claudeImportRowDetail, item.folder, item.whenLabel),
+                        else
+                            stringResource(
+                                Res.string.claudeImportRowDetail,
+                                item.folder,
+                                item.whenLabel,
+                            ),
                     supportingMaxLines = 2,
                     trailing = KitRowTrailing.Chevron,
                     enabled = !busy,
@@ -205,7 +224,14 @@ private fun ImportPart(state: ComputerUi, actions: ComputerActions, gutter: Modi
                 )
             }
             if (list.alreadyHere > 0) {
-                KitText(pluralStringResource(Res.plurals.claudeImportAlready, list.alreadyHere, list.alreadyHere), gutter)
+                KitText(
+                    pluralStringResource(
+                        Res.plurals.claudeImportAlready,
+                        list.alreadyHere,
+                        list.alreadyHere,
+                    ),
+                    gutter,
+                )
             }
         }
     }

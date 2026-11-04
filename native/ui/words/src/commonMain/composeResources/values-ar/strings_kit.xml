@@ -738,4 +738,6 @@
     <string name="appUpdateNow">حدّث الآن</string>
     <string name="appUpdateOpenSettings">افتح الإعدادات</string>
     <string name="composerPasteImage">لصق صورة</string>
+    <string name="kitDiffSideBySide">جنبًا إلى جنب</string>
+    <string name="kitDiffUnified">موحّد</string>
 </resources>

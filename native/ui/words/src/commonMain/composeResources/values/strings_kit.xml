@@ -630,4 +630,6 @@
     <string name="appUpdateNow">Update now</string>
     <string name="appUpdateOpenSettings">Open Settings</string>
     <string name="composerPasteImage">Paste image</string>
+    <string name="kitDiffSideBySide">Side by side</string>
+    <string name="kitDiffUnified">Unified</string>
 </resources>

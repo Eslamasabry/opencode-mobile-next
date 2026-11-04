@@ -49,9 +49,9 @@ public interface ChangesActions {
 }
 
 /**
- * Changes of a turn ([messageId] any of its messages) or of the whole conversation (null). The rows are tool
- * evidence from the server's records (B-CHAT-068); "Undo all" stages an undo from the changes' first prompt with
- * files back (Flutter `_undoAllAction`), then opens its review.
+ * Changes of a turn ([messageId] any of its messages) or of the whole conversation (null). The rows
+ * are tool evidence from the server's records (B-CHAT-068); "Undo all" stages an undo from the
+ * changes' first prompt with files back (Flutter `_undoAllAction`), then opens its review.
  */
 public class ChangesPresenter(
     private val review: ConversationReview,
@@ -60,36 +60,65 @@ public class ChangesPresenter(
     private val scope: CoroutineScope,
     private val sendBack: ReviewSendBack? = null,
 ) : ChangesActions {
-    private val mutable = MutableStateFlow(ChangesUi(turn = messageId != null, canSendBack = sendBack != null))
+    private val mutable =
+        MutableStateFlow(ChangesUi(turn = messageId != null, canSendBack = sendBack != null))
     public val state: StateFlow<ChangesUi> = mutable.asStateFlow()
     private var set: ChangeSet = ConversationReview.Empty
 
-    /** The undo boundary the rows were read against: Undo all refuses once it moved (B-CHAT-105). */
+    /**
+     * The undo boundary the rows were read against: Undo all refuses once it moved (B-CHAT-105).
+     */
     private var basis: Long? = null
 
     init {
-        scope.launch { review.state.collect { s -> mutable.update { it.copy(busy = s.running || s.working, undoAll = undoAll(it.load)) } } }
+        scope.launch {
+            review.state.collect { s ->
+                mutable.update {
+                    it.copy(busy = s.running || s.working, undoAll = undoAll(it.load))
+                }
+            }
+        }
         load()
     }
 
     private fun load() {
         mutable.update { it.copy(load = ReviewLoad.Loading) }
         scope.launch {
-            review.refresh() // the staged boundary decides Undo all; a failed read leaves it as it was
+            review.refresh() // the staged boundary decides Undo all; a failed read leaves it as it
+            // was
             when (val read = review.changes(messageId)) {
-                is Outcome.Failed -> mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
+                is Outcome.Failed ->
+                    mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
                 is Outcome.Ok -> {
                     set = read.value
                     basis = review.basis()
-                    var rows = set.files.map { ChangeRowUi(it.path, it.name, it.folder, it.added, it.removed, it.hasDiff) }
-                    // Nothing from the tools (an agent may edit through commands): the conversation's view gives way
+                    var rows =
+                        set.files.map {
+                            ChangeRowUi(
+                                it.path,
+                                it.name,
+                                it.folder,
+                                it.added,
+                                it.removed,
+                                it.hasDiff,
+                            )
+                        }
+                    // Nothing from the tools (an agent may edit through commands): the
+                    // conversation's view gives way
                     // to the folder's uncommitted changes, where the server has them (B-NAV-053).
                     var working = false
                     if (rows.isEmpty() && messageId == null && review.workingTreeAvailable()) {
                         val tree = (review.workingTree() as? Outcome.Ok)?.value.orEmpty()
                         if (tree.isNotEmpty()) {
                             working = true
-                            rows = tree.map { d -> workingRow(d.file, d.additions, d.deletions, !d.patch.isNullOrBlank()) }
+                            rows = tree.map { d ->
+                                workingRow(
+                                    d.file,
+                                    d.additions,
+                                    d.deletions,
+                                    !d.patch.isNullOrBlank(),
+                                )
+                            }
                         }
                     }
                     mutable.update {
@@ -126,7 +155,12 @@ public class ChangesPresenter(
         if (s.workingTree) nav.openWorkingTreeFile(path) else nav.openFile(path, staged = false)
     }
 
-    private fun workingRow(path: String, added: Int?, removed: Int?, hasDiff: Boolean): ChangeRowUi {
+    private fun workingRow(
+        path: String,
+        added: Int?,
+        removed: Int?,
+        hasDiff: Boolean,
+    ): ChangeRowUi {
         val name = path.split('/').lastOrNull { it.isNotEmpty() } ?: path
         val folder = path.substringBeforeLast('/', "").takeIf { it.isNotEmpty() }
         return ChangeRowUi(path, name, folder, added, removed, hasDiff)
@@ -136,7 +170,8 @@ public class ChangesPresenter(
 
     override fun undoAll() {
         val s = state.value
-        if (s.undoAll == UndoAllUi.Offered && !s.busy && s.files.isNotEmpty()) mutable.update { it.copy(confirming = true, actionFailure = null) }
+        if (s.undoAll == UndoAllUi.Offered && !s.busy && s.files.isNotEmpty())
+            mutable.update { it.copy(confirming = true, actionFailure = null) }
     }
 
     override fun dismissConfirm() {
@@ -149,7 +184,13 @@ public class ChangesPresenter(
         mutable.update { it.copy(working = true) }
         scope.launch {
             val result = review.stage(from, applyFiles = true, reviewed = basis)
-            mutable.update { it.copy(working = false, confirming = false, actionFailure = (result as? Outcome.Failed)?.failure) }
+            mutable.update {
+                it.copy(
+                    working = false,
+                    confirming = result is Outcome.Failed,
+                    actionFailure = (result as? Outcome.Failed)?.failure,
+                )
+            }
             if (result is Outcome.Ok) {
                 nav.back()
                 nav.openStaged()
@@ -173,7 +214,8 @@ public class ChangesPresenter(
             mutable.update { it.copy(noting = false) }
             return
         }
-        // The note is about these changes: a review comment on the first changed file (Flutter's default file).
+        // The note is about these changes: a review comment on the first changed file (Flutter's
+        // default file).
         val first = set.files.firstOrNull() ?: return mutable.update { it.copy(noting = false) }
         val reference =
             ReviewReference(
@@ -188,13 +230,18 @@ public class ChangesPresenter(
         mutable.update { it.copy(noting = false, working = true) }
         scope.launch {
             val result = port.send(ReviewReference.format(listOf(reference)))
-            mutable.update { it.copy(working = false, sendBackFailure = (result as? Outcome.Failed)?.failure) }
+            mutable.update {
+                it.copy(working = false, sendBackFailure = (result as? Outcome.Failed)?.failure)
+            }
             if (result is Outcome.Ok) nav.back()
         }
     }
 }
 
-/** One file's diff, read again from the turn's records or the staged preview (routes carry ids only). */
+/**
+ * One file's diff, read again from the turn's records or the staged preview (routes carry ids
+ * only).
+ */
 public class FileDiffPresenter(
     private val review: ConversationReview,
     private val path: String,
@@ -217,32 +264,52 @@ public class FileDiffPresenter(
         scope.launch {
             if (workingTree) {
                 when (val read = review.workingTree()) {
-                    is Outcome.Failed -> mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
+                    is Outcome.Failed ->
+                        mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
                     is Outcome.Ok -> {
                         val file = read.value.firstOrNull { it.file == path }
                         mutable.update {
-                            it.copy(load = ReviewLoad.Ready, diff = file, missing = file == null, noDiff = file != null && file.patch.isNullOrBlank())
+                            it.copy(
+                                load = ReviewLoad.Ready,
+                                diff = file,
+                                missing = file == null,
+                                noDiff = file != null && file.patch.isNullOrBlank(),
+                            )
                         }
                     }
                 }
             } else if (staged) {
                 when (val read = review.refresh()) {
-                    is Outcome.Failed -> mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
+                    is Outcome.Failed ->
+                        mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
                     is Outcome.Ok -> {
                         val file = review.state.value.staged?.files?.firstOrNull { it.file == path }
-                        val empty = file != null && file.patch.isNullOrBlank() && file.before == null && file.after == null
-                        mutable.update { it.copy(load = ReviewLoad.Ready, diff = file, missing = file == null, noDiff = empty) }
+                        val empty =
+                            file != null &&
+                                file.patch.isNullOrBlank() &&
+                                file.before == null &&
+                                file.after == null
+                        mutable.update {
+                            it.copy(
+                                load = ReviewLoad.Ready,
+                                diff = file,
+                                missing = file == null,
+                                noDiff = empty,
+                            )
+                        }
                     }
                 }
             } else {
                 when (val read = review.changes(messageId)) {
-                    is Outcome.Failed -> mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
+                    is Outcome.Failed ->
+                        mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
                     is Outcome.Ok -> {
                         val file = read.value.files.firstOrNull { it.path == path }
                         mutable.update {
                             it.copy(
                                 load = ReviewLoad.Ready,
-                                diff = file?.takeIf { f -> f.hasDiff }?.let(TurnChanges::asFileDiff),
+                                diff =
+                                    file?.takeIf { f -> f.hasDiff }?.let(TurnChanges::asFileDiff),
                                 missing = file == null,
                                 noDiff = file != null && !file.hasDiff,
                             )
@@ -264,9 +331,10 @@ public interface UndoFromHereActions {
 }
 
 /**
- * "Undo from this prompt?" (Flutter `showStageRevertSheet`): staged servers hide the prompt and what follows while
- * the person reviews, with "Put files back too"; one-step servers undo at once, so the page is the confirm and lists
- * the files the agent reported editing (B-CHAT-120). A failure keeps the page open with the choice intact.
+ * "Undo from this prompt?" (Flutter `showStageRevertSheet`): staged servers hide the prompt and
+ * what follows while the person reviews, with "Put files back too"; one-step servers undo at once,
+ * so the page is the confirm and lists the files the agent reported editing (B-CHAT-120). A failure
+ * keeps the page open with the choice intact.
  */
 public class UndoFromHerePresenter(
     private val review: ConversationReview,
@@ -275,18 +343,40 @@ public class UndoFromHerePresenter(
     private val scope: CoroutineScope,
 ) : UndoFromHereActions {
     private val shape = review.shape()
-    private val mutable = MutableStateFlow(UndoFromHereUi(staged = shape == UndoShape.Staged, available = shape != UndoShape.Unavailable))
+    private val mutable =
+        MutableStateFlow(
+            UndoFromHereUi(
+                staged = shape == UndoShape.Staged,
+                available = shape != UndoShape.Unavailable,
+            )
+        )
     public val state: StateFlow<UndoFromHereUi> = mutable.asStateFlow()
 
-    /** The undo boundary this page read; another client moving it makes the page stale (B-CHAT-105). */
+    /**
+     * The undo boundary this page read; another client moving it makes the page stale (B-CHAT-105).
+     */
     @kotlin.concurrent.Volatile private var basis: Long? = null
 
     init {
-        scope.launch { review.state.collect { s -> mutable.update { it.copy(block = block(s.running, s.working && !it.working, s.revision, it.block)) } } }
-        if (shape != UndoShape.Unavailable) load() else mutable.update { it.copy(load = ReviewLoad.Ready) }
+        scope.launch {
+            review.state.collect { s ->
+                mutable.update {
+                    it.copy(
+                        block = block(s.running, s.working && !it.working, s.revision, it.block)
+                    )
+                }
+            }
+        }
+        if (shape != UndoShape.Unavailable) load()
+        else mutable.update { it.copy(load = ReviewLoad.Ready) }
     }
 
-    private fun block(running: Boolean, othersWorking: Boolean, revision: Long, was: UndoBlock?): UndoBlock? =
+    private fun block(
+        running: Boolean,
+        othersWorking: Boolean,
+        revision: Long,
+        was: UndoBlock?,
+    ): UndoBlock? =
         when {
             running || othersWorking -> UndoBlock.Busy
             was == UndoBlock.Stale -> UndoBlock.Stale
@@ -297,16 +387,26 @@ public class UndoFromHerePresenter(
     private fun load() {
         scope.launch {
             if (shape == UndoShape.Staged) {
-                review.refresh() // the boundary this page is about; a failed read leaves it as it was
+                review
+                    .refresh() // the boundary this page is about; a failed read leaves it as it was
                 basis = review.basis()
             }
             when (val prompt = review.prompt(promptId)) {
-                is Outcome.Failed -> mutable.update { it.copy(load = ReviewLoad.Ready, promptUnavailable = true) }
-                is Outcome.Ok -> mutable.update { it.copy(load = ReviewLoad.Ready, prompt = prompt.value, promptUnavailable = prompt.value == null) }
+                is Outcome.Failed ->
+                    mutable.update { it.copy(load = ReviewLoad.Ready, promptUnavailable = true) }
+                is Outcome.Ok ->
+                    mutable.update {
+                        it.copy(
+                            load = ReviewLoad.Ready,
+                            prompt = prompt.value,
+                            promptUnavailable = prompt.value == null,
+                        )
+                    }
             }
             if (shape == UndoShape.OneStep) {
                 val count = (review.messagesAfter(promptId) as? Outcome.Ok)?.value
-                val edited = (review.editedAfter(promptId) as? Outcome.Ok)?.value ?: persistentListOf()
+                val edited =
+                    (review.editedAfter(promptId) as? Outcome.Ok)?.value ?: persistentListOf()
                 mutable.update { it.copy(messagesAfter = count, edited = edited) }
             }
         }
@@ -323,8 +423,12 @@ public class UndoFromHerePresenter(
         if (s.working || s.block != null || !s.available || s.promptUnavailable) return
         mutable.update { it.copy(working = true, failure = null) }
         scope.launch {
-            val result: Outcome<*> = if (s.staged) review.stage(promptId, s.applyFiles, reviewed = basis) else review.undoNow(promptId)
-            val stale = ((result as? Outcome.Failed)?.failure as? Failure.Refused)?.reason == RefusalReason.StaleScope
+            val result: Outcome<*> =
+                if (s.staged) review.stage(promptId, s.applyFiles, reviewed = basis)
+                else review.undoNow(promptId)
+            val stale =
+                ((result as? Outcome.Failed)?.failure as? Failure.Refused)?.reason ==
+                    RefusalReason.StaleScope
             mutable.update {
                 it.copy(
                     working = false,
@@ -361,9 +465,10 @@ public interface StagedActions {
 }
 
 /**
- * "Review the undo" (Flutter `StagedRevertScreen`): the prompt it starts from, the files the server lists for it
- * (each opens its diff), "Put everything back" (primary) and the destructive "Delete the hidden messages". The page
- * reviews one point-in-time state; a change on the server makes it stale until "Review latest state" (B-CHAT-105).
+ * "Review the undo" (Flutter `StagedRevertScreen`): the prompt it starts from, the files the server
+ * lists for it (each opens its diff), "Put everything back" (primary) and the destructive "Delete
+ * the hidden messages". The page reviews one point-in-time state; a change on the server makes it
+ * stale until "Review latest state" (B-CHAT-105).
  */
 public class StagedPresenter(
     private val review: ConversationReview,
@@ -379,8 +484,16 @@ public class StagedPresenter(
         scope.launch {
             review.state.collect { s ->
                 mutable.update { ui ->
-                    val stale = ui.phase == StagedPhase.Review && !acting && reviewed?.let(review::isCurrent) == false
-                    ui.copy(busy = s.running || s.working, title = s.title, phase = if (stale) StagedPhase.Stale else ui.phase, confirm = if (stale) null else ui.confirm)
+                    val stale =
+                        ui.phase == StagedPhase.Review &&
+                            !acting &&
+                            reviewed?.let(review::isCurrent) == false
+                    ui.copy(
+                        busy = s.running || s.working,
+                        title = s.title,
+                        phase = if (stale) StagedPhase.Stale else ui.phase,
+                        confirm = if (stale) null else ui.confirm,
+                    )
                 }
             }
         }
@@ -405,7 +518,16 @@ public class StagedPresenter(
             mutable.update { it.copy(phase = StagedPhase.None, files = null) }
             return
         }
-        mutable.update { it.copy(phase = StagedPhase.Review, files = current.revert.files, prompt = null, promptUnavailable = false, messagesAfter = null, failure = null) }
+        mutable.update {
+            it.copy(
+                phase = StagedPhase.Review,
+                files = current.revert.files,
+                prompt = null,
+                promptUnavailable = false,
+                messagesAfter = null,
+                failure = null,
+            )
+        }
         val id = current.revert.messageId.raw
         val prompt = review.prompt(id)
         val count = (review.messagesAfter(id) as? Outcome.Ok)?.value
@@ -431,11 +553,13 @@ public class StagedPresenter(
     }
 
     override fun askKeep() {
-        if (state.value.phase == StagedPhase.Review && !state.value.busy) mutable.update { it.copy(confirm = StagedConfirm.Keep, failure = null) }
+        if (state.value.phase == StagedPhase.Review && !state.value.busy)
+            mutable.update { it.copy(confirm = StagedConfirm.Keep, failure = null) }
     }
 
     override fun askPutBack() {
-        if (state.value.phase == StagedPhase.Review && !state.value.busy) mutable.update { it.copy(confirm = StagedConfirm.PutBack, failure = null) }
+        if (state.value.phase == StagedPhase.Review && !state.value.busy)
+            mutable.update { it.copy(confirm = StagedConfirm.PutBack, failure = null) }
     }
 
     override fun dismissConfirm() {
@@ -449,14 +573,30 @@ public class StagedPresenter(
         acting = true
         mutable.update { it.copy(working = true) }
         scope.launch {
-            val result = if (choice == StagedConfirm.Keep) review.keep(target) else review.putBack(target)
+            val result =
+                if (choice == StagedConfirm.Keep) review.keep(target) else review.putBack(target)
             acting = false
             when (result) {
                 is Outcome.Ok ->
-                    mutable.update { it.copy(working = false, confirm = null, phase = if (choice == StagedConfirm.Keep) StagedPhase.Kept else StagedPhase.Restored) }
+                    mutable.update {
+                        it.copy(
+                            working = false,
+                            confirm = null,
+                            phase =
+                                if (choice == StagedConfirm.Keep) StagedPhase.Kept
+                                else StagedPhase.Restored,
+                        )
+                    }
                 is Outcome.Failed -> {
                     val stale = !review.isCurrent(target)
-                    mutable.update { it.copy(working = false, confirm = null, failure = result.failure, phase = if (stale) StagedPhase.Stale else it.phase) }
+                    mutable.update {
+                        it.copy(
+                            working = false,
+                            confirm = null,
+                            failure = result.failure,
+                            phase = if (stale) StagedPhase.Stale else it.phase,
+                        )
+                    }
                 }
             }
         }
