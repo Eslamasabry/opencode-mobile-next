@@ -319,8 +319,7 @@ internal fun classifyRuntime(e: Throwable): Failure {
             message == "ownershipUnknown" || message == "ownership_unknown" ->
                 RuntimeProblem.OwnershipUnknown
             // SetupRunner.start: the durable setup journal could not be written (B-LINUX-208).
-            e is SetupPersistenceException ->
-                RuntimeProblem.SetupPersistence
+            e is SetupPersistenceException -> RuntimeProblem.SetupPersistence
             message.startsWith("Another phone task") -> RuntimeProblem.SlotBusy
             message.startsWith("Ubuntu is not installed") -> RuntimeProblem.NotInstalled
             message.startsWith("Finish or cancel setup") -> RuntimeProblem.Installing
@@ -1202,6 +1201,7 @@ internal constructor(
             val ack = mutation { linux.ackServerRecoveryReceipt(id, event) }
             if (ack is Outcome.Failed) return ack
         }
+        var freshInverse: (suspend () -> Boolean)? = null
         var budget =
             when (val read = blocking { linux.serverRecoveryBudget(id) }) {
                 is Outcome.Failed -> return read
@@ -1243,6 +1243,26 @@ internal constructor(
                             )
                     val confirmed = mutation { linux.confirmServerRecovery(generation) }
                     if (confirmed is Outcome.Failed) return confirmed
+                    // Only this foreground confirmation may grant a process-local inverse.
+                    // Archived receipts and confirmations restored after restart never do.
+                    if (
+                        (blocking { linux.canUndoConfirmedServerRecovery(id, generation) }
+                                as? Outcome.Ok)
+                            ?.value == true
+                    ) {
+                        freshInverse = {
+                            val stopped =
+                                withContext(io) {
+                                    linux.undoConfirmedServerRecovery(id, generation)
+                                }
+                            if (stopped) {
+                                actionEpoch++
+                                statusRevision.incrementAndGet()
+                                scope.launch { refreshNow() }
+                            }
+                            stopped
+                        }
+                    }
                     when (
                         val saved = mutation {
                             linux.updateServerRecoveryReceipt(
@@ -1262,7 +1282,7 @@ internal constructor(
             val event =
                 budget["eventId"] as? String
                     ?: return Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
-            val saved = acts.recordRestart(id, event, confirmedAt)
+            val saved = acts.recordRestart(id, event, confirmedAt, undo = freshInverse)
             if (saved is Outcome.Failed) return saved
             val finished =
                 budget +
@@ -1344,7 +1364,10 @@ internal constructor(
         }
     }
 
-    /** BUILD-RUNTIME-B: the setup job's finish step starts or re-reads the server through the one lane. */
+    /**
+     * BUILD-RUNTIME-B: the setup job's finish step starts or re-reads the server through the one
+     * lane.
+     */
     suspend fun startServer(): Outcome<Unit> = startNow()
 
     suspend fun refreshServer() = refreshNow()
