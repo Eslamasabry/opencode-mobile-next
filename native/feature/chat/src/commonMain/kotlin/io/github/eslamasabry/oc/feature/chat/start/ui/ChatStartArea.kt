@@ -80,7 +80,7 @@ public fun ChatStartArea(
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
         Column(
             Modifier.fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState(), reverseScrolling = true)
                 .padding(vertical = Space.S4.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {

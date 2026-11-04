@@ -118,6 +118,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitComposerSending
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStopShort
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import io.github.eslamasabry.oc.ui.words.res.promptHistorySaveFailed
+import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
@@ -221,7 +222,7 @@ public fun BasicComposer(
         val request = insert ?: return@LaunchedEffect
         if (!editorReady || !state.draft.ready) return@LaunchedEffect
         val current = field.text.toString()
-        if (request.onlyIfEmpty && (current.isNotEmpty() || state.draft.attachments.isNotEmpty())) {
+        if (request.onlyIfEmpty && (current.isNotBlank() || state.draft.attachments.isNotEmpty())) {
             chrome.insertDone(request.id)
             return@LaunchedEffect
         }
@@ -288,10 +289,17 @@ public fun BasicComposer(
         actions.draftChanged(now)
     }
     Column(modifier) {
-        if (history.saveFailure != null)
+        // A one-off note, as in Flutter: dismissing hides this failure until a new one arrives.
+        var dismissedSave by remember { mutableStateOf<Failure?>(null) }
+        if (history.saveFailure != null && history.saveFailure !== dismissedSave)
             KitNotice(
                 message = stringResource(Res.string.promptHistorySaveFailed),
                 tone = StatusTone.Failure,
+                dismiss =
+                    KitLineAction(
+                        stringResource(Res.string.workspaceDismissNotice),
+                        { dismissedSave = history.saveFailure },
+                    ),
                 modifier = Modifier.testTag("prompt-history-save-failed"),
             )
         if (state.draft.failure != null || state.draft.sendBlocked) {

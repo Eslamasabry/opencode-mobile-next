@@ -73,7 +73,9 @@ public class ChatEntries(
                     state.rows.isEmpty() &&
                     state.pending.isEmpty() &&
                     state.live == null
-            LaunchedEffect(emptyChat) { startVm.visible(emptyChat) }
+            // Older history can finish loading after the chat turned empty; re-check then too.
+            val startVisible = emptyChat && start.emptyEligible
+            LaunchedEffect(startVisible) { startVm.visible(startVisible) }
             val requests by vm.requests.collectAsStateWithLifecycle()
             val slot =
                 requests?.state?.collectAsStateWithLifecycle()?.value

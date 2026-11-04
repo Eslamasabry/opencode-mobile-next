@@ -388,7 +388,10 @@ public class ChatPresenter(
                             it.state == PendingState.Unconfirmed
                     }
                 val failure = (looked as? Outcome.Failed)?.failure
-                val stale = failure is Failure.Refused && failure.reason == RefusalReason.StaleScope
+                // Busy: another check of this bubble is already running and will announce its answer.
+                val stale =
+                    (failure is Failure.Refused && failure.reason == RefusalReason.StaleScope) ||
+                        failure is Failure.Busy
                 // The world may remove a confirmed bubble. Any other vanished/replaced target has
                 // nothing to announce.
                 val confirmed = looked is Outcome.Ok && looked.value
