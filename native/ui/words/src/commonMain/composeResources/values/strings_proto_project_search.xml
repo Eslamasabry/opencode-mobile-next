@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="protoProjectTools">Server project tools</string>
+    <string name="protoWorking">Working…</string>
+    <string name="protoGitInitialized">This folder is a Git repository.</string>
+    <string name="protoWorktreeCreated">The worktree is ready in the folder below.</string>
+    <string name="protoShellSaved">Default shell saved.</string>
+    <string name="protoGitInitialize">Initialize Git in this folder</string>
+    <string name="protoWorktreeName">New worktree name</string>
+    <string name="protoWorktreeCreate">Create worktree</string>
+    <string name="protoShellTitle">Default terminal shell</string>
+    <string name="protoShellDefault">Use the server default</string>
+    <string name="protoShellUnavailable">This shell cannot be used on this server.</string>
+    <string name="protoWebSearch">Search the web</string>
+    <string name="protoWebSearchHelp">Search with this server’s provider. Searches stay out of conversation history.</string>
+    <string name="protoWebUnavailable">Web search is unavailable on this server.</string>
+    <string name="protoWebFailed">Web search could not be completed. Retry the provider list or search again.</string>
+    <string name="protoWebQuery">Web search query</string>
+    <string name="protoWebProvider">Search provider</string>
+    <string name="protoWebEmpty">No web results were returned.</string>
+    <string name="protoWebOpenQuestion">Open %1$s in your browser?</string>
+    <string name="protoWebOpenBrowser">Open browser</string>
+    <string name="protoWebInsecure">This link uses an unencrypted connection.</string>
+    <string name="protoWebLeaveApp">This opens a website outside the app.</string>
+    <string name="protoGitToolsFailed">That did not work. Check the server and try again.</string>
+    <string name="protoPairingCheck">%1$s: %2$s</string>
+</resources>

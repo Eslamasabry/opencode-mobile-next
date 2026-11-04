@@ -79,6 +79,7 @@ dependencies {
             ":core:model",
             ":core:domain",
             ":engine:connection",
+            ":engine:attention",
             ":engine:transcript",
             ":ui:design",
             ":ui:words",
@@ -152,7 +153,10 @@ dependencies {
             ":engine:lifecycle", // P12-BUILD-RUNTIME-C: this-phone mark and lifecycle rules
             ":feature:phonesetup", // P12-BUILD-RUNTIME-C: Set up OpenCode on this phone
             ":feature:diagnostics", // BUILD-DIAGNOSTICS-ATTENTION
-            ":feature:devservices", // BUILD-RUNTIME-A: Development services (commands, servers)
+            ":feature:devservices", // BUILD-RUNTIME-A: Development services (saved commands, dev
+            // servers found)
+            ":engine:integrations-catalog",
+            ":engine:integrations-quota",
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
             ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
         )

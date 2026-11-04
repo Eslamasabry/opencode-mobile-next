@@ -74,12 +74,18 @@ import io.github.eslamasabry.oc.ui.words.res.p12SearchTryAgain
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Search conversations (map `search`, plan 07 B12 search-first): the field under the bar, the server as chips when
- * there are several, "Also search inside recent conversations" as a visible switch row, then recent searches (empty
- * field) or results: Titles first, then Inside conversations with the matching words. Kit parts only.
+ * Search conversations (map `search`, plan 07 B12 search-first): the field under the bar, the
+ * server as chips when there are several, "Also search inside recent conversations" as a visible
+ * switch row, then recent searches (empty field) or results: Titles first, then Inside
+ * conversations with the matching words. Kit parts only.
  */
 @Composable
-public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFieldState = rememberTextFieldState(state.query)) {
+public fun SearchScreen(
+    state: SearchUi,
+    actions: SearchActions,
+    field: TextFieldState = rememberTextFieldState(state.query),
+    webSearch: @Composable () -> Unit = {},
+) {
     val gutter = LocalKitTokens.current.gutter
     KitScreen(
         topBar = {
@@ -127,6 +133,7 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFiel
                     }
                 }
             }
+            item(key = "web-search") { webSearch() }
             if (state.phase != SearchPhase.NoServer) {
                 item(key = "inside") {
                     KitSwitchRow(
@@ -138,7 +145,9 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFiel
                 }
             }
             if (state.recentFailed) {
-                item(key = "recent-failed") { KitNotice(stringResource(Res.string.p12SearchRecentFailed)) }
+                item(key = "recent-failed") {
+                    KitNotice(stringResource(Res.string.p12SearchRecentFailed))
+                }
             }
             when (state.phase) {
                 SearchPhase.NoServer ->
@@ -147,7 +156,11 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFiel
                             kind = KitStateKind.Missing,
                             title = stringResource(Res.string.p12SearchNoServerTitle),
                             body = stringResource(Res.string.p12SearchNoServerBody),
-                            primary = KitAction(stringResource(Res.string.p12SearchOpenServers), actions::openServers),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.p12SearchOpenServers),
+                                    actions::openServers,
+                                ),
                         )
                     }
                 SearchPhase.Idle -> recent(state, actions, field)
@@ -160,7 +173,11 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFiel
                             failure = state.failure,
                             detailsLabel = stringResource(Res.string.kitDetails),
                             copyLabel = stringResource(Res.string.kitCopyDetails),
-                            retry = KitLineAction(stringResource(Res.string.p12SearchTryAgain), actions::retry),
+                            retry =
+                                KitLineAction(
+                                    stringResource(Res.string.p12SearchTryAgain),
+                                    actions::retry,
+                                ),
                         )
                     }
                 SearchPhase.NoMatch -> {
@@ -171,12 +188,17 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFiel
                             what = stringResource(Res.string.p12SearchConversationsWhat),
                         )
                     }
-                    // Nothing matched on the pages read so far, but the server has more: keep the way on.
+                    // Nothing matched on the pages read so far, but the server has more: keep the
+                    // way on.
                     more(state, actions)
                 }
                 SearchPhase.Results -> results(state, actions)
             }
-            if (state.phase == SearchPhase.Results || state.phase == SearchPhase.NoMatch || state.phase == SearchPhase.Searching) {
+            if (
+                state.phase == SearchPhase.Results ||
+                    state.phase == SearchPhase.NoMatch ||
+                    state.phase == SearchPhase.Searching
+            ) {
                 when (state.content) {
                     ContentPhase.Searching ->
                         item(key = "inside-reading") {
@@ -187,7 +209,9 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions, field: TextFiel
                             )
                         }
                     ContentPhase.Failed ->
-                        item(key = "inside-failed") { KitNotice(stringResource(Res.string.p12SearchInsideFailed)) }
+                        item(key = "inside-failed") {
+                            KitNotice(stringResource(Res.string.p12SearchInsideFailed))
+                        }
                     ContentPhase.Off,
                     ContentPhase.Done -> Unit
                 }
@@ -250,7 +274,9 @@ private fun LazyListScope.results(state: SearchUi, actions: SearchActions) {
     }
     more(state, actions)
     if (state.contentHits.isNotEmpty()) {
-        item(key = "inside-label") { KitSectionLabel(stringResource(Res.string.p12SearchInsideSection)) }
+        item(key = "inside-label") {
+            KitSectionLabel(stringResource(Res.string.p12SearchInsideSection))
+        }
         items(state.contentHits, key = { "c/" + it.key }) { HitRow(it, actions) }
     }
 }
@@ -261,7 +287,13 @@ private fun LazyListScope.more(state: SearchUi, actions: SearchActions) {
         item(key = "more-failed") {
             KitNotice(
                 stringResource(Res.string.globalSessionsLoadMoreFailed),
-                actions = listOf(KitLineAction(stringResource(Res.string.p12SearchTryAgain), actions::loadMore)),
+                actions =
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.p12SearchTryAgain),
+                            actions::loadMore,
+                        )
+                    ),
             )
         }
     } else if (state.canLoadMore) {
@@ -278,12 +310,18 @@ private fun LazyListScope.more(state: SearchUi, actions: SearchActions) {
 
 @Composable
 private fun HitRow(hit: SearchHitUi, actions: SearchActions) {
-    val title = hit.title?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.globalSessionsUntitled)
+    val title =
+        hit.title?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.globalSessionsUntitled)
     val snippet =
         hit.snippet?.let {
-            // The excerpt is the person's or the agent's own words: isolate it so it never reorders the line.
+            // The excerpt is the person's or the agent's own words: isolate it so it never reorders
+            // the line.
             val words = "⁨$it⁩"
-            stringResource(if (hit.snippetFromYou) Res.string.p12SearchFromYou else Res.string.p12SearchFromAgent, words)
+            stringResource(
+                if (hit.snippetFromYou) Res.string.p12SearchFromYou
+                else Res.string.p12SearchFromAgent,
+                words,
+            )
         }
     KitRow(
         title = title,

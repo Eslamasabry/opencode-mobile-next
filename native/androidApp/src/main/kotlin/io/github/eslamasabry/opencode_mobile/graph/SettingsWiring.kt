@@ -83,8 +83,10 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
+import io.github.eslamasabry.oc.ui.routes.ProvidersRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
+import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.routes.VoiceRoute
 import io.github.eslamasabry.oc.ui.shell.nav.SystemMotion
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -257,6 +259,20 @@ class AndroidSettingsHost(
     override val openers: SettingsOpeners = SettingsOpeners { place ->
         when (place) {
             SettingsOutside.Servers -> nav.open(ServersRoute.Home)
+            SettingsOutside.Tools,
+            SettingsOutside.Providers -> {
+                val live = connections.servers.value
+                val active = stores.profiles.activeId.value
+                val target =
+                    live.firstOrNull { it.id == active && it.connected }
+                        ?: live.firstOrNull { it.connected }
+                if (target != null) {
+                    nav.open(
+                        if (place == SettingsOutside.Providers) ProvidersRoute(target.id)
+                        else ToolsRoute(target.id)
+                    )
+                } else nav.open(ServersRoute.Home)
+            }
             SettingsOutside.StarOnGitHub -> application.view(REPO)
             SettingsOutside.WhatsNew,
             SettingsOutside.ReleaseNotes -> application.view("$REPO/releases")
@@ -376,6 +392,8 @@ class AndroidSettingsHost(
                 SettingsOutside.ReportOnGitHub,
                 SettingsOutside.KeptDiagnostics,
                 SettingsOutside.KeepRunning,
+                SettingsOutside.Tools,
+                SettingsOutside.Providers,
             )
     }
 }

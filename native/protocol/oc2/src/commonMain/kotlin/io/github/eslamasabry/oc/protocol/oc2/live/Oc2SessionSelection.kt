@@ -29,7 +29,9 @@ internal object Oc2SessionSelection {
     /** null / "" / "default" all mean: no variant (B-PROTO-018). */
     fun variant(wire: String?): String =
         when (wire) {
-            null, "", "default" -> ""
+            null,
+            "",
+            "default" -> ""
             else -> wire
         }
 
@@ -49,27 +51,44 @@ internal object Oc2SessionSelection {
             agentKnown = true,
         )
 
-    /** `POST /session/{id}/model` body: `{model:{id, providerID, variant?}}`, variant omitted when empty. */
-    fun modelBody(model: ModelRef, variant: String): JsonObject =
-        buildJsonObject {
-            put(
-                "model",
-                buildJsonObject {
-                    put("id", model.modelId)
-                    put("providerID", model.providerId)
-                    sendableVariant(variant)?.let { put("variant", it) }
-                },
-            )
-        }
+    /**
+     * `POST /session/{id}/model` body: `{model:{id, providerID, variant?}}`, variant omitted when
+     * empty.
+     */
+    fun modelBody(model: ModelRef, variant: String): JsonObject = buildJsonObject {
+        put(
+            "model",
+            buildJsonObject {
+                put(
+                    "id",
+                    model.modelId.removePrefix("${model.providerId}/").takeIf { it.isNotEmpty() }
+                        ?: model.modelId,
+                )
+                put("providerID", model.providerId)
+                sendableVariant(variant)?.let { put("variant", it) }
+            },
+        )
+    }
 
-    /** The id the app selects, sends and compares a model by: the server's own row id, peeled of its own provider prefix. */
+    /**
+     * The id the app selects, sends and compares a model by: the server's own row id, peeled of its
+     * own provider prefix.
+     */
     fun catalogModelId(model: Oc2ModelInfo): String {
         val provider = model.providerID
-        if (provider != null && model.id.startsWith("$provider/")) return model.id.substring(provider.length + 1)
+        if (
+            !provider.isNullOrEmpty() &&
+                model.id.startsWith("$provider/") &&
+                model.id.length > provider.length + 1
+        )
+            return model.id.substring(provider.length + 1)
         return model.id
     }
 
-    /** A mode's name, told apart from its base model: "Name · mode" unless the name already carries the mode. */
+    /**
+     * A mode's name, told apart from its base model: "Name · mode" unless the name already carries
+     * the mode.
+     */
     private fun catalogModelName(model: Oc2ModelInfo): String {
         val id = catalogModelId(model)
         val name = model.name ?: id
@@ -79,7 +98,9 @@ internal object Oc2SessionSelection {
         return if (name.lowercase().contains(mode.lowercase())) name else "$name · $mode"
     }
 
-    /** Safe display metadata only: no raw provider config is kept or returned (mapApi2CatalogModel). */
+    /**
+     * Safe display metadata only: no raw provider config is kept or returned (mapApi2CatalogModel).
+     */
     fun catalogModel(model: Oc2ModelInfo): CatalogModel =
         CatalogModel(
             id = catalogModelId(model),
@@ -135,9 +156,9 @@ internal object Oc2SessionSelection {
         )
 
     /**
-     * `GET /model/default` row to a bare ref; a row without a provider id names no default. The id is
-     * the catalog row's own ([catalogModelId]): a mode row (`gpt-5-high` over base `gpt-5`) is its own
-     * choice, so the default must name the row the picker shows, never the base `modelID`.
+     * `GET /model/default` row to a bare ref; a row without a provider id names no default. The id
+     * is the catalog row's own ([catalogModelId]): a mode row (`gpt-5-high` over base `gpt-5`) is
+     * its own choice, so the default must name the row the picker shows, never the base `modelID`.
      */
     fun defaultModelRef(info: Oc2ModelInfo?): ModelRef? {
         if (info == null) return null

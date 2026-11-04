@@ -1,0 +1,5 @@
+<resources>
+    <string name="serversInspectSetup">فحص الإعداد</string>
+    <string name="serversPairingAnswered">استجاب الخادم. تحقّق من تسجيل الدخول أو حالته قبل الاتصال.</string>
+    <string name="serversRemoteTerminal">الطرفية</string>
+</resources>

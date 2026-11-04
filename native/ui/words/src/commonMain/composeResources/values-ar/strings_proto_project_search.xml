@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="protoProjectTools">أدوات مشروع الخادم</string>
+    <string name="protoWorking">جارٍ التنفيذ…</string>
+    <string name="protoGitInitialized">هذا المجلد مستودع Git.</string>
+    <string name="protoWorktreeCreated">شجرة العمل جاهزة في المجلد أدناه.</string>
+    <string name="protoShellSaved">تم حفظ الصدفة الافتراضية.</string>
+    <string name="protoGitInitialize">تهيئة Git في هذا المجلد</string>
+    <string name="protoWorktreeName">اسم شجرة العمل الجديدة</string>
+    <string name="protoWorktreeCreate">إنشاء شجرة عمل</string>
+    <string name="protoShellTitle">صدفة الطرفية الافتراضية</string>
+    <string name="protoShellDefault">استخدام الإعداد الافتراضي للخادم</string>
+    <string name="protoShellUnavailable">لا يمكن استخدام هذه الصدفة على هذا الخادم.</string>
+    <string name="protoWebSearch">البحث في الويب</string>
+    <string name="protoWebSearchHelp">ابحث باستخدام موفّر هذا الخادم. لا تُحفظ عمليات البحث في سجل المحادثات.</string>
+    <string name="protoWebUnavailable">البحث في الويب غير متاح على هذا الخادم.</string>
+    <string name="protoWebFailed">تعذّر إكمال البحث في الويب. أعد تحميل قائمة الموفّرين أو ابحث مجددًا.</string>
+    <string name="protoWebQuery">عبارة البحث في الويب</string>
+    <string name="protoWebProvider">موفّر البحث</string>
+    <string name="protoWebEmpty">لم تُرجع أي نتائج من الويب.</string>
+    <string name="protoWebOpenQuestion">هل تريد فتح %1$s في المتصفح؟</string>
+    <string name="protoWebOpenBrowser">فتح المتصفح</string>
+    <string name="protoWebInsecure">يستخدم هذا الرابط اتصالًا غير مشفّر.</string>
+    <string name="protoWebLeaveApp">سيفتح هذا موقعًا خارج التطبيق.</string>
+    <string name="protoGitToolsFailed">لم ينجح ذلك. تحقّق من الخادم ثم حاول مرة أخرى.</string>
+    <string name="protoPairingCheck">%1$s: %2$s</string>
+</resources>

@@ -1,0 +1,31 @@
+<resources>
+    <string name="remoteTerminalTitle">Terminal</string>
+    <string name="remoteTerminalWorking">Working…</string>
+    <string name="remoteTerminalUnavailable">Connect to a server that supports terminals to use this page.</string>
+    <string name="remoteTerminalFailed">The terminal could not be reached. Reconnect to the server and try again.</string>
+    <string name="remoteTerminalInputUncertain">The connection stopped while sending input. Check the terminal before sending it again.</string>
+    <string name="remoteTerminalIntro">Commands run on this server. Leaving this page disconnects the view; use End terminal to stop its shell.</string>
+    <string name="remoteTerminalCreate">New terminal</string>
+    <string name="remoteTerminalRefresh">Refresh</string>
+    <string name="remoteTerminalEmpty">No terminals yet.</string>
+    <string name="remoteTerminalRunning">Running</string>
+    <string name="remoteTerminalEnded">Ended</string>
+    <string name="remoteTerminalList">All terminals</string>
+    <string name="remoteTerminalDisconnect">Disconnect</string>
+    <string name="remoteTerminalReconnect">Reconnect</string>
+    <string name="remoteTerminalEnd">End terminal</string>
+    <string name="remoteTerminalDisconnected">Disconnected. Reconnect to continue reading this terminal.</string>
+    <string name="remoteTerminalInputOff">Reconnect to send terminal input.</string>
+    <string name="remoteTerminalInterrupt">Interrupt (Ctrl-C)</string>
+    <string name="remoteTerminalEndInput">End input (Ctrl-D)</string>
+    <string name="remoteTerminalEscape">Escape</string>
+    <string name="remoteTerminalTab">Tab</string>
+    <string name="remoteTerminalReadable">Readable terminal</string>
+    <string name="remoteTerminalTranscript">Terminal output</string>
+    <string name="remoteTerminalNoOutput">No terminal output yet.</string>
+    <string name="remoteTerminalInput">Send to terminal</string>
+    <string name="remoteTerminalSend">Send</string>
+    <string name="remoteTerminalEndQuestion">End this terminal?</string>
+    <string name="remoteTerminalEndBody">This stops the remote shell and anything running inside it.</string>
+    <string name="remoteTerminalKeep">Keep terminal</string>
+</resources>

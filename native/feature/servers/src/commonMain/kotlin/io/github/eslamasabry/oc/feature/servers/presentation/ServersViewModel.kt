@@ -94,11 +94,14 @@ public class ServersViewModel(
 
     private fun choose(fill: PairingFill) {
         val generation = ++choosing
-        if (probe === NoPairingProbe || fill.candidates.size < 2) return publish(fill)
+        if (probe === NoPairingProbe || fill.fromLink) return publish(fill)
         viewModelScope.launch {
-            val chosen = PairingChoice.choose(fill.candidates, probe)
-            if (generation == choosing)
+            val checks = PairingChoice.inspect(fill.candidates, probe, fill.credentials())
+            if (generation == choosing) {
+                local.update { it.copy(pairingChecks = checks.outcomes) }
+                val chosen = checks.chosen
                 publish(if (chosen == null || chosen == fill.address) fill else fill.at(chosen))
+            }
         }
     }
 
@@ -223,7 +226,14 @@ public class ServersViewModel(
             local.update { it.copy(pairingProblem = (read as? PairingRead.Problem)?.problem) }
             return
         }
-        local.update { it.copy(pairingProblem = null, issue = null, failure = null) }
+        local.update {
+            it.copy(
+                pairingProblem = null,
+                pairingChecks = kotlinx.collections.immutable.persistentListOf(),
+                issue = null,
+                failure = null,
+            )
+        }
         pairing.put(fill)
     }
 

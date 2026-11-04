@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.engine.profiles.DeletionStep
 import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansSource
 import io.github.eslamasabry.opencode_mobile.UsageWidgetProvider
+import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,7 +39,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.time.Clock
 
 /*
  * Unit P12-BUILD-INTEGRATIONS-B: Usage › Plans on Android. The subscriptions engine (`:engine:integrations-usage`) is
@@ -46,9 +46,7 @@ import kotlin.time.Clock
  * widget feed live in the app's preference store under the Flutter keys, so the Usage widget draws them. Nothing
  * here switches the active server or replays a request.
  *
- * Not wired yet (engines exist, adapters do not): the in-app Ubuntu quota collector (`:engine:integrations-quota`
- * needs an OkHttp QuotaTransport), Paseo/phone usage lists (PaseoUsageMonitor needs the Paseo usage call) and the
- * alert delivery bridge.
+ * The strict collector reader supplies existing, consented quota windows; no arbitrary remote collector is probed.
  */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<PlansSource>())
@@ -58,6 +56,7 @@ class AndroidPlansSource(
     private val stores: PreviewStores,
     private val application: Application,
     private val clock: Clock,
+    private val quota: ProtoQuotaSource,
     appScope: AppCoroutineScope,
 ) : PlansSource {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -69,53 +68,76 @@ class AndroidPlansSource(
     private fun openCodeServers() =
         registry.live.value.filter { (_, graph) -> graph.profile.backend == BackendKind.OpenCode2 }
 
-    /** Built after the preference store is ready (the engine reads its cache in its constructor). */
-    private suspend fun engine(): UsageSubscriptionsEngine? =
-        creating.withLock {
-            engine?.let { return@withLock it }
-            if (stores.warm() !is Outcome.Ok) return@withLock null
-            // B-STATE-068: the retired Remaining-page quota budgets go on load.
-            RetiredQuotaBudgets.dropAll(stores.prefs, stores.lanes.app)
-            val signIns =
-                OpenCodeSignInSource(
-                    servers = { openCodeServers().keys.map { SignInServer(it.raw, isOpenCode = true) } },
-                    isReadable = { id -> registry.live.value[ProfileId(id)] != null },
-                    providers = { server ->
-                        val gateway = registry.live.value[ProfileId(server.id)]?.session?.server
-                        gateway?.providers()?.map { response -> response.providers.map { ConnectedProvider(it.id, it.name) } }
-                            ?: Failure.Refused(RefusalReason.StaleScope).failed()
-                    },
-                )
-            val widget =
-                UsageWidgetFeed(
-                    store = stores.prefs,
-                    lane = stores.lanes.app,
-                    isAndroid = true,
-                    refreshNative = { UsageWidgetProvider.refreshAll(application) },
-                    clock = { clock.now() },
-                )
-            UsageSubscriptionsEngine(
+    /**
+     * Built after the preference store is ready (the engine reads its cache in its constructor).
+     */
+    private suspend fun engine(): UsageSubscriptionsEngine? = creating.withLock {
+        engine?.let {
+            return@withLock it
+        }
+        if (stores.warm() !is Outcome.Ok) return@withLock null
+        // B-STATE-068: the retired Remaining-page quota budgets go on load.
+        RetiredQuotaBudgets.dropAll(stores.prefs, stores.lanes.app)
+        val signIns =
+            OpenCodeSignInSource(
+                servers = {
+                    openCodeServers().keys.map {
+                        SignInServer(
+                            it.raw,
+                            isOpenCode = true,
+                            requiresPasswordReentry =
+                                stores.profiles.profile(it)?.reentry?.password != false,
+                        )
+                    }
+                },
+                isReadable = { id -> registry.live.value[ProfileId(id)] != null },
+                providers = { server ->
+                    val gateway = registry.live.value[ProfileId(server.id)]?.session?.server
+                    gateway?.providers()?.map { response ->
+                        response.providers.map { ConnectedProvider(it.id, it.name) }
+                    } ?: Failure.Refused(RefusalReason.StaleScope).failed()
+                },
+            )
+        val widget =
+            UsageWidgetFeed(
+                store = stores.prefs,
+                lane = stores.lanes.app,
+                isAndroid = true,
+                refreshNative = { UsageWidgetProvider.refreshAll(application) },
+                clock = { clock.now() },
+            )
+        UsageSubscriptionsEngine(
                 store = stores.prefs,
                 lane = stores.lanes.app,
                 connections = {
-                    openCodeServers().map { (id, graph) -> UsageConnection(id.raw, graph.profile.name, UsageConnectionKind.OpenCodeServer) }
+                    openCodeServers().map { (id, graph) ->
+                        UsageConnection(
+                            id.raw,
+                            graph.profile.name,
+                            UsageConnectionKind.OpenCodeServer,
+                        )
+                    }
                 },
-                sources = listOf(signIns),
+                sources = listOf(signIns, quota),
                 alertsOnRule = { false },
                 setQuotaAlerts = {},
                 widget = widget,
                 clock = { clock.now() },
-            ).also { created ->
+            )
+            .also { created ->
                 engine = created
                 scope.launch { created.snapshot.collect { state.value = it } }
             }
-        }
+    }
 
     override suspend fun refresh() {
         engine()?.refresh()
     }
 
-    /** B-SEC-178: a removed server takes its cached numbers, its overrides and its widget rows along. */
+    /**
+     * B-SEC-178: a removed server takes its cached numbers, its overrides and its widget rows
+     * along.
+     */
     suspend fun removeProfile(profile: ProfileId): Boolean {
         val e = engine() ?: return false
         e.removeProfile(profile.raw)
@@ -123,7 +145,10 @@ class AndroidPlansSource(
     }
 }
 
-/** Profile deletion: the usage engine forgets the server before the generic sweep removes `oc.usageLast.<id>`. */
+/**
+ * Profile deletion: the usage engine forgets the server before the generic sweep removes
+ * `oc.usageLast.<id>`.
+ */
 @ContributesIntoSet(AppScope::class, binding = binding<ProfileResourceCleaner>())
 @Inject
 class UsagePlansDeletionCleaner(private val plans: AndroidPlansSource) : ProfileResourceCleaner {

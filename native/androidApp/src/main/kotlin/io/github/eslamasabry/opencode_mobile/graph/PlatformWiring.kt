@@ -72,6 +72,8 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
+import io.github.eslamasabry.oc.engine.attention.identity.RunIdentity
+import io.github.eslamasabry.oc.engine.attention.identity.RunMessage
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
@@ -292,6 +294,7 @@ class PlatformHub(
     private var knownProfiles: Set<ProfileId> = emptySet()
     private val share = ShareSeed()
     private var widgetModel: WidgetModel? = null
+    private var widgetBaseModel: WidgetModel? = null
     private var widgetStampMs = 0L
     private val serverSince = mutableMapOf<String, Pair<Boolean, Long>>()
     private var publishedPins: Pair<String, List<PinnedSession>>? = null
@@ -573,8 +576,24 @@ class PlatformHub(
         val profile = stores.profiles.activeId.value ?: return
         val savedProfiles = stores.profiles.profiles.value
         val names = savedProfiles.associate { it.id to it.profile.name }
-        val model =
+        val base =
             PlatformRules.widgetModel(feed, waiting, profile, names, registry.live.value.keys)
+        // Unchanged content is not rewritten or redrawn: clock stamps move only when the content
+        // does (B-ANDR-117).
+        if (base == widgetBaseModel) return
+        val graph = registry.live.value[profile]
+        // A failed or bounded-out read leaves the marker absent. Unknown identity never authorizes
+        // a status patch.
+        val rows =
+            withTimeoutOrNull(WIDGET_IDENTITIES_WAIT_MS) {
+                base.rows.map { row ->
+                    if (row.profile != profile.raw || graph == null) row
+                    else widgetIdentity(graph, row)
+                }
+            } ?: base.rows
+        if (stores.profiles.activeId.value != profile || registry.live.value[profile] !== graph)
+            return
+        val model = base.copy(rows = rows)
         if (model == widgetModel) return
         val details = mutableMapOf<Pair<String, String>, WidgetDetail>()
         // Only the four launcher-visible rows. Each read is bounded and never mutates the server.
@@ -647,13 +666,56 @@ class PlatformHub(
                 stores.profiles.profiles.value.associate { it.id to it.profile.name },
                 registry.live.value.keys,
             )
-        if (current != model || stores.profiles.activeId.value != profile) return
+        if (current != base || stores.profiles.activeId.value != profile) return
         val now = clock.now().toEpochMilliseconds()
         val payload = widgetJson(model, now, details)
         if (widgets.publish(payload, profile.raw, null) != PublishResult.Refused) {
+            widgetBaseModel = base
             widgetModel = model
             widgetStampMs = now
         }
+    }
+
+    private suspend fun widgetIdentity(graph: ConnectionGraph, row: WidgetRow): WidgetRow {
+        val gateway = graph.session.server
+        val messages = ArrayList<RunMessage>()
+        var cursor: String? = null
+        val seen = HashSet<String>()
+        repeat(WIDGET_IDENTITY_PAGES) {
+            val page =
+                when (
+                    val read =
+                        gateway.messagePage(SessionId(row.id), cursor, WIDGET_IDENTITY_PAGE_SIZE)
+                ) {
+                    is Outcome.Failed -> return row
+                    is Outcome.Ok -> read.value
+                }
+            if (registry.live.value[graph.profile.id] !== graph) return row
+            messages +=
+                page.items
+                    .filter { it.info.sessionId == row.id }
+                    .map { message ->
+                        RunMessage(
+                            id = message.info.id,
+                            role = if (message.info.role == Role.User) "user" else "assistant",
+                            createdAt = message.info.time?.createdMs,
+                            partTypes = message.parts.map { it.rawType },
+                        )
+                    }
+            val marker = RunIdentity.marker(messages)
+            if (marker != null) {
+                val started =
+                    messages.firstOrNull { it.id == marker && it.role == "user" }?.createdAt
+                return row.copy(
+                    runMarker = marker,
+                    startedAt = started?.takeIf { it > 0 },
+                    promptCount = RunIdentity.promptCount(messages),
+                )
+            }
+            cursor = page.nextCursor ?: return row
+            if (!seen.add(cursor!!)) return row
+        }
+        return row
     }
 
     private data class WidgetDetail(val preview: String, val ask: Map<String, String>)
@@ -683,6 +745,11 @@ class PlatformHub(
                             if (detail.preview.isNotEmpty()) put("preview", detail.preview)
                             if (detail.ask.isNotEmpty()) put("ask", JSONObject(detail.ask))
                         }
+                    }
+                    .apply {
+                        row.runMarker?.let { put("runMarker", it) }
+                        row.startedAt?.let { put("startedAt", it) }
+                        row.promptCount?.let { put("promptCount", it) }
                     }
             )
         }
@@ -906,6 +973,17 @@ class PlatformHub(
         val engine =
             (graph as? ChatGraphAccessors)?.chatRequests?.engine
                 ?: return Outcome.Failed(Failure.Unexpected())
+        val pending =
+            engine.pending.value.firstOrNull {
+                it.id == answer.request && it.sessionId == answer.session
+            }
+        val matches =
+            when (answer.kind) {
+                AlertKind.Permission -> pending is PendingRequest.Permission
+                AlertKind.Question -> pending is PendingRequest.Question
+                else -> false
+            }
+        if (!matches) return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
         val reply = ShadeReplyAnswers.of(answer.kind, answer.reply) // B-PROTO-046 (BuildRestWiring)
         val result = engine.answerNow(answer.request, reply)
         log.i { "shade answer ${answer.kind} ${if (result is Outcome.Ok) "sent" else "not sent"}" }
@@ -918,6 +996,9 @@ class PlatformHub(
         const val EXCERPT_WAIT_MS = 5_000L
         const val EXCERPT_MESSAGES = 6
         const val SEED_WAIT_MS = 10_000L
+        const val WIDGET_IDENTITIES_WAIT_MS = 8_000L
+        const val WIDGET_IDENTITY_PAGES = 3
+        const val WIDGET_IDENTITY_PAGE_SIZE = 100
         const val REQUESTS_ON = "oc.notify.requests"
         const val FINISHED_ON = "oc.notify.finishedRuns"
         const val PINS_PREFIX = "oc.sessionPins."
@@ -943,6 +1024,10 @@ internal data class WidgetRow(
      */
     val requestId: String,
     val updatedAt: Long,
+    val runMarker: String? = null,
+    val startedAt: Long? = null,
+    /** Real user prompts in the bounded identity read; OC2 timeline records never count. */
+    val promptCount: Int? = null,
 )
 
 internal data class WidgetServer(val name: String, val online: Boolean, val id: String = name)

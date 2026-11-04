@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.core.model.WebSearchProvider
 import io.github.eslamasabry.oc.core.model.WebSearchResponse
 import io.github.eslamasabry.oc.core.model.WebSearchResult
 import io.ktor.http.HttpMethod
+import io.ktor.http.Url
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.JsonArray
@@ -78,6 +79,16 @@ internal object Oc2WebSearch {
             val title = optionalText(obj["title"]) ?: return null
             val content = optionalText(obj["content"]) ?: return null
             if (url.length > 8192 || (title.value?.length ?: 0) > 10_000 || (content.value?.length ?: 0) > 100_000)
+                return null
+            // Only a plain web address opens: http(s), a host, no embedded user or password.
+            val parsed =
+                try {
+                    Url(url)
+                } catch (_: IllegalArgumentException) {
+                    return null
+                }
+            if (parsed.protocol.name !in setOf("http", "https") || parsed.host.isBlank() ||
+                parsed.user != null || parsed.password != null)
                 return null
             val published = time["published"]
             if (published != null && published != JsonNull &&

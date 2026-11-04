@@ -1,0 +1,31 @@
+<resources>
+    <string name="remoteTerminalTitle">الطرفية</string>
+    <string name="remoteTerminalWorking">جارٍ العمل…</string>
+    <string name="remoteTerminalUnavailable">اتصل بخادم يدعم الطرفيات لاستخدام هذه الصفحة.</string>
+    <string name="remoteTerminalFailed">تعذّر الوصول إلى الطرفية. أعد الاتصال بالخادم وحاول مجددًا.</string>
+    <string name="remoteTerminalInputUncertain">انقطع الاتصال أثناء إرسال الإدخال. تحقّق من الطرفية قبل إرساله مجددًا.</string>
+    <string name="remoteTerminalIntro">تُنفَّذ الأوامر على هذا الخادم. مغادرة الصفحة تفصل العرض فقط؛ استخدم إنهاء الطرفية لإيقاف الصدفة.</string>
+    <string name="remoteTerminalCreate">طرفية جديدة</string>
+    <string name="remoteTerminalRefresh">تحديث</string>
+    <string name="remoteTerminalEmpty">لا توجد طرفيات بعد.</string>
+    <string name="remoteTerminalRunning">قيد التشغيل</string>
+    <string name="remoteTerminalEnded">انتهت</string>
+    <string name="remoteTerminalList">كل الطرفيات</string>
+    <string name="remoteTerminalDisconnect">قطع الاتصال</string>
+    <string name="remoteTerminalReconnect">إعادة الاتصال</string>
+    <string name="remoteTerminalEnd">إنهاء الطرفية</string>
+    <string name="remoteTerminalDisconnected">انقطع الاتصال. أعد الاتصال لمتابعة قراءة هذه الطرفية.</string>
+    <string name="remoteTerminalInputOff">أعد الاتصال لإرسال الإدخال إلى الطرفية.</string>
+    <string name="remoteTerminalInterrupt">مقاطعة (Ctrl-C)</string>
+    <string name="remoteTerminalEndInput">إنهاء الإدخال (Ctrl-D)</string>
+    <string name="remoteTerminalEscape">هروب</string>
+    <string name="remoteTerminalTab">جدولة</string>
+    <string name="remoteTerminalReadable">طرفية مقروءة</string>
+    <string name="remoteTerminalTranscript">مخرجات الطرفية</string>
+    <string name="remoteTerminalNoOutput">لا توجد مخرجات للطرفية بعد.</string>
+    <string name="remoteTerminalInput">إرسال إلى الطرفية</string>
+    <string name="remoteTerminalSend">إرسال</string>
+    <string name="remoteTerminalEndQuestion">إنهاء هذه الطرفية؟</string>
+    <string name="remoteTerminalEndBody">يوقف هذا الصدفة البعيدة وكل ما يعمل بداخلها.</string>
+    <string name="remoteTerminalKeep">إبقاء الطرفية</string>
+</resources>

@@ -1,0 +1,31 @@
+<resources>
+    <string name="protoProvidersTitle">Provider sign-ins</string>
+    <string name="protoProvidersRefresh">Refresh providers</string>
+    <string name="protoProvidersEmpty">This server has no provider sign-ins.</string>
+    <string name="protoProvidersConnected">Connected</string>
+    <string name="protoProvidersNotConnected">Not connected</string>
+    <string name="protoProvidersUseKey">Use an API key</string>
+    <string name="protoProvidersDisconnect">Remove stored sign-in</string>
+    <string name="protoProvidersStart">Start sign-in</string>
+    <string name="protoProvidersKey">API key</string>
+    <string name="protoProvidersConnect">Connect provider</string>
+    <string name="protoProvidersFinishBrowser">Finish signing in in your browser, then check the result here.</string>
+    <string name="protoProvidersCode">Sign-in code</string>
+    <string name="protoProvidersComplete">Finish sign-in</string>
+    <string name="protoProvidersCheck">Check sign-in</string>
+    <string name="protoProvidersCancel">Cancel sign-in</string>
+    <string name="protoProvidersOpenTitle">Open sign-in page?</string>
+    <string name="protoProvidersOpenHost">Your browser will open %1$s.</string>
+    <string name="protoProvidersOpenInsecure">The page at %1$s uses an unencrypted connection.</string>
+    <string name="protoProvidersOpen">Open browser</string>
+    <string name="protoProvidersUnavailable">Provider sign-in is unavailable on this server.</string>
+    <string name="protoProvidersLoadFailed">Provider sign-ins could not be loaded. Try again.</string>
+    <string name="protoProvidersChanged">This server or project changed. Refresh before starting another sign-in.</string>
+    <string name="protoProvidersInvalidInput">Fill in the required sign-in details.</string>
+    <string name="protoProvidersFailed">The sign-in could not be completed. Check its status or try again.</string>
+    <string name="protoProvidersPending">Waiting for the provider to finish sign-in.</string>
+    <string name="protoProvidersCompleteStatus">Sign-in confirmed by the server. Refresh to see connected providers.</string>
+    <string name="protoProvidersExpired">This sign-in expired. Start a new sign-in.</string>
+    <string name="protoProvidersCancelled">Sign-in cancelled.</string>
+    <string name="protoProvidersDisconnected">Stored sign-in removed. Refresh to see the current connections.</string>
+</resources>

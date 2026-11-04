@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingAnswer
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
 import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
@@ -57,7 +58,12 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
+import io.github.eslamasabry.oc.ui.words.res.e7SetupNoServerAnswer
+import io.github.eslamasabry.oc.ui.words.res.e7SetupPairAddressUnusable
+import io.github.eslamasabry.oc.ui.words.res.e7SetupPairTestFailed
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
+import io.github.eslamasabry.oc.ui.words.res.e7SetupRefused
+import io.github.eslamasabry.oc.ui.words.res.e7SetupTimeout
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -76,6 +82,7 @@ import io.github.eslamasabry.oc.ui.words.res.monitorServerWifiRequired
 import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
+import io.github.eslamasabry.oc.ui.words.res.protoPairingCheck
 import io.github.eslamasabry.oc.ui.words.res.serverFailureCertificate
 import io.github.eslamasabry.oc.ui.words.res.serverFailureIncompatible
 import io.github.eslamasabry.oc.ui.words.res.serverFailureNetwork
@@ -98,10 +105,13 @@ import io.github.eslamasabry.oc.ui.words.res.serversConnected
 import io.github.eslamasabry.oc.ui.words.res.serversCreate
 import io.github.eslamasabry.oc.ui.words.res.serversCreateFailed
 import io.github.eslamasabry.oc.ui.words.res.serversEmpty
+import io.github.eslamasabry.oc.ui.words.res.serversInspectSetup
 import io.github.eslamasabry.oc.ui.words.res.serversInvalidAddress
 import io.github.eslamasabry.oc.ui.words.res.serversName
 import io.github.eslamasabry.oc.ui.words.res.serversNewTitle
+import io.github.eslamasabry.oc.ui.words.res.serversPairingAnswered
 import io.github.eslamasabry.oc.ui.words.res.serversPassword
+import io.github.eslamasabry.oc.ui.words.res.serversRemoteTerminal
 import io.github.eslamasabry.oc.ui.words.res.serversRemove
 import io.github.eslamasabry.oc.ui.words.res.serversRemoveConfirm
 import io.github.eslamasabry.oc.ui.words.res.serversRemoveFailed
@@ -131,6 +141,8 @@ public fun ServersScreen(
      * Linux.
      */
     onThisPhone: (() -> Unit)? = null,
+    onInspectSetup: ((ProfileId) -> Unit)? = null,
+    onTerminal: ((ProfileId) -> Unit)? = null,
 ) {
     // The unsaved draft survives a page on top (Scan code) and the form leaving composition: the
     // plain fields are
@@ -278,6 +290,20 @@ public fun ServersScreen(
                             )
                         }
                         if (server.connected) {
+                            onTerminal?.let { terminal ->
+                                KitButton(
+                                    stringResource(Res.string.serversRemoteTerminal),
+                                    { terminal(server.id) },
+                                    role = KitButtonRole.Secondary,
+                                )
+                            }
+                            onInspectSetup?.let { inspect ->
+                                KitButton(
+                                    stringResource(Res.string.serversInspectSetup),
+                                    { inspect(server.id) },
+                                    role = KitButtonRole.Secondary,
+                                )
+                            }
                             KitButton(
                                 stringResource(Res.string.usageTitle),
                                 { actions.openUsage(server.id) },
@@ -406,6 +432,26 @@ public fun ServersScreen(
                 },
             )
             state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
+            for (check in state.pairingChecks) {
+                val verdict =
+                    when (check.answer) {
+                        PairingAnswer.Works -> Res.string.serversConnected
+                        PairingAnswer.Answers -> Res.string.serversPairingAnswered
+                        PairingAnswer.NoAnswer -> Res.string.e7SetupNoServerAnswer
+                        PairingAnswer.TimedOut -> Res.string.e7SetupTimeout
+                        PairingAnswer.Refused -> Res.string.e7SetupRefused
+                        PairingAnswer.ProbeFailed -> Res.string.e7SetupPairTestFailed
+                        PairingAnswer.InvalidAddress -> Res.string.e7SetupPairAddressUnusable
+                        PairingAnswer.NeedsCleartextConsent -> Res.string.serversCleartextHelp
+                    }
+                KitNotice(
+                    stringResource(
+                        Res.string.protoPairingCheck,
+                        check.origin,
+                        stringResource(verdict),
+                    )
+                )
+            }
             filledFromLink?.let { link ->
                 KitNotice(
                     stringResource(

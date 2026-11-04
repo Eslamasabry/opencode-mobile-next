@@ -1,0 +1,5 @@
+<resources>
+    <string name="serversInspectSetup">Inspect setup</string>
+    <string name="serversPairingAnswered">The server answered. Check its sign-in or status before connecting.</string>
+    <string name="serversRemoteTerminal">Terminal</string>
+</resources>

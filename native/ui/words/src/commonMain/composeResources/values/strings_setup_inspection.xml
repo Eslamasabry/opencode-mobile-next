@@ -1,0 +1,34 @@
+<resources>
+    <string name="setupInspectTitle">Inspect setup</string>
+    <string name="setupInspectReadOnly">This view reads configuration and tool status. Apply and Undo are unavailable because this server cannot safely restore setup changes.</string>
+    <string name="setupInspectFailed">Setup information could not be loaded. Reconnect to the server and try again.</string>
+    <string name="setupInspectRefresh">Refresh setup</string>
+    <string name="setupInspectLoading">Reading setup…</string>
+    <string name="setupInspectConfig">Configuration sources</string>
+    <string name="setupInspectNoSources">No configuration sources were reported.</string>
+    <string name="setupInspectMcp">Tool connections</string>
+    <string name="setupInspectNoMcp">No tool connections were reported.</string>
+    <string name="setupMcpConnected">Connected</string>
+    <string name="setupMcpPending">Connecting</string>
+    <string name="setupMcpDisabled">Disabled</string>
+    <string name="setupMcpFailed">Connection failed</string>
+    <string name="setupMcpSignIn">Sign-in needed</string>
+    <string name="setupMcpUnknown">Status unknown</string>
+    <string name="setupRegistryTitle">Public tool registry</string>
+    <string name="setupRegistryConsent">Browse the public registry</string>
+    <string name="setupRegistryPrivacy">Refresh contacts the public MCP registry without server credentials. Search terms are sent to the registry and are never saved.</string>
+    <string name="setupRegistryDisabled">Browsing is off. Turn it on to load listings when you choose Refresh.</string>
+    <string name="setupRegistryLoading">Loading public listings…</string>
+    <string name="setupRegistryOffline">You are offline. Showing saved listings.</string>
+    <string name="setupRegistryError">The public registry could not be loaded. Showing saved listings.</string>
+    <string name="setupRegistryEmpty">No listings are loaded. Refresh or search the registry.</string>
+    <string name="setupRegistryReadOnly">Listings are information only. Set up tools by hand on your server; this page never runs registry commands or opens listed links.</string>
+    <string name="setupRegistrySearch">Search listings</string>
+    <string name="setupRegistryRefresh">Refresh listings</string>
+    <string name="setupRegistrySaved">Show saved listings</string>
+    <string name="setupInspectUnsupported">Setup inspection is unavailable on this server.</string>
+    <string name="setupMigrationRequired">Bringing your earlier conversations across…</string>
+    <string name="setupMigrationProgress">Bringing your earlier conversations across (%1$d of %2$d)…</string>
+    <string name="setupMigrationError">The server could not finish bringing your earlier conversations across. Your original data is still on this phone, untouched.</string>
+    <string name="setupMigrationUnavailable">The server could not report the status of your earlier conversations. Refresh to try again.</string>
+</resources>

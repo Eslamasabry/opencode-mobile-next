@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.servers.presentation
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.SavedServer
+import io.github.eslamasabry.oc.feature.servers.pairing.PairingCheck
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingFill
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingProblem
 import kotlinx.collections.immutable.ImmutableList
@@ -24,6 +25,7 @@ public data class ServersUi(
      */
     val pairingArrival: Int = 0,
     val pairingProblem: PairingProblem? = null,
+    val pairingChecks: ImmutableList<PairingCheck> = persistentListOf(),
 )
 
 public enum class ServerIssue {
