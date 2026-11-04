@@ -8,16 +8,18 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.core.domain.SessionPermissionModeGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.facet
+import io.github.eslamasabry.oc.core.model.PermissionReply
+import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
-import io.github.eslamasabry.oc.core.common.ids.RequestId
-import io.github.eslamasabry.oc.core.model.PermissionReply
-import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.engine.requests.AnswerPhase
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.requests.RequestAnswer
@@ -30,18 +32,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Production [ChatHeaderPorts]: each port reads the conversation's own connection graph (ADR §9.1). */
+/**
+ * Production [ChatHeaderPorts]: each port reads the conversation's own connection graph (ADR §9.1).
+ */
 @Inject
 @ContributesBinding(AppScope::class)
 public class GraphChatHeaderPorts(private val registry: ConnectionRegistry) : ChatHeaderPorts {
-    override fun open(ref: ConversationRef): ChatHeaderPort = GraphChatHeaderPort(ref, registry).also { it.attach() }
+    override fun open(ref: ConversationRef): ChatHeaderPort =
+        GraphChatHeaderPort(ref, registry).also { it.attach() }
 }
 
 /**
- * One conversation's header acts on its connection. Every act captures the graph it starts on and publishes nothing
- * when the registry replaced it meanwhile (a stale graph's answer is about another connection).
+ * One conversation's header acts on its connection. Every act captures the graph it starts on and
+ * publishes nothing when the registry replaced it meanwhile (a stale graph's answer is about
+ * another connection).
  */
-internal class GraphChatHeaderPort(private val ref: ConversationRef, private val registry: ConnectionRegistry) : ChatHeaderPort {
+internal class GraphChatHeaderPort(
+    private val ref: ConversationRef,
+    private val registry: ConnectionRegistry,
+) : ChatHeaderPort {
     private val sid = SessionId(ref.sessionId.raw)
     private val mutableFacts = MutableStateFlow(HeaderFacts())
     override val facts: StateFlow<HeaderFacts> = mutableFacts.asStateFlow()
@@ -60,22 +69,36 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
                 return engine.answerNow(id, RequestAnswer.Permission(PermissionReply.Once))
             }
 
-            // Codex chat-header BLOCKER 2: sub-agent inheritance needs the real parent; an ask is published only after
-            // its session's parents are known (see [resolveParents]), so a child never falls back to the server mode.
+            override suspend fun syncPermissions(): Outcome<Unit> {
+                val graph = bound ?: return offline()
+                val gateway = (graph as ChatGraphAccessors).chatGateway
+                val modes = gateway.facet<SessionPermissionModeGateway>() ?: return Outcome.Ok(Unit)
+                val result = modes.syncSessionPermissions(sid)
+                return if (bound === graph && registry.graphFor(ref) === graph) result
+                else offline()
+            }
+
+            // Codex chat-header BLOCKER 2: sub-agent inheritance needs the real parent; an ask is
+            // published only after
+            // its session's parents are known (see [resolveParents]), so a child never falls back
+            // to the server mode.
             override fun parentOf(session: SessionId): SessionId? = parents[session]
         }
 
     /** Session → its parent (`null` = a known top-level session), read from the server. */
     private val parents = HashMap<SessionId, SessionId?>()
 
-    /** Reads the parent chain of every session in [asks] the port does not know yet (bounded depth). */
+    /**
+     * Reads the parent chain of every session in [asks] the port does not know yet (bounded depth).
+     */
     private suspend fun resolveParents(gateway: ServerGateway, asks: List<PermissionRequest>) {
         for (ask in asks) {
             var current: SessionId? = ask.sessionId
             var depth = 0
             while (current != null && current !in parents && depth < MAX_PARENT_DEPTH) {
                 val read = gateway.session(current)
-                if (read !is Outcome.Ok) break // unknown stays unknown: the presenter falls back to Ask for it
+                if (read !is Outcome.Ok)
+                    break // unknown stays unknown: the presenter falls back to Ask for it
                 parents[current] = read.value.parentId
                 current = read.value.parentId
                 depth++
@@ -107,7 +130,11 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
         }
         val gateway = (graph as ChatGraphAccessors).chatGateway
         mutableFacts.value =
-            HeaderFacts(serverName = graph.profile.name, directory = gateway.location.value.directory, connected = true)
+            HeaderFacts(
+                serverName = graph.profile.name,
+                directory = gateway.location.value.directory,
+                connected = true,
+            )
         val jobs =
             listOf(
                 graph.scope.launch(registry.mainContext) { read(graph, gateway) },
@@ -124,7 +151,11 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
                 graph.scope.launch(registry.mainContext) {
                     gateway.events.all.collect { envelope ->
                         val event = envelope.event
-                        if (event is GatewayEvent.SessionChanged && event.sessionId == sid && event.directory != null) {
+                        if (
+                            event is GatewayEvent.SessionChanged &&
+                                event.sessionId == sid &&
+                                event.directory != null
+                        ) {
                             mutableFacts.update { it.copy(directory = event.directory) }
                         }
                     }
@@ -173,45 +204,44 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
             FreeModelFacts(
                 signedIn = (providers as Outcome.Ok).value.providers.map { it.id },
                 models = (catalog as Outcome.Ok).value.models,
-            ),
+            )
         )
     }
 
-    override suspend fun rename(title: String): Outcome<Unit> =
-        withGateway { gateway, _ -> gateway.renameSession(sid, title) }
+    override suspend fun rename(title: String): Outcome<Unit> = withGateway { gateway, _ ->
+        gateway.renameSession(sid, title)
+    }
 
-    override suspend fun share(): Outcome<String?> =
-        withGateway { gateway, ops ->
-            if (!gateway.capabilities.value.sessionShare) unavailable("sessionShare")
-            else
-                ops.shareSession(sid).also { r ->
-                    if (r is Outcome.Ok) mutableFacts.update { it.copy(shareUrl = r.value) }
-                }
-        }
+    override suspend fun share(): Outcome<String?> = withGateway { gateway, ops ->
+        if (!gateway.capabilities.value.sessionShare) unavailable("sessionShare")
+        else
+            ops.shareSession(sid).also { r ->
+                if (r is Outcome.Ok) mutableFacts.update { it.copy(shareUrl = r.value) }
+            }
+    }
 
-    override suspend fun unshare(): Outcome<Unit> =
-        withGateway { gateway, ops ->
-            if (!gateway.capabilities.value.sessionShare) unavailable("sessionShare")
-            else
-                ops.unshareSession(sid).also { r ->
-                    if (r is Outcome.Ok) mutableFacts.update { it.copy(shareUrl = null) }
-                }
-        }
+    override suspend fun unshare(): Outcome<Unit> = withGateway { gateway, ops ->
+        if (!gateway.capabilities.value.sessionShare) unavailable("sessionShare")
+        else
+            ops.unshareSession(sid).also { r ->
+                if (r is Outcome.Ok) mutableFacts.update { it.copy(shareUrl = null) }
+            }
+    }
 
-    override suspend fun fork(): Outcome<SessionId> =
-        withGateway { gateway, ops ->
-            if (!gateway.capabilities.value.sessionFork) unavailable("sessionFork") else ops.forkSession(sid, null)
-        }
+    override suspend fun fork(): Outcome<SessionId> = withGateway { gateway, ops ->
+        if (!gateway.capabilities.value.sessionFork) unavailable("sessionFork")
+        else ops.forkSession(sid, null)
+    }
 
-    override suspend fun archive(): Outcome<Unit> =
-        withGateway { gateway, ops ->
-            if (!gateway.capabilities.value.sessionArchive) unavailable("sessionArchive") else ops.archiveSession(sid)
-        }
+    override suspend fun archive(): Outcome<Unit> = withGateway { gateway, ops ->
+        if (!gateway.capabilities.value.sessionArchive) unavailable("sessionArchive")
+        else ops.archiveSession(sid)
+    }
 
-    override suspend fun delete(): Outcome<Unit> =
-        withGateway { gateway, _ ->
-            if (!gateway.capabilities.value.sessionDelete) unavailable("sessionDelete") else gateway.deleteSession(sid)
-        }
+    override suspend fun delete(): Outcome<Unit> = withGateway { gateway, _ ->
+        if (!gateway.capabilities.value.sessionDelete) unavailable("sessionDelete")
+        else gateway.deleteSession(sid)
+    }
 
     override fun close() {
         stopWatching?.invoke()
@@ -221,8 +251,13 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
         bound = null
     }
 
-    /** Runs [act] on the current graph; a graph replaced while it ran publishes a refusal, never its answer. */
-    private suspend fun <T> withGateway(act: suspend (ServerGateway, ServerOperationsGateway) -> Outcome<T>): Outcome<T> {
+    /**
+     * Runs [act] on the current graph; a graph replaced while it ran publishes a refusal, never its
+     * answer.
+     */
+    private suspend fun <T> withGateway(
+        act: suspend (ServerGateway, ServerOperationsGateway) -> Outcome<T>
+    ): Outcome<T> {
         val graph = bound ?: return offline()
         val services = graph as ChatGraphAccessors
         when (val ready = services.chatGateway.awaitActionTransport()) {
@@ -237,7 +272,8 @@ internal class GraphChatHeaderPort(private val ref: ConversationRef, private val
 
     private fun offline(): Outcome<Nothing> = Outcome.Failed(Failure.Network(NetworkWhy.Offline))
 
-    private fun unavailable(name: String): Outcome<Nothing> = Outcome.Failed(Failure.Unavailable(FeatureId(name)))
+    private fun unavailable(name: String): Outcome<Nothing> =
+        Outcome.Failed(Failure.Unavailable(FeatureId(name)))
 }
 
 private const val MAX_PARENT_DEPTH = 8

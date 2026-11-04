@@ -18,9 +18,10 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.put
 
 /**
- * The per-server approval settings (Flutter `SessionAutoApprovalStore`): one JSON map per saved server under
- * `oc.autoApprove.<profileId>` (format unchanged, so the profile sweep finds it and the Flutter app reads it back).
- * Absent on hosts without durable preferences; the chip is then not offered.
+ * The per-server approval settings (Flutter `SessionAutoApprovalStore`): one JSON map per saved
+ * server under `oc.autoApprove.<profileId>` (format unchanged, so the profile sweep finds it and
+ * the Flutter app reads it back). Absent on hosts without durable preferences; the chip is then not
+ * offered.
  */
 public interface ApprovalStore {
     /** +1 per acknowledged write; readers re-read [settings]. */
@@ -28,11 +29,21 @@ public interface ApprovalStore {
 
     public fun settings(profile: ProfileId): Map<String, SessionApproval>
 
-    /** Writes one conversation's own setting ([setting] null removes it); [ApprovalModes.SERVER_WIDE] is the "*" entry. */
-    public suspend fun set(profile: ProfileId, session: String, setting: SessionApproval?): Outcome<Unit>
+    /**
+     * Writes one conversation's own setting ([setting] null removes it);
+     * [ApprovalModes.SERVER_WIDE] is the "*" entry.
+     */
+    public suspend fun set(
+        profile: ProfileId,
+        session: String,
+        setting: SessionApproval?,
+    ): Outcome<Unit>
 }
 
-/** The Flutter wire format, both ways (`SessionAutoApproval.toJson/fromJson`). Unknown or malformed entries are skipped. */
+/**
+ * The Flutter wire format, both ways (`SessionAutoApproval.toJson/fromJson`). Unknown or malformed
+ * entries are skipped.
+ */
 public object ApprovalCodec {
     public fun key(profile: ProfileId): String = "oc.autoApprove.${profile.raw}"
 
@@ -48,25 +59,34 @@ public object ApprovalCodec {
                         "autoOnce" -> ApprovalMode.AutoOnce
                         else -> null
                     } ?: continue
-                put(session, SessionApproval(mode, (value["inheritToChildren"] as? JsonPrimitive)?.booleanOrNull == true))
+                put(
+                    session,
+                    SessionApproval(
+                        mode,
+                        (value["inheritToChildren"] as? JsonPrimitive)?.booleanOrNull == true,
+                    ),
+                )
             }
         }
     }
 
-    public fun encode(settings: Map<String, SessionApproval>): String =
-        buildJsonObject {
-            for ((session, s) in settings) {
-                put(
-                    session,
-                    buildJsonObject {
-                        put("mode", if (s.mode == ApprovalMode.AutoOnce) "autoOnce" else "ask")
-                        put("inheritToChildren", s.inheritToChildren)
-                    },
-                )
-            }
-        }.toString()
+    public fun encode(settings: Map<String, SessionApproval>): String = buildJsonObject {
+        for ((session, s) in settings) {
+            put(
+                session,
+                buildJsonObject {
+                    put("mode", if (s.mode == ApprovalMode.AutoOnce) "autoOnce" else "ask")
+                    put("inheritToChildren", s.inheritToChildren)
+                },
+            )
+        }
+    }
+        .toString()
 
-    /** Parsing a stored string is not suspend code; a corrupt value reads as no settings (Dart catches the same). */
+    /**
+     * Parsing a stored string is not suspend code; a corrupt value reads as no settings (Dart
+     * catches the same).
+     */
     @Suppress("TooGenericExceptionCaught")
     private fun runCatchingParse(text: String) =
         try {
@@ -76,19 +96,32 @@ public object ApprovalCodec {
         }
 }
 
-/** The permission asks this conversation's connection holds, and the one write that answers one "once". */
+/**
+ * The permission asks this conversation's connection holds, and the one write that answers one
+ * "once".
+ */
 public interface ApprovalPort {
-    /** Waiting permission asks of this conversation's connection (all sessions; the sweep filters). */
+    /**
+     * Waiting permission asks of this conversation's connection (all sessions; the sweep filters).
+     */
     public val waiting: StateFlow<List<PermissionRequest>>
 
     /** Answers [id] "Allow once" through the same write path as a tap on the card. */
     public suspend fun allowOnce(id: RequestId): Outcome<Unit>
 
+    /**
+     * Applies a saved choice to tools that may already be running; server policies are read back.
+     */
+    public suspend fun syncPermissions(): Outcome<Unit> = Outcome.Ok(Unit)
+
     /** The session's parent, when the connection knows it (sub-agent inheritance). */
     public fun parentOf(session: SessionId): SessionId? = null
 }
 
-/** The host's approval store, if it has durable preferences (Android binds one; desktop and tests may not). */
+/**
+ * The host's approval store, if it has durable preferences (Android binds one; desktop and tests
+ * may not).
+ */
 @dev.zacsweers.metro.ContributesTo(dev.zacsweers.metro.AppScope::class)
 public interface ApprovalBindings {
     @dev.zacsweers.metro.Multibinds(allowEmpty = true) public val approvalStores: Set<ApprovalStore>
@@ -96,7 +129,8 @@ public interface ApprovalBindings {
 
 /** No connection: nothing waits, nothing is answered. */
 public object NoApprovals : ApprovalPort {
-    override val waiting: StateFlow<List<PermissionRequest>> = kotlinx.coroutines.flow.MutableStateFlow(emptyList())
+    override val waiting: StateFlow<List<PermissionRequest>> =
+        kotlinx.coroutines.flow.MutableStateFlow(emptyList())
 
     override suspend fun allowOnce(id: RequestId): Outcome<Unit> = Outcome.Ok(Unit)
 }
