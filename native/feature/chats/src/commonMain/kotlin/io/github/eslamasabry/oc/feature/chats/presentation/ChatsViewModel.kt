@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlin.time.Clock
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -41,10 +42,15 @@ public class ChatsViewModel(
     private val nav: AppNavigator,
     private val updates: UpdateDoor = NoUpdateDoor(),
     private val home: ChatsHomeExtras = NoChatsHomeExtras(),
+    private val permissionAnswers: Set<HomePermissionAnswers> = emptySet(),
 ) : ViewModel(), ChatsActions {
     private val filters = MutableStateFlow(ChatsFilters())
     private val sheet = MutableStateFlow<ChatsHomeSheet?>(null)
     private val watchedSelection = MutableStateFlow<String?>(null)
+    private val answers =
+        MutableStateFlow<Pair<Set<String>, io.github.eslamasabry.oc.core.common.Failure?>>(
+            emptySet<String>() to null
+        )
 
     public val state: StateFlow<ChatsUi> =
         combine(
@@ -58,9 +64,12 @@ public class ChatsViewModel(
                 home.snapshot,
                 sheet,
                 watchedSelection,
-            ) { base, extra, open, selected ->
+                answers,
+            ) { base, extra, open, selected, answering ->
                 base.copy(
                     home = extra,
+                    answering = answering.first.toImmutableSet(),
+                    answerFailure = answering.second,
                     sheet = open,
                     confirmWatched = extra.monitoring.requests.firstOrNull { it.key == selected },
                 )
@@ -81,6 +90,20 @@ public class ChatsViewModel(
             settingsAvailable = settings.available,
             nowMs = clock.now().toEpochMilliseconds(),
         )
+
+    override fun answerPermission(row: ConversationRowUi, allow: Boolean) {
+        val permission = row.permission ?: return
+        val port = permissionAnswers.singleOrNull() ?: return
+        if (permission.requestId in answers.value.first) return
+        answers.value = (answers.value.first + permission.requestId) to null
+        viewModelScope.launch {
+            val result = port.answer(row.ref, permission.requestId, allow)
+            answers.value =
+                (answers.value.first - permission.requestId) to
+                    (result as? io.github.eslamasabry.oc.core.common.Outcome.Failed)?.failure
+            feed.refresh()
+        }
+    }
 
     override fun openConversation(ref: ConversationRef) {
         if (state.value.home.opening != null) return
@@ -242,4 +265,18 @@ public class ChatsViewModel(
             }
         }
     }
+}
+
+public fun interface HomePermissionAnswers {
+    public suspend fun answer(
+        ref: ConversationRef,
+        requestId: String,
+        allow: Boolean,
+    ): io.github.eslamasabry.oc.core.common.Outcome<Unit>
+}
+
+@dev.zacsweers.metro.ContributesTo(dev.zacsweers.metro.AppScope::class)
+public interface HomePermissionBindings {
+    @dev.zacsweers.metro.Multibinds(allowEmpty = true)
+    public val homePermissionAnswers: Set<HomePermissionAnswers>
 }

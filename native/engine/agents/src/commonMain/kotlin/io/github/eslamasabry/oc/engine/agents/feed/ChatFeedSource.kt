@@ -65,6 +65,8 @@ public data class OpenCodeListing(
     val failed: Boolean = false,
     /** `ServerCapabilities.globalSessionSearch`: false = the current project only. */
     val acrossProjects: Boolean = true,
+    val running: Map<SessionId, FeedRunning> = emptyMap(),
+    val permissions: Map<SessionId, FeedPermission> = emptyMap(),
 )
 
 /**
@@ -112,6 +114,8 @@ public class OpenCodeChatFeedSource(
         return ChatFeedItem(
             sourceId = id,
             locationKey = locationKey,
+            running = listing.running[session.id].takeIf { chatStatus == ChatStatus.Running },
+            permission = listing.permissions[session.id],
             profileId = profileId,
             sessionId = session.id,
             title = session.title,

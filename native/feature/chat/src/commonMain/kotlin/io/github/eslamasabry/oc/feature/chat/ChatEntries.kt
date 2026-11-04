@@ -13,24 +13,26 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import io.github.eslamasabry.oc.core.domain.platform.AppNotices
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
-import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
-import io.github.eslamasabry.oc.core.domain.platform.AppNotices
 import io.github.eslamasabry.oc.feature.chat.cards.ChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.LocalChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.ModelCardSlotHost
 import io.github.eslamasabry.oc.feature.chat.composer.ChatPromptsDoor
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
+import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
 import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffSheet
 import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffViewModel
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
-import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteViewModel
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
+import io.github.eslamasabry.oc.feature.chat.queuemove.QueueMoveScreen
+import io.github.eslamasabry.oc.feature.chat.queuemove.QueueMoveViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.presentation.SessionTransferViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui.SessionTransferSheet
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewModel
@@ -51,6 +53,7 @@ import io.github.eslamasabry.oc.ui.routes.PreviewRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
+import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveTitle
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
 import io.github.eslamasabry.oc.ui.words.res.protoToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionTransferTitle
@@ -176,11 +179,16 @@ public class ChatEntries(
                     },
                     testTag = "chat-dev-preview",
                 )
-            // B-CHAT-001..003: the inspector of what the next turn reads; offered only where the server has the route.
+            // B-CHAT-001..003: the inspector of what the next turn reads; offered only where the
+            // server has the route.
             val activeContext = remember(route.ref) { ActiveContextModel(route.ref, registry) }
             DisposableEffect(activeContext) { onDispose { activeContext.close() } }
             val inspect =
-                KitLineAction(stringResource(Res.string.activeContextTitle), activeContext::open, testTag = "chat-active-context")
+                KitLineAction(
+                    stringResource(Res.string.activeContextTitle),
+                    activeContext::open,
+                    testTag = "chat-active-context",
+                )
             val transfer =
                 assistedMetroViewModel<SessionTransferViewModel, SessionTransferViewModel.Factory> {
                     create(route)
@@ -195,6 +203,12 @@ public class ChatEntries(
                         navigator.open(ToolsRoute(route.ref.profileId, route.ref.sessionId))
                     },
                 )
+            val queueMove =
+                assistedMetroViewModel<QueueMoveViewModel, QueueMoveViewModel.Factory> {
+                    create(route)
+                }
+            val queueMoveState by queueMove.state.collectAsStateWithLifecycle()
+            val queueMoveAvailable by queueMove.available.collectAsStateWithLifecycle()
             val prompts = remember(route.ref) { ChatPromptsDoor(route.ref, inbox, navigator) }
             // P12-CHAT-CARDS: the conversation's agent cards, read by the transcript's card slot.
             val cardModel = remember(route.ref) { cards.open(route.ref) }
@@ -223,6 +237,11 @@ public class ChatEntries(
                                     inspect.takeIf { activeContext.available() },
                                     transferAction,
                                     toolsAction,
+                                    KitLineAction(
+                                            stringResource(Res.string.chatQueueMoveTitle),
+                                            queueMove::open,
+                                        )
+                                        .takeIf { queueMoveAvailable },
                                     // STATE: continue this conversation elsewhere.
                                     KitLineAction(
                                         stringResource(Res.string.stateHandoffTitle),
@@ -247,6 +266,7 @@ public class ChatEntries(
                             appStatus = appStatus,
                             replyOffer = offerContent,
                         )
+                        QueueMoveScreen(queueMoveState, queueMove)
                         SessionTransferSheet(transferState, transfer)
                         StateHandoffSheet(handoff, handoffVm)
                     }

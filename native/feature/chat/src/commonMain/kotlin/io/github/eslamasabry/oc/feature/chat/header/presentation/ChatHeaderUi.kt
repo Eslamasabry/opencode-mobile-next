@@ -17,6 +17,7 @@ public data class ChatHeaderUi(
     /** "server · project" parts; either may be absent. */
     val serverName: String? = null,
     val projectName: String? = null,
+    val branch: String? = null,
     /**
      * The ⋯ menu's entries in order (Go to, then Do; destructive last), built from capabilities.
      */

@@ -539,15 +539,23 @@ public class PromptDelivery(
                     null
                 }
             }
-        if (
-            bubble.reviewId != null &&
-                clientId != null &&
-                link.capabilities.commandReceipts &&
-                journal != null
-        ) {
+        if (link.capabilities.commandReceipts) {
+            // Receipt admission is independent of the offline queue. OC2 accepts prompts into
+            // its own inbox and has no device queue marker, but still needs a durable identity
+            // before the first byte leaves this process (B-STATE-047…053).
+            if (clientId == null || journal == null)
+                return failed(
+                    bubble,
+                    request,
+                    putBack,
+                    Failure.Refused(RefusalReason.DispatchUncertain),
+                    left = false,
+                )
             val receipt =
                 CommandReceipt(
-                    commandId = CommandReceipt.queueCommandId(bubble.reviewId),
+                    commandId =
+                        bubble.reviewId?.let { CommandReceipt.queueCommandId(it) }
+                            ?: sendCommandId(bubble.localId),
                     receiptId = clientId.raw,
                     sessionId = ref.sessionId.raw,
                     tabId = ref.sessionId.raw,
@@ -798,6 +806,48 @@ public class PromptDelivery(
         withContext(queue.lane) { checkAgainOnLane(id) }
 
     private suspend fun checkAgainOnLane(id: LocalSendId): Outcome<ReceiptLook> {
+        val ref = mutablePending.value.firstOrNull { it.localId == id }?.ref
+        val link = connection.link.value
+        val direct = link?.takeIf { it.connected && it.capabilities.commandReceipts }
+        if (direct != null && (ref == null || direct.scope.profileId == ref.profileId)) {
+            val origin = direct.scope
+            val journal =
+                when (val owner = journals.forProfile(origin.profileId)) {
+                    is Outcome.Failed -> return owner
+                    is Outcome.Ok -> owner.value
+                }
+            val receipt =
+                when (val read = journal.read()) {
+                    is Outcome.Failed -> return read
+                    is Outcome.Ok -> read.value.singleOrNull { it.commandId == sendCommandId(id) }
+                }
+            if (receipt != null) {
+                if (receipt.scope != origin.receiptScope)
+                    return Failure.Refused(RefusalReason.StaleScope).failed()
+                val checked =
+                    CommandReceiptController(journal).retry(receipt.commandId) {
+                        if (!sameTarget(direct, origin)) false
+                        else {
+                            val looked =
+                                direct.lookupAdmission(
+                                    io.github.eslamasabry.oc.core.common.ids.SessionId(
+                                        it.sessionId
+                                    ),
+                                    MessageId(it.receiptId),
+                                )
+                            sameTarget(direct, origin) && (looked as? Outcome.Ok)?.value == true
+                        }
+                    }
+                return when (checked) {
+                    is Outcome.Failed -> checked
+                    is Outcome.Ok ->
+                        (if (checked.value.state == CommandReceiptState.Confirmed)
+                                ReceiptLook.Confirmed
+                            else ReceiptLook.StillUnknown)
+                            .ok()
+                }
+            }
+        }
         val confirmed = queue.checkReceipt(reviewIdOf(id))
         forgetResolvedReviews()
         return (if (confirmed) ReceiptLook.Confirmed else ReceiptLook.StillUnknown).ok()
@@ -819,6 +869,8 @@ public class PromptDelivery(
         forgetResolvedReviews()
         return result
     }
+
+    private fun sendCommandId(id: LocalSendId): String = "send:${id.raw}"
 
     private fun reviewIdOf(id: LocalSendId): String =
         reviewIds[id] ?: mutablePending.value.firstOrNull { it.localId == id }?.reviewId ?: id.raw

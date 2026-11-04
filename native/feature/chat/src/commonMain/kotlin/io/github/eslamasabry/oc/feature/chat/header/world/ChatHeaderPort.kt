@@ -83,6 +83,7 @@ public data class HeaderFacts(
     val contextLimit: Long? = null,
     val totalTokens: Long? = null,
     val connected: Boolean = false,
+    val branch: String? = null,
 )
 
 /** Builds one port per open conversation. */

@@ -71,6 +71,7 @@ public data class BasicComposerUi(
     /** The extra ways to attach this platform offers besides the document picker. */
     val attachKinds: Set<AttachKind> = emptySet(),
     val readOnly: io.github.eslamasabry.oc.feature.chat.world.ReadOnlyChat? = null,
+    val phrases: List<String> = emptyList(),
 ) {
     override fun toString(): String =
         "BasicComposerUi(available=$available, sending=$sending, steers=$steers, draft=$draft, " +
@@ -89,6 +90,8 @@ public interface BasicComposerActions {
 
     public fun openParent() {}
 
+    public fun hidePhrase(text: String) {}
+
     public suspend fun sendAgain(text: String, expectedRevision: Long): Boolean = false
 
     /** Loads the conversation's model choices again (first load, retry). */
@@ -96,6 +99,8 @@ public interface BasicComposerActions {
 
     /** True = the world verified the new choice and published it. */
     public suspend fun selectModel(choice: ComposerModel?, variant: String = ""): Boolean = false
+
+    public suspend fun cycleModel(reverse: Boolean = false): Boolean = false
 
     public suspend fun toggleModelFavorite(choice: ComposerModel) {}
 
@@ -180,6 +185,8 @@ public class BasicComposerViewModel(
     private val appCommands: Set<ComposerAppCommands> = emptySet(),
     private val histories: Set<ComposerHistory> = emptySet(),
     private val navigator: io.github.eslamasabry.oc.ui.routes.AppNavigator? = null,
+    private val phraseSources: Set<ComposerPhrases> = emptySet(),
+    private val clock: kotlin.time.Clock? = null,
 ) : ViewModel(), BasicComposerActions {
     private val profileId = ProfileId(target.profileId)
     private val query = MutableStateFlow<ComposerQuery?>(null)
@@ -338,6 +345,41 @@ public class BasicComposerViewModel(
                         }
                     }
             }
+            .combine(
+                phraseSources.singleOrNull()?.changes ?: kotlinx.coroutines.flow.flowOf(Unit)
+            ) { ui, _ ->
+                val feed = (world as? TurnFeedSource)?.turnFeed?.value
+                val moment = feed?.let {
+                    io.github.eslamasabry.oc.engine.composer.phrases.PhraseMomentRules.derive(
+                        it.ledger.messages,
+                        it.busy,
+                        clock?.now()?.toEpochMilliseconds() ?: 0,
+                        offline =
+                            world?.link?.value !=
+                                io.github.eslamasabry.oc.feature.chat.world.ChatLink.Live,
+                    )
+                }
+                ui.copy(
+                    phrases =
+                        if (
+                            moment?.moment == null ||
+                                moment.moment ==
+                                    io.github.eslamasabry.oc.engine.composer.phrases.PhraseMoment
+                                        .Working ||
+                                ui.sending ||
+                                moment.errorShown ||
+                                moment.continueShown ||
+                                ui.draft.text.isNotBlank() ||
+                                ui.draft.attachments.isNotEmpty()
+                        )
+                            emptyList()
+                        else
+                            phraseSources
+                                .singleOrNull()
+                                ?.suggestions(profileId, moment.moment!!)
+                                .orEmpty()
+                )
+            }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(STOP_AFTER_MS),
@@ -365,6 +407,11 @@ public class BasicComposerViewModel(
                 }
             }
         }
+    }
+
+    override fun hidePhrase(text: String) {
+        if (text !in state.value.phrases) return
+        viewModelScope.launch { phraseSources.singleOrNull()?.hide(profileId, text) }
     }
 
     override fun draftChanged(text: String) {
@@ -508,6 +555,17 @@ public class BasicComposerViewModel(
         selectingModel.value = true
         return try {
             w.selectModel(choice, variant) is Outcome.Ok
+        } finally {
+            selectingModel.value = false
+        }
+    }
+
+    override suspend fun cycleModel(reverse: Boolean): Boolean {
+        val w = world ?: return false
+        if (busy()) return false
+        selectingModel.value = true
+        return try {
+            w.cycleModel(reverse) is Outcome.Ok
         } finally {
             selectingModel.value = false
         }

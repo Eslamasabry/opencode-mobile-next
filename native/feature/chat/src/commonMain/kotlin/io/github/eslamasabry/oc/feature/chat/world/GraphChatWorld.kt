@@ -98,6 +98,10 @@ public class GraphChatWorlds(
     private val registry: ConnectionRegistry,
     private val draftStores: Set<ConversationDrafts> = emptySet(),
     private val recentBackings: Set<RecentModelsBacking> = emptySet(),
+    private val clock: kotlin.time.Clock? = null,
+    private val phrases:
+        Set<io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerPhrases> =
+        emptySet(),
     private val histories:
         Set<io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistory> =
         emptySet(),
@@ -127,6 +131,8 @@ public class GraphChatWorlds(
                     draftStores.singleOrNull(),
                     recentModels,
                     histories.singleOrNull(),
+                    phrases.singleOrNull(),
+                    clock,
                 ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
@@ -161,9 +167,16 @@ internal class GraphChatWorld(
     private val recentModels: RecentModels = RecentModels(),
     private val history: io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistory? =
         null,
+    private val phrases:
+        io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerPhrases? =
+        null,
+    private val clock: kotlin.time.Clock? = null,
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
+    private val phraseMoments =
+        mutableMapOf<Long, io.github.eslamasabry.oc.engine.composer.phrases.PhraseMoment>()
+    private val phraseRecorded = mutableSetOf<Long>()
     private val feedKeeper = TurnFeedKeeper(ref.sessionId.raw)
     override val turnFeed: StateFlow<TurnFeed> = feedKeeper.feed
     private var draftSession = draftStore?.open(ref)
@@ -1247,7 +1260,41 @@ internal class GraphChatWorld(
         return result
     }
 
-    private suspend fun applyModel(choice: ComposerModel?, variant: String): Outcome<Unit> {
+    override suspend fun cycleModel(reverse: Boolean): Outcome<Unit> {
+        if (readOnlyNow()) return readOnlyFailure()
+        suspend fun cycle(): Outcome<Unit> {
+            val current = mutableModels.value
+            val ring =
+                current.recent
+                    .filter { candidate ->
+                        current.choices.any {
+                            it.providerId == candidate.providerId && it.modelId == candidate.modelId
+                        }
+                    }
+                    .distinctBy { it.providerId to it.modelId }
+            if (ring.isEmpty()) return Outcome.Ok(Unit)
+            val index = ring.indexOfFirst {
+                it.providerId == current.selected?.providerId &&
+                    it.modelId == current.selected?.modelId
+            }
+            val next =
+                if (index < 0) {
+                    if (reverse) ring.lastIndex else 0
+                } else (index + if (reverse) ring.size - 1 else 1) % ring.size
+            return applyModel(ring[next], "", recordRecent = false)
+        }
+        val delivery = (currentAttached()?.graph as? ChatGraphAccessors)?.chatDelivery
+        val result = if (delivery == null) cycle() else delivery.withSelection(ref) { cycle() }
+        if (result is Outcome.Failed && result.failure != STALE)
+            mutableModels.value = mutableModels.value.copy(failure = result.failure)
+        return result
+    }
+
+    private suspend fun applyModel(
+        choice: ComposerModel?,
+        variant: String,
+        recordRecent: Boolean = true,
+    ): Outcome<Unit> {
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         if (!a.gateway.capabilities.value.sessionModelProviderSwitching)
             return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
@@ -1318,11 +1365,12 @@ internal class GraphChatWorld(
                                 )
                                 if (currentAttached() !== a) return Outcome.Failed(STALE)
                                 if (selectionEpoch != confirmedEpoch) return Outcome.Ok(Unit)
-                                recentModels.record(
-                                    ref.profileId.raw,
-                                    target.providerId,
-                                    target.modelId,
-                                )
+                                if (recordRecent)
+                                    recentModels.record(
+                                        ref.profileId.raw,
+                                        target.providerId,
+                                        target.modelId,
+                                    )
                                 mutableModels.value =
                                     mutableModels.value.copy(
                                         selected = target,
@@ -1459,6 +1507,13 @@ internal class GraphChatWorld(
                         models.value.variant.takeIf { v -> v.isNotEmpty() },
                     )
                 }
+        phraseMoments[id] =
+            io.github.eslamasabry.oc.engine.composer.phrases.PhraseMomentRules.derive(
+                    turnFeed.value.ledger.messages,
+                    mutableTranscript.value.run.busy,
+                    clock?.now()?.toEpochMilliseconds() ?: 0,
+                )
+                .moment ?: io.github.eslamasabry.oc.engine.composer.phrases.PhraseMoment.Idle
         val snapshot = SentSnapshot(files.toImmutableList(), selection)
         sentSnapshots[id] = snapshot
         val expected = currentAttached()
@@ -1611,6 +1666,17 @@ internal class GraphChatWorld(
         }
     }
 
+    private fun recordPhrase(localId: Long) {
+        val store = phrases ?: return
+        val moment = phraseMoments[localId] ?: return
+        val text = mutablePending.value.firstOrNull { it.localId == localId }?.text ?: return
+        if (!phraseRecorded.add(localId)) return
+        val attachments = sentFiles(localId).isNotEmpty()
+        registry.appScope.launch(registry.mainContext) {
+            store.record(ref.profileId, text, moment, attachments)
+        }
+    }
+
     private fun syncDelivery(delivery: ConnectionDelivery) {
         val engine = delivery.engine ?: return
         for ((localId, id) in deliveryIds) {
@@ -1626,6 +1692,7 @@ internal class GraphChatWorld(
             bubble?.reviewId?.let { recoveryIds[it] = localId }
             bubble?.dispatchedMessageId?.let { canonical[localId] = "prompt:${it.raw}" }
             if (bubble?.phase == SendPhase.Accepted) {
+                recordPhrase(localId)
                 admitted += localId
                 acknowledgedDraft(localId)
                 delivered += localId
@@ -1633,6 +1700,7 @@ internal class GraphChatWorld(
             for (outcome in engine.outcomes.value.filter { it.ref == ref }) when (outcome) {
                 is SendOutcome.Accepted ->
                     if (outcome.localId == id) {
+                        recordPhrase(localId)
                         if (voiceProof?.localId == localId)
                             voiceProof = voiceProof?.copy(accepted = true)
                         acknowledgedDraft(localId)

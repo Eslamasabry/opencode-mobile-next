@@ -90,14 +90,14 @@ import io.github.eslamasabry.oc.ui.words.res.p12SelectCancel
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuArchive
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuDelete
+import io.github.eslamasabry.oc.ui.words.res.sessionRelationsPin
+import io.github.eslamasabry.oc.ui.words.res.sessionRelationsUnpin
 import io.github.eslamasabry.oc.ui.words.res.sessionsReload
 import io.github.eslamasabry.oc.ui.words.res.stateContextUsage
 import io.github.eslamasabry.oc.ui.words.res.statePin
 import io.github.eslamasabry.oc.ui.words.res.statePinFailed
 import io.github.eslamasabry.oc.ui.words.res.stateSavedPreview
 import io.github.eslamasabry.oc.ui.words.res.stateUnpin
-import io.github.eslamasabry.oc.ui.words.res.sessionRelationsPin
-import io.github.eslamasabry.oc.ui.words.res.sessionRelationsUnpin
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -422,14 +422,9 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
             title = title,
             supporting = supporting,
             trailing =
-                when {
-                    row.pinAvailable && pinActions != null ->
-                        KitRowTrailing.Action(
-                            KitLineAction(pinLabel, { pinActions.togglePin(row.key) })
-                        )
-                    row.running -> KitRowTrailing.Value(running, chevron = false)
-                    else -> KitRowTrailing.None
-                },
+                KitRowTrailing.Action(
+                    KitLineAction(stringResource(Res.string.p12MoreFor, title), { menu = true })
+                ),
             growKey = row.ref,
             onLongClick = { menu = true },
             onLongClickLabel = stringResource(Res.string.p12MoreFor, title),
