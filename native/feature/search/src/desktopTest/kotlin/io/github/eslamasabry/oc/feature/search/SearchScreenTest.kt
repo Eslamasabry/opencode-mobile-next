@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.feature.search.presentation.ContentPhase
+import io.github.eslamasabry.oc.feature.search.presentation.GoToRow
 import io.github.eslamasabry.oc.feature.search.presentation.SearchActions
 import io.github.eslamasabry.oc.feature.search.presentation.SearchHitUi
 import io.github.eslamasabry.oc.feature.search.presentation.SearchPhase
@@ -97,6 +98,10 @@ class SearchScreenTest {
 
         override fun openServers() {
             calls += "servers"
+        }
+
+        override fun goTo(row: GoToRow) {
+            calls += "goto:${row.place ?: row.ref?.sessionId?.raw}"
         }
     }
 

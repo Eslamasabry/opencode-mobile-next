@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageActions
@@ -402,4 +404,4 @@ private fun ValueRow(title: String, value: String) {
 
 @Composable
 private fun cost(value: Double): String =
-    if (UsageFigures.isTiny(value)) stringResource(Res.string.usageTinyCost) else UsageFigures.money(value)
+    if (UsageFigures.isTiny(value)) stringResource(Res.string.usageTinyCost) else UsageFigures.money(value, symbolAfter = LocalLayoutDirection.current == LayoutDirection.Rtl)

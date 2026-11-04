@@ -53,6 +53,8 @@ public data class SearchUi(
     val failure: Failure? = null,
     /** A recent-search write failed; the search itself still works. */
     val recentFailed: Boolean = false,
+    /** The Go to menu's rows for the chosen server (B-NAV-056); empty until the server has been read. */
+    val goTo: ImmutableList<GoToRow> = persistentListOf(),
 ) {
     val serverName: String?
         get() = servers.firstOrNull { it.id == server }?.name
@@ -82,4 +84,7 @@ public interface SearchActions {
 
     /** The way out of "No server connected". */
     public fun openServers()
+
+    /** Open the place or conversation a Go to row names. */
+    public fun goTo(row: GoToRow)
 }

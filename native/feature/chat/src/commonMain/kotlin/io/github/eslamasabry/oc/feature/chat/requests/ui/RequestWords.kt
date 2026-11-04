@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.ui.words.res.e7PermissionAction6
 import io.github.eslamasabry.oc.ui.words.res.kitRequestChangeSize
 import io.github.eslamasabry.oc.ui.words.res.kitToolTookMinutes
 import io.github.eslamasabry.oc.ui.words.res.kitToolTookSeconds
+import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -62,10 +63,10 @@ import org.jetbrains.compose.resources.stringResource
 // layer says it). Every string already exists in :ui:words (ported from app_en.arb / app_ar.arb).
 
 /** Left-to-right isolate for a command or a file name inside a sentence (Dart `KitBidi.ltr`). */
-private fun ltr(text: String): String = "⁦$text⁩"
+private fun ltr(text: String): String = KitBidi.ltr(text)
 
 /** First-strong isolate for a project or folder name (Dart `KitBidi.auto`). */
-private fun auto(text: String): String = "⁨$text⁩"
+private fun auto(text: String): String = KitBidi.auto(text)
 
 /** The ask as one question: "Run npm install in neon-breaker?", "Edit 5 files?", "Write outside this project?". */
 @Composable
