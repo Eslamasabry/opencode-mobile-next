@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
+import io.github.eslamasabry.oc.core.domain.StagedRevertGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent as CoreEvent
 import io.github.eslamasabry.oc.core.domain.facet
@@ -641,23 +642,28 @@ internal class GraphChatWorld(
         val version = handle.historyVersion()
         val feedVersion = feedKeeper.historyVersion()
         val at = gateway.location.value
-        val session = gateway.session(sid)
-        if (session is Outcome.Failed) {
-            if (currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live) {
-                mutableLoad.value = ChatLoad.Failed(session.failure)
+        // Only a backend with V2's staged revert can hide its newest pages; others read history directly, as before.
+        val boundary =
+            if (gateway.facet<StagedRevertGateway>() == null) null
+            else {
+                val session = gateway.session(sid)
+                if (session is Outcome.Failed) {
+                    if (currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live) {
+                        mutableLoad.value = ChatLoad.Failed(session.failure)
+                    }
+                    return session
+                }
+                if (currentAttached()?.handle !== handle || gateway.location.value != at) {
+                    return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+                }
+                val details = (session as Outcome.Ok).value
+                if (details.id != sid) {
+                    val failure = Failure.UnreadableReply()
+                    if (mutableLoad.value !is ChatLoad.Live) mutableLoad.value = ChatLoad.Failed(failure)
+                    return Outcome.Failed(failure)
+                }
+                details.stagedRevert?.messageId
             }
-            return session
-        }
-        if (currentAttached()?.handle !== handle || gateway.location.value != at) {
-            return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
-        }
-        val details = (session as Outcome.Ok).value
-        if (details.id != sid) {
-            val failure = Failure.UnreadableReply()
-            if (mutableLoad.value !is ChatLoad.Live) mutableLoad.value = ChatLoad.Failed(failure)
-            return Outcome.Failed(failure)
-        }
-        val boundary = details.stagedRevert?.messageId
         val read = readHistoryAtStagedBoundary(
             gateway,
             sid,

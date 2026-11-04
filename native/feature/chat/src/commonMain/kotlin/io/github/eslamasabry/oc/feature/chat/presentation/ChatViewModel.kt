@@ -131,6 +131,8 @@ public class ChatViewModel(
 
     override fun openPath(path: String, line: Int?): Unit = presenter.openPath(path, line)
 
+    override fun confirmPhoneFile(): Unit = presenter.confirmPhoneFile()
+
     override fun checkPaths(paths: List<String>): Unit = presenter.checkPaths(paths)
 
     @AssistedFactory

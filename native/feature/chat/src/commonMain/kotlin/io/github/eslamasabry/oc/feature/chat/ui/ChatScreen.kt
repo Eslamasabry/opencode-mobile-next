@@ -37,6 +37,12 @@ import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.ui.words.res.phoneSharedAccessTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneSharedAccessBody
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallAction
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallBody
+import io.github.eslamasabry.oc.ui.words.res.phoneFileInstallTitle
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenAction
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenBody
+import io.github.eslamasabry.oc.ui.words.res.phoneFileOpenTitle
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusKind
@@ -445,15 +451,12 @@ public fun ChatScreen(
             KitConfirm(
                 spec = confirmSpec(state.confirm),
                 onConfirm = {
-                    when (val confirm = latest.confirm) {
+                    when (latest.confirm) {
                         is ChatConfirm.DeleteMessage -> actions.confirmDelete()
                         ChatConfirm.LeaveUnsaved -> actions.confirmLeave()
                         is ChatConfirm.UndoFrom -> actions.confirmUndo()
                         is ChatConfirm.OpenLink -> actions.confirmOpenLink()
-                        is ChatConfirm.PhoneFileAccess -> {
-                            actions.dismissConfirm()
-                            actions.openPath(confirm.path, null)
-                        }
+                        is ChatConfirm.PhoneFile, is ChatConfirm.PhoneFileAccess -> actions.confirmPhoneFile()
                         null -> Unit
                     }
                 },
@@ -690,6 +693,21 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
                 kind = KitConfirmKind.Destructive,
                 body = stringResource(Res.string.chatFeelUndoBody),
             )
+        is ChatConfirm.PhoneFile -> {
+            val name = confirm.path.substringAfterLast('/')
+            if (confirm.install)
+                KitConfirmSpec(
+                    title = stringResource(Res.string.phoneFileInstallTitle, name),
+                    confirmLabel = stringResource(Res.string.phoneFileInstallAction),
+                    body = stringResource(Res.string.phoneFileInstallBody),
+                )
+            else
+                KitConfirmSpec(
+                    title = stringResource(Res.string.phoneFileOpenTitle, name),
+                    confirmLabel = stringResource(Res.string.phoneFileOpenAction),
+                    body = stringResource(Res.string.phoneFileOpenBody),
+                )
+        }
         is ChatConfirm.PhoneFileAccess ->
             KitConfirmSpec(
                 title = stringResource(Res.string.phoneSharedAccessTitle),

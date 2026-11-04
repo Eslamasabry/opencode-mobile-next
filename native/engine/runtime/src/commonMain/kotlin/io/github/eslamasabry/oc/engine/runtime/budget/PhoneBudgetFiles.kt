@@ -1,7 +1,9 @@
 package io.github.eslamasabry.oc.engine.runtime.budget
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -84,6 +86,13 @@ public object PhoneBudgetFiles {
         if (!changed) return current
         val result = root.toMutableMap()
         if (env.isEmpty()) result.remove("env") else result["env"] = JsonObject(env)
-        return if (result.isEmpty()) "" else JsonObject(result).toString() + "\n"
+        // The person's file keeps Flutter's readable two-space layout (JsonEncoder.withIndent('  ')).
+        return if (result.isEmpty()) "" else pretty.encodeToString(JsonElement.serializer(), JsonObject(result)) + "\n"
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    private val pretty = Json {
+        prettyPrint = true
+        prettyPrintIndent = "  "
     }
 }

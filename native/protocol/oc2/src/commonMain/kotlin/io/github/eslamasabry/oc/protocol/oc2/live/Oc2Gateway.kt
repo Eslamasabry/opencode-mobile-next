@@ -439,7 +439,23 @@ internal class Oc2Gateway(
                     }
                 }
             },
-        ) { root -> sessionValue(data(root))?.id }
+        ) { root -> sessionValue(data(root))?.id }.also { forked ->
+            // Flutter ops_sessions: give the copy a plain name, best effort; the server's stamp stays otherwise.
+            val copy = (forked as? Outcome.Ok)?.value ?: return@also
+            val original = (session(id) as? Outcome.Ok)?.value?.title
+            forkedTitle(original)?.let { renameSession(copy, it) }
+        }
+    }
+
+    /** Dart `forkedSessionTitle`: null for an unreadable or placeholder title, so the copy keeps the server's. */
+    private fun forkedTitle(original: String?): String? {
+        var title = original?.trim().orEmpty()
+        val lower = title.lowercase()
+        FORK_TITLE_MARKERS.map { lower.indexOf(it) }.filter { it >= 0 }.minOrNull()?.let { at ->
+            title = title.substring(0, at).replace(Regex("""[\s…]*(?:\.\.\.)?[\s…]*$"""), "").trim()
+        }
+        if (title.isEmpty() || FORK_PLACEHOLDER_TITLE.matches(title)) return null
+        return "Copy of $title"
     }
 
     override suspend fun renameSession(id: SessionId, title: String): Outcome<Unit> =
@@ -469,9 +485,24 @@ internal class Oc2Gateway(
         id: SessionId,
         cursor: String?,
         limit: Int,
-    ): Outcome<ServerPage<MessageWithParts>> = historyPage(id, cursor, limit, 16 * 1024 * 1024, 30_000).map {
-        ServerPage(it.items, it.nextCursor)
-    }
+    ): Outcome<ServerPage<MessageWithParts>> =
+        // The ordinary transcript keeps the connection's normal read and typed failures; only agent-card recovery
+        // takes the bounded path below (Flutter keeps the two apart too).
+        read(
+            "/session/${sid(id)}/message",
+            query =
+                if (cursor != null) mapOf("cursor" to cursor)
+                else mapOf("limit" to limit.toString(), "order" to "desc"),
+        ) { root ->
+            val rows = pageEntries(root) ?: return@read null
+            val history = Oc2History(redactor)
+            val messages =
+                rows.reversed().map { history.message(id.raw, data(it)) ?: return@read null }
+            ServerPage(
+                messages.toImmutableList(),
+                cursor(root)?.takeIf { it.isNotEmpty() && rows.size >= limit },
+            )
+        }
 
     override suspend fun boundedHistoryPage(
         session: SessionId,
@@ -1333,3 +1364,12 @@ internal class Oc2Gateway(
 }
 
 private const val AGENT_BOOT_RETRY_MS = 500L
+
+private val FORK_TITLE_MARKERS = listOf("<tool_call", "</tool_call", "<tool_use", "<function", "</function", "<|")
+
+private val FORK_PLACEHOLDER_TITLE =
+    Regex(
+        """^(?:(?:New|Child)\s+session|Fork(?:ed)?(?:\s+session)?)?\s*[-:–]?\s*""" +
+            """\d{4}-\d{2}-\d{2}T[\d:.]+(?:Z|[+-]\d{2}:?\d{2})?$""",
+        RegexOption.IGNORE_CASE,
+    )

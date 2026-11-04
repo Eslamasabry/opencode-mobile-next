@@ -165,6 +165,10 @@ public sealed interface ChatConfirm {
     /** A link from a reply asks first, naming where it goes (R17: policy → opener, never straight to the platform). */
     public data class OpenLink(val url: String, val host: String) : ChatConfirm
 
+    /** Flutter offerPhoneFile: "Open {name}?" / "Install {name}?" before the file is handed to Android. */
+    public data class PhoneFile(val path: String, val install: Boolean) : ChatConfirm
+
+    /** Android asked for file access; the person comes back and tries again (visible Retry). */
     public data class PhoneFileAccess(val path: String) : ChatConfirm
 }
 
@@ -279,6 +283,9 @@ public interface ChatActions {
      * viewer, any other file in the file viewer (which offers Open with and Share).
      */
     public fun openPath(path: String, line: Int?) {}
+
+    /** The person said yes to "Open {name}?"/"Install {name}?", or tries again after allowing file access. */
+    public fun confirmPhoneFile() {}
 
     /** B-CHAT-064: the path-like text a reply shows; the ones that exist on the server become tappable. */
     public fun checkPaths(paths: List<String>) {}

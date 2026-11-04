@@ -17,7 +17,10 @@ public interface ChatOutside {
     /** A local file link stays in the app's file flow, never in the browser. */
     public fun fileLinkPath(url: String): String? = null
 
-    /** Open a shared-storage binary/APK, request access, or keep the normal file preview. */
+    /** Flutter phoneFileAction: a shared-storage binary/APK of a server on this phone is Android's to open. */
+    public suspend fun phoneFileKind(ref: ConversationRef, path: String): PhoneFileKind = PhoneFileKind.Preview
+
+    /** After the person said yes: open the shared-storage binary/APK, request access, or keep the file preview. */
     public suspend fun openPhoneFile(ref: ConversationRef, path: String): Outcome<PhoneFileOpen> = Outcome.Ok(PhoneFileOpen.Preview)
 
     /** Puts [text] on the clipboard verbatim (a reply is the person's to paste). False = it did not work. */
@@ -63,3 +66,6 @@ public class NoChatOutside : ChatOutside {
 
 /** The permission round trip leaves a visible Retry action in chat. */
 public enum class PhoneFileOpen { Preview, Opened, AccessRequested }
+
+/** What a tap on a file path does: the in-app preview, Android's "Open with…", or Android's package installer. */
+public enum class PhoneFileKind { Preview, Open, Install }

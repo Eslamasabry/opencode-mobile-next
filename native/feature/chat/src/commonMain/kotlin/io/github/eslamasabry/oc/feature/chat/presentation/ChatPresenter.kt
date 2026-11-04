@@ -465,14 +465,30 @@ public class ChatPresenter(
         val clean = path.trim()
         if (clean.isEmpty() || !world.capabilities.value.fileBrowsing) return
         launcher.launch {
-            when (val handed = outside?.openPhoneFile(world.ref, clean)) {
+            when (outside?.phoneFileKind(world.ref, clean) ?: PhoneFileKind.Preview) {
+                PhoneFileKind.Preview -> previewPath(clean, line)
+                PhoneFileKind.Open -> local.update { it.copy(confirm = ChatConfirm.PhoneFile(clean, install = false)) }
+                PhoneFileKind.Install -> local.update { it.copy(confirm = ChatConfirm.PhoneFile(clean, install = true)) }
+            }
+        }
+    }
+
+    override fun confirmPhoneFile() {
+        val path = when (val asked = local.value.confirm) {
+            is ChatConfirm.PhoneFile -> asked.path
+            is ChatConfirm.PhoneFileAccess -> asked.path
+            else -> return
+        }
+        local.update { it.copy(confirm = null) }
+        val out = outside ?: return
+        launcher.launch {
+            when (val handed = out.openPhoneFile(world.ref, path)) {
                 is Outcome.Failed -> local.update { it.copy(actionFailure = handed.failure) }
                 is Outcome.Ok -> when (handed.value) {
-                    PhoneFileOpen.Preview -> previewPath(clean, line)
+                    PhoneFileOpen.Preview -> previewPath(path, null)
                     PhoneFileOpen.Opened -> Unit
-                    PhoneFileOpen.AccessRequested -> local.update { it.copy(confirm = ChatConfirm.PhoneFileAccess(clean)) }
+                    PhoneFileOpen.AccessRequested -> local.update { it.copy(confirm = ChatConfirm.PhoneFileAccess(path)) }
                 }
-                null -> previewPath(clean, line)
             }
         }
     }

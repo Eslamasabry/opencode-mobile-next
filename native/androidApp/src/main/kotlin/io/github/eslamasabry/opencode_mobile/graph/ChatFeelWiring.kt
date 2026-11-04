@@ -24,12 +24,12 @@ import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
-import io.github.eslamasabry.oc.engine.runtime.paths.SharedStoragePath
 import io.github.eslamasabry.oc.core.security.ApprovedLink
 import io.github.eslamasabry.oc.core.security.ExternalLinkOpener
 import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
 import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
+import io.github.eslamasabry.oc.feature.chat.presentation.PhoneFileKind
 import io.github.eslamasabry.oc.feature.chat.presentation.PhoneFileOpen
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatOutside
 import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
@@ -75,18 +75,37 @@ class AndroidChatOutside(
             null
         }
 
+    /** Flutter phoneFileAction: only a server on this phone, only shared storage, only kinds a preview cannot show. */
+    override suspend fun phoneFileKind(ref: ConversationRef, path: String): PhoneFileKind {
+        val graph = connections.graphFor(ref) ?: return PhoneFileKind.Preview
+        val shared = PHONE_SHARED_ROOTS.any { path == it || path.startsWith("$it/") }
+        if (!AddressRules.isLoopback(graph.profile.origin.host) || !shared) return PhoneFileKind.Preview
+        val extension = path.substringAfterLast('/').substringAfterLast('.', "").lowercase()
+        return when {
+            extension == "apk" -> PhoneFileKind.Install
+            extension in SHARED_BINARY_TYPES -> PhoneFileKind.Open
+            else -> PhoneFileKind.Preview
+        }
+    }
+
     override suspend fun openPhoneFile(ref: ConversationRef, path: String): Outcome<PhoneFileOpen> {
         val graph = connections.graphFor(ref) ?: return Outcome.Ok(PhoneFileOpen.Preview)
-        if (!AddressRules.isLoopback(graph.profile.origin.host) || !SharedStoragePath.isShared(path)) return Outcome.Ok(PhoneFileOpen.Preview)
+        if (phoneFileKind(ref, path) == PhoneFileKind.Preview) return Outcome.Ok(PhoneFileOpen.Preview)
         val extension = path.substringAfterLast('/').substringAfterLast('.', "").lowercase()
-        if (extension != "apk" && extension !in SHARED_BINARY_TYPES) return Outcome.Ok(PhoneFileOpen.Preview)
         return try {
             val requested = withContext(dispatchers.main) {
                 if (Build.VERSION.SDK_INT >= 30 && !Environment.isExternalStorageManager()) {
-                    application.startActivity(
-                        Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${application.packageName}"))
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    )
+                    // A Settings page, not a dialog (Flutter StorageAccess): the person returns and taps Try again.
+                    try {
+                        application.startActivity(
+                            Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${application.packageName}"))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    } catch (_: ActivityNotFoundException) {
+                        application.startActivity(
+                            Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    }
                     true
                 } else if (Build.VERSION.SDK_INT < 30 && application.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     val activity = activities.current ?: return@withContext false
@@ -181,6 +200,8 @@ class AndroidChatOutside(
 
     private companion object {
         const val MAX_ASKED = 8
+        /** Flutter phone_file.dart `_sharedRoots`: the internal shared storage only (the canonical check follows). */
+        val PHONE_SHARED_ROOTS = listOf("/sdcard", "/storage/emulated/0", "/storage/self/primary", "/mnt/sdcard")
         val SHARED_BINARY_TYPES = setOf(
             "zip", "tar", "gz", "tgz", "bz2", "xz", "7z", "rar", "iso", "img", "bin", "apks", "xapk", "aab",
             "jar", "so", "db", "sqlite", "mp3", "wav", "flac", "ogg", "m4a", "mp4", "mkv", "mov", "avi", "webm",
