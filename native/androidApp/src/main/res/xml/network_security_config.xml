@@ -6,7 +6,8 @@
       configuration cannot scope cleartext permission to those runtime origins
       or express IP ranges. The base permission is therefore the narrowest
       platform setting that supports arbitrary user-selected HTTP servers.
-      Dart remains the security boundary: every non-loopback HTTP origin needs
+      The app's transport remains the security boundary (TrustGateInterceptor
+      in the native app, as Dart was in Flutter): every non-loopback HTTP origin needs
       explicit, origin-bound per-profile consent before any authenticated
       request, and the OpenCode 2 transport refuses redirects so consent and
       credentials cannot cross to a different origin or downgrade silently.

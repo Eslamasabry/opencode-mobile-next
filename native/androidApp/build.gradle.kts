@@ -301,21 +301,26 @@ androidComponents.onVariants { variant ->
 }
 
 // A production release may only keep one of the two existing populations' signing lineages.
-// This task runs only for Release packaging; compile-only migration work never opens a key store.
+// Release builds that Gradle leaves unsigned (signed afterwards with apksigner, as the migration
+// proof and the build server do) are checked by the signer comparison at delivery instead. The
+// values are captured at configuration time so the task stays configuration-cache safe.
 val verifyProductionLineage by tasks.registering {
+    val signing = android.buildTypes.getByName("release").signingConfig
+    val storeFile = signing?.storeFile
+    val storeType = signing?.storeType ?: "JKS"
+    val storePassword = signing?.storePassword
+    val keyAlias = signing?.keyAlias
     doLast {
-        val app = project.extensions.getByType<com.android.build.api.dsl.ApplicationExtension>()
-        val signing =
-            app.buildTypes.getByName("release").signingConfig
-                ?: error(
-                    "Production release signing must be configured with the existing installed lineage."
-                )
-        val file = signing.storeFile ?: error("Production signing store is missing.")
-        val store = KeyStore.getInstance(signing.storeType ?: "JKS")
-        file.inputStream().use { store.load(it, signing.storePassword?.toCharArray()) }
+        if (storeFile == null) {
+            logger.lifecycle(
+                "Release is unsigned here; its signer is compared with the installed lineage at delivery."
+            )
+            return@doLast
+        }
+        val store = KeyStore.getInstance(storeType)
+        storeFile.inputStream().use { store.load(it, storePassword?.toCharArray()) }
         val certificate =
-            store.getCertificate(signing.keyAlias)
-                ?: error("Production signing certificate is missing.")
+            store.getCertificate(keyAlias) ?: error("Production signing certificate is missing.")
         val digest =
             MessageDigest.getInstance("SHA-256").digest(certificate.encoded).joinToString("") {
                 "%02X".format(it.toInt() and 255)
