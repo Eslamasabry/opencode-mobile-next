@@ -39,7 +39,33 @@ public data class ConversationRowUi(
     val title: RowTitle,
     val project: String,
     val status: RowStatus,
+    /** How long ago it last moved; null when the clock is unknown. */
+    val ago: RelativeAge? = null,
 )
+
+/** A relative time, localized by the screen (B-L10N-004): under a minute, minutes, hours, then days. */
+public sealed interface RelativeAge {
+    public data object JustNow : RelativeAge
+
+    public data class Minutes(val count: Int) : RelativeAge
+
+    public data class Hours(val count: Int) : RelativeAge
+
+    public data class Days(val count: Int) : RelativeAge
+
+    public companion object {
+        public fun of(thenMs: Long, nowMs: Long): RelativeAge? {
+            if (nowMs <= 0 || thenMs <= 0) return null
+            val minutes = ((nowMs - thenMs).coerceAtLeast(0) / 60_000L).toInt()
+            return when {
+                minutes < 1 -> JustNow
+                minutes < 60 -> Minutes(minutes)
+                minutes < 60 * 24 -> Hours(minutes / 60)
+                else -> Days(minutes / (60 * 24))
+            }
+        }
+    }
+}
 
 /** A recent project chip; [selected] when it is the project filter. */
 public data class ProjectChipUi(val directory: String, val name: String, val selected: Boolean)

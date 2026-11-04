@@ -22,6 +22,7 @@ public object ChatsState {
         filters: ChatsFilters,
         startOfTodayMs: Long,
         settingsAvailable: Boolean,
+        nowMs: Long = 0L,
     ): ChatsUi {
         val roots = feed.items.filter { !it.isSubagent }
         val projects = ChatFeedRules.projects(roots)
@@ -54,8 +55,8 @@ public object ChatsState {
         val (today, earlier) = visible.partition { it.lastActivityMs >= startOfTodayMs }
         return ChatsUi(
             phase = phase,
-            today = today.map(::row).toImmutableList(),
-            earlier = earlier.map(::row).toImmutableList(),
+            today = today.map { row(it, nowMs) }.toImmutableList(),
+            earlier = earlier.map { row(it, nowMs) }.toImmutableList(),
             needsYou = roots.count { it.status == ChatStatus.NeedsYou },
             running = roots.count { it.status == ChatStatus.Running },
             projects = chips.toImmutableList(),
@@ -74,7 +75,7 @@ public object ChatsState {
             item.projectName.contains(q, ignoreCase = true)
     }
 
-    public fun row(item: ChatFeedItem): ConversationRowUi =
+    public fun row(item: ChatFeedItem, nowMs: Long = 0L): ConversationRowUi =
         ConversationRowUi(
             key = item.identity,
             ref = item.ref,
@@ -87,6 +88,7 @@ public object ChatsState {
                     ChatStatus.Failed -> RowStatus.Failed
                     ChatStatus.Idle -> if (item.finishedUnseen) RowStatus.Done else RowStatus.None
                 },
+            ago = RelativeAge.of(item.lastActivityMs, nowMs),
         )
 
     /**
