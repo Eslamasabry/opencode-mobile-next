@@ -31,6 +31,8 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.platform.PromptFilePicker
+import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistorySheet
+import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistoryUi
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.AttachKind
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerActions
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerUi
@@ -97,6 +99,8 @@ import io.github.eslamasabry.oc.ui.words.res.composerFullThinking
 import io.github.eslamasabry.oc.ui.words.res.composerFullThinkingDefault
 import io.github.eslamasabry.oc.ui.kit.KitRow
 import io.github.eslamasabry.oc.ui.words.res.composerFullAddTitle
+import io.github.eslamasabry.oc.ui.kit.row.KitRow as KitActionRow
+import io.github.eslamasabry.oc.ui.words.res.chatHistoryTitle
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachModelWithoutFiles
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachNoPicker
@@ -125,6 +129,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitComposerSending
 import io.github.eslamasabry.oc.ui.words.res.kitComposerTrayClose
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStopShort
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
+import io.github.eslamasabry.oc.ui.words.res.promptHistorySaveFailed
+import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
@@ -145,6 +151,7 @@ public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : Comp
                 create(target)
             }
         val state by vm.state.collectAsStateWithLifecycle()
+        val history by vm.history.collectAsStateWithLifecycle()
         BasicComposer(
             state,
             vm,
@@ -155,6 +162,8 @@ public class BasicComposerHost(private val voices: Set<KitComposerVoice>) : Comp
                 target.sessionId?.let {
                     ConversationRef(ProfileId(target.profileId), SessionId(it))
                 },
+            history = history,
+            refreshHistory = vm::loadHistory,
         )
     }
 }
@@ -178,6 +187,8 @@ public fun BasicComposer(
     modifier: Modifier = Modifier,
     voice: KitComposerVoice? = null,
     conversationRef: ConversationRef? = null,
+    history: ComposerHistoryUi = ComposerHistoryUi(),
+    refreshHistory: (() -> Unit)? = null,
 ) {
     val field = remember(state.targetKey) { TextFieldState() }
     val focus = remember(state.targetKey) { FocusRequester() }
@@ -228,6 +239,10 @@ public fun BasicComposer(
         val request = insert ?: return@LaunchedEffect
         if (!editorReady || !state.draft.ready) return@LaunchedEffect
         val current = field.text.toString()
+        if (request.onlyIfEmpty && (current.isNotBlank() || state.draft.attachments.isNotEmpty())) {
+            chrome.insertDone(request.id)
+            return@LaunchedEffect
+        }
         val next =
             if (request.replace || current.isBlank()) request.text
             else current.trimEnd() + "\n" + request.text
@@ -281,6 +296,7 @@ public fun BasicComposer(
     var modelsOpen by remember(state.targetKey) { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
+    var historyOpen by remember(state.targetKey) { mutableStateOf(false) }
     val selectAndClose: (ComposerModel?) -> Unit = { choice ->
         scope.launch { if (actions.selectModel(choice)) modelsOpen = false }
     }
@@ -293,6 +309,19 @@ public fun BasicComposer(
         actions.draftChanged(now)
     }
     Column(modifier) {
+        // A one-off note, as in Flutter: dismissing hides this failure until a new one arrives.
+        var dismissedSave by remember { mutableStateOf<Failure?>(null) }
+        if (history.saveFailure != null && history.saveFailure !== dismissedSave)
+            KitNotice(
+                message = stringResource(Res.string.promptHistorySaveFailed),
+                tone = StatusTone.Failure,
+                dismiss =
+                    KitLineAction(
+                        stringResource(Res.string.workspaceDismissNotice),
+                        { dismissedSave = history.saveFailure },
+                    ),
+                modifier = Modifier.testTag("prompt-history-save-failed"),
+            )
         if (state.draft.failure != null || state.draft.sendBlocked) {
             KitErrorNotice(
                 message =
@@ -367,14 +396,6 @@ public fun BasicComposer(
                 modifier = Modifier.weight(1f, fill = false).testTag("chat-model-button"),
                 maxLines = 1,
             )
-            val attachReason =
-                when {
-                    !state.filesAvailable ->
-                        stringResource(Res.string.composerPreviewAttachNoPicker)
-                    state.models.selected?.supportsAttachments == false ->
-                        stringResource(Res.string.composerPreviewAttachModelWithoutFiles)
-                    else -> null
-                }
             KitButton(
                 label =
                     stringResource(
@@ -386,9 +407,6 @@ public fun BasicComposer(
                     if (state.attachKinds.isEmpty()) actions.attachFile() else addOpen = !addOpen
                 },
                 role = KitButtonRole.Secondary,
-                enabled =
-                    if (attachReason != null) KitEnabled.Disabled(attachReason)
-                    else KitEnabled.Enabled,
                 working = state.pickingFile,
                 modifier = Modifier.testTag("chat-attach-button"),
             )
@@ -434,6 +452,18 @@ public fun BasicComposer(
                         ) {
                             addOpen = false
                             actions.attach(AttachKind.Clipboard)
+                        }
+                    )
+                // PORT-SCREENS-1: reuse a prompt from this conversation or recent sends.
+                if (refreshHistory != null)
+                    add(
+                        KitTrayAction(
+                            stringResource(Res.string.chatHistoryTitle),
+                            KitTrayKind.History,
+                        ) {
+                            addOpen = false
+                            refreshHistory()
+                            historyOpen = true
                         }
                     )
             }
@@ -703,6 +733,23 @@ public fun BasicComposer(
             }
         }
     }
+    ComposerHistorySheet(
+        visible = historyOpen,
+        state = history,
+        onDismiss = { historyOpen = false },
+        onRetry = { refreshHistory?.invoke() },
+        onChoose = { words ->
+            val current = field.text.toString().trimEnd()
+            val next = if (current.isEmpty()) words else "$current\n\n$words"
+            field.edit { replace(0, length, next) }
+            editor.userEditSerial += 1
+            editor.lastReported = next
+            repeatRevision = null
+            actions.draftChanged(next)
+            historyOpen = false
+            focus.requestFocus()
+        },
+    )
     LaunchedEffect(state.targetKey, state.draft.editRevision, state.canRepeat) {
         if (!state.canRepeat || repeatRevision != state.draft.editRevision) repeatRevision = null
     }

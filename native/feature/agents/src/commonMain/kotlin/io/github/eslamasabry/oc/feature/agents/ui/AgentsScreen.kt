@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
+import io.github.eslamasabry.oc.feature.agents.hub.AgentsHubActions
+import io.github.eslamasabry.oc.feature.agents.hub.AgentsHubControlsUi
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsIssue
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsProblem
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
@@ -63,6 +65,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentsHubOnComputers
 import io.github.eslamasabry.oc.ui.words.res.agentsHubOnPhone
 import io.github.eslamasabry.oc.ui.words.res.agentsHubSignInFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHubStartFailed
+import io.github.eslamasabry.oc.ui.words.res.agentsHubSwitchFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsRunOnBuiltIn
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsStateChecking
@@ -73,6 +76,9 @@ import io.github.eslamasabry.oc.ui.words.res.agentsStateReady
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsStateStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUnavailable
+import io.github.eslamasabry.oc.ui.words.res.agentsSwitchToBuiltIn
+import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsSupporting
+import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
 import io.github.eslamasabry.oc.ui.words.res.codexProjectFolder
 import io.github.eslamasabry.oc.ui.words.res.computerToolsOpen
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
@@ -109,7 +115,12 @@ import org.jetbrains.compose.resources.stringResource
  * visible button, never a hidden gesture.
  */
 @Composable
-public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
+public fun AgentsScreen(
+    state: AgentsUi,
+    actions: AgentsActions,
+    hub: AgentsHubControlsUi? = null,
+    hubActions: AgentsHubActions? = null,
+) {
     val name = remember { TextFieldState() }
     val address = remember { TextFieldState() }
     val folder = remember { TextFieldState() }
@@ -125,8 +136,8 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
     }
     LaunchedEffect(Unit) {
         snapshotFlow {
-                listOf(address.text.toString(), folder.text.toString(), password.text.toString())
-            }
+            listOf(address.text.toString(), folder.text.toString(), password.text.toString())
+        }
             .collect { actions.edited() }
     }
     val enabled =
@@ -178,20 +189,43 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                         )
                 }
             }
-            AgentInstallPanel(state, actions, gutter, enabled)
-            KitButton(
-                stringResource(Res.string.linuxAgentPayloadRefresh),
-                actions::refreshPhone,
-                gutter,
-                role = KitButtonRole.Secondary,
-                enabled = enabled,
-            )
-            if (!state.phone.available) {
+            hub?.failure?.let { failure ->
+                KitErrorNotice(
+                    stringResource(Res.string.agentsHubSwitchFailed),
+                    gutter,
+                    failure = failure,
+                    detailsLabel = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                )
+            }
+            val phoneAvailable = state.phone.available && hub?.connection?.usingBuiltIn != false
+            if (phoneAvailable) AgentInstallPanel(state, actions, gutter, enabled)
+            if (phoneAvailable)
+                KitButton(
+                    stringResource(Res.string.linuxAgentPayloadRefresh),
+                    actions::refreshPhone,
+                    gutter,
+                    role = KitButtonRole.Secondary,
+                    enabled = enabled,
+                )
+            if (!phoneAvailable) {
                 KitRow(
                     title = stringResource(Res.string.agentsRunOnBuiltIn),
                     supporting = stringResource(Res.string.agentsStateUnavailable),
                     supportingMaxLines = 3,
                 )
+                if (hub?.connection?.builtInAvailable == true && hubActions != null) {
+                    KitButton(
+                        stringResource(Res.string.agentsSwitchToBuiltIn),
+                        hubActions::switchToBuiltIn,
+                        gutter,
+                        enabled =
+                            if (hub.working)
+                                KitEnabled.Disabled(stringResource(Res.string.serversWorking))
+                            else enabled,
+                        working = hub.working,
+                    )
+                }
             } else {
                 for (agent in state.phone.agents) {
                     KitRow(title = agent.name, supporting = phoneStatusWords(agent.status))
@@ -213,6 +247,15 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                         )
                     }
                 }
+            }
+
+            if (phoneAvailable && hubActions != null) {
+                KitRow(
+                    title = stringResource(Res.string.cardsFromAgentsTitle),
+                    supporting = stringResource(Res.string.cardsFromAgentsSupporting),
+                    supportingMaxLines = 3,
+                    onClick = hubActions::openCardsSettings,
+                )
             }
 
             KitSectionLabel(stringResource(Res.string.agentsHubOnComputers))

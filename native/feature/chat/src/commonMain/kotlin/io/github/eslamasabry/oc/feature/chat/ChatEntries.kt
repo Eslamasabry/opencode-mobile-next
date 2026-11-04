@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,9 +25,11 @@ import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.presentation.SessionTransferViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui.SessionTransferSheet
+import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewModel
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -70,6 +73,19 @@ public class ChatEntries(
         entry<ChatRoute> { route ->
             val vm = assistedMetroViewModel<ChatViewModel, ChatViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
+            val startVm =
+                assistedMetroViewModel<ChatStartViewModel, ChatStartViewModel.Factory> {
+                    create(route)
+                }
+            val start by startVm.state.collectAsStateWithLifecycle()
+            val emptyChat =
+                state.phase == ChatPhase.Live &&
+                    state.rows.isEmpty() &&
+                    state.pending.isEmpty() &&
+                    state.live == null
+            // Older history can finish loading after the chat turned empty; re-check then too.
+            val startVisible = emptyChat && start.emptyEligible
+            LaunchedEffect(startVisible) { startVm.visible(startVisible) }
             val requests by vm.requests.collectAsStateWithLifecycle()
             val slot =
                 requests?.state?.collectAsStateWithLifecycle()?.value
@@ -157,6 +173,8 @@ public class ChatEntries(
                                     ApprovalChipSlot(approval, headerVm),
                                 ),
                             replyReader = readers.firstOrNull(),
+                            start = start,
+                            startActions = startVm,
                         )
                         SessionTransferSheet(transferState, transfer)
                     }

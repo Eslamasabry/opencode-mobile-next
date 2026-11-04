@@ -49,12 +49,17 @@ import io.github.eslamasabry.oc.feature.chat.presentation.MessageOrder
 import io.github.eslamasabry.oc.feature.chat.presentation.PictureUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
+import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
+import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartActions
+import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartUi
+import io.github.eslamasabry.oc.feature.chat.start.ui.ChatStartArea
+import io.github.eslamasabry.oc.feature.chat.tasks.ui.ChatTasksSheet
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -147,6 +152,7 @@ import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
 import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
+import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
@@ -167,10 +173,14 @@ import io.github.eslamasabry.oc.ui.words.res.kitWorkSteps
 import io.github.eslamasabry.oc.ui.words.res.kitWorkStopped
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWorking
 import io.github.eslamasabry.oc.ui.words.res.nlibTitle
+import io.github.eslamasabry.oc.ui.words.res.mobileTasksProgress
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.queuedDiscardUnconfirmedMessage
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
+import io.github.eslamasabry.oc.ui.words.res.queuedReceiptConfirmed
+import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
+import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
 import io.github.eslamasabry.oc.ui.words.res.revertFromHere
 import io.github.eslamasabry.oc.ui.words.res.schedulePhoneBusy
 import io.github.eslamasabry.oc.ui.words.res.schedulePhoneCheckFailed
@@ -215,8 +225,13 @@ public fun ChatScreen(
     replyReader: KitReplyReader? = null,
     /** B-CHAT-001..003: the active-context inspector this conversation opens from its bar (null where the server has none). */
     activeContext: ActiveContextModel? = null,
+    start: ChatStartUi = ChatStartUi(),
+    startActions: ChatStartActions? = null,
 ) {
     var contextOpen by remember { mutableStateOf(false) }
+    var tasksOpen by remember(state.ref) { mutableStateOf(false) }
+    val startState by rememberUpdatedState(start)
+    val currentStartActions by rememberUpdatedState(startActions)
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
     val requestState by rememberUpdatedState(requests)
     val headerState by rememberUpdatedState(header)
@@ -286,10 +301,17 @@ public fun ChatScreen(
                 // with cards (S5).
                 pendingInsert = {
                     latest.insert?.let { InsertRequest(it.id, it.text, replace = true) }
+                        ?: startState.insert?.let {
+                            InsertRequest(it.id, it.text, replace = true, onlyIfEmpty = true)
+                        }
                         ?: prompts?.pending()
                 },
                 insertDone = { id ->
-                    if (latest.insert?.id == id) actions.insertDone(id) else prompts?.done(id)
+                    when {
+                        latest.insert?.id == id -> actions.insertDone(id)
+                        startState.insert?.id == id -> currentStartActions?.insertDone(id)
+                        else -> prompts?.done(id)
+                    }
                 },
                 focusRequest = { latest.arrival?.takeIf { it.focusComposer }?.id },
                 focusDone = actions::arrivalShown,
@@ -333,6 +355,17 @@ public fun ChatScreen(
                                 }
                             val unitActions =
                                 listOfNotNull(
+                                    facts.tasks?.let { tasks ->
+                                        KitLineAction(
+                                            stringResource(
+                                                Res.string.mobileTasksProgress,
+                                                tasks.done,
+                                                tasks.total,
+                                            ),
+                                            { tasksOpen = true },
+                                            testTag = "chat-tasks-open",
+                                        )
+                                    },
                                     KitLineAction(
                                         stringResource(Res.string.gitSheetTitle),
                                         actions::openGit,
@@ -451,6 +484,16 @@ public fun ChatScreen(
                             )
                         ChatPhase.Live ->
                             Box(Modifier.fillMaxSize().kitFrostSource(frost)) {
+                                // PORT-SCREENS-1: an empty conversation offers its starters instead.
+                                if (
+                                    state.rows.isEmpty() &&
+                                        state.pending.isEmpty() &&
+                                        state.live == null &&
+                                        start.emptyEligible &&
+                                        startActions != null
+                                ) {
+                                    ChatStartArea(start, startActions)
+                                } else
                                 ChatTranscriptList(
                                     rows = state.rows,
                                     live = state.live,
@@ -462,6 +505,8 @@ public fun ChatScreen(
                                     motion = motion,
                                     onOpenMenu = actions::openMessageMenu,
                                     onRetrySend = actions::retrySend,
+                                    receiptChecks = state.receiptChecks,
+                                    onCheckReceipt = actions::checkReceipt,
                                     modifier = Modifier.fillMaxSize(),
                                     facts = facts,
                                     onOpenSession = onOpenSession,
@@ -497,6 +542,7 @@ public fun ChatScreen(
                     reads = replyReader != null,
                 )
                 ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
+                ChatTasksSheet(facts.tasks, tasksOpen) { tasksOpen = false }
                 if (activeContext != null) ActiveContextSheet(activeContext)
                 SelectTextSheet(state.select, actions)
                 PictureSheet(state.picture, actions)
@@ -800,6 +846,21 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                 KitStatusKind.Info,
                 stringResource(Res.string.queuedDiscardUnconfirmedMessage),
                 id = "chat-status-${line.id}",
+            )
+        ChatStatusKind.ReceiptChecked ->
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(
+                    when (line.receiptResult) {
+                        ReceiptCheckResult.Confirmed -> Res.string.queuedReceiptConfirmed
+                        ReceiptCheckResult.StorageProblem -> Res.string.queuedReceiptStorageProblem
+                        ReceiptCheckResult.StillUnknown,
+                        null -> Res.string.queuedReceiptStillUncertain
+                    }
+                ),
+                id = "chat-status-${line.id}",
+                onDismiss = { actions.dismissStatus(line.id) },
+                dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
         ChatStatusKind.RunFailed ->
             KitStatus(

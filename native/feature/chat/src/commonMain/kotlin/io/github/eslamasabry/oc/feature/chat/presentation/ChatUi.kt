@@ -5,8 +5,10 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
 
 /*
@@ -61,6 +63,8 @@ public data class ChatUi(
     val confirmedPaths: ImmutableSet<String> = persistentSetOf(),
     val timeline: TimelineUi? = null,
     val reasoningExpanded: Boolean = false,
+    /** Lookup-only receipt checks, kept for this visit; never authorizes another send. */
+    val receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -104,7 +108,21 @@ public data class ChatStatusUi(
     val kind: ChatStatusKind,
     val failure: Failure? = null,
     val localId: Long? = null,
+    val receiptResult: ReceiptCheckResult? = null,
 )
+
+/** A receipt check is only a read. Its timestamp is intentionally not persisted. */
+public data class ReceiptCheckUi(
+    val checking: Boolean = false,
+    val checkedAtMs: Long? = null,
+    val result: ReceiptCheckResult? = null,
+)
+
+public enum class ReceiptCheckResult {
+    Confirmed,
+    StillUnknown,
+    StorageProblem,
+}
 
 /**
  * Lower ordinal = more urgent. Connection first (07 §10.1), then the chat's own lines in plan 09
@@ -131,6 +149,9 @@ public enum class ChatStatusKind {
 
     /** P12-CHAT-FEEL: a link in a reply the app's link policy will not open. */
     LinkRefused,
+
+    /** The result of the person's lookup; dismissing it never changes the receipt. */
+    ReceiptChecked,
 }
 
 /**
@@ -351,6 +372,9 @@ public interface ChatActions {
 
     /** The list reached or left the live edge (read acknowledgement, plan 09 §6.7). */
     public fun liveEdgeChanged(atLiveEdge: Boolean)
+
+    /** Looks up an unconfirmed send. Never sends the prompt again. */
+    public fun checkReceipt(localId: Long) {}
 
     public fun retrySend(localId: Long)
 

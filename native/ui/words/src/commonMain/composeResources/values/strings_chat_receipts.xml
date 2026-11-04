@@ -1,0 +1,5 @@
+<resources>
+    <string name="chatReceiptCheckAgain">Check again</string>
+    <string name="chatReceiptChecking">Checking whether your message arrived…</string>
+    <string name="chatReceiptLastChecked">Last checked %1$s.</string>
+</resources>

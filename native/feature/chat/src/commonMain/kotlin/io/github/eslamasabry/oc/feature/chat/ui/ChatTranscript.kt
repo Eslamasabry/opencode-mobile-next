@@ -17,6 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
@@ -35,6 +39,8 @@ import io.github.eslamasabry.oc.feature.chat.presentation.CodeCopy
 import io.github.eslamasabry.oc.feature.chat.presentation.FenceText
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
 import io.github.eslamasabry.oc.feature.chat.presentation.LongTable
+import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
+import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
@@ -67,9 +73,22 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatReceiptCheckAgain
+import io.github.eslamasabry.oc.ui.words.res.chatReceiptChecking
+import io.github.eslamasabry.oc.ui.words.res.chatReceiptLastChecked
+import io.github.eslamasabry.oc.ui.words.res.kitQueuedUncertain
+import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
+import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
+import kotlin.time.Instant
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * The words the transcript shows that are not server text. The P3 overload of [ChatTranscript]
@@ -223,6 +242,8 @@ internal fun ChatTranscriptList(
         null,
     reasoningExpanded: Boolean = false,
     onCompactAgain: (() -> Unit)? = null,
+    receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
+    onCheckReceipt: ((Long) -> Unit)? = null,
 ) {
     val folds = rememberTranscriptFolds()
     val currentRows by rememberUpdatedState(rows)
@@ -284,7 +305,15 @@ internal fun ChatTranscriptList(
                 key = { ListKeys.pending(it.localId) },
                 contentType = { RowKind.Prompt },
             ) { p ->
-                PendingBubble(p, listWords, onRetry = { onRetrySend(p.localId) })
+                PendingBubble(
+                    p,
+                    listWords,
+                    onRetry = { onRetrySend(p.localId) },
+                    check = receiptChecks[p.localId],
+                    onCheck =
+                        if (p.canCheckReceipt) onCheckReceipt?.let { check -> { check(p.localId) } }
+                        else null,
+                )
             }
         }
         items(unique, key = { it.key }, contentType = { it.kind }) { row ->
@@ -353,12 +382,18 @@ internal fun ImmutableList<TranscriptRow>.distinctKeys(): ImmutableList<Transcri
 }
 
 @Composable
-private fun PendingBubble(p: PendingSend, words: ChatListWords, onRetry: () -> Unit) {
+private fun PendingBubble(
+    p: PendingSend,
+    words: ChatListWords,
+    onRetry: () -> Unit,
+    check: ReceiptCheckUi? = null,
+    onCheck: (() -> Unit)? = null,
+) {
     Column {
         KitPromptBubble(p.text, Modifier.kitPromptLift(p.localId, p.text))
         when (p.state) {
             PendingState.Sending -> KitQuietLine(words.sending)
-            PendingState.Unconfirmed -> KitQuietLine(words.unconfirmed)
+            PendingState.Unconfirmed -> ReceiptCheckLine(p.localId, check, onCheck)
             PendingState.Failed -> {
                 KitQuietLine(words.notSent)
                 p.failure?.let { failure ->
@@ -379,6 +414,48 @@ private fun PendingBubble(p: PendingSend, words: ChatListWords, onRetry: () -> U
                     modifier = Modifier.testTag("chat-send-error-try-again"),
                 )
             }
+        }
+    }
+}
+
+/** The unconfirmed bubble looks only: its action can never resend it. */
+@Composable
+private fun ReceiptCheckLine(localId: Long, check: ReceiptCheckUi?, onCheck: (() -> Unit)?) {
+    val checking = check?.checking == true
+    val words =
+        when {
+            checking -> stringResource(Res.string.chatReceiptChecking)
+            check?.result == ReceiptCheckResult.StorageProblem ->
+                stringResource(Res.string.queuedReceiptStorageProblem)
+            check?.result == ReceiptCheckResult.StillUnknown ->
+                stringResource(Res.string.queuedReceiptStillUncertain)
+            else -> stringResource(Res.string.kitQueuedUncertain)
+        }
+    Column(
+        Modifier.testTag("chat-receipt-$localId").semantics { liveRegion = LiveRegionMode.Polite }
+    ) {
+        KitQuietLine(words)
+        check?.checkedAtMs?.let { at ->
+            val time =
+                Instant.fromEpochMilliseconds(at)
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                    .time
+            val label =
+                Numbers.digits(
+                    time.hour.toString().padStart(2, '0') +
+                        ":" +
+                        time.minute.toString().padStart(2, '0')
+                )
+            KitQuietLine(stringResource(Res.string.chatReceiptLastChecked, label))
+        }
+        if (onCheck != null) {
+            KitButton(
+                label = stringResource(Res.string.chatReceiptCheckAgain),
+                onClick = onCheck,
+                role = KitButtonRole.Tertiary,
+                working = checking,
+                modifier = Modifier.testTag("chat-receipt-check-$localId"),
+            )
         }
     }
 }

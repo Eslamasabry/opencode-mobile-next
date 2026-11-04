@@ -66,6 +66,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatProjectChipFilesSemantics
 import io.github.eslamasabry.oc.ui.words.res.chatProjectServerChipFilesSemantics
 import io.github.eslamasabry.oc.ui.words.res.chatRenameEmpty
 import io.github.eslamasabry.oc.ui.words.res.chatUiAgent
+import io.github.eslamasabry.oc.ui.words.res.chatUiAnyoneWithTheLinkCanViewThis
 import io.github.eslamasabry.oc.ui.words.res.chatUiAssistant
 import io.github.eslamasabry.oc.ui.words.res.chatUiAttachment
 import io.github.eslamasabry.oc.ui.words.res.chatUiCopyTranscript
@@ -77,6 +78,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiOpenCodeSession
 import io.github.eslamasabry.oc.ui.words.res.chatUiRename
 import io.github.eslamasabry.oc.ui.words.res.chatUiRenameSession
 import io.github.eslamasabry.oc.ui.words.res.chatUiShareSession
+import io.github.eslamasabry.oc.ui.words.res.chatUiShareThisSession
 import io.github.eslamasabry.oc.ui.words.res.chatUiStopSharing
 import io.github.eslamasabry.oc.ui.words.res.chatUiTitle
 import io.github.eslamasabry.oc.ui.words.res.chatUiTool
@@ -112,6 +114,9 @@ import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import io.github.eslamasabry.oc.ui.words.res.nativeHandoffTitle
+import io.github.eslamasabry.oc.ui.words.res.safetyStopSharingBody
+import io.github.eslamasabry.oc.ui.words.res.safetyStopSharingKeep
+import io.github.eslamasabry.oc.ui.words.res.safetyStopSharingTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionArchiveBody
 import io.github.eslamasabry.oc.ui.words.res.sessionArchiveTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionContextLoading
@@ -283,6 +288,21 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
         spec =
             when (val c = state.confirm) {
                 null -> null
+                HeaderConfirm.Share ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.chatUiShareThisSession),
+                        confirmLabel = stringResource(Res.string.chatUiShareSession),
+                        kind = KitConfirmKind.Neutral,
+                        body = stringResource(Res.string.chatUiAnyoneWithTheLinkCanViewThis),
+                    )
+                HeaderConfirm.Unshare ->
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.safetyStopSharingTitle),
+                        confirmLabel = stringResource(Res.string.chatUiStopSharing),
+                        kind = KitConfirmKind.Stop,
+                        body = stringResource(Res.string.safetyStopSharingBody),
+                        cancelLabel = stringResource(Res.string.safetyStopSharingKeep),
+                    )
                 is HeaderConfirm.Archive ->
                     KitConfirmSpec(
                         title = stringResource(Res.string.sessionArchiveTitle, c.title ?: untitled),

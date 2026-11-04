@@ -111,6 +111,12 @@ public data class ContinueChoice(
 )
 
 public sealed interface HeaderConfirm {
+    /** A public link may expose the conversation and its shared context. */
+    public data object Share : HeaderConfirm
+
+    /** The public link stops working for everyone who has it. */
+    public data object Unshare : HeaderConfirm
+
     public data class Archive(val title: String?) : HeaderConfirm
 
     public data class Delete(val title: String?) : HeaderConfirm

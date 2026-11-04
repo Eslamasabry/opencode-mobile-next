@@ -3,4 +3,10 @@
     <string name="chatHistoryReadFailed">تعذّر تحميل الرسائل الأقدم. الرسائل المحمّلة ما زالت هنا. حاول مجددًا.</string>
     <string name="chatTranscriptTokens">%1$s رمز</string>
     <string name="chatTranscriptCost">التكلفة التقديرية: $%1$s</string>
+    <string name="chatHistoryTitle">إعادة استخدام طلب</string>
+    <string name="chatHistorySubtitle">اختر كلمات من هذه المحادثة أو طلباتك الأخيرة. تُضاف إلى المسودة ولا يُرسل شيء.</string>
+    <string name="chatHistorySearch">البحث في الطلبات الأخيرة</string>
+    <string name="chatHistoryEmpty">لا توجد طلبات أخيرة بعد.</string>
+    <string name="chatHistoryLoading">جارٍ تحميل الطلبات الأخيرة…</string>
+    <string name="chatHistoryLoadFailed">تعذّر تحميل الطلبات الأخيرة. لا يزال بإمكانك استخدام طلبات هذه المحادثة.</string>
 </resources>

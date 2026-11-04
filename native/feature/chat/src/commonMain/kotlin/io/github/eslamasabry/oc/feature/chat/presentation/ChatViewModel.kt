@@ -48,6 +48,7 @@ public class ChatViewModel(
             { block -> viewModelScope.launch { block() } },
             focusComposer = route.focusComposer,
             outside = outside,
+            clock = clock,
         )
 
     public val requests = world.requests
@@ -153,6 +154,10 @@ public class ChatViewModel(
     override fun arrivalShown(id: Long): Unit = presenter.arrivalShown(id)
 
     override fun liveEdgeChanged(atLiveEdge: Boolean): Unit = presenter.liveEdgeChanged(atLiveEdge)
+
+    override fun continueReply(words: String): Unit = presenter.continueReply(words)
+
+    override fun checkReceipt(localId: Long): Unit = presenter.checkReceipt(localId)
 
     override fun retrySend(localId: Long): Unit = presenter.retrySend(localId)
 

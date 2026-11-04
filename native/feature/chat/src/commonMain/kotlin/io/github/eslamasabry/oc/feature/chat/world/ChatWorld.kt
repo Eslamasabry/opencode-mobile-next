@@ -61,6 +61,14 @@ public interface ChatWorld {
     /** The composer's words against the last saved draft (07 §3.4 Back guard). */
     public val draft: StateFlow<DraftFacts>
 
+    /** A confirmed send could not be added to local prompt history. Never a send failure. */
+    public val historyFailure: StateFlow<Failure?>
+        get() = kotlinx.coroutines.flow.MutableStateFlow(null)
+
+    /** Looks up the original admission receipt only; never dispatches the prompt again. */
+    public suspend fun checkReceipt(localId: Long): Outcome<Boolean> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("commandReceipts")))
+
     /**
      * The models this conversation's server offers, safe for display; empty until [loadModels]
      * succeeds. A selection lives in the server session, never in a local preference.
@@ -249,6 +257,8 @@ public data class PendingSend(
     val text: String,
     val state: PendingState,
     val failure: Failure? = null,
+    /** The exact dispatched queue record has a receipt on this connection. */
+    val canCheckReceipt: Boolean = false,
 )
 
 public enum class PendingState {

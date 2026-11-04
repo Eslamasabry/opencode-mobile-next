@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chat.presentation
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
@@ -15,15 +16,20 @@ import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
+import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Clock
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -69,6 +75,8 @@ internal data class ChatLocal(
     val linkRefused: Boolean = false,
     val picture: PictureUi? = null,
     val confirmedPaths: PersistentSet<String> = persistentSetOf(),
+    val receiptChecks: PersistentMap<Long, ReceiptCheckUi> = persistentMapOf(),
+    val receiptResult: ReceiptCheckResult? = null,
 )
 
 internal data class PendingArrival(
@@ -102,6 +110,7 @@ public class ChatPresenter(
     focusComposer: Boolean = false,
     landOnFailure: Boolean = false,
     private val outside: ChatOutside? = null,
+    private val clock: Clock? = null,
 ) : ChatActions {
     private var nextId = 1L
     private val local =
@@ -224,7 +233,14 @@ public class ChatPresenter(
             ref = world.ref,
             title = i.title,
             status =
-                StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused),
+                StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused)
+                    ?: l.receiptResult?.let {
+                        ChatStatusUi(
+                            RECEIPT_STATUS,
+                            ChatStatusKind.ReceiptChecked,
+                            receiptResult = it,
+                        )
+                    },
             phase =
                 when (val load = i.load) {
                     ChatLoad.Loading -> ChatPhase.Loading
@@ -264,6 +280,10 @@ public class ChatPresenter(
                         l.olderFailure,
                     )
                 },
+            receiptChecks =
+                l.receiptChecks
+                    .filterKeys { id -> i.pending.any { it.localId == id } }
+                    .toPersistentMap(),
         )
     }
 
@@ -372,11 +392,87 @@ public class ChatPresenter(
         launcher.launch { world.sendAgain(words) }
     }
 
+    override fun checkReceipt(localId: Long) {
+        val target =
+            world.pending.value.firstOrNull {
+                it.localId == localId && it.state == PendingState.Unconfirmed && it.canCheckReceipt
+            } ?: return
+        if (local.value.receiptChecks[localId]?.checking == true) return
+        local.update {
+            val previous = it.receiptChecks[localId] ?: ReceiptCheckUi()
+            it.copy(
+                receiptChecks =
+                    it.receiptChecks.putting(
+                        localId,
+                        previous.copy(checking = true, result = null),
+                    ),
+                receiptResult = null,
+            )
+        }
+        launcher.launch {
+            try {
+                val looked = world.checkReceipt(localId)
+                val stillHere =
+                    world.pending.value.any {
+                        it.localId == localId &&
+                            it.text == target.text &&
+                            it.state == PendingState.Unconfirmed
+                    }
+                val failure = (looked as? Outcome.Failed)?.failure
+                // Busy: another check of this bubble is already running and will announce its answer.
+                val stale =
+                    (failure is Failure.Refused && failure.reason == RefusalReason.StaleScope) ||
+                        failure is Failure.Busy
+                // The world may remove a confirmed bubble. Any other vanished/replaced target has
+                // nothing to announce.
+                val confirmed = looked is Outcome.Ok && looked.value
+                if (stale || (!confirmed && !stillHere)) {
+                    local.update { it.copy(receiptChecks = it.receiptChecks.removing(localId)) }
+                    return@launch
+                }
+                val result =
+                    when {
+                        confirmed -> ReceiptCheckResult.Confirmed
+                        looked is Outcome.Failed &&
+                            (looked.failure is Failure.StorageRefused ||
+                                looked.failure is Failure.SecretUnavailable) ->
+                            ReceiptCheckResult.StorageProblem
+                        else -> ReceiptCheckResult.StillUnknown
+                    }
+                val checkedAt =
+                    if (result == ReceiptCheckResult.StillUnknown)
+                        clock?.now()?.toEpochMilliseconds()
+                    else local.value.receiptChecks[localId]?.checkedAtMs
+                local.update {
+                    it.copy(
+                        receiptChecks =
+                            it.receiptChecks.putting(
+                                localId,
+                                ReceiptCheckUi(checkedAtMs = checkedAt, result = result),
+                            ),
+                        receiptResult = result,
+                    )
+                }
+            } finally {
+                local.update {
+                    val check = it.receiptChecks[localId]
+                    if (check?.checking == true)
+                        it.copy(
+                            receiptChecks =
+                                it.receiptChecks.putting(localId, check.copy(checking = false))
+                        )
+                    else it
+                }
+            }
+        }
+    }
+
     override fun retrySend(localId: Long) {
         launcher.launch { world.retrySend(localId) }
     }
 
     override fun dismissStatus(id: String) {
+        if (id == RECEIPT_STATUS) local.update { it.copy(receiptResult = null) }
         if (id == StatusPick.ACTION) local.update { it.copy(actionFailure = null) }
         if (id == StatusPick.LINK) local.update { it.copy(linkRefused = false) }
     }
@@ -789,3 +885,5 @@ private const val MAX_PATH_CHECKS = 256
 
 /** Flutter `_drawablePictureName`: the files the picture viewer draws. */
 private val PICTURE_NAME = Regex("\\.(png|jpe?g|gif|webp|bmp)$", RegexOption.IGNORE_CASE)
+
+private const val RECEIPT_STATUS: String = "chat-receipt-check"

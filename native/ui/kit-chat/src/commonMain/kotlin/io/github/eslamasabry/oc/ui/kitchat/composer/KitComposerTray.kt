@@ -30,6 +30,8 @@ public enum class KitTrayKind {
     Camera,
     File,
     Clipboard,
+    /** A saved or recent prompt to reuse (drawn with the document glyph). */
+    History,
 }
 
 /** The caller closes the tray before running an action, preserving the editor and its keyboard. */
@@ -107,7 +109,8 @@ public fun KitComposerTray(actions: List<KitTrayAction>, modifier: Modifier = Mo
                                         )
                                     }
                                     KitTrayKind.File,
-                                    KitTrayKind.Clipboard -> {
+                                    KitTrayKind.Clipboard,
+                                    KitTrayKind.History -> {
                                         drawRect(
                                             colors.text1,
                                             Offset(size.width * .22f, size.height * .12f),

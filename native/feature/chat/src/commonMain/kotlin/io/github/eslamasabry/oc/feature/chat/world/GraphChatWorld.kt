@@ -96,6 +96,9 @@ public class GraphChatWorlds(
     private val registry: ConnectionRegistry,
     private val draftStores: Set<ConversationDrafts> = emptySet(),
     private val recentBackings: Set<RecentModelsBacking> = emptySet(),
+    private val histories:
+        Set<io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistory> =
+        emptySet(),
 ) : ChatWorlds {
     /**
      * B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest)
@@ -108,6 +111,7 @@ public class GraphChatWorlds(
     init {
         check(draftStores.size <= 1) { "multiple conversation draft stores" }
         check(recentBackings.size <= 1) { "multiple recent model stores" }
+        check(histories.size <= 1) { "multiple prompt history stores" }
     }
 
     private val open = HashMap<ConversationRef, Pair<GraphChatWorld, Int>>()
@@ -115,7 +119,13 @@ public class GraphChatWorlds(
     override fun open(ref: ConversationRef): ChatWorld {
         val (world, holders) =
             open[ref]
-                ?: (GraphChatWorld(ref, registry, draftStores.singleOrNull(), recentModels) to 0)
+                ?: (GraphChatWorld(
+                    ref,
+                    registry,
+                    draftStores.singleOrNull(),
+                    recentModels,
+                    histories.singleOrNull(),
+                ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
         return world
@@ -147,6 +157,8 @@ internal class GraphChatWorld(
     private val registry: ConnectionRegistry,
     private val draftStore: ConversationDrafts? = null,
     private val recentModels: RecentModels = RecentModels(),
+    private val history: io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistory? =
+        null,
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
@@ -160,6 +172,9 @@ internal class GraphChatWorld(
     private val mutableLink = MutableStateFlow(ChatLink.Connecting)
     private val mutablePending = MutableStateFlow<ImmutableList<PendingSend>>(persistentListOf())
     private val mutableDraft = MutableStateFlow(DraftFacts(ready = draftSession == null))
+    private val mutableHistoryFailure = MutableStateFlow<Failure?>(null)
+    override val historyFailure: StateFlow<Failure?> = mutableHistoryFailure
+    private val checkingReceipts = HashSet<Long>()
     private var protectedDraftText: String? = null
     /** The files that were protected with [protectedDraftText]; null = any (history matches). */
     private var protectedFiles: List<PromptAttachment>? = null
@@ -515,6 +530,10 @@ internal class GraphChatWorld(
         val submitted = draftSubmissions.remove(localId) ?: return
         val session = draftSession ?: return
         registry.appScope.launch(registry.mainContext) {
+            history?.let { store ->
+                mutableHistoryFailure.value =
+                    (store.record(ref.profileId, submitted.text) as? Outcome.Failed)?.failure
+            }
             if (session.clearAfterSend(submitted) is Outcome.Failed) {
                 protectedDraftText = submitted.text
                 protectedFiles = submitted.attachments
@@ -669,7 +688,15 @@ internal class GraphChatWorld(
                 val id = nextLocalId++
                 recoveryIds[entry.id] = id
                 mutablePending.update {
-                    (it + PendingSend(id, entry.text, PendingState.Unconfirmed)).toImmutableList()
+                    (it +
+                            PendingSend(
+                                id,
+                                entry.text,
+                                PendingState.Unconfirmed,
+                                canCheckReceipt =
+                                    entry.dispatched && gateway.capabilities.value.commandReceipts,
+                            ))
+                        .toImmutableList()
                 }
                 // The marker keeps its dispatched files and model, so an equal draft never
                 // duplicates and a settled retry needs nothing from the current composer.
@@ -1333,6 +1360,49 @@ internal class GraphChatWorld(
         return dispatch(localId, bubble.text, original, expected)
     }
 
+    override suspend fun checkReceipt(localId: Long): Outcome<Boolean> {
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val bubble =
+            mutablePending.value.firstOrNull {
+                it.localId == localId && it.state == PendingState.Unconfirmed && it.canCheckReceipt
+            } ?: return Outcome.Failed(STALE)
+        val delivery = (a.graph as ChatGraphAccessors).chatDelivery
+        val queue =
+            delivery.queue
+                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("commandReceipts")))
+        val reviewId =
+            recoveryIds.entries.firstOrNull { it.value == localId }?.key
+                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("commandReceipts")))
+        val entry =
+            queue.entries().firstOrNull {
+                it.id == reviewId &&
+                    it.profileId == ref.profileId &&
+                    it.sessionId == sid &&
+                    it.dispatched
+            } ?: return Outcome.Failed(STALE)
+        if (!a.gateway.capabilities.value.commandReceipts)
+            return Outcome.Failed(Failure.Unavailable(FeatureId("commandReceipts")))
+        if (!checkingReceipts.add(localId)) return Outcome.Failed(Failure.Busy())
+        return try {
+            // The queue validates the receipt's profile, session and location again on its serial
+            // lane.
+            val confirmed = queue.checkReceipt(entry.id)
+            if (currentAttached() !== a || mutablePending.value.none { it === bubble })
+                return Outcome.Failed(STALE)
+            if (confirmed) {
+                mutablePending.update { list -> list.filterNot { it === bubble }.toImmutableList() }
+                acknowledgedDraft(localId)
+                recoveryIds.remove(reviewId)
+                sentSnapshots.remove(localId)
+                deliveryIds.remove(localId)?.let { delivery.engine?.reconciled(it) }
+                readHistory(a.gateway, a.handle, P3Bridge(sid.raw))
+            }
+            Outcome.Ok(confirmed)
+        } finally {
+            checkingReceipts.remove(localId)
+        }
+    }
+
     private suspend fun dispatch(
         localId: Long,
         text: String,
@@ -1426,6 +1496,30 @@ internal class GraphChatWorld(
         }
         delivered.forEach(::retireFailedTwins)
         delivered.clear()
+        val receiptEntries =
+            delivery.queue
+                ?.entries()
+                .orEmpty()
+                .filter {
+                    it.profileId == ref.profileId && it.sessionId == sid && it.dispatched
+                }
+                .mapTo(HashSet()) { it.id }
+        val supportsReceipts =
+            currentAttached()?.gateway?.capabilities?.value?.commandReceipts == true
+        mutablePending.update { list ->
+            list
+                .map { pending ->
+                    val canCheck =
+                        supportsReceipts &&
+                            pending.state == PendingState.Unconfirmed &&
+                            recoveryIds.any { (review, id) ->
+                                id == pending.localId && review in receiptEntries
+                            }
+                    if (pending.canCheckReceipt == canCheck) pending
+                    else pending.copy(canCheckReceipt = canCheck)
+                }
+                .toImmutableList()
+        }
         settlePending(mutableTranscript.value)
         publishVoiceConversation()
     }

@@ -1,0 +1,5 @@
+<resources>
+    <string name="chatReceiptCheckAgain">التحقّق مجددًا</string>
+    <string name="chatReceiptChecking">جارٍ التحقّق من وصول رسالتك…</string>
+    <string name="chatReceiptLastChecked">آخر تحقّق %1$s.</string>
+</resources>

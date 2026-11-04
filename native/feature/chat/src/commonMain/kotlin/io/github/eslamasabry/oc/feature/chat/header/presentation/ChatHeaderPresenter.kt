@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat.header.presentation
 
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
@@ -290,21 +292,16 @@ public class ChatHeaderPresenter(
                 if (world.models.value.choices.isEmpty()) loadModels()
             }
             HeaderAction.CopyTranscript -> Unit // needs the person's words: [copyTranscript]
-            HeaderAction.Share ->
-                run(action) {
-                    when (val r = port.share()) {
-                        is Outcome.Ok -> {
-                            r.value?.let { url ->
-                                local.update {
-                                    it.copy(clip = HeaderClip(nextId++, url, ClipKind.ShareLink))
-                                }
-                            }
-                            Outcome.Ok(Unit)
-                        }
-                        is Outcome.Failed -> r
-                    }
+            HeaderAction.Share -> {
+                if (world.capabilities.value.sessionShare && local.value.working == null) {
+                    local.update { it.copy(confirm = HeaderConfirm.Share) }
                 }
-            HeaderAction.Unshare -> run(action) { port.unshare() }
+            }
+            HeaderAction.Unshare -> {
+                if (world.capabilities.value.sessionShare && local.value.working == null) {
+                    local.update { it.copy(confirm = HeaderConfirm.Unshare) }
+                }
+            }
             HeaderAction.Fork ->
                 run(action) {
                     when (val r = port.fork()) {
@@ -523,13 +520,43 @@ public class ChatHeaderPresenter(
 
     override fun confirm() {
         val confirm = local.value.confirm ?: return
-        val action =
-            if (confirm is HeaderConfirm.Delete) HeaderAction.Delete else HeaderAction.Archive
+        if (local.value.working != null) return
         local.update { it.copy(confirm = null) }
-        run(action) {
-            val r = if (action == HeaderAction.Delete) port.delete() else port.archive()
-            if (r is Outcome.Ok) nav.back()
-            r
+        when (confirm) {
+            HeaderConfirm.Share ->
+                run(HeaderAction.Share) {
+                    if (!world.capabilities.value.sessionShare) {
+                        Outcome.Failed(Failure.Unavailable(FeatureId("sessionShare")))
+                    } else {
+                        when (val answer = port.share()) {
+                            is Outcome.Ok -> {
+                                answer.value?.let { url ->
+                                    local.update {
+                                        it.copy(
+                                            clip = HeaderClip(nextId++, url, ClipKind.ShareLink)
+                                        )
+                                    }
+                                }
+                                Outcome.Ok(Unit)
+                            }
+                            is Outcome.Failed -> answer
+                        }
+                    }
+                }
+            HeaderConfirm.Unshare ->
+                run(HeaderAction.Unshare) {
+                    if (!world.capabilities.value.sessionShare) {
+                        Outcome.Failed(Failure.Unavailable(FeatureId("sessionShare")))
+                    } else port.unshare()
+                }
+            is HeaderConfirm.Archive ->
+                run(HeaderAction.Archive) {
+                    port.archive().also { if (it is Outcome.Ok) nav.back() }
+                }
+            is HeaderConfirm.Delete ->
+                run(HeaderAction.Delete) {
+                    port.delete().also { if (it is Outcome.Ok) nav.back() }
+                }
         }
     }
 
