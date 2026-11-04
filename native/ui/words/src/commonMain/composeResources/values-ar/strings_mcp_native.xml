@@ -24,4 +24,9 @@
     <string name="mcpNativeBack">رجوع</string>
     <string name="mcpNativeSaveFailed">تعذّر حفظ تفضيل الدليل. حاول مجددًا.</string>
     <string name="mcpNativeSourceChanged">تغيّر الاتصال. أعد فتح الدليل.</string>
+    <string name="mcpNativeToolsReady">أدوات الموصل جاهزة للدور التالي.</string>
+    <string name="mcpNativeSignIn">تسجيل الدخول إلى الموصل</string>
+    <string name="mcpNativeCode">رابط العودة أو الرمز</string>
+    <string name="mcpNativeFinishSignIn">إكمال تسجيل الدخول</string>
+    <string name="mcpNativeCancelSignIn">إلغاء تسجيل الدخول</string>
 </resources>

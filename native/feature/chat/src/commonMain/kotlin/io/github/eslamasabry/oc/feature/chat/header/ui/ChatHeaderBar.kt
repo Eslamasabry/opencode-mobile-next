@@ -91,6 +91,7 @@ import io.github.eslamasabry.oc.ui.words.res.continueWithNothingReady
 import io.github.eslamasabry.oc.ui.words.res.continueWithSubtitle
 import io.github.eslamasabry.oc.ui.words.res.continueWithTitle
 import io.github.eslamasabry.oc.ui.words.res.continueWithTryAgain
+import io.github.eslamasabry.oc.ui.words.res.handoffNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.handoffSheetCopyCommand
 import io.github.eslamasabry.oc.ui.words.res.handoffUiComputerCommandLabel
 import io.github.eslamasabry.oc.ui.words.res.handoffUiComputerDirectoryNote
@@ -531,6 +532,7 @@ private fun menuWords(action: HeaderAction): String =
         HeaderAction.Rename -> stringResource(Res.string.chatUiRenameSession)
         HeaderAction.ContinueWith -> stringResource(Res.string.continueWithMenu)
         HeaderAction.ContinueOnComputer -> stringResource(Res.string.handoffUiComputerTitle)
+        HeaderAction.AgentHandoff -> stringResource(Res.string.handoffNativeTitle)
         HeaderAction.AgentOptions -> stringResource(Res.string.agentToolsTitle)
         HeaderAction.CardsSettings -> stringResource(Res.string.cardsFromAgentsTitle)
         HeaderAction.CopyTranscript -> stringResource(Res.string.chatUiCopyTranscript)

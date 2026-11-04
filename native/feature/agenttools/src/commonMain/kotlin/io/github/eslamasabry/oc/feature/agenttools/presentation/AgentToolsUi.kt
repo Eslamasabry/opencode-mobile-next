@@ -29,9 +29,18 @@ public data class AgentToolsUi(
     val updatePhase: HostUpdatePhase? = null,
     val updateResult: HostUpdateResult? = null,
     val uncertain: Boolean = false,
+    val terminal: AgentTerminalUi = AgentTerminalUi(),
+    val monitor: io.github.eslamasabry.oc.engine.integrations.usage.ProviderUsageMonitorState? =
+        null,
+    val monitorLastRead: String? = null,
+    val monitorBusy: Boolean = false,
 )
 
-public interface AgentToolsActions {
+public interface AgentToolsActions : AgentTerminalActions {
+    public fun setUsageMonitor(on: Boolean)
+
+    public fun refreshUsageMonitor()
+
     public fun back()
 
     public fun refresh()

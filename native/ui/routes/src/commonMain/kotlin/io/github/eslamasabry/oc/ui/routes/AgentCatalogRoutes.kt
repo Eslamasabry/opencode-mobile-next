@@ -22,3 +22,10 @@ public data class SetupReviewRoute(
 public data class AgentToolsRoute(val profile: ProfileId, val session: SessionId? = null) : AppRoute
 
 @Serializable public data class MonitorRoute(val profile: ProfileId? = null) : AppRoute
+
+@Serializable public data class CodexProbeRoute(val profile: ProfileId? = null) : AppRoute
+
+@Serializable
+public data class AgentHandoffRoute(
+    val source: io.github.eslamasabry.oc.core.common.ids.ConversationRef
+) : AppRoute

@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
+import io.github.eslamasabry.oc.engine.connection.TransientOwners
 import io.github.eslamasabry.oc.engine.profiles.ProfileCloser
 import io.github.eslamasabry.oc.protocol.paseo.work.PaseoPayloadLease
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
@@ -24,6 +25,7 @@ class PhonePayloadGuard(
     private val app: Application,
     private val stores: PreviewStores,
     private val dispatchers: AppDispatchers,
+    private val transientOwners: TransientOwners,
 ) : ProfileCloser {
     override val owner = ":engine:agents/payloads"
     private val lock = Any()
@@ -31,6 +33,7 @@ class PhonePayloadGuard(
     private var mutating = false
     private val closed = HashSet<ProfileId>()
     private val callbacks = HashMap<ProfileId, () -> Outcome<PaseoPayloadLease>>()
+    private val callbackOwners = HashMap<ProfileId, ProfileId>()
 
     class Mutation internal constructor(private val releaseNow: () -> Unit) {
         private var ended = false
@@ -104,14 +107,18 @@ class PhonePayloadGuard(
         if (uri.host !in setOf("127.0.0.1", "localhost", "::1", "[::1]") || uri.port != 4099)
             return null
         val alias = spec.profile.id
-        val raw =
-            (stores.prefs.get("oc.phoneAgentOwner.${alias.raw}") as? PrefValue.Str)?.value
-                ?: alias.raw
-        val owner = raw.takeIf { Regex("^[A-Za-z0-9_-]{1,80}$").matches(it) }?.let(::ProfileId)
+        // A transient helper is admitted by the registry before its factory runs. Its native
+        // ownership proof is the authority; an alias prefix or a preference is never sufficient.
+        val transientOwner = transientOwners.ownerOf(alias)
+        val owner = transientOwner ?: alias.takeIf { stores.profiles.profile(it) != null }
         val callback: () -> Outcome<PaseoPayloadLease> = {
-            if (owner == null) stale() else reserve(spec, owner)
+            if (owner == null) stale() else reserve(spec, owner, transientOwner != null)
         }
-        if (owner != null) synchronized(lock) { callbacks[alias] = callback }
+        if (owner != null)
+            synchronized(lock) {
+                callbacks[alias] = callback
+                callbackOwners[alias] = owner
+            }
         return callback
     }
 
@@ -119,16 +126,22 @@ class PhonePayloadGuard(
     fun reserveForProfile(profile: ProfileId): Outcome<PaseoPayloadLease> =
         synchronized(lock) { callbacks[profile] }?.invoke() ?: stale()
 
-    private fun sourceCurrent(spec: GatewaySpec, profile: ProfileId): Boolean =
+    private fun sourceCurrent(spec: GatewaySpec, profile: ProfileId, transient: Boolean): Boolean =
         spec.scope.coroutineContext[Job]?.isActive == true &&
             profile !in closed &&
             spec.profile.id !in closed &&
             stores.profiles.profile(profile) != null &&
+            (if (transient) transientOwners.ownerOf(spec.profile.id) == profile
+            else spec.profile.id == profile && transientOwners.ownerOf(spec.profile.id) == null) &&
             (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
 
-    private fun reserve(spec: GatewaySpec, profile: ProfileId): Outcome<PaseoPayloadLease> =
+    private fun reserve(
+        spec: GatewaySpec,
+        profile: ProfileId,
+        transient: Boolean,
+    ): Outcome<PaseoPayloadLease> =
         synchronized(lock) {
-            if (!sourceCurrent(spec, profile)) return@synchronized stale()
+            if (!sourceCurrent(spec, profile, transient)) return@synchronized stale()
             if (mutating || SetupRunner.get(app).running || readers >= 32)
                 return@synchronized busy()
             readers++
@@ -153,7 +166,7 @@ class PhonePayloadGuard(
                                     ?.value == true
                             }
                         return synchronized(lock) {
-                            if (released || !sourceCurrent(spec, profile)) stale()
+                            if (released || !sourceCurrent(spec, profile, transient)) stale()
                             else if (!running || mutating) busy() else Unit.ok()
                         }
                     }
@@ -173,7 +186,13 @@ class PhonePayloadGuard(
     override fun stopAdmission(profile: ProfileId) {
         synchronized(lock) {
             closed += profile
+            val aliases = callbackOwners.filterValues { it == profile }.keys.toList()
+            for (alias in aliases) {
+                callbacks.remove(alias)
+                callbackOwners.remove(alias)
+            }
             callbacks.remove(profile)
+            callbackOwners.remove(profile)
         }
     }
 

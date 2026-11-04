@@ -86,4 +86,6 @@ public interface ServersActions {
     public fun openAgentTools(id: ProfileId) {}
 
     public fun openMonitor(id: ProfileId) {}
+
+    public fun openCodexProbe() {}
 }

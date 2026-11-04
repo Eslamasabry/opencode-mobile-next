@@ -34,6 +34,9 @@ import io.github.eslamasabry.oc.engine.integrations.usage.PaseoUsageMonitor
 import io.github.eslamasabry.oc.engine.integrations.usage.PaseoUsagePorts
 import io.github.eslamasabry.oc.engine.integrations.usage.PaseoUsageProfile
 import io.github.eslamasabry.oc.engine.integrations.usage.PaseoUsageSource
+import io.github.eslamasabry.oc.engine.integrations.usage.PaseoUsageStatus
+import io.github.eslamasabry.oc.engine.integrations.usage.ProviderUsageMonitorSettings
+import io.github.eslamasabry.oc.engine.integrations.usage.ProviderUsageMonitorState
 import io.github.eslamasabry.oc.engine.integrations.usage.ProviderUsageReading
 import io.github.eslamasabry.oc.engine.integrations.usage.RetiredQuotaBudgets
 import io.github.eslamasabry.oc.engine.integrations.usage.SignInServer
@@ -50,13 +53,16 @@ import io.github.eslamasabry.oc.feature.plans.presentation.PlanCollectorUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansSource
 import io.github.eslamasabry.opencode_mobile.UsageWidgetProvider
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -86,13 +92,26 @@ class AndroidPlansSource(
     private val appScope: AppCoroutineScope,
     private val phoneUsage: PhoneUsageReader,
     private val collector: CollectorUsageSource,
-) : PlansSource {
+    private val codexReads: AppCodexReads,
+) : PlansSource, ProviderUsageMonitorSettings {
     private val scope = CoroutineScope(appScope.coroutineContext)
     private val state = MutableStateFlow(UsageSnapshot())
     override val snapshot: StateFlow<UsageSnapshot> = state.asStateFlow()
     private val creating = Mutex()
     private var engine: UsageSubscriptionsEngine? = null
     private var paseo: PaseoUsageMonitor? = null
+    private var explicitMonitor: PaseoUsageMonitor? = null
+    private val monitorStates =
+        MutableStateFlow<Map<ProfileId, ProviderUsageMonitorState>>(emptyMap())
+    override val states: StateFlow<Map<ProfileId, ProviderUsageMonitorState>> =
+        monitorStates.asStateFlow()
+    private var monitorLoopStarted = false
+
+    init {
+        // Loading saved monitor choices never reads a daemon. Only an explicit opt-in admits its
+        // timer reads.
+        scope.launch { engine() }
+    }
 
     private fun openCodeServers() =
         registry.live.value.filter { (_, graph) -> graph.profile.backend == BackendKind.OpenCode2 }
@@ -185,6 +204,41 @@ class AndroidPlansSource(
                 autoRead = true,
             )
         paseo = daemonUsage
+        val monitorPorts =
+            object : PaseoUsagePorts {
+                override fun paseoProfiles(): List<PaseoUsageProfile> =
+                    stores.profiles.profiles.value
+                        .filter { it.profile.backend == BackendKind.Paseo }
+                        .map { PaseoUsageProfile(it.id.raw, it.profile.name) }
+
+                override fun isReadable(profileId: String): Boolean =
+                    stores.profiles.profile(ProfileId(profileId))?.profile?.backend ==
+                        BackendKind.Paseo
+
+                override suspend fun readServer(
+                    profileId: String
+                ): Outcome<List<ProviderUsageReading>> = usagePorts.readServer(profileId)
+            }
+        explicitMonitor =
+            PaseoUsageMonitor(
+                store = stores.prefs,
+                lane = stores.lanes.app,
+                ports = monitorPorts,
+                widget = widget,
+                clock = { clock.now() },
+                autoRead = false,
+            )
+        if (!monitorLoopStarted) {
+            monitorLoopStarted = true
+            scope.launch {
+                while (isActive) {
+                    delay(5.minutes)
+                    explicitMonitor?.refresh()
+                    publishMonitorStates()
+                }
+            }
+        }
+        publishMonitorStates()
         UsageSubscriptionsEngine(
                 store = stores.prefs,
                 lane = stores.lanes.app,
@@ -216,13 +270,16 @@ class AndroidPlansSource(
                                             UsageConnectionKind.PhoneAgents,
                                         )
                                 else known
-                            (all + collector.connections()).distinctBy { it.id }
+                            (all + collector.connections() + codexReads.connections()).distinctBy {
+                                it.id
+                            }
                         }
                 },
                 sources =
                     listOf(
                         signIns,
                         collector,
+                        codexReads.usageSource,
                         PaseoUsageSource(daemonUsage) { usagePorts.paseoProfiles().map { it.id } },
                     ),
                 alertsOnRule = collector::alertsOn,
@@ -239,6 +296,73 @@ class AndroidPlansSource(
 
     override suspend fun refresh() {
         engine()?.refresh()
+    }
+
+    override fun supported(profile: ProfileId): Boolean {
+        val graph = registry.savedGraph(stores, profile) ?: return false
+        return graph.session.server is ProviderUsageGateway
+    }
+
+    override fun state(profile: ProfileId): ProviderUsageMonitorState {
+        val saved = monitorStates.value[profile]
+        if (saved != null) return saved
+        val monitor = explicitMonitor ?: return ProviderUsageMonitorState()
+        return monitorState(profile, monitor)
+    }
+
+    private fun monitorState(
+        profile: ProfileId,
+        monitor: PaseoUsageMonitor,
+    ): ProviderUsageMonitorState {
+        val enabled =
+            (stores.prefs.get(PaseoUsageMonitor.key(profile.raw))
+                    as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Bool)
+                ?.value == true
+        return ProviderUsageMonitorState(
+            enabled = enabled,
+            status = if (enabled) monitor.statusFor(profile.raw) else PaseoUsageStatus.Off,
+            lastReadAtMs = monitor.lastReadAt(profile.raw)?.toEpochMilliseconds(),
+            providerCount = monitor.readingsFor(profile.raw)?.size ?: 0,
+        )
+    }
+
+    private fun publishMonitorStates() {
+        val monitor = explicitMonitor ?: return
+        monitorStates.value =
+            stores.profiles.profiles.value
+                .filter { it.profile.backend == BackendKind.Paseo }
+                .associate { it.id to monitorState(it.id, monitor) }
+    }
+
+    override suspend fun setEnabled(profile: ProfileId, enabled: Boolean): Outcome<Unit> {
+        engine() ?: return Failure.Device().failed()
+        if (!supported(profile)) return Failure.Unavailable(FeatureId("providerUsage")).failed()
+        val monitor = explicitMonitor ?: return Failure.Device().failed()
+        val before = state(profile)
+        monitorStates.value =
+            monitorStates.value +
+                (profile to
+                    before.copy(
+                        enabled = enabled,
+                        status = if (enabled) PaseoUsageStatus.Checking else PaseoUsageStatus.Off,
+                    ))
+        val saved = monitor.setEnabled(profile.raw, enabled)
+        publishMonitorStates()
+        return if (saved) Unit.ok() else Failure.StorageRefused().failed()
+    }
+
+    override suspend fun refresh(profile: ProfileId): Outcome<Unit> {
+        engine() ?: return Failure.Device().failed()
+        val monitor = explicitMonitor ?: return Failure.Device().failed()
+        if (!supported(profile) || !state(profile).enabled)
+            return Failure.Unavailable(FeatureId("providerUsage")).failed()
+        monitorStates.value =
+            monitorStates.value +
+                (profile to state(profile).copy(status = PaseoUsageStatus.Checking))
+        monitor.refresh()
+        publishMonitorStates()
+        return if (monitor.statusFor(profile.raw) == PaseoUsageStatus.Current) Unit.ok()
+        else Failure.Network().failed()
     }
 
     override fun collectors(): List<PlanCollectorUi> = collector.collectorOptions()
@@ -350,6 +474,8 @@ class AndroidPlansSource(
             e.removeProfile(UsageConnection.PHONE_ID)
         }
         paseo?.removeProfile(profile.raw)
+        explicitMonitor?.removeProfile(profile.raw)
+        monitorStates.value = monitorStates.value - profile
         e.removeProfile(profile.raw)
         return true
     }
@@ -368,3 +494,13 @@ class UsagePlansDeletionCleaner(private val plans: AndroidPlansSource) : Profile
     override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> =
         if (plans.removeProfile(profileId)) 1.ok() else 0.ok()
 }
+
+/**
+ * Kept separate from the Plans binding so both product surfaces share the same explicit monitor
+ * owner.
+ */
+@SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class, binding = binding<ProviderUsageMonitorSettings>())
+@Inject
+class AndroidProviderUsageMonitorSettings(private val plans: AndroidPlansSource) :
+    ProviderUsageMonitorSettings by plans

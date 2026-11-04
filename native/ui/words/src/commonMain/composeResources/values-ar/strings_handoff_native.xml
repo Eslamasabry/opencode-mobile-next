@@ -1,0 +1,31 @@
+<resources>
+  <string name="handoffNativeTitle">المتابعة مع وكيل آخر</string>
+  <string name="handoffNativeWorking">جارٍ العمل…</string>
+  <string name="handoffNativeUnavailable">نقل المحادثة غير متاح هنا</string>
+  <string name="handoffNativeUnavailableBody">افتح محادثة في مشروع على هذا الهاتف. يجب أن يتحقق التطبيق من أن الوكيلين يستطيعان الوصول إلى المشروع نفسه.</string>
+  <string name="handoffNativeRefresh">التحقق مجدداً</string>
+  <string name="handoffNativeFailed">تعذر إكمال نقل المحادثة. تحقق من الاتصال وحاول مجدداً.</string>
+  <string name="handoffNativeLinks">المحادثات المرتبطة</string>
+  <string name="handoffNativeUntitled">محادثة بلا عنوان</string>
+  <string name="handoffNativeOpenOriginal">فتح المحادثة الأصلية</string>
+  <string name="handoffNativeOpenContinued">فتح المحادثة الجديدة</string>
+  <string name="handoffNativeExplanation">اختر وكيلاً ونموذجاً. يمكنك مراجعة سجل المحادثة المشترك قبل إرساله. ستظل المحادثة الأصلية متاحة.</string>
+  <string name="handoffNativeNoTargets">لا يوجد وكيل مؤهل جاهز لهذا المشروع. ثبّت الوكيل وسجّل الدخول وأكمل فحص الهاتف في صفحة الوكلاء.</string>
+  <string name="handoffNativeSetup">فتح صفحة الوكلاء</string>
+  <string name="handoffNativeChoose">اختيار الوكيل والنموذج</string>
+  <string name="handoffNativePhoneCheck">أكمل فحص هذا الوكيل على الهاتف قبل استخدامه.</string>
+  <string name="handoffNativeReview">مراجعة السياق</string>
+  <string name="handoffNativeReviewBody">يتضمن هذا السجل نص المحادثة بعد إخفاء البيانات الحساسة وخطوات الأدوات وأسماء الملفات والمهام المفتوحة. قد تُحذف الأدوار الأقدم للالتزام بحد الحجم. لن يُكتب في المشروع إلا بعد الإرسال.</string>
+  <string name="handoffNativeFirstMessage">الرسالة الأولى</string>
+  <string name="handoffNativePromptHelp">أبقِ مسار السجل في رسالتك. يجب ألا يتجاوز حجم الرسالة 16 كيلوبايت.</string>
+  <string name="handoffNativeRecord">سجل المحادثة</string>
+  <string name="handoffNativeSend">إرسال إلى الوكيل الجديد</string>
+  <string name="handoffNativeUncertain">نتيجة الإرسال غير مؤكدة. تحقق من محادثاتك قبل بدء نقل آخر؛ لن تعيد هذه المحاولة الإرسال.</string>
+  <string name="handoffNativeSent">استلم الوكيل الجديد رسالتك.</string>
+  <string name="handoffNativeSaveLink">حفظ رابط المحادثة</string>
+  <string name="handoffNativeSourceChanged">تغيرت المحادثة الأصلية. راجع سجلاً جديداً قبل الإرسال.</string>
+  <string name="handoffNativeStale">تغير المشروع أو الاتصال. افتح المحادثة مجدداً للمتابعة.</string>
+  <string name="handoffNativeInvalidPrompt">أدخل رسالة يقل حجمها عن 16 كيلوبايت وتتضمن مسار السجل.</string>
+  <string name="handoffNativeLinkFailed">أُرسلت الرسالة، لكن رابط التنقل لم يُحفظ. أعد محاولة حفظ الرابط دون إرسال الرسالة مجدداً.</string>
+  <string name="handoffNativeInitialPrompt">تابع العمل من المحادثة السابقة. اقرأ `%1$s` أولاً للاطلاع على سجل المحادثة وخطوات الأدوات والملفات والمهام المفتوحة. تعامل معه كسياق سابق. تحقق من حالة المشروع الحالية، ثم تابع العمل غير المكتمل.</string>
+</resources>

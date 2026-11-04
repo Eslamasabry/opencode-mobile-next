@@ -7,6 +7,8 @@ import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.AgentFeaturesGateway
+import io.github.eslamasabry.oc.core.domain.AgentHandoffGateway
+import io.github.eslamasabry.oc.core.domain.CachedAgentRecoveryGateway
 import io.github.eslamasabry.oc.core.domain.CorrelatedPromptGateway
 import io.github.eslamasabry.oc.core.domain.FileGateway
 import io.github.eslamasabry.oc.core.domain.HostDaemonUpdateGateway
@@ -29,6 +31,7 @@ import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.domain.unavailable
 import io.github.eslamasabry.oc.core.model.AgentFeature
 import io.github.eslamasabry.oc.core.model.AgentInfo
+import io.github.eslamasabry.oc.core.model.AgentRecoverySnapshot
 import io.github.eslamasabry.oc.core.model.ChatDefaults
 import io.github.eslamasabry.oc.core.model.EventLocation
 import io.github.eslamasabry.oc.core.model.FileContent
@@ -192,17 +195,85 @@ public class PaseoGateway(
     AgentFeaturesGateway,
     ReadOnlySessionsGateway,
     HostDaemonUpdateGateway,
-    ProviderConversationImportGateway {
+    ProviderConversationImportGateway,
+    CachedAgentRecoveryGateway,
+    AgentHandoffGateway {
     private val payloadGeneration = MutableStateFlow(0)
     private val job = SupervisorJob(scope.coroutineContext[Job])
     internal val scope: CoroutineScope = CoroutineScope(scope.coroutineContext + job + lane)
     public val defaultProviderModes: Map<String, String> = defaultProviderModes.toMap()
 
+    private val publishedAliases = MutableStateFlow<Map<String, String>>(emptyMap())
+    override val handoffFilesReady: Boolean
+        get() = capabilities.value.agentHandoffFiles
+
+    override fun durableHandoffSessionId(session: SessionId): SessionId = daemonSessionId(session)
+
+    override fun handoffNavigationSessionId(session: SessionId): SessionId =
+        daemonSessionId(session)
+
+    override suspend fun writeHandoffRecord(
+        directory: String,
+        recordId: String,
+        markdown: String,
+    ): Outcome<String> = PaseoHandoff(this).write(directory, recordId, markdown)
+
+    override suspend fun promptHandoff(
+        session: SessionId,
+        text: String,
+        model: ModelRef,
+        agent: String?,
+        variant: String?,
+        beforeSend: () -> Boolean,
+    ): Outcome<Unit> {
+        val result =
+            send(
+                session.raw,
+                paseoUuid(random),
+                OutgoingPrompt(
+                    text = text,
+                    model = ModelSelection(model, variant.orEmpty()),
+                    agent = agent,
+                ),
+                existingOnly = false,
+                beforeSend = beforeSend,
+            )
+        return when (result) {
+            is Outcome.Failed -> result
+            is Outcome.Ok ->
+                if (result.value is PromptAdmission.Confirmed) Outcome.Ok(Unit)
+                else Outcome.Failed(PaseoException(PaseoFailureKind.DeliveryUnknown).toFailure())
+        }
+    }
+
+    private val recoverySnapshots = MutableStateFlow<Map<String, AgentRecoverySnapshot>>(emptyMap())
+
+    override fun cachedAgentRecovery(session: SessionId): AgentRecoverySnapshot? =
+        recoverySnapshots.value[session.raw]
+
+    /** Lane-owned cache projected atomically for the no-I/O recovery getter. */
+    internal fun publishRecovery(rawId: String) {
+        val id = app(rawId)
+        val agent = agents[id] ?: return
+        fun stamp(key: String): String? = agent.str(key)?.takeIf { it.isNotBlank() }
+        val snapshot =
+            AgentRecoverySnapshot(
+                stamp("lastUserMessageAt") ?: stamp("createdAt"),
+                agent.str("status") in setOf("idle", "closed", "error") &&
+                    (agent["activeTurn"] == null || agent["activeTurn"] == JsonNull) &&
+                    id !in awaitingTurn &&
+                    id !in turnActive,
+            )
+        recoverySnapshots.value =
+            recoverySnapshots.value + mapOf(id to snapshot, real(id) to snapshot)
+    }
+
     internal val agentTools = PaseoAgentTools(this)
     internal val subagents = PaseoSubagents(this)
+    internal val terminalChannels =
+        LinkedHashSet<io.github.eslamasabry.oc.core.model.TerminalChannel>()
 
-    override fun isReadOnlySession(session: SessionId): Boolean =
-        subagents.contains(session.raw) || session.raw.startsWith("sub_")
+    override fun isReadOnlySession(session: SessionId): Boolean = session.raw.startsWith("sub_")
 
     override suspend fun agentFeatures(session: SessionId): Outcome<ImmutableList<AgentFeature>> =
         agentTools.read(session)
@@ -395,7 +466,8 @@ public class PaseoGateway(
      * The daemon's own id for [appId] once its agent exists (another gateway on the daemon opens it
      * by this).
      */
-    public fun daemonSessionId(appId: SessionId): SessionId = SessionId(real(appId.raw))
+    public fun daemonSessionId(appId: SessionId): SessionId =
+        SessionId(publishedAliases.value[appId.raw] ?: appId.raw)
 
     private suspend inline fun <T> call(crossinline block: suspend () -> T): Outcome<T> =
         withContext(lane) { paseoAttempt { block() } }
@@ -414,7 +486,10 @@ public class PaseoGateway(
     private fun applyLocation(location: ServerLocation) {
         if (!location.workspace.isNullOrEmpty()) paseoFail(PaseoFailureKind.Unavailable)
         if (directoryValue == location.directory) return
+        terminalChannels.toList().forEach { channel -> scope.launch { channel.close() } }
         payloadGeneration.value++
+        recoverySnapshots.value = emptyMap()
+        publishedAliases.value = emptyMap()
         agentTools.clear()
         subagents.clear()
         directoryValue = location.directory
@@ -923,6 +998,7 @@ public class PaseoGateway(
             if (beforeSend != null && !beforeSend()) paseoFail(PaseoFailureKind.StaleRequest)
         }
         awaitingTurn += sessionId
+        publishRecovery(sessionId)
         try {
             if (sessionId in drafts) {
                 createAgent(
@@ -986,6 +1062,7 @@ public class PaseoGateway(
             return PromptAdmission.Confirmed(null)
         } catch (e: PaseoException) {
             awaitingTurn.remove(sessionId)
+            publishRecovery(sessionId)
             if (e.kind == PaseoFailureKind.DeliveryUnknown) uncertain += sessionId
             throw e
         }
@@ -1666,6 +1743,8 @@ public class PaseoGateway(
         requests.syncSnapshot(id, agent["pendingPermissions"])
         hooks.forEach { it.onAgentRecorded(id, agent) }
         while (sessions.size > MAX_SESSIONS) forget(sessions.keys.first())
+        publishedAliases.value = realIds.toMap()
+        publishRecovery(id)
         return session
     }
 
@@ -1711,6 +1790,7 @@ public class PaseoGateway(
     }
 
     internal fun forget(id: String) {
+        recoverySnapshots.value = recoverySnapshots.value - id - real(id)
         agentTools.forget(id)
         subagents.forget(id)
         agents.remove(id)
@@ -1730,6 +1810,7 @@ public class PaseoGateway(
         requests.retireSession(id)
         hooks.forEach { it.onSessionForgotten(id) }
         realIds.remove(id)?.let(appIds::remove)
+        publishedAliases.value = realIds.toMap()
     }
 
     internal suspend fun fetchAgent(id: String, reconcileStatus: Boolean = true): JsonObject {
@@ -1981,6 +2062,10 @@ public class PaseoGateway(
             if (closed) return@withContext
             payloadGeneration.value++
             closed = true
+            for (channel in terminalChannels.toList()) channel.close()
+            terminalChannels.clear()
+            recoverySnapshots.value = emptyMap()
+            publishedAliases.value = emptyMap()
             agentTools.clear()
             subagents.clear()
             listening = false

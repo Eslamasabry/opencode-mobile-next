@@ -5,6 +5,7 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ServerGateway
+import io.github.eslamasabry.oc.engine.integrations.usage.ProviderUsageMonitorSettings
 
 public class AgentToolsSession(
     public val identity: Any,
@@ -16,6 +17,10 @@ public interface AgentToolsHost {
     public fun open(profile: ProfileId): AgentToolsSession?
 
     public fun isCurrent(profile: ProfileId, identity: Any): Boolean
+
+    public val usageMonitor: ProviderUsageMonitorSettings?
+
+    public fun monitorTimeLabel(atMs: Long): String
 
     public fun display(value: String): String
 }
@@ -30,6 +35,10 @@ public class NoAgentToolsHost : AgentToolsHost {
     override fun open(profile: ProfileId): AgentToolsSession? = null
 
     override fun isCurrent(profile: ProfileId, identity: Any): Boolean = false
+
+    override val usageMonitor: ProviderUsageMonitorSettings? = null
+
+    override fun monitorTimeLabel(atMs: Long): String = ""
 
     override fun display(value: String): String = value
 }

@@ -104,6 +104,7 @@ internal fun PaseoGateway.onStream(id: String, event: JsonObject, payload: JsonO
             )
         }
     }
+    publishRecovery(id)
 }
 
 internal fun PaseoGateway.onTimelineItem(

@@ -34,3 +34,6 @@ fetch maven/com/github/termux/termux-app/terminal-emulator/v0.118.3/terminal-emu
   https://jitpack.io/com/github/termux/termux-app/terminal-emulator/v0.118.3/terminal-emulator-v0.118.3.aar
 fetch maven/com/github/termux/termux-app/terminal-view/v0.118.3/terminal-view-v0.118.3.aar \
   https://jitpack.io/com/github/termux/termux-app/terminal-view/v0.118.3/terminal-view-v0.118.3.aar
+
+# Reproducible external-I/O base: remove only upstream TerminalSession classes; the native module compiles its licensed source fork.
+python3 -I "$here/tools/vendor/termux_external.py" "$here"

@@ -44,6 +44,10 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun AgentToolsScreen(state: AgentToolsUi, actions: AgentToolsActions) {
+    if (state.terminal.liveId != null) {
+        AgentTerminalScreen(state.terminal, actions)
+        return
+    }
     val working = stringResource(Res.string.agentToolsWorking)
     val locked = state.busy || state.loading || state.uncertain
     val disabled =
@@ -101,6 +105,87 @@ public fun AgentToolsScreen(state: AgentToolsUi, actions: AgentToolsActions) {
                     item(key = "uncertain") {
                         KitNotice(stringResource(Res.string.agentToolsUncertain))
                     }
+                if (state.terminal.supported) {
+                    item(key = "terminal-actions") {
+                        val terminalEnabled =
+                            if (state.terminal.busy || locked) KitEnabled.Disabled(working)
+                            else KitEnabled.Enabled
+                        KitButton(
+                            stringResource(Res.string.agentToolsReadTerminals),
+                            actions::listTerminals,
+                            role = KitButtonRole.Secondary,
+                            enabled = terminalEnabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.agentToolsNewTerminal),
+                            actions::askNewTerminal,
+                            role = KitButtonRole.Tertiary,
+                            enabled = terminalEnabled,
+                        )
+                    }
+                    item(key = "terminal-list") { AgentTerminalRows(state.terminal, actions) }
+                }
+                state.monitor?.let { monitor ->
+                    item(key = "usage-monitor") {
+                        KitSwitchRow(
+                            title = stringResource(Res.string.agentToolsUsageMonitor),
+                            supporting = stringResource(Res.string.agentToolsUsageMonitorBody),
+                            checked = monitor.enabled,
+                            enabled =
+                                if (state.monitorBusy) KitEnabled.Disabled(working)
+                                else KitEnabled.Enabled,
+                            onCheckedChange = actions::setUsageMonitor,
+                        )
+                        KitText(
+                            stringResource(
+                                when (monitor.status) {
+                                    io.github.eslamasabry.oc.engine.integrations.usage
+                                        .PaseoUsageStatus
+                                        .Off -> Res.string.agentToolsMonitorOff
+                                    io.github.eslamasabry.oc.engine.integrations.usage
+                                        .PaseoUsageStatus
+                                        .Paused -> Res.string.agentToolsMonitorPaused
+                                    io.github.eslamasabry.oc.engine.integrations.usage
+                                        .PaseoUsageStatus
+                                        .Waiting -> Res.string.agentToolsMonitorWaiting
+                                    io.github.eslamasabry.oc.engine.integrations.usage
+                                        .PaseoUsageStatus
+                                        .HostStopped -> Res.string.agentToolsMonitorStopped
+                                    io.github.eslamasabry.oc.engine.integrations.usage
+                                        .PaseoUsageStatus
+                                        .Checking -> Res.string.agentToolsMonitorChecking
+                                    io.github.eslamasabry.oc.engine.integrations.usage
+                                        .PaseoUsageStatus
+                                        .Current -> Res.string.agentToolsMonitorCurrent
+                                    io.github.eslamasabry.oc.engine.integrations.usage
+                                        .PaseoUsageStatus
+                                        .Unavailable -> Res.string.agentToolsMonitorUnavailable
+                                }
+                            )
+                        )
+                        state.monitorLastRead?.let {
+                            KitText(stringResource(Res.string.agentToolsMonitorLastRead, it))
+                        }
+                        if (monitor.enabled)
+                            KitText(
+                                stringResource(
+                                    Res.string.agentToolsMonitorCount,
+                                    monitor.providerCount,
+                                )
+                            )
+                        KitButton(
+                            stringResource(Res.string.agentToolsMonitorRefresh),
+                            actions::refreshUsageMonitor,
+                            role = KitButtonRole.Tertiary,
+                            enabled =
+                                if (monitor.enabled && !state.monitorBusy) KitEnabled.Enabled
+                                else
+                                    KitEnabled.Disabled(
+                                        stringResource(Res.string.agentToolsMonitorEnableFirst)
+                                    ),
+                        )
+                    }
+                }
                 if (state.canOptions && !state.loading) {
                     if (state.models.isNotEmpty())
                         item(key = "models") {
@@ -260,6 +345,7 @@ public fun AgentToolsScreen(state: AgentToolsUi, actions: AgentToolsActions) {
                 }
             }
         }
+        AgentTerminalDialogs(state.terminal, actions)
         KitConfirm(
             spec =
                 if (state.confirmUpdate)

@@ -24,4 +24,9 @@
     <string name="mcpNativeBack">Back</string>
     <string name="mcpNativeSaveFailed">Could not save the catalogue preference. Try again.</string>
     <string name="mcpNativeSourceChanged">The connection changed. Reopen the catalogue.</string>
+    <string name="mcpNativeToolsReady">Connector tools are ready for the next turn.</string>
+    <string name="mcpNativeSignIn">Sign in to connector</string>
+    <string name="mcpNativeCode">Return URL or code</string>
+    <string name="mcpNativeFinishSignIn">Finish sign-in</string>
+    <string name="mcpNativeCancelSignIn">Cancel sign-in</string>
 </resources>

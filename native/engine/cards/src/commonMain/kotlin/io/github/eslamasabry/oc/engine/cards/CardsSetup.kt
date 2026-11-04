@@ -94,6 +94,11 @@ public interface CardsQualifier {
      */
     public fun permitsSession(profileId: String, sessionId: String): Boolean = true
 
+    /** Transient conversations store preferences under their trusted saved owner. */
+    public fun settingsOwner(profileId: String): String? = profileId
+
+    public fun activeSettingsOwner(profileId: String): Boolean = true
+
     /**
      * Ready agents, or a problem (Outcome.Failed is a storage/transport problem:
      * VerificationFailed).
@@ -133,8 +138,15 @@ public class CardsSetup(private val prefs: CardsPrefs, private val qualifier: Ca
     public fun permitsSession(profileId: String, sessionId: String): Boolean =
         qualifier.permitsSession(profileId, sessionId)
 
-    public fun desired(profileId: String): Boolean =
-        desired[profileId] ?: prefs.enabled(profileId) ?: false
+    public fun settingsOwner(profileId: String): String? = qualifier.settingsOwner(profileId)
+
+    public fun activeSettingsOwner(profileId: String): Boolean =
+        qualifier.activeSettingsOwner(profileId)
+
+    public fun desired(profileId: String): Boolean {
+        val owner = settingsOwner(profileId) ?: return false
+        return desired[owner] ?: prefs.enabled(owner) ?: false
+    }
 
     /** Effective: on, proven, for at least one agent here, and not being turned off. */
     public fun effective(profileId: String, agent: CardAgent? = null): Boolean {
@@ -148,8 +160,10 @@ public class CardsSetup(private val prefs: CardsPrefs, private val qualifier: Ca
     /** The status for this connection, naming only its agents (B-CHAT-035). */
     public fun status(profileId: String): CardsStatus {
         if (!desired(profileId)) return CardsStatus.Off
-        val here = qualifier.agentsHere(profileId)
-        val raw = statuses[profileId] ?: CardsStatus.Unavailable(CardsProblem.NotQualified, here)
+        val owner =
+            settingsOwner(profileId) ?: return CardsStatus.Unavailable(CardsProblem.UnsupportedHost)
+        val here = qualifier.agentsHere(owner)
+        val raw = statuses[owner] ?: CardsStatus.Unavailable(CardsProblem.NotQualified, here)
         return project(raw, here)
     }
 
@@ -181,6 +195,17 @@ public class CardsSetup(private val prefs: CardsPrefs, private val qualifier: Ca
      * one never writes its result.
      */
     public suspend fun setEnabled(profileId: String, on: Boolean): Outcome<Unit> {
+        val owner =
+            settingsOwner(profileId)
+                ?: return Outcome.Failed(
+                    io.github.eslamasabry.oc.core.common.Failure.Refused(
+                        io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope
+                    )
+                )
+        return setOwnedEnabled(owner, on)
+    }
+
+    private suspend fun setOwnedEnabled(profileId: String, on: Boolean): Outcome<Unit> {
         val gen = (generation[profileId] ?: 0) + 1
         generation[profileId] = gen
         desired[profileId] = on
@@ -208,6 +233,11 @@ public class CardsSetup(private val prefs: CardsPrefs, private val qualifier: Ca
      * Automatic checks are coalesced: one runs at a time per profile.
      */
     public suspend fun recheck(profileId: String): Outcome<Unit> {
+        val owner = settingsOwner(profileId) ?: return Outcome.Ok(Unit)
+        return recheckOwned(owner)
+    }
+
+    private suspend fun recheckOwned(profileId: String): Outcome<Unit> {
         if (!desired(profileId)) return Outcome.Ok(Unit)
         if (running.containsKey(profileId)) return Outcome.Ok(Unit)
         return refresh(profileId, explicit = false, gen = generation[profileId] ?: 0)

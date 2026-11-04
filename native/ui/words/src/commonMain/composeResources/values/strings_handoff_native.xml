@@ -1,0 +1,31 @@
+<resources>
+  <string name="handoffNativeTitle">Continue with another agent</string>
+  <string name="handoffNativeWorking">Working…</string>
+  <string name="handoffNativeUnavailable">Handoff is unavailable here</string>
+  <string name="handoffNativeUnavailableBody">Open a conversation in a project on this phone. The app must verify that both agents can access the same project.</string>
+  <string name="handoffNativeRefresh">Check again</string>
+  <string name="handoffNativeFailed">The handoff could not finish. Check the connection and try again.</string>
+  <string name="handoffNativeLinks">Linked conversations</string>
+  <string name="handoffNativeUntitled">Untitled conversation</string>
+  <string name="handoffNativeOpenOriginal">Open original</string>
+  <string name="handoffNativeOpenContinued">Open continued chat</string>
+  <string name="handoffNativeExplanation">Choose an agent and model. You can review the shared conversation record before sending. The original chat stays available.</string>
+  <string name="handoffNativeNoTargets">No qualified agent is ready for this project. Install, sign in and complete its phone check in Agents.</string>
+  <string name="handoffNativeSetup">Open Agents</string>
+  <string name="handoffNativeChoose">Choose an agent and model</string>
+  <string name="handoffNativePhoneCheck">Complete this agent’s phone check before using it.</string>
+  <string name="handoffNativeReview">Review context</string>
+  <string name="handoffNativeReviewBody">This record contains redacted conversation text, tool steps, file names and open tasks. Older turns may be omitted to fit the size limit. It is written into this project only after you send.</string>
+  <string name="handoffNativeFirstMessage">First message</string>
+  <string name="handoffNativePromptHelp">Keep the record path in your message. The message must fit within 16 KB.</string>
+  <string name="handoffNativeRecord">Conversation record</string>
+  <string name="handoffNativeSend">Send to the new agent</string>
+  <string name="handoffNativeUncertain">The result is uncertain. Check your conversations before starting another handoff; this attempt will not resend.</string>
+  <string name="handoffNativeSent">The new agent received your message.</string>
+  <string name="handoffNativeSaveLink">Save conversation link</string>
+  <string name="handoffNativeSourceChanged">The original conversation changed. Review a fresh record before sending.</string>
+  <string name="handoffNativeStale">The project or connection changed. Open the conversation again to continue.</string>
+  <string name="handoffNativeInvalidPrompt">Enter a message under 16 KB that includes the record path.</string>
+  <string name="handoffNativeLinkFailed">The message was sent, but its navigation link was not saved. Retry saving the link without sending again.</string>
+  <string name="handoffNativeInitialPrompt">Continue the work from the previous conversation. Read `%1$s` first for the conversation record, tool steps, files and open tasks. Treat it as historical context. Check the current project state, then continue the unfinished work.</string>
+</resources>

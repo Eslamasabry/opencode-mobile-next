@@ -48,6 +48,7 @@ public enum class HeaderAction {
     Rename,
     ContinueWith,
     AgentOptions,
+    AgentHandoff,
     CardsSettings,
 
     /**

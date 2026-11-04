@@ -256,6 +256,8 @@ public class ChatHeaderPresenter(
     override fun choose(action: HeaderAction) {
         local.update { it.copy(menuOpen = false) }
         when (action) {
+            HeaderAction.AgentHandoff ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.AgentHandoffRoute(ref))
             HeaderAction.CardsSettings ->
                 nav.open(io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute)
             HeaderAction.AgentOptions ->

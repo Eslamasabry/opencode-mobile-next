@@ -544,6 +544,15 @@ class PreviewRuntime(
                 )
                 register(
                     io.github.eslamasabry.oc.core.data.scope.KeyShape(
+                        "oc.agentHandoffs.",
+                        io.github.eslamasabry.oc.core.data.scope.KeyScope.Profile,
+                        io.github.eslamasabry.oc.core.data.kv.PrefType.Str,
+                        ":engine:agents",
+                        "durable native agent handoff links",
+                    )
+                )
+                register(
+                    io.github.eslamasabry.oc.core.data.scope.KeyShape(
                         "oc.setupRegistry.",
                         io.github.eslamasabry.oc.core.data.scope.KeyScope.Profile,
                         io.github.eslamasabry.oc.core.data.kv.PrefType.Str,

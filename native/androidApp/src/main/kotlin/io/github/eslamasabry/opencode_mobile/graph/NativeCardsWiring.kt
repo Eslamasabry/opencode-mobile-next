@@ -59,9 +59,29 @@ class NativeCardsQualifier(
             },
         )
 
+    override fun settingsOwner(profileId: String): String? {
+        val id = ProfileId(profileId)
+        val owner =
+            registry.ownerOfTransient(id)
+                ?: id.takeIf { stores.profiles.profile(it) != null }
+                ?: return null
+        return owner.raw.takeIf { PROFILE.matches(it) && stores.profiles.profile(owner) != null }
+    }
+
+    override fun activeSettingsOwner(profileId: String): Boolean =
+        stores.profiles.activeId.value?.raw == profileId
+
     fun graph(profile: String): ConnectionGraph? {
-        if (!PROFILE.matches(profile) || stores.profiles.activeId.value?.raw != profile) return null
-        val graph = registry.savedGraph(stores, ProfileId(profile)) ?: return null
+        val id = ProfileId(profile)
+        val parent = settingsOwner(profile)?.let(::ProfileId) ?: return null
+        if (stores.profiles.activeId.value != parent || owner(profile) != parent.raw) return null
+        val graph =
+            if (registry.ownerOfTransient(id) == parent) registry.live.value[id]
+            else
+                registry.live.value.values
+                    .filter { registry.ownerOfTransient(it.profile.id) == parent }
+                    .singleOrNull()
+        graph ?: return null
         val address =
             try {
                 URI(graph.profile.origin.toString())
@@ -72,38 +92,34 @@ class NativeCardsQualifier(
             address.host !in setOf("127.0.0.1", "localhost", "::1", "[::1]") || address.port != 4099
         )
             return null
-        if (graph.session.server.facet<AgentFeaturesGateway>() == null) return null
-        val owner = owner(profile) ?: return null
-        return graph.takeIf { stores.profiles.profile(ProfileId(owner)) != null }
+        return graph.takeIf { it.session.server.facet<AgentFeaturesGateway>() != null }
     }
 
     fun owner(profile: String): String? {
-        val owner =
-            (stores.prefs.get("oc.phoneAgentOwner.$profile") as? PrefValue.Str)?.value ?: profile
-        if (
-            !PROFILE.matches(owner) ||
-                (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value != owner
-        )
-            return null
-        return owner
+        val owner = settingsOwner(profile) ?: return null
+        return owner.takeIf {
+            (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == it
+        }
     }
 
     override fun managed(profileId: String): Boolean = graph(profileId) != null
 
     override fun agentsHere(profileId: String): List<CardAgent> =
-        if (managed(profileId)) listOf(CardAgent.Claude) else listOf(CardAgent.OpenCode2)
+        if (managed(profileId)) listOf(CardAgent.Claude) else emptyList()
 
-    override fun permitsSession(profileId: String, sessionId: String): Boolean =
-        graph(profileId)
-            ?.session
-            ?.server
-            ?.facet<AgentFeaturesGateway>()
+    override fun permitsSession(profileId: String, sessionId: String): Boolean {
+        val id = ProfileId(profileId)
+        if (registry.ownerOfTransient(id) == null) return false
+        val graph = graph(profileId)?.takeIf { it.profile.id == id } ?: return false
+        return graph.session.server
+            .facet<AgentFeaturesGateway>()
             ?.providerIdForSession(SessionId(sessionId)) == "claude"
+    }
 
     private suspend fun run(profile: String, enabled: Boolean, verify: Boolean): Int? {
         val captured = graph(profile) ?: return null
         val owner = owner(profile) ?: return null
-        val admission = payloads.reserveForProfile(ProfileId(profile))
+        val admission = payloads.reserveForProfile(captured.profile.id)
         val lease = (admission as? Outcome.Ok)?.value ?: return null
         try {
             if (
@@ -348,7 +364,9 @@ class NativeCardsSearchLifecycle(
         started = true
         appScope.launch(dispatchers.main) {
             if (stores.warm() !is Outcome.Ok) return@launch
-            combine(registry.live, stores.profiles.activeId) { live, id -> id?.let { live[it] } }
+            combine(registry.live, stores.profiles.activeId) { _, id ->
+                    id?.let { qualifier.graph(it.raw) }
+                }
                 .flatMapLatest { graph ->
                     if (graph == null) flowOf(null)
                     else
@@ -368,7 +386,7 @@ class NativeCardsSearchLifecycle(
                                     !setup.effective(profile, CardAgent.Claude)
                             )
                                 null
-                            else Source(graph, owner, location, consent(profile))
+                            else Source(graph, owner, location, consent(owner))
                         }
                 }
                 .distinctUntilChanged()
@@ -382,7 +400,7 @@ class NativeCardsSearchLifecycle(
                             source.graph.session.server.events.status.value ==
                                 StreamStatus.Connected &&
                             setup.effective(profile, CardAgent.Claude) &&
-                            consent(profile) == source.consent
+                            consent(source.owner) == source.consent
                     val endpoint =
                         servers.open(::current) { request ->
                             if (!current()) throw IllegalStateException()
@@ -392,7 +410,7 @@ class NativeCardsSearchLifecycle(
                             try {
                                 if (lease.awaitReady() !is Outcome.Ok || !current())
                                     throw IllegalStateException()
-                                search.find(profile, request, ::current)
+                                search.find(source.owner, request, ::current)
                             } finally {
                                 lease.release()
                             }

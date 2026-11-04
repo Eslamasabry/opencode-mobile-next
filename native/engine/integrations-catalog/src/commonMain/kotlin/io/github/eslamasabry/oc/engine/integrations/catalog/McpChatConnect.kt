@@ -13,23 +13,42 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-// Flutter lib/domain/mcp_chat.dart + lib/state/mcp_chat_controller.dart + parseMcpAuthorizationCode (mcp_oauth.dart).
+// Flutter lib/domain/mcp_chat.dart + lib/state/mcp_chat_controller.dart + parseMcpAuthorizationCode
+// (mcp_oauth.dart).
 
-/** Chat connector progress. Ready means discovery completed for the next model step, never that a tool ran. */
+/**
+ * Chat connector progress. Ready means discovery completed for the next model step, never that a
+ * tool ran.
+ */
 public enum class McpChatPhase {
-    Suggested, Connecting, NeedsAuthentication, Authorizing, CheckingTools, ToolsReady, ConnectedReadinessUnknown,
-    Failed, Unavailable,
+    Suggested,
+    Connecting,
+    NeedsAuthentication,
+    Authorizing,
+    CheckingTools,
+    ToolsReady,
+    ConnectedReadinessUnknown,
+    Failed,
+    Unavailable,
 }
 
 /** Fixed keys for plain copy; never server errors or credentials. */
 public enum class McpChatFailure {
-    Unavailable, InvalidSuggestion, SetupRequired, NameConflict, SourceChanged, ConnectFailed, AuthenticationFailed,
-    OauthUnavailable, NotConnected,
+    Unavailable,
+    InvalidSuggestion,
+    SetupRequired,
+    NameConflict,
+    SourceChanged,
+    ConnectFailed,
+    AuthenticationFailed,
+    OauthUnavailable,
+    NotConnected,
 }
 
 /**
- * [authorizationUrl] is inert and ephemeral: open it only through ExternalLinkPolicy; never persist or log it.
- * [manualCodeRequired]: paste the browser's return URL or code (the native app owns no loopback callback listener).
+ * [authorizationUrl] is inert and ephemeral: open it only through ExternalLinkPolicy; never persist
+ * or log it. [manualCodeRequired]: paste the browser's return URL or code (the native app owns no
+ * loopback callback listener).
  */
 public data class McpChatSnapshot(
     val phase: McpChatPhase,
@@ -40,7 +59,10 @@ public data class McpChatSnapshot(
     override fun toString(): String = "McpChatSnapshot($phase, $failure)"
 }
 
-/** One accepted catalog suggestion: [serverName] and the draft it would add (null when it cannot be added as-is). */
+/**
+ * One accepted catalog suggestion: [serverName] and the draft it would add (null when it cannot be
+ * added as-is).
+ */
 public data class McpChatSuggestion(
     val serverName: String,
     val draft: McpServerDraft?,
@@ -50,9 +72,10 @@ public data class McpChatSuggestion(
 )
 
 /**
- * One explicitly accepted connector suggestion, pinned to its conversation. [gateway] supplies a fresh transport for
- * each operation; [current] answers whether the profile/conversation identity is unchanged. An uncertain add is
- * reconciled by refetching, never re-added; invalidation and disposal never revoke server credentials.
+ * One explicitly accepted connector suggestion, pinned to its conversation. [gateway] supplies a
+ * fresh transport for each operation; [current] answers whether the profile/conversation identity
+ * is unchanged. An uncertain add is reconciled by refetching, never re-added; invalidation and
+ * disposal never revoke server credentials.
  */
 public class McpChatConnect(
     public val item: McpChatSuggestion,
@@ -65,8 +88,10 @@ public class McpChatConnect(
 
     public var isDisposed: Boolean = false
         private set
+
     private var invalidated = false
     private var addDispatched = false
+    private var addAcknowledged = false
     private var authDispatched = false
     private var oauthRevision = 0
     private var launch: McpAuthLaunch? = null
@@ -81,13 +106,22 @@ public class McpChatConnect(
         return true
     }
 
-    private fun set(phase: McpChatPhase, failure: McpChatFailure? = null, url: String? = null, manual: Boolean = false) {
+    private fun set(
+        phase: McpChatPhase,
+        failure: McpChatFailure? = null,
+        url: String? = null,
+        manual: Boolean = false,
+    ) {
         if (isDisposed) return
         state.value = McpChatSnapshot(phase, failure, url, manual)
     }
 
     private fun fail(failure: McpChatFailure) =
-        set(if (failure == McpChatFailure.Unavailable) McpChatPhase.Unavailable else McpChatPhase.Failed, failure)
+        set(
+            if (failure == McpChatFailure.Unavailable) McpChatPhase.Unavailable
+            else McpChatPhase.Failed,
+            failure,
+        )
 
     /** No remote cancellation: invalidation cannot revoke unrelated or established credentials. */
     public fun invalidate() {
@@ -102,7 +136,10 @@ public class McpChatConnect(
         launch = null
     }
 
-    /** One operation at a time: a call while another runs waits for that one instead of starting its own. */
+    /**
+     * One operation at a time: a call while another runs waits for that one instead of starting its
+     * own.
+     */
     private suspend fun run(onError: McpChatFailure, action: suspend () -> Unit) {
         if (isDisposed) return
         work?.let {
@@ -120,7 +157,10 @@ public class McpChatConnect(
         }
     }
 
-    /** Gateway answers become exceptions inside [run], so any failure maps to the operation's one fixed key. */
+    /**
+     * Gateway answers become exceptions inside [run], so any failure maps to the operation's one
+     * fixed key.
+     */
     private fun <T> Outcome<T>.orThrow(): T =
         when (this) {
             is Outcome.Ok -> value
@@ -145,9 +185,15 @@ public class McpChatConnect(
                 return@run
             }
             val draft = item.draft
-            if (draft == null || !item.hosted || item.needsKey || item.needsSettings || draft.headers.isNotEmpty() ||
-                draft.environment.isNotEmpty() || draft.command.isNotEmpty() ||
-                CatalogUrl.parse(draft.url.orEmpty())?.scheme != "https"
+            if (
+                draft == null ||
+                    !item.hosted ||
+                    item.needsKey ||
+                    item.needsSettings ||
+                    draft.headers.isNotEmpty() ||
+                    draft.environment.isNotEmpty() ||
+                    draft.command.isNotEmpty() ||
+                    CatalogUrl.parse(draft.url.orEmpty())?.scheme != "https"
             ) {
                 fail(McpChatFailure.SetupRequired)
                 return@run
@@ -163,6 +209,7 @@ public class McpChatConnect(
             }
             addDispatched = true
             g.addMcpServer(draft, McpConfigScope.RuntimeLocation).orThrow()
+            addAcknowledged = true
             if (!check()) return@run
             refreshNow()
         }
@@ -176,6 +223,10 @@ public class McpChatConnect(
             return
         }
         if (!addDispatched) return
+        if (!addAcknowledged) {
+            fail(McpChatFailure.ConnectFailed)
+            return
+        }
         set(McpChatPhase.CheckingTools)
         val g = gateway()
         if (!check()) return
@@ -190,7 +241,10 @@ public class McpChatConnect(
             "connected" -> {
                 clearLaunch()
                 authDispatched = false
-                set(if (capabilities().mcpChatToolRefresh) McpChatPhase.ToolsReady else McpChatPhase.ConnectedReadinessUnknown)
+                set(
+                    if (capabilities().mcpChatToolRefresh) McpChatPhase.ToolsReady
+                    else McpChatPhase.ConnectedReadinessUnknown
+                )
             }
             "needs_auth" -> {
                 val l = launch
@@ -213,23 +267,34 @@ public class McpChatConnect(
                 fail(McpChatFailure.OauthUnavailable)
                 return@run
             }
-            if (!addDispatched || authDispatched || state.value.phase != McpChatPhase.NeedsAuthentication) return@run
+            if (
+                !addDispatched ||
+                    authDispatched ||
+                    state.value.phase != McpChatPhase.NeedsAuthentication
+            )
+                return@run
             val g = gateway()
             if (!check() || requestRevision != oauthRevision) return@run
             authDispatched = true
             val started = g.startMcpAuthentication(item.serverName).orThrow()
             if (!check() || requestRevision != oauthRevision) return@run
             val url = CatalogUrl.parse(started.authorizationUrl)
-            if (url == null || url.scheme != "https" || url.host.isEmpty() || url.userInfo.isNotEmpty() ||
-                Regex("[\\s\\x00-\\x1f\\x7f]").containsMatchIn(started.authorizationUrl) ||
-                started.oauthState.isEmpty() || url.query["state"] != started.oauthState
+            if (
+                url == null ||
+                    url.scheme != "https" ||
+                    url.host.isEmpty() ||
+                    url.userInfo.isNotEmpty() ||
+                    Regex("[\\s\\x00-\\x1f\\x7f]").containsMatchIn(started.authorizationUrl) ||
+                    started.oauthState.isEmpty() ||
+                    url.query["state"] != started.oauthState
             ) {
                 fail(McpChatFailure.AuthenticationFailed)
                 return@run
             }
             launch = started
             ++oauthRevision
-            if (check()) set(McpChatPhase.Authorizing, url = started.authorizationUrl, manual = true)
+            if (check())
+                set(McpChatPhase.Authorizing, url = started.authorizationUrl, manual = true)
         }
     }
 
@@ -255,11 +320,17 @@ public class McpChatConnect(
             refreshNow()
         }
 
-    /** Hides the local launch at once, then cancels only an authentication this controller started. */
+    /**
+     * Hides the local launch at once, then cancels only an authentication this controller started.
+     */
     public suspend fun cancelOAuth() {
         if (!check()) return
         val pending = work
-        if (!authDispatched && !(state.value.phase == McpChatPhase.NeedsAuthentication && pending != null)) return
+        if (
+            !authDispatched &&
+                !(state.value.phase == McpChatPhase.NeedsAuthentication && pending != null)
+        )
+            return
         clearLaunch()
         set(McpChatPhase.CheckingTools)
         pending?.await()
@@ -289,12 +360,14 @@ public class McpChatConnect(
 private class McpChatStepFailed : Exception()
 
 /**
- * The authorization code from a pasted callback URL (its `state` must equal [expectedState]) or a bare code; null for
- * anything else (empty, over 8 KiB, line breaks, a callback with the wrong state or no code, an error callback).
+ * The authorization code from a pasted callback URL (its `state` must equal [expectedState]) or a
+ * bare code; null for anything else (empty, over 8 KiB, line breaks, a callback with the wrong
+ * state or no code, an error callback).
  */
 public fun parseMcpAuthorizationCode(value: String, expectedState: String): String? {
     val input = value.trim()
-    if (input.isEmpty() || input.length > 8192 || input.contains('\r') || input.contains('\n')) return null
+    if (input.isEmpty() || input.length > 8192 || input.contains('\r') || input.contains('\n'))
+        return null
     val url = CatalogUrl.parse(input)
     val query = url?.query.orEmpty()
     val code = query["code"]

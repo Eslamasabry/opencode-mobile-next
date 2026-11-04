@@ -62,9 +62,8 @@ public object PaseoCapabilities {
             globalEventStream = false,
             worktreeReset = false,
             cliSessionResume = false,
-            // TODO(S5-PASEOP1): Dart has these on; their gateways are P1 extras.
             fileBrowsing = true,
-            terminal = false,
+            terminal = true,
             sessionDiff = true,
             worktreeCreate = true,
             worktreeBrowsing = true,
@@ -75,12 +74,12 @@ public object PaseoCapabilities {
 /**
  * Dart `capabilities` getter: gen-UI off; handoff files only while connected to a daemon that
  * negotiated writing.
- *
- * TODO(S5-PASEOP1): handoff is a P1 extra; until its writer is ported the flag stays off whatever
- *   the daemon says.
  */
-@Suppress("UNUSED_PARAMETER")
 public fun paseoCapabilities(
     connected: Boolean,
     workspaceFileEditing: Boolean,
-): ServerCapabilities = PaseoCapabilities.Base.copy(genUi = false, agentHandoffFiles = false)
+): ServerCapabilities =
+    PaseoCapabilities.Base.copy(
+        genUi = false,
+        agentHandoffFiles = connected && workspaceFileEditing,
+    )

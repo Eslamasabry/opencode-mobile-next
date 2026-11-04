@@ -1,0 +1,21 @@
+<resources>
+    <string name="codexNativeTitle">Codex connection check</string>
+    <string name="codexNativeIntro">Run this single-line command on your computer. Enter its address, an absolute folder path and the capability token to check the authenticated connection.</string>
+    <string name="codexNativeCopy">Copy start command</string>
+    <string name="codexNativeTokenHelp">Use your own absolute token-file path. Keep the token private. Plain WebSocket is allowed only on this device; use a secure WebSocket for another computer.</string>
+    <string name="codexNativeAddress">WebSocket address</string>
+    <string name="codexNativeDirectory">Absolute folder path</string>
+    <string name="codexNativeToken">Capability token</string>
+    <string name="codexNativeWorking">Checking the connection…</string>
+    <string name="codexNativeProbe">Check connection</string>
+    <string name="codexNativeProbed">The authenticated connection answered a folder-scoped read. An empty result does not confirm that the folder exists.</string>
+    <string name="codexNativeFailed">The connection check failed. Check that Codex is running and try again.</string>
+    <string name="codexNativeAuthFailed">Codex refused the capability token. Check it and try again.</string>
+    <string name="codexNativeScopeFailed">Check the address, absolute folder path and allowed connection scope.</string>
+    <string name="codexNativeVersion">This connection cannot supply account usage. Account reads require the qualified Codex 0.153.4 protocol.</string>
+    <string name="codexNativeOpen">Open account reader</string>
+    <string name="codexNativeReaderOpen">The account reader is open. Open Plans to refresh the account limits. Close it here when finished.</string>
+    <string name="codexNativePlans">Open Plans</string>
+    <string name="codexNativeClose">Close account reader</string>
+    <string name="codexNativeReadOnly">This page checks the connection and reads account usage. It does not start a chat, sign you in or send a prompt.</string>
+</resources>

@@ -57,6 +57,7 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
 import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
+import io.github.eslamasabry.oc.ui.words.res.codexNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
@@ -344,6 +345,11 @@ public fun ServersScreen(
             KitButton(
                 stringResource(Res.string.usageTabPlans),
                 actions::openPlans,
+                role = KitButtonRole.Secondary,
+            )
+            KitButton(
+                stringResource(Res.string.codexNativeTitle),
+                actions::openCodexProbe,
                 role = KitButtonRole.Secondary,
             )
             KitText(stringResource(Res.string.serversAdd))

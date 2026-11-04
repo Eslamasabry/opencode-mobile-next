@@ -16,6 +16,7 @@ import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
@@ -33,27 +34,32 @@ public class CardsSettingsEntries(
     private val cards: ChatCards,
     private val registry: ConnectionRegistry,
     private val nav: AppNavigator,
+    private val connections: ServerConnections,
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<CardsSettingsRoute> {
             val changes by cards.setup.changes.collectAsStateWithLifecycle()
             val live by registry.live.collectAsStateWithLifecycle()
+            val saved by connections.servers.collectAsStateWithLifecycle()
             val scope = rememberCoroutineScope()
             var pending by remember { mutableStateOf(emptySet<String>()) }
             var failed by remember { mutableStateOf(emptySet<String>()) }
             LaunchedEffect(live.keys) { live.keys.forEach { cards.setup.recheck(it.raw) } }
             val rows =
-                remember(changes, live, pending, failed) {
+                remember(changes, live, saved, pending, failed) {
                     live.values
-                        .map { graph ->
-                            val id = graph.profile.id.raw
+                        .mapNotNull { graph -> cards.setup.settingsOwner(graph.profile.id.raw) }
+                        .distinct()
+                        .mapNotNull { owner ->
+                            val savedOwner =
+                                saved.firstOrNull { it.id.raw == owner } ?: return@mapNotNull null
                             CardsRowUi(
-                                id,
-                                graph.profile.name,
-                                cards.setup.desired(id),
-                                cards.status(id),
-                                id in pending,
-                                id in failed,
+                                owner,
+                                savedOwner.name,
+                                cards.setup.desired(owner),
+                                cards.status(owner),
+                                owner in pending,
+                                owner in failed,
                             )
                         }
                         .toImmutableList()

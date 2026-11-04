@@ -310,7 +310,7 @@ class NativeTerminalManager(
  * Library diagnostics and OSC-52 clipboard requests are intentionally discarded: login output may
  * hold credentials.
  */
-private open class QuietSessionClient : TerminalSessionClient {
+internal open class QuietSessionClient : TerminalSessionClient {
     override fun onTextChanged(session: TerminalSession) = Unit
 
     override fun onTitleChanged(session: TerminalSession) = Unit
@@ -348,7 +348,7 @@ private open class QuietSessionClient : TerminalSessionClient {
  * Ordinary terminal input. No hidden shortcuts, OSC clipboard writes or library logging are
  * enabled.
  */
-private class TerminalInputClient(private val view: TerminalView) : TerminalViewClient {
+internal class TerminalInputClient(private val view: TerminalView) : TerminalViewClient {
     override fun onScale(scale: Float): Float = 1f
 
     override fun onSingleTapUp(event: MotionEvent) {

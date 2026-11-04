@@ -127,6 +127,8 @@ public class ServersViewModel(
     override fun openMonitor(id: ProfileId) =
         nav.open(io.github.eslamasabry.oc.ui.routes.MonitorRoute(id))
 
+    override fun openCodexProbe() = nav.open(io.github.eslamasabry.oc.ui.routes.CodexProbeRoute())
+
     private var consentAddress: String? = null
 
     override fun allowCleartext(allowed: Boolean, address: String) {

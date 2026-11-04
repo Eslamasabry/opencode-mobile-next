@@ -40,14 +40,35 @@ public class AgentToolsViewModel(
     @Assisted private val route: AgentToolsRoute,
     private val host: AgentToolsHost,
     private val nav: AppNavigator,
+    renderers: Set<io.github.eslamasabry.oc.core.domain.RemoteTerminalRenderer>,
 ) : ViewModel(), AgentToolsActions {
     private val mutable = MutableStateFlow(AgentToolsUi())
     public val state: StateFlow<AgentToolsUi> = mutable.asStateFlow()
     private var owner: AgentToolsSession? = null
     private var generation = 0
     private var provider: String? = null
+    private val terminals =
+        AgentTerminal(route.profile, host, renderers, viewModelScope) { terminal ->
+            mutable.update { it.copy(terminal = terminal) }
+        }
+    private var monitorGeneration = 0
 
     init {
+        host.usageMonitor?.let { monitor ->
+            viewModelScope.launch {
+                monitor.states.collect {
+                    if (monitor.supported(route.profile)) {
+                        val next = monitor.state(route.profile)
+                        mutable.update {
+                            it.copy(
+                                monitor = next,
+                                monitorLastRead = next.lastReadAtMs?.let(host::monitorTimeLabel),
+                            )
+                        }
+                    } else mutable.update { it.copy(monitor = null, monitorLastRead = null) }
+                }
+            }
+        }
         refresh()
     }
 
@@ -108,6 +129,7 @@ public class AgentToolsViewModel(
         val source = host.open(route.profile)
         if (source == null) {
             owner = null
+            terminals.adopt(null)
             mutable.value = AgentToolsUi()
             return
         }
@@ -135,6 +157,16 @@ public class AgentToolsViewModel(
                 canUpdate = hostTools && gateway is HostDaemonUpdateGateway,
                 uncertain = oldUncertain,
             )
+        terminals.adopt(source)
+        host.usageMonitor?.let { monitor ->
+            val next = monitor.state(route.profile).takeIf { monitor.supported(route.profile) }
+            mutable.update {
+                it.copy(
+                    monitor = next,
+                    monitorLastRead = next?.lastReadAtMs?.let(host::monitorTimeLabel),
+                )
+            }
+        }
         if (!options || sid == null) return
         viewModelScope.launch {
             val providers = gateway.providers()
@@ -393,6 +425,63 @@ public class AgentToolsViewModel(
             }
         }
     }
+
+    override fun listTerminals() = terminals.listTerminals()
+
+    override fun askNewTerminal() = terminals.askNewTerminal()
+
+    override fun finishTerminalName(name: String?) = terminals.finishTerminalName(name)
+
+    override fun askRenameTerminal(id: String) = terminals.askRenameTerminal(id)
+
+    override fun finishTerminalRename(name: String?) = terminals.finishTerminalRename(name)
+
+    override fun askCloseTerminal(id: String) = terminals.askCloseTerminal(id)
+
+    override fun cancelCloseTerminal() = terminals.cancelCloseTerminal()
+
+    override fun confirmCloseTerminal() = terminals.confirmCloseTerminal()
+
+    override fun openTerminal(id: String) = terminals.openTerminal(id)
+
+    override fun leaveTerminal() = terminals.leaveTerminal()
+
+    override fun sendTerminal(value: String) = terminals.sendTerminal(value)
+
+    override fun terminalAccessible(on: Boolean) = terminals.terminalAccessible(on)
+
+    override fun onCleared() {
+        terminals.dispose()
+        super.onCleared()
+    }
+
+    private fun monitorAction(enabled: Boolean?) {
+        val source = usable() ?: return
+        val monitor = host.usageMonitor ?: return
+        if (state.value.monitorBusy || !monitor.supported(route.profile)) return
+        val run = ++monitorGeneration
+        mutable.update { it.copy(monitorBusy = true) }
+        viewModelScope.launch {
+            val result =
+                if (enabled == null) monitor.refresh(route.profile)
+                else monitor.setEnabled(route.profile, enabled)
+            if (run != monitorGeneration || !host.isCurrent(route.profile, source.identity))
+                return@launch
+            val next = monitor.state(route.profile)
+            mutable.update {
+                it.copy(
+                    monitorBusy = false,
+                    monitor = next,
+                    monitorLastRead = next.lastReadAtMs?.let(host::monitorTimeLabel),
+                    failure = (result as? Outcome.Failed)?.failure,
+                )
+            }
+        }
+    }
+
+    override fun setUsageMonitor(on: Boolean) = monitorAction(on)
+
+    override fun refreshUsageMonitor() = monitorAction(null)
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

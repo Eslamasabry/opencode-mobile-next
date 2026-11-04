@@ -17,6 +17,9 @@ import io.github.eslamasabry.oc.feature.agenttools.presentation.NoAgentToolsHost
 class GraphAgentToolsHost(
     private val registry: ConnectionRegistry,
     private val redactor: Redactor,
+    override val usageMonitor:
+        io.github.eslamasabry.oc.engine.integrations.usage.ProviderUsageMonitorSettings,
+    private val application: android.app.Application,
 ) : AgentToolsHost {
     private class Identity(val graph: ConnectionGraph, val location: ServerLocation)
 
@@ -34,6 +37,14 @@ class GraphAgentToolsHost(
         return registry.live.value[profile] === scope.graph &&
             scope.graph.session.server.location.value == scope.location
     }
+
+    override fun monitorTimeLabel(atMs: Long): String =
+        java.text.DateFormat.getDateTimeInstance(
+                java.text.DateFormat.SHORT,
+                java.text.DateFormat.SHORT,
+                application.resources.configuration.locales[0],
+            )
+            .format(java.util.Date(atMs))
 
     override fun display(value: String): String = redactor.redact(value)
 }

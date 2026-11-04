@@ -45,6 +45,29 @@ internal class PaseoWorkspaceOperations(
             return directory(target.directory ?: paseoFail(PaseoFailureKind.ScopeMismatch))
         }
 
+    private fun terminals(): PaseoTerminals = PaseoTerminals(gateway, target)
+
+    override suspend fun listTerminals():
+        Outcome<ImmutableList<io.github.eslamasabry.oc.core.model.TerminalProcess>> =
+        terminals().list()
+
+    override suspend fun createTerminal(
+        title: String?
+    ): Outcome<io.github.eslamasabry.oc.core.model.TerminalProcess> = terminals().create(title)
+
+    override suspend fun renameTerminal(id: String, title: String): Outcome<Unit> =
+        terminals().rename(id, title)
+
+    override suspend fun resizeTerminal(id: String, rows: Int, cols: Int): Outcome<Unit> =
+        terminals().resize(id, rows, cols)
+
+    override suspend fun removeTerminal(id: String): Outcome<Unit> = terminals().remove(id)
+
+    override suspend fun connectTerminal(
+        id: String,
+        cursor: Long?,
+    ): Outcome<io.github.eslamasabry.oc.core.model.TerminalChannel> = terminals().connect(id)
+
     override suspend fun sessionChildren(
         id: io.github.eslamasabry.oc.core.common.ids.SessionId
     ): Outcome<ImmutableList<io.github.eslamasabry.oc.core.model.Session>> =

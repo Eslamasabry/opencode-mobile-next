@@ -437,6 +437,9 @@ internal class GraphChatWorld(
         }
         val watcher =
             registry.appScope.launch(registry.mainContext) {
+                // An explicit conversation route may restore its proven native helper once.
+                // Passive feed observation never starts or retries a helper.
+                if (registry.graphFor(ref) == null) registry.recoverTransient(ref)
                 registry.live.collect {
                     val graph = registry.graphFor(ref)
                     if (
