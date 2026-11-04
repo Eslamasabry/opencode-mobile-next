@@ -36,7 +36,9 @@ class MainActivity : ComponentActivity() {
         // too.
         enableEdgeToEdge()
         val graph = appGraph
+        graph.previewRuntime.restoreSavedConnection()
         graph.composerFiles.attach(this)
+        graph.androidSessionImportFiles.attach(this)
         // DecorView's DecorContext need not wrap this Activity; pass the actual window for
         // system-bar contrast.
         val platform = AndroidKitPlatform(window.decorView, window)
@@ -96,6 +98,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         shellReady = false
         appGraph.composerFiles.detach(this)
+        appGraph.androidSessionImportFiles.detach(this)
         super.onDestroy()
     }
 }

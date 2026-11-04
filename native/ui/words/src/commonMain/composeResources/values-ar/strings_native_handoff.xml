@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nativeHandoffTitle">المتابعة في وكيل جديد</string>
+    <string name="nativeHandoffIntro">اختر وكيلًا على هذا الخادم. راجع سجل المحادثة المحجوب والرسالة الأولى قبل البدء. تبقى المحادثة الأصلية دون تغيير.</string>
+    <string name="nativeHandoffPreparing">جارٍ إعداد سجل المحادثة…</string>
+    <string name="nativeHandoffReview">سيُحفظ هذا السجل في مجلد جديد مُتجاهَل داخل المشروع نفسه. تُحجب بيانات الاعتماد ويُستبعد التفكير ومحتوى المرفقات.</string>
+    <string name="nativeHandoffPrompt">الرسالة الأولى للوكيل الجديد</string>
+    <string name="nativeHandoffSend">بدء الوكيل الجديد</string>
+    <string name="nativeHandoffSending">جارٍ حفظ السجل وبدء المحادثة الجديدة…</string>
+    <string name="nativeHandoffSucceeded">استلم الوكيل الجديد سجل المحادثة.</string>
+    <string name="nativeHandoffFailed">تعذر إكمال النقل. لم يتغير المصدر. تحقق من الاتصال والمشروع ثم أعد فتح هذه اللوحة.</string>
+    <string name="nativeHandoffUnconfirmed">تعذر تأكيد المحادثة الجديدة. تحقق من كل المحادثات قبل بدء أخرى؛ ربما استلم الوكيل الرسالة.</string>
+    <string name="nativeHandoffLinkFailed">استلم الوكيل الجديد السجل، لكن تعذر حفظ رابط المحادثة. أعد محاولة حفظ الرابط؛ لن تُرسل أي رسالة مرة أخرى.</string>
+    <string name="nativeHandoffSaveLink">حفظ رابط المحادثة</string>
+</resources>

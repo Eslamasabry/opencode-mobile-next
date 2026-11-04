@@ -102,6 +102,7 @@ import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableDirectory
 import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableReference
 import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableWorkspace
 import io.github.eslamasabry.oc.ui.words.res.historyLoadedOnly
+import io.github.eslamasabry.oc.ui.words.res.importAction
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
@@ -110,6 +111,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
+import io.github.eslamasabry.oc.ui.words.res.nativeHandoffTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionArchiveBody
 import io.github.eslamasabry.oc.ui.words.res.sessionArchiveTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionContextLoading
@@ -329,6 +331,22 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
         (sheet as? HeaderSheet.ContinueOnComputer)?.let { ComputerBody(it, actions) }
+    }
+    KitSheet(
+        visible = sheet is HeaderSheet.ImportConversation,
+        onDismissRequest = actions::closeSheet,
+        title = stringResource(Res.string.importAction),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        (sheet as? HeaderSheet.ImportConversation)?.let { SessionImportBody(it.state, actions) }
+    }
+    KitSheet(
+        visible = sheet is HeaderSheet.Handoff,
+        onDismissRequest = actions::closeSheet,
+        title = stringResource(Res.string.nativeHandoffTitle),
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        (sheet as? HeaderSheet.Handoff)?.let { HandoffBody(it, actions) }
     }
     val clip = state.clip
     KitClipboardEffect(clip?.id, clip?.text, actions::clipDone)
@@ -553,6 +571,8 @@ private fun menuWords(action: HeaderAction): String =
         HeaderAction.Rename -> stringResource(Res.string.chatUiRenameSession)
         HeaderAction.ContinueWith -> stringResource(Res.string.continueWithMenu)
         HeaderAction.ContinueOnComputer -> stringResource(Res.string.handoffUiComputerTitle)
+        HeaderAction.ImportConversation -> stringResource(Res.string.importAction)
+        HeaderAction.Handoff -> stringResource(Res.string.nativeHandoffTitle)
         HeaderAction.CopyTranscript -> stringResource(Res.string.chatUiCopyTranscript)
         HeaderAction.Archive -> stringResource(Res.string.sessionMenuArchive)
         HeaderAction.Delete -> stringResource(Res.string.sessionMenuDelete)

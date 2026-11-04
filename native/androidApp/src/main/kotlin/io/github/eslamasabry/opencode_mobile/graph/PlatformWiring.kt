@@ -59,7 +59,9 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
+import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
@@ -133,6 +135,22 @@ import org.json.JSONObject
 @BindingContainer
 @ContributesTo(AppScope::class)
 object PlatformBindings {
+    @Provides
+    @SingleIn(AppScope::class)
+    fun widgetPersistence(
+        stores: PreviewStores,
+        appScope: AppCoroutineScope,
+        clock: Clock,
+        profileScope: ProfileScope,
+    ): WidgetPersistence =
+        WidgetPersistence(
+            stores.prefs,
+            stores.lanes,
+            profileScope,
+            appScope,
+            clock,
+        )
+
     @Provides
     @SingleIn(AppScope::class)
     fun appUpdates(
@@ -263,7 +281,9 @@ class PlatformHub(
     private val appPreferences: AppPreferences,
     private val monitoring: AndroidProfileMonitoring,
     private val sharedProjectFolders: NativeSharedProjectFolders,
-    redactor: Redactor,
+    private val widgetRunner: NativeWidgetRunner,
+    private val widgetPersistence: WidgetPersistence,
+    private val redactor: Redactor,
 ) {
     private val log = AppLog.tagged("Platform")
     private val prefs = application.getSharedPreferences("oc_platform", Context.MODE_PRIVATE)
@@ -273,16 +293,9 @@ class PlatformHub(
     private val channels =
         ChannelRegistry(application.getSystemService(NotificationManager::class.java), words)
     val shade = AndroidAlertShade(application, words, channels)
-    private val widgetPersistence =
-        WidgetPersistence(
-            stores.prefs,
-            stores.lanes,
-            DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app),
-            appScope,
-            clock,
-        )
     private val widgets = AndroidWidgetSurface(application, widgetPersistence)
     private val widgetPresentation = WidgetPresentation(application, redactor)
+    private val widgetSafe = io.github.eslamasabry.oc.engine.attention.widget.WidgetText(redactor)
 
     @Volatile private var started = 0
     private val visible = MutableStateFlow(0)
@@ -319,6 +332,7 @@ class PlatformHub(
     fun start() {
         if (started++ > 0) return
         WidgetFeed.persistence = widgetPersistence
+        WidgetFeed.backgroundRunner = widgetRunner
         sharedProjectFolders.start()
         monitoring.start()
         channels.ensure()
@@ -334,6 +348,9 @@ class PlatformHub(
 
     val scope: CoroutineScope
         get() = appScope
+
+    val appLocaleTag: String?
+        get() = appPreferences.localeTag.value
 
     // ---- Activity
     // -------------------------------------------------------------------------------------------------
@@ -556,7 +573,7 @@ class PlatformHub(
                 // behind (B-STATE-063).
                 AttentionTileCache.clearOwner(application, id.raw)
                 PinnedShortcuts.withdrawProfile(application, id.raw)
-                widgets.clearProfile(id.raw)
+                clearProfile(id)
             }
         }
     }
@@ -574,13 +591,43 @@ class PlatformHub(
 
     private suspend fun publishWidgets(feed: ChatFeedSnapshot, waiting: List<Waiting>) {
         val profile = stores.profiles.activeId.value ?: return
+        // Startup's empty feed is not a server read: keep the saved target until a real listing
+        // arrives.
+        if (
+            feed.items.isEmpty() &&
+                feed.revision == 0L &&
+                !feed.loading &&
+                registry.live.value[profile] == null
+        )
+            return
         val savedProfiles = stores.profiles.profiles.value
         val names = savedProfiles.associate { it.id to it.profile.name }
         val base =
             PlatformRules.widgetModel(feed, waiting, profile, names, registry.live.value.keys)
+        val loaded = stores.profiles.profile(profile) ?: return
+        if (!stores.lanes.forProfile(profile).isAdmitting) return
+        val location =
+            registry.live.value[profile]?.session?.server?.location?.value
+                ?: io.github.eslamasabry.oc.core.model.ServerLocation.Default
+        val fingerprint = widgetFingerprint(loaded)
+        val scopeToken =
+            widgetDigest(
+                "${profile.raw}\u0000${location.directory.orEmpty()}\u0000${location.workspace.orEmpty()}"
+            )
+        val target =
+            JSONObject()
+                .put("profileID", profile.raw)
+                .put("scopeToken", scopeToken)
+                .put("fingerprint", fingerprint)
+        location.directory?.let { target.put("directory", it) }
+        location.workspace?.let { target.put("workspace", it) }
         // Unchanged content is not rewritten or redrawn: clock stamps move only when the content
         // does (B-ANDR-117).
-        if (base == widgetBaseModel) return
+        if (
+            base == widgetBaseModel &&
+                stores.prefs.string("oc.widgetTarget.${profile.raw}") == target.toString()
+        )
+            return
         val graph = registry.live.value[profile]
         // A failed or bounded-out read leaves the marker absent. Unknown identity never authorizes
         // a status patch.
@@ -594,21 +641,21 @@ class PlatformHub(
         if (stores.profiles.activeId.value != profile || registry.live.value[profile] !== graph)
             return
         val model = base.copy(rows = rows)
-        if (model == widgetModel) return
         val details = mutableMapOf<Pair<String, String>, WidgetDetail>()
         // Only the four launcher-visible rows. Each read is bounded and never mutates the server.
         for (row in model.rows.take(4)) {
             if (row.profile != profile.raw) continue
             val id = ProfileId(row.profile)
-            val graph = registry.live.value[id] ?: continue
-            val location = graph.session.server.location.value
-            if (row.project != location.directory.orEmpty()) continue
+            val rowGraph = registry.live.value[id] ?: continue
+            val rowLocation = rowGraph.session.server.location.value
+            if (row.project != rowLocation.directory.orEmpty()) continue
             val page =
                 withTimeoutOrNull(2_000L) {
-                    graph.session.server.messagePage(SessionId(row.id), limit = EXCERPT_MESSAGES)
+                    rowGraph.session.server.messagePage(SessionId(row.id), limit = EXCERPT_MESSAGES)
                 }
             if (
-                registry.live.value[id] !== graph || graph.session.server.location.value != location
+                registry.live.value[id] !== rowGraph ||
+                    rowGraph.session.server.location.value != rowLocation
             )
                 continue
             val messages =
@@ -624,7 +671,7 @@ class PlatformHub(
                         ?.parts
                         ?.firstOrNull { it.type == PartType.Tool && it.callId == named.callId }
                 }
-            val target =
+            val callTarget =
                 call?.tool?.input?.let { input ->
                     val keys =
                         if (call.toolName in listOf("bash", "shell")) listOf("command")
@@ -644,7 +691,7 @@ class PlatformHub(
                                     it.permission,
                                     it.patterns,
                                     call?.toolName,
-                                    target,
+                                    callTarget,
                                 )
                             }
                             .orEmpty(),
@@ -652,8 +699,8 @@ class PlatformHub(
         }
         // A read must never publish a result against a replaced profile, location, request or feed.
         val freshWaiting =
-            registry.live.value.flatMap { (id, graph) ->
-                (graph as? ChatGraphAccessors)?.chatRequests?.engine?.pending?.value.orEmpty().map {
+            registry.live.value.flatMap { (id, live) ->
+                (live as? ChatGraphAccessors)?.chatRequests?.engine?.pending?.value.orEmpty().map {
                     Waiting(id, it)
                 }
             }
@@ -668,12 +715,136 @@ class PlatformHub(
             )
         if (current != base || stores.profiles.activeId.value != profile) return
         val now = clock.now().toEpochMilliseconds()
-        val payload = widgetJson(model, now, details)
-        if (widgets.publish(payload, profile.raw, null) != PublishResult.Refused) {
+        val json =
+            JSONObject(widgetJson(model, now, details))
+                .put("scopeToken", scopeToken)
+                .put("onDemand", JSONObject().put("fingerprint", fingerprint))
+        val jsonRows = json.getJSONArray("sessions")
+        for (i in 0 until jsonRows.length()) {
+            val row = jsonRows.getJSONObject(i)
+            if (row.optString("profileID") != profile.raw) continue
+            if (row.optBoolean("busy") && row.optString("requestID").isBlank()) {
+                if (row.has("runMarker") && row.has("startedAt")) {
+                    // The bounded identity read already found the run.
+                    row.put("onDemandActions", JSONArray(listOf("stop")))
+                } else {
+                    val gateway = registry.live.value[profile]?.session?.server
+                    val page =
+                        gateway?.let {
+                            withTimeoutOrNull(2_000) {
+                                it.messagePage(SessionId(row.getString("id")), limit = 6)
+                            }
+                        } as? Outcome.Ok
+                    val marker = page?.value?.items?.let(::widgetRunMessage)
+                    val markerTime = marker?.info?.time?.createdMs
+                    if (marker != null && markerTime != null && markerTime > 0) {
+                        row.put("runMarker", marker.info.id)
+                            .put("startedAt", markerTime)
+                            .put("onDemandActions", JSONArray(listOf("stop")))
+                    }
+                }
+            }
+            val permission =
+                waiting
+                    .firstOrNull {
+                        it.profile == profile && it.request.id.raw == row.optString("requestID")
+                    }
+                    ?.request as? PendingRequest.Permission ?: continue
+            val ask = permission.request
+            val command =
+                metadataString(permission, "command")
+                    ?: metadataString(permission, "cmd")
+                    ?: ask.patterns
+                        .firstOrNull { it != "*" && it.isNotBlank() }
+                        ?.takeIf { ask.permission in setOf("bash", "shell") }
+            val file =
+                FILE_KEYS.firstNotNullOfOrNull { metadataString(permission, it) }
+                    ?: ask.patterns
+                        .firstOrNull { it != "*" && it.isNotBlank() }
+                        ?.takeIf {
+                            ask.permission in
+                                setOf(
+                                    "edit",
+                                    "read",
+                                    "write",
+                                    "patch",
+                                    "multiedit",
+                                    "external_directory",
+                                )
+                        }
+            val title =
+                NotificationText.permissionAsk(
+                    ask.permission,
+                    command?.let(redactor::redact),
+                    file?.let(redactor::redact),
+                )
+            if (title != null && title.target.isNotBlank()) {
+                row.put("askAction", title.action.wire)
+                    .put("askTarget", title.target)
+                    .put(
+                        "ask",
+                        JSONObject()
+                            .put(
+                                "kind",
+                                if (title.action.wire == "edit") "write" else title.action.wire,
+                            )
+                            .put(
+                                "q",
+                                words.text(
+                                    when (title.action) {
+                                        io.github.eslamasabry.oc.android.notifications.AskAction
+                                            .Run ->
+                                            io.github.eslamasabry.oc.android.notifications.R.string
+                                                .notify_ask_run
+                                        io.github.eslamasabry.oc.android.notifications.AskAction
+                                            .Read ->
+                                            io.github.eslamasabry.oc.android.notifications.R.string
+                                                .notify_ask_read
+                                        io.github.eslamasabry.oc.android.notifications.AskAction
+                                            .Edit ->
+                                            io.github.eslamasabry.oc.android.notifications.R.string
+                                                .notify_ask_edit
+                                        io.github.eslamasabry.oc.android.notifications.AskAction
+                                            .Folder ->
+                                            io.github.eslamasabry.oc.android.notifications.R.string
+                                                .notify_ask_folder
+                                    },
+                                    title.target,
+                                ),
+                            )
+                            .put("file", shadeText(command ?: file.orEmpty())),
+                    )
+                    .put("onDemandActions", JSONArray(listOf("allowOnce", "reject")))
+            }
+        }
+        if (
+            widgets.publish(json.toString(), profile.raw, target.toString()) !=
+                io.github.eslamasabry.oc.android.widgets.PublishResult.Refused
+        ) {
             widgetBaseModel = base
             widgetModel = model
             widgetStampMs = now
         }
+    }
+
+    /**
+     * The transaction calls even without a cached snapshot; a failed native clear stops the generic
+     * sweep.
+     */
+    suspend fun clearProfile(profile: ProfileId): Outcome<Unit> {
+        return when (widgets.clearProfile(profile.raw)) {
+            io.github.eslamasabry.oc.android.widgets.ClearOutcome.Failed ->
+                Outcome.Failed(Failure.StorageRefused())
+            else -> {
+                widgetModel = null
+                Outcome.Ok(Unit)
+            }
+        }
+    }
+
+    suspend fun runWidgetAction(raw: String) {
+        stores.warm()
+        io.github.eslamasabry.oc.android.widgets.NativeWidgetActions.execute(application, raw)
     }
 
     private suspend fun widgetIdentity(graph: ConnectionGraph, row: WidgetRow): WidgetRow {
@@ -731,17 +902,28 @@ class PlatformHub(
                 JSONObject()
                     .put("id", row.id)
                     .put("profileID", row.profile)
-                    .put("title", widgetPresentation.title(row.title))
-                    .put("project", widgetPresentation.project(row.project))
-                    .put("server", row.server)
+                    .put(
+                        "title",
+                        widgetSafe.sessionTitle(
+                            row.title,
+                            words
+                                .localized()
+                                .getString(
+                                    io.github.eslamasabry.oc.android.widgets.R.string.widget_v2_new
+                                ),
+                        ),
+                    )
+                    .put("preview", widgetSafe.preview(row.preview))
+                    .put("project", widgetSafe.project(row.project))
+                    .put("server", widgetSafe.title(row.server))
                     .put("busy", row.busy)
                     .put("needsYou", row.needsYou)
                     .put("onDemandActions", JSONArray())
+                    .put("requestID", row.requestId)
                     .put("updatedAt", row.updatedAt)
                     .apply {
                         val detail = details[row.profile to row.id]
                         if (detail != null) {
-                            if (row.requestId.isNotEmpty()) put("requestID", row.requestId)
                             if (detail.preview.isNotEmpty()) put("preview", detail.preview)
                             if (detail.ask.isNotEmpty()) put("ask", JSONObject(detail.ask))
                         }
@@ -882,17 +1064,38 @@ class PlatformHub(
         }
     }
 
+    private fun shadeText(value: String): String = NotificationText.redact(redactor.redact(value))
+
     private fun requestAlert(
         key: String,
         w: Waiting,
         item: ChatFeedItem?,
         server: String?,
     ): CodingAlert {
-        val subtext = NotificationText.subtitle(server, item?.projectName)
+        val subtext = shadeText(NotificationText.subtitle(server, item?.projectName))
         return when (val r = w.request) {
             is PendingRequest.Permission -> {
-                val command = metadataString(r, "command")
-                val file = FILE_KEYS.firstNotNullOfOrNull { metadataString(r, it) }
+                val command =
+                    metadataString(r, "command")
+                        ?: metadataString(r, "cmd")
+                        ?: r.request.patterns
+                            .firstOrNull { it != "*" && it.isNotBlank() }
+                            ?.takeIf { r.request.permission in setOf("bash", "shell") }
+                val file =
+                    FILE_KEYS.firstNotNullOfOrNull { metadataString(r, it) }
+                        ?: r.request.patterns
+                            .firstOrNull { it != "*" && it.isNotBlank() }
+                            ?.takeIf {
+                                r.request.permission in
+                                    setOf(
+                                        "edit",
+                                        "read",
+                                        "write",
+                                        "patch",
+                                        "multiedit",
+                                        "external_directory",
+                                    )
+                            }
                 CodingAlert(
                     kind = AlertKind.Permission,
                     sessionId = r.sessionId.raw,
@@ -900,9 +1103,14 @@ class PlatformHub(
                     requestId = r.id.raw,
                     profileId = w.profile.raw,
                     subtext = subtext,
-                    chatTitle = item?.title.orEmpty(),
-                    detail = NotificationText.redact(command ?: file ?: r.request.permission),
-                    ask = NotificationText.permissionAsk(r.request.permission, command, file),
+                    chatTitle = shadeText(item?.title.orEmpty()),
+                    detail = shadeText(command ?: file ?: r.request.permission),
+                    ask =
+                        NotificationText.permissionAsk(
+                            r.request.permission,
+                            command?.let(redactor::redact),
+                            file?.let(redactor::redact),
+                        ),
                 )
             }
             is PendingRequest.Question -> {
@@ -914,8 +1122,8 @@ class PlatformHub(
                     requestId = r.id.raw,
                     profileId = w.profile.raw,
                     subtext = subtext,
-                    chatTitle = item?.title.orEmpty(),
-                    detail = NotificationText.redact(prompt?.question.orEmpty()),
+                    chatTitle = shadeText(item?.title.orEmpty()),
+                    detail = shadeText(prompt?.question.orEmpty()),
                     options = prompt?.choices?.map { it.label }.orEmpty(),
                 )
             }
@@ -1028,6 +1236,7 @@ internal data class WidgetRow(
     val startedAt: Long? = null,
     /** Real user prompts in the bounded identity read; OC2 timeline records never count. */
     val promptCount: Int? = null,
+    val preview: String = "",
 )
 
 internal data class WidgetServer(val name: String, val online: Boolean, val id: String = name)
@@ -1089,6 +1298,7 @@ internal object PlatformRules {
                         needsYou = item.status == ChatStatus.NeedsYou || request != null,
                         requestId = if (own) request?.request?.id?.raw.orEmpty() else "",
                         updatedAt = item.lastActivityMs,
+                        preview = widgetText(item.preview),
                     )
                 }
         return WidgetModel(

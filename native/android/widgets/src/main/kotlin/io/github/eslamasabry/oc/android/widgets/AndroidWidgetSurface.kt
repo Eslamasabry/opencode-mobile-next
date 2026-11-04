@@ -84,22 +84,22 @@ public class AndroidWidgetSurface(
     }
 
     /** Also exposed as WidgetProfileCleaner for the existing deletion transaction. */
-    public suspend fun clearProfile(profileId: String): ClearOutcome {
-        if (profileId.isBlank()) return ClearOutcome.NothingToClear
-        val owned =
-            listOf(STYLE_PREFIX, ACTIONS_PREFIX, TARGET_PREFIX, "oc.widgetFollowup.").any {
-                persistence.string(it + profileId) != null
-            } ||
-                runCatching {
-                    org.json
-                        .JSONObject(persistence.string("oc.widgetSessions") ?: "")
-                        .optString("profileID")
-                }
-                    .getOrNull() == profileId
-        if (!owned) return ClearOutcome.NothingToClear
-        return if (WidgetV2Bridge.clearProfile(app, profileId, persistence)) ClearOutcome.Cleared
-        else ClearOutcome.Failed
-    }
+    public suspend fun clearProfile(profileId: String): ClearOutcome =
+        persistence.publications.withLock {
+            if (profileId.isBlank()) return@withLock ClearOutcome.NothingToClear
+            val owned =
+                listOf(STYLE_PREFIX, ACTIONS_PREFIX, TARGET_PREFIX, "oc.widgetFollowup.").any {
+                    persistence.string(it + profileId) != null
+                } ||
+                    runCatching {
+                        org.json
+                            .JSONObject(persistence.string("oc.widgetSessions") ?: "")
+                            .optString("profileID")
+                    }
+                        .getOrNull() == profileId
+            if (!WidgetV2Bridge.clearProfile(app, profileId, persistence)) ClearOutcome.Failed
+            else if (owned) ClearOutcome.Cleared else ClearOutcome.NothingToClear
+        }
 
     public companion object {
         internal const val TARGET_PREFIX = "oc.widgetTarget."

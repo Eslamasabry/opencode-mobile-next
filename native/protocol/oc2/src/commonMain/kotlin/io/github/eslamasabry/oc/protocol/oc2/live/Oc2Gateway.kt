@@ -61,6 +61,7 @@ internal class Oc2Gateway(
     SetupInspectionGateway,
     LibraryGateway,
     SessionDispatchAdmissionGateway,
+    SessionTransferImportGateway,
     ApiRouteGateway {
     private val transfer by lazy {
         Oc2SessionTransfer(this, { location.value }) { feature ->
@@ -258,7 +259,8 @@ internal class Oc2Gateway(
         serverRunsTools = resolver
     }
 
-    override val capabilities: StateFlow<ServerCapabilities> = MutableStateFlow(Capabilities)
+    private val mutableCapabilities = MutableStateFlow(Capabilities)
+    override val capabilities: StateFlow<ServerCapabilities> = mutableCapabilities.asStateFlow()
     override val location = MutableStateFlow(initialLocation)
     private val status = MutableStateFlow<StreamStatus>(StreamStatus.Connecting)
     private val connects = MutableStateFlow(0)
@@ -1158,6 +1160,13 @@ internal class Oc2Gateway(
             "location[workspace]" to at.workspace,
         )
 
+    // SEC-2's integration reads. The sign-in and MCP overrides above (PROTO: Oc2ProviderSignIn, Oc2Library) are the
+    // one implementation of those methods; SEC-2 alone adds the MCP resource list.
+    private val integrationOps = Oc2Integrations(this, { location.value }, redactor)
+
+    override suspend fun mcpResources(): Outcome<ImmutableList<McpResourceInfo>> =
+        integrationOps.mcpResources()
+
     override suspend fun providers(): Outcome<ProvidersResponse> {
         val scope = locationQuery()
         val providerReply = json("/provider", query = scope)
@@ -1458,7 +1467,11 @@ internal class Oc2Gateway(
             }
         if (response is Outcome.Failed) {
             val failure = response.failure
-            if (auth == null && failure is Failure.SignIn && failure.why == SignInWhy.PasswordRejected) {
+            if (
+                auth == null &&
+                    failure is Failure.SignIn &&
+                    failure.why == SignInWhy.PasswordRejected
+            ) {
                 return Failure.SignIn(SignInWhy.PasswordMissing, failure.details).failed()
             }
         }
@@ -1499,6 +1512,52 @@ internal class Oc2Gateway(
             stream = null
             net.close()
         }
+    }
+
+    /** Flutter ops_extras: source ids are retained; location is explicit and never a query. */
+    override suspend fun importSessionDocument(body: JsonObject): Outcome<Session> {
+        if (!capabilities.value.sessionImportExport) return unavailable("sessionImportExport")
+        val info =
+            body["info"] as? JsonObject
+                ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val id = info.str("id") ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val target =
+            body["location"] as? JsonObject
+                ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val directory =
+            target.str("directory")?.takeIf { it.isNotBlank() }
+                ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val workspace = target.str("workspaceID")
+        val response = json("/session/import", HttpMethod.Post, body)
+        if (response is Outcome.Failed) {
+            val f = response.failure
+            val status =
+                when (f) {
+                    is Failure.Server -> f.status
+                    is Failure.Rejected -> f.status
+                    else -> null
+                }
+            if (
+                status == 405 ||
+                    status == 501 ||
+                    (f is Failure.NotFound && f.tag?.raw != "SessionNotFoundError")
+            ) {
+                mutableCapabilities.update { it.copy(sessionImportExport = false) }
+                return unavailable("sessionImportExport")
+            }
+            return response
+        }
+        val imported =
+            sessionValue(data((response as Outcome.Ok).value))
+                ?: return Failure.UnreadableReply().failed()
+        if (
+            imported.id.raw != id ||
+                imported.directory != directory ||
+                imported.workspaceId?.raw != workspace
+        ) {
+            return Failure.UnreadableReply().failed()
+        }
+        return imported.ok()
     }
 
     internal fun sessionValue(value: JsonElement): Session? {
@@ -1581,7 +1640,7 @@ internal class Oc2Gateway(
                 sessionSteal = false,
                 consoleOrganizations = false,
                 mcpOAuth = false,
-                mcpChatConnect = false,
+                mcpChatConnect = true,
                 mcpChatOAuth = false,
                 mcpChatToolRefresh = false,
                 mcpConfigWrites = false,

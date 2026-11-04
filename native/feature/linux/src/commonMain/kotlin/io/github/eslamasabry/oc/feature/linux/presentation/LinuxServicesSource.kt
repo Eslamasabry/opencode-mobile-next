@@ -1,9 +1,11 @@
 package io.github.eslamasabry.oc.feature.linux.presentation
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.runtime.procs.DetectedDevelopmentServers
 import io.github.eslamasabry.oc.engine.runtime.services.DevelopmentServices
+import io.github.eslamasabry.oc.engine.runtime.services.FailedServiceReport
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -30,4 +32,8 @@ public interface LinuxServicesSession {
     public fun redact(text: String): String
 
     public suspend fun command(block: suspend () -> Unit)
+
+    /** Opens a user-reviewed report only while this exact service session is still admitted. */
+    public suspend fun openReport(report: FailedServiceReport): Outcome<Unit> =
+        Outcome.Failed(Failure.Device())
 }

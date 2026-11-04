@@ -11,13 +11,16 @@ import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.supervisedContext
 import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
+import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ServerProfile
+import io.github.eslamasabry.oc.core.security.AddressRules
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf
@@ -78,6 +81,22 @@ public class ConnectionRegistry(
      * failed connect cancels the scope, so nothing it started outlives the failure.
      */
     public suspend fun open(profile: ServerProfile): Outcome<ConnectionGraph> = admission.withLock {
+        // Validate adopted profiles too, before even resolving a stored credential. A LAN HTTP
+        // confirmation is never authority to send a Codex/Paseo credential over a plain socket.
+        val origin = profile.origin
+        val allowed =
+            when (profile.backend) {
+                BackendKind.OpenCode2 -> true
+                BackendKind.Codex ->
+                    origin.scheme == "wss" ||
+                        (origin.scheme == "ws" && AddressRules.isLoopback(origin.host))
+                BackendKind.Paseo ->
+                    origin.scheme in setOf("ws", "wss") &&
+                        (AddressRules.isLoopback(origin.host) ||
+                            AddressRules.isTailnet(origin.host))
+            }
+        if (!allowed)
+            return@withLock Outcome.Failed(Failure.Refused(RefusalReason.HostNotAllowedForBackend))
         live.value[profile.id]?.let {
             return@withLock Outcome.Ok(it)
         }

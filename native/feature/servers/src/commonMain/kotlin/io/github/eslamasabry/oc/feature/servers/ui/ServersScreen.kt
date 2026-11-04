@@ -84,6 +84,8 @@ import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
 import io.github.eslamasabry.oc.ui.words.res.protoPairingCheck
+import io.github.eslamasabry.oc.ui.words.res.secImportedSignInsTitle
+import io.github.eslamasabry.oc.ui.words.res.secSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.serverFailureCertificate
 import io.github.eslamasabry.oc.ui.words.res.serverFailureIncompatible
 import io.github.eslamasabry.oc.ui.words.res.serverFailureNetwork
@@ -124,6 +126,7 @@ import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.serversUsername
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
+import io.github.eslamasabry.oc.ui.words.res.tailscaleTitle
 import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
@@ -144,6 +147,7 @@ public fun ServersScreen(
     onThisPhone: (() -> Unit)? = null,
     onInspectSetup: ((ProfileId) -> Unit)? = null,
     onTerminal: ((ProfileId) -> Unit)? = null,
+    tailscale: io.github.eslamasabry.oc.feature.servers.presentation.TailscaleSetup? = null,
 ) {
     // The unsaved draft survives a page on top (Scan code) and the form leaving composition: the
     // plain fields are
@@ -157,6 +161,7 @@ public fun ServersScreen(
     }
     var removing by remember { mutableStateOf<ProfileId?>(null) }
     var hostSetup by rememberSaveable { mutableStateOf(false) }
+    var tailscaleSetup by rememberSaveable { mutableStateOf(false) }
     // PREVIEW-QR: a scanned or pasted pairing code (or share link) fills the form once; the
     // password is taken, not kept.
     var filledFromLink by rememberSaveable { mutableStateOf<Boolean?>(null) }
@@ -202,6 +207,12 @@ public fun ServersScreen(
             }
     }
     HostSetupSheet(hostSetup) { hostSetup = false }
+    ImportedSignInsSheet(state.importedSignIns, actions)
+
+    TailscaleSetupSheet(tailscaleSetup, tailscale, { tailscaleSetup = false }) { reviewed ->
+        address.edit { replace(0, length, reviewed) }
+        actions.allowCleartext(false, reviewed)
+    }
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else KitEnabled.Enabled
@@ -255,6 +266,12 @@ public fun ServersScreen(
                 trailing = KitRowTrailing.Chevron,
                 onClick = { hostSetup = true },
             )
+            KitRow(
+                title =
+                    stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.tailscaleTitle),
+                trailing = KitRowTrailing.Chevron,
+                onClick = { tailscaleSetup = true },
+            )
             if (state.servers.isEmpty()) KitText(stringResource(Res.string.serversEmpty))
             else KitText(stringResource(Res.string.serversSaved))
             for (server in state.servers) {
@@ -276,6 +293,13 @@ public fun ServersScreen(
                     }
                     if (server.connected) KitText(stringResource(Res.string.serversConnected))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                        KitButton(
+                            stringResource(Res.string.secImportedSignInsTitle),
+                            { actions.reviewImportedSignIns(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+
                         KitButton(
                             stringResource(Res.string.serversCreate),
                             { actions.create(server.id) },
@@ -306,6 +330,11 @@ public fun ServersScreen(
                                     role = KitButtonRole.Secondary,
                                 )
                             }
+                            KitButton(
+                                stringResource(Res.string.secSetupTitle),
+                                { actions.openSetup(server.id) },
+                                role = KitButtonRole.Tertiary,
+                            )
                             KitButton(
                                 stringResource(Res.string.usageTitle),
                                 { actions.openUsage(server.id) },

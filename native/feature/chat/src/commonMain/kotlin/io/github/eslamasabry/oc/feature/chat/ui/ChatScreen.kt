@@ -993,21 +993,19 @@ private fun rememberReplyFailedWords(): (ReplyFailureKind) -> String {
 /** B2: why a send did not leave, in plain words (the code goes under Details). */
 @Composable
 private fun rememberSendFailureWords(): (Failure) -> String {
-    val offline = stringResource(Res.string.chatSendFailedOffline)
+    val authored = rememberProductFailureWords()
     val changed = stringResource(Res.string.chatSendFailedChanged)
-    val refused = stringResource(Res.string.chatSendFailedRefused)
     val phoneBusy = stringResource(Res.string.schedulePhoneBusy)
     val phoneCheckFailed = stringResource(Res.string.schedulePhoneCheckFailed)
-    return remember(offline, changed, refused, phoneBusy, phoneCheckFailed) {
+    return remember(authored, changed, phoneBusy, phoneCheckFailed) {
         { failure ->
             when {
                 failure is Failure.Unavailable && failure.feature.name == "schedulePhoneBusy" ->
                     phoneBusy
                 failure is Failure.Unavailable &&
                     failure.feature.name == "schedulePhoneCheckFailed" -> phoneCheckFailed
-                failure is Failure.Network || failure is Failure.TimedOut -> offline
                 failure is Failure.Refused && failure.reason == RefusalReason.StaleScope -> changed
-                else -> refused
+                else -> authored(failure)
             }
         }
     }

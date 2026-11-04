@@ -238,16 +238,19 @@ public class PromptShelf(
 
     /**
      * Moves legacy inline attachments (Flutter's pre-vault saved prompts) into the vault (Flutter
-     * `migrateAttachments`; B-STATE-134). Only acknowledged metadata is replaced: payloads are published after the
-     * durable owner marker and before the metadata rewrite, so a refused step keeps the literal legacy record. A prompt
-     * with more attachments than one saved prompt may hold is deferred, never truncated or evicted. Returns the ids
-     * deferred (retried by a later call); idempotent. A shelf with no legacy attachments touches no file.
+     * `migrateAttachments`; B-STATE-134). Only acknowledged metadata is replaced: payloads are
+     * published after the durable owner marker and before the metadata rewrite, so a refused step
+     * keeps the literal legacy record. A prompt with more attachments than one saved prompt may
+     * hold is deferred, never truncated or evicted. Returns the ids deferred (retried by a later
+     * call); idempotent. A shelf with no legacy attachments touches no file.
      */
     public suspend fun migrateAttachments(profile: String): List<String> = lane.withLock {
         if (current(profile) != null) return@withLock emptyList()
         val legacy =
             try {
-                readStashes(profile).filter { it.attachments.isNotEmpty() && it.attachmentRefs.isEmpty() }
+                readStashes(profile).filter {
+                    it.attachments.isNotEmpty() && it.attachmentRefs.isEmpty()
+                }
             } catch (e: StoredFormatException) {
                 return@withLock emptyList()
             }
@@ -275,9 +278,11 @@ public class PromptShelf(
             // Profile deletion closed admission while the payload was written: publish no metadata.
             if (current(profile) != null) return@withLock legacy.map { it.id }
             val moved = prompt.copy(attachments = emptyList(), attachmentRefs = refs)
-            if (!prefs.commit { putString(stashKey(profile, moved.id), moved.toJson().toString()) }) deferred += prompt.id
+            if (!prefs.commit { putString(stashKey(profile, moved.id), moved.toJson().toString()) })
+                deferred += prompt.id
         }
-        // A refused metadata write leaves payloads nobody references yet; they stay until the retry adopts them.
+        // A refused metadata write leaves payloads nobody references yet; they stay until the retry
+        // adopts them.
         if (published && deferred.isEmpty()) collect(profile)
         deferred.toList()
     }
@@ -366,11 +371,21 @@ public class PromptShelf(
      * the payloads and finally the owner marker. False leaves something to retry (a retry also
      * removes files orphaned by a failed run).
      */
-    public suspend fun clearForProfile(profile: String): Boolean {
+    public fun stopAdmission(profile: String) {
         while (true) {
             val before = closing.load()
             if (closing.compareAndSet(before, before + profile)) break
         }
+    }
+
+    /** Waits for all work admitted before the deletion fence, without removing its owner marker. */
+    public suspend fun drainProfile(profile: String) {
+        stopAdmission(profile)
+        lane.withLock {}
+    }
+
+    public suspend fun clearForProfile(profile: String): Boolean {
+        stopAdmission(profile)
         return lane.withLock {
             if (!adoptExisting(profile)) return@withLock false
             val prefix = "oc.promptStash.$profile."

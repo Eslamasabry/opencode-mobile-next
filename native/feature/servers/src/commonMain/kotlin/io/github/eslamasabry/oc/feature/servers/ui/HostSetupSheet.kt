@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.engine.runtime.install.PinnedHostCommands
 import io.github.eslamasabry.oc.engine.runtime.install.UbuntuHostScript
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -72,6 +73,31 @@ internal fun HostSetupSheet(visible: Boolean, onDismiss: () -> Unit) {
                 },
             )
             KitNotice(message = stringResource(Res.string.linuxHostSetupCopyDetail))
+            KitText(stringResource(Res.string.secHostOfficialInstall))
+            KitCodeBlock(
+                source = PinnedHostCommands.install(),
+                kind = KitCodeKind.Command,
+                wrap = true,
+                copyLabel = stringResource(Res.string.linuxHostSetupCopy),
+                copiedLabel = stringResource(Res.string.kitCopied),
+                onCopy = {
+                    clipId++
+                    clip = PinnedHostCommands.install()
+                },
+            )
+            KitText(stringResource(Res.string.secHostPinnedFront))
+            KitNotice(stringResource(Res.string.secHostPinnedFrontHelp))
+            KitCodeBlock(
+                source = PinnedHostCommands.teamFront,
+                kind = KitCodeKind.Command,
+                wrap = true,
+                copyLabel = stringResource(Res.string.linuxHostSetupCopy),
+                copiedLabel = stringResource(Res.string.kitCopied),
+                onCopy = {
+                    clipId++
+                    clip = PinnedHostCommands.teamFront
+                },
+            )
             KitText(stringResource(Res.string.linuxHostSetupUsb))
             KitCodeBlock(
                 source = "adb reverse tcp:4096 tcp:4096",

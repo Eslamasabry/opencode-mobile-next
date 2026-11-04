@@ -3,7 +3,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.*
-import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
+import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.security.AddressRules
@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.ui.routes.*
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.collections.immutable.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -34,6 +35,7 @@ import kotlinx.coroutines.sync.withLock
 class PreviewRuntime(
     private val stores: PreviewStores,
     private val registry: ConnectionRegistry,
+    private val profileScope: ProfileScope,
     private val redactor: Redactor,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
@@ -58,6 +60,7 @@ class PreviewRuntime(
     private val eventJobs = mutableMapOf<ProfileId, Job>()
     // Retained only for a saved profile whose deletion reached the draft fence.
     private val draftRecovery = mutableSetOf<ProfileId>()
+    private val restoreRequested = AtomicBoolean(false)
 
     init {
         scope.launch {
@@ -65,11 +68,22 @@ class PreviewRuntime(
             ready.complete(result)
             if (result is Outcome.Ok) {
                 publishServers()
-                val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
-                if (active != null) command { connectNow(active) }
             }
         }
         scope.launch { profiles.profiles.collect { if (ready.isCompleted) publishServers() } }
+    }
+
+    /**
+     * Only a visible app launch may restore the ordinary connection. Cold OS actions validate their
+     * target first.
+     */
+    fun restoreSavedConnection() {
+        if (!restoreRequested.compareAndSet(false, true)) return
+        scope.launch {
+            if (ready.await() is Outcome.Failed) return@launch
+            val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
+            if (active != null) command { connectNow(active) }
+        }
     }
 
     private fun publishServers() {
@@ -344,29 +358,11 @@ class PreviewRuntime(
             is Outcome.Failed -> return@command closed
             is Outcome.Ok -> Unit
         }
-        val scoped =
-            DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
-                register(
-                    io.github.eslamasabry.oc.core.data.scope.KeyShape(
-                        "oc.setupRegistry.",
-                        io.github.eslamasabry.oc.core.data.scope.KeyScope.Profile,
-                        io.github.eslamasabry.oc.core.data.kv.PrefType.Str,
-                        "engine:runtime",
-                        "Public setup registry consent and metadata",
-                    )
-                )
-                io.github.eslamasabry.oc.engine.integrations.quota.InAppQuotaCollector.register(
-                    this
-                )
-                AndroidProfileMonitoring.registerKeys(this)
-                registerSecret("pw.", "profiles")
-                registerSecret("oc.codexToken.", "profiles")
-            }
         when (
             val result =
                 ProfileDeletion(
                         profiles,
-                        scoped,
+                        profileScope,
                         stores.lanes,
                         closers = profileClosers,
                         cleaners = cleaners,

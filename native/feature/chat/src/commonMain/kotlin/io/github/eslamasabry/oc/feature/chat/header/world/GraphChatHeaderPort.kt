@@ -37,9 +37,16 @@ import kotlinx.coroutines.launch
  */
 @Inject
 @ContributesBinding(AppScope::class)
-public class GraphChatHeaderPorts(private val registry: ConnectionRegistry) : ChatHeaderPorts {
+public class GraphChatHeaderPorts(
+    private val registry: ConnectionRegistry,
+    private val dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers,
+    private val importFiles:
+        Set<io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportFiles>,
+) : ChatHeaderPorts {
     override fun open(ref: ConversationRef): ChatHeaderPort =
-        GraphChatHeaderPort(ref, registry).also { it.attach() }
+        GraphChatHeaderPort(ref, registry, dispatchers, importFiles.singleOrNull()).also {
+            it.attach()
+        }
 }
 
 /**
@@ -50,6 +57,9 @@ public class GraphChatHeaderPorts(private val registry: ConnectionRegistry) : Ch
 internal class GraphChatHeaderPort(
     private val ref: ConversationRef,
     private val registry: ConnectionRegistry,
+    private val dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers,
+    private val importFiles:
+        io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportFiles?,
 ) : ChatHeaderPort {
     private val sid = SessionId(ref.sessionId.raw)
     private val mutableFacts = MutableStateFlow(HeaderFacts())
@@ -241,6 +251,26 @@ internal class GraphChatHeaderPort(
     override suspend fun delete(): Outcome<Unit> = withGateway { gateway, _ ->
         if (!gateway.capabilities.value.sessionDelete) unavailable("sessionDelete")
         else gateway.deleteSession(sid)
+    }
+
+    override fun openImport():
+        io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportEngine? {
+        val graph = bound ?: return null
+        val services = graph as ChatGraphAccessors
+        val source = services.chatGateway
+        if (!source.capabilities.value.sessionImportExport) return null
+        val at =
+            io.github.eslamasabry.oc.core.model.ServerLocation(
+                facts.value.directory,
+                facts.value.workspaceId,
+            )
+        return io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportEngine(
+            source,
+            { bound === graph && registry.graphFor(ref) === graph },
+            importFiles,
+            dispatchers,
+            at,
+        )
     }
 
     override fun close() {

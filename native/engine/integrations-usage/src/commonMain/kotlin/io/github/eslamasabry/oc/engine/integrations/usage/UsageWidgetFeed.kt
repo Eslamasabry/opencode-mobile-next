@@ -8,15 +8,24 @@ import io.github.eslamasabry.oc.core.data.lane.WriterLane
 import kotlin.math.roundToLong
 import kotlin.time.Instant
 
-/** The provider ids whose collector numbers may be collected at all; Claude stays off (Flutter `quotaCollectionAvailable`). */
-public fun quotaCollectionAvailable(providerId: String): Boolean = providerId == "codex" || providerId == "minimax" || providerId == "glm"
+/**
+ * The provider ids whose collector numbers may be collected at all; Claude stays off (Flutter
+ * `quotaCollectionAvailable`).
+ */
+public fun quotaCollectionAvailable(providerId: String): Boolean =
+    providerId == "codex" || providerId == "minimax" || providerId == "glm"
 
 /** One collector window as the widget needs it: display numbers only. */
-public data class QuotaWidgetWindow(val remainingPercent: Double?, val durationSeconds: Long?, val resetsAt: Instant?)
+public data class QuotaWidgetWindow(
+    val remainingPercent: Double?,
+    val durationSeconds: Long?,
+    val resetsAt: Instant?,
+)
 
 /**
- * The part of a collector quota snapshot the widget records. [canShowWindows] is the snapshot's own rule (status ok and a
- * matched or source-bound account); account refs, plan names, URLs and errors are not part of this type.
+ * The part of a collector quota snapshot the widget records. [canShowWindows] is the snapshot's own
+ * rule (status ok and a matched or source-bound account); account refs, plan names, URLs and errors
+ * are not part of this type.
  */
 public data class QuotaWidgetInput(
     val providerId: String,
@@ -26,7 +35,11 @@ public data class QuotaWidgetInput(
 )
 
 /** Which windows each widget entry shows. */
-public enum class UsageWidgetWindows(public val wire: String) { Both("both"), FiveHour("fiveHour"), Weekly("weekly") }
+public enum class UsageWidgetWindows(public val wire: String) {
+    Both("both"),
+    FiveHour("fiveHour"),
+    Weekly("weekly"),
+}
 
 /** The person's widget choices (D7), stored app-wide in `oc.usageWidget.v1`. */
 public data class UsageWidgetSettings(
@@ -35,7 +48,13 @@ public data class UsageWidgetSettings(
     val windows: UsageWidgetWindows = UsageWidgetWindows.Both,
 ) {
     public fun toJson(): String =
-        DartJson.encode(mapOf("hidden" to hiddenKeys.sorted(), "setup" to showSetupRows, "windows" to windows.wire))
+        DartJson.encode(
+            mapOf(
+                "hidden" to hiddenKeys.sorted(),
+                "setup" to showSetupRows,
+                "windows" to windows.wire,
+            )
+        )
 
     public companion object {
         public const val KEY: String = "oc.usageWidget.v1"
@@ -44,23 +63,31 @@ public data class UsageWidgetSettings(
             val raw = store.string(KEY) ?: return UsageWidgetSettings()
             val data = DartJson.decodeOrNull(raw) as? Map<*, *> ?: return UsageWidgetSettings()
             return UsageWidgetSettings(
-                hiddenKeys = (data["hidden"] as? List<*>).orEmpty().filterIsInstance<String>().filter { it.length <= 160 }.toSet(),
+                hiddenKeys =
+                    (data["hidden"] as? List<*>)
+                        .orEmpty()
+                        .filterIsInstance<String>()
+                        .filter { it.length <= 160 }
+                        .toSet(),
                 showSetupRows = data["setup"] != false,
-                windows = UsageWidgetWindows.entries.firstOrNull { it.wire == data["windows"] } ?: UsageWidgetWindows.Both,
+                windows =
+                    UsageWidgetWindows.entries.firstOrNull { it.wire == data["windows"] }
+                        ?: UsageWidgetWindows.Both,
             )
         }
     }
 }
 
 /**
- * The display numbers of the Android "Usage" home-screen widget (Flutter `UsageWidgetSnapshot`). The widget is drawn
- * while the app process may be gone, so it reads the last stored numbers and never calls the network. Only what the
- * widget prints is written: provider, saved server name, each window's length, remaining percent and reset time, and
- * when the numbers were measured. Account references, tokens, addresses, plan names and raw errors are never stored,
- * and Claude collector numbers can never appear.
+ * The display numbers of the Android "Usage" home-screen widget (Flutter `UsageWidgetSnapshot`).
+ * The widget is drawn while the app process may be gone, so it reads the last stored numbers and
+ * never calls the network. Only what the widget prints is written: provider, saved server name,
+ * each window's length, remaining percent and reset time, and when the numbers were measured.
+ * Account references, tokens, addresses, plan names and raw errors are never stored, and Claude
+ * collector numbers can never appear.
  *
- * One preference per server, `oc.widgetUsage.<profileId>`, so the profile sweep removes it; the subscriptions feed is
- * the app-wide `oc.widgetUsageSubs`. Inert when [isAndroid] is false.
+ * One preference per server, `oc.widgetUsage.<profileId>`, so the profile sweep removes it; the
+ * subscriptions feed is the app-wide `oc.widgetUsageSubs`. Inert when [isAndroid] is false.
  */
 public class UsageWidgetFeed(
     private val store: KeyValueStore,
@@ -80,19 +107,25 @@ public class UsageWidgetFeed(
         public fun key(profileId: String): String = "$KEY_PREFIX.$profileId"
 
         /** GLM and MiniMax take a key, the rest sign in. */
-        public fun actionFor(providerId: String): String = if (providerId == "glm" || providerId == "minimax") ADD_KEY else SIGN_IN
+        public fun actionFor(providerId: String): String =
+            if (providerId == "glm" || providerId == "minimax") ADD_KEY else SIGN_IN
 
         private val providerIdPattern = Regex("^[a-z0-9][a-z0-9_-]{0,31}$")
 
         public fun validProviderId(id: String): Boolean = providerIdPattern.matches(id)
 
         /** The widget entry for [s], or null when it has nothing to say there. */
-        public fun widgetEntryFor(s: UsageSubscription, settings: UsageWidgetSettings): Map<String, Any?>? {
+        public fun widgetEntryFor(
+            s: UsageSubscription,
+            settings: UsageWidgetSettings,
+        ): Map<String, Any?>? {
             val setup =
-                s.state == SubscriptionState.CantReadYet || s.state == SubscriptionState.NotSignedIn ||
+                s.state == SubscriptionState.CantReadYet ||
+                    s.state == SubscriptionState.NotSignedIn ||
                     s.state == SubscriptionState.SignInExpired
             if (setup && !settings.showSetupRows) return null
-            if (s.state == SubscriptionState.NoLimits || s.state == SubscriptionState.ApiKeyOnly) return null
+            if (s.state == SubscriptionState.NoLimits || s.state == SubscriptionState.ApiKeyOnly)
+                return null
             val five = s.fiveHour
             val week = s.weekly
             val chosen = ArrayList<UsageWindow>()
@@ -102,7 +135,8 @@ public class UsageWidgetFeed(
                     week?.let { chosen += it }
                     if (chosen.isEmpty()) chosen += s.windows.take(2)
                 }
-                UsageWidgetWindows.FiveHour -> (five ?: s.windows.firstOrNull())?.let { chosen += it }
+                UsageWidgetWindows.FiveHour ->
+                    (five ?: s.windows.firstOrNull())?.let { chosen += it }
                 UsageWidgetWindows.Weekly -> (week ?: s.windows.firstOrNull())?.let { chosen += it }
             }
             if (!setup && chosen.isEmpty() && s.state != SubscriptionState.ReaderBroken) return null
@@ -111,10 +145,12 @@ public class UsageWidgetFeed(
                     SubscriptionState.Ok -> "ok"
                     SubscriptionState.NearLimit -> "near"
                     SubscriptionState.Exhausted -> "out"
-                    SubscriptionState.OfflineStale -> if (s.resetSinceLastReading) "reset" else "stale"
+                    SubscriptionState.OfflineStale ->
+                        if (s.resetSinceLastReading) "reset" else "stale"
                     SubscriptionState.ReaderBroken -> "broken"
                     SubscriptionState.CantReadYet -> "setup"
-                    SubscriptionState.NotSignedIn, SubscriptionState.SignInExpired -> "signin"
+                    SubscriptionState.NotSignedIn,
+                    SubscriptionState.SignInExpired -> "signin"
                     else -> "ok"
                 }
             return linkedMapOf(
@@ -124,7 +160,15 @@ public class UsageWidgetFeed(
                 "state" to state,
                 "fetchedAt" to (s.fetchedAt?.toEpochMilliseconds() ?: 0L),
                 "reset" to s.resetSinceLastReading,
-                "windows" to chosen.map { w -> windowJson(w.durationSeconds, w.label, w.leftPercent.roundToLong().coerceIn(0, 100), w.resetsAt) },
+                "windows" to
+                    chosen.map { w ->
+                        windowJson(
+                            w.durationSeconds,
+                            w.label,
+                            w.leftPercent.roundToLong().coerceIn(0, 100),
+                            w.resetsAt,
+                        )
+                    },
                 "action" to
                     when (s.fix) {
                         UsageFix.SignIn -> SIGN_IN
@@ -136,12 +180,16 @@ public class UsageWidgetFeed(
             )
         }
 
-        private fun windowJson(seconds: Long?, label: String, left: Long, resetsAt: Instant?): Map<String, Any?> =
-            buildMap {
-                if (seconds != null) put("seconds", seconds) else put("label", label)
-                put("left", left)
-                put("resetsAt", resetsAt?.toEpochMilliseconds())
-            }
+        private fun windowJson(
+            seconds: Long?,
+            label: String,
+            left: Long,
+            resetsAt: Instant?,
+        ): Map<String, Any?> = buildMap {
+            if (seconds != null) put("seconds", seconds) else put("label", label)
+            put("left", left)
+            put("resetsAt", resetsAt?.toEpochMilliseconds())
+        }
     }
 
     /** Records a collector measurement the monitor accepted as fresh. */
@@ -157,20 +205,30 @@ public class UsageWidgetFeed(
                         "left" to it.remainingPercent!!.coerceIn(0.0, 100.0).roundToLong(),
                         "resetsAt" to it.resetsAt?.toEpochMilliseconds(),
                     )
-                }.take(MAX_WINDOWS_PER_PROVIDER)
+                }
+                .take(MAX_WINDOWS_PER_PROVIDER)
         if (windows.isEmpty()) return
         mutate(profileId, profileName) { rows ->
             rows[snapshot.providerId] =
-                linkedMapOf("state" to "ok", "fetchedAt" to snapshot.fetchedAt.toEpochMilliseconds(), "windows" to windows)
+                linkedMapOf(
+                    "state" to "ok",
+                    "fetchedAt" to snapshot.fetchedAt.toEpochMilliseconds(),
+                    "windows" to windows,
+                )
         }
     }
 
     /**
-     * Replaces everything stored for a Paseo server (or this phone, [thisPhone]) with what its daemon just reported.
-     * Providers the daemon no longer reports disappear. A signed-out provider becomes a row with the way in and no
-     * numbers until numbers replace it (B-STATE-148).
+     * Replaces everything stored for a Paseo server (or this phone, [thisPhone]) with what its
+     * daemon just reported. Providers the daemon no longer reports disappear. A signed-out provider
+     * becomes a row with the way in and no numbers until numbers replace it (B-STATE-148).
      */
-    public suspend fun recordReadings(profileId: String, profileName: String, readings: List<ProviderUsageReading>, thisPhone: Boolean = false) {
+    public suspend fun recordReadings(
+        profileId: String,
+        profileName: String,
+        readings: List<ProviderUsageReading>,
+        thisPhone: Boolean = false,
+    ) {
         if (!isAndroid || profileId.isEmpty()) return
         mutate(profileId, profileName, local = thisPhone) { rows ->
             rows.clear()
@@ -194,29 +252,58 @@ public class UsageWidgetFeed(
                         "fetchedAt" to reading.fetchedAt.toEpochMilliseconds(),
                         "windows" to
                             reading.windows.take(MAX_WINDOWS_PER_PROVIDER).map {
-                                windowJson(it.durationSeconds, it.label, it.remainingPercent.toLong().coerceIn(0, 100), it.resetsAt)
+                                windowJson(
+                                    it.durationSeconds,
+                                    it.label,
+                                    it.remainingPercent.toLong().coerceIn(0, 100),
+                                    it.resetsAt,
+                                )
                             },
                     )
             }
         }
     }
 
-    /** The collector says the stored sign-in no longer works: keep the last numbers and flag the row. */
+    /**
+     * The collector says the stored sign-in no longer works: keep the last numbers and flag the
+     * row.
+     */
     public suspend fun markAuthNeeded(profileId: String, profileName: String, providerId: String) {
         if (!isAndroid || profileId.isEmpty()) return
         if (!quotaCollectionAvailable(providerId)) return
         mutate(profileId, profileName) { rows ->
-            val row = rows.getOrPut(providerId) { linkedMapOf("fetchedAt" to clock().toEpochMilliseconds(), "windows" to emptyList<Any?>()) }
+            val row =
+                rows.getOrPut(providerId) {
+                    linkedMapOf(
+                        "fetchedAt" to clock().toEpochMilliseconds(),
+                        "windows" to emptyList<Any?>(),
+                    )
+                }
             row["state"] = "auth"
             row["action"] = actionFor(providerId)
         }
     }
 
-    /** The source says this provider is not signed in: an existing row keeps its numbers; otherwise a row with the way in. */
-    public suspend fun markNotSignedIn(profileId: String, profileName: String, providerId: String, displayName: String = "", thisPhone: Boolean = false) {
+    /**
+     * The source says this provider is not signed in: an existing row keeps its numbers; otherwise
+     * a row with the way in.
+     */
+    public suspend fun markNotSignedIn(
+        profileId: String,
+        profileName: String,
+        providerId: String,
+        displayName: String = "",
+        thisPhone: Boolean = false,
+    ) {
         if (!isAndroid || profileId.isEmpty() || !validProviderId(providerId)) return
         mutate(profileId, profileName, local = thisPhone) { rows ->
-            val row = rows.getOrPut(providerId) { linkedMapOf("fetchedAt" to clock().toEpochMilliseconds(), "windows" to emptyList<Any?>()) }
+            val row =
+                rows.getOrPut(providerId) {
+                    linkedMapOf(
+                        "fetchedAt" to clock().toEpochMilliseconds(),
+                        "windows" to emptyList<Any?>(),
+                    )
+                }
             val windows = row["windows"]
             if (windows is List<*> && windows.isNotEmpty()) return@mutate
             row["state"] = "signin"
@@ -231,15 +318,26 @@ public class UsageWidgetFeed(
         mutate(profileId, "") { rows -> rows.remove(providerId) }
     }
 
-    /** The single feed the widget prefers: one entry per subscription in Usage order (contract §5). */
-    public suspend fun publishSubscriptions(snapshot: UsageSnapshot, settings: UsageWidgetSettings) {
-        if (!isAndroid) return
-        val entries = snapshot.subscriptions.filter { it.key !in settings.hiddenKeys }.mapNotNull { widgetEntryFor(it, settings) }
+    /**
+     * The single feed the widget prefers: one entry per subscription in Usage order (contract §5).
+     */
+    public suspend fun publishSubscriptions(
+        snapshot: UsageSnapshot,
+        settings: UsageWidgetSettings,
+    ): Boolean {
+        if (!isAndroid) return true
+        val entries =
+            snapshot.subscriptions
+                .filter { it.key !in settings.hiddenKeys }
+                .mapNotNull { widgetEntryFor(it, settings) }
         val raw = store.string(SUBSCRIPTIONS_KEY)
-        if (entries.isEmpty() && !snapshot.loaded) return
+        if (entries.isEmpty() && !snapshot.loaded) return true
         val payload = DartJson.encode(linkedMapOf("v" to 1, "entries" to entries))
-        if (payload == raw) return
-        if (store.commit(lane) { putString(SUBSCRIPTIONS_KEY, payload) } is Outcome.Ok) refreshNative()
+        if (payload == raw) return true
+        if (store.commit(lane) { putString(SUBSCRIPTIONS_KEY, payload) } !is Outcome.Ok)
+            return false
+        refreshNative()
+        return true
     }
 
     public suspend fun clearSubscriptions() {
@@ -272,7 +370,9 @@ public class UsageWidgetFeed(
             if (decoded != null) {
                 if (name.isEmpty()) name = decoded["name"]?.toString() ?: ""
                 (decoded["rows"] as? Map<*, *>)?.forEach { (k, v) ->
-                    if (v is Map<*, *>) rows[k.toString()] = v.entries.associateTo(LinkedHashMap()) { it.key.toString() to it.value }
+                    if (v is Map<*, *>)
+                        rows[k.toString()] =
+                            v.entries.associateTo(LinkedHashMap()) { it.key.toString() to it.value }
                 }
             }
         }

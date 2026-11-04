@@ -26,6 +26,7 @@ public data class ServersUi(
     val pairingArrival: Int = 0,
     val pairingProblem: PairingProblem? = null,
     val pairingChecks: ImmutableList<PairingCheck> = persistentListOf(),
+    val importedSignIns: ImportedSignInUi? = null,
 )
 
 public enum class ServerIssue {
@@ -87,4 +88,12 @@ public interface ServersActions {
 
     /** Usage › Plans across every connection (:feature:plans, unit P12-BUILD-INTEGRATIONS-B). */
     public fun openPlans() {}
+
+    public fun openSetup(id: ProfileId) {}
+
+    public fun reviewImportedSignIns(id: ProfileId) {}
+
+    public fun closeImportedSignIns() {}
+
+    public fun openProviderSignIn() {}
 }

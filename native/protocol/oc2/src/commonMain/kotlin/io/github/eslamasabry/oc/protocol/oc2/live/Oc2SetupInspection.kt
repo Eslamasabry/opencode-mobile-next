@@ -141,3 +141,35 @@ internal class Oc2SetupInspection(
     override suspend fun patchConfig(patch: JsonObject): Outcome<Unit> =
         Failure.Unavailable(FeatureId("setupConfigWrites")).failed()
 }
+
+/**
+ * SEC-2's read-only setup reads (`/config`, `/mcp`) for `:engine:setupassist`, through the existing authenticated and
+ * dialect-aware connection. Named apart from PROTO's [Oc2SetupInspection] inspector, which serves
+ * `SetupInspectionGateway`; both read the same two endpoints at a captured location.
+ */
+public object Oc2SetupReads {
+    public suspend fun read(
+        gateway: ServerGateway,
+        location: ServerLocation,
+        path: String,
+    ): Outcome<JsonElement> {
+        if (path !in setOf("/config", "/mcp"))
+            return Failure.Refused(RefusalReason.StaleScope).failed()
+        if (!gateway.capabilities.value.setupConfigRead || gateway.location.value != location) {
+            return Failure.Unavailable(FeatureId("setup.read")).failed()
+        }
+        val oc2 =
+            gateway as? Oc2Gateway ?: return Failure.Unavailable(FeatureId("setup.read")).failed()
+        val result =
+            oc2.json(
+                path,
+                query =
+                    mapOf(
+                        "location[directory]" to location.directory,
+                        "location[workspace]" to location.workspace,
+                    ),
+            )
+        return if (gateway.location.value == location) result
+        else Failure.Refused(RefusalReason.StaleScope).failed()
+    }
+}

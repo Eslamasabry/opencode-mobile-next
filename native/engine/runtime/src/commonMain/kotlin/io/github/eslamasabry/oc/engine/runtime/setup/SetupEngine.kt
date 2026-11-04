@@ -163,7 +163,16 @@ public class SetupEngine(
                 ensurePolling()
                 return
             }
-            start(ids, SetupPlanning.effectiveJobParams(params, last))
+            if (!SetupPlanning.validParams(params, redact, allowLegacy = true)) {
+                failStart(SetupError.HostRefused)
+                return
+            }
+            val effective = SetupPlanning.effectiveJobParams(params, last)
+            if (!SetupPlanning.validParams(effective, redact)) {
+                failStart(SetupError.HostRefused)
+                return
+            }
+            start(ids, effective)
         } finally {
             starting = false
             startingJobId = null
@@ -625,6 +634,9 @@ public class SetupEngine(
         if (parsed != null) {
             // Hostless records predate host selection and belong only to built-in.
             if ((parsed.host ?: SetupHostKind.Builtin.wireName) != hostKind.wireName) {
+                return Failure.Runtime(RuntimeProblem.InvalidProfile).failed()
+            }
+            if (!SetupPlanning.validParams(parsed.params, redact, allowLegacy = true)) {
                 return Failure.Runtime(RuntimeProblem.InvalidProfile).failed()
             }
             record = parsed

@@ -8,6 +8,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -15,6 +16,7 @@ import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.domain.platform.DeviceFacts
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.integrations.usage.ConnectedProvider
@@ -29,6 +31,7 @@ import io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetFeed
 import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
 import io.github.eslamasabry.oc.engine.profiles.DeletionStep
 import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
+import io.github.eslamasabry.oc.feature.plans.presentation.CollectorTarget
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansSource
 import io.github.eslamasabry.opencode_mobile.UsageWidgetProvider
 import kotlin.time.Clock
@@ -46,7 +49,10 @@ import kotlinx.coroutines.sync.withLock
  * widget feed live in the app's preference store under the Flutter keys, so the Usage widget draws them. Nothing
  * here switches the active server or replays a request.
  *
- * The strict collector reader supplies existing, consented quota windows; no arbitrary remote collector is probed.
+ * The strict collector reader (PROTO) supplies existing, consented quota windows; no arbitrary remote collector is
+ * probed. Remote collectors are read only after explicit trust bound to the current origin and credentials. Each
+ * request uses a private, bounded, redirect-free transport. The in-app collector and Paseo host require their own host
+ * ports.
  */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<PlansSource>())
@@ -56,7 +62,10 @@ class AndroidPlansSource(
     private val stores: PreviewStores,
     private val application: Application,
     private val clock: Clock,
-    private val quota: ProtoQuotaSource,
+    private val protoQuota: ProtoQuotaSource,
+    private val dispatchers: AppDispatchers,
+    private val facts: DeviceFacts,
+    private val collectorHost: AndroidPlansCollectorHost,
     appScope: AppCoroutineScope,
 ) : PlansSource {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -64,6 +73,8 @@ class AndroidPlansSource(
     override val snapshot: StateFlow<UsageSnapshot> = state.asStateFlow()
     private val creating = Mutex()
     private var engine: UsageSubscriptionsEngine? = null
+    private var quota: PlansQuotaSource? = null
+    private var paseo: AndroidPlansPaseoSource? = null
 
     private fun openCodeServers() =
         registry.live.value.filter { (_, graph) -> graph.profile.backend == BackendKind.OpenCode2 }
@@ -106,6 +117,14 @@ class AndroidPlansSource(
                 refreshNative = { UsageWidgetProvider.refreshAll(application) },
                 clock = { clock.now() },
             )
+        val quotaSource =
+            PlansQuotaSource(registry, stores, dispatchers, widget, collectorHost).also {
+                quota = it
+            }
+        val paseoSource =
+            AndroidPlansPaseoSource(registry, stores, widget, clock, facts, scope).also {
+                paseo = it
+            }
         UsageSubscriptionsEngine(
                 store = stores.prefs,
                 lane = stores.lanes.app,
@@ -116,9 +135,9 @@ class AndroidPlansSource(
                             graph.profile.name,
                             UsageConnectionKind.OpenCodeServer,
                         )
-                    }
+                    } + paseoSource.connections()
                 },
-                sources = listOf(signIns, quota),
+                sources = listOf(signIns, protoQuota, quotaSource, paseoSource),
                 alertsOnRule = { false },
                 setQuotaAlerts = {},
                 widget = widget,
@@ -134,14 +153,37 @@ class AndroidPlansSource(
         engine()?.refresh()
     }
 
+    override suspend fun collectors(): List<CollectorTarget> {
+        engine() ?: return emptyList()
+        return quota?.targets().orEmpty() + paseo?.targets().orEmpty()
+    }
+
+    override suspend fun setCollector(target: CollectorTarget, enabled: Boolean): Boolean {
+        engine() ?: return false
+        val changed =
+            if (target.provider == AndroidPlansPaseoSource.PROVIDER)
+                paseo?.setEnabled(target, enabled) == true
+            else quota?.setEnabled(target, enabled) == true
+        if (changed && !enabled) {
+            if (
+                target.provider == AndroidPlansPaseoSource.PROVIDER ||
+                    target.provider == PlansQuotaSource.BUILTIN
+            )
+                engine?.removeProfile(target.profile.raw)
+            else engine?.removeProvider(target.profile.raw, target.provider)
+        }
+        return changed
+    }
+
     /**
      * B-SEC-178: a removed server takes its cached numbers, its overrides and its widget rows
      * along.
      */
     suspend fun removeProfile(profile: ProfileId): Boolean {
         val e = engine() ?: return false
-        e.removeProfile(profile.raw)
-        return true
+        if (quota?.closeProfile(profile) == false) return false
+        if (paseo?.removeProfile(profile) == false) return false
+        return e.removeProfile(profile.raw)
     }
 }
 
@@ -156,5 +198,5 @@ class UsagePlansDeletionCleaner(private val plans: AndroidPlansSource) : Profile
     override val order: Int = DeletionStep.DEVICE_SURFACES
 
     override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> =
-        if (plans.removeProfile(profileId)) 1.ok() else 0.ok()
+        if (plans.removeProfile(profileId)) 1.ok() else Failure.StorageRefused().failed()
 }

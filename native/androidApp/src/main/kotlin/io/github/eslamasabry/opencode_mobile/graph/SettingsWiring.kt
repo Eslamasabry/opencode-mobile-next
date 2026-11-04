@@ -60,7 +60,6 @@ import io.github.eslamasabry.oc.feature.onboarding.presentation.FirstRunPreferen
 import io.github.eslamasabry.oc.feature.settings.presentation.AboutFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.AnalyticsChoices
 import io.github.eslamasabry.oc.feature.settings.presentation.DiagnosticsExport
-import io.github.eslamasabry.oc.feature.settings.presentation.DiagnosticsReport
 import io.github.eslamasabry.oc.feature.settings.presentation.EngineAnalyticsChoices
 import io.github.eslamasabry.oc.feature.settings.presentation.HandledErrors
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationChange
@@ -70,8 +69,6 @@ import io.github.eslamasabry.oc.feature.settings.presentation.NotificationSettin
 import io.github.eslamasabry.oc.feature.settings.presentation.PersonalChoices
 import io.github.eslamasabry.oc.feature.settings.presentation.PreferenceMapping
 import io.github.eslamasabry.oc.feature.settings.presentation.PreferencesChoices
-import io.github.eslamasabry.oc.feature.settings.presentation.ReportError
-import io.github.eslamasabry.oc.feature.settings.presentation.ReportFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerLine
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsHost
@@ -83,6 +80,7 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
+import io.github.eslamasabry.oc.ui.routes.IntegrationsRoute
 import io.github.eslamasabry.oc.ui.routes.ProvidersRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
@@ -271,7 +269,10 @@ class AndroidSettingsHost(
                         if (place == SettingsOutside.Providers) ProvidersRoute(target.id)
                         else ToolsRoute(target.id)
                     )
-                } else nav.open(ServersRoute.Home)
+                } else {
+                    // SEC-2: with no connected server, the integrations page (sign-ins and connectors) answers.
+                    nav.open(IntegrationsRoute)
+                }
             }
             SettingsOutside.StarOnGitHub -> application.view(REPO)
             SettingsOutside.WhatsNew,
@@ -314,35 +315,24 @@ class AndroidSettingsHost(
 
     override val diagnostics: DiagnosticsExport =
         object : DiagnosticsExport {
-            override suspend fun report(): Outcome<String> {
+            private fun connectionWords(): String {
                 val servers = connections.servers.value
                 val p = prefs.value.value
-                val facts =
-                    ReportFacts(
-                        appVersion = buildInfo.versionName,
-                        build = buildInfo.versionCode.toString(),
-                        platform =
-                            "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
-                        language = p.locale.code ?: "system",
-                        textSize = p.textSize.wire,
-                        motion = p.effects.motion.wire,
-                        savedServers = servers.size,
-                        connectedServers = servers.count { it.connected },
-                        errors =
-                            gitHubReports.keptErrors()?.map { (at, source, message) ->
-                                ReportError(at, source, message)
-                            }
-                                ?: diagnosticsLog.errors.value.map {
-                                    ReportError(
-                                        it.at.toString(),
-                                        it.source,
-                                        it.message,
-                                        it.occurrences,
-                                    )
-                                },
-                    )
-                return DiagnosticsReport.text(facts).ok()
+                val connected = servers.count { it.connected }
+                return "${if (connected > 0) "Connected to a server" else "Not connected"} · " +
+                    "${servers.size} saved · $connected connected · Language: ${p.locale.code ?: "system"} · " +
+                    "Text size: ${p.textSize.wire} · Motion: ${p.effects.motion.wire}"
             }
+
+            override suspend fun report(): Outcome<String> = report("")
+
+            override suspend fun report(description: String): Outcome<String> =
+                gitHubReports.preview(connectionWords(), description).ok()
+
+            override fun endReport() = gitHubReports.clearAttachment()
+
+            override suspend fun send(description: String): Outcome<Unit> =
+                gitHubReports.sendReport(connectionWords(), description)
 
             override suspend fun copy(text: String): Outcome<Unit> =
                 withContext(dispatchers.main) {

@@ -129,6 +129,7 @@ dependencies {
             ":engine:entry", // B-ANDR-072: exact-shape opencode-mobile:// link parser
             ":android:tiles", // P12-PLATFORM: QS tiles, shortcuts, share, update installer
             ":android:widgets", // P12-PLATFORM: home-screen widgets
+            ":android:platform",
             ":feature:preview", // PREVIEW-QR
             ":android:webview", // PREVIEW-QR
             ":android:camera", // PREVIEW-QR (pairing scanner)
@@ -158,6 +159,8 @@ dependencies {
             ":engine:integrations-catalog",
             ":engine:integrations-quota",
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
+            ":engine:setupassist",
+            ":feature:integrations",
             ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
         )
         .forEach { implementation(project(it)) }
