@@ -4,12 +4,22 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /** The commands This phone runs, one at a time. */
-public enum class PhoneOp { Start, Stop, Restart, Update }
+public enum class PhoneOp {
+    Start,
+    Stop,
+    Restart,
+    Update,
+}
 
 /** A server row under the answer; each names its object ("Stop OpenCode on this phone"). */
-public enum class ServerRow { Stop, Restart }
+public enum class ServerRow {
+    Stop,
+    Restart,
+}
 
-/** The version row: what is installed and whether the pinned version is offered (B-LINUX-078/079). */
+/**
+ * The version row: what is installed and whether the pinned version is offered (B-LINUX-078/079).
+ */
 public data class VersionRowUi(val installed: String?, val update: UpdateRow?)
 
 public sealed interface UpdateRow {
@@ -23,8 +33,15 @@ public sealed interface UpdateRow {
     public data object Updating : UpdateRow
 }
 
-/** The "Running on this phone" row: how close the app is to Android's child-process limit (plan 11 §7.2). */
-public data class RunningRowUi(val count: Int? = null, val cap: Int = 32, val nearLimit: Boolean = false)
+/**
+ * The "Running on this phone" row: how close the app is to Android's child-process limit (plan 11
+ * §7.2).
+ */
+public data class RunningRowUi(
+    val count: Int? = null,
+    val cap: Int = 32,
+    val nearLimit: Boolean = false,
+)
 
 /** What the page asks before acting (KitConfirm). */
 public sealed interface ThisPhoneConfirm {
@@ -44,8 +61,14 @@ public sealed interface ThisPhoneNotice {
     public data object SettingsMissing : ThisPhoneNotice
 }
 
-/** PhoneRoute.ThisPhone's state (plan 07 F01). No copy: `ThisPhoneScreen` turns each value into `:ui:words`. */
+/**
+ * PhoneRoute.ThisPhone's state (plan 07 F01). No copy: `ThisPhoneScreen` turns each value into
+ * `:ui:words`.
+ */
 public data class ThisPhoneUi(
+    val lifecycle: io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReport? = null,
+    val storage: io.github.eslamasabry.oc.engine.runtime.lifecycle.AppStorageFacts? = null,
+    val storageFailed: Boolean = false,
     val answer: ThisPhoneAnswer = ThisPhoneAnswer(AnswerTone.Working, AnswerHeadline.Checking),
     val serverRows: ImmutableList<ServerRow> = persistentListOf(),
     val version: VersionRowUi? = null,
@@ -59,6 +82,10 @@ public data class ThisPhoneUi(
 public interface ThisPhoneActions {
     /** The answer's one act. */
     public fun act(act: PhoneAct)
+
+    public fun dismissRecovery()
+
+    public fun refreshStorage()
 
     public fun stopServer()
 

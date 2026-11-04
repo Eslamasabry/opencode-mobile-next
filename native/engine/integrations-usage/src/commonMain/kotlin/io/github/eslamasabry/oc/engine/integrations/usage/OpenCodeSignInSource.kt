@@ -1,9 +1,9 @@
 package io.github.eslamasabry.oc.engine.integrations.usage
 
 import io.github.eslamasabry.oc.core.common.Outcome
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** A saved OpenCode server as the sign-in source sees it. */
 public data class SignInServer(
@@ -17,9 +17,9 @@ public data class SignInServer(
 public data class ConnectedProvider(val id: String, val name: String)
 
 /**
- * OpenCode's connected providers as sign-ins (Flutter `OpenCodeSignInSource`). A server that answered is
- * authoritative (a provider missing from its list is signed out there); one that did not answer is unreached; a server
- * that needs its password again is skipped without a request.
+ * OpenCode's connected providers as sign-ins (Flutter `OpenCodeSignInSource`). A server that
+ * answered is authoritative (a provider missing from its list is signed out there); one that did
+ * not answer is unreached; a server that needs its password again is skipped without a request.
  */
 public class OpenCodeSignInSource(
     private val servers: () -> List<SignInServer>,
@@ -32,7 +32,11 @@ public class OpenCodeSignInSource(
         val authoritative = LinkedHashSet<String>()
         val unreached = LinkedHashSet<String>()
         for (server in servers()) {
-            if (!server.isOpenCode || !isReadable(server.id) || server.requiresPasswordReentry) continue
+            if (!server.isOpenCode || server.requiresPasswordReentry) continue
+            if (!isReadable(server.id)) {
+                unreached += server.id
+                continue
+            }
             val answer = withTimeoutOrNull(timeout) { providers(server) }
             if (answer !is Outcome.Ok) {
                 unreached += server.id
@@ -40,11 +44,22 @@ public class OpenCodeSignInSource(
             }
             for (p in answer.value) {
                 val id = canonicalUsageProviderId(p.id) ?: continue
-                signIns += UsageSignIn(providerId = id, connectionId = server.id, displayName = display(id, p.name))
+                signIns +=
+                    UsageSignIn(
+                        providerId = id,
+                        connectionId = server.id,
+                        displayName = display(id, p.name),
+                    )
             }
             authoritative += server.id
         }
-        return Outcome.Ok(UsageSourceResult(signIns = signIns, authoritativeSignIns = authoritative, unreached = unreached))
+        return Outcome.Ok(
+            UsageSourceResult(
+                signIns = signIns,
+                authoritativeSignIns = authoritative,
+                unreached = unreached,
+            )
+        )
     }
 
     private fun display(id: String, name: String): String =

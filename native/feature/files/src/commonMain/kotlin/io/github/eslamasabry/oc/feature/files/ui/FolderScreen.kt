@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -38,20 +39,32 @@ import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.readerUiNoFiles
 import io.github.eslamasabry.oc.ui.words.res.readerUiSearchFiles
+import io.github.eslamasabry.oc.ui.words.res.readerUiServerOrder
+import io.github.eslamasabry.oc.ui.words.res.readerUiSourceFirst
 import io.github.eslamasabry.oc.ui.words.res.readerUiTryFileName
+import io.github.eslamasabry.oc.ui.words.res.stateReaderSaveFailed
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * D02 (07 §5): one folder of the conversation's project, arranged from kit parts only. Folders and files are plain
- * rows (a folder has the chevron); Show hidden files is a visible bar action, never a gesture; search sits under the
- * bar and searches the whole project by name.
+ * D02 (07 §5): one folder of the conversation's project, arranged from kit parts only. Folders and
+ * files are plain rows (a folder has the chevron); Show hidden files is a visible bar action, never
+ * a gesture; search sits under the bar and searches the whole project by name.
  */
 @Composable
 public fun FolderScreen(state: FolderUi, actions: FolderActions) {
-    val title = if (state.path.isEmpty()) stringResource(Res.string.filesProjectRoot) else state.name
+    val title =
+        if (state.path.isEmpty()) stringResource(Res.string.filesProjectRoot) else state.name
     val hiddenLabel =
-        stringResource(if (state.showHidden) Res.string.filesHideHidden else Res.string.filesShowHidden)
+        stringResource(
+            if (state.showHidden) Res.string.filesHideHidden else Res.string.filesShowHidden
+        )
+    val orderLabel =
+        stringResource(
+            if (state.sourceFirst) Res.string.readerUiServerOrder
+            else Res.string.readerUiSourceFirst
+        )
     val barActions = buildList {
+        add(KitLineAction(orderLabel, actions::toggleSourceFirst))
         if (state.phase == FolderPhase.Ready && (state.hiddenCount > 0 || state.showHidden)) {
             add(KitLineAction(hiddenLabel, actions::toggleHidden, testTag = "files-show-hidden"))
         }
@@ -69,11 +82,16 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
             )
         },
         search =
-            if (state.phase == FolderPhase.Ready || state.query != null) ({ KitSearchField(searchLabel, actions::search) })
+            if (state.phase == FolderPhase.Ready || state.query != null)
+                ({ KitSearchField(searchLabel, actions::search) })
             else null,
         width = KitScreenWidth.List,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+            if (state.preferencesFailed)
+                item(key = "preferences-failed") {
+                    KitNotice(stringResource(Res.string.stateReaderSaveFailed))
+                }
             val query = state.query
             when {
                 query != null -> searchItems(state, actions)
@@ -89,7 +107,10 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                     }
                 state.phase == FolderPhase.Unavailable ->
                     item(key = "unavailable") {
-                        KitStateView(kind = KitStateKind.Calm, title = stringResource(Res.string.filesUnavailable))
+                        KitStateView(
+                            kind = KitStateKind.Calm,
+                            title = stringResource(Res.string.filesUnavailable),
+                        )
                     }
                 state.phase == FolderPhase.Failed ->
                     item(key = "failed") {
@@ -106,12 +127,19 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                         KitStateView(
                             kind = KitStateKind.Calm,
                             title = stringResource(Res.string.filesOnlyHidden),
-                            primary = KitAction(stringResource(Res.string.filesShowHidden), actions::toggleHidden),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.filesShowHidden),
+                                    actions::toggleHidden,
+                                ),
                         )
                     }
                 state.empty ->
                     item(key = "empty") {
-                        KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.chatStartEmptyFolder))
+                        KitStateView(
+                            kind = KitStateKind.Empty,
+                            title = stringResource(Res.string.chatStartEmptyFolder),
+                        )
                     }
                 else -> items(state.entries, key = { it.path }) { node -> EntryRow(node, actions) }
             }
@@ -119,7 +147,10 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
     }
 }
 
-private fun androidx.compose.foundation.lazy.LazyListScope.searchItems(state: FolderUi, actions: FolderActions) {
+private fun androidx.compose.foundation.lazy.LazyListScope.searchItems(
+    state: FolderUi,
+    actions: FolderActions,
+) {
     val failure = state.searchFailure
     when {
         state.searching -> item(key = "searching") { KitSkeletonRows(count = 3) }

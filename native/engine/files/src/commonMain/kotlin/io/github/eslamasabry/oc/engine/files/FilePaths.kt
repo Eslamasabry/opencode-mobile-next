@@ -4,7 +4,9 @@ import io.github.eslamasabry.oc.core.model.FileNode
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
-/** Project-relative paths as the server spells them: `/`-separated, no leading `./`, the root is "". */
+/**
+ * Project-relative paths as the server spells them: `/`-separated, no leading `./`, the root is "".
+ */
 public object FilePaths {
     /** "" for the project root; trims `./`, leading and trailing slashes and empty segments. */
     public fun normalize(path: String): String =
@@ -25,7 +27,10 @@ public object FilePaths {
         return if (base.isEmpty()) leaf else "$base/$leaf"
     }
 
-    /** Lower-case extension without the dot; "" when there is none (a leading dot alone is not one: `.env`). */
+    /**
+     * Lower-case extension without the dot; "" when there is none (a leading dot alone is not one:
+     * `.env`).
+     */
     public fun extension(path: String): String {
         val name = name(path)
         val dot = name.lastIndexOf('.')
@@ -49,13 +54,46 @@ public object FilePaths {
     }
 }
 
-/** One folder as shown: the visible entries in the server's order, and how many dot entries are left out. */
+/**
+ * One folder as shown: the visible entries in the server's order, and how many dot entries are left
+ * out.
+ */
 public data class FolderListing(val entries: ImmutableList<FileNode>, val hiddenCount: Int) {
-    /** A folder whose only entries are hidden ones says so instead of looking empty (files_body.dart). */
+    /**
+     * A folder whose only entries are hidden ones says so instead of looking empty
+     * (files_body.dart).
+     */
     val onlyHidden: Boolean
         get() = entries.isEmpty() && hiddenCount > 0
 
     public companion object {
+        /**
+         * Stable partition, matching the reader preference: generated entries stay visible after
+         * source entries.
+         */
+        public fun sourceFirst(entries: List<FileNode>, enabled: Boolean): ImmutableList<FileNode> =
+            (if (enabled) entries.filterNot(::generated) + entries.filter(::generated) else entries)
+                .toImmutableList()
+
+        private fun generated(node: FileNode): Boolean {
+            val directories =
+                setOf(
+                    "node_modules",
+                    ".git",
+                    ".dart_tool",
+                    "build",
+                    "dist",
+                    "coverage",
+                    "__pycache__",
+                    ".gradle",
+                )
+            val parts =
+                node.path.lowercase().split('/').let { if (node.isDir) it else it.dropLast(1) }
+            val name = node.name.lowercase()
+            return parts.any { it in directories } ||
+                listOf(".lock", ".g.dart", ".freezed.dart", ".min.js", ".map").any(name::endsWith)
+        }
+
         public fun of(all: List<FileNode>, showHidden: Boolean): FolderListing {
             if (showHidden) return FolderListing(all.toImmutableList(), 0)
             val (hidden, shown) = all.partition { FilePaths.isHidden(it.name) }

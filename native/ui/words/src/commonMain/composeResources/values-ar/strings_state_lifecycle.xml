@@ -1,0 +1,16 @@
+<resources>
+    <string name="stateLifecycleChecking">أوقف Android التطبيق. جارٍ التحقق مما عاد للعمل…</string>
+    <string name="stateLifecycleUnavailable">أوقف Android التطبيق. تعذّر التحقق من استعادة التشغيل.</string>
+    <string name="stateLifecycleStopped">أوقف Android التطبيق. OpenCode متوقف.</string>
+    <string name="stateLifecycleUnreachable">أوقف Android التطبيق. OpenCode لا يستجيب بعد.</string>
+    <string name="stateLifecyclePartial">OpenCode يستجيب. بعض الخدمات التي كانت تعمل ليست جاهزة.</string>
+    <string name="stateLifecycleReady">عاد OpenCode وخدماته التي كانت تعمل للاستجابة. قد تحتاج المهام التي توقفت إلى انتباهك.</string>
+    <string name="stateStorageTitle">مساحة تخزين التطبيق</string>
+    <string name="stateStorageServer">Linux وOpenCode</string>
+    <string name="stateStoragePrivate">تسجيلات الدخول والإعدادات والمحادثات المحفوظة</string>
+    <string name="stateStorageProject">%1$s · %2$d ملفات · %3$d ملفات خاصة</string>
+    <string name="stateStorageSavedServers">%1$d خوادم محفوظة</string>
+    <string name="stateStorageEmpty">لا توجد بيئة Linux أو مشاريع محفوظة على هذا الهاتف.</string>
+    <string name="stateStorageFailed">تعذّر قياس مساحة التخزين. حاول مرة أخرى.</string>
+    <string name="stateStorageRefresh">قياس مساحة التخزين مجددًا</string>
+</resources>
