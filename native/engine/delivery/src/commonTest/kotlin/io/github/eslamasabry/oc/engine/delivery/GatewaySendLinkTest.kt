@@ -78,7 +78,7 @@ class GatewaySendLinkTest {
     @Test
     fun `B-PROTO-135 another inbox type, session, an assistant message or a looping cursor never confirms`() = runTest {
         val g = Gateway(inboxItems = listOf(item("msg_1", type = "shell"), item("msg_1", session = "ses_other"), item("msg_1", type = "synthetic")))
-        g.fake.capabilities.value = ServerCapabilities(inbox = true)
+        g.fake.capabilities.value = ServerCapabilities(inbox = true, commandReceipts = true)
         g.pages = mapOf(null to ServerPage(persistentListOf(user("msg_1", role = Role.Assistant), user("msg_1", session = "ses_other")), "loop"),
             "loop" to ServerPage(persistentListOf(), "loop"))
         val link = GatewaySendLink(P1, "http://h", g)

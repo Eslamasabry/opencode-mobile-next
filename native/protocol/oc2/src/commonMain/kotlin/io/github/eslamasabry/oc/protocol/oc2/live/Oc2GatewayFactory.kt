@@ -42,7 +42,7 @@ public class Oc2GatewayFactory(
                     clock,
                     redactor,
                 )
-            gateway.health().map { ProbeResult(backend, it.version, Oc2Gateway.Capabilities) }
+            gateway.probe().map { ProbeResult(backend, it.version, Oc2Gateway.Capabilities) }
         } finally {
             client.close()
         }

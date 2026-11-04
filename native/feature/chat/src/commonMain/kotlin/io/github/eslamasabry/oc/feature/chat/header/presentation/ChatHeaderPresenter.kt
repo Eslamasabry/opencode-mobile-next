@@ -7,6 +7,8 @@ import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.engine.agents.resume.SessionResumeCli
+import io.github.eslamasabry.oc.engine.agents.resume.SessionResumeCommand
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeModel
@@ -46,7 +48,7 @@ internal data class HeaderLocal(
     val freeDismissed: Boolean = false,
 )
 
-internal enum class SheetKind { Details, ContinueWith }
+internal enum class SheetKind { Details, ContinueWith, ContinueOnComputer }
 
 /**
  * The header's state holder (plain `kotlin.test`, no ViewModel): [current] presents the present values; [states] is
@@ -147,6 +149,7 @@ public class ChatHeaderPresenter(
                         loading = models.loading || (models.choices.isEmpty() && models.failure == null && l.continueFailure == null),
                         failure = l.continueFailure ?: models.failure,
                     )
+                SheetKind.ContinueOnComputer -> HeaderSheet.ContinueOnComputer(resumeCommand(facts))
             }
         return ChatHeaderUi(
             title = title,
@@ -203,6 +206,11 @@ public class ChatHeaderPresenter(
                 local.update { it.copy(sheet = SheetKind.ContinueWith, continueFailure = null) }
                 if (world.models.value.choices.isEmpty()) loadModels()
             }
+            HeaderAction.ContinueOnComputer -> {
+                // Built from the folder the server reports now (Flutter showSessionHandoff reads the session first).
+                local.update { it.copy(sheet = SheetKind.ContinueOnComputer) }
+                launcher.launch { port.refresh() }
+            }
             HeaderAction.CopyTranscript -> Unit // needs the person's words: [copyTranscript]
             HeaderAction.Share -> run(action) {
                 when (val r = port.share()) {
@@ -226,6 +234,23 @@ public class ChatHeaderPresenter(
             HeaderAction.Archive -> local.update { it.copy(confirm = HeaderConfirm.Archive(titleNow())) }
             HeaderAction.Delete -> local.update { it.copy(confirm = HeaderConfirm.Delete(titleNow())) }
         }
+    }
+
+    /**
+     * B-AGENT-227/228: the resume command for this conversation. The CLI follows the server's product generation (an
+     * OpenCode 2 server, the only one that reports `cliSessionResume`); the menu row is gated on that capability.
+     */
+    private fun resumeCommand(facts: HeaderFacts): SessionResumeCommand =
+        SessionResumeCommand.build(
+            cli = SessionResumeCli.OpenCode2,
+            sessionId = world.ref.sessionId.raw,
+            directory = facts.directory,
+            workspaceId = facts.workspaceId,
+        )
+
+    override fun copyResumeCommand() {
+        val text = resumeCommand(port.facts.value).command ?: return
+        local.update { it.copy(clip = HeaderClip(nextId++, text, ClipKind.ResumeCommand)) }
     }
 
     /** Copy transcript with the person's own words for the headings. */

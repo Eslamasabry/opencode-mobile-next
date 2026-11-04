@@ -20,6 +20,7 @@ kotlin {
         implementation(libs.compose.material3) // kit modules only (ExternalRules)
     }
     sourceSets.getByName("desktopTest").dependencies {
+        implementation(project(":core:security")) // B-XPLAT-011: terminal lines masked by the app's one redactor
         implementation(zxingCore) // QR readability: every drawn code is decoded by ZXing (plan 10 §14.1)
     }
     sourceSets.getByName("androidHostTest").dependencies {

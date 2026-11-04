@@ -92,6 +92,13 @@ class NotificationActionBodyTest {
             extras()
         }
 
+    /** What the shade's inline Reply field puts on the tap. */
+    private fun Intent.remoteReply(text: String) {
+        val input = android.app.RemoteInput.Builder(FrozenExtras.REMOTE_INPUT_REPLY).build()
+        val results = android.os.Bundle().apply { putCharSequence(FrozenExtras.REMOTE_INPUT_REPLY, text) }
+        android.app.RemoteInput.addResultsToIntent(arrayOf(input), this, results)
+    }
+
     @AfterTest
     fun noTrampoline() {
         assertNull(shadowOf(app).nextStartedActivity, "a receiver body must never start an activity")
@@ -124,6 +131,22 @@ class NotificationActionBodyTest {
             assertEquals(1, answers.size)
             assertTrue(shade.dismissed.isEmpty())
             assertEquals("per_1", shade.reposted.single().requestId)
+        }
+
+    @Test
+    fun `B-PROTO-046 Reply on a permission answers the exact request with the typed words, and an empty reply is not delivered`() =
+        runTest {
+            val typed = tapIntent("reply") { remoteReply("use the staging remote instead") }
+            assertEquals(ShadeOutcome.Answered, body().onCodingAction(typed))
+            val sent = answers.single()
+            assertEquals("per_1", sent.request.raw)
+            assertEquals("ses_1", sent.session.raw)
+            assertEquals(AlertKind.Permission, sent.kind)
+            assertEquals(ShadeReply.Text("use the staging remote instead"), sent.reply)
+
+            val blank = tapIntent("reply") { remoteReply("   ") }
+            assertEquals(ShadeOutcome.Ignored, body().onCodingAction(blank))
+            assertEquals(1, answers.size, "an empty reply is never delivered")
         }
 
     @Test
