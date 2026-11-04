@@ -1,4 +1,4 @@
-Already there: 7 | Ported now: 7 | Not needed: 10 | Blocked: 48
+Already there: 9 | Ported now: 7 | Not needed: 11 | Blocked: 55
 
 # Migration step 4: Flutter state and connection logic
 
@@ -6,7 +6,7 @@ Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`; branch `p12x/45-port-state`.
 
 Finish line: read all 87 assigned Flutter sources, map reachable native behavior, port missing runnable slices, and identify prerequisites which still prevent full-file parity. Non-goals: tests, APKs, pushes, signing and releases. A dormant engine is not an implementation a person can use. A blocked row may contain a completed partial port; it stays blocked while other behavior in that source is missing.
 
-Checkpoint: 72/87 dispositions recorded; the remaining review reports are being integrated. Counts above cover recorded rows only. All Flutter source is read-only.
+Checkpoint: 82/87 dispositions recorded; the remaining review reports are being integrated. Counts above cover recorded rows only. All Flutter source is read-only.
 
 - `lib/state/connection/activity.dart` — blocked: AutomaticActivityRegistry has no production owner or Inbox history binding; confirmed-act recording/dismiss/undo cannot reach the person (native/engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/activity/AutomaticActivity.kt:430).
 - `lib/state/connection/agent_handoff.dart` — blocked: no production phone-agent target gateway/host lease/adoption binding exists; the standalone HandoffEngine cannot safely open or retain the target conversation.
@@ -87,6 +87,17 @@ Checkpoint: 72/87 dispositions recorded; the remaining review reports are being 
 - `lib/state/connection/revert.dart` — already there: real review hub constructs `ConversationReview` per conversation at `native/feature/review/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/review/ReviewHub.kt:36`; stage/clear/commit perform fresh readback, scope/revision validation and uncertain-result reconciliation in `native/engine/review/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/review/ConversationReview.kt:233`.
 - `lib/state/connection/session_cache.dart` — blocked: no native persisted inventory preview/tail cache reader or writer is bound; GraphChatWorld hydrates authoritative remote pages but cannot paint saved text immediately after process restart or prefetch through shared reads.
 
+- `lib/state/connection/session_events.dart` — already there: typed gateway events feed version-fenced transcript/session/selection/run reducers at `native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/world/GraphChatWorld.kt:503` and merged-list refresh at `native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PreviewRuntime.kt:189`; local server sessions/requests are independently refreshed.
+- `lib/state/connection/session_notes.dart` — blocked: native SessionSkills activation rules exist but have no graph/presentation consumer; session-note load/review/compare-and-save/remove gateway and UI are absent (not an ADR drop).
+- `lib/state/connection/sessions.dart` — blocked: list paging/create/rename/archive/delete are real at `native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ChatBugsWiring.kt:19` and `native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/header/world/GraphChatHeaderPort.kt:180`; durable session-pin changes and 5-second fallback/two-idle terminal reconciliation are not wired.
+- `lib/state/connection/settings.dart` — already there: persisted locale/appearance/accent/text/effects/reader preferences are owned by native settings `native/engine/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/settings/prefs/Preferences.kt:23` and `native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SettingsWiring.kt:114` (appearance/whatsnew worker owns exact presentation changes).
+- `lib/state/connection/side_connections.dart` — blocked: explicit multiple connections merge at `native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PreviewRuntime.kt:210`, but default-local/opt-in-remote persisted visibility, endpoint alias dedup, automatic start/connect and cached rows are absent.
+- `lib/state/connection/status.dart` — blocked: ConnectionSession now follows live transport status and saved-server rows reflect it, but local helper evidence, connection-attempt/foreground grace clocks, command holds and Android-kill notice require the missing phone-agent/lifecycle owners.
+- `lib/state/connection/surfaces.dart` — blocked: native widgets/tile/pins are live via `native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PlatformWiring.kt:561`, but ongoing notification still lacks this source's combined live working/request/retry/last-reply status and session-level running command/task timing context.
+- `lib/state/connection/team.dart` — not needed: AI Team sibling controller, team alert decisions and team progress notification are deferred by binding ADR plan/01 §12 D6; keep stored team data intact.
+- `lib/state/connection/turn_stall.dart` — blocked: native TurnStallTracker is rendered by `native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/presentation/TurnFactsPresenter.kt:160`, but its probe fabricates endpointReachable from link status and never rereads pending requests; no bounded live health/helper diagnosis is wired.
+- `lib/state/connection/widgets.dart` — blocked: native snapshots and receiver actions exist at `native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PlatformWiring.kt:572`, but full app-scope action result/dedup/scope-token fencing and source-safe phone-agent row routing are not integrated; AI Team rows deliberately defer under D6.
+
 Compile checkpoint 1: requested command passed for Android and desktop, 592 actionable tasks, 0 test tasks, 14 seconds after the shared build lock became available. Log: `/tmp/45-port-state-compile-2.log`. The fresh-cache initial compile also passed (596 actionable tasks; 18m56s). No tests were written, modified or run; no APK was built.
 
 Compile checkpoint 2: requested Android/desktop targets passed, 592 actionable tasks, 0 test tasks, 52 seconds; `/tmp/45-port-state-compile-5.log`. Two integration retries corrected an internal kit icon reference; the guide now uses public KitStepChip and keeps glyph drawing in the kit. Changed Kotlin files were formatted with the plan-pinned ktfmt 0.64 fat jar after verifying its documented SHA-256. No tests changed or run.
@@ -100,3 +111,5 @@ Compile checkpoint 5: unchanged native source snapshot passed both requested tar
 Compile checkpoint 6: both requested targets passed after adding the consent authority’s provenance/owner keys to the real deletion-scope registry; 592 actionable tasks, 0 test tasks, 10 seconds; `/tmp/45-port-state-compile-9.log`.
 
 Compile checkpoint 7: nonce-bound shade actions and guaranteed initial request hydration passed both requested targets; 592 actionable tasks, 0 test tasks, 20 seconds; `/tmp/45-port-state-compile-10.log`. Notification PendingIntent identity includes the per-post nonce, and the bounded in-memory ledger retains the exact saved owner, graph and request incarnation; resolved/replaced/deleted/process-dead actions cannot authorize a replacement ask. The shared automatic-activity/history dependency remains blocked separately.
+
+Compile checkpoint 8: unchanged native source passed both requested targets for the next ten dispositions; 592 actionable tasks, 0 test tasks, 2 seconds; `/tmp/45-port-state-compile-11.log`.
