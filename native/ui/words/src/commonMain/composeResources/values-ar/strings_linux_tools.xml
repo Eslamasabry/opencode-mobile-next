@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxToolsTitle">الأدوات المثبّتة</string>
+    <string name="linuxToolsAiTeam">فريق الذكاء الاصطناعي</string>
+    <string name="linuxToolsPart">أداة الهاتف</string>
+    <string name="linuxToolsFreedBytes">يمكن تحرير نحو %1$s.</string>
+    <string name="linuxToolsWait">انتظر حتى تنتهي العملية الحالية على الهاتف.</string>
+    <string name="linuxToolsInstalled">مثبّتة</string>
+    <string name="linuxToolsAbsent">غير مثبّتة</string>
+    <string name="linuxToolsUnknown">تعذّر التحقق. حدّث للمحاولة مجددًا.</string>
+    <string name="linuxToolsRefresh">تحديث الأدوات المثبّتة</string>
+    <string name="linuxToolsRemovePython">إزالة أدوات Python</string>
+    <string name="linuxToolsRemoveQuestion">هل تريد إزالة أدوات Python؟</string>
+    <string name="linuxToolsRemoveBody">تُزال حزم pip والبيئات الافتراضية. تبقى Python نفسها والمشاريع والمحادثات.</string>
+    <string name="linuxToolsRemoved">أُزيلت أدوات Python.</string>
+    <string name="linuxToolsDependent">تحتاج أداة مثبّتة أخرى إلى هذا المكوّن.</string>
+    <string name="linuxToolsDependencyUnknown">تعذّر التحقق من أداة أخرى قد تحتاج إلى هذا المكوّن. حدّث وحاول مجددًا.</string>
+    <string name="linuxToolsRequired">هذا المكوّن مطلوب لأدوات الهاتف.</string>
+    <string name="linuxToolsUnsupported">لا يمكن إزالة هذا المكوّن هنا.</string>
+    <string name="linuxToolsInventoryFailed">تعذّر التحقق من الأدوات المثبّتة. حدّث وحاول مجددًا. لم يُحذف شيء.</string>
+    <string name="linuxToolsSetupRunning">أوقف الإعداد أو انتظر حتى ينتهي قبل إزالة الأدوات.</string>
+    <string name="linuxToolsRemoveFailed">تعذّرت إزالة أدوات Python بالكامل. حدّث الأدوات المثبّتة، ثم حاول مجددًا.</string>
+    <string name="linuxSetupStatusUnreadable">تعذّرت قراءة الإعداد المحفوظ. تابع الإعداد للمحاولة مجددًا.</string>
+    <string name="linuxSetupHostMismatch">ينتمي الإعداد المحفوظ إلى بيئة Linux أخرى. ابدأ إعداد هذا الهاتف بدلاً منه.</string>
+    <string name="linuxSetupHostRefused">تعذّر بدء إعداد الهاتف بأمان. تابع الإعداد للمحاولة مجددًا.</string>
+    <string name="linuxSetupSavedFailed">تعذّر حفظ الإعداد. أفرغ بعض مساحة التخزين، ثم تابع الإعداد.</string>
+    <string name="linuxSetupBytes">%1$s من %2$s</string>
+    <string name="linuxSetupCheckingPart">جارٍ التحقق من الأدوات المثبّتة</string>
+    <string name="linuxSetupPartPending">بانتظار البدء</string>
+    <string name="linuxSetupPartRunning">جارٍ التثبيت</string>
+    <string name="linuxSetupPartDone">جاهز</string>
+    <string name="linuxSetupPartFailed">تعذّر الإكمال</string>
+</resources>
