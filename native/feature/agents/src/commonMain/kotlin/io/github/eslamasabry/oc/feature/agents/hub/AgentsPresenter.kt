@@ -15,9 +15,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * The Agents hub's logic (no Compose, no platform types). One tap admits one operation; a failed step never
- * navigates or retries on its own. A computer is saved only when the person taps Save — the check alone saves
- * nothing (Flutter `probePaseoConnection` then save).
+ * The Agents hub's logic (no Compose, no platform types). One tap admits one operation; a failed
+ * step never navigates or retries on its own. A computer is saved only when the person taps Save —
+ * the check alone saves nothing (Flutter `probePaseoConnection` then save).
  */
 public class AgentsPresenter(
     private val scope: CoroutineScope,
@@ -28,7 +28,9 @@ public class AgentsPresenter(
 ) : AgentsActions {
     private val local = MutableStateFlow(AgentsUi())
 
-    init { refreshPhone() }
+    init {
+        refreshPhone()
+    }
 
     public val state: StateFlow<AgentsUi> =
         combine(local, computers.computers, phone.state) { own, saved, phoneState ->
@@ -62,27 +64,36 @@ public class AgentsPresenter(
         }
     }
 
-    override fun add(name: String, address: String, password: String, folder: String): Unit = operation {
-        when (val result = computers.add(name.trim(), address.trim(), password, folder.trim())) {
-            is Outcome.Ok -> {
-                val ready = (local.value.check as? ComputerCheck.Ready)?.agents
-                local.update {
-                    it.copy(
-                        adding = false,
-                        check = null,
-                        savedGeneration = it.savedGeneration + 1,
-                        issue = AgentsProblem(AgentsIssue.Added),
-                        ready = if (ready != null) (it.ready + (result.value to ready)).toPersistentMap() else it.ready,
-                    )
+    override fun add(name: String, address: String, password: String, folder: String): Unit =
+        operation {
+            when (
+                val result = computers.add(name.trim(), address.trim(), password, folder.trim())
+            ) {
+                is Outcome.Ok -> {
+                    val ready = (local.value.check as? ComputerCheck.Ready)?.agents
+                    local.update {
+                        it.copy(
+                            adding = false,
+                            check = null,
+                            savedGeneration = it.savedGeneration + 1,
+                            issue = AgentsProblem(AgentsIssue.Added),
+                            ready =
+                                if (ready != null)
+                                    (it.ready + (result.value to ready)).toPersistentMap()
+                                else it.ready,
+                        )
+                    }
                 }
+                is Outcome.Failed -> failed(AgentsIssue.AddFailed, result.failure)
             }
-            is Outcome.Failed -> failed(AgentsIssue.AddFailed, result.failure)
         }
-    }
 
     override fun readAgents(id: ProfileId): Unit = operation {
         when (val result = computers.agents(id)) {
-            is Outcome.Ok -> local.update { it.copy(ready = (it.ready + (id to result.value)).toPersistentMap()) }
+            is Outcome.Ok ->
+                local.update {
+                    it.copy(ready = (it.ready + (id to result.value)).toPersistentMap())
+                }
             is Outcome.Failed -> failed(AgentsIssue.AgentsFailed, result.failure)
         }
     }
@@ -94,10 +105,32 @@ public class AgentsPresenter(
         }
     }
 
+    override fun installPhone(id: String): Unit = operation {
+        if (phone.state.value.agents.none { it.id == id && it.installable }) return@operation
+        val answer =
+            when (val started = phone.install(id)) {
+                is Outcome.Ok -> started.value
+                is Outcome.Failed ->
+                    PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable)
+            }
+        local.update { it.copy(installIssue = (answer as? PhoneAgentInstallResult.Refused)?.issue) }
+    }
+
+    override fun cancelPhoneInstall(): Unit = operation {
+        when (phone.cancelInstall()) {
+            is Outcome.Ok -> local.update { it.copy(installIssue = null) }
+            is Outcome.Failed ->
+                local.update { it.copy(installIssue = PhoneAgentInstallIssue.Unavailable) }
+        }
+    }
+
     override fun refreshPhone(): Unit = operation {
         when (phone.refresh()) {
             is Outcome.Ok -> Unit
-            is Outcome.Failed -> local.update { it.copy(removal = PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable)) }
+            is Outcome.Failed ->
+                local.update {
+                    it.copy(removal = PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable))
+                }
         }
     }
 
@@ -115,10 +148,12 @@ public class AgentsPresenter(
         val agent = local.value.removingAgent ?: return
         operation {
             local.update { it.copy(removingAgent = null, removal = null) }
-            val result = when (val removed = phone.remove(agent.id)) {
-                is Outcome.Ok -> removed.value
-                is Outcome.Failed -> PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable)
-            }
+            val result =
+                when (val removed = phone.remove(agent.id)) {
+                    is Outcome.Ok -> removed.value
+                    is Outcome.Failed ->
+                        PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable)
+                }
             local.update { it.copy(removal = result) }
         }
     }

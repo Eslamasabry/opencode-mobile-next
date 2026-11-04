@@ -1,0 +1,10 @@
+<resources>
+    <string name="linuxExitForceStop">أُغلق التطبيق أثناء تشغيل OpenCode</string>
+    <string name="linuxExitMemory">أغلق Android التطبيق لتحرير الذاكرة</string>
+    <string name="linuxExitMemoryLimit">أغلق Android التطبيق عند بلوغ حد الذاكرة</string>
+    <string name="linuxExitCrash">تعطّل التطبيق أثناء تشغيل OpenCode</string>
+    <string name="linuxExitKilled">أوقف Android التطبيق أثناء تشغيل OpenCode</string>
+    <string name="linuxExitRestored">يعمل OpenCode مجددًا.</string>
+    <string name="linuxExitCheckStatus">تحقق من حالة الخادم الحالية أدناه.</string>
+    <string name="linuxExitPolicyOff">إعادة التشغيل التلقائية متوقفة. يمكنك تشغيل OpenCode عندما تكون مستعدًا.</string>
+</resources>

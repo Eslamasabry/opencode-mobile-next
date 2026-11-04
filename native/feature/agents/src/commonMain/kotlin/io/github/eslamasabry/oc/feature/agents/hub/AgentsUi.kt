@@ -6,7 +6,10 @@ import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 
-/** Field values and the password never enter this state; the screen keeps them in unsaved text fields. */
+/**
+ * Field values and the password never enter this state; the screen keeps them in unsaved text
+ * fields.
+ */
 public data class AgentsUi(
     val phone: PhoneAgentsState = PhoneAgentsState(),
     val computers: ImmutableList<AgentComputer> = persistentListOf(),
@@ -21,6 +24,7 @@ public data class AgentsUi(
     val adding: Boolean = false,
     val removingAgent: PhoneAgentRow? = null,
     val removal: PhoneAgentRemoval? = null,
+    val installIssue: PhoneAgentInstallIssue? = null,
 )
 
 public interface AgentsActions {
@@ -40,6 +44,10 @@ public interface AgentsActions {
     public fun readAgents(id: ProfileId)
 
     public fun newConversation(id: ProfileId)
+
+    public fun installPhone(id: String) {}
+
+    public fun cancelPhoneInstall() {}
 
     public fun refreshPhone()
 

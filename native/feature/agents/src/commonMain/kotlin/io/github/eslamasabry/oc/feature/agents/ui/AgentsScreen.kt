@@ -21,9 +21,9 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentsIssue
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsProblem
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
 import io.github.eslamasabry.oc.feature.agents.hub.ComputerCheck
-import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemovalIssue
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -77,6 +77,15 @@ import io.github.eslamasabry.oc.ui.words.res.codexProjectFolder
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadBusy
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRefresh
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemove
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoveBody
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoveTitle
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoved
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnavailable
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnconfirmed
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnsafe
 import io.github.eslamasabry.oc.ui.words.res.paseoAddressHint
 import io.github.eslamasabry.oc.ui.words.res.paseoCheckNoneReady
 import io.github.eslamasabry.oc.ui.words.res.paseoCheckReady
@@ -90,21 +99,13 @@ import io.github.eslamasabry.oc.ui.words.res.serversCreate
 import io.github.eslamasabry.oc.ui.words.res.serversName
 import io.github.eslamasabry.oc.ui.words.res.serversSave
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRefresh
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemove
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoveTitle
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoveBody
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoved
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadBusy
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnsafe
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnconfirmed
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnavailable
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Settings › Agents (Flutter `AgentsScreen` + the Paseo pairing editor). Kit parts only. The phone part is never an
- * empty page: without a phone agent host it says where agents run in one line. Every computer row has its visible
- * actions (Start conversation, Check agents); adding one is a visible button, never a hidden gesture.
+ * Settings › Agents (Flutter `AgentsScreen` + the Paseo pairing editor). Kit parts only. The phone
+ * part is never an empty page: without a phone agent host it says where agents run in one line.
+ * Every computer row has its visible actions (Start conversation, Check agents); adding one is a
+ * visible button, never a hidden gesture.
  */
 @Composable
 public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
@@ -122,11 +123,14 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
         }
     }
     LaunchedEffect(Unit) {
-        snapshotFlow { listOf(address.text.toString(), folder.text.toString(), password.text.toString()) }
+        snapshotFlow {
+                listOf(address.text.toString(), folder.text.toString(), password.text.toString())
+            }
             .collect { actions.edited() }
     }
     val enabled =
-        if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking)) else KitEnabled.Enabled
+        if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
+        else KitEnabled.Enabled
     KitScreen(
         topBar = {
             KitTopBar(
@@ -151,19 +155,36 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
             KitSectionLabel(stringResource(Res.string.agentsHubOnPhone))
             state.removal?.let { removal ->
                 when (removal) {
-                    is PhoneAgentRemoval.Removed -> KitNotice(stringResource(Res.string.linuxAgentPayloadRemoved, removal.freedBytes), gutter)
-                    is PhoneAgentRemoval.Refused -> KitErrorNotice(
-                        stringResource(when (removal.issue) {
-                            PhoneAgentRemovalIssue.Busy -> Res.string.linuxAgentPayloadBusy
-                            PhoneAgentRemovalIssue.Unsafe -> Res.string.linuxAgentPayloadUnsafe
-                            PhoneAgentRemovalIssue.Unconfirmed -> Res.string.linuxAgentPayloadUnconfirmed
-                            PhoneAgentRemovalIssue.Unavailable -> Res.string.linuxAgentPayloadUnavailable
-                        }),
-                        gutter,
-                    )
+                    is PhoneAgentRemoval.Removed ->
+                        KitNotice(
+                            stringResource(Res.string.linuxAgentPayloadRemoved, removal.freedBytes),
+                            gutter,
+                        )
+                    is PhoneAgentRemoval.Refused ->
+                        KitErrorNotice(
+                            stringResource(
+                                when (removal.issue) {
+                                    PhoneAgentRemovalIssue.Busy -> Res.string.linuxAgentPayloadBusy
+                                    PhoneAgentRemovalIssue.Unsafe ->
+                                        Res.string.linuxAgentPayloadUnsafe
+                                    PhoneAgentRemovalIssue.Unconfirmed ->
+                                        Res.string.linuxAgentPayloadUnconfirmed
+                                    PhoneAgentRemovalIssue.Unavailable ->
+                                        Res.string.linuxAgentPayloadUnavailable
+                                }
+                            ),
+                            gutter,
+                        )
                 }
             }
-            KitButton(stringResource(Res.string.linuxAgentPayloadRefresh), actions::refreshPhone, gutter, role = KitButtonRole.Secondary, enabled = enabled)
+            AgentInstallPanel(state, actions, gutter, enabled)
+            KitButton(
+                stringResource(Res.string.linuxAgentPayloadRefresh),
+                actions::refreshPhone,
+                gutter,
+                role = KitButtonRole.Secondary,
+                enabled = enabled,
+            )
             if (!state.phone.available) {
                 KitRow(
                     title = stringResource(Res.string.agentsRunOnBuiltIn),
@@ -173,6 +194,14 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
             } else {
                 for (agent in state.phone.agents) {
                     KitRow(title = agent.name, supporting = phoneStatusWords(agent.status))
+                    if (agent.installable) {
+                        KitButton(
+                            agentInstallLabel(agent.name),
+                            { actions.installPhone(agent.id) },
+                            gutter,
+                            enabled = enabled,
+                        )
+                    }
                     if (agent.removable) {
                         KitButton(
                             stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
@@ -244,7 +273,10 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                         stringResource(Res.string.serversAddress),
                         kind = KitFieldKind.Url,
                         placeholder = stringResource(Res.string.paseoAddressHint),
-                        error = if (invalid?.address == true) stringResource(Res.string.agentsHubInvalidAddress) else null,
+                        error =
+                            if (invalid?.address == true)
+                                stringResource(Res.string.agentsHubInvalidAddress)
+                            else null,
                         enabled = enabled,
                     )
                     KitField(
@@ -252,7 +284,10 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                         stringResource(Res.string.codexProjectFolder),
                         kind = KitFieldKind.Path,
                         placeholder = stringResource(Res.string.agentsHubFolderHint),
-                        error = if (invalid?.folder == true) stringResource(Res.string.agentsHubInvalidFolder) else null,
+                        error =
+                            if (invalid?.folder == true)
+                                stringResource(Res.string.agentsHubInvalidFolder)
+                            else null,
                         enabled = enabled,
                     )
                     KitField(
@@ -260,19 +295,33 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                         stringResource(Res.string.paseoPasswordLabel),
                         kind = KitFieldKind.Secret,
                         helper = stringResource(Res.string.paseoPasswordHelp),
-                        error = if (invalid?.password == true) stringResource(Res.string.agentsHubInvalidPassword) else null,
+                        error =
+                            if (invalid?.password == true)
+                                stringResource(Res.string.agentsHubInvalidPassword)
+                            else null,
                         enabled = enabled,
                     )
                     (state.check as? ComputerCheck.Ready)?.let { ready ->
                         KitNotice(
-                            if (ready.agents.isEmpty()) stringResource(Res.string.paseoCheckNoneReady)
-                            else stringResource(Res.string.paseoCheckReady, ready.agents.joinToString(", ")),
+                            if (ready.agents.isEmpty())
+                                stringResource(Res.string.paseoCheckNoneReady)
+                            else
+                                stringResource(
+                                    Res.string.paseoCheckReady,
+                                    ready.agents.joinToString(", "),
+                                )
                         )
                     }
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                         KitButton(
                             stringResource(Res.string.agentsHubCheck),
-                            { actions.check(address.text.toString(), password.text.toString(), folder.text.toString()) },
+                            {
+                                actions.check(
+                                    address.text.toString(),
+                                    password.text.toString(),
+                                    folder.text.toString(),
+                                )
+                            },
                             role = KitButtonRole.Secondary,
                             enabled = enabled,
                             working = state.busy,
@@ -300,12 +349,14 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
         }
     }
     KitConfirm(
-        state.removingAgent?.let { agent -> KitConfirmSpec(
-            title = stringResource(Res.string.linuxAgentPayloadRemoveTitle, agent.name),
-            confirmLabel = stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
-            kind = KitConfirmKind.Destructive,
-            body = stringResource(Res.string.linuxAgentPayloadRemoveBody),
-        ) },
+        state.removingAgent?.let { agent ->
+            KitConfirmSpec(
+                title = stringResource(Res.string.linuxAgentPayloadRemoveTitle, agent.name),
+                confirmLabel = stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
+                kind = KitConfirmKind.Destructive,
+                body = stringResource(Res.string.linuxAgentPayloadRemoveBody),
+            )
+        },
         onConfirm = actions::confirmRemoval,
         onCancel = actions::cancelRemoval,
     )
@@ -332,7 +383,9 @@ private fun issueWords(issue: AgentsProblem): String =
     stringResource(
         when (issue.failure) {
             is Failure.SignIn -> Res.string.agentsHubSignInFailed
-            is Failure.ComputerDidNotAnswer, is Failure.Network, is Failure.TimedOut -> Res.string.agentsHubNotAnswering
+            is Failure.ComputerDidNotAnswer,
+            is Failure.Network,
+            is Failure.TimedOut -> Res.string.agentsHubNotAnswering
             else ->
                 when (issue.kind) {
                     AgentsIssue.CheckFailed -> Res.string.addServerCheckFailedPlain
