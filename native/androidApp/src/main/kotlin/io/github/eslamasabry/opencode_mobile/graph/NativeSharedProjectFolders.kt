@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.kv.stringList
@@ -20,6 +21,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -40,6 +43,7 @@ class NativeSharedProjectFolders(
         CoroutineScope(appScope.coroutineContext + dispatchers.serial("shared-project-folders"))
     private var started = false
     private var published: List<String>? = null
+    private val lane = Mutex()
 
     fun start() {
         if (started) return
@@ -51,14 +55,28 @@ class NativeSharedProjectFolders(
                     stores.prefs.changes.map { Unit },
                 )
                 .onStart { emit(Unit) }
-                .collect { synchronize() }
+                .collect { lane.withLock { synchronize() } }
         }
     }
 
-    private suspend fun synchronize() {
+    /**
+     * The only writer of the runtime's list: the storage-access flow and profile deletion publish
+     * through here, so a second formula can never race this one and drop a bound folder.
+     */
+    suspend fun publish(excluding: ProfileId? = null): Outcome<Unit> {
+        if (stores.warm() is Outcome.Failed) return Failure.StorageRefused().failed()
+        return lane.withLock { synchronize(excluding, force = true) }
+    }
+
+    private suspend fun synchronize(
+        excluding: ProfileId? = null,
+        force: Boolean = false,
+    ): Outcome<Unit> {
         val owner = stores.prefs.string("oc.builtinServerOwner")
         val profile =
-            owner?.takeIf { it.isNotEmpty() }?.let { stores.profiles.profile(ProfileId(it)) }
+            owner
+                ?.takeIf { it.isNotEmpty() && it != excluding?.raw }
+                ?.let { stores.profiles.profile(ProfileId(it)) }
         // Folders a Flutter build already granted (`oc.sharedProjects.<profileId>`, migrated as
         // is) stay bound like Flutter's union, but only for saved phone profiles: a deleted or
         // remote server's list grants nothing.
@@ -66,6 +84,7 @@ class NativeSharedProjectFolders(
             stores.prefs
                 .keys(SHARED_PROJECTS)
                 .filter { key ->
+                    key.removePrefix(SHARED_PROJECTS) != excluding?.raw &&
                     stores.profiles
                         .profile(ProfileId(key.removePrefix(SHARED_PROJECTS)))
                         ?.let { localPhone(it.profile.baseUrl) } == true
@@ -81,7 +100,7 @@ class NativeSharedProjectFolders(
                 .mapNotNull(SharedStoragePath::projectRoot)
                 .distinct()
                 .sorted()
-        if (published == roots) return
+        if (!force && published == roots) return Outcome.Ok(Unit)
         // The copied runtime writes atomically. A failed replacement leaves the previous
         // file intact; the next acknowledged preference/profile change attempts it again.
         val written =
@@ -91,6 +110,7 @@ class NativeSharedProjectFolders(
                 }
             }
         if (written is Outcome.Ok) published = roots
+        return written
     }
 
     private companion object {

@@ -35,6 +35,7 @@ class AndroidProjectStorageAccess(
     private val phoneSource: Lazy<PhoneServerSource>,
     private val runtime: Lazy<BuiltinRuntime>,
     private val dispatchers: AppDispatchers,
+    private val folders: NativeSharedProjectFolders,
 ) : ProjectStorageAccess {
     private val server
         get() = phoneSource.value
@@ -105,10 +106,19 @@ class AndroidProjectStorageAccess(
                     if (Build.VERSION.SDK_INT >= 30)
                         Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
                     else Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                app.startActivity(
-                    Intent(action, Uri.parse("package:${app.packageName}"))
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
+                try {
+                    app.startActivity(
+                        Intent(action, Uri.parse("package:${app.packageName}"))
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                } catch (missing: android.content.ActivityNotFoundException) {
+                    // Some OEM builds lack the per-app page; Flutter falls back to the list page.
+                    if (Build.VERSION.SDK_INT < 30) throw missing
+                    app.startActivity(
+                        Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
             }
         }
 
@@ -157,18 +167,9 @@ class AndroidProjectStorageAccess(
         return push()
     }
 
-    private suspend fun push(excluding: ProfileId? = null): Outcome<Unit> {
-        val roots = mutableSetOf<String>()
-        for (name in stores.prefs.keys("oc.sharedProjects.")) {
-            if (excluding != null && name == key(excluding)) continue
-            val raw = stores.prefs.get(name)
-            if (raw !is PrefValue.StrList) return Failure.StorageRefused().failed()
-            roots.addAll(raw.value.mapNotNull(SharedStoragePath::projectRoot))
-        }
-        return withContext(dispatchers.io) {
-            attempt({ Failure.StorageRefused() }) { linux.setSharedProjectRoots(roots.sorted()) }
-        }
-    }
+    /** One writer for the runtime's root list (NativeSharedProjectFolders), never a second formula. */
+    private suspend fun push(excluding: ProfileId? = null): Outcome<Unit> =
+        folders.publish(excluding)
 
     suspend fun removeBindings(profile: ProfileId): Outcome<Int> = lane.withLock {
         when (val result = push(excluding = profile)) {

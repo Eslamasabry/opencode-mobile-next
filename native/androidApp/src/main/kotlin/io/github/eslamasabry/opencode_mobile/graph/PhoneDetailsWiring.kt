@@ -190,10 +190,19 @@ class NativePhoneDetails(
             attempt({ Failure.Runtime(RuntimeProblem.Generic) }) { block() }
         }
 
-    override suspend fun refresh() = lane.withLock {
+    // A read abandoned because the page hid or reopened must not leave Check now disabled.
+    override suspend fun refresh(): Unit = lane.withLock {
+        try {
+            refreshShown()
+        } finally {
+            mutable.update { it.copy(loading = false) }
+        }
+    }
+
+    private suspend fun refreshShown() {
         val revision = viewRevision
         val isShown = visible
-        if (!isShown || !platform.builtinLinux || stores.warm() is Outcome.Failed) return@withLock
+        if (!isShown || !platform.builtinLinux || stores.warm() is Outcome.Failed) return
         mutable.update { it.copy(loading = true) }
         val observed = native {
             val installed = linux.installed
@@ -225,17 +234,17 @@ class NativePhoneDetails(
                 linux.message,
             )
         }
-        if (!visible || revision != viewRevision) return@withLock
+        if (!visible || revision != viewRevision) return
         if (observed is Outcome.Failed) {
             mutable.update {
                 it.copy(loading = false, memoryBytes = null, logFailure = observed.failure)
             }
-            return@withLock
+            return
         }
         val reading = (observed as Outcome.Ok).value
         val id = owner()
         refreshHistory()
-        if (!visible || revision != viewRevision) return@withLock
+        if (!visible || revision != viewRevision) return
         mutable.update {
             it.copy(
                 installed = reading.installed,
@@ -265,15 +274,15 @@ class NativePhoneDetails(
                     log = null,
                 )
             }
-            return@withLock
+            return
         }
         var inventory = setup.installedInventory()
         if (inventory is Outcome.Failed) {
             delay(1_500)
-            if (!visible || revision != viewRevision) return@withLock
+            if (!visible || revision != viewRevision) return
             inventory = setup.installedInventory()
         }
-        if (!visible || revision != viewRevision) return@withLock
+        if (!visible || revision != viewRevision) return
         when (val result = inventory) {
             is Outcome.Ok ->
                 mutable.update {
