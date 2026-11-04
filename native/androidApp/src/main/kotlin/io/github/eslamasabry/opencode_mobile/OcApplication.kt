@@ -52,6 +52,9 @@ class OcApplication : Application(), GraphOwner {
             .diagnosticsAttention
             .start() // persisted report, crash store, exits
         appGraph.previewRuntime // Warm local stores. MainActivity restores the ordinary connection.
+        (appGraph as io.github.eslamasabry.opencode_mobile.graph.AttentionStateAccessors)
+            .attentionState
+            .start()
         (appGraph as PlatformAccessors)
             .platform
             .start() // P12-PLATFORM: channels, widgets feed, alerts, update check

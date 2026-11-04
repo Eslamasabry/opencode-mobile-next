@@ -1,0 +1,15 @@
+<resources>
+    <string name="stateHandoffTitle">المحادثات المرتبطة</string>
+    <string name="stateHandoffWorking">جارٍ العمل…</string>
+    <string name="stateHandoffFailed">تعذر فتح المحادثات المرتبطة. حاول مجددًا.</string>
+    <string name="stateHandoffTransferFailed">لم يتم تأكيد هذا النقل. أغلق هذه اللوحة وتحقق من محادثاتك قبل بدء نقل آخر.</string>
+    <string name="stateHandoffReviewNote">راجع سجل المحادثة المحجوب والرسالة الأولى قبل المتابعة. محتويات المرفقات والتفكير الخاص غير مضمنة.</string>
+    <string name="stateHandoffRecord">سجل المحادثة</string>
+    <string name="stateHandoffPrompt">الرسالة الأولى</string>
+    <string name="stateHandoffRetryLink">حفظ الرابط مجددًا</string>
+    <string name="stateHandoffContinue">بدء محادثة مرتبطة</string>
+    <string name="stateHandoffLinked">المحادثات المرتبطة</string>
+    <string name="stateHandoffNoLinks">لا توجد روابط محفوظة لهذه المحادثة.</string>
+    <string name="stateHandoffNew">المتابعة في محادثة جديدة</string>
+    <string name="stateHandoffNewNote">اختر نموذجًا على هذا الاتصال. يبقى مشروعك كما هو وتراجع التسليم قبل إرسال أي شيء.</string>
+</resources>

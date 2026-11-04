@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateAttentionTitle">Activity</string>
+    <string name="stateAttentionRefresh">Refresh</string>
+    <string name="stateAttentionNeedsYou">Needs you</string>
+    <string name="stateAttentionHistory">While you were away</string>
+    <string name="stateAttentionIncomplete">Some servers have not been checked. Saved observations may be out of date.</string>
+    <string name="stateAttentionCorrupt">Some saved activity could not be read. It has been kept on this phone.</string>
+    <string name="stateAttentionSaveFailed">Could not save this change. Refresh and try again.</string>
+    <string name="stateAttentionNoneKnown">No requests are known from the servers that answered.</string>
+    <string name="stateAttentionNone">No requests are waiting.</string>
+    <string name="stateAttentionNoHistory">No automatic activity to show.</string>
+    <string name="stateAttentionPermission">Permission requested</string>
+    <string name="stateAttentionQuestion">Question waiting</string>
+    <string name="stateAttentionForm">Form waiting</string>
+    <string name="stateAttentionFailure">Conversation needs a look</string>
+    <string name="stateAttentionTeam">Team needs you</string>
+    <string name="stateAttentionStale">Last known</string>
+    <string name="stateAttentionAcknowledge">Dismiss shown activity</string>
+    <string name="stateActReconnect">Reconnected automatically</string>
+    <string name="stateActRestart">Restarted automatically</string>
+    <string name="stateActHeatPause">Paused because of heat</string>
+    <string name="stateActHeatStop">Stopped because of heat</string>
+    <string name="stateActHeatResume">Resumed after cooling</string>
+    <string name="stateActUpdate">Updated automatically</string>
+    <string name="stateActPermission">Permission allowed automatically</string>
+    <string name="stateActQueued">Saved message sent</string>
+    <string name="stateActOther">Automatic activity</string>
+    <string name="stateAttentionMonitorTitle">Other servers</string>
+    <string name="stateAttentionMonitorCopy">Choose which other saved servers this phone may check for waiting requests. This does not answer requests or change those servers.</string>
+    <string name="stateAttentionMonitorChoice">Check for waiting requests</string>
+</resources>

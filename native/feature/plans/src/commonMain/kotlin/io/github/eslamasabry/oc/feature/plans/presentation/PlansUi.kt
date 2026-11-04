@@ -28,6 +28,14 @@ public interface PlansSource {
     public suspend fun collectors(): List<CollectorTarget> = emptyList()
 
     public suspend fun setCollector(target: CollectorTarget, enabled: Boolean): Boolean = false
+
+    public suspend fun setThreshold(key: String?, percent: Double?): Boolean
+
+    public suspend fun setResetNotice(key: String?, value: Boolean): Boolean
+
+    public val defaultThreshold: Double
+
+    public val resetNotice: Boolean
 }
 
 /** The binding is an opaque digest, so stale confirmations cannot authorize changed credentials. */
@@ -125,6 +133,13 @@ public data class PlansUi(
     val confirmCollector: CollectorTarget? = null,
     val collectorFailed: Boolean = false,
     val collector: CollectorUi = CollectorUi(),
+    val defaultThreshold: Int = 80,
+    val resetNotice: Boolean = false,
+    val editing: Boolean = false,
+    val editKey: String? = null,
+    val thresholdInput: String = "",
+    val saving: Boolean = false,
+    val failed: Boolean = false,
 )
 
 public interface PlansActions {
@@ -141,6 +156,18 @@ public interface PlansActions {
     public fun setUpCollector()
 
     public fun turnOffCollector()
+
+    public fun editThreshold(key: String?)
+
+    public fun thresholdChanged(value: String)
+
+    public fun saveThreshold()
+
+    public fun useDefaultThreshold()
+
+    public fun toggleResetNotice()
+
+    public fun dismissEditor()
 }
 
 private fun UsageConnection.ui(): PlanConnectionUi =

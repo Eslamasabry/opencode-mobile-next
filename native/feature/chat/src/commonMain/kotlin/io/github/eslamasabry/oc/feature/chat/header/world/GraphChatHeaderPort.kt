@@ -42,9 +42,10 @@ public class GraphChatHeaderPorts(
     private val dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers,
     private val importFiles:
         Set<io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportFiles>,
+    private val context: io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory,
 ) : ChatHeaderPorts {
     override fun open(ref: ConversationRef): ChatHeaderPort =
-        GraphChatHeaderPort(ref, registry, dispatchers, importFiles.singleOrNull()).also {
+        GraphChatHeaderPort(ref, registry, dispatchers, importFiles.singleOrNull(), context).also {
             it.attach()
         }
 }
@@ -60,6 +61,7 @@ internal class GraphChatHeaderPort(
     private val dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers,
     private val importFiles:
         io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportFiles?,
+    private val context: io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory,
 ) : ChatHeaderPort {
     private val sid = SessionId(ref.sessionId.raw)
     private val mutableFacts = MutableStateFlow(HeaderFacts())
@@ -175,10 +177,18 @@ internal class GraphChatHeaderPort(
     }
 
     private suspend fun read(graph: ConnectionGraph, gateway: ServerGateway): Outcome<Unit> =
-        when (val s = gateway.session(sid)) {
+        when (val s = graph.session.reads.session(sid)) {
             is Outcome.Ok -> {
                 if (bound === graph) parents[sid] = s.value.parentId
-                if (bound === graph) mutableFacts.update { publish(it, s.value) }
+                if (bound === graph) {
+                    mutableFacts.update { publish(it, s.value) }
+                    val use = s.value.contextUse
+                    context.remember(
+                        ref.profileId,
+                        sid.raw,
+                        use?.takeIf { it.limit > 0 }?.let { it.tokens.toDouble() / it.limit },
+                    )
+                }
                 Outcome.Ok(Unit)
             }
             is Outcome.Failed -> s

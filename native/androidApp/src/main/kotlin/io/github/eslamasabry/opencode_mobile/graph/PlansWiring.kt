@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.platform.DeviceFacts
+import io.github.eslamasabry.oc.core.data.kv.bool
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.integrations.usage.ConnectedProvider
@@ -53,6 +54,8 @@ import kotlinx.coroutines.sync.withLock
  * probed. Remote collectors are read only after explicit trust bound to the current origin and credentials. Each
  * request uses a private, bounded, redirect-free transport. The in-app collector and Paseo host require their own host
  * ports. The optional local collector (LINUX-2) is read on demand through QuotaWiring.
+ * Additional readers use their saved consent and existing authenticated transport; they never change the selected
+ * connection or obtain credentials from provider configuration.
  */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<PlansSource>())
@@ -67,6 +70,7 @@ class AndroidPlansSource(
     private val facts: DeviceFacts,
     private val collectorHost: AndroidPlansCollectorHost,
     private val collector: AndroidQuotaCollector,
+    private val additional: AndroidAdditionalUsageSources,
     appScope: AppCoroutineScope,
 ) : PlansSource {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -78,7 +82,7 @@ class AndroidPlansSource(
     private var paseo: AndroidPlansPaseoSource? = null
 
     private fun openCodeServers() =
-        registry.live.value.filter { (_, graph) -> graph.profile.backend == BackendKind.OpenCode2 }
+        stores.profiles.profiles.value.filter { it.profile.backend == BackendKind.OpenCode2 }
 
     /**
      * Built after the preference store is ready (the engine reads its cache in its constructor).
@@ -93,12 +97,11 @@ class AndroidPlansSource(
         val signIns =
             OpenCodeSignInSource(
                 servers = {
-                    openCodeServers().keys.map {
+                    openCodeServers().map {
                         SignInServer(
-                            it.raw,
+                            it.id.raw,
                             isOpenCode = true,
-                            requiresPasswordReentry =
-                                stores.profiles.profile(it)?.reentry?.password != false,
+                            requiresPasswordReentry = it.reentry.password,
                         )
                     }
                 },
@@ -130,17 +133,24 @@ class AndroidPlansSource(
                 store = stores.prefs,
                 lane = stores.lanes.app,
                 connections = {
-                    openCodeServers().map { (id, graph) ->
-                        UsageConnection(
-                            id.raw,
-                            graph.profile.name,
-                            UsageConnectionKind.OpenCodeServer,
-                        )
-                    } + paseoSource.connections()
+                    (openCodeServers().map { saved ->
+                            UsageConnection(
+                                saved.id.raw,
+                                saved.profile.name,
+                                UsageConnectionKind.OpenCodeServer,
+                            )
+                        } + additional.connections() + paseoSource.connections())
+                        .distinctBy { it.id }
                 },
-                sources = listOf(signIns, protoQuota, quotaSource, paseoSource, collector.usageSource()),
-                alertsOnRule = { false },
-                setQuotaAlerts = {},
+                sources =
+                    listOf(signIns, additional, protoQuota, quotaSource, paseoSource, collector.usageSource()),
+                alertBridge = additional.alertBridge,
+                alertsOnRule = { stores.prefs.bool("oc.notify.quotaAlerts") == true },
+                setQuotaAlerts = { enabled ->
+                    stores.prefs.commit(stores.lanes.app) {
+                        putBool("oc.notify.quotaAlerts", enabled)
+                    }
+                },
                 widget = widget,
                 clock = { clock.now() },
             )
@@ -148,6 +158,24 @@ class AndroidPlansSource(
                 engine = created
                 scope.launch { created.snapshot.collect { state.value = it } }
             }
+    }
+
+    override val defaultThreshold: Double
+        get() = engine?.defaultThreshold ?: 80.0
+
+    override val resetNotice: Boolean
+        get() = engine?.notifyOnResetDefault ?: false
+
+    override suspend fun setThreshold(key: String?, percent: Double?): Boolean {
+        val owner = engine() ?: return false
+        return if (key == null) percent?.let { owner.setDefaultThreshold(it) } ?: false
+        else owner.setThresholdFor(key, percent)
+    }
+
+    override suspend fun setResetNotice(key: String?, value: Boolean): Boolean {
+        val owner = engine() ?: return false
+        return if (key == null) owner.setNotifyOnResetDefault(value)
+        else owner.setNotifyOnReset(key, value)
     }
 
     override suspend fun refresh() {
@@ -170,7 +198,7 @@ class AndroidPlansSource(
                 target.provider == AndroidPlansPaseoSource.PROVIDER ||
                     target.provider == PlansQuotaSource.BUILTIN
             )
-                engine?.removeProfile(target.profile.raw)
+                engine?.removeProfile(target.profile.raw, deleted = false)
             else engine?.removeProvider(target.profile.raw, target.provider)
         }
         return changed
@@ -200,4 +228,38 @@ class UsagePlansDeletionCleaner(private val plans: AndroidPlansSource) : Profile
 
     override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> =
         if (plans.removeProfile(profileId)) 1.ok() else Failure.StorageRefused().failed()
+}
+
+/**
+ * B-STATE-146/147: budget owners share locks and profile lanes across replacement Usage screens.
+ */
+@Inject
+@SingleIn(AppScope::class)
+@ContributesIntoSet(
+    AppScope::class,
+    binding = binding<io.github.eslamasabry.oc.feature.usage.presentation.UsageBudgetAccess>(),
+)
+class AndroidUsageBudgets(private val stores: PreviewStores) :
+    io.github.eslamasabry.oc.feature.usage.presentation.UsageBudgetAccess {
+    private val locks = io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetLocks()
+
+    override suspend fun open(
+        profile: ProfileId
+    ): io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgets? {
+        if (stores.warm() !is Outcome.Ok) return null
+        val saved = stores.profiles.profile(profile)?.profile ?: return null
+        return io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgets(
+            stores.prefs,
+            stores.lanes.forProfile(profile),
+            locks,
+            profile.raw,
+            // Dart hashes '$origin\n$username' (usage_screen.dart), so Flutter-saved budgets match.
+            "${saved.baseUrl}\n${saved.username}",
+            isCurrent = {
+                val now = stores.profiles.profile(profile)?.profile
+                now?.baseUrl == saved.baseUrl && now.username == saved.username
+            },
+            isProfilePresent = { stores.profiles.profile(profile) != null },
+        )
+    }
 }

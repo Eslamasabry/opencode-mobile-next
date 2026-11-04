@@ -112,6 +112,8 @@ public data class FileUi(
     val opening: Boolean = false,
     val share: ShareSheetUi? = null,
     val notice: FileNotice? = null,
+    /** STATE: a reader choice is being saved (the head saves at once; kept for the screen). */
+    val preferencesSaving: Boolean = false,
     val linkUrl: String? = null,
     val linkHost: String? = null,
     /**

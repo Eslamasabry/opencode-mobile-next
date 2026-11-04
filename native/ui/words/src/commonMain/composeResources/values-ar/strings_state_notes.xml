@@ -1,0 +1,18 @@
+<resources>
+    <string name="stateNoteTitle">ملاحظة المحادثة</string>
+    <string name="stateNoteDescription">توجّه هذه الملاحظة الردود في هذه المحادثة، وتُحفظ على هذا الخادم.</string>
+    <string name="stateNoteField">ملاحظة لهذه المحادثة</string>
+    <string name="stateNoteSave">حفظ الملاحظة</string>
+    <string name="stateNoteRemove">حذف الملاحظة</string>
+    <string name="stateNoteReload">قراءة الملاحظة المحفوظة مجددًا</string>
+    <string name="stateNoteWorking">جارٍ حفظ الملاحظة أو قراءتها. انتظر قليلًا.</string>
+    <string name="stateNoteReloadFirst">اكتب تغييرًا أولًا. يجب تحميل الملاحظة وألّا تتجاوز 8192 بايت بعد الترميز.</string>
+    <string name="stateNoteTooLarge">الملاحظة طويلة جدًا. اجعلها ضمن 8192 بايت بعد الترميز.</string>
+    <string name="stateNoteChanged">تغيّرت المحادثة أو ملاحظتها المحفوظة. اقرأها مجددًا قبل الحفظ.</string>
+    <string name="stateNoteFailed">تعذّرت قراءة الملاحظة أو حفظها. تحقق من الاتصال وحاول مجددًا.</string>
+    <string name="stateNoteSaved">حُفظت الملاحظة.</string>
+    <string name="stateNoteRemoved">حُذفت الملاحظة.</string>
+    <string name="stateNoteDiscardTitle">تجاهل تغيير الملاحظة؟</string>
+    <string name="stateNoteDiscardBody">سيُفقد التغيير غير المحفوظ. ستبقى الملاحظة المحفوظة كما هي.</string>
+    <string name="stateNoteDiscard">تجاهل التغيير</string>
+</resources>

@@ -101,3 +101,5 @@
 :engine:integrations-host	F	build-integrations-b	parity-p12
 :feature:plans	F	build-integrations-b	parity-p12
 :feature:integrations	F	28-build-SEC-2	parity-p12
+
+:feature:setupassistant	F	state-setup	P12-STATE

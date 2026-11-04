@@ -292,6 +292,11 @@ public class ServersViewModel(
 
     override fun heldPassword(): String = draftPassword
 
+    override fun openStateSetup(id: ProfileId): Unit =
+        nav.open(io.github.eslamasabry.oc.ui.routes.SetupRoute.Home(id))
+
+    override fun tryOffline(): Unit = nav.open(io.github.eslamasabry.oc.ui.routes.DemoRoute)
+
     override fun openSchedules(id: ProfileId) {
         nav.open(SchedulesRoute.List(id))
     }

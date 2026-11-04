@@ -30,6 +30,7 @@ public class ThisPhoneModel(
     private val scope: CoroutineScope,
     private val clock: Clock,
     private val pacer: Pacer,
+    private val details: Set<PhoneStateDetails> = emptySet(),
     private val exits: PhoneExitNotices = PhoneExitNotices.Absent,
     private val processes: PhoneProcessSource? = null,
 ) : ThisPhoneActions {
@@ -41,6 +42,9 @@ public class ThisPhoneModel(
         val processReading: ProcessReading? = null,
         val dismissedLeftover: io.github.eslamasabry.oc.engine.runtime.procs.RunawayIdentity? =
             null,
+        val lifecycle: io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReport? = null,
+        val storage: io.github.eslamasabry.oc.engine.runtime.lifecycle.AppStorageFacts? = null,
+        val storageFailed: Boolean = false,
     )
 
     private val local = MutableStateFlow(Local(now = clock.now()))
@@ -82,6 +86,9 @@ public class ThisPhoneModel(
                 else -> persistentListOf()
             }
         return ThisPhoneUi(
+            lifecycle = l.lifecycle,
+            storage = l.storage,
+            storageFailed = l.storageFailed,
             answer = answer,
             serverRows = serverRows.toImmutableList(),
             version = version(facts),
@@ -131,6 +138,21 @@ public class ThisPhoneModel(
                     if (!settings.open(KeepAliveSetting.AppDetails))
                         local.update { it.copy(notice = ThisPhoneNotice.SettingsMissing) }
                 }
+        }
+    }
+
+    override fun dismissRecovery() {
+        details.singleOrNull()?.dismissRecovery()
+    }
+
+    override fun refreshStorage() {
+        val owner = details.singleOrNull() ?: return
+        scope.launch {
+            when (val result = owner.measureStorage()) {
+                is Outcome.Ok ->
+                    local.update { it.copy(storage = result.value, storageFailed = false) }
+                is Outcome.Failed -> local.update { it.copy(storageFailed = true) }
+            }
         }
     }
 
@@ -188,12 +210,19 @@ public class ThisPhoneModel(
     override fun back(): Unit = nav.back()
 
     init {
+        details.singleOrNull()?.let { owner ->
+            scope.launch {
+                owner.recovery.collect { report -> local.update { it.copy(lifecycle = report) } }
+            }
+        }
         // While shown: read the status once, then move the countdown each second (no timer while
         // hidden).
         scope.launch {
             visible.collectLatest { shown ->
                 if (!shown) return@collectLatest
                 source.refresh()
+                details.singleOrNull()?.refresh()
+                refreshStorage()
                 local.update { it.copy(now = clock.now()) }
                 coroutineScope {
                     if (processes != null)
@@ -217,14 +246,17 @@ public class ThisPhoneModel(
     }
 
     override fun shown(visible: Boolean) {
+        if (!visible) details.singleOrNull()?.invalidate()
         this.visible.value = visible
     }
 
     private fun run(op: PhoneOp, command: suspend () -> Outcome<Unit>) {
         if (local.value.working != null) return
+        details.singleOrNull()?.invalidate()
         local.update { it.copy(working = op, notice = null) }
         scope.launch {
             val outcome = command()
+            details.singleOrNull()?.refresh()
             local.update {
                 it.copy(
                     working = null,

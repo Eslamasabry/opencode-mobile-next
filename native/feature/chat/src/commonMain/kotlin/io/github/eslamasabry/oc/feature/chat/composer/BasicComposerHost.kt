@@ -101,6 +101,9 @@ import io.github.eslamasabry.oc.ui.kit.KitRow
 import io.github.eslamasabry.oc.ui.words.res.composerFullAddTitle
 import io.github.eslamasabry.oc.ui.kit.row.KitRow as KitActionRow
 import io.github.eslamasabry.oc.ui.words.res.chatHistoryTitle
+import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_add
+import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_remove
+import io.github.eslamasabry.oc.ui.words.res.chat_model_favorites
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachModelWithoutFiles
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachNoPicker
@@ -682,20 +685,43 @@ public fun BasicComposer(
                     sections.forEach { section ->
                         KitRowGroup(
                             label =
-                                section.providerName ?: stringResource(Res.string.chatModelsRecent)
+                                if (section.favorites)
+                                    stringResource(Res.string.chat_model_favorites)
+                                else
+                                    section.providerName
+                                        ?: stringResource(Res.string.chatModelsRecent)
                         ) {
                             section.rows.forEach { pick ->
-                                KitChoiceRow(
-                                    title = pick.model.label,
-                                    selected = pick.current,
-                                    // In "Recent" the provider tells equal names apart.
-                                    supporting =
-                                        if (section.providerName == null) pick.model.providerName
-                                        else null,
-                                    tag = if (pick.current) currentTag else null,
-                                    onClick = { selectAndClose(pick.model) },
-                                    modifier = Modifier.testTag("chat-model-choice"),
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    KitChoiceRow(
+                                        title = pick.model.label,
+                                        selected = pick.current,
+                                        // In "Recent" the provider tells equal names apart.
+                                        supporting =
+                                            if (section.providerName == null)
+                                                pick.model.providerName
+                                            else null,
+                                        tag = if (pick.current) currentTag else null,
+                                        onClick = { selectAndClose(pick.model) },
+                                        modifier = Modifier.weight(1f).testTag("chat-model-choice"),
+                                    )
+                                    val favorite =
+                                        models.favorites.any {
+                                            it.providerId == pick.model.providerId &&
+                                                it.modelId == pick.model.modelId
+                                        }
+                                    KitButton(
+                                        label =
+                                            stringResource(
+                                                if (favorite) Res.string.chat_model_favorite_remove
+                                                else Res.string.chat_model_favorite_add
+                                            ),
+                                        role = KitButtonRole.Tertiary,
+                                        onClick = {
+                                            scope.launch { actions.toggleModelFavorite(pick.model) }
+                                        },
+                                    )
+                                }
                             }
                         }
                     }

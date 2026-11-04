@@ -1,0 +1,16 @@
+<resources>
+    <string name="stateLifecycleChecking">Android stopped the app. Checking what is running again…</string>
+    <string name="stateLifecycleUnavailable">Android stopped the app. Recovery could not be checked.</string>
+    <string name="stateLifecycleStopped">Android stopped the app. OpenCode is stopped.</string>
+    <string name="stateLifecycleUnreachable">Android stopped the app. OpenCode is not answering yet.</string>
+    <string name="stateLifecyclePartial">OpenCode is answering. Some previously running services are not ready.</string>
+    <string name="stateLifecycleReady">OpenCode and its previously running services are answering again. Interrupted tasks may need your attention.</string>
+    <string name="stateStorageTitle">App storage</string>
+    <string name="stateStorageServer">Linux and OpenCode</string>
+    <string name="stateStoragePrivate">Saved sign-ins, settings and conversations</string>
+    <string name="stateStorageProject">%1$s · %2$d files · %3$d private files</string>
+    <string name="stateStorageSavedServers">%1$d saved servers</string>
+    <string name="stateStorageEmpty">No Linux or projects are stored on this phone.</string>
+    <string name="stateStorageFailed">Storage could not be measured. Try again.</string>
+    <string name="stateStorageRefresh">Measure storage again</string>
+</resources>

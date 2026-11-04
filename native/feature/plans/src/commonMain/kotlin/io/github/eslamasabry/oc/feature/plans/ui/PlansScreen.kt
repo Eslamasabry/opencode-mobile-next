@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
@@ -27,6 +29,10 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
@@ -43,6 +49,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun PlansScreen(state: PlansUi, actions: PlansActions) {
     val words = plansWords()
+    KitSheetHost {
     KitScreen(
         topBar = {
             KitTopBar(
@@ -81,6 +88,29 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                 if (state.phase == PlansPhase.Loading) KitStateView(KitStateKind.Loading, words.loading)
                 if (state.phase == PlansPhase.Empty)
                     KitStateView(KitStateKind.Empty, words.emptyTitle, body = words.emptyBody)
+                // STATE: the alert threshold and the reset notice.
+                if (state.phase != PlansPhase.Loading) {
+                    KitRowGroup(label = stringResource(Res.string.statePlansAlerts)) {
+                        KitRow(
+                            title =
+                                stringResource(
+                                    Res.string.statePlansThreshold,
+                                    state.defaultThreshold,
+                                ),
+                            onClick = { actions.editThreshold(null) },
+                        )
+                        KitRow(
+                            title =
+                                stringResource(
+                                    if (state.resetNotice) Res.string.statePlansResetOn
+                                    else Res.string.statePlansResetOff
+                                ),
+                            onClick = actions::toggleResetNotice,
+                        )
+                    }
+                    if (state.failed && !state.editing)
+                        KitNotice(stringResource(Res.string.statePlansSaveFailed))
+                }
                 for (card in state.cards) PlanCard(card, state.nowMs, words, actions)
                 if (state.keys.isNotEmpty()) {
                     KitRowGroup(label = words.keysLabel) {
@@ -161,6 +191,41 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
         onConfirm = actions::confirmCollector,
         onCancel = actions::cancelCollector,
     )
+    // STATE: the threshold editor.
+        if (state.editing)
+            key(state.editKey) {
+                val field = rememberTextFieldState(state.thresholdInput)
+                KitSheet(
+                    visible = true,
+                    title = stringResource(Res.string.statePlansAlerts),
+                    closeLabel = words.back,
+                    onDismissRequest = actions::dismissEditor,
+                    primary =
+                        KitAction(
+                            stringResource(Res.string.statePlansSave),
+                            actions::saveThreshold,
+                        ),
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                        KitField(
+                            field,
+                            stringResource(Res.string.statePlansPercent),
+                            kind = KitFieldKind.Number,
+                            checking = state.saving,
+                            onTextChanged = actions::thresholdChanged,
+                        )
+                        if (state.failed) KitNotice(stringResource(Res.string.statePlansSaveFailed))
+                        if (state.editKey != null)
+                            KitButton(
+                                stringResource(Res.string.statePlansUseDefault),
+                                actions::useDefaultThreshold,
+                                role = KitButtonRole.Tertiary,
+                                working = state.saving,
+                            )
+                    }
+                }
+            }
+    }
 }
 
 @Composable
@@ -223,6 +288,11 @@ private fun PlanCard(card: PlanCardUi, nowMs: Long, words: PlansWords, actions: 
                     .ifBlank { null },
             supportingMaxLines = 2,
         )
+        if (card.windows.isNotEmpty())
+            KitRow(
+                title = stringResource(Res.string.statePlansThreshold, card.alertThreshold),
+                onClick = { actions.editThreshold(card.key) },
+            )
         for (w in card.windows) {
             KitRow(
                 title = words.window(w.kind, w.label),

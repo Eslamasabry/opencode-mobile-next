@@ -67,6 +67,14 @@ public data class FolderListing(val entries: ImmutableList<FileNode>, val hidden
         get() = entries.isEmpty() && hiddenCount > 0
 
     public companion object {
+        /**
+         * Stable partition, matching the reader preference: generated entries stay visible after
+         * source entries.
+         */
+        public fun sourceFirst(entries: List<FileNode>, enabled: Boolean): ImmutableList<FileNode> =
+            (if (enabled) entries.filterNot(::generated) + entries.filter(::generated) else entries)
+                .toImmutableList()
+
         private val generatedDirectories =
             setOf(
                 "node_modules",

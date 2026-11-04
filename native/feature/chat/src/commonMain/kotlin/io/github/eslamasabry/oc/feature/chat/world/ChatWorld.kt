@@ -138,6 +138,10 @@ public interface ChatWorld {
     public suspend fun selectModel(choice: ComposerModel?, variant: String = ""): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
 
+    /** Changes only the personal shortcut; never the conversation's model. */
+    public suspend fun toggleModelFavorite(choice: ComposerModel): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("modelFavorites")))
+
     /**
      * Moves the conversation to the primary [agent] in the server session, verified by readback.
      */

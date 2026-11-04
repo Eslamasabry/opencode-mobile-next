@@ -4,9 +4,15 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import kotlinx.serialization.json.JsonObject
 
-/** A read-only setup view pinned to the location selected when it was opened. */
+/**
+ * A read-only setup view pinned to the location selected when it was opened (PROTO), and STATE's safe summary of
+ * the current location (inspection only: production servers have no verified atomic configuration restore
+ * contract). One interface for both units.
+ */
 public interface SetupInspectionGateway {
     public fun setupInspection(location: ServerLocation): SetupInspector
+
+    public suspend fun inspectSetup(): Outcome<SetupInspection> = unavailable("setupInspection")
 }
 
 /**

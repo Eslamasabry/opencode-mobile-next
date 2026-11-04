@@ -31,9 +31,19 @@ public sealed interface ListPhase<out T> {
     public data class Failed(val failure: Failure) : ListPhase<Nothing>
 }
 
-public data class CommandsUi(val phase: ListPhase<CommandItem> = ListPhase.Loading)
+public data class CommandsUi(
+    val phase: ListPhase<CommandItem> = ListPhase.Loading,
+    val skills: List<io.github.eslamasabry.oc.core.model.SkillInfo> = emptyList(),
+    val skillsLoading: Boolean = false,
+    val skillWorking: String? = null,
+    val skillResult: io.github.eslamasabry.oc.engine.integrations.catalog.SkillActivation? = null,
+    val skillsFailure: Failure? = null,
+)
 
-public data class TasksUi(val phase: ListPhase<TaskItem> = ListPhase.Loading, val unfinishedOnly: Boolean = false) {
+public data class TasksUi(
+    val phase: ListPhase<TaskItem> = ListPhase.Loading,
+    val unfinishedOnly: Boolean = false,
+) {
     val visible: List<TaskItem>
         get() =
             when (val p = phase) {
@@ -49,6 +59,8 @@ public interface CommandsActions {
 
     /** Puts `/name ` into the conversation's composer (the person adds arguments and sends). */
     public fun choose(name: String)
+
+    public fun activateSkill(id: String)
 }
 
 public interface TasksActions {
@@ -75,6 +87,7 @@ public class CommandsViewModel(
     @Assisted private val route: PromptsRoute.Commands,
     private val lists: ConversationLists,
     private val inbox: ComposerInbox,
+    private val skillSources: Set<SkillsSource>,
     private val nav: AppNavigator,
 ) : ViewModel(), CommandsActions {
     private val local = MutableStateFlow(CommandsUi())
@@ -92,12 +105,37 @@ public class CommandsViewModel(
             val read = lists.commands(route.ref).phase()
             local.update { it.copy(phase = read) }
         }
+        val source = skillSources.singleOrNull()?.takeIf { it.available(route.ref) } ?: return
+        local.update { it.copy(skillsLoading = true, skillsFailure = null) }
+        viewModelScope.launch {
+            when (val read = source.list(route.ref)) {
+                is Outcome.Ok ->
+                    local.update { it.copy(skills = read.value, skillsLoading = false) }
+                is Outcome.Failed ->
+                    local.update { it.copy(skillsFailure = read.failure, skillsLoading = false) }
+            }
+        }
+    }
+
+    override fun activateSkill(id: String) {
+        if (local.value.skills.none { it.id == id }) return
+        val source = skillSources.singleOrNull() ?: return
+        // The engine rejects concurrent actions as Busy; the screen keeps their destination
+        // explicit.
+        local.update { it.copy(skillWorking = id, skillResult = null) }
+        viewModelScope.launch {
+            val result = source.activate(route.ref, id)
+            local.update { it.copy(skillWorking = null, skillResult = result) }
+        }
     }
 
     override fun choose(name: String) {
         val shown = local.value.phase as? ListPhase.Shown ?: return
         if (shown.items.none { it.name == name }) return
-        inbox.offer(ComposerInbox.target(route.ref.profileId.raw, route.ref.sessionId.raw), "/$name ")
+        inbox.offer(
+            ComposerInbox.target(route.ref.profileId.raw, route.ref.sessionId.raw),
+            "/$name ",
+        )
         nav.returnToChat()
     }
 

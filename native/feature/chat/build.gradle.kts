@@ -9,6 +9,7 @@ kotlin {
         implementation(libs.compose.desktop.currentos)
     }
     sourceSets.commonMain.dependencies {
+        implementation(project(":engine:settings"))
         implementation(project(":engine:delivery"))
         implementation(project(":engine:voice"))
         implementation(project(":engine:composer"))

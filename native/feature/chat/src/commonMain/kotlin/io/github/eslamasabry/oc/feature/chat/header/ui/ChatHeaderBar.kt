@@ -21,6 +21,9 @@ import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderConfirm
 import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderRules
 import io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderSheet
 import io.github.eslamasabry.oc.feature.chat.header.presentation.TranscriptWords
+import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteActions
+import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteScreen
+import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteUi
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
@@ -132,6 +135,7 @@ import io.github.eslamasabry.oc.ui.words.res.sessionMenuDo
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuFind
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuGoTo
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuNeedsPrompt
+import io.github.eslamasabry.oc.ui.words.res.stateNoteTitle
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindReasoning
 import org.jetbrains.compose.resources.stringResource
 
@@ -144,6 +148,8 @@ public class ChatHeaderSlot(
     public val state: ChatHeaderUi,
     public val actions: ChatHeaderActions,
     public val approval: ApprovalChipSlot? = null,
+    public val note: SessionNoteUi? = null,
+    public val noteActions: SessionNoteActions? = null,
 )
 
 /**
@@ -171,7 +177,21 @@ public fun ChatHeaderTopBar(
             else -> state.serverName ?: state.projectName
         }
     val transcriptWords = transcriptWords()
-    val items = menuItems(state, actions, onFind, transcriptWords)
+    val items =
+        menuItems(state, actions, onFind, transcriptWords) +
+            listOfNotNull(
+                slot.noteActions
+                    ?.takeIf { slot.note?.available == true }
+                    ?.let { noteActions ->
+                        KitMenuItem(
+                            stringResource(Res.string.stateNoteTitle),
+                            {
+                                actions.closeMenu()
+                                noteActions.openNote()
+                            },
+                        )
+                    }
+            )
     KitTopBar(
         title = state.title ?: stringResource(Res.string.commandUntitledChat),
         subtitle = subtitle,
@@ -271,6 +291,9 @@ public fun ChatHeaderTopBar(
  */
 @Composable
 public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
+    val note = slot.note
+    val noteActions = slot.noteActions
+    if (note != null && noteActions != null) SessionNoteScreen(note, noteActions)
     val state = slot.state
     val actions = slot.actions
     val empty = stringResource(Res.string.chatRenameEmpty)

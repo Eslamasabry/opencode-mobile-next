@@ -85,3 +85,18 @@ public sealed interface FilesLinkTicket {
 
     public data object Refused : FilesLinkTicket
 }
+
+/**
+ * Persisted reader choices. Platform bindings wait for storage admission before returning success.
+ */
+public interface ReaderSettings {
+    public suspend fun read(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId
+    ): io.github.eslamasabry.oc.engine.settings.reader.ReaderPreferences?
+
+    public suspend fun update(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        sourceFirst: Boolean? = null,
+        wrapCode: Boolean? = null,
+    ): Boolean
+}

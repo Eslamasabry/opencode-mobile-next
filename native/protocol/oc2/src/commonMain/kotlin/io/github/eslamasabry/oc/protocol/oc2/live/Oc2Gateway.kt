@@ -63,11 +63,15 @@ internal class Oc2Gateway(
     SessionDispatchAdmissionGateway,
     SessionTransferImportGateway,
     SessionSkillGateway,
+    SessionNoteGateway,
     McpRemovalGateway,
     IntegrationCredentialGateway,
     IntegrationCommandGateway,
     IntegrationAuthRecoveryGateway,
     ApiRouteGateway {
+    // STATE: the safe setup summary of the current location (beside PROTO's pinned inspector below).
+    override suspend fun inspectSetup(): Outcome<SetupInspection> = Oc2SetupSnapshot.read(this, redactor)
+
     private val transfer by lazy {
         Oc2SessionTransfer(this, { location.value }) { feature ->
             val caps = capabilities as MutableStateFlow<ServerCapabilities>
@@ -556,6 +560,100 @@ internal class Oc2Gateway(
         verb: HttpMethod,
         body: JsonObject? = null,
     ): Outcome<Unit> = json(path, verb, body).map {}
+
+    /** B-STATE-113: only mobile.note crosses the protocol boundary, in the captured location. */
+    override suspend fun loadSessionNote(
+        session: SessionId,
+        location: ServerLocation,
+    ): Outcome<String?> {
+        val result =
+            noteRequest("/session/${sid(session)}/instructions/entries", HttpMethod.Get, location)
+        if (result is Outcome.Failed) return result
+        val rows =
+            ((result as Outcome.Ok).value as? JsonObject)?.get("data") as? JsonArray
+                ?: return Failure.UnreadableReply().failed()
+        val owned =
+            rows.filterIsInstance<JsonObject>().filter { it["key"] == JsonPrimitive("mobile.note") }
+        if (owned.isEmpty()) return Outcome.Ok(null)
+        val value = owned.singleOrNull()?.get("value") as? JsonPrimitive
+        return if (value?.isString == true) Outcome.Ok(value.content)
+        else Failure.UnreadableReply().failed()
+    }
+
+    override suspend fun saveSessionNote(
+        session: SessionId,
+        location: ServerLocation,
+        value: String?,
+        beforeSend: () -> Boolean,
+    ): Outcome<Unit> {
+        if (value != null && JsonPrimitive(value).toString().encodeToByteArray().size > 8192)
+            return Failure.Rejected(413).failed()
+        // Negotiate before the final admission check; a wake must not redirect this mutation.
+        if (dialect.value == null) {
+            val ready = health()
+            if (ready is Outcome.Failed) return ready
+        }
+        if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
+        return noteRequest(
+                "/session/${sid(session)}/instructions/entries/mobile.note",
+                if (value == null) HttpMethod.Delete else HttpMethod.Put,
+                location,
+                value?.let { buildJsonObject { put("value", it) } },
+            )
+            .map {}
+    }
+
+    private suspend fun noteRequest(
+        path: String,
+        method: HttpMethod,
+        at: ServerLocation,
+        body: JsonObject? = null,
+    ): Outcome<JsonElement> {
+        val result = json(path, method, body, locationQuery(at))
+        val failure = (result as? Outcome.Failed)?.failure
+        val unsupported =
+            (failure is Failure.NotFound && failure.tag?.raw != "SessionNotFoundError") ||
+                (failure is Failure.Rejected && failure.status in listOf(405, 501)) ||
+                (failure is Failure.Server && failure.status == 501)
+        if (unsupported) {
+            (capabilities as MutableStateFlow<ServerCapabilities>).update {
+                it.copy(sessionNotes = false)
+            }
+            return Failure.Unavailable(FeatureId("sessionNotes")).failed()
+        }
+        return result
+    }
+
+    @kotlin.concurrent.Volatile private var skillsAvailable = true
+
+    override val sessionSkillsAvailable: Boolean
+        get() = skillsAvailable
+
+    override suspend fun sessionSkills(): Outcome<ImmutableList<SkillInfo>> =
+        Oc2SessionSkills.list(this, locationQuery())
+
+    override suspend fun activateSessionSkill(
+        session: SessionId,
+        skillId: String,
+        resume: Boolean,
+        beforeSend: () -> Boolean,
+    ): Outcome<Unit> {
+        if (!skillsAvailable)
+            return Failure.Unavailable(FeatureId("sessionSkills")).failed()
+        // Resolve the dialect before admission: a wake cannot redirect a skill into a changed
+        // location.
+        if (dialect.value == null) {
+            val ready = health()
+            if (ready is Outcome.Failed) return ready
+        }
+        if (!beforeSend()) return Failure.Refused(RefusalReason.StaleScope).failed()
+        val result = Oc2SessionSkills.activate(this, session, skillId, resume)
+        if (Oc2SessionSkills.unsupported(result)) {
+            skillsAvailable = false
+            return Failure.Unavailable(FeatureId("sessionSkills")).failed()
+        }
+        return result
+    }
 
     private fun sid(id: SessionId): String = id.raw.encodeURLPathPart()
 
@@ -1233,7 +1331,7 @@ internal class Oc2Gateway(
     override suspend fun selectTerminalShell(value: String): Outcome<Unit> =
         Oc2HostTools(this, location.value).selectShell(value)
 
-    private fun locationQuery(at: ServerLocation = location.value): Map<String, String?> =
+    internal fun locationQuery(at: ServerLocation = location.value): Map<String, String?> =
         mapOf(
             "location[directory]" to at.directory,
             "location[workspace]" to at.workspace,
@@ -1682,7 +1780,7 @@ internal class Oc2Gateway(
                 setupMcpInventory = true,
                 setupAssistantSession = false,
                 clientPromptMessageID = true,
-                commandReceipts = false,
+                commandReceipts = true,
                 agentAccount = false,
                 hostAgentProviders = false,
                 hostAgentPermissionActions = false,

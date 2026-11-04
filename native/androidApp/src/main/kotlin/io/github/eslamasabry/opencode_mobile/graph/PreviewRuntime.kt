@@ -15,9 +15,8 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.feed.*
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.connection.*
+import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
 import io.github.eslamasabry.oc.engine.delivery.queue.*
-import io.github.eslamasabry.oc.engine.delivery.receipts.PendingCommandJournals
-import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileDirectory
 import io.github.eslamasabry.oc.engine.profiles.*
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.chats.presentation.*
@@ -44,9 +43,10 @@ class PreviewRuntime(
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
     private val draftOwners: Set<ConversationDrafts>,
-    private val profileClosers: Set<ProfileCloser>,
     private val cleaners:
         Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
+    private val deliveryStores: Set<DeliveryStorage>,
+    private val profileClosers: Set<ProfileCloser>,
 ) : ServerConnections {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -361,7 +361,27 @@ class PreviewRuntime(
                                 }
                             }
                         }
+                        launch {
+                            graph.session.reads.missing.collect { missing ->
+                                order.withLock {
+                                    if (registry.live.value[id] === graph) {
+                                        listings[id]?.let { listing ->
+                                            listing.value =
+                                                listing.value.copy(
+                                                    sessions =
+                                                        listing.value.sessions
+                                                            .filterNot { it.id in missing }
+                                                            .toImmutableList()
+                                                )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         graph.session.server.events.all.collect { envelope ->
+                            val event = envelope.event
+                            if (event is GatewayEvent.SessionDeleted)
+                                graph.session.reads.forget(event.sessionId)
                             when (envelope.event) {
                                 GatewayEvent.Connected,
                                 is GatewayEvent.SessionUpserted,
@@ -449,7 +469,10 @@ class PreviewRuntime(
                 page.value.sessions.forEach(graph.session.readState::observe)
                 listing.value =
                     OpenCodeListing(
-                        sessions = page.value.sessions,
+                        sessions =
+                            page.value.sessions
+                                .filterNot { it.id in graph.session.reads.missing.value }
+                                .toImmutableList(),
                         statuses = (statuses as? Outcome.Ok)?.value ?: listing.value.statuses,
                         needsYou =
                             if (
@@ -484,6 +507,11 @@ class PreviewRuntime(
         failed ?: Unit.ok()
     }
 
+    internal fun prefetch(ref: ConversationRef) {
+        if (profiles.profile(ref.profileId) == null) return
+        registry.live.value[ref.profileId]?.session?.reads?.prefetch(ref.sessionId)
+    }
+
     override suspend fun createConversation(profile: ProfileId?): Outcome<ConversationRef> =
         command {
             val id =
@@ -506,80 +534,83 @@ class PreviewRuntime(
             }
         }
 
-    override suspend fun remove(id: ProfileId): Outcome<Unit> = command {
-        when (val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()) {
-            QueueRead.Unreadable -> return@command Failure.StorageRefused().failed()
-            is QueueRead.Readable ->
-                if (queued.entries.any { it.profileId == id })
-                    return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
-        }
-        val graph = registry.live.value[id]
-        if (graph != null) {
-            // Composer callers can outlive graph.scope. Fence the actual delivery owner,
-            // including its app-lane online-marker writes, before cancelling the graph.
-            val delivery =
-                (graph as? ChatGraphAccessors)?.chatDelivery?.queue
+    override suspend fun remove(id: ProfileId): Outcome<Unit> {
+        val result = command {
+            when (val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()) {
+                QueueRead.Unreadable -> return@command Failure.StorageRefused().failed()
+                is QueueRead.Readable ->
+                    if (queued.entries.any { it.profileId == id })
+                        return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+            }
+            val graph = registry.live.value[id]
+            if (graph != null) {
+                // Composer callers can outlive graph.scope. Fence the actual delivery owner,
+                // including its app-lane online-marker writes, before cancelling the graph.
+                val delivery =
+                    (graph as? ChatGraphAccessors)?.chatDelivery?.queue
+                        ?: return@command Failure.StorageRefused().failed()
+                delivery.closeProfile(id)
+            }
+            registry.close(id)
+            eventJobs.remove(id)?.cancel()
+            listings.remove(id)
+            loadedSources.update { it - id }
+            mutableSourceFailures.update { it - id }
+            rebuildFeed()
+            // Queue admission is fenced above and close joins connection work. A send may have
+            // written
+            // its marker
+            // after the optimistic check above; inspect again only after that drain, before
+            // sweeping either metadata or secrets. A refusal keeps the saved server intact.
+            when (val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()) {
+                QueueRead.Unreadable -> return@command Failure.StorageRefused().failed()
+                is QueueRead.Readable ->
+                    if (queued.entries.any { it.profileId == id })
+                        return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+            }
+            val journals =
+                deliveryStores.singleOrNull()?.journals
                     ?: return@command Failure.StorageRefused().failed()
-            delivery.closeProfile(id)
+            journals.closeProfile(id)
+            when (val receipts = journals.deletionSnapshot(id)) {
+                is Outcome.Failed -> return@command receipts
+                is Outcome.Ok ->
+                    if (receipts.value.any { !it.state.terminal })
+                        return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+            }
+            val drafts =
+                draftOwners.singleOrNull() ?: return@command Failure.StorageRefused().failed()
+            draftRecovery += id
+            when (val closed = drafts.closeProfile(id)) {
+                is Outcome.Failed -> return@command closed
+                is Outcome.Ok -> Unit
+            }
+            // The shared ProfileScope registers every unit's keys (STATE's among them) and the secrets.
+            when (
+                val result =
+                    ProfileDeletion(
+                            profiles,
+                            profileScope,
+                            stores.lanes,
+                            closers = profileClosers,
+                            cleaners = cleaners,
+                        )
+                        .delete(id)
+            ) {
+                is Outcome.Failed -> result
+                is Outcome.Ok ->
+                    if (result.value.complete) {
+                        draftRecovery.remove(id)
+                        Unit.ok()
+                    } else
+                        (result.value.failures.firstOrNull()?.failure ?: Failure.StorageRefused())
+                            .failed()
+            }
         }
-        registry.close(id)
-        eventJobs.remove(id)?.cancel()
-        listings.remove(id)
-        loadedSources.update { it - id }
-        mutableSourceFailures.update { it - id }
-        rebuildFeed()
-        // Queue admission is fenced above and close joins connection work. A send may have written
-        // its marker
-        // after the optimistic check above; inspect again only after that drain, before
-        // sweeping either metadata or secrets. A refusal keeps the saved server intact.
-        when (val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()) {
-            QueueRead.Unreadable -> return@command Failure.StorageRefused().failed()
-            is QueueRead.Readable ->
-                if (queued.entries.any { it.profileId == id })
-                    return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+        if (result is Outcome.Failed && profiles.profile(id) != null) {
+            deliveryStores.singleOrNull()?.journals?.cancelDeletion(id)
         }
-        val journals =
-            PendingCommandJournals(
-                stores.prefs,
-                stores.lanes,
-                ProfileDirectory { profiles.profile(it) != null },
-            )
-        when (val journal = journals.forProfile(id)) {
-            is Outcome.Failed -> return@command journal
-            is Outcome.Ok ->
-                when (val receipts = journal.value.read()) {
-                    is Outcome.Failed -> return@command receipts
-                    is Outcome.Ok ->
-                        if (receipts.value.any { !it.state.terminal })
-                            return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
-                }
-        }
-        val drafts = draftOwners.singleOrNull() ?: return@command Failure.StorageRefused().failed()
-        draftRecovery += id
-        when (val closed = drafts.closeProfile(id)) {
-            is Outcome.Failed -> return@command closed
-            is Outcome.Ok -> Unit
-        }
-        when (
-            val result =
-                ProfileDeletion(
-                        profiles,
-                        profileScope,
-                        stores.lanes,
-                        closers = profileClosers,
-                        cleaners = cleaners,
-                    )
-                    .delete(id)
-        ) {
-            is Outcome.Failed -> result
-            is Outcome.Ok ->
-                if (result.value.complete) {
-                    draftRecovery.remove(id)
-                    Unit.ok()
-                } else
-                    (result.value.failures.firstOrNull()?.failure ?: Failure.StorageRefused())
-                        .failed()
-        }
+        return result
     }
 }
 
@@ -589,6 +620,8 @@ class PreviewConversationsFeed(private val runtime: PreviewRuntime) : Conversati
     override val snapshot: StateFlow<ChatFeedSnapshot> = runtime.snapshot
 
     override suspend fun refresh(): Outcome<Unit> = runtime.refresh()
+
+    override fun prefetch(ref: ConversationRef) = runtime.prefetch(ref)
 }
 
 @ContributesBinding(AppScope::class, replaces = [ClosedSettingsDoor::class])

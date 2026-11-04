@@ -9,8 +9,10 @@ public data class SavedPromptItem(
     val createdAt: Long,
     val attachments: Int = 0,
     val references: Int = 0,
+    val unavailable: List<String> = emptyList(),
 ) {
-    override fun toString(): String = "SavedPromptItem(id=$id, chars=${text.length}, attachments=$attachments)"
+    override fun toString(): String =
+        "SavedPromptItem(id=$id, chars=${text.length}, attachments=$attachments)"
 }
 
 /** Puts a deleted saved prompt back exactly once. */
@@ -19,10 +21,13 @@ public fun interface SavedPromptRestore {
 }
 
 /**
- * The saved prompts of one server (plan 09 §10.8; Flutter `prompt_stash.dart`). Every call names its profile; a removed
- * profile refuses. Implemented over the composer engine's PromptShelf ([ShelfSavedPrompts]).
+ * The saved prompts of one server (plan 09 §10.8; Flutter `prompt_stash.dart`). Every call names
+ * its profile; a removed profile refuses. Implemented over the composer engine's PromptShelf
+ * ([ShelfSavedPrompts]).
  */
 public interface SavedPromptsStore {
+    public fun migrationPending(profile: String): Boolean = false
+
     /** Newest first. A shelf that cannot be read fails; it never reads as empty. */
     public suspend fun list(profile: String): Outcome<List<SavedPromptItem>>
 

@@ -3,7 +3,9 @@ package io.github.eslamasabry.opencode_mobile.graph
 import android.app.Application
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.data.android.AndroidDataStores
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.DefaultWriterLanes
 import io.github.eslamasabry.oc.core.data.migration.MigrationGate
 import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
@@ -15,6 +17,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
 import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileDirectory
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
+import io.github.eslamasabry.oc.engine.profiles.StoredProfileJson
 import java.security.SecureRandom
 import kotlin.random.Random
 import kotlin.random.asKotlinRandom
@@ -98,11 +101,24 @@ object PreviewBindings {
 
     @Provides
     @IntoSet
+    @SingleIn(AppScope::class)
     fun delivery(stores: PreviewStores): DeliveryStorage =
         DeliveryStorage(
             stores.prefs,
             stores.lanes,
-            ProfileDirectory { stores.profiles.profile(it) != null },
+            ProfileDirectory { id ->
+                val raw = (stores.prefs.get("oc.profiles") as? PrefValue.Str)?.value
+                val saved = raw?.let(DartJson::decodeOrNull) as? List<*>
+                val decoded = saved?.map { row ->
+                    (row as? Map<*, *>)?.let(StoredProfileJson::decode)
+                }
+                val current = stores.profiles.profile(id)?.profile
+                current != null &&
+                    decoded != null &&
+                    decoded.all { it != null && it.id.raw.isNotEmpty() } &&
+                    decoded.map { it?.id }.distinct().size == decoded.size &&
+                    decoded.singleOrNull { it?.id == id } == current
+            },
         )
 
     @Provides

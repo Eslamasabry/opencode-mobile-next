@@ -35,6 +35,8 @@ public class PlansViewModel(
     private val confirmation = MutableStateFlow<CollectorTarget?>(null)
     private val collectorFailed = MutableStateFlow(false)
 
+    private val edits = MutableStateFlow(PlansUi())
+
     public val state: StateFlow<PlansUi> =
         combine(source.snapshot, refreshing, collectors, confirmation, collectorFailed) {
                 snapshot,
@@ -51,6 +53,18 @@ public class PlansViewModel(
             }
             // LINUX-2: the phone's own collector setup.
             .combine(collector.state) { ui, c -> ui.copy(collector = c) }
+            // STATE: the alert threshold and reset-notice editor.
+            .combine(edits) { ui, edit ->
+                ui.copy(
+                    defaultThreshold = source.defaultThreshold.toInt(),
+                    resetNotice = source.resetNotice,
+                    editing = edit.editing,
+                    editKey = edit.editKey,
+                    thresholdInput = edit.thresholdInput,
+                    saving = edit.saving,
+                    failed = edit.failed,
+                )
+            }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -59,6 +73,56 @@ public class PlansViewModel(
 
     init {
         refresh()
+    }
+
+    override fun editThreshold(key: String?) {
+        val threshold =
+            key?.let { wanted ->
+                source.snapshot.value.subscriptions.firstOrNull { it.key == wanted }?.alertThreshold
+            } ?: source.defaultThreshold
+        edits.value =
+            PlansUi(editing = true, editKey = key, thresholdInput = threshold.toInt().toString())
+    }
+
+    override fun thresholdChanged(value: String) {
+        if (!edits.value.saving)
+            edits.value = edits.value.copy(thresholdInput = value, failed = false)
+    }
+
+    override fun dismissEditor() {
+        if (!edits.value.saving) edits.value = PlansUi()
+    }
+
+    override fun saveThreshold() {
+        val value = edits.value.thresholdInput.toDoubleOrNull()
+        if (value == null || !value.isFinite() || value <= 0 || value > 100) {
+            edits.value = edits.value.copy(failed = true)
+            return
+        }
+        save(value)
+    }
+
+    override fun useDefaultThreshold() {
+        if (edits.value.editKey != null) save(null)
+    }
+
+    private fun save(value: Double?) {
+        if (edits.value.saving) return
+        val key = edits.value.editKey
+        edits.value = edits.value.copy(saving = true)
+        viewModelScope.launch {
+            val saved = source.setThreshold(key, value)
+            edits.value = if (saved) PlansUi() else edits.value.copy(saving = false, failed = true)
+        }
+    }
+
+    override fun toggleResetNotice() {
+        if (edits.value.saving) return
+        edits.value = edits.value.copy(saving = true)
+        viewModelScope.launch {
+            val saved = source.setResetNotice(null, !source.resetNotice)
+            edits.value = edits.value.copy(saving = false, failed = !saved)
+        }
     }
 
     override fun back(): Unit = nav.back()

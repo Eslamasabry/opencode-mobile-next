@@ -37,6 +37,7 @@ public class ProjectsPickerViewModel(
     private val connections: ProjectServers,
     private val opened: OpenedFolders,
     private val discovery: PhoneProjectDiscovery,
+    private val creator: ProjectCreation = NoProjectCreation(),
 ) : ViewModel(), ProjectsPickerActions {
     private val mutable = MutableStateFlow(ProjectsPickerUi())
     public val state: StateFlow<ProjectsPickerUi> = mutable.asStateFlow()
@@ -104,6 +105,7 @@ public class ProjectsPickerViewModel(
                 projectsLoading = true,
                 canFindPhoneProjects = discovery.available(server.profile),
                 pathStart = pathStart(before),
+                canCreate = creator.available(server),
             )
         viewModelScope.launch {
             val read = readProjects(server)
@@ -236,12 +238,61 @@ public class ProjectsPickerViewModel(
     }
 
     override fun chooseServer(profile: ProfileId) {
-        if (profile == chosen) return
+        if (profile == chosen || state.value.creatingFolder) return
         chosen = profile
         load()
     }
 
     override fun askPath(): Unit = mutable.update { it.copy(askingPath = true) }
+
+    override fun askCreate() {
+        val server = current() ?: return
+        if (creator.available(server))
+            mutable.update { it.copy(askingCreate = true, folderFailure = null) }
+    }
+
+    override fun changeCreateName(name: String) {
+        if (!state.value.creatingFolder)
+            mutable.update { it.copy(createName = name, folderFailure = null) }
+    }
+
+    override fun closeCreate() {
+        if (!state.value.creatingFolder) mutable.update { it.copy(askingCreate = false) }
+    }
+
+    override fun createFolder() {
+        val server = current() ?: return
+        if (state.value.creatingFolder || !creator.available(server)) return
+        val name =
+            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.validated(
+                state.value.createName
+            ) ?: return
+        val run = generation
+        mutable.update { it.copy(creatingFolder = true, folderFailure = null) }
+        viewModelScope.launch {
+            val result = creator.create(server, name)
+            if (run != generation || current()?.gateway !== server.gateway) return@launch
+            when (result) {
+                is Outcome.Ok -> {
+                    val saved = opened.remember(server.profile, result.value)
+                    if (run != generation || current()?.gateway !== server.gateway) return@launch
+                    mutable.update {
+                        it.copy(askingCreate = saved is Outcome.Failed, creatingFolder = false)
+                    }
+                    when (saved) {
+                        is Outcome.Ok ->
+                            nav.open(ProjectsRoute.Project(server.profile, result.value))
+                        is Outcome.Failed ->
+                            mutable.update { it.copy(folderFailure = saved.failure) }
+                    }
+                }
+                is Outcome.Failed ->
+                    mutable.update {
+                        it.copy(creatingFolder = false, folderFailure = result.failure)
+                    }
+            }
+        }
+    }
 
     override fun finishPath(path: String?) {
         mutable.update { it.copy(askingPath = false) }

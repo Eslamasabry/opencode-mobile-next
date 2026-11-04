@@ -20,8 +20,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -127,6 +125,9 @@ import io.github.eslamasabry.oc.ui.words.res.serversUsername
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
 import io.github.eslamasabry.oc.ui.words.res.tailscaleTitle
+import io.github.eslamasabry.oc.ui.words.res.stateDemoTryOffline
+import io.github.eslamasabry.oc.ui.words.res.stateServerSchedules
+import io.github.eslamasabry.oc.ui.words.res.stateSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
@@ -272,6 +273,11 @@ public fun ServersScreen(
                 trailing = KitRowTrailing.Chevron,
                 onClick = { tailscaleSetup = true },
             )
+            KitButton(
+                stringResource(Res.string.stateDemoTryOffline),
+                actions::tryOffline,
+                role = KitButtonRole.Tertiary,
+            )
             if (state.servers.isEmpty()) KitText(stringResource(Res.string.serversEmpty))
             else KitText(stringResource(Res.string.serversSaved))
             for (server in state.servers) {
@@ -412,6 +418,11 @@ public fun ServersScreen(
                             }
                         } else KitText(stringResource(Res.string.monitorServerUnavailable))
                     }
+                    KitButton(
+                        stringResource(Res.string.stateSetupTitle),
+                        { actions.openStateSetup(server.id) },
+                        role = KitButtonRole.Tertiary,
+                    )
                     if (removing == server.id) {
                         KitNotice(stringResource(Res.string.serversRemoveConfirm, server.name))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
@@ -561,9 +572,4 @@ private fun issueWords(issue: ServerIssue, failure: Failure?): String =
         }
     )
 
-// TODO(words): `serversSchedules` belongs in :ui:words (P12-SCHEDULES may not edit it); the l10n
-// owner moves it.
-@Composable
-private fun schedulesLabel(): String =
-    if (LocalLayoutDirection.current == LayoutDirection.Rtl) "الطلبات المجدولة"
-    else "Scheduled prompts"
+@Composable private fun schedulesLabel(): String = stringResource(Res.string.stateServerSchedules)

@@ -34,8 +34,11 @@ public class OpenCodeSignInSource(
         val authoritative = LinkedHashSet<String>()
         val unreached = LinkedHashSet<String>()
         for (server in servers()) {
-            if (!server.isOpenCode || !isReadable(server.id) || server.requiresPasswordReentry)
+            if (!server.isOpenCode || server.requiresPasswordReentry) continue
+            if (!isReadable(server.id)) {
+                unreached += server.id
                 continue
+            }
             val read =
                 attempt({ Failure.Network() }) { withTimeoutOrNull(timeout) { providers(server) } }
             val answer = (read as? Outcome.Ok)?.value

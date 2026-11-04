@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="statePin">Pin conversation</string>
+    <string name="stateUnpin">Unpin conversation</string>
+    <string name="statePinFailed">Could not save the pin. Try again.</string>
+    <string name="stateContextUsage">Last context: %1$d%%</string>
+    <string name="stateSavedPreview">Saved list. Connect to open this conversation.</string>
+</resources>

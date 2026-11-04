@@ -26,6 +26,8 @@ public interface ConversationsFeed {
     public val snapshot: StateFlow<ChatFeedSnapshot>
 
     public suspend fun refresh(): Outcome<Unit>
+
+    public fun prefetch(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {}
 }
 
 /** The return brief for the active profile and location, and its exact dismissal (07 §5 B15). */
@@ -76,8 +78,9 @@ public class ClosedSettingsDoor : SettingsDoor {
 }
 
 /**
- * The in-app update badge (unit P12-PLATFORM, Flutter gear dot): [ready] while a newer release waits; [open] shows
- * the Updates page with Update now. Closed by default; :androidApp binds the updater.
+ * The in-app update badge (unit P12-PLATFORM, Flutter gear dot): [ready] while a newer release
+ * waits; [open] shows the Updates page with Update now. Closed by default; :androidApp binds the
+ * updater.
  */
 public interface UpdateDoor {
     public val ready: StateFlow<Boolean>

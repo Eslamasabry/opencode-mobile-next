@@ -1,0 +1,7 @@
+<resources>
+    <string name="stateReaderWrap">Wrap code lines</string>
+    <string name="stateReaderNoWrap">Keep code on one line</string>
+    <string name="stateReaderSaveFailed">The display choice could not be saved. Try again.</string>
+    <string name="stateUsageBudgets">Personal consumption budgets</string>
+    <string name="stateUsageUsd">USD</string>
+</resources>

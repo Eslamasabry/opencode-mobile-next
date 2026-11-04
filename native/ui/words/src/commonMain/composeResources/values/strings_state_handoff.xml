@@ -1,0 +1,15 @@
+<resources>
+    <string name="stateHandoffTitle">Linked conversations</string>
+    <string name="stateHandoffWorking">Working…</string>
+    <string name="stateHandoffFailed">Could not open linked conversations. Try again.</string>
+    <string name="stateHandoffTransferFailed">This transfer was not confirmed. Close this sheet and check your conversations before starting another transfer.</string>
+    <string name="stateHandoffReviewNote">Review this masked conversation record and the first prompt before continuing. Attachment contents and private reasoning are excluded.</string>
+    <string name="stateHandoffRecord">Conversation record</string>
+    <string name="stateHandoffPrompt">First prompt</string>
+    <string name="stateHandoffRetryLink">Save the link again</string>
+    <string name="stateHandoffContinue">Start linked conversation</string>
+    <string name="stateHandoffLinked">Linked conversations</string>
+    <string name="stateHandoffNoLinks">This conversation has no saved links.</string>
+    <string name="stateHandoffNew">Continue in a new conversation</string>
+    <string name="stateHandoffNewNote">Choose a model on this connection. Your project stays the same, and you review the handoff before anything is sent.</string>
+</resources>

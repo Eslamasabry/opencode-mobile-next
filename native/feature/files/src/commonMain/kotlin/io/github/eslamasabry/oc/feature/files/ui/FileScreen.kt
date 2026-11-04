@@ -38,6 +38,8 @@ import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerFrame
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerImageBody
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerSvgBody
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerTableBody
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerCodeBody
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerTextBody
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -53,8 +55,6 @@ import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeLine
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
-import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerCodeBody
-import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerTextBody
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
@@ -102,6 +102,9 @@ import io.github.eslamasabry.oc.ui.words.res.readerUiCopyPath
 import io.github.eslamasabry.oc.ui.words.res.readerUiOpenReview
 import io.github.eslamasabry.oc.ui.words.res.readerUiPathLine
 import io.github.eslamasabry.oc.ui.words.res.readerUiSavedDevice
+import io.github.eslamasabry.oc.ui.words.res.stateReaderNoWrap
+import io.github.eslamasabry.oc.ui.words.res.stateReaderSaveFailed
+import io.github.eslamasabry.oc.ui.words.res.stateReaderWrap
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -154,6 +157,18 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                                 stringResource(Res.string.kitTopBarClose),
                                 actions::dismissNotice,
                             ),
+                    )
+                }
+                if (ready && state.body is FileBody.Code) {
+                    KitButton(
+                        stringResource(
+                            if (state.wrapCode) Res.string.stateReaderNoWrap
+                            else Res.string.stateReaderWrap
+                        ),
+                        actions::toggleWrap,
+                        Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp),
+                        role = KitButtonRole.Tertiary,
+                        working = state.preferencesSaving,
                     )
                 }
                 if (ready)

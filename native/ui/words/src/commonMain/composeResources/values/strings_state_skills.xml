@@ -1,0 +1,10 @@
+<resources>
+    <string name="stateSkillsTitle">Skills</string>
+    <string name="stateSkillsUse">Use in this conversation</string>
+    <string name="stateSkillsDone">Skill added to this conversation.</string>
+    <string name="stateSkillsChanged">The conversation or folder changed. Open the list again.</string>
+    <string name="stateSkillsBusy">A skill is already being added. Wait for it to finish.</string>
+    <string name="stateSkillsStaged">Finish or cancel the pending undo before adding a skill.</string>
+    <string name="stateSkillsUnsupported">This server cannot add skills to conversations.</string>
+    <string name="stateSkillsUncertain">The result could not be confirmed. Refresh before trying again.</string>
+</resources>

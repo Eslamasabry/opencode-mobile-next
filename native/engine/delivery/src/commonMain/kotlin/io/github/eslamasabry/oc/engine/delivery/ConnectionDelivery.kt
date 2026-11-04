@@ -58,7 +58,12 @@ public class DeliveryStorage(
     public val store: KeyValueStore,
     public val lanes: WriterLanes,
     public val profiles: ProfileDirectory,
-)
+) {
+    /**
+     * One process owner survives connection replacement and keeps closed profile admission closed.
+     */
+    public val journals: PendingCommandJournals = PendingCommandJournals(store, lanes, profiles)
+}
 
 @ContributesTo(AppScope::class)
 public interface DeliveryStorageBindings {
@@ -109,7 +114,7 @@ public class ConnectionDelivery(
         }
 
     private val storage = stores.singleOrNull()
-    private val journals = storage?.let { PendingCommandJournals(it.store, it.lanes, it.profiles) }
+    private val journals = storage?.journals
     public val queue: OfflineQueue? = storage?.let {
         OfflineQueue(
             OfflineQueueStore(it.store, it.lanes.app),

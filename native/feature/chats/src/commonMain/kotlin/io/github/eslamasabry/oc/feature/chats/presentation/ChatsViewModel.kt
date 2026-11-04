@@ -85,6 +85,7 @@ public class ChatsViewModel(
     override fun openConversation(ref: ConversationRef) {
         if (state.value.home.opening != null) return
         sheet.value = null
+        feed.prefetch(ref)
         nav.openChat(ref)
     }
 
@@ -133,6 +134,11 @@ public class ChatsViewModel(
     override fun showAll(): Unit = nav.open(ChatsRoute.All(filter = null))
 
     override fun openSearch(): Unit = nav.open(SearchRoute.Conversations())
+
+    override fun openAttention() {
+        sheet.value = null
+        nav.open(ChatsRoute.Attention)
+    }
 
     override fun openProjects() {
         sheet.value = null

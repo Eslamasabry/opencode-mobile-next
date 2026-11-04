@@ -6,6 +6,11 @@ import io.github.eslamasabry.oc.engine.diagnostics.perf.PerfTrace
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.time.Instant
 
+/** A platform subscription to thermal changes; closing the capture detaches it too. */
+public fun interface ProblemThermalReadings {
+    public fun subscribe(onReading: (status: String, headroom: Double?) -> Unit): () -> Unit
+}
+
 /**
  * Connects the process diagnostics (the handled-error ring and the trace) to a durable
  * [ReportProblem] (port of `ReportProblemCapture`; B-SEC-148, B-STATE-070..073). Create one after
@@ -27,6 +32,7 @@ public class ReportProblemCapture(
     private val diagnostics: Diagnostics,
     trace: PerfTrace,
     public val typedAndroidExits: Boolean = false,
+    thermalReadings: ProblemThermalReadings? = null,
 ) {
     private val lock = SpinLock()
     private val seenErrors = mutableMapOf<Long, Pair<Instant, Int>>()
@@ -35,6 +41,8 @@ public class ReportProblemCapture(
     private val detachRecorded: () -> Unit
     private val detachCleared: () -> Unit
     private val detachTimings: () -> Unit
+    private var detachThermal: () -> Unit = {}
+    private var lastThermal: String? = null
 
     init {
         detachRecorded = diagnostics.onRecorded(::captureErrors)
@@ -51,20 +59,23 @@ public class ReportProblemCapture(
             detach
         }
         captureErrors()
+        detachThermal = thermalReadings?.subscribe(::onThermal) ?: {}
     }
 
     public val isClosed: Boolean
         get() = closed.load()
 
     private fun onCleared() {
-        if (closed.load()) return
-        lock.withLock { seenErrors.clear() }
-        report.clear()
+        lock.withLock {
+            if (closed.load()) return@withLock
+            seenErrors.clear()
+            report.clear()
+        }
     }
 
     private fun captureErrors() {
-        if (closed.load()) return
         lock.withLock {
+            if (closed.load()) return@withLock
             val list = diagnostics.errors.value
             val current = list.mapTo(HashSet()) { it.id }
             seenErrors.keys.retainAll(current)
@@ -86,7 +97,15 @@ public class ReportProblemCapture(
     private fun onTiming(span: PerfSpan) {
         if (closed.load()) return
         lock.withLock {
-            if (!historicalTimingIds.remove(span.id)) report.recordTiming(span)
+            if (!closed.load() && !historicalTimingIds.remove(span.id)) report.recordTiming(span)
+        }
+    }
+
+    private fun onThermal(status: String, headroom: Double?) {
+        lock.withLock {
+            if (closed.load() || status == "unknown" || status == lastThermal) return@withLock
+            report.recordThermal(status, headroom)
+            lastThermal = status
         }
     }
 
@@ -95,9 +114,11 @@ public class ReportProblemCapture(
      * sources.
      */
     public fun close() {
-        if (!closed.compareAndSet(expectedValue = false, newValue = true)) return
+        val closing = lock.withLock { closed.compareAndSet(expectedValue = false, newValue = true) }
+        if (!closing) return
         detachRecorded()
         detachCleared()
         detachTimings()
+        detachThermal()
     }
 }

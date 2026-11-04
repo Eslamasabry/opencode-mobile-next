@@ -89,31 +89,56 @@ import io.github.eslamasabry.oc.ui.words.res.p12SelectCancel
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuArchive
 import io.github.eslamasabry.oc.ui.words.res.sessionMenuDelete
+import io.github.eslamasabry.oc.ui.words.res.sessionsReload
+import io.github.eslamasabry.oc.ui.words.res.stateContextUsage
+import io.github.eslamasabry.oc.ui.words.res.statePin
+import io.github.eslamasabry.oc.ui.words.res.statePinFailed
+import io.github.eslamasabry.oc.ui.words.res.stateSavedPreview
+import io.github.eslamasabry.oc.ui.words.res.stateUnpin
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * All conversations (07 §5 B12). Arranges kit parts only (K1): search first, the filter chips, one row per
- * conversation, a visible "Load more conversations" (also on reaching the end) with Try again, and a select mode
- * whose actions sit at the bottom. A row's long-press opens its menu; Select is the visible way to the same acts.
+ * All conversations (07 §5 B12). Arranges kit parts only (K1): search first, the filter chips, one
+ * row per conversation, a visible "Load more conversations" (also on reaching the end) with Try
+ * again, and a select mode whose actions sit at the bottom. A row's long-press opens its menu;
+ * Select is the visible way to the same acts.
  */
 @Composable
 public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
     // Back leaves select mode first (predictive back), then the page.
     KitBackGuard(enabled = state.selecting, onBack = actions::stopSelecting)
     val listed = state.phase == AllPhase.List || state.phase == AllPhase.NoMatch
-    // One text state for the page, so the field keeps its words when select mode hides and brings it back.
+    // One text state for the page, so the field keeps its words when select mode hides and brings
+    // it back.
     val searchText = rememberTextFieldState(state.query)
     val barActions =
         when {
-            state.selecting -> listOf(KitLineAction(stringResource(Res.string.p12SelectCancel), actions::stopSelecting))
-            state.phase == AllPhase.List -> listOf(KitLineAction(stringResource(Res.string.p12Select), { actions.startSelecting(null) }))
+            state.selecting ->
+                listOf(
+                    KitLineAction(
+                        stringResource(Res.string.p12SelectCancel),
+                        actions::stopSelecting,
+                    )
+                )
+            state.phase == AllPhase.List ->
+                listOf(
+                    KitLineAction(stringResource(Res.string.sessionsReload), actions::retry),
+                    KitLineAction(
+                        stringResource(Res.string.p12Select),
+                        { actions.startSelecting(null) },
+                    ),
+                )
             else -> emptyList()
         }
     val title =
         if (state.selecting) {
-            pluralStringResource(Res.plurals.kitChoiceSelectedCount, state.selectedCount, state.selectedCount)
+            pluralStringResource(
+                Res.plurals.kitChoiceSelectedCount,
+                state.selectedCount,
+                state.selectedCount,
+            )
         } else {
             stringResource(Res.string.chats_all_title)
         }
@@ -129,7 +154,13 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
         },
         search =
             if (listed && !state.selecting) {
-                { KitSearchField(label = stringResource(Res.string.globalSessionsSearchLabel), onSearch = actions::search, state = searchText) }
+                {
+                    KitSearchField(
+                        label = stringResource(Res.string.globalSessionsSearchLabel),
+                        onSearch = actions::search,
+                        state = searchText,
+                    )
+                }
             } else {
                 null
             },
@@ -137,23 +168,31 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
         width = KitScreenWidth.Reading,
     ) {
         val list = rememberLazyListState()
-        // Reaching the end asks for the next page; after a failure only the visible Try again does. Keyed on the pages
-        // read, so a page that brings no matching row (search, Running, Archived) still leads to the next one.
+        // Reaching the end asks for the next page; after a failure only the visible Try again does.
+        // Keyed on the pages
+        // read, so a page that brings no matching row (search, Running, Archived) still leads to
+        // the next one.
         val autoLoad = state.canLoadMore && state.loadMoreFailure == null && !state.selecting
         LaunchedEffect(list, autoLoad, state.loadedPages) {
             if (!autoLoad) return@LaunchedEffect
             snapshotFlow {
-                    val info = list.layoutInfo
-                    val last = info.visibleItemsInfo.lastOrNull()?.index ?: 0
-                    info.totalItemsCount > 0 && last >= info.totalItemsCount - END_SLACK
-                }
+                val info = list.layoutInfo
+                val last = info.visibleItemsInfo.lastOrNull()?.index ?: 0
+                info.totalItemsCount > 0 && last >= info.totalItemsCount - END_SLACK
+            }
                 .collect { near -> if (near) actions.loadMore() }
         }
         LazyColumn(state = list, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-            if ((listed || state.hasArchived) && !state.selecting) item(key = "filters") { Filters(state, actions) }
+            if ((listed || state.hasArchived) && !state.selecting)
+                item(key = "filters") { Filters(state, actions) }
             if (state.incomplete.isNotEmpty()) {
                 item(key = "incomplete") {
-                    KitNotice(stringResource(Res.string.chatsHomeIncompleteNamed, state.incomplete.joinToString(", ")))
+                    KitNotice(
+                        stringResource(
+                            Res.string.chatsHomeIncompleteNamed,
+                            state.incomplete.joinToString(", "),
+                        )
+                    )
                 }
             }
             state.problem?.let { problem ->
@@ -165,6 +204,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                                     AllProblemKind.Rename -> Res.string.p12RenameFailed
                                     AllProblemKind.Delete -> Res.string.p12DeleteFailed
                                     AllProblemKind.Archive -> Res.string.p12ArchiveFailed
+                                    AllProblemKind.Pin -> Res.string.statePinFailed
                                 }
                             ),
                         failure = problem.failure,
@@ -181,7 +221,11 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                             kind = KitStateKind.Calm,
                             title = stringResource(Res.string.p12NoServerTitle),
                             body = stringResource(Res.string.p12NoServerBody),
-                            primary = KitAction(stringResource(Res.string.serversTitle), actions::openServers),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.serversTitle),
+                                    actions::openServers,
+                                ),
                         )
                     }
                 AllPhase.Failed ->
@@ -207,12 +251,20 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                         KitStateView(
                             kind = KitStateKind.Empty,
                             title = stringResource(Res.string.globalSessionsNoMatchTitle),
-                            primary = KitAction(stringResource(Res.string.chatsHomeClearFilters), actions::clearFilters),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.chatsHomeClearFilters),
+                                    actions::clearFilters,
+                                ),
                         )
                     }
-                AllPhase.List -> items(state.rows, key = { it.key }) { row -> AllRow(row, state.selecting, actions) }
+                AllPhase.List ->
+                    items(state.rows, key = { it.key }) { row ->
+                        AllRow(row, state.selecting, actions)
+                    }
             }
-            // Under a filter with no loaded match, older pages may still hold one: Load more and its Try again stay.
+            // Under a filter with no loaded match, older pages may still hold one: Load more and
+            // its Try again stay.
             if (listed && state.canLoadMore) {
                 item(key = "more") {
                     val failed = state.loadMoreFailure
@@ -222,7 +274,11 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                             failure = failed,
                             detailsLabel = stringResource(Res.string.kitDetails),
                             copyLabel = stringResource(Res.string.kitCopyDetails),
-                            retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::loadMore),
+                            retry =
+                                KitLineAction(
+                                    stringResource(Res.string.kitTryAgain),
+                                    actions::loadMore,
+                                ),
                         )
                     } else {
                         KitButton(
@@ -302,8 +358,21 @@ private fun rowTitle(title: RowTitle): String =
 private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) {
     val title = rowTitle(row.title)
     val project = row.project ?: stringResource(Res.string.globalSessionsUnknownLocation)
-    val supporting = row.server?.let { "$it · $project" } ?: project
+    val location = row.server?.let { "$it · $project" } ?: project
+    val supporting =
+        row.contextPercent?.let {
+            "$location · " + stringResource(Res.string.stateContextUsage, it)
+        } ?: location
     val running = stringResource(Res.string.chatsHomeRunning)
+    if (row.readOnly) {
+        KitRow(
+            title = title,
+            supporting = supporting,
+            enabled = false,
+            disabledReason = stringResource(Res.string.stateSavedPreview),
+        )
+        return
+    }
     if (selecting) {
         KitChoiceRow(
             title = title,
@@ -319,20 +388,31 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
     val archiveReason = stringResource(Res.string.p12ArchiveUnavailable)
     val items =
         listOf(
+            KitMenuItem(
+                stringResource(if (row.pinned) Res.string.stateUnpin else Res.string.statePin),
+                { actions.togglePin(row.key) },
+            ),
             KitMenuItem(stringResource(Res.string.p12Rename), { actions.rename(row.key) }),
             KitMenuItem(
                 stringResource(Res.string.sessionMenuArchive),
                 { actions.archive(row.key) },
-                enabled = if (row.canArchive) KitEnabled.Enabled else KitEnabled.Disabled(archiveReason),
+                enabled =
+                    if (row.canArchive) KitEnabled.Enabled else KitEnabled.Disabled(archiveReason),
             ),
             KitMenuItem(stringResource(Res.string.p12Select), { actions.startSelecting(row.key) }),
-            KitMenuItem(stringResource(Res.string.sessionMenuDelete), { actions.delete(row.key) }, destructive = true),
+            KitMenuItem(
+                stringResource(Res.string.sessionMenuDelete),
+                { actions.delete(row.key) },
+                destructive = true,
+            ),
         )
     KitMenu(expanded = menu, items = items, onDismissRequest = { menu = false }, title = title) {
         KitRow(
             title = title,
             supporting = supporting,
-            trailing = if (row.running) KitRowTrailing.Value(running, chevron = false) else KitRowTrailing.None,
+            trailing =
+                if (row.running) KitRowTrailing.Value(running, chevron = false)
+                else KitRowTrailing.None,
             growKey = row.ref,
             onLongClick = { menu = true },
             onLongClickLabel = stringResource(Res.string.p12MoreFor, title),
@@ -348,6 +428,16 @@ private fun Bottom(state: AllConversationsUi, actions: ChatsAllActions) {
         if (state.selecting && state.selectedCount > 0) {
             val n = state.selectedCount
             if (n == 1) {
+                val selected = state.rows.singleOrNull { it.selected }
+                KitButton(
+                    label =
+                        stringResource(
+                            if (selected?.pinned == true) Res.string.stateUnpin
+                            else Res.string.statePin
+                        ),
+                    onClick = actions::toggleSelectedPin,
+                    role = KitButtonRole.Secondary,
+                )
                 KitButton(
                     label = stringResource(Res.string.p12Rename),
                     onClick = actions::renameSelected,
@@ -377,7 +467,9 @@ private fun Bottom(state: AllConversationsUi, actions: ChatsAllActions) {
                 else -> pluralStringResource(Res.plurals.p12DeletedMany, undo.count, undo.count)
             }
         KitUndoBar(
-            offer = if (undo != null && message != null) KitUndoOffer("delete-${undo.id}", message) else null,
+            offer =
+                if (undo != null && message != null) KitUndoOffer("delete-${undo.id}", message)
+                else null,
             onUndo = actions::undoDelete,
             onTimeout = actions::commitDelete,
         )

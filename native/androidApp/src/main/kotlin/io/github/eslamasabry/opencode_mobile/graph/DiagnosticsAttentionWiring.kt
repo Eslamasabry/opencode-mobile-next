@@ -7,6 +7,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.PowerManager
 import android.widget.Toast
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
@@ -51,6 +52,7 @@ import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemReportClipboar
 import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemReportEvent
 import io.github.eslamasabry.oc.engine.diagnostics.problem.ProblemReports
 import io.github.eslamasabry.oc.engine.diagnostics.report.AppErrorCapture
+import io.github.eslamasabry.oc.engine.diagnostics.report.ProblemThermalReadings
 import io.github.eslamasabry.oc.engine.diagnostics.report.ReportProblemStartup
 import io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptDiagnosticsHost
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -78,6 +80,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
+import kotlinx.coroutines.asExecutor
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /*
  * Unit BUILD-DIAGNOSTICS-ATTENTION: the Android halves of the diagnostics engines. The persisted problem report
@@ -101,6 +106,7 @@ object DiagnosticsAttentionBindings {
         trace: PerfTrace,
         redactor: Redactor,
         clock: Clock,
+        dispatchers: AppDispatchers,
     ): ReportProblemStartup =
         ReportProblemStartup(
             { AndroidReportFiles(application.filesDir) },
@@ -108,6 +114,7 @@ object DiagnosticsAttentionBindings {
             trace,
             redactor,
             clock,
+            thermalReadings = AndroidProblemThermalReadings(application, dispatchers),
         )
 
     @Provides
@@ -176,6 +183,42 @@ object DiagnosticsAttentionBindings {
     }
 }
 
+/** Native thermal changes feed the same persisted report as errors, timings and typed exits. */
+private class AndroidProblemThermalReadings(
+    private val application: Application,
+    private val dispatchers: AppDispatchers,
+) : ProblemThermalReadings {
+    override fun subscribe(onReading: (String, Double?) -> Unit): () -> Unit {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return {}
+        val manager = application.getSystemService(PowerManager::class.java) ?: return {}
+        val listener = PowerManager.OnThermalStatusChangedListener { status ->
+            val name =
+                when (status) {
+                    PowerManager.THERMAL_STATUS_NONE -> "none"
+                    PowerManager.THERMAL_STATUS_LIGHT -> "light"
+                    PowerManager.THERMAL_STATUS_MODERATE -> "moderate"
+                    PowerManager.THERMAL_STATUS_SEVERE -> "severe"
+                    PowerManager.THERMAL_STATUS_CRITICAL -> "critical"
+                    PowerManager.THERMAL_STATUS_EMERGENCY -> "emergency"
+                    PowerManager.THERMAL_STATUS_SHUTDOWN -> "shutdown"
+                    else -> "unknown"
+                }
+            onReading(name, null)
+        }
+        return try {
+            manager.addThermalStatusListener(dispatchers.io.asExecutor(), listener)
+            val detach: () -> Unit = {
+                try {
+                    manager.removeThermalStatusListener(listener)
+                } catch (_: RuntimeException) {}
+            }
+            detach
+        } catch (_: RuntimeException) {
+            {}
+        }
+    }
+}
+
 /**
  * The once-per-process start: the persisted report, the crash store, the framework error hook and
  * the exit entry.
@@ -187,6 +230,7 @@ class DiagnosticsAttentionStartup(
     private val crash: CrashStartup,
     private val exits: ExitHistory,
     private val diagnostics: Diagnostics,
+    private val trace: PerfTrace,
     private val appScope: AppCoroutineScope,
     private val dispatchers: AppDispatchers,
 ) {
@@ -200,12 +244,15 @@ class DiagnosticsAttentionStartup(
         // A fatal error leaves only its category (B-STATE-074); the platform handler then ends the
         // process as before.
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
-            capture.capture(error)
-            previous?.uncaughtException(thread, error)
+            val safe = capture.capture(error)
+            previous?.uncaughtException(thread, safe)
         }
         crash.start()
         appScope.launch(dispatchers.io) {
-            val session = report.start() ?: return@launch
+            val opening = trace.begin("diagnostics.open")
+            val session = report.start()
+            opening.finish(error = session == null)
+            session ?: return@launch
             exits.launchReport().exit?.let {
                 session.recordAndroidExit(it)
             } // B-STATE-077: once per exit
@@ -232,7 +279,6 @@ class AppKeptDiagnosticsHost(
     appScope: AppCoroutineScope,
 ) : KeptDiagnosticsHost {
     private val format = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
-    private val reopened = MutableStateFlow(0)
 
     override val crash: StateFlow<CrashDiagnosticsState?> =
         crashStartup.current
@@ -240,12 +286,11 @@ class AppKeptDiagnosticsHost(
             .stateIn(appScope, SharingStarted.Eagerly, crashStartup.current.value?.state?.value)
 
     override val errorsKept: StateFlow<Int> =
-        combine(diagnostics.errors, reopened) { ring, _ -> ring }
-            .flatMapLatest { ring ->
-                val session = report.current
+        report.sessions
+            .flatMapLatest { session ->
                 session?.report?.state?.map { s ->
                     s.entries.count { it.kind.name == "Error" || it.kind.name == "AndroidExit" }
-                } ?: flowOf(ring.size)
+                } ?: diagnostics.errors.map { it.size }
             }
             .stateIn(appScope, SharingStarted.Eagerly, diagnostics.errors.value.size)
 
@@ -265,12 +310,13 @@ class AppKeptDiagnosticsHost(
 
     override suspend fun clearErrors(): Outcome<Unit> =
         withContext(dispatchers.io) {
-            // Diagnostics.clear also erases the saved report and restored crash evidence through
-            // its listeners.
-            val cleared = report.current?.report?.clear() ?: Outcome.Ok(Unit)
+            // One deletion through the capture listener: a second clear could hide a later storage
+            // failure.
+            val session = report.start()
             diagnostics.clear()
-            reopened.value++
-            cleared
+            if (session == null || session.report.storageFailed)
+                Outcome.Failed(Failure.StorageRefused())
+            else Outcome.Ok(Unit)
         }
 
     override fun timeLabel(at: Instant): String = format.format(Date(at.toEpochMilliseconds()))
@@ -450,6 +496,9 @@ class AndroidCrashStore(private val dir: File) : CrashStore {
  * profile) in `oc.diag.lastExitSeen`.
  */
 class AndroidLifecycleSource(private val application: Application) : LifecycleSource {
+    private val launchLock = Mutex()
+    private var launch: RawLaunchReport? = null
+
     override val exitHistorySupported: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
     override val mainProcessName: String = application.packageName
 
@@ -470,15 +519,38 @@ class AndroidLifecycleSource(private val application: Application) : LifecycleSo
         }
     }
 
-    override suspend fun launchReport(): Outcome<RawLaunchReport> {
-        val all = retainedExits()
-        if (all !is Outcome.Ok) return Outcome.Ok(RawLaunchReport())
-        val prefs = application.getSharedPreferences("oc.diag", Context.MODE_PRIVATE)
-        val seen = prefs.getLong("oc.diag.lastExitSeen", 0L)
-        val newest =
-            all.value.filter { it.processName == mainProcessName }.maxByOrNull { it.timestampMs }
-        if (newest == null || newest.timestampMs <= seen) return Outcome.Ok(RawLaunchReport())
-        prefs.edit().putLong("oc.diag.lastExitSeen", newest.timestampMs).apply()
-        return Outcome.Ok(RawLaunchReport(exit = newest))
-    }
+    override suspend fun launchReport(): Outcome<RawLaunchReport> =
+        launchLock.withLock<Outcome<RawLaunchReport>> {
+            launch?.let {
+                return@withLock Outcome.Ok(it)
+            }
+            val all =
+                when (val read = retainedExits()) {
+                    is Outcome.Failed -> return@withLock read
+                    is Outcome.Ok -> read.value
+                }
+            attempt({ Failure.StorageRefused() }) {
+                val prefs = application.getSharedPreferences("oc.diag", Context.MODE_PRIVATE)
+                val seen = prefs.getLong("oc.diag.lastExitSeen", 0L)
+                val newest =
+                    all.filter { it.processName == mainProcessName }.maxByOrNull { it.timestampMs }
+                val report =
+                    RawLaunchReport(
+                        exit = newest?.takeIf { it.timestampMs > seen },
+                        previousServices =
+                            io.github.eslamasabry.opencode_mobile.AppLifecycle.previousServices(
+                                application
+                            ),
+                    )
+                val exit = report.exit
+                if (
+                    exit != null &&
+                        !prefs.edit().putLong("oc.diag.lastExitSeen", exit.timestampMs).commit()
+                ) {
+                    throw java.io.IOException("unavailable")
+                }
+                launch = report
+                report
+            }
+        }
 }

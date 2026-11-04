@@ -6,6 +6,10 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.model.PromptAttachment
+import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.engine.composer.stash.DraftMigrationResult
+import io.github.eslamasabry.oc.engine.composer.stash.PromptShelf
+import io.github.eslamasabry.oc.engine.composer.stash.SavedPromptMigration
 import io.github.eslamasabry.oc.engine.composer.store.ComposerPrefs
 import io.github.eslamasabry.oc.engine.composer.store.ComposerProfiles
 import io.github.eslamasabry.oc.engine.composer.store.StoredFormatException
@@ -79,6 +83,20 @@ public class Drafts(
 
     private val lane = Mutex()
     private val closing = AtomicReference<Set<String>>(emptySet())
+
+    /**
+     * Uses the ordinary draft writer's lane, so migration cannot replace a concurrently saved
+     * draft.
+     */
+    public suspend fun migrateOlder(
+        profile: String,
+        shelf: PromptShelf,
+        redactor: Redactor,
+    ): DraftMigrationResult = lane.withLock {
+        SavedPromptMigration(prefs, shelf, vault, profiles, redactor).runForProfile(profile) {
+            profile !in closing.load() && profiles.exists(profile)
+        }
+    }
 
     private class Snapshot(
         val raw: String?,
@@ -201,10 +219,10 @@ public class Drafts(
     }
 
     /**
-     * The draft session's whole-state write (full composer, 2026-11-02): the exact text
-     * (whitespace preserved; an empty draft with no files is never written) and the authoritative
-     * file snapshot — an empty list removes saved files and lets the collector reclaim their
-     * payloads. A refusal changes no metadata.
+     * The draft session's whole-state write (full composer, 2026-11-02): the exact text (whitespace
+     * preserved; an empty draft with no files is never written) and the authoritative file snapshot
+     * — an empty list removes saved files and lets the collector reclaim their payloads. A refusal
+     * changes no metadata.
      */
     internal suspend fun saveRevision(
         profileId: String,
@@ -248,7 +266,8 @@ public class Drafts(
         } else if (files == null && (drafts[key]?.text == text || nothingStored)) {
             return Unit.ok()
         }
-        // A whole-state write keeps the conversation's directory/workspace binding: a `file:` reference
+        // A whole-state write keeps the conversation's directory/workspace binding: a `file:`
+        // reference
         // is meaningful only there. Unknown location keeps the stored one; a file reference with no
         // location at all is refused rather than saved unbound.
         val place =

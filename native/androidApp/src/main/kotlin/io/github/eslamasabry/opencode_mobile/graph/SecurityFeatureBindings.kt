@@ -54,6 +54,8 @@ object SecurityFeatureBindings {
             )
             // REST-1: per-profile monitoring keys.
             AndroidProfileMonitoring.registerKeys(this)
+            // STATE: saved native state (pins, budgets, models, prompt history, pending commands and more).
+            registerStateKeys(this)
             // PORT-SCREENS-2: reader choices, new-chat project, shared project folders, list sources, opening titles.
             io.github.eslamasabry.oc.engine.settings.reader.ReaderPreferencesStore.register(this)
             register(

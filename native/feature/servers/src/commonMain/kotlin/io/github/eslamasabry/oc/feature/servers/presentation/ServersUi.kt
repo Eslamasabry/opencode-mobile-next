@@ -91,9 +91,15 @@ public interface ServersActions {
 
     public fun openSetup(id: ProfileId) {}
 
+    /** STATE: the setup inspection page (SetupRoute.Home). */
+    public fun openStateSetup(id: ProfileId) {}
+
     public fun reviewImportedSignIns(id: ProfileId) {}
 
     public fun closeImportedSignIns() {}
 
     public fun openProviderSignIn() {}
+
+    /** STATE: the offline demo conversation. */
+    public fun tryOffline() {}
 }

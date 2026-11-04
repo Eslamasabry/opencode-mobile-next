@@ -46,6 +46,11 @@ public data class ProjectsPickerUi(
     val query: String = "",
     val showSearch: Boolean = false,
     val askingPath: Boolean = false,
+    val canCreate: Boolean = false,
+    val askingCreate: Boolean = false,
+    val createName: String = "",
+    val creatingFolder: Boolean = false,
+    val folderFailure: Failure? = null,
     /** The folder used last, so the path field starts next to it. */
     val pathStart: String = "",
 )
@@ -60,6 +65,14 @@ public interface ProjectsPickerActions {
     public fun cancelPhoneScan()
 
     public fun askPath()
+
+    public fun askCreate() {}
+
+    public fun changeCreateName(name: String) {}
+
+    public fun closeCreate() {}
+
+    public fun createFolder() {}
 
     /** The path dialog's answer; null = cancelled. */
     public fun finishPath(path: String?)

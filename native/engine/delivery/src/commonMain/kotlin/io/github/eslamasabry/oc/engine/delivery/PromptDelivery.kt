@@ -524,7 +524,21 @@ public class PromptDelivery(
                 (bubble.reviewId == null || queue.canDispatchOnline(bubble.reviewId))
         var failure: Failure? = null
         val accepted: Boolean
-        val journal = (journals.forProfile(ref.profileId) as? Outcome.Ok)?.value
+        val journal =
+            when (val owner = journals.forProfile(ref.profileId)) {
+                is Outcome.Ok -> owner.value
+                is Outcome.Failed -> {
+                    if (link.capabilities.commandReceipts)
+                        return failed(
+                            bubble,
+                            request,
+                            putBack,
+                            Failure.Refused(RefusalReason.DispatchUncertain),
+                            left = false,
+                        )
+                    null
+                }
+            }
         if (
             bubble.reviewId != null &&
                 clientId != null &&

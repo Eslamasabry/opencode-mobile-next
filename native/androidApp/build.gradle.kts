@@ -88,6 +88,7 @@ dependencies {
             ":feature:chats",
             ":feature:chat",
             ":feature:servers",
+            ":feature:setupassistant",
             ":core:data",
             ":core:net",
             ":protocol:oc2",

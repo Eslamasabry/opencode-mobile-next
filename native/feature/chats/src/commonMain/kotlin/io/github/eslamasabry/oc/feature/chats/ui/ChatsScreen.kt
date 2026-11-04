@@ -71,6 +71,7 @@ import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
 import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
+import io.github.eslamasabry.oc.ui.words.res.stateAttentionTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.pluralStringResource
@@ -117,6 +118,13 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
                 items(opening.rows, key = { "cached:${it.key}" }) { row -> OpeningRow(row) }
                 if (opening.rows.isEmpty()) item(key = "opening") { KitSkeletonRows() }
                 return@LazyColumn
+            }
+            item(key = "attention") {
+                KitButton(
+                    label = stringResource(Res.string.stateAttentionTitle),
+                    onClick = actions::openAttention,
+                    role = KitButtonRole.Tertiary,
+                )
             }
             state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions) } }
             if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) {

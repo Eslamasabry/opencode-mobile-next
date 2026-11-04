@@ -26,14 +26,29 @@ public class ThisPhoneViewModel(
     nav: PhoneNavigator,
     clock: Clock,
     pacer: Pacer,
+    details: Set<PhoneStateDetails>,
     exits: PhoneExitNotices,
     processes: PhoneProcessSource,
 ) : ViewModel(), ThisPhoneActions {
     private val model =
-        ThisPhoneModel(source, settings, nav, viewModelScope, clock, pacer, exits, processes)
+        ThisPhoneModel(
+            source,
+            settings,
+            nav,
+            viewModelScope,
+            clock,
+            pacer,
+            details = details,
+            exits = exits,
+            processes = processes,
+        )
     public val state: StateFlow<ThisPhoneUi> = model.state
 
     override fun act(act: PhoneAct): Unit = model.act(act)
+
+    override fun dismissRecovery(): Unit = model.dismissRecovery()
+
+    override fun refreshStorage(): Unit = model.refreshStorage()
 
     override fun stopServer(): Unit = model.stopServer()
 

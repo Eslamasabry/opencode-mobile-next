@@ -67,6 +67,9 @@ public sealed interface ThisPhoneNotice {
  * `:ui:words`.
  */
 public data class ThisPhoneUi(
+    val lifecycle: io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReport? = null,
+    val storage: io.github.eslamasabry.oc.engine.runtime.lifecycle.AppStorageFacts? = null,
+    val storageFailed: Boolean = false,
     val answer: ThisPhoneAnswer = ThisPhoneAnswer(AnswerTone.Working, AnswerHeadline.Checking),
     val serverRows: ImmutableList<ServerRow> = persistentListOf(),
     val version: VersionRowUi? = null,
@@ -82,6 +85,10 @@ public data class ThisPhoneUi(
 public interface ThisPhoneActions {
     /** The answer's one act. */
     public fun act(act: PhoneAct)
+
+    public fun dismissRecovery()
+
+    public fun refreshStorage()
 
     public fun stopServer()
 

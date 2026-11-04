@@ -1,0 +1,18 @@
+<resources>
+    <string name="stateNoteTitle">Conversation note</string>
+    <string name="stateNoteDescription">This note guides replies in this conversation. It is saved on this server.</string>
+    <string name="stateNoteField">Note for this conversation</string>
+    <string name="stateNoteSave">Save note</string>
+    <string name="stateNoteRemove">Remove note</string>
+    <string name="stateNoteReload">Read saved note again</string>
+    <string name="stateNoteWorking">Saving or reading the note. Please wait.</string>
+    <string name="stateNoteReloadFirst">Write a change first. The note must be loaded and fit within 8192 encoded bytes.</string>
+    <string name="stateNoteTooLarge">The note is too long. Keep it within 8192 encoded bytes.</string>
+    <string name="stateNoteChanged">The conversation or its saved note changed. Read it again before saving.</string>
+    <string name="stateNoteFailed">The note could not be read or saved. Check the connection and try again.</string>
+    <string name="stateNoteSaved">Note saved.</string>
+    <string name="stateNoteRemoved">Note removed.</string>
+    <string name="stateNoteDiscardTitle">Discard this note change?</string>
+    <string name="stateNoteDiscardBody">Your unsaved change will be lost. The saved note stays as it is.</string>
+    <string name="stateNoteDiscard">Discard change</string>
+</resources>

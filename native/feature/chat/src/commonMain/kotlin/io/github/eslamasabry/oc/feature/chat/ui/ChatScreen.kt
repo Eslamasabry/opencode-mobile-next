@@ -187,6 +187,7 @@ import io.github.eslamasabry.oc.ui.words.res.schedulePhoneCheckFailed
 import io.github.eslamasabry.oc.ui.words.res.sessionInstructionsUpdated
 import io.github.eslamasabry.oc.ui.words.res.skillApplied
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindAll
+import io.github.eslamasabry.oc.ui.words.res.stateDemoDisclosure
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindClose
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindCount
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindHint
@@ -227,6 +228,7 @@ public fun ChatScreen(
     activeContext: ActiveContextModel? = null,
     start: ChatStartUi = ChatStartUi(),
     startActions: ChatStartActions? = null,
+    demoMode: Boolean = false,
 ) {
     var contextOpen by remember { mutableStateOf(false) }
     var tasksOpen by remember(state.ref) { mutableStateOf(false) }
@@ -354,6 +356,9 @@ public fun ChatScreen(
                                     )
                                 }
                             val unitActions =
+                                // STATE: the offline demo offers no server actions.
+                                (if (demoMode) emptyList()
+                                else
                                 listOfNotNull(
                                     facts.tasks?.let { tasks ->
                                         KitLineAction(
@@ -401,7 +406,7 @@ public fun ChatScreen(
                                         actions::openTools,
                                         testTag = "chat-tools-open",
                                     ),
-                                ) + extraActions
+                                )) + extraActions
                             if (header != null) {
                                 // CHAT-HEADER replaces the plain bar; Find lives in its ⋯ menu, the
                                 // other
@@ -433,7 +438,14 @@ public fun ChatScreen(
                                 )
                         }
                     },
-                    status = state.status?.let { statusLine(it, actions) },
+                    status =
+                        if (demoMode)
+                            KitStatus(
+                                KitStatusKind.Info,
+                                stringResource(Res.string.stateDemoDisclosure),
+                                id = "offline-demo",
+                            )
+                        else state.status?.let { statusLine(it, actions) },
                     search = state.find?.let { find -> @Composable { FindBar(find, actions) } },
                     loading = state.phase == ChatPhase.Loading,
                     loadingLabel = stringResource(Res.string.chatLoadingConversation),

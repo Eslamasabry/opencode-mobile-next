@@ -6,6 +6,8 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.security.Redactor
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.time.Instant
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
@@ -32,22 +34,37 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
-import kotlin.concurrent.atomics.AtomicBoolean
-import kotlin.time.Instant
 
-/** Completed automatic actions, never requests for the person to answer (Flutter `AutomaticActKind`). */
+/**
+ * Completed automatic actions, never requests for the person to answer (Flutter
+ * `AutomaticActKind`).
+ */
 public enum class AutomaticActKind {
-    Reconnect, Restart, HeatPause, HeatStop, HeatResume, Update, PermissionApproval, QueuedSend, Other;
+    Reconnect,
+    Restart,
+    HeatPause,
+    HeatStop,
+    HeatResume,
+    Update,
+    PermissionApproval,
+    QueuedSend,
+    Other;
 
     /** The persisted name, as Flutter's `kind.name` (lower camel case). */
-    public val wire: String get() = name.replaceFirstChar { it.lowercaseChar() }
+    public val wire: String
+        get() = name.replaceFirstChar { it.lowercaseChar() }
 
     public companion object {
-        public fun fromWire(value: String): AutomaticActKind? = entries.firstOrNull { it.wire == value }
+        public fun fromWire(value: String): AutomaticActKind? = entries.firstOrNull {
+            it.wire == value
+        }
     }
 }
 
-/** One observed automatic action within a profile's location. [summary] is already redacted and bounded. */
+/**
+ * One observed automatic action within a profile's location. [summary] is already redacted and
+ * bounded.
+ */
 public data class AutomaticAct(
     val id: String,
     val locationKey: String,
@@ -60,12 +77,21 @@ public data class AutomaticAct(
     val undone: Boolean = false,
 )
 
-/** No exception text leaves an inverse operation. An uncertain attempt is never retried, even after process death. */
-public enum class AutomaticUndoResult { Unavailable, Undone, Failed, Unconfirmed }
+/**
+ * No exception text leaves an inverse operation. An uncertain attempt is never retried, even after
+ * process death.
+ */
+public enum class AutomaticUndoResult {
+    Unavailable,
+    Undone,
+    Failed,
+    Unconfirmed,
+}
 
 /**
- * App-private key/value storage for the activity history (SharedPreferences on Android). [write] and [remove] return
- * false when the platform refused; they may also throw. Both are treated as "not saved".
+ * App-private key/value storage for the activity history (SharedPreferences on Android). [write]
+ * and [remove] return false when the platform refused; they may also throw. Both are treated as
+ * "not saved".
  */
 public interface AttentionKeyStore {
     public suspend fun read(key: String): String?
@@ -86,13 +112,15 @@ public data class AutomaticActivityState(
 )
 
 /**
- * Local history of observed automatic acts; never initiates automation (port of `AutomaticActivityController`,
- * B-STATE-006/007, B-SEC-015/016, B-AGENT-030). One instance per profile ([AutomaticActivityRegistry]). Event ids
- * identify occurrences: a repeated delivery deduplicates, a new act does not. Only the newest [MAX_ENTRIES] are kept.
- * Undo callbacks are memory-only, offered once, never reconstructed on restart, and need a durable attempt marker
+ * Local history of observed automatic acts; never initiates automation (port of
+ * `AutomaticActivityController`, B-STATE-006/007, B-SEC-015/016, B-AGENT-030). One instance per
+ * profile ([AutomaticActivityRegistry]). Event ids identify occurrences: a repeated delivery
+ * deduplicates, a new act does not. Only the newest [MAX_ENTRIES] are kept. Undo callbacks are
+ * memory-only, offered once, never reconstructed on restart, and need a durable attempt marker
  * first. Commands run on one serial lane; admission is decided when the command is called.
  */
-public class AutomaticActivity private constructor(
+public class AutomaticActivity
+private constructor(
     private val store: AttentionKeyStore,
     private val redactor: Redactor,
     public val profileId: String,
@@ -113,10 +141,14 @@ public class AutomaticActivity private constructor(
     private val mutableState = MutableStateFlow(AutomaticActivityState())
     public val state: StateFlow<AutomaticActivityState> = mutableState.asStateFlow()
 
-    public val currentActs: ImmutableList<AutomaticAct> get() = acts.toImmutableList()
+    public val currentActs: ImmutableList<AutomaticAct>
+        get() = acts.toImmutableList()
 
-    private val available: Boolean get() = !disposed.load() && !closed.load() && isProfilePresent()
-    private val accepting: Boolean get() = available && !preparingDeletion.load()
+    private val available: Boolean
+        get() = !disposed.load() && !closed.load() && isProfilePresent()
+
+    private val accepting: Boolean
+        get() = available && !preparingDeletion.load()
 
     /** Avoids persisting directory names or URLs (which can carry credentials). */
     public fun locationKey(location: String): String = DartJson.sha256Hex(location)
@@ -127,8 +159,9 @@ public class AutomaticActivity private constructor(
     }
 
     /**
-     * False means the observation could not be durably recorded; the caller may retry this SAME event id and must
-     * never repeat the original act to retry a write. [undo] returns true only after confirming the inverse.
+     * False means the observation could not be durably recorded; the caller may retry this SAME
+     * event id and must never repeat the original act to retry a write. [undo] returns true only
+     * after confirming the inverse.
      */
     public suspend fun record(
         eventId: String,
@@ -144,9 +177,15 @@ public class AutomaticActivity private constructor(
         if (safeSummary.isEmpty()) return false
         val id = DartJson.sha256Hex(DartJson.encode(listOf(location, eventId)))
         val safeSession =
-            if (sessionId.isNullOrEmpty() || sessionId.length > 256 || redactor.containsSecret(sessionId)) null
+            if (
+                sessionId.isNullOrEmpty() ||
+                    sessionId.length > 256 ||
+                    redactor.containsSecret(sessionId)
+            )
+                null
             else redactor.redact(sessionId)
-        val act = AutomaticAct(id, locationKey(location), kind, safeSummary, occurredAt, safeSession)
+        val act =
+            AutomaticAct(id, locationKey(location), kind, safeSummary, occurredAt, safeSession)
         return enqueue(false) {
             if (acts.any { it.id == id }) return@enqueue true
             if (!save(bounded(acts + act))) return@enqueue false
@@ -158,7 +197,10 @@ public class AutomaticActivity private constructor(
         }
     }
 
-    /** Acknowledges only these ids, captured before entering the lane. Hides history; never marks work read. */
+    /**
+     * Acknowledges only these ids, captured before entering the lane. Hides history; never marks
+     * work read.
+     */
     public suspend fun acknowledge(ids: Iterable<String>): Boolean {
         val shown = ids.toSet()
         return enqueue(false) {
@@ -168,7 +210,10 @@ public class AutomaticActivity private constructor(
     }
 
     public fun canUndo(id: String): Boolean =
-        accepting && id !in pendingUndo && inverses.containsKey(id) && acts.any { it.id == id && !it.undoAttempted }
+        accepting &&
+            id !in pendingUndo &&
+            inverses.containsKey(id) &&
+            acts.any { it.id == id && !it.undoAttempted }
 
     public suspend fun undo(id: String): AutomaticUndoResult {
         if (!canUndo(id)) return AutomaticUndoResult.Unavailable
@@ -180,7 +225,8 @@ public class AutomaticActivity private constructor(
                 if (inverse == null || acts.none { it.id == id && !it.undoAttempted }) {
                     return@enqueue AutomaticUndoResult.Unavailable
                 }
-                // Commit intent first: a crash after the remote effect cannot offer the inverse again.
+                // Commit intent first: a crash after the remote effect cannot offer the inverse
+                // again.
                 if (!save(acts.map { if (it.id == id) it.copy(undoAttempted = true) else it })) {
                     return@enqueue AutomaticUndoResult.Failed
                 }
@@ -201,18 +247,22 @@ public class AutomaticActivity private constructor(
     }
 
     /**
-     * Pauses new records, acknowledgements and Undo at once, then drains already admitted writes and inverses without
-     * erasing history or callbacks. Use [cancelDeletion] if the deletion aborts.
+     * Pauses new records, acknowledgements and Undo at once, then drains already admitted writes
+     * and inverses without erasing history or callbacks. Use [cancelDeletion] if the deletion
+     * aborts.
      */
     public suspend fun prepareForDeletion() {
         if (!closed.load() && !disposed.load()) {
             preparingDeletion.store(true)
             publish()
         }
-        lane.withLock { }
+        lane.withLock {}
     }
 
-    /** Resumes the same owner after reversible deletion preparation. Erasure or disposal cannot be cancelled. */
+    /**
+     * Resumes the same owner after reversible deletion preparation. Erasure or disposal cannot be
+     * cancelled.
+     */
     public fun cancelDeletion() {
         if (!preparingDeletion.load() || closed.load() || disposed.load()) return
         preparingDeletion.store(false)
@@ -220,8 +270,9 @@ public class AutomaticActivity private constructor(
     }
 
     /**
-     * Closes first, drains in-flight writes and inverses, then removes the key. Call only in committed deletion. False
-     * is retryable; the history stays closed even when the platform refused removal.
+     * Closes first, drains in-flight writes and inverses, then removes the key. Call only in
+     * committed deletion. False is retryable; the history stays closed even when the platform
+     * refused removal.
      */
     public suspend fun deleteProfileData(): Boolean {
         closed.store(true)
@@ -257,7 +308,8 @@ public class AutomaticActivity private constructor(
             publish()
             return false
         }
-        // A profile removed while a platform write was pending cannot be recreated by that late write.
+        // A profile removed while a platform write was pending cannot be recreated by that late
+        // write.
         if (!isProfilePresent()) {
             val removed = attempt({ Failure.StorageRefused() }) { store.remove(storageKey) }
             if (removed !is Outcome.Ok || !removed.value) {
@@ -287,28 +339,29 @@ public class AutomaticActivity private constructor(
     }
 
     private fun summaryOf(value: String): String {
-        // Redact BEFORE flattening/truncation: headers and multiline secrets depend on their original boundaries.
+        // Redact BEFORE flattening/truncation: headers and multiline secrets depend on their
+        // original boundaries.
         val safe = redactor.redact(value).replace(FLATTEN, " ").trim()
         return takeCodePoints(safe, SUMMARY_LIMIT)
     }
 
-    private fun encode(next: List<AutomaticAct>): String =
-        buildJsonObject {
-            put("version", 1)
-            putJsonArray("acts") {
-                for (act in next) addJsonObject {
-                    put("id", redactor.redact(act.id))
-                    put("location", redactor.redact(act.locationKey))
-                    put("kind", act.kind.wire)
-                    put("summary", summaryOf(act.summary))
-                    put("at", act.occurredAt.toEpochMilliseconds())
-                    put("session", act.sessionId?.let { redactor.redact(it) })
-                    put("acknowledged", act.acknowledged)
-                    put("undoAttempted", act.undoAttempted)
-                    put("undone", act.undone)
-                }
+    private fun encode(next: List<AutomaticAct>): String = buildJsonObject {
+        put("version", 1)
+        putJsonArray("acts") {
+            for (act in next) addJsonObject {
+                put("id", redactor.redact(act.id))
+                put("location", redactor.redact(act.locationKey))
+                put("kind", act.kind.wire)
+                put("summary", summaryOf(act.summary))
+                put("at", act.occurredAt.toEpochMilliseconds())
+                put("session", act.sessionId?.let { redactor.redact(it) })
+                put("acknowledged", act.acknowledged)
+                put("undoAttempted", act.undoAttempted)
+                put("undone", act.undone)
             }
-        }.toString()
+        }
+    }
+        .toString()
 
     private fun load(raw: String?) {
         if (raw == null) return
@@ -337,12 +390,21 @@ public class AutomaticActivity private constructor(
                 val location = e["location"]!!.jsonPrimitive.content
                 val summary = e["summary"]!!.jsonPrimitive.content
                 val at = e["at"]!!.jsonPrimitive.long
-                val session = (e["session"] as? JsonPrimitive)?.takeUnless { it is JsonNull }?.contentOrNull
+                val session =
+                    (e["session"] as? JsonPrimitive)?.takeUnless { it is JsonNull }?.contentOrNull
                 val attempted = e["undoAttempted"]!!.jsonPrimitive.boolean
                 val undone = e["undone"]!!.jsonPrimitive.boolean
-                val kind = AutomaticActKind.fromWire(e["kind"]!!.jsonPrimitive.content) ?: return null
-                if (!HEX64.matches(id) || !HEX64.matches(location) || !ids.add(id) || summaryOf(summary).isEmpty() ||
-                    summary.length > 1600 || at <= 0 || (session != null && session.length > 256) || (undone && !attempted)
+                val kind =
+                    AutomaticActKind.fromWire(e["kind"]!!.jsonPrimitive.content) ?: return null
+                if (
+                    !HEX64.matches(id) ||
+                        !HEX64.matches(location) ||
+                        !ids.add(id) ||
+                        summaryOf(summary).isEmpty() ||
+                        summary.length > 1600 ||
+                        at <= 0 ||
+                        (session != null && session.length > 256) ||
+                        (undone && !attempted)
                 ) {
                     return null
                 }
@@ -352,7 +414,9 @@ public class AutomaticActivity private constructor(
                     kind = kind,
                     summary = summaryOf(summary),
                     occurredAt = Instant.fromEpochMilliseconds(at),
-                    sessionId = if (session == null || redactor.containsSecret(session)) null else redactor.redact(session),
+                    sessionId =
+                        if (session == null || redactor.containsSecret(session)) null
+                        else redactor.redact(session),
                     acknowledged = e["acknowledged"]!!.jsonPrimitive.boolean,
                     undoAttempted = attempted,
                     undone = undone,
@@ -376,14 +440,20 @@ public class AutomaticActivity private constructor(
         private val OPAQUE_ID = Regex("^[A-Za-z0-9_-]{1,128}$")
         private val log = AppLog.tagged("AutomaticActivity")
 
-        /** The profile-scoped key the deletion sweep must cover (`oc.automaticActivity.<profileId>`). */
+        /**
+         * The profile-scoped key the deletion sweep must cover
+         * (`oc.automaticActivity.<profileId>`).
+         */
         public fun keyFor(profileId: String): String = "oc.automaticActivity.$profileId"
 
         /** Keys contain only an app-authored opaque profile id, never server input. */
         public fun isOpaqueProfileId(profileId: String, redactor: Redactor): Boolean =
             OPAQUE_ID.matches(profileId) && !redactor.containsSecret(profileId)
 
-        /** Null for an id that is not an opaque app-authored profile id; nothing is read or written then. */
+        /**
+         * Null for an id that is not an opaque app-authored profile id; nothing is read or written
+         * then.
+         */
         public suspend fun open(
             store: AttentionKeyStore,
             redactor: Redactor,
@@ -415,7 +485,14 @@ public class AutomaticActivity private constructor(
             var count = 0
             var i = 0
             while (i < text.length && count < limit) {
-                i += if (text[i].isHighSurrogate() && i + 1 < text.length && text[i + 1].isLowSurrogate()) 2 else 1
+                i +=
+                    if (
+                        text[i].isHighSurrogate() &&
+                            i + 1 < text.length &&
+                            text[i + 1].isLowSurrogate()
+                    )
+                        2
+                    else 1
                 count++
             }
             return text.substring(0, i)
@@ -424,20 +501,36 @@ public class AutomaticActivity private constructor(
 }
 
 /**
- * The one shared history per profile on one store, so every connection and the Inbox write the same instance, never
- * a second writer for one key (Flutter `AutomaticActivityController.forProfile` / `closeProfile`).
+ * The one shared history per profile on one store, so every connection and the Inbox write the same
+ * instance, never a second writer for one key (Flutter `AutomaticActivityController.forProfile` /
+ * `closeProfile`).
  */
-public class AutomaticActivityRegistry(private val store: AttentionKeyStore, private val redactor: Redactor) {
+public class AutomaticActivityRegistry(
+    private val store: AttentionKeyStore,
+    private val redactor: Redactor,
+) {
     private val lane = Mutex()
     private val byProfile = mutableMapOf<String, AutomaticActivity>()
 
-    public suspend fun forProfile(profileId: String, isProfilePresent: () -> Boolean): AutomaticActivity? =
-        lane.withLock {
-            byProfile[profileId]
-                ?: AutomaticActivity.open(store, redactor, profileId, isProfilePresent)?.also { byProfile[profileId] = it }
-        }
+    public suspend fun forProfile(
+        profileId: String,
+        isProfilePresent: () -> Boolean,
+    ): AutomaticActivity? = lane.withLock {
+        byProfile[profileId]
+            ?: AutomaticActivity.open(store, redactor, profileId, isProfilePresent)?.also {
+                byProfile[profileId] = it
+            }
+    }
 
-    /** Permanently closes and erases the shared history after profile removal commits. False when refused. */
+    /** Detaches an already swept profile without performing another disk write. */
+    public suspend fun forgetProfile(profileId: String) {
+        lane.withLock { byProfile.remove(profileId) }?.dispose()
+    }
+
+    /**
+     * Permanently closes and erases the shared history after profile removal commits. False when
+     * refused.
+     */
     public suspend fun closeProfile(profileId: String): Boolean {
         val activity = lane.withLock { byProfile[profileId] } ?: return true
         try {

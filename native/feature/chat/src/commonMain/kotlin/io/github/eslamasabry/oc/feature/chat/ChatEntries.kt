@@ -22,10 +22,13 @@ import io.github.eslamasabry.oc.feature.chat.cards.LocalChatCards
 import io.github.eslamasabry.oc.feature.chat.cards.ModelCardSlotHost
 import io.github.eslamasabry.oc.feature.chat.composer.ChatPromptsDoor
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
+import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffSheet
+import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffViewModel
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
+import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteViewModel
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.presentation.SessionTransferViewModel
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui.SessionTransferSheet
@@ -47,6 +50,7 @@ import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
 import io.github.eslamasabry.oc.ui.words.res.protoToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionTransferTitle
+import io.github.eslamasabry.oc.ui.words.res.stateHandoffTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -96,6 +100,16 @@ public class ChatEntries(
                     create(route)
                 }
             val header by headerVm.state.collectAsStateWithLifecycle()
+            val noteVm =
+                assistedMetroViewModel<SessionNoteViewModel, SessionNoteViewModel.Factory> {
+                    create(route)
+                }
+            val note by noteVm.state.collectAsStateWithLifecycle()
+            val handoffVm =
+                assistedMetroViewModel<StateHandoffViewModel, StateHandoffViewModel.Factory> {
+                    create(route)
+                }
+            val handoff by handoffVm.state.collectAsStateWithLifecycle()
             val approval by headerVm.approval.collectAsStateWithLifecycle()
             // PREVIEW-QR: the dev servers this conversation mentioned (rows are newest first; the
             // scan wants oldest first).
@@ -161,6 +175,11 @@ public class ChatEntries(
                                     inspect.takeIf { activeContext.available() },
                                     transferAction,
                                     toolsAction,
+                                    // STATE: continue this conversation elsewhere.
+                                    KitLineAction(
+                                        stringResource(Res.string.stateHandoffTitle),
+                                        handoffVm::open,
+                                    ),
                                 ),
                             activeContext = activeContext,
                             prompts = prompts,
@@ -171,12 +190,15 @@ public class ChatEntries(
                                     header,
                                     headerVm,
                                     ApprovalChipSlot(approval, headerVm),
+                                    note,
+                                    noteVm,
                                 ),
                             replyReader = readers.firstOrNull(),
                             start = start,
                             startActions = startVm,
                         )
                         SessionTransferSheet(transferState, transfer)
+                        StateHandoffSheet(handoff, handoffVm)
                     }
                 }
             }

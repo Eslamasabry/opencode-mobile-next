@@ -118,6 +118,8 @@ public class UsageSubscriptionsEngine(
     private val authoritative = HashSet<String>()
     private val offline = HashSet<String>()
     private val refreshLock = Mutex()
+    private val alertsLock = Mutex()
+    private val removedProfiles = HashSet<String>()
     private var refreshedAt: Instant? = null
     private var loaded = false
     private var disposed = false
@@ -196,7 +198,7 @@ public class UsageSubscriptionsEngine(
         }
         if (disposed || start != epoch) return
         val now = clock()
-        val known = list.mapTo(HashSet()) { it.id }
+        val known = list.mapTo(HashSet()) { it.id }.apply { removeAll(removedProfiles) }
         val touched = HashSet<String>()
 
         val unreached = results.flatMapTo(HashSet()) { it.unreached }
@@ -216,15 +218,18 @@ public class UsageSubscriptionsEngine(
                 if (reading.connectionId !in known) continue
                 val slot = cache.getOrPut(reading.connectionId) { LinkedHashMap() }
                 val old = slot[reading.providerId]
-                // The older of two numbers never replaces the newer.
+                // B-STATE-149: older numbers never replace newer cached evidence, including
+                // recovery from offline.
                 if (
                     old != null &&
                         old.hasNumbers &&
-                        old.problem == null &&
                         reading.hasNumbers &&
                         old.fetchedAt > reading.fetchedAt
-                )
+                ) {
+                    slot[reading.providerId] = old.copy(problem = null, checkedAt = now)
+                    touched += reading.connectionId
                     continue
+                }
                 slot[reading.providerId] =
                     reading.copy(
                         problem = null,
@@ -292,7 +297,7 @@ public class UsageSubscriptionsEngine(
     // ------------------------------------------------------------------------------------------------------- caching
 
     private fun loadCache(id: String) {
-        if (cache.containsKey(id)) return
+        if (id in removedProfiles || cache.containsKey(id)) return
         val slot = LinkedHashMap<String, UsageReading>()
         val raw = store.string(lastKey(id))
         // An unreadable cache is just an empty one.
@@ -305,6 +310,7 @@ public class UsageSubscriptionsEngine(
     }
 
     private suspend fun saveCache(id: String) {
+        if (id in removedProfiles) return
         val slot = cache[id] ?: return
         if (slot.isEmpty()) {
             store.commit(lane) { remove(lastKey(id)) }
@@ -354,13 +360,11 @@ public class UsageSubscriptionsEngine(
 
     public suspend fun setDefaultThreshold(percent: Double): Boolean {
         if (!validLevel(percent)) return false
-        default = percent
-        return commitAlerts()
+        return changeAlerts { default = percent }
     }
 
-    public suspend fun setNotifyOnResetDefault(value: Boolean): Boolean {
+    public suspend fun setNotifyOnResetDefault(value: Boolean): Boolean = changeAlerts {
         resetDefault = value
-        return commitAlerts()
     }
 
     /**
@@ -369,30 +373,59 @@ public class UsageSubscriptionsEngine(
      */
     public suspend fun setThresholdFor(key: String, percent: Double?): Boolean {
         if (percent != null && !validLevel(percent)) return false
-        putOverride(
-            key,
-            UsageAlertOverride(threshold = percent, notifyOnReset = overrides[key]?.notifyOnReset),
-        )
-        return commitAlerts()
+        return changeAlerts {
+            putOverride(
+                key,
+                UsageAlertOverride(
+                    threshold = percent,
+                    notifyOnReset = overrides[key]?.notifyOnReset,
+                ),
+            )
+        }
     }
 
-    public suspend fun setNotifyOnReset(key: String, value: Boolean): Boolean {
+    public suspend fun setNotifyOnReset(key: String, value: Boolean): Boolean = changeAlerts {
         putOverride(
             key,
             UsageAlertOverride(threshold = overrides[key]?.threshold, notifyOnReset = value),
         )
-        return commitAlerts()
     }
 
     private fun putOverride(key: String, value: UsageAlertOverride) {
         if (value.isEmpty) overrides.remove(key) else overrides[key] = value
     }
 
-    private suspend fun commitAlerts(): Boolean {
-        val saved = saveAlerts()
+    /**
+     * Publish settings only after the write is accepted; replacement screens share this one engine
+     * lane.
+     */
+    private suspend fun changeAlerts(edit: () -> Unit): Boolean = alertsLock.withLock {
+        if (disposed) return@withLock false
+        val previousDefault = default
+        val previousReset = resetDefault
+        val previousOverrides = overrides.toMap()
+        val previousMigrated = migrated
+        edit()
+        val proposedDefault = default
+        val proposedReset = resetDefault
+        val proposedOverrides = overrides.toMap()
+        val proposedMigrated = migrated
+        // No optimistic setting remains readable while disk is pending.
+        default = previousDefault
+        resetDefault = previousReset
+        migrated = previousMigrated
+        overrides.clear()
+        overrides.putAll(previousOverrides)
+        if (!saveAlerts(proposedDefault, proposedReset, proposedMigrated, proposedOverrides))
+            return@withLock false
+        default = proposedDefault
+        resetDefault = proposedReset
+        migrated = proposedMigrated
+        overrides.clear()
+        overrides.putAll(proposedOverrides)
         rebuild(loaded)
         syncAlerts()
-        return saved
+        true
     }
 
     private fun loadAlerts() {
@@ -412,16 +445,21 @@ public class UsageSubscriptionsEngine(
         }
     }
 
-    private suspend fun saveAlerts(): Boolean {
+    private suspend fun saveAlerts(
+        threshold: Double = default,
+        reset: Boolean = resetDefault,
+        migrationDone: Boolean = migrated,
+        choices: Map<String, UsageAlertOverride> = overrides,
+    ): Boolean {
         val payload =
             DartJson.encode(
                 linkedMapOf(
                     "v" to 1,
-                    "default" to default,
-                    "resetDefault" to resetDefault,
-                    "migrated" to migrated,
+                    "default" to threshold,
+                    "resetDefault" to reset,
+                    "migrated" to migrationDone,
                     "overrides" to
-                        overrides.entries.associateTo(LinkedHashMap<String, Any?>()) { (k, v) ->
+                        choices.entries.associateTo(LinkedHashMap<String, Any?>()) { (k, v) ->
                             val entry = LinkedHashMap<String, Any?>()
                             v.threshold?.let { entry["t"] = it }
                             v.notifyOnReset?.let { entry["r"] = it }
@@ -436,18 +474,26 @@ public class UsageSubscriptionsEngine(
     private suspend fun migrateOnce() {
         if (migrated) return
         val bridge = alertBridge ?: return
-        for (rule in bridge.legacyRules()) {
-            if (abs(rule.threshold - DEFAULT_ALERT_THRESHOLD) < 0.001) continue
-            val key = usageSubscriptionKey(rule.providerId, rule.accountRef, rule.connectionId)
-            val old = overrides[key]
-            overrides[key] =
-                UsageAlertOverride(
-                    threshold = old?.threshold ?: rule.threshold,
-                    notifyOnReset = old?.notifyOnReset,
-                )
+        changeAlerts {
+            if (!migrated) {
+                for (rule in bridge.legacyRules()) {
+                    if (
+                        !validLevel(rule.threshold) ||
+                            abs(rule.threshold - DEFAULT_ALERT_THRESHOLD) < 0.001
+                    )
+                        continue
+                    val key =
+                        usageSubscriptionKey(rule.providerId, rule.accountRef, rule.connectionId)
+                    val old = overrides[key]
+                    overrides[key] =
+                        UsageAlertOverride(
+                            threshold = old?.threshold ?: rule.threshold,
+                            notifyOnReset = old?.notifyOnReset,
+                        )
+                }
+                migrated = true
+            }
         }
-        migrated = true
-        saveAlerts()
     }
 
     /** Watches every readable subscription at its effective level. */
@@ -499,7 +545,9 @@ public class UsageSubscriptionsEngine(
      * A saved server was removed: its cached numbers, sign-ins and overrides of vanished
      * subscriptions go with it.
      */
-    public suspend fun removeProfile(profileId: String): Boolean {
+    public suspend fun removeProfile(profileId: String, deleted: Boolean = true): Boolean {
+        // STATE: a deleted server never comes back into the feed; a withdrawn collector (SEC-2) only drops its numbers.
+        if (deleted) removedProfiles += profileId
         epoch++
         cache.remove(profileId)
         signIns.remove(profileId)

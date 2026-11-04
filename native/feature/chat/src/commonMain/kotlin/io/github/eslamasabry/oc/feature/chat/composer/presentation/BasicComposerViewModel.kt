@@ -94,6 +94,8 @@ public interface BasicComposerActions {
     /** True = the world verified the new choice and published it. */
     public suspend fun selectModel(choice: ComposerModel?, variant: String = ""): Boolean = false
 
+    public suspend fun toggleModelFavorite(choice: ComposerModel) {}
+
     /** True = the world verified the conversation now runs as [agent]. */
     public suspend fun selectAgent(agent: String): Boolean = false
 
@@ -494,6 +496,10 @@ public class BasicComposerViewModel(
         } finally {
             selectingModel.value = false
         }
+    }
+
+    override suspend fun toggleModelFavorite(choice: ComposerModel) {
+        world?.toggleModelFavorite(choice)
     }
 
     override suspend fun selectAgent(agent: String): Boolean {

@@ -3,19 +3,24 @@ package io.github.eslamasabry.oc.engine.attention.feed
 import io.github.eslamasabry.oc.engine.attention.elsewhere.AttentionEvent
 import io.github.eslamasabry.oc.engine.attention.elsewhere.ElsewhereAttention
 import io.github.eslamasabry.oc.engine.attention.elsewhere.ElsewhereAttention.Companion.asText
-import kotlinx.serialization.json.JsonObject
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.serialization.json.JsonObject
 
 /** A conversation the transport knows: only its title and location reach the feed. */
-public data class AttentionSessionFacts(val title: String? = null, val directory: String? = null, val workspace: String? = null)
+public data class AttentionSessionFacts(
+    val title: String? = null,
+    val directory: String? = null,
+    val workspace: String? = null,
+)
 
 /**
- * The selected server's attention evidence from its live transport (port of the `connection/attention.dart` active
- * snapshot, B-STATE-010). Successful request reads refresh rows; a reconnect bumps the transport revision, so cached
- * requests and failures turn stale until the next successful read or event. A confirmed `session.error` becomes a
- * failed-run row with no error text; newer work (busy), a new prompt or deletion retires it. Not thread-safe: feed it
- * from the connection's one lane.
+ * The selected server's attention evidence from its live transport (port of the
+ * `connection/attention.dart` active snapshot, B-STATE-010). Successful request reads refresh rows;
+ * a reconnect bumps the transport revision, so cached requests and failures turn stale until the
+ * next successful read or event. A confirmed `session.error` becomes a failed-run row with no error
+ * text; newer work (busy), a new prompt or deletion retires it. Not thread-safe: feed it from the
+ * connection's one lane.
  */
 public class SelectedTransportAttention(private val clock: Clock) {
     private var revision = 0
@@ -28,7 +33,9 @@ public class SelectedTransportAttention(private val clock: Clock) {
     private val busy = mutableSetOf<String>()
     private val deleted = mutableSetOf<String>()
 
-    /** Connected, or a reconnect/disconnect: every change of transport makes what was read stale. */
+    /**
+     * Connected, or a reconnect/disconnect: every change of transport makes what was read stale.
+     */
     public fun streamConnected(value: Boolean) {
         if (value == connected) return
         connected = value
@@ -62,7 +69,8 @@ public class SelectedTransportAttention(private val clock: Clock) {
                 if (sessionId.isNullOrEmpty()) return
                 val raw = props["status"]
                 when (if (raw is JsonObject) raw["type"].asText() else raw.asText()) {
-                    "busy", "retry" -> {
+                    "busy",
+                    "retry" -> {
                         busy += sessionId
                         failures.remove(sessionId)
                     }
@@ -72,7 +80,8 @@ public class SelectedTransportAttention(private val clock: Clock) {
             "session.idle" -> if (sessionId != null) busy -= sessionId
             "message.updated" -> {
                 val info = props["info"] as? JsonObject ?: return
-                if (info["role"].asText() == "user") info["sessionID"].asText()?.let { failures.remove(it) }
+                if (info["role"].asText() == "user")
+                    info["sessionID"].asText()?.let { failures.remove(it) }
             }
             "session.deleted" -> {
                 val info = props["info"]
@@ -85,8 +94,9 @@ public class SelectedTransportAttention(private val clock: Clock) {
     }
 
     /**
-     * The active profile's snapshot for [AttentionFeed.fromServers]. [elsewhere] adds the other projects' observations
-     * (leaving out [directory]); [sessions] gives titles and locations; [supportsForms] says whether forms are read.
+     * The active profile's snapshot for [AttentionFeed.fromServers]. [elsewhere] adds the other
+     * projects' observations (leaving out [directory]); [sessions] gives titles and locations;
+     * [supportsForms] says whether forms are read.
      */
     public fun snapshot(
         profileId: String,
@@ -98,12 +108,14 @@ public class SelectedTransportAttention(private val clock: Clock) {
     ): AttentionServerSnapshot {
         fun readCurrent(kind: AttentionKind) = readRevisions[kind] == revision
         val complete =
-            readCurrent(AttentionKind.Permission) && readCurrent(AttentionKind.Question) &&
+            readCurrent(AttentionKind.Permission) &&
+                readCurrent(AttentionKind.Question) &&
                 (!supportsForms || readCurrent(AttentionKind.Form))
         val observations = mutableListOf<AttentionObservation>()
         for ((kind, requests) in pending) {
             val at = reads[kind]
             for (r in requests) {
+                if (r.sessionId in deleted) continue
                 val session = sessions(r.sessionId)
                 observations +=
                     AttentionObservation(
