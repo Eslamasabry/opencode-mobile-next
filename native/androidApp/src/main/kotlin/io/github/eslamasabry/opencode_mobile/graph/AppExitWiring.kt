@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitHistory
 import io.github.eslamasabry.oc.engine.runtime.recovery.AppExitNotice
 import io.github.eslamasabry.oc.engine.runtime.recovery.PreviousExitKind
 import io.github.eslamasabry.oc.engine.runtime.server.ProbeAnswer
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,7 +66,7 @@ class AppExitHub(
     private val application: Application,
     private val stores: PreviewStores,
     private val exits: ExitHistory,
-    private val runtime: BuiltinRuntime,
+    private val phoneServer: PhoneServerSource,
     private val registry: ConnectionRegistry,
     appScope: AppCoroutineScope,
     private val dispatchers: AppDispatchers,
@@ -127,7 +128,7 @@ class AppExitHub(
                     }
                 }
             }
-            combine(runtime.server.facts, connected, policy) { facts, stream, permits ->
+            combine(phoneServer.facts, connected, policy) { facts, stream, permits ->
                     val back =
                         facts.probe == ProbeAnswer.Answered &&
                             facts.status?.serverRunning == true || stream == StreamStatus.Connected

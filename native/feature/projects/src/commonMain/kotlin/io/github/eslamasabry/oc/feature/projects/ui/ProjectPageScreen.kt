@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
+import io.github.eslamasabry.oc.ui.words.res.linuxSvcTitle
 import io.github.eslamasabry.oc.ui.words.res.p12CreateFailed
 import io.github.eslamasabry.oc.ui.words.res.p12ElsewhereTitle
 import io.github.eslamasabry.oc.ui.words.res.p12NewHere
@@ -52,8 +53,8 @@ import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * One project (07 §5 D15). Kit parts only (K1). "New conversation here" is the first, visible act; then this
- * project's conversations with a visible Load more, then "In other projects" (B-NAV-010).
+ * One project (07 §5 D15). Kit parts only (K1). "New conversation here" is the first, visible act;
+ * then this project's conversations with a visible Load more, then "In other projects" (B-NAV-010).
  */
 @Composable
 public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, onDevServices: (() -> Unit)? = null) {
@@ -76,7 +77,11 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, 
                         kind = KitStateKind.Calm,
                         title = stringResource(Res.string.p12NoServerTitle),
                         body = stringResource(Res.string.p12NoServerBody),
-                        primary = KitAction(stringResource(Res.string.serversTitle), actions::openServers),
+                        primary =
+                            KitAction(
+                                stringResource(Res.string.serversTitle),
+                                actions::openServers,
+                            ),
                     )
                 }
                 return@LazyColumn
@@ -89,8 +94,18 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, 
                     working = state.creating,
                 )
             }
+            item(key = "development-services") {
+                KitRow(
+                    title = stringResource(Res.string.linuxSvcTitle),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::developmentServices,
+                )
+            }
             item(key = "new-body") {
-                KitText(stringResource(Res.string.p12NewHereBody, state.name), KitTextRole.Supporting)
+                KitText(
+                    stringResource(Res.string.p12NewHereBody, state.name),
+                    KitTextRole.Supporting,
+                )
             }
             state.createFailure?.let { failure ->
                 item(key = "create-failed") {
@@ -99,7 +114,11 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, 
                         failure = failure,
                         detailsLabel = stringResource(Res.string.kitDetails),
                         copyLabel = stringResource(Res.string.kitCopyDetails),
-                        retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::newConversationHere),
+                        retry =
+                            KitLineAction(
+                                stringResource(Res.string.kitTryAgain),
+                                actions::newConversationHere,
+                            ),
                     )
                 }
             }
@@ -133,16 +152,23 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, 
                     item(key = "here") {
                         KitRowGroup(label = stringResource(Res.string.p12ProjectConversations)) {
                             if (state.conversations.isEmpty()) {
-                                KitText(stringResource(Res.string.p12ProjectNoConversations), KitTextRole.Supporting)
+                                KitText(
+                                    stringResource(Res.string.p12ProjectNoConversations),
+                                    KitTextRole.Supporting,
+                                )
                             }
-                            state.conversations.forEach { ChatRow(it, showProject = false, actions = actions) }
+                            state.conversations.forEach {
+                                ChatRow(it, showProject = false, actions = actions)
+                            }
                         }
                     }
                     if (state.canLoadMore) item(key = "more") { LoadMore(state, actions) }
                     if (state.elsewhere.isNotEmpty()) {
                         item(key = "elsewhere") {
                             KitRowGroup(label = stringResource(Res.string.p12ElsewhereTitle)) {
-                                state.elsewhere.forEach { ChatRow(it, showProject = true, actions = actions) }
+                                state.elsewhere.forEach {
+                                    ChatRow(it, showProject = true, actions = actions)
+                                }
                             }
                         }
                     }
@@ -184,8 +210,12 @@ private fun ChatRow(row: ProjectChatUi, showProject: Boolean, actions: ProjectPa
     val running = stringResource(Res.string.chatsHomeRunning)
     KitRow(
         title = title,
-        supporting = if (showProject) row.project ?: stringResource(Res.string.globalSessionsUnknownLocation) else null,
-        trailing = if (row.running) KitRowTrailing.Value(running, chevron = false) else KitRowTrailing.None,
+        supporting =
+            if (showProject) row.project ?: stringResource(Res.string.globalSessionsUnknownLocation)
+            else null,
+        trailing =
+            if (row.running) KitRowTrailing.Value(running, chevron = false)
+            else KitRowTrailing.None,
         growKey = row.ref,
         onClick = { actions.openConversation(row.ref) },
     )

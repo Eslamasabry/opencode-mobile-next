@@ -115,6 +115,8 @@ public data class ProjectPageUi(
 )
 
 public interface ProjectPageActions {
+    public fun developmentServices()
+
     public fun back()
 
     public fun newConversationHere()

@@ -57,10 +57,14 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsDisconnectTitle
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.linuxHostSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
 import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
@@ -135,6 +139,7 @@ public fun ServersScreen(
         snapshotFlow { password.text.toString() }.collect { actions.holdPassword(it) }
     }
     var removing by remember { mutableStateOf<ProfileId?>(null) }
+    var hostSetup by rememberSaveable { mutableStateOf(false) }
     // PREVIEW-QR: a scanned or pasted pairing code (or share link) fills the form once; the
     // password is taken, not kept.
     var filledFromLink by rememberSaveable { mutableStateOf<Boolean?>(null) }
@@ -180,6 +185,7 @@ public fun ServersScreen(
                 actions.allowCleartext(false, address.text.toString())
             }
     }
+    HostSetupSheet(hostSetup) { hostSetup = false }
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else KitEnabled.Enabled
@@ -227,6 +233,11 @@ public fun ServersScreen(
                     onClick = it,
                 )
             }
+            KitRow(
+                title = stringResource(Res.string.linuxHostSetupTitle),
+                trailing = KitRowTrailing.Chevron,
+                onClick = { hostSetup = true },
+            )
             if (state.servers.isEmpty()) KitText(stringResource(Res.string.serversEmpty))
             else KitText(stringResource(Res.string.serversSaved))
             // Flutter confirmDisconnectServer: the person confirms before live updates stop.
@@ -256,6 +267,11 @@ public fun ServersScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                     KitText(server.name)
                     KitText(server.address)
+                    // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded loopback is a server.
+                    val support = if (onThisPhone != null) PhoneHostSupport.Android else PhoneHostSupport.Elsewhere
+                    if (PhoneOwnServers.isPhoneOwnServer(PhoneServerCandidate(server.id.raw, server.address), support)) {
+                        KitText(stringResource(Res.string.settingsV3ThisPhone))
+                    }
                     if (server.connected) KitText(stringResource(Res.string.serversConnected))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                         KitButton(

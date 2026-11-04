@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxLifetimeTitle">Service lifetimes</string>
+    <string name="linuxLifetimeRefresh">Check service lifetimes</string>
+    <string name="linuxLifetimeReading">Reading service lifetimes…</string>
+    <string name="linuxLifetimeRunning">Running</string>
+    <string name="linuxLifetimeStopped">Not running</string>
+    <string name="linuxLifetimeUptime">Current run: %1$d ms</string>
+    <string name="linuxLifetimeLastUptime">Previous run: %1$d ms</string>
+    <string name="linuxLifetimeExit">Last exit: %1$d</string>
+    <string name="linuxLifetimeRestarts">Restarts: %1$d</string>
+    <string name="linuxLifetimeUnknown">Exit cause unknown</string>
+    <string name="linuxLifetimeExited">Program exited</string>
+    <string name="linuxLifetimeKilled">Memory pressure or Android process limit</string>
+    <string name="linuxLifetimeFailed">Service lifetimes could not be read.</string>
+    <string name="linuxLifetimeEmpty">No service lifetime observations are available.</string>
+</resources>

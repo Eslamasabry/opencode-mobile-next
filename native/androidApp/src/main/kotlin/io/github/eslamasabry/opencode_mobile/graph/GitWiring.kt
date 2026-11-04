@@ -10,6 +10,7 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -46,10 +47,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Android bindings of unit P12-GIT: the Git page's workspace resolver (the conversation's live server + its project
- * folder, reached through `POST /api/shell` with the profile's own resolved credentials), the GitHub device flow over
- * two trust-gated clients (github.com and api.github.com), the token store in the app's encrypted secret store, and the
- * external-link opener. Nothing here logs a value.
+ * Android bindings of unit P12-GIT: the Git page's workspace resolver (the conversation's live
+ * server + its project folder, reached through `POST /api/shell` with the profile's own resolved
+ * credentials), the GitHub device flow over two trust-gated clients (github.com and
+ * api.github.com), the token store in the app's encrypted secret store, and the external-link
+ * opener. Nothing here logs a value.
  */
 @BindingContainer
 @ContributesTo(AppScope::class)
@@ -65,14 +67,38 @@ object GitWiring {
         redactor: Redactor,
         appScope: AppCoroutineScope,
         clock: Clock,
+        dispatchers: AppDispatchers,
     ): GitServices {
-        val github = http.create(TransportSpec(ServerOrigin("https", "github.com", 443), HostClass.Public, cleartextPermitted = false))
-        val api = http.create(TransportSpec(ServerOrigin("https", "api.github.com", 443), HostClass.Public, cleartextPermitted = false))
+        val github =
+            http.create(
+                TransportSpec(
+                    ServerOrigin("https", "github.com", 443),
+                    HostClass.Public,
+                    cleartextPermitted = false,
+                )
+            )
+        val api =
+            http.create(
+                TransportSpec(
+                    ServerOrigin("https", "api.github.com", 443),
+                    HostClass.Public,
+                    cleartextPermitted = false,
+                )
+            )
         val now = { clock.now().toEpochMilliseconds() }
         val tokens = GitHubTokenStore(stores.secrets, redactor)
         val services =
             GitServices(
-                workspaces = ServerGitWorkspaces(registry, http, credentialSources, redactor),
+                workspaces =
+                    ServerGitWorkspaces(
+                        registry,
+                        http,
+                        credentialSources,
+                        redactor,
+                        application,
+                        stores,
+                        dispatchers,
+                    ),
                 tokens = tokens,
                 flow = GitHubDeviceFlow(NetGitHubHttp(github, api), redactor, now),
                 redactor = redactor,
@@ -81,21 +107,30 @@ object GitWiring {
                 scope = appScope,
                 nowMs = now,
             )
-        // A removed server's GitHub sign-in goes with it (B-SEC-085). Only after the profile list is really loaded:
+        // A removed server's GitHub sign-in goes with it (B-SEC-085). Only after the profile list
+        // is really loaded:
         // an unread list must never look like "no servers".
         appScope.launch {
             if (stores.warm() !is Outcome.Ok) return@launch
-            stores.profiles.profiles.collect { loaded -> services.forgetRemovedProfiles(loaded.map { it.id }.toSet()) }
+            stores.profiles.profiles.collect { loaded ->
+                services.forgetRemovedProfiles(loaded.map { it.id }.toSet())
+            }
         }
         return services
     }
 }
 
-/** Opens an approved link in the person's browser. Only [ExternalLinkPolicy] makes an [ApprovedLink]. */
+/**
+ * Opens an approved link in the person's browser. Only [ExternalLinkPolicy] makes an
+ * [ApprovedLink].
+ */
 private class AndroidLinkOpener(private val application: Application) : ExternalLinkOpener {
     override fun open(link: ApprovedLink): Outcome<Unit> =
         try {
-            application.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link.uri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            application.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse(link.uri))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
             Unit.ok()
         } catch (e: ActivityNotFoundException) {
             Outcome.Failed(Failure.Unavailable(FeatureId("browser")))
@@ -103,50 +138,85 @@ private class AndroidLinkOpener(private val application: Application) : External
 }
 
 /**
- * B-NAV-022 on the live connection: the conversation's server must be connected, the conversation must have a project
- * folder, and the server must not report the command endpoint absent. The native OC2 gateway does not advertise
- * `remoteShell` yet, so an unadvertised server is tried and a 404 answers "can't run Git" (engine `GitPage`).
+ * B-NAV-022 on the live connection: the conversation's server must be connected, the conversation
+ * must have a project folder, and the server must not report the command endpoint absent. The
+ * native OC2 gateway does not advertise `remoteShell` yet, so an unadvertised server is tried and a
+ * 404 answers "can't run Git" (engine `GitPage`).
  */
 private class ServerGitWorkspaces(
     private val registry: ConnectionRegistry,
     private val http: HttpClientFactory,
     private val credentialSources: Set<ConnectionCredentialSource>,
     private val redactor: Redactor,
+    private val application: Application,
+    private val stores: PreviewStores,
+    private val dispatchers: AppDispatchers,
 ) : GitWorkspaces {
     private val lock = Mutex()
     private val clients = HashMap<ProfileId, Pair<ConnectionGraph, NetClient>>()
 
     override suspend fun resolve(ref: ConversationRef): GitWorkspaceResolution {
-        val graph = registry.graphFor(ref) ?: return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
+        val graph =
+            registry.graphFor(ref)
+                ?: return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
         val session =
             when (val read = graph.session.server.session(ref.sessionId)) {
-                is Outcome.Failed -> return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
+                is Outcome.Failed ->
+                    return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
                 is Outcome.Ok -> read.value
             }
         val profile = graph.profile
+        if (
+            profile.managedOnPhone &&
+                profile.origin.scheme == "http" &&
+                AddressRules.isLoopback(profile.origin.host)
+        ) {
+            val native = BuiltinGitShell(application, stores, dispatchers, graph, registry, ref)
+            if (!native.current())
+                return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
+            return resolveGitWorkspace(
+                connected = true,
+                directory = session.directory,
+                remoteShell = true,
+                placeName = profile.name,
+            ) {
+                native
+            }
+        }
         val auth =
             when (val read = credentialSources.singleOrNull()?.resolve(profile)) {
                 null -> null
-                is Outcome.Failed -> return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
+                is Outcome.Failed ->
+                    return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
                 is Outcome.Ok ->
                     read.value.secret?.let { secret ->
-                        val token = Base64.encode("${read.value.username ?: "opencode"}:$secret".encodeToByteArray())
+                        val token =
+                            Base64.encode(
+                                "${read.value.username ?: "opencode"}:$secret".encodeToByteArray()
+                            )
                         redactor.registerSecret(secret)
                         redactor.registerSecret(token)
                         "Basic $token"
                     }
             }
-        val net = clientFor(graph, profile) ?: return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
+        val net =
+            clientFor(graph, profile)
+                ?: return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
         val advertised = graph.session.capabilities.value.remoteShell
         return resolveGitWorkspace(
             connected = true,
             directory = session.directory,
             remoteShell = if (advertised) true else null,
             placeName = profile.name,
-        ) { folder -> ServerGitShell(net, profile.origin, auth, folder) }
+        ) { folder ->
+            ServerGitShell(net, profile.origin, auth, folder)
+        }
     }
 
-    /** One trust-gated client per live connection; a replaced connection gets a new one and the old one is closed. */
+    /**
+     * One trust-gated client per live connection; a replaced connection gets a new one and the old
+     * one is closed.
+     */
     private suspend fun clientFor(graph: ConnectionGraph, profile: ServerProfile): NetClient? =
         lock.withLock {
             clients[profile.id]?.let { (owner, client) ->
@@ -160,7 +230,10 @@ private class ServerGitWorkspaces(
             if (origin.scheme != "https" && !cleartext) return@withLock null
             val pin = profile.trust.pinnedLeafSha256?.let { decodePin(it) ?: return@withLock null }
             if (origin.scheme != "https" && pin != null) return@withLock null
-            val client = http.create(TransportSpec(origin, AddressRules.classify(origin.host), cleartext, pin))
+            val client =
+                http.create(
+                    TransportSpec(origin, AddressRules.classify(origin.host), cleartext, pin)
+                )
             clients[profile.id] = graph to client
             client
         }

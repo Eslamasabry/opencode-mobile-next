@@ -31,6 +31,7 @@ public class ThisPhoneModel(
     private val clock: Clock,
     private val pacer: Pacer,
     private val storage: PhoneStorageReadings? = null,
+    private val exits: PhoneExitNotices = PhoneExitNotices.Absent,
 ) : ThisPhoneActions {
     private data class Local(
         val working: PhoneOp? = null,
@@ -45,10 +46,14 @@ public class ThisPhoneModel(
     private val visible = MutableStateFlow(false)
 
     public val state: StateFlow<ThisPhoneUi> =
-        combine(source.facts, local, ::build)
-            .stateIn(scope, SharingStarted.Eagerly, build(source.facts.value, local.value))
+        combine(source.facts, local, exits.notice, ::build)
+            .stateIn(
+                scope,
+                SharingStarted.Eagerly,
+                build(source.facts.value, local.value, exits.notice.value),
+            )
 
-    private fun build(facts: PhoneServerFacts, l: Local): ThisPhoneUi {
+    private fun build(facts: PhoneServerFacts, l: Local, exitNotice: PhoneExitNotice?): ThisPhoneUi {
         val shownFacts =
             if (l.working == PhoneOp.Start || l.working == PhoneOp.Restart)
                 facts.copy(starting = true)
@@ -87,6 +92,7 @@ public class ThisPhoneModel(
             storageSupported = storage?.supported == true,
             storage = l.storage,
             measuringStorage = l.measuringStorage,
+            exitNotice = exitNotice,
         )
     }
 
@@ -154,7 +160,10 @@ public class ThisPhoneModel(
         }
     }
 
-    override fun dismiss(): Unit = local.update { it.copy(confirm = null, notice = null) }
+    override fun dismiss() {
+        local.update { it.copy(confirm = null, notice = null) }
+        exits.dismiss()
+    }
 
     override fun measureStorage() {
         readStorage(includeBuiltinHost = true)

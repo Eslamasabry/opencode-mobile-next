@@ -77,6 +77,7 @@ public data class ThisPhoneUi(
     val storageSupported: Boolean = false,
     val storage: PhoneStorageSnapshot? = null,
     val measuringStorage: Boolean = false,
+    val exitNotice: PhoneExitNotice? = null,
 )
 
 /** Intents only (ADR §9.1). */
