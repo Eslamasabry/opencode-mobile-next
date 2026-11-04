@@ -5,6 +5,7 @@ kotlin {
         implementation(project(":engine:connection"))
         implementation(project(":engine:lifecycle"))
         implementation(project(":engine:runtime"))
+        implementation(project(":engine:setupassist"))
         implementation(project(":ui:kit-chat"))
     }
 }

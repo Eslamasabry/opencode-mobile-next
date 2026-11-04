@@ -1,8 +1,8 @@
 package io.github.eslamasabry.oc.engine.setupassist
 
 /**
- * The parts of Dart's `Uri.tryParse` the setup rules read: scheme, user info, host and whether a query or fragment
- * exists. Null when the text is not a URI reference this reader accepts.
+ * The parts of Dart's `Uri.tryParse` the setup rules read: scheme, user info, host and whether a
+ * query or fragment exists. Null when the text is not a URI reference this reader accepts.
  */
 internal data class SetupUri(
     val scheme: String,
@@ -39,14 +39,19 @@ internal data class SetupUri(
                     } else {
                         hostPort.substringBefore(':')
                     }
-                val port = if (hostPort.startsWith("[")) hostPort.substringAfter(']', "").removePrefix(":") else hostPort.substringAfter(':', "")
+                val port =
+                    if (hostPort.startsWith("[")) hostPort.substringAfter(']', "").removePrefix(":")
+                    else hostPort.substringAfter(':', "")
                 if (port.isNotEmpty() && port.any { !it.isDigit() }) return null
                 if (host.any { it in "<>\"\\^`{|}" }) return null
             }
             return SetupUri(scheme, userInfo, host.lowercase(), hasQuery, hasFragment)
         }
 
-        /** Dart `Uri.decodeFull`: null when a percent escape is malformed or the bytes are not UTF-8. */
+        /**
+         * Dart `Uri.decodeFull`: null when a percent escape is malformed or the bytes are not
+         * UTF-8.
+         */
         fun decodeFull(raw: String): String? {
             if ('%' !in raw) return raw
             val bytes = ArrayList<Byte>()
@@ -71,10 +76,19 @@ internal data class SetupUri(
 
         private val LOOPBACK = setOf("localhost", "127.0.0.1", "::1")
 
-        /** The planner and controller rule: HTTPS, or HTTP to loopback, with a host and no credentials, query or fragment. */
+        /**
+         * The planner and controller rule: HTTPS, or HTTP to loopback, with a host and no
+         * credentials, query or fragment.
+         */
         fun isSafeMcpUrl(raw: String): Boolean {
             val uri = parse(raw) ?: return false
-            if (uri.host.isEmpty() || uri.userInfo.isNotEmpty() || uri.hasQuery || uri.hasFragment) return false
+            if (
+                '@' in raw.substringBefore('/').ifEmpty { raw } ||
+                    '@' in raw.substringAfter("://").substringBefore('/')
+            )
+                return false
+            if (uri.host.isEmpty() || uri.userInfo.isNotEmpty() || uri.hasQuery || uri.hasFragment)
+                return false
             return uri.scheme == "https" || (uri.scheme == "http" && uri.host in LOOPBACK)
         }
     }

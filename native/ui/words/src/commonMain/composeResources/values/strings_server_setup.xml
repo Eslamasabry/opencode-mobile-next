@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="secSetupTitle">Server setup</string>
+    <string name="secSetupReadOnly">Inspect your server configuration and prepare local proposals. Applying and undoing need an atomic restore endpoint that this server does not provide. Nothing here changes your server.</string>
+    <string name="secSetupFailed">Setup could not be loaded. Reconnect to this server and try again.</string>
+    <string name="secSetupRefresh">Refresh server setup</string>
+    <string name="secSetupConfig">Configuration with private values hidden</string>
+    <string name="secSetupGuided">Guided setup on this device</string>
+    <string name="secSetupReview">Review proposal</string>
+    <string name="secSetupInvalid">Use the requested fields without credentials. Check the model, command and address, then try again.</string>
+    <string name="secSetupInputs">Enter all requested values without credentials. URLs must not contain a password, query or fragment. No change has been proposed.</string>
+    <string name="secSetupUnsupported">This workflow needs the separate sign-in or server configuration tools. It is unavailable in guided setup.</string>
+    <string name="secSetupProposed">Local proposal ready for review. Nothing has been applied. Connector proposals start disabled.</string>
+    <string name="secSetupRegistry">Browse the public connector registry</string>
+    <string name="secSetupRegistryConsent">Off by default. Enabling saves your choice without fetching. Refresh contacts the public MCP registry without server credentials.</string>
+    <string name="secSetupSearch">Search public listings</string>
+    <string name="secSetupRegistryRefresh">Refresh public listings</string>
+    <string name="secSetupRegistryDisabled">Public registry access is off.</string>
+    <string name="secSetupRegistryOffline">You are offline. Showing saved listings.</string>
+    <string name="secSetupRegistryFailed">The public registry could not be loaded. Try again later or set up by hand.</string>
+    <string name="secSetupRegistryEmpty">No public listings to show.</string>
+    <string name="secSetupRegistryReady">Public connector listings</string>
+    <string name="secSetupRegistryRemote">An HTTPS endpoint is listed. Review its details before setting it up on your server.</string>
+    <string name="secSetupRegistryDetails">This listing needs connection details. Set it up by hand.</string>
+    <string name="secSetupRegistryCommand">Package installation needs a reviewed command on your server. Set it up by hand.</string>
+    <string name="secSetupRegistryNoEndpoint">This listing has no supported HTTPS endpoint. Set it up by hand.</string>
+    <string name="secSetupChooseModel">Choose model</string>
+    <string name="secSetupDefaultAgent">Default agent</string>
+    <string name="secSetupPermission">Permission rule</string>
+    <string name="secSetupRemoteMcp">Remote connector</string>
+    <string name="secSetupLocalMcp">Local connector</string>
+    <string name="secSetupRemoveMcp">Remove connector</string>
+    <string name="secSetupProvider">Provider sign-in</string>
+    <string name="secSetupAgent">Configure agent</string>
+    <string name="secSetupCommand">Configure command</string>
+    <string name="secSetupModelField">Model (provider/model)</string>
+    <string name="secSetupAgentField">Existing agent name</string>
+    <string name="secSetupToolField">Tool name</string>
+    <string name="secSetupEffectField">Permission (ask, allow or deny)</string>
+    <string name="secSetupUrlField">HTTPS or loopback connector address</string>
+    <string name="secSetupCommandField">Command arguments as a JSON list, without credentials</string>
+    <string name="secSetupNameField">Connector name</string>
+</resources>

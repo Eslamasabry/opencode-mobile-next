@@ -25,6 +25,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.ShareLink
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
@@ -50,9 +53,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
@@ -65,6 +65,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
 import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
+import io.github.eslamasabry.oc.ui.words.res.secSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.serverFailureCertificate
 import io.github.eslamasabry.oc.ui.words.res.serverFailureIncompatible
 import io.github.eslamasabry.oc.ui.words.res.serverFailureNetwork
@@ -102,6 +103,7 @@ import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.serversUsername
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
+import io.github.eslamasabry.oc.ui.words.res.tailscaleTitle
 import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
@@ -120,6 +122,7 @@ public fun ServersScreen(
      * Linux.
      */
     onThisPhone: (() -> Unit)? = null,
+    tailscale: io.github.eslamasabry.oc.feature.servers.presentation.TailscaleSetup? = null,
 ) {
     // The unsaved draft survives a page on top (Scan code) and the form leaving composition: the
     // plain fields are
@@ -133,6 +136,7 @@ public fun ServersScreen(
     }
     var removing by remember { mutableStateOf<ProfileId?>(null) }
     var hostSetup by rememberSaveable { mutableStateOf(false) }
+    var tailscaleSetup by rememberSaveable { mutableStateOf(false) }
     // PREVIEW-QR: a scanned or pasted pairing code (or share link) fills the form once; the
     // password is taken, not kept.
     var filledFromLink by rememberSaveable { mutableStateOf<Boolean?>(null) }
@@ -178,6 +182,10 @@ public fun ServersScreen(
             }
     }
     HostSetupSheet(hostSetup) { hostSetup = false }
+    TailscaleSetupSheet(tailscaleSetup, tailscale, { tailscaleSetup = false }) { reviewed ->
+        address.edit { replace(0, length, reviewed) }
+        actions.allowCleartext(false, reviewed)
+    }
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else KitEnabled.Enabled
@@ -230,15 +238,29 @@ public fun ServersScreen(
                 trailing = KitRowTrailing.Chevron,
                 onClick = { hostSetup = true },
             )
+            KitRow(
+                title =
+                    stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.tailscaleTitle),
+                trailing = KitRowTrailing.Chevron,
+                onClick = { tailscaleSetup = true },
+            )
             if (state.servers.isEmpty()) KitText(stringResource(Res.string.serversEmpty))
             else KitText(stringResource(Res.string.serversSaved))
             for (server in state.servers) {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                     KitText(server.name)
                     KitText(server.address)
-                    // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded loopback is a server.
-                    val support = if (onThisPhone != null) PhoneHostSupport.Android else PhoneHostSupport.Elsewhere
-                    if (PhoneOwnServers.isPhoneOwnServer(PhoneServerCandidate(server.id.raw, server.address), support)) {
+                    // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded
+                    // loopback is a server.
+                    val support =
+                        if (onThisPhone != null) PhoneHostSupport.Android
+                        else PhoneHostSupport.Elsewhere
+                    if (
+                        PhoneOwnServers.isPhoneOwnServer(
+                            PhoneServerCandidate(server.id.raw, server.address),
+                            support,
+                        )
+                    ) {
                         KitText(stringResource(Res.string.settingsV3ThisPhone))
                     }
                     if (server.connected) KitText(stringResource(Res.string.serversConnected))
@@ -259,6 +281,11 @@ public fun ServersScreen(
                             )
                         }
                         if (server.connected) {
+                            KitButton(
+                                stringResource(Res.string.secSetupTitle),
+                                { actions.openSetup(server.id) },
+                                role = KitButtonRole.Tertiary,
+                            )
                             KitButton(
                                 stringResource(Res.string.usageTitle),
                                 { actions.openUsage(server.id) },
