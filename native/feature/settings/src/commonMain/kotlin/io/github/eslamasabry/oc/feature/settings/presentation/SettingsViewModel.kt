@@ -11,8 +11,9 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Everything the Settings pages read and write, bound once by the app (`SettingsWiring`): the engines behind the ports
- * are app-wide, so one host serves every visit. A port the platform lacks is null; its row is already absent.
+ * Everything the Settings pages read and write, bound once by the app (`SettingsWiring`): the
+ * engines behind the ports are app-wide, so one host serves every visit. A port the platform lacks
+ * is null; its row is already absent.
  */
 public interface SettingsHost {
     public val facts: StateFlow<SettingsFacts>
@@ -23,12 +24,15 @@ public interface SettingsHost {
     public val notifications: NotificationSettings?
     public val updates: UpdateSettings?
     public val about: AboutFacts
+    public val licenses: VoiceLicenseSource?
+        get() = null
+
     public val diagnostics: DiagnosticsExport?
 }
 
 /**
- * The Settings ViewModel: one presenter for the hub and its pages (they share the back stack and the personal
- * choices). Leaving the hub closes the route.
+ * The Settings ViewModel: one presenter for the hub and its pages (they share the back stack and
+ * the personal choices). Leaving the hub closes the route.
  */
 @Inject
 @ViewModelKey
@@ -46,6 +50,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.updates,
             host.about,
             host.diagnostics,
+            host.licenses,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state
@@ -54,6 +59,10 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
     /** System Back or the bar's Back: walk the pages first, then leave Settings. */
     public fun back() {
         if (!presenter.onBack()) nav.back()
+    }
+
+    override fun onCleared() {
+        presenter.close()
     }
 
     public fun exit(): Unit = nav.back()

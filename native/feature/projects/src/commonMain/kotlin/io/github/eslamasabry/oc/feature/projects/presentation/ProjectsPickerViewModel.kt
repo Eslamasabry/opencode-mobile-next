@@ -26,9 +26,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Projects (07 §5 D15 + D16's first page). The server's projects come from its project list when it has one
- * (`projectManagement`), otherwise from the folders its conversations work in. Opening a folder or a project goes
- * to that project's page, which remembers it under Opened before.
+ * Projects (07 §5 D15 + D16's first page). The server's projects come from its project list when it
+ * has one (`projectManagement`), otherwise from the folders its conversations work in. Opening a
+ * folder or a project goes to that project's page, which remembers it under Opened before.
  */
 @AssistedInject
 public class ProjectsPickerViewModel(
@@ -36,7 +36,8 @@ public class ProjectsPickerViewModel(
     private val nav: AppNavigator,
     private val connections: ProjectServers,
     private val opened: OpenedFolders,
-) : ViewModel(), ProjectsPickerActions {
+    private val storageAccess: Set<ProjectFolderAccess> = emptySet(),
+) : ViewModel(), ProjectsPickerActions, ProjectStorageActions {
     private val mutable = MutableStateFlow(ProjectsPickerUi())
     public val state: StateFlow<ProjectsPickerUi> = mutable.asStateFlow()
 
@@ -50,13 +51,17 @@ public class ProjectsPickerViewModel(
             connections.servers.collect { live ->
                 servers = live
                 val keep = chosen?.takeIf { c -> live.any { it.profile == c } }
-                val next = keep ?: connections.active.value?.takeIf { a -> live.any { it.profile == a } } ?: live.firstOrNull()?.profile
+                val next =
+                    keep
+                        ?: connections.active.value?.takeIf { a -> live.any { it.profile == a } }
+                        ?: live.firstOrNull()?.profile
                 val changed = next != chosen || state.value.phase == ProjectsPhase.NoServer
                 chosen = next
                 if (changed) load()
             }
         }
-        // Back from a project page: that page remembered its folder, so Opened before is read again (B-ANDR-078).
+        // Back from a project page: that page remembered its folder, so Opened before is read again
+        // (B-ANDR-078).
         viewModelScope.launch { nav.top.collect { if (it == route) rereadOpened() } }
     }
 
@@ -66,7 +71,8 @@ public class ProjectsPickerViewModel(
         val before = ProjectRules.openedBefore(opened.recent(server.profile))
         mutable.update { ui ->
             ui.copy(
-                openedBefore = before.map { FolderRowUi(it, ProjectRules.name(it)) }.toImmutableList(),
+                openedBefore =
+                    before.map { FolderRowUi(it, ProjectRules.name(it)) }.toImmutableList(),
                 pathStart = ui.pathStart.ifEmpty { pathStart(before) },
             )
         }
@@ -91,7 +97,8 @@ public class ProjectsPickerViewModel(
                 phase = ProjectsPhase.Ready,
                 servers = choices(),
                 serverName = server.name,
-                openedBefore = before.map { FolderRowUi(it, ProjectRules.name(it)) }.toImmutableList(),
+                openedBefore =
+                    before.map { FolderRowUi(it, ProjectRules.name(it)) }.toImmutableList(),
                 projectsLoading = true,
                 pathStart = pathStart(before),
             )
@@ -104,16 +111,24 @@ public class ProjectsPickerViewModel(
                     mutable.update { it.copy(projectsLoading = false, projectsFailure = null) }
                     publish()
                 }
-                is Outcome.Failed -> mutable.update { it.copy(projectsLoading = false, projectsFailure = read.failure) }
+                is Outcome.Failed ->
+                    mutable.update {
+                        it.copy(projectsLoading = false, projectsFailure = read.failure)
+                    }
             }
         }
     }
 
     private fun choices(): ImmutableList<ServerChoiceUi> =
-        (if (servers.size > 1) servers.map { ServerChoiceUi(it.profile, it.name, it.profile == chosen) } else emptyList())
+        (if (servers.size > 1)
+                servers.map { ServerChoiceUi(it.profile, it.name, it.profile == chosen) }
+            else emptyList())
             .toImmutableList()
 
-    /** Conversations first (for counts and for servers without a project list), then the project list. */
+    /**
+     * Conversations first (for counts and for servers without a project list), then the project
+     * list.
+     */
     private suspend fun readProjects(server: ProjectServer): Outcome<List<FolderRowUi>> {
         val sessions = mutableListOf<Session>()
         var cursor: String? = null
@@ -129,30 +144,46 @@ public class ProjectsPickerViewModel(
             pages++
         } while (cursor != null && pages < ProjectRules.PROJECT_PAGES)
         val running: Set<SessionId> =
-            (server.gateway.sessionStatuses() as? Outcome.Ok)?.value?.filterValues(ProjectRules::isRunning)?.keys.orEmpty()
+            (server.gateway.sessionStatuses() as? Outcome.Ok)
+                ?.value
+                ?.filterValues(ProjectRules::isRunning)
+                ?.keys
+                .orEmpty()
         val ops = server.operations
         val summaries =
             if (ops != null && server.gateway.capabilities.value.projectManagement) {
                 when (val listed = ops.listProjects()) {
                     is Outcome.Ok -> ProjectRules.fromServer(listed.value, sessions, running)
-                    // A server that says it has no project list is read from its conversations instead.
+                    // A server that says it has no project list is read from its conversations
+                    // instead.
                     is Outcome.Failed ->
-                        if (listed.failure is Failure.Unavailable) ProjectRules.fromSessions(sessions, running)
+                        if (listed.failure is Failure.Unavailable)
+                            ProjectRules.fromSessions(sessions, running)
                         else return listed
                 }
             } else {
                 ProjectRules.fromSessions(sessions, running)
             }
-        return Outcome.Ok(summaries.map { FolderRowUi(it.directory, it.name, it.conversations, it.running, it.isGit) })
+        return Outcome.Ok(
+            summaries.map {
+                FolderRowUi(it.directory, it.name, it.conversations, it.running, it.isGit)
+            }
+        )
     }
 
     private fun publish() {
         val q = state.value.query.trim().lowercase()
         val shown =
             if (q.isEmpty()) all
-            else all.filter { it.name.lowercase().contains(q) || it.directory.lowercase().contains(q) }
+            else
+                all.filter {
+                    it.name.lowercase().contains(q) || it.directory.lowercase().contains(q)
+                }
         mutable.update {
-            it.copy(projects = shown.toImmutableList(), showSearch = all.size > ProjectRules.SEARCH_FROM || q.isNotEmpty())
+            it.copy(
+                projects = shown.toImmutableList(),
+                showSearch = all.size > ProjectRules.SEARCH_FROM || q.isNotEmpty(),
+            )
         }
     }
 
@@ -174,7 +205,39 @@ public class ProjectsPickerViewModel(
 
     override fun openProject(directory: String) {
         val profile = chosen ?: return
-        nav.open(ProjectsRoute.Project(profile, ProjectRules.normalize(directory)))
+        val normalized = ProjectRules.normalize(directory)
+        val mine = generation
+        viewModelScope.launch {
+            if (storageAccess.any { it.blocked(profile, normalized) }) {
+                if (chosen == profile && generation == mine)
+                    mutable.update {
+                        it.copy(storageDirectory = normalized, storageRefused = false)
+                    }
+            } else if (chosen == profile && generation == mine)
+                nav.open(ProjectsRoute.Project(profile, normalized))
+        }
+    }
+
+    override fun allowStorage() {
+        val profile = chosen ?: return
+        val directory = state.value.storageDirectory ?: return
+        val access = storageAccess.singleOrNull() ?: return
+        if (state.value.requestingStorage) return
+        val mine = generation
+        mutable.update { it.copy(requestingStorage = true) }
+        viewModelScope.launch {
+            val result = access.request(profile, directory)
+            val denied = result is Outcome.Failed || access.blocked(profile, directory)
+            if (chosen != profile || generation != mine) return@launch
+            mutable.update {
+                it.copy(requestingStorage = false, storageDirectory = null, storageRefused = denied)
+            }
+            if (!denied) nav.open(ProjectsRoute.Project(profile, directory))
+        }
+    }
+
+    override fun cancelStorage(): Unit = mutable.update {
+        it.copy(storageDirectory = null, storageRefused = false)
     }
 
     override fun search(query: String) {

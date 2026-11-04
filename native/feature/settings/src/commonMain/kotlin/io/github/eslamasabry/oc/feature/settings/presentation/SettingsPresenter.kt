@@ -22,12 +22,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * The logic of every Settings page, testable under a test scope. It reads the ports' acknowledged values and its own
- * navigation state, and builds [SettingsUi]; actions write through the ports and never publish an optimistic value
- * (B-STATE-005): a refused write leaves the port's value as it was and sets one [SettingsNote].
+ * The logic of every Settings page, testable under a test scope. It reads the ports' acknowledged
+ * values and its own navigation state, and builds [SettingsUi]; actions write through the ports and
+ * never publish an optimistic value (B-STATE-005): a refused write leaves the port's value as it
+ * was and sets one [SettingsNote].
  *
- * A port the host does not bind (null) makes its page's state null; its row is already absent, because the capability
- * flags in [SettingsFacts] gate the rows.
+ * A port the host does not bind (null) makes its page's state null; its row is already absent,
+ * because the capability flags in [SettingsFacts] gate the rows.
  */
 public class SettingsPresenter(
     private val scope: CoroutineScope,
@@ -40,6 +41,7 @@ public class SettingsPresenter(
     private val updates: UpdateSettings? = null,
     private val about: AboutFacts = AboutFacts(),
     private val diagnostics: DiagnosticsExport? = null,
+    private val licenses: VoiceLicenseSource? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -49,6 +51,7 @@ public class SettingsPresenter(
         val note: SettingsNote? = null,
         val consentSaving: Boolean = false,
         val report: ReportUi? = null,
+        val license: LicenseUi? = null,
     )
 
     private data class Engines(
@@ -68,14 +71,25 @@ public class SettingsPresenter(
             voice?.facts ?: flowOf(null),
             notifications?.facts ?: flowOf(null),
             updates?.facts ?: flowOf(null),
-        ) { c, v, n, u -> Engines(c, v, n, u) }
+        ) { c, v, n, u ->
+            Engines(c, v, n, u)
+        }
 
     private fun engineNow() =
-        Engines(analytics?.whatWeCollect?.value, voice?.facts?.value, notifications?.facts?.value, updates?.facts?.value)
+        Engines(
+            analytics?.whatWeCollect?.value,
+            voice?.facts?.value,
+            notifications?.facts?.value,
+            updates?.facts?.value,
+        )
 
     public val state: StateFlow<SettingsUi> =
         combine(local, facts, prefs, engines) { l, f, p, e -> build(l, f, p, e) }
-            .stateIn(scope, SharingStarted.Eagerly, build(local.value, facts.value, prefs.value, engineNow()))
+            .stateIn(
+                scope,
+                SharingStarted.Eagerly,
+                build(local.value, facts.value, prefs.value, engineNow()),
+            )
 
     override fun onSearchEntries(entries: List<SettingsSearchEntry>) {
         local.update { it.copy(entries = entries) }
@@ -103,6 +117,8 @@ public class SettingsPresenter(
             language = p.language,
             report = l.report,
             note = l.note,
+            voiceLicenses = licenses != null,
+            license = l.license,
         )
     }
 
@@ -125,7 +141,11 @@ public class SettingsPresenter(
     }
 
     override fun onOpen(page: SettingsPage) {
-        local.update { if (it.stack.last() == page) it else it.copy(stack = (it.stack + page).toImmutableList()) }
+        updates?.setPageOpen(page == SettingsPage.Updates)
+        local.update {
+            if (it.stack.last() == page) it
+            else it.copy(stack = (it.stack + page).toImmutableList())
+        }
         if (page == SettingsPage.ReportProblem) loadReport()
         if (page == SettingsPage.Notifications) notifications?.refresh()
     }
@@ -137,7 +157,9 @@ public class SettingsPresenter(
     override fun onQuietHours(on: Boolean) {
         val port = notifications ?: return
         if ((port.facts.value.quietHours != null) == on) return
-        run(SettingsNote.ChoiceNotSaved) { port.set(NotificationChange.Quiet(if (on) QuietHours.Default else null)) }
+        run(SettingsNote.ChoiceNotSaved) {
+            port.set(NotificationChange.Quiet(if (on) QuietHours.Default else null))
+        }
     }
 
     override fun onQuietTime(start: Boolean, minutes: Int) {
@@ -154,6 +176,7 @@ public class SettingsPresenter(
         return when {
             l.stack.size > 1 -> {
                 local.update { it.copy(stack = it.stack.dropLast(1).toImmutableList()) }
+                updates?.setPageOpen(local.value.stack.last() == SettingsPage.Updates)
                 true
             }
             l.query.isNotEmpty() -> {
@@ -167,15 +190,18 @@ public class SettingsPresenter(
     override fun onRow(row: SettingsRowId) {
         val p = prefs.value
         val door =
-            SettingsStructure.rows(row.group, currentFacts.value, p.reasoning, p.timestamps).firstOrNull { it.id == row }?.door
-                ?: return
+            SettingsStructure.rows(row.group, currentFacts.value, p.reasoning, p.timestamps)
+                .firstOrNull { it.id == row }
+                ?.door ?: return
         when (door) {
             is SettingsDoor.Page -> onOpen(door.page)
             is SettingsDoor.Outside -> openers.open(door.place)
             is SettingsDoor.Switch ->
                 when (row) {
-                    SettingsRowId.ShowReasoning -> write(PersonalChange.Reasoning(!door.on), SettingsNote.ChoiceNotSaved)
-                    SettingsRowId.ShowTimestamps -> write(PersonalChange.Timestamps(!door.on), SettingsNote.ChoiceNotSaved)
+                    SettingsRowId.ShowReasoning ->
+                        write(PersonalChange.Reasoning(!door.on), SettingsNote.ChoiceNotSaved)
+                    SettingsRowId.ShowTimestamps ->
+                        write(PersonalChange.Timestamps(!door.on), SettingsNote.ChoiceNotSaved)
                     else -> Unit
                 }
         }
@@ -186,15 +212,18 @@ public class SettingsPresenter(
     }
 
     override fun onOutside(place: SettingsOutside) {
-        openers.open(place)
+        if (place == SettingsOutside.VoiceNotices && licenses != null) onOpen(SettingsPage.About)
+        else openers.open(place)
     }
 
     override fun onMode(mode: AppearanceMode) {
-        if (prefs.value.mode != mode) write(PersonalChange.Mode(mode), SettingsNote.AppearanceNotSaved)
+        if (prefs.value.mode != mode)
+            write(PersonalChange.Mode(mode), SettingsNote.AppearanceNotSaved)
     }
 
     override fun onPack(pack: PackId) {
-        if (prefs.value.pack != pack) write(PersonalChange.Pack(pack), SettingsNote.AppearanceNotSaved)
+        if (prefs.value.pack != pack)
+            write(PersonalChange.Pack(pack), SettingsNote.AppearanceNotSaved)
     }
 
     override fun onSeeAllPacks() {
@@ -250,17 +279,22 @@ public class SettingsPresenter(
         scope.launch {
             val outcome = port.setDetailedConsent(on)
             local.update {
-                it.copy(consentSaving = false, note = if (outcome is Outcome.Failed) SettingsNote.ConsentNotSaved else it.note)
+                it.copy(
+                    consentSaving = false,
+                    note = if (outcome is Outcome.Failed) SettingsNote.ConsentNotSaved else it.note,
+                )
             }
         }
     }
 
     override fun onTextSize(size: AppTextSize) {
-        if (prefs.value.textSize != size) write(PersonalChange.TextSize(size), SettingsNote.AppearanceNotSaved)
+        if (prefs.value.textSize != size)
+            write(PersonalChange.TextSize(size), SettingsNote.AppearanceNotSaved)
     }
 
     override fun onLanguage(language: AppLanguage) {
-        if (prefs.value.language != language) write(PersonalChange.Language(language), SettingsNote.ChoiceNotSaved)
+        if (prefs.value.language != language)
+            write(PersonalChange.Language(language), SettingsNote.ChoiceNotSaved)
     }
 
     override fun onRetryReport() {
@@ -271,7 +305,9 @@ public class SettingsPresenter(
         val port = diagnostics ?: return
         val text = (local.value.report as? ReportUi.Ready)?.text ?: return
         scope.launch {
-            val note = if (port.copy(text) is Outcome.Ok) SettingsNote.ReportCopied else SettingsNote.ShareFailed
+            val note =
+                if (port.copy(text) is Outcome.Ok) SettingsNote.ReportCopied
+                else SettingsNote.ShareFailed
             local.update { it.copy(note = note) }
         }
     }
@@ -299,12 +335,67 @@ public class SettingsPresenter(
 
     private var reportGeneration = 0L
 
+    override fun onVoiceLicense(id: String) {
+        if (licenses == null || VoiceLicenseComponent.entries.none { it.id == id }) return
+        onOpen(SettingsPage.VoiceLicense(id))
+        loadLicense(id)
+    }
+
+    override fun onRetryLicense() {
+        val page = local.value.stack.last() as? SettingsPage.VoiceLicense ?: return
+        loadLicense(page.id)
+    }
+
+    override fun onCopyLicense() {
+        val source = licenses ?: return
+        val text = (local.value.license as? LicenseUi.Ready)?.text ?: return
+        scope.launch {
+            val note =
+                if (source.copy(text) is Outcome.Ok) SettingsNote.LicenseCopied
+                else SettingsNote.LicenseCopyFailed
+            local.update { it.copy(note = note) }
+        }
+    }
+
+    override fun onLicenseWebsite() {
+        val page = local.value.stack.last() as? SettingsPage.VoiceLicense ?: return
+        val component = VoiceLicenseComponent.entries.firstOrNull { it.id == page.id } ?: return
+        licenses?.openWebsite(component.website)
+    }
+
+    private var licenseGeneration = 0L
+
+    private fun loadLicense(id: String) {
+        val source = licenses ?: return
+        val component = VoiceLicenseComponent.entries.firstOrNull { it.id == id } ?: return
+        val generation = ++licenseGeneration
+        local.update { it.copy(license = LicenseUi.Loading) }
+        scope.launch {
+            val result =
+                when (val read = source.read(component.asset)) {
+                    is Outcome.Ok -> LicenseUi.Ready(reflowLicenseText(read.value))
+                    is Outcome.Failed -> LicenseUi.Failed
+                }
+            if (
+                generation == licenseGeneration &&
+                    local.value.stack.last() == SettingsPage.VoiceLicense(id)
+            ) {
+                local.update { it.copy(license = result) }
+            }
+        }
+    }
+
+    public fun close() {
+        updates?.setPageOpen(false)
+        licenseGeneration++
+    }
+
     override fun onNoteSeen() {
         local.update { it.copy(note = null) }
     }
 
     private fun write(change: PersonalChange, failed: SettingsNote) {
-        run(failed) { choices.set(change).map { } }
+        run(failed) { choices.set(change).map {} }
     }
 
     private fun run(failed: SettingsNote, call: suspend () -> Outcome<Unit>) {

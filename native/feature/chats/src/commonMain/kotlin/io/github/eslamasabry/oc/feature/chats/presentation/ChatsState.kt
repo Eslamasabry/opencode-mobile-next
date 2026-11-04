@@ -80,6 +80,7 @@ public object ChatsState {
             ref = item.ref,
             title = SessionTitles.present(item.title),
             project = item.projectName,
+            canOpen = item.canReopen,
             status =
                 when (item.status) {
                     ChatStatus.NeedsYou -> RowStatus.NeedsYou

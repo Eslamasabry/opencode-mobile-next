@@ -27,10 +27,10 @@ import kotlinx.coroutines.flow.first
  */
 
 /**
- * The open conversation as the cards read it (B-CHAT-031/052). Live events update it in place; a history read
- * replaces it whole, in the server's order, but only when no live event arrived while the read was out (Flutter's
- * revision fence): an older snapshot never overwrites newer parts, and cached messages outside the returned tail are
- * never appended after newer ones.
+ * The open conversation as the cards read it (B-CHAT-031/052). Live events update it in place; a
+ * history read replaces it whole, in the server's order, but only when no live event arrived while
+ * the read was out (Flutter's revision fence): an older snapshot never overwrites newer parts, and
+ * cached messages outside the returned tail are never appended after newer ones.
  */
 internal class CardTranscript {
     private val messages = LinkedHashMap<String, MessageWithParts>()
@@ -48,6 +48,12 @@ internal class CardTranscript {
         messages[info.id] = MessageWithParts(info, old?.parts ?: persistentListOf())
     }
 
+    /** One authoritative user echo replaces its info and complete parts together. */
+    fun upsert(message: MessageWithParts) {
+        revision++
+        messages[message.info.id] = message
+    }
+
     /** False when the part's message is not known yet (a later read reconciles). */
     fun upsert(part: Part): Boolean {
         val old = messages[part.messageId] ?: return false
@@ -59,7 +65,10 @@ internal class CardTranscript {
         return true
     }
 
-    /** Applies a finished read taken at [mark]; false = a live event arrived meanwhile and the read is dropped. */
+    /**
+     * Applies a finished read taken at [mark]; false = a live event arrived meanwhile and the read
+     * is dropped.
+     */
     fun applyRead(mark: Long, tail: CardTail): Boolean {
         if (mark != revision) return false
         messages.clear()
@@ -79,9 +88,10 @@ internal class CardTranscript {
 }
 
 /**
- * Qualification (B-CHAT-034/035, plan 09 §13.1): the `oc-ui` MCP self-check is necessary but not sufficient. OpenCode 2
- * stays unqualified until its card qualification is proven on the device (Flutter's OpenCode 2 adapter has
- * `cardsQualified = false`), so a connected helper alone never enables answer controls.
+ * Qualification (B-CHAT-034/035, plan 09 §13.1): the `oc-ui` MCP self-check is necessary but not
+ * sufficient. OpenCode 2 stays unqualified until its card qualification is proven on the device
+ * (Flutter's OpenCode 2 adapter has `cardsQualified = false`), so a connected helper alone never
+ * enables answer controls.
  */
 internal object CardsQualification {
     const val HELPER: String = "oc-ui"
@@ -97,16 +107,20 @@ internal object CardsQualification {
         val unqualified = CardsVerdict(emptyList(), CardsProblem.NotQualified, here)
         if (!qualified) return unqualified
         val ok = servers as? Outcome.Ok ?: return unqualified
-        return if (ok.value.any { it.name == HELPER && it.status.equals("connected", ignoreCase = true) }) CardsVerdict(here)
+        return if (
+            ok.value.any { it.name == HELPER && it.status.equals("connected", ignoreCase = true) }
+        )
+            CardsVerdict(here)
         else unqualified
     }
 }
 
 /**
- * B-CHAT-050 (plan 09 §13.5): the delivery pipeline answers a send with a local id before the request leaves, so the
- * card waits for that send's own result. Accepted → Ok (the card stays "not confirmed" until the echo). Put back →
- * the definite failure (nothing left; the card may be answered again). Unconfirmed, queued or a result the card did
- * not see → "may have been sent" (Refused DispatchUncertain): never resent.
+ * B-CHAT-050 (plan 09 §13.5): the delivery pipeline answers a send with a local id before the
+ * request leaves, so the card waits for that send's own result. Accepted → Ok (the card stays "not
+ * confirmed" until the echo). Put back → the definite failure (nothing left; the card may be
+ * answered again). Unconfirmed, queued or a result the card did not see → "may have been sent"
+ * (Refused DispatchUncertain): never resent.
  */
 internal suspend fun awaitCardSend(
     id: LocalSendId,
@@ -115,20 +129,22 @@ internal suspend fun awaitCardSend(
 ): Outcome<Unit> {
     val uncertain = Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
     return combine(outcomes, pending) { o, p ->
-        when (val mine = o.firstOrNull { it.localIdOf() == id.raw }) {
-            is SendOutcome.Accepted -> Outcome.Ok(Unit)
-            is SendOutcome.PutBack -> Outcome.Failed(mine.reason)
-            is SendOutcome.Unconfirmed, is SendOutcome.Queued -> uncertain
-            null -> {
-                val bubble = p.firstOrNull { it.localId == id }
-                when {
-                    bubble == null -> uncertain // gone without a result this card saw
-                    bubble.phase == SendPhase.Accepted -> Outcome.Ok(Unit)
-                    else -> null // still on its way
+            when (val mine = o.firstOrNull { it.localIdOf() == id.raw }) {
+                is SendOutcome.Accepted -> Outcome.Ok(Unit)
+                is SendOutcome.PutBack -> Outcome.Failed(mine.reason)
+                is SendOutcome.Unconfirmed,
+                is SendOutcome.Queued -> uncertain
+                null -> {
+                    val bubble = p.firstOrNull { it.localId == id }
+                    when {
+                        bubble == null -> uncertain // gone without a result this card saw
+                        bubble.phase == SendPhase.Accepted -> Outcome.Ok(Unit)
+                        else -> null // still on its way
+                    }
                 }
             }
         }
-    }.first { it != null }!!
+        .first { it != null }!!
 }
 
 private fun SendOutcome.localIdOf(): String? =

@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.domain.BoundedCardHistoryGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.PromptAttachment
@@ -25,14 +26,12 @@ import io.github.eslamasabry.oc.engine.cards.CardAnswerSender
 import io.github.eslamasabry.oc.engine.cards.CardBoard
 import io.github.eslamasabry.oc.engine.cards.CardBoardState
 import io.github.eslamasabry.oc.engine.cards.CardDispatchCheck
-import io.github.eslamasabry.oc.engine.cards.CardJournal
-import io.github.eslamasabry.oc.engine.cards.CardJournalStore
-import io.github.eslamasabry.oc.engine.cards.CardRefusal
-import io.github.eslamasabry.oc.engine.cards.MemoryCardJournal
-import io.github.eslamasabry.oc.engine.cards.StoredCardJournal
 import io.github.eslamasabry.oc.engine.cards.CardHistory
 import io.github.eslamasabry.oc.engine.cards.CardHistoryPage
 import io.github.eslamasabry.oc.engine.cards.CardHistorySource
+import io.github.eslamasabry.oc.engine.cards.CardJournal
+import io.github.eslamasabry.oc.engine.cards.CardJournalStore
+import io.github.eslamasabry.oc.engine.cards.CardRefusal
 import io.github.eslamasabry.oc.engine.cards.CardScope
 import io.github.eslamasabry.oc.engine.cards.CardsPrefs
 import io.github.eslamasabry.oc.engine.cards.CardsProblem
@@ -40,6 +39,8 @@ import io.github.eslamasabry.oc.engine.cards.CardsQualifier
 import io.github.eslamasabry.oc.engine.cards.CardsSetup
 import io.github.eslamasabry.oc.engine.cards.CardsStatus
 import io.github.eslamasabry.oc.engine.cards.CardsVerdict
+import io.github.eslamasabry.oc.engine.cards.MemoryCardJournal
+import io.github.eslamasabry.oc.engine.cards.StoredCardJournal
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.delivery.SendRoute
@@ -58,16 +59,23 @@ import kotlinx.coroutines.launch
  * as the Flutter GenUiStateController does, and hands the authoritative transcript to the engine's CardBoard.
  */
 
-/** Where the person's "Cards from agents" choice is stored; the app binds one over its preferences. */
+/**
+ * Where the person's "Cards from agents" choice is stored; the app binds one over its preferences.
+ */
 @ContributesTo(AppScope::class)
 public interface ChatCardsBindings {
     @Multibinds(allowEmpty = true) public val cardsPrefs: Set<CardsPrefs>
 
-    /** Where answers that may have left are remembered (`oc.genui.journal.<profileId>`, B-CHAT-051). */
+    /**
+     * Where answers that may have left are remembered (`oc.genui.journal.<profileId>`, B-CHAT-051).
+     */
     @Multibinds(allowEmpty = true) public val cardJournalStores: Set<CardJournalStore>
 }
 
-/** In-memory prefs where the app binds none (desktop preview, tests): cards stay off after a restart. */
+/**
+ * In-memory prefs where the app binds none (desktop preview, tests): cards stay off after a
+ * restart.
+ */
 public class MemoryCardsPrefs : CardsPrefs {
     private val values = HashMap<String, Boolean>()
 
@@ -80,9 +88,10 @@ public class MemoryCardsPrefs : CardsPrefs {
 }
 
 /**
- * Qualification for a connected server: the server must report the app's `oc-ui` MCP server as connected (the MCP
- * `initialize` self-check). The phone cannot install anything on a server it does not manage, so setup never runs an
- * installer here (B-CHAT-036); the agent named is OpenCode 2 (B-CHAT-035).
+ * Qualification for a connected server: the server must report the app's `oc-ui` MCP server as
+ * connected (the MCP `initialize` self-check). The phone cannot install anything on a server it
+ * does not manage, so setup never runs an installer here (B-CHAT-036); the agent named is OpenCode
+ * 2 (B-CHAT-035).
  */
 public class GraphCardsQualifier(private val registry: ConnectionRegistry) : CardsQualifier {
     override fun managed(profileId: String): Boolean = false
@@ -95,7 +104,12 @@ public class GraphCardsQualifier(private val registry: ConnectionRegistry) : Car
         if (graph == null || !CardsQualification.OPEN_CODE_2_QUALIFIED) {
             return Outcome.Ok(CardsVerdict(emptyList(), CardsProblem.NotQualified, here))
         }
-        return Outcome.Ok(CardsQualification.verdict((graph as ChatGraphAccessors).chatOperations.mcpServers(), here))
+        return Outcome.Ok(
+            CardsQualification.verdict(
+                (graph as ChatGraphAccessors).chatOperations.mcpServers(),
+                here,
+            )
+        )
     }
 }
 
@@ -107,22 +121,27 @@ public class ChatCards(
     prefs: Set<CardsPrefs> = emptySet(),
     journals: Set<CardJournalStore> = emptySet(),
 ) {
-    public val setup: CardsSetup = CardsSetup(prefs.firstOrNull() ?: MemoryCardsPrefs(), GraphCardsQualifier(registry))
-    private val journal: CardJournal = journals.firstOrNull()?.let(::StoredCardJournal) ?: MemoryCardJournal()
+    public val setup: CardsSetup =
+        CardsSetup(prefs.firstOrNull() ?: MemoryCardsPrefs(), GraphCardsQualifier(registry))
+    private val journal: CardJournal =
+        journals.firstOrNull()?.let(::StoredCardJournal) ?: MemoryCardJournal()
 
-    public fun open(ref: ConversationRef): ChatCardsModel = ChatCardsModel(ref, registry, setup, journal).also { it.attach() }
+    public fun open(ref: ConversationRef): ChatCardsModel =
+        ChatCardsModel(ref, registry, setup, journal).also { it.attach() }
 
     /** The Cards row: what is true now. */
     public fun status(profileId: String): CardsStatus = setup.status(profileId)
 
-    public suspend fun setEnabled(profileId: String, on: Boolean): Outcome<Unit> = setup.setEnabled(profileId, on)
+    public suspend fun setEnabled(profileId: String, on: Boolean): Outcome<Unit> =
+        setup.setEnabled(profileId, on)
 }
 
 /**
- * The cards of one open conversation. Lives as long as the chat entry; [close] drops held answers (nothing is sent
- * late) and stops reading.
+ * The cards of one open conversation. Lives as long as the chat entry; [close] drops held answers
+ * (nothing is sent late) and stops reading.
  */
-public class ChatCardsModel internal constructor(
+public class ChatCardsModel
+internal constructor(
     public val ref: ConversationRef,
     private val registry: ConnectionRegistry,
     private val setup: CardsSetup,
@@ -137,7 +156,8 @@ public class ChatCardsModel internal constructor(
     private var stopWatching: (() -> Unit)? = null
     private val transcript = CardTranscript()
     private var cardScope: CardScope? = null
-    private val sid: SessionId get() = ref.sessionId
+    private val sid: SessionId
+        get() = ref.sessionId
 
     internal fun attach() {
         val watcher =
@@ -150,7 +170,11 @@ public class ChatCardsModel internal constructor(
         stopWatching = { watcher.cancel() }
     }
 
-    public fun answer(card: AgentCard, answer: CardAnswer, photos: List<PromptAttachment> = emptyList()) {
+    public fun answer(
+        card: AgentCard,
+        answer: CardAnswer,
+        photos: List<PromptAttachment> = emptyList(),
+    ) {
         board?.answer(card, answer, photos)
     }
 
@@ -182,29 +206,40 @@ public class ChatCardsModel internal constructor(
         val delivery = services.chatDelivery
         val sender = CardAnswerSender { _, text, photos ->
             when (val sent = delivery.send(ref, text, photos.toImmutableList())) {
-                // The id comes back before the request leaves: wait for this send's own result (B-CHAT-050).
+                // The id comes back before the request leaves: wait for this send's own result
+                // (B-CHAT-050).
                 is Outcome.Ok -> {
                     val engine = delivery.engine
-                    if (engine == null) Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
+                    if (engine == null)
+                        Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
                     else awaitCardSend(sent.value, engine.outcomes, engine.pending)
                 }
                 is Outcome.Failed -> sent
             }
         }
-        // B-CHAT-039/050/052 (Flutter `_send`): a fresh read, then an explicit idle check, right before sending. A
+        // B-CHAT-039/050/052 (Flutter `_send`): a fresh read, then an explicit idle check, right
+        // before sending. A
         // card answer is never queued for later and never steered into a running turn.
         val check = CardDispatchCheck { card ->
-            if (bound !== graph || card.sessionId != sid.raw) return@CardDispatchCheck CardRefusal.Changed
-            if (gateway.events.status.value != StreamStatus.Connected) return@CardDispatchCheck CardRefusal.Changed
+            if (bound !== graph || card.sessionId != sid.raw)
+                return@CardDispatchCheck CardRefusal.Changed
+            if (gateway.events.status.value != StreamStatus.Connected)
+                return@CardDispatchCheck CardRefusal.Changed
             if (!read(gateway)) return@CardDispatchCheck CardRefusal.Changed
             val idle =
-                when (val statuses = gateway.sessionStatuses()) {
-                    is Outcome.Failed -> false
-                    is Outcome.Ok -> statuses.value[sid].let { it == null || it == SessionStatus.Idle }
+                if (gateway is BoundedCardHistoryGateway) {
+                    (gateway.cardSessionIdle(sid) as? Outcome.Ok)?.value == true
+                } else {
+                    when (val statuses = gateway.sessionStatuses()) {
+                        is Outcome.Failed -> false
+                        is Outcome.Ok ->
+                            statuses.value[sid].let { it == null || it == SessionStatus.Idle }
+                    }
                 }
             if (bound !== graph) return@CardDispatchCheck CardRefusal.Changed
             board?.setBusy(!idle)
-            if (!idle || delivery.engine?.routeFor(ref) != SendRoute.Plain) CardRefusal.Busy else null
+            if (!idle || delivery.engine?.routeFor(ref) != SendRoute.Plain) CardRefusal.Busy
+            else null
         }
         val b =
             CardBoard(
@@ -216,7 +251,8 @@ public class ChatCardsModel internal constructor(
             )
         board = b
         val location = gateway.location.value
-        cardScope = CardScope(ref.profileId.raw, SOURCE, location.directory ?: GLOBAL, location.workspace)
+        cardScope =
+            CardScope(ref.profileId.raw, SOURCE, location.directory ?: GLOBAL, location.workspace)
         val profile = ref.profileId.raw
         graph.run { b.state.collect { mutable.value = it } }
         graph.run {
@@ -237,11 +273,31 @@ public class ChatCardsModel internal constructor(
                             b.setBusy(false)
                             read(gateway) // reconcile by refetch, not replay
                         }
-                    is GatewayEvent.MessageUpserted -> if (e.message.sessionId == sid.raw) upsert(e.message)
+                    is GatewayEvent.MessageUpserted ->
+                        if (e.message.sessionId == sid.raw) {
+                            val echo = e.userEcho
+                            if (
+                                echo != null &&
+                                    e.message.role ==
+                                        io.github.eslamasabry.oc.core.model.transcript.Role.User &&
+                                    echo.parts.all {
+                                        it.sessionId == sid.raw && it.messageId == e.message.id
+                                    }
+                            ) {
+                                transcript.upsert(
+                                    io.github.eslamasabry.oc.core.model.transcript.MessageWithParts(
+                                        e.message,
+                                        echo.parts.toImmutableList(),
+                                    )
+                                )
+                                publish()
+                            } else upsert(e.message)
+                        }
                     is GatewayEvent.PartUpserted -> if (e.part.sessionId == sid.raw) upsert(e.part)
                     is GatewayEvent.TranscriptStale -> if (e.sessionId == sid) read(gateway)
                     GatewayEvent.Connected -> read(gateway)
-                    // Pure deltas never change a card (B-CHAT-037): input arrives whole when the call completes.
+                    // Pure deltas never change a card (B-CHAT-037): input arrives whole when the
+                    // call completes.
                     else -> Unit
                 }
             }
@@ -254,15 +310,32 @@ public class ChatCardsModel internal constructor(
         stops += { job.cancel() }
     }
 
-    /** One bounded read; true when it was applied (a failed or overtaken read leaves the cards as they were). */
+    /**
+     * One bounded read; true when it was applied (a failed or overtaken read leaves the cards as
+     * they were).
+     */
     private suspend fun read(gateway: ServerGateway): Boolean {
         val source = CardHistorySource { session, cursor, limit ->
-            when (val page = gateway.messagePage(SessionId(session), cursor = cursor, limit = limit)) {
-                is Outcome.Ok -> Outcome.Ok(CardHistoryPage(page.value.items, page.value.nextCursor, page.value.nextCursor != null))
+            val result =
+                if (gateway is BoundedCardHistoryGateway) {
+                    gateway.cardHistoryPage(SessionId(session), cursor, limit)
+                } else {
+                    gateway.messagePage(SessionId(session), cursor = cursor, limit = limit)
+                }
+            when (val page = result) {
+                is Outcome.Ok ->
+                    Outcome.Ok(
+                        CardHistoryPage(
+                            page.value.items,
+                            page.value.nextCursor,
+                            page.value.nextCursor != null,
+                        )
+                    )
                 is Outcome.Failed -> page
             }
         }
-        // A live event during the read means the read is older than what is shown: read again, a few times at most.
+        // A live event during the read means the read is older than what is shown: read again, a
+        // few times at most.
         repeat(READ_ATTEMPTS) {
             val mark = transcript.mark()
             val tail = CardHistory.readTail(source, sid.raw)
@@ -298,15 +371,19 @@ public class ChatCardsModel internal constructor(
 }
 
 /**
- * What a prompt bubble shows for a card answer: only the summary line of a fully valid receipt (plan 09 §13.4: the
- * JSON line is hidden only for a validated receipt); any other text unchanged.
+ * What a prompt bubble shows for a card answer: only the summary line of a fully valid receipt
+ * (plan 09 §13.4: the JSON line is hidden only for a validated receipt); any other text unchanged.
  */
 public object CardAnswerDisplay {
     public fun text(raw: String): String {
         if (!raw.startsWith("[oc-ui answer ")) return raw
         val message =
             MessageWithParts(
-                MessageInfo("display", "display", io.github.eslamasabry.oc.core.model.transcript.Role.User),
+                MessageInfo(
+                    "display",
+                    "display",
+                    io.github.eslamasabry.oc.core.model.transcript.Role.User,
+                ),
                 kotlinx.collections.immutable.persistentListOf(
                     Part(
                         id = "display",
@@ -318,6 +395,7 @@ public object CardAnswerDisplay {
                     )
                 ),
             )
-        return io.github.eslamasabry.oc.engine.cards.CardCodec.answerEnvelope(message)?.second ?: raw
+        return io.github.eslamasabry.oc.engine.cards.CardCodec.answerEnvelope(message)?.second
+            ?: raw
     }
 }

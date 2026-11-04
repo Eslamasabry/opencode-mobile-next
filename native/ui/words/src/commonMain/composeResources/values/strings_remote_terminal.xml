@@ -1,0 +1,18 @@
+<resources>
+    <string name="remoteTerminalCreate">New terminal</string>
+    <string name="remoteTerminalEmpty">No terminals in this project</string>
+    <string name="remoteTerminalFailed">The terminal could not complete that action</string>
+    <string name="remoteTerminalTranscript">Terminal transcript</string>
+    <string name="remoteTerminalNoOutput">No terminal output yet.</string>
+    <string name="remoteTerminalInput">Send to terminal</string>
+    <string name="remoteTerminalSend">Send</string>
+    <string name="remoteTerminalOffline">The terminal is disconnected. Open it again to reconnect.</string>
+    <string name="remoteTerminalReadable">Readable terminal</string>
+    <string name="remoteTerminalSize">Terminal size</string>
+    <string name="remoteTerminalRows">Rows</string>
+    <string name="remoteTerminalColumns">Columns</string>
+    <string name="remoteTerminalApplySize">Apply size</string>
+    <string name="remoteTerminalSizeRange">Choose between 1 and 1000 rows and columns.</string>
+    <string name="remoteTerminalReconnect">Reconnect</string>
+    <string name="remoteTerminalList">Terminals</string>
+</resources>

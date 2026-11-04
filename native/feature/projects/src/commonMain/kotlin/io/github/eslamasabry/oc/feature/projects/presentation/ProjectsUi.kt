@@ -41,6 +41,9 @@ public data class ProjectsPickerUi(
     val query: String = "",
     val showSearch: Boolean = false,
     val askingPath: Boolean = false,
+    val storageDirectory: String? = null,
+    val requestingStorage: Boolean = false,
+    val storageRefused: Boolean = false,
     /** The folder used last, so the path field starts next to it. */
     val pathStart: String = "",
 )

@@ -39,6 +39,7 @@ public data class ConversationRowUi(
     val title: RowTitle,
     val project: String,
     val status: RowStatus,
+    val canOpen: Boolean = true,
 )
 
 /** A recent project chip; [selected] when it is the project filter. */
@@ -123,7 +124,10 @@ public interface ChatsActions {
     /** Search conversations across the server (unit P12-SEARCH-USAGE). */
     public fun openSearch() {}
 
-    /** The Projects page (P12): New project, Open a folder, Opened before, then the server's projects. */
+    /**
+     * The Projects page (P12): New project, Open a folder, Opened before, then the server's
+     * projects.
+     */
     public fun openProjects()
 }
 

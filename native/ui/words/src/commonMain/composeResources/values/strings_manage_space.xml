@@ -1,0 +1,4 @@
+<resources>
+    <string name="manageSpaceBytes">%1$d bytes</string>
+    <string name="manageSpaceClearCacheQuestion">Clear the app's cache?</string>
+</resources>

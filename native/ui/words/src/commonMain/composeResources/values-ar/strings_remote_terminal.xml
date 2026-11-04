@@ -1,0 +1,18 @@
+<resources>
+    <string name="remoteTerminalCreate">طرفية جديدة</string>
+    <string name="remoteTerminalEmpty">لا توجد طرفيات في هذا المشروع</string>
+    <string name="remoteTerminalFailed">تعذّر على الطرفية إكمال هذا الإجراء</string>
+    <string name="remoteTerminalTranscript">نص الطرفية</string>
+    <string name="remoteTerminalNoOutput">لا توجد مخرجات للطرفية بعد.</string>
+    <string name="remoteTerminalInput">إرسال إلى الطرفية</string>
+    <string name="remoteTerminalSend">إرسال</string>
+    <string name="remoteTerminalOffline">الطرفية غير متصلة. افتحها مجددًا لإعادة الاتصال.</string>
+    <string name="remoteTerminalReadable">الطرفية بنص قابل للقراءة</string>
+    <string name="remoteTerminalSize">حجم الطرفية</string>
+    <string name="remoteTerminalRows">الصفوف</string>
+    <string name="remoteTerminalColumns">الأعمدة</string>
+    <string name="remoteTerminalApplySize">تطبيق الحجم</string>
+    <string name="remoteTerminalSizeRange">اختر عددًا من ١ إلى ١٠٠٠ للصفوف والأعمدة.</string>
+    <string name="remoteTerminalReconnect">إعادة الاتصال</string>
+    <string name="remoteTerminalList">الطرفيات</string>
+</resources>

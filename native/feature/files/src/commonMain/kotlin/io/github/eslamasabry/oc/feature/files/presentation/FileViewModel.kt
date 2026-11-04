@@ -34,15 +34,26 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-public enum class FilePhase { Loading, Ready, Failed, NotConnected, Unavailable }
+public enum class FilePhase {
+    Loading,
+    Ready,
+    Failed,
+    NotConnected,
+    Unavailable,
+}
 
 /** The Share on Wi-Fi sheet (07 §5 D05): stops on close, on Stop, or after 15 minutes. */
 public sealed interface ShareSheetUi {
     public data object Starting : ShareSheetUi
 
-    public data class Running(val url: String, val name: String, val downloads: Int, val remainingMs: Long?) :
-        ShareSheetUi {
-        override fun toString(): String = "Running(downloads=$downloads)" // the link holds the token
+    public data class Running(
+        val url: String,
+        val name: String,
+        val downloads: Int,
+        val remainingMs: Long?,
+    ) : ShareSheetUi {
+        override fun toString(): String =
+            "Running(downloads=$downloads)" // the link holds the token
     }
 
     /** Not on Wi-Fi, a file that may hold secrets, or the server could not start. */
@@ -51,7 +62,13 @@ public sealed interface ShareSheetUi {
     public data object Ended : ShareSheetUi
 }
 
-public enum class FileNotice { OpenWithNone, OpenWithFailed, MentionFailed, Saved, SaveFailed }
+public enum class FileNotice {
+    OpenWithNone,
+    OpenWithFailed,
+    MentionFailed,
+    Saved,
+    SaveFailed,
+}
 
 public sealed interface PdfPageUi {
     public data object Loading : PdfPageUi
@@ -71,6 +88,8 @@ public data class FileUi(
     val sizeBytes: Long? = null,
     val canShare: Boolean = false,
     val canOpenWith: Boolean = false,
+    val canOpenLocal: Boolean = false,
+    val canInstall: Boolean = false,
     /** Save the exact original bytes (B-MEDIA-001), where the platform can. */
     val canSave: Boolean = false,
     val saving: Boolean = false,
@@ -78,7 +97,10 @@ public data class FileUi(
     val opening: Boolean = false,
     val share: ShareSheetUi? = null,
     val notice: FileNotice? = null,
-    /** PDF: the shown page count (at most 200) once the document opened; pages fill in as they render. */
+    /**
+     * PDF: the shown page count (at most 200) once the document opened; pages fill in as they
+     * render.
+     */
     val pdfPageCount: Int = 0,
     val pdfFailure: Failure? = null,
     val pdfPages: ImmutableMap<Int, PdfPageUi> = persistentMapOf(),
@@ -95,10 +117,15 @@ public interface FileActions {
 
     public fun retry()
 
-    /** Ask about this file: `@path ` into this conversation's message, then back to the conversation. */
+    /**
+     * Ask about this file: `@path ` into this conversation's message, then back to the
+     * conversation.
+     */
     public fun ask()
 
     public fun openWith()
+
+    public fun openPhone(install: Boolean): Unit = openWith()
 
     /** Save the original bytes to a place the person picks. */
     public fun save()
@@ -117,8 +144,9 @@ public interface FileActions {
 }
 
 /**
- * D03 (07 §5): one file of the conversation's project. Reads once; the original bytes stay exact for Open with and
- * Share on Wi-Fi. Opened for a chat, so Ask about this file stages into that chat's draft and returns to it.
+ * D03 (07 §5): one file of the conversation's project. Reads once; the original bytes stay exact
+ * for Open with and Share on Wi-Fi. Opened for a chat, so Ask about this file stages into that
+ * chat's draft and returns to it.
  */
 @AssistedInject
 public class FileViewModel(
@@ -131,6 +159,7 @@ public class FileViewModel(
     private val nav: AppNavigator,
     private val appScope: AppCoroutineScope,
     private val savers: Set<FileSaver>,
+    private val phoneFiles: Set<PhoneFiles> = emptySet(),
 ) : ViewModel(), FileActions {
     private val local =
         MutableStateFlow(
@@ -192,15 +221,30 @@ public class FileViewModel(
         val mine = ++loads
         val gateway = connections.gateway(route.from)
         when {
-            gateway == null -> local.update { it.copy(phase = FilePhase.NotConnected, failure = null) }
-            !connections.canBrowse(route.from) -> local.update { it.copy(phase = FilePhase.Unavailable, failure = null) }
+            gateway == null ->
+                local.update { it.copy(phase = FilePhase.NotConnected, failure = null) }
+            !connections.canBrowse(route.from) ->
+                local.update { it.copy(phase = FilePhase.Unavailable, failure = null) }
             else -> {
                 local.update { it.copy(phase = FilePhase.Loading, failure = null) }
                 viewModelScope.launch {
+                    val localFile =
+                        phoneFiles.singleOrNull()?.available(route.from, route.path) == true
+                    if (mine != loads) return@launch
+                    local.update {
+                        it.copy(
+                            canOpenLocal = localFile,
+                            canInstall =
+                                localFile && route.path.endsWith(".apk", ignoreCase = true),
+                        )
+                    }
                     val opened = ProjectFiles.open(gateway, route.path, route.line)
                     if (mine != loads) return@launch
                     when (opened) {
-                        is Outcome.Failed -> local.update { it.copy(phase = FilePhase.Failed, failure = opened.failure) }
+                        is Outcome.Failed ->
+                            local.update {
+                                it.copy(phase = FilePhase.Failed, failure = opened.failure)
+                            }
                         is Outcome.Ok -> {
                             data = opened.value.data
                             local.update {
@@ -235,7 +279,9 @@ public class FileViewModel(
             is Outcome.Failed -> local.update { it.copy(pdfFailure = opened.failure) }
             is Outcome.Ok -> {
                 pdf = opened.value
-                local.update { it.copy(pdfPageCount = opened.value.pageCount.coerceIn(0, PdfLimits.MAX_PAGES)) }
+                local.update {
+                    it.copy(pdfPageCount = opened.value.pageCount.coerceIn(0, PdfLimits.MAX_PAGES))
+                }
             }
         }
     }
@@ -246,23 +292,32 @@ public class FileViewModel(
         if (index !in 0 until ui.pdfPageCount) return
         val current = ui.pdfPages[index]
         if (current is PdfPageUi.Loading || current is PdfPageUi.Ready) return
-        local.update { it.copy(pdfPages = it.pdfPages.toPersistentMap().putting(index, PdfPageUi.Loading)) }
+        local.update {
+            it.copy(pdfPages = it.pdfPages.toPersistentMap().putting(index, PdfPageUi.Loading))
+        }
         viewModelScope.launch {
             val page =
                 when (val rendered = doc.renderPage(index, PDF_WIDTH_PX)) {
                     is Outcome.Ok -> PdfPageUi.Ready(rendered.value)
                     is Outcome.Failed -> PdfPageUi.Failed
                 }
-            local.update { it.copy(pdfPages = keepNear(it.pdfPages.toPersistentMap().putting(index, page), index)) }
+            local.update {
+                it.copy(
+                    pdfPages = keepNear(it.pdfPages.toPersistentMap().putting(index, page), index)
+                )
+            }
         }
     }
 
     /**
-     * Rendered pages stay only near the page just shown (Flutter frees off-screen pages): at most [PDF_WINDOW] pages
-     * each side and [PDF_BUDGET_BYTES] of PNGs, farthest first. A dropped page renders again when it is reached.
+     * Rendered pages stay only near the page just shown (Flutter frees off-screen pages): at most
+     * [PDF_WINDOW] pages each side and [PDF_BUDGET_BYTES] of PNGs, farthest first. A dropped page
+     * renders again when it is reached.
      */
     private fun keepNear(pages: Map<Int, PdfPageUi>, center: Int): ImmutableMap<Int, PdfPageUi> {
-        val near = pages.filter { (i, page) -> page !is PdfPageUi.Ready || kotlin.math.abs(i - center) <= PDF_WINDOW }
+        val near = pages.filter { (i, page) ->
+            page !is PdfPageUi.Ready || kotlin.math.abs(i - center) <= PDF_WINDOW
+        }
         var bytes = near.values.sumOf { (it as? PdfPageUi.Ready)?.png?.size?.toLong() ?: 0L }
         if (bytes <= PDF_BUDGET_BYTES) return near.toPersistentMap()
         val kept = near.toMutableMap()
@@ -289,7 +344,10 @@ public class FileViewModel(
         }
     }
 
-    /** Pops every Files page this conversation opened; the chat is under them (07 §5 D03 `popTo(ChatRoute)`). */
+    /**
+     * Pops every Files page this conversation opened; the chat is under them (07 §5 D03
+     * `popTo(ChatRoute)`).
+     */
     private fun returnToConversation() {
         var guard = 0
         while (nav.top.value is FilesRoute && guard++ < MAX_POPS) nav.back()
@@ -309,9 +367,28 @@ public class FileViewModel(
                         when (result) {
                             is Outcome.Ok -> null
                             is Outcome.Failed ->
-                                if (result.failure == Failure.Media(MediaProblem.NoAppToOpen)) FileNotice.OpenWithNone
+                                if (result.failure == Failure.Media(MediaProblem.NoAppToOpen))
+                                    FileNotice.OpenWithNone
                                 else FileNotice.OpenWithFailed
                         },
+                )
+            }
+        }
+    }
+
+    override fun openPhone(install: Boolean) {
+        val handoff = phoneFiles.singleOrNull() ?: return
+        if (
+            local.value.opening || !local.value.canOpenLocal || (install && !local.value.canInstall)
+        )
+            return
+        local.update { it.copy(opening = true, notice = null) }
+        viewModelScope.launch {
+            val result = handoff.open(route.from, route.path, install)
+            local.update {
+                it.copy(
+                    opening = false,
+                    notice = if (result is Outcome.Failed) FileNotice.OpenWithFailed else null,
                 )
             }
         }
@@ -344,10 +421,12 @@ public class FileViewModel(
         local.update { it.copy(share = ShareSheetUi.Starting) }
         viewModelScope.launch {
             when (val started = share.start(file)) {
-                is Outcome.Failed -> local.update { it.copy(share = ShareSheetUi.Refused(started.failure)) }
+                is Outcome.Failed ->
+                    local.update { it.copy(share = ShareSheetUi.Refused(started.failure)) }
                 is Outcome.Ok -> {
                     shareId = started.value.id
-                    // The sheet was closed while the server was starting: end the share it no longer shows.
+                    // The sheet was closed while the server was starting: end the share it no
+                    // longer shows.
                     if (!shareWanted) {
                         share.stop(started.value.id)
                         return@launch
@@ -386,7 +465,8 @@ public class FileViewModel(
     override fun dismissNotice(): Unit = local.update { it.copy(notice = null) }
 
     override fun onCleared() {
-        // Leaving the file ends its share (the sheet cannot outlive the viewer) and frees the PDF renderer.
+        // Leaving the file ends its share (the sheet cannot outlive the viewer) and frees the PDF
+        // renderer.
         val id = shareId
         if (shareWanted && id != null) share.stopLater(id)
         val doc = pdf
