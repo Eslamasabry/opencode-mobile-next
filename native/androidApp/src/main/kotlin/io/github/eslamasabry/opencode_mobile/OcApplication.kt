@@ -11,10 +11,15 @@ import io.github.eslamasabry.oc.core.common.Severity
 import io.github.eslamasabry.oc.core.security.RedactingWriter
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
+import io.github.eslamasabry.opencode_mobile.graph.AppExitAccessors
+import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
+import io.github.eslamasabry.opencode_mobile.graph.AttentionRuntimeAccessors
+import io.github.eslamasabry.opencode_mobile.graph.BackgroundAccessors
 import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsAttentionAccessors
 import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsLogSink
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
 import io.github.eslamasabry.opencode_mobile.graph.LinuxAccessors
+import io.github.eslamasabry.opencode_mobile.graph.MonitorRuntimeAccessors
 import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
 
 /**
@@ -30,7 +35,10 @@ class OcApplication : Application(), GraphOwner {
         super.onCreate()
         val redactor = Redactor() // 2. before any secret is read
         AppLog.install(
-            RedactingWriter(redactor, listOf(DiagnosticsLogSink)), // P12: warnings/errors feed Report a problem
+            RedactingWriter(
+                redactor,
+                listOf(DiagnosticsLogSink),
+            ), // P12: warnings/errors feed Report a problem
             Severity.Info,
         ) // ring + logcat sinks: slice 1
         val buildInfo =
@@ -43,12 +51,27 @@ class OcApplication : Application(), GraphOwner {
         appGraph =
             createGraphFactory<AndroidAppGraph.Factory>()
                 .create(this, buildInfo, redactor, LaunchMode.Normal)
-        (appGraph as DiagnosticsAttentionAccessors).diagnosticsAttention.start() // persisted report, crash store, exits
+        (appGraph as DiagnosticsAttentionAccessors)
+            .diagnosticsAttention
+            .start() // persisted report, crash store, exits
+        (appGraph as BackgroundAccessors).background.start()
+        (appGraph as AppExitAccessors).appExit.start()
+        (appGraph as AppNoticesAccessors).appNotices.start()
+        (appGraph as AttentionRuntimeAccessors).attentionRuntime.start()
+        (appGraph as MonitorRuntimeAccessors).monitorRuntime.start()
         appGraph.previewRuntime // warm stores, restore saved profile, connect
-        (appGraph as PlatformAccessors).platform.start() // P12-PLATFORM: channels, widgets feed, alerts, update check
-        appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)
-        appGraph.builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone server comes back
-        (appGraph as LinuxAccessors).linuxStartup.start() // P12-FIX: finish an interrupted Reset Linux (B-LINUX-093)
+        (appGraph as PlatformAccessors)
+            .platform
+            .start() // P12-PLATFORM: channels, widgets feed, alerts, update check
+        appGraph
+            .resumedActivities // P12-VOICE: follow the resumed activity from the start (mic
+                               // permission)
+        appGraph
+            .builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone
+                            // server comes back
+        (appGraph as LinuxAccessors)
+            .linuxStartup
+            .start() // P12-FIX: finish an interrupted Reset Linux (B-LINUX-093)
         AppLog.tagged("App").i { "graph ready ${buildInfo.versionName} (${buildInfo.versionCode})" }
     }
 }

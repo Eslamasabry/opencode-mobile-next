@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notify_tool_command">Running a command…</string>
+    <string name="notify_tool_edit">Editing files…</string>
+    <string name="notify_tool_read">Reading files…</string>
+    <string name="notify_tool_search">Searching files…</string>
+    <string name="notify_tool_web">Browsing the web…</string>
+    <string name="notify_tool_subagent">Running a subagent…</string>
+    <string name="notify_tool_plan">Planning…</string>
+    <string name="notify_tool_working">Working…</string>
+    <string name="notify_tool_card">Showing a card…</string>
+    <string name="notify_tool_backgroundtask">Checking a background task…</string>
+    <string name="notify_tool_other">Running %1$s…</string>
+</resources>

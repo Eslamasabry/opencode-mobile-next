@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notify_tool_command">جارٍ تشغيل أمر…</string>
+    <string name="notify_tool_edit">جارٍ تعديل الملفات…</string>
+    <string name="notify_tool_read">جارٍ قراءة الملفات…</string>
+    <string name="notify_tool_search">جارٍ البحث في الملفات…</string>
+    <string name="notify_tool_web">جارٍ تصفح الويب…</string>
+    <string name="notify_tool_subagent">جارٍ تشغيل وكيل فرعي…</string>
+    <string name="notify_tool_plan">جارٍ التخطيط…</string>
+    <string name="notify_tool_working">جارٍ العمل…</string>
+    <string name="notify_tool_card">جارٍ عرض بطاقة…</string>
+    <string name="notify_tool_backgroundtask">جارٍ فحص مهمة في الخلفية…</string>
+    <string name="notify_tool_other">جارٍ تشغيل %1$s…</string>
+</resources>

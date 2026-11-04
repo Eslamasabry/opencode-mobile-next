@@ -43,7 +43,9 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeClearFilters
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEarlier
@@ -52,10 +54,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNeedsYou
-import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewChat
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewShort
-import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
@@ -66,9 +66,10 @@ import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefMore
 import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefUnknown
 import io.github.eslamasabry.oc.ui.words.res.chats_back
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
-import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
+import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
+import io.github.eslamasabry.oc.ui.words.res.p12SearchTitle
 import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import kotlinx.coroutines.flow.drop
@@ -81,8 +82,14 @@ import org.jetbrains.compose.resources.stringResource
  * top-bar words, search sits under the bar.
  */
 @Composable
-public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
-    // B15 (QA wave 1): short words so "Conversations" is never cut, and the door says where it goes (Settings).
+public fun ChatsScreen(
+    state: ChatsUi,
+    actions: ChatsActions,
+    appStatus: KitStatus? = null,
+    replyOffer: (@Composable () -> Unit)? = null,
+) {
+    // B15 (QA wave 1): short words so "Conversations" is never cut, and the door says where it goes
+    // (Settings).
     val newLabel = stringResource(Res.string.chatsHomeNewShort)
     val settingsLabel = stringResource(Res.string.librarySettingsTitle)
     val updateLabel = stringResource(Res.string.appUpdateUpdate)
@@ -99,9 +106,11 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
         search =
             if (state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.Opening) null
             else ({ SearchField(actions) }),
+        status = appStatus,
         width = KitScreenWidth.Reading,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+            replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
             state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions) } }
             if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) {
                 item(key = "filters") { Filters(state, actions) }
@@ -124,7 +133,11 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
                             kind = KitStateKind.Calm,
                             title = stringResource(Res.string.chatsHomeEmptyTitle),
                             body = stringResource(Res.string.chatsHomeEmptyCalmBody),
-                            primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.chatsHomeNewChat),
+                                    actions::newConversation,
+                                ),
                         )
                     }
                 ChatsPhase.NoMatch ->

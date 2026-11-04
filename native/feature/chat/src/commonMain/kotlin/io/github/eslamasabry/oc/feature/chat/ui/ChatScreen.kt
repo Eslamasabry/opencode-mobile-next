@@ -1,9 +1,5 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
-import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,34 +11,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
-import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ChatPromptsDoor
+import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
+import io.github.eslamasabry.oc.feature.chat.composer.InsertRequest
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChip
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
-import io.github.eslamasabry.oc.feature.chat.composer.InsertRequest
-import io.github.eslamasabry.oc.feature.chat.presentation.PictureUi
-import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
-import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureContent
-import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureView
-import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureFailed
-import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureLoading
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
@@ -53,7 +44,11 @@ import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageAction
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageMenuUi
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageOrder
+import io.github.eslamasabry.oc.feature.chat.presentation.PictureUi
+import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
+import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
 import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
+import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
@@ -76,45 +71,60 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
-import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
-import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownSelection
-import io.github.eslamasabry.oc.ui.words.res.chatFeelPicture
-import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnServer
-import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnWeb
-import io.github.eslamasabry.oc.ui.words.res.chatFeelDone
-import io.github.eslamasabry.oc.ui.words.res.chatFeelEditAndResend
-import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
-import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
-import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkBody
-import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkTitle
-import io.github.eslamasabry.oc.ui.words.res.chatFeelSelectText
-import io.github.eslamasabry.oc.ui.words.res.chatFeelShare
-import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
-import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
-import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoTitle
-import io.github.eslamasabry.oc.ui.words.res.revertFromHere
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitReadRequest
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
+import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureContent
+import io.github.eslamasabry.oc.ui.kitchat.image.KitPictureView
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownSelection
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitReadRequest
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitReplyReader
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatFeelDone
+import io.github.eslamasabry.oc.ui.words.res.chatFeelEditAndResend
+import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
+import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
+import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkBody
+import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkTitle
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPicture
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureFailed
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureLoading
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnServer
+import io.github.eslamasabry.oc.ui.words.res.chatFeelPictureOnWeb
+import io.github.eslamasabry.oc.ui.words.res.chatFeelSelectText
+import io.github.eslamasabry.oc.ui.words.res.chatFeelShare
+import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
+import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
+import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoTitle
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedBody
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.chatLoadingConversation
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedBusy
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedConnectionLost
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedCopy
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedDetails
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedModel
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedNoCredit
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedOther
+import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedSignIn
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailed
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailedChanged
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailedOffline
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailedRefused
 import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
 import io.github.eslamasabry.oc.ui.words.res.chatUiContextCompacted
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteThisMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiEarlierMessageCount
+import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
 import io.github.eslamasabry.oc.ui.words.res.chatUiForkFromThisPrompt
 import io.github.eslamasabry.oc.ui.words.res.chatUiNotConnectedToTheServerRightNow
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenCodeIsReconnectingTryAgainShortly
@@ -125,43 +135,31 @@ import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
+import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
+import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitCopy
-import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
-import io.github.eslamasabry.oc.ui.words.res.voiceNativeReadAloud
 import io.github.eslamasabry.oc.ui.words.res.kitDiscardTitle
 import io.github.eslamasabry.oc.ui.words.res.kitJumpLatest
 import io.github.eslamasabry.oc.ui.words.res.kitMessageActions
+import io.github.eslamasabry.oc.ui.words.res.kitMessageThought
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
-import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
-import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSending
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
-import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.kitWorkDidntFinish
-import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedBusy
-import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedConnectionLost
-import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedCopy
-import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedDetails
-import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedModel
-import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedNoCredit
-import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedOther
-import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedSignIn
-import io.github.eslamasabry.oc.ui.words.res.chatSendFailedChanged
-import io.github.eslamasabry.oc.ui.words.res.chatSendFailedOffline
-import io.github.eslamasabry.oc.ui.words.res.chatSendFailedRefused
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSteps
 import io.github.eslamasabry.oc.ui.words.res.kitWorkStopped
-import io.github.eslamasabry.oc.ui.words.res.kitMessageThought
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWorking
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
+import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.queuedDiscardUnconfirmedMessage
+import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
 import io.github.eslamasabry.oc.ui.words.res.revertFromHere
 import io.github.eslamasabry.oc.ui.words.res.sessionInstructionsUpdated
 import io.github.eslamasabry.oc.ui.words.res.skillApplied
@@ -172,6 +170,7 @@ import io.github.eslamasabry.oc.ui.words.res.transcriptFindNext
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindNone
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindPartial
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindPrevious
+import io.github.eslamasabry.oc.ui.words.res.voiceNativeReadAloud
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -189,13 +188,18 @@ public fun ChatScreen(
     modifier: Modifier = Modifier,
     requests: RequestSlotUi = RequestSlotUi(),
     requestActions: ChatRequestActions? = null,
-    /** Bar actions other units contribute through the chat's entry (PREVIEW-QR: "Preview a running app"). */
+    /**
+     * Bar actions other units contribute through the chat's entry (PREVIEW-QR: "Preview a running
+     * app").
+     */
     extraActions: List<KitLineAction> = emptyList(),
     prompts: ChatPromptsDoor? = null,
     facts: TurnFactsUi = TurnFactsUi.Empty,
     onOpenSession: ((String) -> Unit)? = null,
     header: ChatHeaderSlot? = null,
     replyReader: KitReplyReader? = null,
+    appStatus: KitStatus? = null,
+    replyOffer: (@Composable () -> Unit)? = null,
 ) {
     var contextOpen by remember { mutableStateOf(false) }
     KitBackGuard(enabled = state.guardBack, onBack = actions::leaveRequested)
@@ -252,10 +256,17 @@ public fun ChatScreen(
                 busy = { latest.live != null },
                 requestWaiting = { requestState.card != null },
                 onSent = { list.following = true },
-                // "Edit and resend" (P12-CHAT-FEEL) first, then saved prompts and slash commands (P12-PROMPTS); each
-                // acknowledgement goes back to the side that offered it. Agent ```choices arrive with cards (S5).
-                pendingInsert = { latest.insert?.let { InsertRequest(it.id, it.text, replace = true) } ?: prompts?.pending() },
-                insertDone = { id -> if (latest.insert?.id == id) actions.insertDone(id) else prompts?.done(id) },
+                // "Edit and resend" (P12-CHAT-FEEL) first, then saved prompts and slash commands
+                // (P12-PROMPTS); each
+                // acknowledgement goes back to the side that offered it. Agent ```choices arrive
+                // with cards (S5).
+                pendingInsert = {
+                    latest.insert?.let { InsertRequest(it.id, it.text, replace = true) }
+                        ?: prompts?.pending()
+                },
+                insertDone = { id ->
+                    if (latest.insert?.id == id) actions.insertDone(id) else prompts?.done(id)
+                },
                 focusRequest = { latest.arrival?.takeIf { it.focusComposer }?.id },
                 focusDone = actions::arrivalShown,
                 onStop = actions::stop,
@@ -272,11 +283,15 @@ public fun ChatScreen(
                 modifier = Modifier.fillMaxSize(),
                 page = true,
                 topBar = {
-                    // CHAT-TRANSCRIPT (B-CHAT-019): the context reading folds into the bar's actions.
+                    // CHAT-TRANSCRIPT (B-CHAT-019): the context reading folds into the bar's
+                    // actions.
                     val context =
                         facts.context?.let { context ->
                             KitLineAction(
-                                stringResource(Res.string.kitContextRingSemantics, Numbers.format(context.percent)),
+                                stringResource(
+                                    Res.string.kitContextRingSemantics,
+                                    Numbers.format(context.percent),
+                                ),
                                 { contextOpen = true },
                                 testTag = "chat-context-open",
                             )
@@ -307,36 +322,43 @@ public fun ChatScreen(
                             },
                         ) + extraActions
                     if (header != null) {
-                        // CHAT-HEADER replaces the plain bar; Find lives in its ⋯ menu, the other units' actions stay.
+                        // CHAT-HEADER replaces the plain bar; Find lives in its ⋯ menu, the other
+                        // units' actions stay.
                         ChatHeaderTopBar(
                             header,
                             actions::leaveRequested,
                             { actions.find(state.find?.query ?: "") },
                             extraActions = listOfNotNull(context) + unitActions,
                         )
-                    } else KitTopBar(
-                        title = state.title ?: stringResource(Res.string.commandUntitledChat),
-                        exit = KitTopBarExit.Back,
-                        exitLabel = stringResource(Res.string.kitTopBarBack),
-                        onExit = actions::leaveRequested,
-                        actions =
-                            listOfNotNull(
-                                context,
-                                KitLineAction(
-                                    stringResource(Res.string.kitTopBarSearch),
-                                    { actions.find(state.find?.query ?: "") },
-                                    testTag = "chat-find-open",
-                                ),
-                            ) + unitActions,
-                    )
+                    } else
+                        KitTopBar(
+                            title = state.title ?: stringResource(Res.string.commandUntitledChat),
+                            exit = KitTopBarExit.Back,
+                            exitLabel = stringResource(Res.string.kitTopBarBack),
+                            onExit = actions::leaveRequested,
+                            actions =
+                                listOfNotNull(
+                                    context,
+                                    KitLineAction(
+                                        stringResource(Res.string.kitTopBarSearch),
+                                        { actions.find(state.find?.query ?: "") },
+                                        testTag = "chat-find-open",
+                                    ),
+                                ) + unitActions,
+                        )
                 },
-                status = state.status?.let { statusLine(it, actions) },
+                status =
+                    KitStatus.highest(
+                        listOf(state.status?.let { statusLine(it, actions) }, appStatus)
+                    ),
                 search = state.find?.let { find -> @Composable { FindBar(find, actions) } },
                 loading = state.phase == ChatPhase.Loading,
                 loadingLabel = stringResource(Res.string.chatLoadingConversation),
                 bottom = {
                     Column {
-                        // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone consent.
+                        replyOffer?.invoke()
+                        // P12-VOICE: the reading strip (Stop, notes) and the once-per-phone
+                        // consent.
                         replyReader?.Reader(
                             state.readAloud?.let { KitReadRequest(it.id, it.rowKey, it.text) },
                             actions::readAloudDone,
@@ -404,7 +426,12 @@ public fun ChatScreen(
 
             // The menu opens over the composer's end, where the action that opened it is under the
             // thumb.
-            MessageMenu(state.menu, actions, Modifier.align(Alignment.BottomEnd), reads = replyReader != null)
+            MessageMenu(
+                state.menu,
+                actions,
+                Modifier.align(Alignment.BottomEnd),
+                reads = replyReader != null,
+            )
             ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
             SelectTextSheet(state.select, actions)
             PictureSheet(state.picture, actions)
@@ -457,7 +484,12 @@ private fun EarlierMessagesPill(
         }
     if (count > 0) {
         KitChip(
-            label = pluralStringResource(Res.plurals.chatUiEarlierMessageCount, count, Numbers.format(count)),
+            label =
+                pluralStringResource(
+                    Res.plurals.chatUiEarlierMessageCount,
+                    count,
+                    Numbers.format(count),
+                ),
             onClick = actions::openTimeline,
             modifier = modifier.testTag("earlier-messages-pill"),
         )
@@ -524,26 +556,37 @@ private fun FindBar(find: FindUi, actions: ChatActions) {
 }
 
 /**
- * One action list per message (plan 09 §6.6, Flutter `_messageContextActions`). Copy, Share and Select text
- * leave the app through the chat's `ChatOutside`; a list without a platform (slice 2) has no Copy.
+ * One action list per message (plan 09 §6.6, Flutter `_messageContextActions`). Copy, Share and
+ * Select text leave the app through the chat's `ChatOutside`; a list without a platform (slice 2)
+ * has no Copy.
  */
 @Composable
-private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Modifier, reads: Boolean = false) {
+private fun MessageMenu(
+    menu: MessageMenuUi?,
+    actions: ChatActions,
+    modifier: Modifier,
+    reads: Boolean = false,
+) {
     val feel = menu?.actions?.contains(MessageAction.Share) == true
     val items =
         menu
             ?.actions
             .orEmpty()
-            .filter { (feel || it != MessageAction.Copy) && (reads || it != MessageAction.ReadAloud) }
+            .filter {
+                (feel || it != MessageAction.Copy) && (reads || it != MessageAction.ReadAloud)
+            }
             .map { action ->
                 KitMenuItem(
                     label =
                         when (action) {
                             MessageAction.Copy -> stringResource(Res.string.kitCopy)
                             MessageAction.Share -> stringResource(Res.string.chatFeelShare)
-                            MessageAction.SelectText -> stringResource(Res.string.chatFeelSelectText)
-                            MessageAction.EditAndResend -> stringResource(Res.string.chatFeelEditAndResend)
-                            MessageAction.ReadAloud -> stringResource(Res.string.voiceNativeReadAloud)
+                            MessageAction.SelectText ->
+                                stringResource(Res.string.chatFeelSelectText)
+                            MessageAction.EditAndResend ->
+                                stringResource(Res.string.chatFeelEditAndResend)
+                            MessageAction.ReadAloud ->
+                                stringResource(Res.string.voiceNativeReadAloud)
                             MessageAction.SendAgain ->
                                 stringResource(Res.string.chatUiSendPromptAgain)
                             MessageAction.Fork ->
@@ -566,8 +609,8 @@ private fun MessageMenu(menu: MessageMenuUi?, actions: ChatActions, modifier: Mo
 }
 
 /**
- * "Select text" (P12-CHAT-FEEL): the message's words in a sheet, selectable in full with the transcript's filtered
- * menu (Copy and Select all only, R17).
+ * "Select text" (P12-CHAT-FEEL): the message's words in a sheet, selectable in full with the
+ * transcript's filtered menu (Copy and Select all only, R17).
  */
 @Composable
 private fun SelectTextSheet(select: SelectTextUi?, actions: ChatActions) {
@@ -578,7 +621,9 @@ private fun SelectTextSheet(select: SelectTextUi?, actions: ChatActions) {
         closeLabel = stringResource(Res.string.chatFeelDone),
     ) {
         if (select != null) {
-            KitMarkdownSelection(Modifier.fillMaxWidth().testTag("chat-select-text")) { KitText(select.text) }
+            KitMarkdownSelection(Modifier.fillMaxWidth().testTag("chat-select-text")) {
+                KitText(select.text)
+            }
         }
     }
 }
@@ -706,13 +751,14 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
     }
 
 /**
- * P12-CHAT-FEEL: what a reply's parts do. Links and web pictures go to [ChatActions.openLink] (the link policy, then
- * the one external opener); a code block's Copy copies its whole source verbatim.
+ * P12-CHAT-FEEL: what a reply's parts do. Links and web pictures go to [ChatActions.openLink] (the
+ * link policy, then the one external opener); a code block's Copy copies its whole source verbatim.
  */
 @Composable
 internal fun rememberReplyActions(
     actions: ChatActions,
-    confirmedPaths: kotlinx.collections.immutable.ImmutableSet<String> = kotlinx.collections.immutable.persistentSetOf(),
+    confirmedPaths: kotlinx.collections.immutable.ImmutableSet<String> =
+        kotlinx.collections.immutable.persistentSetOf(),
 ): ReplyActions {
     val copy = stringResource(Res.string.kitCopy)
     val copied = stringResource(Res.string.kitCopied)
@@ -720,13 +766,23 @@ internal fun rememberReplyActions(
     val onServer = stringResource(Res.string.chatFeelPictureOnServer, "\u0000")
     val onWeb = stringResource(Res.string.chatFeelPictureOnWeb, "\u0000")
     val continueLabel = stringResource(Res.string.returnBriefContinue)
-    return remember(actions, copy, copied, picture, onServer, onWeb, confirmedPaths, continueLabel) {
+    return remember(
+        actions,
+        copy,
+        copied,
+        picture,
+        onServer,
+        onWeb,
+        confirmedPaths,
+        continueLabel,
+    ) {
         ReplyActions(
             copiedLabel = copied,
             markdown =
                 KitMarkdownActions(
                     onLink = actions::openLink,
-                    // B-CHAT-064: a path the server confirmed opens its file (a picture in the viewer).
+                    // B-CHAT-064: a path the server confirmed opens its file (a picture in the
+                    // viewer).
                     onPath = actions::openPath,
                     confirmedPaths = confirmedPaths,
                     copyCodeLabel = copy,
@@ -736,7 +792,8 @@ internal fun rememberReplyActions(
                         val path = p.path
                         when {
                             url != null -> actions.openLink(url)
-                            path != null -> actions.openPicture(path, p.label ?: path.substringAfterLast('/'))
+                            path != null ->
+                                actions.openPicture(path, p.label ?: path.substringAfterLast('/'))
                         }
                     },
                     openFilePictures = true,
@@ -756,19 +813,29 @@ internal fun rememberReplyActions(
     }
 }
 
-/** B-CHAT-114: a file a step produced opens in the file viewer; a web address goes through the link policy. */
-internal fun openArtifact(actions: ChatActions, file: io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) {
+/**
+ * B-CHAT-114: a file a step produced opens in the file viewer; a web address goes through the link
+ * policy.
+ */
+internal fun openArtifact(
+    actions: ChatActions,
+    file: io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact,
+) {
     val path = file.path
     val url = file.url
     when {
         path != null -> actions.openPath(path, null)
-        url != null && (url.startsWith("https://") || url.startsWith("http://")) -> actions.openLink(url)
+        url != null && (url.startsWith("https://") || url.startsWith("http://")) ->
+            actions.openLink(url)
     }
 }
 
 /** Whether [openArtifact] can open [file]. */
-internal fun canOpenArtifact(file: io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact): Boolean =
-    file.path != null || file.url?.let { it.startsWith("https://") || it.startsWith("http://") } == true
+internal fun canOpenArtifact(
+    file: io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
+): Boolean =
+    file.path != null ||
+        file.url?.let { it.startsWith("https://") || it.startsWith("http://") } == true
 
 /** The words the transcript shows that are not server text, from `:ui:words`. */
 @Composable
@@ -783,7 +850,18 @@ internal fun rememberChatWords(): ChatTranscriptWords {
     val stopped = stringResource(Res.string.kitWorkStopped)
     val thoughtWord = stringResource(Res.string.kitMessageThought)
     val separator = stringResource(Res.string.kitWorkSeparator)
-    return remember(jump, more, didntFinish, compacted, instructions, skill, working, stopped, thoughtWord, separator) {
+    return remember(
+        jump,
+        more,
+        didntFinish,
+        compacted,
+        instructions,
+        skill,
+        working,
+        stopped,
+        thoughtWord,
+        separator,
+    ) {
         object : ChatTranscriptWords {
             override val jumpToLatest: String = jump
 
@@ -811,7 +889,8 @@ internal fun rememberChatWords(): ChatTranscriptWords {
 
             override fun stoppedFooter(): String = stopped
 
-            // QA wave 4 B15: the thinking line says what it is ("Thought · …"), not unlabeled grey text.
+            // QA wave 4 B15: the thinking line says what it is ("Thought · …"), not unlabeled grey
+            // text.
             override fun thought(firstLine: String): String = thoughtWord + separator + firstLine
         }
     }

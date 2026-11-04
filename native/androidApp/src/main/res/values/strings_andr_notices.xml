@@ -1,0 +1,33 @@
+<resources>
+    <string name="andr_appExitForceStopped">OpenCode Mobile was closed %1$s</string>
+    <string name="andr_appExitLowMemory">Android closed OpenCode Mobile %1$s to free memory</string>
+    <string name="andr_appExitCrashed">OpenCode Mobile stopped unexpectedly %1$s</string>
+    <string name="andr_appExitKilled">Android stopped OpenCode Mobile %1$s</string>
+    <string name="andr_appExitServerStopped">%1$s. Your phone\u0027s OpenCode stopped with it; it\u0027s starting again.</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s. Your phone\u0027s OpenCode and the AI Team stopped with it; they\u0027re starting again.</string>
+    <string name="andr_appExitServerStoppedManual">%1$s. Your phone\u0027s OpenCode stopped with it. Start it again when you\u0027re ready.</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s. Your phone\u0027s OpenCode and the AI Team stopped with it. Start them again when you\u0027re ready.</string>
+    <string name="andr_appExitServerBack">%1$s. Your phone\u0027s OpenCode stopped with it and is running again.</string>
+    <string name="andr_appExitServerBackTeam">%1$s. Your phone\u0027s OpenCode and the AI Team stopped with it; OpenCode is running again.</string>
+    <string name="andr_appExitAtTime">at %1$s</string>
+    <string name="andr_appExitOnDay">on %1$s at %2$s</string>
+    <string name="andr_appExitKeepRunning">Keep it running</string>
+    <string name="andr_backgroundPauseTimeLimit">Background connection paused %1$s to save battery.</string>
+    <string name="andr_backgroundPauseRestricted">Background connection paused: battery use is restricted.</string>
+    <string name="andr_backgroundPauseUserStopped">Background connection stopped when the app closed %1$s.</string>
+    <string name="andr_backgroundPauseAppUpdated">Background connection stopped when the app was updated %1$s.</string>
+    <string name="andr_backgroundPauseInterrupted">Background connection stopped for an unknown reason.</string>
+    <string name="andr_backgroundPauseDeviceRestarted">Background connection stopped when the phone restarted.</string>
+    <string name="andr_backgroundPauseResumeShort">Resume</string>
+    <string name="andr_backgroundPauseResuming">Resuming background connection…</string>
+    <string name="andr_backgroundPauseResumeFailed">Couldn\u0027t resume. Open Keep running settings.</string>
+    <string name="andr_backgroundPauseOpenKeepRunning">Open Keep running settings</string>
+    <string name="andr_notifyDismiss">Dismiss</string>
+    <string name="andr_firstRunNotifyTitle">Notify you when the agent needs you?</string>
+    <string name="andr_firstRunNotifyBody">Leave the app while the agent works. You get a notification when it needs your answer. Android shows a small ongoing notification while it stays connected.</string>
+    <string name="andr_firstRunNotifyAccept">Notify me</string>
+    <string name="andr_firstRunNotifyDecline">Not now</string>
+    <string name="andr_notifyPermissionRefused">Notifications are blocked. Allow notifications in Android settings, then turn on the background connection.</string>
+    <string name="andr_notifyEnableFailed">The background connection did not start. Open Background settings to try again.</string>
+    <string name="andr_pauseBackground">Pause background</string>
+</resources>

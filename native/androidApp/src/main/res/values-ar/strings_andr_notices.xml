@@ -1,0 +1,33 @@
+<resources>
+    <string name="andr_appExitForceStopped">أغلق أندرويد OpenCode Mobile %1$s</string>
+    <string name="andr_appExitLowMemory">أغلق أندرويد OpenCode Mobile %1$s لتحرير الذاكرة</string>
+    <string name="andr_appExitCrashed">توقّف OpenCode Mobile على نحو غير متوقع %1$s</string>
+    <string name="andr_appExitKilled">أوقف أندرويد OpenCode Mobile %1$s</string>
+    <string name="andr_appExitServerStopped">%1$s. توقّف OpenCode على هاتفك معه، وهو يبدأ من جديد.</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s. توقّف OpenCode على هاتفك وفريق الذكاء الاصطناعي معه، وهما يبدآن من جديد.</string>
+    <string name="andr_appExitServerStoppedManual">%1$s. توقف OpenCode على هاتفك معه. شغّله مجددًا عندما تكون جاهزًا.</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s. توقف OpenCode وAI Team على هاتفك معه. شغّلهما مجددًا عندما تكون جاهزًا.</string>
+    <string name="andr_appExitServerBack">%1$s. توقف OpenCode على هاتفك معه ثم عاد إلى العمل.</string>
+    <string name="andr_appExitServerBackTeam">%1$s. توقف OpenCode وAI Team على هاتفك معه؛ عاد OpenCode إلى العمل.</string>
+    <string name="andr_appExitAtTime">عند %1$s</string>
+    <string name="andr_appExitOnDay">يوم %1$s عند %2$s</string>
+    <string name="andr_appExitKeepRunning">أبقِه يعمل</string>
+    <string name="andr_backgroundPauseTimeLimit">أُوقف الاتصال في الخلفية مؤقتًا %1$s لتوفير البطارية.</string>
+    <string name="andr_backgroundPauseRestricted">أُوقف الاتصال في الخلفية مؤقتًا: استخدام البطارية مقيَّد.</string>
+    <string name="andr_backgroundPauseUserStopped">توقف الاتصال في الخلفية لأن التطبيق أُغلق %1$s.</string>
+    <string name="andr_backgroundPauseAppUpdated">توقف الاتصال في الخلفية لأن التطبيق حُدِّث %1$s.</string>
+    <string name="andr_backgroundPauseInterrupted">توقف الاتصال في الخلفية لسبب غير معروف.</string>
+    <string name="andr_backgroundPauseDeviceRestarted">توقف الاتصال في الخلفية عند إعادة تشغيل الهاتف.</string>
+    <string name="andr_backgroundPauseResumeShort">استئناف</string>
+    <string name="andr_backgroundPauseResuming">جارٍ استئناف الاتصال في الخلفية…</string>
+    <string name="andr_backgroundPauseResumeFailed">تعذّر الاستئناف. افتح إعدادات الاستمرار في العمل.</string>
+    <string name="andr_backgroundPauseOpenKeepRunning">فتح إعدادات الاستمرار في العمل</string>
+    <string name="andr_notifyDismiss">إغلاق التنبيه</string>
+    <string name="andr_firstRunNotifyTitle">هل نُعلمك عندما يجهز الرد؟</string>
+    <string name="andr_firstRunNotifyBody">غادر التطبيق بينما يعمل الوكيل. يصلك إشعار عندما ينتهي أو يحتاج إليك. يعرض Android إشعارًا صغيرًا دائمًا ما دام الاتصال قائمًا.</string>
+    <string name="andr_firstRunNotifyAccept">أشعِرني</string>
+    <string name="andr_firstRunNotifyDecline">ليس الآن</string>
+    <string name="andr_notifyPermissionRefused">الإشعارات محظورة. اسمح بالإشعارات في إعدادات Android، ثم شغّل الاتصال في الخلفية.</string>
+    <string name="andr_notifyEnableFailed">لم يبدأ الاتصال في الخلفية. افتح إعدادات الخلفية للمحاولة مرة أخرى.</string>
+    <string name="andr_pauseBackground">إيقاف الاتصال في الخلفية مؤقتًا</string>
+</resources>

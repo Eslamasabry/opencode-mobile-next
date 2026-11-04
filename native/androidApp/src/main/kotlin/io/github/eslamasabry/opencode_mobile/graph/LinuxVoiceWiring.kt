@@ -26,6 +26,9 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.oc.engine.profiles.SecretEdit
+import io.github.eslamasabry.oc.engine.runtime.history.HistorySwitchAdmission
+import io.github.eslamasabry.oc.engine.runtime.history.HistorySwitchCheck
+import io.github.eslamasabry.oc.engine.runtime.history.LinuxRunResult
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.server.LaunchMode
@@ -33,9 +36,6 @@ import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerPort
 import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerStarter
 import io.github.eslamasabry.oc.engine.runtime.server.ProbeAnswer
 import io.github.eslamasabry.oc.engine.runtime.server.StartTarget
-import io.github.eslamasabry.oc.engine.runtime.history.HistorySwitchAdmission
-import io.github.eslamasabry.oc.engine.runtime.history.HistorySwitchCheck
-import io.github.eslamasabry.oc.engine.runtime.history.LinuxRunResult
 import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.host.ShellRun
@@ -75,8 +75,14 @@ import kotlinx.coroutines.withContext
 object LinuxRuntimeWiring {
     @Provides
     @SingleIn(AppScope::class)
-    fun builtinRuntime(app: Application, dispatchers: AppDispatchers, appScope: AppCoroutineScope, profiles: ProfileStore, stores: PreviewStores, clock: Clock): BuiltinRuntime =
-        BuiltinRuntime(app, dispatchers.io, appScope, profiles, stores, clock)
+    fun builtinRuntime(
+        app: Application,
+        dispatchers: AppDispatchers,
+        appScope: AppCoroutineScope,
+        profiles: ProfileStore,
+        stores: PreviewStores,
+        clock: Clock,
+    ): BuiltinRuntime = BuiltinRuntime(app, dispatchers.io, appScope, profiles, stores, clock)
 
     @Provides fun linuxHost(runtime: BuiltinRuntime): LinuxHost = runtime.host
 
@@ -85,13 +91,19 @@ object LinuxRuntimeWiring {
     @Provides fun phoneServerSource(runtime: BuiltinRuntime): PhoneServerSource = runtime.server
 }
 
-/** Started with the app (OcApplication touches it), so the phone server comes back when the app opens. */
+/**
+ * Started with the app (OcApplication touches it), so the phone server comes back when the app
+ * opens.
+ */
 @ContributesTo(AppScope::class)
 interface LinuxRuntimeGraph {
     val builtinRuntime: BuiltinRuntime
 }
 
-/** Where the Flutter app (and this one, same package) keeps the built-in Linux. Pure: tested on the JVM. */
+/**
+ * Where the Flutter app (and this one, same package) keeps the built-in Linux. Pure: tested on the
+ * JVM.
+ */
 internal object BuiltinDiscovery {
     fun home(filesDir: File): File = File(filesDir, "linux")
 
@@ -104,14 +116,18 @@ internal object BuiltinDiscovery {
     fun projects(filesDir: File): File = File(rootfs(filesDir), "root/projects")
 
     fun presence(filesDir: File): LinuxPresence =
-        if (readyMarker(filesDir).isFile && rootfs(filesDir).isDirectory) LinuxPresence.Ready else LinuxPresence.NotInstalled
+        if (readyMarker(filesDir).isFile && rootfs(filesDir).isDirectory) LinuxPresence.Ready
+        else LinuxPresence.NotInstalled
 
     /** setup.json (SetupRunner) says a job runs right now. */
     fun setupRunning(statusJson: String?): Boolean =
         statusJson != null && Regex("\"state\"\\s*:\\s*\"running\"").containsMatchIn(statusJson)
 }
 
-/** The phone server's scripts, verbatim ports of lib/builtin/builtin_linux.dart. Pure: tested on the JVM. */
+/**
+ * The phone server's scripts, verbatim ports of lib/builtin/builtin_linux.dart. Pure: tested on the
+ * JVM.
+ */
 internal object PhoneServerScripts {
     const val PORT = 4097
     const val USERNAME = "opencode"
@@ -120,12 +136,17 @@ internal object PhoneServerScripts {
 
     /** Flutter `renewBuiltinPassword`: 32 random bytes, base64url, padding removed. */
     fun newPassword(random: java.util.Random): String =
-        Base64.getUrlEncoder().withoutPadding().encodeToString(ByteArray(32).also(random::nextBytes))
+        Base64.getUrlEncoder()
+            .withoutPadding()
+            .encodeToString(ByteArray(32).also(random::nextBytes))
 
     /** Flutter `BuiltinLinux._quote`. */
     fun quote(value: String): String = "'" + value.replace("'", "'\"'\"'") + "'"
 
-    /** Flutter `BuiltinLinux.writePasswordScript`: the password never reaches a command line or a log. */
+    /**
+     * Flutter `BuiltinLinux.writePasswordScript`: the password never reaches a command line or a
+     * log.
+     */
     fun writePassword(password: String): String {
         require(password.isNotEmpty()) { "Must not be empty." }
         val dir = PASSWORD_FILE.substringBeforeLast('/')
@@ -137,10 +158,11 @@ internal object PhoneServerScripts {
     }
 
     /**
-     * Flutter `BuiltinLinux.serverScript(runtime = opencode2)`: started in /root/projects, bound to 127.0.0.1 only,
-     * Basic auth `opencode` + the password read from the root-only file, OpenCode 2's isolated XDG folders, and the
-     * OpenCode 1 history copy before the first start. Deviation: the agent-context block (`PhoneAgentContext`), which
-     * Flutter runs with `|| true` and which never blocks the start, is left out; the AGENTS.md it wrote stays.
+     * Flutter `BuiltinLinux.serverScript(runtime = opencode2)`: started in /root/projects, bound to
+     * 127.0.0.1 only, Basic auth `opencode` + the password read from the root-only file, OpenCode
+     * 2's isolated XDG folders, and the OpenCode 1 history copy before the first start. Deviation:
+     * the agent-context block (`PhoneAgentContext`), which Flutter runs with `|| true` and which
+     * never blocks the start, is left out; the AGENTS.md it wrote stays.
      */
     fun server(port: Int = PORT): String {
         require(port in 1024..65535) { "Must be between 1024 and 65535." }
@@ -168,7 +190,10 @@ internal object PhoneServerScripts {
             "exec opencode2 serve --hostname 127.0.0.1 --port $port\n"
     }
 
-    /** lib/domain/opencode_history_copy.dart `openCode1HistoryCopyScript`, verbatim (provenance + copy). */
+    /**
+     * lib/domain/opencode_history_copy.dart `openCode1HistoryCopyScript`, verbatim (provenance +
+     * copy).
+     */
     const val HISTORY_COPY: String =
         $$"""
 history_source_signature() (
@@ -237,7 +262,10 @@ if [ ! -e "$oc2_dir/opencode.db" ] && [ -f "$oc1_dir/opencode.db" ]; then
 fi
 """
 
-    /** lib/domain/server_probe.dart: a 2xx answered with our password, a 401 refused it, anything else is no answer. */
+    /**
+     * lib/domain/server_probe.dart: a 2xx answered with our password, a 401 refused it, anything
+     * else is no answer.
+     */
     fun answer(status: Int?): ProbeAnswer =
         when {
             status == null -> ProbeAnswer.NoAnswer
@@ -246,30 +274,47 @@ fi
             else -> ProbeAnswer.NoAnswer
         }
 
-    /** The routes the probe tries in order (beta `/api/health`, stable `/api/info`, OpenCode 1 `/global/health`). */
+    /**
+     * The routes the probe tries in order (beta `/api/health`, stable `/api/info`, OpenCode 1
+     * `/global/health`).
+     */
     val PROBE_PATHS: List<String> = listOf("/api/health", "/api/info", "/global/health")
 }
 
-/** Runtime exception → the flat Failure the features read (P12-LINUX report §5 item 5). Text classifies only. */
+/**
+ * Runtime exception → the flat Failure the features read (P12-LINUX report §5 item 5). Text
+ * classifies only.
+ */
 internal fun classifyRuntime(e: Throwable): Failure {
     val message = e.message.orEmpty()
     val problem =
         when {
-            message == "ownershipUnknown" || message == "ownership_unknown" -> RuntimeProblem.OwnershipUnknown
+            message == "ownershipUnknown" || message == "ownership_unknown" ->
+                RuntimeProblem.OwnershipUnknown
             message.startsWith("Another phone task") -> RuntimeProblem.SlotBusy
             message.startsWith("Ubuntu is not installed") -> RuntimeProblem.NotInstalled
             message.startsWith("Finish or cancel setup") -> RuntimeProblem.Installing
-            message.startsWith("The phone server could not restart") -> RuntimeProblem.RecoveryUnavailable
+            message.startsWith("The phone server could not restart") ->
+                RuntimeProblem.RecoveryUnavailable
             else -> RuntimeProblem.Generic
         }
     return Failure.Runtime(problem, Redacted.shape(e))
 }
 
 /** The status the phone pages read, from BuiltinLinux's live values. Pure: tested on the JVM. */
-internal fun runtimeStatusOf(installed: Boolean, installing: Boolean, serverRunning: Boolean, port: Int?, uptimeMs: Long?, services: List<String>): RuntimeStatus =
+internal fun runtimeStatusOf(
+    installed: Boolean,
+    installing: Boolean,
+    serverRunning: Boolean,
+    port: Int?,
+    uptimeMs: Long?,
+    services: List<String>,
+): RuntimeStatus =
     RuntimeStatus(
         installed = installed,
-        phase = if (installing) RuntimePhase.Installing else if (installed) RuntimePhase.Ready else RuntimePhase.Idle,
+        phase =
+            if (installing) RuntimePhase.Installing
+            else if (installed) RuntimePhase.Ready else RuntimePhase.Idle,
         serverRunning = serverRunning,
         serverPort = if (serverRunning) port else null,
         serverUptime = if (serverRunning) uptimeMs?.milliseconds else null,
@@ -277,11 +322,13 @@ internal fun runtimeStatusOf(installed: Boolean, installing: Boolean, serverRunn
     )
 
 /**
- * The one owner of the built-in Linux in the app. [host], [lifecycle] and [server] are the seams :feature:linux and
- * :feature:phone read. Starts by following the activity (BuiltinLinux.setActivityResumed, as Flutter's MainActivity
- * did) and, once, by bringing the phone server back when it was running and the person had not stopped it.
+ * The one owner of the built-in Linux in the app. [host], [lifecycle] and [server] are the seams
+ * :feature:linux and :feature:phone read. Starts by following the activity
+ * (BuiltinLinux.setActivityResumed, as Flutter's MainActivity did) and, once, by bringing the phone
+ * server back when it was running and the person had not stopped it.
  */
-class BuiltinRuntime internal constructor(
+class BuiltinRuntime
+internal constructor(
     private val app: Application,
     private val io: CoroutineDispatcher,
     private val scope: AppCoroutineScope,
@@ -290,7 +337,9 @@ class BuiltinRuntime internal constructor(
     clock: Clock,
 ) {
     private val linux: BuiltinLinux by lazy { BuiltinLinux.get(app) }
-    private val filesDir: File get() = app.filesDir
+    private val filesDir: File
+        get() = app.filesDir
+
     private val lane = Mutex()
 
     private suspend fun <T> blocking(block: () -> T): Outcome<T> =
@@ -306,10 +355,13 @@ class BuiltinRuntime internal constructor(
 
     val host: LinuxHost =
         object : LinuxHost {
-            override suspend fun presence(): LinuxPresence = withContext(io) { BuiltinDiscovery.presence(filesDir) }
+            override suspend fun presence(): LinuxPresence =
+                withContext(io) { BuiltinDiscovery.presence(filesDir) }
 
             override suspend fun run(script: String, timeoutSeconds: Long): Outcome<ShellRun> =
-                blocking { linux.run(script, timeoutSeconds).let { ShellRun(it.exitCode, it.output) } }
+                blocking {
+                    linux.run(script, timeoutSeconds).let { ShellRun(it.exitCode, it.output) }
+                }
 
             override suspend fun setupRunning(): Boolean =
                 withContext(io) {
@@ -320,12 +372,18 @@ class BuiltinRuntime internal constructor(
                     }
                 }
 
-            override suspend fun serviceRunning(name: String): Boolean = withContext(io) { linux.serviceRunning(name) }
+            override suspend fun serviceRunning(name: String): Boolean =
+                withContext(io) { linux.serviceRunning(name) }
 
-            override suspend fun startService(name: String, script: String, notice: String): Outcome<Unit> =
-                blocking { linux.startService(name, script, null, notice) }
+            override suspend fun startService(
+                name: String,
+                script: String,
+                notice: String,
+            ): Outcome<Unit> = blocking { linux.startService(name, script, null, notice) }
 
-            override suspend fun stopService(name: String): Outcome<Unit> = blocking { linux.stopService(name) }
+            override suspend fun stopService(name: String): Outcome<Unit> = blocking {
+                linux.stopService(name)
+            }
 
             override suspend fun serviceLog(name: String, tailBytes: Int): String =
                 withContext(io) {
@@ -341,19 +399,25 @@ class BuiltinRuntime internal constructor(
 
     val lifecycle: LinuxLifecycle =
         object : LinuxLifecycle {
-            override suspend fun installed(): Boolean? = withContext(io) { BuiltinDiscovery.presence(filesDir) == LinuxPresence.Ready }
+            override suspend fun installed(): Boolean? =
+                withContext(io) { BuiltinDiscovery.presence(filesDir) == LinuxPresence.Ready }
 
             /** Projects stay (`uninstall(alsoDeleteProjects = false)`). */
-            override suspend fun erase(): Outcome<Unit> = lane.withLock { blocking { linux.uninstall(alsoDeleteProjects = false) } }
+            override suspend fun erase(): Outcome<Unit> = lane.withLock {
+                blocking { linux.uninstall(alsoDeleteProjects = false) }
+            }
 
             /**
-             * Phone setup (download Ubuntu, install OpenCode) is the Flutter setup engine's job, which is not ported to
-             * this app yet: an existing install is used as it is, and a phone without one is told plainly.
+             * Phone setup (download Ubuntu, install OpenCode) is the Flutter setup engine's job,
+             * which is not ported to this app yet: an existing install is used as it is, and a
+             * phone without one is told plainly.
              */
             override suspend fun startSetup(): Outcome<Boolean> =
-                if (installed() == true) Outcome.Ok(true) else Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
+                if (installed() == true) Outcome.Ok(true)
+                else Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
 
-            override suspend fun repair(): Outcome<Unit> = Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable))
+            override suspend fun repair(): Outcome<Unit> =
+                Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable))
         }
 
     // ---- The phone server
@@ -362,34 +426,53 @@ class BuiltinRuntime internal constructor(
         object : PhoneServerPort {
             // BUILD-RUNTIME-B (B-LINUX-108, 142): the real read-only admission, not a blanket yes.
             override suspend fun checkHistoryMove(): Outcome<Unit> =
-                when (HistorySwitchCheck({ script, timeout -> blocking { linux.run(script, timeout.inWholeSeconds).let { LinuxRunResult(it.exitCode, it.output) } } }).admission()) {
+                when (
+                    HistorySwitchCheck({ script, timeout ->
+                            blocking {
+                                linux.run(script, timeout.inWholeSeconds).let {
+                                    LinuxRunResult(it.exitCode, it.output)
+                                }
+                            }
+                        })
+                        .admission()
+                ) {
                     HistorySwitchAdmission.Allowed -> Outcome.Ok(Unit)
-                    HistorySwitchAdmission.SeparateHistory, HistorySwitchAdmission.Unavailable -> Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                    HistorySwitchAdmission.SeparateHistory,
+                    HistorySwitchAdmission.Unavailable ->
+                        Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
                 }
 
             override suspend fun writePassword(password: String): Outcome<Unit> =
-                when (val ran = blocking { linux.run(PhoneServerScripts.writePassword(password), 60) }) {
+                when (
+                    val ran = blocking { linux.run(PhoneServerScripts.writePassword(password), 60) }
+                ) {
                     is Outcome.Failed -> ran
                     is Outcome.Ok ->
-                        if (ran.value.exitCode == 0) Outcome.Ok(Unit) else Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                        if (ran.value.exitCode == 0) Outcome.Ok(Unit)
+                        else Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
                 }
 
             override suspend fun launch(profile: ProfileId, mode: LaunchMode): Outcome<Unit> =
-                blocking { linux.startServer(PhoneServerScripts.server(), PhoneServerScripts.PORT) }
+                blocking {
+                    linux.startServer(PhoneServerScripts.server(), PhoneServerScripts.PORT)
+                }
 
-            override suspend fun probe(password: String): ProbeAnswer = withContext(io) { probeLoopback(password) }
+            override suspend fun probe(password: String): ProbeAnswer =
+                withContext(io) { probeLoopback(password) }
 
             override suspend fun refreshStatus(): Outcome<RuntimeStatus> = blocking { readStatus() }
 
-            override suspend fun confirmRecovery(expectedGeneration: Long): Outcome<Unit> = Outcome.Ok(Unit)
+            override suspend fun confirmRecovery(expectedGeneration: Long): Outcome<Unit> =
+                Outcome.Ok(Unit)
         }
 
     private val starter = PhoneServerStarter(port, clock, renewPassword = ::renewPassword)
 
     /**
-     * B-LINUX-025: the phone server's password is made by the app, so when the Keystore lost it (a fresh install, or
-     * the migration's `renewedByOwner`) a new one is made — 32 random bytes, base64url without padding, as Flutter's
-     * `renewBuiltinPassword` — and saved under `pw.<id>` on the same profile before the start writes it into Ubuntu.
+     * B-LINUX-025: the phone server's password is made by the app, so when the Keystore lost it (a
+     * fresh install, or the migration's `renewedByOwner`) a new one is made — 32 random bytes,
+     * base64url without padding, as Flutter's `renewBuiltinPassword` — and saved under `pw.<id>` on
+     * the same profile before the start writes it into Ubuntu.
      */
     private suspend fun renewPassword(id: ProfileId): String? {
         val loaded = profiles.profile(id) ?: return null
@@ -399,6 +482,7 @@ class BuiltinRuntime internal constructor(
             is Outcome.Failed -> null
         }
     }
+
     private val facts = MutableStateFlow(PhoneServerFacts())
 
     private fun readStatus(): RuntimeStatus {
@@ -406,7 +490,10 @@ class BuiltinRuntime internal constructor(
         if (!installed) return runtimeStatusOf(false, false, false, null, null, emptyList())
         return runtimeStatusOf(
             installed = true,
-            installing = BuiltinDiscovery.setupRunning(runCatchingBlocking { SetupRunner.get(app).status() }),
+            installing =
+                BuiltinDiscovery.setupRunning(
+                    runCatchingBlocking { SetupRunner.get(app).status() }
+                ),
             serverRunning = linux.serverRunning,
             port = linux.port,
             uptimeMs = linux.serverUptimeMs,
@@ -421,18 +508,26 @@ class BuiltinRuntime internal constructor(
             null
         }
 
-    /** The person's Stop, as BuiltinLinux keeps it (device-wide `builtin_server_recovery` userStopped). */
+    /**
+     * The person's Stop, as BuiltinLinux keeps it (device-wide `builtin_server_recovery`
+     * userStopped).
+     */
     private fun stoppedByPerson(): Boolean =
         app.getSharedPreferences("builtin_server_recovery", Context.MODE_PRIVATE).let { prefs ->
             prefs.getBoolean("userStopped", !prefs.getBoolean("wanted", false))
         }
 
     private fun probeLoopback(password: String): ProbeAnswer {
-        val auth = "Basic " + Base64.getEncoder().encodeToString("${PhoneServerScripts.USERNAME}:$password".toByteArray())
+        val auth =
+            "Basic " +
+                Base64.getEncoder()
+                    .encodeToString("${PhoneServerScripts.USERNAME}:$password".toByteArray())
         for (path in PhoneServerScripts.PROBE_PATHS) {
             val status =
                 try {
-                    val conn = URL("http", "127.0.0.1", PhoneServerScripts.PORT, path).openConnection() as HttpURLConnection
+                    val conn =
+                        URL("http", "127.0.0.1", PhoneServerScripts.PORT, path).openConnection()
+                            as HttpURLConnection
                     conn.connectTimeout = 2_000
                     conn.readTimeout = 4_000
                     conn.setRequestProperty("Authorization", auth)
@@ -450,15 +545,20 @@ class BuiltinRuntime internal constructor(
         return ProbeAnswer.NoAnswer
     }
 
-    /** The phone server's profile: `oc.builtinServerOwner` (written by the Flutter app, kept by the migration). */
-    private fun ownerId(): ProfileId? =
-        runCatchingBlocking { (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value }
-            ?.takeIf { it.isNotEmpty() }
-            ?.let(::ProfileId)
+    /**
+     * The phone server's profile: `oc.builtinServerOwner` (written by the Flutter app, kept by the
+     * migration).
+     */
+    private fun ownerId(): ProfileId? = runCatchingBlocking {
+        (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value
+    }?.takeIf { it.isNotEmpty() }?.let(::ProfileId)
 
     private suspend fun target(): StartTarget? {
         val id = ownerId() ?: return null
-        val loaded = profiles.profile(id) ?: (profiles.load() as? Outcome.Ok)?.value?.firstOrNull { it.id == id } ?: return null
+        val loaded =
+            profiles.profile(id)
+                ?: (profiles.load() as? Outcome.Ok)?.value?.firstOrNull { it.id == id }
+                ?: return null
         val password = (profiles.secret(loaded.id) as? Outcome.Ok)?.value.orEmpty()
         return StartTarget(loaded.id, password, passwordNeedsReentry = loaded.reentry.password)
     }
@@ -469,31 +569,45 @@ class BuiltinRuntime internal constructor(
         facts.update { it.copy(status = status, stoppedByPerson = stopped) }
     }
 
-    private suspend fun startNow(): Outcome<Unit> =
+    private suspend fun startNow(stillWanted: () -> Boolean = { true }): Outcome<Unit> =
         lane.withLock {
-            if (BuiltinDiscovery.presence(filesDir) != LinuxPresence.Ready) return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
-            val target = target() ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
+            if (BuiltinDiscovery.presence(filesDir) != LinuxPresence.Ready)
+                return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
+            val target =
+                target()
+                    ?: return@withLock Outcome.Failed(
+                        Failure.Runtime(RuntimeProblem.InvalidProfile)
+                    )
             facts.update { it.copy(starting = true, startProblem = null) }
-            val failure = starter.start(target)
-            facts.update { it.copy(starting = false, startProblem = failure?.problem, probe = if (failure == null) ProbeAnswer.Answered else it.probe) }
+            val failure = starter.start(target, stillWanted = stillWanted)
+            facts.update {
+                it.copy(
+                    starting = false,
+                    startProblem = failure?.problem,
+                    probe = if (failure == null) ProbeAnswer.Answered else it.probe,
+                )
+            }
             publish()
-            if (failure == null) Outcome.Ok(Unit) else Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable, failure.details))
+            if (failure == null) Outcome.Ok(Unit)
+            else
+                Outcome.Failed(
+                    Failure.Runtime(RuntimeProblem.ServerStartUnavailable, failure.details)
+                )
         }
 
-    private suspend fun stopNow(): Outcome<Unit> =
-        lane.withLock {
-            val stopped =
-                blocking {
-                    linux.requestServerStop()
-                    linux.stopServer()
-                }
-            publish()
-            stopped
+    private suspend fun stopNow(): Outcome<Unit> = lane.withLock {
+        val stopped = blocking {
+            linux.requestServerStop()
+            linux.stopServer()
         }
+        publish()
+        stopped
+    }
 
     val server: PhoneServerSource =
         object : PhoneServerSource {
-            override val facts: StateFlow<PhoneServerFacts> = this@BuiltinRuntime.facts.asStateFlow()
+            override val facts: StateFlow<PhoneServerFacts> =
+                this@BuiltinRuntime.facts.asStateFlow()
 
             override suspend fun refresh() = publish()
 
@@ -507,8 +621,11 @@ class BuiltinRuntime internal constructor(
                     is Outcome.Ok -> startNow()
                 }
 
-            /** The setup engine's "Update OpenCode" job is not ported yet (same reason as setup). */
-            override suspend fun updateOpenCode(): Outcome<Unit> = Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable))
+            /**
+             * The setup engine's "Update OpenCode" job is not ported yet (same reason as setup).
+             */
+            override suspend fun updateOpenCode(): Outcome<Unit> =
+                Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable))
         }
 
     init {
@@ -518,29 +635,35 @@ class BuiltinRuntime internal constructor(
 
                 override fun onActivityPaused(activity: Activity) = resumed(false)
 
-                override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+                override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) =
+                    Unit
 
                 override fun onActivityStarted(activity: Activity) = Unit
 
                 override fun onActivityStopped(activity: Activity) = Unit
 
-                override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+                override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) =
+                    Unit
 
                 override fun onActivityDestroyed(activity: Activity) = Unit
-            },
+            }
         )
         scope.launch { publish() }
     }
 
     @Volatile private var openStartDone = false
 
-    /** Main thread, never waits for runtime I/O (BuiltinLinux's contract); only when Linux is set up. */
+    /**
+     * Main thread, never waits for runtime I/O (BuiltinLinux's contract); only when Linux is set
+     * up.
+     */
     private fun resumed(on: Boolean) {
         if (!readyMarkerPresent()) return
         try {
             linux.setActivityResumed(on)
         } catch (e: Exception) {
-            // The runtime refused to follow the activity; its own recovery stays off. Nothing to tell the person.
+            // The runtime refused to follow the activity; its own recovery stays off. Nothing to
+            // tell the person.
         }
         if (on && !openStartDone) scope.launch { if (openStart()) openStartDone = true }
     }
@@ -548,18 +671,21 @@ class BuiltinRuntime internal constructor(
     private fun readyMarkerPresent(): Boolean = BuiltinDiscovery.readyMarker(filesDir).isFile
 
     /**
-     * The app-open start (Flutter `AppOpenStart`, simplified): when Linux is set up, a phone-server profile exists, the
-     * person did not stop the server and it is not running, start it once through the one start path. True when this
-     * app open is decided (started, or nothing to do).
+     * The app-open start (Flutter `AppOpenStart`, simplified): when Linux is set up, a phone-server
+     * profile exists, the person did not stop the server and it is not running, start it once
+     * through the one start path. True when this app open is decided (started, or nothing to do).
      */
     private suspend fun openStart(): Boolean {
         publish()
-        if (withContext(io) { BuiltinDiscovery.presence(filesDir) } != LinuxPresence.Ready) return true
+        if (withContext(io) { BuiltinDiscovery.presence(filesDir) } != LinuxPresence.Ready)
+            return true
         val current = facts.value
         if (current.status?.serverRunning == true || current.stoppedByPerson) return true
-        // Before the migration gate opens the profile list cannot be read yet: try again on the next resume.
-        if (ownerId() == null) return false
-        startNow()
+        // Before the migration gate opens the profile list cannot be read yet: try again on the
+        // next resume.
+        val owner = ownerId() ?: return false
+        if (!restartPhoneServerAllowed(stores, owner)) return true
+        startNow { ownerId() == owner && restartPhoneServerAllowed(stores, owner) }
         return true
     }
 }
@@ -572,8 +698,12 @@ class BuiltinRuntime internal constructor(
  * former NoOfflineSpeechEngine.
  */
 object OfflineSpeechEngine : SherpaRuntime {
-    /** The JNI library loaded on this device (false only on a broken install or an ABI the APK lacks). */
-    val available: Boolean get() = SherpaOnnx.loadable
+    /**
+     * The JNI library loaded on this device (false only on a broken install or an ABI the APK
+     * lacks).
+     */
+    val available: Boolean
+        get() = SherpaOnnx.loadable
 
     override fun newRecognizer(config: WhisperRecognizerConfig): NativeRecognizer {
         val whisper =
@@ -589,7 +719,8 @@ object OfflineSpeechEngine : SherpaRuntime {
                 modelType = config.modelType,
             )
         return object : NativeRecognizer {
-            override fun decode(samples: FloatArray, sampleRate: Int): String = whisper.decode(samples, sampleRate)
+            override fun decode(samples: FloatArray, sampleRate: Int): String =
+                whisper.decode(samples, sampleRate)
 
             override fun release() = whisper.release()
         }
@@ -608,7 +739,8 @@ object OfflineSpeechEngine : SherpaRuntime {
                 maxNumSentences = config.maxNumSentences,
             )
         return object : NativeTts {
-            override val sampleRate: Int get() = kokoro.sampleRate
+            override val sampleRate: Int
+                get() = kokoro.sampleRate
 
             override fun generate(text: String, speakerId: Int, speed: Float, sink: KokoroSink) =
                 kokoro.generate(text, speakerId, speed, sink)
