@@ -40,6 +40,7 @@ public class SettingsPresenter(
     private val updates: UpdateSettings? = null,
     private val about: AboutFacts = AboutFacts(),
     private val diagnostics: DiagnosticsExport? = null,
+    private val localModels: LocalModelStorage? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -49,6 +50,7 @@ public class SettingsPresenter(
         val note: SettingsNote? = null,
         val consentSaving: Boolean = false,
         val report: ReportUi? = null,
+        val confirmLocalModels: Boolean = false,
     )
 
     private data class Engines(
@@ -56,6 +58,7 @@ public class SettingsPresenter(
         val voice: VoiceFacts?,
         val notifications: NotificationFacts?,
         val updates: UpdateFacts?,
+        val localModels: LocalModelStorageFacts?,
     )
 
     private val local = MutableStateFlow(Local())
@@ -68,10 +71,11 @@ public class SettingsPresenter(
             voice?.facts ?: flowOf(null),
             notifications?.facts ?: flowOf(null),
             updates?.facts ?: flowOf(null),
-        ) { c, v, n, u -> Engines(c, v, n, u) }
+            localModels?.facts ?: flowOf(null),
+        ) { c, v, n, u, m -> Engines(c, v, n, u, m) }
 
     private fun engineNow() =
-        Engines(analytics?.whatWeCollect?.value, voice?.facts?.value, notifications?.facts?.value, updates?.facts?.value)
+        Engines(analytics?.whatWeCollect?.value, voice?.facts?.value, notifications?.facts?.value, updates?.facts?.value, localModels?.facts?.value)
 
     public val state: StateFlow<SettingsUi> =
         combine(local, facts, prefs, engines) { l, f, p, e -> build(l, f, p, e) }
@@ -102,6 +106,7 @@ public class SettingsPresenter(
             privacy = e.collect?.let { PrivacyUi(it, l.consentSaving) },
             language = p.language,
             report = l.report,
+            localModels = e.localModels?.copy(confirmDelete = l.confirmLocalModels),
             note = l.note,
         )
     }
@@ -127,10 +132,33 @@ public class SettingsPresenter(
     override fun onOpen(page: SettingsPage) {
         local.update { if (it.stack.last() == page) it else it.copy(stack = (it.stack + page).toImmutableList()) }
         if (page == SettingsPage.ReportProblem) loadReport()
+        if (page == SettingsPage.Storage) onRefreshLocalModels()
         if (page == SettingsPage.Notifications) notifications?.refresh()
     }
 
+    override fun onRefreshLocalModels() {
+        scope.launch { localModels?.refresh() }
+    }
+
+    override fun onAskDeleteLocalModel() {
+        val facts = localModels?.facts?.value ?: return
+        if (!facts.loading && !facts.deleting && !facts.failed && facts.present) {
+            local.update { it.copy(confirmLocalModels = true) }
+        }
+    }
+
+    override fun onCancelDeleteLocalModel() {
+        local.update { it.copy(confirmLocalModels = false) }
+    }
+
+    override fun onDeleteLocalModel() {
+        if (!local.value.confirmLocalModels) return
+        local.update { it.copy(confirmLocalModels = false) }
+        scope.launch { localModels?.delete() }
+    }
+
     override fun onResume() {
+        if (local.value.stack.last() == SettingsPage.Storage) onRefreshLocalModels()
         if (local.value.stack.last() == SettingsPage.Notifications) notifications?.refresh()
     }
 

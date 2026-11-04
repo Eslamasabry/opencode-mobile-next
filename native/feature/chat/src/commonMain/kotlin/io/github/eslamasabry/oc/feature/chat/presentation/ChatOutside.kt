@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.chat.presentation
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 
 /**
  * P12-CHAT-FEEL: what the chat hands to the platform — the clipboard, the share sheet and links. Plain strings in, a
@@ -12,6 +14,12 @@ import dev.zacsweers.metro.Inject
  * decision arrives as a [LinkCheck].
  */
 public interface ChatOutside {
+    /** A local file link stays in the app's file flow, never in the browser. */
+    public fun fileLinkPath(url: String): String? = null
+
+    /** Open a shared-storage binary/APK, request access, or keep the normal file preview. */
+    public suspend fun openPhoneFile(ref: ConversationRef, path: String): Outcome<PhoneFileOpen> = Outcome.Ok(PhoneFileOpen.Preview)
+
     /** Puts [text] on the clipboard verbatim (a reply is the person's to paste). False = it did not work. */
     public fun copy(text: String): Boolean
 
@@ -52,3 +60,6 @@ public class NoChatOutside : ChatOutside {
 
     override fun openLink(url: String): Boolean = false
 }
+
+/** The permission round trip leaves a visible Retry action in chat. */
+public enum class PhoneFileOpen { Preview, Opened, AccessRequested }

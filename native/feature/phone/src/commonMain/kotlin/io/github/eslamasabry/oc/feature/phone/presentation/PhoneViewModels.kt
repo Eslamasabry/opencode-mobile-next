@@ -87,11 +87,13 @@ public class RunningViewModel(
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-public class KeepRunningViewModel(settings: KeepAliveSettings, nav: PhoneNavigator) : ViewModel(), KeepRunningActions {
-    private val model = KeepRunningModel(settings, nav, viewModelScope)
+public class KeepRunningViewModel(settings: KeepAliveSettings, nav: PhoneNavigator, budgets: Set<PhoneBudgetSource>) : ViewModel(), KeepRunningActions, PhoneBudgetActions {
+    private val model = KeepRunningModel(settings, nav, viewModelScope, budgets.singleOrNull())
     public val state: StateFlow<KeepRunningUi> = model.state
 
     override fun resumed(): Unit = model.resumed()
+
+    override fun setFullSpeed(enabled: Boolean): Unit = model.setFullSpeed(enabled)
 
     override fun open(step: KeepAliveStepKind): Unit = model.open(step)
 

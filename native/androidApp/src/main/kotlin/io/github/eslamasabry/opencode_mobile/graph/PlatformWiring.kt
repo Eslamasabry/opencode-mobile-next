@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.android.notifications.ShadeAnswerer
 import io.github.eslamasabry.oc.android.tiles.AttentionTileCache
 import io.github.eslamasabry.oc.android.tiles.LaunchAction
 import io.github.eslamasabry.oc.android.tiles.LaunchActions
+import io.github.eslamasabry.oc.android.tiles.SessionShortcutTap
 import io.github.eslamasabry.oc.android.tiles.PinnedSession
 import io.github.eslamasabry.oc.android.tiles.PinnedShortcuts
 import io.github.eslamasabry.oc.android.tiles.SharedTextIntake
@@ -92,6 +93,8 @@ import io.github.eslamasabry.oc.feature.settings.presentation.UpdateState as Set
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateLinks
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
+import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.PlansRoute
@@ -295,6 +298,7 @@ class PlatformHub(
     private var widgetStampMs = 0L
     private val serverSince = mutableMapOf<String, Pair<Boolean, Long>>()
     private var publishedPins: Pair<String, List<PinnedSession>>? = null
+    private var pinnedLaunchGeneration = 0L
 
     /** Answers a shade tap on the exact pending request of the live connection (plan 11 §10.6). */
     val actionBody: NotificationActionBody =
@@ -349,6 +353,7 @@ class PlatformHub(
      */
     fun route(intent: Intent?) {
         if (intent == null) return
+        pinnedLaunchGeneration++ // Any newer launch invalidates a pin still waiting for startup.
         if (monitoring.route(intent)) return
         if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
             // B-ANDR-072: the one VIEW filter. Consumed once; route identifiers only.
@@ -370,7 +375,7 @@ class PlatformHub(
             return
         }
         LaunchActions.consumeSessionShortcut(intent)?.let { tap ->
-            navigator.openChat(ConversationRef(ProfileId(tap.profileId), SessionId(tap.sessionId)))
+            openPinnedSession(tap)
             return
         }
         alertTap(intent)?.let { ref ->
@@ -389,6 +394,8 @@ class PlatformHub(
                     SetupTap.Land,
                     SetupTap.NotSetup -> navigator.land()
                 }
+            LaunchAction.BackgroundSettings -> navigator.open(BackgroundRoute.Home)
+            LaunchAction.Linux -> navigator.open(PhoneRoute.ThisPhone)
             LaunchAction.Connect -> navigator.open(ServersRoute.Home)
             LaunchAction.NewTask ->
                 navigator.open(ChatsRoute.New(profile = stores.profiles.activeId.value))
@@ -399,6 +406,34 @@ class PlatformHub(
             // Activity, background and the other Flutter actions land on Conversations (needs-you
             // rows lead).
             else -> navigator.land()
+        }
+    }
+
+    /**
+     * A pinned shortcut names the active saved server only. Wait for its existing startup/connection work, then
+     * recheck ownership and readiness. Never connect or switch a server merely because a shortcut named it.
+     */
+    private fun openPinnedSession(tap: SessionShortcutTap) {
+        val generation = ++pinnedLaunchGeneration
+        val id = ProfileId(tap.profileId)
+        appScope.launch {
+            if (stores.warm() !is Outcome.Ok) {
+                if (generation == pinnedLaunchGeneration) navigator.open(ServersRoute.Home)
+                return@launch
+            }
+            runtime.awaitInitialConnection()
+            runtime.busy.first { !it }
+            if (generation != pinnedLaunchGeneration) return@launch
+            val saved = stores.profiles.profile(id)
+            val graph = registry.live.value[id]
+            if (stores.profiles.activeId.value != id || saved == null ||
+                saved.reentry.password || saved.reentry.agentToken ||
+                graph?.session?.status?.value != io.github.eslamasabry.oc.core.model.StreamStatus.Connected
+            ) {
+                navigator.open(ServersRoute.Home)
+                return@launch
+            }
+            navigator.openChat(ConversationRef(id, SessionId(tap.sessionId)))
         }
     }
 

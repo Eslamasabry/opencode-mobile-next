@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent as CoreEvent
 import io.github.eslamasabry.oc.core.domain.facet
+import io.github.eslamasabry.oc.core.domain.readHistoryAtStagedBoundary
 import io.github.eslamasabry.oc.core.model.ChatDefaults
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ModelSelection
@@ -549,6 +550,9 @@ internal class GraphChatWorld(
                         if (event is CoreEvent.SessionSelection && event.sessionId == sid) adoptRemoteSelection(event)
                         feedKeeper.event(event, envelope.receivedAtMs)
                         bridge.event(event)?.let(handle::submit)
+                        if (event is CoreEvent.RevertChanged && event.sessionId == sid) {
+                            readHistory(gateway, handle, bridge)
+                        }
                     }
                 },
                 scope.launch(registry.mainContext) {
@@ -636,7 +640,33 @@ internal class GraphChatWorld(
     ): Outcome<Unit> {
         val version = handle.historyVersion()
         val feedVersion = feedKeeper.historyVersion()
-        return when (val page = gateway.messagePage(sid, cursor = cursor, limit = HISTORY_PAGE)) {
+        val at = gateway.location.value
+        val session = gateway.session(sid)
+        if (session is Outcome.Failed) {
+            if (currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live) {
+                mutableLoad.value = ChatLoad.Failed(session.failure)
+            }
+            return session
+        }
+        if (currentAttached()?.handle !== handle || gateway.location.value != at) {
+            return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        }
+        val details = (session as Outcome.Ok).value
+        if (details.id != sid) {
+            val failure = Failure.UnreadableReply()
+            if (mutableLoad.value !is ChatLoad.Live) mutableLoad.value = ChatLoad.Failed(failure)
+            return Outcome.Failed(failure)
+        }
+        val boundary = details.stagedRevert?.messageId
+        val read = readHistoryAtStagedBoundary(
+            gateway,
+            sid,
+            boundary = boundary,
+            cursor = cursor,
+            limit = HISTORY_PAGE,
+            isCurrent = { currentAttached()?.handle === handle && gateway.location.value == at },
+        )
+        return when (val page = read) {
             is Outcome.Ok -> {
                 if (currentAttached()?.handle !== handle)
                     return Outcome.Failed(Failure.Network(NetworkWhy.Offline))

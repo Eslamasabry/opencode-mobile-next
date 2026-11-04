@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.transcript.internal
 
+import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.transcript.TranscriptCounters
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.DeltaField
@@ -502,15 +503,17 @@ internal class TranscriptModel(
         var failed = false
         var stopped = false
         var reason: String? = null
+        var errorKind: MessageErrorKind? = null
         for (m in members) {
             if (m.info.role == Role.Assistant) {
                 hasAssistant = true
                 // B-CHAT-101: the turn's outcome is its newest assistant step's (Flutter). A step that failed and
                 // was followed by one that finished is not a failed turn: each step resets what the last one said.
                 val error = m.info.errorText
-                stopped = error != null && isStopError(error)
-                failed = error != null && !stopped
-                reason = if (failed && error!!.isNotBlank()) error.trim() else null
+                errorKind = m.info.errorKind
+                stopped = errorKind == MessageErrorKind.Aborted || (error != null && isStopError(error))
+                failed = (error != null || errorKind != null) && !stopped
+                reason = if (failed) error?.trim()?.takeIf { it.isNotEmpty() } else null
             }
             for (pe in m.parts.values) {
                 val p = pe.part
@@ -564,7 +567,7 @@ internal class TranscriptModel(
             rows.add(workAt, reuse(WorkLineRow("work:$turnId", turnId, calls, failedCalls, state)))
         }
         if (finished && hasAssistant) {
-            rows += reuse(FooterRow("footer:$turnId", turnId, failed, reason, stopped = stopped && !failed))
+            rows += reuse(FooterRow("footer:$turnId", turnId, failed, reason, stopped = stopped && !failed, errorKind = errorKind))
         }
         return TurnEntry(turnId, members, LongArray(members.size) { members[it].version }, rows)
     }

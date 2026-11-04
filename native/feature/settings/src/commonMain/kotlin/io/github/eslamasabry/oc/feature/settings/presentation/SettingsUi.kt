@@ -24,6 +24,7 @@ public data class SettingsUi(
     val language: AppLanguage = AppLanguage.System,
     /** Report a problem's preview; null until the page opens. */
     val report: ReportUi? = null,
+    val localModels: LocalModelStorageFacts? = null,
     /** One plain line about the last save that did not stick, if any. */
     val note: SettingsNote? = null,
 ) {

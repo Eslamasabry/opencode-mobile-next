@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
@@ -84,6 +85,10 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions, modifier:
         SettingsPage.Language ->
             SettingsFrame(stringResource(Res.string.settingsV3Language), back, state, actions, modifier) {
                 LanguageBody(state.language, actions)
+            }
+        SettingsPage.Storage ->
+            SettingsFrame(stringResource(Res.string.migrationStorageTitle), back, state, actions, modifier) {
+                state.localModels?.let { LocalModelsBody(it, actions) }
             }
         SettingsPage.ReportProblem ->
             SettingsFrame(stringResource(Res.string.kitReportProblem), back, state, actions, modifier) {

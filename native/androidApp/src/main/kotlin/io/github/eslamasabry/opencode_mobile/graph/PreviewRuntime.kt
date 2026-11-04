@@ -47,6 +47,7 @@ class PreviewRuntime(
     private val scope = CoroutineScope(appScope.coroutineContext + lane)
     private val order = Mutex()
     private val ready = CompletableDeferred<Outcome<Unit>>()
+    private val initialConnection = CompletableDeferred<Outcome<Unit>>()
     private val mutableServers = MutableStateFlow<ImmutableList<SavedServer>>(persistentListOf())
     override val servers: StateFlow<ImmutableList<SavedServer>> = mutableServers.asStateFlow()
     private val mutableBusy = MutableStateFlow(false)
@@ -66,11 +67,16 @@ class PreviewRuntime(
             if (result is Outcome.Ok) {
                 publishServers()
                 val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
-                if (active != null) command { connectNow(active) }
+                initialConnection.complete(if (active != null) command { connectNow(active) } else Unit.ok())
+            } else {
+                initialConnection.complete(result)
             }
         }
         scope.launch { profiles.profiles.collect { if (ready.isCompleted) publishServers() } }
     }
+
+    /** Launcher shortcuts wait for the existing startup connection; they never start or switch a server. */
+    internal suspend fun awaitInitialConnection(): Outcome<Unit> = initialConnection.await()
 
     private fun publishServers() {
         mutableServers.value =

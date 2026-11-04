@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="relativeAgeJustNow">Just now</string>
+    <string name="relativeAgeMinutes">%1$s min ago</string>
+    <string name="relativeAgeHours">%1$sh ago</string>
+    <string name="relativeAgeYesterday">Yesterday</string>
+    <string name="relativeAgeDays">%1$sd ago</string>
+</resources>

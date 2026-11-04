@@ -36,6 +36,9 @@ public sealed interface SettingsPage {
     /** Settings › Help › Report a problem: the safe diagnostics report, previewed, then copied or shared. */
     public data object ReportProblem : SettingsPage
 
+    /** Local files kept for the deferred assistant, with a measured Delete action. */
+    public data object Storage : SettingsPage
+
     /** Settings › This app › Notifications › Quiet hours start ([start]) or end: one check-mark choice per time. */
     public data class QuietTime(val start: Boolean) : SettingsPage
 }

@@ -74,6 +74,8 @@ internal data class Oc2AdaptedTool(
     /** B-CHAT-109: when the call started running (`time.ran`, else `time.created`) and finished (`time.completed`). */
     public val startedAtMs: Long? = null,
     public val completedAtMs: Long? = null,
+    /** The server removed this output from the model context. */
+    public val pruned: Boolean = false,
 )
 
 internal enum class Oc2SettleReason { StepMovedOn, StepFailed, RunFailed, RunInterrupted }
@@ -557,7 +559,12 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
                 is Oc2ToolState.Unknown -> Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Pending)
             }
         // B-CHAT-109 (Dart v1ToolTimeJson): start prefers `ran` (execution start) over `created` (call emitted).
-        return state.copy(startedAtMs = item.time.ran ?: item.time.created, completedAtMs = item.time.completed)
+        return state.copy(
+            startedAtMs = item.time.ran ?: item.time.created,
+            completedAtMs = item.time.completed,
+            pruned = item.time.pruned != null,
+            executed = item.executed,
+        )
     }
 
     private fun List<Oc2ToolResultItem>.attachments(): List<Oc2ToolAttachment> =

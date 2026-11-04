@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.eslamasabry.oc.feature.phone.presentation.KeepRunningActions
 import io.github.eslamasabry.oc.feature.phone.presentation.KeepRunningUi
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneBudgetActions
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -16,9 +17,14 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.words.res.fullSpeedSetting
+import io.github.eslamasabry.oc.ui.words.res.usageSaveFailed
+import io.github.eslamasabry.oc.ui.words.res.fullSpeedSettingDetail
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.keepRunningAllSetBody
 import io.github.eslamasabry.oc.ui.words.res.keepRunningAllSetTitle
@@ -83,6 +89,16 @@ public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions) 
                     )
                 }
             }
+            if (state.speedAvailable && actions is PhoneBudgetActions) {
+                KitSwitchRow(
+                    title = stringResource(Res.string.fullSpeedSetting),
+                    supporting = stringResource(Res.string.fullSpeedSettingDetail),
+                    checked = state.fullSpeed,
+                    enabled = if (state.savingSpeed) KitEnabled.Disabled(stringResource(Res.string.fullSpeedSetting)) else KitEnabled.Enabled,
+                    onCheckedChange = actions::setFullSpeed,
+                )
+            }
+            if (state.speedSaveFailed) KitNotice(message = stringResource(Res.string.usageSaveFailed))
             if (state.openFailed) KitNotice(message = stringResource(Res.string.keepRunningOpenFailed))
             if (state.dailyLimit) KitGroupNote(stringResource(Res.string.keepRunningDailyLimit))
             KitGroupNote(stringResource(Res.string.keepRunningFootnote))

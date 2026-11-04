@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 /** What a Linux page asks before acting (KitConfirm). */
@@ -75,6 +77,7 @@ public data class LinuxHomeUi(
     val askingIdleMinutes: Boolean = false,
     val lifetimes: LinuxLifetimesUi = LinuxLifetimesUi(),
     val askingCreateProject: Boolean = false,
+    val vitals: io.github.eslamasabry.oc.engine.runtime.vitals.LinuxVitals? = null,
 ) {
     /** The rows that act on Linux are offered only when it answers. */
     val ready: Boolean
@@ -146,14 +149,28 @@ public class LinuxHomeModel(
     private val setupSource: LinuxSetupSource? = null,
     private val idleSource: LinuxIdleSource? = null,
     lifetimesSource: LinuxLifetimesSource? = null,
-) : LinuxHomeActions {
+    private val vitalsSource: LinuxVitalsSource? = null,
+) : LinuxHomeActions, LinuxVitalsActions {
     private val ui = MutableStateFlow(LinuxHomeUi())
     public val state: StateFlow<LinuxHomeUi> = ui.asStateFlow()
     private val visible = MutableStateFlow(false)
+    private val vitalsVisible = MutableStateFlow(false)
 
     private val lifetimes = lifetimesSource?.let { LinuxLifetimesModel(it, scope) }
 
     init {
+        vitalsSource?.let { source ->
+            scope.launch {
+                combine(vitalsVisible, ui.map { it.ready }.distinctUntilChanged()) { shown, ready -> shown && ready }
+                    .distinctUntilChanged()
+                    .collectLatest { reading ->
+                        if (reading) {
+                            refreshVitals(source)
+                            pacer.ticks(LinuxVitalsTimers.poll).collect { refreshVitals(source) }
+                        }
+                    }
+            }
+        }
         lifetimes?.let { model ->
             scope.launch {
                 model.state.collect { state -> ui.update { it.copy(lifetimes = state) } }
@@ -183,6 +200,17 @@ public class LinuxHomeModel(
                     if (polling) pacer.ticks(LinuxTimers.jobPoll).collect { watch.refresh() }
                 }
         }
+    }
+
+    private suspend fun refreshVitals(source: LinuxVitalsSource) {
+        val result = source.read()
+        if (vitalsVisible.value && ui.value.ready && result is Outcome.Ok) {
+            ui.update { it.copy(vitals = result.value) }
+        }
+    }
+
+    override fun vitalsShown(visible: Boolean) {
+        vitalsVisible.value = visible
     }
 
     override fun shown(visible: Boolean) {

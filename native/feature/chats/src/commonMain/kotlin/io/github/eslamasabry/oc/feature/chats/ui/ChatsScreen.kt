@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.RowStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -102,7 +103,7 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
         width = KitScreenWidth.Reading,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-            state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions) } }
+            state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions, state.nowMs) } }
             if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) {
                 item(key = "filters") { Filters(state, actions) }
             }
@@ -145,13 +146,13 @@ public fun ChatsScreen(state: ChatsUi, actions: ChatsActions) {
                         item(key = "today") {
                             KitSectionLabel(stringResource(Res.string.chatsHomeToday))
                         }
-                        items(state.today, key = { it.key }) { ConversationRow(it, actions) }
+                        items(state.today, key = { it.key }) { ConversationRow(it, actions, state.nowMs) }
                     }
                     if (state.earlier.isNotEmpty()) {
                         item(key = "earlier") {
                             KitSectionLabel(stringResource(Res.string.chatsHomeEarlier))
                         }
-                        items(state.earlier, key = { it.key }) { ConversationRow(it, actions) }
+                        items(state.earlier, key = { it.key }) { ConversationRow(it, actions, state.nowMs) }
                     }
                 }
             }
@@ -233,10 +234,10 @@ private fun Filters(state: ChatsUi, actions: ChatsActions) {
 }
 
 @Composable
-private fun BriefBlock(brief: BriefUi, actions: ChatsActions) {
+private fun BriefBlock(brief: BriefUi, actions: ChatsActions, nowMs: Long) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
         if (brief.unknown) KitNotice(stringResource(Res.string.chatsReturnBriefUnknown))
-        brief.rows.forEach { ConversationRow(it, actions) }
+        brief.rows.forEach { ConversationRow(it, actions, nowMs) }
         if (brief.more > 0) {
             KitButton(
                 label = stringResource(Res.string.chatsReturnBriefMore, brief.more),
@@ -255,7 +256,7 @@ private fun BriefBlock(brief: BriefUi, actions: ChatsActions) {
 }
 
 @Composable
-private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions) {
+private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, nowMs: Long) {
     val title =
         when (val t = row.title) {
             is RowTitle.Text -> t.text
@@ -273,7 +274,7 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions) {
     // The row registers its grow key; the chat page grows out of it and shrinks back into it (P2).
     KitRow(
         title = title,
-        supporting = row.project,
+        supporting = listOfNotNull(row.project.takeIf { it.isNotEmpty() }, row.updatedAtMs?.let { kitRelativeAge(it, nowMs) }).joinToString(" · "),
         trailing = status?.let { KitRowTrailing.Value(it, chevron = false) } ?: KitRowTrailing.None,
         growKey = row.ref,
         onClick = { actions.openConversation(row.ref) },

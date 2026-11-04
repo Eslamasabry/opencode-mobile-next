@@ -17,6 +17,7 @@ public data class MessageInfo(
     val completedMs: Long? = null,
     val finish: String? = null,
     val errorText: String? = null,
+    val errorKind: io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind? = null,
 )
 
 /** Switch/Notice/Compaction = the Dart "v2:*" tags (plan 09 §2.2, trap T9). */

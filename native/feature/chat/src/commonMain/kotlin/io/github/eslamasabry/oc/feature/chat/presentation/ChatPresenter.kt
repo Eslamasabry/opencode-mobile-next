@@ -396,6 +396,10 @@ public class ChatPresenter(
 
     override fun openLink(url: String) {
         val out = outside ?: return
+        out.fileLinkPath(url)?.let {
+            openPath(it, null)
+            return
+        }
         local.update { it.copy(linkRefused = false) }
         when (val check = out.checkLink(url)) {
             LinkCheck.Opened -> Unit
@@ -460,6 +464,21 @@ public class ChatPresenter(
     override fun openPath(path: String, line: Int?) {
         val clean = path.trim()
         if (clean.isEmpty() || !world.capabilities.value.fileBrowsing) return
+        launcher.launch {
+            when (val handed = outside?.openPhoneFile(world.ref, clean)) {
+                is Outcome.Failed -> local.update { it.copy(actionFailure = handed.failure) }
+                is Outcome.Ok -> when (handed.value) {
+                    PhoneFileOpen.Preview -> previewPath(clean, line)
+                    PhoneFileOpen.Opened -> Unit
+                    PhoneFileOpen.AccessRequested -> local.update { it.copy(confirm = ChatConfirm.PhoneFileAccess(clean)) }
+                }
+                null -> previewPath(clean, line)
+            }
+        }
+    }
+
+    private fun previewPath(clean: String, line: Int?) {
+        if (!world.capabilities.value.fileBrowsing) return
         val name = clean.substringAfterLast('/')
         if (PICTURE_NAME.containsMatchIn(name)) openPicture(clean, name)
         else nav.open(FilesRoute.File(world.ref, clean, line))

@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.ui.words.res.textSizeDefault
 import io.github.eslamasabry.oc.ui.words.res.textSizeLarge
 import io.github.eslamasabry.oc.ui.words.res.textSizeSmall
 import io.github.eslamasabry.oc.ui.words.res.textSizeSmallest
+import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailChecksum
@@ -128,6 +129,7 @@ internal fun rowWords(row: SettingsRowId): String =
         SettingsRowId.Language -> Res.string.settingsV3Language
         SettingsRowId.Privacy -> Res.string.settingsHubPrivacyRow
         SettingsRowId.Updates -> Res.string.appUpdatesTitle
+        SettingsRowId.Storage -> Res.string.migrationStorageTitle
         SettingsRowId.Guide -> Res.string.onboardingSetupGuide
         SettingsRowId.Tips -> Res.string.tipsTitle
         SettingsRowId.ReportProblem -> Res.string.kitReportProblem
@@ -156,7 +158,7 @@ internal fun aliasWords(row: SettingsRowId): String {
         SettingsRowId.Guide -> Res.string.settingsHubSearchGuideAliases
         SettingsRowId.ReportProblem -> Res.string.settingsHubSearchBugAliases
         SettingsRowId.About -> Res.string.settingsHubSearchAboutAliases
-        SettingsRowId.Agents, SettingsRowId.Background, SettingsRowId.Language, SettingsRowId.Tips -> null
+        SettingsRowId.Storage, SettingsRowId.Agents, SettingsRowId.Background, SettingsRowId.Language, SettingsRowId.Tips -> null
     }
     return key?.let { stringResource(it) }.orEmpty()
 }

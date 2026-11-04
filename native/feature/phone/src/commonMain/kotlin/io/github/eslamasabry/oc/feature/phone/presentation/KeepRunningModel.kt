@@ -84,6 +84,10 @@ public data class KeepRunningUi(
     val openFailed: Boolean = false,
     /** Android 15+'s ~6 h / 24 h background budget, stated plainly (plan 07 F15). */
     val dailyLimit: Boolean = true,
+    val speedAvailable: Boolean = false,
+    val fullSpeed: Boolean = false,
+    val savingSpeed: Boolean = false,
+    val speedSaveFailed: Boolean = false,
 )
 
 public interface KeepRunningActions {
@@ -95,19 +99,39 @@ public interface KeepRunningActions {
     public fun back()
 }
 
-/** Keep running in the background (port of `KeepRunningSection`, without the AI Team heat and full-speed groups). */
+/** Keep running in the background (port of `KeepRunningSection`, with the phone-agent full-speed preference; AI Team remains deferred). */
 public class KeepRunningModel(
     private val settings: KeepAliveSettings,
     private val nav: PhoneNavigator,
     private val scope: CoroutineScope,
-) : KeepRunningActions {
+    private val budget: PhoneBudgetSource? = null,
+) : KeepRunningActions, PhoneBudgetActions {
     private val ui = MutableStateFlow(KeepRunningUi())
     public val state: StateFlow<KeepRunningUi> = ui.asStateFlow()
 
     override fun resumed() {
         scope.launch {
             val info = settings.info() ?: return@launch
-            ui.update { build(info).copy(openFailed = it.openFailed) }
+            val fullSpeed = budget?.fullSpeed() ?: false
+            ui.update {
+                build(info).copy(
+                    openFailed = it.openFailed,
+                    speedAvailable = budget != null,
+                    fullSpeed = if (it.savingSpeed) it.fullSpeed else fullSpeed,
+                    savingSpeed = it.savingSpeed,
+                    speedSaveFailed = it.speedSaveFailed,
+                )
+            }
+        }
+    }
+
+    override fun setFullSpeed(enabled: Boolean) {
+        val source = budget ?: return
+        if (ui.value.savingSpeed) return
+        ui.update { it.copy(savingSpeed = true, speedSaveFailed = false) }
+        scope.launch {
+            val saved = source.setFullSpeed(enabled) is io.github.eslamasabry.oc.core.common.Outcome.Ok
+            ui.update { it.copy(fullSpeed = if (saved) enabled else it.fullSpeed, savingSpeed = false, speedSaveFailed = !saved) }
         }
     }
 

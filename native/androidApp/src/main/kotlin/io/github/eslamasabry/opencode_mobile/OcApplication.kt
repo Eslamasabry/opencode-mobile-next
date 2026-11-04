@@ -47,6 +47,7 @@ class OcApplication : Application(), GraphOwner {
         (appGraph as DiagnosticsAttentionAccessors).diagnosticsAttention.start() // persisted report, crash store, exits
         appGraph.previewRuntime // warm stores, restore saved profile, connect
         (appGraph as PlatformAccessors).platform.start() // P12-PLATFORM: channels, widgets feed, alerts, update check
+        (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneBudgetAccessors).nativePhoneBudget.start()
         appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)
         appGraph.builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone server comes back
         (appGraph as NativeExitAccessors).nativeAppExitRecovery.start()

@@ -204,6 +204,7 @@ class AndroidSettingsHost(
         AppUpdateSettings, // P12-FIX-PLATFORM-GIT: Settings › Updates on the real updater
     private val voiceSettings: AndroidVoiceSettings,
     private val activities: ResumedActivities,
+    override val localModels: AndroidLocalModelStorage,
     private val gitHubReports: GitHubProblemReporter, // BUILD-DIAGNOSTICS-ATTENTION
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -233,6 +234,7 @@ class AndroidSettingsHost(
                     dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                     systemMotionOff = scale == 0f,
                     diagnostics = true,
+                    localModelStorage = true,
                     opens = OPENS,
                     surfaceStyles = false,
                     transcriptDisplay = false,
@@ -245,6 +247,7 @@ class AndroidSettingsHost(
                     platform = shipped,
                     dynamicColour = Build.VERSION.SDK_INT >= 31,
                     diagnostics = true,
+                    localModelStorage = true,
                     opens = OPENS,
                     surfaceStyles = false,
                     transcriptDisplay = false,

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="relativeAgeJustNow">الآن</string>
+    <string name="relativeAgeMinutes">قبل %1$s د</string>
+    <string name="relativeAgeHours">قبل %1$s س</string>
+    <string name="relativeAgeYesterday">أمس</string>
+    <string name="relativeAgeDays">قبل %1$s ي</string>
+</resources>

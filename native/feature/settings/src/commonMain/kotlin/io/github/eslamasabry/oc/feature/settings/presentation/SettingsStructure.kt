@@ -30,6 +30,7 @@ public enum class SettingsRowId(public val tag: String, public val group: Settin
     Language("settings-language", SettingsGroupId.ThisApp),
     Privacy("settings-privacy", SettingsGroupId.ThisApp),
     Updates("settings-updates", SettingsGroupId.ThisApp),
+    Storage("settings-storage", SettingsGroupId.ThisApp),
 
     Guide("settings-guide", SettingsGroupId.Help),
     Tips("settings-tips", SettingsGroupId.Help),
@@ -65,6 +66,7 @@ public data class SettingsFacts(
     val systemMotionOff: Boolean = false,
     /** The host can build and hand over the diagnostics report: Report a problem opens its page here. */
     val diagnostics: Boolean = false,
+    val localModelStorage: Boolean = false,
     /**
      * The places the host can open; a row leading anywhere else is absent, never dead (02 §3.7). Null = every place
      * (a host with every feature routed).
@@ -106,6 +108,7 @@ public object SettingsStructure {
                         SettingsRowId.Language -> SettingsDoor.Page(SettingsPage.Language)
                         SettingsRowId.Privacy -> SettingsDoor.Page(SettingsPage.Privacy)
                         SettingsRowId.Updates -> SettingsDoor.Page(SettingsPage.Updates).takeIf { p.inAppUpdater || p.desktopReleaseCheck }
+                        SettingsRowId.Storage -> SettingsDoor.Page(SettingsPage.Storage).takeIf { facts.localModelStorage }
                         SettingsRowId.Guide -> SettingsDoor.Outside(SettingsOutside.Guide)
                         SettingsRowId.Tips -> SettingsDoor.Outside(SettingsOutside.Tips)
                         SettingsRowId.ReportProblem ->

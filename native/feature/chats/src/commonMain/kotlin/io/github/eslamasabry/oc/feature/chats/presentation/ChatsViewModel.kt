@@ -59,7 +59,7 @@ public class ChatsViewModel(
             filters = chosen,
             startOfTodayMs = day.startOfToday(clock.now()).toEpochMilliseconds(),
             settingsAvailable = settings.available,
-        )
+        ).copy(nowMs = clock.now().toEpochMilliseconds())
 
     override fun openConversation(ref: ConversationRef): Unit = nav.openChat(ref)
 

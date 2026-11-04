@@ -39,6 +39,7 @@ public data class ConversationRowUi(
     val title: RowTitle,
     val project: String,
     val status: RowStatus,
+    val updatedAtMs: Long? = null,
 )
 
 /** A recent project chip; [selected] when it is the project filter. */
@@ -78,6 +79,7 @@ public data class ChatsFilters(
  */
 public data class ChatsUi(
     val phase: ChatsPhase = ChatsPhase.Opening,
+    val nowMs: Long = 0,
     val today: ImmutableList<ConversationRowUi> = persistentListOf(),
     val earlier: ImmutableList<ConversationRowUi> = persistentListOf(),
     val needsYou: Int = 0,

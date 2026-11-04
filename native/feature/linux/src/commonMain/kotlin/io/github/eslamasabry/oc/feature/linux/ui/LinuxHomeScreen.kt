@@ -7,6 +7,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import io.github.eslamasabry.oc.feature.linux.presentation.LinuxVitalsActions
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxConfirm
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxHomeActions
@@ -80,6 +82,12 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
+    if (actions is LinuxVitalsActions) {
+        LifecycleResumeEffect(actions) {
+            actions.vitalsShown(true)
+            onPauseOrDispose { actions.vitalsShown(false) }
+        }
+    }
     LifecycleStartEffect(actions) {
         actions.shown(true)
         onStopOrDispose { actions.shown(false) }
@@ -158,6 +166,7 @@ public fun LinuxHomeScreen(state: LinuxHomeUi, actions: LinuxHomeActions) {
                     liveRegion = false,
                 )
             }
+            if (state.ready) LinuxVitalsPanel(state.vitals) { actions.open(LinuxPage.Running) }
             LinuxJobPanel(state.job, actions::askStopJob, actions::dismissJob)
             if (presence != null && presence != LinuxPresence.NotOnThisBuild) {
                 if (state.ready) LinuxIdlePanel(state, actions)

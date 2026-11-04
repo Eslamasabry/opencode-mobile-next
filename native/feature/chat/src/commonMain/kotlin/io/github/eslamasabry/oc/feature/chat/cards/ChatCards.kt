@@ -10,6 +10,8 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.domain.facet
+import io.github.eslamasabry.oc.core.domain.BoundedHistoryGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.PromptAttachment
@@ -256,9 +258,10 @@ public class ChatCardsModel internal constructor(
 
     /** One bounded read; true when it was applied (a failed or overtaken read leaves the cards as they were). */
     private suspend fun read(gateway: ServerGateway): Boolean {
+        val bounded = gateway.facet<BoundedHistoryGateway>() ?: return false
         val source = CardHistorySource { session, cursor, limit ->
-            when (val page = gateway.messagePage(SessionId(session), cursor = cursor, limit = limit)) {
-                is Outcome.Ok -> Outcome.Ok(CardHistoryPage(page.value.items, page.value.nextCursor, page.value.nextCursor != null))
+            when (val page = bounded.boundedHistoryPage(SessionId(session), cursor = cursor, limit = limit)) {
+                is Outcome.Ok -> Outcome.Ok(CardHistoryPage(page.value.items, page.value.nextCursor, page.value.hasMore))
                 is Outcome.Failed -> page
             }
         }

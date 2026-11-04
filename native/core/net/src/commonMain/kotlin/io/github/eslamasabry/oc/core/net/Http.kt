@@ -15,6 +15,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.UserAgent
+import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.prepareRequest
 import io.ktor.client.statement.HttpResponse
@@ -166,6 +167,7 @@ public class HttpClientFactory(private val engines: EngineFactory) {
                 socketTimeoutMillis = spec.readTimeoutMs
             }
             install(UserAgent) { agent = USER_AGENT }
+            install(WebSockets)
         }
         return NetClient(client, engines::classify) {
             engine.close()

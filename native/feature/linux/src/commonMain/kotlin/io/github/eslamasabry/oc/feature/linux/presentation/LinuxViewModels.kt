@@ -85,9 +85,10 @@ public class LinuxHomeViewModel(
     setup: LinuxSetupSource,
     idle: LinuxIdleSource,
     lifetimes: LinuxLifetimesSource,
+    vitals: Set<LinuxVitalsSource>,
     nav: LinuxNavigator,
     pacer: Pacer,
-) : ViewModel(), LinuxHomeActions {
+) : ViewModel(), LinuxHomeActions, LinuxVitalsActions {
     private val model =
         LinuxHomeModel(
             manager,
@@ -101,10 +102,13 @@ public class LinuxHomeViewModel(
             setup,
             idle,
             lifetimes,
+            vitals.singleOrNull(),
         )
     public val state: StateFlow<LinuxHomeUi> = model.state
 
     override fun shown(visible: Boolean): Unit = model.shown(visible)
+
+    override fun vitalsShown(visible: Boolean): Unit = model.vitalsShown(visible)
 
     override fun open(page: LinuxPage): Unit = model.open(page)
 

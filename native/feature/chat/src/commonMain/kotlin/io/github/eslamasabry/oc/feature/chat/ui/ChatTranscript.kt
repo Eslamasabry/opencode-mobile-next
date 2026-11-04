@@ -52,6 +52,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
+import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -107,6 +108,7 @@ internal class ChatListWords(
     val tryAgain: String,
     /** B5: the plain reason and next step of a failed reply, by kind. */
     val replyFailed: (ReplyFailureKind) -> String = { "" },
+    val messageError: (MessageErrorKind) -> String = { "" },
     /** B2/B5: the label and copy label of the Details fold under a failure. */
     val details: String = "",
     val copyDetails: String = "",
@@ -381,7 +383,7 @@ private fun ChatRow(
             }
         is NoticeRow -> KitQuietLine(words.notice(row.notice))
         is FooterRow -> Column {
-            if (row.failed && !row.reason.isNullOrBlank() && listWords != null && listWords.details.isNotEmpty()) {
+            if (row.failed && listWords != null && listWords.details.isNotEmpty()) {
                 val reason = row.reason.orEmpty()
                 // B-SEC-014/B-SEC-133: the server's text may carry a key or an Authorization header; Details shows
                 // (and copies) it masked by the app's one redactor, as Flutter redacts notes before display.
@@ -400,7 +402,8 @@ private fun ChatRow(
                         }
                     else KitQuietLine(words.footer(row.failed))
                     val kind = ReplyFailureKind.of(reason)
-                    KitQuietLine(listWords.replyFailed(kind))
+                    val typed = row.errorKind?.takeUnless { it == MessageErrorKind.Unknown }
+                    KitQuietLine(typed?.let(listWords.messageError)?.takeIf { it.isNotBlank() } ?: listWords.replyFailed(kind))
                     // B-AGENT-024: a lost connection's next step is a visible Continue (the turn picks up there).
                     val continueLabel = reply?.continueLabel
                     if (kind == ReplyFailureKind.ConnectionLost && !continueLabel.isNullOrBlank())
@@ -409,7 +412,7 @@ private fun ChatRow(
                             onClick = { reply.onContinue(continueLabel) },
                             role = KitButtonRole.Secondary,
                         )
-                    KitDetailsFold(
+                    if (reason.isNotBlank()) KitDetailsFold(
                         label = listWords.details,
                         copyLabel = listWords.copyDetails,
                         notes = listOf(mask(reason)),

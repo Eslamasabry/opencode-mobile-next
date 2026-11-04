@@ -71,4 +71,12 @@ public interface SettingsActions {
 
     /** The screen is on screen again (back from Android's settings): re-read what may have changed outside. */
     public fun onResume() {}
+
+    public fun onAskDeleteLocalModel() {}
+
+    public fun onDeleteLocalModel() {}
+
+    public fun onCancelDeleteLocalModel() {}
+
+    public fun onRefreshLocalModels() {}
 }

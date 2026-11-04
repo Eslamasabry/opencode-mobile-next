@@ -18,9 +18,11 @@ import io.github.eslamasabry.oc.protocol.oc2.send.Oc2ClientIds
 import io.github.eslamasabry.oc.protocol.oc2.send.Oc2PromptSend
 import io.github.eslamasabry.oc.protocol.oc2.wire.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
+import io.ktor.utils.io.readAvailable
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 import kotlin.time.Clock
@@ -29,6 +31,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
@@ -44,7 +47,7 @@ internal class Oc2Gateway(
     random: Random = Random.Default,
     initialDialect: Oc2Dialect? = null,
 ) : ServerGateway, ServerOperationsGateway, CorrelatedPromptGateway, SessionSelectionGateway, StagedRevertGateway,
-    LocatedFileGateway, LocatedVcsGateway, WebSearchGateway, LocatedManagedShellGateway {
+    LocatedFileGateway, LocatedVcsGateway, WebSearchGateway, LocatedManagedShellGateway, BoundedHistoryGateway {
     private val ids = Oc2ClientIds(clock, random)
     private val dialect = MutableStateFlow(initialDialect)
     private val negotiation = Mutex()
@@ -68,6 +71,8 @@ internal class Oc2Gateway(
     private val envelopes = MutableSharedFlow<GatewayEnvelope>()
     private var loop: EventStreamLoop? = null
     private var stream: Job? = null
+    @kotlin.concurrent.Volatile private var closed: Boolean = false
+    internal val terminalClosed: Boolean get() = closed
 
     init {
         credentials.secret?.let(redactor::registerSecret)
@@ -419,6 +424,24 @@ internal class Oc2Gateway(
             buildJsonObject { put("agent", agent) },
         )
 
+    /** The visible Fork action uses the server's own boundary contract; an anchored copy excludes its anchor. */
+    override suspend fun forkSession(id: SessionId, from: MessageId?): Outcome<SessionId> {
+        if (id.raw.isEmpty() || from?.raw?.isEmpty() == true) return Failure.Rejected(null).failed()
+        return read(
+            "/session/${sid(id)}/fork",
+            HttpMethod.Post,
+            buildJsonObject {
+                putJsonObject("boundary") {
+                    if (from == null) put("type", "through")
+                    else {
+                        put("type", "before")
+                        put("messageID", from.raw)
+                    }
+                }
+            },
+        ) { root -> sessionValue(data(root))?.id }
+    }
+
     override suspend fun renameSession(id: SessionId, title: String): Outcome<Unit> =
         unit("/session/${sid(id)}/rename", HttpMethod.Post, buildJsonObject { put("title", title) })
 
@@ -446,22 +469,111 @@ internal class Oc2Gateway(
         id: SessionId,
         cursor: String?,
         limit: Int,
-    ): Outcome<ServerPage<MessageWithParts>> =
-        read(
-            "/session/${sid(id)}/message",
-            query =
-                if (cursor != null) mapOf("cursor" to cursor)
-                else mapOf("limit" to limit.toString(), "order" to "desc"),
-        ) { root ->
-            val rows = pageEntries(root) ?: return@read null
-            val history = Oc2History(redactor)
-            val messages =
-                rows.reversed().map { history.message(id.raw, data(it)) ?: return@read null }
-            ServerPage(
-                messages.toImmutableList(),
-                cursor(root)?.takeIf { it.isNotEmpty() && rows.size >= limit },
-            )
+    ): Outcome<ServerPage<MessageWithParts>> = historyPage(id, cursor, limit, 16 * 1024 * 1024, 30_000).map {
+        ServerPage(it.items, it.nextCursor)
+    }
+
+    override suspend fun boundedHistoryPage(
+        session: SessionId,
+        cursor: String?,
+        limit: Int,
+    ): Outcome<BoundedHistoryPage> {
+        if (limit !in 1..50) return Failure.Rejected(null).failed()
+        return historyPage(session, cursor, limit, 1024 * 1024, 10_000)
+    }
+
+    /** Flutter gen_ui_history.dart / gen_ui_history_http.dart: validate before dispatch and fence the answer. */
+    private suspend fun historyPage(
+        session: SessionId,
+        cursor: String?,
+        limit: Int,
+        byteLimit: Int,
+        timeoutMs: Long,
+    ): Outcome<BoundedHistoryPage> {
+        if (closed || session.raw.isEmpty() || session.raw.length > 512 || limit < 1 ||
+            (cursor != null && (cursor.isEmpty() || cursor.length > 4096))) {
+            return Failure.Rejected(null).failed()
         }
+        val at = location.value
+        val path = "/session/${sid(session)}/message"
+        // Session routes are globally identified, so no location query is attached. Retain the requested limit on
+        // continuation pages too: a cursor is opaque, and must never silently enlarge the bounded recovery page.
+        val query = mapOf("limit" to limit.toString()) +
+            if (cursor != null) mapOf("cursor" to cursor) else mapOf("order" to "desc")
+        val reply = boundedHistoryJson(path, query, byteLimit, timeoutMs)
+        if (closed || location.value != at) return Failure.Refused(RefusalReason.StaleScope).failed()
+        return reply.flatMap { root ->
+            val rows = pageEntries(root) ?: return@flatMap Failure.UnreadableReply().failed()
+            if (rows.size > limit) return@flatMap Failure.UnreadableReply().failed()
+            val history = Oc2History(redactor)
+            val seen = HashSet<String>()
+            val messages = rows.reversed().map { row ->
+                val wire = data(row) as? JsonObject ?: return@flatMap Failure.UnreadableReply().failed()
+                if ("sessionID" in wire && wire.str("sessionID") != session.raw) {
+                    return@flatMap Failure.UnreadableReply().failed()
+                }
+                val message = history.message(session.raw, wire) ?: return@flatMap Failure.UnreadableReply().failed()
+                if (message.info.id.isEmpty() || !seen.add(message.info.id)) return@flatMap Failure.UnreadableReply().failed()
+                message
+            }
+            val next = cursor(root)
+            if (next != null && (next.isEmpty() || next.length > 4096 || next == cursor)) {
+                return@flatMap Failure.UnreadableReply().failed()
+            }
+            BoundedHistoryPage(messages.toImmutableList(), next?.takeIf { rows.size >= limit }, rows.size == limit).ok()
+        }
+    }
+
+    /** Stream within the budget before JSON decoding. Timeout cancels the actual request, including a stalled body. */
+    private suspend fun boundedHistoryJson(
+        path: String,
+        query: Map<String, String?>,
+        byteLimit: Int,
+        timeoutMs: Long,
+    ): Outcome<JsonElement> = withTimeoutOrNull(timeoutMs) {
+        if (dialect.value == null) {
+            when (val health = health()) {
+                is Outcome.Failed -> return@withTimeoutOrNull health
+                is Outcome.Ok -> if (!health.value.healthy) return@withTimeoutOrNull Failure.UnreadableReply().failed()
+            }
+        }
+        val settled = dialect.value ?: return@withTimeoutOrNull Failure.UnreadableReply().failed()
+        val route = settled.route(path, HttpMethod.Get, null, query)
+        route.removed?.let { return@withTimeoutOrNull Failure.Unavailable(FeatureId(it)).failed() }
+        net.exchange({
+            request(route.path, route.method, route.query)
+            header(HttpHeaders.Accept, "application/json")
+        }) { response ->
+            if (response.status != HttpStatusCode.OK ||
+                (response.headers[HttpHeaders.ContentLength]?.toLongOrNull() ?: 0L) > byteLimit) {
+                return@exchange Failure.UnreadableReply().failed()
+            }
+            val channel = response.bodyAsChannel()
+            val chunks = ArrayList<ByteArray>()
+            val buffer = ByteArray(8192)
+            var size = 0
+            while (true) {
+                val count = channel.readAvailable(buffer, 0, buffer.size)
+                if (count < 0) break
+                if (count > byteLimit - size) return@exchange Failure.UnreadableReply().failed()
+                if (count > 0) {
+                    chunks += buffer.copyOf(count)
+                    size += count
+                }
+            }
+            val bytes = ByteArray(size)
+            var offset = 0
+            for (chunk in chunks) {
+                chunk.copyInto(bytes, offset)
+                offset += chunk.size
+            }
+            attempt({ Failure.UnreadableReply() }) {
+                val text = bytes.decodeToString(throwOnInvalidSequence = true)
+                Oc2Wire.parse(text)?.let { settled.response(HttpMethod.Get, path, it) }
+                    ?: return@attempt null
+            }.flatMap { value -> value?.ok() ?: Failure.UnreadableReply().failed() }
+        }.flatMap { it }
+    } ?: Failure.TimedOut().failed()
 
     override suspend fun prompt(
         session: SessionId,
@@ -1036,12 +1148,46 @@ internal class Oc2Gateway(
     // ---- Stable-line features and operations (new files Oc2Operations / Oc2WebSearch / Oc2HistoryMigration /
     // Oc2Terminal; Flutter lib/api2/gateway_operations). Each delegates; the request shapes live there.
 
+    /** Server inventory includes known projects with no current conversation; the Projects picker consumes it. */
+    override suspend fun listProjects(): Outcome<ImmutableList<WorkspaceProject>> =
+        read("/project") { root ->
+            val rows = pageEntries(root) ?: return@read null
+            rows.map { row -> projectValue(data(row)) ?: return@read null }.toImmutableList()
+        }
+
+    override suspend fun currentProject(): Outcome<WorkspaceProject?> =
+        json("/project/current", query = locationQuery()).flatMap { root ->
+            val item = data(root) as? JsonObject ?: return@flatMap Failure.UnreadableReply().failed()
+            if (item.isEmpty()) null.ok()
+            else projectValue(item)?.ok() ?: Failure.UnreadableReply().failed()
+        }
+
+    private fun projectValue(value: JsonElement): WorkspaceProject? {
+        val item = value as? JsonObject ?: return null
+        val id = item.str("id")?.takeIf { it.isNotEmpty() } ?: return null
+        val directory = item.str("directory") ?: item.str("canonical") ?: ""
+        val copies = (item["worktrees"] ?: item["sandboxes"]) as? JsonArray
+        val time = item["time"] as? JsonObject
+        return WorkspaceProject(
+            id = id,
+            name = item.str("name")?.takeIf { it.isNotEmpty() } ?: directory.trimEnd('/').substringAfterLast('/'),
+            directory = directory,
+            worktrees = copies?.mapNotNull { (it as? JsonPrimitive)?.takeIf { it.isString }?.content }?.toImmutableList()
+                ?: persistentListOf(),
+            updatedAtMs = time?.long("updated") ?: time?.long("created") ?: 0L,
+            isGit = item.str("vcs") == "git",
+        )
+    }
+
     override suspend fun initializeGitRepository(): Outcome<Unit> = gitInit()
 
     override suspend fun createWorktree(projectDirectory: String, name: String?): Outcome<WorktreeInfo> =
         worktreeCreate(projectDirectory, name)
 
     override suspend fun terminalShellSettings(): Outcome<TerminalShellSettings> = shellSettings()
+
+    override suspend fun connectTerminal(id: String, cursor: Long?): Outcome<TerminalChannel> =
+        connectTerminalWith(oc2TerminalSockets(net), id, cursor)
 
     override suspend fun selectTerminalShell(value: String): Outcome<Unit> = selectShell(value)
 
@@ -1056,6 +1202,7 @@ internal class Oc2Gateway(
     suspend fun historyMigrationStatus(): Outcome<HistoryMigrationStatus?> = historyMigrationStatusRead()
 
     override suspend fun close() {
+        closed = true
         try {
             stream?.cancelAndJoin()
         } finally {
@@ -1120,10 +1267,10 @@ internal class Oc2Gateway(
                 fileBrowsing = true,
                 terminal = false,
                 conversationShell = true,
-                projectManagement = false,
+                projectManagement = true,
                 globalSessionSearch = false,
                 sessionDiff = false,
-                sessionFork = false,
+                sessionFork = true,
                 sessionCompact = false,
                 persistentPermissionGrants = false,
                 permissionRequests = true,

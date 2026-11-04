@@ -80,6 +80,7 @@ public object ChatsState {
             ref = item.ref,
             title = SessionTitles.present(item.title),
             project = item.projectName,
+            updatedAtMs = item.lastActivityMs.takeIf { it > 0 },
             status =
                 when (item.status) {
                     ChatStatus.NeedsYou -> RowStatus.NeedsYou
