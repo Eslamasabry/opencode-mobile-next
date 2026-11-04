@@ -1,0 +1,15 @@
+<resources>
+<string name="andrMonitorExplanation">Check other saved servers while this app is open, or while your background connection is running. Each server needs your permission. Monitoring never turns on the background connection.</string>
+<string name="andrMonitorEnabled">Check this server</string>
+<string name="andrMonitorOff">Off. No background checks.</string>
+<string name="andrMonitorWaiting">Waiting for the next check. Earlier information may be out of date.</string>
+<string name="andrMonitorChecking">Checking now. Earlier information may be out of date.</string>
+<string name="andrMonitorCurrent">Up to date after the latest check.</string>
+<string name="andrMonitorUnavailable">Could not check. Open this server to review its latest activity.</string>
+<string name="andrMonitorWifi">Waiting for Wi-Fi.</string>
+<string name="andrMonitorPaused">Paused while the app and background connection are stopped.</string>
+<string name="andrMonitorSaveFailed">Could not save this choice. Try again.</string>
+<string name="andrMonitorCheckIn">Remind me about long replies</string>
+<string name="andrMonitorCheckInDetail">One reminder after a chat has been observed working for this long. Failed checks do not count as work.</string>
+<string name="andrMonitorMinutes">%1$s minutes</string>
+</resources>

@@ -32,14 +32,17 @@ import kotlinx.coroutines.sync.withLock
 @ContributesBinding(AppScope::class, binding = binding<ServerConnections>())
 @Inject
 class PreviewRuntime(
+    private val application: android.app.Application,
     private val stores: PreviewStores,
     private val registry: ConnectionRegistry,
     private val redactor: Redactor,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
     private val draftOwners: Set<ConversationDrafts>,
-    private val cleaners: Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
-) : ServerConnections {
+    private val closers: Set<ProfileCloser>,
+    private val cleaners:
+        Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
+) : ServerConnections, ServerDisconnects {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
     private val scope = CoroutineScope(appScope.coroutineContext + lane)
@@ -268,6 +271,15 @@ class PreviewRuntime(
         failed ?: Unit.ok()
     }
 
+    override suspend fun disconnect(id: ProfileId): Outcome<Unit> = command {
+        registry.close(id)
+        eventJobs.remove(id)?.cancel()
+        listings.remove(id)
+        rebuildFeed()
+        application.platformHub.onExplicitDisconnect()
+        if (profiles.activeId.value == id) profiles.setActive(null) else Unit.ok()
+    }
+
     override suspend fun createConversation(profile: ProfileId?): Outcome<ConversationRef> =
         command {
             val id =
@@ -344,10 +356,25 @@ class PreviewRuntime(
         }
         val scoped =
             DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
+                registerMonitorKeys(this)
+                io.github.eslamasabry.oc.engine.settings.consent.ConsentKeys.shapes.forEach {
+                    register(it)
+                }
+                register(io.github.eslamasabry.oc.engine.settings.pins.SessionPinStore.SHAPE)
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
             }
-        when (val result = ProfileDeletion(profiles, scoped, stores.lanes, cleaners = cleaners).delete(id)) {
+        when (
+            val result =
+                ProfileDeletion(
+                        profiles,
+                        scoped,
+                        stores.lanes,
+                        closers = closers,
+                        cleaners = cleaners,
+                    )
+                    .delete(id)
+        ) {
             is Outcome.Failed -> result
             is Outcome.Ok ->
                 if (result.value.complete) {

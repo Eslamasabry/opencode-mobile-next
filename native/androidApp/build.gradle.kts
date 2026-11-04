@@ -84,6 +84,7 @@ dependencies {
             ":engine:analytics",
             ":engine:diagnostics",
             ":android:notifications",
+            ":android:platform", // ANDR: real default-network tracker for consented monitors
             ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
             ":engine:migration",

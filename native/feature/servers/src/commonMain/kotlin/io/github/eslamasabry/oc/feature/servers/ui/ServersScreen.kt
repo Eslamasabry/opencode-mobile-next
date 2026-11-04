@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.ShareLink
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerDisconnectActions
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerFailureKind
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerIssue
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersActions
@@ -50,19 +51,18 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
-import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
-import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
+import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
-import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
-import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
-import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
+import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
+import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
+import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
+import io.github.eslamasabry.oc.ui.words.res.serverDisconnectFrom
 import io.github.eslamasabry.oc.ui.words.res.serverFailureCertificate
 import io.github.eslamasabry.oc.ui.words.res.serverFailureIncompatible
 import io.github.eslamasabry.oc.ui.words.res.serverFailureNetwork
@@ -99,6 +99,8 @@ import io.github.eslamasabry.oc.ui.words.res.serversSignInFailed
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.serversUsername
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
+import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
+import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.stringResource
@@ -111,21 +113,29 @@ import org.jetbrains.compose.resources.stringResource
 public fun ServersScreen(
     state: ServersUi,
     actions: ServersActions,
-    /** Opens This phone (the phone's own server and Linux); null where the platform has no built-in Linux. */
+    /**
+     * Opens This phone (the phone's own server and Linux); null where the platform has no built-in
+     * Linux.
+     */
     onThisPhone: (() -> Unit)? = null,
 ) {
-    // The unsaved draft survives a page on top (Scan code) and the form leaving composition: the plain fields are
+    // The unsaved draft survives a page on top (Scan code) and the form leaving composition: the
+    // plain fields are
     // saveable, the password is held in memory by the ViewModel only (never saved instance state).
     val name = rememberTextFieldState()
     val address = rememberTextFieldState()
     val username = rememberTextFieldState("opencode")
     val password = remember { TextFieldState(actions.heldPassword()) }
-    LaunchedEffect(password) { snapshotFlow { password.text.toString() }.collect { actions.holdPassword(it) } }
+    LaunchedEffect(password) {
+        snapshotFlow { password.text.toString() }.collect { actions.holdPassword(it) }
+    }
     var removing by remember { mutableStateOf<ProfileId?>(null) }
-    // PREVIEW-QR: a scanned or pasted pairing code (or share link) fills the form once; the password is taken, not kept.
+    // PREVIEW-QR: a scanned or pasted pairing code (or share link) fills the form once; the
+    // password is taken, not kept.
     var filledFromLink by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var clearedGeneration by rememberSaveable { mutableIntStateOf(0) }
-    // A pairing code carries a password, so it goes in a secret field (the kit's Paste lives there too).
+    // A pairing code carries a password, so it goes in a secret field (the kit's Paste lives there
+    // too).
     val code = remember { TextFieldState() }
     LaunchedEffect(code) {
         snapshotFlow { code.text.toString() }
@@ -150,11 +160,13 @@ public fun ServersScreen(
         }
     }
     LaunchedEffect(address) {
-        // The first value is the field as it is (a restored draft keeps its consent); only a change is acted on.
+        // The first value is the field as it is (a restored draft keeps its consent); only a change
+        // is acted on.
         snapshotFlow { address.text.toString() }
             .drop(1)
             .collect { text ->
-                // A pairing code or share link pasted into the address field is read, never saved as an address.
+                // A pairing code or share link pasted into the address field is read, never saved
+                // as an address.
                 if (PairingText.looksLikePayload(text) || ShareLink.origin(text) != null) {
                     address.edit { replace(0, length, "") }
                     actions.pastePairing(text)
@@ -222,12 +234,22 @@ public fun ServersScreen(
                             { actions.create(server.id) },
                             enabled = enabled,
                         )
-                        // QA wave 4 B15: a connected server says Connected; Connect is offered only when it is not.
+                        // QA wave 4 B15: a connected server says Connected; Connect is offered only
+                        // when it is not.
                         if (!server.connected) {
                             KitButton(
                                 stringResource(Res.string.serversConnect),
                                 { actions.connect(server.id) },
                                 role = KitButtonRole.Secondary,
+                                enabled = enabled,
+                            )
+                        }
+                        val disconnect = actions as? ServerDisconnectActions
+                        if (server.connected && disconnect?.disconnectSupported == true) {
+                            KitButton(
+                                stringResource(Res.string.serverDisconnectFrom, server.name),
+                                { disconnect.disconnect(server.id) },
+                                role = KitButtonRole.Tertiary,
                                 enabled = enabled,
                             )
                         }
@@ -304,7 +326,11 @@ public fun ServersScreen(
             )
             state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
             filledFromLink?.let { link ->
-                KitNotice(stringResource(if (link) Res.string.previewQrLinkFilled else Res.string.previewQrPairFilled))
+                KitNotice(
+                    stringResource(
+                        if (link) Res.string.previewQrLinkFilled else Res.string.previewQrPairFilled
+                    )
+                )
             }
             KitField(name, stringResource(Res.string.serversName), enabled = enabled)
             KitField(
@@ -377,7 +403,9 @@ private fun issueWords(issue: ServerIssue, failure: Failure?): String =
         }
     )
 
-// TODO(words): `serversSchedules` belongs in :ui:words (P12-SCHEDULES may not edit it); the l10n owner moves it.
+// TODO(words): `serversSchedules` belongs in :ui:words (P12-SCHEDULES may not edit it); the l10n
+// owner moves it.
 @Composable
 private fun schedulesLabel(): String =
-    if (LocalLayoutDirection.current == LayoutDirection.Rtl) "الطلبات المجدولة" else "Scheduled prompts"
+    if (LocalLayoutDirection.current == LayoutDirection.Rtl) "الطلبات المجدولة"
+    else "Scheduled prompts"

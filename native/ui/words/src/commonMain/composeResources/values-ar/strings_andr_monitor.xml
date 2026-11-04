@@ -1,0 +1,15 @@
+<resources>
+<string name="andrMonitorExplanation">تحقّق من الخوادم المحفوظة الأخرى عندما يكون التطبيق مفتوحًا أو الاتصال في الخلفية قيد التشغيل. يحتاج كل خادم إلى إذنك. لا تشغّل المراقبة الاتصال في الخلفية.</string>
+<string name="andrMonitorEnabled">التحقّق من هذا الخادم</string>
+<string name="andrMonitorOff">متوقف. لا توجد عمليات تحقّق في الخلفية.</string>
+<string name="andrMonitorWaiting">بانتظار التحقّق التالي. قد تكون المعلومات السابقة قديمة.</string>
+<string name="andrMonitorChecking">جارٍ التحقّق. قد تكون المعلومات السابقة قديمة.</string>
+<string name="andrMonitorCurrent">المعلومات حديثة بعد آخر تحقّق.</string>
+<string name="andrMonitorUnavailable">تعذّر التحقّق. افتح هذا الخادم لمراجعة أحدث نشاط.</string>
+<string name="andrMonitorWifi">بانتظار شبكة Wi-Fi.</string>
+<string name="andrMonitorPaused">متوقف مؤقتًا لأن التطبيق والاتصال في الخلفية متوقفان.</string>
+<string name="andrMonitorSaveFailed">تعذّر حفظ هذا الاختيار. حاول مرة أخرى.</string>
+<string name="andrMonitorCheckIn">تذكيري بالردود الطويلة</string>
+<string name="andrMonitorCheckInDetail">تذكير واحد بعد ملاحظة عمل المحادثة لهذه المدة. عمليات التحقّق الفاشلة لا تُحسب عملًا.</string>
+<string name="andrMonitorMinutes">%1$s دقيقة</string>
+</resources>

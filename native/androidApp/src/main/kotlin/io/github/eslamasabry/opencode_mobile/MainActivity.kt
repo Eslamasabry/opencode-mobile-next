@@ -1,12 +1,13 @@
 package io.github.eslamasabry.opencode_mobile
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import android.content.Context
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -23,9 +24,21 @@ import io.github.eslamasabry.opencode_mobile.graph.platformHub
 
 /** Frozen FQCN (ADR §9.9). EntryRouter and ActivityResults attach here in slice 2. */
 class MainActivity : ComponentActivity() {
+    private var entryReady = false
+    private var pendingEntry: Intent? = null
+
+    private fun routePendingEntry() {
+        if (!entryReady) return
+        val pending = pendingEntry ?: return
+        pendingEntry = null
+        platformHub.route(pending)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // B14 (QA wave 1): after super.onCreate, so a recreate (language switch) keeps edge-to-edge too.
+        pendingEntry = intent
+        // B14 (QA wave 1): after super.onCreate, so a recreate (language switch) keeps edge-to-edge
+        // too.
         enableEdgeToEdge()
         val graph = appGraph
         graph.composerFiles.attach(this)
@@ -38,13 +51,28 @@ class MainActivity : ComponentActivity() {
         setContent {
             val appearance by settings.appPreferences.appearance.collectAsState()
             LaunchedEffect(Unit) {
-                settings.appPreferences.storedLocaleTag.collect { tag -> if (AppLocale.changed(tag)) recreate() }
+                settings.appPreferences.storedLocaleTag.collect { tag ->
+                    if (AppLocale.changed(tag)) recreate()
+                }
             }
             CompositionLocalProvider(
                 LocalKitSecretSink provides KitSecretSink(graph.redactor::registerSecret)
             ) {
                 MigrationRoot(graph.migration, graph.shell.navigator, platform) {
-                    App(graph.shell, platform, graph.metroViewModelFactory, appearance, AppLocale.applied)
+                    App(
+                        graph.shell,
+                        platform,
+                        graph.metroViewModelFactory,
+                        appearance,
+                        AppLocale.applied,
+                    )
+                    // Hold cold/live taps until migration has opened and the real shell has
+                    // attached.
+                    DisposableEffect(Unit) {
+                        entryReady = true
+                        routePendingEntry()
+                        onDispose { entryReady = false }
+                    }
                 }
             }
         }
@@ -54,17 +82,11 @@ class MainActivity : ComponentActivity() {
         super.attachBaseContext(AppLocale.wrap(newBase))
     }
 
-    // P12-PLATFORM: launcher / pinned shortcuts, notification taps and shares. Posted so the shell's first frame
-    // attaches the back stack first; each extra is consumed once.
-    override fun onPostCreate(savedInstanceState: Bundle?) {
-        super.onPostCreate(savedInstanceState)
-        if (savedInstanceState == null) window.decorView.post { platformHub.route(intent) }
-    }
-
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        platformHub.route(intent)
+        pendingEntry = intent
+        routePendingEntry()
     }
 
     override fun onResume() {
@@ -73,6 +95,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        entryReady = false
+        pendingEntry = null
         appGraph.composerFiles.detach(this)
         super.onDestroy()
     }
