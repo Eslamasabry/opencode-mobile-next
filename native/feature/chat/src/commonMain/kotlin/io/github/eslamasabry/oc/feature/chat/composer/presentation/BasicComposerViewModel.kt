@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.platform.PromptFilePicker
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatOutside
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
 import io.github.eslamasabry.oc.feature.chat.world.ComposerCommand
@@ -27,19 +28,21 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
+import io.github.eslamasabry.oc.feature.chat.world.RecentModelsBacking
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 
 /**
- * What the basic composer shows (plan 09 §6.3 slice 2: field, Send, Stop; the model choice and
- * file attachments of the full-composer slice ride along).
+ * What the basic composer shows (plan 09 §6.3 slice 2: field, Send, Stop; the model choice and file
+ * attachments of the full-composer slice ride along).
  */
 public data class BasicComposerUi(
     /** There is a conversation to send to (slice 2 has no new-conversation composer here). */
@@ -93,6 +96,14 @@ public interface BasicComposerActions {
     public suspend fun selectAgent(agent: String): Boolean = false
 
     /** Opens the platform picker; a cancelled pick changes nothing. */
+    public fun copyModelId(model: ComposerModel) {}
+
+    public fun toggleFavorite(model: ComposerModel) {}
+
+    public fun cycleModel(reverse: Boolean = false, favoritesOnly: Boolean = false) {}
+
+    public fun cycleVariant(reverse: Boolean = false) {}
+
     public fun attachFile() {}
 
     /** Removes one attached file by its current index. */
@@ -130,10 +141,13 @@ public sealed interface ComposerQuery {
             return File(word, at)
         }
 
-        /** Name prefix first, then contains, then the rest; at most [limit], no folders or spaces. */
+        /**
+         * Name prefix first, then contains, then the rest; at most [limit], no folders or spaces.
+         */
         public fun rankFiles(query: String, paths: List<String>, limit: Int = 20): List<String> {
             val q = query.lowercase()
-            val usable = paths.filter { it.isNotBlank() && !it.endsWith("/") && ' ' !in it }.distinct()
+            val usable =
+                paths.filter { it.isNotBlank() && !it.endsWith("/") && ' ' !in it }.distinct()
             fun name(p: String) = p.substringAfterLast('/').lowercase()
             val prefix = usable.filter { name(it).startsWith(q) }
             val contains = usable.filter { it !in prefix && it.lowercase().contains(q) }
@@ -165,6 +179,9 @@ public class BasicComposerViewModel(
     private val filePickers: Set<PromptFilePicker> = emptySet(),
     private val attachSources: Set<ComposerAttachSource> = emptySet(),
     private val appCommands: Set<ComposerAppCommands> = emptySet(),
+    private val modelBackings: Set<RecentModelsBacking> = emptySet(),
+    private val outside: ChatOutside? = null,
+    private val clock: Clock? = null,
 ) : ViewModel(), BasicComposerActions {
     private val profileId = ProfileId(target.profileId)
     private val query = MutableStateFlow<ComposerQuery?>(null)
@@ -179,6 +196,9 @@ public class BasicComposerViewModel(
     private val pickingFile = MutableStateFlow(false)
     private val committingFiles = MutableStateFlow(false)
     private val selectingModel = MutableStateFlow(false)
+    private val favorites = MutableStateFlow<List<Pair<String, String>>>(emptyList())
+    private val favoriteFailure = MutableStateFlow<Failure?>(null)
+    private var savingFavorite = false
     private val attachmentFailure = MutableStateFlow<Failure?>(null)
     private val targetKey = "${target.profileId}/${target.sessionId}"
 
@@ -211,57 +231,91 @@ public class BasicComposerViewModel(
                         )
                     }
                 combine(facts, world.pending) { ui, pending ->
-                    val noUnknown = pending.none { it.state == PendingState.Unconfirmed }
-                    ui.copy(
-                        available = ui.available && noUnknown,
-                        canRepeat = ui.canRepeat && noUnknown && !ui.sending,
-                    )
-                }
-                // One gate for every in-flight composer operation: Send waits while a pick, its
-                // commit or a model change runs.
-                .let { gated ->
-                    val filesBusy =
-                        combine(pickingFile, committingFiles) { picking, committing ->
-                            picking to committing
-                        }
-                    val suggestions =
-                        combine(query, world.commands, fileMatches) { q, commands, files ->
-                            when (q) {
-                                is ComposerQuery.Command ->
-                                    commands
-                                        .filter { it.name.startsWith(q.query, ignoreCase = true) }
-                                        .plus(
-                                            commands.filter {
-                                                !it.name.startsWith(q.query, ignoreCase = true) &&
-                                                    it.name.contains(q.query, ignoreCase = true)
-                                            }
-                                        )
-                                        .take(MAX_COMMANDS) to emptyList()
-                                is ComposerQuery.File -> emptyList<ComposerCommand>() to files
-                                null -> emptyList<ComposerCommand>() to emptyList()
-                            }
-                        }
-                    combine(
-                        combine(gated, suggestions) { ui, s ->
-                            ui.copy(commandMatches = s.first, fileMatches = s.second)
-                        },
-                        world.models,
-                        filesBusy,
-                        selectingModel,
-                        attachmentFailure,
-                    ) { ui, models, busy, selecting, failure ->
-                        val (picking, committing) = busy
+                        val noUnknown = pending.none { it.state == PendingState.Unconfirmed }
                         ui.copy(
-                            attachKinds = attachSources.flatMapTo(HashSet()) { it.kinds },
-                            available = ui.available && !picking && !committing && !selecting,
-                            canRepeat = ui.canRepeat && !picking && !committing && !selecting,
-                            models = models,
-                            pickingFile = picking,
-                            attachmentFailure = failure,
-                            filesAvailable = filePickers.isNotEmpty(),
+                            available = ui.available && noUnknown,
+                            canRepeat = ui.canRepeat && noUnknown && !ui.sending,
                         )
                     }
-                }
+                    // One gate for every in-flight composer operation: Send waits while a pick, its
+                    // commit or a model change runs.
+                    .let { gated ->
+                        val filesBusy =
+                            combine(pickingFile, committingFiles) { picking, committing ->
+                                picking to committing
+                            }
+                        val suggestions =
+                            combine(query, world.commands, fileMatches) { q, commands, files ->
+                                when (q) {
+                                    is ComposerQuery.Command ->
+                                        commands
+                                            .filter {
+                                                it.name.startsWith(q.query, ignoreCase = true)
+                                            }
+                                            .plus(
+                                                commands.filter {
+                                                    !it.name.startsWith(
+                                                        q.query,
+                                                        ignoreCase = true,
+                                                    ) &&
+                                                        it.name.contains(q.query, ignoreCase = true)
+                                                }
+                                            )
+                                            .take(MAX_COMMANDS) to emptyList()
+                                    is ComposerQuery.File -> emptyList<ComposerCommand>() to files
+                                    null -> emptyList<ComposerCommand>() to emptyList()
+                                }
+                            }
+                        combine(
+                            combine(gated, suggestions) { ui, s ->
+                                ui.copy(commandMatches = s.first, fileMatches = s.second)
+                            },
+                            combine(world.models, favorites, favoriteFailure) {
+                                models,
+                                saved,
+                                failed ->
+                                val stored =
+                                    modelBackings.firstOrNull()?.favorites(profileId.raw) ?: saved
+                                val chosenFavorites = if (savingFavorite) saved else stored
+                                val now = clock?.now()?.toEpochMilliseconds()
+                                val catalog =
+                                    models.choices.map { model ->
+                                        val released = model.releasedAtMs
+                                        model.copy(
+                                            isNew =
+                                                now != null &&
+                                                    released != null &&
+                                                    released <= now &&
+                                                    now - released < 2_592_000_000L
+                                        )
+                                    }
+                                models.copy(
+                                    choices = catalog,
+                                    favorites =
+                                        chosenFavorites.mapNotNull { (provider, model) ->
+                                            catalog.firstOrNull {
+                                                it.providerId == provider && it.modelId == model
+                                            }
+                                        },
+                                    libraryFailure = failed,
+                                )
+                            },
+                            filesBusy,
+                            selectingModel,
+                            attachmentFailure,
+                        ) { ui, models, busy, selecting, failure ->
+                            val (picking, committing) = busy
+                            ui.copy(
+                                attachKinds = attachSources.flatMapTo(HashSet()) { it.kinds },
+                                available = ui.available && !picking && !committing && !selecting,
+                                canRepeat = ui.canRepeat && !picking && !committing && !selecting,
+                                models = models,
+                                pickingFile = picking,
+                                attachmentFailure = failure,
+                                filesAvailable = filePickers.isNotEmpty(),
+                            )
+                        }
+                    }
             }
             .stateIn(
                 viewModelScope,
@@ -344,7 +398,8 @@ public class BasicComposerViewModel(
                         if (picked.value.isEmpty()) {
                             // A cancel changes nothing; an empty clipboard says so in plain words.
                             if (kind == AttachKind.Clipboard)
-                                attachmentFailure.value = Failure.Unavailable(FeatureId("clipboardImage"))
+                                attachmentFailure.value =
+                                    Failure.Unavailable(FeatureId("clipboardImage"))
                             return@launch
                         }
                         if (w.draftGeneration != generation) {
@@ -354,7 +409,8 @@ public class BasicComposerViewModel(
                         val latest = w.draft.value
                         if (!latest.ready || latest.failure != null || latest.sendBlocked) {
                             attachmentFailure.value =
-                                latest.failure ?: Failure.Unavailable(FeatureId("promptAttachments"))
+                                latest.failure
+                                    ?: Failure.Unavailable(FeatureId("promptAttachments"))
                             return@launch
                         }
                         val room = MAX_FILES - latest.attachments.size
@@ -381,7 +437,8 @@ public class BasicComposerViewModel(
         val w = world ?: return false
         if (busy()) return false
         if (!SendGate.accepts(state.value.copy(sending = sending.value), text)) return false
-        // Codex composer #5: the app's own commands run here and leave the box; nothing goes to the server.
+        // Codex composer #5: the app's own commands run here and leave the box; nothing goes to the
+        // server.
         AppCommands.of(text)?.let { command ->
             val runner = appCommands.firstOrNull() ?: return@let
             w.draftChanged("")
@@ -415,7 +472,10 @@ public class BasicComposerViewModel(
     }
 
     override fun loadModels() {
-        viewModelScope.launch { world?.loadModels() }
+        viewModelScope.launch {
+            modelBackings.firstOrNull()?.favorites(profileId.raw)?.let { favorites.value = it }
+            world?.loadModels()
+        }
     }
 
     override suspend fun selectModel(choice: ComposerModel?, variant: String): Boolean {
@@ -440,6 +500,60 @@ public class BasicComposerViewModel(
         }
     }
 
+    override fun copyModelId(model: ComposerModel) {
+        favoriteFailure.value =
+            if (outside?.copy("${model.providerId}/${model.modelId}") == true) null
+            else Failure.Unavailable(FeatureId("clipboard"))
+    }
+
+    override fun toggleFavorite(model: ComposerModel) {
+        val backing = modelBackings.firstOrNull() ?: return
+        if (savingFavorite) return
+        val id = model.providerId to model.modelId
+        val current = backing.favorites(profileId.raw) ?: favorites.value
+        val next = if (id in current) current - id else current + id
+        favorites.value = current
+        savingFavorite = true
+        viewModelScope.launch {
+            try {
+                when (val result = backing.setFavorites(profileId.raw, next)) {
+                    is Outcome.Ok -> {
+                        favorites.value = next
+                        favoriteFailure.value = null
+                    }
+                    is Outcome.Failed -> favoriteFailure.value = result.failure
+                }
+            } finally {
+                savingFavorite = false
+            }
+        }
+    }
+
+    override fun cycleModel(reverse: Boolean, favoritesOnly: Boolean) {
+        val models = state.value.models
+        val choices = (if (favoritesOnly) models.favorites else models.recent).filter { it.enabled }
+        if (choices.isEmpty()) return
+        val current = choices.indexOfFirst {
+            it.providerId == models.selected?.providerId && it.modelId == models.selected?.modelId
+        }
+        val index =
+            if (current < 0) {
+                if (reverse) choices.lastIndex else 0
+            } else (current + (if (reverse) -1 else 1) + choices.size) % choices.size
+        if (index == current) return
+        viewModelScope.launch { selectModel(choices[index]) }
+    }
+
+    override fun cycleVariant(reverse: Boolean) {
+        val models = state.value.models
+        val selected = models.selected ?: return
+        val levels = listOf("") + selected.variants
+        if (levels.size < 2) return
+        val current = levels.indexOf(models.variant).coerceAtLeast(0)
+        val next = (current + (if (reverse) -1 else 1) + levels.size) % levels.size
+        viewModelScope.launch { selectModel(selected, levels[next]) }
+    }
+
     override fun attachFile() {
         val w = world ?: return
         val picker = filePickers.firstOrNull() ?: return
@@ -461,7 +575,8 @@ public class BasicComposerViewModel(
                         val latest = w.draft.value
                         if (!latest.ready || latest.failure != null || latest.sendBlocked) {
                             attachmentFailure.value =
-                                latest.failure ?: Failure.Unavailable(FeatureId("promptAttachments"))
+                                latest.failure
+                                    ?: Failure.Unavailable(FeatureId("promptAttachments"))
                             return@launch
                         }
                         committingFiles.value = true

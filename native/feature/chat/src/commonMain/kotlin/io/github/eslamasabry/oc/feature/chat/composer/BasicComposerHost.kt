@@ -1,14 +1,5 @@
 package io.github.eslamasabry.oc.feature.chat.composer
 
-import androidx.compose.ui.platform.LocalFocusManager
-import io.github.eslamasabry.oc.feature.chat.composer.presentation.ModelPicker
-import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
-import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
-import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
-import io.github.eslamasabry.oc.ui.words.res.chatModelsCurrent
-import io.github.eslamasabry.oc.ui.words.res.chatModelsNoMatch
-import io.github.eslamasabry.oc.ui.words.res.chatModelsRecent
-import io.github.eslamasabry.oc.ui.words.res.chatModelsSearch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -37,35 +29,17 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.domain.platform.PromptFilePicker
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.AttachKind
-import io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerQuery
-import io.github.eslamasabry.oc.ui.kit.KitRow
-import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
-import io.github.eslamasabry.oc.ui.words.res.composerFullAgent
-import io.github.eslamasabry.oc.ui.words.res.composerFullAttach
-import io.github.eslamasabry.oc.ui.words.res.composerFullAttachmentsLocal
-import io.github.eslamasabry.oc.ui.words.res.composerFullAddTitle
-import io.github.eslamasabry.oc.ui.words.res.composerFullDraftFull
-import io.github.eslamasabry.oc.ui.words.res.composerFullModelChangeFailed
-import io.github.eslamasabry.oc.ui.words.res.composerFullModels
-import io.github.eslamasabry.oc.ui.words.res.composerFullPasteEmpty
-import io.github.eslamasabry.oc.ui.words.res.composerFullPasteImage
-import io.github.eslamasabry.oc.ui.words.res.composerFullPhotoDenied
-import io.github.eslamasabry.oc.ui.words.res.composerFullPhotoLibrary
-import io.github.eslamasabry.oc.ui.words.res.composerFullStale
-import io.github.eslamasabry.oc.ui.words.res.composerFullSteerHint
-import io.github.eslamasabry.oc.ui.words.res.composerFullTakePhoto
-import io.github.eslamasabry.oc.ui.words.res.composerFullThinking
-import io.github.eslamasabry.oc.ui.words.res.composerFullThinkingDefault
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerActions
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerUi
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerViewModel
-import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
+import io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerQuery
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitRow
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
@@ -87,6 +61,17 @@ import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatTitle
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoring
+import io.github.eslamasabry.oc.ui.words.res.composerFullAddTitle
+import io.github.eslamasabry.oc.ui.words.res.composerFullAttach
+import io.github.eslamasabry.oc.ui.words.res.composerFullAttachmentsLocal
+import io.github.eslamasabry.oc.ui.words.res.composerFullDraftFull
+import io.github.eslamasabry.oc.ui.words.res.composerFullPasteEmpty
+import io.github.eslamasabry.oc.ui.words.res.composerFullPasteImage
+import io.github.eslamasabry.oc.ui.words.res.composerFullPhotoDenied
+import io.github.eslamasabry.oc.ui.words.res.composerFullPhotoLibrary
+import io.github.eslamasabry.oc.ui.words.res.composerFullStale
+import io.github.eslamasabry.oc.ui.words.res.composerFullSteerHint
+import io.github.eslamasabry.oc.ui.words.res.composerFullTakePhoto
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachModelWithoutFiles
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachNoPicker
@@ -118,8 +103,8 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The slice-2 composer (plan 09 §6.3) extended by the full-composer slice (2026-11-02): the
- * field, Send and Stop in the same row while a reply runs, plus the visible model choice and file
+ * The slice-2 composer (plan 09 §6.3) extended by the full-composer slice (2026-11-02): the field,
+ * Send and Stop in the same row while a reply runs, plus the visible model choice and file
  * attachments.
  */
 @Inject
@@ -194,16 +179,21 @@ public fun BasicComposer(
             chrome.focusDone(focusId)
         }
     }
-    // One composer insert at a time, after the draft is restored. Saved prompts and slash commands (P12-PROMPTS): an
-    // empty field takes the words whole, otherwise they go on a new line after the words. "Edit and resend"
-    // (P12-CHAT-FEEL, [InsertRequest.replace]): the prompt's words replace the field, focused, ready to change and send.
+    // One composer insert at a time, after the draft is restored. Saved prompts and slash commands
+    // (P12-PROMPTS): an
+    // empty field takes the words whole, otherwise they go on a new line after the words. "Edit and
+    // resend"
+    // (P12-CHAT-FEEL, [InsertRequest.replace]): the prompt's words replace the field, focused,
+    // ready to change and send.
     // Reported as the person's own edit so the draft owner keeps it.
     val insert = chrome.pendingInsert()
     LaunchedEffect(insert, editorReady, state.draft.ready) {
         val request = insert ?: return@LaunchedEffect
         if (!editorReady || !state.draft.ready) return@LaunchedEffect
         val current = field.text.toString()
-        val next = if (request.replace || current.isBlank()) request.text else current.trimEnd() + "\n" + request.text
+        val next =
+            if (request.replace || current.isBlank()) request.text
+            else current.trimEnd() + "\n" + request.text
         field.edit { replace(0, length, next) }
         editor.userEditSerial += 1
         editor.lastReported = next
@@ -224,10 +214,16 @@ public fun BasicComposer(
             }
         }
     }
-    // P12-VOICE: the voice slot types into this field and sends through this composer's one send path.
+    // P12-VOICE: the voice slot types into this field and sends through this composer's one send
+    // path.
     val canSend =
-        state.available && editorReady && state.draft.ready && state.draft.failure == null &&
-            !state.draft.sendBlocked && !state.pickingFile && !state.sending
+        state.available &&
+            editorReady &&
+            state.draft.ready &&
+            state.draft.failure == null &&
+            !state.draft.sendBlocked &&
+            !state.pickingFile &&
+            !state.sending
     val voiceField =
         KitVoiceField(
             key = state.targetKey,
@@ -245,9 +241,6 @@ public fun BasicComposer(
     var modelsOpen by remember(state.targetKey) { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
-    val selectAndClose: (ComposerModel?) -> Unit = { choice ->
-        scope.launch { if (actions.selectModel(choice)) modelsOpen = false }
-    }
     // Picking from the strip edits the field like typing would, then reports it (one draft truth).
     val replaceTail: (Int, String) -> Unit = { start, words ->
         field.edit { replace(start.coerceIn(0, length), length, words) }
@@ -309,7 +302,8 @@ public fun BasicComposer(
                 label =
                     modelLabel(
                         state.models.selected?.label
-                            // QA wave 4 B13: "Server default" only once the server said so; before the session is
+                            // QA wave 4 B13: "Server default" only once the server said so; before
+                            // the session is
                             // read (after a restart) the chip claims nothing.
                             ?: stringResource(
                                 if (state.models.usesDefault) Res.string.composerPreviewModelDefault
@@ -325,7 +319,8 @@ public fun BasicComposer(
                 },
                 role = KitButtonRole.Secondary,
                 semanticsLabel = stringResource(Res.string.composerPreviewModelButton),
-                // QA wave 4 N2: a long model name shrinks first, so Attach and the approval chip keep their room.
+                // QA wave 4 N2: a long model name shrinks first, so Attach and the approval chip
+                // keep their room.
                 modifier = Modifier.weight(1f, fill = false).testTag("chat-model-button"),
                 maxLines = 1,
             )
@@ -343,7 +338,9 @@ public fun BasicComposer(
                         if (state.attachKinds.isEmpty()) Res.string.composerPreviewAttachFile
                         else Res.string.composerFullAttach
                     ),
-                onClick = { if (state.attachKinds.isEmpty()) actions.attachFile() else addOpen = true },
+                onClick = {
+                    if (state.attachKinds.isEmpty()) actions.attachFile() else addOpen = true
+                },
                 role = KitButtonRole.Secondary,
                 enabled =
                     if (attachReason != null) KitEnabled.Disabled(attachReason)
@@ -397,7 +394,8 @@ public fun BasicComposer(
                 }
             }
         }
-        // B8 (QA wave 1): while a reply runs, Stop and "Add to this turn" sit on their own row under a full-width
+        // B8 (QA wave 1): while a reply runs, Stop and "Add to this turn" sit on their own row
+        // under a full-width
         // field, so the message box never shrinks to a sliver.
         val stopShown = busy || chrome.requestWaiting()
         val fieldPart: @Composable (Modifier) -> Unit = { fieldModifier ->
@@ -412,7 +410,8 @@ public fun BasicComposer(
                 kind = KitFieldKind.Multiline,
                 // B6: one line when empty, so the conversation keeps its room above the keyboard.
                 multilineLines = 1..6,
-                // QA wave 4 B6: no "Message" row above the box; the words show inside it while it is empty.
+                // QA wave 4 B6: no "Message" row above the box; the words show inside it while it
+                // is empty.
                 labelShown = false,
                 focusRequester = focus,
                 enabled =
@@ -526,76 +525,7 @@ public fun BasicComposer(
             models.choices.isEmpty() ->
                 KitNotice(message = stringResource(Res.string.composerPreviewModelsEmpty))
             else -> {
-                if (models.failure != null)
-                    KitNotice(
-                        message = stringResource(Res.string.composerFullModelChangeFailed),
-                        tone = StatusTone.Failure,
-                    )
-                // B3 (QA wave 1): a searchable list grouped by provider, recent picks first, the current one marked.
-                var modelQuery by remember(state.targetKey) { mutableStateOf("") }
-                KitSearchField(
-                    label = stringResource(Res.string.chatModelsSearch),
-                    onSearch = { modelQuery = it },
-                    modifier = Modifier.fillMaxWidth().testTag("chat-model-search"),
-                )
-                val currentTag = stringResource(Res.string.chatModelsCurrent)
-                val sections = remember(models, modelQuery) { ModelPicker.sections(models, modelQuery) }
-                Column(Modifier.fillMaxWidth().testTag("chat-model-choices")) {
-                    if (models.selected != null && modelQuery.isBlank()) {
-                        KitChoiceRow(
-                            title = stringResource(Res.string.composerPreviewModelDefault),
-                            selected = models.usesDefault,
-                            tag = if (models.usesDefault) currentTag else null,
-                            onClick = { selectAndClose(null) },
-                        )
-                    }
-                    if (sections.isEmpty()) KitText(stringResource(Res.string.chatModelsNoMatch))
-                    sections.forEach { section ->
-                        KitRowGroup(label = section.providerName ?: stringResource(Res.string.chatModelsRecent)) {
-                            section.rows.forEach { pick ->
-                                KitChoiceRow(
-                                    title = pick.model.label,
-                                    selected = pick.current,
-                                    // In "Recent" the provider tells equal names apart.
-                                    supporting = if (section.providerName == null) pick.model.providerName else null,
-                                    tag = if (pick.current) currentTag else null,
-                                    onClick = { selectAndClose(pick.model) },
-                                    modifier = Modifier.testTag("chat-model-choice"),
-                                )
-                            }
-                        }
-                    }
-                }
-                val selected = models.selected
-                if (selected != null && selected.variants.isNotEmpty()) {
-                    KitSectionLabel(stringResource(Res.string.composerFullThinking))
-                    KitChipWrap(Modifier.fillMaxWidth().testTag("chat-thinking-choices")) {
-                        (listOf("") + selected.variants).forEach { level ->
-                            KitChip(
-                                label =
-                                    if (level.isEmpty())
-                                        stringResource(Res.string.composerFullThinkingDefault)
-                                    else level,
-                                kind = KitChipKind.Action,
-                                selected = level == models.variant,
-                                onClick = { scope.launch { actions.selectModel(selected, level) } },
-                            )
-                        }
-                    }
-                }
-                if (models.agents.isNotEmpty()) {
-                    KitSectionLabel(stringResource(Res.string.composerFullAgent))
-                    KitChipWrap(Modifier.fillMaxWidth().testTag("chat-agent-choices")) {
-                        models.agents.forEach { agent ->
-                            KitChip(
-                                label = agent.id,
-                                kind = KitChipKind.Action,
-                                selected = agent.id == models.agent,
-                                onClick = { scope.launch { actions.selectAgent(agent.id) } },
-                            )
-                        }
-                    }
-                }
+                ModelCatalogPanel(models, actions, state.targetKey) { modelsOpen = false }
             }
         }
     }
@@ -607,25 +537,41 @@ public fun BasicComposer(
     ) {
         Column(Modifier.fillMaxWidth().testTag("chat-add-sheet")) {
             if (state.filesAvailable)
-                KitRow(stringResource(Res.string.composerPreviewAttachFile), null, {
-                    addOpen = false
-                    actions.attachFile()
-                })
+                KitRow(
+                    stringResource(Res.string.composerPreviewAttachFile),
+                    null,
+                    {
+                        addOpen = false
+                        actions.attachFile()
+                    },
+                )
             if (AttachKind.Photos in state.attachKinds)
-                KitRow(stringResource(Res.string.composerFullPhotoLibrary), null, {
-                    addOpen = false
-                    actions.attach(AttachKind.Photos)
-                })
+                KitRow(
+                    stringResource(Res.string.composerFullPhotoLibrary),
+                    null,
+                    {
+                        addOpen = false
+                        actions.attach(AttachKind.Photos)
+                    },
+                )
             if (AttachKind.Camera in state.attachKinds)
-                KitRow(stringResource(Res.string.composerFullTakePhoto), null, {
-                    addOpen = false
-                    actions.attach(AttachKind.Camera)
-                })
+                KitRow(
+                    stringResource(Res.string.composerFullTakePhoto),
+                    null,
+                    {
+                        addOpen = false
+                        actions.attach(AttachKind.Camera)
+                    },
+                )
             if (AttachKind.Clipboard in state.attachKinds)
-                KitRow(stringResource(Res.string.composerFullPasteImage), null, {
-                    addOpen = false
-                    actions.attach(AttachKind.Clipboard)
-                })
+                KitRow(
+                    stringResource(Res.string.composerFullPasteImage),
+                    null,
+                    {
+                        addOpen = false
+                        actions.attach(AttachKind.Clipboard)
+                    },
+                )
         }
     }
     LaunchedEffect(state.targetKey, state.draft.editRevision, state.canRepeat) {
@@ -664,32 +610,31 @@ private fun modelLabel(model: String, level: String, agent: String?): String =
 /** Plain words per failure kind; raw details stay in the Failure's redacted fold. */
 @Composable
 private fun attachmentWords(failure: Failure): String =
-    stringResource(when (failure) {
-        is Failure.StorageRefused -> Res.string.composerPreviewAttachmentStorage
-        is Failure.Refused -> Res.string.composerFullStale
-        is Failure.Unavailable ->
-            if (failure.feature.name == "clipboardImage") Res.string.composerFullPasteEmpty
-            else Res.string.composerPreviewAttachmentFailed
-        is Failure.Media ->
-            when (failure.problem) {
-                MediaProblem.AttachmentTooLarge,
-                MediaProblem.AttachmentsTotalTooLarge,
-                -> Res.string.composerPreviewAttachmentTooLarge
-                MediaProblem.DraftFull -> Res.string.composerFullDraftFull
-                MediaProblem.CameraDenied,
-                MediaProblem.CameraDeniedForever,
-                -> Res.string.composerFullPhotoDenied
-                MediaProblem.PhotoTooLarge,
-                MediaProblem.ClipboardImageTooLarge,
-                -> Res.string.composerPreviewAttachmentTooLarge
-                MediaProblem.AttachmentUnsupported,
-                MediaProblem.OfficeUnreadable,
-                MediaProblem.OfficeEmpty,
-                -> Res.string.composerPreviewAttachmentUnsupported
-                else -> Res.string.composerPreviewAttachmentFailed
-            }
-        else -> Res.string.composerPreviewAttachmentFailed
-    }
+    stringResource(
+        when (failure) {
+            is Failure.StorageRefused -> Res.string.composerPreviewAttachmentStorage
+            is Failure.Refused -> Res.string.composerFullStale
+            is Failure.Unavailable ->
+                if (failure.feature.name == "clipboardImage") Res.string.composerFullPasteEmpty
+                else Res.string.composerPreviewAttachmentFailed
+            is Failure.Media ->
+                when (failure.problem) {
+                    MediaProblem.AttachmentTooLarge,
+                    MediaProblem.AttachmentsTotalTooLarge ->
+                        Res.string.composerPreviewAttachmentTooLarge
+                    MediaProblem.DraftFull -> Res.string.composerFullDraftFull
+                    MediaProblem.CameraDenied,
+                    MediaProblem.CameraDeniedForever -> Res.string.composerFullPhotoDenied
+                    MediaProblem.PhotoTooLarge,
+                    MediaProblem.ClipboardImageTooLarge ->
+                        Res.string.composerPreviewAttachmentTooLarge
+                    MediaProblem.AttachmentUnsupported,
+                    MediaProblem.OfficeUnreadable,
+                    MediaProblem.OfficeEmpty -> Res.string.composerPreviewAttachmentUnsupported
+                    else -> Res.string.composerPreviewAttachmentFailed
+                }
+            else -> Res.string.composerPreviewAttachmentFailed
+        }
     )
 
 /**

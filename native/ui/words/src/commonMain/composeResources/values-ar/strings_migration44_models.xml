@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="native44AllModels">كل النماذج (%1$s)</string>
+    <string name="native44MoreModels">عرض %1$s نموذجًا آخر</string>
+    <string name="native44Context">سياق %1$s</string>
+    <string name="native44Output">حد الإخراج %1$s</string>
+    <string name="native44Price">الإدخال %1$s دولار · الإخراج %2$s دولار لكل مليون رمز</string>
+    <string name="native44ModelShortcuts">تبديل النموذج</string>
+    <string name="native44CopyFailed">تعذّر نسخ معرّف النموذج. حاول مرة أخرى.</string>
+</resources>

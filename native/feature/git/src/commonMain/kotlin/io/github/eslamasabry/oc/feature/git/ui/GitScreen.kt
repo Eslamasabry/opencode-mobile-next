@@ -11,15 +11,21 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.git.GitAction
 import io.github.eslamasabry.oc.engine.git.GitActionNote
 import io.github.eslamasabry.oc.engine.git.GitBusy
+import io.github.eslamasabry.oc.engine.git.GitChangeKind
 import io.github.eslamasabry.oc.engine.git.GitCheck
 import io.github.eslamasabry.oc.engine.git.GitDiffView
+import io.github.eslamasabry.oc.engine.git.GitFileChange
 import io.github.eslamasabry.oc.engine.git.GitHubSignIn
 import io.github.eslamasabry.oc.engine.git.GitPageView
 import io.github.eslamasabry.oc.engine.git.GitProblem
@@ -80,9 +86,29 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun GitScreen(state: GitUi, actions: GitActions) {
     val message = remember { TextFieldState() }
+    var suggested by remember { mutableStateOf("") }
+    var messageEdited by remember { mutableStateOf(false) }
+    val defaultMessage =
+        suggestedMessage(
+            state.snapshot?.status?.files.orEmpty().filter { it.path in state.selected }
+        )
+    LaunchedEffect(message) {
+        snapshotFlow { message.text.toString() }
+            .collect { if (it != suggested) messageEdited = true }
+    }
+    LaunchedEffect(defaultMessage) {
+        if (!messageEdited) {
+            suggested = defaultMessage
+            message.edit { replace(0, length, defaultMessage) }
+        }
+    }
     LaunchedEffect(state.generation) {
         val saved = state.result?.let { it.ok && it.note != null && it.commit != null } ?: false
-        if (saved) message.edit { replace(0, length, "") }
+        if (saved) {
+            suggested = ""
+            message.edit { replace(0, length, "") }
+            messageEdited = false
+        }
     }
     val holdReason = state.busy?.let { gitBusyText(it) }
     val enabled = if (holdReason != null) KitEnabled.Disabled(holdReason) else KitEnabled.Enabled
@@ -131,12 +157,32 @@ public fun GitScreen(state: GitUi, actions: GitActions) {
                         body = gitUnavailableText(view.reason),
                         modifier = Modifier.testTag("git-unavailable"),
                     )
-                GitPageView.NotRepository ->
+                GitPageView.NotRepository -> {
                     KitStateView(
                         kind = KitStateKind.Empty,
                         title = stringResource(Res.string.gitNotRepositoryTitle),
                         body = stringResource(Res.string.gitNotRepositoryBody),
                     )
+                    KitRowGroup {
+                        KitRow(
+                            title = stringResource(Res.string.gitCloneRow),
+                            supporting = stringResource(Res.string.gitCloneRowHint),
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = actions::openClone,
+                            modifier = Modifier.testTag("git-clone-row"),
+                        )
+                    }
+                    state.result?.failure?.let { failure ->
+                        Gutter {
+                            KitErrorNotice(
+                                gitProblemText(failure.problem),
+                                details = state.resultDetails,
+                                detailsLabel = stringResource(Res.string.kitDetails),
+                                copyLabel = stringResource(Res.string.kitCopyDetails),
+                            )
+                        }
+                    }
+                }
                 is GitPageView.Failed ->
                     Gutter {
                         KitErrorNotice(
@@ -279,9 +325,9 @@ private fun Ready(
                     state.check == GitCheck.Failed -> stringResource(Res.string.gitCheckFailed)
                     else -> stringResource(Res.string.gitStateUpToDate)
                 },
-            enabled = enabled.isEnabled && snapshot.hasRemote && branch.hasUpstream,
+            enabled = enabled.isEnabled && (!snapshot.hasRemote || branch.hasUpstream),
             disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
-            onClick = actions::pull,
+            onClick = if (!snapshot.hasRemote) actions::openRemotes else actions::pull,
             modifier = Modifier.testTag("git-pull-row"),
         )
         KitRow(
@@ -294,9 +340,9 @@ private fun Ready(
                         pluralStringResource(Res.plurals.gitAhead, branch.ahead, branch.ahead)
                     else -> stringResource(Res.string.gitStateNothingToSend)
                 },
-            enabled = enabled.isEnabled && snapshot.hasRemote && !branch.detached,
+            enabled = enabled.isEnabled && !branch.detached && !branch.unborn,
             disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
-            onClick = actions::push,
+            onClick = if (!snapshot.hasRemote) actions::openRemotes else actions::push,
             modifier = Modifier.testTag("git-push-row"),
         )
     }
@@ -713,7 +759,7 @@ private fun CloneSheet(state: GitUi, actions: GitActions) {
         }
     }
     KitSheet(
-        visible = state.sheet == GitSheet.Clone && state.snapshot != null,
+        visible = state.sheet == GitSheet.Clone && state.directory != null,
         onDismissRequest = actions::closeSheet,
         title = stringResource(Res.string.gitCloneRow),
         closeLabel = stringResource(Res.string.kitSheetClose),
@@ -860,3 +906,31 @@ private fun confirmSpec(confirm: GitConfirm?): KitConfirmSpec? =
                 body = stringResource(Res.string.gitHubSignOutBody),
             )
     }
+
+/**
+ * A truthful editable save message follows the chosen filenames until the person writes their own.
+ */
+@Composable
+private fun suggestedMessage(files: List<GitFileChange>): String {
+    fun name(file: GitFileChange): String = file.path.substringAfterLast('/')
+    return when (files.size) {
+        0 -> ""
+        1 ->
+            stringResource(
+                if (
+                    files[0].kind == GitChangeKind.Added || files[0].kind == GitChangeKind.Untracked
+                )
+                    Res.string.gitMessageAddOne
+                else Res.string.gitMessageUpdateOne,
+                name(files[0]),
+            )
+        2 -> stringResource(Res.string.gitMessageUpdateTwo, name(files[0]), name(files[1]))
+        else ->
+            pluralStringResource(
+                Res.plurals.gitMessageUpdateMany,
+                files.size - 1,
+                files.size - 1,
+                name(files[0]),
+            )
+    }
+}
