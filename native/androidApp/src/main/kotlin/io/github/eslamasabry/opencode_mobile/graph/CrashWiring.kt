@@ -66,8 +66,9 @@ class AppCrashDiagnostics(
                             // §0.1).
                             directory = app.filesDir.canonicalFile
                             native = NativeCrashStore(directory)
+                            // The uncaught handler itself is installed first thing in
+                            // OcApplication.onCreate.
                             ensureDirectory()
-                            native.install()
                             CrashStartupEvidence(
                                 AndroidCrashFiles(directory, dispatchers),
                                 NativeCrashRecord.from(native.read()),
@@ -243,23 +244,39 @@ private class AndroidCrashFiles(
 
     override suspend fun read(file: CrashFile, maxBytes: Int): Outcome<String?> =
         withContext(dispatchers.io) {
-            attempt({ Failure.StorageRefused() }) {
-                val target = file(file)
-                if (!Files.exists(target.toPath(), NOFOLLOW_LINKS)) return@attempt null
-                check(Files.isRegularFile(target.toPath(), NOFOLLOW_LINKS))
-                check(target.length() <= maxBytes)
-                target.inputStream().use { input ->
-                    val bytes = ByteArray(maxBytes + 1)
-                    var length = 0
-                    while (length < bytes.size) {
-                        val read = input.read(bytes, length, bytes.size - length)
-                        if (read < 0) break
-                        length += read
+            // CrashStore contract: over the cap (or not UTF-8) is UnreadableReply, so the owner
+            // discards it as Dart does; only an unusable file system is StorageRefused.
+            var unreadable = false
+            val read =
+                attempt({ Failure.StorageRefused() }) {
+                    val target = file(file)
+                    if (!Files.exists(target.toPath(), NOFOLLOW_LINKS)) return@attempt null
+                    check(Files.isRegularFile(target.toPath(), NOFOLLOW_LINKS))
+                    if (target.length() > maxBytes) {
+                        unreadable = true
+                        return@attempt null
                     }
-                    check(length <= maxBytes)
-                    bytes.copyOf(length).decodeToString(throwOnInvalidSequence = true)
+                    target.inputStream().use { input ->
+                        val bytes = ByteArray(maxBytes + 1)
+                        var length = 0
+                        while (length < bytes.size) {
+                            val read = input.read(bytes, length, bytes.size - length)
+                            if (read < 0) break
+                            length += read
+                        }
+                        if (length > maxBytes) {
+                            unreadable = true
+                            return@attempt null
+                        }
+                        try {
+                            bytes.copyOf(length).decodeToString(throwOnInvalidSequence = true)
+                        } catch (_: CharacterCodingException) {
+                            unreadable = true
+                            null
+                        }
+                    }
                 }
-            }
+            if (unreadable) Outcome.Failed(Failure.UnreadableReply()) else read
         }
 
     override suspend fun write(file: CrashFile, text: String): Outcome<Unit> =

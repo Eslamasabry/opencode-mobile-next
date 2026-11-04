@@ -3,6 +3,7 @@ package io.github.eslamasabry.opencode_mobile
 import android.app.Application
 import android.content.pm.ApplicationInfo
 import dev.zacsweers.metro.createGraphFactory
+import io.github.eslamasabry.oc.android.platform.NativeCrashStore
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Channel
@@ -28,6 +29,11 @@ class OcApplication : Application(), GraphOwner {
 
     override fun onCreate() {
         super.onCreate()
+        // 1. B-SEC-043, as the Flutter OcApplication: the category-only handler goes in before
+        // anything else can crash; it stores nothing until crash capture is turned on.
+        try {
+            NativeCrashStore(filesDir).install()
+        } catch (_: Throwable) {}
         val redactor = Redactor() // 2. before any secret is read
         AppLog.install(
             RedactingWriter(

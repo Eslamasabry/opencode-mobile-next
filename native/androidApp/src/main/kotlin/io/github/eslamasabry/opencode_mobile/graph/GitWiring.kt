@@ -171,11 +171,11 @@ private class ServerGitWorkspaces(
             }
         val profile = graph.profile
         // Stored runtime ownership plus the exact managed origin, never merely a server at a
-        // familiar port.
+        // familiar port (Dart looksLikeInAppServer). ServerProfile.managedOnPhone is never set by
+        // the profile store, so it cannot gate this.
         fun ownsLinux(): Boolean =
             try {
                 registry.graphFor(ref) === graph &&
-                    profile.managedOnPhone &&
                     profile.origin == ServerOrigin("http", "127.0.0.1", 4097) &&
                     (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value ==
                         profile.id.raw
