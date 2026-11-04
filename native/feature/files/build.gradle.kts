@@ -8,7 +8,7 @@ kotlin {
         implementation(project(":engine:files"))
         implementation(project(":engine:settings"))
         implementation(project(":engine:media"))
-        implementation(project(":ui:kit-chat"))
+        implementation(project(":ui:kit-chat")) // the kit-owned clipboard effect
         implementation(project(":engine:connection")) // the conversation's own connection graph
         implementation(
             project(":engine:composer")

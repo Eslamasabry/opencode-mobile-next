@@ -12,9 +12,7 @@ import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
-import io.github.eslamasabry.oc.engine.transcript.turnfacts.ConnectorSearchOutcome
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
-import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolDetail
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
@@ -25,7 +23,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
-import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolOutput
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRail
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
@@ -35,13 +32,8 @@ import io.github.eslamasabry.oc.ui.kitchat.turn.KIT_WORK_STEP_CAP
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkState
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchEmpty
-import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchNotLoaded
-import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchOff
-import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchUnavailable
 import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
 import io.github.eslamasabry.oc.ui.words.res.kitCodeShowAll
-import io.github.eslamasabry.oc.ui.words.res.kitToolFailed
 import io.github.eslamasabry.oc.ui.words.res.kitToolOpenConversation
 import io.github.eslamasabry.oc.ui.words.res.kitWorkEarlierSteps
 import org.jetbrains.compose.resources.pluralStringResource
@@ -129,6 +121,7 @@ internal fun TurnWorkLine(
                     folds,
                     onOpenSession,
                     onOpenFile,
+                    reply,
                     KitToolRail(index == 0, index == shown.lastIndex),
                 )
             }
@@ -138,7 +131,8 @@ internal fun TurnWorkLine(
             for (entry in entries) when (entry) {
                 is WorkEntryUi.Step -> {
                     val step = stepQueues[entry.partId]?.removeFirstOrNull() ?: continue
-                    if (skipped++ >= hidden) StepRow(step, nowMs, folds, onOpenSession, onOpenFile)
+                    if (skipped++ >= hidden)
+                        StepRow(step, nowMs, folds, onOpenSession, onOpenFile, reply)
                 }
                 is WorkEntryUi.Detail ->
                     if (skipped >= hidden)
@@ -156,14 +150,7 @@ internal fun TurnWorkLine(
 }
 
 @Composable
-private fun nowWords(step: TurnStep): String {
-    val title = stepTitle(step.facts)
-    val subject = step.facts.subject
-    // B-SEC-094 / R18: the subject is a command or path the agent wrote; it reads redacted like
-    // every mono surface.
-    val mask = rememberKitMask()
-    return if (subject.isNullOrBlank()) title else "$title · ${mask(subject)}"
-}
+private fun nowWords(step: TurnStep): String = runningStepWords(step.facts)
 
 @Composable
 private fun StepRow(
@@ -172,6 +159,7 @@ private fun StepRow(
     folds: TranscriptFolds,
     onOpenSession: ((String) -> Unit)?,
     onOpenFile: ((ToolArtifact) -> Unit)?,
+    reply: ReplyActions? = null,
     rail: KitToolRail? = null,
 ) {
     val key = "step:${step.partId}"
@@ -184,8 +172,8 @@ private fun StepRow(
             id = step.partId,
             kind = f.kind.toKit(),
             title = stepTitle(f),
-            subject = f.subject,
-            detail = f.detail,
+            subject = stepSubjectWords(f),
+            detail = stepDetailWords(f),
             status = step.state.toKit(),
             durationLabel = (step.durationMs ?: runningFor)?.let { durationWords(it) },
             added = f.added,
@@ -199,10 +187,10 @@ private fun StepRow(
     // B-CHAT-114: an explicit file the step produced (an attachment, a `filePath` output) is a
     // visible action.
     val files = if (onOpenFile == null) emptyList() else out.artifacts.filter(::canOpenArtifact)
-    val connector = f.details.filterIsInstance<ToolDetail.ConnectorSearch>().firstOrNull()
     val hasBody =
-        connector != null ||
-            text != null ||
+        text != null ||
+            out.pruned ||
+            (out.input.isNotEmpty() && inputHasBody(f.kind, step.state)) ||
             (shell && !f.subject.isNullOrBlank()) ||
             child != null ||
             files.isNotEmpty()
@@ -219,21 +207,8 @@ private fun StepRow(
             if (!hasBody) null
             else {
                 {
-                    if (connector != null)
-                        KitQuietLine(
-                            stringResource(
-                                when (connector.outcome) {
-                                    ConnectorSearchOutcome.Empty ->
-                                        Res.string.chatUiConnectorSearchEmpty
-                                    ConnectorSearchOutcome.NotLoaded ->
-                                        Res.string.chatUiConnectorSearchNotLoaded
-                                    ConnectorSearchOutcome.Off ->
-                                        Res.string.chatUiConnectorSearchOff
-                                    ConnectorSearchOutcome.Unavailable ->
-                                        Res.string.chatUiConnectorSearchUnavailable
-                                }
-                            )
-                        )
+                    // The connector-search outcome reads in the row's detail line
+                    // (stepDetailWords); its matches open in ToolStepBody.
                     if (child != null && onOpenSession != null)
                         KitButton(
                             stringResource(Res.string.kitToolOpenConversation),
@@ -260,20 +235,7 @@ private fun StepRow(
                             onMore = { folds.full[key] = true },
                             exitLabel = null,
                         )
-                    else if (text != null)
-                        KitToolOutput(
-                            text = text,
-                            moreLabel = more,
-                            onMore = { folds.full[key] = true },
-                            maxLines =
-                                if (full) Int.MAX_VALUE
-                                else
-                                    io.github.eslamasabry.oc.ui.kitchat.tool
-                                        .KIT_COMMAND_OUTPUT_LINES,
-                            errorLabel =
-                                if (out.errorText != null) stringResource(Res.string.kitToolFailed)
-                                else null,
-                        )
+                    else ToolStepBody(step, reply)
                 }
             },
     )
@@ -355,3 +317,13 @@ private fun ToolKind.toKit(): KitToolKind =
         ToolKind.BackgroundNotice,
         ToolKind.Generic -> KitToolKind.Other
     }
+
+/** Only steps whose body draws its input open on input alone (ToolStepBody returns early for the rest). */
+private fun inputHasBody(kind: ToolKind, state: StepState): Boolean =
+    state != StepState.NotRun &&
+        state != StepState.Stopped &&
+        kind != ToolKind.Card &&
+        kind != ToolKind.Read &&
+        kind != ToolKind.Shell &&
+        kind != ToolKind.Lsp &&
+        kind != ToolKind.ConnectorSearch

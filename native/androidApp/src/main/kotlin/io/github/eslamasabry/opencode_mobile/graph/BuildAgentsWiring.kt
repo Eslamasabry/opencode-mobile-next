@@ -64,6 +64,29 @@ class SavedRecentModels(
             null // before the migration gate opens: asked again on the next read
         }
 
+    override suspend fun setFavorites(
+        profile: String,
+        favorites: List<Pair<String, String>>,
+    ): Outcome<Unit> = writes.withLock {
+        if (!admits(profile)) return@withLock Failure.Refused(RefusalReason.ProfileClosing).failed()
+        val id = ProfileId(profile)
+        val store = modelStore(profile)
+        val saved =
+            try {
+                store.modelLibrary(id)
+            } catch (_: GateNotOpen) {
+                return@withLock Outcome.Failed(Failure.StorageRefused())
+            }
+        store.setModelLibrary(
+            id,
+            ModelLibrary(
+                favorites =
+                    favorites.distinct().map { (provider, model) -> ModelRef(provider, model) },
+                recent = saved.recent,
+            ),
+        )
+    }
+
     override fun save(profile: String, recent: List<Pair<String, String>>) {
         val refs = recent.map { (provider, model) -> ModelRef(provider, model) }
         appScope.launch {

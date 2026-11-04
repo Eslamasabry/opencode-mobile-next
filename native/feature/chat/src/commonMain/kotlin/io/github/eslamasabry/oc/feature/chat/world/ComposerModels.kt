@@ -15,6 +15,20 @@ public data class ComposerModel(
     val variants: List<String> = emptyList(),
     /** B3 (QA wave 1): the provider's display name, so equal model names can be told apart. */
     val providerName: String = "",
+    val enabled: Boolean = true,
+    val contextLimit: Int = 0,
+    val outputLimit: Int = 0,
+    val reasoning: Boolean = false,
+    val tools: Boolean = false,
+    val inputCost: Double? = null,
+    val outputCost: Double? = null,
+    val releasedAtMs: Long? = null,
+    val status: String = "",
+    val isNew: Boolean = false,
+    val defaultVariantId: String? = null,
+    val fast: Boolean = false,
+    val variantLabels: Map<String, String> = emptyMap(),
+    val variantEfforts: Map<String, String> = emptyMap(),
 )
 
 /**
@@ -106,13 +120,30 @@ public interface RecentModelsBacking {
         choice: SavedSessionModel?,
     ): Outcome<Unit> = Unit.ok()
 
-    public fun favorites(profile: String): List<Pair<String, String>> = emptyList()
+    /**
+     * The same registered model-library record owns favorites across restart and profile deletion.
+     * Null = the store cannot be read yet.
+     */
+    public fun favorites(profile: String): List<Pair<String, String>>? = emptyList()
 
+    /** Replaces the whole favorites list (newest order kept by the caller). */
+    public suspend fun setFavorites(
+        profile: String,
+        favorites: List<Pair<String, String>>,
+    ): Outcome<Unit> = Outcome.Failed(Failure.Unavailable(FeatureId("modelFavorites")))
+
+    /** Adds or removes one favorite; by default through [favorites] + [setFavorites]. */
     public suspend fun toggleFavorite(
         profile: String,
         provider: String,
         model: String,
-    ): Outcome<Unit> = Outcome.Failed(Failure.Unavailable(FeatureId("modelFavorites")))
+    ): Outcome<Unit> {
+        val current =
+            favorites(profile)
+                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("modelFavorites")))
+        val id = provider to model
+        return setFavorites(profile, if (id in current) current - id else current + id)
+    }
 
     public suspend fun prune(profile: String, available: Set<Pair<String, String>>): Outcome<Unit> =
         Unit.ok()
@@ -138,6 +169,8 @@ public data class ComposerModels(
     val favorites: List<ComposerModel> = emptyList(),
     /** A restart preview never rides a send or overwrites server metadata. */
     val displayOnly: Boolean = false,
+    val defaultModel: ComposerModel? = null,
+    val libraryFailure: Failure? = null,
 )
 
 /** One server slash command, safe for display. */

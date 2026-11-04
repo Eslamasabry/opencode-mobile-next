@@ -111,6 +111,9 @@ public class ChatEntries(
     private val transcriptPreferences:
         Set<io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences> =
         emptySet(),
+    private val photoSources:
+        Set<io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerAttachSource> =
+        emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ConnectionFormRoute> { route ->
@@ -307,6 +310,12 @@ public class ChatEntries(
                         vm::openLink,
                         { navigator.open(CardsSettingsRoute) },
                         catalogue = { cardModel.catalogueRoute()?.let(navigator::open) },
+                        photoSource =
+                            photoSources.firstOrNull {
+                                io.github.eslamasabry.oc.feature.chat.composer.presentation
+                                    .AttachKind
+                                    .Photos in it.kinds
+                            },
                     )
                 }
             CompositionLocalProvider(LocalChatCards provides cardSlot) {

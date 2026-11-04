@@ -103,10 +103,23 @@ object LinuxRuntimeWiring {
         acts: NativeRuntimeActs,
         leases: NativeChatLeases,
         policies: AppAutomationPolicies,
+        consents: NativePhoneFirstStartConsents,
     ): BuiltinRuntime =
-        BuiltinRuntime(app, dispatchers.io, appScope, profiles, stores, clock, acts, leases, policies).also {
-            leases.start()
-        }
+        BuiltinRuntime(
+                app,
+                dispatchers.io,
+                appScope,
+                profiles,
+                stores,
+                clock,
+                acts,
+                leases,
+                policies,
+                consents,
+            )
+            .also {
+                leases.start()
+            }
 
     @Provides fun linuxHost(runtime: BuiltinRuntime): LinuxHost = runtime.host
 
@@ -368,6 +381,7 @@ internal constructor(
     private val acts: NativeRuntimeActs,
     private val leases: NativeChatLeases,
     private val policies: AppAutomationPolicies,
+    private val consents: NativePhoneFirstStartConsents,
 ) {
     private val linux: BuiltinLinux by lazy { BuiltinLinux.get(app) }
     private val filesDir: File
@@ -766,8 +780,10 @@ internal constructor(
                 onManualReady?.invoke()
             }
             publish()
-            if (failure == null) Outcome.Ok(Unit)
-            else
+            if (failure == null) {
+                consents.started(target.profile)
+                Outcome.Ok(Unit)
+            } else
                 Outcome.Failed(
                     Failure.Runtime(RuntimeProblem.ServerStartUnavailable, failure.details)
                 )
@@ -879,6 +895,7 @@ internal constructor(
             if (saved is Outcome.Failed) return@withLock saved
         }
         publish()
+        consents.started(id)
         Outcome.Ok(id)
     }
 

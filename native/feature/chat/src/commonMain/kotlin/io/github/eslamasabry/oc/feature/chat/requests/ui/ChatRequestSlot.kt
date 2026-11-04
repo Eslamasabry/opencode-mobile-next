@@ -64,6 +64,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitRequestChangeSize
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReject
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReplyEmptyReason
 import io.github.eslamasabry.oc.ui.words.res.kitRequestSend
+import io.github.eslamasabry.oc.ui.words.res.kitRequestSendAnswers
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -225,7 +226,8 @@ private fun QuestionWaiting(
 
 /**
  * Every prompt and every offered answer, selected locally and sent through the same guarded request
- * lane.
+ * lane. Multi-prompt, optional and long-option questions reach it through Answer, every other
+ * question through Details; drafts are kept per request while it waits, and Cancel keeps them.
  */
 @Composable
 private fun QuestionSheet(state: QuestionSheetUi, actions: ChatRequestActions) {
@@ -238,12 +240,17 @@ private fun QuestionSheet(state: QuestionSheetUi, actions: ChatRequestActions) {
             if (state.question.prompts.size > 1) KitSheetHeight.Full else KitSheetHeight.Content,
         primary =
             KitAction(
-                stringResource(Res.string.kitRequestSend),
+                stringResource(
+                    if (state.question.prompts.size > 1) Res.string.kitRequestSendAnswers
+                    else Res.string.kitRequestSend
+                ),
                 onClick = { actions.sendSheet(id) },
                 enabled =
                     if (state.canSend) KitEnabled.Enabled
                     else KitEnabled.Disabled(stringResource(Res.string.chatRequestAnswerRequired)),
             ),
+        secondary =
+            KitAction(stringResource(Res.string.kitConfirmCancel), { actions.closeSheet(id) }),
     ) {
         state.question.prompts.forEachIndexed { index, prompt ->
             key(id, index) {

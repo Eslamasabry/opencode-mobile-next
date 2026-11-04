@@ -270,7 +270,7 @@ public class ChatHeaderPresenter(
         models: ComposerModels
     ): kotlinx.collections.immutable.ImmutableList<ContinueChoice> {
         val current = models.selected
-        val others = models.choices.filter { !same(it, current) }.take(MAX_CONTINUE)
+        val others = models.choices.filter { it.enabled && !same(it, current) }.take(MAX_CONTINUE)
         return (listOfNotNull(current) + others)
             .map {
                 ContinueChoice(it.providerId, it.modelId, it.label, current = same(it, current))
@@ -529,7 +529,7 @@ public class ChatHeaderPresenter(
         }
         val model =
             world.models.value.choices.firstOrNull {
-                it.providerId == choice.providerId && it.modelId == choice.modelId
+                it.enabled && it.providerId == choice.providerId && it.modelId == choice.modelId
             } ?: return
         local.update { it.copy(working = HeaderAction.ContinueWith, continueFailure = null) }
         launcher.launch {

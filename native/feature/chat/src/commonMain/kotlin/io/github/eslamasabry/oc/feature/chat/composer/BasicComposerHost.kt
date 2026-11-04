@@ -39,9 +39,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerUi
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerViewModel
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerQuery
-import io.github.eslamasabry.oc.feature.chat.composer.presentation.ModelPicker
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.PhraseSuggestionsViewModel
-import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -51,19 +49,14 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
-import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
-import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
-import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
-import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
-import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
@@ -78,8 +71,6 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerGlow
 import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptOrigin
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.chatCycleNext
-import io.github.eslamasabry.oc.ui.words.res.chatCyclePrevious
 import io.github.eslamasabry.oc.ui.words.res.composerKeptMissingFiles
 import io.github.eslamasabry.oc.ui.words.res.composerKeptRestoreRefused
 import io.github.eslamasabry.oc.ui.words.res.composerKeptRestoreTitle
@@ -89,21 +80,12 @@ import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatTitle
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoring
 import io.github.eslamasabry.oc.ui.words.res.chatHistoryTitle
-import io.github.eslamasabry.oc.ui.words.res.chatModelsCurrent
-import io.github.eslamasabry.oc.ui.words.res.chatModelsNoMatch
-import io.github.eslamasabry.oc.ui.words.res.chatModelsRecent
-import io.github.eslamasabry.oc.ui.words.res.chatModelsSearch
 import io.github.eslamasabry.oc.ui.words.res.chatPhraseHide
 import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
-import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_add
-import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_remove
-import io.github.eslamasabry.oc.ui.words.res.chat_model_favorites
-import io.github.eslamasabry.oc.ui.words.res.composerFullAgent
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttach
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttachmentsLocal
 import io.github.eslamasabry.oc.ui.words.res.composerFullDraftFull
-import io.github.eslamasabry.oc.ui.words.res.composerFullModelChangeFailed
 import io.github.eslamasabry.oc.ui.words.res.composerFullPasteEmpty
 import io.github.eslamasabry.oc.ui.words.res.composerFullPasteImage
 import io.github.eslamasabry.oc.ui.words.res.composerFullPhotoDenied
@@ -111,8 +93,6 @@ import io.github.eslamasabry.oc.ui.words.res.composerFullPhotoLibrary
 import io.github.eslamasabry.oc.ui.words.res.composerFullStale
 import io.github.eslamasabry.oc.ui.words.res.composerFullSteerHint
 import io.github.eslamasabry.oc.ui.words.res.composerFullTakePhoto
-import io.github.eslamasabry.oc.ui.words.res.composerFullThinking
-import io.github.eslamasabry.oc.ui.words.res.composerFullThinkingDefault
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentDismiss
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentFailed
@@ -366,9 +346,6 @@ public fun BasicComposer(
     val focusManager = LocalFocusManager.current
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
     var historyOpen by remember(state.targetKey) { mutableStateOf(false) }
-    val selectAndClose: (ComposerModel?) -> Unit = { choice ->
-        scope.launch { if (actions.selectModel(choice)) modelsOpen = false }
-    }
     // Picking from the strip edits the field like typing would, then reports it (one draft truth).
     val replaceTail: (Int, String) -> Unit = { start, words ->
         field.edit { replace(start.coerceIn(0, length), length, words) }
@@ -776,130 +753,7 @@ public fun BasicComposer(
             models.choices.isEmpty() ->
                 KitNotice(message = stringResource(Res.string.composerPreviewModelsEmpty))
             else -> {
-                if (models.failure != null)
-                    KitNotice(
-                        message = stringResource(Res.string.composerFullModelChangeFailed),
-                        tone = StatusTone.Failure,
-                    )
-                if (models.recent.size > 1) {
-                    KitChipWrap {
-                        KitChip(
-                            label = stringResource(Res.string.chatCyclePrevious),
-                            kind = KitChipKind.Action,
-                            onClick = { scope.launch { actions.cycleModel(reverse = true) } },
-                        )
-                        KitChip(
-                            label = stringResource(Res.string.chatCycleNext),
-                            kind = KitChipKind.Action,
-                            onClick = { scope.launch { actions.cycleModel(reverse = false) } },
-                        )
-                    }
-                }
-                // B3 (QA wave 1): a searchable list grouped by provider, recent picks first, the
-                // current one marked.
-                var modelQuery by remember(state.targetKey) { mutableStateOf("") }
-                KitSearchField(
-                    label = stringResource(Res.string.chatModelsSearch),
-                    onSearch = { modelQuery = it },
-                    modifier = Modifier.fillMaxWidth().testTag("chat-model-search"),
-                )
-                val currentTag = stringResource(Res.string.chatModelsCurrent)
-                val sections =
-                    remember(models, modelQuery) { ModelPicker.sections(models, modelQuery) }
-                Column(Modifier.fillMaxWidth().testTag("chat-model-choices")) {
-                    if (models.selected != null && modelQuery.isBlank()) {
-                        KitChoiceRow(
-                            title = stringResource(Res.string.composerPreviewModelDefault),
-                            selected = models.usesDefault,
-                            tag = if (models.usesDefault) currentTag else null,
-                            onClick = { selectAndClose(null) },
-                        )
-                    }
-                    if (sections.isEmpty()) KitText(stringResource(Res.string.chatModelsNoMatch))
-                    sections.forEach { section ->
-                        KitRowGroup(
-                            label =
-                                if (section.favorites)
-                                    stringResource(Res.string.chat_model_favorites)
-                                else
-                                    section.providerName?.let {
-                                        providerRouteName(section.rows.first().model.providerId, it)
-                                    } ?: stringResource(Res.string.chatModelsRecent)
-                        ) {
-                            section.rows.forEach { pick ->
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    KitChoiceRow(
-                                        title = pick.model.label,
-                                        leading = {
-                                            KitProviderLogo(
-                                                pick.model.providerId,
-                                                pick.model.providerName,
-                                            )
-                                        },
-                                        selected = pick.current,
-                                        // In "Recent" the provider tells equal names apart.
-                                        supporting =
-                                            if (section.providerName == null)
-                                                providerRouteName(
-                                                    pick.model.providerId,
-                                                    pick.model.providerName,
-                                                )
-                                            else null,
-                                        tag = if (pick.current) currentTag else null,
-                                        onClick = { selectAndClose(pick.model) },
-                                        modifier = Modifier.weight(1f).testTag("chat-model-choice"),
-                                    )
-                                    val favorite =
-                                        models.favorites.any {
-                                            it.providerId == pick.model.providerId &&
-                                                it.modelId == pick.model.modelId
-                                        }
-                                    KitButton(
-                                        label =
-                                            stringResource(
-                                                if (favorite) Res.string.chat_model_favorite_remove
-                                                else Res.string.chat_model_favorite_add
-                                            ),
-                                        role = KitButtonRole.Tertiary,
-                                        onClick = {
-                                            scope.launch { actions.toggleModelFavorite(pick.model) }
-                                        },
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-                val selected = models.selected
-                if (selected != null && selected.variants.isNotEmpty()) {
-                    KitSectionLabel(stringResource(Res.string.composerFullThinking))
-                    KitChipWrap(Modifier.fillMaxWidth().testTag("chat-thinking-choices")) {
-                        (listOf("") + selected.variants).forEach { level ->
-                            KitChip(
-                                label =
-                                    if (level.isEmpty())
-                                        stringResource(Res.string.composerFullThinkingDefault)
-                                    else level,
-                                kind = KitChipKind.Action,
-                                selected = level == models.variant,
-                                onClick = { scope.launch { actions.selectModel(selected, level) } },
-                            )
-                        }
-                    }
-                }
-                if (models.agents.isNotEmpty()) {
-                    KitSectionLabel(stringResource(Res.string.composerFullAgent))
-                    KitChipWrap(Modifier.fillMaxWidth().testTag("chat-agent-choices")) {
-                        models.agents.forEach { agent ->
-                            KitChip(
-                                label = agent.id,
-                                kind = KitChipKind.Action,
-                                selected = agent.id == models.agent,
-                                onClick = { scope.launch { actions.selectAgent(agent.id) } },
-                            )
-                        }
-                    }
-                }
+                ModelCatalogPanel(models, actions, state.targetKey) { modelsOpen = false }
             }
         }
     }

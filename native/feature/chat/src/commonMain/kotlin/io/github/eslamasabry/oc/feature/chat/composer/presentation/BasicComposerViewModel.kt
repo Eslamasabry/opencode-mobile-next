@@ -23,6 +23,8 @@ import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
 import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistory
 import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistoryRules
 import io.github.eslamasabry.oc.feature.chat.composer.history.ComposerHistoryUi
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatOutside
+import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
 import io.github.eslamasabry.oc.feature.chat.world.ComposerCommand
@@ -32,6 +34,7 @@ import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -100,12 +103,24 @@ public interface BasicComposerActions {
     /** True = the world verified the new choice and published it. */
     public suspend fun selectModel(choice: ComposerModel?, variant: String = ""): Boolean = false
 
-    public suspend fun cycleModel(reverse: Boolean = false): Boolean = false
-
+    /** Changes only the personal shortcut; never the conversation's model. */
     public suspend fun toggleModelFavorite(choice: ComposerModel) {}
 
     /** True = the world verified the conversation now runs as [agent]. */
     public suspend fun selectAgent(agent: String): Boolean = false
+
+    public fun copyModelId(model: ComposerModel) {}
+
+    /** Fire-and-forget [toggleModelFavorite] for click handlers. */
+    public fun toggleFavorite(model: ComposerModel) {}
+
+    /**
+     * Moves to the next (or previous) model of the recent ring, or of the favorites with
+     * [favoritesOnly]; disabled models are skipped.
+     */
+    public fun cycleModel(reverse: Boolean = false, favoritesOnly: Boolean = false) {}
+
+    public fun cycleVariant(reverse: Boolean = false) {}
 
     /** Opens the platform picker; a cancelled pick changes nothing. */
     public fun attachFile() {}
@@ -189,8 +204,14 @@ public class BasicComposerViewModel(
     private val histories: Set<ComposerHistory> = emptySet(),
     private val navigator: io.github.eslamasabry.oc.ui.routes.AppNavigator? = null,
     private val phraseSources: Set<ComposerPhrases> = emptySet(),
-    private val clock: kotlin.time.Clock? = null,
+    // Non-null keys on purpose: Metro binds `ChatOutside?`/`Clock?` as their own keys, so nullable
+    // parameters would always fall back to the default even though the graph binds both.
+    // Distinct names so property initializers below read the nullable properties, not these.
+    outsideBinding: ChatOutside = NoComposerOutside,
+    clockBinding: Clock = NoComposerClock,
 ) : ViewModel(), BasicComposerActions {
+    private val outside: ChatOutside? = outsideBinding.takeUnless { it === NoComposerOutside }
+    private val clock: Clock? = clockBinding.takeUnless { it === NoComposerClock }
     private val profileId = ProfileId(target.profileId)
     private val query = MutableStateFlow<ComposerQuery?>(null)
     private val fileMatches = MutableStateFlow<List<String>>(emptyList())
@@ -204,6 +225,9 @@ public class BasicComposerViewModel(
     private val pickingFile = MutableStateFlow(false)
     private val committingFiles = MutableStateFlow(false)
     private val selectingModel = MutableStateFlow(false)
+    /** Favorite-save and copy-id problems the model catalog shows (favorites live in the world). */
+    private val libraryFailure = MutableStateFlow<Failure?>(null)
+    private var savingFavorite = false
     private val attachmentFailure = MutableStateFlow<Failure?>(null)
     private val targetKey = "${target.profileId}/${target.sessionId}"
 
@@ -330,7 +354,32 @@ public class BasicComposerViewModel(
                             combine(gated, suggestions) { ui, s ->
                                 ui.copy(commandMatches = s.first, fileMatches = s.second)
                             },
-                            world.models,
+                            combine(world.models, libraryFailure) { models, failed ->
+                                val now = clock?.now()?.toEpochMilliseconds()
+                                val catalog =
+                                    models.choices.map { model ->
+                                        val released = model.releasedAtMs
+                                        model.copy(
+                                            isNew =
+                                                now != null &&
+                                                    released != null &&
+                                                    released <= now &&
+                                                    now - released < 2_592_000_000L
+                                        )
+                                    }
+                                fun fresh(list: List<ComposerModel>) =
+                                    list.map { m ->
+                                        catalog.firstOrNull {
+                                            it.providerId == m.providerId && it.modelId == m.modelId
+                                        } ?: m
+                                    }
+                                models.copy(
+                                    choices = catalog,
+                                    recent = fresh(models.recent),
+                                    favorites = fresh(models.favorites),
+                                    libraryFailure = failed ?: models.libraryFailure,
+                                )
+                            },
                             filesBusy,
                             selectingModel,
                             attachmentFailure,
@@ -563,19 +612,9 @@ public class BasicComposerViewModel(
         }
     }
 
-    override suspend fun cycleModel(reverse: Boolean): Boolean {
-        val w = world ?: return false
-        if (busy()) return false
-        selectingModel.value = true
-        return try {
-            w.cycleModel(reverse) is Outcome.Ok
-        } finally {
-            selectingModel.value = false
-        }
-    }
-
     override suspend fun toggleModelFavorite(choice: ComposerModel) {
-        world?.toggleModelFavorite(choice)
+        val result = world?.toggleModelFavorite(choice) ?: return
+        libraryFailure.value = (result as? Outcome.Failed)?.failure
     }
 
     override suspend fun selectAgent(agent: String): Boolean {
@@ -587,6 +626,63 @@ public class BasicComposerViewModel(
         } finally {
             selectingModel.value = false
         }
+    }
+
+    override fun copyModelId(model: ComposerModel) {
+        libraryFailure.value =
+            if (outside?.copy("${model.providerId}/${model.modelId}") == true) null
+            else Failure.Unavailable(FeatureId("clipboard"))
+    }
+
+    override fun toggleFavorite(model: ComposerModel) {
+        if (world == null || savingFavorite) return
+        savingFavorite = true
+        viewModelScope.launch {
+            try {
+                toggleModelFavorite(model)
+            } finally {
+                savingFavorite = false
+            }
+        }
+    }
+
+    override fun cycleModel(reverse: Boolean, favoritesOnly: Boolean) {
+        val w = world ?: return
+        if (busy()) return
+        if (!favoritesOnly) {
+            // The recent ring is the world's (one selection lane, no recent re-record).
+            selectingModel.value = true
+            viewModelScope.launch {
+                try {
+                    w.cycleModel(reverse)
+                } finally {
+                    selectingModel.value = false
+                }
+            }
+            return
+        }
+        val models = state.value.models
+        val choices = models.favorites.filter { it.enabled }
+        if (choices.isEmpty()) return
+        val current = choices.indexOfFirst {
+            it.providerId == models.selected?.providerId && it.modelId == models.selected?.modelId
+        }
+        val index =
+            if (current < 0) {
+                if (reverse) choices.lastIndex else 0
+            } else (current + (if (reverse) -1 else 1) + choices.size) % choices.size
+        if (index == current) return
+        viewModelScope.launch { selectModel(choices[index]) }
+    }
+
+    override fun cycleVariant(reverse: Boolean) {
+        val models = state.value.models
+        val selected = models.selected ?: return
+        val levels = listOf("") + selected.variants
+        if (levels.size < 2) return
+        val current = levels.indexOf(models.variant).coerceAtLeast(0)
+        val next = (current + (if (reverse) -1 else 1) + levels.size) % levels.size
+        viewModelScope.launch { selectModel(selected, levels[next]) }
     }
 
     override fun attachFile() {
@@ -728,4 +824,19 @@ private fun embeddedAttachment(file: PromptAttachment): Boolean {
     } catch (_: IllegalArgumentException) {
         false
     }
+}
+
+/** Defaults for hand-built view models (tests) with no platform: copying fails, release age is unknown. */
+private object NoComposerOutside : ChatOutside {
+    override fun copy(text: String): Boolean = false
+
+    override fun share(text: String): Boolean = false
+
+    override fun checkLink(url: String): LinkCheck = LinkCheck.Refused
+
+    override fun openLink(url: String): Boolean = false
+}
+
+private object NoComposerClock : Clock {
+    override fun now(): kotlin.time.Instant = kotlin.time.Instant.DISTANT_PAST
 }

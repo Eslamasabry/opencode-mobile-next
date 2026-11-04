@@ -137,5 +137,15 @@ object SecurityFeatureBindings {
             NativeServerDefaults.register(this)
             AndroidPlansReaders.register(this)
             PlansLegacyCollectors.register(this)
+            // 44-PORT-UI: model favorites and recent models (`oc.modelLibrary.<profileId>`).
+            register(
+                KeyShape(
+                    io.github.eslamasabry.oc.engine.agents.models.ModelKeys.MODEL_LIBRARY_PREFIX,
+                    KeyScope.Profile,
+                    PrefType.Str,
+                    ":engine:agents",
+                    "model favorites and recent models",
+                )
+            )
         }
 }

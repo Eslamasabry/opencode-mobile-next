@@ -29,6 +29,8 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.status.KitStatus
+import io.github.eslamasabry.oc.ui.kit.status.LocalKitStatusConditions
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appExitAtTime
 import io.github.eslamasabry.oc.ui.words.res.appExitOnDay
@@ -78,6 +80,11 @@ public fun BackgroundScreen(
     state: BackgroundUi,
     actions: BackgroundActions,
 ) {
+    // Hide the screen's own pause notice only while the app-wide slot actually shows the pause:
+    // the slot draws one condition, so an outranking one (connection lost) would hide it there.
+    val pauseInStatusSlot =
+        KitStatus.highest(LocalKitStatusConditions.current)?.id?.startsWith("background-paused") ==
+            true
     KitScreen(
         topBar = {
             KitTopBar(
@@ -103,7 +110,8 @@ public fun BackgroundScreen(
                     modifier = Modifier.testTag("background-timeout-notice"),
                 )
             }
-            state.pause?.let { pause -> PauseNotice(pause, state.resuming, actions) }
+            if (!pauseInStatusSlot)
+                state.pause?.let { pause -> PauseNotice(pause, state.resuming, actions) }
             KitRowGroup {
                 KitSwitchRow(
                     title = stringResource(Res.string.e7SettingsUi25),

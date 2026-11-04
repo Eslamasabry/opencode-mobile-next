@@ -158,6 +158,7 @@ public object FilePreview {
             "css" to "text/css",
             "js" to "text/javascript",
             "csv" to "text/csv",
+            "tsv" to "text/tab-separated-values",
             "xml" to "application/xml",
             "zip" to "application/zip",
             "mp4" to "video/mp4",
