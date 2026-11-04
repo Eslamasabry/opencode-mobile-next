@@ -147,10 +147,13 @@ public class FormRequests(
     public suspend fun refresh(): Outcome<Unit> = readSlot.withLock {
         val began = revision
         val source = sourceIdentity()
+        val response =
+            withTimeoutOrNull(3_000) { gateway.pendingForms() }
+                ?: return@withLock Failure.TimedOut().failed()
         val listed =
-            when (val o = gateway.pendingForms()) {
-                is Outcome.Ok -> o.value
-                is Outcome.Failed -> return@withLock o
+            when (response) {
+                is Outcome.Ok -> response.value
+                is Outcome.Failed -> return@withLock response
             }
         if (sourceIdentity() != source)
             return@withLock Failure.Refused(RefusalReason.StaleScope).failed()

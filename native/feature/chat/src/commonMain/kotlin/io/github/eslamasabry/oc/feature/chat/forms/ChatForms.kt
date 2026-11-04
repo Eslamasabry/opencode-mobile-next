@@ -160,11 +160,19 @@ internal constructor(
         val owner = connection ?: return
         owner.watchingFormSession(ref.sessionId, true)
         jobs += scope.launch {
-            owner.forms.pending.collect {
+            owner.forms.pending.collect { all ->
+                if (!current()) {
+                    publish()
+                    return@collect
+                }
                 val next = forms().associateBy(::identity)
-                for (id in known.keys - next.keys) {
-                    memory.remove(id)
-                    save(id, emptyMap())
+                // Forget a saved draft only when the ask itself left the owner, never because it
+                // dropped out of this chat's filtered view.
+                for ((id, form) in known - next.keys) {
+                    if (all.none { matches(it, form) }) {
+                        memory.remove(id)
+                        save(id, emptyMap())
+                    }
                 }
                 known = next
                 publish()
@@ -172,7 +180,14 @@ internal constructor(
         }
         jobs += scope.launch { owner.forms.phases.collect { publish() } }
         jobs += scope.launch { owner.forms.notices.collect { publish() } }
-        jobs += scope.launch { graph?.session?.server?.location?.collect { publish() } }
+        jobs += scope.launch {
+            graph?.session?.server?.location?.collect {
+                // A folder change rebinds to the new source instead of hiding this chat's forms
+                // for good (the registry does not replace the graph for a folder change).
+                if (it != source && !closed && registry.graphFor(ref) === graph) bind(graph)
+                else publish()
+            }
+        }
     }
 
     private fun publish() {

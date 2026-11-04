@@ -48,8 +48,9 @@ public class ConnectionRequests(
         formScope.launch {
             gateway.events.project.collect { envelope ->
                 forms.onEvent(envelope.event)
+                // Never hold event handling across a read: the refetch runs beside the collector.
                 if (envelope.event == GatewayEvent.Connected && gateway.capabilities.value.forms)
-                    refreshForms()
+                    formScope.launch { refreshForms() }
             }
         }
         formScope.launch {

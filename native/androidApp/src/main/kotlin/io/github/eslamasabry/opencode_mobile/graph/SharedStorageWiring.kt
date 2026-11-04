@@ -53,6 +53,9 @@ class AndroidSharedStorageAccess(
         directory: String?,
         expectedSource: Any?,
     ): Outcome<SharedStorageBlock> {
+        // Unknown never blocks (Flutter SharedStorageGate): a folder outside shared storage needs
+        // no warm-up, profile or graph read that could fail it.
+        if (!SharedStoragePath.isShared(directory)) return SharedStorageBlock.None.ok()
         if (stores.warm() is Outcome.Failed) return Failure.StorageRefused().failed()
         val source =
             stores.profiles.profile(profile)

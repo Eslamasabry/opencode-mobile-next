@@ -939,7 +939,7 @@ class PlatformHub(
         val graph = registry.live.value[waiting.profile] ?: return null
         val engine = (graph as? ChatGraphAccessors)?.chatRequests?.engine ?: return null
         if (
-            owner.toServerProfile() != graph.profile ||
+            owner.toServerProfile(graph.profile.managedOnPhone) != graph.profile ||
                 !stores.lanes.forProfile(waiting.profile).isAdmitting ||
                 !engine.isCurrent(waiting.request)
         )

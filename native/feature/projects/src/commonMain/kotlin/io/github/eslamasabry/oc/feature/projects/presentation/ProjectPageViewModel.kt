@@ -155,7 +155,15 @@ public class ProjectPageViewModel(
     }
 
     override fun onResume() {
-        if (state.value.phase != ProjectPagePhase.Opening) load()
+        // Re-check only a page still blocked by shared storage; a plain return from a chat or
+        // Files must not turn the page back into a skeleton (Flutter asks only on open).
+        val s = state.value
+        if (
+            s.storageBlock != SharedStorageBlock.None &&
+                !s.requestingStorage &&
+                s.phase != ProjectPagePhase.Opening
+        )
+            load()
     }
 
     override fun requestStorage() {

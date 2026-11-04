@@ -17,7 +17,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.feature.servers.presentation.ConnectionCheckFacts
 import io.github.eslamasabry.oc.feature.servers.presentation.ConnectionCheckStream
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerConnectionCheck
-import kotlin.time.Clock
+import kotlin.time.TimeSource
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
@@ -31,7 +31,6 @@ class NativeConnectionCheck(
     private val credentials: Set<ConnectionCredentialSource>,
     private val factories: Set<GatewayFactory>,
     private val registry: ConnectionRegistry,
-    private val clock: Clock,
 ) : ServerConnectionCheck {
     override suspend fun inspect(id: ProfileId): Outcome<ConnectionCheckFacts> {
         when (val warm = stores.warm()) {
@@ -56,12 +55,13 @@ class NativeConnectionCheck(
                 ?: return Outcome.Failed(Failure.Unavailable(FeatureId("connectionCheck")))
         if (stores.profiles.profile(id) !== loaded)
             return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
-        val started = clock.now()
+        // Monotonic, like Flutter's Stopwatch: a wall-clock jump must not fake a slow reply.
+        val started = TimeSource.Monotonic.markNow()
         val result =
             withTimeoutOrNull(15_000) {
                 factory.probe(ProbeTarget(profile.origin, credential, profile.trust))
             } ?: Outcome.Failed(Failure.TimedOut())
-        val elapsed = (clock.now() - started).inWholeMilliseconds.coerceAtLeast(0)
+        val elapsed = started.elapsedNow().inWholeMilliseconds.coerceAtLeast(0)
         if (stores.profiles.profile(id) !== loaded)
             return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
         val live = registry.live.value[id]?.takeIf { it.session.profile == profile }

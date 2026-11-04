@@ -335,7 +335,15 @@ public class FileViewModel(
     }
 
     override fun onResume() {
-        if (local.value.phase != FilePhase.Loading) load()
+        // Flutter asks the storage gate only when the page opens; a resume re-checks only a
+        // page that is still showing the shared-storage notice (back from the permission page).
+        val l = local.value
+        if (
+            l.storageBlock != SharedStorageBlock.None &&
+                !l.requestingStorage &&
+                l.phase != FilePhase.Loading
+        )
+            load()
     }
 
     override fun requestStorage() {

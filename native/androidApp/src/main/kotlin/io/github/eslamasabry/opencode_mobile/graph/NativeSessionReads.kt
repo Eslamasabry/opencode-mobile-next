@@ -217,7 +217,7 @@ class NativeSessionReads(
                 registry.live.value[profile.id] === graph &&
                 graph.session.server.location.value == location
         if (!current()) return stale()
-        return lane(profile.id).withLock {
+        val committed: Outcome<Unit> = lane(profile.id).withLock {
             if (!current()) return@withLock stale()
             val key = sessionKey(profile, location, session)
             val snapshot =
@@ -241,21 +241,25 @@ class NativeSessionReads(
                     }
                 }
             if (recorded is Outcome.Failed) return@withLock recorded
-            // A local read never grants remote sharing, wakes a server or queues a write for later.
-            val reader = graph.session.server as? SessionReadStateGateway
-            if (
-                reader != null &&
-                    ticket != null &&
-                    current() &&
-                    consent.stillShared(ticket) &&
-                    (session.time?.viewedMs ?: 0) < idle
-            ) {
-                val shared = reader.viewSession(session.id, idle)
-                if (shared is Outcome.Failed) return@withLock shared
-                if (current() && consent.stillShared(ticket)) changed()
-            }
             Outcome.Ok(Unit)
         }
+        if (committed is Outcome.Failed) return committed
+        // A local read never grants remote sharing, wakes a server or queues a write for later.
+        // The receipt is sent outside the profile lane so a slow server never holds up the
+        // brief/feed publication that waits on the same lane.
+        val reader = graph.session.server as? SessionReadStateGateway
+        if (
+            reader != null &&
+                ticket != null &&
+                current() &&
+                consent.stillShared(ticket) &&
+                (session.time?.viewedMs ?: 0) < idle
+        ) {
+            val shared = reader.viewSession(session.id, idle)
+            if (shared is Outcome.Failed) return shared
+            if (current() && consent.stillShared(ticket)) changed()
+        }
+        return Outcome.Ok(Unit)
     }
 
     suspend fun publishBrief(

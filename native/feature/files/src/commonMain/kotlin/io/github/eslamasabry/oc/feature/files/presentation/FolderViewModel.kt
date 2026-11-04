@@ -202,7 +202,14 @@ public class FolderViewModel(
     }
 
     override fun onResume() {
-        if (local.value.phase != FolderPhase.Loading) retry()
+        // Re-check only a folder still blocked by shared storage (back from the permission page).
+        val l = local.value
+        if (
+            l.storageBlock != SharedStorageBlock.None &&
+                !l.requestingStorage &&
+                l.phase != FolderPhase.Loading
+        )
+            retry()
     }
 
     override fun requestStorage() {
