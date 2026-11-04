@@ -26,3 +26,22 @@ B-AGENT-135 -> blocked: no admitted backend supplies the positive next-turn read
 
 B-AGENT-138 -> blocked: project attention depends on the AI Team/phone project engine which binding plan/01 D6 defers pending owner decision (`docs/design/native-rewrite-2026-11-01/plan/01-architecture-decision.md:875`); normal server attention is now bound (`native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ProfileMonitorWiring.kt:174`), but its `MonitorAttentionReader` deliberately has no phone-engine factory; enabling the deferred authenticated `/v1` project runtime requires that owner decision.
 
+B-AGENT-044 -> blocked: no owner-reviewed full host bundle is published for an exact app version (`scripts/byo-host/release-pins.json:20` has `appVersions={}`; `lib/host/byo_host_bundle_pins.dart:5` admits none); selecting or inventing an artifact would bypass the publication decision.
+
+B-AGENT-045 -> blocked: enrollment needs the unavailable owner-reviewed/published exact app-version host bundle; durable reservation and bundle-gated adoption already exist (`native/engine/integrations-host/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/integrations/host/ByoHostController.kt:91`, `scripts/byo-host/release-pins.json:20`).
+
+B-AGENT-046 -> blocked: authenticated ephemeral adoption requires the unavailable reviewed bundle supervisor/version (`scripts/byo-host/release-pins.json:20`); the native controller retains ephemeral credentials and validates bundle version (`native/engine/integrations-host/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/integrations/host/ByoHostController.kt:53`).
+
+B-AGENT-047 -> blocked: interrupted-install recovery needs the same unpublished reviewed exact app-version bundle; saved-tuple recovery with fresh login already exists (`native/engine/integrations-host/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/integrations/host/ByoHostController.kt:156`, `scripts/byo-host/release-pins.json:20`).
+
+B-AGENT-048 -> blocked: the reviewed-bundle prerequisite prevents production enrollment and its removal/revocation journey (`scripts/byo-host/release-pins.json:20`); confirmed removal, local cascade callback and durable revocation journal already exist (`native/engine/integrations-host/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/integrations/host/ByoHostController.kt:237`).
+
+B-AGENT-049 -> blocked: no reviewed exact app-version host bundle is published (`scripts/byo-host/release-pins.json:20`); built the native shared service/controller registry prerequisite now (`native/engine/integrations-host/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/integrations/host/ByoHostService.kt:16`), including serial shared SSH runner, isolated controllers, safe release and retryable disposal, while production enrollment remains unavailable.
+
+B-AGENT-121 -> blocked: reinstating Termux-hosted installation/removal requires an owner reversal of binding D7 migrate-out-only and the explicit NG8 retirement (`docs/design/native-rewrite-2026-11-01/plan/01-architecture-decision.md:876`, `docs/design/native-rewrite-2026-11-01/plan/17-gap-closure.md:838`); the permitted built-in pinned installer already exists (`native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/NativeAgentSetupJobs.kt:98`).
+
+B-AGENT-122 -> blocked: production Termux bridge dispatch and detached installer verbs are explicitly retired by NG8 and require the same owner decision (`docs/design/native-rewrite-2026-11-01/plan/17-gap-closure.md:838`); built-in jobs already embed the current build scripts (`native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/NativeAgentSetupJobs.kt:114`).
+
+B-AGENT-123 -> blocked: the Termux Ubuntu prerequisite/status contract is retired by binding D7/NG8 (`docs/design/native-rewrite-2026-11-01/plan/17-gap-closure.md:838`); its permitted built-in equivalent installs and verifies Linux, Node, Paseo and Claude (`native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/NativeAgentSetupJobs.kt:114`), without re-enabling Termux.
+
+B-AGENT-126 -> blocked: Termux project creation is outside D7 migrate-out-only and explicitly retired by NG8 (`docs/design/native-rewrite-2026-11-01/plan/17-gap-closure.md:838`); restoring that host path needs the owner decision, while built-in project creation already uses `git init` (`native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/LinuxStorageWiring.kt:118`).
