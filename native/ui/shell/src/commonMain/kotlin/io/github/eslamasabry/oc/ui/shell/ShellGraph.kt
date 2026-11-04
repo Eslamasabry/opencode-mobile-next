@@ -22,6 +22,7 @@ import kotlin.reflect.KClass
 public interface ShellMultibindings {
     @Multibinds(allowEmpty = true) public val entryInstallers: Set<EntryInstaller>
     @Multibinds(allowEmpty = true) public val statusSources: Set<ShellStatusSource>
+    @Multibinds(allowEmpty = true) public val overlays: Set<ShellOverlay>
 }
 
 /**
@@ -35,6 +36,7 @@ public class ShellDependencies(
     public val installers: Set<EntryInstaller>,
     public val motion: SystemMotion,
     public val statusSources: Set<ShellStatusSource> = emptySet(),
+    public val overlays: Set<ShellOverlay> = emptySet(),
 )
 
 /**

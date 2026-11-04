@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.core.domain.platform.PromptFilePicker
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatOutside
+import io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorlds
 import io.github.eslamasabry.oc.feature.chat.world.ComposerCommand
@@ -180,9 +181,13 @@ public class BasicComposerViewModel(
     private val attachSources: Set<ComposerAttachSource> = emptySet(),
     private val appCommands: Set<ComposerAppCommands> = emptySet(),
     private val modelBackings: Set<RecentModelsBacking> = emptySet(),
-    private val outside: ChatOutside? = null,
-    private val clock: Clock? = null,
+    // Non-null keys on purpose: Metro binds `ChatOutside?`/`Clock?` as their own keys, so nullable
+    // parameters would always fall back to the default even though the graph binds both.
+    outside: ChatOutside = NoComposerOutside,
+    clock: Clock = NoComposerClock,
 ) : ViewModel(), BasicComposerActions {
+    private val outside: ChatOutside? = outside.takeUnless { it === NoComposerOutside }
+    private val clock: Clock? = clock.takeUnless { it === NoComposerClock }
     private val profileId = ProfileId(target.profileId)
     private val query = MutableStateFlow<ComposerQuery?>(null)
     private val fileMatches = MutableStateFlow<List<String>>(emptyList())
@@ -639,4 +644,19 @@ public class BasicComposerViewModel(
         const val MAX_COMMANDS = 8
         const val MAX_FILES = 5
     }
+}
+
+/** Defaults for hand-built view models (tests) with no platform: copying fails, release age is unknown. */
+private object NoComposerOutside : ChatOutside {
+    override fun copy(text: String): Boolean = false
+
+    override fun share(text: String): Boolean = false
+
+    override fun checkLink(url: String): LinkCheck = LinkCheck.Refused
+
+    override fun openLink(url: String): Boolean = false
+}
+
+private object NoComposerClock : Clock {
+    override fun now(): kotlin.time.Instant = kotlin.time.Instant.DISTANT_PAST
 }

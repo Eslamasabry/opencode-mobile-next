@@ -881,7 +881,9 @@ internal class GraphChatWorld(
                     ref.providerId,
                     ref.modelId,
                     ref.modelId,
-                    false,
+                    // Unknown to the catalog: its file support is unknown too, so Attach is not
+                    // refused on a guess (before the stand-in, `selected` was null here).
+                    true,
                     providerName = providerNames[ref.providerId] ?: ref.providerId,
                     enabled = false,
                 )

@@ -326,7 +326,11 @@ private fun Ready(
                     else -> stringResource(Res.string.gitStateUpToDate)
                 },
             enabled = enabled.isEnabled && (!snapshot.hasRemote || branch.hasUpstream),
-            disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+            disabledReason =
+                (enabled as? KitEnabled.Disabled)?.reason
+                    ?: if (snapshot.hasRemote && !branch.hasUpstream)
+                        stringResource(Res.string.gitPullNotOnRemote)
+                    else null,
             onClick = if (!snapshot.hasRemote) actions::openRemotes else actions::pull,
             modifier = Modifier.testTag("git-pull-row"),
         )
@@ -341,7 +345,14 @@ private fun Ready(
                     else -> stringResource(Res.string.gitStateNothingToSend)
                 },
             enabled = enabled.isEnabled && !branch.detached && !branch.unborn,
-            disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+            // A disabled row always says why (KitRow refuses a silent one).
+            disabledReason =
+                (enabled as? KitEnabled.Disabled)?.reason
+                    ?: when {
+                        branch.detached -> stringResource(Res.string.gitDetachedHead)
+                        branch.unborn -> stringResource(Res.string.gitNoCommitsYet)
+                        else -> null
+                    },
             onClick = if (!snapshot.hasRemote) actions::openRemotes else actions::push,
             modifier = Modifier.testTag("git-push-row"),
         )

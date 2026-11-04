@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import androidx.compose.runtime.Composable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.ContributesIntoSet
@@ -21,6 +22,8 @@ import io.github.eslamasabry.oc.feature.phone.presentation.KeepAliveStepKind
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneConsentUi
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneFirstStartConsents
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneMaker
+import io.github.eslamasabry.oc.feature.phone.ui.PhoneFirstStartConsentHost
+import io.github.eslamasabry.oc.ui.shell.ShellOverlay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,7 +47,7 @@ class NativePhoneFirstStartConsents(
     private val closed = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     @Volatile private var activeProfile: ProfileId? = null
 
-    private data class Ask(val profile: ProfileId, val ui: PhoneConsentUi)
+    private data class Ask(val profile: ProfileId, val ui: PhoneConsentUi, val failedOnce: Boolean = false)
 
     private val asks = ArrayDeque<Ask>()
     private val visible = MutableStateFlow<PhoneConsentUi?>(null)
@@ -83,12 +86,23 @@ class NativePhoneFirstStartConsents(
             asks.firstOrNull()
                 ?: return@withLock Outcome.Failed(Failure.Refused(RefusalReason.AlreadyAnswered))
         when (val saved = consent.answer(ask.profile, ask.ui.kind, allow)) {
-            is Outcome.Failed -> saved
+            is Outcome.Failed -> {
+                // The question stays once so the person sees the failure; a second refused save
+                // stops asking this profile (Flutter stops after a refused save), so an unwritable
+                // store never traps the person in the dialog.
+                if (ask.failedOnce) asks.removeAll { it.profile == ask.profile }
+                else asks[0] = ask.copy(failedOnce = true)
+                publish()
+                saved
+            }
             is Outcome.Ok -> {
                 asks.removeFirst()
-                if (allow && ask.ui.kind == InFlowConsentKind.BatteryExemption)
-                    background.allowUnrestrictedBattery()
-                else if (allow) settings.open(KeepAliveSetting.Autostart)
+                if (allow)
+                    when (ask.ui.kind) {
+                        InFlowConsentKind.BatteryExemption -> background.allowUnrestrictedBattery()
+                        InFlowConsentKind.MakerAutoStart -> settings.open(KeepAliveSetting.Autostart)
+                        InFlowConsentKind.NeedsYouNotifications -> Unit // no Android page here
+                    }
                 publish()
                 saved
             }
@@ -121,6 +135,13 @@ class NativePhoneFirstStartConsents(
         activeProfile = asks.firstOrNull()?.profile
         visible.value = asks.firstOrNull()?.ui
     }
+}
+
+/** Asks the first-start questions above whatever screen is open (Flutter asks wherever it started). */
+@Inject
+@ContributesIntoSet(AppScope::class, binding = binding<ShellOverlay>())
+class PhoneConsentOverlay(private val consents: PhoneFirstStartConsents) : ShellOverlay {
+    @Composable override fun Content() = PhoneFirstStartConsentHost(consents)
 }
 
 @Inject

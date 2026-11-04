@@ -176,7 +176,7 @@ public class ChatHeaderPresenter(
     /** "Models on this server": the current one first, marked; at most eight others (Flutter caps the list at six picks). */
     private fun continueChoices(models: ComposerModels): kotlinx.collections.immutable.ImmutableList<ContinueChoice> {
         val current = models.selected
-        val others = models.choices.filter { !same(it, current) }.take(MAX_CONTINUE)
+        val others = models.choices.filter { it.enabled && !same(it, current) }.take(MAX_CONTINUE)
         return (listOfNotNull(current) + others)
             .map { ContinueChoice(it.providerId, it.modelId, it.label, current = same(it, current)) }
             .toImmutableList()
@@ -294,7 +294,7 @@ public class ChatHeaderPresenter(
             closeSheet()
             return
         }
-        val model = world.models.value.choices.firstOrNull { it.providerId == choice.providerId && it.modelId == choice.modelId }
+        val model = world.models.value.choices.firstOrNull { it.enabled && it.providerId == choice.providerId && it.modelId == choice.modelId }
             ?: return
         local.update { it.copy(working = HeaderAction.ContinueWith, continueFailure = null) }
         launcher.launch {

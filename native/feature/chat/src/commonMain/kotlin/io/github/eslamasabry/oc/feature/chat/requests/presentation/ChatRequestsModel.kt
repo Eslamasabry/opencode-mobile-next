@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.requests.presentation
 
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
@@ -153,6 +154,7 @@ public class ChatRequestsModel(
         local.update { mine ->
             val drafts =
                 (mine.sheetDrafts[id] ?: QuestionSheet.emptyDraft(question)).toMutableList()
+            sized(drafts, question.prompts.size)
             drafts[prompt] = QuestionSheet.choose(spec, drafts[prompt], label)
             mine.copy(sheetDrafts = mine.sheetDrafts.put(id, drafts.toImmutableList()))
         }
@@ -164,6 +166,7 @@ public class ChatRequestsModel(
         local.update { mine ->
             val drafts =
                 (mine.sheetDrafts[id] ?: QuestionSheet.emptyDraft(question)).toMutableList()
+            sized(drafts, question.prompts.size)
             drafts[prompt] = QuestionSheet.write(spec, drafts[prompt], text)
             mine.copy(sheetDrafts = mine.sheetDrafts.put(id, drafts.toImmutableList()))
         }
@@ -173,8 +176,10 @@ public class ChatRequestsModel(
         val question = sheetRequest(id)?.question ?: return
         val drafts = local.value.sheetDrafts[id] ?: QuestionSheet.emptyDraft(question)
         val answers = QuestionSheet.answers(question, drafts) ?: return
-        engine.answer(id, RequestAnswer.Question(answers))
-        local.update { it.copy(sheet = null) }
+        // The engine's own check is stricter (no repeated values): the sheet stays open, with the
+        // person's words, unless the answer was taken.
+        if (engine.answer(id, RequestAnswer.Question(answers)) is Outcome.Ok)
+            local.update { it.copy(sheet = null) }
     }
 
     override fun closeSheet() {
@@ -295,4 +300,10 @@ public class ChatRequestsModel(
         }
 
     private fun single(answer: String) = persistentListOf(persistentListOf(answer))
+}
+
+/** Drafts kept from before a refetch match the question's prompts again (one per prompt). */
+private fun sized(drafts: MutableList<PromptDraft>, size: Int) {
+    while (drafts.size > size) drafts.removeAt(drafts.lastIndex)
+    while (drafts.size < size) drafts.add(PromptDraft())
 }

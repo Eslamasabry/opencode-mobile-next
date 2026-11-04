@@ -74,9 +74,6 @@ public data class ThisPhoneUi(
     val confirm: ThisPhoneConfirm? = null,
     val notice: ThisPhoneNotice? = null,
     val exitNotice: PhoneExitNotice? = null,
-    val phoneConsent: PhoneConsentUi? = null,
-    val consentSaving: Boolean = false,
-    val consentFailure: Boolean = false,
 )
 
 /** Intents only (ADR §9.1). */
@@ -102,8 +99,6 @@ public interface ThisPhoneActions {
 
     /** The "Linux" row: the Linux manager of the phone's own Ubuntu. */
     public fun openLinux() {}
-
-    public fun answerConsent(allow: Boolean) {}
 
     public fun back()
 

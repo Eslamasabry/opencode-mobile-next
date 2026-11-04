@@ -157,7 +157,7 @@ private fun StepRow(
     val hasBody =
         text != null ||
             out.pruned ||
-            out.input.isNotEmpty() ||
+            (out.input.isNotEmpty() && inputHasBody(f.kind, step.state)) ||
             (shell && !f.subject.isNullOrBlank()) ||
             child != null ||
             files.isNotEmpty()
@@ -281,3 +281,13 @@ private fun ToolKind.toKit(): KitToolKind =
         ToolKind.BackgroundNotice,
         ToolKind.Generic -> KitToolKind.Other
     }
+
+/** Only steps whose body draws its input open on input alone (ToolStepBody returns early for the rest). */
+private fun inputHasBody(kind: ToolKind, state: StepState): Boolean =
+    state != StepState.NotRun &&
+        state != StepState.Stopped &&
+        kind != ToolKind.Card &&
+        kind != ToolKind.Read &&
+        kind != ToolKind.Shell &&
+        kind != ToolKind.Lsp &&
+        kind != ToolKind.ConnectorSearch

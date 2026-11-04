@@ -56,7 +56,8 @@ internal fun runningStepWords(f: ToolFacts): String {
                 it.isNotEmpty()
             }
     if (name != null) {
-        name = mask(if (name.length > 40) name.take(39) + "…" else name)
+        name = mask(name)
+        if (name.length > 40) name = name.take(39) + "…"
         if (f.technical) name = "\u2066$name\u2069"
     }
     return when (f.kind) {
@@ -150,13 +151,14 @@ internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?) {
     val metadata = output.metadata ?: JsonObject(emptyMap())
     val kind = step.facts.kind
     val text = output.text
+    val mask = rememberKitMask()
     if (output.pruned) KitQuietLine(stringResource(Res.string.chatUiOutputPruned))
-    if (kind == ToolKind.Card || step.state == StepState.NotRun || step.state == StepState.Stopped)
-        return
     if (kind == ToolKind.Task) {
         TaskBody(step, reply)
         return
     }
+    if (kind == ToolKind.Card || step.state == StepState.NotRun || step.state == StepState.Stopped)
+        return
     if (output.errorText != null) {
         if (kind == ToolKind.Generic)
             Readable(input, reply, stringResource(Res.string.toolCardWhatWasSent))
@@ -197,7 +199,8 @@ internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?) {
         ToolKind.Edit,
         ToolKind.Write,
         ToolKind.Patch -> {
-            val files = remember(kind, input, metadata) { stepDiffs(kind, input, metadata) }
+            val files =
+                remember(kind, input, metadata, mask) { stepDiffs(kind, input, metadata, mask) }
             if (files.isEmpty()) StepOutput(text, reply) else files.forEach { StepDiff(it) }
             metadata["diagnostics"]
                 ?.takeIf { it != JsonNull }
@@ -337,7 +340,9 @@ private fun TaskBody(step: TurnStep, reply: ReplyActions?) {
                 ?.trim() ?: raw.trim()
     when {
         launched -> KitQuietLine(stringResource(Res.string.workStartedInBackground))
-        step.output.errorText != null -> TechnicalText(result, reply)
+        step.output.errorText != null ->
+            if (result.isEmpty()) KitQuietLine(stringResource(Res.string.chatUiSubagentFailed))
+            else TechnicalText(result, reply)
         result.isNotEmpty() -> StepProse(result, reply, step.partId)
         step.state == StepState.Running || step.state == StepState.Pending ->
             KitQuietLine(stringResource(Res.string.chatUiSubagentWorking))
@@ -397,7 +402,7 @@ private fun ConnectorSearchBody(text: String, reply: ReplyActions?) {
                     else -> null
                 }
             SafeRow(
-                (match.word("name") ?: match.word("catalogId") ?: "").take(120),
+                match.word("name") ?: match.word("catalogId") ?: "",
                 listOfNotNull(runtime, connected).joinToString(" · "),
             )
         }
@@ -416,10 +421,14 @@ private fun ConnectorSearchBody(text: String, reply: ReplyActions?) {
 }
 
 @Composable
-private fun SafeRow(label: String, value: String) {
+private fun SafeRow(label: String, value: String, labelLimit: Int = 120, valueLimit: Int = 1000) {
     val mask = rememberKitMask()
     if (label.isNotBlank())
-        KitRow(title = mask(label), supporting = mask(value), supportingMaxLines = 12)
+        KitRow(
+            title = mask(label).take(labelLimit),
+            supporting = mask(value).take(valueLimit),
+            supportingMaxLines = 12,
+        )
 }
 
 @Composable
@@ -449,7 +458,7 @@ private fun Readable(
                 if (rows++ < 12)
                     SafeRow(
                         toolIdWords(key).replaceFirstChar { it.uppercase() },
-                        item.content.take(1000),
+                        item.content,
                     )
                 else nested[key] = item
             } else if (item !is JsonPrimitive && item != JsonNull) nested[key] = item
@@ -484,7 +493,8 @@ private fun StepOutput(
     val mask = rememberKitMask()
     var full by rememberSaveable(text) { mutableStateOf(false) }
     val more = stringResource(Res.string.tools44ShowAll)
-    val shown = if (full) text else text.lineSequence().take(200).joinToString("\n").take(20_000)
+    val safe = remember(text, mask) { mask(text) }
+    val shown = if (full) safe else safe.lineSequence().take(200).joinToString("\n").take(20_000)
     KitCodeBlock(
         source = shown,
         kind =
@@ -493,11 +503,11 @@ private fun StepOutput(
         language = CodeLanguage.Plain,
         maxLines = if (full) Int.MAX_VALUE else 12,
         copyLabel = reply?.copyLabel,
-        onCopy = if (reply == null) null else { _ -> reply.copy(mask(text)) },
+        onCopy = if (reply == null) null else { _ -> reply.copy(safe) },
         moreLabel = { more },
         onMore = { full = true },
     )
-    if (!full && shown.length < text.length && shown.lines().size <= 12)
+    if (!full && shown.length < safe.length && shown.lines().size <= 12)
         KitButton(more, { full = true }, role = KitButtonRole.Tertiary)
 }
 
@@ -509,13 +519,14 @@ private fun StepProse(text: String, reply: ReplyActions?, key: String) {
     }
     var full by rememberSaveable(key, text) { mutableStateOf(false) }
     val mask = rememberKitMask()
-    val shown = if (full) text else text.lineSequence().take(12).joinToString("\n").take(4000)
-    val masked = mask(shown)
+    val safe = remember(text, mask) { mask(text) }
+    val masked =
+        if (full) safe else safe.lineSequence().take(12).joinToString("\n").take(4000)
     val blocks =
         remember(key, masked) { KitMdSource.blocks("tool:$key", masked, streaming = false) }
     Column(Modifier.testTag("tool-prose")) {
         KitMarkdown(blocks, reply.markdown)
-        if (shown.length < text.length)
+        if (masked.length < safe.length)
             KitButton(
                 stringResource(Res.string.tools44ShowAll),
                 { full = true },
@@ -534,7 +545,7 @@ private fun StepDiff(file: DiffFile) {
         file,
         maxLines = if (full) Int.MAX_VALUE else 12,
         hunkLabel = { _, _, start, end -> "$lines $start–$end" },
-        gapLabel = { "$it $hidden" },
+        gapLabel = { "$hidden: $it" },
     )
     if (!full && file.totalLines > 12)
         KitButton(
@@ -565,7 +576,12 @@ private fun decoded(text: String): JsonElement? =
 private fun simpleValues(value: JsonObject): Set<String> =
     value.values.filterIsInstance<JsonPrimitive>().map { it.content }.toSet()
 
-private fun stepDiffs(kind: ToolKind, input: JsonObject, metadata: JsonObject): List<DiffFile> {
+private fun stepDiffs(
+    kind: ToolKind,
+    input: JsonObject,
+    metadata: JsonObject,
+    mask: (String) -> String,
+): List<DiffFile> {
     val path =
         input.word("filePath") ?: input.word("file_path") ?: input.word("path") ?: "changes.diff"
     if (kind == ToolKind.Patch) {
@@ -579,21 +595,21 @@ private fun stepDiffs(kind: ToolKind, input: JsonObject, metadata: JsonObject): 
                         ?: file.word("movePath")
                         ?: file.word("filePath")
                         ?: path,
-                    patch,
+                    mask(patch),
                 )
             } ?: emptyList()
         if (patches.isNotEmpty()) return patches
         val patch = metadata.word("diff") ?: input.word("patchText") ?: return emptyList()
-        return listOf(DiffModel.parseFilePatch(path, patch))
+        return listOf(DiffModel.parseFilePatch(path, mask(patch)))
     }
     if (kind == ToolKind.Write) {
         val content = (input["content"] as? JsonPrimitive)?.content ?: return emptyList()
-        return listOf(DiffModel.fromBeforeAfter(path, null, content))
+        return listOf(DiffModel.fromBeforeAfter(path, null, mask(content)))
     }
     val patch = (metadata["filediff"] as? JsonObject)?.word("patch") ?: metadata.word("diff")
-    if (patch != null) return listOf(DiffModel.parseFilePatch(path, patch))
+    if (patch != null) return listOf(DiffModel.parseFilePatch(path, mask(patch)))
     val before = (input["oldString"] as? JsonPrimitive)?.content
     val after = (input["newString"] as? JsonPrimitive)?.content
     return if (before == null && after == null) emptyList()
-    else listOf(DiffModel.fromBeforeAfter(path, before, after))
+    else listOf(DiffModel.fromBeforeAfter(path, before?.let(mask), after?.let(mask)))
 }

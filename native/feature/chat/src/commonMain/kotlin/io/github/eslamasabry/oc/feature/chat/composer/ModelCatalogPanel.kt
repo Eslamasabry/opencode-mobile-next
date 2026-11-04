@@ -3,9 +3,7 @@ package io.github.eslamasabry.oc.feature.chat.composer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -34,6 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -95,7 +94,7 @@ internal fun ModelCatalogPanel(
         }
     }
     Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         val failureWords =
@@ -368,8 +367,9 @@ internal fun ModelCatalogPanel(
                     }
                     if (found.size > visible)
                         KitRow(
-                            stringResource(
-                                Res.string.native44MoreModels,
+                            pluralStringResource(
+                                Res.plurals.native44MoreModels,
+                                found.size - visible,
                                 Numbers.format(found.size - visible),
                             ),
                             onClick = { visible += 40 },

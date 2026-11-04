@@ -280,7 +280,9 @@ private fun FullQuestionSheet(
     ) {
         if (state != null)
             state.question.prompts.forEachIndexed { index, prompt ->
-                val draft = state.drafts[index]
+                val draft =
+                    state.drafts.getOrNull(index)
+                        ?: io.github.eslamasabry.oc.engine.requests.questions.PromptDraft()
                 val id = state.question.id
                 key(id, index) {
                     if (prompt.title.isNotBlank()) KitText(prompt.title, role = TypeRole.Headline)

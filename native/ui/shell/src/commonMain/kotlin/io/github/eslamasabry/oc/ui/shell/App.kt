@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.shell
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -8,7 +9,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -17,6 +20,7 @@ import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusScope
@@ -85,17 +89,37 @@ public fun NavShell(
     val scale by deps.motion.animatorScale.collectAsState()
     val conditions = deps.statusSources.mapNotNull { it.status() }
     KitStatusScope(conditions) {
-        ShellNavDisplay(
-            backStack = backStack,
-            gate = gate,
-            level = motionLevelOf(scale),
-            onSystemBack = deps.navigator::systemBack,
-            baseDecorators =
-                listOf(
-                    rememberSaveableStateHolderNavEntryDecorator(),
-                    rememberViewModelStoreNavEntryDecorator(),
-                ),
-            entryProvider = provider,
-        )
+        // App-wide questions get their own modal host above every route (each KitScreen hosts its
+        // own modals inside); with none contributed the tree is unchanged.
+        if (deps.overlays.isEmpty()) {
+            ShellNav(backStack, gate, scale, deps, provider)
+        } else {
+            KitSheetHost(Modifier.fillMaxSize()) {
+                ShellNav(backStack, gate, scale, deps, provider)
+                deps.overlays.forEach { it.Content() }
+            }
+        }
     }
+}
+
+@Composable
+private fun ShellNav(
+    backStack: List<NavKey>,
+    gate: RowTransformGate,
+    scale: Float,
+    deps: ShellDependencies,
+    provider: (NavKey) -> NavEntry<NavKey>,
+) {
+    ShellNavDisplay(
+        backStack = backStack,
+        gate = gate,
+        level = motionLevelOf(scale),
+        onSystemBack = deps.navigator::systemBack,
+        baseDecorators =
+            listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator(),
+            ),
+        entryProvider = provider,
+    )
 }

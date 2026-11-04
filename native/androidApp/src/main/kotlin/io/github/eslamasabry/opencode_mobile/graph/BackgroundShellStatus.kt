@@ -2,6 +2,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
@@ -32,6 +33,21 @@ class BackgroundShellStatus(
 ) : ShellStatusSource {
     @Composable
     override fun status(): KitStatus? {
+        // Stable callbacks, so an unchanged pause yields an equal KitStatus and the app-wide
+        // condition list does not recompose every screen.
+        val resume: () -> Unit = remember {
+            {
+                hub.launchOnMain {
+                    if ((live.resume() as? Outcome.Ok)?.value == true)
+                        activities.current
+                            ?.window
+                            ?.decorView
+                            ?.announceForAccessibility(getString(Res.string.backgroundPauseResumed))
+                }
+            }
+        }
+        val openKeepRunning: () -> Unit = remember { { navigator.open(PhoneRoute.KeepRunning) } }
+        val dismiss: () -> Unit = remember { { hub.launchOnMain { live.dismissPause() } } }
         val state by live.facts.collectAsStateWithLifecycle()
         val pause = state.pause ?: return null
         if (state.resuming)
@@ -55,15 +71,6 @@ class BackgroundShellStatus(
                 PauseReason.AppUpdated -> stringResource(Res.string.backgroundPauseAppUpdated, at)
                 PauseReason.Interrupted -> stringResource(Res.string.backgroundPauseInterrupted)
             }
-        val resume: () -> Unit = {
-            hub.launchOnMain {
-                if ((live.resume() as? Outcome.Ok)?.value == true)
-                    activities.current
-                        ?.window
-                        ?.decorView
-                        ?.announceForAccessibility(getString(Res.string.backgroundPauseResumed))
-            }
-        }
         val resumeShort =
             KitLineAction(
                 stringResource(Res.string.backgroundPauseResumeShort),
@@ -80,7 +87,7 @@ class BackgroundShellStatus(
         val keep =
             KitLineAction(
                 stringResource(Res.string.backgroundPauseOpenKeepRunning),
-                { navigator.open(PhoneRoute.KeepRunning) },
+                openKeepRunning,
             )
         return KitStatus(
             kind = KitStatusKind.AppStopped,
@@ -93,7 +100,7 @@ class BackgroundShellStatus(
             more =
                 if (!pause.canResume) emptyList()
                 else if (pause.resumeFailed) listOf(resumeAgain) else listOf(keep),
-            onDismiss = { hub.launchOnMain { live.dismissPause() } },
+            onDismiss = dismiss,
             dismissLabel = stringResource(Res.string.notifyDismiss),
         )
     }

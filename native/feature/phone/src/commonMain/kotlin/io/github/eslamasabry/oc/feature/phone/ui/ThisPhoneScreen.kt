@@ -252,7 +252,6 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
             }
         }
     }
-    PhoneFirstStartConsent(state, actions)
     KitConfirm(
         spec =
             when (val asked = state.confirm) {

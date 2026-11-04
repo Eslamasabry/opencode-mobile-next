@@ -104,6 +104,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentCardYourAnswer
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
 import io.github.eslamasabry.oc.ui.words.res.kitDateInvalid
 import io.github.eslamasabry.oc.ui.words.res.kitUndoAction
+import io.github.eslamasabry.oc.ui.words.res.kitWorking
 import io.github.eslamasabry.oc.ui.words.res.photoPermissionDenied
 import io.github.eslamasabry.oc.ui.words.res.photoUnavailable
 import kotlin.io.encoding.Base64
@@ -412,7 +413,15 @@ private fun CardAskControls(
                         .map { field ->
                             field.copy(
                                 description =
-                                    if (ask.fields.first { it.id == field.key }.required)
+                                    // Flutter puts the hint on typed and date fields only;
+                                    // a toggle or select always holds an answer.
+                                    if (
+                                        ask.fields.first { it.id == field.key }.let {
+                                            it.required &&
+                                                it.type != CardFieldType.Toggle &&
+                                                it.type != CardFieldType.Select
+                                        }
+                                    )
                                         stringResource(Res.string.agentCardFieldRequiredHint)
                                     else null,
                                 error =
@@ -473,7 +482,9 @@ private fun CardPhotoControls(
     var picking by remember(card.identity) { mutableStateOf(false) }
     var failure by remember(card.identity) { mutableStateOf<Failure?>(null) }
     var tooLarge by remember(card.identity) { mutableStateOf(false) }
-    val busy = blocked ?: if (picking) stringResource(Res.string.agentCardPhotoChoose) else null
+    val busy = blocked ?: if (picking) stringResource(Res.string.kitWorking) else null
+    // Decoded once per photo: a redraw of the card must not decode up to 20 MB again.
+    val decoded = remember(card.identity) { mutableMapOf<String, ByteArray?>() }
     val maximum = photos.size >= ask.max
     val maxWords = stringResource(Res.string.agentCardPhotoMax)
     fun pick(kind: AttachKind) {
@@ -517,7 +528,7 @@ private fun CardPhotoControls(
                         index.toString(),
                         stringResource(Res.string.agentCardPhotoName, index + 1),
                         stringResource(Res.string.agentCardPhotoRemove, index + 1),
-                        photoBytes(attachment),
+                        decoded.getOrPut(attachment.url) { photoBytes(attachment) },
                     )
                 }
                 .toImmutableList(),
