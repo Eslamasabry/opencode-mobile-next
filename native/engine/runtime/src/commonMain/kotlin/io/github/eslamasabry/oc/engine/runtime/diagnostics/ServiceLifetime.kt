@@ -1,13 +1,13 @@
 package io.github.eslamasabry.oc.engine.runtime.diagnostics
 
 /** A native observation; exit 137 alone cannot identify why a service stopped. */
-public enum class ServiceExitReason {
+public enum class NamedServiceExitReason {
     Unknown,
     Exited,
     MemoryOrPhantomKill,
 }
 
-public data class ServiceLifetime(
+public data class NamedServiceLifetime(
     val name: String,
     val running: Boolean = false,
     val lastExitCode: Long? = null,
@@ -16,18 +16,18 @@ public data class ServiceLifetime(
     val lastStopRequested: Boolean? = null,
     val uptimeMs: Long? = null,
     val restartCount: Long = 0,
-    val exitReason: ServiceExitReason = ServiceExitReason.Unknown,
+    val exitReason: NamedServiceExitReason = NamedServiceExitReason.Unknown,
 )
 
 /** B-LINUX-026: missing/old maps are empty; malformed values never become invented observations. */
 public object ServiceLifetimes {
-    public fun read(performance: Any?): List<ServiceLifetime> {
+    public fun read(performance: Any?): List<NamedServiceLifetime> {
         val root = performance as? Map<*, *> ?: return emptyList()
         val services = root["services"] as? Map<*, *> ?: return emptyList()
         return services.entries.mapNotNull { (name, value) ->
             if (name !is String || name.isEmpty()) return@mapNotNull null
             val map = value as? Map<*, *> ?: return@mapNotNull null
-            ServiceLifetime(
+            NamedServiceLifetime(
                 name = name,
                 running = map["running"] == true,
                 lastExitCode = integer(map["lastExitCode"]),
@@ -39,9 +39,9 @@ public object ServiceLifetimes {
                 restartCount = nonNegative(map["restartCount"]) ?: 0,
                 exitReason =
                     when (map["exitReason"]) {
-                        "exited" -> ServiceExitReason.Exited
-                        "memory_or_phantom_kill" -> ServiceExitReason.MemoryOrPhantomKill
-                        else -> ServiceExitReason.Unknown
+                        "exited" -> NamedServiceExitReason.Exited
+                        "memory_or_phantom_kill" -> NamedServiceExitReason.MemoryOrPhantomKill
+                        else -> NamedServiceExitReason.Unknown
                     },
             )
         }

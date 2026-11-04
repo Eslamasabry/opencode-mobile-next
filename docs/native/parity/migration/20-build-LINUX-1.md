@@ -71,3 +71,47 @@ Final compile checkpoint: **2/2 requested gates passed**, `:androidApp:assembleP
 Final coverage: **56 rows = 54 built now + 2 already there + 0 blocked**. **No tests were written or run. No push, release-key use or release.**
 
 Changed native-source snapshot relative to the integration base: `4a11c21f87fdb6b0235aeebe5b61c622a035648bf1683077dfac5ff77ed0237e` (100 paths; sorted path + NUL + contents + NUL).
+
+
+## P12 integration repair — 2026-11-04
+
+Merged integration head `c89e2c887be77b94bee51a0e1f95284e0607d762` into
+`p12x/job-20-build-LINUX-1-a1b7c86` (unit tip `a1b7c869db7eda649e608715f8771ef8dae28cff`).
+The app dependency list is the union of both parents: Termux, diagnostics and development
+services all remain, along with the agent-install BuildConfig floor.
+
+The integration's performance snapshot and this unit's named lifetime observations declared
+identical type names. Renamed only this unit's types to `NamedServiceLifetime` and
+`NamedServiceExitReason`, updating its three consumers without changing parsing or fields.
+Updated four existing screen-test recorders for the merged Agents, Git, Linux and project
+action contracts; all existing assertions remain unchanged. No tests were executed.
+
+The fresh checkout lacked the gitignored Sherpa AAR. Restored it using
+`native/tools/vendor/fetch.sh`, then verified `native/third_party/SHA256SUMS`; no dependency
+version or hash changed. Initial compile pass exposed that missing artifact, the type
+collision and the incomplete test doubles (13 failed Gradle tasks, 1228 actionable tasks).
+
+Compile command, from `native/`, under `/tmp/oc-native-gradle.lock` and the machine build lock:
+
+```bash
+export JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk"
+nice -n 5 ./gradlew --console=plain --continue \
+  -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
+  -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' \
+  :androidApp:assemblePreviewDebug compileKotlinDesktop compileTestKotlinDesktop
+```
+
+Final integration compile: **3/3 requested targets passed**, **1273 actionable Gradle tasks**
+(176 executed, 11 from cache, 1086 up-to-date), **0 failed tasks**, **0 test execution tasks**;
+Gradle duration **1m28s** after waiting for the shared locks. Includes
+`:androidApp:verifyPreviewDebugNativeLibraries`. Log:
+`/tmp/job-20-build-LINUX-1-integration-compile-2.log`.
+
+Tracked native input snapshot (sorted path + NUL + contents + NUL):
+`e0655e3ebfb94007f86c6f2421541b431f007c24a3c20272ada144de8f6e51e0`. No native input changed after the successful gate.
+`git diff --cached --check c89e2c887be77b94bee51a0e1f95284e0607d762` and the
+dependency-union check passed; no unresolved conflicts. The incoming integration already
+contains a trailing blank line in `ServerRestartBudget.kt:468`; that unrelated file is
+byte-for-byte unchanged from the integration head.
+Flutter/preflight/test execution was omitted under the owner's compile-only instruction.
+No push, release signing, publication or device/runtime qualification.

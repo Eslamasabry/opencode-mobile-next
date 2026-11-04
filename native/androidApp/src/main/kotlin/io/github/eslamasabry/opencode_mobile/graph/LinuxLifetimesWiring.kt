@@ -11,7 +11,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
-import io.github.eslamasabry.oc.engine.runtime.diagnostics.ServiceLifetime
+import io.github.eslamasabry.oc.engine.runtime.diagnostics.NamedServiceLifetime
 import io.github.eslamasabry.oc.engine.runtime.diagnostics.ServiceLifetimes
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifetimesSource
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
@@ -34,7 +34,7 @@ class NativeLinuxLifetimes(
     private val io = dispatchers.io
     private val lane = Mutex()
 
-    override suspend fun read(): Outcome<List<ServiceLifetime>> {
+    override suspend fun read(): Outcome<List<NamedServiceLifetime>> {
         if (!platform.builtinLinux) return Outcome.Ok(emptyList())
         return lane.withLock {
             withContext(io) {

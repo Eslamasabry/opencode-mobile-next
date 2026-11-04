@@ -2,7 +2,7 @@ package io.github.eslamasabry.oc.feature.linux.presentation
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.engine.runtime.diagnostics.ServiceLifetime
+import io.github.eslamasabry.oc.engine.runtime.diagnostics.NamedServiceLifetime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,11 +12,11 @@ import kotlinx.coroutines.launch
 
 /** The app supplies real lifetime observations, without command, credential or log text. */
 public interface LinuxLifetimesSource {
-    public suspend fun read(): Outcome<List<ServiceLifetime>>
+    public suspend fun read(): Outcome<List<NamedServiceLifetime>>
 }
 
 public data class LinuxLifetimesUi(
-    val records: List<ServiceLifetime> = emptyList(),
+    val records: List<NamedServiceLifetime> = emptyList(),
     val loading: Boolean = false,
     val failure: Failure? = null,
     val read: Boolean = false,

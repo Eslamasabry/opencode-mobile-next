@@ -47,6 +47,8 @@ import io.github.eslamasabry.oc.ui.words.res.p12NoServerTitle
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectConversations
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectNoConversations
 import io.github.eslamasabry.oc.ui.words.res.serversTitle
+import io.github.eslamasabry.oc.ui.words.res.servicesSubtitle
+import io.github.eslamasabry.oc.ui.words.res.servicesTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.stringResource
 
@@ -55,7 +57,7 @@ import org.jetbrains.compose.resources.stringResource
  * then this project's conversations with a visible Load more, then "In other projects" (B-NAV-010).
  */
 @Composable
-public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions) {
+public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, onDevServices: (() -> Unit)? = null) {
     KitScreen(
         topBar = {
             KitTopBar(
@@ -134,6 +136,19 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions) 
                     }
                 ProjectPagePhase.NoServer -> Unit
                 ProjectPagePhase.Ready -> {
+                    // BUILD-RUNTIME-A: Development services of this folder (Flutter project hub).
+                    if (onDevServices != null) {
+                        item(key = "services") {
+                            KitRowGroup {
+                                KitRow(
+                                    title = stringResource(Res.string.servicesTitle),
+                                    supporting = stringResource(Res.string.servicesSubtitle),
+                                    trailing = KitRowTrailing.Chevron,
+                                    onClick = onDevServices,
+                                )
+                            }
+                        }
+                    }
                     item(key = "here") {
                         KitRowGroup(label = stringResource(Res.string.p12ProjectConversations)) {
                             if (state.conversations.isEmpty()) {

@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.core.common.Severity
 import io.github.eslamasabry.oc.core.security.RedactingWriter
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.opencode_mobile.graph.AndroidAppGraph
+import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsAttentionAccessors
 import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsLogSink
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
 import io.github.eslamasabry.opencode_mobile.graph.LinuxAccessors
@@ -43,6 +44,7 @@ class OcApplication : Application(), GraphOwner {
         appGraph =
             createGraphFactory<AndroidAppGraph.Factory>()
                 .create(this, buildInfo, redactor, LaunchMode.Normal)
+        (appGraph as DiagnosticsAttentionAccessors).diagnosticsAttention.start() // persisted report, crash store, exits
         appGraph.previewRuntime // warm stores, restore saved profile, connect
         (appGraph as PlatformAccessors).platform.start() // P12-PLATFORM: channels, widgets feed, alerts, update check
         appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)

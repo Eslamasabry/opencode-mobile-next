@@ -1,7 +1,7 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
 import androidx.compose.runtime.Composable
-import io.github.eslamasabry.oc.engine.runtime.diagnostics.ServiceExitReason
+import io.github.eslamasabry.oc.engine.runtime.diagnostics.NamedServiceExitReason
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifetimesUi
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -54,9 +54,9 @@ public fun LinuxLifetimesPanel(state: LinuxLifetimesUi, onRefresh: () -> Unit) {
             val reason =
                 stringResource(
                     when (record.exitReason) {
-                        ServiceExitReason.Unknown -> Res.string.linuxLifetimeUnknown
-                        ServiceExitReason.Exited -> Res.string.linuxLifetimeExited
-                        ServiceExitReason.MemoryOrPhantomKill -> Res.string.linuxLifetimeKilled
+                        NamedServiceExitReason.Unknown -> Res.string.linuxLifetimeUnknown
+                        NamedServiceExitReason.Exited -> Res.string.linuxLifetimeExited
+                        NamedServiceExitReason.MemoryOrPhantomKill -> Res.string.linuxLifetimeKilled
                     }
                 )
             val detail =
