@@ -74,7 +74,8 @@ class ComposerCommandsFilesTest {
                 assertIs<Outcome.Ok<Unit>>(g.slashCommand(SessionId("s1"), "/review", "now please"))
                 val post = requests.last()
                 assertTrue(post.url.encodedPath.endsWith("/session/s1/command"))
-                assertEquals("""{"command":"review","text":"now please"}""", post.bodyText())
+                // Stable renamed the slash-command field (dialect.dart, B-PROTO-013): `command` goes out as `name`.
+                assertEquals("""{"name":"review","text":"now please"}""", post.bodyText())
                 assertTrue(g.capabilities.value.slashCommands)
             } finally {
                 g.close()

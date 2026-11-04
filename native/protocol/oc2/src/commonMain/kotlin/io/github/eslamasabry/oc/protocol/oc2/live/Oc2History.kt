@@ -154,6 +154,7 @@ internal class Oc2History(private val redactor: Redactor) {
                             metadata =
                                 buildJsonObject {
                                     put("shellStatus", wire.status)
+                                    wire.shellID?.let { put("shellID", it) }
                                     put("truncated", wire.outputTruncated)
                                     wire.exit?.let { put("exit", it) }
                                 },
