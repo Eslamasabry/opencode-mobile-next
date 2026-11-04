@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="voiceConversationNativeSends">عند انتهاء التسجيل، تُرسل كلماته إلى هذه المحادثة. اضغط «استماع» للجولة التالية. لا تُقرأ الردود إلا عند تفعيل هذا الخيار.</string>
+    <string name="voiceConversationNativeAllowReplies">السماح بقراءة الردود</string>
+    <string name="voiceConversationNativeTourSpeak">تحدّث، ثم اضغط «إرسال» لإرسال ما قلته. يبدأ «استماع» جولتك التالية.</string>
+    <string name="voiceConversationNativeTourReplies">يطلب خيار قراءة الردود موافقتك واختيار صوت الهاتف. يمكنك إيقاف القراءة في أي وقت.</string>
+    <string name="voiceConversationNativeTourLeave">تُوقف مغادرة وضع الصوت الاستماع والقراءة التلقائية. لا تُعاد تلقائيًا رسالة لم يتأكد إرسالها.</string>
+    <string name="voiceConversationNativeTourDone">فهمت</string>
+    <string name="voiceConversationNativeTourNext">التالي</string>
+    <string name="voiceConversationNativeTourReset">عرض النصائح مرة أخرى</string>
+    <string name="voiceConversationNativeTourResetFailed">تعذّر إعادة ضبط النصائح. حاول مرة أخرى.</string>
+    <string name="voiceConversationNativeTourReplay">أرني</string>
+    <string name="voiceConversationNativeTourLoadFailed">تعذّر فتح النصائح. حاول مرة أخرى.</string>
+</resources>

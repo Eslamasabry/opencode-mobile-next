@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxBackupPrivacyNative">تبقى ملفات تسجيل الدخول المعروفة وإعدادات بيئة الخدمات المحفوظة على هذا الهاتف. تتضمن النسخة أوامر الخدمات المخصصة؛ راجعها قبل مشاركة النسخة الاحتياطية.</string>
+    <string name="linuxBackupServiceAccountsNative">تُحفظ الخدمات التي لها إعدادات بيئة وهي متوقفة. بعد الاستعادة، أعد إعداد الحساب والبيئة لهذه الخدمات قبل تشغيلها.</string>
+</resources>

@@ -85,6 +85,8 @@ import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
+import io.github.eslamasabry.oc.ui.routes.TeachingRoute
+import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.routes.VoiceRoute
 import io.github.eslamasabry.oc.ui.shell.nav.SystemMotion
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -257,6 +259,8 @@ class AndroidSettingsHost(
     override val openers: SettingsOpeners = SettingsOpeners { place ->
         when (place) {
             SettingsOutside.Servers -> nav.open(ServersRoute.Home)
+            SettingsOutside.Tools -> nav.open(ToolsRoute())
+            SettingsOutside.Providers -> nav.open(ToolsRoute(tab = "providers"))
             SettingsOutside.StarOnGitHub -> application.view(REPO)
             SettingsOutside.WhatsNew,
             SettingsOutside.ReleaseNotes -> application.view("$REPO/releases")
@@ -268,6 +272,7 @@ class AndroidSettingsHost(
             SettingsOutside.ShareApp -> scope.launch { shareApp() }
             SettingsOutside.AndroidNotificationSettings -> openNotificationSettings()
             SettingsOutside.VoiceSetup -> nav.open(VoiceRoute.Settings)
+            SettingsOutside.Tips -> nav.open(TeachingRoute.Tips)
             SettingsOutside.KeepRunning ->
                 nav.open(BackgroundRoute.Home) // BUILD-ANDROID-BG-PLATFORM
             SettingsOutside.VoiceNotices ->
@@ -364,6 +369,8 @@ class AndroidSettingsHost(
     private companion object {
         val OPENS: Set<SettingsOutside> =
             setOf(
+                SettingsOutside.Tools,
+                SettingsOutside.Providers,
                 SettingsOutside.Servers,
                 SettingsOutside.StarOnGitHub,
                 SettingsOutside.WhatsNew,
@@ -376,6 +383,7 @@ class AndroidSettingsHost(
                 SettingsOutside.ReportOnGitHub,
                 SettingsOutside.KeptDiagnostics,
                 SettingsOutside.KeepRunning,
+                SettingsOutside.Tips,
             )
     }
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sharedFoldersTitle">Shared storage</string>
+    <string name="sharedFoldersSelected">Linux can see only the project folders you open and Download › OpenCode. Android file access lets the app read those folders; it does not share your whole storage with Linux.</string>
+    <string name="sharedFoldersAll">Let Linux see all shared storage</string>
+    <string name="sharedFoldersAllDetail">Use the older storage access instead of selected project folders. Changes apply when the phone server starts again.</string>
+    <string name="sharedFoldersAllRisk">Agents running in Linux will be able to read and change files outside your opened projects.</string>
+    <string name="sharedFoldersProtection">Protection keeps Linux limited to selected project folders.</string>
+    <string name="sharedFoldersRestart">Folder access is saved. Restart the phone server from This phone when your work is ready, then refresh Files. No server has been stopped.</string>
+    <string name="sharedFoldersFailed">Could not read or save folder access. Try again.</string>
+    <string name="sharedFoldersAndroid">Android file access</string>
+    <string name="sharedFoldersAndroidDetail">Allow access when you open projects in shared storage.</string>
+    <string name="sharedFoldersGranted">Allowed. Linux still follows the folder choice below.</string>
+    <string name="sharedFoldersWorking">Updating folder access…</string>
+</resources>

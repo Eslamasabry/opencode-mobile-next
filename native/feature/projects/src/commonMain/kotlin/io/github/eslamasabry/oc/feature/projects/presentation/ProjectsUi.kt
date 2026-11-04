@@ -96,9 +96,46 @@ public data class ProjectPageUi(
     val failure: Failure? = null,
     val creating: Boolean = false,
     val createFailure: Failure? = null,
+    val canStartIsolated: Boolean = false,
+    val copies: List<io.github.eslamasabry.oc.core.model.WorktreeInfo> = emptyList(),
+    val copiesFailure: Failure? = null,
+    val copiesLoading: Boolean = false,
+    val isolatedShown: Boolean = false,
+    val isolatedLoading: Boolean = false,
+    val isolatedFailure: Failure? = null,
+    val isolatedTask: String = "",
+    val isolatedName: String = "",
+    val isolated: io.github.eslamasabry.oc.engine.agents.worktree.IsolatedTaskState? = null,
+    val isolatedDraftFailed: Boolean = false,
+    val confirmRemoveCopy: Boolean = false,
+    val isolatedDetails: io.github.eslamasabry.oc.core.common.Redacted? = null,
 )
 
 public interface ProjectPageActions {
+    public fun refreshCopies() {}
+
+    public fun openCopy(directory: String) {}
+
+    public fun startIsolatedTask() {}
+
+    public fun isolatedDraftChanged(text: String) {}
+
+    public fun isolatedNameChanged(name: String) {}
+
+    public fun createIsolatedTask() {}
+
+    public fun closeIsolatedTask() {}
+
+    public fun keepWaitingForCopy() {}
+
+    public fun openCopyAnyway() {}
+
+    public fun requestRemoveCopy() {}
+
+    public fun confirmRemoveCopy(remove: Boolean) {}
+
+    public fun openUnsentConversation() {}
+
     public fun developmentServices()
 
     public fun back()

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="voiceConversationNativeSends">When a recording finishes, its words are sent to this conversation. Tap Listen for the next turn. Replies are spoken only when you turn this on.</string>
+    <string name="voiceConversationNativeAllowReplies">Allow spoken replies</string>
+    <string name="voiceConversationNativeTourSpeak">Talk, then tap Send to send what you said. Listen starts your next turn.</string>
+    <string name="voiceConversationNativeTourReplies">Read replies aloud asks for your consent and a phone voice. You can stop reading at any time.</string>
+    <string name="voiceConversationNativeTourLeave">Leave voice mode stops listening and automatic reading. An uncertain send is never sent again automatically.</string>
+    <string name="voiceConversationNativeTourDone">Got it</string>
+    <string name="voiceConversationNativeTourNext">Next</string>
+    <string name="voiceConversationNativeTourReset">Show tips again</string>
+    <string name="voiceConversationNativeTourResetFailed">Tips could not be reset. Try again.</string>
+    <string name="voiceConversationNativeTourReplay">Show me</string>
+    <string name="voiceConversationNativeTourLoadFailed">Tips could not be opened. Try again.</string>
+</resources>

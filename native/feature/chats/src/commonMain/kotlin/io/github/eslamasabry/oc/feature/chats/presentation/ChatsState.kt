@@ -39,6 +39,7 @@ public object ChatsState {
                     projectDirectory = filters.projectDirectory,
                     running = filters.running,
                     needsYou = filters.needsYou,
+                    otherFolders = filters.otherFolders,
                 )
                 .apply(roots)
                 .filter {
@@ -64,6 +65,29 @@ public object ChatsState {
             brief = if (filters.identities == null) briefUi(brief, roots) else null,
             incomplete = feed.incompleteSources,
             settingsAvailable = settingsAvailable,
+            projectChoices = projects.toImmutableList(),
+            projectNeedsYou =
+                roots
+                    .filter { it.status == ChatStatus.NeedsYou }
+                    .mapNotNull { it.directory }
+                    .toImmutableSet(),
+            allCount = roots.size,
+            otherFoldersCount = roots.count { it.inOtherFolder },
+            otherFoldersSelected = filters.otherFolders,
+            inbox =
+                feed.items
+                    .filter { it.status == ChatStatus.NeedsYou }
+                    .sortedWith(
+                        compareBy<ChatFeedItem> { it.lastActivityMs }.thenBy { it.identity }
+                    )
+                    .map(::row)
+                    .toImmutableList(),
+            finished =
+                roots
+                    .filter { it.finishedUnseen && it.status == ChatStatus.Idle }
+                    .sortedByDescending { it.lastActivityMs }
+                    .map(::row)
+                    .toImmutableList(),
         )
     }
 

@@ -390,6 +390,47 @@ class AndroidProfileMonitoring(
         }
     }
 
+    /** The one engine, for Conversations' watched-servers panel (it never builds a second one). */
+    internal suspend fun awaitEngine(): ProfileMonitor {
+        start()
+        return prepared.await()
+    }
+
+    /**
+     * Opens a watched request from Conversations after the same private preflight a notification
+     * tap gets; [current] re-checks the request is still listed before and after connecting.
+     */
+    internal suspend fun openWatched(
+        route: MonitoredRoute,
+        current: (ProfileMonitor) -> Boolean,
+    ): Outcome<ConversationRef> {
+        start()
+        return withContext(dispatchers.main) {
+            val stale = Failure.Refused(RefusalReason.StaleScope)
+            val engine =
+                withTimeoutOrNull(8.seconds) { prepared.await() }
+                    ?: return@withContext Failure.TimedOut().failed()
+            updateIdentity()
+            val opener =
+                MonitorRequestOpener(
+                    source,
+                    ::gateway,
+                    { engine.rulesFor(it).enabled && consent.allows(it) },
+                    { it !in stopped && stores.profiles.profile(ProfileId(it)) != null },
+                    clock,
+                )
+            if (!current(engine) || !opener.prepare(route) || !current(engine))
+                return@withContext stale.failed()
+            val id = ProfileId(route.profileId)
+            when (val connected = application.appGraph.previewRuntime.connect(id)) {
+                is Outcome.Failed -> connected
+                is Outcome.Ok ->
+                    if (current(engine)) ConversationRef(id, SessionId(route.sessionId)).ok()
+                    else stale.failed()
+            }
+        }
+    }
+
     /** Consumes opaque taps before the normal profile/session extras can bypass preflight. */
     fun route(intent: Intent): Boolean {
         val token = intent.getStringExtra(FrozenExtras.EXTRA_MONITOR_TOKEN) ?: return false

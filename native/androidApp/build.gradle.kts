@@ -79,6 +79,8 @@ dependencies {
             ":core:model",
             ":core:domain",
             ":engine:connection",
+            ":engine:integrations-catalog",
+            ":engine:setupassist",
             ":engine:transcript",
             ":ui:design",
             ":ui:words",
@@ -98,6 +100,7 @@ dependencies {
             ":engine:agents",
             ":engine:delivery",
             ":engine:requests",
+            ":engine:attention", // Native watched-server Inbox and explicit monitoring consent.
             ":ui:kit-chat",
             ":ui:kit-content",
             ":feature:settings",
@@ -106,6 +109,7 @@ dependencies {
             ":engine:analytics",
             ":engine:diagnostics",
             ":android:notifications",
+            ":android:platform",
             ":android:background", // BUILD-ANDROID-BG-PLATFORM: live mode, pause, sign-in lease
             ":android:migration",
             ":android:termux",

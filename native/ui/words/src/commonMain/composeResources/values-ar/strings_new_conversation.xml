@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="p12NewDefaultModel">النموذج الافتراضي</string>
+    <string name="p12NewDefaultAgent">الوكيل الافتراضي</string>
+    <string name="p12NewAgent">الوكيل</string>
+    <string name="p12NewFolder">مجلد المشروع</string>
+    <string name="p12NewUseFolder">استخدام هذا المجلد</string>
+    <string name="p12NewDraftFailed">تعذر حفظ رسالتك على هذا الهاتف. أبقِ هذه الصفحة مفتوحة وحاول مرة أخرى.</string>
+    <string name="p12NewCreationUnconfirmed">لم يؤكد الخادم ما إذا تم إنشاء المحادثة. تحقق من المحادثات قبل بدء أخرى. تبقى رسالتك محفوظة هنا.</string>
+    <string name="p12NewBoundProject">يستخدم هذا الاتصال مجلد المشروع المحفوظ. أضف اتصالًا لمجلد آخر.</string>
+    <string name="p12NewDeliveryUnconfirmed">لم يؤكد الخادم هذه الرسالة. افتح المحادثة التي أُنشئت للتحقق منها قبل بدء أخرى. تبقى كلماتك محفوظة هنا.</string>
+    <string name="p12NewOpenCreated">فتح المحادثة التي أُنشئت</string>
+</resources>

@@ -11,8 +11,11 @@ import io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageCategory
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxSize
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrCatAgents
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrCatAgentsDetail
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrCatBase
@@ -85,7 +88,7 @@ internal fun LinuxProblem.words(): String =
             LinuxProblem.JobRunning -> Res.string.linuxMgrProblemJob
             LinuxProblem.Unavailable -> Res.string.linuxMgrProblemUnavailable
             LinuxProblem.Failed -> Res.string.linuxMgrProblemFailed
-        },
+        }
     )
 
 @Composable
@@ -97,7 +100,7 @@ internal fun LinuxProgramKind.words(): String =
             LinuxProgramKind.Agent -> Res.string.linuxMgrKindAgent
             LinuxProgramKind.DevServer -> Res.string.linuxMgrKindDev
             LinuxProgramKind.Other -> Res.string.linuxMgrKindOther
-        },
+        }
     )
 
 @Composable
@@ -110,7 +113,7 @@ internal fun LinuxStorageCategory.title(): String =
             LinuxStorageCategory.Agents -> Res.string.linuxMgrCatAgents
             LinuxStorageCategory.Projects -> Res.string.linuxMgrCatProjects
             LinuxStorageCategory.Temp -> Res.string.linuxMgrCatTemp
-        },
+        }
     )
 
 @Composable
@@ -123,7 +126,7 @@ internal fun LinuxStorageCategory.detail(): String =
             LinuxStorageCategory.Agents -> Res.string.linuxMgrCatAgentsDetail
             LinuxStorageCategory.Projects -> Res.string.linuxMgrCatProjectsDetail
             LinuxStorageCategory.Temp -> Res.string.linuxMgrCatTempDetail
-        },
+        }
     )
 
 @Composable
@@ -134,7 +137,7 @@ internal fun LinuxCleanupId.title(): String =
             LinuxCleanupId.ToolCaches -> Res.string.linuxMgrCleanTools
             LinuxCleanupId.TempFiles -> Res.string.linuxMgrCleanTemp
             LinuxCleanupId.OldAgentVersions -> Res.string.linuxMgrCleanAgents
-        },
+        }
     )
 
 @Composable
@@ -145,7 +148,7 @@ internal fun LinuxCleanupId.detail(): String =
             LinuxCleanupId.ToolCaches -> Res.string.linuxMgrCleanToolsDetail
             LinuxCleanupId.TempFiles -> Res.string.linuxMgrCleanTempDetail
             LinuxCleanupId.OldAgentVersions -> Res.string.linuxMgrCleanAgentsDetail
-        },
+        }
     )
 
 @Composable
@@ -156,7 +159,7 @@ internal fun LinuxCleanupId.ask(): String =
             LinuxCleanupId.ToolCaches -> Res.string.linuxMgrCleanToolsAsk
             LinuxCleanupId.TempFiles -> Res.string.linuxMgrCleanTempAsk
             LinuxCleanupId.OldAgentVersions -> Res.string.linuxMgrCleanAgentsAsk
-        },
+        }
     )
 
 /** A size in an LTR isolate, so Arabic text around it keeps its order. */
@@ -170,17 +173,28 @@ internal fun names(names: List<String>): String = "⁦${names.joinToString(", ")
 internal fun stopJobWords(kind: LinuxJobKind, list: List<String>): Pair<String, String> {
     val n = names(list)
     return when (kind) {
-        LinuxJobKind.Install -> stringResource(Res.string.linuxMgrJobStopInstallTitle, n) to stringResource(Res.string.linuxMgrJobStopInstall, n)
-        LinuxJobKind.Remove -> stringResource(Res.string.linuxMgrJobStopRemoveTitle, n) to stringResource(Res.string.linuxMgrJobStopRemove, n)
-        LinuxJobKind.Update -> stringResource(Res.string.linuxMgrJobStopUpdateTitle) to stringResource(Res.string.linuxMgrJobStopUpdate)
-        LinuxJobKind.Backup -> stringResource(Res.string.linuxMgrJobStopBackupTitle) to stringResource(Res.string.linuxMgrJobStopBackup)
-        LinuxJobKind.Restore -> stringResource(Res.string.linuxMgrJobStopRestoreTitle) to stringResource(Res.string.linuxMgrJobStopRestore)
+        LinuxJobKind.Install ->
+            stringResource(Res.string.linuxMgrJobStopInstallTitle, n) to
+                stringResource(Res.string.linuxMgrJobStopInstall, n)
+        LinuxJobKind.Remove ->
+            stringResource(Res.string.linuxMgrJobStopRemoveTitle, n) to
+                stringResource(Res.string.linuxMgrJobStopRemove, n)
+        LinuxJobKind.Update ->
+            stringResource(Res.string.linuxMgrJobStopUpdateTitle) to
+                stringResource(Res.string.linuxMgrJobStopUpdate)
+        LinuxJobKind.Backup ->
+            stringResource(Res.string.linuxMgrJobStopBackupTitle) to
+                stringResource(Res.string.linuxMgrJobStopBackup)
+        LinuxJobKind.Restore ->
+            stringResource(Res.string.linuxMgrJobStopRestoreTitle) to
+                stringResource(Res.string.linuxMgrJobStopRestore)
     }
 }
 
 /**
- * The one long job, said in place (Flutter LinuxJobPanel): what runs with its percent and that it keeps going when the
- * page is left, with a Stop that names it; how it ended, with Done. Nothing when there is no job.
+ * The one long job, said in place (Flutter LinuxJobPanel): what runs with its percent and that it
+ * keeps going when the page is left, with a Stop that names it; how it ended, with Done. Nothing
+ * when there is no job.
  */
 @Composable
 internal fun LinuxJobPanel(job: LinuxJobState, onStop: () -> Unit, onDismiss: () -> Unit) {
@@ -200,7 +214,14 @@ internal fun LinuxJobPanel(job: LinuxJobState, onStop: () -> Unit, onDismiss: ()
             KitNotice(
                 title = job.percent?.let { "$title · ⁦$it %⁩" } ?: title,
                 message = stringResource(Res.string.linuxMgrJobKeepsGoing),
-                actions = listOf(KitLineAction(stopJobWords(kind, job.names).second, onStop, testTag = "linux-job-stop")),
+                actions =
+                    listOf(
+                        KitLineAction(
+                            stopJobWords(kind, job.names).second,
+                            onStop,
+                            testTag = "linux-job-stop",
+                        )
+                    ),
                 liveRegion = false,
             )
         }
@@ -216,10 +237,17 @@ internal fun LinuxJobPanel(job: LinuxJobState, onStop: () -> Unit, onDismiss: ()
             KitNotice(
                 message = done,
                 tone = StatusTone.Ok,
-                dismiss = KitLineAction(stringResource(Res.string.linuxMgrJobDismiss), onDismiss, testTag = "linux-job-dismiss"),
+                dismiss =
+                    KitLineAction(
+                        stringResource(Res.string.linuxMgrJobDismiss),
+                        onDismiss,
+                        testTag = "linux-job-dismiss",
+                    ),
             )
         }
-        LinuxJobStatus.Failed, LinuxJobStatus.TimedOut, LinuxJobStatus.Interrupted -> {
+        LinuxJobStatus.Failed,
+        LinuxJobStatus.TimedOut,
+        LinuxJobStatus.Interrupted -> {
             val why =
                 when {
                     job.wasBusy -> Res.string.linuxMgrProblemBusy
@@ -230,7 +258,17 @@ internal fun LinuxJobPanel(job: LinuxJobState, onStop: () -> Unit, onDismiss: ()
             KitNotice(
                 message = stringResource(why),
                 tone = StatusTone.Failure,
-                dismiss = KitLineAction(stringResource(Res.string.linuxMgrJobDismiss), onDismiss, testTag = "linux-job-dismiss"),
+                dismiss =
+                    KitLineAction(
+                        stringResource(Res.string.linuxMgrJobDismiss),
+                        onDismiss,
+                        testTag = "linux-job-dismiss",
+                    ),
+            )
+            KitDetailsFold(
+                label = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
+                text = job.details,
             )
         }
     }

@@ -29,9 +29,9 @@ import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
-import io.github.eslamasabry.oc.engine.composer.input.Mentions
 import io.github.eslamasabry.oc.engine.composer.drafts.DraftSession
 import io.github.eslamasabry.oc.engine.composer.drafts.DraftSubmission
+import io.github.eslamasabry.oc.engine.composer.input.Mentions
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.delivery.ConnectionDelivery
@@ -45,6 +45,10 @@ import io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.engine.transcript.transcript
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceConversationSession
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceConversationSnapshot
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceDispatchProof
+import io.github.eslamasabry.oc.engine.voice.conversation.VoiceReplyMessage
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestsModel
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestPlace
 import kotlin.coroutines.ContinuationInterceptor
@@ -93,9 +97,13 @@ public class GraphChatWorlds(
     private val draftStores: Set<ConversationDrafts> = emptySet(),
     private val recentBackings: Set<RecentModelsBacking> = emptySet(),
 ) : ChatWorlds {
-    /** B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest) when the app binds a store. */
+    /**
+     * B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest)
+     * when the app binds a store.
+     */
     private val recentModels =
-        recentBackings.singleOrNull()?.let { RecentModels(max = SAVED_RECENT_MODELS, backing = it) } ?: RecentModels()
+        recentBackings.singleOrNull()?.let { RecentModels(max = SAVED_RECENT_MODELS, backing = it) }
+            ?: RecentModels()
 
     init {
         check(draftStores.size <= 1) { "multiple conversation draft stores" }
@@ -106,7 +114,8 @@ public class GraphChatWorlds(
 
     override fun open(ref: ConversationRef): ChatWorld {
         val (world, holders) =
-            open[ref] ?: (GraphChatWorld(ref, registry, draftStores.singleOrNull(), recentModels) to 0)
+            open[ref]
+                ?: (GraphChatWorld(ref, registry, draftStores.singleOrNull(), recentModels) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
         return world
@@ -138,8 +147,9 @@ internal class GraphChatWorld(
     private val registry: ConnectionRegistry,
     private val draftStore: ConversationDrafts? = null,
     private val recentModels: RecentModels = RecentModels(),
-) : ChatWorld, TurnFeedSource {
-    // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results, context).
+) : ChatWorld, TurnFeedSource, VoiceConversationSession {
+    // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
+    // context).
     private val feedKeeper = TurnFeedKeeper(ref.sessionId.raw)
     override val turnFeed: StateFlow<TurnFeed> = feedKeeper.feed
     private var draftSession = draftStore?.open(ref)
@@ -164,10 +174,13 @@ internal class GraphChatWorld(
     private var catalogDefaults: ChatDefaults? = null
     /** Bumped by every verified selection: a load that began earlier never publishes its choice. */
     private var selectionEpoch = 0L
-    /** Bumped whenever the draft owner is replaced: a delayed pick for the old one writes nothing. */
+    /**
+     * Bumped whenever the draft owner is replaced: a delayed pick for the old one writes nothing.
+     */
     private var draftOwnerGeneration = 0L
     override val draftGeneration: Long
         get() = draftOwnerGeneration
+
     /** Server user messages of this conversation ("prompt:<id>"), with or without words. */
     private val userMessageKeys = LinkedHashSet<String>()
 
@@ -179,7 +192,10 @@ internal class GraphChatWorld(
 
     private val sentSnapshots = HashMap<Long, SentSnapshot>()
 
-    /** Visible sub-agents of the loaded catalog: an `@name` of one rides the prompt as a mention (Codex composer #6). */
+    /**
+     * Visible sub-agents of the loaded catalog: an `@name` of one rides the prompt as a mention
+     * (Codex composer #6).
+     */
     private var subagentNames: List<String> = emptyList()
 
     override val transcript: StateFlow<TranscriptState> = mutableTranscript.asStateFlow()
@@ -193,11 +209,170 @@ internal class GraphChatWorld(
     private val mutableCommands = MutableStateFlow<List<ComposerCommand>>(emptyList())
     override val commands: StateFlow<List<ComposerCommand>> = mutableCommands.asStateFlow()
 
+    private val mutableVoiceConversation = MutableStateFlow(VoiceConversationSnapshot())
+    override val voiceConversation: StateFlow<VoiceConversationSnapshot> =
+        mutableVoiceConversation.asStateFlow()
+    private var voiceGeneration = 0L
+    private var voiceBusyCount = 0L
+    private var voiceIdleCount = 0L
+    private val voiceLiveUsers = LinkedHashSet<String>()
+    private var voiceProof: VoiceDispatchProof? = null
+
+    private fun publishVoiceConversation() {
+        val feed = feedKeeper.feed.value
+        val draft = mutableDraft.value
+        mutableVoiceConversation.value =
+            VoiceConversationSnapshot(
+                generation = voiceGeneration,
+                connected = currentAttached() != null && mutableLink.value == ChatLink.Live,
+                ready =
+                    mutableLoad.value is ChatLoad.Live &&
+                        draft.ready &&
+                        draft.failure == null &&
+                        !draft.sendBlocked,
+                busy = feed.busy || mutablePending.value.any { it.state == PendingState.Sending },
+                requestWaiting = mutableRequests.value?.state?.value?.card != null,
+                hasAttachments = draft.attachments.isNotEmpty(),
+                busyCount = voiceBusyCount,
+                idleCount = voiceIdleCount,
+                liveUserIds = voiceLiveUsers.toSet(),
+                messages =
+                    feed.ledger.messages.map { message ->
+                        val info = message.info
+                        VoiceReplyMessage(
+                            info.id,
+                            info.role == io.github.eslamasabry.oc.core.model.transcript.Role.User,
+                            info.parentId,
+                            info.time?.completedMs != null || info.errorText != null,
+                            message.parts
+                                .filter {
+                                    !it.synthetic &&
+                                        it.type ==
+                                            io.github.eslamasabry.oc.core.model.transcript.PartType
+                                                .Text
+                                }
+                                .joinToString("\n") { it.text },
+                        )
+                    },
+                dispatch = voiceProof,
+            )
+    }
+
+    override suspend fun sendVoice(text: String): Outcome<Unit> {
+        publishVoiceConversation()
+        val before = voiceConversation.value
+        if (
+            !before.connected ||
+                !before.ready ||
+                before.busy ||
+                before.requestWaiting ||
+                before.hasAttachments ||
+                mutableDraft.value.text.isNotEmpty()
+        )
+            return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        val id = nextLocalId
+        voiceProof = VoiceDispatchProof(id)
+        publishVoiceConversation()
+        val result = send(text, draftFiles = false)
+        if (result is Outcome.Failed && voiceProof?.localId == id)
+            voiceProof = voiceProof?.copy(uncertain = true)
+        publishVoiceConversation()
+        return result
+    }
+
+    override suspend fun readVoiceReply(id: String, automatic: Boolean): Outcome<String> {
+        val owner = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val connects = owner.gateway.events.connects.value
+        val generation = voiceGeneration
+        fun current(): Boolean =
+            currentAttached() === owner &&
+                voiceGeneration == generation &&
+                owner.gateway.events.connects.value == connects &&
+                mutableLink.value == ChatLink.Live
+        fun refused(): Outcome.Failed =
+            Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
+        if (
+            automatic &&
+                (voiceProof?.messageId != id ||
+                    voiceProof?.accepted != true ||
+                    voiceProof?.uncertain == true)
+        )
+            return refused()
+        var cursor: String? = null
+        val cursors = HashSet<String>()
+        var messages: List<io.github.eslamasabry.oc.core.model.transcript.MessageWithParts> =
+            emptyList()
+        repeat(8) {
+            if (!current()) return Outcome.Failed(STALE)
+            val page = owner.gateway.messagePage(sid, cursor = cursor, limit = 100)
+            if (!current()) return Outcome.Failed(STALE)
+            when (page) {
+                is Outcome.Failed -> return page
+                is Outcome.Ok -> {
+                    val ids = messages.mapTo(HashSet()) { it.info.id }
+                    messages = page.value.items.filter { it.info.id !in ids } + messages
+                    val start = messages.indexOfFirst { it.info.id == id }
+                    if (start >= 0) {
+                        val selected =
+                            if (automatic) {
+                                if (
+                                    messages[start].info.role !=
+                                        io.github.eslamasabry.oc.core.model.transcript.Role.User
+                                )
+                                    return refused()
+                                messages.drop(start + 1).takeWhile {
+                                    it.info.role !=
+                                        io.github.eslamasabry.oc.core.model.transcript.Role.User
+                                }
+                            } else listOf(messages[start])
+                        if (
+                            selected.isEmpty() ||
+                                selected.any { message ->
+                                    message.info.role !=
+                                        io.github.eslamasabry.oc.core.model.transcript.Role
+                                            .Assistant ||
+                                        (automatic && message.info.parentId != id) ||
+                                        (message.info.time?.completedMs == null &&
+                                            message.info.errorText == null)
+                                }
+                        )
+                            return refused()
+                        if (
+                            automatic &&
+                                (feedKeeper.feed.value.busy ||
+                                    mutableRequests.value?.state?.value?.card != null)
+                        )
+                            return refused()
+                        return Outcome.Ok(
+                            selected.joinToString("\n\n") { message ->
+                                message.parts
+                                    .filter {
+                                        !it.synthetic &&
+                                            it.type ==
+                                                io.github.eslamasabry.oc.core.model.transcript
+                                                    .PartType
+                                                    .Text
+                                    }
+                                    .joinToString("\n") { it.text }
+                            }
+                        )
+                    }
+                    cursor = page.value.nextCursor ?: return refused()
+                    if (!cursors.add(cursor!!)) return refused()
+                }
+            }
+        }
+        return refused()
+    }
+
     private var attached: Attached? = null
     private var stopWatching: (() -> Unit)? = null
     private val mutableOlder = MutableStateFlow(false)
     override val hasOlder: StateFlow<Boolean> = mutableOlder
     private var nextCursor: String? = null
+    override val olderPageKey: String?
+        get() = nextCursor
+
     private val baselines = HashMap<Long, Set<String>>()
     private val canonical = HashMap<Long, String>()
     private val admitted = HashSet<Long>()
@@ -247,6 +422,7 @@ internal class GraphChatWorld(
                             savedAttachments = saved.savedAttachments,
                         )
                     refreshDraftProtection()
+                    publishVoiceConversation()
                 }
             }
         stopDraftDisplay = { draftDisplayJob.cancel() }
@@ -276,7 +452,9 @@ internal class GraphChatWorld(
             // History rows carry no file identity: an equal history prompt stays protected (an
             // explicit repeat remains possible).
             val inHistory = restored in knownUserPrompts
-            if (restored.isNotEmpty() && current.text == current.saved && (inHistory || samePending)) {
+            if (
+                restored.isNotEmpty() && current.text == current.saved && (inHistory || samePending)
+            ) {
                 protectedDraftText = current.text
                 protectedFiles = current.attachments
                 protectedByHistory = inHistory && !samePending
@@ -296,8 +474,10 @@ internal class GraphChatWorld(
             protectedFiles = current.attachments
             protectedByHistory = false
         }
-        // Codex composer #1 / QA wave 4 N5: while a bubble with exactly these words and files is on its way or
-        // unconfirmed, a second Send would dispatch the same message again. (A not-sent twin is retired when the box
+        // Codex composer #1 / QA wave 4 N5: while a bubble with exactly these words and files is on
+        // its way or
+        // unconfirmed, a second Send would dispatch the same message again. (A not-sent twin is
+        // retired when the box
         // sends it again, so a Failed bubble never blocks.)
         val pendingTwin =
             (current.text.isNotBlank() || current.attachments.isNotEmpty()) &&
@@ -309,7 +489,7 @@ internal class GraphChatWorld(
         val blocked =
             pendingTwin ||
                 protectedDraftText?.let { it.trim() == current.text.trim() } == true &&
-                protectedFiles.let { it == null || it == current.attachments }
+                    protectedFiles.let { it == null || it == current.attachments }
         val repeat =
             blocked &&
                 protectedByHistory &&
@@ -430,6 +610,8 @@ internal class GraphChatWorld(
     }
 
     private fun bind(graph: ConnectionGraph?) {
+        voiceGeneration++
+        voiceLiveUsers.clear()
         unbind()
         mutableCaps.value = ServerCapabilities()
         // Another server owns another catalog and selection; a stale graph publishes nothing.
@@ -445,6 +627,7 @@ internal class GraphChatWorld(
         if (graph == null) {
             mutableLink.value = ChatLink.Offline
             mutableLoad.value = ChatLoad.Failed(Failure.Network(NetworkWhy.Offline))
+            publishVoiceConversation()
             return
         }
         val gateway = (graph as ChatGraphAccessors).chatGateway
@@ -452,7 +635,10 @@ internal class GraphChatWorld(
         // The draft records (and restores `file:` references only at) this conversation's place.
         gateway.location.value.let {
             draftSession?.bindLocation(
-                io.github.eslamasabry.oc.engine.composer.drafts.DraftLocation(it.directory, it.workspace)
+                io.github.eslamasabry.oc.engine.composer.drafts.DraftLocation(
+                    it.directory,
+                    it.workspace,
+                )
             )
         }
         val handle = graph.transcript.open(sid.raw)
@@ -503,6 +689,9 @@ internal class GraphChatWorld(
         val jobs =
             listOf(
                 scope.launch(registry.mainContext) {
+                    mutableRequests.value?.state?.collect { publishVoiceConversation() }
+                },
+                scope.launch(registry.mainContext) {
                     services.chatRequests.engine.refresh()
                 },
                 scope.launch(registry.mainContext) {
@@ -546,8 +735,28 @@ internal class GraphChatWorld(
                                     io.github.eslamasabry.oc.core.model.transcript.Role.User
                         )
                             userMessageKeys += "prompt:${event.message.id}"
-                        if (event is CoreEvent.SessionSelection && event.sessionId == sid) adoptRemoteSelection(event)
+                        if (event is CoreEvent.SessionSelection && event.sessionId == sid)
+                            adoptRemoteSelection(event)
+                        if (
+                            event is CoreEvent.MessageUpserted &&
+                                event.message.sessionId == sid.raw &&
+                                event.message.role ==
+                                    io.github.eslamasabry.oc.core.model.transcript.Role.User
+                        ) {
+                            voiceLiveUsers += event.message.id
+                            while (voiceLiveUsers.size > 512) voiceLiveUsers.remove(
+                                voiceLiveUsers.first()
+                            )
+                        }
+                        if (event is CoreEvent.RunStarted && event.sessionId == sid)
+                            voiceBusyCount++
+                        if (event is CoreEvent.RunRetrying && event.sessionId == sid)
+                            voiceBusyCount++
+                        if (event is CoreEvent.RunEnded && event.sessionId == sid) voiceIdleCount++
                         feedKeeper.event(event, envelope.receivedAtMs)
+                        // Voice watches final identities and lifecycle events; volatile token
+                        // deltas need no second snapshot.
+                        if (event !is CoreEvent.PartDelta) publishVoiceConversation()
                         bridge.event(event)?.let(handle::submit)
                     }
                 },
@@ -555,25 +764,34 @@ internal class GraphChatWorld(
                     gateway.events.status.collect {
                         mutableLink.value = linkOf(it)
                         feedKeeper.link(mutableLink.value)
+                        publishVoiceConversation()
                     }
                 },
                 scope.launch(registry.mainContext) {
                     gateway.events.connects.collect { n ->
-                        if (n > connects) handle.submit(GatewayEvent.Connected)
+                        if (n > connects) {
+                            voiceGeneration++
+                            handle.submit(GatewayEvent.Connected)
+                            publishVoiceConversation()
+                        }
                         connects = n
                     }
                 },
                 scope.launch(registry.mainContext) {
                     gateway.capabilities.collect { mutableCaps.value = it }
                 },
-                // B13/B4 (QA wave 1): the chip names the conversation's real model from the start (not "Server
-                // default" after a restart), and the picker's first open never races capability negotiation.
+                // B13/B4 (QA wave 1): the chip names the conversation's real model from the start
+                // (not "Server
+                // default" after a restart), and the picker's first open never races capability
+                // negotiation.
                 scope.launch(registry.mainContext) {
-                    // Unknown = not negotiated yet (its defaults read as "switching"): wait for the real flags.
+                    // Unknown = not negotiated yet (its defaults read as "switching"): wait for the
+                    // real flags.
                     gateway.capabilities.first {
                         it != ServerCapabilities.Unknown && it.sessionModelProviderSwitching
                     }
-                    if (mutableModels.value.choices.isEmpty() && !mutableModels.value.loading) loadModels()
+                    if (mutableModels.value.choices.isEmpty() && !mutableModels.value.loading)
+                        loadModels()
                 },
                 scope.launch(registry.mainContext) {
                     (gateway.session(sid) as? Outcome.Ok)?.value?.title?.let {
@@ -586,6 +804,7 @@ internal class GraphChatWorld(
                     }
                     readHistory(gateway, handle, bridge)
                     feedKeeper.loadWindows { services.chatOperations.catalog() }
+                    publishVoiceConversation()
                 },
             )
         jobs.forEach { job -> stops += { job.cancel() } }
@@ -626,6 +845,7 @@ internal class GraphChatWorld(
         if (flushHeld && model != null) a.graph.scope.launch(registry.mainContext) { model.leave() }
         a.stop()
         a.handle.close()
+        publishVoiceConversation()
     }
 
     private suspend fun readHistory(
@@ -642,10 +862,13 @@ internal class GraphChatWorld(
                     return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
                 handle.loadHistory(page.value.items.map(bridge::message), version)
                 feedKeeper.history(page.value.items, feedVersion)
+                publishVoiceConversation()
                 nextCursor = page.value.nextCursor
                 mutableOlder.value = nextCursor != null
                 page.value.items
-                    .filter { it.info.role == io.github.eslamasabry.oc.core.model.transcript.Role.User }
+                    .filter {
+                        it.info.role == io.github.eslamasabry.oc.core.model.transcript.Role.User
+                    }
                     .forEach { userMessageKeys += "prompt:${it.info.id}" }
                 knownUserPrompts +=
                     page.value.items
@@ -715,8 +938,9 @@ internal class GraphChatWorld(
         draftSession?.flush() ?: Outcome.Failed(Failure.Unavailable(FeatureId("drafts")))
 
     override suspend fun replaceAttachments(files: List<PromptAttachment>): Outcome<Unit> {
-        val session = draftSession
-            ?: return Outcome.Failed(Failure.Unavailable(FeatureId("draftAttachments")))
+        val session =
+            draftSession
+                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("draftAttachments")))
         val previous = mutableDraft.value.attachments
         val result = session.replaceAttachments(files)
         // Publish only the acknowledged snapshot; failures and revisions pass through untouched.
@@ -754,7 +978,8 @@ internal class GraphChatWorld(
         val catalog = operations.catalog()
         if (currentAttached() !== a) return staleModels()
         if (catalog is Outcome.Failed) {
-            mutableModels.value = mutableModels.value.copy(loading = false, failure = catalog.failure)
+            mutableModels.value =
+                mutableModels.value.copy(loading = false, failure = catalog.failure)
             return catalog
         }
         val defaults = operations.chatDefaults()
@@ -762,8 +987,7 @@ internal class GraphChatWorld(
         val readback = a.gateway.session(sid)
         if (currentAttached() !== a) return staleModels()
         val snapshot = (catalog as Outcome.Ok).value
-        val enabledProviders =
-            snapshot.providers.filter { it.enabled }.mapTo(HashSet()) { it.id }
+        val enabledProviders = snapshot.providers.filter { it.enabled }.mapTo(HashSet()) { it.id }
         val providerNames = snapshot.providers.associate { it.id to it.name.ifBlank { it.id } }
         val choices = ArrayList<ComposerModel>()
         val seen = HashSet<Pair<String, String>>()
@@ -794,10 +1018,9 @@ internal class GraphChatWorld(
             (readback as? Outcome.Failed)?.failure
                 ?: if (session?.model == null) (defaults as? Outcome.Failed)?.failure else null
         val effective = if (failure != null) null else session?.model ?: catalogDefaults?.model
-        val resolved =
-            effective?.let { ref ->
-                choices.firstOrNull { it.providerId == ref.providerId && it.modelId == ref.modelId }
-            }
+        val resolved = effective?.let { ref ->
+            choices.firstOrNull { it.providerId == ref.providerId && it.modelId == ref.modelId }
+        }
         val previous = mutableModels.value
         // A choice verified while this load ran is newer than anything this load read.
         val newer = selectionEpoch != epoch
@@ -809,7 +1032,8 @@ internal class GraphChatWorld(
                 variant = if (newer) previous.variant else session?.variant.orEmpty(),
                 agents = agents,
                 agent = if (newer) previous.agent else session?.agent ?: catalogDefaults?.agent,
-                usesDefault = if (newer) previous.usesDefault else session?.model == null && failure == null,
+                usesDefault =
+                    if (newer) previous.usesDefault else session?.model == null && failure == null,
                 recent = recentOf(choices),
             )
         return if (failure != null) Outcome.Failed(failure) else Outcome.Ok(Unit)
@@ -827,14 +1051,17 @@ internal class GraphChatWorld(
     }
 
     /**
-     * Codex composer #4 (B-STATE-118): another client changed this session's model or agent; the chip follows the
-     * server, so the next send never re-applies a stale choice. A pick of our own in flight wins (its read-back
-     * publishes the server's answer).
+     * Codex composer #4 (B-STATE-118): another client changed this session's model or agent; the
+     * chip follows the server, so the next send never re-applies a stale choice. A pick of our own
+     * in flight wins (its read-back publishes the server's answer).
      */
     private fun adoptRemoteSelection(event: CoreEvent.SessionSelection) {
         if (localSelections > 0) return
         val now = mutableModels.value
-        val model = event.model?.let { m -> now.choices.firstOrNull { it.providerId == m.providerId && it.modelId == m.modelId } }
+        val model =
+            event.model?.let { m ->
+                now.choices.firstOrNull { it.providerId == m.providerId && it.modelId == m.modelId }
+            }
         val modelChanged = model != null && model != now.selected
         val agentChanged = event.agent != null && event.agent != now.agent
         if (!modelChanged && !agentChanged) return
@@ -880,11 +1107,17 @@ internal class GraphChatWorld(
                 // Null asks for the default; only a concrete catalog model may be set, there is no
                 // reset route.
                 null -> {
-                    val default = catalogDefaults?.model
-                        ?: return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelDefault")))
+                    val default =
+                        catalogDefaults?.model
+                            ?: return Outcome.Failed(
+                                Failure.Unavailable(FeatureId("sessionModelDefault"))
+                            )
                     catalog.firstOrNull {
                         it.providerId == default.providerId && it.modelId == default.modelId
-                    } ?: return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelDefault")))
+                    }
+                        ?: return Outcome.Failed(
+                            Failure.Unavailable(FeatureId("sessionModelDefault"))
+                        )
                 }
                 else ->
                     catalog.firstOrNull {
@@ -911,7 +1144,11 @@ internal class GraphChatWorld(
                                 Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
                             else {
                                 selectionEpoch++
-                                recentModels.record(ref.profileId.raw, target.providerId, target.modelId)
+                                recentModels.record(
+                                    ref.profileId.raw,
+                                    target.providerId,
+                                    target.modelId,
+                                )
                                 mutableModels.value =
                                     mutableModels.value.copy(
                                         selected = target,
@@ -930,9 +1167,9 @@ internal class GraphChatWorld(
     override suspend fun selectAgent(agent: String): Outcome<Unit> {
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         val selection =
-            a.gateway.facet<SessionSelectionGateway>()
-                ?.takeIf { a.gateway.capabilities.value.agentSelection }
-                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("agentSelection")))
+            a.gateway.facet<SessionSelectionGateway>()?.takeIf {
+                a.gateway.capabilities.value.agentSelection
+            } ?: return Outcome.Failed(Failure.Unavailable(FeatureId("agentSelection")))
         if (mutableModels.value.agents.none { it.id == agent })
             return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
         val result =
@@ -968,7 +1205,8 @@ internal class GraphChatWorld(
             is Outcome.Failed -> listed
             is Outcome.Ok -> {
                 if (currentAttached() !== a) return Outcome.Failed(STALE)
-                mutableCommands.value = listed.value.map { ComposerCommand(it.name, it.description) }
+                mutableCommands.value =
+                    listed.value.map { ComposerCommand(it.name, it.description) }
                 Outcome.Ok(Unit)
             }
         }
@@ -978,7 +1216,8 @@ internal class GraphChatWorld(
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         return when (val found = a.gateway.findFile(query)) {
             is Outcome.Failed -> found
-            is Outcome.Ok -> if (currentAttached() !== a) Outcome.Failed(STALE) else Outcome.Ok(found.value)
+            is Outcome.Ok ->
+                if (currentAttached() !== a) Outcome.Failed(STALE) else Outcome.Ok(found.value)
         }
     }
 
@@ -1011,10 +1250,7 @@ internal class GraphChatWorld(
         // The session captures text and files as one revision; the dispatch carries that snapshot.
         val submission =
             if (!draftFiles) null
-            else
-                draftSession
-                    ?.captureSubmission()
-                    ?.takeIf { it.text.trim() == text.trim() }
+            else draftSession?.captureSubmission()?.takeIf { it.text.trim() == text.trim() }
         val files = if (!draftFiles) emptyList() else submission?.attachments ?: draft.attachments
         if (text.isBlank() && files.isEmpty())
             return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
@@ -1033,7 +1269,8 @@ internal class GraphChatWorld(
         mutablePending.update {
             (it + PendingSend(id, text, PendingState.Sending)).toImmutableList()
         }
-        // QA wave 4 N5: the words left the box again, so their not-sent bubble (and its Try again) goes now; one copy
+        // QA wave 4 N5: the words left the box again, so their not-sent bubble (and its Try again)
+        // goes now; one copy
         // of the message stays on screen and only one can be sent.
         retireFailedTwins(id)
         refreshDraftProtection()
@@ -1101,7 +1338,15 @@ internal class GraphChatWorld(
         // its range (B-CHAT-087); other files pass through untouched.
         val files = Mentions.resolveFileMentions(text, sent.files).toImmutableList()
         val mentions = Mentions.agentMentions(text, subagentNames).toImmutableList()
-        val result = delivery.send(ref, text, files, sent.model, mentions)
+        val result =
+            delivery.send(
+                ref,
+                text,
+                files,
+                sent.model,
+                mentions,
+                insteadOfDraft = voiceProof?.localId == localId,
+            )
         return when (result) {
             is Outcome.Failed -> fail(localId, result.failure)
             is Outcome.Ok -> {
@@ -1110,7 +1355,8 @@ internal class GraphChatWorld(
                         list.filterNot { it.localId == localId }.toImmutableList()
                     }
                     sentSnapshots.remove(localId)
-                    // Codex composer #2: a command that ran is done; its words leave the box (Flutter clears them).
+                    // Codex composer #2: a command that ran is done; its words leave the box
+                    // (Flutter clears them).
                     acknowledgedDraft(localId)
                     refreshDraftProtection()
                 } else {
@@ -1127,6 +1373,14 @@ internal class GraphChatWorld(
         val engine = delivery.engine ?: return
         for ((localId, id) in deliveryIds) {
             val bubble = engine.pending.value.firstOrNull { it.localId == id }
+            if (voiceProof?.localId == localId && bubble != null) {
+                voiceProof =
+                    voiceProof?.copy(
+                        messageId = bubble.dispatchedMessageId?.raw ?: voiceProof?.messageId,
+                        accepted =
+                            bubble.phase == SendPhase.Accepted || voiceProof?.accepted == true,
+                    )
+            }
             bubble?.reviewId?.let { recoveryIds[it] = localId }
             bubble?.dispatchedMessageId?.let { canonical[localId] = "prompt:${it.raw}" }
             if (bubble?.phase == SendPhase.Accepted) {
@@ -1137,32 +1391,41 @@ internal class GraphChatWorld(
             for (outcome in engine.outcomes.value.filter { it.ref == ref }) when (outcome) {
                 is SendOutcome.Accepted ->
                     if (outcome.localId == id) {
+                        if (voiceProof?.localId == localId)
+                            voiceProof = voiceProof?.copy(accepted = true)
                         acknowledgedDraft(localId)
                         delivered += localId
                     }
                 is SendOutcome.Unconfirmed ->
                     if (outcome.localId == id) {
+                        if (voiceProof?.localId == localId)
+                            voiceProof = voiceProof?.copy(uncertain = true)
                         outcome.reviewId?.let { recoveryIds[it] = localId }
                         setPending(localId) {
                             it.copy(state = PendingState.Unconfirmed, failure = outcome.reason)
                         }
                     }
                 is SendOutcome.PutBack ->
-                    if (outcome.localId == id)
+                    if (outcome.localId == id) {
+                        if (voiceProof?.localId == localId)
+                            voiceProof = voiceProof?.copy(uncertain = true)
                         setPending(localId) {
                             it.copy(state = PendingState.Failed, failure = outcome.reason)
                         }
+                    }
                 else -> Unit
             }
         }
         delivered.forEach(::retireFailedTwins)
         delivered.clear()
         settlePending(mutableTranscript.value)
+        publishVoiceConversation()
     }
 
     /**
-     * B11 (QA wave 1): the words of a failed bubble went out on a later tap (the person sent them again), so the old
-     * bubble is no longer "not sent": its Try again would send them twice. Same words and same files only.
+     * B11 (QA wave 1): the words of a failed bubble went out on a later tap (the person sent them
+     * again), so the old bubble is no longer "not sent": its Try again would send them twice. Same
+     * words and same files only.
      */
     private fun retireFailedTwins(localId: Long) {
         val sent = mutablePending.value.firstOrNull { it.localId == localId } ?: return
@@ -1203,12 +1466,14 @@ internal class GraphChatWorld(
     private fun settlePending(s: TranscriptState) {
         val prompts = s.rows.filterIsInstance<PromptRow>()
         // A file-only user message has no prompt row (no words): it is matched by its server id.
-        val wordless = userMessageKeys.filterTo(LinkedHashSet()) { key -> prompts.none { it.key == key } }
+        val wordless =
+            userMessageKeys.filterTo(LinkedHashSet()) { key -> prompts.none { it.key == key } }
         for (bubble in mutablePending.value) {
             val id = canonical[bubble.localId]
             if (bubble.state == PendingState.Failed) continue
             val fileOnly = bubble.text.isBlank()
-            val present = id != null && (prompts.any { it.key == id } || (fileOnly && id in wordless))
+            val present =
+                id != null && (prompts.any { it.key == id } || (fileOnly && id in wordless))
             if (bubble.localId !in admitted && !present) continue
             val matchKey =
                 if (fileOnly)
@@ -1260,11 +1525,14 @@ internal class GraphChatWorld(
         (a.graph as ChatGraphAccessors).chatDelivery.engine?.let {
             // The engine calls off waiting sends and records the person's Stop, then interrupts.
             val stopped = it.stopTurn(ref)
-            // Codex chat-bugs 2: a tap inside the guard after a send asked nothing; Stop stays usable.
+            // Codex chat-bugs 2: a tap inside the guard after a send asked nothing; Stop stays
+            // usable.
             when (stopped) {
                 is Outcome.Ok -> return Outcome.Ok(stopped.value == StopAnswer.Asked)
-                // B10: a stale fence there asked the server nothing; the running turn is still owed its interrupt.
-                is Outcome.Failed -> if (stopped.failure != STALE || currentAttached() !== a) return stopped
+                // B10: a stale fence there asked the server nothing; the running turn is still owed
+                // its interrupt.
+                is Outcome.Failed ->
+                    if (stopped.failure != STALE || currentAttached() !== a) return stopped
             }
         }
         return when (val r = a.gateway.stop(sid)) {
@@ -1279,6 +1547,30 @@ internal class GraphChatWorld(
             is ChatLoad.Failed -> Outcome.Failed(l.failure)
             else -> Outcome.Ok(Unit)
         }
+    }
+
+    override suspend fun isChildSession(id: String): Outcome<Boolean> {
+        if (!Regex("^[A-Za-z0-9_-]+$").matches(id) || id == sid.raw) return Outcome.Ok(false)
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        return when (val read = a.gateway.session(SessionId(id))) {
+            is Outcome.Failed -> read
+            is Outcome.Ok ->
+                Outcome.Ok(
+                    currentAttached() === a && read.value.id.raw == id && read.value.parentId == sid
+                )
+        }
+    }
+
+    override suspend fun compact(): Outcome<Unit> {
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        if (!capabilities.value.sessionCompact || mutableTranscript.value.run.busy)
+            return Outcome.Failed(Failure.Busy(BusyKind.Starting))
+        val choice =
+            models.value.selected
+                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("sessionCompact")))
+        return (a.graph as ChatGraphAccessors)
+            .chatOperations
+            .compactSession(sid, ModelRef(choice.providerId, choice.modelId))
     }
 
     override suspend fun fork(from: MessageId): Outcome<SessionId> {
@@ -1317,7 +1609,11 @@ internal class GraphChatWorld(
             return Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
         }
         return try {
-            Outcome.Ok(kotlin.io.encoding.Base64.Default.decode(file.content.filterNot { it.isWhitespace() }))
+            Outcome.Ok(
+                kotlin.io.encoding.Base64.Default.decode(
+                    file.content.filterNot { it.isWhitespace() }
+                )
+            )
         } catch (_: IllegalArgumentException) {
             Outcome.Failed(Failure.Unexpected())
         }
@@ -1364,5 +1660,7 @@ internal class GraphChatWorld(
     }
 }
 
-/** 20 MB of picture as base64 (Flutter's attachment cap); a bigger file is not opened in the chat. */
+/**
+ * 20 MB of picture as base64 (Flutter's attachment cap); a bigger file is not opened in the chat.
+ */
 private const val MAX_PICTURE_BASE64: Int = 28_000_000

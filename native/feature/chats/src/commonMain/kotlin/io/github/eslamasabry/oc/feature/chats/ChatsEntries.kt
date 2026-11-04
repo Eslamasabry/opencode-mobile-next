@@ -12,8 +12,10 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllViewModel
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsViewModel
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationViewModel
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsAllScreen
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
+import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 
@@ -25,6 +27,14 @@ import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class ChatsEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
+        entry<ChatsRoute.New> { route ->
+            val vm =
+                assistedMetroViewModel<NewConversationViewModel, NewConversationViewModel.Factory> {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            NewConversationScreen(state, vm)
+        }
         entry<ChatsRoute.Home> {
             val vm = metroViewModel<ChatsViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()

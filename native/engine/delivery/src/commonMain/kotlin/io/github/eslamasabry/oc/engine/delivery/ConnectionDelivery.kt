@@ -181,6 +181,8 @@ public class ConnectionDelivery(
          * agents).
          */
         mentions: ImmutableList<PromptAgentMention> = persistentListOf(),
+        /** Ephemeral voice turns never learn phrases or restore themselves into a later draft. */
+        insteadOfDraft: Boolean = false,
     ): Outcome<LocalSendId> {
         val engine = engine ?: return Outcome.Failed(Failure.StorageRefused())
         when (val undo = (connection.link.value ?: link).revertPending(ref.sessionId)) {
@@ -188,8 +190,8 @@ public class ConnectionDelivery(
             is Outcome.Ok ->
                 if (undo.value) return Outcome.Failed(Failure.Refused(RefusalReason.UndoUnresolved))
         }
-        return engine.send(
+        val request =
             SendRequest(ref, text, attachments = attachments, model = model, mentions = mentions)
-        )
+        return if (insteadOfDraft) engine.sendInsteadOfDraft(request) else engine.send(request)
     }
 }

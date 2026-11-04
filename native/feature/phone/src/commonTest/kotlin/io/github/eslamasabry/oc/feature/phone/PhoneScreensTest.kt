@@ -78,6 +78,7 @@ class PhoneScreensTest {
         override fun back() { seen += "back" }
         override fun shown(visible: Boolean) { seen += "shown $visible" }
         override fun retry() { seen += "retry" }
+        override fun details(pid: Int) { seen += "details $pid" }
         override fun askStop(pid: Int) { seen += "askStop $pid" }
         override fun confirmStop() { seen += "confirmStop" }
         override fun openChildLimitSettings() { seen += "openChildLimit" }

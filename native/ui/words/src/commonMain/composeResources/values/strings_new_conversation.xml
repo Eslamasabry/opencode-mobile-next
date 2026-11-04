@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="p12NewDefaultModel">Default model</string>
+    <string name="p12NewDefaultAgent">Default agent</string>
+    <string name="p12NewAgent">Agent</string>
+    <string name="p12NewFolder">Project folder</string>
+    <string name="p12NewUseFolder">Use this folder</string>
+    <string name="p12NewDraftFailed">Your message could not be saved on this phone. Keep this page open and try again.</string>
+    <string name="p12NewCreationUnconfirmed">The server did not confirm whether the conversation was created. Check Conversations before starting another. Your message stays saved here.</string>
+    <string name="p12NewBoundProject">This connection uses its saved project folder. Add a connection for another folder.</string>
+    <string name="p12NewDeliveryUnconfirmed">The server did not confirm this message. Open the created conversation to check it before starting another. Your words stay saved here.</string>
+    <string name="p12NewOpenCreated">Open the created conversation</string>
+</resources>

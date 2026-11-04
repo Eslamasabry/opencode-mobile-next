@@ -12,17 +12,39 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import io.github.eslamasabry.oc.feature.phone.presentation.KeepRunningViewModel
 import io.github.eslamasabry.oc.feature.phone.presentation.RunningViewModel
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneViewModel
+import io.github.eslamasabry.oc.feature.phone.storage.ProjectStorageScreen
+import io.github.eslamasabry.oc.feature.phone.storage.ProjectStorageViewModel
+import io.github.eslamasabry.oc.feature.phone.storage.SharedFoldersScreen
+import io.github.eslamasabry.oc.feature.phone.storage.SharedFoldersViewModel
 import io.github.eslamasabry.oc.feature.phone.ui.KeepRunningScreen
 import io.github.eslamasabry.oc.feature.phone.ui.RunningScreen
 import io.github.eslamasabry.oc.feature.phone.ui.ThisPhoneScreen
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 
-/** The EntryInstaller (S3-PHONEUI request R1); the ONLY file in the module that imports androidx.navigation3.runtime. */
+/**
+ * The EntryInstaller (S3-PHONEUI request R1); the ONLY file in the module that imports
+ * androidx.navigation3.runtime.
+ */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
 public class PhoneEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
+        entry<PhoneRoute.SharedFolders> {
+            val vm = metroViewModel<SharedFoldersViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            SharedFoldersScreen(state, vm)
+        }
+        entry<PhoneRoute.ExportProjects> {
+            val vm = metroViewModel<ProjectStorageViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            ProjectStorageScreen(state, vm, manageSpace = false)
+        }
+        entry<PhoneRoute.ManageSpace> {
+            val vm = metroViewModel<ProjectStorageViewModel>()
+            val state by vm.state.collectAsStateWithLifecycle()
+            ProjectStorageScreen(state, vm, manageSpace = true)
+        }
         entry<PhoneRoute.ThisPhone> {
             val vm = metroViewModel<ThisPhoneViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()

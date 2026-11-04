@@ -406,6 +406,9 @@ internal class TranscriptModel(
                     when (part.type) {
                         PartType.Reasoning -> "thought:${part.messageId}/${part.id}"
                         PartType.Tool -> "work:$turnId"
+                        PartType.Notice,
+                        PartType.Switch,
+                        PartType.Compaction -> "notice:${part.messageId}/${part.id}"
                         PartType.File ->
                             "footer:$turnId".takeIf { it in positions }
                                 ?: "prompt:$turnId".takeIf { it in positions }
@@ -505,8 +508,10 @@ internal class TranscriptModel(
         for (m in members) {
             if (m.info.role == Role.Assistant) {
                 hasAssistant = true
-                // B-CHAT-101: the turn's outcome is its newest assistant step's (Flutter). A step that failed and
-                // was followed by one that finished is not a failed turn: each step resets what the last one said.
+                // B-CHAT-101: the turn's outcome is its newest assistant step's (Flutter). A step
+                // that failed and
+                // was followed by one that finished is not a failed turn: each step resets what the
+                // last one said.
                 val error = m.info.errorText
                 stopped = error != null && isStopError(error)
                 failed = error != null && !stopped
@@ -564,7 +569,16 @@ internal class TranscriptModel(
             rows.add(workAt, reuse(WorkLineRow("work:$turnId", turnId, calls, failedCalls, state)))
         }
         if (finished && hasAssistant) {
-            rows += reuse(FooterRow("footer:$turnId", turnId, failed, reason, stopped = stopped && !failed))
+            rows +=
+                reuse(
+                    FooterRow(
+                        "footer:$turnId",
+                        turnId,
+                        failed,
+                        reason,
+                        stopped = stopped && !failed,
+                    )
+                )
         }
         return TurnEntry(turnId, members, LongArray(members.size) { members[it].version }, rows)
     }
@@ -669,10 +683,14 @@ internal class TranscriptModel(
     }
 }
 
-/** QA wave 4 N3: the error a stopped step carries (OC2 `Step interrupted`, OC1 `MessageAbortedError`). */
+/**
+ * QA wave 4 N3: the error a stopped step carries (OC2 `Step interrupted`, OC1
+ * `MessageAbortedError`).
+ */
 internal fun isStopError(text: String): Boolean = STOP_TEXT.containsMatchIn(text)
 
-private val STOP_TEXT = Regex(
-    "^\\s*(the )?(step|run|tool execution|operation|request)?\\s*(was )?(interrupted|aborted)\\b|MessageAbortedError",
-    RegexOption.IGNORE_CASE,
-)
+private val STOP_TEXT =
+    Regex(
+        "^\\s*(the )?(step|run|tool execution|operation|request)?\\s*(was )?(interrupted|aborted)\\b|MessageAbortedError",
+        RegexOption.IGNORE_CASE,
+    )

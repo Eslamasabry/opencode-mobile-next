@@ -85,6 +85,7 @@ import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownSelection
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitFindExcerpt
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -120,10 +121,12 @@ import io.github.eslamasabry.oc.ui.words.res.chatSendFailedChanged
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailedOffline
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailedRefused
 import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
+import io.github.eslamasabry.oc.ui.words.res.chatUiCollapseReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiContextCompacted
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteThisMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiEarlierMessageCount
+import io.github.eslamasabry.oc.ui.words.res.chatUiExpandReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
 import io.github.eslamasabry.oc.ui.words.res.chatUiForkFromThisPrompt
 import io.github.eslamasabry.oc.ui.words.res.chatUiNotConnectedToTheServerRightNow
@@ -136,7 +139,6 @@ import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
 import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
-import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
@@ -156,6 +158,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSteps
 import io.github.eslamasabry.oc.ui.words.res.kitWorkStopped
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWorking
+import io.github.eslamasabry.oc.ui.words.res.nlibTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.queuedDiscardUnconfirmedMessage
@@ -165,6 +168,7 @@ import io.github.eslamasabry.oc.ui.words.res.schedulePhoneBusy
 import io.github.eslamasabry.oc.ui.words.res.schedulePhoneCheckFailed
 import io.github.eslamasabry.oc.ui.words.res.sessionInstructionsUpdated
 import io.github.eslamasabry.oc.ui.words.res.skillApplied
+import io.github.eslamasabry.oc.ui.words.res.transcriptFindAll
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindClose
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindCount
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindHint
@@ -172,6 +176,7 @@ import io.github.eslamasabry.oc.ui.words.res.transcriptFindNext
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindNone
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindPartial
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindPrevious
+import io.github.eslamasabry.oc.ui.words.res.transcriptFindStopSearchingAll
 import io.github.eslamasabry.oc.ui.words.res.voiceNativeReadAloud
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -299,6 +304,19 @@ public fun ChatScreen(
                     val unitActions =
                         listOfNotNull(
                             KitLineAction(
+                                stringResource(
+                                    if (state.reasoningExpanded) Res.string.chatUiCollapseReasoning
+                                    else Res.string.chatUiExpandReasoning
+                                ),
+                                actions::toggleReasoning,
+                                testTag = "chat-reasoning-toggle",
+                            ),
+                            KitLineAction(
+                                stringResource(Res.string.nlibTitle),
+                                actions::openTools,
+                                testTag = "chat-tools-open",
+                            ),
+                            KitLineAction(
                                 stringResource(Res.string.gitSheetTitle),
                                 actions::openGit,
                                 testTag = "chat-git-chip",
@@ -408,6 +426,9 @@ public fun ChatScreen(
                                 onOpenSession = onOpenSession,
                                 reply = rememberReplyActions(actions, state.confirmedPaths),
                                 onOpenFile = { file -> openArtifact(actions, file) },
+                                reasoningExpanded = state.reasoningExpanded,
+                                onCompactAgain =
+                                    if (state.capabilities.compact) actions::compactAgain else null,
                             )
                             EarlierMessagesPill(
                                 state,
@@ -428,6 +449,7 @@ public fun ChatScreen(
                 Modifier.align(Alignment.BottomEnd),
                 reads = replyReader != null,
             )
+            ChatTimelineSheet(state.timeline, actions)
             ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
             SelectTextSheet(state.select, actions)
             PictureSheet(state.picture, actions)
@@ -495,9 +517,8 @@ private fun EarlierMessagesPill(
 @Composable
 private fun FindBar(find: FindUi, actions: ChatActions) {
     val field = rememberTextFieldState(find.query)
-    val query by rememberUpdatedState(find.query)
-    LaunchedEffect(field) {
-        snapshotFlow { field.text.toString() }.collect { if (it != query) actions.find(it) }
+    LaunchedEffect(find.query) {
+        if (field.text.toString() != find.query) field.edit { replace(0, length, find.query) }
     }
     Column(
         Modifier.fillMaxWidth().padding(horizontal = Space.S4.dp).testTag("transcript-find-bar")
@@ -506,16 +527,25 @@ private fun FindBar(find: FindUi, actions: ChatActions) {
             field,
             stringResource(Res.string.transcriptFindHint),
             Modifier.testTag("transcript-find-input"),
+            onTextChanged = { actions.find(it) },
+            onSubmit = actions::findNext,
         )
         if (find.partial) {
             KitText(stringResource(Res.string.transcriptFindPartial))
             KitButton(
-                stringResource(Res.string.historyLoadOlder),
-                actions::loadOlder,
-                Modifier.testTag("chat-load-older"),
+                stringResource(
+                    if (find.searchingAll) Res.string.transcriptFindStopSearchingAll
+                    else Res.string.transcriptFindAll
+                ),
+                if (find.searchingAll) actions::cancelSearchAll else actions::searchAllHistory,
+                Modifier.testTag(
+                    if (find.searchingAll) "transcript-find-cancel-all" else "transcript-find-older"
+                ),
                 role = KitButtonRole.Tertiary,
             )
         }
+        find.olderFailure?.let { HistoryReadFailure(it, actions::searchAllHistory) }
+        find.excerpt?.let { KitFindExcerpt(it, find.query) }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             val count =
                 when {

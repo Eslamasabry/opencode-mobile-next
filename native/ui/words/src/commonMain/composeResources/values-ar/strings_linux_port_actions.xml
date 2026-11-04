@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxPortActions">إجراءات المنفذ</string>
+    <string name="linuxPortCopiedAddress">نسخ العنوان</string>
+    <string name="linuxPortOwnerStop">إيقاف %1$s</string>
+    <string name="linuxPortOwnerQuestion">إيقاف %1$s؟</string>
+    <string name="linuxPortOwnerStopBody">إيقاف البرنامج المحدد وعملياته المساعدة (%1$d عملية)، بعد مطابقة هوية كل عملية. لن يُعاد تشغيله تلقائيًا.</string>
+    <string name="linuxPortOwnerResult">انتهت: %1$d · أُجبرت على الإيقاف: %2$d · ما زالت تعمل: %3$d · تغيّرت هويتها وبقيت: %4$d</string>
+</resources>

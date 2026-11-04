@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="projectStorageMeasureFailed">تعذّر قياس الملفات المخزّنة. حاول مجددًا.</string>
+    <string name="projectStorageDeleteFailed">تعذّر على Android مسح بيانات التطبيق. حاول مجددًا.</string>
+</resources>

@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.kv.stringList
@@ -36,8 +37,8 @@ class NativeSharedProjectFolders(
     private val dispatchers: AppDispatchers,
     appScope: AppCoroutineScope,
 ) {
-    private val scope =
-        CoroutineScope(appScope.coroutineContext + dispatchers.serial("shared-project-folders"))
+    private val lane = dispatchers.serial("shared-project-folders")
+    private val scope = CoroutineScope(appScope.coroutineContext + lane)
     private var started = false
     private var published: List<String>? = null
 
@@ -55,7 +56,19 @@ class NativeSharedProjectFolders(
         }
     }
 
-    private suspend fun synchronize() {
+    /**
+     * Rewrites the runtime's list now (a Files grant or a profile deletion) and says whether it
+     * landed. The one writer of the shared-roots file, so grants and the opened-project union never
+     * overwrite each other.
+     */
+    suspend fun syncNow(): Outcome<Unit> =
+        withContext(lane) {
+            if (stores.warm() is Outcome.Failed) return@withContext Failure.StorageRefused().failed()
+            published = null
+            synchronize()
+        }
+
+    private suspend fun synchronize(): Outcome<Unit> {
         val owner = stores.prefs.string("oc.builtinServerOwner")
         val profile =
             owner?.takeIf { it.isNotEmpty() }?.let { stores.profiles.profile(ProfileId(it)) }
@@ -81,7 +94,7 @@ class NativeSharedProjectFolders(
                 .mapNotNull(SharedStoragePath::projectRoot)
                 .distinct()
                 .sorted()
-        if (published == roots) return
+        if (published == roots) return Outcome.Ok(Unit)
         // The copied runtime writes atomically. A failed replacement leaves the previous
         // file intact; the next acknowledged preference/profile change attempts it again.
         val written =
@@ -91,6 +104,7 @@ class NativeSharedProjectFolders(
                 }
             }
         if (written is Outcome.Ok) published = roots
+        return written
     }
 
     private companion object {

@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
@@ -42,17 +43,18 @@ class AndroidGitLinkRepairService(
 ) : GitLinkRepairService {
     private val lane = Mutex()
 
-    override fun available(ref: ConversationRef): Boolean =
+    override fun available(ref: ConversationRef): Boolean = ownerAvailable(ref.profileId)
+
+    private fun ownerAvailable(profile: ProfileId): Boolean =
         try {
-            val graph = registry.graphFor(ref)
+            val graph = registry.live.value[profile]
             graph != null &&
                 graph.profile.managedOnPhone &&
                 graph.profile.origin.scheme == "http" &&
                 AddressRules.isLoopback(graph.profile.origin.host) &&
                 graph.profile.origin.port == PhoneServerScripts.PORT &&
-                stores.profiles.profile(ref.profileId) != null &&
-                (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value ==
-                    ref.profileId.raw
+                stores.profiles.profile(profile) != null &&
+                (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
         } catch (_: Exception) {
             false
         }
@@ -69,11 +71,31 @@ class AndroidGitLinkRepairService(
                 is Outcome.Failed -> return@withLock loaded
             }
         if (session.directory != directory) return@withLock refused()
+        perform(directory) { registry.graphFor(ref) === graph && available(ref) }
+    }
+
+    override fun availableProject(profile: ProfileId, directory: String): Boolean =
+        directory.startsWith("/root/projects/") && ownerAvailable(profile)
+
+    override suspend fun repairProject(
+        profile: ProfileId,
+        directory: String,
+    ): Outcome<GitLinkRepairReport> = lane.withLock {
+        if (!availableProject(profile, directory)) return@withLock refused()
+        val graph = registry.live.value[profile] ?: return@withLock refused()
+        perform(directory) {
+            registry.live.value[profile] === graph && availableProject(profile, directory)
+        }
+    }
+
+    private suspend fun perform(
+        directory: String,
+        current: () -> Boolean,
+    ): Outcome<GitLinkRepairReport> =
         withContext(dispatchers.io) {
             try {
                 val linux = BuiltinLinux.get(app)
                 val projects = File(app.filesDir, "projects")
-                val current = { registry.graphFor(ref) === graph && available(ref) }
                 val repair =
                     GitObjectRepair(
                         projects,
@@ -99,7 +121,6 @@ class AndroidGitLinkRepairService(
                 refused()
             }
         }
-    }
 
     override fun openTermuxSettings() {
         try {

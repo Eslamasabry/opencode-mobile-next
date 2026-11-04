@@ -133,6 +133,18 @@ class LinuxScreensTest {
         override fun confirmStopProgram() {
             seen += "confirmStopProgram"
         }
+        override fun selectPort(port: Int) {
+            seen += "selectPort $port"
+        }
+        override fun copyAddress(port: Int) {
+            seen += "copyAddress $port"
+        }
+        override fun askStopOwner(port: Int) {
+            seen += "askStopOwner $port"
+        }
+        override fun confirmStopOwner() {
+            seen += "confirmStopOwner"
+        }
     }
 
     @Test
@@ -179,7 +191,7 @@ class LinuxScreensTest {
             setContent { Themed { LinuxPortsScreen(ui, calls) } }
             onNodeWithText("Port 4097").assertExists()
             onNodeWithText("Port 5173").assertExists()
-            onNodeWithText("Open preview").performClick()
+            onNodeWithText("Port 5173").performClick()
             assertEquals(listOf("preview 5173"), calls.seen)
         }
 

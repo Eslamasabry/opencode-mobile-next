@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.feature.linux.manager.LinuxPort
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxPortsActions
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxPortsUi
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -20,6 +21,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitAlert
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
@@ -55,6 +57,12 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrPortsEmptyBody
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrPortsNote
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrPortsTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrProblemFailed
+import io.github.eslamasabry.oc.ui.words.res.linuxPortActions
+import io.github.eslamasabry.oc.ui.words.res.linuxPortCopiedAddress
+import io.github.eslamasabry.oc.ui.words.res.linuxPortOwnerQuestion
+import io.github.eslamasabry.oc.ui.words.res.linuxPortOwnerResult
+import io.github.eslamasabry.oc.ui.words.res.linuxPortOwnerStop
+import io.github.eslamasabry.oc.ui.words.res.linuxPortOwnerStopBody
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import org.jetbrains.compose.resources.stringResource
 
@@ -159,6 +167,23 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
                     }
                 }
             }
+            state.ownerStopResult?.let { result ->
+                KitNotice(
+                    message =
+                        stringResource(
+                            Res.string.linuxPortOwnerResult,
+                            result.ended,
+                            result.forced,
+                            result.remaining,
+                            result.changed,
+                        ),
+                    dismiss =
+                        KitLineAction(
+                            stringResource(Res.string.workspaceDismissNotice),
+                            actions::dismiss,
+                        ),
+                )
+            }
             if (state.ports.isNotEmpty()) {
                 KitRowGroup(note = stringResource(Res.string.linuxMgrPortsNote)) {
                     state.ports.forEach { PortRow(it, actions) }
@@ -166,6 +191,62 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
             }
         }
     }
+    val selectedPort = state.ports.firstOrNull { it.port == state.selectedPort }
+    KitSheet(
+        visible = selectedPort != null,
+        title =
+            selectedPort?.let { stringResource(Res.string.linuxMgrPortRow, it.port) }
+                ?: stringResource(Res.string.linuxPortActions),
+        onDismissRequest = actions::dismiss,
+        primary =
+            selectedPort
+                ?.takeIf { it.canPreview }
+                ?.let { port ->
+                    KitAction(
+                        stringResource(Res.string.linuxMgrPortPreview),
+                        { actions.preview(port.port) },
+                    )
+                },
+        secondary =
+            selectedPort?.let { port ->
+                KitAction(
+                    stringResource(Res.string.linuxPortCopiedAddress),
+                    { actions.copyAddress(port.port) },
+                )
+            },
+        tertiary =
+            selectedPort
+                ?.takeIf {
+                    it.owner != null &&
+                        it.kind !=
+                            io.github.eslamasabry.oc.feature.linux.manager.LinuxProgramKind
+                                .OpenCodeServer
+                }
+                ?.let { port ->
+                    listOf(
+                        KitAction(
+                            stringResource(Res.string.linuxPortOwnerStop, port.owner!!.name),
+                            { actions.askStopOwner(port.port) },
+                            destructive = true,
+                            working = state.ownerStopping,
+                        )
+                    )
+                }
+                .orEmpty(),
+    ) {}
+    KitConfirm(
+        spec =
+            state.ownerStopAsk?.let { ask ->
+                KitConfirmSpec(
+                    title = stringResource(Res.string.linuxPortOwnerQuestion, ask.name),
+                    confirmLabel = stringResource(Res.string.linuxPortOwnerStop, ask.name),
+                    kind = KitConfirmKind.Stop,
+                    body = stringResource(Res.string.linuxPortOwnerStopBody, ask.identities.size),
+                )
+            },
+        onConfirm = actions::confirmStopOwner,
+        onCancel = actions::dismiss,
+    )
     KitAlert(
         visible = state.logPid != null,
         title = stringResource(Res.string.linuxDevLog),
@@ -213,16 +294,13 @@ private fun PortRow(port: LinuxPort, actions: LinuxPortsActions) {
         title = stringResource(Res.string.linuxMgrPortRow, port.port),
         supporting = listOfNotNull(owner, reach, notPage).joinToString(" · "),
         supportingMaxLines = 3,
+        onClick = if (port.canPreview) ({ actions.preview(port.port) }) else null,
         trailing =
-            if (port.canPreview) {
-                KitRowTrailing.Action(
-                    KitLineAction(
-                        stringResource(Res.string.linuxMgrPortPreview),
-                        { actions.preview(port.port) },
-                    )
+            KitRowTrailing.Action(
+                KitLineAction(
+                    stringResource(Res.string.linuxPortActions),
+                    { actions.selectPort(port.port) },
                 )
-            } else {
-                KitRowTrailing.None
-            },
+            ),
     )
 }
