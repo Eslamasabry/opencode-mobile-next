@@ -44,6 +44,22 @@ public class SettingsEntries : EntryInstaller {
                 monitoring = { MonitoringSection(monitoringState, monitoring) },
             )
         }
+        entry<SettingsRoute.Target> { target ->
+            val vm = metroViewModel<SettingsViewModel>()
+            LaunchedEffect(vm, target.rowTag) {
+                vm.actions.onAnchor(target.rowTag)
+            }
+            val state by vm.state.collectAsStateWithLifecycle()
+            val monitoring = metroViewModel<MonitoringViewModel>()
+            val monitoringState by monitoring.state.collectAsStateWithLifecycle()
+            KitBackGuard(enabled = state.page != SettingsPage.Hub, onBack = vm::back)
+            SettingsScreen(
+                state,
+                vm.actions,
+                onExit = vm::exit,
+                monitoring = { MonitoringSection(monitoringState, monitoring) },
+            )
+        }
         entry<SettingsRoute.ReportProblem> {
             val vm = metroViewModel<SettingsViewModel>()
             LaunchedEffect(vm) { vm.actions.onOpen(SettingsPage.ReportProblem) }

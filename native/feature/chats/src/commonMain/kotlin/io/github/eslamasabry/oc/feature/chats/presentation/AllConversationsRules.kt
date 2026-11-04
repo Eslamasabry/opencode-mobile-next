@@ -16,6 +16,7 @@ public data class SourcePages(
     val loaded: Boolean = false,
     val failure: Failure? = null,
     val moreFailure: Failure? = null,
+    val pinFailure: Failure? = null,
     val running: Set<SessionId> = emptySet(),
     val pinned: Set<SessionId> = emptySet(),
     val contextUsage: Map<SessionId, Double> = emptyMap(),
@@ -215,7 +216,9 @@ public object AllConversationsRules {
             incomplete =
                 model.servers
                     .filter { s ->
-                        model.sources[s.profile]?.let { it.failure != null && !allFailed } == true
+                        model.sources[s.profile]?.let {
+                            (it.failure != null || it.pinFailure != null) && !allFailed
+                        } == true
                     }
                     .map { it.name }
                     .toImmutableList(),

@@ -42,9 +42,14 @@ public data class ConversationRowUi(
     val status: RowStatus,
     /** How long ago it last moved; null when the clock is unknown. */
     val ago: RelativeAge? = null,
+    val running: io.github.eslamasabry.oc.engine.agents.feed.FeedRunning? = null,
+    val permission: io.github.eslamasabry.oc.engine.agents.feed.FeedPermission? = null,
+    val observedAtMs: Long = 0,
 )
 
-/** A relative time, localized by the screen (B-L10N-004): under a minute, minutes, hours, then days. */
+/**
+ * A relative time, localized by the screen (B-L10N-004): under a minute, minutes, hours, then days.
+ */
 public sealed interface RelativeAge {
     public data object JustNow : RelativeAge
 
@@ -129,10 +134,14 @@ public data class ChatsUi(
     val inbox: ImmutableList<ConversationRowUi> = persistentListOf(),
     val finished: ImmutableList<ConversationRowUi> = persistentListOf(),
     val confirmWatched: ChatsWatchedRequestUi? = null,
+    val answering: ImmutableSet<String> = persistentSetOf(),
+    val answerFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
 )
 
 /** Methods are intents, never widget names (ADR §9.1). */
 public interface ChatsActions {
+    public fun answerPermission(row: ConversationRowUi, allow: Boolean) {}
+
     public fun openConversation(ref: ConversationRef)
 
     public fun newConversation()

@@ -46,6 +46,7 @@ public class SettingsPresenter(
     private val about: AboutFacts = AboutFacts(),
     private val diagnostics: DiagnosticsExport? = null,
     private val crashes: CrashSettings? = null,
+    private val phrases: PhraseSettings? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -57,6 +58,9 @@ public class SettingsPresenter(
         val report: ReportUi? = null,
         val reportDescription: String = "",
         val crash: CrashUi? = null,
+        val focusedRow: SettingsRowId? = null,
+        val focusedAnchor: String? = null,
+        val phraseChips: Boolean = true,
     )
 
     private data class Engines(
@@ -97,6 +101,11 @@ public class SettingsPresenter(
             )
 
     init {
+        phrases?.let { port ->
+            scope.launch {
+                port.enabled.collect { enabled -> local.update { it.copy(phraseChips = enabled) } }
+            }
+        }
         crashes?.let { port ->
             scope.launch {
                 port.state.collect { evidence ->
@@ -192,6 +201,9 @@ public class SettingsPresenter(
             language = p.language,
             report = l.report,
             reportDescription = l.reportDescription,
+            phraseChips = l.phraseChips,
+            focusedRow = l.focusedRow,
+            focusedAnchor = l.focusedAnchor,
             crash = l.crash,
             note = l.note,
         )
@@ -287,6 +299,32 @@ public class SettingsPresenter(
                     else -> Unit
                 }
         }
+    }
+
+    override fun onAnchor(tag: String) {
+        if (tag == "notifications-servers" && currentFacts.value.platform.notifications) {
+            onOpen(SettingsPage.Notifications)
+            local.update { it.copy(query = "", focusedAnchor = tag) }
+        } else SettingsRowId.entries.firstOrNull { it.tag == tag }?.let(::onTarget)
+    }
+
+    override fun onTarget(row: SettingsRowId) {
+        if (row !in SettingsStructure.searchable(currentFacts.value)) return
+        onOpen(SettingsPage.Group(row.group))
+        local.update { it.copy(query = "", focusedRow = row) }
+        // Like Flutter's search results, a page or outside row opens its destination; a switch
+        // stays highlighted in its group so the person can flip it there.
+        val p = prefs.value
+        val door =
+            SettingsStructure.rows(row.group, currentFacts.value, p.reasoning, p.timestamps)
+                .firstOrNull { it.id == row }
+                ?.door
+        if (door != null && door !is SettingsDoor.Switch) onRow(row)
+    }
+
+    override fun onPhraseChips(on: Boolean) {
+        val port = phrases ?: return
+        run(SettingsNote.ChoiceNotSaved) { port.setEnabled(on) }
     }
 
     override fun onQuery(text: String) {

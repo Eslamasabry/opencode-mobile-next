@@ -38,14 +38,31 @@ class AndroidStateHandoffSource(
     private val profiles: ProfileStore,
     private val registry: ConnectionRegistry,
     private val redactor: Redactor,
+    private val saved: NativeHandoffLinks,
+    private val nativeSource: NativeHandoffSource,
 ) : StateHandoffSource {
-    internal val links = HandoffLinks(KvAgentPrefs(stores.prefs, stores.lanes.app), redactor)
+    internal val links: HandoffLinks
+        get() = saved.links
+
+    /** The navigation alias names a runtime; persisted links always name its durable parent. */
+    private fun parent(ref: ConversationRef): ProfileId? {
+        val id =
+            if (ref.profileId.raw.endsWith(".agents"))
+                ProfileId(ref.profileId.raw.removeSuffix(".agents"))
+            else ref.profileId
+        return id.takeIf { Regex("[A-Za-z0-9_-]{1,128}").matches(it.raw) && saved.admitting(it) }
+    }
+
+    private fun origin(ref: ConversationRef): HandoffOrigin =
+        if (ref.profileId.raw.endsWith(".agents")) HandoffOrigin.PhoneAgent
+        else HandoffOrigin.Server
 
     override suspend fun links(ref: ConversationRef): Outcome<List<HandoffLink>> =
         when (
             val result =
                 capture({ Failure.StorageRefused() }) {
-                    links.forSession(ref.profileId.raw, canonicalSession(ref), HandoffOrigin.Server)
+                    val parent = parent(ref) ?: return@capture null
+                    links.forSession(parent.raw, canonicalSession(ref), origin(ref))
                 }
         ) {
             is Outcome.Failed -> result
@@ -90,11 +107,11 @@ class AndroidStateHandoffSource(
         // reported folder establishes it.
         val scope =
             HandoffScope(
-                ref.profileId.raw,
+                (parent(ref) ?: return Failure.Refused(RefusalReason.ProfileClosing).failed()).raw,
                 directory,
                 gateway.location.value.workspace,
                 "live-connection",
-                HandoffOrigin.Server,
+                origin(ref),
             )
         val target =
             HandoffTarget(
@@ -112,9 +129,7 @@ class AndroidStateHandoffSource(
                 target,
                 links,
                 isCurrent = {
-                    current() &&
-                        registry.graphFor(ref) === graph &&
-                        profiles.profile(ref.profileId) != null
+                    current() && registry.graphFor(ref) === graph && parent(ref) != null
                 },
                 recordId = { UUID.randomUUID().toString() },
                 redactor = redactor,
@@ -131,41 +146,78 @@ class AndroidStateHandoffSource(
         ref: ConversationRef,
         link: HandoffLink,
     ): Outcome<ConversationRef> {
+        val durableParent =
+            parent(ref) ?: return Failure.Refused(RefusalReason.ProfileClosing).failed()
         val canonical = canonicalSession(ref)
+        val sourceOrigin = origin(ref)
+        fun admitted(): Boolean =
+            parent(ref) == durableParent &&
+                links.forSession(durableParent.raw, canonical, sourceOrigin)?.any { it == link } ==
+                    true
+        if (!admitted()) return Failure.Refused(RefusalReason.StaleScope).failed()
         val outgoing =
-            link.sourceProfileId == ref.profileId.raw &&
+            link.sourceProfileId == durableParent.raw &&
                 link.sourceSessionId == canonical &&
-                link.sourceOrigin == HandoffOrigin.Server
+                link.sourceOrigin == sourceOrigin
         val incoming =
-            link.targetProfileId == ref.profileId.raw &&
+            link.targetProfileId == durableParent.raw &&
                 link.targetSessionId == canonical &&
-                link.targetOrigin == HandoffOrigin.Server
+                link.targetOrigin == sourceOrigin
         if (!outgoing && !incoming) return Failure.Refused(RefusalReason.StaleScope).failed()
-        val profile = if (outgoing) link.targetProfileId else link.sourceProfileId
-        val session = if (outgoing) link.targetSessionId else link.sourceSessionId
-        val origin = if (outgoing) link.targetOrigin else link.sourceOrigin
-        if (origin != HandoffOrigin.Server)
-            return Failure.Unavailable(FeatureId("phoneAgentConversation")).failed()
-        val saved =
-            profiles.profile(ProfileId(profile))
-                ?: return Failure.Refused(RefusalReason.ProfileDeleted).failed()
+        val targetParent = ProfileId(if (outgoing) link.targetProfileId else link.sourceProfileId)
+        val session = SessionId(if (outgoing) link.targetSessionId else link.sourceSessionId)
+        val targetOrigin = if (outgoing) link.targetOrigin else link.sourceOrigin
+        if (!saved.admitting(targetParent))
+            return Failure.Refused(RefusalReason.ProfileClosing).failed()
+        val target =
+            ConversationRef(
+                if (targetOrigin == HandoffOrigin.PhoneAgent)
+                    ProfileId("${targetParent.raw}.agents")
+                else targetParent,
+                session,
+            )
         val graph =
-            when (
-                val opened =
-                    registry.open(
-                        saved.toServerProfile()
-                            ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
-                    )
-            ) {
-                is Outcome.Failed -> return opened
-                is Outcome.Ok -> opened.value
+            if (targetOrigin == HandoffOrigin.PhoneAgent) {
+                if (!nativeSource.project(link.projectDirectory))
+                    return Failure.Refused(RefusalReason.StaleScope).failed()
+                when (val recovered = registry.recoverTransient(target)) {
+                    is Outcome.Failed -> return recovered
+                    is Outcome.Ok ->
+                        recovered.value ?: return Failure.Refused(RefusalReason.StaleScope).failed()
+                }
+            } else {
+                val profile =
+                    profiles.profile(targetParent)
+                        ?: return Failure.Refused(RefusalReason.ProfileDeleted).failed()
+                when (
+                    val opened =
+                        registry.open(
+                            profile.toServerProfile()
+                                ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+                        )
+                ) {
+                    is Outcome.Failed -> return opened
+                    is Outcome.Ok -> opened.value
+                }
             }
-        return when (val read = graph.session.server.session(SessionId(session))) {
+        if (
+            !admitted() ||
+                !saved.admitting(targetParent) ||
+                registry.graphFor(target) !== graph ||
+                (targetOrigin == HandoffOrigin.PhoneAgent &&
+                    graph.session.server.location.value.directory != link.projectDirectory)
+        )
+            return Failure.Refused(RefusalReason.StaleScope).failed()
+        return when (val read = graph.session.server.session(session)) {
             is Outcome.Failed -> read
             is Outcome.Ok ->
-                if (registry.live.value[ProfileId(profile)] !== graph)
+                if (
+                    !admitted() ||
+                        !saved.admitting(targetParent) ||
+                        registry.graphFor(target) !== graph
+                )
                     Failure.Refused(RefusalReason.StaleScope).failed()
-                else ConversationRef(ProfileId(profile), read.value.id).ok()
+                else target.copy(sessionId = read.value.id).ok()
         }
     }
 }

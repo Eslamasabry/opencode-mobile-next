@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="desktopSettingsMenu">الإعدادات</string>
+    <string name="desktopReleaseCurrent">هذا أحدث إصدار منشور.</string>
+    <string name="desktopUpdatesBuildAvailable">الإصدار %1$s متاح.</string>
+    <string name="desktopReleaseFailed">تعذّر البحث عن تحديثات. حاول مجددًا عند الاتصال بالإنترنت.</string>
+    <string name="desktopReleaseLimit">تفتح التحديثات على GitHub. نزّل إصدار الكمبيوتر وثبّته بنفسك.</string>
+    <string name="desktopReleaseOpenQuestion">فتح الإصدار على GitHub؟</string>
+    <string name="desktopReleaseOpenFailed">تعذّر فتح المتصفح. حاول مجددًا.</string>
+</resources>

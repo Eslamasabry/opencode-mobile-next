@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +32,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 /**
@@ -60,6 +60,8 @@ public class ChatsAllViewModel(
         )
     private var servers: List<ConversationServer> = emptyList()
     private var generation = 0
+    private val attemptedPins = mutableSetOf<Pair<ProfileId, SessionId>>()
+    private val failedPins = mutableSetOf<Pair<ProfileId, SessionId>>()
     private val tombstones = mutableMapOf<ProfileId, MutableSet<SessionId>>()
     private val liveSessions =
         mutableMapOf<
@@ -79,7 +81,10 @@ public class ChatsAllViewModel(
                 // ANDR-1: a host with pin storage shows the row's visible pin action too.
                 val built = AllConversationsRules.build(current)
                 if (!pins.supported) built
-                else built.copy(rows = built.rows.map { it.copy(pinAvailable = true) }.toImmutableList())
+                else
+                    built.copy(
+                        rows = built.rows.map { it.copy(pinAvailable = true) }.toImmutableList()
+                    )
             }
             .stateIn(
                 viewModelScope,
@@ -114,6 +119,12 @@ public class ChatsAllViewModel(
     private fun adopt(live: ImmutableList<ConversationServer>) {
         val before = servers.map { it.profile to it.gateway }
         val after = live.map { it.profile to it.gateway }
+        live.forEach { server ->
+            if (servers.firstOrNull { it.profile == server.profile }?.gateway !== server.gateway) {
+                attemptedPins.removeAll { it.first == server.profile }
+                failedPins.removeAll { it.first == server.profile }
+            }
+        }
         servers = live
         model.update { m ->
             m.copy(
@@ -336,6 +347,7 @@ public class ChatsAllViewModel(
                 }
             cur.copy(sources = cur.sources + (server.profile to source))
         }
+        if (page is Outcome.Ok) fetchPinned(server, run)
         if (page is Outcome.Ok && savedScope != null && run == generation) {
             // Dart saves sortedSessions(): visible roots only, pinned first, then newest, so the
             // capped restart preview never shows subagent, archived or AI Team rows.
@@ -359,6 +371,56 @@ public class ChatsAllViewModel(
                             .thenByDescending(AllConversationsRules::updatedAt)
                     ),
             )
+        }
+    }
+
+    /** Reads each off-page pin once; a failed read keeps both the pin and its visible retry. */
+    private suspend fun fetchPinned(server: ConversationServer, run: Int) {
+        val pinned = pins.ids(server)
+        for (id in pinned) {
+            val key = server.profile to id
+            if (
+                model.value.sources[server.profile]?.sessions?.any { it.id == id } == true ||
+                    !attemptedPins.add(key)
+            )
+                continue
+            val read = server.gateway.session(id)
+            if (run != generation) {
+                attemptedPins.remove(key)
+                return
+            }
+            when (read) {
+                is Outcome.Ok -> {
+                    failedPins.remove(key)
+                    model.update { cur ->
+                        val source = cur.sources[server.profile] ?: return@update cur
+                        cur.copy(
+                            sources =
+                                cur.sources +
+                                    (server.profile to
+                                        source.copy(
+                                            sessions =
+                                                merge(
+                                                    server.profile,
+                                                    source.sessions,
+                                                    listOf(read.value),
+                                                )
+                                        ))
+                        )
+                    }
+                }
+                is Outcome.Failed -> {
+                    failedPins.add(key)
+                    model.update { cur ->
+                        val source = cur.sources[server.profile] ?: return@update cur
+                        cur.copy(
+                            sources =
+                                cur.sources +
+                                    (server.profile to source.copy(pinFailure = read.failure))
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -409,7 +471,14 @@ public class ChatsAllViewModel(
         }
     }
 
-    override fun retry(): Unit = reload()
+    override fun retry() {
+        attemptedPins.removeAll(failedPins)
+        failedPins.clear()
+        model.update { cur ->
+            cur.copy(sources = cur.sources.mapValues { (_, src) -> src.copy(pinFailure = null) })
+        }
+        reload()
+    }
 
     override fun back() {
         commitDelete()

@@ -102,7 +102,7 @@ public class PlansViewModel(
                                         when (card.fix) {
                                             UsageFix.TryAgain -> true
                                             UsageFix.SignIn ->
-                                                card.providerId == "claude" &&
+                                                card.providerId in setOf("claude", "codex") &&
                                                     card.fixConnection?.isPhone == true &&
                                                     source.phoneSignInOwner() != null
                                             UsageFix.SetUp ->
@@ -365,9 +365,13 @@ public class PlansViewModel(
         when (card.fix) {
             UsageFix.TryAgain -> refresh()
             UsageFix.SignIn -> {
-                if (card.providerId != "claude" || card.fixConnection?.id != "phone") return
+                if (
+                    card.providerId !in setOf("claude", "codex") ||
+                        card.fixConnection?.id != "phone"
+                )
+                    return
                 val owner = source.phoneSignInOwner() ?: return
-                nav.open(AgentsRoute.SignInTerminal(owner, "claude"))
+                nav.open(AgentsRoute.SignInTerminal(owner, card.providerId))
             }
             UsageFix.SetUp -> card.fixConnection?.id?.let { askCollector(ProfileId(it)) }
             else -> Unit

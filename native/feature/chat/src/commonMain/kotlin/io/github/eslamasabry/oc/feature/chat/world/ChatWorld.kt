@@ -139,6 +139,9 @@ public interface ChatWorld {
      * default. A choice is published only after the server acknowledged it, and a failed selection
      * never replaces the previous one.
      */
+    public suspend fun cycleModel(reverse: Boolean = false): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
+
     public suspend fun selectModel(choice: ComposerModel?, variant: String = ""): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
 

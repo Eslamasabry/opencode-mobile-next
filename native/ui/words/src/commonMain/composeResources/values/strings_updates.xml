@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="desktopSettingsMenu">Settings</string>
+    <string name="desktopReleaseCurrent">This is the newest published build.</string>
+    <string name="desktopUpdatesBuildAvailable">Build %1$s is available.</string>
+    <string name="desktopReleaseFailed">Could not check for updates. Try again when you are online.</string>
+    <string name="desktopReleaseLimit">Updates open on GitHub. Download and install the desktop release yourself.</string>
+    <string name="desktopReleaseOpenQuestion">Open the release on GitHub?</string>
+    <string name="desktopReleaseOpenFailed">Could not open the browser. Try again.</string>
+</resources>

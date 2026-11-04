@@ -113,6 +113,9 @@ public object ChatsState {
                     ChatStatus.Idle -> if (item.finishedUnseen) RowStatus.Done else RowStatus.None
                 },
             ago = RelativeAge.of(item.lastActivityMs, nowMs),
+            running = item.running,
+            permission = item.permission,
+            observedAtMs = nowMs,
         )
 
     /**

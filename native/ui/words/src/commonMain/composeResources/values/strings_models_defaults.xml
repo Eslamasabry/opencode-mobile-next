@@ -1,0 +1,17 @@
+<resources>
+    <string name="modelDefaultsPhoneTitle">New conversations on this phone</string>
+    <string name="modelDefaultsNamedTitle">New conversations on %1$s</string>
+    <string name="modelDefaultsScope">Used for new conversations. Each conversation keeps its own choice.</string>
+    <string name="modelDefaultsServerChoice">Use the server default</string>
+    <string name="modelDefaultsRecommended">Suggested choices</string>
+    <string name="modelDefaultsAll">All available models</string>
+    <string name="modelDefaultsFailed">Could not read or save the model choice.</string>
+    <string name="modelDefaultsInUse">In use</string>
+    <string name="modelDefaultsDefault">Server default</string>
+    <string name="modelDefaultsRecent">Recent choice</string>
+    <string name="modelDefaultsCheapest">Lowest price</string>
+    <string name="modelDefaultsFree">Free</string>
+    <string name="modelDefaultsPrice">Input $%1$s · Output $%2$s per million tokens</string>
+    <string name="modelDefaultsSelected">Selected</string>
+    <string name="modelDefaultsSaving">Saving the model choice</string>
+</resources>

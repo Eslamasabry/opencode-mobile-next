@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -120,6 +121,7 @@ internal class GraphChatHeaderPort(
 
     fun attach() {
         if (stopWatching != null) return
+        bind(registry.graphFor(ref))
         val watcher =
             registry.appScope.launch(registry.mainContext) {
                 registry.live.collect {
@@ -146,9 +148,30 @@ internal class GraphChatHeaderPort(
                 serverName = graph.profile.name,
                 directory = gateway.location.value.directory,
                 connected = true,
+                branch = branches[ref.profileId.raw to gateway.location.value.directory],
             )
         val jobs =
             listOf(
+                graph.scope.launch(registry.mainContext) {
+                    gateway.location.collectLatest { location ->
+                        val key = ref.profileId.raw to location.directory
+                        mutableFacts.update { it.copy(branch = branches[key]) }
+                        val health =
+                            (graph as ChatGraphAccessors).chatOperations.versionControlHealth()
+                        if (
+                            bound === graph &&
+                                gateway.location.value == location &&
+                                health is Outcome.Ok
+                        ) {
+                            val branch =
+                                health.value.branch?.trim()?.takeIf {
+                                    it.isNotEmpty() && it != "HEAD"
+                                }
+                            if (branch == null) branches.remove(key) else branches[key] = branch
+                            mutableFacts.update { it.copy(branch = branch) }
+                        }
+                    }
+                },
                 graph.scope.launch(registry.mainContext) { read(graph, gateway) },
                 graph.scope.launch(registry.mainContext) {
                     (graph as ChatGraphAccessors).chatRequests.engine.pending.collect { all ->
@@ -317,3 +340,8 @@ internal class GraphChatHeaderPort(
 }
 
 private const val MAX_PARENT_DEPTH = 8
+
+/**
+ * Process-local branch read cache: a reopened header can render its last known branch immediately.
+ */
+private val branches = mutableMapOf<Pair<String, String?>, String>()

@@ -5,10 +5,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
@@ -25,6 +30,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.aboutAllLicences
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
@@ -34,6 +40,7 @@ import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietEnd
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietStart
 import io.github.eslamasabry.oc.ui.words.res.nativeBundledPrivacy
+import io.github.eslamasabry.oc.ui.words.res.nativePhraseChipsTitle
 import io.github.eslamasabry.oc.ui.words.res.notifyDismiss
 import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsHubPrivacyRow
@@ -94,7 +101,13 @@ public fun SettingsScreen(
                 modifier,
             ) {
                 state.notifications?.let { NotificationsBody(it, actions) }
-                monitoring?.invoke(this)
+                val request = remember { BringIntoViewRequester() }
+                LaunchedEffect(state.focusedAnchor, monitoring) {
+                    if (state.focusedAnchor == "notifications-servers") request.bringIntoView()
+                }
+                Column(Modifier.testTag("notifications-servers").bringIntoViewRequester(request)) {
+                    monitoring?.invoke(this)
+                }
             }
         SettingsPage.Updates ->
             SettingsFrame(
@@ -105,6 +118,26 @@ public fun SettingsScreen(
                 modifier,
             ) {
                 state.updates?.let { UpdatesBody(it, actions) }
+            }
+        SettingsPage.Notices ->
+            SettingsFrame(
+                stringResource(Res.string.aboutAllLicences),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
+                NoticesBody()
+            }
+        SettingsPage.PhraseChips ->
+            SettingsFrame(
+                stringResource(Res.string.nativePhraseChipsTitle),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
+                PhraseChipsBody(state.phraseChips, actions)
             }
         SettingsPage.About ->
             SettingsFrame(stringResource(Res.string.aboutTitle), back, state, actions, modifier) {

@@ -86,9 +86,10 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
                 // LINUX-2: the phone's own usage collector, above the plans.
-                if (state.collector.available) CollectorSetup(state.collector, actions)
+                if (state.phase == PlansPhase.List && state.collector.available)
+                    CollectorSetup(state.collector, actions)
                 // AGENT-2: usage alerts and the provider-usage collectors.
-                UsageCollectorRows(state, actions)
+                if (state.phase == PlansPhase.List) UsageCollectorRows(state, actions)
                 if (state.phase == PlansPhase.Loading)
                     KitStateView(KitStateKind.Loading, words.loading)
                 if (state.phase == PlansPhase.Empty)
@@ -99,7 +100,7 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                         primary = KitAction(words.refresh, actions::refresh),
                     )
                 // STATE: the alert threshold and the reset notice.
-                if (state.phase != PlansPhase.Loading) {
+                if (state.phase == PlansPhase.List) {
                     KitRowGroup(label = stringResource(Res.string.statePlansAlerts)) {
                         KitRow(
                             title =
@@ -442,17 +443,24 @@ private fun PlanCard(card: PlanCardUi, nowMs: Long, words: PlansWords, actions: 
             checked = card.widgetVisible,
             onCheckedChange = { actions.setWidgetVisible(card.key, it) },
         )
-        KitRow(
-            title = words.state(card.state),
-            supporting =
-                listOfNotNull(
-                        card.plan?.let { words.plan(it) },
-                        words.alertAt(card.alertThreshold).takeIf { card.windows.isNotEmpty() },
-                    )
-                    .joinToString(" · ")
-                    .ifBlank { null },
-            supportingMaxLines = 2,
-        )
+        if (
+            card.state ==
+                io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState.SignInExpired
+        ) {
+            KitErrorNotice(words.state(card.state))
+            card.plan?.let { KitRow(title = words.plan(it)) }
+        } else
+            KitRow(
+                title = words.state(card.state),
+                supporting =
+                    listOfNotNull(
+                            card.plan?.let { words.plan(it) },
+                            words.alertAt(card.alertThreshold).takeIf { card.windows.isNotEmpty() },
+                        )
+                        .joinToString(" · ")
+                        .ifBlank { null },
+                supportingMaxLines = 2,
+            )
         if (card.windows.isNotEmpty())
             KitRow(
                 title = stringResource(Res.string.statePlansThreshold, card.alertThreshold),
@@ -470,7 +478,17 @@ private fun PlanCard(card: PlanCardUi, nowMs: Long, words: PlansWords, actions: 
             )
         }
         if (card.resetSince) KitRow(title = words.resetSince, supportingMaxLines = 2)
-        words.fix(card.fix, card.fixConnection)?.let { fixLine ->
+        words.fix(card.fix, card.fixConnection)?.let { line ->
+            val fixLine =
+                if (
+                    card.state ==
+                        io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
+                            .SignInExpired &&
+                        card.fix ==
+                            io.github.eslamasabry.oc.engine.integrations.usage.UsageFix.SignIn
+                )
+                    stringResource(Res.string.plansNavSignInAgain)
+                else line
             if (card.canFix) {
                 KitRow(title = fixLine, onClick = { actions.fix(card.key) })
             } else {

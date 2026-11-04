@@ -59,6 +59,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageDownloadingLinux
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageRetrying
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageStarting
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupStageUnpackingLinux
+import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedTitle
 import io.github.eslamasabry.opencode_mobile.SetupRunner
 import java.security.SecureRandom
 import java.util.UUID
@@ -169,8 +170,49 @@ object PhoneSetupWiring {
         server: PhoneServerSource,
         linux: LinuxHost,
         dispatchers: AppDispatchers,
+        redactor: Redactor,
+        reports: GitHubProblemReporter,
+        nav: io.github.eslamasabry.oc.ui.routes.AppNavigator,
     ): PhoneSetupJobs =
         object : PhoneSetupJobs {
+            override suspend fun reportFailure(
+                progress: io.github.eslamasabry.oc.engine.linuxsetup.SetupProgress
+            ): Outcome<Unit> {
+                if (progress.state != io.github.eslamasabry.oc.engine.linuxsetup.SetupState.Failed)
+                    return Outcome.Failed(
+                        io.github.eslamasabry.oc.core.common.Failure.Refused(
+                            io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope
+                        )
+                    )
+                val report =
+                    io.github.eslamasabry.oc.engine.diagnostics.job.FailedJobReport.setup(
+                        redactor,
+                        io.github.eslamasabry.oc.engine.diagnostics.job.SetupJobSnapshot(
+                            state =
+                                io.github.eslamasabry.oc.engine.diagnostics.job.SetupJobState
+                                    .Failed,
+                            jobId = progress.jobId,
+                            current = progress.current,
+                            logTail = progress.logTail,
+                        ),
+                    )
+                        ?: return Outcome.Failed(
+                            io.github.eslamasabry.oc.core.common.Failure.Device()
+                        )
+                val attachment =
+                    report.toAttachment(getString(Res.string.setupProgressViewFailedTitle))
+                withContext(dispatchers.main) {
+                    reports.attachFailure(
+                        attachment.title,
+                        attachment.details,
+                        attachment.source,
+                        attachment.log,
+                    )
+                    nav.open(io.github.eslamasabry.oc.ui.routes.SettingsRoute.ReportProblem)
+                }
+                return Outcome.Ok(Unit)
+            }
+
             override suspend fun finishStep(jobId: String, openCodeChanged: Boolean) {
                 val finisher =
                     finisher(stores, server, linux, getString(Res.string.phoneSetupProfileName))

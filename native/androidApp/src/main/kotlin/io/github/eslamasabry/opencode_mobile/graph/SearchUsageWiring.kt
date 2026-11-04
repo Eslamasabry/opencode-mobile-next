@@ -10,24 +10,25 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.domain.ServerGateway
+import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.feature.search.presentation.ConversationSearchSource
-import io.github.eslamasabry.oc.feature.search.presentation.SearchGoToFacts
 import io.github.eslamasabry.oc.feature.search.presentation.RecentSearchHistory
 import io.github.eslamasabry.oc.feature.search.presentation.RecentSearchStore
 import io.github.eslamasabry.oc.feature.search.presentation.SearchConversation
 import io.github.eslamasabry.oc.feature.search.presentation.SearchConversationPage
+import io.github.eslamasabry.oc.feature.search.presentation.SearchGoToFacts
 import io.github.eslamasabry.oc.feature.search.presentation.SearchMatch
 import io.github.eslamasabry.oc.feature.search.presentation.SearchMessage
 import io.github.eslamasabry.oc.feature.search.presentation.SearchServer
@@ -47,8 +48,14 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -60,20 +67,33 @@ import kotlinx.coroutines.flow.stateIn
 /** Live servers, shared by both screens. */
 @SingleIn(AppScope::class)
 @Inject
-class SearchUsageServers(registry: ConnectionRegistry, appScope: AppCoroutineScope, private val stores: PreviewStores) {
+class SearchUsageServers(
+    registry: ConnectionRegistry,
+    appScope: AppCoroutineScope,
+    private val stores: PreviewStores,
+) {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
     /** Connected servers by id and saved name, in saved order. */
     val live: StateFlow<List<Pair<ProfileId, String>>> =
         registry.live
             .map { graphs -> graphs.map { (id, graph) -> id to graph.profile.name } }
-            .stateIn(scope, SharingStarted.Eagerly, registry.live.value.map { (id, graph) -> id to graph.profile.name })
+            .stateIn(
+                scope,
+                SharingStarted.Eagerly,
+                registry.live.value.map { (id, graph) -> id to graph.profile.name },
+            )
 
     val active: StateFlow<ProfileId?> = stores.profiles.activeId
 
+    val graphs = registry.live
     private val registryRef = registry
 
-    fun gateway(profile: ProfileId): ServerGateway? = registryRef.live.value[profile]?.session?.server
+    fun gateway(profile: ProfileId): ServerGateway? =
+        registryRef.live.value[profile]?.session?.server
+
+    fun managedOnPhone(profile: ProfileId): Boolean =
+        registryRef.live.value[profile]?.profile?.managedOnPhone == true
 }
 
 private fun stale(): Outcome<Nothing> = Failure.Refused(RefusalReason.StaleScope).failed()
@@ -83,9 +103,16 @@ private const val PAGE = 50
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<ConversationSearchSource>())
 @Inject
-class AndroidConversationSearch(private val shared: SearchUsageServers, appScope: AppCoroutineScope) :
-    ConversationSearchSource {
+class AndroidConversationSearch(
+    private val shared: SearchUsageServers,
+    appScope: AppCoroutineScope,
+    private val platform: io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities,
+) : ConversationSearchSource {
     private val scope = CoroutineScope(appScope.coroutineContext)
+
+    override val platformCapabilities:
+        io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
+        get() = platform
 
     override val servers: StateFlow<ImmutableList<SearchServer>> =
         shared.live
@@ -100,39 +127,149 @@ class AndroidConversationSearch(private val shared: SearchUsageServers, appScope
         cursor: String?,
     ): Outcome<SearchConversationPage> {
         val gateway = shared.gateway(profile) ?: return stale()
-        // The server's own title search across every project (OC2); a server that cannot is read page by page here.
+        // The server's own title search across every project (OC2); a server that cannot is read
+        // page by page here.
         when (val global = Oc2SearchUsage.searchSessions(gateway, query, cursor, PAGE)) {
             null -> Unit
             is Outcome.Ok ->
                 return SearchConversationPage(
-                    global.value.items.map { row(it.session, it.projectDirectory) }.toImmutableList(),
-                    global.value.nextCursor,
-                    titlesMatched = query.isNotBlank(),
-                    allProjects = true,
-                ).ok()
+                        global.value.items
+                            .map { row(it.session, it.projectDirectory) }
+                            .toImmutableList(),
+                        global.value.nextCursor,
+                        titlesMatched = query.isNotBlank(),
+                        allProjects = true,
+                    )
+                    .ok()
             is Outcome.Failed ->
-                if (global.failure !is Failure.NotFound && global.failure !is Failure.Unavailable) return global
+                if (global.failure !is Failure.NotFound && global.failure !is Failure.Unavailable)
+                    return global
         }
         return when (val page = gateway.sessionPage(cursor, PAGE)) {
             is Outcome.Failed -> page
             is Outcome.Ok ->
                 SearchConversationPage(
-                    page.value.items.filter { it.parentId == null }.map { row(it, it.directory) }.toImmutableList(),
-                    page.value.nextCursor,
-                    titlesMatched = false,
-                    allProjects = false,
-                ).ok()
+                        page.value.items
+                            .filter { it.parentId == null }
+                            .map { row(it, it.directory) }
+                            .toImmutableList(),
+                        page.value.nextCursor,
+                        titlesMatched = false,
+                        allProjects = false,
+                    )
+                    .ok()
         }
     }
 
     override suspend fun goToFacts(profile: ProfileId): SearchGoToFacts? {
         val gateway = shared.gateway(profile) ?: return null
         val caps = gateway.capabilities.value
-        val recent =
-            (gateway.sessionPage(null, PAGE) as? Outcome.Ok)?.value?.items.orEmpty()
-                .filter { it.parentId == null }
-                .map { ConversationRef(profile, it.id) to it.title }
-        return SearchGoToFacts(caps.fileBrowsing, caps.terminal, caps.projectManagement, recent.toImmutableList())
+        val sessions =
+            (gateway.sessionPage(null, PAGE) as? Outcome.Ok)?.value?.items.orEmpty().filter {
+                it.parentId == null
+            }
+        val recent = sessions.map { ConversationRef(profile, it.id) to it.title }
+        val location = gateway.location.value.directory
+        val projectSession = sessions.firstOrNull { location == null || it.directory == location }
+        return SearchGoToFacts(
+            caps.fileBrowsing,
+            caps.terminal,
+            caps.projectManagement,
+            recent.toImmutableList(),
+            capabilities = caps,
+            platform = platform,
+            managedOnPhone = shared.managedOnPhone(profile),
+            hasShell = true,
+            projectDirectory = location ?: projectSession?.directory,
+            projectRef = projectSession?.let { ConversationRef(profile, it.id) },
+        )
+    }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    override fun navigationFacts(profile: ProfileId): Flow<SearchGoToFacts?> =
+        shared.graphs.flatMapLatest { graphs ->
+            val graph = graphs[profile]
+            if (graph == null) flowOf(null)
+            else
+                flow {
+                    val facts = goToFacts(profile)
+                    combine(graph.session.server.capabilities, graph.session.server.location) {
+                            caps,
+                            location ->
+                            facts
+                                ?.takeIf { shared.gateway(profile) === graph.session.server }
+                                ?.copy(
+                                    capabilities = caps,
+                                    fileBrowsing = caps.fileBrowsing,
+                                    terminal = caps.terminal,
+                                    projectManagement = caps.projectManagement,
+                                    projectDirectory = location.directory ?: facts.projectDirectory,
+                                    // A project change invalidates conversation-bound destinations
+                                    // until the next read.
+                                    projectRef =
+                                        facts.projectRef.takeIf {
+                                            location.directory == null ||
+                                                location.directory == facts.projectDirectory
+                                        },
+                                )
+                        }
+                        .collect { emit(it) }
+                }
+        }
+
+    override suspend fun projectHealth(
+        profile: ProfileId,
+        directory: String,
+    ): Outcome<io.github.eslamasabry.oc.feature.search.presentation.ProjectHealthSnapshot> {
+        val gateway = shared.gateway(profile) ?: return stale()
+        val caps = gateway.capabilities.value
+        val location = gateway.location.value
+        val revision = gateway.scopeRevision
+        val operations =
+            gateway
+                .facet<io.github.eslamasabry.oc.core.domain.LocatedProjectGateway>()
+                ?.operationsAt(io.github.eslamasabry.oc.core.model.ServerLocation(directory))
+                ?: gateway
+                    .facet<io.github.eslamasabry.oc.core.domain.ServerOperationsGateway>()
+                    ?.takeIf { location.directory == directory }
+                ?: return stale()
+        fun current(): Boolean =
+            shared.gateway(profile) === gateway &&
+                gateway.scopeRevision == revision &&
+                gateway.location.value == location
+        val vcs =
+            if (caps.sessionDiff)
+                when (val read = operations.versionControlHealth()) {
+                    is Outcome.Ok -> read.value
+                    is Outcome.Failed -> return read
+                }
+            else null
+        if (!current()) return stale()
+        val languages =
+            if (caps.languageServiceStatus)
+                when (val read = operations.listLanguageServices()) {
+                    is Outcome.Ok -> read.value
+                    is Outcome.Failed -> return read
+                }
+            else persistentListOf()
+        if (!current()) return stale()
+        val formatters =
+            if (caps.formatterStatus)
+                when (val read = operations.listFormatters()) {
+                    is Outcome.Ok -> read.value
+                    is Outcome.Failed -> return read
+                }
+            else persistentListOf()
+        if (!current()) return stale()
+        return io.github.eslamasabry.oc.feature.search.presentation
+            .ProjectHealthSnapshot(
+                vcs,
+                languages,
+                formatters,
+                caps.languageServiceStatus,
+                caps.formatterStatus,
+            )
+            .ok()
     }
 
     override suspend fun recentMessages(
@@ -166,13 +303,18 @@ class AndroidConversationSearch(private val shared: SearchUsageServers, appScope
 }
 
 /**
- * App-wide recent searches (`oc.search.recent`, a string list). Not per server: the words are the person's own.
- * Start-up restoration and every change share one lock ([RecentSearchHistory]), so no history is lost to a race.
+ * App-wide recent searches (`oc.search.recent`, a string list). Not per server: the words are the
+ * person's own. Start-up restoration and every change share one lock ([RecentSearchHistory]), so no
+ * history is lost to a race.
  */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<RecentSearchStore>())
 @Inject
-class AndroidRecentSearches(stores: PreviewStores, appScope: AppCoroutineScope, dispatchers: AppDispatchers) :
+class AndroidRecentSearches(
+    stores: PreviewStores,
+    appScope: AppCoroutineScope,
+    dispatchers: AppDispatchers,
+) :
     RecentSearchStore by RecentSearchHistory(
         CoroutineScope(appScope.coroutineContext + dispatchers.serial("recent-searches")),
         warm = { stores.warm() },
@@ -189,7 +331,8 @@ private const val RECENT_KEY = "oc.search.recent"
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<UsageSource>())
 @Inject
-class AndroidUsageSource(private val shared: SearchUsageServers, appScope: AppCoroutineScope) : UsageSource {
+class AndroidUsageSource(private val shared: SearchUsageServers, appScope: AppCoroutineScope) :
+    UsageSource {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
     override val servers: StateFlow<ImmutableList<UsageServer>> =
@@ -201,7 +344,8 @@ class AndroidUsageSource(private val shared: SearchUsageServers, appScope: AppCo
 
     override suspend fun projects(profile: ProfileId): Outcome<ImmutableList<UsageProject>> {
         val gateway = shared.gateway(profile) ?: return stale()
-        // OC2: the current project first, then those of recent conversations (Oc2SearchUsage.projectChoices).
+        // OC2: the current project first, then those of recent conversations
+        // (Oc2SearchUsage.projectChoices).
         val seen: List<Pair<String?, String?>> =
             when (val choices = Oc2SearchUsage.projectChoices(gateway, 100)) {
                 is Outcome.Ok -> choices.value.map { it.id to it.directory }
@@ -233,7 +377,8 @@ class AndroidUsageSource(private val shared: SearchUsageServers, appScope: AppCo
         }
     }
 
-    private fun tokens(t: Oc2UsageStatistics.Tokens) = UsageTokens(t.input, t.output, t.reasoning, t.cacheRead, t.cacheWrite)
+    private fun tokens(t: Oc2UsageStatistics.Tokens) =
+        UsageTokens(t.input, t.output, t.reasoning, t.cacheRead, t.cacheWrite)
 
     private fun report(s: Oc2UsageStatistics): UsageReport =
         UsageReport(
@@ -250,7 +395,16 @@ class AndroidUsageSource(private val shared: SearchUsageServers, appScope: AppCo
             tools = s.tools?.let { UsageTools(it.calls, it.succeeded, it.failed, it.unfinished) },
             models =
                 s.models
-                    .map { UsageModel(it.providerID, it.modelID, it.variant, it.steps, tokens(it.tokens), it.cost) }
+                    .map {
+                        UsageModel(
+                            it.providerID,
+                            it.modelID,
+                            it.variant,
+                            it.steps,
+                            tokens(it.tokens),
+                            it.cost,
+                        )
+                    }
                     .toImmutableList(),
             activity = s.activity.map { UsageDay(it.date, it.steps) }.toImmutableList(),
         )

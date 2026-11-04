@@ -158,6 +158,8 @@ public data class ProjectPageUi(
     val confirmRemoveCopy: Boolean = false,
     val isolatedDetails: io.github.eslamasabry.oc.core.common.Redacted? = null,
     val workspace: ProjectWorkspaceUi = ProjectWorkspaceUi(),
+    val changesCount: Int? = null,
+    val devServerPort: Int? = null,
 )
 
 public interface ProjectPageActions : ProjectWorkspaceActions {

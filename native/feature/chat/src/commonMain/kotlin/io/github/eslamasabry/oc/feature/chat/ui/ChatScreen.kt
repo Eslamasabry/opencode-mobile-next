@@ -1,7 +1,5 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
-import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
-import io.github.eslamasabry.oc.feature.chat.context.ActiveContextSheet
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,6 +30,8 @@ import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
 import io.github.eslamasabry.oc.feature.chat.composer.InsertRequest
+import io.github.eslamasabry.oc.feature.chat.context.ActiveContextModel
+import io.github.eslamasabry.oc.feature.chat.context.ActiveContextSheet
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChip
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
@@ -47,19 +47,19 @@ import io.github.eslamasabry.oc.feature.chat.presentation.MessageAction
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageMenuUi
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageOrder
 import io.github.eslamasabry.oc.feature.chat.presentation.PictureUi
+import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.SelectTextUi
-import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
-import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartActions
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartUi
 import io.github.eslamasabry.oc.feature.chat.start.ui.ChatStartArea
 import io.github.eslamasabry.oc.feature.chat.tasks.ui.ChatTasksSheet
+import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -102,6 +102,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitFindExcerpt
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentErrorOpenSettings
 import io.github.eslamasabry.oc.ui.words.res.chatFeelDone
 import io.github.eslamasabry.oc.ui.words.res.chatFeelEditAndResend
 import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
@@ -118,7 +119,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatFeelShare
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoTitle
-import io.github.eslamasabry.oc.ui.words.res.agentErrorOpenSettings
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedBody
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.chatLoadingConversation
@@ -132,8 +132,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedOther
 import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedSignIn
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailed
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailedChanged
-import io.github.eslamasabry.oc.ui.words.res.chatSendFailedOffline
-import io.github.eslamasabry.oc.ui.words.res.chatSendFailedRefused
 import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
 import io.github.eslamasabry.oc.ui.words.res.chatUiCollapseReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiContextCompacted
@@ -152,12 +150,11 @@ import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveAction
 import io.github.eslamasabry.oc.ui.words.res.draftLeaveMessage
-import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SharedHTTPIsNotEncryptedOtherDevicesOn
 import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenHTTPLink
 import io.github.eslamasabry.oc.ui.words.res.e7SharedOpenInsecureHTTPLink
 import io.github.eslamasabry.oc.ui.words.res.externalLinkDontOpen
-import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
+import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
@@ -177,22 +174,22 @@ import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSteps
 import io.github.eslamasabry.oc.ui.words.res.kitWorkStopped
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWorking
-import io.github.eslamasabry.oc.ui.words.res.nlibTitle
 import io.github.eslamasabry.oc.ui.words.res.mobileTasksProgress
+import io.github.eslamasabry.oc.ui.words.res.nlibTitle
 import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.queuedDiscardUnconfirmedMessage
-import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptConfirmed
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
+import io.github.eslamasabry.oc.ui.words.res.returnBriefContinue
 import io.github.eslamasabry.oc.ui.words.res.revertFromHere
 import io.github.eslamasabry.oc.ui.words.res.schedulePhoneBusy
 import io.github.eslamasabry.oc.ui.words.res.schedulePhoneCheckFailed
 import io.github.eslamasabry.oc.ui.words.res.sessionInstructionsUpdated
 import io.github.eslamasabry.oc.ui.words.res.skillApplied
-import io.github.eslamasabry.oc.ui.words.res.transcriptFindAll
 import io.github.eslamasabry.oc.ui.words.res.stateDemoDisclosure
+import io.github.eslamasabry.oc.ui.words.res.transcriptFindAll
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindClose
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindCount
 import io.github.eslamasabry.oc.ui.words.res.transcriptFindHint
@@ -229,7 +226,10 @@ public fun ChatScreen(
     onOpenSession: ((String) -> Unit)? = null,
     header: ChatHeaderSlot? = null,
     replyReader: KitReplyReader? = null,
-    /** B-CHAT-001..003: the active-context inspector this conversation opens from its bar (null where the server has none). */
+    /**
+     * B-CHAT-001..003: the active-context inspector this conversation opens from its bar (null
+     * where the server has none).
+     */
     activeContext: ActiveContextModel? = null,
     start: ChatStartUi = ChatStartUi(),
     startActions: ChatStartActions? = null,
@@ -366,54 +366,55 @@ public fun ChatScreen(
                                 // STATE: the offline demo offers no server actions.
                                 (if (demoMode) emptyList()
                                 else
-                                listOfNotNull(
-                                    facts.tasks?.let { tasks ->
+                                    listOfNotNull(
+                                        facts.tasks?.let { tasks ->
+                                            KitLineAction(
+                                                stringResource(
+                                                    Res.string.mobileTasksProgress,
+                                                    tasks.done,
+                                                    tasks.total,
+                                                ),
+                                                { tasksOpen = true },
+                                                testTag = "chat-tasks-open",
+                                            )
+                                        },
+                                        KitLineAction(
+                                            stringResource(Res.string.gitSheetTitle),
+                                            actions::openGit,
+                                            testTag = "chat-git-chip",
+                                        ),
+                                        KitLineAction(
+                                            stringResource(Res.string.chatUiFiles),
+                                            actions::openFiles,
+                                            testTag = "chat-files-open",
+                                        ),
+                                        KitLineAction(
+                                            stringResource(Res.string.chatUiChanges),
+                                            actions::openChanges,
+                                            testTag = "chat-changes-open",
+                                        ),
+                                        prompts?.let {
+                                            KitLineAction(
+                                                stringResource(Res.string.promptStashTitle),
+                                                it::open,
+                                                testTag = "chat-saved-prompts-open",
+                                            )
+                                        },
                                         KitLineAction(
                                             stringResource(
-                                                Res.string.mobileTasksProgress,
-                                                tasks.done,
-                                                tasks.total,
+                                                if (state.reasoningExpanded)
+                                                    Res.string.chatUiCollapseReasoning
+                                                else Res.string.chatUiExpandReasoning
                                             ),
-                                            { tasksOpen = true },
-                                            testTag = "chat-tasks-open",
-                                        )
-                                    },
-                                    KitLineAction(
-                                        stringResource(Res.string.gitSheetTitle),
-                                        actions::openGit,
-                                        testTag = "chat-git-chip",
-                                    ),
-                                    KitLineAction(
-                                        stringResource(Res.string.chatUiFiles),
-                                        actions::openFiles,
-                                        testTag = "chat-files-open",
-                                    ),
-                                    KitLineAction(
-                                        stringResource(Res.string.chatUiChanges),
-                                        actions::openChanges,
-                                        testTag = "chat-changes-open",
-                                    ),
-                                    prompts?.let {
-                                        KitLineAction(
-                                            stringResource(Res.string.promptStashTitle),
-                                            it::open,
-                                            testTag = "chat-saved-prompts-open",
-                                        )
-                                    },
-                                    KitLineAction(
-                                        stringResource(
-                                            if (state.reasoningExpanded) Res.string.chatUiCollapseReasoning
-                                            else Res.string.chatUiExpandReasoning
+                                            actions::toggleReasoning,
+                                            testTag = "chat-reasoning-toggle",
                                         ),
-                                        actions::toggleReasoning,
-                                        testTag = "chat-reasoning-toggle",
-                                    ),
-                                    KitLineAction(
-                                        stringResource(Res.string.nlibTitle),
-                                        actions::openTools,
-                                        testTag = "chat-tools-open",
-                                    ),
-                                )) + extraActions
+                                        KitLineAction(
+                                            stringResource(Res.string.nlibTitle),
+                                            actions::openTools,
+                                            testTag = "chat-tools-open",
+                                        ),
+                                    )) + extraActions
                             if (header != null) {
                                 // CHAT-HEADER replaces the plain bar; Find lives in its ⋯ menu, the
                                 // other
@@ -424,6 +425,7 @@ public fun ChatScreen(
                                     { actions.find(state.find?.query ?: "") },
                                     extraActions = listOfNotNull(context) + unitActions,
                                     onProject = actions::openFiles,
+                                    onBranch = actions::openGit,
                                 )
                             } else
                                 KitTopBar(
@@ -507,7 +509,8 @@ public fun ChatScreen(
                             )
                         ChatPhase.Live ->
                             Box(Modifier.fillMaxSize().kitFrostSource(frost)) {
-                                // PORT-SCREENS-1: an empty conversation offers its starters instead.
+                                // PORT-SCREENS-1: an empty conversation offers its starters
+                                // instead.
                                 if (
                                     state.rows.isEmpty() &&
                                         state.pending.isEmpty() &&
@@ -517,28 +520,29 @@ public fun ChatScreen(
                                 ) {
                                     ChatStartArea(start, startActions)
                                 } else
-                                ChatTranscriptList(
-                                    rows = state.rows,
-                                    live = state.live,
-                                    pending = state.pending,
-                                    words = words,
-                                    listWords = listWords,
-                                    list = list,
-                                    reveal = reveal,
-                                    motion = motion,
-                                    onOpenMenu = actions::openMessageMenu,
-                                    onRetrySend = actions::retrySend,
-                                    receiptChecks = state.receiptChecks,
-                                    onCheckReceipt = actions::checkReceipt,
-                                    modifier = Modifier.fillMaxSize(),
-                                    facts = facts,
-                                    onOpenSession = onOpenSession,
-                                    reply = rememberReplyActions(actions, state.confirmedPaths),
-                                    onOpenFile = { file -> openArtifact(actions, file) },
-                                    reasoningExpanded = state.reasoningExpanded,
-                                    onCompactAgain =
-                                        if (state.capabilities.compact) actions::compactAgain else null,
-                                )
+                                    ChatTranscriptList(
+                                        rows = state.rows,
+                                        live = state.live,
+                                        pending = state.pending,
+                                        words = words,
+                                        listWords = listWords,
+                                        list = list,
+                                        reveal = reveal,
+                                        motion = motion,
+                                        onOpenMenu = actions::openMessageMenu,
+                                        onRetrySend = actions::retrySend,
+                                        receiptChecks = state.receiptChecks,
+                                        onCheckReceipt = actions::checkReceipt,
+                                        modifier = Modifier.fillMaxSize(),
+                                        facts = facts,
+                                        onOpenSession = onOpenSession,
+                                        reply = rememberReplyActions(actions, state.confirmedPaths),
+                                        onOpenFile = { file -> openArtifact(actions, file) },
+                                        reasoningExpanded = state.reasoningExpanded,
+                                        onCompactAgain =
+                                            if (state.capabilities.compact) actions::compactAgain
+                                            else null,
+                                    )
                                 EarlierMessagesPill(
                                     state,
                                     list,

@@ -1,0 +1,19 @@
+<resources>
+    <string name="chatCyclePrevious">Previous recent model</string>
+    <string name="chatCycleNext">Next recent model</string>
+    <string name="chatHomeAllow">Allow once</string>
+    <string name="chatHomeReject">Reject</string>
+    <string name="chatHomeAnswerFailed">Could not send your answer. Open the conversation to check it.</string>
+    <string name="chatHomeRunning">Running</string>
+    <string name="chatHomeMinutes">%1$s min</string>
+    <string name="chatQueueMoveTitle">Move a queued prompt</string>
+    <string name="chatQueueMoveEmpty">No unsent queued prompts in this conversation.</string>
+    <string name="chatQueueMoveChoosePrompt">Choose a prompt</string>
+    <string name="chatQueueMoveChooseServer">Choose its destination server</string>
+    <string name="chatQueueMoveChooseDestination">Move to a conversation</string>
+    <string name="chatQueueMoveFailure">Could not move the prompt. Nothing was sent.</string>
+    <string name="chatQueueMoveMore">More conversations</string>
+    <string name="chatQueueMoveSelectionNote">The prompt stays queued. A model or agent the destination does not offer is removed.</string>
+    <string name="chatPhraseHide">Hide %1$s</string>
+    <string name="chatHomeSeconds">%1$s s</string>
+</resources>

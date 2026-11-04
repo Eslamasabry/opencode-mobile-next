@@ -1,8 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
 import androidx.compose.runtime.Composable
-import io.github.eslamasabry.oc.ui.design.tokens.Density
-import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.feature.settings.presentation.BackgroundState
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsNote
@@ -13,7 +11,9 @@ import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.color.Packs
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
+import io.github.eslamasabry.oc.ui.design.tokens.Density
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailChecksum
@@ -26,8 +26,20 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateFailStorage
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailVersion
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesSearchAliases
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentBlue
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentMint
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentMono
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentPink
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentSilver
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentTeal
+import io.github.eslamasabry.oc.ui.words.res.appearanceAccentViolet
+import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersRound
+import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSharp
+import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSoft
 import io.github.eslamasabry.oc.ui.words.res.appearanceModeAuto
 import io.github.eslamasabry.oc.ui.words.res.appearanceModeSaver
+import io.github.eslamasabry.oc.ui.words.res.appearanceSpacingCompact
+import io.github.eslamasabry.oc.ui.words.res.appearanceSpacingRoomy
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceBrutal
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfacePaper
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceSoft
@@ -49,6 +61,9 @@ import io.github.eslamasabry.oc.ui.words.res.effectsMotionOff
 import io.github.eslamasabry.oc.ui.words.res.effectsMotionOffHint
 import io.github.eslamasabry.oc.ui.words.res.effectsSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
+import io.github.eslamasabry.oc.ui.words.res.nativeCapabilitiesTitle
+import io.github.eslamasabry.oc.ui.words.res.nativePhraseChipsAliases
+import io.github.eslamasabry.oc.ui.words.res.nativePhraseChipsTitle
 import io.github.eslamasabry.oc.ui.words.res.onboardingSetupGuide
 import io.github.eslamasabry.oc.ui.words.res.reportProblemCopied
 import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupAgent
@@ -95,18 +110,6 @@ import io.github.eslamasabry.oc.ui.words.res.textSizeLarge
 import io.github.eslamasabry.oc.ui.words.res.textSizeSmall
 import io.github.eslamasabry.oc.ui.words.res.textSizeSmallest
 import io.github.eslamasabry.oc.ui.words.res.tipsTitle
-import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersRound
-import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSoft
-import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSharp
-import io.github.eslamasabry.oc.ui.words.res.appearanceSpacingRoomy
-import io.github.eslamasabry.oc.ui.words.res.appearanceSpacingCompact
-import io.github.eslamasabry.oc.ui.words.res.appearanceAccentMint
-import io.github.eslamasabry.oc.ui.words.res.appearanceAccentTeal
-import io.github.eslamasabry.oc.ui.words.res.appearanceAccentBlue
-import io.github.eslamasabry.oc.ui.words.res.appearanceAccentViolet
-import io.github.eslamasabry.oc.ui.words.res.appearanceAccentPink
-import io.github.eslamasabry.oc.ui.words.res.appearanceAccentMono
-import io.github.eslamasabry.oc.ui.words.res.appearanceAccentSilver
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -138,6 +141,7 @@ internal fun rowWords(row: SettingsRowId): String =
             SettingsRowId.Agents -> Res.string.settingsV3AgentsOnPhone
             SettingsRowId.ShowReasoning -> Res.string.settingsHubShowReasoning
             SettingsRowId.ShowTimestamps -> Res.string.settingsHubShowTimestamps
+            SettingsRowId.PhraseChips -> Res.string.nativePhraseChipsTitle
             SettingsRowId.DefaultShell -> Res.string.e7SettingsUi35
             SettingsRowId.Voice -> Res.string.settingsHubVoice
             SettingsRowId.Permissions -> Res.string.settingsV3Permissions
@@ -149,6 +153,7 @@ internal fun rowWords(row: SettingsRowId): String =
             SettingsRowId.Updates -> Res.string.appUpdatesTitle
             SettingsRowId.Guide -> Res.string.onboardingSetupGuide
             SettingsRowId.Tips -> Res.string.tipsTitle
+            SettingsRowId.Capabilities -> Res.string.nativeCapabilitiesTitle
             SettingsRowId.ReportProblem -> Res.string.kitReportProblem
             SettingsRowId.About -> Res.string.aboutTitle
         }
@@ -170,6 +175,7 @@ internal fun aliasWords(row: SettingsRowId): String {
             SettingsRowId.Tools -> Res.string.settingsHubSearchToolsAliases
             SettingsRowId.ShowReasoning -> Res.string.settingsHubSearchReasoningAliases
             SettingsRowId.ShowTimestamps -> Res.string.settingsHubSearchTranscriptAliases
+            SettingsRowId.PhraseChips -> Res.string.nativePhraseChipsAliases
             SettingsRowId.DefaultShell -> Res.string.settingsHubSearchShellAliases
             SettingsRowId.Voice -> Res.string.settingsHubSearchVoiceAliases
             SettingsRowId.Permissions -> Res.string.settingsHubSearchPermissionsAliases
@@ -184,7 +190,8 @@ internal fun aliasWords(row: SettingsRowId): String {
             SettingsRowId.Agents,
             SettingsRowId.Background,
             SettingsRowId.Language,
-            SettingsRowId.Tips -> null
+            SettingsRowId.Tips,
+            SettingsRowId.Capabilities -> null
         }
     return key?.let { stringResource(it) }.orEmpty()
 }
@@ -294,7 +301,7 @@ internal fun cornersWords(corners: Corners): String =
             Corners.Round -> Res.string.appearanceFineTuneCornersRound
             Corners.Soft -> Res.string.appearanceFineTuneCornersSoft
             Corners.Sharp -> Res.string.appearanceFineTuneCornersSharp
-        },
+        }
     )
 
 @Composable
@@ -303,7 +310,7 @@ internal fun spacingWords(spacing: Density): String =
         when (spacing) {
             Density.Comfortable -> Res.string.appearanceSpacingRoomy
             Density.Compact -> Res.string.appearanceSpacingCompact
-        },
+        }
     )
 
 /** An Accent swatch's name by its stored id; an unknown id reads as its own id (never blank). */

@@ -19,7 +19,6 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AllPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.AllProblemKind
 import io.github.eslamasabry.oc.feature.chats.presentation.AllRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllActions
-import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPinActions
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -96,8 +95,6 @@ import io.github.eslamasabry.oc.ui.words.res.statePin
 import io.github.eslamasabry.oc.ui.words.res.statePinFailed
 import io.github.eslamasabry.oc.ui.words.res.stateSavedPreview
 import io.github.eslamasabry.oc.ui.words.res.stateUnpin
-import io.github.eslamasabry.oc.ui.words.res.sessionRelationsPin
-import io.github.eslamasabry.oc.ui.words.res.sessionRelationsUnpin
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -367,8 +364,8 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
             "$location · " + stringResource(Res.string.stateContextUsage, it)
         } ?: location
     val running = stringResource(Res.string.chatsHomeRunning)
-    // ANDR-1: the visible pin action takes the trailing slot, so Running moves into the line.
-    val supporting = if (row.running && row.pinAvailable) "$place · $running" else place
+    // ANDR-1: the visible More action takes the trailing slot, so Running moves into the line.
+    val supporting = if (row.running) "$place · $running" else place
     if (row.readOnly) {
         KitRow(
             title = title,
@@ -378,12 +375,6 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
         )
         return
     }
-    val pinActions = actions as? ChatsPinActions
-    val pinLabel =
-        stringResource(
-            if (row.pinned) Res.string.sessionRelationsUnpin else Res.string.sessionRelationsPin,
-            title,
-        )
     if (selecting) {
         KitChoiceRow(
             title = title,
@@ -422,14 +413,9 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
             title = title,
             supporting = supporting,
             trailing =
-                when {
-                    row.pinAvailable && pinActions != null ->
-                        KitRowTrailing.Action(
-                            KitLineAction(pinLabel, { pinActions.togglePin(row.key) })
-                        )
-                    row.running -> KitRowTrailing.Value(running, chevron = false)
-                    else -> KitRowTrailing.None
-                },
+                KitRowTrailing.Action(
+                    KitLineAction(stringResource(Res.string.p12MoreFor, title), { menu = true })
+                ),
             growKey = row.ref,
             onLongClick = { menu = true },
             onLongClickLabel = stringResource(Res.string.p12MoreFor, title),

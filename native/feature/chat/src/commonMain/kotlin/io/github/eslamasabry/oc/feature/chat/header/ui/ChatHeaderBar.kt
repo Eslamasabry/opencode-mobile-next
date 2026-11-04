@@ -99,6 +99,7 @@ import io.github.eslamasabry.oc.ui.words.res.continueWithNothingReady
 import io.github.eslamasabry.oc.ui.words.res.continueWithSubtitle
 import io.github.eslamasabry.oc.ui.words.res.continueWithTitle
 import io.github.eslamasabry.oc.ui.words.res.continueWithTryAgain
+import io.github.eslamasabry.oc.ui.words.res.handoffNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.handoffSheetCopyCommand
 import io.github.eslamasabry.oc.ui.words.res.handoffUiComputerCommandLabel
 import io.github.eslamasabry.oc.ui.words.res.handoffUiComputerDirectoryNote
@@ -108,7 +109,6 @@ import io.github.eslamasabry.oc.ui.words.res.handoffUiComputerVerify
 import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableDirectory
 import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableReference
 import io.github.eslamasabry.oc.ui.words.res.handoffUiUnavailableWorkspace
-import io.github.eslamasabry.oc.ui.words.res.handoffNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.historyLoadedOnly
 import io.github.eslamasabry.oc.ui.words.res.importAction
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
@@ -170,6 +170,7 @@ public fun ChatHeaderTopBar(
     // limit, the rest at the end of the same ⋯ menu.
     extraActions: List<KitLineAction> = emptyList(),
     onProject: (() -> Unit)? = null,
+    onBranch: (() -> Unit)? = null,
 ) {
     val state = slot.state
     val actions = slot.actions
@@ -213,8 +214,8 @@ public fun ChatHeaderTopBar(
                                 )
                             } ?: stringResource(Res.string.chatProjectChipFilesSemantics, project),
                         onProject = onProject,
-                        // No branch word: the header port has no branch fact yet (report row
-                        // kit_top_bar_scope, blocked); Git stays the bar's own visible action.
+                        branch = state.branch,
+                        onBranch = onBranch,
                     )
                 }
             },

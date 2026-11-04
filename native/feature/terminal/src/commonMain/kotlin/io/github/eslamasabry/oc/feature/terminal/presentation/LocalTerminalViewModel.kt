@@ -21,11 +21,13 @@ import io.github.eslamasabry.oc.ui.routes.RemoteTerminalRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 public data class TerminalServerSource(val id: ProfileId, val name: String)
@@ -39,6 +41,7 @@ public data class LocalTerminalUi(
     val notInstalled: Boolean = false,
     val accessible: Boolean? = null,
     val confirmStop: Int? = null,
+    val devServerPort: Int? = null,
 )
 
 public interface LocalTerminalNativeActions {
@@ -69,6 +72,8 @@ public interface LocalTerminalActions {
     public fun setAccessible(enabled: Boolean)
 
     public fun back()
+
+    public fun openDevPreview() {}
 }
 
 @Inject
@@ -78,6 +83,9 @@ public class LocalTerminalViewModel(
     private val port: LocalTerminalPort,
     private val nav: AppNavigator,
     private val registry: ConnectionRegistry,
+    private val devServers:
+        io.github.eslamasabry.oc.engine.runtime.devservers.TerminalDevServerHost =
+        io.github.eslamasabry.oc.engine.runtime.devservers.NoTerminalDevServerHost(),
 ) : ViewModel(), LocalTerminalActions, LocalTerminalNativeActions {
     private val sources =
         registry.live.flatMapLatest { graphs ->
@@ -112,6 +120,62 @@ public class LocalTerminalViewModel(
 
     init {
         if (port.shells.value.isEmpty()) create()
+    }
+
+    private var devSession:
+        io.github.eslamasabry.oc.engine.runtime.devservers.TerminalDevServerSession? =
+        null
+    private var devWatch: kotlinx.coroutines.Job? = null
+
+    public fun resumeDevServer() {
+        if (devWatch?.isActive == true) return
+        devWatch = viewModelScope.launch {
+            devServers.sessions().collectLatest { session ->
+                devSession = session
+                local.update { it.copy(devServerPort = null) }
+                if (session == null) return@collectLatest
+                try {
+                    kotlinx.coroutines.coroutineScope {
+                        launch {
+                            while (kotlinx.coroutines.currentCoroutineContext().isActive) {
+                                session.signal.refresh()
+                                kotlinx.coroutines.delay(15_000)
+                            }
+                        }
+                        session.signal.running.collect { port ->
+                            local.update { it.copy(devServerPort = port) }
+                        }
+                    }
+                } finally {
+                    session.signal.close()
+                }
+            }
+        }
+    }
+
+    public fun pauseDevServer() {
+        devWatch?.cancel()
+        devWatch = null
+        devSession?.signal?.close()
+        devSession = null
+        local.update { it.copy(devServerPort = null) }
+    }
+
+    override fun openDevPreview() {
+        val session = devSession ?: return
+        val port = state.value.devServerPort ?: return
+        if (session.signal.available && session.signal.running.value == port)
+            nav.open(
+                io.github.eslamasabry.oc.ui.routes.PreviewRoute.Page(
+                    port,
+                    profile = session.profile,
+                )
+            )
+    }
+
+    override fun onCleared() {
+        pauseDevServer()
+        super.onCleared()
     }
 
     override fun create() = run {

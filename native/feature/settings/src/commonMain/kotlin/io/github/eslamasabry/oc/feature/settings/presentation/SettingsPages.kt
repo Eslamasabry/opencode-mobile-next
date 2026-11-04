@@ -34,6 +34,10 @@ public sealed interface SettingsPage {
 
     public data object About : SettingsPage
 
+    public data object Notices : SettingsPage
+
+    public data object PhraseChips : SettingsPage
+
     public data object Privacy : SettingsPage
 
     public data object PrivacyPolicy : SettingsPage
@@ -75,6 +79,7 @@ public enum class SettingsOutside {
     Language,
     Guide,
     Tips,
+    Capabilities,
     ReportProblem,
     WhatsNew,
     Notices,

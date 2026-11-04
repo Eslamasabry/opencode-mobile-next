@@ -1,0 +1,495 @@
+# Third-Party Notices
+
+OpenCode Mobile is an independent community project. It is not built,
+maintained, endorsed by, or affiliated with the official OpenCode team.
+
+This file covers everything the application ships: the fonts and native
+runtimes bundled in the package, and every Dart package resolved in
+`pubspec.lock`. Full license texts are in [`LICENSES/`](LICENSES/), bundled
+with the app and readable in **Settings → About and open source notices**.
+
+The local voice-input feature downloads model files only after the user
+chooses a model pack. Model files are stored in app-private storage and are
+not bundled with the application.
+
+**How this file is verified.** Every version below is read from
+`pubspec.lock`, not from the version constraint in `pubspec.yaml` — the two
+differ, and this file previously documented `record` 6.2.1 while the app
+shipped 7.1.1. Every license identifier is classified from the `LICENSE`
+file inside that exact package version in the local pub cache
+(`~/.pub-cache/hosted/pub.dev/<name>-<version>/LICENSE`) by matching the
+license text itself, not from a package's self-declared metadata and not
+from memory. Where a package's `LICENSE` carries no copyright line, the
+table says so with a dash rather than inventing an owner.
+
+## Bundled components
+
+### Phone project engine
+
+The ARM64 phone engine, confinement launcher and isolated boundary probe are
+built from `engine/phone/` and its committed `Cargo.lock`. The packaged Android
+asset `aiteam-engine-manifest.json` records executable SHA-256 hashes and an exact
+Rust source digest; native launch verifies the executable hashes. Rebuild with
+`engine/phone/tool/build-android.sh --stage-android` using the pinned NDK.
+
+The complete locked Android normal-dependency notices, including Rust standard
+library attribution, libgit2's GPL v2 text with linking exception and vendored
+notices, and SQLite's public-domain dedication, are bundled in
+[`LICENSES/Rust-Phone-Engine.txt`](LICENSES/Rust-Phone-Engine.txt). The generator
+reads the exact local Cargo package sources; these are separate from the Dart
+package inventory below. Execution is gated independently of packaging.
+
+### Phosphor icon artwork
+
+The regular, duotone and fill icon fonts are copied unchanged from the official
+`phosphor_flutter` 2.1.0 archive, licensed under MIT, Copyright (c) 2020-2021 Phosphor Icons.
+The complete license is bundled at `LICENSES/MIT-Phosphor.txt`. Native Flutter
+`IconData` declarations render these fonts because the upstream Dart wrapper
+extends `IconData`, which is final in our pinned Flutter 3.47.2. The package itself
+is not a runtime dependency. Archive and file hashes are recorded in
+`assets/fonts/phosphor/provenance.json`.
+
+### Agent and provider marks
+
+The single-colour logos in `assets/marks/` (agents such as Claude, Codex and
+Gemini, and about 100 model-provider ids such as Anthropic, OpenAI and Mistral) are the
+monochrome SVGs of lobe-icons by LobeHub, MIT licensed, Copyright (c) 2023
+LobeHub. The licence is bundled at `LICENSES/MIT-lobe-icons.txt`; each file is
+unchanged apart from removing its `<title>` element. (`opencode.svg` once also
+carried the lighter lower block of OpenCode's two-tone mark at 40% of the same
+colour; at 16 to 24 dp that block filled the opening and the mark read as a
+solid box, so it is back to the plain single-colour frame.) The app draws them in the
+current text colour and the logos remain trademarks of their owners; they are
+shown only to name the agent or provider. A provider without a bundled mark
+still falls back to its models.dev logo, downloaded by provider name.
+
+### Local SVG previews
+
+The native kit renders bounded provider marks on Android with `com.caverock:androidsvg-aar:1.4`,
+maintained by Paul LeBeau, Cave Rock Software Ltd., under Apache 2.0. Its source headers name
+Copyright 2013 Paul LeBeau, Cave Rock Software Ltd.; the full license is bundled at
+[`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt). Version and rendering API provenance:
+[the maintainer's AndroidSVG documentation](https://bigbadaboom.github.io/androidsvg/).
+The renderer receives static SVG text only and has no external file resolver.
+
+`flutter_svg` 2.3.0 is maintained in Flutter's packages repository and is
+distributed under the MIT license, with Copyright (c) 2018 Dan Field.
+Its complete license is bundled unchanged at `LICENSES/MIT-flutter-svg.txt`.
+The text was extracted from the exact pub.dev 2.3.0 archive after verifying
+its SHA-256 against pub.dev version metadata, then matched byte for byte
+against this worktree's restored package cache.
+XML 7.0.1 remains the existing MIT-licensed dependency listed below; the
+preview now declares it directly for its static-content validation.
+
+The resolved SVG path also adds `path_parsing` 1.1.0 (MIT, Dan Field;
+`LICENSES/MIT-path-parsing.txt`), `vector_graphics` 1.2.3 and
+`vector_graphics_compiler` 1.3.0 (identical Flutter BSD 3-Clause text in
+`LICENSES/BSD-3-Clause-vector-graphics.txt`), and `vector_graphics_codec`
+1.1.13 (Flutter BSD 3-Clause, including its additional rights-reserved
+line, in `LICENSES/BSD-3-Clause-vector-graphics-codec.txt`). All four texts
+were read from the exact resolved package versions and copied unchanged.
+
+### Photo and file selection
+
+`image_picker` 1.2.3, `image_picker_android` 0.8.13+22, and
+`image_picker_ios` 0.8.13+7 distribute identical combined Flutter BSD
+3-Clause and aFileChooser Apache 2.0 notices, including Paul Burke's
+copyright. Their complete, unmodified text is in `LICENSES/image-picker.txt`.
+
+The file-selector platform packages, `flutter_plugin_android_lifecycle`,
+`image_picker_for_web`, `image_picker_macos`, and
+`image_picker_platform_interface` share the exact Flutter BSD 3-Clause
+text in `LICENSES/flutter-file-selection.txt`. The Linux and Windows
+image-picker implementations share the variant in
+`LICENSES/image-picker-desktop.txt`. Versions are listed in the table below.
+
+### sherpa-onnx
+
+- Component: `sherpa_onnx` Flutter package and native sherpa-onnx runtime
+- Version: 2.0.1
+- Project: https://github.com/k2-fsa/sherpa-onnx
+- Copyright: sherpa-onnx contributors, including Xiaomi Corporation notices in
+  the distributed source
+- License: Apache License 2.0; see `LICENSES/Apache-2.0.txt`
+
+sherpa-onnx performs the local Whisper decode and supplies the native libraries
+for Android ABIs through its `sherpa_onnx_android_*` packages.
+
+### ONNX Runtime
+
+- Component: ONNX Runtime native inference runtime used by sherpa-onnx
+- Version provenance: sherpa-onnx 2.0.1 packages ONNX Runtime 1.28.2 (the
+  libonnxruntime.so in its Android packages reports that version; the 1.13.8
+  release changelog records the update from 1.27.1)
+- Project: https://github.com/microsoft/onnxruntime
+- Copyright: Microsoft Corporation
+- License: MIT; see `LICENSES/MIT-ONNX-Runtime.txt`
+
+### record
+
+- Component: `record` Flutter package and its platform implementations
+  (`record_android`, `record_ios`, `record_linux`, `record_macos`,
+  `record_web`, `record_windows`, `record_platform_interface`)
+- Version: 7.1.1 (`pubspec.lock`; the constraint in `pubspec.yaml` is also
+  pinned to 7.1.1)
+- Project: https://github.com/llfbandit/record
+- License: BSD 3-Clause; see `LICENSES/BSD-3-Clause-record.txt`
+
+The license file distributed in the 7.1.1 pub package carries the notice
+"Copyright 2022 openapi4j authors. All rights reserved." — an upstream
+artifact of the package's own history, not a claim by this project. That file
+is reproduced byte for byte, comment markers included, in the license text
+referenced above. The same text ships in every `record_*` platform package.
+
+### scrollable_positioned_list
+
+- Component: `scrollable_positioned_list` Flutter package
+- Version: 0.3.8
+- Project: https://github.com/google/flutter.widgets/tree/master/packages/scrollable_positioned_list
+- Copyright: 2018 the Dart project authors, Inc.
+- License: BSD 3-Clause; see
+  `LICENSES/BSD-3-Clause-scrollable-positioned-list.txt`
+
+This package supplies stable indexed scrolling for long, mixed-height message
+timelines.
+
+### mobile_scanner, and the Android libraries it pulls in
+
+- Component: `mobile_scanner` Flutter package
+- Version: 7.4.2
+- Project: https://github.com/juliansteenbakker/mobile_scanner
+- Copyright: 2022 Julian Steenbakker
+- License: BSD 3-Clause; see `LICENSES/BSD-3-Clause.txt`
+
+This package reads the QR code that `opencode2 pair` prints. It is listed
+here as well as in the inventory table because, unlike the other Dart
+packages, it causes Google-authored native libraries to be compiled into the
+Android APK. Its Gradle module declares:
+
+- `com.google.mlkit:barcode-scanning` 17.3.0 — the barcode decoder, **with
+  the detection model bundled into the APK**. This is the package's default;
+  the alternative (`play-services-mlkit-barcode-scanning`, model downloaded
+  on demand via Google Play Services) is not used, so scanning works on a
+  device with no Play Services and with no first-run download. The cost is a
+  larger APK, stated here rather than left to be discovered.
+- `androidx.camera:camera-lifecycle` and `androidx.camera:camera-camera2`
+  1.6.1 — CameraX, which drives the preview.
+- `org.jetbrains.kotlinx:kotlinx-coroutines-android` 1.11.0.
+
+All of the above are Apache License 2.0; see `LICENSES/Apache-2.0.txt`.
+ML Kit is additionally covered by Google's ML Kit terms of service. None of
+these are used anywhere else in the app: the camera is opened only by the
+pairing scanner, only while that screen is on top, and no frame is stored.
+
+### Termux terminal-emulator (the local terminal's PTY)
+
+- Component: `terminal-emulator` library of Termux, used unmodified as the
+  published artifact `com.github.termux.termux-app:terminal-emulator`
+- Version: v0.118.3 (JitPack build of that release tag)
+- Project: https://github.com/termux/termux-app/tree/v0.118.3/terminal-emulator
+- Copyright: Fredrik Fornwall and the Termux contributors; derived from Jack
+  Palevich's Android Terminal Emulator
+- License: Apache License 2.0; see `LICENSES/Apache-2.0.txt`
+
+The terminal on "This phone" starts its shell on a pseudoterminal through
+this library's native `libtermux.so` (`termux.c`), called from
+`android/app/src/main/java/com/termux/terminal/PtyAccess.java`. The
+termux-app repository as a whole is GPLv3; its `LICENSE.md` names
+`terminal-emulator` and `terminal-view` as the Apache 2.0 exceptions. No
+other Termux code (the app, its extra-keys view, `termux-shared`) is used:
+the key bar and the screen are this app's own. The upstream library ships
+no NOTICE file of its own. See also `NOTICE`.
+
+### Geist and Geist Mono
+
+- Component: Geist and Geist Mono variable font files bundled under
+  `assets/fonts/geist/`
+- Version: v1.7.2, the `variable/` TTFs of the official release archive
+  https://github.com/vercel/geist-font/releases/download/v1.7.2/geist-font-v1.7.2.zip
+- Project: https://github.com/vercel/geist-font
+- Copyright: 2024 The Geist Project Authors
+- License: SIL Open Font License 1.1; see `LICENSES/OFL-1.1-Geist.txt`
+  (also `assets/fonts/geist/OFL.txt`)
+
+Geist renders every word of the interface; Geist Mono renders code,
+terminal output, commands, paths and other monospace content.
+
+### Flutter SDK
+
+- Component: the Flutter framework and engine, and the SDK-sourced packages
+  `flutter`, `flutter_localizations`, `flutter_web_plugins`, `sky_engine`
+  (and `flutter_test`, which is not shipped)
+- Version: 3.47.2, the revision pinned for Shorebird releases
+- Project: https://github.com/flutter/flutter
+- Copyright: 2014 The Flutter Authors. All rights reserved.
+- License: BSD 3-Clause; see `LICENSES/BSD-3-Clause.txt`. The engine
+  additionally bundles its own third-party notices, which Flutter surfaces
+  through `showLicensePage`.
+
+### OpenAI Whisper and converted ONNX model files
+
+The downloadable INT8 ONNX files are conversions of multilingual OpenAI
+Whisper model weights. OpenAI states that Whisper code and model weights are
+released under the MIT License. The OpenAI Whisper MIT text and attribution are
+in `LICENSES/MIT-OpenAI-Whisper.txt`.
+
+The application does not modify or redistribute model bytes. The converted
+encoder, decoder, and tokenizer files are hosted by `csukuangfj` on Hugging
+Face and are fetched from immutable repository revisions:
+
+- `csukuangfj/sherpa-onnx-whisper-small` at
+  `8f3c18b358db4d1f2fc1eae49d75cd20989e4309`
+- `csukuangfj/sherpa-onnx-whisper-base` at
+  `bb53ee204431c90d314c1cc08d28d23e5b7927cc`
+- `csukuangfj/sherpa-onnx-whisper-tiny` at
+  `65176e2deb88badc814a94058666cadccc29b61c`
+
+The application verifies every downloaded file against the byte length and
+SHA-256 digest pinned in `lib/voice/model_manifest.dart`. Neither Hugging Face,
+OpenAI, nor the sherpa-onnx project endorses this application.
+
+### Kokoro natural reading voice (optional download)
+
+The optional "Natural voice" for read-aloud downloads Kokoro-82M v1.0
+(hexgrad, Apache-2.0), packaged for sherpa-onnx as an int8 ONNX model with its
+voices, tokens and an English pronunciation lexicon derived from the misaki
+dictionaries (Apache-2.0). The notice and license text are in
+`LICENSES/Apache-2.0-Kokoro.txt`. The application does not modify or
+redistribute the bytes; they are fetched from the immutable revision
+`csukuangfj/kokoro-int8-multi-lang-v1_0` at
+`57adb37fc0e8d4bd430cfc1b8f8c2294945b9af2` and verified against the byte length
+and SHA-256 digest pinned in `lib/voice/natural_voice.dart`. Arabic is not
+offered: sherpa-onnx 2.0 removed espeak-ng, which the published Arabic
+Kokoro-runtime models (Nabra-82M, Apache-2.0) need for pronunciation.
+
+## Package inventory
+
+Every hosted package resolved in `pubspec.lock`, at the exact version
+resolved. "Role" is `runtime` for packages reachable from the application's
+own dependency graph and `test-only` for packages reached solely through
+`dev_dependencies`; test-only packages are not shipped in the APK or the
+desktop bundle and are listed for completeness. Some runtime packages are
+platform implementations for iOS, macOS, Windows, or web and are therefore
+resolved but not compiled into the Android or Linux builds.
+
+License texts: `LICENSES/MIT.txt`, `LICENSES/BSD-3-Clause.txt`,
+`LICENSES/Apache-2.0.txt`, `LICENSES/MPL-2.0.txt`. Per-package copyright
+lines are in the table.
+
+`opencode_sdk` is generated from this repository's own OpenAPI contracts,
+lives in `packages/opencode_sdk/`, and is covered by this project's
+[MIT license](LICENSE) — it is not third-party and is not listed below.
+
+| Package | Version | License | Copyright line in the package's LICENSE | Role |
+|---|---|---|---|---|
+| `android_file_picker` | 1.1.0 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
+| `args` | 2.7.0 | BSD-3-Clause | Copyright 2013, the Dart project authors | runtime |
+| `async` | 2.13.1 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
+| `boolean_selector` | 2.1.2 | BSD-3-Clause | Copyright 2016, the Dart project authors | runtime |
+| `characters` | 1.4.1 | BSD-3-Clause | Copyright 2019, the Dart project authors | runtime |
+| `clock` | 1.1.2 | Apache-2.0 | — | runtime |
+| `code_assets` | 2.0.0 | BSD-3-Clause | Copyright 2025, the Dart project authors | runtime |
+| `collection` | 1.19.1 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
+| `convert` | 3.1.2 | BSD-3-Clause | Copyright 2015, the Dart project authors | test-only |
+| `cross_file` | 0.3.5+5 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `crypto` | 3.0.7 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
+| `cryptography` | 2.9.0 | Apache-2.0 | — | runtime |
+| `cupertino_icons` | 1.0.9 | MIT | Copyright (c) 2016 Vladimir Kharlampidi | runtime |
+| `dbus` | 0.7.15 | MPL-2.0 | — | runtime |
+| `desktop_drop` | 0.8.4 | Apache-2.0 | — | runtime |
+| `dio` | 5.11.1 | MIT | Copyright (c) 2018 Wen Du (wendux) | runtime |
+| `dio_web_adapter` | 2.2.1 | MIT | Copyright (c) 2018 Wen Du (wendux) | runtime |
+| `dynamic_color` | 1.9.0 | Apache-2.0 | — | runtime |
+| `equatable` | 2.0.7 | MIT | Copyright (c) 2024 Felix Angelov | runtime |
+| `fake_async` | 1.3.3 | Apache-2.0 | — | test-only |
+| `ffi` | 2.2.0 | BSD-3-Clause | Copyright 2019, the Dart project authors | runtime |
+| `ffi_leak_tracker` | 0.1.2 | BSD-3-Clause | Copyright (c) 2026, Halil Durmus | runtime |
+| `file` | 7.0.1 | BSD-3-Clause | Copyright 2017, the Dart project authors. All rights reserved | runtime |
+| `file_picker` | 12.2.0 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
+| `file_picker_darwin` | 1.1.0 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
+| `file_picker_linux` | 1.1.0 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
+| `file_picker_platform_interface` | 3.3.0 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
+| `file_picker_web` | 3.1.0 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
+| `file_selector_linux` | 0.9.4+1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `file_selector_macos` | 0.9.5+1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `file_selector_platform_interface` | 2.7.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `file_selector_windows` | 0.9.3+6 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `fixnum` | 1.1.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
+| `flutter_lints` | 6.0.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | test-only |
+| `flutter_plugin_android_lifecycle` | 2.0.35 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `flutter_riverpod` | 3.4.3 | MIT | Copyright (c) 2020 Remi Rousselet | runtime |
+| `flutter_secure_storage` | 11.2.0 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
+| `flutter_secure_storage_darwin` | 0.4.0 | BSD-3-Clause | Copyright 2025 Julian Steenbakker | runtime |
+| `flutter_secure_storage_linux` | 3.0.2 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
+| `flutter_secure_storage_platform_interface` | 2.1.1 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
+| `flutter_secure_storage_web` | 2.1.1 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
+| `flutter_secure_storage_windows` | 4.2.2 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
+| `flutter_svg` | 2.3.0 | MIT | Copyright (c) 2018 Dan Field | runtime |
+| `flutter_timezone` | 5.1.0 | Apache-2.0 | — | runtime |
+| `highlight` | 0.7.0 | MIT | Copyright (c) 2019 Rongjian Zhang | runtime |
+| `hooks` | 2.2.0 | BSD-3-Clause | Copyright 2025, the Dart project authors | runtime |
+| `http` | 1.6.0 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
+| `http_parser` | 4.1.2 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
+| `image_picker` | 1.2.3 | BSD-3-Clause AND Apache-2.0 | Copyright 2013 The Flutter Authors; Copyright 2011 - 2013 Paul Burke | runtime |
+| `image_picker_android` | 0.8.13+22 | BSD-3-Clause AND Apache-2.0 | Copyright 2013 The Flutter Authors; Copyright 2011 - 2013 Paul Burke | runtime |
+| `image_picker_for_web` | 3.1.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `image_picker_ios` | 0.8.13+7 | BSD-3-Clause AND Apache-2.0 | Copyright 2013 The Flutter Authors; Copyright 2011 - 2013 Paul Burke | runtime |
+| `image_picker_linux` | 0.2.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `image_picker_macos` | 0.2.2+1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `image_picker_platform_interface` | 2.11.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `image_picker_windows` | 0.2.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `intl` | 0.20.3 | BSD-3-Clause | Copyright 2013, the Dart project authors | runtime |
+| `jni` | 1.0.3 | BSD-3-Clause | Copyright 2022, the Dart project authors | runtime |
+| `jni_flutter` | 1.0.2 | BSD-3-Clause | Copyright 2026, the Dart project authors | runtime |
+| `jni_util` | 1.0.0 | BSD-3-Clause | Copyright 2026, the Dart project authors | runtime |
+| `json_annotation` | 4.12.0 | BSD-3-Clause | Copyright 2017, the Dart project authors. All rights reserved | runtime |
+| `leak_tracker` | 11.0.2 | BSD-3-Clause | Copyright 2022, the Dart project authors | test-only |
+| `leak_tracker_flutter_testing` | 3.0.10 | BSD-3-Clause | Copyright 2022, the Dart project authors | test-only |
+| `leak_tracker_testing` | 3.0.2 | BSD-3-Clause | Copyright 2022, the Dart project authors | test-only |
+| `lints` | 6.1.0 | BSD-3-Clause | Copyright 2021, the Dart project authors | test-only |
+| `listen` | 1.0.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `local_auth` | 3.0.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `local_auth_android` | 2.2.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `local_auth_darwin` | 2.0.4 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `local_auth_platform_interface` | 1.1.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `local_auth_windows` | 2.0.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `logging` | 1.3.0 | BSD-3-Clause | Copyright 2013, the Dart project authors | runtime |
+| `matcher` | 0.12.20 | BSD-3-Clause | Copyright 2014, the Dart project authors | test-only |
+| `material_color_utilities` | 0.13.0 | Apache-2.0 | — | runtime |
+| `meta` | 1.19.0 | BSD-3-Clause | Copyright 2016, the Dart project authors | runtime |
+| `mime` | 2.0.0 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
+| `mobile_scanner` | 7.4.2 | BSD-3-Clause | Copyright (c) 2022, Julian Steenbakker | runtime |
+| `objective_c` | 9.6.0 | BSD-3-Clause | Copyright 2024, the Dart project authors | runtime |
+| `package_config` | 2.2.0 | BSD-3-Clause | Copyright 2019, the Dart project authors | runtime |
+| `package_info_plus` | 10.2.1 | BSD-3-Clause | Copyright 2017 The Chromium Authors. All rights reserved | runtime |
+| `package_info_plus_platform_interface` | 4.1.0 | BSD-3-Clause | Copyright 2017 The Chromium Authors. All rights reserved | runtime |
+| `path` | 1.9.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
+| `path_parsing` | 1.1.0 | MIT | Copyright (c) 2018 Dan Field | runtime |
+| `path_provider` | 2.1.6 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `path_provider_android` | 2.3.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `path_provider_foundation` | 2.6.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `path_provider_linux` | 2.2.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `path_provider_platform_interface` | 2.1.3 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `path_provider_windows` | 2.3.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `petitparser` | 7.0.2 | MIT | Copyright (c) 2006-2024 Lukas Renggli | runtime |
+| `platform` | 3.1.6 | BSD-3-Clause | Copyright 2017, the Dart project authors. All rights reserved | runtime |
+| `plugin_platform_interface` | 2.1.8 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `process` | 5.0.6 | BSD-3-Clause | Copyright 2013, the Dart project authors | test-only |
+| `pub_semver` | 2.2.0 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
+| `qr` | 3.0.2 | BSD-3-Clause | Copyright 2014, the Dart QR project authors. All rights reserved | runtime |
+| `quiver` | 3.2.2 | Apache-2.0 | — | test-only |
+| `record` | 7.1.1 | BSD-3-Clause | Copyright 2022 openapi4j authors. All rights reserved | runtime |
+| `record_android` | 2.1.2 | BSD-3-Clause | Copyright 2022 openapi4j authors. All rights reserved | runtime |
+| `record_ios` | 2.1.1 | BSD-3-Clause | Copyright 2022 openapi4j authors. All rights reserved | runtime |
+| `record_linux` | 2.1.1 | BSD-3-Clause | Copyright 2022 openapi4j authors. All rights reserved | runtime |
+| `record_macos` | 2.1.1 | BSD-3-Clause | Copyright 2022 openapi4j authors. All rights reserved | runtime |
+| `record_platform_interface` | 2.1.0 | BSD-3-Clause | Copyright 2022 openapi4j authors. All rights reserved | runtime |
+| `record_use` | 1.1.1 | BSD-3-Clause | Copyright 2024, the Dart project authors | runtime |
+| `record_web` | 2.1.2 | BSD-3-Clause | Copyright 2022 openapi4j authors. All rights reserved | runtime |
+| `record_windows` | 2.2.3 | BSD-3-Clause | Copyright 2022 openapi4j authors. All rights reserved | runtime |
+| `riverpod` | 3.4.3 | MIT | Copyright (c) 2020 Remi Rousselet | runtime |
+| `screen_retriever` | 0.2.2 | MIT | Copyright (c) 2022-2024 LiJianying <lijy91@foxmail.com> | runtime |
+| `screen_retriever_linux` | 0.2.2 | MIT | Copyright (c) 2022-2024 LiJianying <lijy91@foxmail.com> | runtime |
+| `screen_retriever_macos` | 0.2.2 | MIT | Copyright (c) 2022-2024 LiJianying <lijy91@foxmail.com> | runtime |
+| `screen_retriever_platform_interface` | 0.2.2 | MIT | Copyright (c) 2022-2024 LiJianying <lijy91@foxmail.com> | runtime |
+| `screen_retriever_windows` | 0.2.2 | MIT | Copyright (c) 2022-2024 LiJianying <lijy91@foxmail.com> | runtime |
+| `scrollable_positioned_list` | 0.3.8 | BSD-3-Clause | Copyright 2018 the Dart project authors, Inc. All rights reserved | runtime |
+| `shared_preferences` | 2.5.5 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `shared_preferences_android` | 2.4.27 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `shared_preferences_foundation` | 2.5.6 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `shared_preferences_linux` | 2.4.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `shared_preferences_platform_interface` | 2.4.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `shared_preferences_web` | 2.4.3 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `shared_preferences_windows` | 2.4.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `sherpa_onnx` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_android_arm64` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_android_armeabi` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_android_x86` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_android_x86_64` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_ios` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_linux` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_macos` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_web` | 2.0.1 | Apache-2.0 | — | runtime |
+| `sherpa_onnx_windows` | 2.0.1 | Apache-2.0 | — | runtime |
+| `shorebird_code_push` | 2.0.7 | MIT | — | runtime |
+| `source_span` | 1.10.2 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
+| `stack_trace` | 1.12.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
+| `state_notifier` | 1.0.0 | MIT | Copyright (c) 2020 Remi Rousselet | runtime |
+| `stream_channel` | 2.1.4 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
+| `string_scanner` | 1.4.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
+| `sync_http` | 0.3.1 | BSD-3-Clause | Copyright 2017, the Dart project authors | test-only |
+| `term_glyph` | 1.2.2 | BSD-3-Clause | Copyright 2017, the Dart project authors | runtime |
+| `test_api` | 0.7.12 | BSD-3-Clause | Copyright 2018, the Dart project authors | runtime |
+| `typed_data` | 1.4.0 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
+| `universal_platform` | 1.1.0 | MIT | Copyright (c) 2019 gskinner.com | runtime |
+| `url_launcher` | 6.3.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `url_launcher_android` | 6.3.32 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `url_launcher_ios` | 6.4.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `url_launcher_linux` | 3.2.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `url_launcher_macos` | 3.2.5 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `url_launcher_platform_interface` | 2.3.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `url_launcher_web` | 2.4.3 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `url_launcher_windows` | 3.1.5 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `uuid` | 4.6.0 | MIT | Copyright (c) 2021 Yulian Kuncheff | runtime |
+| `vector_graphics` | 1.2.3 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `vector_graphics_codec` | 1.1.13 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `vector_graphics_compiler` | 1.3.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `vector_math` | 2.4.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `vm_service` | 15.3.0 | BSD-3-Clause | Copyright 2015, the Dart project authors | test-only |
+| `web` | 1.1.1 | BSD-3-Clause | Copyright 2023, the Dart project authors | runtime |
+| `webdriver` | 3.2.0 | Apache-2.0 | — | test-only |
+| `webview_flutter` | 4.14.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `webview_flutter_android` | 4.14.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `webview_flutter_platform_interface` | 2.15.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `webview_flutter_wkwebview` | 3.27.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `win32` | 6.4.0 | BSD-3-Clause | Copyright (c) 2024, Halil Durmus | runtime |
+| `window_manager` | 0.5.2 | MIT | Copyright (c) 2022-present LiJianying <lijy91@foxmail.com> | runtime |
+| `windows_file_picker` | 1.2.0 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
+| `xdg_directories` | 1.1.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `xml` | 7.0.1 | MIT | Copyright (c) 2006-2026 Lukas Renggli | runtime |
+| `yaml` | 3.1.3 | MIT | Copyright (c) 2014, the Dart project authors | runtime |
+| `zmodem` | 0.0.6 | MIT | Copyright (c) 2023 xuty | test-only |
+
+### Notes on individual entries
+
+- **`dbus` (MPL-2.0)** is reached only through `flutter_secure_storage_linux`
+  and is therefore present in the Linux desktop build, not the Android APK.
+  It is used unmodified; MPL-2.0 source for it is available from the package
+  on pub.dev. Its `LICENSE` is reproduced in full at `LICENSES/MPL-2.0.txt`.
+- **`record` and every `record_*` package** ship the openapi4j-attributed
+  BSD-3-Clause notice described above.
+- **Apache-2.0 and MPL-2.0 packages** distribute the unmodified license text
+  with no per-package copyright line, so the copyright column shows a dash.
+  Attribution for those packages is the package name and version in this
+  table.
+- **`shorebird_code_push`** distributes the plain MIT text with no copyright
+  line of its own.
+
+## Runtime and model data flow
+
+The `record` plugin supplies PCM16 microphone samples. The application passes
+those samples to sherpa-onnx, which executes the converted Whisper ONNX graphs
+with ONNX Runtime on CPU. Downloaded model files remain in app-private storage;
+captured audio is held only for the active transcription and then discarded.
+
+## Regenerating this file
+
+The package inventory table is generated; the prose around it is not. When
+dependencies change run:
+
+```sh
+python3 tool/notices/regenerate.py          # rewrite the table
+python3 tool/notices/regenerate.py --check  # exit 1 if the table is stale
+```
+
+The tool reads `pubspec.lock`, then
+`~/.pub-cache/hosted/pub.dev/<name>-<version>/LICENSE` (or `$PUB_CACHE`) for
+each hosted package, classifies the license from the text, takes the copyright
+line from that same file, and marks a package `runtime` when it is reachable
+from `pubspec.yaml` (plus the Flutter SDK's own runtime dependencies) and
+`test-only` otherwise. A package with no `LICENSE`, or one it does not
+recognise, is written as `UNKNOWN` and fails `--check`: check its pub.dev page
+by hand, add its text under `LICENSES/`, and extend the classifier. Run
+`flutter pub get` first so the cache holds the locked versions.
+`test/repository_hygiene_test.dart` runs `--check` when `python3` and the pub
+cache are present.

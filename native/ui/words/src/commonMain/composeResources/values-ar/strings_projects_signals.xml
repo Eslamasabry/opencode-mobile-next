@@ -1,0 +1,4 @@
+<resources>
+    <string name="navProjectChangesCount">التغييرات · %1$d</string>
+    <string name="navProjectDevServer">خادم تطوير قيد التشغيل · المنفذ %1$d</string>
+</resources>

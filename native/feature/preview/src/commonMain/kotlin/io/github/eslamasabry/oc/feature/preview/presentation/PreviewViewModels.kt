@@ -24,10 +24,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** The saved server a preview points at: the conversation's own, else the connected one. */
-internal fun serverAddressFor(ref: ConversationRef?, servers: List<SavedServer>): String? =
-    (servers.firstOrNull { ref != null && it.id == ref.profileId }
-            ?: servers.firstOrNull { it.connected })
-        ?.address
+internal fun serverAddressFor(
+    ref: ConversationRef?,
+    servers: List<SavedServer>,
+    profile: io.github.eslamasabry.oc.core.common.ids.ProfileId? = null,
+): String? {
+    val exact = ref?.profileId ?: profile
+    return if (exact != null) servers.firstOrNull { it.id == exact }?.address
+    else servers.firstOrNull { it.connected }?.address
+}
 
 /**
  * The running page of one port (Flutter `DevPreviewScreen`). The target is resolved once, when the
@@ -43,6 +48,9 @@ public class DevPreviewViewModel(
     private val browser: PreviewBrowser,
     private val tools: PreviewTools = NoPreviewTools(),
 ) : ViewModel(), DevPreviewActions {
+    private val capturedAddress =
+        serverAddressFor(route.ref, connections.servers.value, route.profile)
+    private var scopeRetired = false
     private val target =
         DevPreviewTarget.resolve(
             PreviewLink(
@@ -51,7 +59,7 @@ public class DevPreviewViewModel(
                 route.path.substringBefore('?').takeIf { it.startsWith("/") } ?: "/",
                 route.path.substringAfter('?', "").ifEmpty { null },
             ),
-            serverAddressFor(route.ref, connections.servers.value),
+            capturedAddress,
         )
     private val egress: PreviewEgress? =
         when (target) {
@@ -72,16 +80,44 @@ public class DevPreviewViewModel(
         )
     public val state: StateFlow<DevPreviewUi> = mutable.asStateFlow()
 
+    /** An approved link waiting for "Open in browser"; never in observable state. */
+    private var pending: Any? = null
+
+    init {
+        if (route.ref != null || route.profile != null)
+            viewModelScope.launch {
+                connections.servers.collect { servers ->
+                    if (
+                        !scopeRetired &&
+                            serverAddressFor(route.ref, servers, route.profile) != capturedAddress
+                    ) {
+                        scopeRetired = true
+                        egress?.revoke()
+                        pending = null
+                        mutable.update {
+                            it.copy(
+                                target = null,
+                                blocked = PreviewBlock.NoServer,
+                                shown = null,
+                                canAsk = false,
+                                logsAvailable = false,
+                                logsOpen = false,
+                                leaveHost = null,
+                            )
+                        }
+                    }
+                }
+            }
+    }
+
     /** The rules the platform web view applies to every request; null while blocked. */
     public val pageEgress: PreviewEgress?
         get() = egress
 
-    /** An approved link waiting for "Open in browser"; never in observable state. */
-    private var pending: Any? = null
-
     override fun back(): Unit = nav.back()
 
     override fun openInBrowser() {
+        if (scopeRetired) return
         val url = mutable.value.shown ?: mutable.value.origin ?: return
         // The address the app built (and pages on that same origin) is app-authored; anything else
         // asks first.
@@ -121,6 +157,7 @@ public class DevPreviewViewModel(
     override fun noticeShown(): Unit = mutable.update { it.copy(notice = null) }
 
     override fun ask(text: String) {
+        if (scopeRetired) return
         val ref = route.ref ?: return
         if (!mutable.value.canAsk || mutable.value.asking || text.isBlank()) return
         val delivery = tools.delivery(ref)
@@ -176,6 +213,7 @@ public class DevPreviewViewModel(
     private var readingLogs = false
 
     override fun refreshLogs() {
+        if (scopeRetired) return
         if (readingLogs || !mutable.value.logsOpen) return
         readingLogs = true
         viewModelScope.launch {
@@ -205,6 +243,7 @@ public class DevPreviewViewModel(
     }
 
     private fun open(token: Any) {
+        if (scopeRetired) return
         if (!browser.open(token)) mutable.update { it.copy(notice = PreviewNotice.OpenFailed) }
     }
 

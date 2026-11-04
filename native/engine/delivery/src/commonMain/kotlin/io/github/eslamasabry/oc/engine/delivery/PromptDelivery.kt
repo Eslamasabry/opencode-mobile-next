@@ -539,6 +539,9 @@ public class PromptDelivery(
                     null
                 }
             }
+        // Like Flutter (queue.dart:843), only queued sends are journalled: the journal is
+        // bounded (MAX_ENTRIES) and never pruned, so journalling every online send would
+        // permanently refuse sending after 1000 messages on one server.
         if (
             bubble.reviewId != null &&
                 clientId != null &&

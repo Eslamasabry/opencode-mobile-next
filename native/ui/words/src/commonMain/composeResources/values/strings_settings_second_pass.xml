@@ -1,0 +1,14 @@
+<resources>
+    <string name="nativeAboutProvenanceTitle">About this build</string>
+    <string name="nativeAboutProvenance">This independent app is built heavily with AI assistance. Android is the primary supported platform. Desktop builds are experimental and have not been hardware-tested. Report what breaks to help improve the app.</string>
+    <string name="nativePhraseChipsTitle">Phrase chips</string>
+    <string name="nativePhraseChipsAliases">phrase chips quick phrases suggestions composer</string>
+    <string name="nativePhraseChipsDescription">Suggest short phrases you use often above the message box. Learned phrases stay on this device.</string>
+    <string name="nativeToolsRequired">Required</string>
+    <string name="nativeToolsOptional">Optional</string>
+    <string name="nativeToolsParameters">Parameters</string>
+    <string name="nativeToolsNoParameters">This tool declares no parameters.</string>
+    <string name="nativeToolsCoding">Tools for the model</string>
+    <string name="nativeToolsChooseModel">Choose a model to read its tools.</string>
+    <string name="nativeCapabilitiesTitle">What works here</string>
+</resources>

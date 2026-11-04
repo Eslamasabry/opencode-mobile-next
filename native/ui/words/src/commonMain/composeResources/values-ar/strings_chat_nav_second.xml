@@ -1,0 +1,19 @@
+<resources>
+    <string name="chatCyclePrevious">النموذج السابق من الأخيرة</string>
+    <string name="chatCycleNext">النموذج التالي من الأخيرة</string>
+    <string name="chatHomeAllow">السماح مرة واحدة</string>
+    <string name="chatHomeReject">رفض</string>
+    <string name="chatHomeAnswerFailed">تعذّر إرسال إجابتك. افتح المحادثة للتحقق منها.</string>
+    <string name="chatHomeRunning">قيد التشغيل</string>
+    <string name="chatHomeMinutes">%1$s د</string>
+    <string name="chatQueueMoveTitle">نقل طلب في الانتظار</string>
+    <string name="chatQueueMoveEmpty">لا توجد طلبات غير مرسلة في انتظار هذه المحادثة.</string>
+    <string name="chatQueueMoveChoosePrompt">اختر طلبًا</string>
+    <string name="chatQueueMoveChooseServer">اختر خادم الوجهة</string>
+    <string name="chatQueueMoveChooseDestination">النقل إلى محادثة</string>
+    <string name="chatQueueMoveFailure">تعذّر نقل الطلب. لم يُرسل شيء.</string>
+    <string name="chatQueueMoveMore">المزيد من المحادثات</string>
+    <string name="chatQueueMoveSelectionNote">يبقى الطلب في الانتظار. يُزال النموذج أو الوكيل الذي لا توفره الوجهة.</string>
+    <string name="chatPhraseHide">إخفاء %1$s</string>
+    <string name="chatHomeSeconds">%1$s ث</string>
+</resources>

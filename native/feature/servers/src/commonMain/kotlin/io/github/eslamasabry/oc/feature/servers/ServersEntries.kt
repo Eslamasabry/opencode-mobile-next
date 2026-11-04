@@ -15,6 +15,8 @@ import io.github.eslamasabry.oc.feature.servers.presentation.ServersViewModel
 import io.github.eslamasabry.oc.feature.servers.ui.ServerSetupScreen
 import io.github.eslamasabry.oc.feature.servers.ui.ServersScreen
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.CapabilityServerDoor
+import io.github.eslamasabry.oc.ui.routes.CapabilityServerSetupRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import io.github.eslamasabry.oc.ui.routes.RemoteTerminalRoute
@@ -34,6 +36,21 @@ public class ServersEntries(
         get() = if (platform.builtinLinux) ({ navigator.open(PhoneRoute.ThisPhone) }) else null
 
     override fun EntryProviderScope<NavKey>.install() {
+        entry<CapabilityServerSetupRoute> { route ->
+            val vm =
+                assistedMetroViewModel<ServersViewModel, ServersViewModel.Factory> { create(null) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            ServersScreen(
+                state,
+                vm,
+                onThisPhone = thisPhone,
+                onInspectSetup = { navigator.open(ServersRoute.Setup(it)) },
+                onTerminal = { navigator.open(RemoteTerminalRoute(it)) },
+                tailscale = tailscale,
+                initialHostSetup = route.door == CapabilityServerDoor.OpenCode2,
+                initialTailscaleSetup = route.door == CapabilityServerDoor.Tailscale,
+            )
+        }
         // PORT-SCREENS-2: ChatsRoute.New is owned by :feature:chats (ChatsEntries) now.
         entry<ServersRoute.SetupAssist> { route ->
             val vm =

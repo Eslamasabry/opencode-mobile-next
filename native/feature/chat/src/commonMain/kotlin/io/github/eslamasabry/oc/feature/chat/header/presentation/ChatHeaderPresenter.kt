@@ -218,6 +218,7 @@ public class ChatHeaderPresenter(
                     l.importState?.let { HeaderSheet.ImportConversation(it) }
             }
         return ChatHeaderUi(
+            branch = facts.branch,
             title = title,
             serverName = facts.serverName,
             projectName = project,

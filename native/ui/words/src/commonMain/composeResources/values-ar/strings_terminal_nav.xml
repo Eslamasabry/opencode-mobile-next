@@ -1,0 +1,4 @@
+<resources>
+    <string name="terminalNavDevServer">خادم تطوير قيد التشغيل</string>
+    <string name="terminalNavOpenPreview">فتح المعاينة</string>
+</resources>

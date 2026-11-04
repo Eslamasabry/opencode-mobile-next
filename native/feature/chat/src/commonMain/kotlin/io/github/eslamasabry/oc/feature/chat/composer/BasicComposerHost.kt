@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
+import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -74,15 +75,24 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
 import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.stream.kitPromptOrigin
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatCycleNext
+import io.github.eslamasabry.oc.ui.words.res.chatCyclePrevious
 import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatTitle
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoring
+import io.github.eslamasabry.oc.ui.words.res.chatHistoryTitle
 import io.github.eslamasabry.oc.ui.words.res.chatModelsCurrent
 import io.github.eslamasabry.oc.ui.words.res.chatModelsNoMatch
 import io.github.eslamasabry.oc.ui.words.res.chatModelsRecent
 import io.github.eslamasabry.oc.ui.words.res.chatModelsSearch
+import io.github.eslamasabry.oc.ui.words.res.chatPhraseHide
+import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
+import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
+import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_add
+import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_remove
+import io.github.eslamasabry.oc.ui.words.res.chat_model_favorites
 import io.github.eslamasabry.oc.ui.words.res.composerFullAgent
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttach
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttachmentsLocal
@@ -97,19 +107,7 @@ import io.github.eslamasabry.oc.ui.words.res.composerFullSteerHint
 import io.github.eslamasabry.oc.ui.words.res.composerFullTakePhoto
 import io.github.eslamasabry.oc.ui.words.res.composerFullThinking
 import io.github.eslamasabry.oc.ui.words.res.composerFullThinkingDefault
-import io.github.eslamasabry.oc.ui.kit.KitRow
-import io.github.eslamasabry.oc.ui.words.res.composerFullAddTitle
-import io.github.eslamasabry.oc.ui.kit.row.KitRow as KitActionRow
-import io.github.eslamasabry.oc.ui.words.res.chatHistoryTitle
-import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_add
-import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_remove
-import io.github.eslamasabry.oc.ui.words.res.chat_model_favorites
-import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogo
-import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
-import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachFile
-import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachModelWithoutFiles
-import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachNoPicker
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentDismiss
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentFailed
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentRemove
@@ -389,6 +387,26 @@ public fun BasicComposer(
                 modifier = Modifier.testTag("chat-attachment-failure"),
             )
         }
+        if (state.phrases.isNotEmpty() && !chrome.requestWaiting())
+            KitChipWrap {
+                state.phrases.forEach { phrase ->
+                    KitChip(
+                        label = phrase,
+                        kind = KitChipKind.Action,
+                        onClick = {
+                            if (field.text.isEmpty() && state.draft.attachments.isEmpty()) {
+                                field.edit { replace(0, length, phrase) }
+                                actions.draftChanged(phrase)
+                            }
+                        },
+                    )
+                    KitChip(
+                        label = stringResource(Res.string.chatPhraseHide, phrase),
+                        kind = KitChipKind.Action,
+                        onClick = { actions.hidePhrase(phrase) },
+                    )
+                }
+            }
         Row(
             Modifier.fillMaxWidth().testTag("chat-composer-controls"),
             verticalAlignment = Alignment.CenterVertically,
@@ -682,6 +700,20 @@ public fun BasicComposer(
                         message = stringResource(Res.string.composerFullModelChangeFailed),
                         tone = StatusTone.Failure,
                     )
+                if (models.recent.size > 1) {
+                    KitChipWrap {
+                        KitChip(
+                            label = stringResource(Res.string.chatCyclePrevious),
+                            kind = KitChipKind.Action,
+                            onClick = { scope.launch { actions.cycleModel(reverse = true) } },
+                        )
+                        KitChip(
+                            label = stringResource(Res.string.chatCycleNext),
+                            kind = KitChipKind.Action,
+                            onClick = { scope.launch { actions.cycleModel(reverse = false) } },
+                        )
+                    }
+                }
                 // B3 (QA wave 1): a searchable list grouped by provider, recent picks first, the
                 // current one marked.
                 var modelQuery by remember(state.targetKey) { mutableStateOf("") }

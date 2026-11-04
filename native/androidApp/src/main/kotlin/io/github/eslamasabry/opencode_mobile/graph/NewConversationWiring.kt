@@ -230,6 +230,18 @@ class AndroidNewConversationHost(
                             !candidate.startsWith("/tmp/")
                     }
                 val importer = gateway.facet<ProviderConversationImportGateway>()
+                val savedModel =
+                    stores.prefs.string("oc.model.${profile.raw}")?.let { raw ->
+                        val fields = raw.split('|', limit = 2)
+                        if (
+                            fields.size == 2 &&
+                                providers.providers.any {
+                                    it.id == fields[0] && fields[1] in it.modelIds
+                                }
+                        )
+                            ModelRef(fields[0], fields[1])
+                        else null
+                    }
                 Outcome.Ok(
                     NewConversationSetup(
                         directory = directory,
@@ -264,9 +276,10 @@ class AndroidNewConversationHost(
                             },
                         agents = agents,
                         model =
-                            providers.defaultProviderId?.let { p ->
-                                providers.defaultModelId?.let { ModelRef(p, it) }
-                            },
+                            savedModel
+                                ?: providers.defaultProviderId?.let { p ->
+                                    providers.defaultModelId?.let { ModelRef(p, it) }
+                                },
                         importDirectory =
                             importer
                                 ?.takeIf { caps.hostAgentProviders && it.providerImportSupported }

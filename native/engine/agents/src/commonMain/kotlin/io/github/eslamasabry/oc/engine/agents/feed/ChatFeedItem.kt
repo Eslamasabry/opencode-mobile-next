@@ -17,6 +17,10 @@ public enum class ChatStatus {
 /** [ChatFeedItem.agentId] of OpenCode chats (Dart `defaultChatAgentId`). */
 public const val OPENCODE_AGENT_ID: String = "opencode"
 
+public data class FeedRunning(val sinceMs: Long?, val command: String? = null)
+
+public data class FeedPermission(val requestId: String, val command: String)
+
 /**
  * One conversation row on Conversations (Dart `ChatFeedItem`, 17 §1.6). Immutable, and it holds
  * **only what a row shows**: equality is what decides whether the feed revision moves (B-CHAT-014).
@@ -50,6 +54,8 @@ public data class ChatFeedItem(
      * unknown.
      */
     val locationKey: String? = null,
+    val running: FeedRunning? = null,
+    val permission: FeedPermission? = null,
 ) {
     /** The list key: profile, source, session, folder and captured location. */
     val identity: String

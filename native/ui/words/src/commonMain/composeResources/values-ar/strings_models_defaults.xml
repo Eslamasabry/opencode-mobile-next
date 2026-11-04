@@ -1,0 +1,17 @@
+<resources>
+    <string name="modelDefaultsPhoneTitle">المحادثات الجديدة على هذا الهاتف</string>
+    <string name="modelDefaultsNamedTitle">المحادثات الجديدة على %1$s</string>
+    <string name="modelDefaultsScope">يُستخدم للمحادثات الجديدة. تحتفظ كل محادثة باختيارها.</string>
+    <string name="modelDefaultsServerChoice">استخدام الخيار الافتراضي للخادم</string>
+    <string name="modelDefaultsRecommended">خيارات مقترحة</string>
+    <string name="modelDefaultsAll">كل النماذج المتاحة</string>
+    <string name="modelDefaultsFailed">تعذرت قراءة اختيار النموذج أو حفظه.</string>
+    <string name="modelDefaultsInUse">قيد الاستخدام</string>
+    <string name="modelDefaultsDefault">الافتراضي للخادم</string>
+    <string name="modelDefaultsRecent">اختيار حديث</string>
+    <string name="modelDefaultsCheapest">الأقل سعرًا</string>
+    <string name="modelDefaultsFree">مجاني</string>
+    <string name="modelDefaultsPrice">الإدخال ‎$%1$s · الإخراج ‎$%2$s لكل مليون رمز</string>
+    <string name="modelDefaultsSelected">محدد</string>
+    <string name="modelDefaultsSaving">جارٍ حفظ اختيار النموذج</string>
+</resources>

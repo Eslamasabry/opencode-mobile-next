@@ -20,6 +20,10 @@ public class LocalTerminalEntries : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<LocalTerminalRoute> {
             val vm = metroViewModel<LocalTerminalViewModel>()
+            androidx.lifecycle.compose.LifecycleStartEffect(vm) {
+                vm.resumeDevServer()
+                onStopOrDispose { vm.pauseDevServer() }
+            }
             val state by vm.state.collectAsStateWithLifecycle()
             LocalTerminalScreen(state, vm)
         }

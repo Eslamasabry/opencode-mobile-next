@@ -3,15 +3,13 @@ package io.github.eslamasabry.opencode_mobile.graph
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.*
-import io.github.eslamasabry.oc.core.data.kv.PrefType
 import io.github.eslamasabry.oc.core.data.kv.bool
-import io.github.eslamasabry.oc.core.data.scope.KeyScope
-import io.github.eslamasabry.oc.core.data.scope.KeyShape
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.domain.SessionCreationGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.model.NewSession
+import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.feed.*
@@ -36,6 +34,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /**
  * Saved server -> live graph -> conversations. No production Flutter adoption is performed here.
@@ -122,7 +122,8 @@ class PreviewRuntime(
         scope.launch {
             if (ready.await() is Outcome.Failed) return@launch
             val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
-            // PORT-SCREENS-2: the home list records each source's failure, then the other shown sources join.
+            // PORT-SCREENS-2: the home list records each source's failure, then the other shown
+            // sources join.
             if (active != null) command { connectForHome(active) }
             synchronizeListSources()
         }
@@ -417,6 +418,65 @@ class PreviewRuntime(
                             val event = envelope.event
                             if (event is GatewayEvent.SessionDeleted)
                                 graph.session.reads.forget(event.sessionId)
+                            listings[id]?.let { listing ->
+                                val old = listing.value
+                                when (event) {
+                                    GatewayEvent.Connected ->
+                                        listing.value = old.copy(running = emptyMap())
+                                    is GatewayEvent.RunStarted ->
+                                        listing.value =
+                                            old.copy(
+                                                running =
+                                                    old.running +
+                                                        (event.sessionId to
+                                                            FeedRunning(
+                                                                clock.now().toEpochMilliseconds()
+                                                            ))
+                                            )
+                                    is GatewayEvent.RunEnded ->
+                                        listing.value =
+                                            old.copy(running = old.running - event.sessionId)
+                                    is GatewayEvent.PartUpserted -> {
+                                        val part = event.part
+                                        val tool = part.tool
+                                        if (tool != null) {
+                                            val sid = SessionId(part.sessionId)
+                                            val previous = old.running[sid]
+                                            val active = tool.status == ToolStatus.Running
+                                            val command =
+                                                if (
+                                                    active &&
+                                                        part.toolName in setOf("bash", "shell")
+                                                )
+                                                    (tool.input["command"] as? JsonPrimitive)
+                                                        ?.contentOrNull
+                                                        ?.lineSequence()
+                                                        ?.firstOrNull()
+                                                        ?.trim()
+                                                        ?.takeIf { it.isNotEmpty() }
+                                                else null
+                                            if (active || previous != null)
+                                                listing.value =
+                                                    old.copy(
+                                                        running =
+                                                            old.running +
+                                                                (sid to
+                                                                    FeedRunning(
+                                                                        tool.startedAtMs
+                                                                            ?: previous?.sinceMs
+                                                                            ?: clock
+                                                                                .now()
+                                                                                .toEpochMilliseconds(),
+                                                                        command?.let(
+                                                                            redactor::redact
+                                                                        ),
+                                                                    ))
+                                                    )
+                                        }
+                                    }
+                                    else -> Unit
+                                }
+                            }
                             when (envelope.event) {
                                 GatewayEvent.Connected,
                                 is GatewayEvent.SessionUpserted,
@@ -509,6 +569,32 @@ class PreviewRuntime(
                                 .filterNot { it.id in graph.session.reads.missing.value }
                                 .toImmutableList(),
                         statuses = (statuses as? Outcome.Ok)?.value ?: listing.value.statuses,
+                        running = listing.value.running,
+                        permissions =
+                            if (permissions is Outcome.Ok)
+                                permissions.value
+                                    .groupBy { it.sessionId }
+                                    .mapNotNull { (sid, asks) ->
+                                        asks.firstOrNull()?.let { ask ->
+                                            val command =
+                                                (ask.metadata["command"] as? JsonPrimitive)
+                                                    ?.contentOrNull
+                                                    ?: ask.patterns.firstOrNull()
+                                                    ?: ask.permission
+                                            sid to
+                                                FeedPermission(
+                                                    ask.id.raw,
+                                                    redactor.redact(
+                                                        command
+                                                            .lineSequence()
+                                                            .firstOrNull()
+                                                            .orEmpty()
+                                                    ),
+                                                )
+                                        }
+                                    }
+                                    .toMap()
+                            else listing.value.permissions,
                         needsYou =
                             if (
                                 permissions is Outcome.Failed ||
@@ -758,7 +844,8 @@ class PreviewRuntime(
                 is Outcome.Failed -> return@command closed
                 is Outcome.Ok -> Unit
             }
-            // The shared ProfileScope registers every unit's keys (STATE's among them) and the secrets.
+            // The shared ProfileScope registers every unit's keys (STATE's among them) and the
+            // secrets.
             when (
                 val result =
                     ProfileDeletion(

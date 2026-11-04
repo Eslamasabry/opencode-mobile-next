@@ -9,6 +9,7 @@ plugins { id("oc.kmp.feature") }
 // the TerminalHost stand-in until :engine:project freezes it (plan 17 §2.6, contracts/s3.md).
 kotlin {
     sourceSets.commonMain.dependencies {
+        implementation(project(":engine:runtime"))
         implementation(project(":engine:integrations-catalog"))
         implementation(project(":engine:connection"))
         implementation(project(":engine:project-terminal"))

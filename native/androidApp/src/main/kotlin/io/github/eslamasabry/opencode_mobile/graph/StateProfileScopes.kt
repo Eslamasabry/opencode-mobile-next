@@ -10,10 +10,16 @@ import io.github.eslamasabry.oc.engine.settings.reader.ReaderPreferencesStore
 
 /** STATE migration keys use the same registry for server removal and the OS manage-space entry. */
 internal fun stateProfileScope(stores: PreviewStores): DefaultProfileScope =
-    DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply { registerStateKeys(this) }
+    DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
+        registerStateKeys(this)
+    }
 
-/** The same keys on any registry; the shared ProfileScope (SecurityFeatureBindings) registers them too. */
+/**
+ * The same keys on any registry; the shared ProfileScope (SecurityFeatureBindings) registers them
+ * too.
+ */
 internal fun registerStateKeys(scope: ProfileScope) {
+    scope.register(io.github.eslamasabry.oc.engine.profiles.SessionLinkBindingOwners.SHAPE)
     scope.apply {
         register(ReaderPreferencesStore.SHAPE)
         register(SessionPinStore.SHAPE)

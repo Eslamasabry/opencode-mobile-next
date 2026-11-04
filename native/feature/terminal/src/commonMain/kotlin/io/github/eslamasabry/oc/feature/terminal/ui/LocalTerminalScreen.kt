@@ -48,15 +48,23 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
         topBar = {
             KitTopBar(
                 title = stringResource(Res.string.libraryTerminalTitle),
+                subtitle =
+                    state.devServerPort?.let { stringResource(Res.string.terminalNavDevServer) },
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
                 actions =
-                    listOf(
+                    listOfNotNull(
+                        state.devServerPort?.let {
+                            KitLineAction(
+                                stringResource(Res.string.terminalNavOpenPreview),
+                                actions::openDevPreview,
+                            )
+                        },
                         KitLineAction(
                             stringResource(Res.string.localTerminalNewShell),
                             actions::create,
-                        )
+                        ),
                     ),
             )
         },

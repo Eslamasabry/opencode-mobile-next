@@ -15,11 +15,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.core.common.Failure
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
@@ -46,12 +46,15 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
+import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.style.KitRunningFeedLine
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeChunk
@@ -75,6 +78,8 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
+import io.github.eslamasabry.oc.ui.words.res.chatHomeSeconds
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptCheckAgain
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptChecking
 import io.github.eslamasabry.oc.ui.words.res.chatReceiptLastChecked
@@ -284,14 +289,26 @@ internal fun ChatTranscriptList(
                 // Retry, stall and shortening fold into the live line: no new bar
                 // (CHAT-TRANSCRIPT).
                 val notice = facts.live
-                KitQuietLine(
+                val liveWords =
                     when {
                         live.stopping -> listWords.stopping
                         notice != null -> liveNoticeWords(notice)
                         else -> listWords.working
-                    },
-                    Modifier.testTag("chat-live-line"),
-                )
+                    }
+                if (LocalKitAppearance.current.style == KitSurfaceStyle.Signal) {
+                    val minutes = stringResource(Res.string.chatHomeMinutes)
+                    val seconds = stringResource(Res.string.chatHomeSeconds)
+                    val step = facts.work.values.lastOrNull { it.now != null }?.now
+                    val mask = rememberKitMask()
+                    KitRunningFeedLine(
+                        sinceMs = step?.startedAtMs ?: facts.runStartedAtMs,
+                        nowMs = facts.nowMs,
+                        command = step?.facts?.subject?.let(mask),
+                        runningLabel = liveWords,
+                        minutesLabel = { minutes.replace("%1\$s", it) },
+                        secondsLabel = { seconds.replace("%1\$s", it) },
+                    )
+                } else KitQuietLine(liveWords, Modifier.testTag("chat-live-line"))
             }
         }
         if (facts.background.isNotEmpty() && listWords != null) {

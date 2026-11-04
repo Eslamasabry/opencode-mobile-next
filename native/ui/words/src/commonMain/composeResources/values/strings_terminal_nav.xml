@@ -1,0 +1,4 @@
+<resources>
+    <string name="terminalNavDevServer">Dev server running</string>
+    <string name="terminalNavOpenPreview">Open preview</string>
+</resources>

@@ -26,5 +26,6 @@ public sealed interface ProjectsRoute : AppRoute {
         val taskProvider: String? = null,
         val taskModel: String? = null,
         val taskAgent: String? = null,
+        val initialWorkspace: Boolean = false,
     ) : ProjectsRoute
 }

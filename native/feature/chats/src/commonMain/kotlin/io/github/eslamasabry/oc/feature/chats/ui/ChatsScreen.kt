@@ -17,8 +17,10 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
+import io.github.eslamasabry.oc.feature.chats.presentation.RelativeAge
 import io.github.eslamasabry.oc.feature.chats.presentation.RowStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
+import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -44,8 +46,16 @@ import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
+import io.github.eslamasabry.oc.ui.kit.style.KitRunningFeedLine
+import io.github.eslamasabry.oc.ui.kit.style.KitSignalSlip
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
+import io.github.eslamasabry.oc.ui.words.res.chatHomeAllow
+import io.github.eslamasabry.oc.ui.words.res.chatHomeAnswerFailed
+import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
+import io.github.eslamasabry.oc.ui.words.res.chatHomeReject
+import io.github.eslamasabry.oc.ui.words.res.chatHomeRunning
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeClearFilters
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEarlier
@@ -65,6 +75,10 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeToday
 import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefMore
 import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefUnknown
 import io.github.eslamasabry.oc.ui.words.res.chats_back
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceHoursAgo
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceJustNow
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceMinutesAgo
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.librarySettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.notifStatusNeedsYou
@@ -76,11 +90,6 @@ import io.github.eslamasabry.oc.ui.words.res.stateAttentionTitle
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.pluralStringResource
-import io.github.eslamasabry.oc.feature.chats.presentation.RelativeAge
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceHoursAgo
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceJustNow
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceMinutesAgo
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -135,6 +144,13 @@ public fun ChatsScreen(
                 )
             }
             state.brief?.let { brief -> item(key = "brief") { BriefBlock(brief, actions) } }
+            if (state.answerFailure != null)
+                item(key = "answer-failure") {
+                    io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
+                        message = stringResource(Res.string.chatHomeAnswerFailed),
+                        failure = state.answerFailure,
+                    )
+                }
             if (state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch) {
                 item(key = "filters") { Filters(state, actions) }
             }
@@ -184,13 +200,15 @@ public fun ChatsScreen(
                         item(key = "today") {
                             KitSectionLabel(stringResource(Res.string.chatsHomeToday))
                         }
-                        items(state.today, key = { it.key }) { ConversationRow(it, actions) }
+                        items(state.today, key = { it.key }) { ConversationRow(it, actions, state) }
                     }
                     if (state.earlier.isNotEmpty()) {
                         item(key = "earlier") {
                             KitSectionLabel(stringResource(Res.string.chatsHomeEarlier))
                         }
-                        items(state.earlier, key = { it.key }) { ConversationRow(it, actions) }
+                        items(state.earlier, key = { it.key }) {
+                            ConversationRow(it, actions, state)
+                        }
                     }
                 }
             }
@@ -296,7 +314,7 @@ private fun BriefBlock(brief: BriefUi, actions: ChatsActions) {
 }
 
 @Composable
-private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions) {
+private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions, state: ChatsUi? = null) {
     val title =
         when (val t = row.title) {
             is RowTitle.Text -> t.text
@@ -311,23 +329,66 @@ private fun ConversationRow(row: ConversationRowUi, actions: ChatsActions) {
             RowStatus.Done -> stringResource(Res.string.chatsHomeDone)
             RowStatus.None -> null
         }
+    val signal = LocalKitAppearance.current.style == KitSurfaceStyle.Signal
     // The row registers its grow key; the chat page grows out of it and shrinks back into it (P2).
     KitRow(
         title = title,
-        supporting = listOfNotNull(row.project.ifEmpty { null }, row.ago?.let { agoText(it) }).joinToString(" · ").ifEmpty { null },
-        trailing = status?.let { KitRowTrailing.Value(it, chevron = false) } ?: KitRowTrailing.None,
+        supporting =
+            listOfNotNull(
+                    row.project.ifEmpty { null },
+                    row.ago?.takeUnless { signal && row.running != null }?.let { agoText(it) },
+                )
+                .joinToString(" · ")
+                .ifEmpty { null },
+        trailing =
+            status
+                ?.takeUnless { signal && row.running != null }
+                ?.let { KitRowTrailing.Value(it, chevron = false) } ?: KitRowTrailing.None,
         growKey = row.ref,
         onClick = { actions.openConversation(row.ref) },
     )
+    if (signal) {
+        row.running?.let { running ->
+            val minuteTemplate = stringResource(Res.string.chatHomeMinutes)
+            KitRunningFeedLine(
+                running.sinceMs,
+                row.observedAtMs,
+                running.command,
+                stringResource(Res.string.chatHomeRunning),
+                { minuteTemplate.replace("%1\$s", it) },
+            )
+        }
+        row.permission?.let { permission ->
+            KitSignalSlip {
+                KitText("$ " + permission.command, maxLines = 2)
+                KitChipWrap {
+                    KitButton(
+                        stringResource(Res.string.chatHomeAllow),
+                        { actions.answerPermission(row, true) },
+                        working = permission.requestId in state?.answering.orEmpty(),
+                    )
+                    KitButton(
+                        stringResource(Res.string.chatHomeReject),
+                        { actions.answerPermission(row, false) },
+                        role = KitButtonRole.Secondary,
+                        working = permission.requestId in state?.answering.orEmpty(),
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
 private fun agoText(age: RelativeAge): String =
     when (age) {
         RelativeAge.JustNow -> stringResource(Res.string.e7WorkspaceJustNow)
-        is RelativeAge.Minutes -> stringResource(Res.string.e7WorkspaceMinutesAgo, Numbers.format(age.count))
-        is RelativeAge.Hours -> stringResource(Res.string.e7WorkspaceHoursAgo, Numbers.format(age.count))
-        is RelativeAge.Days -> stringResource(Res.string.e7WorkspaceDaysAgo, Numbers.format(age.count))
+        is RelativeAge.Minutes ->
+            stringResource(Res.string.e7WorkspaceMinutesAgo, Numbers.format(age.count))
+        is RelativeAge.Hours ->
+            stringResource(Res.string.e7WorkspaceHoursAgo, Numbers.format(age.count))
+        is RelativeAge.Days ->
+            stringResource(Res.string.e7WorkspaceDaysAgo, Numbers.format(age.count))
     }
 
 /** P2 proof page for ChatRoute: the box a row grows into (plan 08 §5.4). */

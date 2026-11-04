@@ -92,6 +92,7 @@ public data class TurnFactsUi(
     val nowMs: Long = 0,
     val reading: TranscriptReadingUi = TranscriptReadingUi(),
     val tasks: ChatTaskList? = null,
+    val runStartedAtMs: Long? = null,
 ) {
     public companion object {
         public val Empty: TurnFactsUi = TurnFactsUi()
@@ -172,6 +173,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
             nowMs = nowMs,
             reading = reading,
             tasks = latestChatTasks(snapshot.messages),
+            runStartedAtMs = feed.runStartedAtMs,
         )
     }
 

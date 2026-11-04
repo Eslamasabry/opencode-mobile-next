@@ -80,11 +80,9 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.BackgroundRoute
 import io.github.eslamasabry.oc.ui.routes.DiagnosticsRoute
-import io.github.eslamasabry.oc.ui.routes.IntegrationsRoute
-import io.github.eslamasabry.oc.ui.routes.ProvidersRoute
+import io.github.eslamasabry.oc.ui.routes.LibraryRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
-import io.github.eslamasabry.oc.ui.routes.LibraryRoute
 import io.github.eslamasabry.oc.ui.routes.TeachingRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
 import io.github.eslamasabry.oc.ui.routes.VoiceRoute
@@ -244,6 +242,7 @@ class AndroidSettingsHost(
                     configurationInspection = configAvailable,
                     opens = OPENS,
                     surfaceStyles = true,
+                    phraseChips = true,
                     transcriptDisplay = false,
                 )
             }
@@ -256,15 +255,22 @@ class AndroidSettingsHost(
                     diagnostics = true,
                     opens = OPENS,
                     surfaceStyles = true,
+                    phraseChips = true,
                     transcriptDisplay = false,
                 ),
             )
+
+    override val phrases: io.github.eslamasabry.oc.feature.settings.presentation.PhraseSettings =
+        AndroidPhraseSettings(stores, scope)
 
     override val choices: PersonalChoices =
         PreferencesChoices(prefs::preferences, prefs.value, scope)
 
     override val openers: SettingsOpeners = SettingsOpeners { place ->
         when (place) {
+            SettingsOutside.Capabilities ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.CapabilitiesRoute)
+            SettingsOutside.ModelAndMode -> nav.open(SettingsRoute.ModelDefaults())
             SettingsOutside.Servers -> nav.open(ServersRoute.Home)
             SettingsOutside.Tools,
             SettingsOutside.Providers -> {
@@ -275,11 +281,13 @@ class AndroidSettingsHost(
                         ?: live.firstOrNull { it.connected }
                 if (target != null) {
                     nav.open(
-                        if (place == SettingsOutside.Providers) ProvidersRoute(target.id)
+                        if (place == SettingsOutside.Providers)
+                            LibraryRoute(tab = "providers", profileId = target.id)
                         else ToolsRoute(target.id)
                     )
                 } else {
-                    // PORT-SCREENS-2: with no connected server, the tabbed library answers (it picks its own
+                    // PORT-SCREENS-2: with no connected server, the tabbed library answers (it
+                    // picks its own
                     // server). SEC-2's integrations page stays reachable from Servers.
                     nav.open(
                         if (place == SettingsOutside.Providers) LibraryRoute(tab = "providers")
@@ -324,7 +332,7 @@ class AndroidSettingsHost(
             version = buildInfo.versionName,
             build = buildInfo.versionCode.toString(),
             whatsNew = true,
-            notices = false,
+            notices = true,
         )
 
     override val configuration:
@@ -362,9 +370,7 @@ class AndroidSettingsHost(
                         val status =
                             io.github.eslamasabry.opencode_mobile.SetupRunner.get(application)
                                 .status()
-                        io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord.parse(
-                                status
-                            )
+                        io.github.eslamasabry.oc.engine.runtime.setup.SetupJobRecord.parse(status)
                             ?.let {
                                 io.github.eslamasabry.oc.engine.runtime.setup.FailedSetupReport
                                     .from(it, reportRedactor::redact)
@@ -456,6 +462,8 @@ class AndroidSettingsHost(
     private companion object {
         val OPENS: Set<SettingsOutside> =
             setOf(
+                SettingsOutside.ModelAndMode,
+                SettingsOutside.Capabilities,
                 SettingsOutside.Tools,
                 SettingsOutside.Providers,
                 SettingsOutside.Servers,
@@ -739,6 +747,8 @@ class FirstRunStarter(
     private val connections: ServerConnections,
     private val nav: AppNavigator,
     private val dispatchers: AppDispatchers,
+    private val managedMove:
+        io.github.eslamasabry.oc.feature.onboarding.presentation.ManagedMoveSource,
     appScope: AppCoroutineScope,
 ) {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -766,7 +776,10 @@ class FirstRunStarter(
         scope.launch {
             if (stores.warm() is Outcome.Failed) return@launch
             val saved = stores.profiles.profiles.value.map { it.id }.toSet()
-            withContext(dispatchers.main) { flow.start(stores.profiles.activeId.value, saved) }
+            val needsMove = managedMove.needed()
+            withContext(dispatchers.main) {
+                flow.start(stores.profiles.activeId.value, saved, needsMove)
+            }
             connections.servers
                 .map { list -> list.any { it.connected } }
                 .distinctUntilChanged()
@@ -781,7 +794,11 @@ class FirstRunStarter(
 internal fun systemLocaleTag(): String {
     val list = Resources.getSystem().configuration.locales
     val tags = (0 until list.size()).map { list[it].toLanguageTag() }
-    val code = io.github.eslamasabry.oc.core.common.text.AppLanguageResolver.resolve(tags, SHIPPED_LANGUAGES)
+    val code =
+        io.github.eslamasabry.oc.core.common.text.AppLanguageResolver.resolve(
+            tags,
+            SHIPPED_LANGUAGES,
+        )
     return tags.firstOrNull { it.substringBefore('-').lowercase() == code } ?: code
 }
 

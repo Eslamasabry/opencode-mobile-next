@@ -30,6 +30,9 @@ public interface SettingsHost {
     public val crashes: CrashSettings?
         get() = null
 
+    public val phrases: PhraseSettings?
+        get() = null
+
     public val diagnostics: DiagnosticsExport?
 }
 
@@ -54,6 +57,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.about,
             host.diagnostics,
             host.crashes,
+            host.phrases,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

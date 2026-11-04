@@ -34,6 +34,7 @@ public data class RemoteTerminalUi(
     val transcript: String = "",
     val issue: RemoteTerminalIssue? = null,
     val ending: Boolean = false,
+    val devServerPort: Int? = null,
 )
 
 public interface RemoteTerminalActions {
@@ -72,4 +73,6 @@ public interface RemoteTerminalActions {
     public fun confirmEnd()
 
     public fun back()
+
+    public fun openDevPreview() {}
 }

@@ -47,6 +47,8 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateTryAgain
 import io.github.eslamasabry.oc.ui.words.res.appUpdateUpToDate
 import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.appUpdateWhatsNew
+import io.github.eslamasabry.oc.ui.words.res.nativeAboutProvenance
+import io.github.eslamasabry.oc.ui.words.res.nativeAboutProvenanceTitle
 import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
 import io.github.eslamasabry.oc.ui.words.res.shareRowDetail
 import io.github.eslamasabry.oc.ui.words.res.shareRowTitle
@@ -57,8 +59,8 @@ import io.github.eslamasabry.oc.ui.words.res.whatsNewRowTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * I20: the version and its state in one row, the state's one main action, Check now, the switch that turns checks
- * off, What's new and the build number.
+ * I20: the version and its state in one row, the state's one main action, Check now, the switch
+ * that turns checks off, What's new and the build number.
  */
 @Composable
 internal fun ColumnScope.UpdatesBody(u: UpdateFacts, actions: SettingsActions) {
@@ -75,11 +77,18 @@ internal fun ColumnScope.UpdatesBody(u: UpdateFacts, actions: SettingsActions) {
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         when (u.state) {
-            is UpdateState.Available -> KitButton(stringResource(Res.string.appUpdateUpdate), actions::onUpdateAction)
+            is UpdateState.Available ->
+                KitButton(stringResource(Res.string.appUpdateUpdate), actions::onUpdateAction)
             is UpdateState.Downloading ->
-                KitButton(stringResource(Res.string.appUpdateCancel), actions::onUpdateAction, role = KitButtonRole.Secondary)
-            is UpdateState.Downloaded -> KitButton(stringResource(Res.string.appUpdateInstall), actions::onUpdateAction)
-            is UpdateState.Failed -> KitButton(stringResource(Res.string.appUpdateTryAgain), actions::onCheckForUpdates)
+                KitButton(
+                    stringResource(Res.string.appUpdateCancel),
+                    actions::onUpdateAction,
+                    role = KitButtonRole.Secondary,
+                )
+            is UpdateState.Downloaded ->
+                KitButton(stringResource(Res.string.appUpdateInstall), actions::onUpdateAction)
+            is UpdateState.Failed ->
+                KitButton(stringResource(Res.string.appUpdateTryAgain), actions::onCheckForUpdates)
             else -> Unit
         }
         val busy = u.state is UpdateState.Downloading || u.state == UpdateState.Installing
@@ -88,7 +97,10 @@ internal fun ColumnScope.UpdatesBody(u: UpdateFacts, actions: SettingsActions) {
                 stringResource(Res.string.appUpdateCheckNow),
                 actions::onCheckForUpdates,
                 modifier = Modifier.testTag("updates-check-now"),
-                role = if (u.state is UpdateState.Available || u.state is UpdateState.Downloaded) KitButtonRole.Secondary else KitButtonRole.Primary,
+                role =
+                    if (u.state is UpdateState.Available || u.state is UpdateState.Downloaded)
+                        KitButtonRole.Secondary
+                    else KitButtonRole.Primary,
                 working = u.state == UpdateState.Checking,
             )
         }
@@ -108,7 +120,10 @@ internal fun ColumnScope.UpdatesBody(u: UpdateFacts, actions: SettingsActions) {
             trailing = KitRowTrailing.Chevron,
             onClick = { actions.onOutside(SettingsOutside.ReleaseNotes) },
         )
-        KitRow(title = stringResource(Res.string.appUpdateBuildLabel), trailing = KitRowTrailing.Value(u.build, chevron = false))
+        KitRow(
+            title = stringResource(Res.string.appUpdateBuildLabel),
+            trailing = KitRowTrailing.Value(u.build, chevron = false),
+        )
     }
 }
 
@@ -121,20 +136,34 @@ private fun updateLine(state: UpdateState): String =
             state.checked?.let { stringResource(Res.string.appUpdateUpToDate, it) }
                 ?: stringResource(Res.string.appUpdateCheckedJustNow)
         is UpdateState.Available ->
-            stringResource(Res.string.appUpdateAvailableLine, state.version, stringResource(Res.string.appUpdateSizeMb, state.sizeMb))
+            stringResource(
+                Res.string.appUpdateAvailableLine,
+                state.version,
+                stringResource(Res.string.appUpdateSizeMb, state.sizeMb),
+            )
         is UpdateState.Downloading ->
-            stringResource(Res.string.appUpdateDownloadingTitle, state.version) + " · " +
+            stringResource(Res.string.appUpdateDownloadingTitle, state.version) +
+                " · " +
                 stringResource(Res.string.appUpdatePercent, state.percent.toString())
-        is UpdateState.Downloaded -> stringResource(Res.string.appUpdateInstallReadyTitle, state.version)
+        is UpdateState.Downloaded ->
+            stringResource(Res.string.appUpdateInstallReadyTitle, state.version)
         UpdateState.Installing -> stringResource(Res.string.appUpdateInstalling)
         is UpdateState.Failed -> updateFailureWords(state.why)
     }
 
-/** L04: the version, What's new, the two quiet "Tell others" rows, the notices and the privacy policy. */
+/**
+ * L04: the version, What's new, the two quiet "Tell others" rows, the notices and the privacy
+ * policy.
+ */
 @Composable
 internal fun ColumnScope.AboutBody(about: AboutFacts, actions: SettingsActions) {
     KitRowGroup {
         KitRow(title = stringResource(Res.string.aboutBuildVersion, about.version, about.build))
+        KitRow(
+            title = stringResource(Res.string.nativeAboutProvenanceTitle),
+            supporting = stringResource(Res.string.nativeAboutProvenance),
+            supportingMaxLines = 8,
+        )
         if (about.whatsNew) {
             KitRow(
                 title = stringResource(Res.string.whatsNewRowTitle),
@@ -162,7 +191,11 @@ internal fun ColumnScope.AboutBody(about: AboutFacts, actions: SettingsActions) 
                 title = stringResource(Res.string.aboutAllLicences),
                 supporting = stringResource(Res.string.aboutAllLicencesDetail),
                 trailing = KitRowTrailing.Chevron,
-                onClick = { actions.onOutside(SettingsOutside.Notices) },
+                onClick = {
+                    actions.onOpen(
+                        io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage.Notices
+                    )
+                },
             )
         }
         KitRow(

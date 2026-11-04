@@ -63,6 +63,10 @@ class AndroidLibraryHost(
                 ?: stores.profiles.activeId.value
                 ?: connections.live.value.keys.firstOrNull()
                 ?: return null
+        return openProfile(profile, scope)
+    }
+
+    override fun openProfile(profile: ProfileId, scope: CoroutineScope): LibrarySession? {
         val first = connections.live.value[profile] ?: return null
         val captured = first.profile
         val capturedOrigin = stores.profiles.profile(profile)?.profile?.baseUrl ?: return null
