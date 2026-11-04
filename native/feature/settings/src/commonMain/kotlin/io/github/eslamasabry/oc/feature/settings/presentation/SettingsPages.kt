@@ -34,6 +34,10 @@ public sealed interface SettingsPage {
 
     public data object About : SettingsPage
 
+    public data object Notices : SettingsPage
+
+    public data object PhraseChips : SettingsPage
+
     public data object Privacy : SettingsPage
 
     /** Settings › This app › Privacy › What we collect (plan 18 §6): one page, no new level. */
@@ -73,6 +77,7 @@ public enum class SettingsOutside {
     Language,
     Guide,
     Tips,
+    Capabilities,
     ReportProblem,
     WhatsNew,
     Notices,

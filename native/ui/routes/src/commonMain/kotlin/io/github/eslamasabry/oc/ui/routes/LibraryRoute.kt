@@ -4,9 +4,13 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import kotlinx.serialization.Serializable
 
 /**
- * PORT-SCREENS-2: the server's real tools and provider accounts as one tabbed library; a conversation keeps its own
- * profile/location. (Named apart from PROTO's [ToolsRoute], which opens one server's tools page.)
+ * PORT-SCREENS-2: the server's real tools and provider accounts as one tabbed library; a
+ * conversation keeps its own profile/location. (Named apart from PROTO's [ToolsRoute], which opens
+ * one server's tools page.)
  */
 @Serializable
-public data class LibraryRoute(val tab: String = "commands", val ref: ConversationRef? = null) :
-    AppRoute
+public data class LibraryRoute(
+    val tab: String = "commands",
+    val ref: ConversationRef? = null,
+    val profileId: io.github.eslamasabry.oc.core.common.ids.ProfileId? = null,
+) : AppRoute

@@ -15,6 +15,7 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:analytics"))
+        implementation(project(":engine:agents"))
         implementation(project(":engine:integrations-catalog"))
         implementation(project(":engine:setupassist"))
         implementation(project(":ui:kit-chat"))

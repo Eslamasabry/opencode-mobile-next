@@ -18,7 +18,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** What Android reports about this phone, and the Storage settings page (bound in androidApp PhoneSetupWiring). */
+/**
+ * What Android reports about this phone, and the Storage settings page (bound in androidApp
+ * PhoneSetupWiring).
+ */
 public interface PhoneSetupDevice {
     public suspend fun facts(): SetupDevice
 
@@ -26,15 +29,30 @@ public interface PhoneSetupDevice {
     public fun openStorageSettings(): Boolean
 }
 
-/** The native job runner's controls the engine does not own: the app-run step, Stop, and the poll pause. */
+/**
+ * The native job runner's controls the engine does not own: the app-run step, Stop, and the poll
+ * pause.
+ */
 public interface PhoneSetupJobs {
-    /** Runs the job's "Start OpenCode" step (profile, password, start) and reports it to the runner. */
+    /**
+     * Runs the job's "Start OpenCode" step (profile, password, start) and reports it to the runner.
+     */
     public suspend fun finishStep(jobId: String, openCodeChanged: Boolean)
 
     /** Stops the running job; what finished stays installed. */
     public suspend fun cancel()
 
-    /** The pause between two reads of setup.json while a job runs (features may not import delay, K1). */
+    /**
+     * The pause between two reads of setup.json while a job runs (features may not import delay,
+     * K1).
+     */
+    public suspend fun reportFailure(
+        progress: SetupProgress
+    ): io.github.eslamasabry.oc.core.common.Outcome<Unit> =
+        io.github.eslamasabry.oc.core.common.Outcome.Failed(
+            io.github.eslamasabry.oc.core.common.Failure.Device()
+        )
+
     public suspend fun pause()
 }
 
@@ -49,7 +67,9 @@ public interface PhoneSetupNavigator {
 /** One component the start page lists. */
 public data class SetupItemUi(val id: String, val title: String)
 
-/** The page: the start (preflight, what is installed) until a job exists, then that job's progress. */
+/**
+ * The page: the start (preflight, what is installed) until a job exists, then that job's progress.
+ */
 public data class PhoneSetupUi(
     val checking: Boolean = true,
     val preflight: SetupPreflightResult? = null,
@@ -62,8 +82,10 @@ public data class PhoneSetupUi(
     /** The Stop confirmation is open (steer, never queue: one question at a time). */
     val confirmingStop: Boolean = false,
     val storageUnopened: Boolean = false,
+    val reportFailed: Boolean = false,
 ) {
-    val canSetUp: Boolean get() = !checking && !starting && preflight?.supported != false && progress == null
+    val canSetUp: Boolean
+        get() = !checking && !starting && preflight?.supported != false && progress == null
 }
 
 public interface PhoneSetupActions {
@@ -81,13 +103,16 @@ public interface PhoneSetupActions {
 
     public fun openStorage()
 
+    public fun reportFailure() {}
+
     public fun done()
 }
 
 /**
- * The Set up page's rules (Flutter phone_setup_start_screen.dart + phone_setup_progress_screen.dart): a job already on
- * the phone is shown, never restarted; otherwise the preflight decides whether "Set up" is offered. While a job runs,
- * setup.json is read again after each [PhoneSetupJobs.pause]; the app-run step is started once per job.
+ * The Set up page's rules (Flutter phone_setup_start_screen.dart +
+ * phone_setup_progress_screen.dart): a job already on the phone is shown, never restarted;
+ * otherwise the preflight decides whether "Set up" is offered. While a job runs, setup.json is read
+ * again after each [PhoneSetupJobs.pause]; the app-run step is started once per job.
  */
 public class PhoneSetupModel(
     private val engine: SetupEngine,
@@ -98,6 +123,19 @@ public class PhoneSetupModel(
 ) : PhoneSetupActions {
     private val mutable = MutableStateFlow(PhoneSetupUi())
     public val state: StateFlow<PhoneSetupUi> = mutable.asStateFlow()
+
+    override fun reportFailure() {
+        val progress = mutable.value.progress?.takeIf { it.state == SetupState.Failed } ?: return
+        scope.launch {
+            val result = jobs.reportFailure(progress)
+            mutable.update {
+                it.copy(
+                    reportFailed = result is io.github.eslamasabry.oc.core.common.Outcome.Failed
+                )
+            }
+        }
+    }
+
     private val stepsStarted = mutableSetOf<String>()
     private var polling = false
 
@@ -107,7 +145,10 @@ public class PhoneSetupModel(
 
     private suspend fun load() {
         val job = SetupJourney.defaultJob(engine.registry)
-        val items = job.filter { !it.jobStep && !it.app }.map { SetupItemUi(it.id, it.title) }.toImmutableList()
+        val items =
+            job.filter { !it.jobStep && !it.app }
+                .map { SetupItemUi(it.id, it.title) }
+                .toImmutableList()
         val download = SetupJourney.downloadBytes(job)
         mutable.update { it.copy(items = items, downloadBytes = download) }
         engine.restore()
@@ -178,7 +219,8 @@ public class PhoneSetupModel(
     }
 
     override fun askStop() {
-        if (mutable.value.progress?.state == SetupState.Running) mutable.update { it.copy(confirmingStop = true) }
+        if (mutable.value.progress?.state == SetupState.Running)
+            mutable.update { it.copy(confirmingStop = true) }
     }
 
     override fun keepGoing(): Unit = mutable.update { it.copy(confirmingStop = false) }

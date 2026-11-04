@@ -1,0 +1,68 @@
+{
+  "source": "native commonMain live gesture call sites; primitive-only gestures with no feature caller are excluded",
+  "rows": [
+    {
+      "page": "conversations",
+      "element": "row-menu",
+      "gesture": "Long press a conversation",
+      "action": "Open conversation actions",
+      "visibleEquivalent": "Tap the visible More action on the same row",
+      "evidence": "native/feature/chats/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chats/ui/ChatsAllScreen.kt:429",
+      "changed": true
+    },
+    {
+      "page": "chat",
+      "element": "prompt-actions",
+      "gesture": "Long press a sent prompt",
+      "action": "Open message actions",
+      "visibleEquivalent": "Tap the same prompt to open its actions",
+      "evidence": "native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/ui/ChatTranscript.kt:525",
+      "changed": false
+    },
+    {
+      "page": "composer",
+      "element": "stop-after-step",
+      "gesture": "Hold Stop",
+      "action": "Stop after this step",
+      "visibleEquivalent": "Tap the visible Stop after this step action beside Stop",
+      "evidence": "native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitComposerStop.kt:154",
+      "changed": true
+    },
+    {
+      "page": "voice",
+      "element": "hold-to-talk",
+      "gesture": "Hold the microphone then release",
+      "action": "Record and insert speech",
+      "visibleEquivalent": "Tap the microphone, then tap Done",
+      "evidence": "native/feature/voice/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/voice/ui/ComposerVoiceSlot.kt:135",
+      "changed": false
+    },
+    {
+      "page": "voice",
+      "element": "slide-to-cancel",
+      "gesture": "Slide away while holding the microphone",
+      "action": "Discard speech without inserting it",
+      "visibleEquivalent": "Use tap-to-talk and the visible Cancel action",
+      "evidence": "native/feature/voice/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/voice/ui/ComposerVoiceSlot.kt:35",
+      "changed": false
+    },
+    {
+      "page": "chat-picture",
+      "element": "zoom",
+      "gesture": "Pinch or double tap a reply picture",
+      "action": "Zoom or fit the picture",
+      "visibleEquivalent": "Use Zoom in, Zoom out and Fit below the picture",
+      "evidence": "native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/image/KitPictureView.kt:117",
+      "changed": true
+    },
+    {
+      "page": "viewer",
+      "element": "zoom",
+      "gesture": "Pinch or double tap an image or SVG",
+      "action": "Zoom or fit the image",
+      "visibleEquivalent": "Use the always-visible KitZoomControls in KitImageView or KitViewerSvgBody",
+      "evidence": "native/ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/image/KitZoomControls.kt:39",
+      "changed": false
+    }
+  ]
+}

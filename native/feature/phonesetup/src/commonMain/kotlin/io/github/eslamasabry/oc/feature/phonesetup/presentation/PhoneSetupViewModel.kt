@@ -25,8 +25,10 @@ public class RoutedPhoneSetupNavigator(private val nav: AppNavigator) : PhoneSet
     }
 }
 
-/** Thin Metro ViewModel (plan 03 §13.7): hands viewModelScope to [PhoneSetupModel]. SetupEngine and the ports are
- *  bound by androidApp's graph/PhoneSetupWiring.kt. */
+/**
+ * Thin Metro ViewModel (plan 03 §13.7): hands viewModelScope to [PhoneSetupModel]. SetupEngine and
+ * the ports are bound by androidApp's graph/PhoneSetupWiring.kt.
+ */
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
@@ -54,4 +56,6 @@ public class PhoneSetupViewModel(
     override fun openStorage(): Unit = model.openStorage()
 
     override fun done(): Unit = model.done()
+
+    override fun reportFailure(): Unit = model.reportFailure()
 }

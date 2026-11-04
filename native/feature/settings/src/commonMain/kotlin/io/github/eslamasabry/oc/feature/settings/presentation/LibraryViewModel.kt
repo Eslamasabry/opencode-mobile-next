@@ -13,8 +13,8 @@ import io.github.eslamasabry.oc.core.model.*
 import io.github.eslamasabry.oc.engine.integrations.catalog.*
 import io.github.eslamasabry.oc.engine.setupassist.*
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
-import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import io.github.eslamasabry.oc.ui.routes.LibraryRoute
+import io.github.eslamasabry.oc.ui.routes.PhoneRoute
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -27,6 +27,8 @@ import kotlinx.coroutines.launch
  */
 public interface LibraryHost {
     public fun open(ref: ConversationRef?, scope: CoroutineScope): LibrarySession?
+
+    public fun openProfile(profile: ProfileId, scope: CoroutineScope): LibrarySession? = null
 
     public suspend fun copy(text: String): Outcome<Unit>
 
@@ -181,7 +183,10 @@ public class LibraryViewModel(
     private val nav: AppNavigator,
 ) : ViewModel(), LibraryActions {
     private val host = hosts.singleOrNull()
-    private val session = host?.open(route.ref, viewModelScope)
+    private val session =
+        if (route.ref == null && route.profileId != null)
+            host?.openProfile(route.profileId!!, viewModelScope)
+        else host?.open(route.ref, viewModelScope)
     private val initialTab =
         LibraryTab.entries.firstOrNull { it.name.equals(route.tab, ignoreCase = true) }
             ?: LibraryTab.Commands

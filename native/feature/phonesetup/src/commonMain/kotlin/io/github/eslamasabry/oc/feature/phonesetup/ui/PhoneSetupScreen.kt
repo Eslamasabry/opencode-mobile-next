@@ -38,8 +38,10 @@ import io.github.eslamasabry.oc.ui.kit.state.KitProgressTone
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.diagnosticsUnavailable
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorCannotStart
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupErrorChecksum
@@ -87,14 +89,15 @@ import io.github.eslamasabry.oc.ui.words.res.setupProgressViewFailedUnknown
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewGettingStarted
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewInterrupted
 import io.github.eslamasabry.oc.ui.words.res.setupProgressViewOverallLabel
-import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
+import org.jetbrains.compose.resources.stringResource
 
 /**
- * PhoneSetupRoute.Setup (Flutter phone_setup_start_screen.dart + phone_setup_progress_screen.dart): the start shows what
- * is installed and the preflight (B-LINUX-209..211), then the job's weighted bar with its stage and an honest ETA
- * (B-LINUX-201), and a failure as one plain line with Details (B-LINUX-203, B-SEC-166), Continue and Stop.
+ * PhoneSetupRoute.Setup (Flutter phone_setup_start_screen.dart + phone_setup_progress_screen.dart):
+ * the start shows what is installed and the preflight (B-LINUX-209..211), then the job's weighted
+ * bar with its stage and an honest ETA (B-LINUX-201), and a failure as one plain line with Details
+ * (B-LINUX-203, B-SEC-166), Continue and Stop.
  */
 @Composable
 public fun PhoneSetupScreen(state: PhoneSetupUi, actions: PhoneSetupActions) {
@@ -103,7 +106,10 @@ public fun PhoneSetupScreen(state: PhoneSetupUi, actions: PhoneSetupActions) {
         topBar = {
             KitTopBar(
                 title =
-                    stringResource(if (progress == null) Res.string.phoneSetupStartScreenTitle else Res.string.phoneSetupProgressTitle),
+                    stringResource(
+                        if (progress == null) Res.string.phoneSetupStartScreenTitle
+                        else Res.string.phoneSetupProgressTitle
+                    ),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
@@ -149,13 +155,17 @@ private fun Start(state: PhoneSetupUi, actions: PhoneSetupActions) {
     val size = sizeWords(state.downloadBytes)
     KitText(
         if (state.downloadBytes > 0) stringResource(Res.string.phoneSetupStartPromise, size)
-        else stringResource(Res.string.phoneSetupStartPromiseNoSize),
+        else stringResource(Res.string.phoneSetupStartPromiseNoSize)
     )
     when (val preflight = state.preflight) {
         is SetupPreflightResult.UnsupportedAbi ->
             KitNotice(
                 title = stringResource(Res.string.phoneSetupPreflightUnsupportedHeadline),
-                message = stringResource(Res.string.phoneSetupPreflightUnsupportedBody, preflight.reportedAbi),
+                message =
+                    stringResource(
+                        Res.string.phoneSetupPreflightUnsupportedBody,
+                        preflight.reportedAbi,
+                    ),
                 tone = StatusTone.Failure,
             )
         is SetupPreflightResult.LowMemory ->
@@ -172,24 +182,47 @@ private fun Start(state: PhoneSetupUi, actions: PhoneSetupActions) {
         is SetupPreflightResult.LowSpace ->
             KitNotice(
                 title = stringResource(Res.string.phoneSetupPreflightLowSpaceHeadline),
-                message = stringResource(Res.string.phoneSetupPreflightLowSpaceBody, sizeWords(preflight.bytesToFree)),
+                message =
+                    stringResource(
+                        Res.string.phoneSetupPreflightLowSpaceBody,
+                        sizeWords(preflight.bytesToFree),
+                    ),
                 tone = StatusTone.Failure,
-                actions = listOf(KitLineAction(stringResource(Res.string.phoneSetupPreflightOpenStorage), actions::openStorage)),
+                actions =
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.phoneSetupPreflightOpenStorage),
+                            actions::openStorage,
+                        )
+                    ),
             )
         is SetupPreflightResult.MayBeSlow ->
-            KitNotice(stringResource(Res.string.phoneSetupPreflightMayBeSlow, "${preflight.totalMemoryMb}"))
+            KitNotice(
+                stringResource(
+                    Res.string.phoneSetupPreflightMayBeSlow,
+                    "${preflight.totalMemoryMb}",
+                )
+            )
         else -> Unit
     }
     for (item in state.items) KitRow(title = itemTitle(item.id, item.title))
     if (state.preflight?.supported != false) {
-        KitButton(stringResource(Res.string.phoneSetupStartSetUp), actions::setUp, working = state.starting)
+        KitButton(
+            stringResource(Res.string.phoneSetupStartSetUp),
+            actions::setUp,
+            working = state.starting,
+        )
     }
 }
 
 @Composable
 private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetupActions) {
     val current = progress.components.firstOrNull { it.id == progress.current }
-    val stage = current?.stage ?: if (progress.state == SetupState.Running) stringResource(Res.string.setupProgressViewGettingStarted) else null
+    val stage =
+        current?.stage
+            ?: if (progress.state == SetupState.Running)
+                stringResource(Res.string.setupProgressViewGettingStarted)
+            else null
     val bar =
         KitProgress.Known(
             value = progress.overall.toFloat().coerceIn(0f, 1f),
@@ -201,7 +234,8 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
         tone =
             when (progress.state) {
                 SetupState.Failed -> KitProgressTone.Failed
-                SetupState.Running, SetupState.Done -> KitProgressTone.Moving
+                SetupState.Running,
+                SetupState.Done -> KitProgressTone.Moving
                 else -> KitProgressTone.Stopped
             },
     )
@@ -211,11 +245,20 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
         SetupState.Running -> {
             for (component in progress.components) {
                 KitRow(
-                    title = itemTitle(component.id, state.items.firstOrNull { it.id == component.id }?.title ?: component.id),
+                    title =
+                        itemTitle(
+                            component.id,
+                            state.items.firstOrNull { it.id == component.id }?.title
+                                ?: component.id,
+                        ),
                     supporting = rowState(component.state),
                 )
             }
-            KitButton(stringResource(Res.string.setupProgressViewCancel), actions::askStop, role = KitButtonRole.Secondary)
+            KitButton(
+                stringResource(Res.string.setupProgressViewCancel),
+                actions::askStop,
+                role = KitButtonRole.Secondary,
+            )
         }
         SetupState.Done -> {
             KitNotice(
@@ -225,12 +268,17 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
             )
             KitButton(stringResource(Res.string.phoneSetupStartOpen), actions::done)
         }
-        SetupState.Failed, SetupState.Interrupted, SetupState.Cancelled -> {
+        SetupState.Failed,
+        SetupState.Interrupted,
+        SetupState.Cancelled -> {
             val message =
                 when (progress.state) {
-                    SetupState.Interrupted -> stringResource(Res.string.setupProgressViewInterrupted)
+                    SetupState.Interrupted ->
+                        stringResource(Res.string.setupProgressViewInterrupted)
                     SetupState.Cancelled -> stringResource(Res.string.setupProgressViewCancelled)
-                    else -> progress.error?.let { problemWords(it) } ?: stringResource(Res.string.setupProgressViewFailedUnknown)
+                    else ->
+                        progress.error?.let { problemWords(it) }
+                            ?: stringResource(Res.string.setupProgressViewFailedUnknown)
                 }
             KitErrorNotice(
                 message = message,
@@ -239,7 +287,18 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
                 detailsLabel = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.kitCopyDetails),
             )
-            KitButton(stringResource(Res.string.setupProgressViewContinue), actions::continueSetup, working = state.starting)
+            if (state.reportFailed) KitNotice(stringResource(Res.string.diagnosticsUnavailable))
+            if (progress.state == SetupState.Failed)
+                KitButton(
+                    stringResource(Res.string.kitReportProblem),
+                    actions::reportFailure,
+                    role = KitButtonRole.Secondary,
+                )
+            KitButton(
+                stringResource(Res.string.setupProgressViewContinue),
+                actions::continueSetup,
+                working = state.starting,
+            )
         }
         SetupState.Idle -> Unit
     }
@@ -248,13 +307,18 @@ private fun Job(progress: SetupProgress, state: PhoneSetupUi, actions: PhoneSetu
 @Composable
 private fun rowState(state: ComponentState): String? =
     when (state) {
-        ComponentState.Done, ComponentState.Skipped -> "✓"
-        ComponentState.Running, ComponentState.Checking -> "…"
+        ComponentState.Done,
+        ComponentState.Skipped -> "✓"
+        ComponentState.Running,
+        ComponentState.Checking -> "…"
         ComponentState.Failed -> "!"
         ComponentState.Pending -> null
     }
 
-/** A component's name in the person's language; Python, Node.js and OpenCode are names and stay as they are. */
+/**
+ * A component's name in the person's language; Python, Node.js and OpenCode are names and stay as
+ * they are.
+ */
 @Composable
 internal fun itemTitle(id: String, fallback: String): String =
     when (id) {
@@ -264,7 +328,10 @@ internal fun itemTitle(id: String, fallback: String): String =
         else -> fallback
     }
 
-/** The job's problem in plain words (app_en.arb phoneSetupError*); the technical reason stays under Details. */
+/**
+ * The job's problem in plain words (app_en.arb phoneSetupError*); the technical reason stays under
+ * Details.
+ */
 @Composable
 internal fun problemWords(problem: SetupProblem): String =
     when (problem) {
@@ -275,8 +342,11 @@ internal fun problemWords(problem: SetupProblem): String =
         is SetupProblem.Checksum -> stringResource(Res.string.phoneSetupErrorChecksum, problem.name)
         is SetupProblem.Install -> stringResource(Res.string.phoneSetupErrorInstall, problem.name)
         SetupProblem.PackageRepair -> stringResource(Res.string.phoneSetupErrorPackageRepair)
-        SetupProblem.CannotStart, SetupProblem.RuntimeOwnershipUnknown -> stringResource(Res.string.phoneSetupErrorCannotStart)
-        SetupProblem.OpenCodeNoProgram -> stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
+        SetupProblem.CannotStart,
+        SetupProblem.RuntimeOwnershipUnknown ->
+            stringResource(Res.string.phoneSetupErrorCannotStart)
+        SetupProblem.OpenCodeNoProgram ->
+            stringResource(Res.string.phoneSetupErrorOpenCodeNoProgram)
         SetupProblem.OpenCodeWontRun -> stringResource(Res.string.phoneSetupErrorOpenCodeWontRun)
         SetupProblem.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)
         is SetupProblem.StartFailed -> stringResource(Res.string.setupProgressViewFailedUnknown)
@@ -287,8 +357,14 @@ internal fun problemWords(problem: SetupProblem): String =
 internal fun sizeWords(bytes: Long): String {
     val mb = bytes / 1_000_000.0
     return if (mb >= 1000) {
-        stringResource(Res.string.phoneSetupStartGigabytes, ((mb / 100).roundToInt() / 10.0).toString())
+        stringResource(
+            Res.string.phoneSetupStartGigabytes,
+            ((mb / 100).roundToInt() / 10.0).toString(),
+        )
     } else {
-        stringResource(Res.string.phoneSetupStartMegabytes, mb.roundToInt().coerceAtLeast(1).toString())
+        stringResource(
+            Res.string.phoneSetupStartMegabytes,
+            mb.roundToInt().coerceAtLeast(1).toString(),
+        )
     }
 }

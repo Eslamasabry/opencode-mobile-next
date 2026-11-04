@@ -21,6 +21,12 @@ public interface SettingsActions {
 
     public fun onQuery(text: String)
 
+    public fun onPhraseChips(on: Boolean) {}
+
+    public fun onTarget(row: SettingsRowId) {}
+
+    public fun onAnchor(tag: String) {}
+
     /**
      * The screen hands over the words of every row that exists, in the person's language (no copy
      * here, K2).

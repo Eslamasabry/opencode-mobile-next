@@ -10,8 +10,8 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.style.StyleResolver
-import io.github.eslamasabry.oc.ui.design.tokens.Density
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
+import io.github.eslamasabry.oc.ui.design.tokens.Density
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -46,6 +46,7 @@ public class SettingsPresenter(
     private val about: AboutFacts = AboutFacts(),
     private val diagnostics: DiagnosticsExport? = null,
     private val crashes: CrashSettings? = null,
+    private val phrases: PhraseSettings? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -57,6 +58,9 @@ public class SettingsPresenter(
         val report: ReportUi? = null,
         val reportDescription: String = "",
         val crash: CrashUi? = null,
+        val focusedRow: SettingsRowId? = null,
+        val focusedAnchor: String? = null,
+        val phraseChips: Boolean = true,
     )
 
     private data class Engines(
@@ -97,6 +101,11 @@ public class SettingsPresenter(
             )
 
     init {
+        phrases?.let { port ->
+            scope.launch {
+                port.enabled.collect { enabled -> local.update { it.copy(phraseChips = enabled) } }
+            }
+        }
         crashes?.let { port ->
             scope.launch {
                 port.state.collect { evidence ->
@@ -192,6 +201,9 @@ public class SettingsPresenter(
             language = p.language,
             report = l.report,
             reportDescription = l.reportDescription,
+            phraseChips = l.phraseChips,
+            focusedRow = l.focusedRow,
+            focusedAnchor = l.focusedAnchor,
             crash = l.crash,
             note = l.note,
         )
@@ -201,7 +213,8 @@ public class SettingsPresenter(
         val available = PackId.entries.filter { it != PackId.Dynamic || f.dynamicColour }
         val first = (Packs.mostUsed + p.pack).distinct().filter { it in available }
         val listed = if (all) available else first
-        val ownKnobs = StyleResolver.spec(Style.entries.first { it.name == p.style.name }).tokens.defaults
+        val ownKnobs =
+            StyleResolver.spec(Style.entries.first { it.name == p.style.name }).tokens.defaults
         return AppearanceUi(
             mode = p.mode,
             pack = p.pack,
@@ -210,7 +223,9 @@ public class SettingsPresenter(
             style = p.style,
             corners = p.corners ?: ownKnobs.corners,
             spacing = p.spacing ?: ownKnobs.density,
-            fineTuned = (p.corners != null && p.corners != ownKnobs.corners) || (p.spacing != null && p.spacing != ownKnobs.density),
+            fineTuned =
+                (p.corners != null && p.corners != ownKnobs.corners) ||
+                    (p.spacing != null && p.spacing != ownKnobs.density),
             accent = p.accent,
             motion = p.motion,
             textSize = p.textSize,
@@ -286,6 +301,24 @@ public class SettingsPresenter(
         }
     }
 
+    override fun onAnchor(tag: String) {
+        if (tag == "notifications-servers" && currentFacts.value.platform.notifications) {
+            onOpen(SettingsPage.Notifications)
+            local.update { it.copy(query = "", focusedAnchor = tag) }
+        } else SettingsRowId.entries.firstOrNull { it.tag == tag }?.let(::onTarget)
+    }
+
+    override fun onTarget(row: SettingsRowId) {
+        if (row !in SettingsStructure.searchable(currentFacts.value)) return
+        onOpen(SettingsPage.Group(row.group))
+        local.update { it.copy(query = "", focusedRow = row) }
+    }
+
+    override fun onPhraseChips(on: Boolean) {
+        val port = phrases ?: return
+        run(SettingsNote.ChoiceNotSaved) { port.setEnabled(on) }
+    }
+
     override fun onQuery(text: String) {
         local.update { it.copy(query = text) }
     }
@@ -329,15 +362,18 @@ public class SettingsPresenter(
     override fun onResetFineTune() {
         run(SettingsNote.AppearanceNotSaved) {
             val corners = choices.set(PersonalChange.Corner(null))
-            if (corners is Outcome.Failed) corners.map { } else choices.set(PersonalChange.Spacing(null)).map { }
+            if (corners is Outcome.Failed) corners.map {}
+            else choices.set(PersonalChange.Spacing(null)).map {}
         }
     }
 
     override fun onAccent(id: String?) {
-        if (prefs.value.accent != id) write(PersonalChange.Accent(id), SettingsNote.AppearanceNotSaved)
+        if (prefs.value.accent != id)
+            write(PersonalChange.Accent(id), SettingsNote.AppearanceNotSaved)
     }
 
-    private fun ownKnobs(p: PersonalPrefs) = StyleResolver.spec(Style.entries.first { it.name == p.style.name }).tokens.defaults
+    private fun ownKnobs(p: PersonalPrefs) =
+        StyleResolver.spec(Style.entries.first { it.name == p.style.name }).tokens.defaults
 
     override fun onMotion(motion: MotionLevel) {
         val p = prefs.value

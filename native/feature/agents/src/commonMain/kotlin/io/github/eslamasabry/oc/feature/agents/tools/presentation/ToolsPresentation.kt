@@ -10,7 +10,7 @@ import io.github.eslamasabry.oc.core.domain.*
 import io.github.eslamasabry.oc.core.model.*
 import io.github.eslamasabry.oc.engine.integrations.catalog.*
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
-import io.github.eslamasabry.oc.ui.routes.ProvidersRoute
+import io.github.eslamasabry.oc.ui.routes.LibraryRoute
 import kotlinx.collections.immutable.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -45,6 +45,11 @@ public enum class ToolsIssue {
 }
 
 public data class ToolsUi(
+    val tools: ImmutableList<CodingToolInfo> = persistentListOf(),
+    val models: ImmutableList<ModelRef> = persistentListOf(),
+    val model: ModelRef? = null,
+    val tool: CodingToolInfo? = null,
+    val toolsSupported: Boolean = false,
     val loading: Boolean = true,
     val working: Boolean = false,
     val plugins: ImmutableList<LibraryPlugin> = persistentListOf(),
@@ -64,6 +69,10 @@ public interface ToolsActions {
     public fun back()
 
     public fun refresh()
+
+    public fun selectModel(model: ModelRef) {}
+
+    public fun selectTool(id: String) {}
 
     public fun providers()
 
@@ -108,8 +117,18 @@ public class ToolsViewModel(private val source: ToolsSource, private val nav: Ap
 
     override fun back() = nav.back()
 
+    override fun selectModel(model: ModelRef) {
+        if (model !in mutable.value.models || mutable.value.working || mutable.value.loading) return
+        mutable.update { it.copy(model = model, tool = null) }
+        refresh()
+    }
+
+    override fun selectTool(id: String) {
+        mutable.update { before -> before.copy(tool = before.tools.firstOrNull { it.id == id }) }
+    }
+
     override fun providers() {
-        profile?.let { nav.open(ProvidersRoute(it)) }
+        profile?.let { nav.open(LibraryRoute(tab = "providers", profileId = it)) }
     }
 
     override fun refresh() {
@@ -131,6 +150,30 @@ public class ToolsViewModel(private val source: ToolsSource, private val nav: Ap
                 }
             connection = target
             val caps = target.server.capabilities.value
+            val providerRead = if (caps.toolInventory) target.server.providers() else null
+            val providers = (providerRead as? Outcome.Ok)?.value
+            val models =
+                providers
+                    ?.providers
+                    .orEmpty()
+                    .flatMap { provider ->
+                        provider.modelIds.map { ModelRef(provider.id, it) }
+                    }
+                    .distinct()
+                    .toImmutableList()
+            val serverDefault = providers?.let { data ->
+                val providerId = data.defaultProviderId
+                val modelId = data.defaultModelId
+                if (providerId != null && modelId != null) ModelRef(providerId, modelId) else null
+            }
+            val selectedModel =
+                mutable.value.model?.takeIf { it in models }
+                    ?: serverDefault?.takeIf { it in models }
+                    ?: models.firstOrNull()
+            val tools =
+                if (caps.toolInventory && selectedModel != null)
+                    target.operations.codingTools(selectedModel)
+                else null
             val plugins = if (caps.pluginInventory) target.library?.plugins() else null
             val skills = if (caps.serverCatalog) target.operations.skills() else null
             val servers = if (caps.serverCatalog) target.operations.mcpServers() else null
@@ -143,6 +186,14 @@ public class ToolsViewModel(private val source: ToolsSource, private val nav: Ap
             mutable.update { before ->
                 before.copy(
                     loading = false,
+                    tools =
+                        (tools as? Outcome.Ok)?.value
+                            ?: before.tools.takeIf { before.model == selectedModel }
+                            ?: persistentListOf(),
+                    models = models,
+                    model = selectedModel,
+                    toolsSupported = caps.toolInventory,
+                    tool = null,
                     plugins = (plugins as? Outcome.Ok)?.value ?: before.plugins,
                     skills = (skills as? Outcome.Ok)?.value ?: before.skills,
                     servers = (servers as? Outcome.Ok)?.value ?: before.servers,
@@ -151,6 +202,8 @@ public class ToolsViewModel(private val source: ToolsSource, private val nav: Ap
                     // add() always uses the runtime scope (until the server restarts).
                     canAdd = caps.mcpRuntimeAdds,
                     failedSections = buildSet {
+                            if (tools is Outcome.Failed || providerRead is Outcome.Failed)
+                                add("tools")
                             if (plugins is Outcome.Failed) add("plugins")
                             if (skills is Outcome.Failed) add("skills")
                             if (servers is Outcome.Failed) add("mcp")

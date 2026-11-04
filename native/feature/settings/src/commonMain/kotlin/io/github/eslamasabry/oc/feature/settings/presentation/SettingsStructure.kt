@@ -19,6 +19,7 @@ public enum class SettingsRowId(public val tag: String, public val group: Settin
     Agents("settings-agents", SettingsGroupId.Agent),
     ShowReasoning("settings-show-reasoning", SettingsGroupId.Conversations),
     ShowTimestamps("settings-show-timestamps", SettingsGroupId.Conversations),
+    PhraseChips("settings-phrase-chips", SettingsGroupId.Conversations),
     DefaultShell("settings-default-shell", SettingsGroupId.Conversations),
     Voice("settings-voice", SettingsGroupId.Conversations),
     Permissions("settings-permissions", SettingsGroupId.Conversations),
@@ -30,6 +31,7 @@ public enum class SettingsRowId(public val tag: String, public val group: Settin
     Updates("settings-updates", SettingsGroupId.ThisApp),
     Guide("settings-guide", SettingsGroupId.Help),
     Tips("settings-tips", SettingsGroupId.Help),
+    Capabilities("settings-capabilities", SettingsGroupId.Help),
     ReportProblem("settings-report-problem", SettingsGroupId.Help),
     About("settings-about", SettingsGroupId.Help),
 }
@@ -81,6 +83,7 @@ public data class SettingsFacts(
      * then.
      */
     val transcriptDisplay: Boolean = true,
+    val phraseChips: Boolean = false,
 ) {
     public fun canOpen(place: SettingsOutside): Boolean = opens?.contains(place) ?: true
 }
@@ -125,6 +128,8 @@ public object SettingsStructure {
                             SettingsDoor.Switch(reasoning).takeIf { facts.transcriptDisplay }
                         SettingsRowId.ShowTimestamps ->
                             SettingsDoor.Switch(timestamps).takeIf { facts.transcriptDisplay }
+                        SettingsRowId.PhraseChips ->
+                            SettingsDoor.Page(SettingsPage.PhraseChips).takeIf { facts.phraseChips }
                         SettingsRowId.DefaultShell ->
                             SettingsDoor.Outside(SettingsOutside.DefaultShell).takeIf { connected }
                         SettingsRowId.Voice ->
@@ -145,6 +150,8 @@ public object SettingsStructure {
                                 p.inAppUpdater || p.desktopReleaseCheck
                             }
                         SettingsRowId.Guide -> SettingsDoor.Outside(SettingsOutside.Guide)
+                        SettingsRowId.Capabilities ->
+                            SettingsDoor.Outside(SettingsOutside.Capabilities)
                         SettingsRowId.Tips -> SettingsDoor.Outside(SettingsOutside.Tips)
                         SettingsRowId.ReportProblem ->
                             if (facts.diagnostics) SettingsDoor.Page(SettingsPage.ReportProblem)

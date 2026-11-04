@@ -11,4 +11,14 @@ public sealed interface SettingsRoute : AppRoute {
     @Serializable public data object Home : SettingsRoute
 
     @Serializable public data object ReportProblem : SettingsRoute
+
+    /**
+     * A stable settings row identifier; the settings feature resolves its page and scroll target.
+     */
+    @Serializable public data class Target(val rowTag: String) : SettingsRoute
+
+    @Serializable
+    public data class ModelDefaults(
+        val profile: io.github.eslamasabry.oc.core.common.ids.ProfileId? = null
+    ) : SettingsRoute
 }

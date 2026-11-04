@@ -56,6 +56,51 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
             state.issue?.let { KitNotice(issueWords(it)) }
             if (!state.catalogSupported && !state.loading)
                 KitNotice(stringResource(Res.string.protoToolsUnavailable))
+            if (state.toolsSupported) {
+                KitRowGroup(label = stringResource(Res.string.nativeToolsCoding)) {
+                    if ("tools" in state.failedSections)
+                        KitNotice(stringResource(Res.string.protoToolsLoadFailed))
+                    if (state.models.isEmpty() && !state.loading)
+                        KitNotice(stringResource(Res.string.nativeToolsChooseModel))
+                    for (model in state.models) KitRow(
+                        title = model.modelId,
+                        supporting = model.providerId,
+                        selected = state.model == model,
+                        onClick = { actions.selectModel(model) },
+                    )
+                    for (tool in state.tools) KitRow(
+                        title = tool.id,
+                        supporting = toolSummary(tool.description),
+                        supportingMaxLines = 3,
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = { actions.selectTool(tool.id) },
+                    )
+                    state.tool?.let { tool ->
+                        KitRow(
+                            title = tool.id,
+                            supporting = tool.description,
+                            supportingMaxLines = 20,
+                        )
+                        val parameters = toolParameters(tool.parameters)
+                        if (parameters.isEmpty())
+                            KitRow(stringResource(Res.string.nativeToolsNoParameters))
+                        for (parameter in parameters) KitRow(
+                            title = parameter.name,
+                            supporting =
+                                listOfNotNull(
+                                        stringResource(
+                                            if (parameter.required) Res.string.nativeToolsRequired
+                                            else Res.string.nativeToolsOptional
+                                        ),
+                                        parameter.type,
+                                        parameter.description,
+                                    )
+                                    .joinToString(" · "),
+                            supportingMaxLines = 6,
+                        )
+                    }
+                }
+            }
             if (state.pluginSupported)
                 KitRowGroup(label = stringResource(Res.string.protoToolsPlugins)) {
                     if ("plugins" in state.failedSections)
