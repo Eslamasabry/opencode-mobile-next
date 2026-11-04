@@ -59,7 +59,39 @@ internal class NativeRuntimeRecovery(
         }
     }
 
+    /**
+     * A confirmed manual start lifts the runtime-switch suspension (Flutter
+     * `managed_server_recovery.dart` clears `_manuallySuspended` there) and rebinds with the policy.
+     */
+    suspend fun confirmManualStart(profile: ProfileId): Outcome<Unit> {
+        val key = "oc.managedServerRecovery.${profile.raw}"
+        val saved = stores.prefs.get(key) as? PrefValue.Str ?: return Outcome.Ok(Unit)
+        val record =
+            try {
+                JSONObject(saved.value)
+            } catch (_: Exception) {
+                return unavailable()
+            }
+        if (record.opt("manuallySuspended") != true) return Outcome.Ok(Unit)
+        record.put("manuallySuspended", false)
+        val persisted =
+            stores.prefs.commit(stores.lanes.forProfile(profile)) {
+                putString(key, record.toString())
+            }
+        if (persisted is Outcome.Failed) return persisted
+        return bind(profile)
+    }
+
     fun policyAllows(profile: String): Boolean {
+        val suspended = stores.prefs.get("oc.managedServerRecovery.$profile")
+        if (suspended != null) {
+            if (suspended !is PrefValue.Str) return false
+            try {
+                if (JSONObject(suspended.value).opt("manuallySuspended") == true) return false
+            } catch (_: Exception) {
+                return false
+            }
+        }
         val value = stores.prefs.get("oc.automation.$profile") ?: return true
         if (value !is PrefValue.Str) return false
         return try {

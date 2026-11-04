@@ -201,6 +201,10 @@ public data class PhoneProcess(
     val memoryBytes: Long? = null,
     val elapsedSeconds: Long? = null,
     val stopIdentities: Map<Int, Long> = emptyMap(),
+    val heavy: Boolean = false,
+    val memoryMb: Long? = null,
+    val memberCount: Int = 1,
+    val identity: String? = null,
 )
 
 /**
@@ -211,6 +215,8 @@ public data class ProcessReading(
     val processes: List<PhoneProcess>,
     val count: Int?,
     val limitLifted: Boolean,
+    val status: io.github.eslamasabry.oc.engine.runtime.procs.RunningRowStatus? = null,
+    val leftover: io.github.eslamasabry.oc.engine.runtime.procs.RunawayNotice? = null,
 )
 
 /**
@@ -225,6 +231,12 @@ public interface PhoneProcessSource {
 
     /** The exact displayed tree, including kernel start ticks, frozen before the stop question. */
     public suspend fun stop(pid: Int, identities: Map<Int, Long>): Outcome<Unit> = stop(pid)
+
+    /**
+     * The identity the confirmation displayed; native bindings reject a later process at the same
+     * pid.
+     */
+    public suspend fun stop(pid: Int, identity: String?): Outcome<Unit> = stop(pid)
 }
 
 /** Android 14+ "Disable child process restrictions" (plan 11 §7.2 guided card). */
@@ -288,6 +300,7 @@ public enum class PhonePage {
     Linux,
     ExportProjects,
     SharedFolders,
+    Terminal,
 }
 
 public interface PhoneNavigator {

@@ -1,0 +1,18 @@
+<resources>
+    <string name="linuxFindProjects">البحث عن مشاريع على هذا الهاتف</string>
+    <string name="linuxFindProjectsBody">ابحث في مساحة المشاريع وتخزين الهاتف المشترك. تبقى المجلدات في مكانها.</string>
+    <string name="linuxStopFinding">إيقاف البحث</string>
+    <string name="linuxFindProjectsDone">اكتمل البحث</string>
+    <string name="linuxFindProjectsLimited">توقّف البحث عند الحد المسموح. هذه أول النتائج.</string>
+    <string name="linuxProjectDart">Dart / Flutter</string>
+    <string name="linuxProjectNode">Node</string>
+    <string name="linuxProjectPython">Python</string>
+    <string name="linuxProjectRust">Rust</string>
+    <string name="linuxProjectGo">Go</string>
+    <string name="linuxProjectJava">Java / Gradle</string>
+    <string name="linuxProjectRuby">Ruby</string>
+    <string name="linuxProjectPhp">PHP</string>
+    <string name="linuxProjectDotnet">.NET</string>
+    <string name="linuxProjectCpp">C / C++</string>
+    <string name="linuxProjectFolder">مجلد مشروع</string>
+</resources>

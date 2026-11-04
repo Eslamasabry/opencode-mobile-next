@@ -11,6 +11,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.withFrameNanos
+import io.github.eslamasabry.oc.ui.kit.content.terminal.AndroidKitTerminalSlot
+import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalSlot
 import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
@@ -55,7 +57,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
             CompositionLocalProvider(
-                LocalKitSecretSink provides KitSecretSink(graph.redactor::registerSecret)
+                LocalKitSecretSink provides KitSecretSink(graph.redactor::registerSecret),
+                LocalKitTerminalSlot provides AndroidKitTerminalSlot,
             ) {
                 MigrationRoot(graph.migration, graph.shell.navigator, platform) {
                     App(

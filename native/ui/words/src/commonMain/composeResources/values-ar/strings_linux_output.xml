@@ -1,0 +1,4 @@
+<resources>
+    <string name="linuxOutputWarning">تحذير</string>
+    <string name="linuxOutputError">خطأ</string>
+</resources>

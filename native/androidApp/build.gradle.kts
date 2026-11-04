@@ -162,6 +162,9 @@ dependencies {
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
             ":engine:setupassist",
             ":feature:integrations",
+            ":engine:project-terminal",
+            ":android:terminal",
+            ":feature:terminal",
             ":feature:plans", // P12-BUILD-INTEGRATIONS-B: Usage › Plans
         )
         .forEach { implementation(project(it)) }

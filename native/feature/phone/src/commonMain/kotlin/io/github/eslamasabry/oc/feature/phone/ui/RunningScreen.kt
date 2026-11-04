@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
+import io.github.eslamasabry.oc.engine.runtime.procs.DurationWords
 import io.github.eslamasabry.oc.feature.phone.presentation.ChildLimitCardKind
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessRole
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessRowUi
@@ -50,6 +51,8 @@ import io.github.eslamasabry.oc.ui.words.res.runningDetailHelpers
 import io.github.eslamasabry.oc.ui.words.res.runningDetailIdle
 import io.github.eslamasabry.oc.ui.words.res.runningDetailMemory
 import io.github.eslamasabry.oc.ui.words.res.runningDetailPid
+import io.github.eslamasabry.oc.ui.words.res.linuxProcessHeavy
+import io.github.eslamasabry.oc.ui.words.res.linuxProcessMembers
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneEmpty
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneEmptyBody
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneLimitBody
@@ -67,6 +70,7 @@ import io.github.eslamasabry.oc.ui.words.res.runningPhoneStopTitle
 import io.github.eslamasabry.oc.ui.words.res.runningPhoneTitle
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsAboutHostApp
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsAutoRefresh
+import io.github.eslamasabry.oc.ui.words.res.termuxProcsMemoryMb
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsStopping
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import org.jetbrains.compose.resources.stringResource
@@ -104,6 +108,23 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
             }
             if (state.refreshFailed)
                 KitNotice(message = stringResource(Res.string.runningPhoneRefreshFailed))
+            state.leftover?.let { notice ->
+                KitNotice(
+                    message = notice.message.words(),
+                    tone = StatusTone.Attention,
+                    actions =
+                        listOf(
+                            KitLineAction(
+                                stringResource(
+                                    Res.string.runningPhoneStopNamed,
+                                    notice.stopLabelName,
+                                ),
+                                { actions.askStop(notice.identity.pid) },
+                            )
+                        ),
+                )
+            }
+            state.status?.let { KitGroupNote(it.words()) }
             val count = state.count
             if (state.nearLimit && count != null) {
                 KitNotice(
@@ -205,17 +226,21 @@ private fun ProcessRow(row: ProcessRowUi, stopping: Boolean, actions: RunningAct
     val details =
         listOfNotNull(
                 row.kind.words(),
-                row.cpuPercent?.let {
-                    if (it >= 5) stringResource(Res.string.runningDetailBusy)
-                    else stringResource(Res.string.runningDetailIdle)
-                },
-                row.cpuPercent?.let { "⁦$it %⁩" },
-                row.memoryBytes?.let {
-                    stringResource(Res.string.runningDetailMemory, (it / 1048576).coerceAtLeast(1))
-                },
-                row.elapsedSeconds?.let {
-                    stringResource(Res.string.runningDetailElapsed, it / 60)
-                },
+                row.cpuWords?.words()
+                    ?: row.cpuPercent?.let {
+                        if (it >= 5) stringResource(Res.string.runningDetailBusy)
+                        else stringResource(Res.string.runningDetailIdle)
+                    },
+                row.cpuPercent?.let { "⁦$it %⁩" },
+                row.memoryMb?.let { stringResource(Res.string.termuxProcsMemoryMb, it) }
+                    ?: row.memoryBytes?.let {
+                        stringResource(Res.string.runningDetailMemory, (it / 1048576).coerceAtLeast(1))
+                    },
+                row.elapsedSeconds?.let { DurationWords.of(it).words() },
+                if (row.memberCount > 1)
+                    stringResource(Res.string.linuxProcessMembers, row.memberCount)
+                else null,
+                if (row.heavy) stringResource(Res.string.linuxProcessHeavy) else null,
                 if (row.leftBehind) stringResource(Res.string.runningPhoneMarkStuck) else null,
             )
             .joinToString(" · ")
@@ -231,7 +256,7 @@ private fun ProcessRow(row: ProcessRowUi, stopping: Boolean, actions: RunningAct
     KitRow(
         title = row.name,
         supporting = supporting,
-        supportingMaxLines = 3,
+        supportingMaxLines = 5,
         onClick = { actions.details(row.pid) },
         trailing =
             if (row.stoppable && !stopping) {

@@ -33,6 +33,9 @@ import io.github.eslamasabry.oc.ui.words.res.keptSvcTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.linuxBackupRow
 import io.github.eslamasabry.oc.ui.words.res.linuxBackupSetupProjectsDetail
+import io.github.eslamasabry.oc.ui.words.res.linuxComponentsRemove
+import io.github.eslamasabry.oc.ui.words.res.linuxComponentsRemoveBody
+import io.github.eslamasabry.oc.ui.words.res.linuxComponentsRemoveQuestion
 import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveAll
 import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveAllBody
 import io.github.eslamasabry.oc.ui.words.res.linuxLocalRemoveAllQuestion
@@ -74,6 +77,9 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupStop
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupStopBody
 import io.github.eslamasabry.oc.ui.words.res.linuxSetupStopQuestion
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupSwitchBusy
+import io.github.eslamasabry.oc.ui.words.res.linuxSetupSwitchFailed
+import io.github.eslamasabry.oc.ui.words.res.openCode2MoveFailedSeparateHistory
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProfileName
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import org.jetbrains.compose.resources.stringResource
@@ -144,6 +150,32 @@ public fun LinuxHomeScreen(
                         message = stringResource(Res.string.linuxLocalRemoved),
                         dismiss = dismiss,
                     )
+                is LinuxHomeNotice.SetupRefused ->
+                    KitNotice(
+                        message =
+                            stringResource(
+                                if (
+                                    (notice.failure
+                                            as?
+                                            io.github.eslamasabry.oc.core.common.Failure.Refused)
+                                        ?.reason ==
+                                        io.github.eslamasabry.oc.core.common.RefusalReason
+                                            .MigrationPending
+                                )
+                                    Res.string.openCode2MoveFailedSeparateHistory
+                                else if (
+                                    (notice.failure
+                                            as?
+                                            io.github.eslamasabry.oc.core.common.Failure.Runtime)
+                                        ?.problem ==
+                                        io.github.eslamasabry.oc.core.common.RuntimeProblem.SlotBusy
+                                )
+                                    Res.string.linuxSetupSwitchBusy
+                                else Res.string.linuxSetupSwitchFailed
+                            ),
+                        tone = StatusTone.Attention,
+                        dismiss = dismiss,
+                    )
                 LinuxHomeNotice.SetupUnavailable ->
                     KitNotice(
                         message = stringResource(Res.string.linuxMgrProblemUnavailable),
@@ -185,6 +217,7 @@ public fun LinuxHomeScreen(
                                     io.github.eslamasabry.oc.engine.runtime.setup.SetupState
                                         .Running,
                     )
+                if (state.ready) LinuxComponentsPanel(state, actions)
                 LinuxLocalStoragePanel(state, actions)
                 LinuxLifetimesPanel(state.lifetimes, actions::refreshLifetimes)
             }
@@ -274,6 +307,26 @@ public fun LinuxHomeScreen(
                     confirmLabel = stringResource(Res.string.linuxSetupStop),
                     kind = KitConfirmKind.Stop,
                     body = stringResource(Res.string.linuxSetupStopBody),
+                )
+            is LinuxConfirm.RemoveComponent ->
+                KitConfirmSpec(
+                    title =
+                        stringResource(
+                            io.github.eslamasabry.oc.ui.words.res.Res.string
+                                .linuxComponentsRemoveQuestion,
+                            componentName(asked.id),
+                        ),
+                    confirmLabel =
+                        stringResource(
+                            io.github.eslamasabry.oc.ui.words.res.Res.string.linuxComponentsRemove,
+                            componentName(asked.id),
+                        ),
+                    kind = KitConfirmKind.Destructive,
+                    body =
+                        stringResource(
+                            io.github.eslamasabry.oc.ui.words.res.Res.string
+                                .linuxComponentsRemoveBody
+                        ),
                 )
             is LinuxConfirm.Remove ->
                 KitConfirmSpec(

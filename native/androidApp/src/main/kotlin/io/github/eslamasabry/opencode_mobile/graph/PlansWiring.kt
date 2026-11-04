@@ -52,7 +52,7 @@ import kotlinx.coroutines.sync.withLock
  * The strict collector reader (PROTO) supplies existing, consented quota windows; no arbitrary remote collector is
  * probed. Remote collectors are read only after explicit trust bound to the current origin and credentials. Each
  * request uses a private, bounded, redirect-free transport. The in-app collector and Paseo host require their own host
- * ports.
+ * ports. The optional local collector (LINUX-2) is read on demand through QuotaWiring.
  */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<PlansSource>())
@@ -66,6 +66,7 @@ class AndroidPlansSource(
     private val dispatchers: AppDispatchers,
     private val facts: DeviceFacts,
     private val collectorHost: AndroidPlansCollectorHost,
+    private val collector: AndroidQuotaCollector,
     appScope: AppCoroutineScope,
 ) : PlansSource {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -137,7 +138,7 @@ class AndroidPlansSource(
                         )
                     } + paseoSource.connections()
                 },
-                sources = listOf(signIns, protoQuota, quotaSource, paseoSource),
+                sources = listOf(signIns, protoQuota, quotaSource, paseoSource, collector.usageSource()),
                 alertsOnRule = { false },
                 setQuotaAlerts = {},
                 widget = widget,

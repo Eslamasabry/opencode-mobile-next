@@ -26,8 +26,9 @@ public class AgentsPresenter(
     private val onBack: () -> Unit,
     private val openChat: (ConversationRef) -> Unit,
     private val openComputerPage: (ProfileId) -> Unit = {},
+    private val phoneHost: PhoneAgentHostStarter? = null,
 ) : AgentsActions {
-    private val local = MutableStateFlow(AgentsUi())
+    private val local = MutableStateFlow(AgentsUi(helperOffered = phoneHost != null))
 
     init {
         refreshPhone()
@@ -134,6 +135,70 @@ public class AgentsPresenter(
                 local.update {
                     it.copy(removal = PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable))
                 }
+        }
+    }
+
+    override fun requestPreviousVersion(id: String) {
+        if (local.value.busy) return
+        val agent =
+            phone.state.value.agents.firstOrNull { it.id == id && it.previousVersionAvailable }
+                ?: return
+        local.update {
+            it.copy(
+                revertingAgent = agent,
+                previousVersionFailed = false,
+                previousVersionRestored = false,
+            )
+        }
+    }
+
+    override fun cancelPreviousVersion() {
+        if (!local.value.busy) local.update { it.copy(revertingAgent = null) }
+    }
+
+    override fun confirmPreviousVersion() {
+        val agent = local.value.revertingAgent ?: return
+        operation {
+            local.update { it.copy(revertingAgent = null) }
+            val result = phone.usePreviousVersion(agent.id)
+            local.update {
+                it.copy(
+                    previousVersionFailed = result is Outcome.Failed,
+                    previousVersionRestored = result is Outcome.Ok,
+                )
+            }
+        }
+    }
+
+    override fun connectPhoneHelper(): Unit = operation {
+        val host = phoneHost ?: return@operation
+        val result = host.connect()
+        local.update {
+            it.copy(
+                helperConnectFailed = result is Outcome.Failed,
+                helperConnected = result is Outcome.Ok,
+            )
+        }
+        phone.refresh()
+    }
+
+    override fun requestSignInReset() {
+        if (!local.value.busy)
+            local.update { it.copy(resettingSignIns = true, resetFailed = false) }
+    }
+
+    override fun cancelSignInReset() {
+        if (!local.value.busy) local.update { it.copy(resettingSignIns = false) }
+    }
+
+    override fun confirmSignInReset(): Unit = operation {
+        local.update { it.copy(resettingSignIns = false) }
+        val answer = phone.resetSavedSignIns()
+        local.update {
+            it.copy(
+                resetFailed = answer is Outcome.Failed,
+                ready = kotlinx.collections.immutable.persistentMapOf(),
+            )
         }
     }
 

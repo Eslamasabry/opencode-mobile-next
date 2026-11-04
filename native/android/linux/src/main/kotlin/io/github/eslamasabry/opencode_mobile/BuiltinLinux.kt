@@ -2995,14 +2995,26 @@ class BuiltinLinux(private val context: Context) {
         return serverIdleStatus()
     }
 
-    internal data class AgentHostTicket(
-        val profile: String,
-        val owner: String?,
-        val revision: Long,
-        val epoch: Long,
-        val idleGeneration: Long?,
-    )
+    /** Explicit helper start shares native owner, idle and foreground admission. */
+    fun startPhoneAgentHelper(profile: String, password: String, config: String, port: Int = 4099,
+        expectedHelperVersion: String? = null): Map<String, Any?> {
+        val ticket = captureAgentHostStart(profile, false, null) ?: error("agent_host_unavailable")
+        return withAgentHostStart(ticket) {
+            agentHost.start(PhoneAgentHost.StartRequest(profile, password, port, config,
+                PhoneAgentHost.HelperPolicy(expectedVersion = expectedHelperVersion)))
+        }
+    }
 
+    /** Foreground idle restoration uses the receipt's exact helper and generation. */
+    fun resumeIdleStoppedAgentHost(profile: String, generation: Long, password: String, config: String): Map<String, Any?> {
+        val ticket = captureAgentHostStart(profile, true, generation) ?: error("idle_resume_stale")
+        return withAgentHostStart(ticket) {
+            agentHost.start(PhoneAgentHost.StartRequest(profile, password, 4099, config))
+        }
+    }
+
+    internal data class AgentHostTicket(val profile: String, val owner: String?, val revision: Long,
+        val epoch: Long, val idleGeneration: Long?)
     private val agentHostTicket = ThreadLocal<AgentHostTicket?>()
     private val agentHostAdmissions = java.util.IdentityHashMap<Process, AgentHostTicket>()
 
@@ -5710,10 +5722,11 @@ class BuiltinLinux(private val context: Context) {
         val targets =
             pids.distinct().take(MAX_STOP_PIDS).mapNotNull { pid ->
                 val entry = NativeProcScan.read(pid, uid)
+                // A pid whose start identity is missing or changed is never signalled.
                 val reason =
                     if (
                         expectedStarts != null &&
-                            (entry == null || expectedStarts[pid] != entry.startTicks)
+                            (expectedStarts[pid] == null || entry == null || expectedStarts[pid] != entry.startTicks)
                     )
                         "changed"
                     else NativeProcessList.stopRefusal(pid, entry, uid, appPids, roots)

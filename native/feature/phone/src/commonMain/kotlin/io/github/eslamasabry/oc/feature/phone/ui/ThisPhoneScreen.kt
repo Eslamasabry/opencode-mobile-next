@@ -34,6 +34,7 @@ import io.github.eslamasabry.oc.ui.words.res.keepRunningOpenFailed
 import io.github.eslamasabry.oc.ui.words.res.keepRunningRowSubtitle
 import io.github.eslamasabry.oc.ui.words.res.keepRunningTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.libraryTerminalTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxExitCheckStatus
 import io.github.eslamasabry.oc.ui.words.res.linuxExitCrash
 import io.github.eslamasabry.oc.ui.words.res.linuxExitForceStop
@@ -64,6 +65,7 @@ import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateBusy
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateDetail
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateKept
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpdateTitle
+import io.github.eslamasabry.oc.ui.words.res.workRunawaySeeRunning
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import org.jetbrains.compose.resources.stringResource
 
@@ -234,12 +236,31 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                     trailing = KitRowTrailing.Chevron,
                     onClick = { actions.act(PhoneAct.SharedFolders) },
                 )
+                state.leftover?.let { notice ->
+                    KitNotice(
+                        message = notice.message.words(),
+                        actions =
+                            listOf(
+                                KitLineAction(
+                                    stringResource(Res.string.workRunawaySeeRunning),
+                                    actions::openRunning,
+                                )
+                            ),
+                        dismiss =
+                            KitLineAction(
+                                stringResource(Res.string.workspaceDismissNotice),
+                                actions::dismiss,
+                            ),
+                    )
+                }
                 val running = state.running
                 val count = running.count
                 KitRow(
                     title = stringResource(Res.string.runningPhoneTitle),
                     supporting =
-                        if (running.nearLimit && count != null) {
+                        if (running.status != null) {
+                            running.status.words()
+                        } else if (running.nearLimit && count != null) {
                             stringResource(Res.string.runningPhoneRowNearLimit, count, running.cap)
                         } else {
                             stringResource(Res.string.runningPhoneRowIdle)
@@ -261,6 +282,11 @@ public fun ThisPhoneScreen(state: ThisPhoneUi, actions: ThisPhoneActions) {
                     supportingMaxLines = 2,
                     trailing = KitRowTrailing.Chevron,
                     onClick = actions::openLinux,
+                )
+                KitRow(
+                    title = stringResource(Res.string.libraryTerminalTitle),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = actions::openTerminal,
                 )
             }
         }

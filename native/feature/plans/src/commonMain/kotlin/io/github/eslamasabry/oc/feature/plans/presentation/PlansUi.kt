@@ -38,6 +38,31 @@ public data class CollectorTarget(
     val enabled: Boolean,
     val binding: String,
 )
+public enum class CollectorFailure {
+    LinuxNotReady,
+    NoNode,
+    NodeTooOld,
+    Copy,
+    Prepare,
+    Start,
+    Remove,
+}
+
+public data class CollectorUi(
+    val available: Boolean = false,
+    val enabled: Boolean = false,
+    val busy: Boolean = false,
+    val failure: CollectorFailure? = null,
+    val details: io.github.eslamasabry.oc.core.common.Failure? = null,
+)
+
+public interface CollectorControls {
+    public val state: StateFlow<CollectorUi>
+
+    public suspend fun setUp()
+
+    public suspend fun turnOff()
+}
 
 public enum class PlansPhase {
     Loading,
@@ -99,6 +124,7 @@ public data class PlansUi(
     val collectors: ImmutableList<CollectorTarget> = persistentListOf(),
     val confirmCollector: CollectorTarget? = null,
     val collectorFailed: Boolean = false,
+    val collector: CollectorUi = CollectorUi(),
 )
 
 public interface PlansActions {
@@ -111,6 +137,10 @@ public interface PlansActions {
     public fun confirmCollector() {}
 
     public fun cancelCollector() {}
+
+    public fun setUpCollector()
+
+    public fun turnOffCollector()
 }
 
 private fun UsageConnection.ui(): PlanConnectionUi =

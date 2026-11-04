@@ -235,7 +235,13 @@ public class InAppQuotaCollector(
             val changed = installFiles()
             if (!changed && SERVICE_NAME in linux.status().services) return true
             rootfs.write(TOKEN_PATH, "$token\n".encodeToByteArray())
-            linux.run("chmod 700 $DIR && chmod 600 $TOKEN_PATH $COLLECTOR_PATH $KEYS_PATH", 30_000)
+            val modes =
+                linux.run(
+                    "chmod 700 $DIR && chmod 600 $TOKEN_PATH $COLLECTOR_PATH $KEYS_PATH",
+                    30_000,
+                )
+            if (modes.exitCode != 0) return false
+            if (changed && SERVICE_NAME in linux.status().services) linux.stopService(SERVICE_NAME)
             linux.startService(SERVICE_NAME, serviceScript(), PORT)
             true
         } catch (e: CancellationException) {

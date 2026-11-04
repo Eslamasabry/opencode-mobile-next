@@ -67,7 +67,8 @@ public data class RunningProcess(
     val owner: PhoneProcessOwner,
     /** The agent session it runs (Claude Code's `--resume` id), if any. */
     val session: String? = null,
-    val startTicks: Long = 0,
+    /** Kernel identity, when the native reader supplied it. */
+    val startTicks: Long? = null,
 )
 
 /** What runs now, and what the orphan clean-up has stopped since app start. */
@@ -198,11 +199,14 @@ public data class RunningReading(
  * Running on this phone share the history. Not thread-safe: the caller records from one place.
  */
 public class PhoneProcessWatch {
-    private class Track(var name: String, var elapsed: Duration) {
+    private class Track(var name: String, var elapsed: Duration, val startTicks: Long?) {
         var highSince: Instant? = null
         var lastCpu: Double = 0.0
 
-        fun sameAs(p: RunningProcess): Boolean = p.name == name && p.elapsed + 2.seconds >= elapsed
+        fun sameAs(p: RunningProcess): Boolean =
+            p.name == name &&
+                p.elapsed + 2.seconds >= elapsed &&
+                (startTicks == null || p.startTicks == null || p.startTicks == startTicks)
     }
 
     private val tracks = HashMap<Int, Track>()
@@ -233,7 +237,9 @@ public class PhoneProcessWatch {
             live.add(p.pid)
             val seen = tracks[p.pid]
             val known = seen != null && continuous && seen.sameAs(p)
-            val track = if (known) seen else Track(p.name, p.elapsed).also { tracks[p.pid] = it }
+            val track =
+                if (known) seen
+                else Track(p.name, p.elapsed, p.startTicks).also { tracks[p.pid] = it }
             val high = p.cpuPercent > HEAVY_CPU
             track.highSince = if (high) (if (known) track.highSince ?: at else at) else null
             val since = track.highSince

@@ -1,0 +1,13 @@
+<resources>
+    <string name="linuxQuotaTitle">استخدام الخطط على هذا الهاتف</string>
+    <string name="linuxQuotaSetup">إعداد استخدام الخطط</string>
+    <string name="linuxQuotaEnabled">تم إعداد استخدام الخطط</string>
+    <string name="linuxQuotaBody">اقرأ حدود Codex وGLM وMiniMax من تسجيلات الدخول الموجودة على هذا الهاتف. يعمل المساعد فقط أثناء قراءة الاستخدام.</string>
+    <string name="linuxQuotaTurnOff">إيقاف استخدام الخطط</string>
+    <string name="linuxQuotaLinuxNotReady">أعدّ لينكس في صفحة هذا الهاتف أولًا.</string>
+    <string name="linuxQuotaNoNode">ثبّت Node من مكونات لينكس، ثم حاول مجددًا.</string>
+    <string name="linuxQuotaOldNode">حدّث Node إلى الإصدار 20 أو أحدث، ثم حاول مجددًا.</string>
+    <string name="linuxQuotaPrepareFailed">تعذّر تجهيز ملفات الاستخدام. حاول مجددًا.</string>
+    <string name="linuxQuotaStartFailed">لم يستجب مساعد الاستخدام. حاول مجددًا.</string>
+    <string name="linuxQuotaRemoveFailed">تعذّرت إزالة مساعد الاستخدام. حاول مجددًا.</string>
+</resources>

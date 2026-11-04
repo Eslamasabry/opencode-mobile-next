@@ -275,6 +275,7 @@ object LinuxWiring {
                         PhonePage.Running -> PhoneRoute.Running
                         PhonePage.KeepRunning -> PhoneRoute.KeepRunning
                         PhonePage.Linux -> LinuxRoute.Home
+                        PhonePage.Terminal -> io.github.eslamasabry.oc.ui.routes.LocalTerminalRoute
                         PhonePage.ExportProjects -> PhoneRoute.ExportProjects
                         PhonePage.SharedFolders -> PhoneRoute.SharedFolders
                         // P12-BUILD-RUNTIME-C: the real setup journey (PhoneSetupWiring). BUILD-RUNTIME-B's

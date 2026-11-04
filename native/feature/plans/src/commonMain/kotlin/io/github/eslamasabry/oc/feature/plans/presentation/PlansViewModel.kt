@@ -28,6 +28,7 @@ public class PlansViewModel(
     private val source: PlansSource,
     private val nav: AppNavigator,
     private val clock: Clock,
+    private val collector: CollectorControls,
 ) : ViewModel(), PlansActions {
     private val refreshing = MutableStateFlow(false)
     private val collectors = MutableStateFlow<List<CollectorTarget>>(emptyList())
@@ -48,6 +49,8 @@ public class PlansViewModel(
                         collectorFailed = failed,
                     )
             }
+            // LINUX-2: the phone's own collector setup.
+            .combine(collector.state) { ui, c -> ui.copy(collector = c) }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -86,6 +89,20 @@ public class PlansViewModel(
             } finally {
                 refreshing.value = false
             }
+        }
+    }
+
+    override fun setUpCollector() {
+        viewModelScope.launch {
+            collector.setUp()
+            refresh()
+        }
+    }
+
+    override fun turnOffCollector() {
+        viewModelScope.launch {
+            collector.turnOff()
+            refresh()
         }
     }
 

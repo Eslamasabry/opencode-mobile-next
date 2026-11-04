@@ -1,0 +1,23 @@
+<resources>
+    <string name="linuxComponentsTitle">Linux components</string>
+    <string name="linuxComponentsRefresh">Check installed components</string>
+    <string name="linuxComponentsTeam">AI Team</string>
+    <string name="linuxComponentsUnknown">Component</string>
+    <string name="linuxComponentsInstalled">Installed</string>
+    <string name="linuxComponentsDependents">Needed by %1$s. Remove those components first.</string>
+    <string name="linuxComponentsDependencyUnknown">Could not check %1$s. Check again before removing this component.</string>
+    <string name="linuxComponentsRequired">Needed for the server on this phone.</string>
+    <string name="linuxComponentsUnsupported">This component cannot be removed separately.</string>
+    <string name="linuxComponentsAbsent">Not installed</string>
+    <string name="linuxComponentsUnknownPresence">Could not check installed components. Try again.</string>
+    <string name="linuxComponentsBusy">Wait for setup or the current operation to finish.</string>
+    <string name="linuxComponentsFailed">The component could not be removed. Check again and retry.</string>
+    <string name="linuxComponentsRemove">Remove %1$s</string>
+    <string name="linuxComponentsRemoveQuestion">Remove %1$s?</string>
+    <string name="linuxComponentsRemoveBody">Only this component is removed. Your projects and conversations stay. Dependencies will be checked again before removing it.</string>
+    <string name="linuxSetupOpenSettings">Open app settings</string>
+    <string name="linuxSetupStepWaiting">Waiting</string>
+    <string name="linuxSetupStepKept">Already installed</string>
+    <string name="linuxSetupSwitchBusy">Finish running work and answer pending requests on this phone, then try setup again.</string>
+    <string name="linuxSetupSwitchFailed">Setup could not prepare this phone safely. Your saved conversations and messages are kept. Check your connection and free space, then try again.</string>
+</resources>

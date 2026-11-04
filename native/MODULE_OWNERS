@@ -23,6 +23,9 @@
 :protocol:paseo	S	backend-owner	slice-3
 :engine:analytics	S	diagnostics-owner	slice-1
 :android:linux	S	runtime-owner	slice-1
+:android:terminal	S	runtime-owner (26-build-LINUX-2)	slice-5
+:engine:project-terminal	F	26-build-LINUX-2	slice-5
+:feature:terminal	F	26-build-LINUX-2	slice-5
 :tools:strings	S	l10n-owner	slice-1
 :tools:flutter-migration-readers	S	migration-owner	slice-0
 :engine:settings	S	core-owner (S1-ENG)	slice-1

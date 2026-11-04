@@ -4,12 +4,22 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /** The commands This phone runs, one at a time. */
-public enum class PhoneOp { Start, Stop, Restart, Update }
+public enum class PhoneOp {
+    Start,
+    Stop,
+    Restart,
+    Update,
+}
 
 /** A server row under the answer; each names its object ("Stop OpenCode on this phone"). */
-public enum class ServerRow { Stop, Restart }
+public enum class ServerRow {
+    Stop,
+    Restart,
+}
 
-/** The version row: what is installed and whether the pinned version is offered (B-LINUX-078/079). */
+/**
+ * The version row: what is installed and whether the pinned version is offered (B-LINUX-078/079).
+ */
 public data class VersionRowUi(val installed: String?, val update: UpdateRow?)
 
 public sealed interface UpdateRow {
@@ -23,8 +33,16 @@ public sealed interface UpdateRow {
     public data object Updating : UpdateRow
 }
 
-/** The "Running on this phone" row: how close the app is to Android's child-process limit (plan 11 §7.2). */
-public data class RunningRowUi(val count: Int? = null, val cap: Int = 32, val nearLimit: Boolean = false)
+/**
+ * The "Running on this phone" row: how close the app is to Android's child-process limit (plan 11
+ * §7.2).
+ */
+public data class RunningRowUi(
+    val count: Int? = null,
+    val cap: Int = 32,
+    val nearLimit: Boolean = false,
+    val status: io.github.eslamasabry.oc.engine.runtime.procs.RunningRowStatus? = null,
+)
 
 /** What the page asks before acting (KitConfirm). */
 public sealed interface ThisPhoneConfirm {
@@ -44,7 +62,10 @@ public sealed interface ThisPhoneNotice {
     public data object SettingsMissing : ThisPhoneNotice
 }
 
-/** PhoneRoute.ThisPhone's state (plan 07 F01). No copy: `ThisPhoneScreen` turns each value into `:ui:words`. */
+/**
+ * PhoneRoute.ThisPhone's state (plan 07 F01). No copy: `ThisPhoneScreen` turns each value into
+ * `:ui:words`.
+ */
 public data class ThisPhoneUi(
     val answer: ThisPhoneAnswer = ThisPhoneAnswer(AnswerTone.Working, AnswerHeadline.Checking),
     val serverRows: ImmutableList<ServerRow> = persistentListOf(),
@@ -54,6 +75,7 @@ public data class ThisPhoneUi(
     val confirm: ThisPhoneConfirm? = null,
     val notice: ThisPhoneNotice? = null,
     val exitNotice: PhoneExitNotice? = null,
+    val leftover: io.github.eslamasabry.oc.engine.runtime.procs.RunawayNotice? = null,
 )
 
 /** Intents only (ADR §9.1). */
@@ -79,6 +101,8 @@ public interface ThisPhoneActions {
 
     /** The "Linux" row: the Linux manager of the phone's own Ubuntu. */
     public fun openLinux() {}
+
+    public fun openTerminal() {}
 
     public fun back()
 

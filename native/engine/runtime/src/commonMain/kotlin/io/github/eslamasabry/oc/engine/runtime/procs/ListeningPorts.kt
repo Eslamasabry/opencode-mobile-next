@@ -1,14 +1,16 @@
 package io.github.eslamasabry.oc.engine.runtime.procs
 
 /**
- * Port of lib/domain/listening_ports.dart (dev servers running on the in-app Linux whoever started them: the script
- * that lists them, [ListeningPorts.script], and the parser for what it prints, [ListeningPorts.parse]).
+ * Port of lib/domain/listening_ports.dart (dev servers running on the in-app Linux whoever started
+ * them: the script that lists them, [ListeningPorts.script], and the parser for what it prints,
+ * [ListeningPorts.parse]).
  *
- * Android 10+ denies apps `/proc/net/tcp{,6}` (SELinux), so the socket tables are a bonus, not the source. The script
- * finds the processes that hold a socket (`/proc/<pid>/fd/`), collects the ports they name (command line, `PORT=`-style
- * variables — only the number is printed — and ports their log file mentions), then tries each of those plus
- * [COMMON_DEV_PORTS] on loopback; a port is listed only when that connection worked. The script is POSIX sh; only the
- * loopback probe runs in bash (for `/dev/tcp`).
+ * Android 10+ denies apps `/proc/net/tcp{,6}` (SELinux), so the socket tables are a bonus, not the
+ * source. The script finds the processes that hold a socket (`/proc/<pid>/fd/`), collects the ports
+ * they name (command line, `PORT=`-style variables — only the number is printed — and ports their
+ * log file mentions), then tries each of those plus [COMMON_DEV_PORTS] on loopback; a port is
+ * listed only when that connection worked. The script is POSIX sh; only the loopback probe runs in
+ * bash (for `/dev/tcp`).
  */
 public data class ListeningSocket(
     val port: Int,
@@ -24,33 +26,70 @@ public data class LocalServerProcess(
     val command: String,
     val ports: List<Int>,
     val cwd: String? = null,
-    /** The regular file this program's standard output is written to, when it is one. Null for a terminal or pipe. */
+    /**
+     * The regular file this program's standard output is written to, when it is one. Null for a
+     * terminal or pipe.
+     */
     val logPath: String? = null,
     val loopbackOnly: Boolean = true,
 ) {
-    val hasProcess: Boolean get() = pid > 0
+    val hasProcess: Boolean
+        get() = pid > 0
 }
 
-/** The usual dev-server ports, always tried: framework defaults (Vite, Next, Astro, Storybook, Hugo, Flask…). */
-public val COMMON_DEV_PORTS: List<Int> = listOf(
-    1313, 3000, 3001, 3333, 4000, 4173, 4200, 4321, 5000, 5001, 5173, 5174, 5500, 6006, 7000, 8000, 8001, 8008, 8080,
-    8081, 8088, 8888, 9000, 9090,
-)
+/**
+ * The usual dev-server ports, always tried: framework defaults (Vite, Next, Astro, Storybook, Hugo,
+ * Flask…).
+ */
+public val COMMON_DEV_PORTS: List<Int> =
+    listOf(
+        1313,
+        3000,
+        3001,
+        3333,
+        4000,
+        4173,
+        4200,
+        4321,
+        5000,
+        5001,
+        5173,
+        5174,
+        5500,
+        6006,
+        7000,
+        8000,
+        8001,
+        8008,
+        8080,
+        8081,
+        8088,
+        8888,
+        9000,
+        9090,
+    )
 
-private val PORT_IN_COMMAND = Regex("""(?:--port[= ]|-p[= ]?|PORT=|:)(\d{2,5})(?!\d)|(?:^| )(\d{4,5})(?= |$)""")
-
-/** Port numbers a command line names (`--port 5173`, `-p 3000`, `PORT=8081`, `host:9229`, a bare number word). */
-public fun portsNamedIn(cmd: String): Set<Int> =
-    PORT_IN_COMMAND.findAll(cmd).mapNotNull { m ->
-        val raw = m.groups[1]?.value ?: m.groups[2]?.value
-        raw?.toIntOrNull()?.takeIf { it in 1024..65535 }
-    }.toCollection(LinkedHashSet())
+private val PORT_IN_COMMAND =
+    Regex("""(?:--port[= ]|-p[= ]?|PORT=|:)(\d{2,5})(?!\d)|(?:^| )(\d{4,5})(?= |$)""")
 
 /**
- * POSIX sh that prints `::n <pid> <port>` for each port process `$p` names and adds them to `$oc_named`. Only numbers
- * leave it. Verbatim from listening_ports.dart `namedPortsShell`.
+ * Port numbers a command line names (`--port 5173`, `-p 3000`, `PORT=8081`, `host:9229`, a bare
+ * number word).
  */
-public const val NAMED_PORTS_SHELL: String = $$"""oc_n=$( {
+public fun portsNamedIn(cmd: String): Set<Int> =
+    PORT_IN_COMMAND.findAll(cmd)
+        .mapNotNull { m ->
+            val raw = m.groups[1]?.value ?: m.groups[2]?.value
+            raw?.toIntOrNull()?.takeIf { it in 1024..65535 }
+        }
+        .toCollection(LinkedHashSet())
+
+/**
+ * POSIX sh that prints `::n <pid> <port>` for each port process `$p` names and adds them to
+ * `$oc_named`. Only numbers leave it. Verbatim from listening_ports.dart `namedPortsShell`.
+ */
+public const val NAMED_PORTS_SHELL: String =
+    $$"""oc_n=$( {
   tr '\000' '\n' <"/proc/$p/cmdline" 2>/dev/null | tr -c '0-9\n' '\n'
   tr '\000' '\n' <"/proc/$p/environ" 2>/dev/null | sed -n 's/^[A-Z_]*PORT=\([0-9][0-9]*\)$/\1/p'
   for oc_f in 1 2; do
@@ -68,7 +107,10 @@ for oc_q in $oc_n; do
 done
 """
 
-/** Bash, from sh: prints `<marker><port>` for each of [fixed] and `$oc_named` that accepts a loopback connection. */
+/**
+ * Bash, from sh: prints `<marker><port>` for each of [fixed] and `$oc_named` that accepts a
+ * loopback connection.
+ */
 public fun loopbackProbeShell(fixed: Iterable<Int>, marker: String = ""): String {
     val ports = fixed.filter { it in 1..65535 }.toSortedSet()
     return $$"""bash -c 'for q in $(printf "%s\n" "$@" | sort -un); do : 2>/dev/null 3<>/dev/tcp/127.0.0.1/$q && echo "$$marker$q"; done' oc-ports $${ports.joinToString(" ")} $oc_named 2>/dev/null"""
@@ -80,14 +122,15 @@ public object ListeningPorts {
     public const val OWN_SERVER_PORT: Int = 4097
 
     /** Program names that are the machine's own plumbing, not dev servers. */
-    private val PLUMBING = setOf("sshd", "opencode", "paseo", "proot", "dropbear")
+    private val PLUMBING =
+        setOf("sshd", "opencode", "opencode2", ".opencode", "paseo", "proot", "dropbear")
     private val CLIENTS = setOf("curl", "wget", "ssh", "scp", "nc", "ncat", "telnet", "git")
     private val SPACES = Regex("""\s+""")
     private val INODE = Regex("""/proc/(\d+)/fd/\d+ -> socket:\[(\d+)]""")
 
     /**
-     * The script for the in-app Linux (POSIX sh). Prints sections the parser reads; every read may fail silently.
-     * [socketTables] exists for tests that hide them, as Android does.
+     * The script for the in-app Linux (POSIX sh). Prints sections the parser reads; every read may
+     * fail silently. [socketTables] exists for tests that hide them, as Android does.
      */
     public fun script(
         probe: List<Int> = COMMON_DEV_PORTS,
@@ -130,17 +173,19 @@ true
         return ListeningSocket(port, inode, loopback(address.uppercase()))
     }
 
-    private fun loopback(hex: String): Boolean = when (hex.length) {
-        8 -> hex.endsWith("7F")
-        // ::1, or ::ffff:127.x.x.x
-        32 -> hex == "00000000000000000000000001000000" ||
-            (hex.startsWith("0000000000000000FFFF0000") && hex.endsWith("7F"))
-        else -> false
-    }
+    private fun loopback(hex: String): Boolean =
+        when (hex.length) {
+            8 -> hex.endsWith("7F")
+            // ::1, or ::ffff:127.x.x.x
+            32 ->
+                hex == "00000000000000000000000001000000" ||
+                    (hex.startsWith("0000000000000000FFFF0000") && hex.endsWith("7F"))
+            else -> false
+        }
 
     /**
-     * Reads what [script] printed. One entry per process, its ports sorted; ports found only by the probe come last
-     * with pid 0. The in-app server's port and system plumbing are left out.
+     * Reads what [script] printed. One entry per process, its ports sorted; ports found only by the
+     * probe come last with pid 0. The in-app server's port and system plumbing are left out.
      */
     public fun parse(output: String): List<LocalServerProcess> {
         var section = ""
@@ -160,23 +205,30 @@ true
                 val parts = line.substring(4).trim().split(' ')
                 val pid = if (parts.size == 2) parts[0].toIntOrNull() else null
                 val port = if (parts.size == 2) parts[1].toIntOrNull() else null
-                if (pid != null && port != null && port in 1..65535) named.getOrPut(port) { mutableSetOf() }.add(pid)
+                if (pid != null && port != null && port in 1..65535)
+                    named.getOrPut(port) { mutableSetOf() }.add(pid)
                 continue
             }
             when (section) {
-                "#T4", "#T6" -> parseSocketLine(line)?.let(sockets::add)
-                "#S" -> INODE.find(line)?.let { m ->
-                    owners.getOrPut(m.groupValues[2].toLong()) { mutableSetOf() }.add(m.groupValues[1].toInt())
-                }
+                "#T4",
+                "#T6" -> parseSocketLine(line)?.let(sockets::add)
+                "#S" ->
+                    INODE.find(line)?.let { m ->
+                        val inode = m.groupValues[2].toLongOrNull()
+                        val pid = m.groupValues[1].toIntOrNull()
+                        if (inode != null && pid != null)
+                            owners.getOrPut(inode) { mutableSetOf() }.add(pid)
+                    }
                 "#C" -> {
                     val parts = line.split('\t')
                     val pid = parts.first().toIntOrNull()
                     if (pid != null && parts.size >= 2) {
-                        info[pid] = listOf(
-                            parts[1].trim(),
-                            if (parts.size > 2) parts[2] else "",
-                            if (parts.size > 3) parts[3] else "",
-                        )
+                        info[pid] =
+                            listOf(
+                                parts[1].trim(),
+                                if (parts.size > 2) parts[2] else "",
+                                if (parts.size > 3) parts[3] else "",
+                            )
                     }
                 }
                 "#P" -> line.toIntOrNull()?.takeIf { it in 1..65535 }?.let(probed::add)
@@ -192,7 +244,8 @@ true
                 reachable[pid] = (reachable[pid] ?: false) || !socket.loopbackOnly
             }
         }
-        // Without the tables (Android 10+), a port that answered belongs to the process that named it: the newest
+        // Without the tables (Android 10+), a port that answered belongs to the process that named
+        // it: the newest
         // one, the child that listens, and never a client such as curl.
         for (port in probed) {
             if (port in known || port == OWN_SERVER_PORT) continue
@@ -215,15 +268,17 @@ true
                     cwd = details[1].ifEmpty { null },
                     logPath = regularFileOrNull(details[2]),
                     loopbackOnly = !(reachable[pid] ?: false),
-                ),
+                )
             )
         }
-        val rest = probed.filter { it != OWN_SERVER_PORT && it !in claimed && it !in known }.sorted()
+        val rest =
+            probed.filter { it != OWN_SERVER_PORT && it !in claimed && it !in known }.sorted()
         for (port in rest) out.add(LocalServerProcess(pid = 0, command = "", ports = listOf(port)))
         return out
     }
 
-    private fun firstWord(command: String): String = command.trim().split(' ').first().split('/').last()
+    private fun firstWord(command: String): String =
+        command.trim().split(' ').first().split('/').last()
 
     private fun namer(pids: Set<Int>?, info: Map<Int, List<String>>): Int? {
         if (pids == null) return null
@@ -238,7 +293,10 @@ true
 
     private fun isPlumbing(command: String): Boolean = firstWord(command) in PLUMBING
 
-    /** [target] when it is an absolute path that can be a plain log file; null for terminals, pipes, system paths. */
+    /**
+     * [target] when it is an absolute path that can be a plain log file; null for terminals, pipes,
+     * system paths.
+     */
     public fun regularFileOrNull(target: String?): String? {
         if (target == null) return null
         val t = target.trim()
@@ -251,19 +309,24 @@ true
     /** A single-quoted shell word: a quote inside cannot end the quoting. */
     public fun shellQuote(value: String): String = "'" + value.replace("'", "'\\''") + "'"
 
-    /** Reads the end of [path] (at most 64 KB). Refuses (`exit 2`) anything that is not a plain file path. */
+    /**
+     * Reads the end of [path] (at most 64 KB). Refuses (`exit 2`) anything that is not a plain file
+     * path.
+     */
     public fun tailScript(path: String): String {
         val safe = regularFileOrNull(path) ?: return "exit 2"
         return "[ -f ${shellQuote(safe)} ] || exit 3; tail -c 65536 -- ${shellQuote(safe)}"
     }
 
     /**
-     * Signals [pid] only while its command line still starts with what the person saw, so a reused pid is never hit.
-     * TERM, then KILL if it holds on after two seconds. Exit 0 ended/gone, 4 changed, 5 still running, 2 refused.
+     * Signals [pid] only while its command line still starts with what the person saw, so a reused
+     * pid is never hit. TERM, then KILL if it holds on after two seconds. Exit 0 ended/gone, 4
+     * changed, 5 still running, 2 refused.
      */
     public fun stopScript(pid: Int, expectedCommand: String): String {
-        if (pid <= 1) return "exit 2"
-        val want = if (expectedCommand.length > 200) expectedCommand.substring(0, 200) else expectedCommand
+        if (pid <= 1 || expectedCommand.isBlank()) return "exit 2"
+        val want =
+            if (expectedCommand.length > 200) expectedCommand.substring(0, 200) else expectedCommand
         return $$"""now=$(tr '\0\t\n' '   ' </proc/$$pid/cmdline 2>/dev/null)
 [ -n "$now" ] || exit 0
 case "$now" in $${shellQuote(want)}*) ;; *) exit 4;; esac
@@ -276,13 +339,16 @@ exit 0
 """
     }
 
-    private val LOCAL_LINK = Regex(
-        """https?://(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1]):(\d{1,5})[^\s<>()\[\]`'"]*""",
-        RegexOption.IGNORE_CASE,
-    )
+    private val LOCAL_LINK =
+        Regex(
+            """https?://(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1]):(\d{1,5})[^\s<>()\[\]`'"]*""",
+            RegexOption.IGNORE_CASE,
+        )
 
     /** The ports mentioned as local links in [text] (a server's own output), sorted, each once. */
     public fun portsInOutput(text: String): List<Int> =
-        LOCAL_LINK.findAll(text).mapNotNull { it.groupValues[1].toIntOrNull()?.takeIf { p -> p in 1..65535 } }
-            .toSortedSet().toList()
+        LOCAL_LINK.findAll(text)
+            .mapNotNull { it.groupValues[1].toIntOrNull()?.takeIf { p -> p in 1..65535 } }
+            .toSortedSet()
+            .toList()
 }

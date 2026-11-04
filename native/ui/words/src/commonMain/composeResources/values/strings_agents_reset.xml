@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="agentsResetSavedSignIns">Reset saved sign-ins</string>
+    <string name="agentsResetSavedSignInsBody">Disconnect all servers and remove saved server passwords and helper access keys from this app? Your profiles, conversations, projects and agents’ own sign-ins stay. Restart the app afterwards.</string>
+    <string name="agentsResetSavedSignInsFailed">Saved sign-ins could not all be reset. Try again, then restart the app.</string>
+    <string name="agentsRestartAfterReset">Restart the app before connecting or using phone agents again.</string>
+    <string name="agentsHelperStopped">The agent helper stopped unexpectedly. Check the phone setup before starting another conversation.</string>
+    <string name="agentsHelperMayHaveStopped">The agent helper stopped. Android may have stopped it to free memory or limit background processes.</string>
+    <string name="agentsConnectPhoneHelper">Connect phone agents</string>
+    <string name="agentsConnectPhoneHelperFailed">Phone agents could not connect. Install an agent and its helper, then try again.</string>
+    <string name="agentsPhoneHelperConnected">Phone agents are connected. Their conversations now appear in Chats.</string>
+    <string name="agentsPhoneHelperProfile">Phone agents</string>
+    <string name="agentsPreviousVersion">Use earlier %1$s version</string>
+    <string name="agentsPreviousVersionBody">Switch to the verified earlier version kept on this phone? The helper will stop first. Sign-ins and conversations stay. Connect phone agents again afterwards.</string>
+    <string name="agentsPreviousVersionFailed">The earlier version could not be restored. Finish any running work, then try again.</string>
+    <string name="agentsPreviousVersionRestored">The earlier version is restored. Connect phone agents again to continue.</string>
+</resources>

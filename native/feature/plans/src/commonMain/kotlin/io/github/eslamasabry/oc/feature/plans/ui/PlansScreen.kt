@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
+import io.github.eslamasabry.oc.feature.plans.presentation.CollectorFailure
+import io.github.eslamasabry.oc.feature.plans.presentation.CollectorUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanCardUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansActions
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansPhase
@@ -27,6 +29,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -69,12 +72,13 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
                 }),
         width = KitScreenWidth.Reading,
     ) {
-        if (state.phase == PlansPhase.Loading) KitStateView(KitStateKind.Loading, words.loading)
-        else
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
             ) {
+                // LINUX-2: the phone's own usage collector, above the plans.
+                if (state.collector.available) CollectorSetup(state.collector, actions)
+                if (state.phase == PlansPhase.Loading) KitStateView(KitStateKind.Loading, words.loading)
                 if (state.phase == PlansPhase.Empty)
                     KitStateView(KitStateKind.Empty, words.emptyTitle, body = words.emptyBody)
                 for (card in state.cards) PlanCard(card, state.nowMs, words, actions)
@@ -157,6 +161,52 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
         onConfirm = actions::confirmCollector,
         onCancel = actions::cancelCollector,
     )
+}
+
+@Composable
+private fun CollectorSetup(state: CollectorUi, actions: PlansActions) {
+    KitRowGroup(label = stringResource(Res.string.linuxQuotaTitle)) {
+        KitRow(
+            title =
+                stringResource(
+                    if (state.enabled) Res.string.linuxQuotaEnabled else Res.string.linuxQuotaSetup
+                ),
+            supporting = stringResource(Res.string.linuxQuotaBody),
+            supportingMaxLines = 3,
+        )
+        state.failure?.let { failure ->
+            val message =
+                stringResource(
+                    when (failure) {
+                        CollectorFailure.LinuxNotReady -> Res.string.linuxQuotaLinuxNotReady
+                        CollectorFailure.NoNode -> Res.string.linuxQuotaNoNode
+                        CollectorFailure.NodeTooOld -> Res.string.linuxQuotaOldNode
+                        CollectorFailure.Copy,
+                        CollectorFailure.Prepare -> Res.string.linuxQuotaPrepareFailed
+                        CollectorFailure.Start -> Res.string.linuxQuotaStartFailed
+                        CollectorFailure.Remove -> Res.string.linuxQuotaRemoveFailed
+                    }
+                )
+            val detail = state.details
+            if (detail != null)
+                KitErrorNotice(
+                    message = message,
+                    failure = detail,
+                    detailsLabel = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                )
+            else KitRow(title = message, supportingMaxLines = 3)
+        }
+        KitButton(
+            label =
+                stringResource(
+                    if (state.enabled) Res.string.linuxQuotaTurnOff else Res.string.linuxQuotaSetup
+                ),
+            onClick = if (state.enabled) actions::turnOffCollector else actions::setUpCollector,
+            working = state.busy,
+            role = KitButtonRole.Secondary,
+        )
+    }
 }
 
 @Composable

@@ -27,8 +27,10 @@ public class ThisPhoneViewModel(
     clock: Clock,
     pacer: Pacer,
     exits: PhoneExitNotices,
+    processes: PhoneProcessSource,
 ) : ViewModel(), ThisPhoneActions {
-    private val model = ThisPhoneModel(source, settings, nav, viewModelScope, clock, pacer, exits)
+    private val model =
+        ThisPhoneModel(source, settings, nav, viewModelScope, clock, pacer, exits, processes)
     public val state: StateFlow<ThisPhoneUi> = model.state
 
     override fun act(act: PhoneAct): Unit = model.act(act)
@@ -48,6 +50,8 @@ public class ThisPhoneViewModel(
     override fun openKeepRunning(): Unit = model.openKeepRunning()
 
     override fun openLinux(): Unit = model.openLinux()
+
+    override fun openTerminal(): Unit = model.openTerminal()
 
     override fun back(): Unit = model.back()
 

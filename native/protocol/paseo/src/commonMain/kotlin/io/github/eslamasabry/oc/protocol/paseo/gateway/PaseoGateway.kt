@@ -1380,7 +1380,7 @@ public class PaseoGateway(
                     get() = transport.epoch
 
                 override val connected: Boolean
-                    get() = transport.connected
+                    get() = !closed && transport.connected
 
                 override val scope: String?
                     get() = directoryValue
@@ -1388,10 +1388,18 @@ public class PaseoGateway(
                 override val locationEpoch: Int
                     get() = this@PaseoGateway.locationEpoch
 
+                override val displayCardsWireSupported: Boolean
+                    get() =
+                        io.github.eslamasabry.oc.protocol.paseo.PaseoTestedVersions.paseoSupports(
+                            transport.serverVersion
+                        )
+
                 override fun realId(appId: String): String = real(appId)
 
                 override fun providerOf(appId: String): String? =
                     agents[appId]?.str("provider") ?: draftProviders[appId]
+
+                override fun directoryOf(appId: String): String? = agents[appId]?.str("cwd")
 
                 override suspend fun request(
                     type: String,
@@ -1416,8 +1424,15 @@ public class PaseoGateway(
                 // refresh hint until then.
                 override fun questionChanged(signal: PaseoQuestionSignal) =
                     this@PaseoGateway.emit(GatewayEvent.RefreshHint(QUESTION_HINT))
-            }
+            },
+            tasks = this.scope,
         )
+
+    /** Only the owning app's verified local-card setup may supply this live revocable allowance. */
+    public suspend fun setDisplayCardPermissionAllowance(allowed: (() -> Boolean)?): Outcome<Unit> =
+        call {
+            requests.setDisplayCardAllowance(allowed)
+        }
 
     override suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>> = call {
         requests.pendingPermissions()

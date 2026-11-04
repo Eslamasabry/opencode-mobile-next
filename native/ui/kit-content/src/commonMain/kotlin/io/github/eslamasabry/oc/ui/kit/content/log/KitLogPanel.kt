@@ -236,3 +236,43 @@ public fun KitLogPanel(
         }
     }
 }
+
+/** Bounded selectable output. Levels are spoken in words as well as shown in the attention tone. */
+@Composable
+public fun KitLogPanel(
+    lines: List<KitLogLine>,
+    title: String,
+    warningLabel: String,
+    errorLabel: String,
+    modifier: Modifier = Modifier,
+) {
+    val scroll = rememberLazyListState()
+    val follow = !scroll.canScrollForward
+    LaunchedEffect(lines) {
+        if (follow && lines.isNotEmpty()) scroll.scrollToItem(lines.lastIndex)
+    }
+    Column(modifier.fillMaxWidth()) {
+        KitText(title, role = TypeRole.Headline)
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            SelectionContainer {
+                LazyColumn(Modifier.fillMaxWidth().heightIn(max = 280.dp), state = scroll) {
+                    itemsIndexed(lines, key = { index, _ -> index }) { _, line ->
+                        val label =
+                            when (line.level) {
+                                KitLogLevel.Normal -> line.text
+                                KitLogLevel.Warning -> "$warningLabel: ${line.text}"
+                                KitLogLevel.Error -> "$errorLabel: ${line.text}"
+                            }
+                        KitText(
+                            label.ifEmpty { " " },
+                            role = TypeRole.Mono,
+                            tone =
+                                if (line.level == KitLogLevel.Normal) TextTone.Secondary
+                                else TextTone.Attention,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

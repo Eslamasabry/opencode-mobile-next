@@ -8,6 +8,7 @@ import kotlin.time.Instant
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,12 +31,16 @@ public class ThisPhoneModel(
     private val clock: Clock,
     private val pacer: Pacer,
     private val exits: PhoneExitNotices = PhoneExitNotices.Absent,
+    private val processes: PhoneProcessSource? = null,
 ) : ThisPhoneActions {
     private data class Local(
         val working: PhoneOp? = null,
         val confirm: ThisPhoneConfirm? = null,
         val notice: ThisPhoneNotice? = null,
         val now: Instant,
+        val processReading: ProcessReading? = null,
+        val dismissedLeftover: io.github.eslamasabry.oc.engine.runtime.procs.RunawayIdentity? =
+            null,
     )
 
     private val local = MutableStateFlow(Local(now = clock.now()))
@@ -85,11 +90,13 @@ public class ThisPhoneModel(
                     count = facts.processCount,
                     cap = ProcessBudget.ceiling(facts.limitLifted),
                     nearLimit = ProcessBudget.nearLimit(facts.processCount),
+                    status = l.processReading?.status,
                 ),
             working = l.working,
             confirm = l.confirm,
             notice = l.notice,
             exitNotice = exitNotice,
+            leftover = l.processReading?.leftover?.takeIf { it.identity != l.dismissedLeftover },
         )
     }
 
@@ -160,7 +167,13 @@ public class ThisPhoneModel(
     }
 
     override fun dismiss() {
-        local.update { it.copy(confirm = null, notice = null) }
+        local.update {
+            it.copy(
+                confirm = null,
+                notice = null,
+                dismissedLeftover = it.processReading?.leftover?.identity,
+            )
+        }
         exits.dismiss()
     }
 
@@ -169,6 +182,8 @@ public class ThisPhoneModel(
     override fun openKeepRunning(): Unit = nav.open(PhonePage.KeepRunning)
 
     override fun openLinux(): Unit = nav.open(PhonePage.Linux)
+
+    override fun openTerminal(): Unit = nav.open(PhonePage.Terminal)
 
     override fun back(): Unit = nav.back()
 
@@ -180,10 +195,24 @@ public class ThisPhoneModel(
                 if (!shown) return@collectLatest
                 source.refresh()
                 local.update { it.copy(now = clock.now()) }
-                pacer.ticks(PhoneTimers.answerCountdown).collect {
-                    local.update { it.copy(now = clock.now()) }
+                coroutineScope {
+                    if (processes != null)
+                        launch {
+                            readProcesses()
+                            pacer.ticks(PhoneTimers.runningRefresh).collect { readProcesses() }
+                        }
+                    pacer.ticks(PhoneTimers.answerCountdown).collect {
+                        local.update { it.copy(now = clock.now()) }
+                    }
                 }
             }
+        }
+    }
+
+    private suspend fun readProcesses() {
+        when (val answer = processes?.read()) {
+            is Outcome.Ok -> local.update { it.copy(processReading = answer.value) }
+            else -> Unit
         }
     }
 

@@ -32,6 +32,7 @@ public class AgentsViewModel(
     phone: PhoneAgents,
     private val nav: AppNavigator,
     private val hub: AgentsHubConnection,
+    phoneHosts: Set<PhoneAgentHostStarter>,
 ) : ViewModel(), AgentsActions, AgentsHubActions {
     private val presenter =
         AgentsPresenter(
@@ -41,6 +42,7 @@ public class AgentsViewModel(
             onBack = nav::back,
             openChat = { nav.openChat(it, focusComposer = true) },
             openComputerPage = { nav.open(ComputerRoute(it)) },
+            phoneHost = phoneHosts.singleOrNull(),
         )
 
     public val state: StateFlow<AgentsUi> = presenter.state
@@ -96,6 +98,20 @@ public class AgentsViewModel(
     override fun cancelPhoneInstall(): Unit = presenter.cancelPhoneInstall()
 
     override fun refreshPhone(): Unit = presenter.refreshPhone()
+
+    override fun requestPreviousVersion(id: String): Unit = presenter.requestPreviousVersion(id)
+
+    override fun cancelPreviousVersion(): Unit = presenter.cancelPreviousVersion()
+
+    override fun confirmPreviousVersion(): Unit = presenter.confirmPreviousVersion()
+
+    override fun connectPhoneHelper(): Unit = presenter.connectPhoneHelper()
+
+    override fun requestSignInReset(): Unit = presenter.requestSignInReset()
+
+    override fun cancelSignInReset(): Unit = presenter.cancelSignInReset()
+
+    override fun confirmSignInReset(): Unit = presenter.confirmSignInReset()
 
     override fun requestRemoval(id: String): Unit = presenter.requestRemoval(id)
 

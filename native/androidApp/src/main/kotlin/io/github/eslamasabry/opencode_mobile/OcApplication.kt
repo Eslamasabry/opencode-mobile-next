@@ -16,6 +16,7 @@ import io.github.eslamasabry.opencode_mobile.graph.DiagnosticsLogSink
 import io.github.eslamasabry.opencode_mobile.graph.GraphOwner
 import io.github.eslamasabry.opencode_mobile.graph.LinuxAccessors
 import io.github.eslamasabry.opencode_mobile.graph.NativeExitAccessors
+import io.github.eslamasabry.opencode_mobile.graph.NativeHealingAccessors
 import io.github.eslamasabry.opencode_mobile.graph.PlatformAccessors
 
 /**
@@ -60,6 +61,7 @@ class OcApplication : Application(), GraphOwner {
         appGraph
             .builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone
                             // server comes back
+        (appGraph as NativeHealingAccessors).nativePhoneHealing.start()
         (appGraph as NativeExitAccessors).nativeAppExitRecovery.start()
         (appGraph as LinuxAccessors)
             .linuxStartup
