@@ -3,6 +3,7 @@ package oc.buildlogic
 import com.android.build.api.dsl.LibraryExtension
 import oc.buildlogic.LintPolicy.ocLint
 import oc.buildlogic.Sdk.ocCompileSdk
+import oc.buildlogic.TermuxSessionFork.applyTermuxSessionFork
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
@@ -29,6 +30,7 @@ class OcAndroidLibraryPlugin : Plugin<Project> {
                 maxParallelForks = providers.gradleProperty("oc.test.forks").get().toInt()
                 javaLauncher.set(toolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(Jdk.TEST_LAUNCHER)) })
             }
+            applyTermuxSessionFork()
             enforceModuleRules()
         }
 }

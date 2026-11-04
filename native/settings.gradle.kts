@@ -21,6 +21,8 @@ dependencyResolutionManagement {
         // P12-FIX-LINUX-VOICE (plan 03 §0 settings, plan 10 §2.2): vendored, hash-pinned artifacts.
         // Only the sherpa-onnx
         // group resolves here; tools/vendor/fetch.sh fills it and third_party/SHA256SUMS pins it.
+        // Termux v0.118.3 from JitPack; third_party/SHA256SUMS pins the emulator AAR, checked when the
+        // TermuxSessionFork transform (build-logic) strips the upstream TerminalSession classes.
         exclusiveContent {
             forRepository { maven { url = uri("https://jitpack.io") } }
             filter { includeGroup("com.github.termux.termux-app") }
@@ -35,10 +37,7 @@ dependencyResolutionManagement {
                     }
                 }
             }
-            filter {
-                includeGroup("com.k2fsa.sherpa.onnx")
-                includeGroup("com.github.termux.termux-app")
-            }
+            filter { includeGroup("com.k2fsa.sherpa.onnx") }
         }
     }
 }

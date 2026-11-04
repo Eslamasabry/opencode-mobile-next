@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.protocol.paseo.gateway
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.model.HostUpdatePhase
+import io.github.eslamasabry.oc.core.model.HostUpdateResult
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.protocol.paseo.boolOrNull
 import io.github.eslamasabry.oc.protocol.paseo.str
 import io.github.eslamasabry.oc.protocol.paseo.stringOrNull
@@ -15,18 +18,9 @@ import kotlinx.serialization.json.JsonObject
  * the connection back.
  */
 
-public enum class HostUpdatePhase { Starting, Downloading, Installing, Complete }
+// HostUpdatePhase and HostUpdateResult are the shared core.model types (AgentToolsGateway).
 
-public data class HostUpdateResult(
-    val success: Boolean,
-    val previousVersion: String? = null,
-    val newVersion: String? = null,
-    /** The computer's own words for why it failed. Technical: Details only, never copy or logs. */
-    val reason: String? = null,
-) {
-    /** It worked and nothing newer was there to install. */
-    val alreadyUpToDate: Boolean get() = success && previousVersion != null && newVersion != null && previousVersion == newVersion
-}
+private val REASONS = Redactor()
 
 private fun phaseOf(name: String?): HostUpdatePhase? =
     when (name) {
@@ -71,6 +65,6 @@ public suspend fun PaseoGateway.updateHostDaemon(onProgress: ((HostUpdatePhase) 
         success = success,
         previousVersion = cleanVersion(result["previousVersion"]) ?: before,
         newVersion = cleanVersion(result["newVersion"]),
-        reason = if (success) null else result.str("error")?.let(::clipReason),
+        reason = if (success) null else result.str("error")?.let { REASONS.details(clipReason(it)) },
     )
 }

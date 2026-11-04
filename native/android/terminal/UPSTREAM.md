@@ -18,15 +18,11 @@ file descriptor or I/O worker. IME, hardware keys, paste and emulator replies us
 the same external write hook. No reflection bypass or substitute local process is
 used for remote rendering. The existing upstream local FD wrapper is unchanged.
 
-`tools/vendor/termux_external.py` deterministically derives the private
-`terminal-emulator:v0.118.3-oc1` AAR from the hash-pinned upstream AAR. It removes
-only `TerminalSession.class` and its inner classes from `classes.jar`; all other
-classes and every ABI's JNI bytes are retained. Both ZIPs use sorted entries,
-fixed timestamps and stored compression, making the derived hash reproducible.
-The native source fork supplies the removed classes. The terminal-view dependency
-explicitly excludes its original emulator dependency, so the app receives one
-`TerminalSession` definition.
-
-Run `tools/vendor/fetch.sh` from a fresh checkout to fetch the pinned inputs and
-produce the derived AAR. Both input and derived hashes are in
-`third_party/SHA256SUMS`. These AARs are generated artifacts and are not committed.
+The build depends on the hash-pinned upstream `terminal-emulator:v0.118.3` AAR from JitPack.
+The `TermuxSessionFork` artifact transform in `build-logic` (applied by every Android convention
+plugin) checks it against its pin in `third_party/SHA256SUMS` and removes only
+`TerminalSession.class` and its inner classes from `classes.jar`; all other classes and every
+ABI's JNI bytes are retained, and the rewritten ZIPs use sorted, stored, fixed-time entries. The
+native source fork supplies the removed classes. The terminal-view dependency explicitly excludes
+its original emulator dependency, so the app receives one `TerminalSession` definition. No derived
+AAR is stored or fetched: every checkout produces it from committed files and the pinned upstream.
