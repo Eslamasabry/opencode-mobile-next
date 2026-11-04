@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.engine.delivery
 
-import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
@@ -15,11 +14,16 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
 import io.github.eslamasabry.oc.core.domain.ServerGateway
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.ModelSelection
+import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.ServerProfile
+import io.github.eslamasabry.oc.core.model.StreamStatus
+import io.github.eslamasabry.oc.engine.delivery.live.InboxProjection
 import io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy
 import io.github.eslamasabry.oc.engine.delivery.port.ConversationFacts
 import io.github.eslamasabry.oc.engine.delivery.port.DeliveryConnection
@@ -37,6 +41,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 
 /**
  * The storage owner supplies the adopted, gated store. Absence refuses admission; never substitute
@@ -75,22 +85,6 @@ public class ConnectionDelivery(
             override val activeProfile = MutableStateFlow<ProfileId?>(profile.id)
         }
 
-    init {
-        var connects = gateway.events.connects.value
-        var status = gateway.events.status.value
-        scope.launch {
-            combine(gateway.events.connects, gateway.events.status) { n, s -> n to s }
-                .collect { (n, s) ->
-                    if (n != connects || s != status) {
-                        connects = n
-                        status = s
-                        connection.link.value =
-                            GatewaySendLink(profile.id, profile.origin.toString(), gateway)
-                    }
-                }
-        }
-    }
-
     private val storage = stores.singleOrNull()
     private val journals = storage?.let { PendingCommandJournals(it.store, it.lanes, it.profiles) }
     public val queue: OfflineQueue? = storage?.let {
@@ -98,7 +92,9 @@ public class ConnectionDelivery(
             OfflineQueueStore(it.store, it.lanes.app),
             journals!!,
             connection,
-            AutomationPolicy { false },
+            AutomationPolicy { target ->
+                target == profile.id && queueAutomationAllowed(it.store, profile.id)
+            },
             clock,
             scope,
             dispatchers,
@@ -133,26 +129,71 @@ public class ConnectionDelivery(
         )
     }
 
+    /**
+     * Server-admitted sends, separate from the device's offline queue. The connection owns their
+     * live projection.
+     */
+    public val inbox: InboxProjection = InboxProjection(gateway)
+
+    init {
+        val lane = dispatchers.serial("delivery-reconcile")
+        scope.launch(lane) {
+            gateway.events.project.collect { envelope ->
+                val event = envelope.event
+                if (event is GatewayEvent.InboxChanged && gateway.capabilities.value.inbox)
+                    inbox.onEvent(event)
+            }
+        }
+        scope.launch(lane) {
+            var first = true
+            var connects = gateway.events.connects.value
+            var status = gateway.events.status.value
+            combine(gateway.events.connects, gateway.events.status) { n, s -> n to s }
+                .collect { (n, s) ->
+                    val changed = first || n != connects || s != status
+                    first = false
+                    connects = n
+                    status = s
+                    if (changed) {
+                        connection.link.value =
+                            GatewaySendLink(profile.id, profile.origin.toString(), gateway)
+                        if (s == StreamStatus.Connected) {
+                            // A reconnect reconciles admitted sends and receipts; marked/uncertain
+                            // sends are never replayed.
+                            if (gateway.capabilities.value.inbox) inbox.refreshKnown()
+                            queue?.flush()
+                        }
+                    }
+                }
+        }
+    }
+
     public fun running(ref: ConversationRef, busy: Boolean) {
         running.update { if (busy) it + ref else it - ref }
         if (!busy) engine?.turnEnded(ref)
     }
 
-    /** A picker change under the conversation's send-selection lock (Codex composer #3); no engine: runs as is. */
+    /**
+     * A picker change under the conversation's send-selection lock (Codex composer #3); no engine:
+     * runs as is.
+     */
     public suspend fun <T> withSelection(ref: ConversationRef, block: suspend () -> T): T =
         engine?.withSelection(ref, block) ?: block()
 
     /**
-     * Only the durable pipeline may accept; the caller keeps its draft on any refusal. [attachments] and
-     * [model] ride the same request: the files are snapshotted immutably and the choice is applied before
-     * the prompt is admitted to the wire.
+     * Only the durable pipeline may accept; the caller keeps its draft on any refusal.
+     * [attachments] and [model] ride the same request: the files are snapshotted immutably and the
+     * choice is applied before the prompt is admitted to the wire.
      */
     public suspend fun send(
         ref: ConversationRef,
         text: String,
         attachments: ImmutableList<PromptAttachment> = persistentListOf(),
         model: ModelSelection? = null,
-        /** Sub-agent `@name` mentions in [text] (Codex composer #6; OC2 sends them as the prompt's agents). */
+        /**
+         * Sub-agent `@name` mentions in [text] (Codex composer #6; OC2 sends them as the prompt's
+         * agents).
+         */
         mentions: ImmutableList<PromptAgentMention> = persistentListOf(),
     ): Outcome<LocalSendId> {
         val engine = engine ?: return Outcome.Failed(Failure.StorageRefused())
@@ -161,6 +202,31 @@ public class ConnectionDelivery(
             is Outcome.Ok ->
                 if (undo.value) return Outcome.Failed(Failure.Refused(RefusalReason.UndoUnresolved))
         }
-        return engine.send(SendRequest(ref, text, attachments = attachments, model = model, mentions = mentions))
+        return engine.send(
+            SendRequest(ref, text, attachments = attachments, model = model, mentions = mentions)
+        )
     }
+}
+
+/**
+ * The existing Flutter consent record. A missing record uses its default; an unreadable record
+ * grants nothing.
+ */
+private fun queueAutomationAllowed(store: KeyValueStore, profile: ProfileId): Boolean {
+    val value = store.get("oc.automation.${profile.raw}") ?: return true
+    val text = (value as? PrefValue.Str)?.value ?: return false
+    val root =
+        try {
+            Json.parseToJsonElement(text) as? JsonObject
+        } catch (_: IllegalArgumentException) {
+            null
+        } ?: return false
+    if ((root["version"] as? JsonPrimitive)?.intOrNull != 1) return false
+    if (
+        (root["supervision"] as? JsonPrimitive)?.contentOrNull !in
+            setOf("high", "balanced", "autonomous")
+    )
+        return false
+    val behaviors = root["behaviors"] as? JsonObject ?: return false
+    return (behaviors["reconcileQueuedSends"] as? JsonPrimitive)?.booleanOrNull == true
 }
