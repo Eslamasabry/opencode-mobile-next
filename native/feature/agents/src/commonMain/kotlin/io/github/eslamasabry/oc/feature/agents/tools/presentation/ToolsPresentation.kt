@@ -134,7 +134,12 @@ public class ToolsViewModel(private val source: ToolsSource, private val nav: Ap
             val plugins = if (caps.pluginInventory) target.library?.plugins() else null
             val skills = if (caps.serverCatalog) target.operations.skills() else null
             val servers = if (caps.serverCatalog) target.operations.mcpServers() else null
-            if (epoch != generation || !target.isCurrent()) return@launch
+            if (epoch != generation) return@launch
+            if (!target.isCurrent()) {
+                // The connection changed mid-load: never leave the page stuck in loading.
+                mutable.update { it.copy(loading = false, issue = ToolsIssue.Changed) }
+                return@launch
+            }
             mutable.update { before ->
                 before.copy(
                     loading = false,
@@ -143,13 +148,13 @@ public class ToolsViewModel(private val source: ToolsSource, private val nav: Ap
                     servers = (servers as? Outcome.Ok)?.value ?: before.servers,
                     pluginSupported = caps.pluginInventory && target.library != null,
                     catalogSupported = caps.serverCatalog,
-                    canAdd = caps.mcpConfigWrites || caps.mcpRuntimeAdds,
-                    failedSections =
-                        buildSet {
-                                if (plugins is Outcome.Failed) add("plugins")
-                                if (skills is Outcome.Failed) add("skills")
-                                if (servers is Outcome.Failed) add("mcp")
-                            }
+                    // add() always uses the runtime scope (until the server restarts).
+                    canAdd = caps.mcpRuntimeAdds,
+                    failedSections = buildSet {
+                            if (plugins is Outcome.Failed) add("plugins")
+                            if (skills is Outcome.Failed) add("skills")
+                            if (servers is Outcome.Failed) add("mcp")
+                        }
                             .toImmutableSet(),
                 )
             }

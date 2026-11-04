@@ -20,9 +20,11 @@ import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
+import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.delivery.live.PhoneChatDispatchTracker
+import io.github.eslamasabry.oc.engine.profiles.LoadedProfile
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.net.URI
@@ -105,14 +107,11 @@ class NativeChatLeases(
         }
     }
 
+    // The same rule as the gateway's requireDispatchAdmission, so the hook exists wherever it is
+    // required (bracketed IPv6 and any letter case included).
     private fun local(graph: ConnectionGraph): Boolean =
-        try {
-            val uri = URI(graph.profile.origin.toString())
-            uri.host in listOf("127.0.0.1", "localhost", "::1") &&
-                uri.port in listOf(PhoneServerScripts.PORT, 4099)
-        } catch (_: Exception) {
-            false
-        }
+        AddressRules.isLoopback(graph.profile.origin.host) &&
+            graph.profile.origin.port in listOf(PhoneServerScripts.PORT, 4099)
 
     /**
      * The native fallback of Flutter `beforePersonDispatch`: where the heartbeat admission owner is
@@ -129,52 +128,19 @@ class NativeChatLeases(
         val saved = profiles.profile(profile) ?: return@withLock staleAdmission()
         if (registry.live.value[profile] !== graph || !local(graph))
             return@withLock staleAdmission()
+        // Like Flutter's preparePhoneAliasDispatch: another saved alias of this phone's OpenCode
+        // daemon can still own an AI Team process, whether or not this profile uses AI Team.
+        val aliases = withContext(dispatchers.io) { pauseOwners(graph, saved) { it != profile } }
+        if (aliases is Outcome.Failed) return@withLock aliases
+        if (registry.live.value[profile] !== graph || profiles.profile(profile) != saved)
+            return@withLock staleAdmission()
         if (!phoneEngineConfigured(saved.profile.orchestration?.encoded)) return@withLock Unit.ok()
         if (!PROFILE.matches(profile.raw)) return@withLock staleAdmission()
         val directory = graph.session.server.location.value.directory
         synchronized(dispatches) { dispatches.begin(session, directory) }
         val paused =
             try {
-                withContext(dispatchers.io) {
-                    attempt(::classifyRuntime) {
-                        // Aliases of this phone's OpenCode daemon can own an older AI Team process.
-                        // Like Flutter's
-                        // preparePhoneAliasDispatch, inspect only saved, configured loopback owners
-                        // and stop by exact id.
-                        val owners =
-                            profiles.profiles.value.filter { row ->
-                                PROFILE.matches(row.id.raw) &&
-                                    phoneEngineConfigured(row.profile.orchestration?.encoded) &&
-                                    row.toServerProfile()?.origin?.let { origin ->
-                                        origin.host in listOf("127.0.0.1", "localhost", "::1") &&
-                                            origin.port == graph.profile.origin.port
-                                    } == true
-                            }
-                        for (owner in owners) {
-                            check(
-                                registry.live.value[profile] === graph &&
-                                    profiles.profile(profile) == saved
-                            )
-                            check(profiles.profile(owner.id) == owner)
-                            val before = linux.phoneEngineStatus(owner.id.raw)
-                            check(
-                                before["profileId"] == owner.id.raw && before["running"] is Boolean
-                            )
-                            if (before["running"] == true) {
-                                val stopped = linux.stopPhoneEngine(owner.id.raw)
-                                check(
-                                    stopped["profileId"] == owner.id.raw &&
-                                        stopped["running"] == false
-                                )
-                                val confirmed = linux.phoneEngineStatus(owner.id.raw)
-                                check(
-                                    confirmed["profileId"] == owner.id.raw &&
-                                        confirmed["running"] == false
-                                )
-                            }
-                        }
-                    }
-                }
+                withContext(dispatchers.io) { pauseOwners(graph, saved) { it == profile } }
             } catch (cancelled: CancellationException) {
                 synchronized(dispatches) { dispatches.settled(session, removeUnsent = true) }
                 throw cancelled
@@ -190,6 +156,41 @@ class NativeChatLeases(
         readings.update { it + (profile.raw to true) }
         Unit.ok()
     }
+
+    /**
+     * Stops, by exact id, each saved and configured loopback AI Team owner of this daemon that
+     * [which] selects, and reads back that it stopped. Unknown readbacks fail the admission.
+     */
+    private suspend fun pauseOwners(
+        graph: ConnectionGraph,
+        saved: LoadedProfile,
+        which: (ProfileId) -> Boolean,
+    ): Outcome<Unit> =
+        attempt(::classifyRuntime) {
+            val profile = graph.profile.id
+            val owners =
+                profiles.profiles.value.filter { row ->
+                    which(row.id) &&
+                        PROFILE.matches(row.id.raw) &&
+                        phoneEngineConfigured(row.profile.orchestration?.encoded) &&
+                        row.toServerProfile()?.origin?.let { origin ->
+                            AddressRules.isLoopback(origin.host) &&
+                                origin.port == graph.profile.origin.port
+                        } == true
+                }
+            for (owner in owners) {
+                check(registry.live.value[profile] === graph && profiles.profile(profile) == saved)
+                check(profiles.profile(owner.id) == owner)
+                val before = linux.phoneEngineStatus(owner.id.raw)
+                check(before["profileId"] == owner.id.raw && before["running"] is Boolean)
+                if (before["running"] == true) {
+                    val stopped = linux.stopPhoneEngine(owner.id.raw)
+                    check(stopped["profileId"] == owner.id.raw && stopped["running"] == false)
+                    val confirmed = linux.phoneEngineStatus(owner.id.raw)
+                    check(confirmed["profileId"] == owner.id.raw && confirmed["running"] == false)
+                }
+            }
+        }
 
     private fun phoneEngineConfigured(encoded: String?): Boolean =
         if (encoded == null) false

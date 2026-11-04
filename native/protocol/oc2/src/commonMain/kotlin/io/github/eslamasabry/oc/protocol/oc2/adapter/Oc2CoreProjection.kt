@@ -246,7 +246,8 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
             cost = cost ?: 0.0,
             tokens = tokens?.toCore() ?: Tokens(),
             time = MsgTime(createdMs, completedMs),
-            errorText = error?.message,
+            // Server prose: redacted like the history path (Oc2History) before it can be shown.
+            errorText = error?.message?.let { redact(it).text },
             finish = finish,
         )
 
@@ -291,7 +292,11 @@ internal class Oc2CoreProjection(private val redact: (String) -> Redacted) {
             inputRaw = raw,
             // Plan 09 §2.2: a failed call's server text is its output (ToolState.declined reads it
             // there).
-            output = if (status == Oc2ToolStatus.Error) error else output,
+            output =
+                if (status != Oc2ToolStatus.Error) output
+                // A failed step's server message settles open calls; redact it like errorText.
+                else if (settledBy == Oc2SettleReason.StepFailed) error?.let { redact(it).text }
+                else error,
             metadata = metadata,
             outputFiles =
                 attachments

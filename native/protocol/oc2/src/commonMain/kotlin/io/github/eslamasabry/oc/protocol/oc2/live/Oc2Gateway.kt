@@ -21,7 +21,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
-import kotlin.concurrent.atomics.AtomicReference
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 import kotlin.time.Clock
@@ -32,6 +31,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.*
 
 /** Every mutation makes exactly one request. An uncertain prompt receipt is never replayed. */
@@ -201,25 +201,28 @@ internal class Oc2Gateway(
         val settle: (SessionId) -> Unit,
     )
 
-    private val dispatchAdmission = AtomicReference<DispatchAdmission?>(null)
+    private val dispatchAdmission = MutableStateFlow<DispatchAdmission?>(null)
 
     override fun setSessionDispatchAdmission(
         admit: suspend (SessionId) -> Outcome<Unit>,
         settled: (SessionId) -> Unit,
     ) {
-        dispatchAdmission.store(DispatchAdmission(admit, settled))
+        dispatchAdmission.value = DispatchAdmission(admit, settled)
     }
 
     private suspend fun <T> admitted(
         session: SessionId,
         action: suspend () -> Outcome<T>,
     ): Outcome<T> {
-        val admission = dispatchAdmission.load()
-        if (admission == null) {
-            if (requireDispatchAdmission)
-                return Failure.Refused(RefusalReason.ConsentMissing).failed()
-            return action()
-        }
+        // The phone-server owner installs its admission right after the graph goes live; a send
+        // in that gap waits briefly for it instead of failing.
+        val admission =
+            dispatchAdmission.value
+                ?: if (requireDispatchAdmission)
+                    withTimeoutOrNull(ADMISSION_WAIT_MS) {
+                        dispatchAdmission.filterNotNull().first()
+                    } ?: return Failure.Refused(RefusalReason.ConsentMissing).failed()
+                else return action()
         val accepted = admission.enter(session)
         if (accepted is Outcome.Failed) return accepted
         return try {
@@ -1589,3 +1592,4 @@ internal class Oc2Gateway(
 }
 
 private const val AGENT_BOOT_RETRY_MS = 500L
+private const val ADMISSION_WAIT_MS = 5_000L

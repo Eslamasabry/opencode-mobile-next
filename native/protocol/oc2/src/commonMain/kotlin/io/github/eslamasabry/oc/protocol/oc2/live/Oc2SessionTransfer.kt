@@ -36,7 +36,8 @@ internal class Oc2SessionTransfer(
             is Outcome.Failed ->
                 if (missing(result.failure)) {
                     exportSupported = false
-                    disable("sessionImportExport")
+                    // One shared flag: hide transfer only once both directions are latched off.
+                    if (!importSupported) disable("sessionImportExport")
                     unavailable("sessionImportExport")
                 } else result
         }
@@ -55,7 +56,7 @@ internal class Oc2SessionTransfer(
             is Outcome.Failed ->
                 if (missing(result.failure)) {
                     importSupported = false
-                    disable("sessionImportExport")
+                    if (!exportSupported) disable("sessionImportExport")
                     unavailable("sessionImportExport")
                 } else result
             is Outcome.Ok -> {

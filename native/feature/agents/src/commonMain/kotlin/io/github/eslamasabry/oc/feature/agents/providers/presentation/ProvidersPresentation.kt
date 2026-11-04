@@ -82,6 +82,8 @@ public data class ProvidersUi(
     val keyEntry: Boolean = false,
     val attempt: Boolean = false,
     val codeMode: Boolean = false,
+    /** The server's sign-in instructions (for example a device code to type), already redacted. */
+    val instructions: String = "",
     val link: ProviderLink? = null,
     val issue: ProviderIssue? = null,
 )
@@ -287,15 +289,18 @@ public class ProvidersViewModel(
                     if (connection !== target || !target.isCurrent())
                         return@work ProviderIssue.Changed
                     attemptId = result.value.attemptId
-                    val link = browser?.review(result.value.url)
+                    val url = result.value.url
+                    val link = if (url.isBlank()) null else browser?.review(url)
                     mutable.update {
                         it.copy(
                             attempt = true,
                             codeMode = result.value.mode == IntegrationAuthMode.Code,
+                            instructions = result.value.instructions,
                             link = link,
                         )
                     }
-                    if (link == null) ProviderIssue.Failed else ProviderIssue.Pending
+                    if (link == null && url.isNotBlank()) ProviderIssue.Failed
+                    else ProviderIssue.Pending
                 }
             }
         }
@@ -347,17 +352,17 @@ public class ProvidersViewModel(
                         IntegrationAuthState.Pending -> ProviderIssue.Pending
                         IntegrationAuthState.Complete -> {
                             attemptId = null
-                            mutable.update { it.copy(attempt = false) }
+                            mutable.update { it.copy(attempt = false, instructions = "") }
                             ProviderIssue.Complete
                         }
                         IntegrationAuthState.Expired -> {
                             attemptId = null
-                            mutable.update { it.copy(attempt = false) }
+                            mutable.update { it.copy(attempt = false, instructions = "") }
                             ProviderIssue.Expired
                         }
                         IntegrationAuthState.Failed -> {
                             attemptId = null
-                            mutable.update { it.copy(attempt = false) }
+                            mutable.update { it.copy(attempt = false, instructions = "") }
                             ProviderIssue.Failed
                         }
                     }
@@ -391,7 +396,7 @@ public class ProvidersViewModel(
                     else {
                         attemptId = null
                         mutable.value.link?.let { browser?.discard(it.token) }
-                        mutable.update { it.copy(attempt = false, link = null) }
+                        mutable.update { it.copy(attempt = false, instructions = "", link = null) }
                         ProviderIssue.Cancelled
                     }
                 }

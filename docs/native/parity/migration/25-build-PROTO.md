@@ -74,3 +74,35 @@ B-PROTO-124 — built now — native/core/domain/src/commonMain/kotlin/io/github
 B-PROTO-125 -> built now: native/feature/search/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/search/SearchEntries.kt:28 wires WebSearchPanel into real SearchScreen for its selected server; web/WebSearchViewModel.kt:151 loads providers and :190 dispatches explicit bounded web queries through WebSearchGateway without recent-history writes or prompts, rejects stale graph/location replies; result links require platform policy review and explicit host confirmation through WebResultOpener. Strict wire contract implemented by protocol slice; Android link binding in ProtoSearchLinks.kt. Changed Kotlin formatted with ktfmt 0.64; compile-only evidence is above.
 B-PROTO-126 -> built now: native/feature/search/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/search/web/WebSearchViewModel.kt:112 consumes payload-free websearch refresh hint, invalidates/cancels current response, clears results and reloads only providers; never automatically repeats a search. Existing protocol adapter emits freshness hint; protocol slice records mapper evidence. Changed Kotlin formatted with ktfmt 0.64; compile-only evidence is above.
 B-PROTO-127 -> built now (native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PlatformWiring.kt:551; native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PlatformWiring.kt:608; native/engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/identity/RunIdentity.kt:13): the real widget snapshot now derives runMarker/startedAt and bounded observed prompt counts from authenticated session history, excluding every v2: timeline part while retaining attachment-only user prompts; unknown/failed/bounded-out identities stay absent.
+
+## Final approval review (Opus 5.5) — approved with fixes
+
+The review covered the whole range: protocol, net and domain; features, routes and words; androidApp wiring, engines, and the chat header and world. It found no security regressions:
+- Web results and provider sign-in links go through `ExternalLinkPolicy` and a one-use `ExternalLinkOpener` token.
+- Credentials are never logged and are redacted. The quota bearer token goes only to loopback 4195, and Basic auth only to the saved origin.
+- The new per-profile key `oc.setupRegistry.<id>` is in the deletion scope.
+
+The kit-only rule holds, every new key exists in English and Arabic, and every new screen is reachable from real navigation. The "already there" claims for 032, 037, 040, 041, 060 and 094 were confirmed in source.
+
+These fixes were committed on this branch:
+- **B-PROTO-029 (Flutter `preparePhoneAliasDispatch`):** other saved AI Team owners of the same phone daemon are now paused before every local send, even when the sending profile does not use AI Team. Before, the alias stop ran only for AI Team profiles.
+- **B-PROTO-029:** the admission hook now uses the gateway's own loopback rule, `AddressRules.isLoopback`, so bracketed IPv6 and any letter case are covered. A send that comes before the hook is installed now waits up to 5 s instead of being refused at once. Before, `http://[::1]:4097` refused every prompt.
+- **B-PROTO-030:** the sign-in launch now carries the server's instructions (redacted), as Flutter does, and the Providers screen shows them. A launch without a URL is accepted, as in Flutter. Before, device-code sign-ins showed no code.
+- **B-PROTO-017/073:** live step-failure text (`errorText`, and the tool calls a failed step settles) is now redacted, as the history path already was.
+- **B-PROTO-096–101:** one missing import or export endpoint no longer hides both. The shared `sessionImportExport` flag is cleared only once both directions are unavailable.
+- **B-PROTO-080:** the Tools add form is offered only with `mcpRuntimeAdds`, because add always uses the runtime scope. Tools also no longer stays stuck loading when the connection changes mid-load.
+- **B-PROTO-125:** web search title limit is now 10 000 characters, as in Flutter. Only 404 and 503 (`NotFound`, `Busy` Starting/Overloaded, `Server` 503) map to unavailable; other failures stay failures.
+- **Copy:** pairing checks use a format resource (`protoPairingCheck`) instead of a hard-coded dash, which is RTL-safe. Git project tools have their own failure string (`protoGitToolsFailed`, English and Arabic).
+
+Known gaps, not fixed (low impact):
+- Terminal and Inspect setup on server rows, and Tools and Conversation tools in the chat menu, appear without capability flags. The destination screens show an unavailable notice instead.
+- The transcript entry has a no-op readable-mode switch.
+- All OAuth prompt fields are masked.
+- `sessionTransferRecords` is not a plural resource.
+- Web search resets on any server's live change, not only the selected server's.
+- Error bodies are read in full before the 64 KB cap.
+- Before a run starts, no CPU lease covers an admitted send.
+
+The claim that remote terminal redacts the whole transcript was checked and holds: `NativeRemoteTerminalTextPolicy` re-redacts it on Android.
+
+Compile-only gate after the fixes, run from `native/`: `nice -n 5 ./gradlew --console=plain -Dorg.gradle.workers.max=3 :androidApp:compilePreviewDebugKotlin compileKotlinDesktop` passed (563 actionable tasks). It needed the gitignored Sherpa AAR, restored with the pinned SHA-256 `a8d09d1d…0ee7`. No tests and no APK were run.

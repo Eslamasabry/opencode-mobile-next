@@ -22,4 +22,6 @@
     <string name="protoWebOpenBrowser">Open browser</string>
     <string name="protoWebInsecure">This link uses an unencrypted connection.</string>
     <string name="protoWebLeaveApp">This opens a website outside the app.</string>
+    <string name="protoGitToolsFailed">That did not work. Check the server and try again.</string>
+    <string name="protoPairingCheck">%1$s: %2$s</string>
 </resources>

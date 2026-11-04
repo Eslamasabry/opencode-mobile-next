@@ -22,4 +22,6 @@
     <string name="protoWebOpenBrowser">فتح المتصفح</string>
     <string name="protoWebInsecure">يستخدم هذا الرابط اتصالًا غير مشفّر.</string>
     <string name="protoWebLeaveApp">سيفتح هذا موقعًا خارج التطبيق.</string>
+    <string name="protoGitToolsFailed">لم ينجح ذلك. تحقّق من الخادم ثم حاول مرة أخرى.</string>
+    <string name="protoPairingCheck">%1$s: %2$s</string>
 </resources>

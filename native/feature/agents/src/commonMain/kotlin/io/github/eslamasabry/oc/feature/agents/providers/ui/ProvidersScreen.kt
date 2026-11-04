@@ -126,6 +126,7 @@ public fun ProvidersScreen(state: ProvidersUi, actions: ProvidersActions) {
                 }
                 if (state.attempt) {
                     KitNotice(stringResource(Res.string.protoProvidersFinishBrowser))
+                    if (state.instructions.isNotBlank()) KitText(state.instructions)
                     if (state.codeMode)
                         KitField(
                             code,

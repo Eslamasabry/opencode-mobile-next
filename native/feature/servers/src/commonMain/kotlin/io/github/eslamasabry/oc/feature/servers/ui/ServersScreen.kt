@@ -68,6 +68,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
 import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
+import io.github.eslamasabry.oc.ui.words.res.protoPairingCheck
 import io.github.eslamasabry.oc.ui.words.res.serverFailureCertificate
 import io.github.eslamasabry.oc.ui.words.res.serverFailureIncompatible
 import io.github.eslamasabry.oc.ui.words.res.serverFailureNetwork
@@ -359,7 +360,13 @@ public fun ServersScreen(
                         PairingAnswer.InvalidAddress -> Res.string.e7SetupPairAddressUnusable
                         PairingAnswer.NeedsCleartextConsent -> Res.string.serversCleartextHelp
                     }
-                KitNotice("${check.origin} — ${stringResource(verdict)}")
+                KitNotice(
+                    stringResource(
+                        Res.string.protoPairingCheck,
+                        check.origin,
+                        stringResource(verdict),
+                    )
+                )
             }
             filledFromLink?.let { link ->
                 KitNotice(

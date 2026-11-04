@@ -45,7 +45,7 @@ public fun GitServerToolsPanel(state: GitServerToolsUi, actions: GitServerToolsA
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             state.directory?.let { KitText(it) }
-            if (state.failed) KitNotice(stringResource(Res.string.protoToolsFailed))
+            if (state.failed) KitNotice(stringResource(Res.string.protoGitToolsFailed))
             state.result?.let {
                 KitNotice(
                     stringResource(

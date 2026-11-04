@@ -71,7 +71,8 @@ internal class Oc2WebSearch(private val gateway: Oc2Gateway, private val locatio
                 return unreadable()
             val title = item.str("title")
             val content = item.str("content")
-            if ((title?.length ?: 0) > 1000 || (content?.length ?: 0) > 100_000) return unreadable()
+            if ((title?.length ?: 0) > 10_000 || (content?.length ?: 0) > 100_000)
+                return unreadable()
             WebSearchResult(url, title, content)
         }
         return WebSearchResponse(provider, results.toImmutableList()).ok()
@@ -89,9 +90,17 @@ internal class Oc2WebSearch(private val gateway: Oc2Gateway, private val locatio
     }
 
     private fun safeFailure(reply: Outcome.Failed): Outcome.Failed =
-        when (reply.failure) {
-            is Failure.Busy,
-            is Failure.Server -> Outcome.Failed(Failure.Unavailable(FeatureId("webSearch")))
+        // Flutter _webSearchRun: only 404 and 503 mean unavailable; other failures stay failures.
+        when (val failure = reply.failure) {
+            is Failure.NotFound -> Outcome.Failed(Failure.Unavailable(FeatureId("webSearch")))
+            is Failure.Busy ->
+                if (failure.kind == BusyKind.Starting || failure.kind == BusyKind.Overloaded)
+                    Outcome.Failed(Failure.Unavailable(FeatureId("webSearch")))
+                else reply
+            is Failure.Server ->
+                if (failure.status == 503)
+                    Outcome.Failed(Failure.Unavailable(FeatureId("webSearch")))
+                else reply
             else -> reply
         }
 

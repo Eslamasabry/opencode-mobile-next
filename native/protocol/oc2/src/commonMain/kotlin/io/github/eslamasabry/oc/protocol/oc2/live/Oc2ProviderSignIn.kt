@@ -206,7 +206,8 @@ internal class Oc2ProviderSignIn(
         if (reply is Outcome.Failed) return@withLock reply
         val value = data((reply as Outcome.Ok).value) as? JsonObject ?: return@withLock failed()
         val attempt = text(value, "attemptID")?.takeIf(::valid) ?: return@withLock failed()
-        val url = text(value, "url") ?: return@withLock failed()
+        // Flutter accepts a launch without a link: device-code methods only carry instructions.
+        val url = text(value, "url").orEmpty()
         if (url.length > 8192) return@withLock failed()
         remember(attempts, attempt, Attempt(id, scope))
         terminal.remove(attempt)
@@ -214,7 +215,7 @@ internal class Oc2ProviderSignIn(
         IntegrationAuthLaunch(
                 attempt,
                 url,
-                "",
+                text(value, "instructions")?.let { redactor.details(it).text.take(2000) }.orEmpty(),
                 if (text(value, "mode") == "code") IntegrationAuthMode.Code
                 else IntegrationAuthMode.Auto,
                 expires,
