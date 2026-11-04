@@ -19,8 +19,11 @@ import io.github.eslamasabry.oc.feature.search.ui.SearchScreen
 import io.github.eslamasabry.oc.feature.search.ui.ShortcutsScreen
 import io.github.eslamasabry.oc.feature.search.web.WebSearchPanel
 import io.github.eslamasabry.oc.feature.search.web.WebSearchViewModel
+import io.github.eslamasabry.oc.feature.search.web.WebSourcesScreen
+import io.github.eslamasabry.oc.feature.search.web.WebSourcesViewModel
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
+import io.github.eslamasabry.oc.ui.routes.WebSourcesRoute
 
 /**
  * The EntryInstaller; the only file in the module that imports androidx.navigation3.runtime
@@ -42,6 +45,14 @@ public class SearchEntries : EntryInstaller {
             val vm = metroViewModel<ShortcutsViewModel>()
             val state by vm.state.collectAsStateWithLifecycle()
             ShortcutsScreen(state, vm)
+        }
+        entry<WebSourcesRoute> { route ->
+            val vm =
+                assistedMetroViewModel<WebSourcesViewModel, WebSourcesViewModel.Factory> {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            WebSourcesScreen(state, vm)
         }
         entry<SearchRoute.Conversations> { route ->
             val vm =

@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.domain.*
+import io.github.eslamasabry.oc.core.domain.SessionSkillGateway as ServerSessionSkills
 import io.github.eslamasabry.oc.core.model.*
 import io.github.eslamasabry.oc.core.security.*
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
@@ -47,6 +48,7 @@ class AndroidLibraryHost(
     private val drafts: Set<ConversationDrafts>,
     private val appScope: AppCoroutineScope,
     private val registryFactory: LibraryRegistryFactory,
+    private val redactor: Redactor,
 ) : LibraryHost {
     private data class ContextKey(
         val profile: ServerProfile,
@@ -192,6 +194,88 @@ class AndroidLibraryHost(
     override fun onPhone(ref: ConversationRef?): Boolean {
         val profile = ref?.profileId ?: stores.profiles.activeId.value ?: return false
         return connections.live.value[profile]?.profile?.managedOnPhone == true
+    }
+
+    override fun skillConversation(
+        profile: ProfileId,
+        selection: SessionSelection?,
+    ): SkillConversation? {
+        val graph = connections.live.value[profile] ?: return null
+        val gateway = graph.session.server
+        val skills = gateway.facet<ServerSessionSkills>() ?: return null
+        if (!gateway.capabilities.value.serverCatalog || !skills.sessionSkillsSupported) return null
+        val location = gateway.location.value
+        val captured = selection ?: SessionSelection(null, "", null, false, false)
+        fun current(): Boolean =
+            connections.live.value[profile] === graph &&
+                stores.profiles.profile(profile) != null &&
+                gateway.location.value == location &&
+                gateway.events.status.value == StreamStatus.Connected
+        val ports =
+            object : SkillConversationPorts {
+                override val isClosed: Boolean
+                    get() = !current()
+
+                override val canUseSkill: Boolean
+                    get() =
+                        gateway.capabilities.value.serverCatalog && skills.sessionSkillsSupported
+
+                override val canAskForSkill: Boolean
+                    get() = gateway.capabilities.value.serverCatalog
+
+                override suspend fun createSession(selection: SkillSelection): Outcome<String> {
+                    if (!current()) return Failure.Refused(RefusalReason.StaleScope).failed()
+                    return (gateway
+                            .facet<SessionSelectionGateway>()
+                            ?.createSelectedSession(captured)
+                            ?: gateway.createSession(NewSession(location = location)))
+                        .map { it.id.raw }
+                }
+
+                override suspend fun activateSkill(
+                    sessionId: String,
+                    skillId: String,
+                    resume: Boolean,
+                ): Outcome<Unit> =
+                    skills.activateSessionSkill(
+                        io.github.eslamasabry.oc.core.common.ids.SessionId(sessionId),
+                        skillId,
+                        resume,
+                        ::current,
+                    )
+
+                override suspend fun prompt(
+                    sessionId: String,
+                    text: String,
+                    selection: SkillSelection,
+                ): Outcome<Unit> {
+                    if (!current()) return Failure.Refused(RefusalReason.StaleScope).failed()
+                    return gateway
+                        .prompt(
+                            io.github.eslamasabry.oc.core.common.ids.SessionId(sessionId),
+                            OutgoingPrompt(
+                                text,
+                                model =
+                                    captured.model?.let {
+                                        ModelSelection(
+                                            it,
+                                            captured.variant.takeIf(String::isNotEmpty),
+                                        )
+                                    },
+                                agent = captured.agent,
+                            ),
+                        )
+                        .let { reply ->
+                            when (reply) {
+                                is Outcome.Failed -> reply
+                                is Outcome.Ok ->
+                                    if (reply.value is PromptAdmission.Confirmed) Unit.ok()
+                                    else Failure.Refused(RefusalReason.DispatchUncertain).failed()
+                            }
+                        }
+                }
+            }
+        return SkillConversation(ports, redactor, ::current)
     }
 
     override suspend fun copy(text: String): Outcome<Unit> =

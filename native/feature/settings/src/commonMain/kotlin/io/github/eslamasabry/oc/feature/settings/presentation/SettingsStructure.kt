@@ -10,6 +10,7 @@ import kotlinx.collections.immutable.toImmutableList
  */
 public enum class SettingsRowId(public val tag: String, public val group: SettingsGroupId) {
     Servers("settings-servers", SettingsGroupId.Server),
+    ServerCapabilities("settings-server-capabilities", SettingsGroupId.Server),
     ServerConfiguration("settings-server-configuration", SettingsGroupId.Server),
     ThisPhone("settings-this-phone", SettingsGroupId.Server),
     ModelAndMode("settings-model-mode", SettingsGroupId.Agent),
@@ -68,6 +69,9 @@ public data class SettingsFacts(
      */
     val diagnostics: Boolean = false,
     val configurationInspection: Boolean = false,
+    val serverCapabilities: io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities? =
+        null,
+    val usageStatistics: Boolean = false,
     /**
      * The places the host can open; a row leading anywhere else is absent, never dead (02 §3.7).
      * Null = every place (a host with every feature routed).
@@ -110,6 +114,8 @@ public object SettingsStructure {
                             SettingsDoor.Page(SettingsPage.ServerConfiguration).takeIf {
                                 facts.configurationInspection
                             }
+                        SettingsRowId.ServerCapabilities ->
+                            SettingsDoor.Page(SettingsPage.ServerCapabilities)
                         SettingsRowId.Servers -> SettingsDoor.Outside(SettingsOutside.Servers)
                         SettingsRowId.ThisPhone ->
                             SettingsDoor.Outside(SettingsOutside.ThisPhone).takeIf {

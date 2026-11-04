@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="webSourcesDuplicateNative">هذا الرابط موجود في قائمة المراجعة.</string>
+    <string name="webSourcesFullNative">يمكنك مراجعة 10 مصادر كحد أقصى. أزل مصدرًا قبل إضافة آخر.</string>
+    <string name="webSourcesChooseNative">اختر مصدرًا واحدًا على الأقل من المصادر التي راجعتها.</string>
+</resources>

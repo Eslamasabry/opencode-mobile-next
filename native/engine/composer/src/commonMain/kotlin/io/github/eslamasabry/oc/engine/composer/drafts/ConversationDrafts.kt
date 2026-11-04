@@ -304,7 +304,10 @@ internal constructor(
                         if (!waiting && saved?.attachments?.isNotEmpty() == true) {
                             // A `file:` reference means something only where it was saved: wait for
                             // the conversation's own location instead of guessing it.
-                            if (place == null && saved.attachments.any { schemeOf(it.url.orEmpty()) == "file" })
+                            if (
+                                place == null &&
+                                    saved.attachments.any { schemeOf(it.url.orEmpty()) == "file" }
+                            )
                                 return@attempt AWAITING_LOCATION.failed()
                             val recovery =
                                 drafts.restoreAttachments(
@@ -333,7 +336,8 @@ internal constructor(
             else
                 when (loaded) {
                     is Outcome.Failed ->
-                        if (loaded.failure === AWAITING_LOCATION) before.copy(awaitingLocation = true)
+                        if (loaded.failure === AWAITING_LOCATION)
+                            before.copy(awaitingLocation = true)
                         else
                             before.copy(
                                 public = before.public.copy(failure = loaded.failure),
@@ -382,23 +386,42 @@ internal constructor(
     }
 
     public fun changed(text: String) {
+        changeText(text)
+    }
+
+    /**
+     * Installs explicitly reviewed context only while the captured draft is unchanged. Advancing
+     * the restore revision asks a still-mounted field to adopt this acknowledged external edit.
+     */
+    public fun replaceReviewedText(expectedEditRevision: Long, text: String): Boolean =
+        changeText(text, expectedEditRevision)
+
+    private fun changeText(text: String, expectedEditRevision: Long? = null): Boolean {
         while (true) {
             val before = snapshots.value
             if (
                 before.fenced ||
+                    (expectedEditRevision != null &&
+                        before.public.editRevision != expectedEditRevision) ||
                     before.closed ||
                     before.retired ||
                     !owner.active(ref.profileId, generation) ||
                     !before.public.ready ||
                     text == before.public.text
             )
-                return
+                return false
             if (
                 snapshots.compareAndSet(
                     before,
                     before.copy(
                         public =
-                            before.public.copy(text = text, editRevision = before.revision + 1),
+                            before.public.copy(
+                                text = text,
+                                editRevision = before.revision + 1,
+                                restoreRevision =
+                                    before.public.restoreRevision +
+                                        if (expectedEditRevision != null) 1 else 0,
+                            ),
                         revision = before.revision + 1,
                         submissions = emptyList(),
                     ),
@@ -418,6 +441,7 @@ internal constructor(
                 autosave.changedRevision(current.public.text, current.revision)
             }
         }
+        return true
     }
 
     private fun acknowledged(revision: Long, text: String, result: Outcome<Unit>) {
@@ -507,8 +531,8 @@ internal constructor(
 
     /**
      * The one whole-state writer (file edits, their retries, the pending-clear supersede). It runs
-     * on the serial lane inside the autosave writer fence, so a text save can never interleave
-     * with it and the file snapshot a revision save keeps is always fresh.
+     * on the serial lane inside the autosave writer fence, so a text save can never interleave with
+     * it and the file snapshot a revision save keeps is always fresh.
      */
     private suspend fun commitAttachments(requested: List<PromptAttachment>): Outcome<Unit> =
         autosave.exclusive {

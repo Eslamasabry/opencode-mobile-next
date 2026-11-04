@@ -52,6 +52,7 @@ public object TeachingIds {
     public val VoiceConversation: TipId = TipId("voice-conversation")
     public val MakeItYours: TipId = TipId("make-it-yours")
     public val WhatsNew: TipId = TipId("whats-new")
+    public val TerminalLinks: TipId = TipId("terminal-links")
 
     /**
      * The earlier Appearance tour "Make it yours" replaced: an answer given to it stands for the
@@ -122,6 +123,17 @@ public class TeachingRegistry(tips: Iterable<TipDefinition>) {
         public val defaults: TeachingRegistry =
             TeachingRegistry(
                 listOf(
+                    TipDefinition(
+                        id = TeachingIds.TerminalLinks,
+                        kind = TeachingKind.Tip,
+                        titleKey = "tipTerminalLinksTitle",
+                        messageKey = "tipTerminalLinks",
+                        copyKeys = persistentListOf("tipTerminalLinksTitle", "tipTerminalLinks"),
+                        anchors = persistentListOf("terminal-output"),
+                        trigger =
+                            "the live terminal first contains a detected link, while the keyboard is clear; done when a link is opened",
+                        maxCount = 2,
+                    ),
                     TipDefinition(
                         id = TeachingIds.StopAfterStep,
                         kind = TeachingKind.Tip,

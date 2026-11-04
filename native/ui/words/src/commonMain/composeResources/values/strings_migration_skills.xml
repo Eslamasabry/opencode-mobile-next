@@ -1,0 +1,8 @@
+<resources>
+    <string name="migrationSkillUseNew">Use in new conversation</string>
+    <string name="migrationSkillReady">The skill is ready in a new conversation. The agent has not run.</string>
+    <string name="migrationSkillChanged">The connection changed. Any conversation already created has been kept.</string>
+    <string name="migrationSkillInvalid">This skill has no supported identifier. Refresh the skills list.</string>
+    <string name="migrationSkillUncertain">The request may have reached the server. Any conversation already created has been kept. Check it before trying again.</string>
+    <string name="migrationSkillOpen">Open conversation</string>
+</resources>

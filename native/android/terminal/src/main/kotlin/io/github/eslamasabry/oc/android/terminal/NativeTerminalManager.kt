@@ -82,8 +82,9 @@ class NativeTerminalManager(
 
         internal lateinit var terminal: TerminalSession
         internal lateinit var view: TerminalView
+        private lateinit var surface: TerminalSurfaceHost
         val platformView: android.view.View
-            get() = view
+            get() = surface
 
         private val ended = CountDownLatch(1)
         private val removalActions = ArrayList<() -> Unit>()
@@ -124,7 +125,10 @@ class NativeTerminalManager(
             get() = this::terminal.isInitialized && this::view.isInitialized && terminal.pid > 0
 
         private val client =
-            object : QuietSessionClient() {
+            object :
+                QuietSessionClient({
+                    if (this@NativeSession::view.isInitialized) view else null
+                }) {
                 override fun onTextChanged(session: TerminalSession) {
                     // The emulator parses UTF-8 incrementally; whole characters survive split PTY
                     // reads.
@@ -180,6 +184,7 @@ class NativeTerminalManager(
                         android.view.View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
                 }
             terminal.updateSize(cols.coerceIn(2, 500), rows.coerceIn(2, 200), 0, 0)
+            surface = TerminalSurfaceHost(app, view)
             view.attachSession(terminal)
             request?.let { file ->
                 appScope.launch(dispatchers.io) {
@@ -307,17 +312,22 @@ class NativeTerminalManager(
 }
 
 /**
- * Library diagnostics and OSC-52 clipboard requests are intentionally discarded: login output may
- * hold credentials.
+ * Library diagnostics are discarded; valid bounded OSC 52 writes use the system clipboard, only
+ * while [shownView] is on screen.
+ * Clipboard queries are removed by TerminalSession before VT decoding.
  */
-internal open class QuietSessionClient : TerminalSessionClient {
+internal open class QuietSessionClient(
+    private val shownView: () -> android.view.View? = { null }
+) : TerminalSessionClient {
     override fun onTextChanged(session: TerminalSession) = Unit
 
     override fun onTitleChanged(session: TerminalSession) = Unit
 
     override fun onSessionFinished(session: TerminalSession) = Unit
 
-    override fun onCopyTextToClipboard(session: TerminalSession, text: String) = Unit
+    override fun onCopyTextToClipboard(session: TerminalSession, text: String) {
+        copyTerminalText(session, text, shownView())
+    }
 
     override fun onPasteTextFromClipboard(session: TerminalSession) = Unit
 
@@ -344,14 +354,12 @@ internal open class QuietSessionClient : TerminalSessionClient {
     override fun logStackTrace(tag: String, error: Exception) = Unit
 }
 
-/**
- * Ordinary terminal input. No hidden shortcuts, OSC clipboard writes or library logging are
- * enabled.
- */
+/** Ordinary terminal input; a tapped output link enters the kit's review sheet. */
 internal class TerminalInputClient(private val view: TerminalView) : TerminalViewClient {
     override fun onScale(scale: Float): Float = 1f
 
     override fun onSingleTapUp(event: MotionEvent) {
+        if ((view.parent as? TerminalSurfaceHost)?.openLink(event) == true) return
         view.requestFocus()
         (view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)
             ?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
@@ -371,7 +379,7 @@ internal class TerminalInputClient(private val view: TerminalView) : TerminalVie
 
     override fun onKeyUp(code: Int, event: KeyEvent): Boolean = false
 
-    override fun onLongPress(event: MotionEvent): Boolean = true
+    override fun onLongPress(event: MotionEvent): Boolean = false
 
     override fun readControlKey(): Boolean = false
 

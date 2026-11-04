@@ -6,5 +6,6 @@ plugins { id("oc.kmp.feature") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:linuxsetup"))
+        implementation(project(":engine:runtime"))
     }
 }

@@ -20,6 +20,8 @@ public enum class SettingsGroupId {
 public sealed interface SettingsPage {
     public data object ServerConfiguration : SettingsPage
 
+    public data object ServerCapabilities : SettingsPage
+
     public data object Hub : SettingsPage
 
     public data class Group(val id: SettingsGroupId) : SettingsPage

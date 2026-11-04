@@ -199,6 +199,17 @@ public class SettingsPresenter(
             about = about,
             privacy = e.collect?.let { PrivacyUi(it, l.consentSaving) },
             language = p.language,
+            capabilities =
+                f.server?.let {
+                    ServerFeatures.project(
+                        it.name,
+                        f.serverCapabilities
+                            ?: io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+                                .Unknown,
+                        f.platform,
+                        f.usageStatistics,
+                    )
+                },
             report = l.report,
             reportDescription = l.reportDescription,
             phraseChips = l.phraseChips,

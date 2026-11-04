@@ -256,7 +256,12 @@ public fun ServersScreen(
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             state.issue?.let { issue ->
-                val words = issueWords(issue, state.failure)
+                val known =
+                    state.addressProblem
+                        ?: state.failure?.details?.text?.let {
+                            io.github.eslamasabry.oc.engine.runtime.messages.SetupMessages.plain(it)
+                        }
+                val words = known?.let { setupMessageWords(it) } ?: issueWords(issue, state.failure)
                 if (issue == ServerIssue.Connected) {
                     KitNotice(words)
                 } else {

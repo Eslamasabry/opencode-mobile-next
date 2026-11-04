@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="webSourcesDuplicateNative">This URL is already in your review list.</string>
+    <string name="webSourcesFullNative">You can review up to 10 sources. Remove one before adding another.</string>
+    <string name="webSourcesChooseNative">Choose at least one reviewed source.</string>
+</resources>

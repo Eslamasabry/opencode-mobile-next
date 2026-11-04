@@ -1327,6 +1327,18 @@ internal class Oc2Gateway(
                 ?.toImmutableList(),
         )
 
+    override suspend fun inbox(session: SessionId): Outcome<ImmutableList<InboxItem>> =
+        Oc2Inbox.list(this, session)
+
+    override suspend fun cancelInboxItem(session: SessionId, item: InboxItemId): Outcome<Unit> =
+        Oc2Inbox.cancel(this, session, item)
+
+    override suspend fun setInboxDelivery(
+        session: SessionId,
+        item: InboxItemId,
+        delivery: InboxDelivery,
+    ): Outcome<Unit> = Oc2Inbox.delivery(this, session, item, delivery)
+
     override suspend fun pendingPermissions(): Outcome<ImmutableList<PermissionRequest>> =
         read("/permission/request", query = locationQuery()) { root ->
             val rows = data(root) as? JsonArray ?: return@read null
@@ -1907,7 +1919,7 @@ internal class Oc2Gateway(
                 subagentSessions = false,
                 promptAgentMentions = true,
                 promptSteering = true,
-                offlinePromptQueue = false,
+                offlinePromptQueue = true,
                 fileBrowsing = true,
                 terminal = true,
                 conversationShell = true,
@@ -1968,7 +1980,7 @@ internal class Oc2Gateway(
                 worktreeInspection = true,
                 legacyQuestionRequests = false,
                 forms = false,
-                inbox = false,
+                inbox = true,
                 cliSessionResume =
                     true, // Flutter api2: opencode2 --session resumes by id (P12-BUILD-AGENTS)
                 projectsAreGitRepositories = false,

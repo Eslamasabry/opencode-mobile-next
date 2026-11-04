@@ -4,7 +4,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -28,6 +30,8 @@ import io.github.eslamasabry.oc.feature.chat.handoff.StateHandoffViewModel
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderViewModel
 import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalChipSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
+import io.github.eslamasabry.oc.feature.chat.inbox.presentation.ChatInboxViewModel
+import io.github.eslamasabry.oc.feature.chat.inbox.ui.ChatInboxSlot
 import io.github.eslamasabry.oc.feature.chat.notes.SessionNoteViewModel
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatViewModel
@@ -37,6 +41,7 @@ import io.github.eslamasabry.oc.feature.chat.sessiontransfer.presentation.Sessio
 import io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui.SessionTransferSheet
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewModel
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
+import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -51,13 +56,20 @@ import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
+import io.github.eslamasabry.oc.ui.routes.WebSourcesRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveTitle
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
+import io.github.eslamasabry.oc.ui.words.res.nativePendingCount
+import io.github.eslamasabry.oc.ui.words.res.nativePendingFailed
+import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
+import io.github.eslamasabry.oc.ui.words.res.nativePendingTitle
 import io.github.eslamasabry.oc.ui.words.res.protoToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.sessionTransferTitle
 import io.github.eslamasabry.oc.ui.words.res.stateHandoffTitle
+import io.github.eslamasabry.oc.ui.words.res.webSourcesTitle
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -85,6 +97,15 @@ public class ChatEntries(
         entry<ChatRoute> { route ->
             val vm = assistedMetroViewModel<ChatViewModel, ChatViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
+            val liveGraphs by registry.live.collectAsStateWithLifecycle()
+            val gateway = (liveGraphs[route.ref.profileId] as? ChatGraphAccessors)?.chatGateway
+            val serverCapabilities = gateway?.capabilities?.collectAsStateWithLifecycle()?.value
+            val pendingVm =
+                assistedMetroViewModel<ChatInboxViewModel, ChatInboxViewModel.Factory> {
+                    create(route)
+                }
+            val pendingSends by pendingVm.state.collectAsStateWithLifecycle()
+            var pendingOpen by remember(route.ref) { mutableStateOf(false) }
             val startVm =
                 assistedMetroViewModel<ChatStartViewModel, ChatStartViewModel.Factory> {
                     create(route)
@@ -242,6 +263,18 @@ public class ChatEntries(
                                             queueMove::open,
                                         )
                                         .takeIf { queueMoveAvailable },
+                                    KitLineAction(
+                                            stringResource(Res.string.webSourcesTitle),
+                                            { navigator.open(WebSourcesRoute(route.ref)) },
+                                        )
+                                        .takeIf { serverCapabilities?.webSearch == true },
+                                    KitLineAction(
+                                            stringResource(Res.string.nativePendingReview),
+                                            { pendingOpen = true },
+                                        )
+                                        .takeIf {
+                                            pendingSends.rows.isNotEmpty() || pendingSends.failed
+                                        },
                                     // STATE: continue this conversation elsewhere.
                                     KitLineAction(
                                         stringResource(Res.string.stateHandoffTitle),
@@ -264,7 +297,47 @@ public class ChatEntries(
                             start = start,
                             startActions = startVm,
                             appStatus = appStatus,
-                            replyOffer = offerContent,
+                            replyOffer = {
+                                offerContent?.invoke()
+                                // Dart `_PendingSendsStrip`: waiting sends stay visible above the
+                                // composer, not only in the overflow menu.
+                                if (pendingSends.rows.isNotEmpty() || pendingSends.failed)
+                                    KitNotice(
+                                        message =
+                                            if (pendingSends.rows.isEmpty())
+                                                stringResource(Res.string.nativePendingFailed)
+                                            else
+                                                pluralStringResource(
+                                                    Res.plurals.nativePendingCount,
+                                                    pendingSends.rows.size,
+                                                    pendingSends.rows.size.toString(),
+                                                ),
+                                        title = stringResource(Res.string.nativePendingTitle),
+                                        actions =
+                                            listOf(
+                                                KitLineAction(
+                                                    stringResource(Res.string.nativePendingReview),
+                                                    { pendingOpen = true },
+                                                )
+                                            ),
+                                        liveRegion = false,
+                                    )
+                            },
+                        )
+                        ChatInboxSlot(
+                            pendingSends,
+                            pendingVm,
+                            { text ->
+                                inbox.offer(
+                                    ComposerInbox.target(
+                                        route.ref.profileId.raw,
+                                        route.ref.sessionId.raw,
+                                    ),
+                                    text,
+                                )
+                            },
+                            open = pendingOpen,
+                            onDismiss = { pendingOpen = false },
                         )
                         QueueMoveScreen(queueMoveState, queueMove)
                         SessionTransferSheet(transferState, transfer)

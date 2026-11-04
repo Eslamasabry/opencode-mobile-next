@@ -7,6 +7,7 @@ plugins { id("oc.kmp.library") }
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":core:common"))
+        api(project(":core:domain"))
         api(project(":core:model")) // PromptAttachment is in the public API (the send pipeline's attachment type)
         api(project(":core:security")) // Redactor: secret checks for phrases, saved-prompt identities, photos
         implementation(libs.kotlinx.io.core) // FilePayloadStore: the Flutter vault layout on disk

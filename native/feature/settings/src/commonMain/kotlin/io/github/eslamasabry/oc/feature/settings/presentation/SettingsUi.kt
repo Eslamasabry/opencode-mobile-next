@@ -24,6 +24,7 @@ public data class SettingsUi(
     val privacy: PrivacyUi? = null,
     /** The language in use (acknowledged), for the Language page and its row. */
     val language: AppLanguage = AppLanguage.System,
+    val capabilities: ServerCapabilitiesUi? = null,
     /** Report a problem's preview; null until the page opens. */
     val report: ReportUi? = null,
     val reportDescription: String = "",

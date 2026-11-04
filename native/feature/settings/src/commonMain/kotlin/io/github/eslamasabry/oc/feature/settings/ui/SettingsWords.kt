@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceBrutal
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfacePaper
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceSoft
 import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceSolid
+import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
 import io.github.eslamasabry.oc.ui.words.res.configInspectionTitle
 import io.github.eslamasabry.oc.ui.words.res.diagnosticsReportShareFailed
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceDark
@@ -131,6 +132,7 @@ internal fun groupWords(group: SettingsGroupId): String =
 internal fun rowWords(row: SettingsRowId): String =
     stringResource(
         when (row) {
+            SettingsRowId.ServerCapabilities -> Res.string.capabilityScreenTitle
             SettingsRowId.ServerConfiguration -> Res.string.configInspectionTitle
             SettingsRowId.Servers -> Res.string.settingsV3Servers
             SettingsRowId.ThisPhone -> Res.string.settingsV3ThisPhone
@@ -186,6 +188,7 @@ internal fun aliasWords(row: SettingsRowId): String {
             SettingsRowId.Guide -> Res.string.settingsHubSearchGuideAliases
             SettingsRowId.ReportProblem -> Res.string.settingsHubSearchBugAliases
             SettingsRowId.About -> Res.string.settingsHubSearchAboutAliases
+            SettingsRowId.ServerCapabilities,
             SettingsRowId.ServerConfiguration,
             SettingsRowId.Agents,
             SettingsRowId.Background,

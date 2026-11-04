@@ -180,7 +180,7 @@ public class WebSearchViewModel(
                             provider =
                                 state.value.provider?.takeIf { id ->
                                     answer.value.any { it.id == id }
-                                } ?: answer.value.firstOrNull()?.id,
+                                } ?: answer.value.singleOrNull()?.id,
                         )
                 }
         }

@@ -223,19 +223,39 @@ class AndroidSettingsHost(
             desktopReleaseCheck = false,
         )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val selectedCapabilities =
+        combine(reportRegistry.live, stores.profiles.activeId, connections.servers) {
+                live,
+                active,
+                servers ->
+                val selected =
+                    servers.firstOrNull { it.id == active && it.connected }
+                        ?: servers.firstOrNull { it.connected }
+                selected?.let { live[it.id] }
+            }
+            .flatMapLatest { graph ->
+                (graph as? io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors)
+                    ?.chatGateway
+                    ?.capabilities ?: kotlinx.coroutines.flow.flowOf(null)
+            }
+
     override val facts: StateFlow<SettingsFacts> =
         combine(
                 connections.servers,
                 stores.profiles.activeId,
                 motion.animatorScale,
                 configurationInspection.available,
-            ) { servers, active, scale, configAvailable ->
+                selectedCapabilities,
+            ) { servers, active, scale, configAvailable, capabilities ->
                 val live =
                     servers.firstOrNull { it.id == active && it.connected }
                         ?: servers.firstOrNull { it.connected }
                 SettingsFacts(
                     platform = shipped,
                     server = live?.let { ServerLine(it.name, onPhone = false) },
+                    serverCapabilities = capabilities,
+                    usageStatistics = live != null,
                     dynamicColour = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                     systemMotionOff = scale == 0f,
                     diagnostics = true,
@@ -272,6 +292,7 @@ class AndroidSettingsHost(
                 nav.open(io.github.eslamasabry.oc.ui.routes.CapabilitiesRoute)
             SettingsOutside.ModelAndMode -> nav.open(SettingsRoute.ModelDefaults())
             SettingsOutside.Servers -> nav.open(ServersRoute.Home)
+            SettingsOutside.Usage -> nav.open(io.github.eslamasabry.oc.ui.routes.UsageRoute.Hub())
             SettingsOutside.Tools,
             SettingsOutside.Providers -> {
                 val live = connections.servers.value
@@ -467,6 +488,7 @@ class AndroidSettingsHost(
                 SettingsOutside.Tools,
                 SettingsOutside.Providers,
                 SettingsOutside.Servers,
+                SettingsOutside.Usage,
                 SettingsOutside.StarOnGitHub,
                 SettingsOutside.WhatsNew,
                 SettingsOutside.ReleaseNotes,

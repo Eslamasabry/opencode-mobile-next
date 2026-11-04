@@ -15,6 +15,11 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.project.terminal.LocalShell
 import io.github.eslamasabry.oc.engine.project.terminal.LocalTerminalInputPort
 import io.github.eslamasabry.oc.engine.project.terminal.LocalTerminalPort
+import io.github.eslamasabry.oc.engine.settings.teaching.TeachingIds
+import io.github.eslamasabry.oc.engine.settings.teaching.TeachingSource
+import io.github.eslamasabry.oc.engine.settings.teaching.TipController
+import io.github.eslamasabry.oc.engine.settings.teaching.TipMoment
+import io.github.eslamasabry.oc.engine.settings.teaching.TipVisit
 import io.github.eslamasabry.oc.engine.project.terminal.TerminalKey
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.RemoteTerminalRoute
@@ -42,6 +47,7 @@ public data class LocalTerminalUi(
     val accessible: Boolean? = null,
     val confirmStop: Int? = null,
     val devServerPort: Int? = null,
+    val linkTip: Boolean = false,
 )
 
 public interface LocalTerminalNativeActions {
@@ -71,6 +77,10 @@ public interface LocalTerminalActions {
 
     public fun setAccessible(enabled: Boolean)
 
+    public fun linkTipMoment(keyboardVisible: Boolean)
+
+    public fun dismissLinkTip()
+
     public fun back()
 
     public fun openDevPreview() {}
@@ -82,6 +92,7 @@ public interface LocalTerminalActions {
 public class LocalTerminalViewModel(
     private val port: LocalTerminalPort,
     private val nav: AppNavigator,
+    private val teaching: TeachingSource,
     private val registry: ConnectionRegistry,
     private val devServers:
         io.github.eslamasabry.oc.engine.runtime.devservers.TerminalDevServerHost =
@@ -99,6 +110,9 @@ public class LocalTerminalViewModel(
                 }
         }
     private val local = MutableStateFlow(LocalTerminalUi())
+    private var tips: TipController? = null
+    private val tipVisit = TipVisit()
+    private var keyboardVisible = true
     public val state: StateFlow<LocalTerminalUi> =
         combine(port.shells, local, sources) { shells, ui, servers ->
                 ui.copy(
@@ -120,6 +134,21 @@ public class LocalTerminalViewModel(
 
     init {
         if (port.shells.value.isEmpty()) create()
+        viewModelScope.launch {
+            val controller = teaching.controller() ?: return@launch
+            tips = controller
+            linkTipMoment(keyboardVisible)
+            controller.active.collect { active ->
+                local.update {
+                    it.copy(
+                        linkTip =
+                            active != null &&
+                                active.id == TeachingIds.TerminalLinks &&
+                                !active.replay
+                    )
+                }
+            }
+        }
     }
 
     private var devSession:
@@ -261,9 +290,31 @@ public class LocalTerminalViewModel(
         local.update { it.copy(accessible = enabled) }
     }
 
+    override fun linkTipMoment(keyboardVisible: Boolean) {
+        this.keyboardVisible = keyboardVisible
+        val shell = state.value.shells.firstOrNull { it.id == state.value.selected } ?: return
+        if (Regex("https?://").containsMatchIn(shell.transcript))
+            tips?.offer(
+                TeachingIds.TerminalLinks,
+                tipVisit,
+                maxCount = 2,
+                moment = TipMoment(keyboardOverAnchor = keyboardVisible),
+            )
+    }
+
+    override fun dismissLinkTip() {
+        tips?.dismiss(TeachingIds.TerminalLinks)
+    }
+
     override fun back() {
+        dismissLinkTip()
         discardInput()
         nav.back()
+    }
+
+    override fun onCleared() {
+        dismissLinkTip()
+        super.onCleared()
     }
 
     private fun run(work: suspend () -> Outcome<Unit>) {
