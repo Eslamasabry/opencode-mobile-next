@@ -1,6 +1,6 @@
 # Migration 46 — Flutter platform, Linux, protocol and other code (part 1)
 
-Counts (41/78 files recorded): already there **14**; ported now **11**; not needed **16**; blocked **0**.
+Counts (51/78 files recorded): already there **14**; ported now **11**; not needed **20**; blocked **6**.
 
 Base: `b6c30a59983a145a4d9cf0bcc3d1ec0295c0d6bc`; branch `p12x/46-port-rest-1`.
 Finish line: all 78 source files have a behavior-based disposition and missing feasible native behavior is wired.
@@ -48,6 +48,16 @@ Non-goals: tests, APKs, pushes, signing, releases, and features explicitly defer
 - `lib/domain/claude_agent_trial.dart` — not needed: plan/01 §12 D8 selects the existing Paseo phone path for the switch and explicitly revisits the OpenCode 2 Claude Agent trial after the switch; no trial adapter or UI is enabled.
 - `lib/domain/factsbook/factsbook_gateway.dart` — not needed: FactsBook App API and signed trigger/reminder/offer contracts are explicitly deferred until after the switch by plan/01 §12 D6; existing persisted data is retained by DeferredFeatureData.
 - `lib/domain/factsbook/fake_factsbook_triggers.dart` — not needed: in-memory demo/test trigger evaluation and seeded reminder offers for the deferred FactsBook feature (plan/01 §12 D6), not a production node implementation.
+- `lib/domain/parallel_requests.dart` — not needed: Dart Future tuple/error-handler plumbing; Kotlin structured suspend/Outcome calls replace it without a separate user feature.
+- `lib/domain/sv3_tool_configuration.dart` — not needed: unused optional Flutter companion interfaces/capability extensions have no implementing gateway or caller; they add no enabled user behavior. Native persistent writes stay capability-gated; no fabricated MCP provenance/effective-enabled state is introduced.
+- `lib/local_llm/local_llm_pack.dart` — not needed — pinned Gemma runtime pack and summary prompt are after-switch functionality by plan/02 §3.5 S02-3.
+- `lib/local_llm/local_llm_platform.dart` — not needed — Gemma MethodChannel/event transport is after-switch by plan/02 §3.5 S02-3; there is no loaded Gemma runtime at the switch.
+- `lib/api2/gateway_operations/ops_catalog.dart` — blocked: catalog/default model selection and MCP runtime adds exist, but native skills/references/MCP resource inventories, connect/disconnect/remove operations and their Library surface remain unavailable (`native/core/domain/src/commonMain/kotlin/io/github/eslamasabry/oc/core/domain/Operations.kt:215`); adding disconnected routes would not port this user journey.
+- `lib/api2/gateway_operations/ops_dev.dart` — blocked: real PTY ticket/socket wiring is ported on this branch and shell settings/Git init exist, but native terminal inventory/create/rename/resize/remove controls and project VCS-health/status adapters remain absent (`native/core/domain/src/commonMain/kotlin/io/github/eslamasabry/oc/core/domain/Operations.kt:178`).
+- `lib/api2/gateway_operations/ops_extras.dart` — blocked: real usage statistics are wired through `native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SearchUsageWiring.kt:180`, but active-context, skill activation, session import/export, note and plugin engines have no complete native feature/transport binding; their capability flags remain off.
+- `lib/api2/gateway_operations/ops_integrations.dart` — blocked: native protocol/feature wiring for provider key/external/OAuth/command sign-in, attempt recovery, credential labeling/activation/removal and original-location fencing is missing; OC2 `integrationCredentials`/`integrationCommandAuth` stay false rather than accepting credentials into an unbound flow.
+- `lib/api2/gateway_operations/ops_projects.dart` — blocked: ported real `/project` inventory and current-project reads into the existing Projects picker on this branch, preserving beta sandboxes/canonical names; global search and create-worktree already exist, but rename/remove/worktree-browser and move-session user journeys are missing (stable deliberately removes managed-workspace routes).
+- `lib/api2/gateway_operations/ops_sessions.dart` — blocked: ported the existing native Fork action to real exclusive-before/through OC2 requests and enabled its capability; staged revert already exists, but compact, read acknowledgements, saved-grant management, child-session inventory and location-reminder wiring are incomplete; Flutter OC2 share/archive/legacy questions are deliberately unsupported and remain unavailable.
 
 The native implementations include shared-storage file/APK handoff with a visible permission retry, localized age labels, retained assistant-model deletion, advisory agent build caps/full-speed settings, native thermal scheduling, visible-only Linux vitals, bounded card history, staged-history pagination, typed error fallback copy, Fork, project inventory and guarded launcher routing. Partial protocol/launch changes remain marked blocked where the rest of that file still lacks a complete native journey.
 
@@ -61,6 +71,7 @@ Validation: from `native/`, JDK 21, serialized with the shared machine build loc
 - `build/native-rest-46/compile-21.log`: both requested compilation tasks passed together (3s).
 - `build/native-rest-46/compile-31.log`: both requested compilation tasks passed together (1s).
 - `build/native-rest-46/compile-41.log`: both requested compilation tasks passed together (1s).
+- `build/native-rest-46/compile-51.log`: both requested compilation tasks passed together (1s).
 
 The first two attempts exposed an unavailable resource-environment import and a void Android Intent setter; both were corrected before the successful checkpoint. No tests were written, run, weakened or removed; no Flutter/preflight/test runner, APK, signing, push, publication or release command was run. Existing compiler warnings remain in untouched code. Kotlin/XML diff and source-manifest checks are static review only.
 
