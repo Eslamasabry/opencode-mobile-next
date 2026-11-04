@@ -42,9 +42,20 @@ public data class ServerEditorUi(
     val canScan: Boolean = false,
     val canTailscale: Boolean = false,
     val canPhone: Boolean = false,
+    val tailscaleApp: EditorTailscaleState? = null,
 )
 
 public interface ServerEditorActions {
+    public fun keepDraft(input: ServerEditorInput)
+
+    public fun takeDraft(): ServerEditorInput?
+
+    public fun refreshTailscale()
+
+    public fun openTailscale()
+
+    public fun installTailscale()
+
     public fun back(dirty: Boolean)
 
     public fun discard()
@@ -105,6 +116,33 @@ public class ServerEditorViewModel(
     private var fill: PairingFill? = null
     private var resultFor: ServerEditorInput? = null
     private var savedId: ProfileId? = route.profile
+    private var draft: ServerEditorInput? = null
+
+    override fun keepDraft(input: ServerEditorInput) {
+        draft = input
+    }
+
+    override fun takeDraft(): ServerEditorInput? = draft.also { draft = null }
+
+    override fun refreshTailscale() {
+        if (mutable.value.canTailscale)
+            mutable.update { it.copy(tailscaleApp = port.tailscaleState()) }
+    }
+
+    override fun openTailscale() {
+        when (val result = port.openTailscale()) {
+            is Outcome.Ok -> Unit
+            is Outcome.Failed -> mutable.update { it.copy(failure = result.failure) }
+        }
+        refreshTailscale()
+    }
+
+    override fun installTailscale() {
+        when (val result = port.installTailscale()) {
+            is Outcome.Ok -> Unit
+            is Outcome.Failed -> mutable.update { it.copy(failure = result.failure) }
+        }
+    }
 
     init {
         route.profile?.let { id ->
@@ -147,6 +185,7 @@ public class ServerEditorViewModel(
         if (mutable.value.saving) return
         changed()
         mutable.update { it.copy(step = step) }
+        if (step == ServerEditorStep.Tailscale) refreshTailscale()
     }
 
     override fun back(dirty: Boolean) {
@@ -219,6 +258,13 @@ public class ServerEditorViewModel(
                     is Outcome.Ok -> {
                         savedId = saved.value
                         mutable.update { it.copy(saved = true) }
+                        when (val baseline = port.read(saved.value)) {
+                            is Outcome.Ok -> mutable.update { it.copy(record = baseline.value) }
+                            is Outcome.Failed -> {
+                                mutable.update { it.copy(failure = baseline.failure) }
+                                return@launch
+                            }
+                        }
                         // The primary promises Save and connect; no mutation is replayed if
                         // connecting fails.
                         when (val connected = connections.connect(saved.value)) {
@@ -316,6 +362,8 @@ public class ServerEditorViewModel(
     override fun onCleared() {
         fill?.takePassword()
         resultFor = null
+        draft = null
+        if (inbox.recipient == EDITOR) inbox.recipient = null
     }
 
     @AssistedFactory

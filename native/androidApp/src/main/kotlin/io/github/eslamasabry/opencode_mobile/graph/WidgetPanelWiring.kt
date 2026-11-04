@@ -5,6 +5,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import io.github.eslamasabry.oc.android.widgets.WidgetComposeBridge
 import io.github.eslamasabry.oc.android.widgets.WidgetFeed
 import io.github.eslamasabry.oc.android.widgets.WidgetPanelStore
 import io.github.eslamasabry.oc.android.widgets.WidgetPanelStyle
@@ -12,6 +13,11 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.map
+import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.ui.shell.widgets.presentation.WidgetComposeLaunch
+import io.github.eslamasabry.oc.ui.shell.widgets.presentation.WidgetComposeNotice
+import io.github.eslamasabry.oc.ui.shell.widgets.presentation.WidgetComposeResult
+import io.github.eslamasabry.oc.ui.shell.widgets.presentation.WidgetComposeSource
 import io.github.eslamasabry.oc.ui.shell.widgets.presentation.WidgetPanelPalette
 import io.github.eslamasabry.oc.ui.shell.widgets.presentation.WidgetPanelSnapshot
 import io.github.eslamasabry.oc.ui.shell.widgets.presentation.WidgetPanelSource
@@ -53,6 +59,38 @@ class WidgetPanelBindings(
 
     override suspend fun saveProject(snapshot: WidgetPanelSnapshot, project: String): Outcome<Unit> =
         withContext(dispatchers.io) { store?.saveProject(snapshot.style(), project) ?: Outcome.Failed(Failure.StorageRefused()) }
+
+    fun compose(widgetId: Int, launchJson: String?, voice: Boolean, submissionId: String): WidgetComposeSource {
+        val bridge = WidgetComposeBridge(app, widgetId, launchJson, voice, submissionId)
+        return object : WidgetComposeSource {
+            override suspend fun inspect(): WidgetComposeLaunch = withContext(dispatchers.io) {
+                when (stores.warm()) {
+                    is Outcome.Failed -> WidgetComposeLaunch(false, "unknown")
+                    is Outcome.Ok -> bridge.inspect().let { WidgetComposeLaunch(it.available, it.steerMode) }
+                }
+            }
+
+            override suspend fun submit(text: String): WidgetComposeResult = withContext(dispatchers.io) {
+                when (val called = attempt({ Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.DispatchUncertain) }) { bridge.submit(text) }) {
+                    is Outcome.Failed -> WidgetComposeResult(uncertain = true)
+                    is Outcome.Ok -> when (called.value.status) {
+                        "accepted" -> WidgetComposeResult(accepted = true)
+                        "uncertain" -> WidgetComposeResult(uncertain = true)
+                        else -> WidgetComposeResult(
+                            uncertain = called.value.error == "uncertainDelivery",
+                            notice = when (called.value.error) {
+                                "staleRequest" -> WidgetComposeNotice.Stale
+                                "unsupported" -> WidgetComposeNotice.Unsupported
+                                "busy" -> WidgetComposeNotice.Busy
+                                "invalidRequest" -> WidgetComposeNotice.Invalid
+                                else -> WidgetComposeNotice.Unavailable
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     private fun WidgetPanelStyle.snapshot() = WidgetPanelSnapshot(widgetId, owner, scope, background, accent, project, projects, revision)
     private fun WidgetPanelSnapshot.style() = WidgetPanelStyle(widgetId, owner, scope, background, accent, project, projects, revision)

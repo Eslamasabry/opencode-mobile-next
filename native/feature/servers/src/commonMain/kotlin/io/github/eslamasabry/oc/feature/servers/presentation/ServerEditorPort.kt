@@ -18,6 +18,8 @@ public data class ServerEditorRecord(
     val cleartextOrigin: String?,
     val certificatePin: String?,
     val certificateOrigin: String?,
+    /** Opaque, memory-only identity of the exact stored edit baseline; contains no credential. */
+    val editToken: Any? = null,
 )
 
 /**
@@ -37,7 +39,12 @@ public data class ServerEditorInput(
     val cleartextOrigin: String?,
     val certificatePin: String?,
     val certificateOrigin: String?,
-)
+    /** Opaque, memory-only identity of the exact stored edit baseline; contains no credential. */
+    val editToken: Any? = null,
+) {
+    override fun toString(): String =
+        "ServerEditorInput(id=${id?.raw}, backend=$backend, keepSecret=$keepSecret)"
+}
 
 public data class ServerEditorProbe(val version: String?, val runtimes: List<String> = emptyList())
 
@@ -52,7 +59,19 @@ public data class ServerCertificate(
  * App-bound profile store and disposable authenticated probes; a probe never saves or starts a
  * conversation.
  */
+public enum class EditorTailscaleState {
+    Installed,
+    Missing,
+    Unavailable,
+}
+
 public interface ServerEditorPort {
+    public fun tailscaleState(): EditorTailscaleState
+
+    public fun openTailscale(): Outcome<Unit>
+
+    public fun installTailscale(): Outcome<Unit>
+
     public suspend fun read(id: ProfileId): Outcome<ServerEditorRecord>
 
     public suspend fun check(input: ServerEditorInput): Outcome<ServerEditorProbe>

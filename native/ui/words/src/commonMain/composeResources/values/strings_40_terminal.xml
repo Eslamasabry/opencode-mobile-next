@@ -45,4 +45,22 @@ Exit code: %4$s</string>
     <string name="terminal40Down">Down</string>
     <string name="terminal40Left">Left</string>
     <string name="terminal40Right">Right</string>
+    <string name="terminal40TipTitle">Selecting terminal text</string>
+    <string name="terminal40Tip">Hold the output to select text, or choose Select text in Terminal actions, then Copy.</string>
+    <string name="terminal40CommandLabel">Command</string>
+    <string name="terminal40FolderLabel">Folder</string>
+    <string name="terminal40PidLabel">Process</string>
+    <string name="terminal40ExitLabel">Exit code</string>
+    <string name="terminal40Pipe">|</string>
+    <string name="terminal40Tilde">~</string>
+    <string name="terminal40Slash">/</string>
+    <string name="terminal40Dash">-</string>
+    <string name="terminal40Home">Home</string>
+    <string name="terminal40End">End</string>
+    <string name="terminal40PageUp">PgUp</string>
+    <string name="terminal40PageDown">PgDn</string>
+    <string name="terminal40Interrupt">Ctrl+C</string>
+    <string name="terminal40Eof">Ctrl+D</string>
+    <string name="terminal40OpenPageQuestion">Open the sign-in page?</string>
+    <string name="terminal40OpenPageBody">This page belongs to %1$s. Open it in your browser?</string>
 </resources>

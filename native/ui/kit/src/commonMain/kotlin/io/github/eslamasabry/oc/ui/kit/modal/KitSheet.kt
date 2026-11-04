@@ -1,4 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.modal
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
@@ -295,8 +300,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                         SheetPanel(
                             entry,
                             Modifier.widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp).fillMaxWidth().then(sized)
-                                .predictiveShrink(back, TransformOrigin(0.5f, 1f))
-                                .clip(KitShapeId.Sheet.toShape()),
+                                .predictiveShrink(back, TransformOrigin(0.5f, 1f)),
                             handle = true,
                         )
                     }
@@ -307,8 +311,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                         SheetPanel(
                             entry,
                             Modifier.widthIn(max = SheetLayout.CENTRED_MAX_DP.dp).fillMaxWidth().heightIn(max = maxSheet)
-                                .predictiveShrink(back, TransformOrigin.Center)
-                                .clip(KitShapeId.Dialog.toShape()),
+                                .predictiveShrink(back, TransformOrigin.Center),
                             handle = false,
                         )
                     }
@@ -323,7 +326,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                         SheetPanel(
                             entry,
                             Modifier.width(SheetLayout.END_WIDTH_DP.dp).fillMaxHeight().predictiveShrink(back, TransformOrigin(1f, 0.5f)),
-                            handle = false,
+                            handle = false, shape = KitShapeId.Square,
                         )
                     }
                 }
@@ -343,12 +346,12 @@ internal fun Modifier.predictiveShrink(back: KitBackProgress, origin: TransformO
     }
 
 @Composable
-private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
+private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean, shape: KitShapeId = if (handle) KitShapeId.Sheet else KitShapeId.Dialog) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     Column(
         modifier
-            .background(colors.surface2)
+            .kitSurface(kitSurfaceLook(SurfaceRequest(SurfaceRole.Sheet, SurfaceLevel.Surface2, uniform = !handle), colors.surface2), shape.toShape())
             .pointerInput(Unit) { detectTapGestures { } } // taps on the sheet never reach the scrim
             .semantics {
                 paneTitle = entry.title
@@ -372,7 +375,7 @@ private fun SheetPanel(entry: SheetEntry, modifier: Modifier, handle: Boolean) {
         ) {
             if (entry.framed) {
                 Column(
-                    Modifier.fillMaxWidth().clip(KitShapeId.Panel.toShape()).background(colors.surface1).padding(tokens.panelPadding.dp),
+                    Modifier.fillMaxWidth().kitSurface(SurfaceRole.Content, KitShapeId.Panel, colors.surface1).padding(tokens.panelPadding.dp),
                     verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
                     content = entry.body,
                 )

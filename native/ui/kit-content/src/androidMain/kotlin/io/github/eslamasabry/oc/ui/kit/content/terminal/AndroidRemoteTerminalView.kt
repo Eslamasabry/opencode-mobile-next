@@ -44,6 +44,7 @@ public class AndroidRemoteTerminalView(
     private var endX = -1
     private var endY = -1
     private var composed = ""
+    private val resizeTask = Runnable { publishSize() }
     private val emulator =
         TerminalEmulator(
             object : TerminalOutput() {
@@ -145,8 +146,12 @@ public class AndroidRemoteTerminalView(
         if (!on) clearSelection()
     }
 
-    public fun selectedText(): String =
-        if (startX < 0) "" else emulator.getSelectedText(startX, startY, endX, endY)
+    public fun selectedText(): String {
+        if (startX < 0) return ""
+        val forward = startY < endY || (startY == endY && startX <= endX)
+        return if (forward) emulator.getSelectedText(startX, startY, endX, endY)
+        else emulator.getSelectedText(endX, endY, startX, startY)
+    }
 
     public fun paste(text: String) {
         if (inputOn) emulator.paste(text)
@@ -193,7 +198,69 @@ public class AndroidRemoteTerminalView(
         val cols = floor(w / renderer.fontWidth).toInt().coerceIn(2, 2000)
         val rows = (h / renderer.fontLineSpacing).coerceIn(2, 1000)
         emulator.resize(cols, rows, 1, 1)
-        resize(rows, cols)
+        removeCallbacks(resizeTask)
+        postDelayed(resizeTask, 150)
+    }
+
+    public fun publishSize() {
+        resize(emulator.mRows, emulator.mColumns)
+    }
+
+    public fun key(key: String, control: Boolean, alt: Boolean) {
+        if (!inputOn) return
+        val code =
+            when (key) {
+                "escape" -> KeyEvent.KEYCODE_ESCAPE
+                "tab" -> KeyEvent.KEYCODE_TAB
+                "up" -> KeyEvent.KEYCODE_DPAD_UP
+                "down" -> KeyEvent.KEYCODE_DPAD_DOWN
+                "left" -> KeyEvent.KEYCODE_DPAD_LEFT
+                "right" -> KeyEvent.KEYCODE_DPAD_RIGHT
+                "home" -> KeyEvent.KEYCODE_MOVE_HOME
+                "end" -> KeyEvent.KEYCODE_MOVE_END
+                "pageUp" -> KeyEvent.KEYCODE_PAGE_UP
+                "pageDown" -> KeyEvent.KEYCODE_PAGE_DOWN
+                else -> null
+            }
+        val modifiers =
+            (if (control) KeyHandler.KEYMOD_CTRL else 0) or (if (alt) KeyHandler.KEYMOD_ALT else 0)
+        val named = code?.let {
+            KeyHandler.getCode(
+                it,
+                modifiers,
+                emulator.isCursorKeysApplicationMode,
+                emulator.isKeypadApplicationMode,
+            )
+        }
+        if (named != null) {
+            send(named)
+            return
+        }
+        val symbol =
+            when (key) {
+                "interrupt" -> "\u0003"
+                "eof" -> "\u0004"
+                else -> key
+            }
+        var value = symbol
+        if (control && value.isNotEmpty()) {
+            val first = value[0].code
+            val translated =
+                when {
+                    first in 0x61..0x7a -> first - 0x60
+                    first in 0x40..0x5f -> first - 0x40
+                    first == 0x20 -> 0
+                    first == 0x3f -> 0x7f
+                    else -> first
+                }
+            value = translated.toChar() + value.substring(1)
+        }
+        send(if (alt) "\u001b$value" else value)
+    }
+
+    override fun onDetachedFromWindow() {
+        removeCallbacks(resizeTask)
+        super.onDetachedFromWindow()
     }
 
     override fun onDraw(canvas: Canvas) {

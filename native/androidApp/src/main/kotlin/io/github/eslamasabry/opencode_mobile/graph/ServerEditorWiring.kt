@@ -2,7 +2,11 @@
 
 package io.github.eslamasabry.opencode_mobile.graph
 
+import android.app.Application
 import dev.zacsweers.metro.*
+import io.github.eslamasabry.oc.android.platform.AndroidTailscaleApp
+import io.github.eslamasabry.oc.android.platform.CurrentActivity
+import io.github.eslamasabry.oc.android.platform.TailscaleAppState
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
@@ -10,6 +14,10 @@ import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ProfileTrust
 import io.github.eslamasabry.oc.core.model.ServerOrigin
 import io.github.eslamasabry.oc.core.security.AddressRules
+import io.github.eslamasabry.oc.core.security.ExternalLinkOpener
+import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
+import io.github.eslamasabry.oc.core.security.LinkDecision
+import io.github.eslamasabry.oc.core.security.LinkOrigin
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.profiles.*
@@ -51,9 +59,36 @@ class NativeServerEditor(
     private val codexFactory: AppCodexGatewayFactory,
     private val dispatchers: AppDispatchers,
     private val redactor: Redactor,
+    application: Application,
+    activities: ResumedActivities,
+    private val links: ExternalLinkPolicy,
+    private val opener: ExternalLinkOpener,
 ) : ServerEditorPort {
     private val lane = dispatchers.serial("server-editor")
     private val writes = Mutex()
+    private val tailscale = AndroidTailscaleApp(application, CurrentActivity { activities.current })
+
+    override fun tailscaleState(): EditorTailscaleState =
+        when (tailscale.state()) {
+            TailscaleAppState.Installed -> EditorTailscaleState.Installed
+            TailscaleAppState.Missing -> EditorTailscaleState.Missing
+            TailscaleAppState.Unavailable -> EditorTailscaleState.Unavailable
+        }
+
+    override fun openTailscale(): Outcome<Unit> =
+        if (tailscale.open()) Unit.ok() else Failure.Device().failed()
+
+    override fun installTailscale(): Outcome<Unit> =
+        when (
+            val checked =
+                links.check(
+                    "https://play.google.com/store/apps/details?id=com.tailscale.ipn",
+                    LinkOrigin.AppAuthored,
+                )
+        ) {
+            is LinkDecision.Open -> opener.open(checked.link)
+            else -> Failure.Device().failed()
+        }
 
     override suspend fun read(id: ProfileId): Outcome<ServerEditorRecord> {
         val profile = stores.profiles.profile(id) ?: return gone()
@@ -71,6 +106,7 @@ class NativeServerEditor(
                 profile.trust.cleartext?.origin,
                 profile.trust.pin?.leafSha256,
                 profile.trust.pin?.origin,
+                profile,
             )
             .ok()
     }
@@ -103,17 +139,23 @@ class NativeServerEditor(
     }
 
     private suspend fun secret(input: ServerEditorInput): Outcome<String> {
-        if (!input.keepSecret)
-            return input.secret?.reveal().orEmpty().also(redactor::registerSecret).ok()
+        if (!input.keepSecret) {
+            val raw = input.secret?.reveal().orEmpty()
+            val value = if (input.backend == BackendKind.OpenCode2) raw else raw.trim()
+            redactor.registerSecret(raw)
+            redactor.registerSecret(value)
+            return value.ok()
+        }
         val id = input.id ?: return invalid()
         val record = stores.profiles.profile(id) ?: return gone()
+        if (input.editToken !== record) return stale()
         if (
             record.profile.backend != input.backend ||
                 record.reentry.password ||
                 record.reentry.agentToken
         )
             return Failure.SecretUnavailable().failed()
-        return stores.profiles.secret(id).map { it.orEmpty() }
+        return stores.profiles.secret(id, expected = record).map { it.orEmpty() }
     }
 
     private fun trust(input: ServerEditorInput, origin: ServerOrigin): Outcome<TrustInput> {
@@ -199,8 +241,10 @@ class NativeServerEditor(
                 val origin = (normalized as Outcome.Ok).value
                 val trusted = trust(input, origin)
                 if (trusted is Outcome.Failed) return@withLock trusted
-                val previous =
-                    input.id?.let { stores.profiles.profile(it)?.profile ?: return@withLock gone() }
+                val snapshot =
+                    input.id?.let { stores.profiles.profile(it) ?: return@withLock gone() }
+                if (snapshot != null && input.editToken !== snapshot) return@withLock stale()
+                val previous = snapshot?.profile
                 val id = previous?.id ?: ProfileId(UUID.randomUUID().toString())
                 val token = secret(input)
                 if (token is Outcome.Failed) return@withLock token
@@ -231,6 +275,11 @@ class NativeServerEditor(
                                         previous.backend == input.backend
                                 },
                     )
+                // Stop and drain the old credential owner before storage can publish its
+                // replacement.
+                // A refused save stays disconnected; no stale-credential graph is reopened
+                // automatically.
+                if (previous != null) registry.close(id)
                 when (
                     val stored =
                         stores.profiles.upsert(
@@ -238,12 +287,11 @@ class NativeServerEditor(
                             if (input.keepSecret) SecretEdit.Keep
                             else if (value.isEmpty()) SecretEdit.Clear else SecretEdit.Set(value),
                             (trusted as Outcome.Ok).value,
+                            expected = snapshot,
                         )
                 ) {
                     is Outcome.Failed -> stored
                     is Outcome.Ok -> {
-                        // A saved address/secret edit must not reuse the old id's live graph.
-                        registry.close(id)
                         val guide = stores.profiles.setTailscaleGuidance(id, input.tailscale)
                         if (guide is Outcome.Failed) guide else id.ok()
                     }
@@ -305,6 +353,8 @@ class NativeServerEditor(
             }
         }
     }
+
+    private fun stale(): Outcome<Nothing> = Failure.Refused(RefusalReason.StaleScope).failed()
 
     private fun gone(): Outcome<Nothing> = Failure.Refused(RefusalReason.ProfileDeleted).failed()
 

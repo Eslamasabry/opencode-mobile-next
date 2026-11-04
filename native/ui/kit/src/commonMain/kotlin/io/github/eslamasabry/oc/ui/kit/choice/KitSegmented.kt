@@ -1,4 +1,12 @@
 package io.github.eslamasabry.oc.ui.kit.choice
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import io.github.eslamasabry.oc.ui.design.color.Argb
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -136,8 +144,7 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
     val specs = KitMotion.specs
     Row(
         Modifier.fillMaxWidth()
-            .clip(KitShapeId.Button.toShape())
-            .background(colors.surface3)
+            .kitSurface(kitSurfaceLook(SurfaceRequest(SurfaceRole.Track), colors.surface3), KitShapeId.Button.toShape())
             .padding(Space.S1.dp)
             .selectableGroup(),
         horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
@@ -146,6 +153,8 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
             val chosen = s.value == selected
             val segEnabled = if (!enabled.isEnabled) enabled else s.enabled
             val fill by animateColorAsState(if (chosen) colors.accent else colors.surface3, specs.quick(), label = "segment")
+            val look = kitSurfaceLook(SurfaceRequest(SurfaceRole.Control, fill = if (chosen) Argb(colors.accent.toArgb()) else null, selected = chosen, disabled = !segEnabled.isEnabled), fill)
+            val styledColors = if (look.words == null) colors else colors.copy(onAccent = Color(look.words!!.v), text1 = Color(look.words!!.v))
             val words = when {
                 !segEnabled.isEnabled -> TextTone.Tertiary
                 chosen -> TextTone.OnAccent
@@ -160,13 +169,15 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                             onChange(it)
                         }
                     }
-                    .background(fill)
+                    .kitSurface(look, KitShapeId.Tile.toShape())
                     .padding(horizontal = Space.S2.dp),
                 horizontalArrangement = Arrangement.spacedBy(Space.S1.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                s.icon?.let { KitGlyph(it, colors.tone(words), tokens.smallIcon.dp) }
-                KitText(s.label, role = TypeRole.Label, tone = words, kind = KitTextKind.Frame, maxLines = 1, textAlign = TextAlign.Center)
+                CompositionLocalProvider(LocalKitColors provides styledColors) {
+                    s.icon?.let { KitGlyph(it, styledColors.tone(words), tokens.smallIcon.dp) }
+                    KitText(s.label, role = TypeRole.Label, tone = words, kind = KitTextKind.Frame, maxLines = 1, textAlign = TextAlign.Center)
+                }
             }
         }
     }

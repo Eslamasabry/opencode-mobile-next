@@ -20,6 +20,8 @@ public data class SettingsUi(
     val updates: UpdateFacts? = null,
     val about: AboutFacts = AboutFacts(),
     val privacy: PrivacyUi? = null,
+    val localData: LocalDataUi? = null,
+    val phrases: PhraseSettingsFacts? = null,
     /** The language in use (acknowledged), for the Language page and its row. */
     val language: AppLanguage = AppLanguage.System,
     /** Report a problem's preview; null until the page opens. */
@@ -28,7 +30,8 @@ public data class SettingsUi(
     val note: SettingsNote? = null,
     val newsStep: Int = 0,
 ) {
-    val page: SettingsPage get() = stack.last()
+    val page: SettingsPage
+        get() = stack.last()
 }
 
 public data class HubUi(
@@ -44,7 +47,10 @@ public data class HubUi(
 
 public data class GroupUi(val id: SettingsGroupId, val rows: ImmutableList<SettingsRowUi>)
 
-/** The Appearance page (plan 07 I04, plan 06 K4): mode, colours, style, motion. Every choice applies at once. */
+/**
+ * The Appearance page (plan 07 I04, plan 06 K4): mode, colours, style, motion. Every choice applies
+ * at once.
+ */
 public data class AppearanceUi(
     val guide: AppearanceHelpFacts? = null,
     val mode: AppearanceMode = AppearanceMode.Dark,
@@ -62,11 +68,13 @@ public data class AppearanceUi(
     val heldBySaver: Boolean = false,
     val systemMotionOff: Boolean = false,
     val accent: String? = null,
-    val frost: io.github.eslamasabry.oc.ui.design.effects.FrostStrength = io.github.eslamasabry.oc.ui.design.effects.FrostStrength.Balanced,
+    val frost: io.github.eslamasabry.oc.ui.design.effects.FrostStrength =
+        io.github.eslamasabry.oc.ui.design.effects.FrostStrength.Balanced,
     val corners: io.github.eslamasabry.oc.engine.settings.prefs.Corners? = null,
     val density: io.github.eslamasabry.oc.engine.settings.prefs.Density? = null,
     val activityGlow: Boolean = true,
-    val glowStyle: io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle = io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle.Classic,
+    val glowStyle: io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle =
+        io.github.eslamasabry.oc.engine.settings.prefs.GlowStyle.Classic,
 )
 
 public sealed interface SpeechModel {
@@ -87,20 +95,43 @@ public data class VoiceFacts(
     val readAloudOn: Boolean = false,
 )
 
-/** Minutes after midnight, local. The same start and end mean quiet all day (Flutter `SharedNotifyRules`). */
+/**
+ * Minutes after midnight, local. The same start and end mean quiet all day (Flutter
+ * `SharedNotifyRules`).
+ */
 public data class QuietHours(val start: Int, val end: Int) {
-    val allDay: Boolean get() = start == end
+    val allDay: Boolean
+        get() = start == end
 
     public companion object {
-        /** What turning quiet hours on starts with (Flutter `defaultQuietStart` / `defaultQuietEnd`). */
+        /**
+         * What turning quiet hours on starts with (Flutter `defaultQuietStart` /
+         * `defaultQuietEnd`).
+         */
         public val Default: QuietHours = QuietHours(22 * 60, 8 * 60)
 
-        /** The times the start and end pages offer: every half hour, plus [current] when it is between them. */
-        public fun choices(current: Int): List<Int> = ((0 until 24 * 60 step 30) + current).distinct().sorted()
+        /**
+         * The times the start and end pages offer: every half hour, plus [current] when it is
+         * between them.
+         */
+        public fun choices(current: Int): List<Int> =
+            ((0 until 24 * 60 step 30) + current).distinct().sorted()
     }
 }
 
-public enum class BackgroundState { Off, Running, StoppedByAndroid }
+public enum class BackgroundState {
+    Off,
+    Running,
+    StoppedByAndroid,
+}
+
+public data class NotificationProfile(
+    val id: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+    val name: String,
+    val enabled: Boolean,
+    val notifications: Boolean,
+    val supported: Boolean = true,
+)
 
 public data class NotificationFacts(
     /** Android does not let the app notify: the page leads with the fix. */
@@ -108,30 +139,59 @@ public data class NotificationFacts(
     val finishedWork: Boolean = true,
     val questions: Boolean = true,
     val usageAlertsShown: Boolean = false,
+    val profiles: ImmutableList<NotificationProfile> = persistentListOf(),
+    val checkInMinutes: Int? = null,
     val quietHours: QuietHours? = null,
     val wifiOnly: Boolean = false,
     val background: BackgroundState? = null,
 )
 
 public sealed interface NotificationChange {
+    public data class ProfileWatch(
+        val profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        val on: Boolean,
+    ) : NotificationChange
+
+    public data class ProfileNotifications(
+        val profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        val on: Boolean,
+    ) : NotificationChange
+
+    public data class CheckIn(val minutes: Int?) : NotificationChange
+
     public data class FinishedWork(val on: Boolean) : NotificationChange
 
     public data class Questions(val on: Boolean) : NotificationChange
 
     public data class WifiOnly(val on: Boolean) : NotificationChange
 
-    /** Quiet hours for every server (`oc.notify.quietStart` / `quietEnd`, minutes after midnight); null turns them off. */
+    /**
+     * Quiet hours for every server (`oc.notify.quietStart` / `quietEnd`, minutes after midnight);
+     * null turns them off.
+     */
     public data class Quiet(val hours: QuietHours?) : NotificationChange
 }
 
-public enum class UpdateFailure { Network, NoFile, Checksum, Signer, Package, Version, Storage, Installer }
+public enum class UpdateFailure {
+    Network,
+    NoFile,
+    Checksum,
+    Signer,
+    Package,
+    Version,
+    Storage,
+    Installer,
+}
 
 public sealed interface UpdateState {
     public data object NeverChecked : UpdateState
 
     public data object Checking : UpdateState
 
-    /** [checked] is a date already formatted for the person's locale (data, not copy); null = just now. */
+    /**
+     * [checked] is a date already formatted for the person's locale (data, not copy); null = just
+     * now.
+     */
     public data class UpToDate(val checked: String?) : UpdateState
 
     public data class Available(val version: String, val sizeMb: String) : UpdateState
@@ -163,7 +223,13 @@ public data class AboutFacts(
 public data class PrivacyUi(val collect: WhatWeCollect, val saving: Boolean = false)
 
 public enum class SettingsNote {
-    AppearanceNotSaved, ChoiceNotSaved, ConsentNotSaved, TestNotSent, UpdateFailed, ReportCopied, ShareFailed,
+    AppearanceNotSaved,
+    ChoiceNotSaved,
+    ConsentNotSaved,
+    TestNotSent,
+    UpdateFailed,
+    ReportCopied,
+    ShareFailed,
 }
 
 /** Report a problem's preview (B-SEC-060: the exact safe text that is shared). */

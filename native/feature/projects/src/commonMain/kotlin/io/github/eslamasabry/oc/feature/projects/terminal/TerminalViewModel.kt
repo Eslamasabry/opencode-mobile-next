@@ -28,6 +28,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,10 +44,14 @@ public class TerminalViewModel(
     private val servers: ProjectServers,
     private val clipboard: TerminalClipboard,
     grids: TerminalGrids,
+    private val privacy: TerminalPrivacy,
+    teaching: TerminalTeaching,
     private val nav: AppNavigator,
 ) : ViewModel(), TerminalActions {
     private val mutable = MutableStateFlow(TerminalUi(route.directory))
     public val state: StateFlow<TerminalUi> = mutable.asStateFlow()
+    private var adopted = false
+    private val tip = teaching.visit()
     private var server: ProjectServer? = null
     private var transport: TerminalChannel? = null
     private var output: Job? = null
@@ -64,6 +69,9 @@ public class TerminalViewModel(
     init {
         mutable.update { it.copy(grid = grid?.view) }
         viewModelScope.launch {
+            tip.visible.collect { on -> mutable.update { it.copy(teaching = on) } }
+        }
+        viewModelScope.launch {
             for ((version, first) in input) {
                 val channel = transport
                 if (
@@ -80,7 +88,10 @@ public class TerminalViewModel(
         viewModelScope.launch {
             servers.servers.collect { live ->
                 val next = live.firstOrNull { it.profile == route.profile }
-                if (next?.gateway !== server?.gateway) adopt(next)
+                if (!adopted || next?.gateway !== server?.gateway) {
+                    adopted = true
+                    adopt(next)
+                }
             }
         }
     }
@@ -90,6 +101,18 @@ public class TerminalViewModel(
         locationWatch?.cancel()
         eventWatch?.cancel()
         server = next
+        cursor = null
+        transcript.reset()
+        grid?.reset()
+        mutable.update {
+            it.copy(
+                selected = null,
+                processes = persistentListOf(),
+                transcript = "",
+                details = null,
+                working = false,
+            )
+        }
         loadGeneration++
         if (next == null) {
             mutable.update { it.copy(phase = TerminalPhase.Unavailable) }
@@ -105,13 +128,26 @@ public class TerminalViewModel(
             next.operations?.setLocation(target)
         }
         locationWatch = viewModelScope.launch {
+            var admitted = at.directory == route.directory
             next.gateway.location.collect { location ->
-                if (location.directory != route.directory) {
+                if (location.directory == route.directory) {
+                    val first = !admitted
+                    admitted = true
+                    if (first && visible) refresh()
+                } else if (admitted) {
                     detach()
                     mutable.update { it.copy(phase = TerminalPhase.Stale) }
                 }
             }
         }
+        if (at.directory != route.directory)
+            viewModelScope.launch {
+                val arrived =
+                    withTimeoutOrNull(10_000) {
+                        next.gateway.location.first { it.directory == route.directory }
+                    }
+                if (arrived == null && server?.gateway === next.gateway) failed(Failure.TimedOut())
+            }
         eventWatch = viewModelScope.launch {
             next.gateway.events.project.collect { envelope ->
                 if (
@@ -159,6 +195,15 @@ public class TerminalViewModel(
                         rows.firstOrNull { it.id == mutable.value.selected }
                             ?: rows.firstOrNull { it.running }
                             ?: rows.firstOrNull()
+                    if (selected?.id != mutable.value.selected) {
+                        detach()
+                        cursor = null
+                        transcript.reset()
+                        grid?.reset()
+                        mutable.update {
+                            it.copy(transcript = "", details = null, selecting = false)
+                        }
+                    }
                     mutable.update {
                         it.copy(
                             processes = rows,
@@ -237,7 +282,14 @@ public class TerminalViewModel(
                     }
                     transport = channel
                     grid?.inputEnabled(true)
+                    grid?.publishSize()
                     mutable.update { it.copy(phase = TerminalPhase.Connected) }
+                    tip.offer {
+                        !visible ||
+                            mutable.value.rename != null ||
+                            mutable.value.removing.isNotEmpty() ||
+                            mutable.value.details != null
+                    }
                     try {
                         val read =
                             attempt({ Failure.Network() }) {
@@ -290,11 +342,66 @@ public class TerminalViewModel(
     }
 
     override fun send(value: String) {
-        if (value.isNotEmpty() && mutable.value.phase == TerminalPhase.Connected && visible)
-            input.trySend(generation to value)
+        if (value.isEmpty() || mutable.value.phase != TerminalPhase.Connected || !visible) return
+        val current = mutable.value
+        val text = modified(value, current.control, current.alt)
+        mutable.update { it.copy(control = false, alt = false) }
+        input.trySend(generation to text)
     }
 
+    override fun key(key: String) {
+        if (mutable.value.phase != TerminalPhase.Connected) return
+        if (key == "ctrl") {
+            mutable.update { it.copy(control = !it.control) }
+            return
+        }
+        if (key == "alt") {
+            mutable.update { it.copy(alt = !it.alt) }
+            return
+        }
+        val state = mutable.value
+        mutable.update { it.copy(control = false, alt = false) }
+        if (grid != null) grid.key(key, state.control, state.alt)
+        else {
+            val bytes =
+                when (key) {
+                    "escape" -> "\u001b"
+                    "tab" -> "\t"
+                    "up" -> "\u001b[A"
+                    "down" -> "\u001b[B"
+                    "left" -> "\u001b[D"
+                    "right" -> "\u001b[C"
+                    "home" -> "\u001b[H"
+                    "end" -> "\u001b[F"
+                    "pageUp" -> "\u001b[5~"
+                    "pageDown" -> "\u001b[6~"
+                    "interrupt" -> "\u0003"
+                    "eof" -> "\u0004"
+                    else -> key
+                }
+            send(modified(bytes, state.control, state.alt))
+        }
+    }
+
+    private fun modified(text: String, ctrl: Boolean, alt: Boolean): String {
+        if (text.isEmpty() || (!ctrl && !alt)) return text
+        val first = text[0].code
+        val control =
+            when {
+                !ctrl -> first
+                first in 0x61..0x7a -> first - 0x60
+                first in 0x40..0x5f -> first - 0x40
+                first == 0x20 -> 0
+                first == 0x3f -> 0x7f
+                else -> first
+            }
+        return (if (alt) "\u001b" else "") + control.toChar() + text.substring(1)
+    }
+
+    override fun dismissTip(): Unit = tip.dismiss()
+
     override fun askRename() {
+        tip.dismiss()
         mutable.value.selected?.let { id -> mutable.update { it.copy(rename = id) } }
     }
 
@@ -313,6 +420,7 @@ public class TerminalViewModel(
     }
 
     override fun askRemove() {
+        tip.dismiss()
         val row = mutable.value.processes.firstOrNull { it.id == mutable.value.selected } ?: return
         mutable.update { it.copy(removing = persistentListOf(row)) }
     }
@@ -365,12 +473,17 @@ public class TerminalViewModel(
         it.copy(
             rename = null,
             removing = persistentListOf(),
-            details = false,
+            details = null,
             clipboardFailed = false,
         )
     }
 
-    override fun details(): Unit = mutable.update { it.copy(details = true) }
+    override fun details() {
+        val process =
+            mutable.value.processes.firstOrNull { it.id == mutable.value.selected } ?: return
+        tip.dismiss()
+        mutable.update { it.copy(details = privacy.describe(process)) }
+    }
 
     override fun copy() {
         mutable.update {
@@ -393,6 +506,7 @@ public class TerminalViewModel(
     override fun accessibleMode(on: Boolean): Unit = mutable.update { it.copy(accessibleMode = on) }
 
     override fun selectText() {
+        tip.used()
         val on = !mutable.value.selecting
         grid?.selectText(on)
         mutable.update { it.copy(selecting = on) }
@@ -418,6 +532,7 @@ public class TerminalViewModel(
     }
 
     override fun onCleared() {
+        tip.dismiss()
         input.close()
         // ViewModel scope is already cancelled: channel.close must not depend on that scope.
         output?.cancel()

@@ -13,6 +13,7 @@ plugins { id("oc.kmp.feature") }
 // DraftAutosave, PromptHistoryNavigation and PromptDelivery is the first follow-up (S3-COMPUI
 // report §6).
 kotlin {
+    sourceSets.commonMain.dependencies { implementation(project(":ui:kit-chat")) }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(
             libs.compose.desktop.currentos

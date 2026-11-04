@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="monitorInboxTitle">Inbox</string>
+    <string name="monitorInboxEmpty">No requests or reminders from your watched servers right now.</string>
+    <string name="monitorInboxFailedRun">A run needs attention</string>
+    <string name="monitorInboxOpening">Opening the request…</string>
+    <string name="monitorInboxSettings">Choose which saved servers to watch in Notifications.</string>
+    <string name="monitorInboxSwitchBody">Open the request on this server. Work already running on your other servers keeps going.</string>
+</resources>

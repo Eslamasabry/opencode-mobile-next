@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKey
+import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKeybar
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalView
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalWords
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -18,7 +20,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
-import io.github.eslamasabry.oc.ui.kit.modal.KitAlert
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -27,8 +28,11 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.nav.KitTab
 import io.github.eslamasabry.oc.ui.kit.nav.KitTabStrip
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
+import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -259,25 +263,99 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                             }
                         )
                     )
-                KitTerminalView(
-                    platformView = state.grid?.native,
-                    title = selected.title,
-                    accessibleMode = state.accessibleMode,
-                    onAccessibleModeChange = actions::accessibleMode,
-                    transcript = state.transcript,
-                    onSend = actions::send,
-                    inputEnabled = connected,
-                    words =
-                        KitTerminalWords(
-                            terminal = title,
-                            accessibleMode = stringResource(Res.string.terminal40Readable),
-                            transcript = stringResource(Res.string.terminal40Transcript),
-                            noOutput = stringResource(Res.string.terminal40NoOutput),
-                            sendToTerminal = stringResource(Res.string.terminal40Command),
-                            send = stringResource(Res.string.terminal40Send),
-                            inputUnavailable = unavailable,
+                KitTerminalKeybar(
+                    keys =
+                        listOf(
+                            KitTerminalKey("escape", stringResource(Res.string.terminal40Escape)),
+                            KitTerminalKey("tab", stringResource(Res.string.terminal40Tab)),
+                            KitTerminalKey(
+                                "ctrl",
+                                stringResource(Res.string.terminal40Ctrl),
+                                state.control,
+                            ),
+                            KitTerminalKey(
+                                "alt",
+                                stringResource(Res.string.terminal40Alt),
+                                state.alt,
+                            ),
+                            KitTerminalKey("left", stringResource(Res.string.terminal40Left)),
+                            KitTerminalKey("up", stringResource(Res.string.terminal40Up)),
+                            KitTerminalKey("down", stringResource(Res.string.terminal40Down)),
+                            KitTerminalKey("right", stringResource(Res.string.terminal40Right)),
+                            KitTerminalKey("|", stringResource(Res.string.terminal40Pipe)),
+                            KitTerminalKey("~", stringResource(Res.string.terminal40Tilde)),
+                            KitTerminalKey("/", stringResource(Res.string.terminal40Slash)),
+                            KitTerminalKey("-", stringResource(Res.string.terminal40Dash)),
+                            KitTerminalKey("home", stringResource(Res.string.terminal40Home)),
+                            KitTerminalKey("end", stringResource(Res.string.terminal40End)),
+                            KitTerminalKey("pageUp", stringResource(Res.string.terminal40PageUp)),
+                            KitTerminalKey(
+                                "pageDown",
+                                stringResource(Res.string.terminal40PageDown),
+                            ),
+                            KitTerminalKey(
+                                "interrupt",
+                                stringResource(Res.string.terminal40Interrupt),
+                            ),
+                            KitTerminalKey("eof", stringResource(Res.string.terminal40Eof)),
                         ),
+                    enabled =
+                        if (connected) KitEnabled.Enabled else KitEnabled.Disabled(unavailable),
+                    onKey = actions::key,
+                )
+                state.details?.let { detail ->
+                    KitDetailsFold(
+                        label = stringResource(Res.string.kitDetails),
+                        copyLabel = stringResource(Res.string.kitCopyDetails),
+                        initiallyExpanded = true,
+                        values =
+                            listOf(
+                                KitTechnicalValue(
+                                    stringResource(Res.string.terminal40CommandLabel),
+                                    detail.command,
+                                ),
+                                KitTechnicalValue(
+                                    stringResource(Res.string.terminal40FolderLabel),
+                                    detail.directory,
+                                ),
+                                KitTechnicalValue(
+                                    stringResource(Res.string.terminal40PidLabel),
+                                    detail.pid,
+                                ),
+                                KitTechnicalValue(
+                                    stringResource(Res.string.terminal40ExitLabel),
+                                    detail.exit,
+                                ),
+                            ),
+                    )
+                }
+                KitTip(
+                    message = stringResource(Res.string.terminal40Tip),
+                    visible = state.teaching,
+                    onDismissed = actions::dismissTip,
                     modifier = Modifier.weight(1f),
+                    anchor = {
+                        KitTerminalView(
+                            platformView = state.grid?.native,
+                            title = selected.title,
+                            accessibleMode = state.accessibleMode,
+                            onAccessibleModeChange = actions::accessibleMode,
+                            transcript = state.transcript,
+                            onSend = actions::send,
+                            inputEnabled = connected,
+                            words =
+                                KitTerminalWords(
+                                    terminal = title,
+                                    accessibleMode = stringResource(Res.string.terminal40Readable),
+                                    transcript = stringResource(Res.string.terminal40Transcript),
+                                    noOutput = stringResource(Res.string.terminal40NoOutput),
+                                    sendToTerminal = stringResource(Res.string.terminal40Command),
+                                    send = stringResource(Res.string.terminal40Send),
+                                    inputUnavailable = unavailable,
+                                ),
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    },
                 )
             }
         }
@@ -306,21 +384,6 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                     ),
             onConfirm = actions::remove,
             onCancel = actions::dismiss,
-        )
-        KitAlert(
-            visible = state.details,
-            title = stringResource(Res.string.kitDetails),
-            onDismissRequest = actions::dismiss,
-            body =
-                selected?.let { process ->
-                    stringResource(
-                        Res.string.terminal40Details,
-                        process.command,
-                        process.directory,
-                        process.pid,
-                        process.exitCode?.toString().orEmpty(),
-                    )
-                },
         )
     }
 }

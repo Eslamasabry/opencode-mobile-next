@@ -51,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChipTone
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerGlow
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.approvalModeAskTitle
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailed
@@ -78,9 +79,8 @@ import org.jetbrains.compose.resources.stringResource
  * It follows the keyboard (`imePadding`) and the navigation bar. The field owns its text ([field]); words flow out
  * through [ComposerActions.onTextChanged] and edits flow in through [ComposerUi.edit].
  *
- * Interim arrangement until the kit's `KitComposer` (S2-KCB) and its glow and Stop motion (S3-COMPMOTION) exist: the
- * glow is state only ([ComposerUi.glow]), "Stop and send" is a secondary button instead of the amber pill, and the
- * field is a multiline `KitField` (report §5).
+ * The real kit glow follows the acknowledged Appearance choice around the field; "Stop and send" remains a
+ * secondary action and the field is a multiline `KitField`.
  *
  * @param finePointer a mouse or trackpad is the pointer: Enter sends, Shift+Enter is a newline.
  * @param keepFocusOnSend a wide window with a hardware keyboard ([ComposerKeys.keepFocusAfterSend]).
@@ -113,6 +113,7 @@ fun ComposerScreen(
     ) {
         state.note?.let { NoteLine(it, actions) }
         if (state.chips.isNotEmpty()) ChipRow(state, actions)
+        KitComposerGlow(active = state.glow) {
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             KitField(
                 state = field,
@@ -123,6 +124,7 @@ fun ComposerScreen(
                 enabled = if (state.fieldEnabled) KitEnabled.Enabled else KitEnabled.Disabled(readOnlyWords()),
             )
             FieldButtonSlot(state.button, actions, mic)
+        }
         }
     }
 }

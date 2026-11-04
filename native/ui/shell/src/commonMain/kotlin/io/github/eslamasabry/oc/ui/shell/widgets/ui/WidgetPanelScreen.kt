@@ -109,7 +109,6 @@ public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions) 
                     modifier = Modifier.testTag("widget-project-all"),
                     onSelect = actions::project,
                 )
-                // The Conversations widget's launcher Edit is for its project; style is a visible secondary page.
             }
             if (state.mode == WidgetPanelMode.Unavailable) {
                 KitButton(stringResource(Res.string.widgetPanelClose), actions::close, role = KitButtonRole.Secondary)

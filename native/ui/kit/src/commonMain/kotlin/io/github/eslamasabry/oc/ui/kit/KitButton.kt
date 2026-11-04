@@ -1,4 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitSignalSlip
+import io.github.eslamasabry.oc.ui.design.color.SignalPalette
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -105,6 +107,7 @@ public fun KitButton(
         when {
             role == KitButtonRole.Tertiary -> Color.Transparent
             !on -> colors.surface3
+            role == KitButtonRole.Secondary && LocalKitSignalSlip.current -> Color(SignalPalette.of(colors.dark).key.v)
             role == KitButtonRole.Secondary -> colors.surface3
             destructive -> colors.text1
             else -> colors.accent
@@ -121,7 +124,7 @@ public fun KitButton(
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectIsPressedAsState()
     val look = kitSurfaceLook(
-        SurfaceRequest(SurfaceRole.Control, fill = if (role == KitButtonRole.Primary || !on) Argb(fill.toArgb()) else null,
+        SurfaceRequest(SurfaceRole.Control, fill = if (role == KitButtonRole.Primary || !on || (role == KitButtonRole.Secondary && LocalKitSignalSlip.current)) Argb(fill.toArgb()) else null,
             pressed = pressed, disabled = !on, action = true),
         easedFill,
     )

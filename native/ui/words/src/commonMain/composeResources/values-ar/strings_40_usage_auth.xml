@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="m40AuthTitle">تسجيل الدخول إلى %1$s</string>
+    <string name="m40AuthBack">رجوع</string>
+    <string name="m40AuthWorking">جارٍ العمل…</string>
+    <string name="m40AuthPlaces">أين تريد تسجيل الدخول؟</string>
+    <string name="m40AuthBest">قراءة الاستخدام جاهزة هنا.</string>
+    <string name="m40AuthServer">يُحفظ تسجيل الدخول على هذا الخادم.</string>
+    <string name="m40AuthPhone">هذا الهاتف</string>
+    <string name="m40AuthMethods">اختر طريقة تسجيل الدخول</string>
+    <string name="m40AuthNoPlace">لا يوجد مكان لتسجيل الدخول</string>
+    <string name="m40AuthNoPlaceBody">أضف خادم OpenCode أو ثبّت وكيل هذا المزوّد على هذا الهاتف.</string>
+    <string name="m40AuthUnavailable">تسجيل الدخول غير متاح هنا</string>
+    <string name="m40AuthUnavailableBody">لا يوفّر هذا الاتصال طريقة تسجيل دخول مدعومة لهذا المزوّد.</string>
+    <string name="m40AuthKey">مفتاح API</string>
+    <string name="m40AuthKeyHelp">يُرسل مفتاحك إلى هذا الاتصال ويُحفظ فيه.</string>
+    <string name="m40AuthSaveKey">حفظ المفتاح</string>
+    <string name="m40AuthContinue">متابعة</string>
+    <string name="m40AuthEnterValue">أدخل قيمة.</string>
+    <string name="m40AuthSelectValue">اختر خيارًا.</string>
+    <string name="m40AuthOpenPage">فتح صفحة تسجيل الدخول</string>
+    <string name="m40AuthAskPage">هل تريد فتح %1$s في المتصفّح؟</string>
+    <string name="m40AuthOpenBrowser">فتح في المتصفّح</string>
+    <string name="m40AuthCheck">التحقق من تسجيل الدخول</string>
+    <string name="m40AuthWaiting">أكمل تسجيل الدخول، ثم تحقّق هنا.</string>
+    <string name="m40AuthCommandWaiting">يجري الاتصال تسجيل الدخول. تحقّق هنا عند انتهائه.</string>
+    <string name="m40AuthCode">رمز تسجيل الدخول أو رابط العودة</string>
+    <string name="m40AuthFinish">إكمال تسجيل الدخول</string>
+    <string name="m40AuthDone">تمّ</string>
+    <string name="m40AuthComplete">تمّ تسجيل الدخول</string>
+    <string name="m40AuthCompleteBody">تمّ تحديث قائمة الخطط.</string>
+    <string name="m40AuthFailed">تعذّر إكمال هذه الخطوة. حاول مرة أخرى.</string>
+    <string name="m40AuthReenter">أعد إدخال كلمة مرور هذا الخادم في «الخوادم»، ثم عُد إلى هنا.</string>
+    <string name="m40AuthDetails">التفاصيل</string>
+    <string name="m40AuthCopyDetails">نسخ التفاصيل</string>
+    <string name="m40AuthDeviceCode">استخدم الرمز %1$s في صفحة تسجيل الدخول.</string>
+    <string name="m40AuthCopyCode">نسخ الرمز</string>
+    <string name="m40AuthCopied">تمّ نسخ الرمز</string>
+    <string name="m40AuthBrowserHint">يجب إكمال هذه الطريقة في متصفّح على الجهاز الذي يشغّل هذا الخادم.</string>
+    <string name="m40AuthDeviceHint">سجّل الدخول باستخدام رمز الجهاز.</string>
+    <string name="m40AuthAccountHint">سجّل الدخول باستخدام حساب المزوّد.</string>
+    <string name="m40AuthCommandHint">ينفّذ الاتصال تسجيل الدخول هذا، ولا ينفّذ الهاتف أي أمر.</string>
+    <string name="m40AuthPhoneHint">استخدم وكيل هذا المزوّد المثبّت على هذا الهاتف.</string>
+</resources>

@@ -41,6 +41,11 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import kotlinx.coroutines.launch
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.foundation.kitTrack
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 
 /**
  * The transcript list's scroll state (plan 09 §7.3, plan 08 §5.1 follow-scroll). Hoisted per chat entry.
@@ -120,7 +125,7 @@ public fun KitTranscriptList(
             state = state.lazy,
             reverseLayout = true,
             contentPadding = contentPadding,
-            modifier = Modifier.fillMaxSize().testTag("transcript-list"),
+            modifier = Modifier.fillMaxSize().then(if (LocalKitStyle.current.track) Modifier.kitTrack((LocalKitTokens.current.gutter + LocalKitTokens.current.iconTile / 2f).dp, live = false) else Modifier).testTag("transcript-list"),
             content = content,
         )
         KitJumpToLatest(state, jumpLabel, motion, Modifier.align(Alignment.BottomCenter).padding(bottom = Space.S4.dp))
@@ -138,7 +143,8 @@ private fun KitJumpToLatest(state: TranscriptListState, label: String, motion: K
         exit = fadeOut(tween(MotionTokens.QUICK)) + (if (full) slideOutVertically(tween(MotionTokens.QUICK)) { it / 4 } else fadeOut()),
         modifier = modifier,
     ) {
-        Surface(
+        KitButton(
+            label = label,
             onClick = {
                 state.following = true
                 scope.launch {
@@ -154,12 +160,8 @@ private fun KitJumpToLatest(state: TranscriptListState, label: String, motion: K
                     }
                 }
             },
-            shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            tonalElevation = 2.dp,
+            role = KitButtonRole.Secondary,
             modifier = Modifier.testTag("jump-to-latest"),
-        ) {
-            Text(label, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp))
-        }
+        )
     }
 }

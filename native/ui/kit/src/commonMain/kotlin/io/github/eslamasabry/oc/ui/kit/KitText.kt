@@ -35,8 +35,10 @@ public fun KitText(
     kind: KitTextKind = KitTextKind.Reading,
     maxLines: Int = Int.MAX_VALUE,
     textAlign: TextAlign? = null,
+    pageTitle: Boolean = false,
+    sectionLabel: Boolean = false,
 ) {
-    val base = LocalKitTypography.current.style(role)
+    val base = LocalKitTypography.current.style(role, pageTitle = pageTitle, sectionLabel = sectionLabel)
     val style =
         base.copy(
             color = LocalKitColors.current.tone(tone),

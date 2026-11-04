@@ -13,8 +13,9 @@ import io.github.eslamasabry.oc.engine.agents.feed.FeedDay
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
-import io.github.eslamasabry.oc.ui.routes.SearchRoute
+import io.github.eslamasabry.oc.ui.routes.MonitorInboxRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
+import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -39,10 +40,16 @@ public class ChatsViewModel(
     private val nav: AppNavigator,
     private val updates: UpdateDoor = NoUpdateDoor(),
 ) : ViewModel(), ChatsActions {
+    override fun openInbox(): Unit = nav.open(MonitorInboxRoute())
+
     private val filters = MutableStateFlow(ChatsFilters())
 
     public val state: StateFlow<ChatsUi> =
-        combine(feed.snapshot, briefs.brief, filters, updates.ready) { snapshot, brief, chosen, update ->
+        combine(feed.snapshot, briefs.brief, filters, updates.ready) {
+                snapshot,
+                brief,
+                chosen,
+                update ->
                 build(snapshot, brief, chosen).copy(updateReady = update)
             }
             .stateIn(
@@ -98,5 +105,6 @@ public class ChatsViewModel(
     override fun showAll(): Unit = nav.open(ChatsRoute.All(filter = null))
 
     override fun openSearch(): Unit = nav.open(SearchRoute.Conversations())
+
     override fun openProjects(): Unit = nav.open(ProjectsRoute.Picker())
 }

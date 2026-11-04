@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import io.github.eslamasabry.oc.android.widgets.BackgroundConnectionService
 import io.github.eslamasabry.oc.android.widgets.WidgetFeed
 import io.github.eslamasabry.oc.android.widgets.WidgetOverlayActivity
@@ -38,26 +37,19 @@ object WidgetV2Bridge {
                 put("id", WidgetActionPolicy.token(this))
             }
         val intent =
-            Intent().setClassName(context, BackgroundConnectionService.COMPONENT).apply {
+            Intent(context, WidgetActionReceiver::class.java).apply {
                 this.action = BackgroundConnectionService.ACTION_WIDGET_ACTION
                 data = Uri.parse("opencode-widget://action/$widgetId/${payload["id"]}")
                 putExtra(EXTRA_PAYLOAD, JSONObject(payload).toString())
             }
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            PendingIntent.getForegroundService(
-                context,
-                widgetId,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-        } else {
-            PendingIntent.getService(
-                context,
-                widgetId,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-        }
+        // A live tap has at most the bridge's 6.5 s deadline. The private receiver's goAsync keeps that bounded
+        // dispatch alive without creating a second dataSync service or renewing the live service's promise.
+        return PendingIntent.getBroadcast(
+            context,
+            widgetId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
     }
 
     fun routeIntent(

@@ -16,6 +16,7 @@ val syntaxmp = "0.3.0" // plan 09 §9.2 decision; catalog request: syntaxmp = "0
 kotlin {
     sourceSets.commonMain.dependencies {
         implementation(project(":core:common"))
+        implementation(project(":core:model"))
         implementation(project(":core:security")) // mono surfaces display Redactor.redact(source) (plan 09 §9.2, R18)
         implementation(project(":core:markdown")) // P12-CHAT-FEEL: transcript rows parse into KitMdBlock (KitMdSource)
         implementation(project(":ui:design"))

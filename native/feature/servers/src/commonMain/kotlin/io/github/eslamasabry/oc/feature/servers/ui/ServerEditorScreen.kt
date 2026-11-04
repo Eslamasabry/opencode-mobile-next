@@ -8,6 +8,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.model.BackendKind
@@ -34,27 +36,32 @@ import org.jetbrains.compose.resources.stringResource
 /** Secrets are held in memory and shown as Saved · Replace; none is a saved-state field. */
 @Composable
 public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorActions) {
-    val name = rememberTextFieldState()
-    val address = rememberTextFieldState()
-    val username = rememberTextFieldState("opencode")
-    val directory = rememberTextFieldState()
+    val restored = remember { actions.takeDraft() }
+    val name = rememberTextFieldState(restored?.name.orEmpty())
+    val address = rememberTextFieldState(restored?.address.orEmpty())
+    val username = rememberTextFieldState(restored?.username ?: "opencode")
+    val directory = rememberTextFieldState(restored?.directory.orEmpty())
     val password = remember { TextFieldState() }
     val pairing = remember { TextFieldState() }
-    var backend by remember { mutableStateOf(BackendKind.OpenCode2) }
-    var tailscale by remember { mutableStateOf(false) }
-    var keepSecret by remember { mutableStateOf(false) }
-    var heldSecret by remember { mutableStateOf<String?>(null) }
-    var confirmedOrigin by remember { mutableStateOf<String?>(null) }
-    var pin by remember { mutableStateOf<String?>(null) }
-    var pinOrigin by remember { mutableStateOf<String?>(null) }
-    var loaded by remember { mutableStateOf(false) }
+    var backend by remember { mutableStateOf(restored?.backend ?: BackendKind.OpenCode2) }
+    var tailscale by remember { mutableStateOf(restored?.tailscale ?: false) }
+    var keepSecret by remember { mutableStateOf(restored?.keepSecret ?: false) }
+    var heldSecret by remember {
+        mutableStateOf(
+            restored?.secret?.reveal()?.takeIf { restored?.keepSecret != true && it.isNotEmpty() }
+        )
+    }
+    var confirmedOrigin by remember { mutableStateOf(restored?.cleartextOrigin) }
+    var pin by remember { mutableStateOf(restored?.certificatePin) }
+    var pinOrigin by remember { mutableStateOf(restored?.certificateOrigin) }
+    var loaded by remember { mutableStateOf(restored != null) }
     var trustQuestion by remember { mutableStateOf(false) }
     var commandsOpen by remember { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
     fun TextFieldState.fill(value: String) = edit { replace(0, length, value) }
     LaunchedEffect(state.record) {
         val record = state.record ?: return@LaunchedEffect
-        if (loaded) return@LaunchedEffect
+        if (loaded && !state.saved) return@LaunchedEffect
         name.fill(record.name)
         address.fill(record.address)
         username.fill(record.username)
@@ -62,6 +69,10 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
         backend = record.backend
         tailscale = record.tailscale
         keepSecret = record.hasSecret && !record.needsSecret
+        if (state.saved) {
+            heldSecret = null
+            password.fill("")
+        }
         confirmedOrigin = record.cleartextOrigin
         pin = record.certificatePin
         pinOrigin = record.certificateOrigin
@@ -93,6 +104,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
             confirmedOrigin,
             pin,
             pinOrigin,
+            state.record?.editToken,
         )
     val dirty =
         state.record?.let {
@@ -163,6 +175,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
             }
             .drop(1)
             .collectLatest {
+                actions.keepDraft(input())
                 actions.changed()
                 if (
                     state.record != null ||
@@ -177,7 +190,15 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 actions.check(input())
             }
     }
-    KitBackGuard(enabled = true, onBack = { actions.back(dirty) })
+    fun leave() {
+        if (state.step == ServerEditorStep.Connect && tailscale && state.record == null)
+            actions.step(ServerEditorStep.Tailscale)
+        else actions.back(dirty)
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (state.step == ServerEditorStep.Tailscale) actions.refreshTailscale()
+    }
+    KitBackGuard(enabled = true, onBack = { leave() })
     val enabled =
         if (state.saving || state.loading)
             KitEnabled.Disabled(stringResource(Res.string.serversWorking))
@@ -249,7 +270,7 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                     ),
                 exit = KitTopBarExit.Close,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
-                onExit = { actions.back(dirty) },
+                onExit = { leave() },
             )
         },
         width = KitScreenWidth.Reading,
@@ -298,6 +319,37 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                 }
                 ServerEditorStep.Tailscale -> {
                     KitText(stringResource(Res.string.editor40TailscaleBody))
+                    KitNotice(
+                        stringResource(
+                            when (state.tailscaleApp) {
+                                EditorTailscaleState.Installed ->
+                                    Res.string.editor40TailscaleInstalled
+                                EditorTailscaleState.Missing -> Res.string.editor40TailscaleMissing
+                                else -> Res.string.editor40TailscaleUnknown
+                            }
+                        )
+                    )
+                    if (state.tailscaleApp == EditorTailscaleState.Installed)
+                        KitButton(
+                            stringResource(Res.string.editor40TailscaleOpen),
+                            {
+                                actions.keepDraft(input())
+                                actions.openTailscale()
+                            },
+                            role = KitButtonRole.Secondary,
+                        )
+                    if (state.tailscaleApp == EditorTailscaleState.Missing)
+                        KitButton(
+                            stringResource(Res.string.editor40TailscaleInstall),
+                            actions::installTailscale,
+                            role = KitButtonRole.Secondary,
+                        )
+                    KitButton(
+                        stringResource(Res.string.editor40TailscaleRefresh),
+                        actions::refreshTailscale,
+                        role = KitButtonRole.Tertiary,
+                    )
+                    state.failure?.let { KitErrorNotice(editorFailureWords(it), failure = it) }
                     KitButton(
                         stringResource(Res.string.editor40EnterAddress),
                         { actions.step(ServerEditorStep.Connect) },
@@ -324,13 +376,18 @@ public fun ServerEditorScreen(state: ServerEditorUi, actions: ServerEditorAction
                                 },
                                 KitCodeKind.Command,
                             )
+                            if (backend == BackendKind.Codex)
+                                KitCodeBlock(SetupCommands.CODEX_TOKEN, KitCodeKind.Command)
                         }
                     }
                     if (backend == BackendKind.OpenCode2 && !tailscale) {
                         if (state.canScan)
                             KitButton(
                                 stringResource(Res.string.addServerScan),
-                                actions::scan,
+                                {
+                                    actions.keepDraft(input())
+                                    actions.scan()
+                                },
                                 role = KitButtonRole.Secondary,
                                 enabled = enabled,
                             )

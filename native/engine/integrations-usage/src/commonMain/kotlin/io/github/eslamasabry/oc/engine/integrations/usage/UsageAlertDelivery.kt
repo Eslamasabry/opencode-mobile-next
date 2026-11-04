@@ -78,7 +78,13 @@ public class UsageAlertDelivery(
         val now = clock().toEpochMilliseconds()
         val seen = load()
         val alive = snapshot.subscriptions.mapTo(HashSet()) { it.key }
-        var changed = seen.keys.removeAll { it !in alive }
+        val vanished = seen.keys.filter { it !in alive }
+        for (key in vanished) {
+            dismiss(alertKey(key, false))
+            dismiss(alertKey(key, true))
+            seen.remove(key)
+        }
+        var changed = vanished.isNotEmpty()
         if (enabled && !foreground && !quiet) {
             for (s in snapshot.subscriptions) {
                 val from = s.readFrom ?: continue

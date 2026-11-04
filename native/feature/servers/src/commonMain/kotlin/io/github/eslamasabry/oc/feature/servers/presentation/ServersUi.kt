@@ -11,6 +11,7 @@ import kotlinx.collections.immutable.persistentListOf
 /** Credentials and editable field values deliberately never enter observable screen state. */
 public data class ServersUi(
     val servers: ImmutableList<SavedServer> = persistentListOf(),
+    val rows: ServerRowsState = ServerRowsState(),
     val busy: Boolean = false,
     val newConversation: Boolean = false,
     val cleartextAllowed: Boolean = false,
@@ -35,6 +36,8 @@ public enum class ServerIssue {
 }
 
 public interface ServersActions {
+    public fun moveQueued(id: ProfileId) {}
+
     public fun edit(id: ProfileId?) {}
 
     public fun settings(id: ProfileId) {}

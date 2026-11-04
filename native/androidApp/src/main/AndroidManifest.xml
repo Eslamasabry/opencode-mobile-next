@@ -3,6 +3,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
     <!-- Settings › Notifications: Android 13+ lets the app notify only with this declared (P12-SETTINGS). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -49,6 +52,7 @@
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
+        <meta-data android:name="io.github.eslamasabry.opencode_mobile.WIDGET_OVERLAY_READY" android:value="true" />
         <activity android:name=".WidgetRouteActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".WidgetOverlayActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <!-- Notification buttons (P12-PLATFORM); frozen Flutter FQCNs. Tiles, widgets and the update receiver merge

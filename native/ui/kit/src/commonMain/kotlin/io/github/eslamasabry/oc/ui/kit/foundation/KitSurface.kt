@@ -5,7 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
@@ -24,10 +26,12 @@ import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.effects.SurfaceDecoration
 import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
 import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
 /** Resolve one real part's Solid paint through the chosen style (Flutter KitSurfaceLook). */
 @Composable
@@ -40,7 +44,13 @@ public fun kitSurfaceLook(
     val style = LocalKitStyle.current
     val roles = LocalKitRoles.current
     val solid = SurfaceDecoration(Argb(fill.toArgb()), Argb(edge.toArgb()), edgeWidth = edgeWidth)
-    return remember(style, roles, request, solid) { style.resolve(request, roles, solid) }
+    val nested = LocalSurfaceDepth.current > 0
+    return remember(style, roles, request, solid, nested) {
+        if (nested && request.role == SurfaceRole.Content && style.style != SurfaceStyle.Solid) SurfaceDecoration(Argb(0))
+        else style.resolve(request, roles, solid).let { look ->
+            if (nested && style.style == SurfaceStyle.Brutal) look.copy(hardOffset = 0f, faceShift = 0f) else look
+        }
+    }
 }
 
 /**
@@ -83,3 +93,19 @@ public fun Modifier.kitSurface(
     edgeWidth: Float = 0f,
     request: SurfaceRequest = SurfaceRequest(role),
 ): Modifier = kitSurface(kitSurfaceLook(request, fill, edge, edgeWidth), shape.toShape())
+
+/** Words on an inverted/raised face follow the spec while attention keeps its own meaning. */
+@Composable
+public fun KitSurfaceContent(look: SurfaceDecoration, content: @Composable () -> Unit) {
+    val colors = LocalKitColors.current
+    val ink = look.words?.let { Color(it.v) }
+    if (ink == null) content() else CompositionLocalProvider(LocalKitColors provides colors.copy(text1 = ink, text2 = ink, accent = ink, onAccent = ink)) { content() }
+}
+
+private val LocalSurfaceDepth = staticCompositionLocalOf { 0 }
+
+/** Non-Solid content nested in a pane shares its parent's face; only the outer Brutal surface casts. */
+@Composable
+public fun KitSurfaceScope(content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalSurfaceDepth provides LocalSurfaceDepth.current + 1) { content() }
+}

@@ -45,4 +45,22 @@
     <string name="terminal40Down">أسفل</string>
     <string name="terminal40Left">يسار</string>
     <string name="terminal40Right">يمين</string>
+    <string name="terminal40TipTitle">تحديد نص الطرفية</string>
+    <string name="terminal40Tip">اضغط مطولًا على المخرجات لتحديد النص، أو اختر تحديد النص من إجراءات الطرفية، ثم نسخ.</string>
+    <string name="terminal40CommandLabel">الأمر</string>
+    <string name="terminal40FolderLabel">المجلد</string>
+    <string name="terminal40PidLabel">العملية</string>
+    <string name="terminal40ExitLabel">رمز الخروج</string>
+    <string name="terminal40Pipe">|</string>
+    <string name="terminal40Tilde">~</string>
+    <string name="terminal40Slash">/</string>
+    <string name="terminal40Dash">-</string>
+    <string name="terminal40Home">Home</string>
+    <string name="terminal40End">End</string>
+    <string name="terminal40PageUp">PgUp</string>
+    <string name="terminal40PageDown">PgDn</string>
+    <string name="terminal40Interrupt">Ctrl+C</string>
+    <string name="terminal40Eof">Ctrl+D</string>
+    <string name="terminal40OpenPageQuestion">هل تريد فتح صفحة تسجيل الدخول؟</string>
+    <string name="terminal40OpenPageBody">تتبع هذه الصفحة %1$s. هل تريد فتحها في المتصفح؟</string>
 </resources>

@@ -13,8 +13,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.engine.integrations.usage.SignInState
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
+import io.github.eslamasabry.oc.feature.plans.presentation.*
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanCardUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansActions
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansPhase
@@ -32,15 +34,24 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitWindowRow
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.words.res.*
+import org.jetbrains.compose.resources.stringResource
 
 /** Plans display measured readings first, urgent first, with full facts a visible tap away. */
 @Composable
-public fun PlansScreen(state: PlansUi, actions: PlansActions) {
+public fun PlansScreen(
+    state: PlansUi,
+    actions: PlansActions,
+    management: PlansManagementUi? = null,
+    manage: PlansManagementActions? = null,
+    onAdd: ((String, String?) -> Unit)? = null,
+) {
     val words = plansWords()
     KitScreen(
         topBar = {
@@ -64,30 +75,34 @@ public fun PlansScreen(state: PlansUi, actions: PlansActions) {
         loadingLabel = words.loading,
         width = KitScreenWidth.Reading,
     ) {
-        PlansContent(state, actions)
+        PlansContent(state, actions, management, manage, onAdd)
     }
 }
 
 /** The body is reusable under the Usage hub's single bar and active-section Refresh. */
 @Composable
-public fun PlansContent(state: PlansUi, actions: PlansActions) {
+public fun PlansContent(
+    state: PlansUi,
+    actions: PlansActions,
+    management: PlansManagementUi? = null,
+    manage: PlansManagementActions? = null,
+    onAdd: ((String, String?) -> Unit)? = null,
+) {
     val words = plansWords()
     var opened by rememberSaveable { mutableStateOf<String?>(null) }
-    when (state.phase) {
-        PlansPhase.Loading -> KitStateView(KitStateKind.Loading, words.loading)
-        PlansPhase.Empty ->
-            KitStateView(KitStateKind.Empty, words.emptyTitle, body = words.emptyBody)
-        PlansPhase.List ->
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-            ) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+    ) {
+        when (state.phase) {
+            PlansPhase.Loading -> KitStateView(KitStateKind.Loading, words.loading)
+            PlansPhase.Empty ->
+                KitStateView(KitStateKind.Empty, words.emptyTitle, body = words.emptyBody)
+            PlansPhase.List -> {
                 for (card in
                     state.cards.filter {
                         it.windows.isNotEmpty() || it.state == SubscriptionState.NoLimits
-                    }) {
-                    PlanCard(card, state.nowMs, words, actions) { opened = card.key }
-                }
+                    }) PlanCard(card, state.nowMs, words, actions) { opened = card.key }
                 val setup =
                     state.cards.filter {
                         it.windows.isEmpty() && it.state != SubscriptionState.NoLimits
@@ -113,6 +128,26 @@ public fun PlansContent(state: PlansUi, actions: PlansActions) {
                         )
                     }
             }
+        }
+        if (state.phase != PlansPhase.Loading && manage != null)
+            KitRowGroup {
+                if (state.addable.isNotEmpty() && onAdd != null)
+                    KitRow(
+                        title = stringResource(Res.string.m40UsageAdd),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = manage::openAdd,
+                    )
+                KitRow(
+                    title = stringResource(Res.string.m40UsageAlerts),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = manage::openAlerts,
+                )
+                KitRow(
+                    title = stringResource(Res.string.m40UsageWidget),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = manage::openWidget,
+                )
+            }
     }
     val card = state.cards.firstOrNull { it.key == opened }
     KitSheet(
@@ -123,7 +158,10 @@ public fun PlansContent(state: PlansUi, actions: PlansActions) {
         height = KitSheetHeight.Full,
         primary = KitAction(words.refresh, actions::refresh, working = state.refreshing),
     ) {
-        if (card != null) PlanDetails(card, state.nowMs, words, actions)
+        if (card != null)
+            PlanDetails(card, state.nowMs, words, actions, management, manage, onAdd) {
+                opened = null
+            }
     }
 }
 
@@ -175,7 +213,16 @@ private fun PlanCard(
 }
 
 @Composable
-private fun PlanDetails(card: PlanCardUi, nowMs: Long, words: PlansWords, actions: PlansActions) {
+private fun PlanDetails(
+    card: PlanCardUi,
+    nowMs: Long,
+    words: PlansWords,
+    actions: PlansActions,
+    management: PlansManagementUi?,
+    manage: PlansManagementActions?,
+    onAdd: ((String, String?) -> Unit)?,
+    close: () -> Unit,
+) {
     Column(
         Modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
@@ -196,15 +243,90 @@ private fun PlanDetails(card: PlanCardUi, nowMs: Long, words: PlansWords, action
             words.fix(card.fix, card.fixConnection)?.let { label ->
                 KitRow(
                     title = label,
-                    onClick = if (card.fix == UsageFix.TryAgain) actions::refresh else null,
+                    onClick =
+                        when (card.fix) {
+                            UsageFix.TryAgain -> actions::refresh
+                            UsageFix.SignIn,
+                            UsageFix.AddKey ->
+                                onAdd?.let { launch ->
+                                    {
+                                        close()
+                                        launch(card.providerId, card.fixConnection?.id)
+                                    }
+                                }
+                            UsageFix.SetUp ->
+                                card.fixConnection?.let { connection ->
+                                    manage?.let { controller ->
+                                        {
+                                            close()
+                                            controller.openReader(connection.id, connection.name)
+                                        }
+                                    }
+                                }
+                            UsageFix.None -> null
+                        },
                     supportingMaxLines = 3,
                 )
             }
             for (on in card.signedInOn) KitRow(
                 title = words.signedIn(on.connection, on.state, on.online, on.readsFromHere),
                 supportingMaxLines = 3,
+                onClick =
+                    if (on.state != SignInState.SignedIn && onAdd != null) {
+                        {
+                            close()
+                            onAdd(card.providerId, on.connection.id)
+                        }
+                    } else null,
             )
         }
+        if (manage != null && management != null && card.windows.isNotEmpty())
+            KitRowGroup(label = stringResource(Res.string.m40UsageAlerts)) {
+                ThresholdChooser(
+                    card.alertThreshold,
+                    true,
+                    management.preferences.threshold,
+                    inherited = !card.hasAlertOverride,
+                ) {
+                    manage.setThreshold(card.key, if (it < 0) null else it)
+                }
+                KitSwitchRow(
+                    title = stringResource(Res.string.m40UsageReset),
+                    supporting = stringResource(Res.string.m40UsageResetHelp),
+                    checked = card.notifyReset,
+                    onCheckedChange = { manage.setReset(card.key, it) },
+                )
+            }
+        if (manage != null && management != null) {
+            for (connection in
+                (card.signedInOn.map { it.connection } + listOfNotNull(card.readFrom)).distinctBy {
+                    it.id
+                }) {
+                val reader = management.readers[connection.id]
+                if (reader?.enabled == true)
+                    KitRow(
+                        title =
+                            stringResource(
+                                Res.string.m40UsageReadOff,
+                                words.connection(connection),
+                            ),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = {
+                            close()
+                            manage.openReader(connection.id, connection.name)
+                        },
+                    )
+            }
+        }
+        if (onAdd != null)
+            KitRow(
+                title = stringResource(Res.string.m40UsageChooseSignIn),
+                trailing = KitRowTrailing.Chevron,
+                onClick = {
+                    close()
+                    onAdd(card.providerId, null)
+                },
+            )
         KitDetailsFold(
             label = words.details,
             copyLabel = words.copyDetails,

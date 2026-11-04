@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTrack
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceScope
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
@@ -56,8 +57,10 @@ public fun KitRowGroup(
         val style = LocalKitStyle.current
         val panel = if (style.flatLists) Modifier else Modifier.kitSurface(SurfaceRole.Content, KitShapeId.Panel, LocalKitColors.current.surface1)
         Column(panel.then(if (style.track) Modifier.kitTrack((tokens.gutter + tokens.iconTile / 2f).dp, live = false) else Modifier)) {
+            KitSurfaceScope {
             HairlineColumn(inset, hairline, rows)
             destructive?.let { HairlineColumn(0.dp, hairline, it, ruleAbove = true) }
+            }
         }
         note?.let { KitGroupNote(it) }
     }

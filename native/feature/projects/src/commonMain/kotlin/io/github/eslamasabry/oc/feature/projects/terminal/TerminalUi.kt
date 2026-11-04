@@ -31,7 +31,10 @@ public data class TerminalUi(
     val failure: Failure? = null,
     val rename: String? = null,
     val removing: ImmutableList<TerminalProcess> = persistentListOf(),
-    val details: Boolean = false,
+    val details: TerminalDetails? = null,
+    val control: Boolean = false,
+    val alt: Boolean = false,
+    val teaching: Boolean = false,
     val grid: io.github.eslamasabry.oc.core.common.PlatformViewHandle? = null,
     val accessibleMode: Boolean? = null,
     val selecting: Boolean = false,
@@ -77,6 +80,10 @@ public interface TerminalActions {
     public fun accessibleMode(on: Boolean)
 
     public fun selectText()
+
+    public fun key(key: String)
+
+    public fun dismissTip()
 }
 
 /** Clipboard text stays in this process and is never logged or persisted. */
@@ -110,6 +117,10 @@ public interface TerminalGrid {
     public fun selectText(on: Boolean)
 
     public fun paste(text: String)
+
+    public fun key(key: String, control: Boolean, alt: Boolean)
+
+    public fun publishSize()
 }
 
 public interface TerminalGrids {
@@ -120,4 +131,52 @@ public interface TerminalGrids {
 @ContributesBinding(AppScope::class)
 public class NoTerminalGrids : TerminalGrids {
     override fun create(send: (String) -> Unit, resize: (Int, Int) -> Unit): TerminalGrid? = null
+}
+
+/** Technical values cross into UI only after the app redactor has scrubbed them. */
+public data class TerminalDetails(
+    val command: io.github.eslamasabry.oc.core.common.Redacted,
+    val directory: io.github.eslamasabry.oc.core.common.Redacted,
+    val pid: io.github.eslamasabry.oc.core.common.Redacted,
+    val exit: io.github.eslamasabry.oc.core.common.Redacted,
+)
+
+public interface TerminalPrivacy {
+    public fun describe(process: TerminalProcess): TerminalDetails?
+}
+
+@Inject
+@ContributesBinding(AppScope::class)
+public class NoTerminalPrivacy : TerminalPrivacy {
+    override fun describe(process: TerminalProcess): TerminalDetails? = null
+}
+
+public interface TerminalTipVisit {
+    public val visible: kotlinx.coroutines.flow.Flow<Boolean>
+
+    public suspend fun offer(blocked: () -> Boolean)
+
+    public fun used()
+
+    public fun dismiss()
+}
+
+public interface TerminalTeaching {
+    public fun visit(): TerminalTipVisit
+}
+
+@Inject
+@ContributesBinding(AppScope::class)
+public class NoTerminalTeaching : TerminalTeaching {
+    override fun visit(): TerminalTipVisit =
+        object : TerminalTipVisit {
+            override val visible: kotlinx.coroutines.flow.Flow<Boolean> =
+                kotlinx.coroutines.flow.flowOf(false)
+
+            override suspend fun offer(blocked: () -> Boolean) = Unit
+
+            override fun used() = Unit
+
+            override fun dismiss() = Unit
+        }
 }

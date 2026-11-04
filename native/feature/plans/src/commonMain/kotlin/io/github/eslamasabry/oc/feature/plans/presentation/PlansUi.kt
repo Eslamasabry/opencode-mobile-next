@@ -31,7 +31,7 @@ public enum class PlansPhase {
  * A connection as the screen names it; this phone's agent host has no saved name ([isPhone], words
  * say "This phone").
  */
-public data class PlanConnectionUi(val name: String, val isPhone: Boolean)
+public data class PlanConnectionUi(val name: String, val isPhone: Boolean, val id: String = "")
 
 public data class PlanWindowUi(
     val kind: UsageWindowKind,
@@ -65,6 +65,8 @@ public data class PlanCardUi(
     val alertThreshold: Int,
     val checkedAtMs: Long? = null,
     val readFrom: PlanConnectionUi? = null,
+    val hasAlertOverride: Boolean = false,
+    val notifyReset: Boolean = false,
 )
 
 public data class PlanKeyUi(
@@ -93,6 +95,7 @@ private fun UsageConnection.ui(): PlanConnectionUi =
     PlanConnectionUi(
         name = name,
         isPhone = kind == UsageConnectionKind.PhoneAgents || id == UsageConnection.PHONE_ID,
+        id = id,
     )
 
 /** Pure: the engine snapshot as screen state. */
@@ -145,6 +148,8 @@ public fun plansUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long): P
                     alertThreshold = s.alertThreshold.roundToInt(),
                     checkedAtMs = s.checkedAt?.toEpochMilliseconds(),
                     readFrom = s.readFrom?.ui(),
+                    hasAlertOverride = s.hasAlertOverride,
+                    notifyReset = s.notifyOnReset,
                 )
             }
     val keys =

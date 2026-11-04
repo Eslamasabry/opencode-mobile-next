@@ -1,4 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.modal
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -153,8 +158,7 @@ internal fun DialogLayer(state: KitSheetHostState) {
                     Box(
                         panel.widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp).fillMaxWidth().heightIn(max = cap)
                             .predictiveShrink(back, TransformOrigin(0.5f, 1f))
-                            .clip(KitShapeId.Sheet.toShape())
-                            .background(colors.surface2)
+                            .kitSurface(kitSurfaceLook(SurfaceRequest(SurfaceRole.Sheet, SurfaceLevel.Surface2, uniform = false), colors.surface2), KitShapeId.Sheet.toShape())
                             .navigationBarsPadding()
                             .imePadding(),
                     ) { body() }
@@ -166,8 +170,7 @@ internal fun DialogLayer(state: KitSheetHostState) {
                     Box(
                         panel.widthIn(max = DIALOG_MAX_DP.dp).fillMaxWidth().heightIn(max = cap)
                             .predictiveShrink(back, TransformOrigin.Center)
-                            .clip(KitShapeId.Dialog.toShape())
-                            .background(colors.surface2),
+                            .kitSurface(kitSurfaceLook(SurfaceRequest(SurfaceRole.Sheet, SurfaceLevel.Surface2), colors.surface2), KitShapeId.Dialog.toShape()),
                     ) { body() }
                 }
             }

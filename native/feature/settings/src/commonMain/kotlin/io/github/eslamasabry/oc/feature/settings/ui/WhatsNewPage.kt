@@ -77,6 +77,11 @@ internal fun ColumnScope.TipsBody(actions: SettingsActions) {
         )
     }
     KitRow(
+        title = stringResource(Res.string.terminal40TipTitle),
+        supporting = stringResource(Res.string.terminal40Tip),
+        supportingMaxLines = 4,
+    )
+    KitRow(
         title = stringResource(Res.string.discoverShowTipsAgain),
         supporting = stringResource(Res.string.discoverShowTipsSubtitle),
         onClick = actions::onShowTipsAgain,

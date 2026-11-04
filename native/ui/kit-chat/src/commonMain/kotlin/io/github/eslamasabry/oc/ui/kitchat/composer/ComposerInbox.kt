@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
+import io.github.eslamasabry.oc.core.model.PromptAttachment
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,7 +11,14 @@ import dev.zacsweers.metro.SingleIn
 
 /** Text waiting for one conversation's composer. [target] is `profileId/sessionId`. */
 @Immutable
-public data class ComposerInsert(val id: Long, val target: String, val text: String)
+public data class ComposerInsert(
+    val id: Long,
+    val target: String,
+    val text: String,
+    val attachments: List<PromptAttachment> = emptyList(),
+    val missingAttachments: List<String> = emptyList(),
+    val stillCurrent: () -> Boolean = { true },
+)
 
 /**
  * One slot of text a page outside the chat (Saved prompts, slash commands) hands back to a conversation's composer.
@@ -24,9 +32,15 @@ public class ComposerInbox {
     private var slot by mutableStateOf<ComposerInsert?>(null)
     private var next = 0L
 
-    public fun offer(target: String, text: String) {
+    public fun offer(
+        target: String,
+        text: String,
+        attachments: List<PromptAttachment> = emptyList(),
+        missingAttachments: List<String> = emptyList(),
+        stillCurrent: () -> Boolean = { true },
+    ) {
         next += 1
-        slot = ComposerInsert(next, target, text)
+        slot = ComposerInsert(next, target, text, attachments.toList(), missingAttachments.toList(), stillCurrent)
     }
 
     public fun pendingFor(target: String): ComposerInsert? = slot?.takeIf { it.target == target }

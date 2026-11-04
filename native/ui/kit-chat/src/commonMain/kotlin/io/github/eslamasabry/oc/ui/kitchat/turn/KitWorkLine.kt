@@ -2,6 +2,9 @@ package io.github.eslamasabry.oc.ui.kitchat.turn
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
@@ -13,6 +16,10 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSignalHead
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSignalAspect
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSignalRing
 
 /**
  * Where a turn's work stands (Dart `KitWorkState`, KIT-12). The host decides; the line only says it.
@@ -58,14 +65,24 @@ public fun KitWorkLine(
             stateDescription = stateWords ?: label
         }
     ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (LocalKitStyle.current.track) {
+            when (state) {
+                KitWorkState.Running -> KitSignalHead(KitSignalAspect.Go, Modifier.padding(top = 12.dp))
+                KitWorkState.WaitingForYou -> KitSignalHead(KitSignalAspect.Stop, Modifier.padding(top = 12.dp))
+                else -> KitSignalRing(Modifier.padding(top = 18.dp))
+            }
+        }
         KitExpandRow(
             title = label,
             expanded = expanded,
             supporting = stateWords,
             onExpandedChange = onToggle,
+            modifier = Modifier.weight(1f),
         ) {
             if (earlier != null) KitButton(earlier.label, earlier.onClick, role = KitButtonRole.Tertiary)
             steps()
+        }
         }
     }
 }

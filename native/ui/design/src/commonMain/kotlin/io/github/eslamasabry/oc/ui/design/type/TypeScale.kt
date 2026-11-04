@@ -33,6 +33,6 @@ public object TypeScale {
         if (arabic) of(role).copy(trackingSp = 0f) else of(role)
 
     /** Weights the variable fonts are instantiated at (plan 06 §4.4 `rememberKitFonts`). */
-    public val sansWeights: IntArray = intArrayOf(400, 500, 600, 650, 700, 750, 800)
+    public val sansWeights: IntArray = intArrayOf(400, 500, 600, 650, 700, 750, 760, 800)
     public val monoWeights: IntArray = intArrayOf(400, 500, 600)
 }

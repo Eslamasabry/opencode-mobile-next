@@ -41,12 +41,38 @@ public data class ServerSettingsFacts(
     val tokenSignIn: Boolean = false,
 )
 
-public enum class ConnectionStep { Address, SignIn, Version, LiveUpdates, Speed }
-public enum class ConnectionMark { Waiting, Running, Pass, Warn, Fail, Skipped }
-public enum class ConnectionReason {
-    Ok, Unreachable, NotOpenCode, PasswordMissing, PasswordRejected, VersionUnsupported, NotReady,
-    LiveNotChecked, LiveConnecting, LiveDown, Slow, EarlierFailed,
+public enum class ConnectionStep {
+    Address,
+    SignIn,
+    Version,
+    LiveUpdates,
+    Speed,
 }
+
+public enum class ConnectionMark {
+    Waiting,
+    Running,
+    Pass,
+    Warn,
+    Fail,
+    Skipped,
+}
+
+public enum class ConnectionReason {
+    Ok,
+    Unreachable,
+    NotOpenCode,
+    PasswordMissing,
+    PasswordRejected,
+    VersionUnsupported,
+    NotReady,
+    LiveNotChecked,
+    LiveConnecting,
+    LiveDown,
+    Slow,
+    EarlierFailed,
+}
+
 public data class ConnectionResult(
     val step: ConnectionStep,
     val mark: ConnectionMark,
@@ -57,15 +83,26 @@ public data class ConnectionResult(
 
 public interface ServerSettingsSource {
     public fun watch(profile: ProfileId): Flow<ServerSettingsFacts?>
+
     public suspend fun health(profile: ProfileId): Outcome<Health>
+
     public suspend fun check(profile: ProfileId): Outcome<ImmutableList<ConnectionResult>>
+
     public suspend fun shells(profile: ProfileId): Outcome<TerminalShellSettings>
-    public suspend fun selectShell(profile: ProfileId, selected: String): Outcome<TerminalShellSettings>
+
+    public suspend fun selectShell(
+        profile: ProfileId,
+        selected: String,
+    ): Outcome<TerminalShellSettings>
+
     public suspend fun connect(profile: ProfileId): Outcome<Unit>
-    public suspend fun remove(profile: ProfileId): Outcome<Unit>
 }
 
-public data class ShellChoice(val value: String, val label: String?, val terminalOnly: Boolean = false)
+public data class ShellChoice(
+    val value: String,
+    val label: String?,
+    val terminalOnly: Boolean = false,
+)
 
 /** Preserve custom selections and disambiguate equal names using the server's absolute paths. */
 public fun shellChoices(settings: TerminalShellSettings): ImmutableList<ShellChoice> {
@@ -93,24 +130,32 @@ public data class ServerSettingsUi(
     val shells: TerminalShellSettings? = null,
     val working: Boolean = false,
     val failure: Failure? = null,
-    val confirmingRemoval: Boolean = false,
 )
 
 public interface ServerSettingsActions {
     public fun back()
+
     public fun refresh()
+
     public fun edit()
+
     public fun connect()
+
     public fun checkConnection()
+
     public fun showShells()
+
     public fun selectShell(value: String)
+
     public fun showCapabilities()
+
     public fun savedPermissions()
+
     public fun computerTools()
+
     public fun reachHelp()
+
     public fun askRemove()
-    public fun cancelRemove()
-    public fun confirmRemove()
 }
 
 @AssistedInject
@@ -130,7 +175,8 @@ public class ServerSettingsViewModel(
                 if (firstLive && route.page == ServerSettingsPage.Home) refresh()
             }
         }
-        if (route.page == ServerSettingsPage.Check || route.page == ServerSettingsPage.Shell) refresh()
+        if (route.page == ServerSettingsPage.Check || route.page == ServerSettingsPage.Shell)
+            refresh()
     }
 
     override fun back(): Unit = nav.back()
@@ -139,14 +185,25 @@ public class ServerSettingsViewModel(
         when (route.page) {
             ServerSettingsPage.Check -> runCheck()
             ServerSettingsPage.Shell -> loadShells()
-            ServerSettingsPage.Capabilities, ServerSettingsPage.Reach -> Unit
+            ServerSettingsPage.Capabilities,
+            ServerSettingsPage.Reach -> Unit
             ServerSettingsPage.Home -> {
                 if (mutable.value.checkingHealth) return
                 mutable.update { it.copy(checkingHealth = true, health = null, failure = null) }
                 viewModelScope.launch {
                     when (val result = source.health(route.profile)) {
-                        is Outcome.Ok -> mutable.update { it.copy(checkingHealth = false, health = result.value) }
-                        is Outcome.Failed -> mutable.update { it.copy(checkingHealth = false, health = null, failure = result.failure) }
+                        is Outcome.Ok ->
+                            mutable.update {
+                                it.copy(checkingHealth = false, health = result.value)
+                            }
+                        is Outcome.Failed ->
+                            mutable.update {
+                                it.copy(
+                                    checkingHealth = false,
+                                    health = null,
+                                    failure = result.failure,
+                                )
+                            }
                     }
                 }
             }
@@ -157,19 +214,41 @@ public class ServerSettingsViewModel(
         if (mutable.value.checking) return
         mutable.update {
             it.copy(
-                checking = true, failure = null,
-                results = ConnectionStep.entries.map { step ->
-                    ConnectionResult(step, if (step == ConnectionStep.Address) ConnectionMark.Running else ConnectionMark.Waiting)
-                }.toImmutableList(),
+                checking = true,
+                failure = null,
+                results =
+                    ConnectionStep.entries
+                        .map { step ->
+                            ConnectionResult(
+                                step,
+                                if (step == ConnectionStep.Address) ConnectionMark.Running
+                                else ConnectionMark.Waiting,
+                            )
+                        }
+                        .toImmutableList(),
             )
         }
         viewModelScope.launch {
             when (val result = source.check(route.profile)) {
-                is Outcome.Ok -> mutable.update { it.copy(checking = false, results = result.value) }
-                is Outcome.Failed -> mutable.update {
-                    it.copy(checking = false, failure = result.failure,
-                        results = ConnectionStep.entries.map { step -> ConnectionResult(step, ConnectionMark.Skipped, ConnectionReason.EarlierFailed) }.toImmutableList())
-                }
+                is Outcome.Ok ->
+                    mutable.update { it.copy(checking = false, results = result.value) }
+                is Outcome.Failed ->
+                    mutable.update {
+                        it.copy(
+                            checking = false,
+                            failure = result.failure,
+                            results =
+                                ConnectionStep.entries
+                                    .map { step ->
+                                        ConnectionResult(
+                                            step,
+                                            ConnectionMark.Skipped,
+                                            ConnectionReason.EarlierFailed,
+                                        )
+                                    }
+                                    .toImmutableList(),
+                        )
+                    }
             }
         }
     }
@@ -180,49 +259,58 @@ public class ServerSettingsViewModel(
         viewModelScope.launch {
             when (val result = source.shells(route.profile)) {
                 is Outcome.Ok -> mutable.update { it.copy(working = false, shells = result.value) }
-                is Outcome.Failed -> mutable.update { it.copy(working = false, failure = result.failure) }
+                is Outcome.Failed ->
+                    mutable.update { it.copy(working = false, failure = result.failure) }
             }
         }
     }
 
     override fun edit(): Unit = nav.open(ServersRoute.Edit(route.profile))
+
     override fun connect() {
         if (mutable.value.working) return
         mutable.update { it.copy(working = true, failure = null) }
         viewModelScope.launch {
             val result = source.connect(route.profile)
-            mutable.update { it.copy(working = false, failure = (result as? Outcome.Failed)?.failure) }
-        }
-    }
-    override fun checkConnection(): Unit = nav.open(route.copy(page = ServerSettingsPage.Check))
-    override fun showShells(): Unit = nav.open(route.copy(page = ServerSettingsPage.Shell))
-    override fun showCapabilities(): Unit = nav.open(route.copy(page = ServerSettingsPage.Capabilities))
-    override fun savedPermissions(): Unit = nav.open(ServersRoute.Permissions(route.profile))
-    override fun computerTools(): Unit = nav.open(ComputerRoute(route.profile))
-    override fun reachHelp(): Unit = nav.open(route.copy(page = ServerSettingsPage.Reach))
-
-    override fun selectShell(value: String) {
-        val previous = mutable.value.shells ?: return
-        if (mutable.value.working || previous.selected == value || shellChoices(previous).none { it.value == value }) return
-        mutable.update { it.copy(working = true, failure = null) }
-        viewModelScope.launch {
-            when (val result = source.selectShell(route.profile, value)) {
-                is Outcome.Ok -> mutable.update { it.copy(working = false, shells = result.value) }
-                is Outcome.Failed -> mutable.update { it.copy(working = false, failure = result.failure) }
+            mutable.update {
+                it.copy(working = false, failure = (result as? Outcome.Failed)?.failure)
             }
         }
     }
 
-    override fun askRemove() { if (!mutable.value.working) mutable.update { it.copy(confirmingRemoval = true) } }
-    override fun cancelRemove(): Unit = mutable.update { it.copy(confirmingRemoval = false) }
-    override fun confirmRemove() {
-        if (!mutable.value.confirmingRemoval || mutable.value.working) return
-        mutable.update { it.copy(confirmingRemoval = false, working = true, failure = null) }
+    override fun checkConnection(): Unit = nav.open(route.copy(page = ServerSettingsPage.Check))
+
+    override fun showShells(): Unit = nav.open(route.copy(page = ServerSettingsPage.Shell))
+
+    override fun showCapabilities(): Unit =
+        nav.open(route.copy(page = ServerSettingsPage.Capabilities))
+
+    override fun savedPermissions(): Unit = nav.open(ServersRoute.Permissions(route.profile))
+
+    override fun computerTools(): Unit = nav.open(ComputerRoute(route.profile))
+
+    override fun reachHelp(): Unit = nav.open(route.copy(page = ServerSettingsPage.Reach))
+
+    override fun selectShell(value: String) {
+        val previous = mutable.value.shells ?: return
+        if (
+            mutable.value.working ||
+                previous.selected == value ||
+                shellChoices(previous).none { it.value == value }
+        )
+            return
+        mutable.update { it.copy(working = true, failure = null) }
         viewModelScope.launch {
-            val result = source.remove(route.profile)
-            mutable.update { it.copy(working = false, failure = (result as? Outcome.Failed)?.failure) }
-            if (result is Outcome.Ok) nav.back()
+            when (val result = source.selectShell(route.profile, value)) {
+                is Outcome.Ok -> mutable.update { it.copy(working = false, shells = result.value) }
+                is Outcome.Failed ->
+                    mutable.update { it.copy(working = false, failure = result.failure) }
+            }
         }
+    }
+
+    override fun askRemove() {
+        if (!mutable.value.working) nav.open(ServersRoute.Remove(route.profile))
     }
 
     @AssistedFactory

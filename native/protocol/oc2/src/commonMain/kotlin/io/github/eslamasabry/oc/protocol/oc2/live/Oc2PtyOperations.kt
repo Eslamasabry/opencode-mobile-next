@@ -47,14 +47,16 @@ private fun ptyRow(value: JsonElement): TerminalProcess? {
     )
 }
 
-internal suspend fun Oc2Gateway.ptyList(): Outcome<ImmutableList<TerminalProcess>> =
-    json("/pty", query = loc(location.value)).map { root ->
-        (ptyData(root) as? JsonArray)
-            .orEmpty()
-            .mapNotNull(::ptyRow)
-            .filterNot { it.title == "OpenCode Mobile usage check" }
-            .toImmutableList()
-    }
+internal suspend fun Oc2Gateway.ptyList(): Outcome<ImmutableList<TerminalProcess>> {
+    val result = json("/pty", query = loc(location.value))
+    if (result is Outcome.Failed) return result
+    val rows =
+        ptyData((result as Outcome.Ok).value) as? JsonArray
+            ?: return Failure.UnreadableReply().failed()
+    if (rows.size > 1000) return Failure.UnreadableReply().failed()
+    val parsed = rows.map { ptyRow(it) ?: return Failure.UnreadableReply().failed() }
+    return parsed.filterNot { it.title == "OpenCode Mobile usage check" }.toImmutableList().ok()
+}
 
 internal suspend fun Oc2Gateway.ptyCreate(
     title: String?,

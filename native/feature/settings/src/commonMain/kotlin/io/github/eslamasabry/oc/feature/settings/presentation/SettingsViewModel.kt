@@ -11,15 +11,21 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Everything the Settings pages read and write, bound once by the app (`SettingsWiring`): the engines behind the ports
- * are app-wide, so one host serves every visit. A port the platform lacks is null; its row is already absent.
+ * Everything the Settings pages read and write, bound once by the app (`SettingsWiring`): the
+ * engines behind the ports are app-wide, so one host serves every visit. A port the platform lacks
+ * is null; its row is already absent.
  */
 public fun interface SettingsServerDoor {
-    public fun open(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId, section: SettingsOutside?)
+    public fun open(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+        section: SettingsOutside?,
+    )
 }
 
 public interface SettingsHost {
-    public val serverPage: SettingsServerDoor? get() = null
+    public val serverPage: SettingsServerDoor?
+        get() = null
+
     public val facts: StateFlow<SettingsFacts>
     public val choices: PersonalChoices
     public val openers: SettingsOpeners
@@ -28,13 +34,21 @@ public interface SettingsHost {
     public val notifications: NotificationSettings?
     public val updates: UpdateSettings?
     public val about: AboutFacts
-    public val appearanceHelp: AppearanceHelp? get() = null
+    public val appearanceHelp: AppearanceHelp?
+        get() = null
+
+    public val localData: LocalDataSettings?
+        get() = null
+
+    public val phrases: PhraseSettings?
+        get() = null
+
     public val diagnostics: DiagnosticsExport?
 }
 
 /**
- * The Settings ViewModel: one presenter for the hub and its pages (they share the back stack and the personal
- * choices). Leaving the hub closes the route.
+ * The Settings ViewModel: one presenter for the hub and its pages (they share the back stack and
+ * the personal choices). Leaving the hub closes the route.
  */
 @Inject
 @ViewModelKey
@@ -54,6 +68,8 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             host.diagnostics,
             host.appearanceHelp,
             host.serverPage,
+            host.localData,
+            host.phrases,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

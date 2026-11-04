@@ -1,4 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.nav
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceContent
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -79,6 +84,8 @@ public fun KitNavRail(
 private fun RailItem(d: KitNavDestination, chosen: Boolean, onClick: () -> Unit) {
     val colors = LocalKitColors.current
     val tone = if (chosen) TextTone.Accent else TextTone.Secondary
+    val look = kitSurfaceLook(SurfaceRequest(SurfaceRole.Control, selected = chosen), if (chosen) colors.surface3 else androidx.compose.ui.graphics.Color.Transparent)
+    KitSurfaceContent(look) {
     KitTappable(
         onClick = onClick,
         modifier =
@@ -97,7 +104,7 @@ private fun RailItem(d: KitNavDestination, chosen: Boolean, onClick: () -> Unit)
         Column(
             Modifier
                 .fillMaxWidth()
-                .then(if (chosen) Modifier.background(colors.surface3, KitShapeId.Panel.toShape()) else Modifier)
+                .then(if (chosen) Modifier.kitSurface(look, KitShapeId.Panel.toShape()) else Modifier)
                 .padding(vertical = Space.S2.dp, horizontal = Space.S1.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
@@ -109,4 +116,5 @@ private fun RailItem(d: KitNavDestination, chosen: Boolean, onClick: () -> Unit)
             NavLabel(d.label, TypeRole.Label, tone, center = true)
         }
     }
+}
 }

@@ -1,4 +1,11 @@
 package io.github.eslamasabry.oc.ui.kit.chip
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.toArgb
+import io.github.eslamasabry.oc.ui.design.color.Argb
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -83,16 +90,18 @@ public fun KitChip(
         }
     val edge = if (tone == KitChipTone.Attention) colors.attentionLine else Color.Transparent
     val shape = KitShapeId.Pill.toShape()
+    val look = kitSurfaceLook(SurfaceRequest(SurfaceRole.Control, fill = if (tone != KitChipTone.Neutral || selected == true) Argb(fill.toArgb()) else null, selected = selected == true || tone == KitChipTone.Active), fill, edge, 1f)
+    val styledColors = if (look.words == null) colors else colors.copy(onAccent = Color(look.words!!.v), text1 = Color(look.words!!.v))
     val face: @Composable () -> Unit = {
+        CompositionLocalProvider(LocalKitColors provides styledColors) {
         Row(
             Modifier.heightIn(min = tokens.chipHeight.dp)
-                .background(fill, shape)
-                .border(1.dp, edge, shape)
+                .kitSurface(look, shape)
                 .padding(horizontal = Space.S3.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
-            icon?.let { KitGlyph(it, colors.tone(words), (tokens.smallIcon - 4).dp) }
+            icon?.let { KitGlyph(it, styledColors.tone(words), (tokens.smallIcon - 4).dp) }
             KitText(label, role = TypeRole.Label, tone = words, kind = KitTextKind.Frame, maxLines = 1)
             if (kind == KitChipKind.Count && count != null) {
                 KitText(count.toString(), role = TypeRole.Label, tone = words, kind = KitTextKind.Frame)
@@ -107,11 +116,12 @@ public fun KitChip(
                             .testTag("kit-chip-remove")
                             .semantics { contentDescription = removeLabel.orEmpty() },
                     shape = KitShapeId.Circle,
-                ) { KitGlyph(KitPartGlyphs.Close, colors.tone(words), (tokens.smallIcon - 6).dp) }
+                ) { KitGlyph(KitPartGlyphs.Close, styledColors.tone(words), (tokens.smallIcon - 6).dp) }
                 }
             }
         }
     }
+        }
     val target = modifier.heightIn(min = tokens.minTarget.dp)
     if (onClick != null) {
         KitTappable(

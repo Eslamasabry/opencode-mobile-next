@@ -1,4 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.modal
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -119,9 +124,7 @@ public fun KitUndoBar(offer: KitUndoOffer?, onUndo: () -> Unit, onTimeout: () ->
             Modifier.widthIn(max = UNDO_MAX_DP.dp)
                 .fillMaxWidth()
                 .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp)
-                .clip(shape)
-                .background(colors.surface2)
-                .border(1.dp, colors.hairline, shape)
+                .kitSurface(kitSurfaceLook(SurfaceRequest(SurfaceRole.Floating, SurfaceLevel.Surface2), colors.surface2, colors.hairline, 1f), shape)
                 .heightIn(min = tokens.rowHeightOne.dp)
                 .padding(start = tokens.gutter.dp, end = Space.S1.dp)
                 .testTag("kit-undo")

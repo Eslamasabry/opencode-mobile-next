@@ -9,6 +9,14 @@ import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.getOrNull
 import io.github.eslamasabry.oc.core.common.ok
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -23,23 +31,17 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.time.Clock
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
- * Sequential, bounded attention snapshots of the person's other saved servers (port of Flutter `ProfileMonitor`;
- * B-ANDR-056..064, B-ANDR-058..060 check-in reminders). No subscriptions, no active-connection mutation, no
- * background-service ownership: monitoring is off by default, needs a stored consent record per server, reads only
- * while the app is in front or an existing live service is allowed to run, and never enables keep-live itself.
+ * Sequential, bounded attention snapshots of the person's other saved servers (port of Flutter
+ * `ProfileMonitor`; B-ANDR-056..064, B-ANDR-058..060 check-in reminders). No subscriptions, no
+ * active-connection mutation, no background-service ownership: monitoring is off by default, needs
+ * a stored consent record per server, reads only while the app is in front or an existing live
+ * service is allowed to run, and never enables keep-live itself.
  *
- * Confinement: every member is called from one dispatcher (the app's main one); [refresh] is the engine's one serial
- * lane (a second call joins the read in flight). [scope] only runs fire-and-forget dismissals.
+ * Confinement: every member is called from one dispatcher (the app's main one); [refresh] is the
+ * engine's one serial lane (a second call joins the read in flight). [scope] only runs
+ * fire-and-forget dismissals.
  */
 @OptIn(ExperimentalUuidApi::class)
 public class ProfileMonitor(
@@ -91,8 +93,11 @@ public class ProfileMonitor(
     /** Bumps on every visible change; the UI re-reads [snapshots] then. */
     public val revision: StateFlow<Int> = mutableRevision.asStateFlow()
 
-    public val refreshing: Boolean get() = inFlight != null
-    public val runningAllowed: Boolean get() = foreground || backgroundAllowed
+    public val refreshing: Boolean
+        get() = inFlight != null
+
+    public val runningAllowed: Boolean
+        get() = foreground || backgroundAllowed
 
     private fun notifyChanged() {
         if (!disposed) mutableRevision.value += 1
@@ -100,19 +105,33 @@ public class ProfileMonitor(
 
     /** Readable, non-deleted profiles' current pictures. Keys are profile ids only. */
     public fun snapshots(): Map<String, ProfileAttentionSnapshot> =
-        profiles.profiles()
+        profiles
+            .profiles()
             .filter { it.id !in blocked && isReadable(it.id) }
             .associate { it.id to snapshotFor(it.id) }
 
     /** Codex keeps its requests inside a live app-server session, so it is never read from here. */
-    public fun supportsProfile(profile: MonitorProfile): Boolean = profile.backend != MonitorBackend.Codex
+    public fun supportsProfile(profile: MonitorProfile): Boolean =
+        profile.backend != MonitorBackend.Codex
 
-    private fun profile(id: String): MonitorProfile? = profiles.profiles().firstOrNull { it.id == id }
+    private fun profile(id: String): MonitorProfile? =
+        profiles.profiles().firstOrNull { it.id == id }
 
     private fun source(p: MonitorProfile): String =
         DartJson.sha256Hex(
             identitySalt +
-                JsonArray(listOf(p.baseUrl, p.username, p.credential, p.flavor, p.backend.name, p.boundDirectory, p.teamEngineToken).map { JsonPrimitive(it) }),
+                JsonArray(
+                    listOf(
+                            p.baseUrl,
+                            p.username,
+                            p.credential,
+                            p.flavor,
+                            p.backend.name,
+                            p.boundDirectory,
+                            p.teamEngineToken,
+                        )
+                        .map { JsonPrimitive(it) }
+                )
         )
 
     private fun sameSource(id: String): Boolean {
@@ -136,7 +155,8 @@ public class ProfileMonitor(
         forgetBusy(p.id)
     }
 
-    private fun beginPoll(id: String): Int = ((pollGenerations[id] ?: 0) + 1).also { pollGenerations[id] = it }
+    private fun beginPoll(id: String): Int =
+        ((pollGenerations[id] ?: 0) + 1).also { pollGenerations[id] = it }
 
     private fun invalidatePoll(id: String) {
         pollGenerations[id] = (pollGenerations[id] ?: 0) + 1
@@ -152,8 +172,9 @@ public class ProfileMonitor(
         }
 
     /**
-     * Folds one complete, successful status read into the busy intervals. A failed or partial poll never gets here: it
-     * must neither end an interval nor extend it. Idle or absent ends it; a gap beyond [BUSY_OBSERVATION_GAP] restarts it.
+     * Folds one complete, successful status read into the busy intervals. A failed or partial poll
+     * never gets here: it must neither end an interval nor extend it. Idle or absent ends it; a gap
+     * beyond [BUSY_OBSERVATION_GAP] restarts it.
      */
     private suspend fun observeBusy(
         id: String,
@@ -179,16 +200,33 @@ public class ProfileMonitor(
                     now - prior.lastObservedBusyAt <= BUSY_OBSERVATION_GAP
             nextIntervals[sessionId] =
                 if (continues) {
-                    prior.observedAgainAt(now, session?.title, session?.directory, session?.workspace)
+                    prior.observedAgainAt(
+                        now,
+                        session?.title,
+                        session?.directory,
+                        session?.workspace,
+                    )
                 } else {
-                    ObservedBusyInterval(sessionId, now, now, session?.title, observedDirectory, observedWorkspace)
+                    ObservedBusyInterval(
+                        sessionId,
+                        now,
+                        now,
+                        session?.title,
+                        observedDirectory,
+                        observedWorkspace,
+                    )
                 }
         }
         busy[id] = nextIntervals
-        // Observation persistence is best effort; a reminder separately needs its claim durably saved first.
+        // Observation persistence is best effort; a reminder separately needs its claim durably
+        // saved first.
         attempt({ Failure.StorageRefused() }) {
             if (nextIntervals.isEmpty()) prefs.remove(busyIntervalsKey(id))
-            else prefs.putString(busyIntervalsKey(id), ObservedBusyInterval.listToJson(nextIntervals.values))
+            else
+                prefs.putString(
+                    busyIntervalsKey(id),
+                    ObservedBusyInterval.listToJson(nextIntervals.values),
+                )
         }
         return nextIntervals.values.sortedBy { it.firstObservedBusyAt }
     }
@@ -198,13 +236,24 @@ public class ProfileMonitor(
         attempt({ Failure.StorageRefused() }) { prefs.remove(busyIntervalsKey(id)) }
     }
 
-    private suspend fun claimCheckIn(id: String, request: MonitoredRequest, current: () -> Boolean): Boolean {
+    private suspend fun claimCheckIn(
+        id: String,
+        request: MonitoredRequest,
+        current: () -> Boolean,
+    ): Boolean {
         if (!current()) return false
         val intervals = busyIntervals(id)
         val interval = intervals[request.sessionId]
         if (interval == null || interval.id != request.id || interval.reminderClaimed) return false
-        val claimed = LinkedHashMap(intervals).apply { put(request.sessionId, interval.claimReminder()) }
-        val saved = attempt({ Failure.StorageRefused() }) { prefs.putString(busyIntervalsKey(id), ObservedBusyInterval.listToJson(claimed.values)) }
+        val claimed =
+            LinkedHashMap(intervals).apply { put(request.sessionId, interval.claimReminder()) }
+        val saved =
+            attempt({ Failure.StorageRefused() }) {
+                prefs.putString(
+                    busyIntervalsKey(id),
+                    ObservedBusyInterval.listToJson(claimed.values),
+                )
+            }
         if (saved.getOrNull() != true) {
             attempt({ Failure.StorageRefused() }) { prefs.reload() }
             return false
@@ -230,7 +279,10 @@ public class ProfileMonitor(
         policyAllowed[id] = nextAllowed
         invalidatePoll(id)
         next.remove(id)
-        snapshots[id]?.let { prior -> snapshots[id] = stale(id, if (nextAllowed) MonitorStatus.Waiting else MonitorStatus.Disabled, prior) }
+        snapshots[id]?.let { prior ->
+            snapshots[id] =
+                stale(id, if (nextAllowed) MonitorStatus.Waiting else MonitorStatus.Disabled, prior)
+        }
         if (activeProfileId == id) activeGateway?.close()
         if (!nextAllowed) scope.launch { dismissProfile(id) }
         notifyChanged()
@@ -245,7 +297,8 @@ public class ProfileMonitor(
     private suspend fun migrateConsent(p: MonitorProfile) {
         if (p.id in blocked || !supportsProfile(p)) return
         if (consent.hasRecord(p.id)) return
-        // Only a stored rule is prior consent; the old two-phone-server fallback was an implicit default.
+        // Only a stored rule is prior consent; the old two-phone-server fallback was an implicit
+        // default.
         val raw = prefs.getString(rulesKey(p.id)) ?: return
         val rules = MonitorNotifyRules.fromJson(raw) ?: return
         if (rules.enabled) {
@@ -254,7 +307,11 @@ public class ProfileMonitor(
         }
     }
 
-    private fun stale(id: String, status: MonitorStatus, prior: ProfileAttentionSnapshot?): ProfileAttentionSnapshot =
+    private fun stale(
+        id: String,
+        status: MonitorStatus,
+        prior: ProfileAttentionSnapshot?,
+    ): ProfileAttentionSnapshot =
         ProfileAttentionSnapshot(
             profileId = id,
             status = status,
@@ -262,8 +319,12 @@ public class ProfileMonitor(
             directory = prior?.directory,
             workspace = prior?.workspace,
             requests = prior?.requests ?: emptyList<MonitoredRequest>().toImmutableList(),
-            attention = (prior?.attention ?: emptyList()).map { it.copy(isFresh = false) }.toImmutableList(),
-            busyIntervals = prior?.busyIntervals ?: emptyList<ObservedBusyInterval>().toImmutableList(),
+            attention =
+                (prior?.attention ?: emptyList())
+                    .map { it.copy(isFresh = false) }
+                    .toImmutableList(),
+            busyIntervals =
+                prior?.busyIntervals ?: emptyList<ObservedBusyInterval>().toImmutableList(),
             runningCount = prior?.runningCount,
             nextCheckAt = next[id],
         )
@@ -273,21 +334,27 @@ public class ProfileMonitor(
     private fun routes(id: String): LinkedHashMap<String, JsonObject> {
         val raw = prefs.getString(routesKey(id)) ?: return LinkedHashMap()
         val o = parseObject(raw) ?: return LinkedHashMap()
-        return LinkedHashMap<String, JsonObject>().apply { o.forEach { (k, v) -> if (v is JsonObject) put(k, v) } }
+        return LinkedHashMap<String, JsonObject>().apply {
+            o.forEach { (k, v) -> if (v is JsonObject) put(k, v) }
+        }
     }
 
-    /** The opaque alert token's route, or null when it is stale, from another source, future-dated or over a day old. */
+    /**
+     * The opaque alert token's route, or null when it is stale, from another source, future-dated
+     * or over a day old.
+     */
     public fun routeForToken(id: String, token: String): MonitoredRoute? {
         if (!isReadable(id) || id in blocked || !rulesFor(id).enabled || !allows(id)) return null
         val p = profile(id) ?: return null
         if (!supportsProfile(p)) return null
         val route = MonitoredRoute.fromJson(id, routes(id)[token]) ?: return null
         val now = clock.now()
-        if ((id in sources && !sameSource(id)) ||
-            route.createdAt > now ||
-            p.baseUrl != route.serverUrl ||
-            route.sourceIdentity != routeSourceIdentity(p) ||
-            now - route.createdAt > 1.days
+        if (
+            (id in sources && !sameSource(id)) ||
+                route.createdAt > now ||
+                p.baseUrl != route.serverUrl ||
+                route.sourceIdentity != routeSourceIdentity(p) ||
+                now - route.createdAt > 1.days
         ) {
             return null
         }
@@ -297,38 +364,50 @@ public class ProfileMonitor(
     private suspend fun saveRoute(id: String, request: MonitoredRequest): String? {
         if (id in blocked) return null
         val p = profile(id) ?: return null
-        val token = Uuid.random().toHexString() + Uuid.random().toHexString().take(16)
+        val token = Uuid.random().toHexString() + Uuid.random().toHexString()
         val all = routes(id)
         while (all.size >= MAX_ROUTES) all.remove(all.keys.first())
         all[token] =
             MonitoredRoute(
-                profileId = id,
-                requestId = request.id,
-                sessionId = request.sessionId,
-                kind = request.kind,
-                createdAt = clock.now(),
-                serverUrl = p.baseUrl,
-                sourceIdentity = routeSourceIdentity(p),
-                directory = request.directory,
-                workspace = request.workspace,
-            ).toJson()
+                    profileId = id,
+                    requestId = request.id,
+                    sessionId = request.sessionId,
+                    kind = request.kind,
+                    createdAt = clock.now(),
+                    serverUrl = p.baseUrl,
+                    sourceIdentity = routeSourceIdentity(p),
+                    directory = request.directory,
+                    workspace = request.workspace,
+                )
+                .toJson()
         return if (prefs.putString(routesKey(id), JsonObject(all).toString())) token else null
     }
 
     // ---- rules ----
 
-    /** The rule as it applies now: shared rules over the server's own record; Wi-Fi only never applies on-phone. */
+    /**
+     * The rule as it applies now: shared rules over the server's own record; Wi-Fi only never
+     * applies on-phone.
+     */
     public fun rulesFor(id: String): MonitorNotifyRules {
         val rules = sharedRules.applyTo(storedRules(id))
         val p = profile(id)
-        return if (p != null && isOnThisPhone(p) && rules.wifiOnly) rules.copy(wifiOnly = false) else rules
+        return if (p != null && isOnThisPhone(p) && rules.wifiOnly) rules.copy(wifiOnly = false)
+        else rules
     }
 
     private fun storedRules(id: String): MonitorNotifyRules {
-        prefs.getString(rulesKey(id))?.let { raw -> MonitorNotifyRules.fromJson(raw)?.let { return it } }
-        // The old two-phone-server settings default, for compatibility. It is not consent: allows() still blocks reads.
+        prefs.getString(rulesKey(id))?.let { raw ->
+            MonitorNotifyRules.fromJson(raw)?.let {
+                return it
+            }
+        }
+        // The old two-phone-server settings default, for compatibility. It is not consent: allows()
+        // still blocks reads.
         val p = profile(id)
-        return if (p != null && isOnThisPhone(p) && profiles.profiles().count { isOnThisPhone(it) } > 1) {
+        return if (
+            p != null && isOnThisPhone(p) && profiles.profiles().count { isOnThisPhone(it) } > 1
+        ) {
             MonitorNotifyRules(enabled = true)
         } else {
             MonitorNotifyRules()
@@ -348,12 +427,16 @@ public class ProfileMonitor(
 
     public fun snapshotFor(id: String): ProfileAttentionSnapshot {
         val rules = rulesFor(id)
-        if (!rules.enabled || id in blocked) return ProfileAttentionSnapshot(id, MonitorStatus.Disabled)
+        if (!rules.enabled || id in blocked)
+            return ProfileAttentionSnapshot(id, MonitorStatus.Disabled)
         val p = profile(id)
-        if (p == null || !supportsProfile(p)) return ProfileAttentionSnapshot(id, MonitorStatus.Unavailable)
+        if (p == null || !supportsProfile(p))
+            return ProfileAttentionSnapshot(id, MonitorStatus.Unavailable)
         val location = profiles.location(id)
         val stored = if (sameSource(id)) snapshots[id] else null
-        val value = stored?.takeIf { it.directory == location?.directory && it.workspace == location?.workspace }
+        val value = stored?.takeIf {
+            it.directory == location?.directory && it.workspace == location?.workspace
+        }
         if (!allows(id)) return stale(id, MonitorStatus.Disabled, value)
         if (!runningAllowed) return stale(id, MonitorStatus.Paused, value)
         if (value == null) return stale(id, MonitorStatus.Waiting, null)
@@ -367,12 +450,19 @@ public class ProfileMonitor(
     }
 
     public val currentPendingTotal: Int
-        get() = profiles.profiles().filter { isReadable(it.id) }.sumOf { snapshotFor(it.id).pendingCount ?: 0 }
+        get() =
+            profiles
+                .profiles()
+                .filter { isReadable(it.id) }
+                .sumOf { snapshotFor(it.id).pendingCount ?: 0 }
 
     public val unknownProfileCount: Int
         get() = profiles.profiles().count { isReadable(it.id) && !snapshotFor(it.id).isCurrent }
 
-    /** The app says whether it is in front and whether an existing live service may run reads in the background. */
+    /**
+     * The app says whether it is in front and whether an existing live service may run reads in the
+     * background.
+     */
     public fun setRuntime(foreground: Boolean, backgroundAllowed: Boolean) {
         if (disposed) return
         val changed = this.foreground != foreground || this.backgroundAllowed != backgroundAllowed
@@ -389,45 +479,60 @@ public class ProfileMonitor(
         if (changed) notifyChanged()
     }
 
-    /** An explicit opt-in (or opt-out); opting in is consent and can restore monitoring after a revoked policy. */
+    /**
+     * An explicit opt-in (or opt-out); opting in is consent and can restore monitoring after a
+     * revoked policy.
+     */
     public suspend fun setEnabled(id: String, enabled: Boolean): Outcome<Unit> =
         writeRules(id, rulesFor(id).copy(enabled = enabled), explicitConsent = enabled)
 
-    public suspend fun setRules(id: String, value: MonitorNotifyRules): Outcome<Unit> = writeRules(id, value, explicitConsent = false)
+    public suspend fun setRules(id: String, value: MonitorNotifyRules): Outcome<Unit> =
+        writeRules(id, value, explicitConsent = false)
 
-    private suspend fun writeRules(id: String, value: MonitorNotifyRules, explicitConsent: Boolean): Outcome<Unit> {
+    private suspend fun writeRules(
+        id: String,
+        value: MonitorNotifyRules,
+        explicitConsent: Boolean,
+    ): Outcome<Unit> {
         val p = profile(id)
         if (disposed || id in blocked || !isReadable(id) || p == null || !supportsProfile(p)) {
             return Failure.Unavailable(FeatureId("profileMonitor")).failed()
         }
-        return writes.getOrPut(id) { Mutex() }.withLock {
-            if (disposed || id in blocked) return@withLock Unit.ok()
-            val before = rulesFor(id)
-            if (!prefs.putString(rulesKey(id), value.toJson())) return@withLock Failure.StorageRefused().failed()
-            val grantsConsent = value.enabled && (explicitConsent || !before.enabled)
-            if (!value.enabled || grantsConsent || !consent.hasRecord(id)) {
-                // An unrelated edit cannot revive a revoked policy; a new record fences legacy migration.
-                allows(id)
-                consent.set(id, grantsConsent)
+        return writes
+            .getOrPut(id) { Mutex() }
+            .withLock {
+                if (disposed || id in blocked) return@withLock Unit.ok()
+                val before = rulesFor(id)
+                if (!prefs.putString(rulesKey(id), value.toJson()))
+                    return@withLock Failure.StorageRefused().failed()
+                val grantsConsent = value.enabled && (explicitConsent || !before.enabled)
+                if (!value.enabled || grantsConsent || !consent.hasRecord(id)) {
+                    // An unrelated edit cannot revive a revoked policy; a new record fences legacy
+                    // migration.
+                    allows(id)
+                    consent.set(id, grantsConsent)
+                }
+                epochs[id] = (epochs[id] ?: 0) + 1
+                invalidatePoll(id)
+                if (activeProfileId == id) activeGateway?.close()
+                next.remove(id)
+                snapshots.remove(id)
+                if (!value.enabled || !value.notifications) {
+                    dismissProfile(id)
+                } else if (value.checkInAfterMinutes != before.checkInAfterMinutes) {
+                    dismissCheckIns(id)
+                }
+                if (!value.enabled) forgetBusy(id)
+                notifyChanged()
+                if (value.enabled) wake.trySend(Unit)
+                Unit.ok()
             }
-            epochs[id] = (epochs[id] ?: 0) + 1
-            invalidatePoll(id)
-            if (activeProfileId == id) activeGateway?.close()
-            next.remove(id)
-            snapshots.remove(id)
-            if (!value.enabled || !value.notifications) {
-                dismissProfile(id)
-            } else if (value.checkInAfterMinutes != before.checkInAfterMinutes) {
-                dismissCheckIns(id)
-            }
-            if (!value.enabled) forgetBusy(id)
-            notifyChanged()
-            if (value.enabled) wake.trySend(Unit)
-            Unit.ok()
-        }
     }
 
-    /** Synchronously closes admission for a profile being deleted; [drain] then waits for its writes and reads. */
+    /**
+     * Synchronously closes admission for a profile being deleted; [drain] then waits for its writes
+     * and reads.
+     */
     public fun removeProfile(id: String, retainIdentity: Boolean = false) {
         if (activeProfileId == id) activeGateway?.close()
         blocked += id
@@ -450,15 +555,19 @@ public class ProfileMonitor(
     }
 
     public suspend fun drain(id: String) {
-        writes[id]?.withLock { }
+        writes[id]?.withLock {}
         polls[id]?.await()
         dismissProfile(id)
     }
 
-    private fun storedAlertKeys(id: String): MutableSet<String> = prefs.getStringList(alertsKey(id)).orEmpty().toMutableSet()
+    private fun storedAlertKeys(id: String): MutableSet<String> =
+        prefs.getStringList(alertsKey(id)).orEmpty().toMutableSet()
 
     private suspend fun dismissKey(key: String): Boolean =
-        attempt({ Failure.Unexpected() }) { withTimeoutOrNull(timeout) { alerts.dismiss(key) } ?: false }.getOrNull() ?: false
+        attempt({ Failure.Unexpected() }) {
+                withTimeoutOrNull(timeout) { alerts.dismiss(key) } ?: false
+            }
+            .getOrNull() ?: false
 
     private suspend fun dismissProfile(id: String) {
         val keys = (alertKeys.remove(id).orEmpty() + storedAlertKeys(id))
@@ -472,12 +581,18 @@ public class ProfileMonitor(
         for (key in keys.filter { isCheckInAlertKey(it) }) {
             if (dismissKey(key)) keys.remove(key)
         }
-        attempt({ Failure.StorageRefused() }) { prefs.putStringList(alertsKey(id), keys.take(MAX_ALERT_KEYS)) }
+        attempt({ Failure.StorageRefused() }) {
+            prefs.putStringList(alertsKey(id), keys.take(MAX_ALERT_KEYS))
+        }
     }
 
-    /** Runs one bounded read of every monitored server due now; a second call joins the read in flight. */
-    public suspend fun refresh() {
+    /**
+     * Runs one bounded read of every monitored server due now; a second call joins the read in
+     * flight.
+     */
+    public suspend fun refresh(force: Boolean = false) {
         if (disposed || !runningAllowed) return
+        if (force) next.clear()
         inFlight?.let {
             it.await()
             return
@@ -494,17 +609,20 @@ public class ProfileMonitor(
     }
 
     private fun Outcome<Unit>.onFailedLog() {
-        if (this is Outcome.Failed) log.w { "monitor refresh ended early: ${failure::class.simpleName}" }
+        if (this is Outcome.Failed)
+            log.w { "monitor refresh ended early: ${failure::class.simpleName}" }
     }
 
     /**
-     * The app's polling loop: refreshes, then waits the interval or until a setting or the runtime changes. Launch it
-     * once in the app's scope; it ends when the scope is cancelled.
+     * The app's polling loop: refreshes, then waits the interval or until a setting or the runtime
+     * changes. Launch it once in the app's scope; it ends when the scope is cancelled.
      */
     public suspend fun runLoop() {
         while (!disposed) {
             refresh()
-            withTimeoutOrNull(if (foreground) foregroundInterval else backgroundInterval) { wake.receive() }
+            withTimeoutOrNull(if (foreground) foregroundInterval else backgroundInterval) {
+                wake.receive()
+            }
         }
     }
 
@@ -518,12 +636,18 @@ public class ProfileMonitor(
         if (!admitted()) return
         val due =
             profiles.profiles().filter {
-                rulesFor(it.id).enabled && allows(it.id) && isReadable(it.id) && supportsProfile(it) && it.id !in blocked
+                rulesFor(it.id).enabled &&
+                    allows(it.id) &&
+                    isReadable(it.id) &&
+                    supportsProfile(it) &&
+                    it.id !in blocked
             }
         if (due.isEmpty()) return
         var wifi: Boolean? = null
         if (due.any { rulesFor(it.id).wifiOnly }) {
-            wifi = attempt({ Failure.Unexpected() }) { withTimeoutOrNull(timeout) { networkWifi() } }.getOrNull()
+            wifi =
+                attempt({ Failure.Unexpected() }) { withTimeoutOrNull(timeout) { networkWifi() } }
+                    .getOrNull()
         }
         var n = 0
         while (n < due.size && n < BATCH) {
@@ -552,7 +676,12 @@ public class ProfileMonitor(
     }
 
     private suspend fun <T> timed(block: suspend () -> Outcome<T>): Outcome<T> =
-        when (val r = attempt({ Failure.Unexpected() }) { withTimeoutOrNull(timeout) { block() } ?: Failure.TimedOut().failed() }) {
+        when (
+            val r =
+                attempt({ Failure.Unexpected() }) {
+                    withTimeoutOrNull(timeout) { block() } ?: Failure.TimedOut().failed()
+                }
+        ) {
             is Outcome.Ok -> r.value
             is Outcome.Failed -> r
         }
@@ -598,8 +727,11 @@ public class ProfileMonitor(
             gateway = gw
             activeGateway = gw
             activeProfileId = id
-            // A Paseo server is bound to its project folder; with no project chosen yet, that folder is read.
-            val directory = location?.directory ?: if (p.backend == MonitorBackend.Paseo) p.boundDirectory else null
+            // A Paseo server is bound to its project folder; with no project chosen yet, that
+            // folder is read.
+            val directory =
+                location?.directory
+                    ?: if (p.backend == MonitorBackend.Paseo) p.boundDirectory else null
             gw.setLocation(directory, location?.workspace)
             val page = timed { gw.sessionPage(100) }.getOrNull() ?: return failed()
             if (!current()) return
@@ -607,41 +739,68 @@ public class ProfileMonitor(
             if (!current()) return
             val questions = readQuestions(gw, ::current) ?: return failed()
             if (!current()) return
-            val forms = if (gw.formsSupported) timed { gw.pendingForms() }.getOrNull() ?: return failed() else emptyList()
+            val forms =
+                if (gw.formsSupported) timed { gw.pendingForms() }.getOrNull() ?: return failed()
+                else emptyList()
             if (!current()) return
             val statuses = timed { gw.sessionStatuses() }.getOrNull() ?: return failed()
             if (!current()) return
-            var details = MonitorAttentionDetails(prior.attention.map { it.copy(isFresh = false) }, complete = false)
+            var details =
+                MonitorAttentionDetails(
+                    prior.attention.map { it.copy(isFresh = false) },
+                    complete = false,
+                )
             val reader = readAttention
             if (reader != null) {
                 val observed =
                     attempt({ Failure.Unexpected() }) {
-                        withTimeoutOrNull(timeout) { reader.read(p, gw, page.items, statuses, ::current) }
-                    }.getOrNull()
+                            withTimeoutOrNull(timeout) {
+                                reader.read(p, gw, page.items, statuses, ::current)
+                            }
+                        }
+                        .getOrNull()
                 // A failed enrichment does not make its retained observations fresh.
                 if (observed != null) details = merge(observed, prior, page.hasMore)
             }
             if (!current()) return
             val sessions = page.items.associateBy { it.id }
-            fun row(requestId: String, sessionId: String, kind: MonitoredRequestKind): MonitoredRequest {
+            fun row(
+                requestId: String,
+                sessionId: String,
+                kind: MonitoredRequestKind,
+            ): MonitoredRequest {
                 val s = sessions[sessionId]
-                return MonitoredRequest(requestId, sessionId, kind, s?.title, s?.directory ?: location?.directory, s?.workspace ?: location?.workspace)
+                return MonitoredRequest(
+                    requestId,
+                    sessionId,
+                    kind,
+                    s?.title,
+                    s?.directory ?: location?.directory,
+                    s?.workspace ?: location?.workspace,
+                )
             }
             val requests =
                 permissions.map { row(it.id, it.sessionId, MonitoredRequestKind.Permission) } +
                     questions.map { row(it.id, it.sessionId, MonitoredRequestKind.Question) } +
                     forms.map { row(it.id, it.sessionId, MonitoredRequestKind.Form) }
-            val unique = LinkedHashMap<String, MonitoredRequest>().apply { requests.forEach { put(it.identity, it) } }.values.take(MAX_REQUESTS)
+            val unique =
+                LinkedHashMap<String, MonitoredRequest>()
+                    .apply { requests.forEach { put(it.identity, it) } }
+                    .values
+                    .take(MAX_REQUESTS)
             val now = clock.now()
             // Every read above succeeded: a complete observation may end or extend a busy interval.
-            val observedBusy = observeBusy(id, statuses, sessions, now, location?.directory, location?.workspace)
+            val observedBusy =
+                observeBusy(id, statuses, sessions, now, location?.directory, location?.workspace)
             if (!current()) return
             failures.remove(id)
             next[id] = now + if (foreground) foregroundInterval else backgroundInterval
             snapshots[id] =
                 ProfileAttentionSnapshot(
                     profileId = id,
-                    status = if (requests.size <= MAX_REQUESTS) MonitorStatus.Current else MonitorStatus.Unavailable,
+                    status =
+                        if (requests.size <= MAX_REQUESTS) MonitorStatus.Current
+                        else MonitorStatus.Unavailable,
                     checkedAt = now,
                     directory = location?.directory,
                     workspace = location?.workspace,
@@ -659,9 +818,14 @@ public class ProfileMonitor(
                 if (requestsAllowed || checkInsAllowed) {
                     val due = buildList {
                         if (requestsAllowed) addAll(unique)
-                        if (checkInsAllowed) snapshots[id]!!.dueCheckIns(rulesFor(id)).forEach { add(it.toRequest()) }
+                        if (checkInsAllowed)
+                            snapshots[id]!!.dueCheckIns(rulesFor(id)).forEach {
+                                add(it.toRequest())
+                            }
                     }
-                    publishAlerts(id, due, ::current) { notificationPolicyCurrent(id) || checkInPolicyCurrent(id) }
+                    publishAlerts(id, due, ::current) {
+                        notificationPolicyCurrent(id) || checkInPolicyCurrent(id)
+                    }
                 }
             }
         } finally {
@@ -673,25 +837,45 @@ public class ProfileMonitor(
         }
     }
 
-    private fun merge(observed: MonitorAttentionDetails, prior: ProfileAttentionSnapshot, hasMore: Boolean): MonitorAttentionDetails {
+    private fun merge(
+        observed: MonitorAttentionDetails,
+        prior: ProfileAttentionSnapshot,
+        hasMore: Boolean,
+    ): MonitorAttentionDetails {
         val complete = observed.complete && !hasMore
         if (complete) return MonitorAttentionDetails(observed.items, complete = true)
         val kept =
-            prior.attention.filter { old ->
-                observed.items.none { it.identity == old.identity } &&
-                    !(old.kind == MonitorAttentionKind.FailedRun && old.taskId == null && old.runId == null && old.sessionId in observed.checkedSessionIds) &&
-                    !((old.kind == MonitorAttentionKind.TeamGate || old.taskId != null || old.runId != null) && observed.teamComplete)
-            }.map { it.copy(isFresh = false) }
+            prior.attention
+                .filter { old ->
+                    observed.items.none { it.identity == old.identity } &&
+                        !(old.kind == MonitorAttentionKind.FailedRun &&
+                            old.taskId == null &&
+                            old.runId == null &&
+                            old.sessionId in observed.checkedSessionIds) &&
+                        !((old.kind == MonitorAttentionKind.TeamGate ||
+                            old.taskId != null ||
+                            old.runId != null) && observed.teamComplete)
+                }
+                .map { it.copy(isFresh = false) }
         return MonitorAttentionDetails(observed.items + kept, complete = false)
     }
 
-    private suspend fun readPermissions(gw: MonitorGateway, current: () -> Boolean): List<MonitorPending>? =
+    private suspend fun readPermissions(
+        gw: MonitorGateway,
+        current: () -> Boolean,
+    ): List<MonitorPending>? =
         mergeReads(current, { gw.pendingPermissions() }, { gw.pendingPermissionsV2() })
 
-    private suspend fun readQuestions(gw: MonitorGateway, current: () -> Boolean): List<MonitorPending>? =
+    private suspend fun readQuestions(
+        gw: MonitorGateway,
+        current: () -> Boolean,
+    ): List<MonitorPending>? =
         mergeReads(current, { gw.listQuestions() }, { gw.pendingQuestionsV2() })
 
-    /** Legacy then modern read; either may fail alone, both failing is "unavailable"; ids de-duplicate. */
+    /**
+     * Legacy then modern read; either may fail alone, both failing is "unavailable"; ids
+     * de-duplicate.
+     */
     internal suspend fun mergeReads(
         current: () -> Boolean,
         legacy: suspend () -> Outcome<List<MonitorPending>>,
@@ -702,14 +886,23 @@ public class ProfileMonitor(
         if (!current()) return null
         val b = timed(modern).getOrNull()
         if (a == null && b == null) return null
-        return LinkedHashMap<String, MonitorPending>().apply { (a.orEmpty() + b.orEmpty()).forEach { put(it.id, it) } }.values.toList()
+        return LinkedHashMap<String, MonitorPending>()
+            .apply { (a.orEmpty() + b.orEmpty()).forEach { put(it.id, it) } }
+            .values
+            .toList()
     }
 
     /**
-     * Reconciles posted alerts with [requests]: anything posted that is no longer listed is dismissed, anything new is
-     * posted once. A check-in key names its busy interval, so an ended interval retires its reminder.
+     * Reconciles posted alerts with [requests]: anything posted that is no longer listed is
+     * dismissed, anything new is posted once. A check-in key names its busy interval, so an ended
+     * interval retires its reminder.
      */
-    private suspend fun publishAlerts(id: String, requests: List<MonitoredRequest>, current: () -> Boolean, policy: () -> Boolean) {
+    private suspend fun publishAlerts(
+        id: String,
+        requests: List<MonitoredRequest>,
+        current: () -> Boolean,
+        policy: () -> Boolean,
+    ) {
         if (!current() || !policy()) return dismissProfile(id)
         val keys = alertKeys.getOrPut(id) { storedAlertKeys(id) }
         val valid = requests.map { alertKey(id, it) }.toSet()
@@ -725,18 +918,26 @@ public class ProfileMonitor(
             if (!mayDispatch()) return
             val key = alertKey(id, request)
             if (key in keys) continue
-            if (request.kind == MonitoredRequestKind.CheckIn && busyIntervals(id)[request.sessionId]?.reminderClaimed == true) continue
+            if (
+                request.kind == MonitoredRequestKind.CheckIn &&
+                    busyIntervals(id)[request.sessionId]?.reminderClaimed == true
+            )
+                continue
             if (dispatched >= BATCH) break
             dispatched++
             val token = attempt({ Failure.StorageRefused() }) { saveRoute(id, request) }
             if (token !is Outcome.Ok) return
             val saved = token.value ?: return
             if (!mayDispatch()) return
-            if (request.kind == MonitoredRequestKind.CheckIn && !claimCheckIn(id, request, current)) continue
-            // Runtime admission can change while either write is held: keep a recorded claim, never dispatch then.
+            if (request.kind == MonitoredRequestKind.CheckIn && !claimCheckIn(id, request, current))
+                continue
+            // Runtime admission can change while either write is held: keep a recorded claim, never
+            // dispatch then.
             if (!mayDispatch()) return
             val delivered =
-                attempt({ Failure.Unexpected() }) { withTimeoutOrNull(timeout) { alerts.alert(id, request, key, saved) } ?: false }
+                attempt({ Failure.Unexpected() }) {
+                    withTimeoutOrNull(timeout) { alerts.alert(id, request, key, saved) } ?: false
+                }
             if (delivered !is Outcome.Ok) return
             if (!mayDispatch()) {
                 if (delivered.value) dismissKey(key)
@@ -747,19 +948,30 @@ public class ProfileMonitor(
         if (current() && policy()) prefs.putStringList(alertsKey(id), keys.take(MAX_ALERT_KEYS))
     }
 
-    private fun quietNow(rules: MonitorNotifyRules): Boolean = rules.quietAt(minuteOfDay(clock.now()))
+    private fun quietNow(rules: MonitorNotifyRules): Boolean =
+        rules.quietAt(minuteOfDay(clock.now()))
 
     private fun notificationPolicyCurrent(id: String): Boolean {
         if (disposed || !runningAllowed || id in blocked || !allows(id)) return false
         val rules = rulesFor(id)
-        return rules.enabled && rules.notifications && sharedRules.requestsAllowed && !quietNow(rules) && (alertsAllowed?.invoke(id) ?: true)
+        return rules.enabled &&
+            rules.notifications &&
+            sharedRules.requestsAllowed &&
+            !quietNow(rules) &&
+            (alertsAllowed?.invoke(id) ?: true)
     }
 
-    /** Check-ins follow every request-alert policy except [alertsAllowed]; the rule's duration must be set. */
+    /**
+     * Check-ins follow every request-alert policy except [alertsAllowed]; the rule's duration must
+     * be set.
+     */
     private fun checkInPolicyCurrent(id: String): Boolean {
         if (disposed || !runningAllowed || id in blocked || !allows(id)) return false
         val rules = rulesFor(id)
-        return rules.enabled && rules.notifications && rules.checkInAfterMinutes != null && !quietNow(rules)
+        return rules.enabled &&
+            rules.notifications &&
+            rules.checkInAfterMinutes != null &&
+            !quietNow(rules)
     }
 
     public fun dispose() {
@@ -786,37 +998,61 @@ public class ProfileMonitor(
 
         public fun busyIntervalsKey(id: String): String = "oc.monitorBusy.$id"
 
-        /** Every per-profile key the monitor writes; the profile deletion sweep removes them (ProfileScope). */
-        public fun profileScopedKeys(id: String): List<String> = listOf(rulesKey(id), alertsKey(id), routesKey(id), busyIntervalsKey(id))
+        /**
+         * Every per-profile key the monitor writes; the profile deletion sweep removes them
+         * (ProfileScope).
+         */
+        public fun profileScopedKeys(id: String): List<String> =
+            listOf(rulesKey(id), alertsKey(id), routesKey(id), busyIntervalsKey(id))
 
-        /** Loopback servers use no network, so Wi-Fi rules do not apply; they still need consent. */
-        public fun isOnThisPhone(p: MonitorProfile): Boolean = hostOf(p.baseUrl) in setOf("127.0.0.1", "localhost", "::1", "[::1]")
+        /**
+         * Loopback servers use no network, so Wi-Fi rules do not apply; they still need consent.
+         */
+        public fun isOnThisPhone(p: MonitorProfile): Boolean =
+            hostOf(p.baseUrl) in setOf("127.0.0.1", "localhost", "::1", "[::1]")
 
         /** Durable route scope deliberately excludes credentials. */
         public fun routeSourceIdentity(p: MonitorProfile): String =
-            DartJson.sha256Hex(JsonArray(listOf(p.baseUrl, p.username, p.flavor).map { JsonPrimitive(it) }).toString())
+            DartJson.sha256Hex(
+                JsonArray(listOf(p.baseUrl, p.username, p.flavor).map { JsonPrimitive(it) })
+                    .toString()
+            )
 
-        public fun alertKey(id: String, r: MonitoredRequest): String = "monitor:${encodeComponent(id)}:${encodeComponent(r.identity)}"
+        public fun alertKey(id: String, r: MonitoredRequest): String =
+            "monitor:${encodeComponent(id)}:${encodeComponent(r.identity)}"
 
-        public fun isCheckInAlertKey(key: String): Boolean = key.contains(":${MonitoredRequestKind.CheckIn.wire}%3A")
+        public fun isCheckInAlertKey(key: String): Boolean =
+            key.contains(":${MonitoredRequestKind.CheckIn.wire}%3A")
 
         internal fun hostOf(url: String): String? {
-            val rest = url.substringAfter("://", missingDelimiterValue = "").takeIf { it.isNotEmpty() } ?: return null
-            val authority = rest.substringBefore('/').substringBefore('?').substringBefore('#').substringAfterLast('@')
-            if (authority.startsWith("[")) return authority.substringBefore(']').plus("]").lowercase().let { if (it == "[::1]") "::1" else it }
+            val rest =
+                url.substringAfter("://", missingDelimiterValue = "").takeIf { it.isNotEmpty() }
+                    ?: return null
+            val authority =
+                rest
+                    .substringBefore('/')
+                    .substringBefore('?')
+                    .substringBefore('#')
+                    .substringAfterLast('@')
+            if (authority.startsWith("["))
+                return authority.substringBefore(']').plus("]").lowercase().let {
+                    if (it == "[::1]") "::1" else it
+                }
             return authority.substringBefore(':').lowercase()
         }
 
-        /** Dart `Uri.encodeComponent`: everything but unreserved marks is percent-encoded as UTF-8. */
-        internal fun encodeComponent(value: String): String =
-            buildString {
-                for (b in value.encodeToByteArray()) {
-                    val c = b.toInt() and 0xff
-                    val ch = c.toChar()
-                    if (ch in 'A'..'Z' || ch in 'a'..'z' || ch in '0'..'9' || ch in "-_.!~*'()") append(ch)
-                    else append('%').append(HEX[c shr 4]).append(HEX[c and 0xf])
-                }
+        /**
+         * Dart `Uri.encodeComponent`: everything but unreserved marks is percent-encoded as UTF-8.
+         */
+        internal fun encodeComponent(value: String): String = buildString {
+            for (b in value.encodeToByteArray()) {
+                val c = b.toInt() and 0xff
+                val ch = c.toChar()
+                if (ch in 'A'..'Z' || ch in 'a'..'z' || ch in '0'..'9' || ch in "-_.!~*'()")
+                    append(ch)
+                else append('%').append(HEX[c shr 4]).append(HEX[c and 0xf])
             }
+        }
 
         private const val HEX = "0123456789ABCDEF"
     }

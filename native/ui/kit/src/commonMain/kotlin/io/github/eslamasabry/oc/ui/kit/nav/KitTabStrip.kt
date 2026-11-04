@@ -1,4 +1,11 @@
 package io.github.eslamasabry.oc.ui.kit.nav
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceContent
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceStyle
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -157,6 +164,7 @@ public fun KitTabStrip(
     }
     val requesters = remember(tabs.size) { List(tabs.size) { BringIntoViewRequester() } }
     LaunchedEffect(selected) { requesters.getOrNull(selected)?.bringIntoView() }
+    val surfaceStyle = LocalKitStyle.current
     val pill = KitShapeId.Pill
     Box(modifier.clipToBounds().kitScrollFade(scroll).testTag("kit-tab-strip")) {
         Row(
@@ -179,6 +187,7 @@ public fun KitTabStrip(
                     true
                 }
                 .drawBehind {
+                    if (surfaceStyle.style != SurfaceStyle.Solid) return@drawBehind
                     val x = left.value
                     if (x.isNaN()) return@drawBehind
                     val h = size.height - 2 * INDICATOR_INSET.dp.toPx()
@@ -196,8 +205,11 @@ public fun KitTabStrip(
                 val chosen = i == selected
                 val count = TabRules.countWords(tab.count)
                 val spoken = if (count != null) stringResource(Res.string.kitTabLabel, tab.label, count) else tab.label
+                val look = kitSurfaceLook(SurfaceRequest(SurfaceRole.Control, selected = chosen), if (chosen) colors.surface3 else androidx.compose.ui.graphics.Color.Transparent)
+                KitSurfaceContent(look) {
                 Row(
                     Modifier
+                        .then(if (chosen && surfaceStyle.style != SurfaceStyle.Solid) Modifier.kitSurface(look, pill.toShape()) else Modifier)
                         .onPlaced { c -> bounds[i] = c.positionInParent().x to c.size.width.toFloat() }
                         .bringIntoViewRequester(requesters[i])
                         .heightIn(min = tokens.minTarget.dp)
@@ -211,7 +223,7 @@ public fun KitTabStrip(
                     horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
                 ) {
                     val tone = if (chosen) TextTone.Primary else TextTone.Secondary
-                    tab.icon?.let { KitGlyph(it, colors.tone(tone), tokens.smallIcon.dp) }
+                    tab.icon?.let { KitGlyph(it, LocalKitColors.current.tone(tone), tokens.smallIcon.dp) }
                     KitText(tab.label, role = TypeRole.Label, tone = tone, kind = KitTextKind.Frame, maxLines = 1)
                     if (tab.count != null) {
                         KitSwapCount(tab.count) { n ->
@@ -219,6 +231,7 @@ public fun KitTabStrip(
                         }
                     }
                     if (tab.needsYou > 0) NeedsYouMark(tab.needsYou)
+                }
                 }
             }
         }

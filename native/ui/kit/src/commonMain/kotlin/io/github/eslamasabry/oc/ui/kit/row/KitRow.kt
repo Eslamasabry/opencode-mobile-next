@@ -1,4 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.row
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRequest
+import io.github.eslamasabry.oc.ui.design.effects.SurfaceRole
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.toShape
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceContent
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +14,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
 /** The supporting lines a row allows (Dart A11Y-8): 1 at normal size, 2 from 1.3×, 3 from 2.0×. */
 public fun kitRowSupportingLines(textScale: Float, asked: Int = 1): Int =
@@ -117,6 +126,7 @@ public fun KitRow(
     }
     val actionBelow = action != null && large
     val tappable = onClick != null || onLongClick != null
+    val look = kitSurfaceLook(SurfaceRequest(SurfaceRole.Control, selected = selected), colors.surface3)
     val base =
         modifier
             .kitMaxWidth(CapRole.List)
@@ -142,11 +152,13 @@ public fun KitRow(
                 if (selected) this.selected = true
                 if (titleIsFileName) contentDescription = title
             }
-            .then(if (selected) Modifier.background(colors.surface3) else Modifier)
+            .then(if (selected) Modifier.kitSurface(look, KitShapeId.Square.toShape()) else Modifier)
             .heightIn(min = (if (supportLine != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
             .padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp)
             .testTag("kit-row")
+    KitSurfaceContent(if (selected) look else look.copy(words = null)) {
     Row(base, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        if (LocalKitStyle.current.track && leading == null) Spacer(Modifier.size(tokens.iconTile.dp))
         leading?.let { RowLeadingTile(it, dim = !enabled) }
         BoxWithConstraints(Modifier.weight(1f)) {
             val measurer = rememberTextMeasurer()
@@ -198,4 +210,5 @@ public fun KitRow(
             }
         }
     }
+}
 }

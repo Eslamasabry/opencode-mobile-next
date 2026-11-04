@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.engine.usage.UsageCalendar
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageActions
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageFigures
 import io.github.eslamasabry.oc.feature.usage.presentation.UsagePhase
@@ -92,7 +93,6 @@ import io.github.eslamasabry.oc.ui.words.res.usageSubagents
 import io.github.eslamasabry.oc.ui.words.res.usageSucceeded
 import io.github.eslamasabry.oc.ui.words.res.usageSuccessRate
 import io.github.eslamasabry.oc.ui.words.res.usageThirtyDays
-import io.github.eslamasabry.oc.engine.usage.UsageCalendar
 import io.github.eslamasabry.oc.ui.words.res.usageTimezone
 import io.github.eslamasabry.oc.ui.words.res.usageTimezoneUnavailable
 import io.github.eslamasabry.oc.ui.words.res.usageTinyCost
@@ -110,13 +110,12 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Usage and cost (Flutter `UsageScreen`, owner order): the total first, then the range and scope that shape it, then
- * the breakdowns (activity, tokens, providers, models, tools, days). The one sentence that this is an estimate, not a
- * provider bill, stays visible at the end. Kit parts only.
+ * Usage and cost (Flutter `UsageScreen`, owner order): the total first, then the range and scope
+ * that shape it, then the breakdowns (activity, tokens, providers, models, tools, days). The one
+ * sentence that this is an estimate, not a provider bill, stays visible at the end. Kit parts only.
  */
 @Composable
 public fun UsageScreen(state: UsageUi, actions: UsageActions) {
-    val gutter = LocalKitTokens.current.gutter
     KitScreen(
         topBar = {
             KitTopBar(
@@ -142,29 +141,40 @@ public fun UsageScreen(state: UsageUi, actions: UsageActions) {
         loadingLabel = stringResource(Res.string.usageLoading),
         width = KitScreenWidth.Reading,
     ) {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-            if (state.phase == UsagePhase.NoServer) {
-                item(key = "no-server") {
-                    KitStateView(
-                        kind = KitStateKind.Missing,
-                        title = stringResource(Res.string.p12SearchNoServerTitle),
-                        body = stringResource(Res.string.p12UsageNoServerBody),
-                        primary = KitAction(stringResource(Res.string.p12SearchOpenServers), actions::openServers),
-                    )
-                }
-                return@LazyColumn
-            }
-            state.report?.let { report -> item(key = "total") { Total(report, state.timezone) } }
-            item(key = "filters") { Filters(state, actions) }
-            item(key = "status") { Status(state, actions) }
-            state.report?.let { report -> breakdowns(report) }
-            item(key = "disclosure") {
-                KitText(
-                    stringResource(Res.string.usageCostDisclosure),
-                    role = KitTextRole.Supporting,
-                    modifier = Modifier.padding(horizontal = gutter.dp, vertical = Space.S3.dp),
+        UsageContent(state, actions)
+    }
+}
+
+/** The Spending body under the app-owned Usage hub. */
+@Composable
+public fun UsageContent(state: UsageUi, actions: UsageActions) {
+    val gutter = LocalKitTokens.current.gutter
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+        if (state.phase == UsagePhase.NoServer) {
+            item(key = "no-server") {
+                KitStateView(
+                    kind = KitStateKind.Missing,
+                    title = stringResource(Res.string.p12SearchNoServerTitle),
+                    body = stringResource(Res.string.p12UsageNoServerBody),
+                    primary =
+                        KitAction(
+                            stringResource(Res.string.p12SearchOpenServers),
+                            actions::openServers,
+                        ),
                 )
             }
+            return@LazyColumn
+        }
+        state.report?.let { report -> item(key = "total") { Total(report, state.timezone) } }
+        item(key = "filters") { Filters(state, actions) }
+        item(key = "status") { Status(state, actions) }
+        state.report?.let { report -> breakdowns(report) }
+        item(key = "disclosure") {
+            KitText(
+                stringResource(Res.string.usageCostDisclosure),
+                role = KitTextRole.Supporting,
+                modifier = Modifier.padding(horizontal = gutter.dp, vertical = Space.S3.dp),
+            )
         }
     }
 }
@@ -176,7 +186,11 @@ private fun Total(report: UsageReport, timezone: String?) {
         Modifier.padding(horizontal = gutter.dp, vertical = Space.S3.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {
-        KitText(stringResource(Res.string.p12UsageCost), role = TypeRole.Label, tone = TextTone.Secondary)
+        KitText(
+            stringResource(Res.string.p12UsageCost),
+            role = TypeRole.Label,
+            tone = TextTone.Secondary,
+        )
         KitText(cost(report.cost), role = TypeRole.LargeTitle)
         val zone = timezone?.takeIf { UsageCalendar.isReadable(it) }
         val first = zone?.let { UsageCalendar.dayLabel(report.fromMs, it) }
@@ -187,7 +201,11 @@ private fun Total(report: UsageReport, timezone: String?) {
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,
             )
-            KitText(stringResource(Res.string.usageTimezone, zone), role = TypeRole.Caption, tone = TextTone.Tertiary)
+            KitText(
+                stringResource(Res.string.usageTimezone, zone),
+                role = TypeRole.Caption,
+                tone = TextTone.Tertiary,
+            )
         }
     }
 }
@@ -212,7 +230,10 @@ private fun Filters(state: UsageUi, actions: UsageActions) {
                 segments =
                     listOf(
                         KitSegment(UsageRange.Today, stringResource(Res.string.usageToday)),
-                        KitSegment(UsageRange.ThirtyDays, stringResource(Res.string.usageThirtyDays)),
+                        KitSegment(
+                            UsageRange.ThirtyDays,
+                            stringResource(Res.string.usageThirtyDays),
+                        ),
                         KitSegment(UsageRange.Year, stringResource(Res.string.usageYear)),
                         KitSegment(UsageRange.AllTime, stringResource(Res.string.usageAllTime)),
                     ),
@@ -256,10 +277,16 @@ private fun Status(state: UsageUi, actions: UsageActions) {
                 )
             }
         UsagePhase.Unsupported ->
-            KitStateView(kind = KitStateKind.Calm, title = stringResource(Res.string.usageUnsupported))
-        UsagePhase.NoTimeZone -> KitNotice(stringResource(Res.string.usageTimezoneUnavailable), actions = listOf(retry))
-        UsagePhase.Authorization -> KitNotice(stringResource(Res.string.usageAuthorization), actions = listOf(retry))
-        UsagePhase.Invalid -> KitNotice(stringResource(Res.string.usageInvalidResponse), actions = listOf(retry))
+            KitStateView(
+                kind = KitStateKind.Calm,
+                title = stringResource(Res.string.usageUnsupported),
+            )
+        UsagePhase.NoTimeZone ->
+            KitNotice(stringResource(Res.string.usageTimezoneUnavailable), actions = listOf(retry))
+        UsagePhase.Authorization ->
+            KitNotice(stringResource(Res.string.usageAuthorization), actions = listOf(retry))
+        UsagePhase.Invalid ->
+            KitNotice(stringResource(Res.string.usageInvalidResponse), actions = listOf(retry))
         UsagePhase.Failed ->
             KitErrorNotice(
                 stringResource(Res.string.p12UsageFailed),
@@ -279,10 +306,16 @@ private fun LazyListScope.breakdowns(report: UsageReport) {
     item(key = "counts") {
         KitRowGroup(label = stringResource(Res.string.p12UsageCounts)) {
             ValueRow(stringResource(Res.string.usageSessions), UsageFigures.count(report.sessions))
-            ValueRow(stringResource(Res.string.usageSubagents), UsageFigures.count(report.subagents))
+            ValueRow(
+                stringResource(Res.string.usageSubagents),
+                UsageFigures.count(report.subagents),
+            )
             ValueRow(stringResource(Res.string.usagePrompts), UsageFigures.count(report.prompts))
             ValueRow(stringResource(Res.string.usageSteps), UsageFigures.count(report.steps))
-            ValueRow(stringResource(Res.string.usageActiveDays), UsageFigures.count(report.activeDays))
+            ValueRow(
+                stringResource(Res.string.usageActiveDays),
+                UsageFigures.count(report.activeDays),
+            )
             ValueRow(stringResource(Res.string.usageStreak), UsageFigures.count(report.streak))
         }
     }
@@ -304,10 +337,16 @@ private fun LazyListScope.breakdowns(report: UsageReport) {
                 for (p in providers) {
                     KitRow(
                         title = p.providerId,
-                        supporting = pluralStringResource(Res.plurals.usageProviderModelCount, p.models, p.models),
+                        supporting =
+                            pluralStringResource(
+                                Res.plurals.usageProviderModelCount,
+                                p.models,
+                                p.models,
+                            ),
                         trailing =
                             KitRowTrailing.Value(
-                                p.cost?.let { cost(it) } ?: stringResource(Res.string.usageProviderCostUnavailable),
+                                p.cost?.let { cost(it) }
+                                    ?: stringResource(Res.string.usageProviderCostUnavailable),
                                 chevron = false,
                             ),
                     )
@@ -326,12 +365,17 @@ private fun LazyListScope.breakdowns(report: UsageReport) {
                 )
             }
             for (m in models) {
-                val name = if (m.variant.isNullOrBlank()) m.modelId else "${m.modelId} · ${m.variant}"
+                val name =
+                    if (m.variant.isNullOrBlank()) m.modelId else "${m.modelId} · ${m.variant}"
                 KitRow(
                     title = name,
                     supporting =
-                        stringResource(Res.string.usageModelSteps, UsageFigures.count(m.steps)) + " · " +
-                            stringResource(Res.string.usageModelTokens, UsageFigures.compact(m.tokens.total)),
+                        stringResource(Res.string.usageModelSteps, UsageFigures.count(m.steps)) +
+                            " · " +
+                            stringResource(
+                                Res.string.usageModelTokens,
+                                UsageFigures.compact(m.tokens.total),
+                            ),
                     server = m.providerId,
                     trailing = KitRowTrailing.Value(cost(m.cost), chevron = false),
                 )
@@ -356,13 +400,26 @@ private fun LazyListScope.breakdowns(report: UsageReport) {
                         modifier = Modifier.padding(horizontal = gutter.dp),
                     )
                 else -> {
-                    ValueRow(stringResource(Res.string.usageToolCalls), UsageFigures.count(tools.calls))
-                    ValueRow(stringResource(Res.string.usageSucceeded), UsageFigures.count(tools.succeeded))
-                    ValueRow(stringResource(Res.string.usageFailed), UsageFigures.count(tools.failed))
-                    ValueRow(stringResource(Res.string.usageUnfinished), UsageFigures.count(tools.unfinished))
+                    ValueRow(
+                        stringResource(Res.string.usageToolCalls),
+                        UsageFigures.count(tools.calls),
+                    )
+                    ValueRow(
+                        stringResource(Res.string.usageSucceeded),
+                        UsageFigures.count(tools.succeeded),
+                    )
+                    ValueRow(
+                        stringResource(Res.string.usageFailed),
+                        UsageFigures.count(tools.failed),
+                    )
+                    ValueRow(
+                        stringResource(Res.string.usageUnfinished),
+                        UsageFigures.count(tools.unfinished),
+                    )
                     KitText(
-                        tools.successRate?.let { stringResource(Res.string.usageSuccessRate, UsageFigures.percent(it)) }
-                            ?: stringResource(Res.string.usageNoFinishedTools),
+                        tools.successRate?.let {
+                            stringResource(Res.string.usageSuccessRate, UsageFigures.percent(it))
+                        } ?: stringResource(Res.string.usageNoFinishedTools),
                         role = KitTextRole.Supporting,
                         modifier = Modifier.padding(horizontal = gutter.dp, vertical = Space.S2.dp),
                     )
@@ -374,7 +431,10 @@ private fun LazyListScope.breakdowns(report: UsageReport) {
     if (days.isNotEmpty()) {
         item(key = "days") {
             KitRowGroup(label = stringResource(Res.string.p12UsageActivity)) {
-                for (d in days) KitRow(title = stringResource(Res.string.p12UsageDay, d.date, UsageFigures.count(d.steps)))
+                for (d in days) KitRow(
+                    title =
+                        stringResource(Res.string.p12UsageDay, d.date, UsageFigures.count(d.steps))
+                )
             }
         }
     }
@@ -387,4 +447,5 @@ private fun ValueRow(title: String, value: String) {
 
 @Composable
 private fun cost(value: Double): String =
-    if (UsageFigures.isTiny(value)) stringResource(Res.string.usageTinyCost) else UsageFigures.money(value)
+    if (UsageFigures.isTiny(value)) stringResource(Res.string.usageTinyCost)
+    else UsageFigures.money(value)

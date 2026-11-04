@@ -223,7 +223,7 @@ public data class StyleSpec(
                 val a = p.text1.withAlpha(1f); val b = p.ground.withAlpha(1f)
                 if (wcagContrast(a, face) >= wcagContrast(b, face)) a else b
             }
-            return SurfaceDecoration(face, edge, edgeWidth = 1f, shadows = listOf(StyleShadow(edge, dy = if (r.pressed) 1f else 3f)), faceShift = if (r.pressed) 2f else 0f, words = words)
+            return SurfaceDecoration(face, edge, edgeWidth = 1f, shadows = listOf(StyleShadow(edge, dy = if (r.pressed) 1f else 3f)), words = words)
         }
         return when (r.role) {
             SurfaceRole.Field -> SurfaceDecoration(Argb(0), ink, edgeWidth = if (r.selected) 2f else 1.5f)

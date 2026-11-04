@@ -1,12 +1,14 @@
 package io.github.eslamasabry.oc.feature.phone.ui
 
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.phone.presentation.AboutWait
 import io.github.eslamasabry.oc.feature.phone.presentation.AnswerHeadline
 import io.github.eslamasabry.oc.feature.phone.presentation.AnswerLine
 import io.github.eslamasabry.oc.feature.phone.presentation.AnswerTone
 import io.github.eslamasabry.oc.feature.phone.presentation.KeepAliveStepKind
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneAct
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneHistoryPhase
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneMaker
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneOp
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessKind
@@ -35,6 +37,11 @@ import io.github.eslamasabry.oc.ui.words.res.phoneServerRestartFailed
 import io.github.eslamasabry.oc.ui.words.res.phoneServerRowNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.phoneServerStartFailed
 import io.github.eslamasabry.oc.ui.words.res.phoneServerStopFailed
+import io.github.eslamasabry.oc.ui.words.res.r40PhoneConnectFailed
+import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryCount
+import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryFailed
+import io.github.eslamasabry.oc.ui.words.res.r40PhoneHistoryMoving
+import io.github.eslamasabry.oc.ui.words.res.r40PhoneMemory
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindAiTeam
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindClaudeCode
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindDevService
@@ -60,8 +67,8 @@ import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerSettingUp
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerStartFailed
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerStartFailedLine
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerStarting
-import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerStopping
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerStoppedItself
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerStopping
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerStorage
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneInstallAgain
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneSetUp
@@ -101,7 +108,7 @@ internal fun AnswerHeadline.words(): String =
             AnswerHeadline.Restarting -> Res.string.thisPhoneAnswerRestarting
             AnswerHeadline.StartFailed -> Res.string.thisPhoneAnswerStartFailed
             AnswerHeadline.Recovery -> Res.string.thisPhoneAnswerRecovery
-        },
+        }
     )
 
 @Composable
@@ -116,11 +123,26 @@ internal fun AnswerLine.words(): String =
     when (this) {
         AnswerLine.StaysOff -> stringResource(Res.string.thisPhoneAnswerOffLine)
         AnswerLine.RestartsSoon -> stringResource(Res.string.thisPhoneAnswerRestartsSoon)
-        is AnswerLine.RestartsIn -> stringResource(Res.string.thisPhoneAnswerRestartsIn, wait.words())
+        is AnswerLine.RestartsIn ->
+            stringResource(Res.string.thisPhoneAnswerRestartsIn, wait.words())
         AnswerLine.GaveUp -> stringResource(Res.string.thisPhoneAnswerGaveUp)
         AnswerLine.StartFailedLine -> stringResource(Res.string.thisPhoneAnswerStartFailedLine)
         AnswerLine.RecoveryBody -> stringResource(Res.string.inAppServerOwnershipRecoveryBody)
-        is AnswerLine.Storage -> stringResource(Res.string.thisPhoneAnswerStorage, PhoneSizes.text(bytes))
+        is AnswerLine.Storage ->
+            stringResource(Res.string.thisPhoneAnswerStorage, PhoneSizes.text(bytes))
+        is AnswerLine.Memory -> stringResource(Res.string.r40PhoneMemory, PhoneSizes.text(bytes))
+        is AnswerLine.History ->
+            when {
+                info.phase == PhoneHistoryPhase.Failed ->
+                    stringResource(Res.string.r40PhoneHistoryFailed)
+                info.done != null && info.total != null && info.total > 0 ->
+                    stringResource(
+                        Res.string.r40PhoneHistoryCount,
+                        Numbers.format(info.done),
+                        Numbers.format(info.total),
+                    )
+                else -> stringResource(Res.string.r40PhoneHistoryMoving)
+            }
         is AnswerLine.Because -> headline.words()
     }
 
@@ -135,7 +157,7 @@ internal fun PhoneAct.words(): String =
             PhoneAct.RestartNow -> Res.string.thisPhoneAnswerRestartNow
             PhoneAct.OpenAppSettings -> Res.string.e7SetupOpenAppSettings
             PhoneAct.ShowProgress -> Res.string.phoneServerCardShowProgress
-        },
+        }
     )
 
 @Composable
@@ -146,7 +168,8 @@ internal fun PhoneOp.failedWords(): String =
             PhoneOp.Stop -> Res.string.phoneServerStopFailed
             PhoneOp.Restart -> Res.string.phoneServerRestartFailed
             PhoneOp.Update -> Res.string.thisPhoneAnswerInstallFailed
-        },
+            PhoneOp.Connect -> Res.string.r40PhoneConnectFailed
+        }
     )
 
 /** The kind word under a process row, or null for a plain program. */
@@ -168,7 +191,10 @@ internal fun KeepAliveStepKind.words(maker: PhoneMaker, done: Boolean): Pair<Str
     when (this) {
         KeepAliveStepKind.Battery ->
             stringResource(Res.string.keepRunningBatteryTitle) to
-                stringResource(if (done) Res.string.keepRunningBatteryDone else Res.string.keepRunningBatteryDetail)
+                stringResource(
+                    if (done) Res.string.keepRunningBatteryDone
+                    else Res.string.keepRunningBatteryDetail
+                )
         KeepAliveStepKind.LockInRecents ->
             stringResource(Res.string.keepRunningLockTitle) to
                 stringResource(
@@ -176,12 +202,13 @@ internal fun KeepAliveStepKind.words(maker: PhoneMaker, done: Boolean): Pair<Str
                         PhoneMaker.Nubia -> Res.string.keepRunningLockNubia
                         PhoneMaker.Samsung -> Res.string.keepRunningLockSamsung
                         else -> Res.string.keepRunningLockOther
-                    },
+                    }
                 )
         KeepAliveStepKind.Autostart ->
             stringResource(Res.string.keepRunningAutostartTitle) to
                 stringResource(
-                    if (maker == PhoneMaker.Huawei) Res.string.keepRunningAutostartHuawei else Res.string.keepRunningAutostartDetail,
+                    if (maker == PhoneMaker.Huawei) Res.string.keepRunningAutostartHuawei
+                    else Res.string.keepRunningAutostartDetail
                 )
         KeepAliveStepKind.Background ->
             stringResource(Res.string.keepRunningBackgroundTitle) to
@@ -192,11 +219,13 @@ internal fun KeepAliveStepKind.words(maker: PhoneMaker, done: Boolean): Pair<Str
                         PhoneMaker.Vivo -> Res.string.keepRunningBackgroundVivo
                         PhoneMaker.Samsung -> Res.string.keepRunningBackgroundSamsung
                         else -> Res.string.keepRunningBackgroundOther
-                    },
+                    }
                 )
     }
 
-/** "410 MB", "1.2 GB": a size in round figures, isolated left to right (port of `thisPhoneSize`). */
+/**
+ * "410 MB", "1.2 GB": a size in round figures, isolated left to right (port of `thisPhoneSize`).
+ */
 internal object PhoneSizes {
     private const val LRI = '⁦'
     private const val PDI = '⁩'
@@ -206,11 +235,13 @@ internal object PhoneSizes {
         val mb = bytes / (1024.0 * 1024.0)
         val body =
             if (mb < 1000) {
-                val rounded = if (mb < 100) kotlin.math.round(mb).toLong() else kotlin.math.round(mb / 10).toLong() * 10
-                "$rounded${NBSP}MB"
+                val rounded =
+                    if (mb < 100) kotlin.math.round(mb).toLong()
+                    else kotlin.math.round(mb / 10).toLong() * 10
+                "${Numbers.format(rounded)}${NBSP}MB"
             } else {
                 val tenths = kotlin.math.round(mb / 1024 * 10).toLong()
-                "${tenths / 10}.${tenths % 10}${NBSP}GB"
+                "${Numbers.decimal(tenths / 10.0, 1)}${NBSP}GB"
             }
         return "$LRI$body$PDI"
     }

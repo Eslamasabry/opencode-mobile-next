@@ -11,11 +11,15 @@ import kotlin.math.abs
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
@@ -100,6 +104,7 @@ public class UsageSubscriptionsEngine(
     private val widget: UsageWidgetFeed? = null,
     private val clock: () -> Instant,
     private val sourceTimeout: Duration = 25.seconds,
+    private val legacyRules: (() -> List<LegacyQuotaRule>)? = null,
 ) {
     public companion object {
         public const val ALERTS_KEY: String = "oc.usageAlerts.v1"
@@ -118,6 +123,7 @@ public class UsageSubscriptionsEngine(
     private val authoritative = HashSet<String>()
     private val offline = HashSet<String>()
     private val refreshLock = Mutex()
+    private val activeRead = MutableStateFlow<Deferred<Unit>?>(null)
     private val alertWrites = Mutex()
     private var refreshedAt: Instant? = null
     private var loaded = false
@@ -159,7 +165,17 @@ public class UsageSubscriptionsEngine(
             return
         }
         try {
-            read(force)
+            coroutineScope {
+                val work = async { read(force) }
+                activeRead.value = work
+                try {
+                    work.await()
+                } catch (cancelled: CancellationException) {
+                    if (!currentCoroutineContext().isActive) throw cancelled
+                } finally {
+                    activeRead.compareAndSet(work, null)
+                }
+            }
         } finally {
             refreshLock.unlock()
         }
@@ -351,7 +367,10 @@ public class UsageSubscriptionsEngine(
         get() = resetDefault
 
     public val alertOverrides: List<UsageSubscription>
-        get() = _snapshot.value.subscriptions.filter { it.hasAlertOverride }
+        get() =
+            _snapshot.value.subscriptions.filter {
+                it.hasAlertOverride || it.notifyOnReset != resetDefault
+            }
 
     public suspend fun setDefaultThreshold(percent: Double): Boolean {
         if (!validLevel(percent)) return false
@@ -449,8 +468,8 @@ public class UsageSubscriptionsEngine(
     /** Keeps any threshold the person chose under the old per-source rules, once. */
     private suspend fun migrateOnce() {
         if (migrated) return
-        val bridge = alertBridge ?: return
-        for (rule in bridge.legacyRules()) {
+        val previous = legacyRules?.invoke() ?: alertBridge?.legacyRules() ?: return
+        for (rule in previous) {
             if (abs(rule.threshold - DEFAULT_ALERT_THRESHOLD) < 0.001) continue
             val key = usageSubscriptionKey(rule.providerId, rule.accountRef, rule.connectionId)
             val old = overrides[key]
@@ -508,23 +527,38 @@ public class UsageSubscriptionsEngine(
      * A saved server was removed: its cached numbers, sign-ins and overrides of vanished
      * subscriptions go with it.
      */
-    public suspend fun removeProfile(profileId: String) {
+    public suspend fun removeProfile(profileId: String): Boolean {
+        // Retire the source before waiting; an owned read cancels with its bounded cleanup.
+        // No preference lane is held while joining the refresh or the alert writer.
         epoch++
-        cache.remove(profileId)
-        signIns.remove(profileId)
-        authoritative -= profileId
-        offline -= profileId
-        store.commit(lane) { remove(lastKey(profileId)) }
-        rebuild(loaded)
-        val alive = _snapshot.value.subscriptions.mapTo(HashSet()) { it.key }
-        val before = overrides.size
-        overrides.keys.retainAll(alive)
-        if (overrides.size != before) saveAlerts()
-        publishWidget()
+        activeRead.value?.cancel()
+        return refreshLock.withLock {
+            alertWrites.withLock {
+                cache[profileId] = LinkedHashMap()
+                signIns.remove(profileId)
+                authoritative -= profileId
+                offline -= profileId
+                var acknowledged = store.commit(lane) { remove(lastKey(profileId)) } is Outcome.Ok
+                rebuild(loaded)
+                val alive = _snapshot.value.subscriptions.mapTo(HashSet()) { it.key }
+                val before = overrides.size
+                overrides.keys.retainAll(alive)
+                if (overrides.size != before && !saveAlerts()) acknowledged = false
+                val retainedHidden = widgetSettings.hiddenKeys.intersect(alive)
+                if (
+                    retainedHidden != widgetSettings.hiddenKeys &&
+                        !setWidgetSettings(widgetSettings.copy(hiddenKeys = retainedHidden))
+                )
+                    acknowledged = false
+                publishWidget()
+                acknowledged
+            }
+        }
     }
 
     public fun dispose() {
         disposed = true
         epoch++
+        activeRead.value?.cancel()
     }
 }

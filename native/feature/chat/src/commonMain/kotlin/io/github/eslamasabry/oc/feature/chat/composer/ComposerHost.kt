@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.composer
 
+import io.github.eslamasabry.oc.core.model.PromptAttachment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
@@ -26,7 +27,14 @@ public data class ComposerTarget(val profileId: String, val sessionId: String?)
  * agent ```choices tap go after the person's words; [replace] (P12-CHAT-FEEL "Edit and resend") takes the field whole.
  */
 @Immutable
-public data class InsertRequest(val id: Long, val text: String, val replace: Boolean = false)
+public data class InsertRequest(
+    val id: Long,
+    val text: String,
+    val replace: Boolean = false,
+    val attachments: List<PromptAttachment> = emptyList(),
+    val missingAttachments: List<String> = emptyList(),
+    val stillCurrent: () -> Boolean = { true },
+)
 
 /**
  * What the chat hands the composer. Every getter is read in draw, layout or an effect, so a change never recomposes

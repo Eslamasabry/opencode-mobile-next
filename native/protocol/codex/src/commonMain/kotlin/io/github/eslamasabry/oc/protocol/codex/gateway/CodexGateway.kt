@@ -7,6 +7,10 @@ import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.PartId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.domain.FencedPromptGateway
+import io.github.eslamasabry.oc.core.domain.PromptRunIdentity
+import io.github.eslamasabry.oc.core.domain.PromptRunIdentityGateway
+import io.github.eslamasabry.oc.core.domain.lastPromptIdentity
 import io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
@@ -103,7 +107,7 @@ public class CodexGateway(
     scope: CoroutineScope,
     private val clock: Clock,
     directory: String?,
-) : ServerGateway, MidTurnPromptGateway, CodexProbeGateway {
+) : ServerGateway, MidTurnPromptGateway, FencedPromptGateway, PromptRunIdentityGateway, CodexProbeGateway {
     private val lane = transport.lane
     private val job = SupervisorJob(scope.coroutineContext[Job])
     private val scope = CoroutineScope(scope.coroutineContext + job + lane)
@@ -388,6 +392,18 @@ public class CodexGateway(
         return result
     }
 
+    override suspend fun lastPromptIdentity(session: SessionId): Outcome<PromptRunIdentity?> = onLane {
+        codexString(session.raw, max = 256)
+        val op = Operation(scopeDirectory(), locationEpoch, transport.epoch)
+        checkOperation(op)
+        val read = transport.requestInEpoch("thread/read", jsonOf("threadId" to session.raw, "includeTurns" to true), op.transportEpoch)
+        checkOperation(op)
+        val thread = codexObject(read["thread"])
+        if (thread["id"].stringOrNull() != session.raw) codexFail(CodexFailureKind.InvalidResponse)
+        codexSession(thread, op.scope)
+        lastPromptIdentity(codexMessages(thread))
+    }
+
     override suspend fun messagePage(id: SessionId, cursor: String?, limit: Int): Outcome<ServerPage<MessageWithParts>> =
         onLane {
             if (cursor != null) codexFail(CodexFailureKind.Unavailable)
@@ -435,7 +451,20 @@ public class CodexGateway(
         return outcome
     }
 
-    private suspend fun promptNow(id: String, prompt: OutgoingPrompt, onDispatch: () -> Unit): PromptAdmission {
+    override suspend fun promptFenced(session: SessionId, prompt: OutgoingPrompt, beforeSend: () -> Boolean): Outcome<PromptAdmission> {
+        var dispatched = false
+        val outcome = onLane {
+            promptNow(session.raw, prompt, fenced = true) {
+                if (!beforeSend()) codexFail(CodexFailureKind.StaleRequest)
+                dispatched = true
+            }
+        }
+        return if (outcome is Outcome.Failed && dispatched && outcome.failure.codexKind() == CodexFailureKind.DeliveryUnknown) {
+            Outcome.Ok(PromptAdmission.Uncertain)
+        } else outcome
+    }
+
+    private suspend fun promptNow(id: String, prompt: OutgoingPrompt, fenced: Boolean = false, onDispatch: () -> Unit): PromptAdmission {
         val agent = prompt.agent
         if (prompt.attachments.isNotEmpty() || prompt.mentions.isNotEmpty() || prompt.delivery == PromptDelivery.Queue ||
             (agent != null && agent != "codex") || id in uncertain
@@ -450,11 +479,14 @@ public class CodexGateway(
         if (statuses[id] == SessionStatus.Busy) return steer(id, text, onDispatch)
         val scope = scopeDirectory()
         val epoch = locationEpoch
-        // Once dispatch begins, even an unacknowledged first turn must recover authoritatively.
-        newEmptyThreads.remove(id)
         try {
+            val dispatchEpoch = transport.epoch
             onDispatch()
-            val result = transport.request("turn/start", startParams(id, text, prompt.model), mutation = true)
+            // Once dispatch begins, even an unacknowledged first turn must recover authoritatively.
+            newEmptyThreads.remove(id)
+            val result = if (fenced) {
+                transport.requestInEpoch("turn/start", startParams(id, text, prompt.model), dispatchEpoch, mutation = true)
+            } else transport.request("turn/start", startParams(id, text, prompt.model), mutation = true)
             checkLocation(scope, epoch)
             val turnId = codexString(codexObject(result["turn"])["id"], max = 256)
             turns[id] = turnId

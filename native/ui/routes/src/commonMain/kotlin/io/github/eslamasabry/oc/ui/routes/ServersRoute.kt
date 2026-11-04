@@ -8,6 +8,10 @@ import kotlinx.serialization.Serializable
 public sealed interface ServersRoute : AppRoute {
     @Serializable public data object Home : ServersRoute
 
+    @Serializable public data class Remove(val profile: ProfileId) : ServersRoute
+
+    @Serializable public data class MoveQueued(val source: ProfileId) : ServersRoute
+
     @Serializable public data class Permissions(val profile: ProfileId) : ServersRoute
 
     @Serializable public data class Edit(val profile: ProfileId? = null) : ServersRoute

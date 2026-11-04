@@ -27,6 +27,10 @@ import kotlinx.serialization.json.JsonArray
 /**
  * Where the files of a draft were picked: a `file:` attachment is restored only at the same place.
  */
+public data class DraftStorageFacts(val count: Int, val bytes: Long, val readable: Boolean)
+
+public data class DraftDiscardResult(val removed: Int, val payloadsCollected: Boolean)
+
 public data class DraftLocation(val directory: String?, val workspace: String?)
 
 /**
@@ -167,6 +171,43 @@ public class Drafts(
         return (current.raw?.encodeToByteArray()?.size ?: 0).toLong() + payloads.values.sum()
     }
 
+    public suspend fun storageFacts(): Outcome<DraftStorageFacts> = lane.withLock {
+        val current = load()
+        if (!current.readable) return@withLock DraftStorageFacts(0, 0, false).ok()
+        when (val payloads = vault.storedBytes()) {
+            is Outcome.Failed -> payloads
+            is Outcome.Ok -> {
+                val index = (current.raw?.encodeToByteArray()?.size ?: 0).toLong()
+                DraftStorageFacts(
+                        current.drafts.size,
+                        if (payloads.value > Long.MAX_VALUE - index) Long.MAX_VALUE
+                        else payloads.value + index,
+                        true,
+                    )
+                    .ok()
+            }
+        }
+    }
+
+    /**
+     * Settings' confirmed discard. The caller supplies every saved-profile journal and profile-list
+     * comparison.
+     */
+    internal suspend fun discardAll(expected: Map<String, String?>): Outcome<DraftDiscardResult> =
+        lane.withLock {
+            val current = load()
+            if (!current.readable) return@withLock Failure.StorageRefused().failed()
+            if (
+                !prefs.compareAndCommit(
+                    expected + (KEY to current.raw),
+                    io.github.eslamasabry.oc.engine.composer.store.PrefsEdit().remove(KEY),
+                )
+            )
+                return@withLock Failure.StorageRefused().failed()
+            val collected = collectLocked()
+            DraftDiscardResult(current.drafts.size, collected).ok()
+        }
+
     /**
      * Saves (or, when [text] is blank and no files remain, forgets) the draft of one conversation.
      * [attachments] null keeps the saved files; a list replaces them. Arguments are snapshotted
@@ -201,10 +242,10 @@ public class Drafts(
     }
 
     /**
-     * The draft session's whole-state write (full composer, 2026-11-02): the exact text
-     * (whitespace preserved; an empty draft with no files is never written) and the authoritative
-     * file snapshot — an empty list removes saved files and lets the collector reclaim their
-     * payloads. A refusal changes no metadata.
+     * The draft session's whole-state write (full composer, 2026-11-02): the exact text (whitespace
+     * preserved; an empty draft with no files is never written) and the authoritative file snapshot
+     * — an empty list removes saved files and lets the collector reclaim their payloads. A refusal
+     * changes no metadata.
      */
     internal suspend fun saveRevision(
         profileId: String,
@@ -248,7 +289,8 @@ public class Drafts(
         } else if (files == null && (drafts[key]?.text == text || nothingStored)) {
             return Unit.ok()
         }
-        // A whole-state write keeps the conversation's directory/workspace binding: a `file:` reference
+        // A whole-state write keeps the conversation's directory/workspace binding: a `file:`
+        // reference
         // is meaningful only there. Unknown location keeps the stored one; a file reference with no
         // location at all is refused rather than saved unbound.
         val place =

@@ -43,8 +43,8 @@ internal class Oc2Gateway(
     initialLocation: ServerLocation = ServerLocation.Default,
     random: Random = Random.Default,
     initialDialect: Oc2Dialect? = null,
-) : ServerGateway, ServerOperationsGateway, CorrelatedPromptGateway, SessionSelectionGateway, StagedRevertGateway,
-    LocatedFileGateway, LocatedVcsGateway, WebSearchGateway, LocatedManagedShellGateway {
+) : ServerGateway, ServerOperationsGateway, CorrelatedPromptGateway, FencedNewSessionPromptGateway, PromptRunIdentityGateway, SessionSelectionGateway, StagedRevertGateway,
+    LocatedFileGateway, LocatedVcsGateway, WebSearchGateway, LocatedManagedShellGateway, IntegrationCommandGateway {
     private val integrationOps = Oc2Integrations(this, redactor)
     private val ids = Oc2ClientIds(clock, random)
     private val dialect = MutableStateFlow(initialDialect)
@@ -443,6 +443,9 @@ internal class Oc2Gateway(
             output.toImmutableMap()
         }
 
+    override suspend fun lastPromptIdentity(session: SessionId): Outcome<PromptRunIdentity?> =
+        messagePage(session, limit = 100).map { lastPromptIdentity(it.items) }
+
     override suspend fun messagePage(
         id: SessionId,
         cursor: String?,
@@ -478,6 +481,13 @@ internal class Oc2Gateway(
         }
 
     override suspend fun promptWithMessageId(
+        session: SessionId,
+        messageId: MessageId,
+        prompt: OutgoingPrompt,
+        beforeSend: () -> Boolean,
+    ): Outcome<PromptAdmission> = sendPrompt(session, prompt, messageId.raw, beforeSend)
+
+    override suspend fun promptNewSessionWithMessageId(
         session: SessionId,
         messageId: MessageId,
         prompt: OutgoingPrompt,
@@ -857,6 +867,10 @@ internal class Oc2Gateway(
     override suspend fun completeIntegrationOAuth(attemptId: String, code: String?): Outcome<Unit> = integrationOps.complete(attemptId,code)
     override suspend fun cancelIntegrationOAuth(attemptId: String): Outcome<Unit> = integrationOps.cancel(attemptId)
 
+    override suspend fun startIntegrationCommand(integrationId: String, methodId: String, label: String?): Outcome<IntegrationAuthLaunch> = integrationOps.startCommand(integrationId,methodId,label)
+    override suspend fun integrationCommandStatus(integrationId: String, attemptId: String): Outcome<IntegrationAuthStatus> = integrationOps.commandStatus(integrationId,attemptId)
+    override suspend fun cancelIntegrationCommand(integrationId: String, attemptId: String): Outcome<Unit> = integrationOps.cancelCommand(integrationId,attemptId)
+
     override suspend fun configuredProviders(): Outcome<ProvidersResponse> = providers()
 
     override suspend fun agents(): Outcome<ImmutableList<AgentInfo>> =
@@ -1143,7 +1157,7 @@ internal class Oc2Gateway(
                 subagentSessions = false,
                 promptAgentMentions = true,
                 promptSteering = true,
-                offlinePromptQueue = false,
+                offlinePromptQueue = true,
                 fileBrowsing = true,
                 terminal = true,
                 conversationShell = true,
@@ -1176,7 +1190,7 @@ internal class Oc2Gateway(
                 mcpRuntimeAdds = true,
                 mcpRuntimeRemovals = false,
                 integrationCredentials = true,
-                integrationCommandAuth = false,
+                integrationCommandAuth = true,
                 pluginInventory = false,
                 webSearch = true,
                 sessionShare = false,

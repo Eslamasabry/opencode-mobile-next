@@ -1,129 +1,270 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import android.app.Activity
 import android.app.Application
-import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesBinding
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
-import dev.zacsweers.metro.SingleIn
-import dev.zacsweers.metro.binding
-import io.github.eslamasabry.oc.core.common.AppCoroutineScope
-import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.RefusalReason
-import io.github.eslamasabry.oc.core.common.failed
+import android.os.Bundle
+import dev.zacsweers.metro.*
+import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.core.common.map
-import io.github.eslamasabry.oc.core.common.ok
-import io.github.eslamasabry.oc.core.model.BackendKind
-import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
-import io.github.eslamasabry.oc.engine.integrations.usage.ConnectedProvider
-import io.github.eslamasabry.oc.engine.integrations.usage.OpenCodeSignInSource
-import io.github.eslamasabry.oc.engine.integrations.usage.RetiredQuotaBudgets
-import io.github.eslamasabry.oc.engine.integrations.usage.SignInServer
-import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnection
-import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnectionKind
-import io.github.eslamasabry.oc.engine.integrations.usage.UsageSnapshot
-import io.github.eslamasabry.oc.engine.integrations.usage.UsageSubscriptionsEngine
-import io.github.eslamasabry.oc.engine.integrations.usage.UsageWidgetFeed
-import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
-import io.github.eslamasabry.oc.engine.profiles.DeletionStep
-import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
-import io.github.eslamasabry.oc.feature.plans.presentation.PlansSource
+import io.github.eslamasabry.oc.core.data.kv.*
+import io.github.eslamasabry.oc.engine.integrations.usage.*
+import io.github.eslamasabry.oc.engine.profiles.*
+import io.github.eslamasabry.oc.feature.plans.presentation.*
 import io.github.eslamasabry.opencode_mobile.UsageWidgetProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
+import kotlin.time.Clock
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.time.Clock
 
-/*
- * Unit P12-BUILD-INTEGRATIONS-B: Usage › Plans on Android. The subscriptions engine (`:engine:integrations-usage`) is
- * fed by every connected OpenCode server's connected providers (its sign-ins); its numbers, alert levels and the
- * widget feed live in the app's preference store under the Flutter keys, so the Usage widget draws them. Nothing
- * here switches the active server or replays a request.
- *
- * Not wired yet (engines exist, adapters do not): the in-app Ubuntu quota collector (`:engine:integrations-quota`
- * needs an OkHttp QuotaTransport), Paseo/phone usage lists (PaseoUsageMonitor needs the Paseo usage call) and the
- * alert delivery bridge.
+/**
+ * One owner for Plans, its widget and its alerts. Reads run only in front or under an existing live
+ * service.
  */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<PlansSource>())
 @Inject
 class AndroidPlansSource(
-    private val registry: ConnectionRegistry,
     private val stores: PreviewStores,
     private val application: Application,
     private val clock: Clock,
     appScope: AppCoroutineScope,
-) : PlansSource {
-    private val scope = CoroutineScope(appScope.coroutineContext)
-    private val state = MutableStateFlow(UsageSnapshot())
-    override val snapshot: StateFlow<UsageSnapshot> = state.asStateFlow()
+    dispatchers: AppDispatchers,
+    private val readers: AndroidPlansReaders,
+    private val legacy: PlansLegacyCollectors,
+    private val alerts: AndroidPlansAlerts,
+    private val background: BackgroundHub,
+    activities: ResumedActivities,
+) : PlansSource, PlansPreferences {
+    private val scope = CoroutineScope(appScope.coroutineContext + dispatchers.main)
+    private val mutableSnapshot = MutableStateFlow(UsageSnapshot())
+    override val snapshot: StateFlow<UsageSnapshot> = mutableSnapshot.asStateFlow()
+    private val mutablePreferences = MutableStateFlow(PlanAlertPreferences())
+    override val preferences: StateFlow<PlanAlertPreferences> = mutablePreferences.asStateFlow()
     private val creating = Mutex()
     private var engine: UsageSubscriptionsEngine? = null
-
-    private fun openCodeServers() =
-        registry.live.value.filter { (_, graph) -> graph.profile.backend == BackendKind.OpenCode2 }
-
-    /** Built after the preference store is ready (the engine reads its cache in its constructor). */
-    private suspend fun engine(): UsageSubscriptionsEngine? =
-        creating.withLock {
-            engine?.let { return@withLock it }
-            if (stores.warm() !is Outcome.Ok) return@withLock null
-            // B-STATE-068: the retired Remaining-page quota budgets go on load.
-            RetiredQuotaBudgets.dropAll(stores.prefs, stores.lanes.app)
-            val signIns =
-                OpenCodeSignInSource(
-                    servers = { openCodeServers().keys.map { SignInServer(it.raw, isOpenCode = true) } },
-                    isReadable = { id -> registry.live.value[ProfileId(id)] != null },
-                    providers = { server ->
-                        val gateway = registry.live.value[ProfileId(server.id)]?.session?.server
-                        gateway?.providers()?.map { response -> response.providers.map { ConnectedProvider(it.id, it.name) } }
-                            ?: Failure.Refused(RefusalReason.StaleScope).failed()
-                    },
-                )
-            val widget =
-                UsageWidgetFeed(
-                    store = stores.prefs,
-                    lane = stores.lanes.app,
-                    isAndroid = true,
-                    refreshNative = { UsageWidgetProvider.refreshAll(application) },
-                    clock = { clock.now() },
-                )
-            UsageSubscriptionsEngine(
-                store = stores.prefs,
-                lane = stores.lanes.app,
-                connections = {
-                    openCodeServers().map { (id, graph) -> UsageConnection(id.raw, graph.profile.name, UsageConnectionKind.OpenCodeServer) }
-                },
-                sources = listOf(signIns),
-                alertsOnRule = { false },
-                setQuotaAlerts = {},
-                widget = widget,
-                clock = { clock.now() },
-            ).also { created ->
-                engine = created
-                scope.launch { created.snapshot.collect { state.value = it } }
-            }
+    private val foreground = MutableStateFlow(activities.current != null)
+    private val shown =
+        java.util.Collections.newSetFromMap(java.util.WeakHashMap<Activity, Boolean>()).apply {
+            activities.current?.let(::add)
         }
 
-    override suspend fun refresh() {
-        engine()?.refresh()
+    init {
+        application.registerActivityLifecycleCallbacks(
+            object : Application.ActivityLifecycleCallbacks {
+                override fun onActivityStarted(activity: Activity) {
+                    shown.add(activity)
+                    foreground.value = true
+                }
+
+                override fun onActivityStopped(activity: Activity) {
+                    shown.remove(activity)
+                    foreground.value = shown.isNotEmpty()
+                }
+
+                override fun onActivityDestroyed(activity: Activity) {
+                    shown.remove(activity)
+                    foreground.value = shown.isNotEmpty()
+                }
+
+                override fun onActivityCreated(activity: Activity, saved: Bundle?) = Unit
+
+                override fun onActivityResumed(activity: Activity) = Unit
+
+                override fun onActivityPaused(activity: Activity) = Unit
+
+                override fun onActivitySaveInstanceState(activity: Activity, saved: Bundle) = Unit
+            }
+        )
+        scope.launch {
+            if (stores.warm() !is Outcome.Ok) return@launch
+            val e = engine() ?: return@launch
+            launch {
+                var known = stores.profiles.profiles.value.associateBy { it.id }
+                stores.profiles.profiles.collect { profiles ->
+                    val next = profiles.associateBy { it.id }
+                    for ((id, before) in known) if (next[id] != before) e.removeProfile(id.raw)
+                    known = next
+                }
+            }
+            launch {
+                var phoneOwner = stores.prefs.string("oc.builtinServerOwner")
+                stores.prefs.changes.collect { keys ->
+                    if ("oc.builtinServerOwner" in keys) {
+                        val next = stores.prefs.string("oc.builtinServerOwner")
+                        if (next != phoneOwner) e.removeProfile(UsageConnection.PHONE_ID)
+                        phoneOwner = next
+                    }
+                    if (
+                        keys.any {
+                            it.startsWith("oc.notify.") ||
+                                it == UsageSubscriptionsEngine.ALERTS_KEY ||
+                                it == UsageWidgetSettings.KEY
+                        }
+                    )
+                        project(e)
+                }
+            }
+            combine(foreground, background.live) { front, live -> front to live.active }
+                .collectLatest { (front, live) ->
+                    e.setForeground(front)
+                    if (front || live)
+                        while (currentCoroutineContext().isActive) {
+                            refresh()
+                            delay(if (front) 60_000 else 300_000)
+                        }
+                }
+        }
     }
 
-    /** B-SEC-178: a removed server takes its cached numbers, its overrides and its widget rows along. */
+    private suspend fun engine(): UsageSubscriptionsEngine? = creating.withLock {
+        engine?.let {
+            return@withLock it
+        }
+        if (stores.warm() !is Outcome.Ok) return@withLock null
+        RetiredQuotaBudgets.dropAll(stores.prefs, stores.lanes.app)
+        val widget =
+            UsageWidgetFeed(
+                stores.prefs,
+                stores.lanes.app,
+                true,
+                refreshNative = { UsageWidgetProvider.refreshAll(application) },
+                clock = { clock.now() },
+            )
+        UsageSubscriptionsEngine(
+                store = stores.prefs,
+                lane = stores.lanes.app,
+                connections = readers::connections,
+                sources = listOf(legacy, readers.signInSource, readers),
+                alertsOnRule = { stores.prefs.bool(AndroidPlansAlerts.ALERTS) == true },
+                setQuotaAlerts = { value ->
+                    stores.prefs.commit(stores.lanes.app) {
+                        putBool(AndroidPlansAlerts.ALERTS, value)
+                    }
+                },
+                widget = widget,
+                clock = { clock.now() },
+                legacyRules = legacy::legacyRules,
+            )
+            .also { created ->
+                engine = created
+                project(created)
+                scope.launch {
+                    created.snapshot.collect { value ->
+                        mutableSnapshot.value = value
+                        alerts.reconcile(value)
+                    }
+                }
+            }
+    }
+
+    private fun project(e: UsageSubscriptionsEngine) {
+        mutablePreferences.value =
+            PlanAlertPreferences(
+                enabled = e.alertsOn,
+                threshold = e.defaultThreshold.roundToInt(),
+                notifyReset = e.notifyOnResetDefault,
+                quietStart =
+                    stores.prefs
+                        .long(AndroidPlansAlerts.QUIET_START)
+                        ?.takeIf { it in 0..1439 }
+                        ?.toInt(),
+                quietEnd =
+                    stores.prefs
+                        .long(AndroidPlansAlerts.QUIET_END)
+                        ?.takeIf { it in 0..1439 }
+                        ?.toInt(),
+                wifiOnly = stores.prefs.bool(AndroidPlansAlerts.WIFI) == true,
+                widget = e.widgetSettings,
+            )
+    }
+
+    override suspend fun refresh() {
+        val e = engine() ?: return
+        e.setForeground(foreground.value)
+        e.refresh()
+        project(e)
+    }
+
+    private suspend fun save(write: suspend (UsageSubscriptionsEngine) -> Boolean): Outcome<Unit> {
+        val e = engine() ?: return Failure.StorageRefused().failed()
+        val saved = write(e)
+        project(e)
+        if (saved) alerts.reconcile(e.snapshot.value)
+        return if (saved) Unit.ok() else Failure.StorageRefused().failed()
+    }
+
+    override suspend fun setAlerts(on: Boolean): Outcome<Unit> = save { e ->
+        e.setAlertsOn(on)
+        e.alertsOn == on
+    }
+
+    override suspend fun setDefaultThreshold(level: Int): Outcome<Unit> = save {
+        it.setDefaultThreshold(level.toDouble())
+    }
+
+    override suspend fun setDefaultReset(on: Boolean): Outcome<Unit> = save {
+        it.setNotifyOnResetDefault(on)
+    }
+
+    override suspend fun setThreshold(key: String, level: Int?): Outcome<Unit> = save {
+        if (it.subscription(key) == null) false else it.setThresholdFor(key, level?.toDouble())
+    }
+
+    override suspend fun setReset(key: String, on: Boolean): Outcome<Unit> = save {
+        if (it.subscription(key) == null) false else it.setNotifyOnReset(key, on)
+    }
+
+    override suspend fun setQuiet(start: Int?, end: Int?): Outcome<Unit> = save {
+        if (
+            (start == null) != (end == null) ||
+                (start != null && start !in 0..1439) ||
+                (end != null && end !in 0..1439)
+        )
+            false
+        else
+            stores.prefs.commit(stores.lanes.app) {
+                if (start == null || end == null) {
+                    remove(AndroidPlansAlerts.QUIET_START)
+                    remove(AndroidPlansAlerts.QUIET_END)
+                } else {
+                    putLong(AndroidPlansAlerts.QUIET_START, start.toLong())
+                    putLong(AndroidPlansAlerts.QUIET_END, end.toLong())
+                }
+            } is Outcome.Ok
+    }
+
+    override suspend fun setWifiOnly(on: Boolean): Outcome<Unit> = save {
+        stores.prefs.commit(stores.lanes.app) { putBool(AndroidPlansAlerts.WIFI, on) } is Outcome.Ok
+    }
+
+    override suspend fun setWidget(settings: UsageWidgetSettings): Outcome<Unit> = save {
+        it.setWidgetSettings(settings)
+    }
+
     suspend fun removeProfile(profile: ProfileId): Boolean {
         val e = engine() ?: return false
-        e.removeProfile(profile.raw)
-        return true
+        var acknowledged = e.removeProfile(profile.raw)
+        if (stores.prefs.string("oc.builtinServerOwner") == profile.raw)
+            acknowledged = e.removeProfile(UsageConnection.PHONE_ID) && acknowledged
+        project(e)
+        alerts.reconcile(e.snapshot.value)
+        return acknowledged
     }
 }
 
-/** Profile deletion: the usage engine forgets the server before the generic sweep removes `oc.usageLast.<id>`. */
+@BindingContainer
+@ContributesTo(AppScope::class)
+object PlansPreferenceBindings {
+    @Provides fun preferences(source: AndroidPlansSource): PlansPreferences = source
+}
+
+@ContributesTo(AppScope::class)
+interface PlansGraph {
+    val plansSource: AndroidPlansSource
+}
+
 @ContributesIntoSet(AppScope::class, binding = binding<ProfileResourceCleaner>())
 @Inject
 class UsagePlansDeletionCleaner(private val plans: AndroidPlansSource) : ProfileResourceCleaner {
@@ -131,5 +272,5 @@ class UsagePlansDeletionCleaner(private val plans: AndroidPlansSource) : Profile
     override val order: Int = DeletionStep.DEVICE_SURFACES
 
     override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> =
-        if (plans.removeProfile(profileId)) 1.ok() else 0.ok()
+        if (plans.removeProfile(profileId)) 1.ok() else Failure.StorageRefused().failed()
 }

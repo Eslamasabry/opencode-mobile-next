@@ -48,7 +48,10 @@ public class Oc2GatewayFactory(
         }
     }
 
-    /** Disposable editor check with the same origin-bound transport trust as a connection, without an event stream. */
+    /**
+     * Disposable editor check with the same origin-bound transport trust as a connection, without
+     * an event stream.
+     */
     public suspend fun checkConnection(
         origin: ServerOrigin,
         credentials: ConnectionCredentials,
@@ -61,11 +64,20 @@ public class Oc2GatewayFactory(
         val pinBytes = pin?.let { decodePin(it) ?: return Failure.UnreadableReply().failed() }
         if (origin.scheme != "https" && pinBytes != null)
             return Failure.Refused(RefusalReason.PinNeedsHttps).failed()
-        val net = clients.create(TransportSpec(origin, AddressRules.classify(origin.host),
-            loopback || trust.cleartextConsentAtMs != null, pinBytes))
+        val net =
+            clients.create(
+                TransportSpec(
+                    origin,
+                    AddressRules.classify(origin.host),
+                    loopback || trust.cleartextConsentAtMs != null,
+                    pinBytes,
+                )
+            )
         return try {
             Oc2Gateway(net, origin, credentials, clock, redactor).probe()
-        } finally { net.close() }
+        } finally {
+            net.close()
+        }
     }
 
     override suspend fun connect(spec: GatewaySpec): Outcome<GatewayPair> {
@@ -89,20 +101,21 @@ public class Oc2GatewayFactory(
             )
         val gateway =
             Oc2Gateway(net, origin, spec.credentials, clock, redactor, spec.location, random)
-        return when (val health = gateway.health()) {
-            is Outcome.Failed -> {
-                gateway.close()
-                health
-            }
-            is Outcome.Ok -> {
-                if (!health.value.healthy) {
-                    gateway.close()
-                    Failure.UnreadableReply().failed()
-                } else {
-                    gateway.start(spec, dispatchers)
-                    GatewayPair(gateway, gateway).ok()
+        var transferred = false
+        try {
+            return when (val health = gateway.health()) {
+                is Outcome.Failed -> health
+                is Outcome.Ok -> {
+                    if (!health.value.healthy) Failure.UnreadableReply().failed()
+                    else {
+                        if (spec.observeEvents) gateway.start(spec, dispatchers)
+                        transferred = true
+                        GatewayPair(gateway, gateway).ok()
+                    }
                 }
             }
+        } finally {
+            if (!transferred) net.close()
         }
     }
 

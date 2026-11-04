@@ -58,6 +58,25 @@ internal class PreviewComposerPrefs(private val stores: PreviewStores) : Compose
             }
         } is Outcome.Ok
     }
+
+    override suspend fun compareAndCommit(
+        expected: Map<String, String?>,
+        edit: PrefsEdit,
+    ): Boolean {
+        stores.requirePrepared()
+        val guard = expected.mapValues { (_, value) -> value?.let(PrefValue::Str) }
+        val result =
+            stores.prefs.compareAndCommit(stores.lanes.app, guard) {
+                edit.entries.forEach { (key, write) ->
+                    when (write) {
+                        is PrefWrite.Str -> putString(key, write.value)
+                        is PrefWrite.Bool -> putBool(key, write.value)
+                        PrefWrite.Remove -> remove(key)
+                    }
+                }
+            }
+        return result is Outcome.Ok && result.value
+    }
 }
 
 internal class PreviewComposerProfiles(private val stores: PreviewStores) : ComposerProfiles {

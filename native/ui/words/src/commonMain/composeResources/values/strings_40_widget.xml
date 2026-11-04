@@ -11,4 +11,8 @@
     <string name="widgetPanelTransparent">Transparent</string>
     <string name="widgetPanelAccent">Accent</string>
     <string name="widgetPanelActionUnavailable">This widget needs a live connection before it can send a message.</string>
+    <string name="widgetPanelSending">Sending…</string>
+    <string name="widgetPanelSent">Sent</string>
+    <string name="widgetPanelBusy">Another widget action is still running. Your message is still here.</string>
+    <string name="widgetPanelDictate">Dictate</string>
 </resources>

@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.servers.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -25,9 +24,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.ShareLink
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
@@ -57,7 +53,6 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
 import io.github.eslamasabry.oc.ui.words.res.e7SetupPairingInstructions
-import io.github.eslamasabry.oc.ui.words.res.editor40Edit
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -76,14 +71,11 @@ import io.github.eslamasabry.oc.ui.words.res.serverFailureServer
 import io.github.eslamasabry.oc.ui.words.res.serverFailureStorage
 import io.github.eslamasabry.oc.ui.words.res.serverFailureTimeout
 import io.github.eslamasabry.oc.ui.words.res.serverFailureUnreadableReply
-import io.github.eslamasabry.oc.ui.words.res.serverSettingsTitle
 import io.github.eslamasabry.oc.ui.words.res.serversAdd
 import io.github.eslamasabry.oc.ui.words.res.serversAddress
-import io.github.eslamasabry.oc.ui.words.res.serversCancel
 import io.github.eslamasabry.oc.ui.words.res.serversCleartext
 import io.github.eslamasabry.oc.ui.words.res.serversCleartextHelp
 import io.github.eslamasabry.oc.ui.words.res.serversCleartextRequired
-import io.github.eslamasabry.oc.ui.words.res.serversConnect
 import io.github.eslamasabry.oc.ui.words.res.serversConnectFailed
 import io.github.eslamasabry.oc.ui.words.res.serversConnected
 import io.github.eslamasabry.oc.ui.words.res.serversCreate
@@ -93,8 +85,6 @@ import io.github.eslamasabry.oc.ui.words.res.serversInvalidAddress
 import io.github.eslamasabry.oc.ui.words.res.serversName
 import io.github.eslamasabry.oc.ui.words.res.serversNewTitle
 import io.github.eslamasabry.oc.ui.words.res.serversPassword
-import io.github.eslamasabry.oc.ui.words.res.serversRemove
-import io.github.eslamasabry.oc.ui.words.res.serversRemoveConfirm
 import io.github.eslamasabry.oc.ui.words.res.serversRemoveFailed
 import io.github.eslamasabry.oc.ui.words.res.serversSave
 import io.github.eslamasabry.oc.ui.words.res.serversSaveFailed
@@ -105,7 +95,6 @@ import io.github.eslamasabry.oc.ui.words.res.serversUsername
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
 import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
-import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.stringResource
 
@@ -234,94 +223,7 @@ public fun ServersScreen(
             )
             if (state.servers.isEmpty()) KitText(stringResource(Res.string.serversEmpty))
             else KitText(stringResource(Res.string.serversSaved))
-            for (server in state.servers) {
-                Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    KitText(server.name)
-                    KitText(server.address)
-                    // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded
-                    // loopback is a server.
-                    val support =
-                        if (onThisPhone != null) PhoneHostSupport.Android
-                        else PhoneHostSupport.Elsewhere
-                    if (
-                        PhoneOwnServers.isPhoneOwnServer(
-                            PhoneServerCandidate(server.id.raw, server.address),
-                            support,
-                        )
-                    ) {
-                        KitText(stringResource(Res.string.settingsV3ThisPhone))
-                    }
-                    if (server.connected) KitText(stringResource(Res.string.serversConnected))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                        KitButton(
-                            stringResource(Res.string.serverSettingsTitle),
-                            { actions.settings(server.id) },
-                            role = KitButtonRole.Secondary,
-                            enabled = enabled,
-                        )
-                        KitButton(
-                            stringResource(Res.string.editor40Edit),
-                            { actions.edit(server.id) },
-                            role = KitButtonRole.Tertiary,
-                            enabled = enabled,
-                        )
-                        KitButton(
-                            stringResource(Res.string.serversCreate),
-                            { actions.create(server.id) },
-                            enabled = enabled,
-                        )
-                        // QA wave 4 B15: a connected server says Connected; Connect is offered only
-                        // when it is not.
-                        if (!server.connected) {
-                            KitButton(
-                                stringResource(Res.string.serversConnect),
-                                { actions.connect(server.id) },
-                                role = KitButtonRole.Secondary,
-                                enabled = enabled,
-                            )
-                        }
-                        if (server.connected) {
-                            KitButton(
-                                stringResource(Res.string.usageTitle),
-                                { actions.openUsage(server.id) },
-                                role = KitButtonRole.Tertiary,
-                            )
-                        }
-                        KitButton(
-                            schedulesLabel(),
-                            { actions.openSchedules(server.id) },
-                            role = KitButtonRole.Secondary,
-                            enabled = enabled,
-                        )
-                        KitButton(
-                            stringResource(Res.string.serversRemove),
-                            { removing = server.id },
-                            role = KitButtonRole.Tertiary,
-                            destructive = true,
-                            enabled = enabled,
-                        )
-                    }
-                    if (removing == server.id) {
-                        KitNotice(stringResource(Res.string.serversRemoveConfirm, server.name))
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                            KitButton(
-                                stringResource(Res.string.serversRemove),
-                                {
-                                    removing = null
-                                    actions.remove(server.id)
-                                },
-                                destructive = true,
-                                enabled = enabled,
-                            )
-                            KitButton(
-                                stringResource(Res.string.serversCancel),
-                                { removing = null },
-                                role = KitButtonRole.Tertiary,
-                            )
-                        }
-                    }
-                }
-            }
+            ServerSavedRows(state, actions, enabled)
             KitButton(
                 stringResource(Res.string.agentsSectionTitle),
                 actions::openAgents,

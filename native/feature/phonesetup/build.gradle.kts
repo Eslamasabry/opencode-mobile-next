@@ -5,6 +5,7 @@ plugins { id("oc.kmp.feature") }
 // plain failure words with Details, Continue and Stop. Ported from lib/ui/screens/phone_setup/**.
 kotlin {
     sourceSets.commonMain.dependencies {
+        implementation(project(":engine:runtime"))
         implementation(project(":engine:linuxsetup"))
     }
 }

@@ -12,9 +12,13 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import io.github.eslamasabry.oc.feature.servers.presentation.SavedPermissionsViewModel
 import io.github.eslamasabry.oc.feature.servers.presentation.ServerEditorViewModel
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerQueueViewModel
+import io.github.eslamasabry.oc.feature.servers.presentation.ServerRemovalViewModel
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersViewModel
 import io.github.eslamasabry.oc.feature.servers.ui.SavedPermissionsScreen
 import io.github.eslamasabry.oc.feature.servers.ui.ServerEditorScreen
+import io.github.eslamasabry.oc.feature.servers.ui.ServerQueueScreen
+import io.github.eslamasabry.oc.feature.servers.ui.ServerRemovalScreen
 import io.github.eslamasabry.oc.feature.servers.ui.ServersScreen
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -34,6 +38,22 @@ public class ServersEntries(
         get() = if (platform.builtinLinux) ({ navigator.open(PhoneRoute.ThisPhone) }) else null
 
     override fun EntryProviderScope<NavKey>.install() {
+        entry<ServersRoute.Remove> { route ->
+            val vm =
+                assistedMetroViewModel<ServerRemovalViewModel, ServerRemovalViewModel.Factory> {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            ServerRemovalScreen(state, vm)
+        }
+        entry<ServersRoute.MoveQueued> { route ->
+            val vm =
+                assistedMetroViewModel<ServerQueueViewModel, ServerQueueViewModel.Factory> {
+                    create(route)
+                }
+            val state by vm.state.collectAsStateWithLifecycle()
+            ServerQueueScreen(state, vm)
+        }
         entry<ServersRoute.Permissions> { route ->
             val vm =
                 assistedMetroViewModel<

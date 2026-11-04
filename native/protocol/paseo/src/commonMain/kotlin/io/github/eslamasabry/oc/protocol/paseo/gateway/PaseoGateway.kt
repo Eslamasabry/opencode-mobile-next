@@ -7,6 +7,10 @@ import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.CorrelatedPromptGateway
+import io.github.eslamasabry.oc.core.domain.FencedNewSessionPromptGateway
+import io.github.eslamasabry.oc.core.domain.PromptRunIdentity
+import io.github.eslamasabry.oc.core.domain.PromptRunIdentityGateway
+import io.github.eslamasabry.oc.core.domain.lastPromptIdentity
 import io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
@@ -148,7 +152,7 @@ public class PaseoGateway(
     /** Overridable so tests do not wait for a warming daemon. */
     internal val providerWarmupAttempts: Int = 8,
     internal val providerWarmupIntervalMs: Long = 1_500,
-) : ServerGateway, SessionSelectionGateway, CorrelatedPromptGateway, MidTurnPromptGateway {
+) : ServerGateway, SessionSelectionGateway, CorrelatedPromptGateway, FencedNewSessionPromptGateway, PromptRunIdentityGateway, MidTurnPromptGateway {
     private val job = SupervisorJob(scope.coroutineContext[Job])
     internal val scope: CoroutineScope = CoroutineScope(scope.coroutineContext + job + lane)
     public val defaultProviderModes: Map<String, String> = defaultProviderModes.toMap()
@@ -502,6 +506,30 @@ public class PaseoGateway(
 
     // ---- history
 
+    override suspend fun lastPromptIdentity(session: SessionId): Outcome<PromptRunIdentity?> = call {
+        val id = paseoString(session.raw, max = 256)
+        if (id in drafts && !draftStarted(id)) return@call null
+        if (isSubagent(id)) paseoFail(PaseoFailureKind.Unavailable)
+        val directory = scopeDir
+        val epoch = locationEpoch
+        val socketEpoch = transport.epoch
+        val read = transport.request("fetch_agent_request", jsonOf("agentId" to real(id)), expectedEpoch = socketEpoch,
+            beforeSend = { checkLocation(directory, epoch) })
+        checkLocation(directory, epoch)
+        val agent = read.obj("agent") ?: paseoFail(PaseoFailureKind.NotFound)
+        if (agent.str("id") != real(id)) paseoFail(PaseoFailureKind.InvalidResponse)
+        if (paseoSession(agent).directory != directory || agent["archivedAt"].stringOrNull() != null) paseoFail(PaseoFailureKind.ScopeMismatch)
+        val timeline = transport.request(
+            "fetch_agent_timeline_request",
+            jsonOf("agentId" to real(id), "direction" to "tail", "limit" to 200, "projection" to "projected"),
+            timeoutMs = HISTORY_TIMEOUT_MS,
+            expectedEpoch = socketEpoch,
+            beforeSend = { checkLocation(directory, epoch) },
+        )
+        checkLocation(directory, epoch)
+        lastPromptIdentity(paseoTimeline(id, timeline, busy = false).messages)
+    }
+
     override suspend fun messagePage(id: SessionId, cursor: String?, limit: Int): Outcome<ServerPage<MessageWithParts>> = call {
         if (cursor != null) paseoFail(PaseoFailureKind.Unavailable)
         ServerPage(readMessages(id.raw), null)
@@ -616,6 +644,13 @@ public class PaseoGateway(
         prompt: OutgoingPrompt,
         beforeSend: () -> Boolean,
     ): Outcome<PromptAdmission> = send(session.raw, messageId.raw, prompt, existingOnly = true, beforeSend = beforeSend)
+
+    override suspend fun promptNewSessionWithMessageId(
+        session: SessionId,
+        messageId: MessageId,
+        prompt: OutgoingPrompt,
+        beforeSend: () -> Boolean,
+    ): Outcome<PromptAdmission> = send(session.raw, messageId.raw, prompt, existingOnly = false, beforeSend = beforeSend)
 
     private suspend fun send(
         sessionId: String,

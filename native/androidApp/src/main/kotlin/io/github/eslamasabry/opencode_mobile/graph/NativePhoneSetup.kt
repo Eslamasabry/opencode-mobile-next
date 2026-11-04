@@ -48,6 +48,7 @@ class NativePhoneSetup(
     appScope: AppCoroutineScope,
     private val clock: Clock,
     private val redactor: Redactor,
+    private val voiceComponent: NativeVoiceSetupComponent,
 ) : LinuxSetupSource {
     private val serial = dispatchers.serial("phone-setup")
     private val scope = CoroutineScope(appScope.coroutineContext + serial)
@@ -129,6 +130,8 @@ class NativePhoneSetup(
         val python = getString(Res.string.linuxRuntimePythonTitle)
         val node = getString(Res.string.linuxRuntimeNodeTitle)
         val openCode = getString(Res.string.linuxRuntimeOpenCodeTitle)
+        val getVoiceTitle = getString(Res.string.voiceComponentTitle)
+        val getVoiceSummary = getString(Res.string.voiceComponentSummary)
         val adding = getString(Res.string.aiteamComponentAddingTitle, "{names}")
         val separator = getString(Res.string.phoneSetupStartListSeparator)
         val words =
@@ -220,7 +223,25 @@ class NativePhoneSetup(
                             jobStep = true,
                             estimatedSeconds = 10,
                         ),
-                    )
+                    ) +
+                        if (
+                            voiceComponent.lastOffer != null ||
+                                params.containsKey(SetupComponentIds.VOICE)
+                        )
+                            listOf(
+                                SetupComponent(
+                                    SetupComponentIds.VOICE,
+                                    getVoiceTitle,
+                                    getVoiceTitle,
+                                    "",
+                                    "",
+                                    app = true,
+                                    summary = getVoiceSummary,
+                                    estimatedSeconds = 45,
+                                    downloadBytes = voiceComponent.lastOffer?.downloadSize?.bytes,
+                                )
+                            )
+                        else emptyList()
                 },
                 words,
                 scope,
@@ -228,6 +249,8 @@ class NativePhoneSetup(
                 InstallPrelude.SETUP,
                 { redactor.diagnostics(it) },
                 foreground = { runtime.isForeground },
+                watchIdle = false,
+                appComponents = voiceComponent,
                 finisher =
                     SetupFinisher { request ->
                         when (val finished = runtime.finishSetup(request)) {
@@ -242,6 +265,87 @@ class NativePhoneSetup(
                 scope.launch { value.toolsChanged.collect { changed.value = it } }
             }
     }
+
+    suspend fun components(): Outcome<List<SetupComponent>> =
+        withContext(serial) {
+            lane.withLock {
+                when (val warm = stores.warm()) {
+                    is Outcome.Failed -> warm
+                    is Outcome.Ok -> {
+                        voiceComponent.offer()
+                        Outcome.Ok(get().registry)
+                    }
+                }
+            }
+        }
+
+    suspend fun optionalIds(): Outcome<Set<String>> =
+        withContext(serial) {
+            lane.withLock {
+                when (val warm = stores.warm()) {
+                    is Outcome.Failed -> warm
+                    is Outcome.Ok -> get().installedOptional()
+                }
+            }
+        }
+
+    suspend fun runSelection(ids: Set<String>, adding: Boolean): Outcome<Unit> {
+        voiceComponent.offer()
+        val voice =
+            if (SetupComponentIds.VOICE in ids)
+                mapOf(SetupComponentIds.VOICE to mapOf("selected" to "1"))
+            else emptyMap()
+        val facts = if (adding) SetupJobParams.adding(ids) else SetupJobParams.firstSetup
+        return command { it.run(ids, facts + RUNTIME_PARAMS + voice) }
+    }
+
+    suspend fun continueSelection(): Outcome<Unit> = command {
+        val progress = it.progress.value
+        if (progress.state == SetupState.Done) {
+            val ids = progress.components.map { c -> c.id }.toSet()
+            val voice =
+                if (SetupComponentIds.VOICE in ids)
+                    mapOf(SetupComponentIds.VOICE to mapOf("selected" to "1"))
+                else emptyMap()
+            it.run(ids, SetupJobParams.firstSetup + RUNTIME_PARAMS + voice)
+        } else it.resume()
+    }
+
+    suspend fun removeVoice(): Outcome<Unit> =
+        try {
+            voiceComponent.remove()
+        } finally {
+            changed.value++
+        }
+
+    /**
+     * Reads the actual setup inventory; incomplete checks fail and never remove a previously shown
+     * tool.
+     */
+    suspend fun installedInventory(): Outcome<List<String>> =
+        withContext(serial) {
+            lane.withLock {
+                when (val warm = stores.warm()) {
+                    is Outcome.Failed -> warm
+                    is Outcome.Ok -> {
+                        val offer = voiceComponent.offer()
+                        if (offer is Outcome.Failed) return@withLock offer
+                        val setup = get()
+                        when (val installed = setup.installedOptional()) {
+                            is Outcome.Failed -> installed
+                            is Outcome.Ok ->
+                                Outcome.Ok(
+                                    setup.registry
+                                        .filter {
+                                            !it.jobStep && (it.required || it.id in installed.value)
+                                        }
+                                        .map { it.shortTitle }
+                                )
+                        }
+                    }
+                }
+            }
+        }
 
     private suspend fun command(action: suspend (SetupEngine) -> Unit): Outcome<Unit> =
         withContext(serial) {

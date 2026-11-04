@@ -3,30 +3,45 @@ package io.github.eslamasabry.opencode_mobile.graph
 import android.app.Application
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefType
 import io.github.eslamasabry.oc.core.data.kv.bool
+import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.scope.*
+import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
+import io.github.eslamasabry.oc.core.domain.GatewayFactory
+import io.github.eslamasabry.oc.core.domain.GatewayPair
+import io.github.eslamasabry.oc.core.domain.GatewaySpec
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.TerminalChannel
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.integrations.quota.*
 import io.github.eslamasabry.oc.engine.integrations.usage.*
 import io.github.eslamasabry.oc.engine.profiles.*
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.feature.plans.presentation.*
+import io.github.eslamasabry.oc.protocol.codex.gateway.CodexGateway
 import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoGateway
+import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
 import io.github.eslamasabry.oc.protocol.paseo.usage.PaseoProviderUsageReader
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.usageReadUsage
+import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
+import java.io.IOException
+import java.net.Proxy
 import java.nio.file.Files
 import java.nio.file.LinkOption.NOFOLLOW_LINKS
 import java.nio.file.StandardOpenOption
 import java.security.SecureRandom
 import java.util.Base64
+import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.time.Clock
 import kotlinx.collections.immutable.*
 import kotlinx.coroutines.*
@@ -34,6 +49,14 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.CookieJar
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import org.jetbrains.compose.resources.getString
 
 /**
  * User-consented readers over the exact saved profile; no provider credential enters presentation.
@@ -48,6 +71,8 @@ class AndroidPlansReaders(
     private val application: Application,
     private val dispatchers: AppDispatchers,
     private val clock: Clock,
+    private val factories: Set<GatewayFactory>,
+    private val redactor: Redactor,
     appScope: AppCoroutineScope,
 ) : PlanReaders, UsageSource {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -58,49 +83,71 @@ class AndroidPlansReaders(
     private val attempted = HashMap<String, Long>()
     private val pending = HashMap<String, ComputerAnswer>()
     private var idleStop: Job? = null
-    private val collectors = HashMap<String, InAppQuotaCollector>()
+    private val collectors = HashMap<String, Pair<LoadedProfile, InAppQuotaCollector>>()
 
     init {
         scope.launch {
             if (stores.warm() !is Outcome.Ok) return@launch
+            var observed = emptyMap<ProfileId, LoadedProfile>()
             stores.profiles.profiles.collect { profiles ->
                 val alive = profiles.mapTo(HashSet()) { it.id.raw }
                 state.update { current -> current.filterKeys { it in alive }.toImmutableMap() }
                 for (p in profiles) if (
                     p.profile.backend == BackendKind.OpenCode2 && p.id.raw !in closed
-                )
+                ) {
+                    if (observed[p.id] != p) state.update { (it - p.id.raw).toImmutableMap() }
                     publish(p)
+                }
+                observed = profiles.associateBy { it.id }
             }
         }
     }
 
-    fun connections(): List<UsageConnection> =
-        stores.profiles.profiles.value.mapNotNull { profile ->
-            if (profile.id.raw in closed) null
-            else
+    val signInSource: UsageSource =
+        OpenCodeSignInSource(
+            servers = {
+                stores.profiles.profiles.value
+                    .filter { it.profile.backend == BackendKind.OpenCode2 && it.id.raw !in closed }
+                    .map { SignInServer(it.id.raw, true, it.reentry.password) }
+            },
+            isReadable = { id -> profile(id) != null },
+            providers = { server ->
+                val p = profile(server.id)
+                if (p == null) Failure.Refused(RefusalReason.ProfileDeleted).failed()
+                else
+                    withSavedPair(p) { pair ->
+                        pair.live.providers().map { response ->
+                            response.providers.map { ConnectedProvider(it.id, it.name) }
+                        }
+                    }
+            },
+        )
+
+    fun connections(): List<UsageConnection> = buildList {
+        for (profile in stores.profiles.profiles.value) {
+            if (profile.id.raw in closed) continue
+            val kind =
                 when (profile.profile.backend) {
                     BackendKind.OpenCode2 ->
-                        UsageConnection(
-                            profile.id.raw,
-                            profile.profile.name,
-                            if (inApp(profile)) UsageConnectionKind.InAppUbuntu
-                            else UsageConnectionKind.OpenCodeServer,
-                        )
-                    BackendKind.Paseo ->
-                        UsageConnection(
-                            profile.id.raw,
-                            profile.profile.name,
-                            UsageConnectionKind.PaseoServer,
-                        )
-                    else -> null
+                        if (inApp(profile)) UsageConnectionKind.InAppUbuntu
+                        else UsageConnectionKind.OpenCodeServer
+                    BackendKind.Paseo -> UsageConnectionKind.PaseoServer
+                    BackendKind.Codex -> UsageConnectionKind.CodexServer
                 }
+            add(UsageConnection(profile.id.raw, profile.profile.name, kind))
         }
+        if (phoneOwner() != null)
+            add(UsageConnection(UsageConnection.PHONE_ID, "", UsageConnectionKind.PhoneAgents))
+    }
 
     private fun profile(id: String): LoadedProfile? =
         stores.profiles.profile(ProfileId(id))?.takeIf { id !in closed }
 
     private fun inApp(p: LoadedProfile): Boolean =
         InAppQuotaCollector.looksLikeInAppServer(quotaProfile(p))
+
+    private fun ownsCollector(p: LoadedProfile): Boolean =
+        inApp(p) && stores.prefs.string("oc.builtinServerOwner") == p.id.raw
 
     private fun quotaProfile(p: LoadedProfile): QuotaServerProfile =
         QuotaServerProfile(p.id, p.profile.baseUrl, p.profile.backend == BackendKind.OpenCode2)
@@ -136,100 +183,166 @@ class AndroidPlansReaders(
         return Failure.Device().failed()
     }
 
-    override suspend fun setUp(id: String): Outcome<Unit> = lane.withLock {
-        if (stores.warm() !is Outcome.Ok) return@withLock Failure.StorageRefused().failed()
-        val p =
-            profile(id) ?: return@withLock Failure.Refused(RefusalReason.ProfileDeleted).failed()
-        if (p.profile.backend != BackendKind.OpenCode2 || p.reentry.password || !p.hasSecret)
-            return@withLock problem(p, PlanReaderProblem.Unavailable)
-        publish(p) { it.copy(busy = true, phase = PlanReaderPhase.Checking, problem = null) }
-        if (inApp(p)) {
-            val result =
-                attempt({ Failure.Device() }) {
-                    collector(p).setUp(quotaProfile(p)) { step ->
-                        publish(p) {
-                            it.copy(
-                                phase =
-                                    when (step) {
-                                        QuotaSetupStep.Checking -> PlanReaderPhase.Checking
-                                        QuotaSetupStep.Copying -> PlanReaderPhase.Copying
-                                        QuotaSetupStep.SignIns -> PlanReaderPhase.SignIns
-                                        QuotaSetupStep.Starting -> PlanReaderPhase.Starting
-                                        QuotaSetupStep.Reading -> PlanReaderPhase.Reading
-                                    }
-                            )
+    private suspend fun readerCommand(
+        id: String,
+        work: suspend () -> Outcome<Unit>,
+    ): Outcome<Unit> = lane.withLock {
+        try {
+            when (val result = attempt({ Failure.Device() }) { work() }) {
+                is Outcome.Ok -> result.value
+                is Outcome.Failed -> {
+                    profile(id)?.let { p ->
+                        publish(p) { it.copy(problem = PlanReaderProblem.Unavailable) }
+                    }
+                    result
+                }
+            }
+        } finally {
+            profile(id)?.let { p -> publish(p) { it.copy(busy = false) } }
+        }
+    }
+
+    override suspend fun setUp(id: String): Outcome<Unit> =
+        readerCommand(id) {
+            if (stores.warm() !is Outcome.Ok) return@readerCommand Failure.StorageRefused().failed()
+            val p =
+                profile(id)
+                    ?: return@readerCommand Failure.Refused(RefusalReason.ProfileDeleted).failed()
+            if (p.profile.backend != BackendKind.OpenCode2 || p.reentry.password || !p.hasSecret)
+                return@readerCommand problem(p, PlanReaderProblem.Unavailable)
+            publish(p) { it.copy(busy = true, phase = PlanReaderPhase.Checking, problem = null) }
+            if (inApp(p)) {
+                if (!ownsCollector(p))
+                    return@readerCommand problem(p, PlanReaderProblem.Unavailable)
+                val result =
+                    attempt({ Failure.Device() }) {
+                        collector(p).setUp(quotaProfile(p)) { step ->
+                            publish(p) {
+                                it.copy(
+                                    phase =
+                                        when (step) {
+                                            QuotaSetupStep.Checking -> PlanReaderPhase.Checking
+                                            QuotaSetupStep.Copying -> PlanReaderPhase.Copying
+                                            QuotaSetupStep.SignIns -> PlanReaderPhase.SignIns
+                                            QuotaSetupStep.Starting -> PlanReaderPhase.Starting
+                                            QuotaSetupStep.Reading -> PlanReaderPhase.Reading
+                                        }
+                                )
+                            }
                         }
                     }
+                if (!current(p))
+                    return@readerCommand Failure.Refused(RefusalReason.StaleScope).failed()
+                val error = (result as? Outcome.Ok)?.value
+                if (result is Outcome.Failed || error != null)
+                    return@readerCommand problem(
+                        p,
+                        when (error?.failure) {
+                            QuotaSetupFailure.LinuxNotReady -> PlanReaderProblem.LinuxNotReady
+                            QuotaSetupFailure.NoNode -> PlanReaderProblem.NodeMissing
+                            QuotaSetupFailure.NodeTooOld -> PlanReaderProblem.NodeTooOld
+                            QuotaSetupFailure.Start -> PlanReaderProblem.Start
+                            QuotaSetupFailure.Remove -> PlanReaderProblem.Remove
+                            else -> PlanReaderProblem.Prepare
+                        },
+                    )
+                touchCollector()
+                publish(p) { it.copy(busy = false, phase = PlanReaderPhase.Ready, problem = null) }
+                Unit.ok()
+            } else {
+                val saved =
+                    stores.prefs.commit(stores.lanes.forProfile(p.id)) {
+                        putBool(computerKey(id), true)
+                    }
+                if (saved is Outcome.Failed)
+                    return@readerCommand problem(p, PlanReaderProblem.SaveFailed)
+                readComputer(p).also { answer -> if (current(p)) pending[id] = answer }.outcome(p)
+            }
+        }
+
+    override suspend fun read(id: String): Outcome<Unit> =
+        readerCommand(id) {
+            val p =
+                profile(id)
+                    ?: return@readerCommand Failure.Refused(RefusalReason.ProfileDeleted).failed()
+            if (inApp(p)) {
+                if (!enabled(p)) return@readerCommand problem(p, PlanReaderProblem.Unavailable)
+                if (ownsCollector(p)) {
+                    if (!collector(p).ensureRunning(quotaProfile(p)))
+                        return@readerCommand problem(p, PlanReaderProblem.Start)
+                } else {
+                    val owner = phoneOwner()
+                    if (
+                        owner == null ||
+                            !enabled(owner) ||
+                            !runtime.host.serviceRunning(InAppQuotaCollector.SERVICE_NAME)
+                    )
+                        return@readerCommand problem(p, PlanReaderProblem.Unavailable)
                 }
-            if (!current(p)) return@withLock Failure.Refused(RefusalReason.StaleScope).failed()
-            val error = (result as? Outcome.Ok)?.value
-            if (result is Outcome.Failed || error != null)
-                return@withLock problem(
-                    p,
-                    when (error?.failure) {
-                        QuotaSetupFailure.LinuxNotReady -> PlanReaderProblem.LinuxNotReady
-                        QuotaSetupFailure.NoNode -> PlanReaderProblem.NodeMissing
-                        QuotaSetupFailure.NodeTooOld -> PlanReaderProblem.NodeTooOld
-                        QuotaSetupFailure.Start -> PlanReaderProblem.Start
-                        QuotaSetupFailure.Remove -> PlanReaderProblem.Remove
-                        else -> PlanReaderProblem.Prepare
-                    },
+                touchCollector()
+                publish(p) { it.copy(busy = false, phase = PlanReaderPhase.Ready, problem = null) }
+                Unit.ok()
+            } else {
+                readComputer(p).also { answer -> if (current(p)) pending[id] = answer }.outcome(p)
+            }
+        }
+
+    override suspend fun turnOff(id: String): Outcome<Unit> =
+        readerCommand(id) {
+            val p =
+                profile(id)
+                    ?: return@readerCommand Failure.Refused(RefusalReason.ProfileDeleted).failed()
+            publish(p) { it.copy(busy = true, problem = null) }
+            if (inApp(p)) {
+                if (!ownsCollector(p)) {
+                    if (
+                        stores.prefs.commit(stores.lanes.forProfile(p.id)) {
+                            remove(InAppQuotaCollector.enabledKey(p.id))
+                        } is Outcome.Failed
+                    )
+                        return@readerCommand problem(p, PlanReaderProblem.SaveFailed)
+                    if (stores.secrets.delete(InAppQuotaCollector.tokenKey(p.id)) is Outcome.Failed)
+                        return@readerCommand problem(p, PlanReaderProblem.Remove)
+                    publish(p) {
+                        it.copy(
+                            busy = false,
+                            phase = PlanReaderPhase.Idle,
+                            problem = null,
+                            foundProviderIds = persistentListOf(),
+                        )
+                    }
+                    return@readerCommand Unit.ok()
+                }
+                idleStop?.cancel()
+                val answer = attempt({ Failure.Device() }) { collector(p).turnOff(p.id) }
+                if (answer is Outcome.Failed || (answer as? Outcome.Ok)?.value != null)
+                    return@readerCommand problem(p, PlanReaderProblem.Remove)
+                if (stores.secrets.delete(InAppQuotaCollector.tokenKey(p.id)) is Outcome.Failed)
+                    return@readerCommand problem(p, PlanReaderProblem.Remove)
+                if (
+                    stores.prefs.commit(stores.lanes.forProfile(p.id)) {
+                        remove(InAppQuotaCollector.enabledKey(p.id))
+                    } is Outcome.Failed
                 )
-            touchCollector()
-            publish(p) { it.copy(busy = false, phase = PlanReaderPhase.Ready, problem = null) }
-            Unit.ok()
-        } else {
-            val saved =
-                stores.prefs.commit(stores.lanes.forProfile(p.id)) {
-                    putBool(computerKey(id), true)
-                }
-            if (saved is Outcome.Failed) return@withLock problem(p, PlanReaderProblem.SaveFailed)
-            readComputer(p).also { answer -> if (current(p)) pending[id] = answer }.outcome(p)
-        }
-    }
-
-    override suspend fun read(id: String): Outcome<Unit> = lane.withLock {
-        val p =
-            profile(id) ?: return@withLock Failure.Refused(RefusalReason.ProfileDeleted).failed()
-        if (inApp(p)) {
-            if (!enabled(p)) return@withLock problem(p, PlanReaderProblem.Unavailable)
-            if (!collector(p).ensureRunning(quotaProfile(p)))
-                return@withLock problem(p, PlanReaderProblem.Start)
-            touchCollector()
-            publish(p) { it.copy(busy = false, phase = PlanReaderPhase.Ready, problem = null) }
-            Unit.ok()
-        } else {
-            readComputer(p).also { answer -> if (current(p)) pending[id] = answer }.outcome(p)
-        }
-    }
-
-    override suspend fun turnOff(id: String): Outcome<Unit> = lane.withLock {
-        val p =
-            profile(id) ?: return@withLock Failure.Refused(RefusalReason.ProfileDeleted).failed()
-        publish(p) { it.copy(busy = true, problem = null) }
-        if (inApp(p)) {
-            idleStop?.cancel()
-            val answer = attempt({ Failure.Device() }) { collector(p).turnOff(p.id) }
-            if (answer is Outcome.Failed || (answer as? Outcome.Ok)?.value != null)
-                return@withLock problem(p, PlanReaderProblem.Remove)
-        } else if (
-            stores.prefs.commit(stores.lanes.forProfile(p.id)) { remove(computerKey(id)) }
-                is Outcome.Failed
-        )
-            return@withLock problem(p, PlanReaderProblem.SaveFailed)
-        pending.remove(id)
-        attempted.remove(id)
-        publish(p) {
-            it.copy(
-                enabled = false,
-                busy = false,
-                phase = PlanReaderPhase.Idle,
-                problem = null,
-                foundProviderIds = persistentListOf(),
+                    return@readerCommand problem(p, PlanReaderProblem.SaveFailed)
+            } else if (
+                stores.prefs.commit(stores.lanes.forProfile(p.id)) { remove(computerKey(id)) }
+                    is Outcome.Failed
             )
+                return@readerCommand problem(p, PlanReaderProblem.SaveFailed)
+            pending.remove(id)
+            attempted.remove(id)
+            publish(p) {
+                it.copy(
+                    enabled = false,
+                    busy = false,
+                    phase = PlanReaderPhase.Idle,
+                    problem = null,
+                    foundProviderIds = persistentListOf(),
+                )
+            }
+            Unit.ok()
         }
-        Unit.ok()
-    }
 
     override suspend fun read(context: UsageReadContext): Outcome<UsageSourceResult> =
         lane.withLock {
@@ -238,56 +351,51 @@ class AndroidPlansReaders(
             val failures = ArrayList<UsageFailure>()
             val unreached = HashSet<String>()
             for (connection in context.connections) {
+                if (connection.id == UsageConnection.PHONE_ID) {
+                    val phone = readPhone()
+                    if (phone == null || phone is Outcome.Failed)
+                        unreached += UsageConnection.PHONE_ID
+                    else
+                        foldPaseo(
+                            UsageConnection.PHONE_ID,
+                            (phone as Outcome.Ok).value,
+                            readings,
+                            signIns,
+                        )
+                    continue
+                }
                 val p = profile(connection.id) ?: continue
+                if (p.profile.backend == BackendKind.Codex) {
+                    if (stores.profiles.activeId.value != p.id) continue
+                    readCodex(p, context, readings, signIns, failures, unreached)
+                    continue
+                }
                 if (p.profile.backend == BackendKind.Paseo) {
-                    val gateway =
-                        registry.live.value[p.id]?.session?.server as? PaseoGateway ?: continue
                     val answer =
-                        PaseoProviderUsageReader(gateway.transport, clock, owns = false).read()
+                        withTimeoutOrNull(12_000) {
+                            withSavedPair(p) { pair ->
+                                val gateway = pair.live as? PaseoGateway
+                                if (gateway == null)
+                                    Failure.Unavailable(FeatureId("providerUsage")).failed()
+                                else
+                                    PaseoProviderUsageReader(gateway.transport, clock, owns = false)
+                                        .read()
+                            }
+                        }
                     if (!current(p)) continue
-                    if (answer is Outcome.Failed) {
-                        unreached += p.id.raw
-                        continue
-                    }
-                    for (reading in (answer as Outcome.Ok).value) {
-                        val provider =
-                            canonicalUsageProviderId(reading.providerId) ?: reading.providerId
-                        signIns +=
-                            UsageSignIn(
-                                provider,
-                                p.id.raw,
-                                if (reading.needsSignIn) SignInState.NotSignedIn
-                                else SignInState.SignedIn,
-                                SignInMethod.Plan,
-                                reading.displayName,
-                            )
-                        if (!reading.needsSignIn)
-                            readings +=
-                                UsageReading(
-                                    provider,
-                                    reading.displayName,
-                                    p.id.raw,
-                                    UsageReadingStatus.Ok,
-                                    kotlin.time.Instant.fromEpochMilliseconds(reading.fetchedAtMs),
-                                    reading.windows.mapIndexed { i, w ->
-                                        UsageWindow(
-                                            "paseo.$i",
-                                            (100 - w.remainingPercent).toDouble(),
-                                            w.durationSeconds?.toLong(),
-                                            w.resetsAtMs?.let(
-                                                kotlin.time.Instant::fromEpochMilliseconds
-                                            ),
-                                            w.label,
-                                        )
-                                    },
-                                    method = SignInMethod.Plan,
-                                )
-                    }
+                    if (answer == null || answer is Outcome.Failed) unreached += p.id.raw
+                    else foldPaseo(p.id.raw, (answer as Outcome.Ok).value, readings, signIns)
                     continue
                 }
                 if (p.profile.backend != BackendKind.OpenCode2 || !enabled(p)) continue
                 if (inApp(p)) {
-                    if (!collector(p).ensureRunning(quotaProfile(p))) {
+                    val owner = if (ownsCollector(p)) p else phoneOwner()
+                    val running =
+                        owner != null &&
+                            enabled(owner) &&
+                            if (ownsCollector(p)) collector(p).ensureRunning(quotaProfile(p))
+                            else runtime.host.serviceRunning(InAppQuotaCollector.SERVICE_NAME)
+                    if (!running || owner == null) {
                         for (provider in readableProviders) failures +=
                             UsageFailure(p.id.raw, provider.wire, UsageProblem.Broken)
                         continue
@@ -301,7 +409,11 @@ class AndroidPlansReaders(
                                 "",
                                 transport = LoopbackQuotaTransport(dispatchers),
                                 provider = provider,
-                                inAppToken = { InAppQuotaCollector.readToken(stores.secrets, p.id) },
+                                inAppToken = {
+                                    if (current(owner) && ownsCollector(owner))
+                                        InAppQuotaCollector.readToken(stores.secrets, owner.id)
+                                    else null
+                                },
                             )
                         val answer =
                             try {
@@ -382,6 +494,198 @@ class AndroidPlansReaders(
             UsageSourceResult(readings, signIns, failures, unreached).ok()
         }
 
+    private fun phoneOwner(): LoadedProfile? =
+        stores.prefs.string("oc.builtinServerOwner")?.let(::profile)?.takeIf {
+            inApp(it) && current(it)
+        }
+
+    /** A usage read never starts the helper, even when its last cached reading exists. */
+    private suspend fun readPhone():
+        Outcome<List<io.github.eslamasabry.oc.protocol.paseo.usage.ProviderUsageReading>>? {
+        val owner = phoneOwner() ?: return null
+        val status =
+            attempt({ Failure.Device() }) {
+                withContext(dispatchers.io) {
+                    BuiltinLinux.get(application).agentHost.status(owner.id.raw)
+                }
+            }
+        if ((status as? Outcome.Ok)?.value?.get("running") != true || !current(owner)) return null
+        val secret =
+            stores.secrets.read("oc.agentHostSecret.${owner.id.raw}").getOrNull()?.takeIf {
+                Regex("^[a-f0-9]{64}$").matches(it)
+            } ?: return Failure.SecretUnavailable().failed()
+        redactor.registerSecret(secret)
+        val transport =
+            PaseoTransport(
+                "ws://127.0.0.1:4099",
+                secret,
+                OkHttpPaseoSockets(),
+                scope,
+                dispatchers.serial("usage-phone"),
+                dispatchers.default,
+                requestTimeoutMs = 10_000,
+            )
+        return try {
+            withTimeoutOrNull(12_000) {
+                val answer = attempt({ Failure.Device() }) { transport.connect() }
+                if (answer is Outcome.Failed) return@withTimeoutOrNull answer
+                if (!current(owner))
+                    return@withTimeoutOrNull Failure.Refused(RefusalReason.StaleScope).failed()
+                val result = PaseoProviderUsageReader(transport, clock, owns = false).read()
+                if (current(owner)) result else Failure.Refused(RefusalReason.StaleScope).failed()
+            } ?: Failure.Network().failed()
+        } finally {
+            withContext(NonCancellable) {
+                withTimeoutOrNull(3000) { attempt({ Failure.Device() }) { transport.close() } }
+            }
+        }
+    }
+
+    private fun foldPaseo(
+        id: String,
+        list: List<io.github.eslamasabry.oc.protocol.paseo.usage.ProviderUsageReading>,
+        readings: MutableList<UsageReading>,
+        signIns: MutableList<UsageSignIn>,
+    ) {
+        for (reading in list) {
+            val provider = canonicalUsageProviderId(reading.providerId) ?: reading.providerId
+            if (reading.needsSignIn && reading.windows.isEmpty()) {
+                readings +=
+                    UsageReading(
+                        provider,
+                        reading.displayName,
+                        id,
+                        UsageReadingStatus.NotSignedIn,
+                        kotlin.time.Instant.fromEpochMilliseconds(reading.fetchedAtMs),
+                        method = SignInMethod.Plan,
+                    )
+                continue
+            }
+            val windows =
+                reading.windows.mapIndexed { index, w ->
+                    UsageWindow(
+                        when (w.durationSeconds) {
+                            18_000 -> "5h"
+                            604_800 -> "weekly"
+                            else -> w.label.ifBlank { "window.$index" }
+                        },
+                        (100 - w.remainingPercent).toDouble(),
+                        w.durationSeconds?.toLong(),
+                        w.resetsAtMs?.let(kotlin.time.Instant::fromEpochMilliseconds),
+                        w.label,
+                    )
+                }
+            readings +=
+                UsageReading(
+                    provider,
+                    reading.displayName,
+                    id,
+                    if (windows.isEmpty()) UsageReadingStatus.NoLimits else UsageReadingStatus.Ok,
+                    kotlin.time.Instant.fromEpochMilliseconds(reading.fetchedAtMs),
+                    windows,
+                    method = SignInMethod.Plan,
+                )
+            signIns +=
+                UsageSignIn(
+                    provider,
+                    id,
+                    method = SignInMethod.Plan,
+                    displayName = reading.displayName,
+                )
+        }
+    }
+
+    private suspend fun readCodex(
+        p: LoadedProfile,
+        context: UsageReadContext,
+        readings: MutableList<UsageReading>,
+        signIns: MutableList<UsageSignIn>,
+        failures: MutableList<UsageFailure>,
+        unreached: MutableSet<String>,
+    ) {
+        val graph = registry.live.value[p.id] ?: return
+        if (
+            !graph.session.capabilities.value.agentAccount ||
+                graph.profile != p.toServerProfile(managedOnPhone = graph.profile.managedOnPhone)
+        )
+            return
+        val gateway = graph.session.server as? CodexGateway ?: return
+        val session = gateway.openAccountSession()
+        try {
+            val account = session.read().getOrNull()
+            if (!current(p) || registry.live.value[p.id] !== graph) return
+            if (account == null) {
+                if (!session.active) unreached += p.id.raw
+                else failures += UsageFailure(p.id.raw, "codex", UsageProblem.Broken)
+                return
+            }
+            if (!account.signedIn) {
+                if (context.lastReading(p.id.raw, "codex") != null || account.requiresSignIn)
+                    readings += bare(p.id.raw, QuotaProvider.Codex, UsageReadingStatus.NotSignedIn)
+                return
+            }
+            if (account.type?.lowercase()?.contains("key") == true) {
+                signIns +=
+                    UsageSignIn(
+                        "codex",
+                        p.id.raw,
+                        method = SignInMethod.ApiKey,
+                        displayName = "OpenAI",
+                    )
+                return
+            }
+            val buckets = session.rateLimits().getOrNull()
+            if (!current(p) || registry.live.value[p.id] !== graph) return
+            if (buckets == null) {
+                failures += UsageFailure(p.id.raw, "codex", UsageProblem.Broken)
+                return
+            }
+            val bucket = buckets.firstOrNull()
+            val windows =
+                listOf(bucket?.primary, bucket?.secondary).mapIndexedNotNull { index, w ->
+                    w?.let {
+                        UsageWindow(
+                            if (index == 0) "primary" else "secondary",
+                            it.usedPercent.toDouble(),
+                            it.durationMinutes?.let { m ->
+                                if (m <= Long.MAX_VALUE / 60) m * 60 else null
+                            },
+                            it.resetsAtMs?.let(kotlin.time.Instant::fromEpochMilliseconds),
+                        )
+                    }
+                }
+            val accountRef =
+                account.email
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { DartJson.sha256Hex("codex-account:$it") }
+            val plan =
+                account.plan?.lowercase()?.takeIf {
+                    it in
+                        setOf("free", "go", "plus", "pro", "team", "business", "enterprise", "edu")
+                }
+            readings +=
+                UsageReading(
+                    "codex",
+                    "Codex",
+                    p.id.raw,
+                    if (windows.isEmpty()) UsageReadingStatus.NoLimits else UsageReadingStatus.Ok,
+                    context.now,
+                    windows,
+                    accountRef,
+                    plan,
+                    SignInMethod.Plan,
+                )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            if (current(p)) failures += UsageFailure(p.id.raw, "codex", UsageProblem.Broken)
+        } finally {
+            withContext(NonCancellable) {
+                withTimeoutOrNull(2000) { attempt({ Failure.Device() }) { session.close() } }
+            }
+        }
+    }
+
     private fun bare(
         id: String,
         provider: QuotaProvider,
@@ -435,8 +739,14 @@ class AndroidPlansReaders(
         }
     }
 
-    private fun collector(p: LoadedProfile): InAppQuotaCollector =
-        collectors.getOrPut(p.id.raw) {
+    private fun collector(p: LoadedProfile): InAppQuotaCollector {
+        check(ownsCollector(p))
+        collectors[p.id.raw]
+            ?.takeIf { it.first == p }
+            ?.let {
+                return it.second
+            }
+        val created =
             InAppQuotaCollector(
                 prefs = stores.prefs,
                 lane = stores.lanes.forProfile(p.id),
@@ -458,7 +768,7 @@ class AndroidPlansReaders(
                             script: String,
                             timeoutMs: Long,
                         ): QuotaLinuxHost.RunResult {
-                            require(current(p))
+                            require(current(p) && ownsCollector(p))
                             val result =
                                 runtime.host.run(script, (timeoutMs + 999) / 1000).getOrNull()
                                     ?: return QuotaLinuxHost.RunResult(-1, "")
@@ -470,11 +780,12 @@ class AndroidPlansReaders(
                             script: String,
                             port: Int?,
                         ) {
-                            require(current(p))
+                            require(current(p) && ownsCollector(p))
                             check(runtime.host.startService(name, script, "") is Outcome.Ok)
                         }
 
                         override suspend fun stopService(name: String) {
+                            require(current(p) && ownsCollector(p))
                             check(runtime.host.stopService(name) is Outcome.Ok)
                         }
 
@@ -499,29 +810,52 @@ class AndroidPlansReaders(
                                         )
                                         .use { channel ->
                                             java.nio.channels.Channels.newInputStream(channel)
-                                                .readBytes()
+                                                .use { input ->
+                                                    val out = java.io.ByteArrayOutputStream()
+                                                    val buffer = ByteArray(8192)
+                                                    while (true) {
+                                                        val count = input.read(buffer)
+                                                        if (count < 0) break
+                                                        check(out.size() + count <= 512 * 1024)
+                                                        out.write(buffer, 0, count)
+                                                    }
+                                                    out.toByteArray()
+                                                }
                                         }
                             }
 
                         override suspend fun write(path: String, bytes: ByteArray) =
                             withContext(dispatchers.io) {
-                                require(current(p))
+                                require(current(p) && ownsCollector(p))
                                 val file = checkNotNull(safeQuotaFile(path, create = true))
-                                Files.newByteChannel(
-                                        file.toPath(),
-                                        setOf(
-                                            StandardOpenOption.WRITE,
-                                            StandardOpenOption.CREATE,
-                                            StandardOpenOption.TRUNCATE_EXISTING,
-                                            NOFOLLOW_LINKS,
-                                        ),
+                                val descriptor =
+                                    android.system.Os.open(
+                                        file.absolutePath,
+                                        android.system.OsConstants.O_WRONLY or
+                                            android.system.OsConstants.O_CREAT or
+                                            android.system.OsConstants.O_TRUNC or
+                                            android.system.OsConstants.O_NOFOLLOW or
+                                            android.system.OsConstants.O_CLOEXEC,
+                                        0b110_000_000,
                                     )
-                                    .use { channel ->
-                                        java.nio.channels.Channels.newOutputStream(channel).use {
-                                            it.write(bytes)
-                                        }
+                                try {
+                                    android.system.Os.fchmod(descriptor, 0b110_000_000)
+                                    var at = 0
+                                    while (at < bytes.size) {
+                                        val count =
+                                            android.system.Os.write(
+                                                descriptor,
+                                                bytes,
+                                                at,
+                                                bytes.size - at,
+                                            )
+                                        check(count > 0)
+                                        at += count
                                     }
-                                android.system.Os.chmod(file.absolutePath, 0b110_000_000)
+                                    android.system.Os.fsync(descriptor)
+                                } finally {
+                                    android.system.Os.close(descriptor)
+                                }
                             }
                     },
                 randomBytes = { size -> ByteArray(size).also(SecureRandom()::nextBytes) },
@@ -542,7 +876,9 @@ class AndroidPlansReaders(
                 probe = { token -> probeCollector(token) },
                 supported = true,
             )
-        }
+        collectors[p.id.raw] = p to created
+        return created
+    }
 
     private fun safeQuotaFile(path: String, create: Boolean): File? {
         if (
@@ -598,10 +934,14 @@ class AndroidPlansReaders(
         }
 
     private fun touchCollector() {
+        val owner = phoneOwner() ?: return
         idleStop?.cancel()
         idleStop = scope.launch {
             delay(120_000)
-            lane.withLock { runtime.host.stopService(InAppQuotaCollector.SERVICE_NAME) }
+            lane.withLock {
+                if (phoneOwner() == owner && current(owner) && ownsCollector(owner))
+                    runtime.host.stopService(InAppQuotaCollector.SERVICE_NAME)
+            }
         }
     }
 
@@ -619,90 +959,174 @@ class AndroidPlansReaders(
     private suspend fun readComputer(p: LoadedProfile): ComputerAnswer {
         attempted[p.id.raw] = clock.now().toEpochMilliseconds()
         publish(p) { it.copy(busy = true, phase = PlanReaderPhase.Reading, problem = null) }
-        val answer =
-            when (val result = attempt({ Failure.Device() }) { runComputer(p) }) {
-                is Outcome.Failed -> ComputerAnswer(problem = PlanReaderProblem.Unreachable)
-                is Outcome.Ok -> result.value
-            }
-        if (current(p)) {
-            if (answer.problem == PlanReaderProblem.ServerTooOld)
-                stores.prefs.commit(stores.lanes.forProfile(p.id)) { remove(computerKey(p.id.raw)) }
-            val found =
-                readableProviders
-                    .filter { provider ->
-                        answer.auth[provider]?.let { auth ->
-                            auth != "api" ||
-                                provider != QuotaProvider.Codex &&
-                                    !(provider == QuotaProvider.Minimax &&
-                                        answer.snapshots[provider]?.status ==
-                                            ProviderQuotaStatus.Unsupported)
-                        } == true
+        return try {
+            val answer =
+                when (val result = attempt({ Failure.Device() }) { runComputer(p) }) {
+                    is Outcome.Failed -> ComputerAnswer(problem = PlanReaderProblem.Unreachable)
+                    is Outcome.Ok -> result.value
+                }
+            if (current(p)) {
+                if (answer.problem == PlanReaderProblem.ServerTooOld)
+                    stores.prefs.commit(stores.lanes.forProfile(p.id)) {
+                        remove(computerKey(p.id.raw))
                     }
-                    .map { it.wire }
-                    .toImmutableList()
-            publish(p) {
-                it.copy(
-                    busy = false,
-                    phase =
-                        if (answer.problem == null) PlanReaderPhase.Ready else PlanReaderPhase.Idle,
-                    problem = answer.problem,
-                    foundProviderIds = found,
-                )
+                val found =
+                    readableProviders
+                        .filter { provider ->
+                            answer.auth[provider]?.let { auth ->
+                                auth != "api" ||
+                                    provider != QuotaProvider.Codex &&
+                                        !(provider == QuotaProvider.Minimax &&
+                                            answer.snapshots[provider]?.status ==
+                                                ProviderQuotaStatus.Unsupported)
+                            } == true
+                        }
+                        .map { it.wire }
+                        .toImmutableList()
+                publish(p) {
+                    it.copy(
+                        busy = false,
+                        phase =
+                            if (answer.problem == null) PlanReaderPhase.Ready
+                            else PlanReaderPhase.Idle,
+                        problem = answer.problem,
+                        foundProviderIds = found,
+                    )
+                }
+            }
+            answer
+        } finally {
+            if (current(p)) publish(p) { it.copy(busy = false) }
+        }
+    }
+
+    /** A read owns a temporary gateway only when it cannot reuse the exact current graph. */
+    private suspend fun <T> withSavedPair(
+        p: LoadedProfile,
+        reuseLive: Boolean = true,
+        read: suspend (GatewayPair) -> Outcome<T>,
+    ): Outcome<T> {
+        if (!current(p) || p.reentry.password || p.reentry.agentToken)
+            return Failure.SecretUnavailable().failed()
+        val model =
+            p.toServerProfile() ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val existing = registry.live.value[p.id].takeIf { reuseLive }
+        if (existing != null) {
+            if (
+                existing.profile !=
+                    p.toServerProfile(managedOnPhone = existing.profile.managedOnPhone)
+            )
+                return Failure.Refused(RefusalReason.StaleScope).failed()
+            val operations = existing.session.server.facet<ServerOperationsGateway>()
+            if (operations != null) {
+                val result = read(GatewayPair(existing.session.server, operations))
+                return if (current(p) && registry.live.value[p.id] === existing) result
+                else Failure.Refused(RefusalReason.StaleScope).failed()
             }
         }
-        return answer
+        val secret =
+            when (val answer = stores.profiles.secret(p.id)) {
+                is Outcome.Failed -> return answer
+                is Outcome.Ok -> answer.value
+            }
+        secret?.let(redactor::registerSecret)
+        if (!current(p)) return Failure.Refused(RefusalReason.StaleScope).failed()
+        val factory =
+            factories.singleOrNull { it.backend == model.backend }
+                ?: return Failure.Unavailable(FeatureId("backend")).failed()
+        val own =
+            ConnectionCoroutineScope(
+                supervisedContext(scope.coroutineContext[Job], dispatchers.default, "usage-read")
+            )
+        var pair: GatewayPair? = null
+        try {
+            val connected =
+                factory.connect(
+                    GatewaySpec(
+                        model,
+                        ConnectionCredentials(model.username, secret),
+                        own,
+                        reconnectAllowed = MutableStateFlow(false),
+                    )
+                )
+            when (connected) {
+                is Outcome.Failed -> return connected
+                is Outcome.Ok -> pair = connected.value
+            }
+            if (!current(p)) return Failure.Refused(RefusalReason.StaleScope).failed()
+            val result = read(pair)
+            return if (current(p)) result else Failure.Refused(RefusalReason.StaleScope).failed()
+        } finally {
+            withContext(NonCancellable) {
+                own.coroutineContext[Job]?.cancel()
+                withTimeoutOrNull(3000) { attempt({ Failure.Device() }) { pair?.live?.close() } }
+                withTimeoutOrNull(3000) { own.coroutineContext[Job]?.cancelAndJoin() }
+            }
+        }
     }
 
     private suspend fun runComputer(p: LoadedProfile): ComputerAnswer {
         if (!current(p) || p.reentry.password || !p.hasSecret)
             return ComputerAnswer(problem = PlanReaderProblem.Unavailable)
-        val model =
-            p.toServerProfile() ?: return ComputerAnswer(problem = PlanReaderProblem.Unavailable)
-        val graph =
-            registry.open(model).getOrNull()
-                ?: return ComputerAnswer(problem = PlanReaderProblem.Unreachable)
-        if (!graph.session.capabilities.value.terminal || !current(p))
-            return ComputerAnswer(problem = PlanReaderProblem.ServerTooOld)
         val source =
             withContext(dispatchers.io) {
                 application.assets.open("quota/read_once.mjs").bufferedReader().use {
                     it.readText()
                 }
             }
-        val operations =
-            graph.session.server.facet<ServerOperationsGateway>()
-                ?: return ComputerAnswer(problem = PlanReaderProblem.ServerTooOld)
-        return withTimeoutOrNull(25_000) {
-            var last = ComputerAnswer(problem = PlanReaderProblem.NoAnswer)
-            val attempts =
-                listOf(
-                    "node" to listOf("--input-type=module", "-e", source),
-                    "bash" to
+        val result =
+            withTimeoutOrNull(25_000) {
+                withSavedPair(p, reuseLive = false) { pair ->
+                    if (!pair.live.capabilities.value.terminal)
+                        return@withSavedPair ComputerAnswer(
+                                problem = PlanReaderProblem.ServerTooOld
+                            )
+                            .ok()
+                    var last = ComputerAnswer(problem = PlanReaderProblem.NoAnswer)
+                    val attempts =
                         listOf(
-                            "-lc",
-                            "command -v node >/dev/null 2>&1 || { echo 'node: command not found'; sleep 1; exit 127; }; node --input-type=module -e \"\$1\"; s=\$?; sleep 1; exit \$s",
-                            "_",
-                            source,
-                        ),
-                )
-            for ((command, args) in attempts) {
-                if (!current(p) || registry.live.value[p.id] !== graph)
-                    return@withTimeoutOrNull ComputerAnswer(problem = PlanReaderProblem.Unreachable)
-                val answer = attemptComputer(operations, command, args)
-                if (
-                    answer.problem == null ||
-                        answer.problem == PlanReaderProblem.ServerTooOld ||
-                        answer.problem == PlanReaderProblem.Unreachable
-                )
-                    return@withTimeoutOrNull answer
-                if (
-                    answer.problem != PlanReaderProblem.NoAnswer ||
-                        last.problem == PlanReaderProblem.NoAnswer
-                )
-                    last = answer
+                            "node" to listOf("--input-type=module", "-e", source),
+                            "bash" to
+                                listOf(
+                                    "-lc",
+                                    """command -v node >/dev/null 2>&1 || { echo 'node: command not found'; sleep 1; exit 127; }; node --input-type=module -e "${'$'}1"; s=${'$'}?; sleep 1; exit ${'$'}s""",
+                                    "_",
+                                    source,
+                                ),
+                        )
+                    for ((command, args) in attempts) {
+                        if (!current(p))
+                            return@withSavedPair ComputerAnswer(
+                                    problem = PlanReaderProblem.Unreachable
+                                )
+                                .ok()
+                        val answer = attemptComputer(pair.operations, command, args)
+                        if (
+                            answer.problem == null ||
+                                answer.problem == PlanReaderProblem.ServerTooOld ||
+                                answer.problem == PlanReaderProblem.Unreachable
+                        )
+                            return@withSavedPair answer.ok()
+                        if (
+                            answer.problem != PlanReaderProblem.NoAnswer ||
+                                last.problem == PlanReaderProblem.NoAnswer
+                        )
+                            last = answer
+                    }
+                    last.ok()
+                }
             }
-            last
-        } ?: ComputerAnswer(problem = PlanReaderProblem.NoAnswer)
+        return when (result) {
+            null -> ComputerAnswer(problem = PlanReaderProblem.NoAnswer)
+            is Outcome.Failed ->
+                ComputerAnswer(
+                    problem =
+                        if (result.failure is Failure.SecretUnavailable)
+                            PlanReaderProblem.Unavailable
+                        else PlanReaderProblem.Unreachable
+                )
+            is Outcome.Ok -> result.value
+        }
     }
 
     private suspend fun attemptComputer(
@@ -719,7 +1143,7 @@ class AndroidPlansReaders(
                     operations.createCommandTerminal(
                         command,
                         args.toImmutableList(),
-                        "Read plan usage",
+                        getString(Res.string.usageReadUsage),
                     )
             ) {
                 is Outcome.Failed ->
@@ -837,44 +1261,59 @@ class AndroidPlansReaders(
 
     suspend fun removeProfile(id: ProfileId): Outcome<Int> {
         closed += id.raw
-        return lane.withLock {
-            val p = stores.profiles.profile(id)
-            if (p != null && inApp(p) && enabled(p)) {
-                idleStop?.cancel()
-                val stopped = runtime.host.stopService(InAppQuotaCollector.SERVICE_NAME)
-                if (stopped is Outcome.Failed) {
-                    closed -= id.raw
-                    return@withLock stopped
-                }
-                // Delete only this collector's fixed files, never follow runtime links.
-                withContext(dispatchers.io) {
-                    for (name in
-                        listOf(
-                            "collector.mjs",
-                            "keys.mjs",
-                            "read.token",
-                            "auth.env",
-                            "glm.key",
-                            "minimax.key",
-                        )) {
-                        val path = InAppQuotaCollector.DIR + "/" + name
-                        val parent =
-                            BuiltinDiscovery.rootfs(application.filesDir)
-                                .resolve(InAppQuotaCollector.DIR.trimStart('/'))
-                        if (
-                            parent.canonicalFile == parent.absoluteFile &&
-                                Files.isDirectory(parent.toPath(), NOFOLLOW_LINKS)
-                        )
-                            Files.deleteIfExists(File(parent, name).toPath())
+        val deletion: Outcome<Outcome<Int>> =
+            attempt({ Failure.StorageRefused() }) {
+                lane.withLock {
+                    val p = stores.profiles.profile(id)
+                    if (p != null && ownsCollector(p) && enabled(p)) {
+                        idleStop?.cancel()
+                        val stopped = runtime.host.stopService(InAppQuotaCollector.SERVICE_NAME)
+                        if (stopped is Outcome.Failed) {
+                            closed -= id.raw
+                            return@withLock stopped
+                        }
+                        // Delete only this collector's fixed files, never follow runtime links.
+                        withContext(dispatchers.io) {
+                            for (name in
+                                listOf(
+                                    "collector.mjs",
+                                    "keys.mjs",
+                                    "read.token",
+                                    "auth.env",
+                                    "glm.key",
+                                    "minimax.key",
+                                )) {
+                                val parent =
+                                    BuiltinDiscovery.rootfs(application.filesDir)
+                                        .resolve(InAppQuotaCollector.DIR.trimStart('/'))
+                                if (
+                                    parent.canonicalFile == parent.absoluteFile &&
+                                        Files.isDirectory(parent.toPath(), NOFOLLOW_LINKS)
+                                )
+                                    Files.deleteIfExists(File(parent, name).toPath())
+                            }
+                        }
                     }
+                    when (val erased = stores.secrets.delete(InAppQuotaCollector.tokenKey(id))) {
+                        is Outcome.Failed -> {
+                            closed -= id.raw
+                            return@withLock erased
+                        }
+                        is Outcome.Ok -> Unit
+                    }
+                    collectors.remove(id.raw)
+                    pending.remove(id.raw)
+                    attempted.remove(id.raw)
+                    state.update { (it - id.raw).toImmutableMap() }
+                    1.ok()
                 }
             }
-            stores.secrets.delete(InAppQuotaCollector.tokenKey(id))
-            collectors.remove(id.raw)
-            pending.remove(id.raw)
-            attempted.remove(id.raw)
-            state.update { (it - id.raw).toImmutableMap() }
-            1.ok()
+        return when (deletion) {
+            is Outcome.Ok -> deletion.value
+            is Outcome.Failed -> {
+                closed -= id.raw
+                deletion
+            }
         }
     }
 
@@ -908,29 +1347,66 @@ class AndroidPlansReaders(
 
 /** A dedicated no-redirect loopback transport. Tokens can never travel to a remote URL. */
 private class LoopbackQuotaTransport(private val dispatchers: AppDispatchers) : QuotaTransport {
-    @Volatile private var connection: HttpURLConnection? = null
+    private val client =
+        OkHttpClient.Builder()
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .retryOnConnectionFailure(false)
+            .cookieJar(CookieJar.NO_COOKIES)
+            .proxy(Proxy.NO_PROXY)
+            .cache(null)
+            .build()
+    @Volatile private var response: Response? = null
+    @Volatile private var call: Call? = null
 
-    override suspend fun fetch(request: QuotaRequest): QuotaResponse =
-        withContext(dispatchers.io) {
-            val url = URL(request.url)
-            require(
-                url.protocol == "http" &&
-                    url.host == "127.0.0.1" &&
-                    url.port == IN_APP_QUOTA_PORT &&
-                    url.userInfo == null
-            )
-            val c = (url.openConnection() as HttpURLConnection).also { connection = it }
-            c.instanceFollowRedirects = false
-            c.connectTimeout = request.connectTimeoutMs.toInt()
-            c.readTimeout = request.receiveTimeoutMs.toInt()
-            c.requestMethod = "GET"
-            for ((name, value) in request.headers) c.setRequestProperty(name, value)
-            val status = c.responseCode
-            QuotaResponse(
-                status,
-                flow {
-                        if (status == 200)
-                            c.inputStream.use { input ->
+    override suspend fun fetch(request: QuotaRequest): QuotaResponse {
+        val url = request.url.toHttpUrl()
+        require(
+            url.scheme == "http" &&
+                url.host == "127.0.0.1" &&
+                url.port == IN_APP_QUOTA_PORT &&
+                url.username.isEmpty() &&
+                url.password.isEmpty()
+        )
+        require(request.method == "GET" && !request.followRedirects && request.maxRedirects == 0)
+        val req =
+            Request.Builder()
+                .url(url)
+                .get()
+                .apply { for ((name, value) in request.headers) header(name, value) }
+                .build()
+        val c =
+            client
+                .newBuilder()
+                .connectTimeout(request.connectTimeoutMs, TimeUnit.MILLISECONDS)
+                .writeTimeout(request.sendTimeoutMs, TimeUnit.MILLISECONDS)
+                .readTimeout(request.receiveTimeoutMs, TimeUnit.MILLISECONDS)
+                .callTimeout(request.receiveTimeoutMs, TimeUnit.MILLISECONDS)
+                .build()
+                .newCall(req)
+        call = c
+        val answer =
+            suspendCancellableCoroutine<Response> { waiting ->
+                waiting.invokeOnCancellation { c.cancel() }
+                c.enqueue(
+                    object : Callback {
+                        override fun onFailure(call: Call, error: IOException) {
+                            waiting.resumeWithException(error)
+                        }
+
+                        override fun onResponse(call: Call, value: Response) {
+                            response = value
+                            waiting.resume(value) { _, received, _ -> received.close() }
+                        }
+                    }
+                )
+            }
+        return QuotaResponse(
+            answer.code,
+            flow {
+                    answer.use { received ->
+                        if (received.code == 200)
+                            received.body.byteStream().use { input ->
                                 val buffer = ByteArray(8192)
                                 var total = 0
                                 while (true) {
@@ -942,14 +1418,19 @@ private class LoopbackQuotaTransport(private val dispatchers: AppDispatchers) : 
                                 }
                             }
                     }
-                    .flowOn(dispatchers.io),
-                isRedirect = status in 300..399,
-            )
-        }
+                }
+                .flowOn(dispatchers.io),
+            isRedirect = answer.isRedirect,
+        )
+    }
 
     override fun close(force: Boolean) {
-        connection?.disconnect()
-        connection = null
+        if (force) call?.cancel()
+        response?.close()
+        response = null
+        client.dispatcher.cancelAll()
+        client.connectionPool.evictAll()
+        client.dispatcher.executorService.shutdown()
     }
 }
 

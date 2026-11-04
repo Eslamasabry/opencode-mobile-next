@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.UsageRoute
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +46,7 @@ public class ServersViewModel(
     @Assisted private val route: ChatsRoute.New?,
     private val connections: ServerConnections,
     private val nav: AppNavigator,
+    private val rows: ServerRowsPort,
     private val pairing: PairingInbox = PairingInbox(),
     /**
      * Picks among a code's addresses (B-PROTO-068); without one, the best-ordered address is used.
@@ -53,8 +55,30 @@ public class ServersViewModel(
 ) : ViewModel(), ServersActions {
     private val local = MutableStateFlow(ServersUi(newConversation = route != null))
     public val state: StateFlow<ServersUi> =
-        combine(local, connections.servers, connections.busy) { own, servers, busy ->
-                own.copy(servers = servers, busy = own.busy || busy)
+        combine(local, connections.servers, connections.busy, rows.state) {
+                own,
+                servers,
+                busy,
+                facts ->
+                val ordered =
+                    servers
+                        .withIndex()
+                        .sortedWith(
+                            compareBy(
+                                { indexed ->
+                                    val row = facts.facts[indexed.value.id]
+                                    when {
+                                        (row?.waiting ?: 0) > 0 -> 0
+                                        (row?.running ?: 0) > 0 -> 1
+                                        else -> 2
+                                    }
+                                },
+                                { it.index },
+                            )
+                        )
+                        .map { it.value }
+                        .toImmutableList()
+                own.copy(servers = ordered, rows = facts, busy = own.busy || busy)
             }
             .stateIn(
                 viewModelScope,
@@ -101,6 +125,10 @@ public class ServersViewModel(
     private fun publish(fill: PairingFill) {
         ready = fill
         local.update { it.copy(pairingArrival = it.pairingArrival + 1) }
+    }
+
+    override fun moveQueued(id: ProfileId) {
+        nav.open(ServersRoute.MoveQueued(id))
     }
 
     override fun edit(id: ProfileId?) {
@@ -189,11 +217,8 @@ public class ServersViewModel(
         }
     }
 
-    override fun remove(id: ProfileId) = operation {
-        when (val result = connections.remove(id)) {
-            is Outcome.Ok -> Unit
-            is Outcome.Failed -> failed(ServerIssue.RemoveFailed, result.failure)
-        }
+    override fun remove(id: ProfileId) {
+        nav.open(ServersRoute.Remove(id))
     }
 
     override fun scanPairing() {

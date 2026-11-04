@@ -1,4 +1,5 @@
 package io.github.eslamasabry.oc.ui.kitchat.form
+import io.github.eslamasabry.oc.ui.kit.state.KitRequestSurface
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -117,17 +118,7 @@ public fun KitFormCard(
 ) {
     val colors = LocalKitColors.current
     val shape = KitShapeId.Card.toShape()
-    Column(
-        modifier
-            .widthIn(max = 700.dp)
-            .fillMaxWidth()
-            .clip(shape)
-            .background(colors.surface1)
-            .background(colors.attentionSurface)
-            .border(1.dp, colors.attentionLine, shape)
-            .padding(Space.S4.dp),
-        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-    ) {
+    KitRequestSurface(modifier.widthIn(max = 700.dp).fillMaxWidth()) {
         KitText(
             title,
             Modifier.semantics {

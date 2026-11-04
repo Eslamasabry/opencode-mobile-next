@@ -11,4 +11,8 @@
     <string name="widgetPanelTransparent">شفافة</string>
     <string name="widgetPanelAccent">لون التمييز</string>
     <string name="widgetPanelActionUnavailable">تحتاج هذه الأداة إلى اتصال مباشر قبل إرسال رسالة.</string>
+    <string name="widgetPanelSending">جارٍ الإرسال…</string>
+    <string name="widgetPanelSent">أُرسلت</string>
+    <string name="widgetPanelBusy">لا يزال إجراء آخر للأداة قيد التنفيذ. رسالتك ما زالت هنا.</string>
+    <string name="widgetPanelDictate">إملاء</string>
 </resources>

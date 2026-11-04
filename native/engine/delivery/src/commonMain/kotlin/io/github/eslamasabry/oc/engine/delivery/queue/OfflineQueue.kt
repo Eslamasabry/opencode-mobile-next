@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptState
 import io.github.eslamasabry.oc.engine.delivery.receipts.DispatchProof
 import io.github.eslamasabry.oc.engine.delivery.receipts.PendingCommandJournal
 import io.github.eslamasabry.oc.engine.delivery.receipts.PendingCommandJournals
+import kotlin.time.Clock
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
@@ -36,11 +37,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlin.time.Clock
 
 /**
- * Symbolic reasons stored in an entry's `error` (never server prose, never exception text; `:ui:words` words them).
- * Entries written by Flutter keep their English sentence and stay readable.
+ * Symbolic reasons stored in an entry's `error` (never server prose, never exception text;
+ * `:ui:words` words them). Entries written by Flutter keep their English sentence and stay
+ * readable.
  */
 public object QueueErrors {
     public const val SESSION_REVERT_PENDING: String = "SessionRevertPending"
@@ -61,9 +62,15 @@ public object QueueErrors {
 public data class QueueState(
     val entries: ImmutableList<QueuedPrompt> = persistentListOf(),
     val readable: Boolean = true,
-    /** Ids a flush or an online send has on the wire right now: cannot be removed or resent (B-STATE-045). */
+    /**
+     * Ids a flush or an online send has on the wire right now: cannot be removed or resent
+     * (B-STATE-045).
+     */
     val sending: ImmutableSet<String> = persistentSetOf(),
-    /** The server accepted these, but the device could not record it. Resending would be a certain duplicate. */
+    /**
+     * The server accepted these, but the device could not record it. Resending would be a certain
+     * duplicate.
+     */
     val acceptedUnrecorded: ImmutableSet<String> = persistentSetOf(),
     /** Set when the queue dropped entries on its own; [OfflineQueue.takeEviction] clears it. */
     val eviction: QueueEviction? = null,
@@ -71,26 +78,45 @@ public data class QueueState(
     val lastFlushedCount: Int = 0,
     val lastFlushSkippedForOtherProfiles: Int = 0,
 ) {
-    /** Queued prompts for one conversation, oldest first; online sends in flight are bubbles, not queue rows. */
+    /**
+     * Queued prompts for one conversation, oldest first; online sends in flight are bubbles, not
+     * queue rows.
+     */
     public fun queuedFor(ref: ConversationRef, onlineInFlight: Set<String>): List<QueuedPrompt> =
-        entries.filter { it.profileId == ref.profileId && it.sessionId == ref.sessionId && it.id !in onlineInFlight }
+        entries.filter {
+            it.profileId == ref.profileId &&
+                it.sessionId == ref.sessionId &&
+                it.id !in onlineInFlight
+        }
 }
 
-/** Why a prompt was not queued. [DuplicateId] protects the whole queue: a repeated id makes Flutter's reader fail it. */
-public enum class QueueRefusal { Closed, TooLarge, NoRoom, DuplicateId }
+/**
+ * Why a prompt was not queued. [DuplicateId] protects the whole queue: a repeated id makes
+ * Flutter's reader fail it.
+ */
+public enum class QueueRefusal {
+    Closed,
+    TooLarge,
+    NoRoom,
+    DuplicateId,
+}
 
 /**
- * The offline queue and its flush (port of `lib/state/connection/queue.dart`; plan 04 §13; plan 09 §4.5). Rows
- * B-STATE-008, 009, 033…046, 062, 066 (count and sweep), 119.
+ * The offline queue and its flush (port of `lib/state/connection/queue.dart`; plan 04 §13; plan 09
+ * §4.5). Rows B-STATE-008, 009, 033…046, 062, 066 (count and sweep), 119.
  *
  * Invariants (never relaxed):
  * 1. A prompt is never sent twice and never silently lost.
- * 2. The dispatch marker is on disk before the request leaves the device; a refused marker write sends nothing.
- * 3. After acceptance the removal is persisted; a refused removal or a death in between leaves "possibly sent".
- * 4. A failure after dispatch never auto-retries; only the person's explicit resend clears the marker (durably, first).
+ * 2. The dispatch marker is on disk before the request leaves the device; a refused marker write
+ *    sends nothing.
+ * 3. After acceptance the removal is persisted; a refused removal or a death in between leaves
+ *    "possibly sent".
+ * 4. A failure after dispatch never auto-retries; only the person's explicit resend clears the
+ *    marker (durably, first).
  * 5. A corrupt queue fails closed.
  *
- * Every queue change runs inside [changes] (Dart's `_serializeQueueChange`); network calls never hold it.
+ * Every queue change runs inside [changes] (Dart's `_serializeQueueChange`); network calls never
+ * hold it.
  */
 public class OfflineQueue(
     private val store: OfflineQueueStore,
@@ -98,14 +124,21 @@ public class OfflineQueue(
     private val connection: DeliveryConnection,
     private val policy: AutomationPolicy,
     private val clock: Clock,
-    /** The connection scope: an explicit resend starts its flush here, so leaving a screen never cancels it. */
+    /**
+     * The connection scope: an explicit resend starts its flush here, so leaving a screen never
+     * cancels it.
+     */
     private val scope: CoroutineScope,
     dispatchers: AppDispatchers,
 ) {
-    /** Shared with the online pipeline: every suspending command and completion returns to this engine lane. */
+    /**
+     * Shared with the online pipeline: every suspending command and completion returns to this
+     * engine lane.
+     */
     internal val lane = dispatchers.serial("delivery")
     private val changes = Mutex()
     private var cache: List<QueuedPrompt>? = null
+    private var cacheVersion: io.github.eslamasabry.oc.core.data.kv.PrefValue? = null
     private var lastReadable = true
     private var inFlight: String? = null
     private val onlineInFlight = LinkedHashSet<String>()
@@ -124,9 +157,17 @@ public class OfflineQueue(
 
     // ---------------------------------------------------------------- reads
 
-    /** The queue with its limits applied; a queue trimmed on first read is written back (B-STATE-046). */
+    /**
+     * The queue with its limits applied; a queue trimmed on first read is written back
+     * (B-STATE-046).
+     */
     private fun queue(): List<QueuedPrompt> {
-        cache?.let { return it }
+        cache
+            ?.takeIf { cacheVersion == store.version() }
+            ?.let {
+                return it
+            }
+        cacheVersion = store.version()
         val read = store.load()
         lastReadable = read is QueueRead.Readable
         val loaded = (read as? QueueRead.Readable)?.entries.orEmpty()
@@ -134,11 +175,29 @@ public class OfflineQueue(
         cache = limited.kept
         if (limited.removed > 0) {
             eviction = limited
-            scope.launch(lane) { changes.withLock { store.save(queue()) } }
+            scope.launch(lane) { changes.withLock { persist(queue()) } }
         }
         publish()
         return limited.kept
     }
+
+    private suspend fun persist(entries: List<QueuedPrompt>): Boolean {
+        val saved = store.saveIfUnchanged(entries, cacheVersion)
+        if (saved) cacheVersion = store.encodedVersion(entries) else cache = null
+        return saved
+    }
+
+    /**
+     * Refresh an open display after an app-wide confirmed discard; no send or replay is started.
+     */
+    public suspend fun refreshAfterExternalEdit(): Unit =
+        withContext(lane) {
+            changes.withLock {
+                cache = null
+                queue()
+                publish()
+            }
+        }
 
     public fun entries(): List<QueuedPrompt> = queue()
 
@@ -146,14 +205,20 @@ public class OfflineQueue(
 
     public fun acceptedUnrecorded(id: String): Boolean = id in acceptedUnrecorded
 
-    /** Queued prompts of [profile] (shown or not). Throws nothing: an unreadable queue is [QueueState.readable] false. */
+    /**
+     * Queued prompts of [profile] (shown or not). Throws nothing: an unreadable queue is
+     * [QueueState.readable] false.
+     */
     public fun countForProfile(profile: ProfileId): Int = queue().count { it.profileId == profile }
 
-    public fun reviewCount(profile: ProfileId): Int = queue().count { it.profileId == profile && it.dispatched && it.id !in onlineInFlight }
+    public fun reviewCount(profile: ProfileId): Int =
+        queue().count { it.profileId == profile && it.dispatched && it.id !in onlineInFlight }
 
-    public fun countForOtherProfiles(profile: ProfileId?): Int = queue().count { it.profileId != profile }
+    public fun countForOtherProfiles(profile: ProfileId?): Int =
+        queue().count { it.profileId != profile }
 
-    public fun queuedFor(ref: ConversationRef): List<QueuedPrompt> = mutableState.value.queuedFor(ref, onlineInFlight).also { queue() }
+    public fun queuedFor(ref: ConversationRef): List<QueuedPrompt> =
+        mutableState.value.queuedFor(ref, onlineInFlight).also { queue() }
 
     /** Reads and clears the pending eviction (shown once). */
     public fun takeEviction(): QueueEviction? = eviction.also {
@@ -166,15 +231,18 @@ public class OfflineQueue(
     // ---------------------------------------------------------------- person's edits
 
     /**
-     * Adds a drafted prompt (B-STATE-036, 046). `Ok(null)` = queued; `Ok(refusal)` = not queued, the composer keeps the
-     * words; `Failed(StorageRefused)` = the write was refused, nothing changed.
+     * Adds a drafted prompt (B-STATE-036, 046). `Ok(null)` = queued; `Ok(refusal)` = not queued,
+     * the composer keeps the words; `Failed(StorageRefused)` = the write was refused, nothing
+     * changed.
      */
-    public suspend fun queuePrompt(prompt: QueuedPrompt): Outcome<QueueRefusal?> = withContext(lane) { queuePromptOnLane(prompt) }
+    public suspend fun queuePrompt(prompt: QueuedPrompt): Outcome<QueueRefusal?> =
+        withContext(lane) { queuePromptOnLane(prompt) }
 
     private suspend fun queuePromptOnLane(prompt: QueuedPrompt): Outcome<QueueRefusal?> =
         changes.withLock {
             if (prompt.profileId in closedProfiles) return@withLock QueueRefusal.Closed.ok()
-            if (prompt.payloadBytes > QueueLimits.MAX_ENTRY_BYTES) return@withLock QueueRefusal.TooLarge.ok()
+            if (prompt.payloadBytes > QueueLimits.MAX_ENTRY_BYTES)
+                return@withLock QueueRefusal.TooLarge.ok()
             val current = queue()
             if (current.any { it.id == prompt.id }) return@withLock QueueRefusal.DuplicateId.ok()
             when (val used = commandIdUsed(prompt)) {
@@ -182,12 +250,13 @@ public class OfflineQueue(
                 is Outcome.Ok -> if (used.value) return@withLock QueueRefusal.DuplicateId.ok()
             }
             val limited = QueueLimits.enforce(current + prompt, clock.now().toEpochMilliseconds())
-            // The new entry losing its own eviction pass, or an entry on the wire being evicted, means no room.
+            // The new entry losing its own eviction pass, or an entry on the wire being evicted,
+            // means no room.
             val keptIds = limited.kept.mapTo(HashSet()) { it.id }
             if (prompt.id !in keptIds || current.any { sending(it.id) && it.id !in keptIds }) {
                 return@withLock QueueRefusal.NoRoom.ok()
             }
-            if (!store.save(limited.kept)) return@withLock Failure.StorageRefused().failed()
+            if (!persist(limited.kept)) return@withLock Failure.StorageRefused().failed()
             cache = limited.kept
             if (limited.removed > 0) eviction = limited
             publish()
@@ -195,43 +264,188 @@ public class OfflineQueue(
         }
 
     /**
-     * Removes an entry. `Ok(false)` when it is on the wire right now (the decision was made against a bubble that said
-     * "queued"). B-STATE-035, 045.
+     * Removes an entry. `Ok(false)` when it is on the wire right now (the decision was made against
+     * a bubble that said "queued"). B-STATE-035, 045.
      */
     public suspend fun remove(id: String): Outcome<Boolean> = withContext(lane) { removeOnLane(id) }
 
-    private suspend fun removeOnLane(id: String): Outcome<Boolean> =
-        changes.withLock {
-            if (sending(id)) return@withLock false.ok()
-            val kept = queue().filter { it.id != id }
-            if (kept.size == queue().size) return@withLock true.ok()
-            if (!store.save(kept)) return@withLock Failure.StorageRefused().failed()
-            cache = kept
-            acceptedUnrecorded -= id
-            explicitResends -= id
-            publish()
-            true.ok()
+    private suspend fun removeOnLane(id: String): Outcome<Boolean> = changes.withLock {
+        if (sending(id)) return@withLock false.ok()
+        val kept = queue().filter { it.id != id }
+        if (kept.size == queue().size) return@withLock true.ok()
+        if (!persist(kept)) return@withLock Failure.StorageRefused().failed()
+        cache = kept
+        acceptedUnrecorded -= id
+        explicitResends -= id
+        publish()
+        true.ok()
+    }
+
+    /** Target-pinned move of reviewed, still-unsent rows; neither move nor Undo starts a flush. */
+    public suspend fun move(
+        source: ProfileId,
+        destination: ConversationRef,
+        ids: Set<String>,
+        expected: List<QueuedPrompt>,
+        admitted: () -> Boolean,
+        keepsSelection: (QueuedPrompt) -> Boolean,
+        redact: (String) -> String,
+    ): Outcome<QueueMoveResult> =
+        withContext(lane) {
+            changes.withLock {
+                if (
+                    !admitted() ||
+                        source == destination.profileId ||
+                        source in closedProfiles ||
+                        destination.profileId in closedProfiles
+                )
+                    return@withLock Failure.Refused(RefusalReason.StaleScope).failed()
+                val current = queue()
+                val durable =
+                    store.load() as? QueueRead.Readable
+                        ?: return@withLock Failure.StorageRefused().failed()
+                fun same(a: List<QueuedPrompt>, b: List<QueuedPrompt>): Boolean =
+                    a.size == b.size &&
+                        a.map { it.id }.toSet().size == a.size &&
+                        a.associateBy { it.id } == b.associateBy { it.id }
+                if (!same(current, expected) || !same(current, durable.entries))
+                    return@withLock Failure.StorageRefused().failed()
+                val originals = ArrayList<QueuedPrompt>()
+                var reset = 0
+                val next = ArrayList<QueuedPrompt>()
+                for (entry in current) {
+                    if (entry.id !in ids || entry.profileId != source) {
+                        next += entry
+                        continue
+                    }
+                    val masked = redact(entry.text)
+                    val blocked =
+                        entry.dispatched ||
+                            sending(entry.id) ||
+                            entry.id in acceptedUnrecorded ||
+                            entry.attachments.any {
+                                it.url.substringBefore(':', "").lowercase() !in
+                                    setOf("data", "http", "https")
+                            } ||
+                            (entry.mentions.isNotEmpty() && masked != entry.text)
+                    if (blocked) {
+                        next += entry
+                        continue
+                    }
+                    when (val used = commandIdUsed(entry)) {
+                        is Outcome.Failed -> return@withLock used
+                        is Outcome.Ok ->
+                            if (used.value) {
+                                next += entry
+                                continue
+                            }
+                    }
+                    val keep = keepsSelection(entry)
+                    val moved =
+                        QueuedPrompt(
+                            entry.id,
+                            destination.profileId,
+                            destination.sessionId,
+                            masked,
+                            entry.attachments,
+                            entry.mentions,
+                            if (keep) entry.modelProviderId else null,
+                            if (keep) entry.modelId else null,
+                            if (keep) entry.agent else null,
+                            if (keep) entry.variant else null,
+                            entry.createdAt,
+                        )
+                    when (val used = commandIdUsed(moved)) {
+                        is Outcome.Failed -> return@withLock used
+                        is Outcome.Ok ->
+                            if (used.value) {
+                                next += entry
+                                continue
+                            }
+                    }
+                    if (!keep) reset++
+                    originals += entry
+                    next += moved
+                }
+                if (originals.isEmpty())
+                    return@withLock Failure.Refused(RefusalReason.StaleScope).failed()
+                if (!admitted() || !persist(next)) return@withLock Failure.StorageRefused().failed()
+                cache = next
+                publish()
+                QueueMoveResult(
+                        source,
+                        destination,
+                        originals.toImmutableList(),
+                        ids.size - originals.size,
+                        reset,
+                    )
+                    .ok()
+            }
+        }
+
+    public suspend fun undoMove(result: QueueMoveResult, admitted: () -> Boolean): Outcome<Int> =
+        withContext(lane) {
+            changes.withLock {
+                if (!admitted() || result.source in closedProfiles)
+                    return@withLock Failure.Refused(RefusalReason.StaleScope).failed()
+                val originals = result.originals.associateBy { it.id }
+                var restored = 0
+                val next = ArrayList<QueuedPrompt>()
+                for (entry in queue()) {
+                    val original = originals[entry.id]
+                    if (
+                        original != null &&
+                            entry.ref == result.destination &&
+                            !entry.dispatched &&
+                            !sending(entry.id) &&
+                            entry.id !in acceptedUnrecorded
+                    ) {
+                        when (val used = commandIdUsed(entry)) {
+                            is Outcome.Failed -> return@withLock used
+                            is Outcome.Ok ->
+                                if (used.value) {
+                                    next += entry
+                                    continue
+                                }
+                        }
+                        when (val used = commandIdUsed(original)) {
+                            is Outcome.Failed -> return@withLock used
+                            is Outcome.Ok ->
+                                if (used.value) {
+                                    next += entry
+                                    continue
+                                }
+                        }
+                        next += original
+                        restored++
+                    } else next += entry
+                }
+                if (!admitted() || !persist(next)) return@withLock Failure.StorageRefused().failed()
+                cache = next
+                publish()
+                restored.ok()
+            }
         }
 
     /** The person's clear of every queued prompt. Refused while any send is in flight. */
     public suspend fun clearAll(): Boolean = withContext(lane) { clearAllOnLane() }
 
-    private suspend fun clearAllOnLane(): Boolean =
-        changes.withLock {
-            if (inFlight != null || onlineInFlight.isNotEmpty()) return@withLock false
-            if (queue().isEmpty() && store.readable) return@withLock true
-            if (!store.save(emptyList())) return@withLock false
-            cache = emptyList()
-            lastReadable = true
-            acceptedUnrecorded.clear()
-            publish()
-            true
-        }
+    private suspend fun clearAllOnLane(): Boolean = changes.withLock {
+        if (inFlight != null || onlineInFlight.isNotEmpty()) return@withLock false
+        if (queue().isEmpty() && store.readable) return@withLock true
+        if (!persist(emptyList())) return@withLock false
+        cache = emptyList()
+        lastReadable = true
+        acceptedUnrecorded.clear()
+        publish()
+        true
+    }
 
     /**
-     * The person's answer to an unconfirmed send (B-STATE-044): clear the marker durably, then flush that entry. A
-     * receipt-bearing command is bound to its first dispatch: resend only looks it up (B-STATE-008). `Ok(false)` when the
-     * entry is not in review any more; `Failed(StorageRefused)` leaves it in review and sends nothing.
+     * The person's answer to an unconfirmed send (B-STATE-044): clear the marker durably, then
+     * flush that entry. A receipt-bearing command is bound to its first dispatch: resend only looks
+     * it up (B-STATE-008). `Ok(false)` when the entry is not in review any more;
+     * `Failed(StorageRefused)` leaves it in review and sends nothing.
      */
     public suspend fun resend(id: String): Outcome<Boolean> = withContext(lane) { resendOnLane(id) }
 
@@ -239,8 +453,12 @@ public class OfflineQueue(
         val profile = queue().firstOrNull { it.id == id }?.profileId ?: return false.ok()
         val journal = (journals.forProfile(profile) as? Outcome.Ok)?.value
         val receipts = journal?.read()
-        if (receipts is Outcome.Failed) return false.ok() // an unreadable journal never authorises a resend
-        if (receipts is Outcome.Ok && receipts.value.any { it.commandId == CommandReceipt.queueCommandId(id) }) {
+        if (receipts is Outcome.Failed)
+            return false.ok() // an unreadable journal never authorises a resend
+        if (
+            receipts is Outcome.Ok &&
+                receipts.value.any { it.commandId == CommandReceipt.queueCommandId(id) }
+        ) {
             return checkReceipt(id).ok()
         }
         val cleared = changes.withLock {
@@ -249,7 +467,7 @@ public class OfflineQueue(
             val index = q.indexOfFirst { it.id == id }
             if (index < 0 || !q[index].dispatched) return@withLock false.ok()
             val next = q.toMutableList().also { it[index] = q[index].withDispatchedAt(null) }
-            if (!store.save(next)) return@withLock Failure.StorageRefused().failed()
+            if (!persist(next)) return@withLock Failure.StorageRefused().failed()
             cache = next
             explicitResends += id
             publish()
@@ -260,8 +478,9 @@ public class OfflineQueue(
     }
 
     /**
-     * The person's Retry on an entry whose send failed before it left the device: it goes out in a flush that starts
-     * now, even with automatic sending off. False when it is gone, on its way, or left the device once.
+     * The person's Retry on an entry whose send failed before it left the device: it goes out in a
+     * flush that starts now, even with automatic sending off. False when it is gone, on its way, or
+     * left the device once.
      */
     public suspend fun retry(id: String): Boolean = withContext(lane) { retryOnLane(id) }
 
@@ -275,73 +494,102 @@ public class OfflineQueue(
         return true
     }
 
-    /** Tombstones reserve ids even after the corresponding queue row has been removed (B-STATE-009). */
+    /**
+     * Tombstones reserve ids even after the corresponding queue row has been removed (B-STATE-009).
+     */
     private fun commandIdUsed(prompt: QueuedPrompt): Outcome<Boolean> {
-        val journal = when (val opened = journals.forProfile(prompt.profileId)) {
-            is Outcome.Failed -> return opened
-            is Outcome.Ok -> opened.value
-        }
+        val journal =
+            when (val opened = journals.forProfile(prompt.profileId)) {
+                is Outcome.Failed -> return opened
+                is Outcome.Ok -> opened.value
+            }
         return when (val read = journal.read()) {
             is Outcome.Failed -> read
-            is Outcome.Ok -> read.value.any { it.commandId == CommandReceipt.queueCommandId(prompt.id) }.ok()
+            is Outcome.Ok ->
+                read.value.any { it.commandId == CommandReceipt.queueCommandId(prompt.id) }.ok()
         }
     }
 
     // ---------------------------------------------------------------- online sends (plan 04 §13.5)
 
-    /** Persists (or refreshes) an online send's marked entry before the composer clears (B-STATE-041, 042). */
-    public suspend fun holdOnline(prompt: QueuedPrompt): Boolean = withContext(lane) { holdOnlineOnLane(prompt) }
+    /**
+     * Persists (or refreshes) an online send's marked entry before the composer clears
+     * (B-STATE-041, 042).
+     */
+    public suspend fun holdOnline(prompt: QueuedPrompt): Boolean =
+        withContext(lane) { holdOnlineOnLane(prompt) }
 
-    private suspend fun holdOnlineOnLane(prompt: QueuedPrompt): Boolean =
-        changes.withLock {
-            if (!prompt.dispatched || prompt.profileId in closedProfiles ||
+    private suspend fun holdOnlineOnLane(prompt: QueuedPrompt): Boolean = changes.withLock {
+        if (
+            !prompt.dispatched ||
+                prompt.profileId in closedProfiles ||
                 prompt.payloadBytes > QueueLimits.MAX_ENTRY_BYTES
-            ) {
-                return@withLock false
-            }
-            val q = queue()
-            val existing = q.indexOfFirst { it.id == prompt.id }
-            if (existing < 0 && (commandIdUsed(prompt) as? Outcome.Ok)?.value != false) return@withLock false
-            if (existing >= 0 && (prompt.id !in onlineInFlight || q[existing].profileId != prompt.profileId ||
-                    q[existing].sessionId != prompt.sessionId)
-            ) {
-                return@withLock false
-            }
-            val next = q.toMutableList().also { if (existing < 0) it += prompt else it[existing] = prompt }
-            // Online journal admission must never evict somebody else's work.
-            if (QueueLimits.enforce(next, clock.now().toEpochMilliseconds()).removed > 0) return@withLock false
-            if (!store.save(next)) return@withLock false
-            onlineInFlight += prompt.id
-            cache = next
-            publish()
-            true
+        ) {
+            return@withLock false
         }
+        val q = queue()
+        val existing = q.indexOfFirst { it.id == prompt.id }
+        if (existing < 0 && (commandIdUsed(prompt) as? Outcome.Ok)?.value != false)
+            return@withLock false
+        if (
+            existing >= 0 &&
+                (prompt.id !in onlineInFlight ||
+                    q[existing].profileId != prompt.profileId ||
+                    q[existing].sessionId != prompt.sessionId)
+        ) {
+            return@withLock false
+        }
+        val next =
+            q.toMutableList().also { if (existing < 0) it += prompt else it[existing] = prompt }
+        // Online journal admission must never evict somebody else's work.
+        if (QueueLimits.enforce(next, clock.now().toEpochMilliseconds()).removed > 0)
+            return@withLock false
+        if (!persist(next)) return@withLock false
+        onlineInFlight += prompt.id
+        cache = next
+        publish()
+        true
+    }
 
     /** Re-checks the deletion fence immediately before the network write. */
     public fun canDispatchOnline(id: String): Boolean =
         id in onlineInFlight &&
-            queue().any { it.id == id && it.profileId == connection.activeProfile.value && it.profileId !in closedProfiles }
+            queue().any {
+                it.id == id &&
+                    it.profileId == connection.activeProfile.value &&
+                    it.profileId !in closedProfiles
+            }
 
     /**
-     * Finishes an online send: confirmed acceptance and pre-flight refusals remove the marker; an unknown outcome
-     * stays for explicit review with its reason (B-STATE-041, 043).
+     * Finishes an online send: confirmed acceptance and pre-flight refusals remove the marker; an
+     * unknown outcome stays for explicit review with its reason (B-STATE-041, 043).
      */
-    public suspend fun finishOnline(id: String, dispatched: Boolean, accepted: Boolean, error: String?): Unit = withContext(lane) { finishOnlineOnLane(id, dispatched, accepted, error) }
+    public suspend fun finishOnline(
+        id: String,
+        dispatched: Boolean,
+        accepted: Boolean,
+        error: String?,
+    ): Unit = withContext(lane) { finishOnlineOnLane(id, dispatched, accepted, error) }
 
-    private suspend fun finishOnlineOnLane(id: String, dispatched: Boolean, accepted: Boolean, error: String?) {
+    private suspend fun finishOnlineOnLane(
+        id: String,
+        dispatched: Boolean,
+        accepted: Boolean,
+        error: String?,
+    ) {
         changes.withLock {
             try {
                 if (id !in onlineInFlight) return@withLock
                 if (accepted || !dispatched) {
                     val next = queue().filter { it.id != id }
-                    if (store.save(next)) {
+                    if (persist(next)) {
                         cache = next
                     } else if (accepted) {
                         acceptedUnrecorded += id
                     }
                 } else if (error != null) {
                     val next = queue().map { if (it.id == id) it.withError(error) else it }
-                    if (store.save(next)) cache = next
+                    if (persist(next)) cache = next
                 }
             } finally {
                 onlineInFlight -= id
@@ -350,47 +598,60 @@ public class OfflineQueue(
         }
     }
 
-    // ---------------------------------------------------------------- profile removal (B-STATE-062, 066 partly)
+    // ---------------------------------------------------------------- profile removal
+    // (B-STATE-062, 066 partly)
 
-    /** Closes queue admission for [profile] at once (online holds, new queue entries, dispatch of its online sends). */
-    public suspend fun closeProfile(profile: ProfileId): Unit = withContext(lane) { closeProfileOnLane(profile) }
+    /**
+     * Closes queue admission for [profile] at once (online holds, new queue entries, dispatch of
+     * its online sends).
+     */
+    public suspend fun closeProfile(profile: ProfileId): Unit =
+        withContext(lane) { closeProfileOnLane(profile) }
 
     private suspend fun closeProfileOnLane(profile: ProfileId) {
         closedProfiles += profile
         journals.closeProfile(profile)
-        changes.withLock { }
+        changes.withLock {}
     }
 
-    /** Count for the removal confirmation; null when the queue cannot be read (never a zero, B-STATE-066). */
-    public fun inspectForRemoval(profile: ProfileId): Int? = if (!store.readable) null else countForProfile(profile)
+    /**
+     * Count for the removal confirmation; null when the queue cannot be read (never a zero,
+     * B-STATE-066).
+     */
+    public fun inspectForRemoval(profile: ProfileId): Int? =
+        if (!store.readable) null else countForProfile(profile)
 
     /**
-     * Sweeps [profile]'s entries, markers included. Refused (nothing removed, markers intact) when the queue is
-     * unreadable, a send of that profile is on the wire, or storage refuses (B-STATE-062, 066).
+     * Sweeps [profile]'s entries, markers included. Refused (nothing removed, markers intact) when
+     * the queue is unreadable, a send of that profile is on the wire, or storage refuses
+     * (B-STATE-062, 066).
      */
-    public suspend fun sweepProfile(profile: ProfileId): Outcome<Int> = withContext(lane) { sweepProfileOnLane(profile) }
+    public suspend fun sweepProfile(profile: ProfileId): Outcome<Int> =
+        withContext(lane) { sweepProfileOnLane(profile) }
 
-    private suspend fun sweepProfileOnLane(profile: ProfileId): Outcome<Int> =
-        changes.withLock {
-            if (!store.readable) return@withLock Failure.StorageRefused().failed()
-            val q = queue()
-            if (q.any { it.profileId == profile && sending(it.id) }) return@withLock Failure.Refused(RefusalReason.DispatchUncertain).failed()
-            val kept = q.filter { it.profileId != profile }
-            val removed = q.size - kept.size
-            if (removed == 0) return@withLock 0.ok()
-            if (!store.save(kept)) return@withLock Failure.StorageRefused().failed()
-            cache = kept
-            publish()
-            removed.ok()
-        }
+    private suspend fun sweepProfileOnLane(profile: ProfileId): Outcome<Int> = changes.withLock {
+        if (!store.readable) return@withLock Failure.StorageRefused().failed()
+        val q = queue()
+        if (q.any { it.profileId == profile && sending(it.id) })
+            return@withLock Failure.Refused(RefusalReason.DispatchUncertain).failed()
+        val kept = q.filter { it.profileId != profile }
+        val removed = q.size - kept.size
+        if (removed == 0) return@withLock 0.ok()
+        if (!persist(kept)) return@withLock Failure.StorageRefused().failed()
+        cache = kept
+        publish()
+        removed.ok()
+    }
 
     // ---------------------------------------------------------------- receipts (B-STATE-008, 009)
 
     /**
-     * "Check again": looks the original receipt up; never sends. Removes the entry only when the server shows the
-     * admission, and only the exact entry the receipt was made for (a late lookup keeps a replacement draft).
+     * "Check again": looks the original receipt up; never sends. Removes the entry only when the
+     * server shows the admission, and only the exact entry the receipt was made for (a late lookup
+     * keeps a replacement draft).
      */
-    public suspend fun checkReceipt(id: String): Boolean = withContext(lane) { checkReceiptOnLane(id) }
+    public suspend fun checkReceipt(id: String): Boolean =
+        withContext(lane) { checkReceiptOnLane(id) }
 
     private suspend fun checkReceiptOnLane(id: String): Boolean {
         val link = connection.link.value ?: return false
@@ -399,21 +660,27 @@ public class OfflineQueue(
         val journal = (journals.forProfile(origin.profileId) as? Outcome.Ok)?.value ?: return false
         val commandId = CommandReceipt.queueCommandId(id)
         val receipts = (journal.read() as? Outcome.Ok)?.value ?: return false
-        if (receipts.none { it.commandId == commandId && it.scope == origin.receiptScope }) return false
+        if (receipts.none { it.commandId == commandId && it.scope == origin.receiptScope })
+            return false
         fun same(): Boolean = connection.link.value?.epoch === link.epoch && link.scope == origin
-        val checked = CommandReceiptController(journal).retry(commandId) { receipt ->
-            val found = link.lookupAdmission(SessionId(receipt.sessionId), MessageId(receipt.receiptId))
-            same() && found is Outcome.Ok && found.value
-        }
+        val checked =
+            CommandReceiptController(journal).retry(commandId) { receipt ->
+                val found =
+                    link.lookupAdmission(SessionId(receipt.sessionId), MessageId(receipt.receiptId))
+                same() && found is Outcome.Ok && found.value
+            }
         val receipt = (checked as? Outcome.Ok)?.value ?: return false
         if (!same() || receipt.state != CommandReceiptState.Confirmed) return false
         val removed = changes.withLock {
             if (!same()) return@withLock false
             val q = queue()
             val kept = q.filter {
-                it.id != id || it.profileId != origin.profileId || it.sessionId.raw != receipt.sessionId || !it.dispatched
+                it.id != id ||
+                    it.profileId != origin.profileId ||
+                    it.sessionId.raw != receipt.sessionId ||
+                    !it.dispatched
             }
-            if (kept.size == q.size || !store.save(kept)) return@withLock false
+            if (kept.size == q.size || !persist(kept)) return@withLock false
             cache = kept
             publish()
             true
@@ -433,14 +700,16 @@ public class OfflineQueue(
         }
     }
 
-    private fun receiptsSupported(link: SendLink): Boolean = link.capabilities.commandReceipts && link.correlated
+    private fun receiptsSupported(link: SendLink): Boolean =
+        link.capabilities.commandReceipts && link.correlated
 
     // ---------------------------------------------------------------- flush (plan 04 §13.4)
 
     /**
-     * Sends the active profile's queued prompts, oldest first. A failure without a server status stops the batch (the
-     * server is still unreachable); one with a status keeps that entry with its reason and continues. Entries whose
-     * marker is set are never sent here. Requests during a flush coalesce into one more pass.
+     * Sends the active profile's queued prompts, oldest first. A failure without a server status
+     * stops the batch (the server is still unreachable); one with a status keeps that entry with
+     * its reason and continues. Entries whose marker is set are never sent here. Requests during a
+     * flush coalesce into one more pass.
      */
     public suspend fun flush(): Unit = withContext(lane) { flushOnLane() }
 
@@ -453,8 +722,10 @@ public class OfflineQueue(
         }
         val origin = link.scope
         val profile = origin.profileId
-        fun eligible(e: QueuedPrompt) = e.profileId == profile && !e.dispatched &&
-            (e.id in explicitResends || policy.allowsQueuedSends(profile))
+        fun eligible(e: QueuedPrompt) =
+            e.profileId == profile &&
+                !e.dispatched &&
+                (e.id in explicitResends || policy.allowsQueuedSends(profile))
         flushing = true
         var sent = 0
         try {
@@ -463,11 +734,13 @@ public class OfflineQueue(
                 if (!eligible(entry)) continue
                 val explicit = entry.id in explicitResends
                 fun allowed(): Boolean =
-                    connection.link.value?.epoch === link.epoch && link.scope == origin && profile !in closedProfiles &&
+                    connection.link.value?.epoch === link.epoch &&
+                        link.scope == origin &&
+                        profile !in closedProfiles &&
                         (explicit || policy.allowsQueuedSends(profile))
                 if (!allowed()) break
                 val transport = link.awaitActionTransport()
-                changes.withLock { }
+                changes.withLock {}
                 if (!allowed() || transport is Outcome.Failed || !link.connected) break
                 if (queue().none { it.id == entry.id && !it.dispatched }) continue
                 when (sendOne(link, entry, explicit, ::allowed)) {
@@ -492,44 +765,63 @@ public class OfflineQueue(
         }
     }
 
-    private enum class Step { Sent, Next, Stop }
+    private enum class Step {
+        Sent,
+        Next,
+        Stop,
+    }
 
-    private suspend fun sendOne(link: SendLink, entry: QueuedPrompt, explicit: Boolean, allowed: () -> Boolean): Step {
+    private suspend fun sendOne(
+        link: SendLink,
+        entry: QueuedPrompt,
+        explicit: Boolean,
+        allowed: () -> Boolean,
+    ): Step {
         val session = entry.sessionId
-        // An older version may have admitted an unmarked replacement under a tombstoned id. Never mark it:
-        // a later receipt reconciliation would otherwise mistake it for the old command (B-STATE-009).
+        // An older version may have admitted an unmarked replacement under a tombstoned id. Never
+        // mark it:
+        // a later receipt reconciliation would otherwise mistake it for the old command
+        // (B-STATE-009).
         when (val used = commandIdUsed(entry)) {
             is Outcome.Failed -> return Step.Stop
             is Outcome.Ok -> if (used.value) return Step.Next
         }
-        // 1. Staged revert (read only): keep the entry with its reason, never commit the revert (B-PROTO-023, 043).
+        // 1. Staged revert (read only): keep the entry with its reason, never commit the revert
+        // (B-PROTO-023, 043).
         if (link.capabilities.sessionRevert) {
             when (val pending = link.revertPending(session)) {
                 is Outcome.Failed -> return preflightFailed(entry, pending.failure)
-                is Outcome.Ok -> if (pending.value) {
-                    replace(entry.id) { it.withError(QueueErrors.SESSION_REVERT_PENDING) }
-                    return Step.Next
-                }
+                is Outcome.Ok ->
+                    if (pending.value) {
+                        replace(entry.id) { it.withError(QueueErrors.SESSION_REVERT_PENDING) }
+                        return Step.Next
+                    }
             }
             if (!allowed()) return Step.Stop
         }
         // 2. The entry's intentional model/agent choice (persisted offline entries carry it).
-        val selection = entry.model?.let { ModelSelection(it, entry.variant?.takeIf(String::isNotEmpty)) }
+        val selection =
+            entry.model?.let { ModelSelection(it, entry.variant?.takeIf(String::isNotEmpty)) }
         val agent = entry.agent?.takeIf(String::isNotEmpty)
         if (selection != null || agent != null) {
             val applied = link.applySelection(session, selection, agent)
             if (applied is Outcome.Failed) return preflightFailed(entry, applied.failure)
             if (!allowed()) return Step.Stop
-            if (queue().none { it.id == entry.id }) return Step.Next // discarded meanwhile: never sent (B-STATE-037)
+            if (queue().none { it.id == entry.id })
+                return Step.Next // discarded meanwhile: never sent (B-STATE-037)
         }
-        // 3. The durable dispatch marker. Removal and resend refuse this id from the moment this write begins.
+        // 3. The durable dispatch marker. Removal and resend refuse this id from the moment this
+        // write begins.
         val marked = changes.withLock {
             val q = queue()
             val index = q.indexOfFirst { it === entry && !it.dispatched }
             if (index < 0 || !allowed()) return@withLock null
             inFlight = entry.id
-            val next = q.toMutableList().also { it[index] = entry.withDispatchedAt(clock.now().toEpochMilliseconds()) }
-            if (!store.save(next)) return@withLock false
+            val next =
+                q.toMutableList().also {
+                    it[index] = entry.withDispatchedAt(clock.now().toEpochMilliseconds())
+                }
+            if (!persist(next)) return@withLock false
             cache = next
             publish()
             true
@@ -543,46 +835,56 @@ public class OfflineQueue(
             true -> Unit
         }
         if (!allowed()) {
-            // Nothing left the device: put the entry back. A refused rollback keeps the conservative marker.
+            // Nothing left the device: put the entry back. A refused rollback keeps the
+            // conservative marker.
             replace(entry.id) { entry }
             inFlight = null
             return Step.Stop
         }
         explicitResends -= entry.id
         // 4. Dispatch.
-        val prompt = OutgoingPrompt(
-            text = entry.text,
-            model = selection,
-            agent = agent,
-            attachments = entry.attachments,
-            mentions = entry.mentions,
-        )
-        val proof: DispatchResult = if (receiptsSupported(link)) {
-            dispatchWithReceipt(link, entry, prompt, allowed)
-        } else {
-            when (val r = link.prompt(session, prompt) { allowed() }) {
-                is Outcome.Ok -> if (r.value is PromptAdmission.Confirmed) DispatchResult.Accepted else DispatchResult.Unknown(null)
-                is Outcome.Failed -> DispatchResult.Unknown(r.failure)
-            }
-        }
-        val step = when (proof) {
-            DispatchResult.Accepted -> {
-                // Until this write lands the marker keeps the entry out of every future flush: a refusal or a death
-                // here can only cost a review, never a duplicate.
-                if (persistRemoval(entry.id)) {
-                    Step.Sent
-                } else {
-                    acceptedUnrecorded += entry.id
-                    replace(entry.id) { it.withError(QueueErrors.ACCEPTED_UNRECORDED) }
-                    Step.Stop
+        val prompt =
+            OutgoingPrompt(
+                text = entry.text,
+                model = selection,
+                agent = agent,
+                attachments = entry.attachments,
+                mentions = entry.mentions,
+            )
+        val proof: DispatchResult =
+            if (receiptsSupported(link)) {
+                dispatchWithReceipt(link, entry, prompt, allowed)
+            } else {
+                when (val r = link.prompt(session, prompt) { allowed() }) {
+                    is Outcome.Ok ->
+                        if (r.value is PromptAdmission.Confirmed) DispatchResult.Accepted
+                        else DispatchResult.Unknown(null)
+                    is Outcome.Failed -> DispatchResult.Unknown(r.failure)
                 }
             }
-            is DispatchResult.Unknown -> {
-                // After dispatch a status does not prove non-delivery: keep the marker, wait for the person.
-                replace(entry.id) { it.withError(proof.failure?.let(QueueErrors::of) ?: QueueErrors.UNCONFIRMED) }
-                if (proof.failure?.hasStatus == true) Step.Next else Step.Stop
+        val step =
+            when (proof) {
+                DispatchResult.Accepted -> {
+                    // Until this write lands the marker keeps the entry out of every future flush:
+                    // a refusal or a death
+                    // here can only cost a review, never a duplicate.
+                    if (persistRemoval(entry.id)) {
+                        Step.Sent
+                    } else {
+                        acceptedUnrecorded += entry.id
+                        replace(entry.id) { it.withError(QueueErrors.ACCEPTED_UNRECORDED) }
+                        Step.Stop
+                    }
+                }
+                is DispatchResult.Unknown -> {
+                    // After dispatch a status does not prove non-delivery: keep the marker, wait
+                    // for the person.
+                    replace(entry.id) {
+                        it.withError(proof.failure?.let(QueueErrors::of) ?: QueueErrors.UNCONFIRMED)
+                    }
+                    if (proof.failure?.hasStatus == true) Step.Next else Step.Stop
+                }
             }
-        }
         inFlight = null
         publish()
         return step
@@ -601,73 +903,94 @@ public class OfflineQueue(
         allowed: () -> Boolean,
     ): DispatchResult {
         val journal: PendingCommandJournal =
-            (journals.forProfile(entry.profileId) as? Outcome.Ok)?.value ?: return DispatchResult.Unknown(null)
+            (journals.forProfile(entry.profileId) as? Outcome.Ok)?.value
+                ?: return DispatchResult.Unknown(null)
         val wireId = link.newClientMessageId() ?: return DispatchResult.Unknown(null)
         var failure: Failure? = null
-        val receipt = CommandReceipt(
-            commandId = CommandReceipt.queueCommandId(entry.id),
-            receiptId = wireId.raw,
-            sessionId = entry.sessionId.raw,
-            tabId = entry.sessionId.raw,
-            scope = link.scope.receiptScope,
-            createdAt = clock.now().toEpochMilliseconds(),
-            state = CommandReceiptState.Sent,
-        )
-        val sent = CommandReceiptController(journal).send(receipt) { receiptId ->
-            if (!allowed()) return@send DispatchProof.Uncertain
-            val r = link.prompt(entry.sessionId, prompt.copy(clientMessageId = MessageId(receiptId))) {
-                allowed() && journal.isOpen // profile deletion fences the actual send
-            }
-            when {
-                r is Outcome.Ok && r.value is PromptAdmission.Confirmed &&
-                    (r.value as PromptAdmission.Confirmed).receiptId.let { it == null || it == receiptId } -> DispatchProof.Confirmed
-                else -> {
-                    failure = (r as? Outcome.Failed)?.failure
-                    DispatchProof.Uncertain
+        val receipt =
+            CommandReceipt(
+                commandId = CommandReceipt.queueCommandId(entry.id),
+                receiptId = wireId.raw,
+                sessionId = entry.sessionId.raw,
+                tabId = entry.sessionId.raw,
+                scope = link.scope.receiptScope,
+                createdAt = clock.now().toEpochMilliseconds(),
+                state = CommandReceiptState.Sent,
+            )
+        val sent =
+            CommandReceiptController(journal).send(receipt) { receiptId ->
+                if (!allowed()) return@send DispatchProof.Uncertain
+                val r =
+                    link.prompt(
+                        entry.sessionId,
+                        prompt.copy(clientMessageId = MessageId(receiptId)),
+                    ) {
+                        allowed() && journal.isOpen // profile deletion fences the actual send
+                    }
+                when {
+                    r is Outcome.Ok &&
+                        r.value is PromptAdmission.Confirmed &&
+                        (r.value as PromptAdmission.Confirmed).receiptId.let {
+                            it == null || it == receiptId
+                        } -> DispatchProof.Confirmed
+                    else -> {
+                        failure = (r as? Outcome.Failed)?.failure
+                        DispatchProof.Uncertain
+                    }
                 }
             }
-        }
         return when {
-            sent is Outcome.Ok && sent.value.sameIdentity(receipt) && sent.value.state == CommandReceiptState.Confirmed -> DispatchResult.Accepted
+            sent is Outcome.Ok &&
+                sent.value.sameIdentity(receipt) &&
+                sent.value.state == CommandReceiptState.Confirmed -> DispatchResult.Accepted
             else -> DispatchResult.Unknown(failure)
         }
     }
 
-    /** Before the marker: nothing left. With a status the entry keeps its reason and the batch goes on. */
+    /**
+     * Before the marker: nothing left. With a status the entry keeps its reason and the batch goes
+     * on.
+     */
     private suspend fun preflightFailed(entry: QueuedPrompt, failure: Failure): Step {
         if (!failure.hasStatus) return Step.Stop
         replace(entry.id) { it.withError(QueueErrors.of(failure)) }
         return Step.Next
     }
 
-    /** Null when the entry is gone; false when storage refused (memory and disk unchanged); true when persisted. */
+    /**
+     * Null when the entry is gone; false when storage refused (memory and disk unchanged); true
+     * when persisted.
+     */
     private suspend fun replace(id: String, update: (QueuedPrompt) -> QueuedPrompt): Boolean? =
         changes.withLock {
             val q = queue()
             val index = q.indexOfFirst { it.id == id }
             if (index < 0) return@withLock null
             val next = q.toMutableList().also { it[index] = update(q[index]) }
-            if (!store.save(next)) return@withLock false
+            if (!persist(next)) return@withLock false
             cache = next
             publish()
             true
         }
 
-    /** A stale in-memory removal is never applied over a persisted entry: it would resend after a restart. */
-    private suspend fun persistRemoval(id: String): Boolean =
-        changes.withLock {
-            val q = queue()
-            val kept = q.filter { it.id != id }
-            if (kept.size == q.size) return@withLock true
-            if (!store.save(kept)) return@withLock false
-            cache = kept
-            publish()
-            true
-        }
+    /**
+     * A stale in-memory removal is never applied over a persisted entry: it would resend after a
+     * restart.
+     */
+    private suspend fun persistRemoval(id: String): Boolean = changes.withLock {
+        val q = queue()
+        val kept = q.filter { it.id != id }
+        if (kept.size == q.size) return@withLock true
+        if (!persist(kept)) return@withLock false
+        cache = kept
+        publish()
+        true
+    }
 
     private fun publish() {
         val entries = cache ?: return
-        if (entries.isNotEmpty()) lastReadable = true // a non-empty queue is only ever written over a readable blob
+        if (entries.isNotEmpty())
+            lastReadable = true // a non-empty queue is only ever written over a readable blob
         mutableState.value =
             QueueState(
                 entries = entries.toImmutableList(),
@@ -687,4 +1010,16 @@ public class OfflineQueue(
     /** Dispatched, not confirmed: the draft never restores one of these (09 §10.8). */
     public fun unconfirmedTexts(ref: ConversationRef): Set<String> =
         queue().filter { it.ref == ref && it.dispatched }.mapTo(LinkedHashSet()) { it.text }
+}
+
+/** Originals remain in memory only for the person's Undo, never diagnostic output. */
+public class QueueMoveResult(
+    public val source: ProfileId,
+    public val destination: ConversationRef,
+    public val originals: ImmutableList<QueuedPrompt>,
+    public val skipped: Int,
+    public val selectionsReset: Int,
+) {
+    override fun toString(): String =
+        "QueueMoveResult(moved=${originals.size}, skipped=$skipped, selectionsReset=$selectionsReset)"
 }

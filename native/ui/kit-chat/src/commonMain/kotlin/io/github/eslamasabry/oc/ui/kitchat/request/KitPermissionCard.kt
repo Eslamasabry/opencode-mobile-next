@@ -1,4 +1,5 @@
 package io.github.eslamasabry.oc.ui.kitchat.request
+import io.github.eslamasabry.oc.ui.kit.state.KitRequestSurface
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -76,18 +77,7 @@ public fun KitPermissionCard(
     val colors = LocalKitColors.current
     val shape = KitShapeId.Card.toShape()
     val reason = if (enabled) null else disabledReason
-    Column(
-        modifier
-            .widthIn(max = CARD_MAX_WIDTH)
-            .fillMaxWidth()
-            .heightIn(max = maxCardHeight())
-            .clip(shape)
-            .background(colors.surface1)
-            .background(colors.attentionSurface)
-            .border(1.dp, colors.attentionLine, shape)
-            .padding(Space.S4.dp),
-        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-    ) {
+    KitRequestSurface(modifier.widthIn(max = CARD_MAX_WIDTH).fillMaxWidth().heightIn(max = maxCardHeight())) {
         // The words scroll together when they do not fit; the answers below never leave the card.
         Column(
             Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
@@ -159,29 +149,11 @@ private fun Answers(
  */
 @Composable
 private fun SecondaryAnswer(label: String, onClick: () -> Unit, enabled: Boolean, reason: String?, modifier: Modifier) {
-    val colors = LocalKitColors.current
-    val tokens = LocalKitTokens.current
-    val shape = KitShapeId.Button.toShape()
-    KitTappable(
-        onClick = onClick,
-        modifier =
-            modifier
-                .heightIn(min = tokens.buttonHeight.dp)
-                .border(1.dp, colors.hairline, shape)
-                .background(colors.surface2, shape),
-        enabled = enabled,
-        disabledReason = reason,
-        shape = KitShapeId.Button,
-    ) {
-        KitText(
-            label,
-            Modifier.padding(horizontal = Space.S4.dp),
-            role = TypeRole.Button,
-            tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
-            kind = KitTextKind.Frame,
-            maxLines = 2,
-        )
-    }
+    io.github.eslamasabry.oc.ui.kit.KitButton(
+        label = label, onClick = onClick, modifier = modifier,
+        role = io.github.eslamasabry.oc.ui.kit.KitButtonRole.Secondary,
+        enabled = io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.of(enabled, reason),
+    )
 }
 
 /** 45 % of the window's height (60 % at 2× text and above); no cap while the window has no size yet. */

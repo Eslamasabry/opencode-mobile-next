@@ -84,6 +84,7 @@ internal data class GlowPlan(
     val loops: Boolean,
     /** Where a still frame puts the highlight (tests, screenshots, gallery). */
     val framePhase: Float,
+    val lineWidth: Float? = null,
 )
 
 internal object GlowGeometry {

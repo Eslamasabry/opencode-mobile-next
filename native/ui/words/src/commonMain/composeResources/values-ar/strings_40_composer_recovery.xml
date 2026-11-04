@@ -1,0 +1,5 @@
+<resources>
+    <string name="composerKeptRestoreTitle">المطالبة المحفوظة</string>
+    <string name="composerKeptRestoreRefused">تعذرت استعادة هذه المطالبة. لا تزال في المطالبات المحفوظة. افتحها مجددًا لاستعادتها.</string>
+    <string name="composerKeptMissingFiles">تعذرت استعادة هذه الملفات: %1$s. لم تتغير المطالبة المحفوظة.</string>
+</resources>

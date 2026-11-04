@@ -1,22 +1,35 @@
 package io.github.eslamasabry.oc.engine.runtime.setup
 
 /**
- * Port of lib/builtin/setup/setup_contract.dart and lib/state/download_size.dart (the shared types of the phone setup
- * engine). Screens depend on these values only; nothing here knows any particular component. Every sentence the
- * Flutter engine wrote into its progress is a [SetupError] value here, mapped to one string key by `:ui:words`.
+ * Port of lib/builtin/setup/setup_contract.dart and lib/state/download_size.dart (the shared types
+ * of the phone setup engine). Screens depend on these values only; nothing here knows any
+ * particular component. Every sentence the Flutter engine wrote into its progress is a [SetupError]
+ * value here, mapped to one string key by `:ui:words`.
  */
 
-/** Where a setup job installs OpenCode. Only the app's own Linux is ported (D7: Termux migrates out). */
-public enum class SetupHostKind(public val wireName: String) { Builtin("builtin"), Termux("termux") }
+/**
+ * Where a setup job installs OpenCode. Only the app's own Linux is ported (D7: Termux migrates
+ * out).
+ */
+public enum class SetupHostKind(public val wireName: String) {
+    Builtin("builtin"),
+    Termux("termux"),
+}
 
 /** Evidence about a payload, never a transport/header guess (lib/state/download_size.dart). */
-public enum class DownloadSizeKind { Unknown, Exact, LowerBound, Estimate }
+public enum class DownloadSizeKind {
+    Unknown,
+    Exact,
+    LowerBound,
+    Estimate,
+}
 
 public data class DownloadSize(val kind: DownloadSizeKind, val bytes: Long?) {
     public companion object {
         public val Unknown: DownloadSize = DownloadSize(DownloadSizeKind.Unknown, null)
 
-        public fun exact(value: Long): DownloadSize = DownloadSize(DownloadSizeKind.Exact, value.also { require(it >= 0) })
+        public fun exact(value: Long): DownloadSize =
+            DownloadSize(DownloadSizeKind.Exact, value.also { require(it >= 0) })
 
         public fun lowerBound(value: Long): DownloadSize =
             DownloadSize(DownloadSizeKind.LowerBound, value.also { require(it >= 0) })
@@ -30,8 +43,9 @@ public data class DownloadSize(val kind: DownloadSizeKind, val bytes: Long?) {
             var exact = true
             for (size in sizes) {
                 val bytes = size.bytes
-                if ((size.kind == DownloadSizeKind.Exact || size.kind == DownloadSizeKind.LowerBound) &&
-                    bytes != null && bytes >= 0
+                if (
+                    (size.kind == DownloadSizeKind.Exact ||
+                        size.kind == DownloadSizeKind.LowerBound) && bytes != null && bytes >= 0
                 ) {
                     total += bytes
                     exact = exact && size.kind == DownloadSizeKind.Exact
@@ -52,8 +66,8 @@ public data class SetupAppOffer(
 )
 
 /**
- * One installable piece (`SetupComponent`). [title]/[shortTitle] are display data from the registry port (the
- * binding fills them from `:ui:words`); the engine itself only uses them as names.
+ * One installable piece (`SetupComponent`). [title]/[shortTitle] are display data from the registry
+ * port (the binding fills them from `:ui:words`); the engine itself only uses them as names.
  */
 public data class SetupComponent(
     val id: String,
@@ -76,6 +90,11 @@ public data class SetupComponent(
     val native: Boolean = false,
     val agentUser: Boolean = false,
     val jobStep: Boolean = false,
+    /**
+     * Downloaded into app storage by [SetupAppComponents], represented durably as a native waiting
+     * step.
+     */
+    val app: Boolean = false,
 ) {
     /** The same component with [bytes] as its download size. */
     public fun withDownloadBytes(bytes: Long?, evidence: DownloadSize? = null): SetupComponent =
@@ -89,16 +108,32 @@ public data class SetupComponent(
         withDownloadBytes(offer.downloadBytes, evidence = offer.downloadSize)
 }
 
-public enum class SetupState { Idle, Running, Done, Failed, Interrupted, Cancelled }
+public enum class SetupState {
+    Idle,
+    Running,
+    Done,
+    Failed,
+    Interrupted,
+    Cancelled,
+}
 
-public enum class ComponentState { Pending, Checking, Running, Done, Failed, Skipped }
+public enum class ComponentState {
+    Pending,
+    Checking,
+    Running,
+    Done,
+    Failed,
+    Skipped,
+}
 
 /**
- * Why a job or a row failed, as a value `:ui:words` turns into one sentence (Flutter keys named per case). The
- * technical reason stays in [SetupProgress.logTail] (Details).
+ * Why a job or a row failed, as a value `:ui:words` turns into one sentence (Flutter keys named per
+ * case). The technical reason stays in [SetupProgress.logTail] (Details).
  */
 public sealed interface SetupError {
-    /** `runtime_ownership_unknown`: `inAppServerOwnershipRecoveryBody` + the Force stop recovery. */
+    /**
+     * `runtime_ownership_unknown`: `inAppServerOwnershipRecoveryBody` + the Force stop recovery.
+     */
     public data object OwnershipUnknown : SetupError
 
     /** `setup_status_invalid`: "The saved setup could not be read. Try Continue setup." */
@@ -143,7 +178,10 @@ public sealed interface SetupError {
     /** `phoneSetupErrorInstall(title)`. */
     public data class Install(val title: String) : SetupError
 
-    /** The phone refused a call (a host failure that is none of the above); its details stay under Details. */
+    /**
+     * The phone refused a call (a host failure that is none of the above); its details stay under
+     * Details.
+     */
     public data object HostRefused : SetupError
 
     /** A start that broke before the runner had the job, for an unexpected reason. */
@@ -166,8 +204,11 @@ public data class ComponentProgress(
             if (state == ComponentState.Done || state == ComponentState.Skipped) return 1.0
             val total = bytesTotal
             val done = bytesDone
-            if (total != null && total > 0 && done != null) return (done.toDouble() / total).coerceIn(0.0, 1.0)
-            percent?.let { return (it / 100).coerceIn(0.0, 1.0) }
+            if (total != null && total > 0 && done != null)
+                return (done.toDouble() / total).coerceIn(0.0, 1.0)
+            percent?.let {
+                return (it / 100).coerceIn(0.0, 1.0)
+            }
             return null
         }
 }
@@ -185,12 +226,17 @@ public data class SetupProgress(
     val adding: List<String> = emptyList(),
 ) {
     val canContinue: Boolean
-        get() = state == SetupState.Failed || state == SetupState.Interrupted || state == SetupState.Cancelled
+        get() =
+            state == SetupState.Failed ||
+                state == SetupState.Interrupted ||
+                state == SetupState.Cancelled
 
-    val ended: Boolean get() = canContinue || state == SetupState.Done
+    val ended: Boolean
+        get() = canContinue || state == SetupState.Done
 
     /** Whether this is the moment a job ended (a first end of this job). */
-    public fun endedBefore(previous: SetupProgress): Boolean = ended && (!previous.ended || previous.jobId != jobId)
+    public fun endedBefore(previous: SetupProgress): Boolean =
+        ended && (!previous.ended || previous.jobId != jobId)
 
     public companion object {
         public val Idle: SetupProgress = SetupProgress(SetupState.Idle, emptyList(), 0.0)
@@ -203,7 +249,8 @@ public object SetupJobParams {
 
     public val firstSetup: Map<String, Map<String, String>> = mapOf(KEY to mapOf("first" to "1"))
 
-    public fun isFirstSetup(params: Map<String, Map<String, String>>): Boolean = params[KEY]?.get("first") == "1"
+    public fun isFirstSetup(params: Map<String, Map<String, String>>): Boolean =
+        params[KEY]?.get("first") == "1"
 
     public fun adding(ids: Iterable<String>): Map<String, Map<String, String>> =
         mapOf(KEY to mapOf("adding" to ids.joinToString(",")))
@@ -224,7 +271,10 @@ public object SetupComponentIds {
     public const val START: String = "start"
 }
 
-/** The reasons the OpenCode install ends a failed run with, as its last log line (`OpenCodeInstallFailure`). */
+/**
+ * The reasons the OpenCode install ends a failed run with, as its last log line
+ * (`OpenCodeInstallFailure`).
+ */
 public object OpenCodeInstallFailure {
     public const val NO_PROGRAM: String = "[oc] OpenCode's download did not contain its program"
     public const val WONT_RUN: String = "[oc] OpenCode's program does not run on this phone"
@@ -234,4 +284,5 @@ public object OpenCodeInstallFailure {
 
 /** The job's log as people see it: never the app's `OCTRACE` timing lines (`setupLogForPeople`). */
 public fun setupLogForPeople(log: String): String =
-    if (!log.contains("OCTRACE")) log else log.split('\n').filterNot { it.contains("OCTRACE") }.joinToString("\n")
+    if (!log.contains("OCTRACE")) log
+    else log.split('\n').filterNot { it.contains("OCTRACE") }.joinToString("\n")

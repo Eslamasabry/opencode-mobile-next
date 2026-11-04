@@ -8,6 +8,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import io.github.eslamasabry.oc.core.common.PlatformViewHandle
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.feature.projects.terminal.*
 import io.github.eslamasabry.oc.ui.kit.content.terminal.AndroidRemoteTerminalView
 
@@ -62,6 +63,32 @@ class AndroidTerminalGrids(private val app: Application) : TerminalGrids {
             override fun paste(text: String) {
                 terminal.paste(text)
             }
+
+            override fun key(key: String, control: Boolean, alt: Boolean) {
+                terminal.key(key, control, alt)
+            }
+
+            override fun publishSize() {
+                terminal.publishSize()
+            }
         }
     }
+}
+
+@Inject
+@ContributesBinding(AppScope::class, replaces = [NoTerminalPrivacy::class])
+class AndroidTerminalPrivacy(private val redactor: Redactor) : TerminalPrivacy {
+    override fun describe(
+        process: io.github.eslamasabry.oc.core.model.TerminalProcess
+    ): TerminalDetails =
+        TerminalDetails(
+            redactor.details(
+                redactor.diagnostics(
+                    (listOf(process.command) + process.arguments).joinToString(" ")
+                )
+            ),
+            redactor.details(redactor.diagnostics(process.directory)),
+            redactor.details(redactor.diagnostics(process.pid.toString())),
+            redactor.details(redactor.diagnostics(process.exitCode?.toString().orEmpty())),
+        )
 }

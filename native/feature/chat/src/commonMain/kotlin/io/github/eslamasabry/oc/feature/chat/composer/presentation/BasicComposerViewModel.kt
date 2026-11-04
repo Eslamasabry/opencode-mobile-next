@@ -98,6 +98,9 @@ public interface BasicComposerActions {
     /** Removes one attached file by its current index. */
     public fun removeAttachment(index: Int) {}
 
+    /** Appends embedded kept-prompt files through the current draft owner; never sends. */
+    public suspend fun restoreAttachments(files: List<PromptAttachment>, stillCurrent: () -> Boolean = { true }): Boolean = false
+
     public fun dismissAttachmentFailure() {}
 
     /** Stages the project file picked from the `@` list (the field inserts its `@path`). */
@@ -475,6 +478,24 @@ public class BasicComposerViewModel(
         }
     }
 
+    override suspend fun restoreAttachments(files: List<PromptAttachment>, stillCurrent: () -> Boolean): Boolean {
+        val w = world ?: return false
+        if (pickingFile.value || committingFiles.value || sending.value || !stillCurrent()) return false
+        val latest = w.draft.value
+        if (!latest.ready || latest.failure != null || latest.sendBlocked) return false
+        if (files.any { !embeddedAttachment(it) }) return false
+        if (files.isEmpty()) return stillCurrent()
+        committingFiles.value = true
+        return try {
+            // This single draft command validates the destination generation and publishes only its acknowledged set.
+            stillCurrent() && w.replaceAttachments(latest.attachments + files.map {
+                it.copy(mentionPath = null, mentionStart = null, mentionEnd = null)
+            }) is Outcome.Ok
+        } finally {
+            committingFiles.value = false
+        }
+    }
+
     override fun removeAttachment(index: Int) {
         val w = world ?: return
         // One file operation at a time, latched before any suspension: a second tap during a
@@ -523,5 +544,41 @@ public class BasicComposerViewModel(
         const val SEARCH_DEBOUNCE_MS = 150L
         const val MAX_COMMANDS = 8
         const val MAX_FILES = 5
+    }
+}
+
+/** Embedded bytes only: paths and server URLs never cross a kept-prompt recovery boundary. */
+private fun embeddedAttachment(file: PromptAttachment): Boolean {
+    val url = file.url
+    if (!url.startsWith("data:") || url.length > 32 * 1024 * 1024) return false
+    val comma = url.indexOf(',')
+    if (comma < 5) return false
+    val header = url.substring(5, comma).split(';')
+    val mime = header.first().ifEmpty { "text/plain" }
+    if (!mime.equals(file.mime.substringBefore(';'), ignoreCase = true)) return false
+    val payload = url.substring(comma + 1)
+    return try {
+        val bytes = payload.encodeToByteArray()
+        val decoded = ByteArray(bytes.size)
+        var read = 0
+        var written = 0
+        while (read < bytes.size) {
+            if (bytes[read] == '%'.code.toByte()) {
+                if (read + 2 >= bytes.size) return false
+                val high = bytes[read + 1].toInt().toChar().digitToIntOrNull(16) ?: return false
+                val low = bytes[read + 2].toInt().toChar().digitToIntOrNull(16) ?: return false
+                decoded[written++] = ((high shl 4) or low).toByte()
+                read += 3
+            } else {
+                decoded[written++] = bytes[read++]
+            }
+        }
+        if (header.drop(1).any { it.equals("base64", true) }) {
+            kotlin.io.encoding.Base64.Default.withPadding(kotlin.io.encoding.Base64.PaddingOption.ABSENT_OPTIONAL)
+                .decode(decoded.copyOf(written))
+        }
+        true
+    } catch (_: IllegalArgumentException) {
+        false
     }
 }
