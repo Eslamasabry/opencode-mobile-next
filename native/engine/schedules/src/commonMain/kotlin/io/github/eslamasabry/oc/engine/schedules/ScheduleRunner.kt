@@ -18,26 +18,33 @@ import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Port of lib/scheduling/runner.dart: one claimed occurrence, with no reconnect and no resend loop. Creating the
- * conversation, changing its model and the prompt are mutations that are never repeated after an ambiguous answer
- * ("uncertain_delivery"). A turn a person started is never steered or interrupted: a busy conversation skips ("busy").
+ * Port of lib/scheduling/runner.dart: one claimed occurrence, with no reconnect and no resend loop.
+ * Creating the conversation, changing its model and the prompt are mutations that are never
+ * repeated after an ambiguous answer ("uncertain_delivery"). A turn a person started is never
+ * steered or interrupted: a busy conversation skips ("busy").
  */
 public class ScheduleRunner(
     private val profiles: ScheduleProfiles,
     private val nowMs: () -> Long,
     private val pollMs: Long = 2_000,
 ) {
-    /** [skip]: the run stopped before any mutation for a reason the person need not act on (Flutter ScheduledRunFailure). */
+    /**
+     * [skip]: the run stopped before any mutation for a reason the person need not act on (Flutter
+     * ScheduledRunFailure).
+     */
     private class Stop(val code: String, val skip: Boolean) : Exception(code)
 
     /**
-     * [isCurrent] is re-checked around every read: an edit, pause or delete made while the run waits stops it before
-     * the next mutation ("stale_target"). [onSessionCreated] persists routing before the prompt boundary.
+     * [isCurrent] is re-checked around every read: an edit, pause or delete made while the run
+     * waits stops it before the next mutation ("stale_target"). [onSessionCreated] persists routing
+     * before the prompt boundary.
      */
     public suspend fun execute(
         schedule: ScheduledPrompt,
@@ -63,7 +70,12 @@ public class ScheduleRunner(
         var dispatched = false
         var accepted = false
 
-        fun result(status: RunStatus, error: String? = null, title: String? = null, summary: String? = null) =
+        fun result(
+            status: RunStatus,
+            error: String? = null,
+            title: String? = null,
+            summary: String? = null,
+        ) =
             ScheduledRun(
                 id = ScheduleIds.occurrence(schedule, scheduledAt),
                 scheduleId = schedule.id,
@@ -78,7 +90,8 @@ public class ScheduleRunner(
                 summary = summary,
             )
 
-        fun remaining(): Long = (deadlineMs - nowMs()).also { if (it <= 0) throw Stop("timeout", skip = false) }
+        fun remaining(): Long =
+            (deadlineMs - nowMs()).also { if (it <= 0) throw Stop("timeout", skip = false) }
 
         suspend fun <T : Any> bounded(block: suspend () -> T): T =
             withTimeoutOrNull(remaining()) { block() } ?: throw Stop("timeout", skip = false)
@@ -102,7 +115,8 @@ public class ScheduleRunner(
 
         suspend fun checkProfile() {
             guard()
-            val current = withTimeoutOrNull(remaining()) { profiles.fingerprint(schedule.profileId) }
+            val current =
+                withTimeoutOrNull(remaining()) { profiles.fingerprint(schedule.profileId) }
             if (current != schedule.profileFingerprint) throw Stop("stale_target", skip = true)
         }
 
@@ -115,24 +129,62 @@ public class ScheduleRunner(
             try {
                 return attempt()
             } catch (e: Stop) {
-                val status = if (dispatched || accepted || !e.skip) RunStatus.Failed else RunStatus.Skipped
+                val status =
+                    if (dispatched || accepted || !e.skip) RunStatus.Failed else RunStatus.Skipped
                 return result(status, if (dispatched && !accepted) "uncertain_delivery" else e.code)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                return result(RunStatus.Failed, if (dispatched && !accepted) "uncertain_delivery" else "unavailable")
+                return result(
+                    RunStatus.Failed,
+                    if (dispatched && !accepted) "uncertain_delivery" else "unavailable",
+                )
             } finally {
-                connection?.let { open -> withTimeoutOrNull(CLOSE_WAIT_MS) { open.close() } }
+                withContext(NonCancellable) {
+                    connection?.let { open -> withTimeoutOrNull(CLOSE_WAIT_MS) { open.close() } }
+                }
             }
         }
 
         private suspend fun attempt(): ScheduledRun {
-            if (!schedule.valid || (!schedule.enabled && !manual)) throw Stop("stale_target", skip = true)
+            if (!schedule.valid || (!schedule.enabled && !manual))
+                throw Stop("stale_target", skip = true)
             checkProfile()
-            val opened = bounded { profiles.open(schedule.profileId, schedule.projectPath, schedule.workspace) }.value()
-            connection = opened
+            val opened = bounded {
+                profiles
+                    .openUntil(
+                        schedule.profileId,
+                        schedule.projectPath,
+                        schedule.workspace,
+                        deadlineMs,
+                    )
+                    .also {
+                        // Keep ownership even if the timeout wins as the open returns to its
+                        // caller.
+                        if (it is Outcome.Ok) connection = it.value
+                    }
+            }
+                .value()
             val gateway = opened.gateway
-            if (!read { gateway.health() }.healthy) throw Stop("unavailable", skip = true)
+            val readyUntil = minOf(deadlineMs, nowMs() + PHONE_READY_MS)
+            while (true) {
+                guard()
+                val health = bounded { gateway.health() }
+                guard()
+                if (health is Outcome.Ok && health.value.healthy) break
+                if (
+                    !opened.startedPhoneServer ||
+                        nowMs() >= readyUntil ||
+                        (health is Outcome.Failed && health.failure is Failure.SignIn)
+                ) {
+                    if (health is Outcome.Failed) health.value()
+                    throw Stop("unavailable", skip = true)
+                }
+                bounded {
+                    delay(pollMs)
+                    Unit
+                }
+            }
             if (!gateway.capabilities.value.scheduledPrompts) throw Stop("unsupported", skip = true)
             val model = schedule.modelProviderId?.let { ModelRef(it, schedule.modelId!!) }
             val selection = gateway.facet<SessionSelectionGateway>()
@@ -145,28 +197,44 @@ public class ScheduleRunner(
                 }
                 guard()
                 bounded { onSessionCreated(existing) }
-                before = read { gateway.messagePage(SessionId(existing)) }.items.map { it.info.id }.toSet()
+                before =
+                    read { gateway.messagePage(SessionId(existing)) }
+                        .items
+                        .map { it.info.id }
+                        .toSet()
                 if (busy(gateway, existing)) return result(RunStatus.Skipped, "busy")
             } else {
                 checkProfile()
-                // Creating the conversation is itself a mutation, never repeated after an ambiguous answer.
+                // Creating the conversation is itself a mutation, never repeated after an ambiguous
+                // answer.
                 dispatched = true
-                val created =
-                    bounded {
-                        // The selected-session call creates in the gateway's pinned project only; a borrowed gateway
-                        // pinned elsewhere creates by location and the model rides with the prompt instead.
-                        val pinnedHere = gateway.location.value.directory == schedule.projectPath
-                        if (selection != null && pinnedHere && (model != null || schedule.agent != null)) {
-                            selection.createSelectedSession(
-                                SessionSelection(
-                                    model, "", schedule.agent,
-                                    modelKnown = model != null, agentKnown = schedule.agent != null,
-                                ),
+                val created = bounded {
+                    // The selected-session call creates in the gateway's pinned project only; a
+                    // borrowed gateway
+                    // pinned elsewhere creates by location and the model rides with the prompt
+                    // instead.
+                    val pinnedHere = gateway.location.value.directory == schedule.projectPath
+                    if (
+                        selection != null && pinnedHere && (model != null || schedule.agent != null)
+                    ) {
+                        selection.createSelectedSession(
+                            SessionSelection(
+                                model,
+                                "",
+                                schedule.agent,
+                                modelKnown = model != null,
+                                agentKnown = schedule.agent != null,
                             )
-                        } else {
-                            gateway.createSession(NewSession(location = ServerLocation(schedule.projectPath, schedule.workspace)))
-                        }
-                    }.value()
+                        )
+                    } else {
+                        gateway.createSession(
+                            NewSession(
+                                location = ServerLocation(schedule.projectPath, schedule.workspace)
+                            )
+                        )
+                    }
+                }
+                    .value()
                 sessionId = created.id.raw
                 dispatched = false
                 guard()
@@ -176,8 +244,10 @@ public class ScheduleRunner(
             val target = SessionId(sessionId!!)
             checkProfile()
             val session = read { gateway.session(target) }
-            // B-AGENT-218: a conversation the server made in another project never receives the prompt.
-            if (session.directory != null && session.directory != schedule.projectPath) throw Stop("wrong_project", skip = false)
+            // B-AGENT-218: a conversation the server made in another project never receives the
+            // prompt.
+            if (session.directory != null && session.directory != schedule.projectPath)
+                throw Stop("wrong_project", skip = false)
             if (busy(gateway, target.raw)) return result(RunStatus.Skipped, "busy")
             if (existing != null && selection != null) {
                 // These calls patch only the named field: never write back a whole stale session.
@@ -191,51 +261,84 @@ public class ScheduleRunner(
                 }
                 val currentAgent = session.selection?.agent ?: session.agent
                 val agent = schedule.agent
-                if (agent != null && agent != currentAgent) select { selection.setSessionAgent(target, agent) }
+                if (agent != null && agent != currentAgent)
+                    select { selection.setSessionAgent(target, agent) }
                 val currentModel = read { gateway.session(target) }.selection?.model
-                if (model != null && currentModel != model) select { selection.setSessionModel(target, model, "") }
-                // Applying a selection is not an idle reservation: a person may have started a turn meanwhile.
+                if (model != null && currentModel != model)
+                    select { selection.setSessionModel(target, model, "") }
+                // Applying a selection is not an idle reservation: a person may have started a turn
+                // meanwhile.
                 if (busy(gateway, target.raw)) return result(RunStatus.Skipped, "busy")
             }
             guard()
             dispatched = true
-            val admission =
-                bounded {
-                    gateway.prompt(target, OutgoingPrompt(schedule.prompt, model = model?.let { ModelSelection(it) }, agent = schedule.agent))
-                }.value()
-            if (admission is PromptAdmission.Uncertain) throw Stop("uncertain_delivery", skip = false)
+            val admission = bounded {
+                gateway.prompt(
+                    target,
+                    OutgoingPrompt(
+                        schedule.prompt,
+                        model = model?.let { ModelSelection(it) },
+                        agent = schedule.agent,
+                    ),
+                )
+            }
+                .value()
+            if (admission is PromptAdmission.Uncertain)
+                throw Stop("uncertain_delivery", skip = false)
             accepted = true
-            // The server owns its run after acknowledgement. It is followed within this attempt's own deadline so the
-            // person can be told when it ends; if the deadline comes first the prompt was still accepted ("started").
+            // The server owns its run after acknowledgement. It is followed within this attempt's
+            // own deadline so the
+            // person can be told when it ends; if the deadline comes first the prompt was still
+            // accepted ("started").
             return try {
                 follow(gateway, target, before)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                // A phone runtime created for this occurrence cannot be released as a successful run
-                // until fresh output finishes. Remote servers continue independently after admission.
+                // A phone runtime created for this occurrence cannot be released as a successful
+                // run
+                // until fresh output finishes. Remote servers continue independently after
+                // admission.
                 if (opened.startedPhoneServer) throw e
                 result(RunStatus.Ran)
             }
         }
 
-        private suspend fun follow(gateway: ServerGateway, target: SessionId, before: Set<String>): ScheduledRun {
+        private suspend fun follow(
+            gateway: ServerGateway,
+            target: SessionId,
+            before: Set<String>,
+        ): ScheduledRun {
             while (true) {
                 val session = read { gateway.session(target) }
-                val replies =
-                    read { gateway.messagePage(target) }.items.filter { it.info.role == Role.Assistant && it.info.id !in before }
+                val replies = read {
+                    gateway.messagePage(target)
+                }
+                    .items
+                    .filter { it.info.role == Role.Assistant && it.info.id !in before }
                 if (session.lastRunFailed || replies.any { it.info.errorText != null }) {
                     return result(RunStatus.Failed, "agent_failed")
                 }
                 if (read { gateway.pendingPermissions() }.any { it.sessionId == target }) {
                     return result(RunStatus.Failed, "needs_you")
                 }
-                if (gateway.capabilities.value.forms && read { gateway.sessionForms(target) }.isNotEmpty()) {
+                if (
+                    gateway.capabilities.value.forms &&
+                        read { gateway.sessionForms(target) }.isNotEmpty()
+                ) {
                     return result(RunStatus.Failed, "needs_you")
                 }
                 val status = read { gateway.sessionStatuses() }[target]
-                if ((status == null || status == SessionStatus.Idle) && replies.any { it.info.time?.completedMs != null }) {
-                    return result(RunStatus.Ran, null, session.title?.trim()?.takeIf { it.isNotEmpty() }, replyLine(replies))
+                if (
+                    (status == null || status == SessionStatus.Idle) &&
+                        replies.any { it.info.time?.completedMs != null }
+                ) {
+                    return result(
+                        RunStatus.Ran,
+                        null,
+                        session.title?.trim()?.takeIf { it.isNotEmpty() },
+                        replyLine(replies),
+                    )
                 }
                 delay(pollMs)
             }
@@ -244,6 +347,7 @@ public class ScheduleRunner(
 
     public companion object {
         private const val CLOSE_WAIT_MS = 3_000L
+        private const val PHONE_READY_MS = 90_000L
 
         /** Fixed codes only: never transport text, server payloads, prompts or credentials. */
         public fun code(failure: Failure): String =
@@ -253,7 +357,9 @@ public class ScheduleRunner(
                 is Failure.Refused ->
                     when (failure.reason) {
                         RefusalReason.CleartextNotConfirmed -> "cleartext_unconfirmed"
-                        RefusalReason.ProfileDeleted, RefusalReason.StaleScope, RefusalReason.ProfileClosing -> "stale_target"
+                        RefusalReason.ProfileDeleted,
+                        RefusalReason.StaleScope,
+                        RefusalReason.ProfileClosing -> "stale_target"
                         RefusalReason.DispatchUncertain -> "uncertain_delivery"
                         else -> "unavailable"
                     }
@@ -265,12 +371,15 @@ public class ScheduleRunner(
         private val leading = Regex("^[\\s#>*\\-]+")
 
         /**
-         * The first line of the newest reply, about 100 characters, for the "finished" notice. Text parts only: never
-         * errors, tool output or reasoning.
+         * The first line of the newest reply, about 100 characters, for the "finished" notice. Text
+         * parts only: never errors, tool output or reasoning.
          */
         public fun replyLine(replies: List<MessageWithParts>): String? {
             for (message in replies.reversed()) {
-                val text = message.parts.filter { it.type == PartType.Text && !it.synthetic }.joinToString("\n") { it.text }
+                val text =
+                    message.parts
+                        .filter { it.type == PartType.Text && !it.synthetic }
+                        .joinToString("\n") { it.text }
                 for (raw in text.split('\n')) {
                     val line = raw.replaceFirst(leading, "").trim()
                     if (line.isEmpty()) continue

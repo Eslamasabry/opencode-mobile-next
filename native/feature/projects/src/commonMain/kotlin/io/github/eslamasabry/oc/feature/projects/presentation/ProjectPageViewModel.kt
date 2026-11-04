@@ -50,6 +50,10 @@ public class ProjectPageViewModel(
     private var cursor: String? = null
     private var generation = 0
     private var adopted = false
+    private val workspace =
+        ProjectWorkspace(directory, viewModelScope) { next ->
+            mutable.update { it.copy(workspace = next) }
+        }
 
     init {
         viewModelScope.launch {
@@ -58,6 +62,7 @@ public class ProjectPageViewModel(
                 if (!adopted || next?.gateway !== server?.gateway) {
                     adopted = true
                     server = next
+                    workspace.adopt(next)
                     load()
                 }
             }
@@ -182,6 +187,34 @@ public class ProjectPageViewModel(
 
     override fun developmentServices(): Unit =
         nav.open(LinuxRoute.Services(route.profile, directory))
+
+    override fun openWorkspace() = workspace.openWorkspace()
+
+    override fun closeWorkspace() = workspace.closeWorkspace()
+
+    override fun retryWorkspace() = workspace.retryWorkspace()
+
+    override fun chooseChanges(mode: io.github.eslamasabry.oc.core.model.VcsDiffMode) =
+        workspace.chooseChanges(mode)
+
+    override fun newNamedWorktree() = workspace.newNamedWorktree()
+
+    override fun createGeneratedWorktree() = workspace.createGeneratedWorktree()
+
+    override fun finishWorktreeName(name: String?) = workspace.finishWorktreeName(name)
+
+    override fun inspectWorktreeRemoval(directory: String) =
+        workspace.inspectWorktreeRemoval(directory)
+
+    override fun confirmWorktreeRemoval() = workspace.confirmWorktreeRemoval()
+
+    override fun cancelWorktreeRemoval() = workspace.cancelWorktreeRemoval()
+
+    override fun openWorkspaceDiff(path: String) = workspace.openWorkspaceDiff(path)
+
+    override fun closeWorkspaceDiff() = workspace.closeWorkspaceDiff()
+
+    override fun workspaceDiffPage(delta: Int) = workspace.workspaceDiffPage(delta)
 
     override fun back(): Unit = nav.back()
 

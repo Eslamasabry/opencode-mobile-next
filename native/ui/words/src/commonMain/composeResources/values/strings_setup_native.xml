@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setupNativeTitle">AI setup</string>
+    <string name="setupNativeBack">Back</string>
+    <string name="setupNativeLoading">Reading server setup</string>
+    <string name="setupNativeRefresh">Refresh</string>
+    <string name="setupNativeRefreshing">Refreshing</string>
+    <string name="setupNativeReviewOnly">Review only. Make changes in the server configuration for now.</string>
+    <string name="setupNativeEmpty">Nothing set up yet</string>
+    <string name="setupNativeEmptyBody">This server has no configuration sources or tool servers to show.</string>
+    <string name="setupNativeOffline">The server is offline</string>
+    <string name="setupNativeOfflineBody">Reconnect to read this server’s setup.</string>
+    <string name="setupNativeOfflineStale">Offline. Showing the last setup read from this server.</string>
+    <string name="setupNativeUnsupported">AI setup isn’t available</string>
+    <string name="setupNativeUnsupportedBody">This server does not share its configuration with the app.</string>
+    <string name="setupNativeSignIn">Sign in to read setup</string>
+    <string name="setupNativeSignInBody">Check this server’s sign-in, then try again.</string>
+    <string name="setupNativeServers">Server sign-in</string>
+    <string name="setupNativeError">Setup couldn’t be read</string>
+    <string name="setupNativeErrorBody">Try again when the server is available.</string>
+    <string name="setupNativeSuggestions">Suggestions</string>
+    <string name="setupNativeSignInTool">Sign in to %1$s on the server.</string>
+    <string name="setupNativeFixTool">Check %1$s in the server configuration.</string>
+    <string name="setupNativeAddTools">Add tools in the server configuration when you need them.</string>
+    <string name="setupNativeTools">Tool servers</string>
+    <string name="setupNativeSources">Configuration sources</string>
+    <string name="setupNativeSourcesBody">Sources are listed in server priority order. Later sources can override earlier ones.</string>
+    <string name="setupNativeSourceOrder">%1$d. %2$s</string>
+    <string name="setupNativeFile">Configuration file</string>
+    <string name="setupNativeInline">Inline settings</string>
+    <string name="setupNativeOtherSource">Configuration source</string>
+    <string name="setupNativeNoValues">This source sets nothing.</string>
+    <string name="setupNativeConnected">Connected</string>
+    <string name="setupNativePending">Waiting</string>
+    <string name="setupNativeDisabled">Off</string>
+    <string name="setupNativeFailed">Needs checking</string>
+    <string name="setupNativeNeedsAuth">Needs sign-in</string>
+    <string name="setupNativeUnknown">Status unknown</string>
+</resources>

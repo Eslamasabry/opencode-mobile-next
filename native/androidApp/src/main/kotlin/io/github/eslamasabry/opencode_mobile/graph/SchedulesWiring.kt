@@ -26,23 +26,27 @@ import io.github.eslamasabry.oc.android.schedules.ScheduleWorkPolicy
 import io.github.eslamasabry.oc.android.schedules.WorkScheduleAlarms
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
-import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppLog
-import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.ConnectionCoroutineScope
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.common.SignInWhy
+import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.core.common.dart.DartJson
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.common.supervisedContext
-import io.github.eslamasabry.oc.core.common.dart.DartJson
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
 import io.github.eslamasabry.oc.core.domain.GatewayFactory
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
 import io.github.eslamasabry.oc.core.domain.ServerGateway
+import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
@@ -60,11 +64,18 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
 import io.github.eslamasabry.opencode_mobile.MainActivity
+import io.github.eslamasabry.opencode_mobile.ScheduledPhoneRuntime
 import io.github.eslamasabry.opencode_mobile.ScheduledPromptReceiver as FlutterScheduleReceiver
 import kotlin.time.Clock
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /*
  * P12-SCHEDULES Android wiring: the engine's ports over the preview stores and connection registry, the WorkManager
@@ -74,7 +85,10 @@ import kotlinx.coroutines.launch
  * FlutterSchedules.kt and only re-arm; native work uses new unique names (`oc.nschedule.*`).
  */
 
-/** What OS components (worker, trampoline) need from the graph; Metro merges it into AndroidAppGraph. */
+/**
+ * What OS components (worker, trampoline) need from the graph; Metro merges it into
+ * AndroidAppGraph.
+ */
 @ContributesTo(AppScope::class)
 interface SchedulesGraphAccess {
     val schedules: ScheduleEngine
@@ -116,16 +130,20 @@ object SchedulesBindings {
     }
 }
 
-/** Saved servers as schedules need them: the server identity fingerprint and a gateway for one run. */
+/**
+ * Saved servers as schedules need them: the server identity fingerprint and a gateway for one run.
+ */
 @SingleIn(AppScope::class)
 @Inject
 class AppScheduleProfiles(
+    private val application: Application,
     private val stores: PreviewStores,
     private val registry: ConnectionRegistry,
     private val factories: Set<GatewayFactory>,
     private val credentialSources: Set<ConnectionCredentialSource>,
     private val appScope: AppCoroutineScope,
     private val dispatchers: AppDispatchers,
+    private val clock: Clock,
 ) : ScheduleProfiles {
     override suspend fun ids(): List<String> {
         stores.warm()
@@ -138,13 +156,20 @@ class AppScheduleProfiles(
         // Everything that names the server and the account, never the display name or a secret.
         return ScheduleEngine.fingerprint(
             listOf(
-                server.backend.name, server.origin.toString(), server.username,
-                server.managedOnPhone.toString(), server.trust.pinnedLeafSha256, server.trust.cleartextConsentAtMs?.toString(),
-            ),
+                server.backend.name,
+                server.origin.toString(),
+                server.username,
+                server.managedOnPhone.toString(),
+                server.trust.pinnedLeafSha256,
+                server.trust.cleartextConsentAtMs?.toString(),
+            )
         )
     }
 
-    /** Flutter `scheduledProfileFingerprint`: SHA-256 of the Dart `toJson()` of the saved profile without `name`. */
+    /**
+     * Flutter `scheduledProfileFingerprint`: SHA-256 of the Dart `toJson()` of the saved profile
+     * without `name`.
+     */
     override suspend fun legacyFingerprint(profileId: String): String? {
         stores.warm()
         val stored = stores.profiles.profile(ProfileId(profileId))?.profile ?: return null
@@ -153,15 +178,63 @@ class AppScheduleProfiles(
     }
 
     /**
-     * A private connection pinned to the schedule's project (Flutter `ScheduledAgentConnection`; B-AGENT-216/218): the
-     * app's own connection may be looking at another project, and Paseo creates conversations in the pinned one. The
-     * run closes exactly this connection; the person's connection is never touched.
+     * A private connection pinned to the schedule's project (Flutter `ScheduledAgentConnection`;
+     * B-AGENT-216/218): the app's own connection may be looking at another project, and Paseo
+     * creates conversations in the pinned one. The run closes exactly this connection; the person's
+     * connection is never touched.
      */
-    override suspend fun open(profileId: String, projectPath: String, workspace: String?): Outcome<ScheduleConnection> {
-        stores.warm()
-        val loaded = stores.profiles.profile(ProfileId(profileId)) ?: return Failure.Refused(RefusalReason.ProfileDeleted).failed()
-        if (loaded.cleartextUnconfirmed) return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
-        val server = loaded.toServerProfile() ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+    override suspend fun open(
+        profileId: String,
+        projectPath: String,
+        workspace: String?,
+    ): Outcome<ScheduleConnection> {
+        return openUntil(
+            profileId,
+            projectPath,
+            workspace,
+            clock.now().toEpochMilliseconds() + PHONE_RUN_BUDGET_MS,
+        )
+    }
+
+    override suspend fun openUntil(
+        profileId: String,
+        projectPath: String,
+        workspace: String?,
+        deadlineMs: Long,
+    ): Outcome<ScheduleConnection> {
+        when (val ready = stores.warm()) {
+            is Outcome.Failed -> return ready
+            is Outcome.Ok -> Unit
+        }
+        if (deadlineMs <= clock.now().toEpochMilliseconds()) return Failure.TimedOut().failed()
+        val loaded =
+            stores.profiles.profile(ProfileId(profileId))
+                ?: return Failure.Refused(RefusalReason.ProfileDeleted).failed()
+        if (loaded.profile.transientTransport || loaded.profile.requiresOpenCode2Migration) {
+            return Failure.Unavailable(FeatureId("scheduledPrompts")).failed()
+        }
+        if (loaded.cleartextUnconfirmed)
+            return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
+        if (loaded.reentry.password || loaded.reentry.agentToken) {
+            return Failure.SignIn(
+                    if (loaded.profile.usesAgentSocket) SignInWhy.TokenMissing
+                    else SignInWhy.PasswordMissing
+                )
+                .failed()
+        }
+        val saved =
+            loaded.toServerProfile()
+                ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        val owner = (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value
+        // A copied loopback URL is not ownership. Only the saved phone owner may start the retained
+        // runtime.
+        val phoneOwner =
+            saved.backend == BackendKind.OpenCode2 &&
+                owner == profileId &&
+                saved.origin.scheme == "http" &&
+                saved.origin.host == "127.0.0.1" &&
+                saved.origin.port == 4097
+        val server = saved.copy(managedOnPhone = phoneOwner)
         val factory =
             factories.firstOrNull { it.backend == server.backend }
                 ?: return Failure.Unavailable(FeatureId("backend.${server.backend}")).failed()
@@ -171,30 +244,142 @@ class AppScheduleProfiles(
                 is Outcome.Ok -> read.value
                 is Outcome.Failed -> return read
             }
-        val scope = ConnectionCoroutineScope(supervisedContext(appScope.coroutineContext[Job], dispatchers.default, "schedule-run"))
+        val scope =
+            ConnectionCoroutineScope(
+                supervisedContext(
+                    appScope.coroutineContext[Job],
+                    dispatchers.default,
+                    "schedule-run",
+                )
+            )
         val location = ServerLocation(projectPath, workspace)
-        return when (val pair = factory.connect(GatewaySpec(server, credentials, scope, location))) {
-            is Outcome.Failed -> {
-                scope.coroutineContext[Job]?.cancelAndJoin()
-                pair
+        var lease: ScheduledPhoneRuntime.Lease? = null
+        var gateway: ServerGateway? = null
+        var transferred = false
+        suspend fun closeOwned(): Unit =
+            withContext(NonCancellable + dispatchers.io) {
+                try {
+                    gateway?.close()
+                } finally {
+                    try {
+                        scope.coroutineContext[Job]?.cancelAndJoin()
+                    } finally {
+                        attempt({ Failure.Device() }) { lease?.release() }
+                        Unit
+                    }
+                }
             }
-            is Outcome.Ok -> {
-                val gateway = pair.value.live
-                if (gateway.location.value != location) gateway.setLocation(location)
-                ScheduleConnection(gateway) {
-                    gateway.close()
-                    scope.coroutineContext[Job]?.cancelAndJoin()
-                }.ok()
+        try {
+            if (phoneOwner) {
+                if (credentials.secret.isNullOrEmpty())
+                    return Failure.SignIn(SignInWhy.PasswordMissing).failed()
+                // The lease is assigned before leaving this uncancellable I/O region: a timed-out
+                // open cannot
+                // lose the exact native handle. The retained native watchdog independently bounds
+                // the process.
+                val acquired =
+                    withContext(NonCancellable + dispatchers.io) {
+                        val result =
+                            ScheduledPhoneRuntime(application)
+                                .acquire(profileId, credentials.secret!!, deadlineMs)
+                        if (result is ScheduledPhoneRuntime.Acquisition.Granted)
+                            lease = result.lease
+                        result
+                    }
+                currentCoroutineContext().ensureActive()
+                if (acquired is ScheduledPhoneRuntime.Acquisition.Refused) {
+                    return when (acquired.reason) {
+                        ScheduledPhoneRuntime.Reason.AuthRequired ->
+                            Failure.SignIn(SignInWhy.PasswordRejected)
+                        ScheduledPhoneRuntime.Reason.Timeout -> Failure.TimedOut()
+                        ScheduledPhoneRuntime.Reason.Unavailable ->
+                            Failure.Runtime(
+                                io.github.eslamasabry.oc.core.common.RuntimeProblem
+                                    .ServerStartUnavailable
+                            )
+                    }.failed()
+                }
             }
+            val spec =
+                GatewaySpec(
+                    server,
+                    credentials,
+                    scope,
+                    location,
+                    reconnectAllowed = MutableStateFlow(false),
+                )
+            val readyUntil = minOf(deadlineMs, clock.now().toEpochMilliseconds() + PHONE_READY_MS)
+            var pair = factory.connect(spec)
+            // The factory performs the first authenticated health read. Retry only that read-only
+            // open while
+            // the runtime this occurrence started is booting; never reconnect or resend after
+            // admission.
+            while (
+                lease?.started == true &&
+                    pair is Outcome.Failed &&
+                    (pair.failure is Failure.Network || pair.failure is Failure.TimedOut) &&
+                    clock.now().toEpochMilliseconds() < readyUntil
+            ) {
+                delay(
+                    minOf(PHONE_POLL_MS, readyUntil - clock.now().toEpochMilliseconds())
+                        .coerceAtLeast(1)
+                )
+                currentCoroutineContext().ensureActive()
+                val current = stores.profiles.profile(ProfileId(profileId))
+                if (
+                    current?.profile?.copy(name = loaded.profile.name) != loaded.profile ||
+                        (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value !=
+                            owner
+                )
+                    return Failure.Refused(RefusalReason.StaleScope).failed()
+                pair = factory.connect(spec)
+            }
+            return when (pair) {
+                is Outcome.Failed -> pair
+                is Outcome.Ok -> {
+                    val live = pair.value.live
+                    gateway = live
+                    if (live.location.value != location) live.setLocation(location)
+                    currentCoroutineContext().ensureActive()
+                    if (
+                        phoneOwner &&
+                            (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value !=
+                                owner
+                    ) {
+                        return Failure.Refused(RefusalReason.StaleScope).failed()
+                    }
+                    val connection =
+                        ScheduleConnection(live, startedPhoneServer = lease?.started == true) {
+                            closeOwned()
+                        }
+                    transferred = true
+                    connection.ok()
+                }
+            }
+        } finally {
+            if (!transferred) closeOwned()
         }
+    }
+
+    private companion object {
+        const val PHONE_RUN_BUDGET_MS = 420_000L
+        const val PHONE_READY_MS = 90_000L
+        const val PHONE_POLL_MS = 2_000L
     }
 
     internal suspend fun gateway(id: ProfileId): Outcome<ServerGateway> {
         stores.warm()
-        registry.live.value[id]?.let { return it.session.server.ok() }
-        val loaded = stores.profiles.profile(id) ?: return Failure.Refused(RefusalReason.ProfileDeleted).failed()
-        if (loaded.cleartextUnconfirmed) return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
-        val server = loaded.toServerProfile() ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
+        registry.live.value[id]?.let {
+            return it.session.server.ok()
+        }
+        val loaded =
+            stores.profiles.profile(id)
+                ?: return Failure.Refused(RefusalReason.ProfileDeleted).failed()
+        if (loaded.cleartextUnconfirmed)
+            return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
+        val server =
+            loaded.toServerProfile()
+                ?: return Failure.Refused(RefusalReason.InvalidAddress).failed()
         return when (val opened = registry.open(server)) {
             is Outcome.Ok -> opened.value.session.server.ok()
             is Outcome.Failed -> opened
@@ -202,19 +387,32 @@ class AppScheduleProfiles(
     }
 }
 
-/** The server facts the schedule screens show (capability, the newest project, models, a conversation's seed). */
+/**
+ * The server facts the schedule screens show (capability, the newest project, models, a
+ * conversation's seed).
+ */
 @ContributesBinding(AppScope::class)
 @Inject
-class AppScheduleServers(private val stores: PreviewStores, private val profiles: AppScheduleProfiles) : ScheduleServers {
+class AppScheduleServers(
+    private val stores: PreviewStores,
+    private val profiles: AppScheduleProfiles,
+) : ScheduleServers {
     override suspend fun target(profileId: ProfileId): ScheduleTarget {
         stores.warm()
         val name = stores.profiles.profile(profileId)?.profile?.name
         return when (val gateway = profiles.gateway(profileId)) {
-            // Offline: the saved schedules still list and edit; runs report the server as unreachable.
-            is Outcome.Failed -> ScheduleTarget(name, available = name != null, recentProject = null)
+            // Offline: the saved schedules still list and edit; runs report the server as
+            // unreachable.
+            is Outcome.Failed ->
+                ScheduleTarget(name, available = name != null, recentProject = null)
             is Outcome.Ok -> {
                 val server = gateway.value
-                val recent = (server.sessionPage(limit = 1) as? Outcome.Ok)?.value?.items?.firstOrNull()?.directory
+                val recent =
+                    (server.sessionPage(limit = 1) as? Outcome.Ok)
+                        ?.value
+                        ?.items
+                        ?.firstOrNull()
+                        ?.directory
                 ScheduleTarget(name, server.capabilities.value.scheduledPrompts, recent)
             }
         }
@@ -224,7 +422,9 @@ class AppScheduleServers(private val stores: PreviewStores, private val profiles
         val server = (profiles.gateway(profileId) as? Outcome.Ok)?.value ?: return emptyList()
         val providers = (server.configuredProviders() as? Outcome.Ok)?.value ?: return emptyList()
         return providers.providers
-            .flatMap { provider -> provider.modelIds.map { ModelChoice(provider.id, it, "${provider.name} · $it") } }
+            .flatMap { provider ->
+                provider.modelIds.map { ModelChoice(provider.id, it, "${provider.name} · $it") }
+            }
             .take(MAX_MODELS)
     }
 
@@ -232,7 +432,13 @@ class AppScheduleServers(private val stores: PreviewStores, private val profiles
         val server = (profiles.gateway(ref.profileId) as? Outcome.Ok)?.value ?: return null
         val session = (server.session(ref.sessionId) as? Outcome.Ok)?.value ?: return null
         val model = session.selection?.model
-        return ConversationSeed(session.directory, session.title, model?.providerId, model?.modelId, session.selection?.agent ?: session.agent)
+        return ConversationSeed(
+            session.directory,
+            session.title,
+            model?.providerId,
+            model?.modelId,
+            session.selection?.agent ?: session.agent,
+        )
     }
 
     private companion object {
@@ -241,12 +447,14 @@ class AppScheduleServers(private val stores: PreviewStores, private val profiles
 }
 
 /**
- * Re-arms every saved schedule when the app's UI first starts (after boot, an update or the Flutter → native
- * update), and cancels the work of a removed server. WorkManager keeps armed work across reboots on its own.
+ * Re-arms every saved schedule when the app's UI first starts (after boot, an update or the Flutter
+ * → native update), and cancels the work of a removed server. WorkManager keeps armed work across
+ * reboots on its own.
  */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-class SchedulesBoot(engine: ScheduleEngine, stores: PreviewStores, appScope: AppCoroutineScope) : EntryInstaller {
+class SchedulesBoot(engine: ScheduleEngine, stores: PreviewStores, appScope: AppCoroutineScope) :
+    EntryInstaller {
     init {
         appScope.launch {
             if (stores.warm() !is Outcome.Ok) return@launch
@@ -263,17 +471,29 @@ class SchedulesBoot(engine: ScheduleEngine, stores: PreviewStores, appScope: App
     override fun EntryProviderScope<NavKey>.install() = Unit
 }
 
-/** The WorkManager worker for timed and "Run now" runs. Always succeeds: a run is never retried by the OS. */
-class ScheduledPromptWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+/**
+ * The WorkManager worker for timed and "Run now" runs. Always succeeds: a run is never retried by
+ * the OS.
+ */
+class ScheduledPromptWorker(context: Context, params: WorkerParameters) :
+    CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val graph = applicationContext.appGraph as SchedulesGraphAccess
-        val report = ScheduleWorkPolicy.run(graph.schedules, inputData, graph.schedulesClock.now().toEpochMilliseconds())
+        val report =
+            ScheduleWorkPolicy.run(
+                graph.schedules,
+                inputData,
+                graph.schedulesClock.now().toEpochMilliseconds(),
+            )
         AppLog.tagged("Schedules").i { "run ended: ${report?.status ?: "nothing to do"}" }
         return Result.success()
     }
 }
 
-/** The notification tap (B-NAV-054): the run's conversation, else the schedule's history, else nothing. */
+/**
+ * The notification tap (B-NAV-054): the run's conversation, else the schedule's history, else
+ * nothing.
+ */
 class ScheduleOpenActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -288,15 +508,26 @@ class ScheduleOpenActivity : Activity() {
             main.post {
                 when (target) {
                     is ScheduledOpen.Conversation ->
-                        access.schedulesNavigator.openChat(ConversationRef(ProfileId(target.profileId), SessionId(target.sessionId)))
+                        access.schedulesNavigator.openChat(
+                            ConversationRef(
+                                ProfileId(target.profileId),
+                                SessionId(target.sessionId),
+                            )
+                        )
                     is ScheduledOpen.History ->
-                        access.schedulesNavigator.open(SchedulesRoute.List(ProfileId(target.profileId), highlight = target.scheduleId))
+                        access.schedulesNavigator.open(
+                            SchedulesRoute.List(
+                                ProfileId(target.profileId),
+                                highlight = target.scheduleId,
+                            )
+                        )
                     null -> Unit // a deleted schedule or a changed server opens nothing but the app
                 }
             }
         }
         startActivity(
-            Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            Intent(this, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         )
         finish()
     }

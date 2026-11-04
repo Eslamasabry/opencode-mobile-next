@@ -4,7 +4,9 @@ import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.*
 import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
+import io.github.eslamasabry.oc.core.domain.SessionCreationGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -14,11 +16,15 @@ import io.github.eslamasabry.oc.engine.connection.*
 import io.github.eslamasabry.oc.engine.delivery.queue.*
 import io.github.eslamasabry.oc.engine.delivery.receipts.PendingCommandJournals
 import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileDirectory
+import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileEndpoints
+import io.github.eslamasabry.oc.engine.delivery.receipts.SessionCreationReceipts
+import io.github.eslamasabry.oc.engine.delivery.receipts.SessionCreationTransport
 import io.github.eslamasabry.oc.engine.profiles.*
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.ui.routes.*
 import java.util.UUID
+import kotlin.time.Clock
 import kotlinx.collections.immutable.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -41,6 +47,7 @@ class PreviewRuntime(
     private val profileClosers: Set<ProfileCloser>,
     private val cleaners:
         Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
+    private val clock: Clock,
 ) : ServerConnections {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -58,6 +65,23 @@ class PreviewRuntime(
     private val eventJobs = mutableMapOf<ProfileId, Job>()
     // Retained only for a saved profile whose deletion reached the draft fence.
     private val draftRecovery = mutableSetOf<ProfileId>()
+    private val pendingCommands =
+        PendingCommandJournals(
+            stores.prefs,
+            stores.lanes,
+            ProfileDirectory { profiles.profile(it) != null },
+        )
+
+    private class CreationOwner(
+        val profile: ProfileId,
+        val tab: String,
+        val receipts: SessionCreationReceipts,
+        val gateway: SessionCreationGateway,
+        val current: () -> Boolean,
+    )
+
+    // Never evict a pending owner and silently attach its command to a replacement connection.
+    private val creationOwners = LinkedHashMap<String, CreationOwner>()
 
     init {
         scope.launch {
@@ -271,26 +295,153 @@ class PreviewRuntime(
     }
 
     override suspend fun createConversation(profile: ProfileId?): Outcome<ConversationRef> =
-        command {
-            val id =
-                profile
-                    ?: profiles.activeId.value
-                    ?: return@command Failure.Refused(RefusalReason.ProfileDeleted).failed()
-            when (val connected = connectNow(id)) {
-                is Outcome.Failed -> return@command connected
-                is Outcome.Ok -> Unit
-            }
-            val graph =
-                registry.live.value[id]
-                    ?: return@command Failure.Refused(RefusalReason.StaleScope).failed()
-            when (val created = graph.session.server.createSession(NewSession())) {
+        createConversation(profile, UUID.randomUUID().toString(), UUID.randomUUID().toString())
+
+    override suspend fun createConversation(
+        profile: ProfileId?,
+        commandId: String,
+        tabId: String,
+    ): Outcome<ConversationRef> = command {
+        if (
+            !Regex("^[A-Za-z0-9_:-]{1,128}$").matches(commandId) ||
+                !Regex("^[A-Za-z0-9_:-]{1,256}$").matches(tabId)
+        )
+            return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+        val id =
+            profile
+                ?: profiles.activeId.value
+                ?: return@command Failure.Refused(RefusalReason.ProfileDeleted).failed()
+        val previousOwner = creationOwners[commandId]
+        if (
+            previousOwner != null &&
+                (previousOwner.profile != id ||
+                    previousOwner.tab != tabId ||
+                    !previousOwner.current())
+        )
+            return@command Failure.Refused(RefusalReason.StaleScope).failed()
+        when (val connected = connectNow(id)) {
+            is Outcome.Failed -> return@command connected
+            is Outcome.Ok -> Unit
+        }
+        val graph =
+            registry.live.value[id]
+                ?: return@command Failure.Refused(RefusalReason.StaleScope).failed()
+        val gateway = graph.session.server
+        val target = gateway.facet<SessionCreationGateway>()
+        if (target == null) {
+            // An ordinary backend without client-selected ids has no receipt owner.
+            if (previousOwner != null)
+                return@command Failure.Refused(RefusalReason.StaleScope).failed()
+            return@command when (val created = gateway.createSession(NewSession())) {
                 is Outcome.Failed -> created
                 is Outcome.Ok -> {
-                    refreshOne(id)
-                    ConversationRef(id, created.value.id).ok()
+                    if (
+                        registry.live.value[id] !== graph ||
+                            graph.scope.coroutineContext[Job]?.isActive != true
+                    )
+                        Failure.Refused(RefusalReason.StaleScope).failed()
+                    else {
+                        refreshOne(id)
+                        if (
+                            registry.live.value[id] === graph &&
+                                graph.scope.coroutineContext[Job]?.isActive == true
+                        )
+                            ConversationRef(id, created.value.id).ok()
+                        else Failure.Refused(RefusalReason.StaleScope).failed()
+                    }
                 }
             }
         }
+        val owner =
+            previousOwner
+                ?: run {
+                    if (creationOwners.size >= 256)
+                        return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+                    val at = gateway.location.value
+                    val expectedEndpoint = graph.profile.origin.toString()
+                    fun current(): Boolean =
+                        registry.live.value[id] === graph &&
+                            graph.scope.coroutineContext[Job]?.isActive == true &&
+                            gateway.location.value == at &&
+                            profiles.profile(id)?.profile?.baseUrl?.let {
+                                SessionCreationReceipts.normalizeRoot(it) ==
+                                    SessionCreationReceipts.normalizeRoot(expectedEndpoint)
+                            } == true
+                    val transport =
+                        object : SessionCreationTransport {
+                            override val endpoint: String = expectedEndpoint
+                            override val directory: String?
+                                get() = gateway.location.value.directory
+
+                            override val workspace: String?
+                                get() = gateway.location.value.workspace
+
+                            override val closed: Boolean
+                                get() = !current()
+
+                            override suspend fun createSession(id: SessionId): Outcome<SessionId> {
+                                if (!current())
+                                    return Failure.Refused(RefusalReason.StaleScope).failed()
+                                val answer = target.createSessionWithId(id, at)
+                                return if (current()) answer
+                                else Failure.Refused(RefusalReason.StaleScope).failed()
+                            }
+
+                            override suspend fun lookupSession(id: SessionId): Outcome<Boolean> {
+                                if (!current())
+                                    return Failure.Refused(RefusalReason.StaleScope).failed()
+                                val answer = target.lookupCreatedSession(id)
+                                return if (current()) answer
+                                else Failure.Refused(RefusalReason.StaleScope).failed()
+                            }
+                        }
+                    val receipts =
+                        when (
+                            val opened =
+                                SessionCreationReceipts.open(
+                                    id,
+                                    ProfileEndpoints { profiles.profile(it)?.profile?.baseUrl },
+                                    transport,
+                                    pendingCommands,
+                                    clock,
+                                    { target.newSessionCreationId().raw },
+                                )
+                        ) {
+                            is Outcome.Failed -> return@command opened
+                            is Outcome.Ok -> opened.value
+                        }
+                    CreationOwner(id, tabId, receipts, target, ::current).also {
+                        creationOwners[commandId] = it
+                    }
+                }
+        if (!owner.current()) return@command Failure.Refused(RefusalReason.StaleScope).failed()
+        // send() claims once durably. Every later invocation returns that receipt without POST.
+        when (val sent = owner.receipts.send(commandId, tabId)) {
+            is Outcome.Failed -> return@command sent
+            is Outcome.Ok -> Unit
+        }
+        val session =
+            owner.receipts.check(commandId, tabId)
+                ?: return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+        if (!owner.current()) return@command Failure.Refused(RefusalReason.StaleScope).failed()
+        // A confirmed tombstone still cannot navigate to a session that has since disappeared.
+        val exists = owner.gateway.lookupCreatedSession(session)
+        if (!owner.current()) return@command Failure.Refused(RefusalReason.StaleScope).failed()
+        if (exists !is Outcome.Ok || !exists.value)
+            return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
+        refreshOne(id)
+        if (!owner.current()) Failure.Refused(RefusalReason.StaleScope).failed()
+        else {
+            // Completed identities remain in the journal; only pending commands retain a graph.
+            creationOwners.remove(commandId)
+            ConversationRef(id, session).ok()
+        }
+    }
+
+    override fun currentLocation(
+        profile: ProfileId
+    ): io.github.eslamasabry.oc.core.model.ServerLocation? =
+        registry.live.value[profile]?.session?.server?.location?.value
 
     override suspend fun remove(id: ProfileId): Outcome<Unit> = command {
         when (val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()) {
@@ -322,13 +473,7 @@ class PreviewRuntime(
                 if (queued.entries.any { it.profileId == id })
                     return@command Failure.Refused(RefusalReason.DispatchUncertain).failed()
         }
-        val journals =
-            PendingCommandJournals(
-                stores.prefs,
-                stores.lanes,
-                ProfileDirectory { profiles.profile(it) != null },
-            )
-        when (val journal = journals.forProfile(id)) {
+        when (val journal = pendingCommands.forProfile(id)) {
             is Outcome.Failed -> return@command journal
             is Outcome.Ok ->
                 when (val receipts = journal.value.read()) {
@@ -348,6 +493,24 @@ class PreviewRuntime(
             DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
+                register(
+                    io.github.eslamasabry.oc.core.data.scope.KeyShape(
+                        "oc.pendingCommands.",
+                        io.github.eslamasabry.oc.core.data.scope.KeyScope.Profile,
+                        io.github.eslamasabry.oc.core.data.kv.PrefType.Str,
+                        ":engine:delivery",
+                        "durable session creation and prompt admission receipts",
+                    )
+                )
+                register(
+                    io.github.eslamasabry.oc.core.data.scope.KeyShape(
+                        "oc.setupRegistry.",
+                        io.github.eslamasabry.oc.core.data.scope.KeyScope.Profile,
+                        io.github.eslamasabry.oc.core.data.kv.PrefType.Str,
+                        ":engine:integrations-catalog",
+                        "public connector catalogue consent and sanitized listings",
+                    )
+                )
             }
         when (
             val result =

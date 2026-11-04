@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setupNativeTitle">إعداد الذكاء الاصطناعي</string>
+    <string name="setupNativeBack">رجوع</string>
+    <string name="setupNativeLoading">جارٍ قراءة إعداد الخادم</string>
+    <string name="setupNativeRefresh">تحديث</string>
+    <string name="setupNativeRefreshing">جارٍ التحديث</string>
+    <string name="setupNativeReviewOnly">للمراجعة فقط. تُجرى التغييرات في إعدادات الخادم حاليًا.</string>
+    <string name="setupNativeEmpty">لم يُضبط شيء بعد</string>
+    <string name="setupNativeEmptyBody">لا توجد مصادر إعداد أو خوادم أدوات لعرضها على هذا الخادم.</string>
+    <string name="setupNativeOffline">الخادم غير متصل</string>
+    <string name="setupNativeOfflineBody">أعد الاتصال لقراءة إعداد هذا الخادم.</string>
+    <string name="setupNativeOfflineStale">غير متصل. نعرض آخر إعداد قُرئ من هذا الخادم.</string>
+    <string name="setupNativeUnsupported">إعداد الذكاء الاصطناعي غير متاح</string>
+    <string name="setupNativeUnsupportedBody">هذا الخادم لا يشارك إعداداته مع التطبيق.</string>
+    <string name="setupNativeSignIn">سجّل الدخول لقراءة الإعداد</string>
+    <string name="setupNativeSignInBody">تحقق من تسجيل الدخول إلى هذا الخادم، ثم حاول مجددًا.</string>
+    <string name="setupNativeServers">تسجيل الدخول إلى الخادم</string>
+    <string name="setupNativeError">تعذّرت قراءة الإعداد</string>
+    <string name="setupNativeErrorBody">حاول مجددًا عندما يصبح الخادم متاحًا.</string>
+    <string name="setupNativeSuggestions">اقتراحات</string>
+    <string name="setupNativeSignInTool">سجّل الدخول إلى %1$s على الخادم.</string>
+    <string name="setupNativeFixTool">تحقق من %1$s في إعدادات الخادم.</string>
+    <string name="setupNativeAddTools">أضف الأدوات في إعدادات الخادم عندما تحتاج إليها.</string>
+    <string name="setupNativeTools">خوادم الأدوات</string>
+    <string name="setupNativeSources">مصادر الإعداد</string>
+    <string name="setupNativeSourcesBody">تُعرض المصادر بترتيب أولويتها على الخادم. يمكن للمصادر اللاحقة تجاوز السابقة.</string>
+    <string name="setupNativeSourceOrder">%1$d. %2$s</string>
+    <string name="setupNativeFile">ملف إعداد</string>
+    <string name="setupNativeInline">إعدادات مضمّنة</string>
+    <string name="setupNativeOtherSource">مصدر إعداد</string>
+    <string name="setupNativeNoValues">لا يضبط هذا المصدر أي قيمة.</string>
+    <string name="setupNativeConnected">متصل</string>
+    <string name="setupNativePending">قيد الانتظار</string>
+    <string name="setupNativeDisabled">متوقف</string>
+    <string name="setupNativeFailed">يحتاج إلى فحص</string>
+    <string name="setupNativeNeedsAuth">يحتاج إلى تسجيل الدخول</string>
+    <string name="setupNativeUnknown">الحالة غير معروفة</string>
+</resources>

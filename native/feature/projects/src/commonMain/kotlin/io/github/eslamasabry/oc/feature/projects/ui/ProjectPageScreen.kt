@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentProjectWorkspace
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunning
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsLoadMore
@@ -57,7 +58,11 @@ import org.jetbrains.compose.resources.stringResource
  * then this project's conversations with a visible Load more, then "In other projects" (B-NAV-010).
  */
 @Composable
-public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, onDevServices: (() -> Unit)? = null) {
+public fun ProjectPageScreen(
+    state: ProjectPageUi,
+    actions: ProjectPageActions,
+    onDevServices: (() -> Unit)? = null,
+) {
     KitScreen(
         topBar = {
             KitTopBar(
@@ -100,6 +105,15 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, 
                     trailing = KitRowTrailing.Chevron,
                     onClick = actions::developmentServices,
                 )
+            }
+            if (state.workspace.available) {
+                item(key = "project-workspace") {
+                    KitRow(
+                        title = stringResource(Res.string.agentProjectWorkspace),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = actions::openWorkspace,
+                    )
+                }
             }
             item(key = "new-body") {
                 KitText(
@@ -175,6 +189,7 @@ public fun ProjectPageScreen(state: ProjectPageUi, actions: ProjectPageActions, 
                 }
             }
         }
+        ProjectWorkspaceSheet(state.workspace, actions)
     }
 }
 

@@ -25,6 +25,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.feature.servers.pairing.PairingText
 import io.github.eslamasabry.oc.feature.servers.pairing.ShareLink
 import io.github.eslamasabry.oc.feature.servers.pairing.pairingProblemText
@@ -50,9 +53,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneHostSupport
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
-import io.github.eslamasabry.oc.engine.lifecycle.PhoneServerCandidate
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerScan
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
@@ -62,6 +62,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.linuxHostSetupTitle
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrRowDetail
+import io.github.eslamasabry.oc.ui.words.res.mcpNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.previewQrLinkFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairFilled
 import io.github.eslamasabry.oc.ui.words.res.previewQrPairingCodeLabel
@@ -102,6 +103,7 @@ import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.serversUsername
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
+import io.github.eslamasabry.oc.ui.words.res.setupNativeTitle
 import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
@@ -236,9 +238,17 @@ public fun ServersScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                     KitText(server.name)
                     KitText(server.address)
-                    // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded loopback is a server.
-                    val support = if (onThisPhone != null) PhoneHostSupport.Android else PhoneHostSupport.Elsewhere
-                    if (PhoneOwnServers.isPhoneOwnServer(PhoneServerCandidate(server.id.raw, server.address), support)) {
+                    // B-NAV-040: only the phone's own servers are marked as this phone; a forwarded
+                    // loopback is a server.
+                    val support =
+                        if (onThisPhone != null) PhoneHostSupport.Android
+                        else PhoneHostSupport.Elsewhere
+                    if (
+                        PhoneOwnServers.isPhoneOwnServer(
+                            PhoneServerCandidate(server.id.raw, server.address),
+                            support,
+                        )
+                    ) {
                         KitText(stringResource(Res.string.settingsV3ThisPhone))
                     }
                     if (server.connected) KitText(stringResource(Res.string.serversConnected))
@@ -269,6 +279,18 @@ public fun ServersScreen(
                             schedulesLabel(),
                             { actions.openSchedules(server.id) },
                             role = KitButtonRole.Secondary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.mcpNativeTitle),
+                            { actions.openConnectorCatalog(server.id) },
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
+                        KitButton(
+                            stringResource(Res.string.setupNativeTitle),
+                            { actions.openSetupReview(server.id) },
+                            role = KitButtonRole.Tertiary,
                             enabled = enabled,
                         )
                         KitButton(

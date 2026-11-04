@@ -94,3 +94,5 @@
 :engine:integrations-catalog	F	build-integrations-b	parity-p12
 :engine:integrations-host	F	build-integrations-b	parity-p12
 :feature:plans	F	build-integrations-b	parity-p12
+:feature:integrations-catalog	F	27-build-AGENT-2	parity-p12
+:feature:setupreview	F	27-build-AGENT-2	parity-p12

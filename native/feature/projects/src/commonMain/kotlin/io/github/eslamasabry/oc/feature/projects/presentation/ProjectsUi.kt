@@ -96,9 +96,10 @@ public data class ProjectPageUi(
     val failure: Failure? = null,
     val creating: Boolean = false,
     val createFailure: Failure? = null,
+    val workspace: ProjectWorkspaceUi = ProjectWorkspaceUi(),
 )
 
-public interface ProjectPageActions {
+public interface ProjectPageActions : ProjectWorkspaceActions {
     public fun developmentServices()
 
     public fun back()
