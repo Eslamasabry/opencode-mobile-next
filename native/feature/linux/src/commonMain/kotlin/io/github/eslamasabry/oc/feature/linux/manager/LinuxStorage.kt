@@ -393,6 +393,14 @@ printf '::freed %s\n' "$freed"
     /** The measure script for every category path. */
     public val script: String = measure(categoryPaths.values.flatten())
 
+    /**
+     * A new scan voids every earlier receipt: removes the receipt files a previous scan left
+     * unused (only the exact mktemp names, never a link target), so they cannot pile up.
+     */
+    internal const val DISCARD_RECEIPTS: String =
+        "rm -f -- /root/.oc-builtin/storage-cleanup.?????????? " +
+            "/root/.oc-builtin/storage-cleanup.??????????.paths 2>/dev/null || true\n"
+
     /** Kilobytes by path from `::du` lines. */
     public fun parseDu(output: String): Map<String, Long> {
         val out = linkedMapOf<String, Long>()

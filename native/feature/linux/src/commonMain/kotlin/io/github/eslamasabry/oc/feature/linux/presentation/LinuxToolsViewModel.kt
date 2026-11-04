@@ -29,6 +29,10 @@ public interface LinuxToolsActions {
     public fun confirmRemove()
 
     public fun dismiss()
+
+    public fun openAppSettings()
+
+    public fun openStorageSettings()
 }
 
 /** Confirmation is transient; every confirmed operation rechecks native admission in the source. */
@@ -75,6 +79,10 @@ public class LinuxToolsModel(
     override fun dismiss() {
         ui.update { it.copy(confirming = false, bytes = null) }
     }
+
+    override fun openAppSettings(): Unit = source.openAppSettings()
+
+    override fun openStorageSettings(): Unit = source.openStorageSettings()
 }
 
 @Inject
@@ -91,4 +99,8 @@ public class LinuxToolsViewModel(source: LinuxToolsSource) : ViewModel(), LinuxT
     override fun confirmRemove(): Unit = model.confirmRemove()
 
     override fun dismiss(): Unit = model.dismiss()
+
+    override fun openAppSettings(): Unit = model.openAppSettings()
+
+    override fun openStorageSettings(): Unit = model.openStorageSettings()
 }

@@ -22,7 +22,11 @@ import org.jetbrains.compose.resources.stringResource
  * progress.
  */
 @Composable
-internal fun LinuxSetupPanel(state: LinuxHomeUi, actions: LinuxHomeActions) {
+internal fun LinuxSetupPanel(
+    state: LinuxHomeUi,
+    actions: LinuxHomeActions,
+    openAppSettings: (() -> Unit)? = null,
+) {
     val progress = state.setup
     val running = progress.state == SetupState.Running
     if (running) {
@@ -53,16 +57,32 @@ internal fun LinuxSetupPanel(state: LinuxHomeUi, actions: LinuxHomeActions) {
             }
         if (progress.state == SetupState.Done)
             KitNotice(message = stringResource(Res.string.linuxSetupDone))
+        // Unknown ownership cannot be repaired by rerunning the job (Flutter
+        // needsOwnershipRecovery): the way out is Force stop in the app's settings.
+        val ownership =
+            progress.error == SetupError.OwnershipUnknown ||
+                progress.components.any {
+                    it.state == ComponentState.Failed && it.error == SetupError.OwnershipUnknown
+                }
         if (progress.canContinue)
             KitNotice(
-                message = progress.error?.words() ?: stringResource(Res.string.linuxSetupFailed),
+                message =
+                    if (ownership) SetupError.OwnershipUnknown.words()
+                    else progress.error?.words() ?: stringResource(Res.string.linuxSetupFailed),
                 actions =
-                    listOf(
-                        KitLineAction(
-                            stringResource(Res.string.linuxSetupContinue),
-                            actions::continueSetup,
+                    if (ownership)
+                        listOfNotNull(
+                            openAppSettings?.let {
+                                KitLineAction(stringResource(Res.string.e7SetupOpenAppSettings), it)
+                            }
                         )
-                    ),
+                    else
+                        listOf(
+                            KitLineAction(
+                                stringResource(Res.string.linuxSetupContinue),
+                                actions::continueSetup,
+                            )
+                        ),
             )
         KitRowGroup {
             if (state.presence == LinuxPresence.NotInstalled)
@@ -101,8 +121,8 @@ internal fun LinuxSetupPanel(state: LinuxHomeUi, actions: LinuxHomeActions) {
                     if (done != null && total != null && total > 0)
                         stringResource(
                             Res.string.linuxSetupBytes,
-                            done.toString(),
-                            total.toString(),
+                            size(done.coerceIn(0L, total)),
+                            size(total),
                         )
                     else null
                 KitRow(
@@ -120,10 +140,7 @@ internal fun LinuxSetupPanel(state: LinuxHomeUi, actions: LinuxHomeActions) {
 @Composable
 private fun SetupError.words(): String =
     when (this) {
-        SetupError.OwnershipUnknown ->
-            stringResource(Res.string.inAppServerOwnershipRecoveryBody) +
-                "\n" +
-                stringResource(Res.string.linuxSetupOwnershipCode)
+        SetupError.OwnershipUnknown -> stringResource(Res.string.inAppServerOwnershipRecoveryBody)
         SetupError.PersistenceFailure -> stringResource(Res.string.linuxSetupSavedFailed)
         SetupError.StatusUnreadable -> stringResource(Res.string.linuxSetupStatusUnreadable)
         SetupError.HostMismatch -> stringResource(Res.string.linuxSetupHostMismatch)

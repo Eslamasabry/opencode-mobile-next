@@ -132,7 +132,7 @@ public class LinuxManager(
     public suspend fun measureStorage(): LinuxAnswer<LinuxStorageReport> = storageLane.withLock {
         storageScanned = false
         cleanupReceipts.clear()
-        run(LinuxStorage.script, timeoutSeconds = 180).then {
+        run(LinuxStorage.DISCARD_RECEIPTS + LinuxStorage.script, timeoutSeconds = 180).then {
             storageScanned = true
             LinuxAnswer.Ok(LinuxStorage.report(it))
         }

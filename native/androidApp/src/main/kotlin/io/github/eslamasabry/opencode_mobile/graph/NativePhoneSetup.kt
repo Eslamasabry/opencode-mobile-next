@@ -108,9 +108,11 @@ class NativePhoneSetup(
                                         .getMemoryInfo(it)
                                 }
                                 .totalMem
-                                .div(1024 * 1024)
-                                .coerceAtMost(Int.MAX_VALUE.toLong())
-                                .toInt()
+                                // A zero reading is unknown, never a phone with no memory.
+                                .takeIf { it > 0 }
+                                ?.div(1024 * 1024)
+                                ?.coerceAtMost(Int.MAX_VALUE.toLong())
+                                ?.toInt()
                         }
                             as? Outcome.Ok)
                         ?.value
@@ -350,8 +352,11 @@ class NativePhoneSetup(
 
     override suspend fun cancel(): Outcome<Unit> =
         withContext(serial) {
-            // A cancel during checks must set cancelRequested before startSetup can run.
-            engine?.cancel()
+            // A cancel during checks must set cancelRequested before startSetup can run, so it
+            // bypasses the lane a running start holds. With no engine yet (a cold app with a
+            // runner job), nothing is starting: build it through the lane and cancel normally.
+            val current = engine ?: return@withContext command { it.cancel() }
+            current.cancel()
             Outcome.Ok(Unit)
         }
 

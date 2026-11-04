@@ -24,4 +24,10 @@ public interface LinuxToolsSource {
     public suspend fun pythonBytes(): Long?
 
     public suspend fun removePython()
+
+    /** The app's own settings page (Force stop is the ownership recovery). */
+    public fun openAppSettings()
+
+    /** The phone's storage settings, for a setup refused on free space. */
+    public fun openStorageSettings()
 }

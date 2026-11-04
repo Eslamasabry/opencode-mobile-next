@@ -1,6 +1,10 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.Application
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -136,5 +140,28 @@ class NativeLinuxTools(
                 shown.update { it.copy(removing = false) }
             }
             if (refreshRequested) refresh()
+        }
+
+    override fun openAppSettings() {
+        open(
+            Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.parse("package:${app.packageName}"),
+            )
+        )
+    }
+
+    override fun openStorageSettings() {
+        if (!open(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS))) openAppSettings()
+    }
+
+    private fun open(intent: Intent): Boolean =
+        try {
+            app.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        } catch (_: SecurityException) {
+            false
         }
 }

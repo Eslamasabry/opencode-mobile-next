@@ -3,8 +3,7 @@
     <string name="linuxToolsTitle">Installed tools</string>
     <string name="linuxToolsAiTeam">AI Team</string>
     <string name="linuxToolsPart">Phone tool</string>
-    <string name="linuxToolsFreeBytes">Free %1$s bytes on this phone, then continue setup.</string>
-    <string name="linuxToolsFreedBytes">About %1$s bytes can be freed.</string>
+    <string name="linuxToolsFreedBytes">About %1$s can be freed.</string>
     <string name="linuxToolsWait">Wait for the current phone operation to finish.</string>
     <string name="linuxToolsInstalled">Installed</string>
     <string name="linuxToolsAbsent">Not installed</string>
@@ -25,8 +24,7 @@
     <string name="linuxSetupHostMismatch">This saved setup belongs to a different Linux environment. Start setup for this phone instead.</string>
     <string name="linuxSetupHostRefused">Phone setup could not start safely. Continue setup to try again.</string>
     <string name="linuxSetupSavedFailed">Setup could not be saved. Free some storage, then continue setup.</string>
-    <string name="linuxSetupOwnershipCode">Recovery code: runtime_ownership_unknown</string>
-    <string name="linuxSetupBytes">%1$s of %2$s bytes</string>
+    <string name="linuxSetupBytes">%1$s of %2$s</string>
     <string name="linuxSetupCheckingPart">Checking installed tools</string>
     <string name="linuxSetupPartPending">Waiting</string>
     <string name="linuxSetupPartRunning">Installing</string>

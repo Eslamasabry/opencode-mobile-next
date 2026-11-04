@@ -166,7 +166,7 @@ public fun LinuxHomeScreen(
             LinuxJobPanel(state.job, actions::askStopJob, actions::dismissJob)
             if (presence != null && presence != LinuxPresence.NotOnThisBuild) {
                 if (state.ready) LinuxIdlePanel(state, actions)
-                LinuxSetupPanel(state, actions)
+                LinuxSetupPanel(state, actions, toolsActions?.let { it::openAppSettings })
                 if (tools != null && toolsActions != null)
                     LinuxToolsPanel(
                         tools,

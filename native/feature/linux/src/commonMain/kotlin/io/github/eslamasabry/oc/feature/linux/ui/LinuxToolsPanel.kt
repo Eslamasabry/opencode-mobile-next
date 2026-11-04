@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.engine.runtime.setup.SetupPreflight
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupPreflightResult
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsActions
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxToolsPanelUi
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -49,7 +50,17 @@ internal fun LinuxToolsPanel(state: LinuxToolsPanelUi, actions: LinuxToolsAction
             KitNotice(
                 title = stringResource(Res.string.phoneSetupPreflightLowSpaceHeadline),
                 message =
-                    stringResource(Res.string.linuxToolsFreeBytes, result.bytesToFree.toString()),
+                    stringResource(
+                        Res.string.phoneSetupPreflightLowSpaceBody,
+                        size(result.bytesToFree),
+                    ),
+                actions =
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.phoneSetupPreflightOpenStorage),
+                            actions::openStorageSettings,
+                        )
+                    ),
             )
         is SetupPreflightResult.MayBeSlow ->
             KitNotice(
@@ -118,7 +129,7 @@ internal fun LinuxToolsPanel(state: LinuxToolsPanelUi, actions: LinuxToolsAction
                             ?.takeIf { it > 0 }
                             ?.let {
                                 listOf(
-                                    stringResource(Res.string.linuxToolsFreedBytes, it.toString())
+                                    stringResource(Res.string.linuxToolsFreedBytes, size(it))
                                 )
                             }
                             .orEmpty(),
