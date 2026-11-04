@@ -77,6 +77,7 @@
 :feature:projects	F	P12-PROJECTS	slice-5
 :feature:review	F	(slice brief names the agent)	slice-4
 :feature:voice	F	(slice brief names the agent)	slice-12
+:feature:devservices	F	build-runtime-a	slice-5
 :feature:diagnostics	F	build-diagnostics-attention	parity
 :android:background	F	build-android-bg-platform	parity-p12
 :android:termux	F	build-android-bg-platform	parity-p12
