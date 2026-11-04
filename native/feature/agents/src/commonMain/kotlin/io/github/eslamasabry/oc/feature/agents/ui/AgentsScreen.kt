@@ -16,6 +16,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsIssue
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsProblem
@@ -40,6 +41,12 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerCheckFailedPlain
+import io.github.eslamasabry.oc.ui.words.res.agentAccountsTitle
+import io.github.eslamasabry.oc.ui.words.res.agentComputerCodex
+import io.github.eslamasabry.oc.ui.words.res.agentComputerCodexNote
+import io.github.eslamasabry.oc.ui.words.res.agentComputerPaseo
+import io.github.eslamasabry.oc.ui.words.res.agentDraftTitle
+import io.github.eslamasabry.oc.ui.words.res.agentPhoneCheck
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAddComputer
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAddFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAdded
@@ -88,12 +95,21 @@ import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Settings › Agents (Flutter `AgentsScreen` + the Paseo pairing editor). Kit parts only. The phone part is never an
- * empty page: without a phone agent host it says where agents run in one line. Every computer row has its visible
- * actions (Start conversation, Check agents); adding one is a visible button, never a hidden gesture.
+ * Settings › Agents (Flutter `AgentsScreen` + the Paseo pairing editor). Kit parts only. The phone
+ * part is never an empty page: without a phone agent host it says where agents run in one line.
+ * Every computer row has its visible actions (Start conversation, Check agents); adding one is a
+ * visible button, never a hidden gesture.
  */
 @Composable
 public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
+    if (state.draftSource != null) {
+        AgentDraftPanel(state, actions)
+        return
+    }
+    if (state.accountTarget != null) {
+        AgentAccountPanel(state, actions)
+        return
+    }
     val name = remember { TextFieldState() }
     val address = remember { TextFieldState() }
     val folder = remember { TextFieldState() }
@@ -108,11 +124,14 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
         }
     }
     LaunchedEffect(Unit) {
-        snapshotFlow { listOf(address.text.toString(), folder.text.toString(), password.text.toString()) }
+        snapshotFlow {
+            listOf(address.text.toString(), folder.text.toString(), password.text.toString())
+        }
             .collect { actions.edited() }
     }
     val enabled =
-        if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking)) else KitEnabled.Enabled
+        if (state.busy) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
+        else KitEnabled.Enabled
     KitScreen(
         topBar = {
             KitTopBar(
@@ -144,6 +163,29 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
             } else {
                 for (agent in state.phone.agents) {
                     KitRow(title = agent.name, supporting = phoneStatusWords(agent.status))
+                }
+            }
+
+            KitButton(
+                stringResource(Res.string.agentPhoneCheck),
+                actions::checkPhoneAgents,
+                gutter,
+                role = KitButtonRole.Secondary,
+                enabled = enabled,
+                working = state.busy,
+            )
+
+            if (state.draftSources.isNotEmpty()) {
+                KitSectionLabel(stringResource(Res.string.agentDraftTitle))
+                for (source in state.draftSources) {
+                    KitRow(title = source.name, onClick = { actions.openDrafts(source.id) })
+                }
+            }
+
+            if (state.accounts.isNotEmpty()) {
+                KitSectionLabel(stringResource(Res.string.agentAccountsTitle))
+                for (account in state.accounts) {
+                    KitRow(title = account.name, onClick = { actions.openAccount(account.id) })
                 }
             }
 
@@ -193,7 +235,29 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                 )
             } else {
                 Column(gutter, verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-                    KitNotice(stringResource(Res.string.paseoSetupNotice))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                        for (kind in AgentComputerKind.entries) {
+                            KitButton(
+                                stringResource(
+                                    if (kind == AgentComputerKind.Paseo)
+                                        Res.string.agentComputerPaseo
+                                    else Res.string.agentComputerCodex
+                                ),
+                                { actions.selectComputerKind(kind) },
+                                role =
+                                    if (kind == state.computerKind) KitButtonRole.Primary
+                                    else KitButtonRole.Secondary,
+                                enabled = enabled,
+                            )
+                        }
+                    }
+                    KitNotice(
+                        stringResource(
+                            if (state.computerKind == AgentComputerKind.Paseo)
+                                Res.string.paseoSetupNotice
+                            else Res.string.agentComputerCodexNote
+                        )
+                    )
                     val invalid = state.check as? ComputerCheck.Invalid
                     KitField(
                         name,
@@ -206,7 +270,10 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                         stringResource(Res.string.serversAddress),
                         kind = KitFieldKind.Url,
                         placeholder = stringResource(Res.string.paseoAddressHint),
-                        error = if (invalid?.address == true) stringResource(Res.string.agentsHubInvalidAddress) else null,
+                        error =
+                            if (invalid?.address == true)
+                                stringResource(Res.string.agentsHubInvalidAddress)
+                            else null,
                         enabled = enabled,
                     )
                     KitField(
@@ -214,7 +281,10 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                         stringResource(Res.string.codexProjectFolder),
                         kind = KitFieldKind.Path,
                         placeholder = stringResource(Res.string.agentsHubFolderHint),
-                        error = if (invalid?.folder == true) stringResource(Res.string.agentsHubInvalidFolder) else null,
+                        error =
+                            if (invalid?.folder == true)
+                                stringResource(Res.string.agentsHubInvalidFolder)
+                            else null,
                         enabled = enabled,
                     )
                     KitField(
@@ -222,19 +292,33 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
                         stringResource(Res.string.paseoPasswordLabel),
                         kind = KitFieldKind.Secret,
                         helper = stringResource(Res.string.paseoPasswordHelp),
-                        error = if (invalid?.password == true) stringResource(Res.string.agentsHubInvalidPassword) else null,
+                        error =
+                            if (invalid?.password == true)
+                                stringResource(Res.string.agentsHubInvalidPassword)
+                            else null,
                         enabled = enabled,
                     )
                     (state.check as? ComputerCheck.Ready)?.let { ready ->
                         KitNotice(
-                            if (ready.agents.isEmpty()) stringResource(Res.string.paseoCheckNoneReady)
-                            else stringResource(Res.string.paseoCheckReady, ready.agents.joinToString(", ")),
+                            if (ready.agents.isEmpty())
+                                stringResource(Res.string.paseoCheckNoneReady)
+                            else
+                                stringResource(
+                                    Res.string.paseoCheckReady,
+                                    ready.agents.joinToString(", "),
+                                )
                         )
                     }
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                         KitButton(
                             stringResource(Res.string.agentsHubCheck),
-                            { actions.check(address.text.toString(), password.text.toString(), folder.text.toString()) },
+                            {
+                                actions.check(
+                                    address.text.toString(),
+                                    password.text.toString(),
+                                    folder.text.toString(),
+                                )
+                            },
                             role = KitButtonRole.Secondary,
                             enabled = enabled,
                             working = state.busy,
@@ -284,7 +368,9 @@ private fun issueWords(issue: AgentsProblem): String =
     stringResource(
         when (issue.failure) {
             is Failure.SignIn -> Res.string.agentsHubSignInFailed
-            is Failure.ComputerDidNotAnswer, is Failure.Network, is Failure.TimedOut -> Res.string.agentsHubNotAnswering
+            is Failure.ComputerDidNotAnswer,
+            is Failure.Network,
+            is Failure.TimedOut -> Res.string.agentsHubNotAnswering
             else ->
                 when (issue.kind) {
                     AgentsIssue.CheckFailed -> Res.string.addServerCheckFailedPlain

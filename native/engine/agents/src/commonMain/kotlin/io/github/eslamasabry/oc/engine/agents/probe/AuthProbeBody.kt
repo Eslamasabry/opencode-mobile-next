@@ -1,9 +1,11 @@
 package io.github.eslamasabry.oc.engine.agents.probe
 
-// GENERATED from lib/builtin/agents/agent_scripts.dart `_authProbe` (copied verbatim; the native side admits only this
-// exact text by its SHA-256). Do not edit by hand.
+// Port of lib/builtin/agents/agent_scripts.dart `_authProbe`. Native probes use an eight-second
+// deadline for every
+// agent (B-AGENT-005); both native admission copies pin this exact body by SHA-256.
 
-internal const val AUTH_PROBE_BODY: String = """import json, os, re, selectors, signal, subprocess, sys, time
+internal const val AUTH_PROBE_BODY: String =
+    """import json, os, re, selectors, signal, subprocess, sys, time
 agent, executable, action = sys.argv[1:]
 def emit(state, account=None, error=None):
     value = {'state': state}
@@ -34,8 +36,7 @@ def run(args, parse=True, stderr=False):
     output = bytearray()
     selector = selectors.DefaultSelector()
     selector.register(stream, selectors.EVENT_READ)
-    # A freshly replaced native binary can take longer to cold-start under PRoot.
-    deadline = time.monotonic() + (60 if agent == 'claude' and action == 'probe' else 8)
+    deadline = time.monotonic() + 8
     try:
         while selector.get_map():
             remaining = deadline - time.monotonic()
