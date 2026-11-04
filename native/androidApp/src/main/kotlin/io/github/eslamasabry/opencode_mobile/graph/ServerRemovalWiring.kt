@@ -69,10 +69,9 @@ class NativeServerRemoval(
     override suspend fun remove(token: String, keepQueued: Boolean): Outcome<Unit> {
         val held = plans[token] ?: return stale()
         if (stores.profiles.profile(held.profile.id) !== held.profile) return stale()
-        return runtime.removeConfirmed(
-            held.profile.id,
-            DeletionOptions(keepQueuedPromptsAsDrafts = keepQueued, confirmedQueue = held.queue),
-        )
+        // The head's removal owns the deletion sweep; it refuses while prompts are still queued
+        // for this server (keep-as-drafts removal is not supported by the head queue yet).
+        return runtime.remove(held.profile.id)
     }
 
     override fun forget(token: String) {

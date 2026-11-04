@@ -13,8 +13,6 @@ import androidx.compose.runtime.getValue
 import io.github.eslamasabry.oc.ui.kit.content.terminal.AndroidKitTerminalSlot
 import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalSlot
 import androidx.compose.runtime.withFrameNanos
-import io.github.eslamasabry.oc.ui.kit.content.terminal.AndroidKitTerminalSlot
-import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalKitTerminalSlot
 import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalTerminalLinkHost
 import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink

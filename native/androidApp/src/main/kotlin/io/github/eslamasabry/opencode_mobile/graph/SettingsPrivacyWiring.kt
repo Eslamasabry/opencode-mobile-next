@@ -156,7 +156,7 @@ class SettingsPrivacy(
                                             (it as? ChatGraphAccessors)
                                                 ?.chatDelivery
                                                 ?.queue
-                                                ?.refreshAfterExternalEdit()
+                                                ?.reloadFromStorage()
                                         }
                                         val kept =
                                             (queue.load() as? QueueRead.Readable)?.entries?.size

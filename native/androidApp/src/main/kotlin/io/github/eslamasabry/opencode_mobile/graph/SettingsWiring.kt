@@ -680,9 +680,31 @@ class AndroidNotificationSettings(
     }
 
     override suspend fun set(change: NotificationChange): Outcome<Unit> {
+        // Per-server watch and alerts are owned by the server's own page (ServerPreferencesWiring).
+        if (
+            change is NotificationChange.ProfileWatch ||
+                change is NotificationChange.ProfileNotifications
+        )
+            return io.github.eslamasabry.oc.core.common.Failure.Unavailable(
+                    io.github.eslamasabry.oc.core.common.FeatureId("profileNotifications")
+                )
+                .let { Outcome.Failed(it) }
+        if (
+            change is NotificationChange.CheckIn &&
+                change.minutes != null &&
+                change.minutes !in 1..1440
+        )
+            return Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.StorageRefused())
         val result =
             stores.prefs.commit(stores.lanes.app) {
                 when (change) {
+                    is NotificationChange.ProfileWatch,
+                    is NotificationChange.ProfileNotifications -> Unit
+                    is NotificationChange.CheckIn -> {
+                        val minutes = change.minutes
+                        if (minutes == null) remove("oc.notify.checkInAfterMinutes")
+                        else putLong("oc.notify.checkInAfterMinutes", minutes.toLong())
+                    }
                     is NotificationChange.FinishedWork ->
                         putBool(NotificationKeys.FINISHED, change.on)
                     is NotificationChange.Questions -> putBool(NotificationKeys.REQUESTS, change.on)
