@@ -1,0 +1,46 @@
+# Migration step 4 — screens, part 1 of 3
+
+Already there: **1** · Ported now: **1** · Not needed: **0** · Blocked: **8**
+
+Rows recorded: **10/68**. Base: `cde0afb45f598c00e89de766d9d0a68ba89ae470`; branch: `p12x/40-port-screens-1`.
+
+Finish line: classify every requested Flutter file by its actual user behavior, wire feasible native journeys, and identify the exact prerequisites preventing the rest. Non-goals: tests, APKs, device qualification, pushes, releases and shared-module contract changes without their owners.
+
+These are source/implementation findings, not behavior-test or device parity proof. A blocked row can contain a useful partial port; it is never counted as completed parity. Shared modules follow `native/AGENTS.md` rule 14 ("propose, don't edit"). Missing shared contracts and platform-owner prerequisites below remain open; no fake production adapters or silent resend paths were added.
+
+| Flutter file | Decision and native evidence |
+|---|---|
+| `lib/ui/screens/agent_account_screen.dart` | blocked: no production account transport/session — native `native/engine/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/agents/account/AgentAccountSession.kt:43` defines the account read/limits/usage/device-login contract but has no production implementor; `native/ui/routes/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/routes/AgentsRoute.kt:8` exposes only Home, so location-pinned account identity, refresh, login/cancel, limits and usage cannot be reached. |
+| `lib/ui/screens/agents/agent_error_notice.dart` | already there — `native/feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/ui/AgentsScreen.kt:414` renders plain localized failure words and a copyable redacted Details fold through `native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitNotice.kt:169`. |
+| `lib/ui/screens/agents/agent_model_sheet.dart` | blocked: phone-agent model catalog and choice are not wired — `native/engine/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/agents/selection/AgentSelection.kt:51` persists per-agent model selection, but the production UI port `native/feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/hub/AgentsPorts.kt:70` offers only refresh/install/remove, with no agent-model catalog, readable default-label or model-selection actions. |
+| `lib/ui/screens/agents/agent_notices.dart` | blocked: Conversations has no live phone-agent status/action integration — `native/feature/chats/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chats/presentation/ChatsUi.kt:84` has no agent restart/signed-out/stopped/limit facts or actions; native readiness logic in `native/engine/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/agents/readiness/AgentReadiness.kt:305` is not connected to these notices, sign-in navigation or host resume. |
+| `lib/ui/screens/agents/agent_sign_in_terminal.dart` | blocked: terminal sign-in has no route or production host/foreground adapters — `native/feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/presentation/SignInTerminalViewModel.kt:15` and `native/feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/AgentsEntries.kt:16` identify the missing route/bindings; terminal UI/session logic exists but cannot be called from the native app. |
+| `lib/ui/screens/agents/agents_screen.dart` | ported now: the actual native Agents hub now opens Cards settings and offers Switch to built-in when a saved built-in server exists, suppresses phone-only controls for remote profiles, and connects only on the explicit tap with typed localized failure; `native/feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/ui/AgentsScreen.kt:200`, `native/feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/hub/AgentsViewModel.kt:55`, and `native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AgentsHubWiring.kt:60` provide the real UI/navigation/connection wiring; nested account/model/check gaps have their own rows. |
+| `lib/ui/screens/agents/phone_check_view.dart` | blocked: the four-step phone check has no production port or screen integration — `native/engine/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/agents/check/PhoneCheck.kt:49` requires unbound `PhoneCheckPorts`; `native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AppPhoneAgents.kt:172` labels an installed payload PhoneCheck without running the check or exposing its four-step progress/results, download bytes or sign-in-needed result. |
+| `lib/ui/screens/chat/agent_cards.dart` | blocked: cards are wired at `native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/ChatEntries.kt:108` and `cards/ChatCards.kt:176`, but `cards/ChatCardSlot.kt:293` explicitly leaves photo asks unavailable, and Flutter's connector card/catalog host is absent; native qualifier also only lists OpenCode2 (`cards/ChatCards.kt:86`), unlike Flutter agent ownership labels. |
+| `lib/ui/screens/chat/approval_mode_menu.dart` | blocked: three modes, persistent writes, Everything confirmation, and leave-Everything handling already exist at `native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/header/approval/ApprovalPresenter.kt:134` and `header/ui/ApprovalChip.kt:52`; Flutter's Settings menu item and shared approvals sheet door are missing (also choice supporting text and composer outcome note). |
+| `lib/ui/screens/chat/approvals_sheet.dart` | blocked: native `native/feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/header/approval/ApprovalPresenter.kt:29` retains only selected mode and auto-answer count; missing sheet, subagent inheritance switch, Follow parent, inherited source line, latest-five approval descriptions/patterns, paused/offline indicator and plus-sheet switch. |
+
+The native changes also restore the missing Continue forwarding, require a public-link confirmation before Share and a confirmation before Stop sharing, add real receipt lookup controls, and add visible prompt reuse with history recorded only after acknowledgement. Those partial improvements do not erase other behavior missing from their Flutter files.
+
+Shared-owner proposals needed to unblock the remaining rows:
+
+- Connection/transcript: durable redacted opening tails; cursor reset/staged-boundary hydration; source-step reveal identities; file/photo and model/time/cost payloads; removal/history-reset and inbox receipt events.
+- Agents/runtime/protocol: production account/usage/device-login transport; terminal/foreground sign-in host; real phone-check/model/readiness and handoff facades. Existing standalone helpers are insufficient.
+- Delivery/composer: receipt lookup returning `Outcome<Boolean>` (journal/read/commit failures are currently indistinguishable from unknown), target-bound inbox edit/cancel/steer actions, atomic expected-revision text/selection/files draft replacement, typed saved-prompt restore, and schedule seed/result admission.
+- Requests/teaching/platform/kit: persisted forms and long-question activation, history-tip registry/Help contributions, actual photo/camera/IME-content intake, gallery/editor result channels, summary inference, and owned navigation/compact/export/background contracts. Hidden keyboard history remains unavailable until its required contextual teaching and Help replay are wired.
+
+Compile-only gate: **2/2 requested targets passed**, 0 Kotlin errors, 0 tests run, 0 test files changed, 0 APKs built. Final unchanged native candidate SHA-256 (sorted changed native Kotlin/Gradle/XML paths and bytes): `49f845d58a0b31078a6592d509aca41215bc2db630447b0cb1568c79821230f3`.
+
+Command in `native/` (one build, native + machine build locks, nice 5):
+
+```bash
+JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME=$HOME/Android/Sdk \
+  nice -n 5 ./gradlew :androidApp:compilePreviewDebugKotlin compileKotlinDesktop \
+  -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
+  '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m'
+```
+
+Final gate: `BUILD SUCCESSFUL in 9s`, 570 actionable tasks (110 executed, 460 up-to-date); 2 warning emissions remain, no errors. An earlier complete compile also passed (2m 56s); the final compile followed removal of newly introduced deprecated collection calls. The initial attempt stopped on a missing vendored Sherpa AAR; `native/tools/vendor/fetch.sh` restored the exact artifact and verified committed SHA-256 `a8d09d1d32f3eb8520482c6d3d43fae674681c5b050385967c70a3c2c9bf0ee7`. No substitute artifact or tracked dependency change was used.
+
+No tests written/run/weakened/deleted. No APK, device run, signing, push, PR, CI, tag or release. Documentation-only ledger batches reuse this unchanged native candidate; Gradle is skipped for those batches as requested.

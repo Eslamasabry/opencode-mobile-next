@@ -7,9 +7,17 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.CardsSettingsRoute
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * `AgentsRoute.Home`. All logic is in [AgentsPresenter]; this only gives it a lifecycle scope and
@@ -21,8 +29,9 @@ import kotlinx.coroutines.flow.StateFlow
 public class AgentsViewModel(
     computers: AgentComputers,
     phone: PhoneAgents,
-    nav: AppNavigator,
-) : ViewModel(), AgentsActions {
+    private val nav: AppNavigator,
+    private val hub: AgentsHubConnection,
+) : ViewModel(), AgentsActions, AgentsHubActions {
     private val presenter =
         AgentsPresenter(
             viewModelScope,
@@ -33,6 +42,32 @@ public class AgentsViewModel(
         )
 
     public val state: StateFlow<AgentsUi> = presenter.state
+
+    private val localHub = MutableStateFlow(AgentsHubControlsUi())
+    public val hubState: StateFlow<AgentsHubControlsUi> =
+        combine(localHub, hub.state) { own, connection -> own.copy(connection = connection) }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Eagerly,
+                localHub.value.copy(connection = hub.state.value),
+            )
+
+    override fun openCardsSettings(): Unit = nav.open(CardsSettingsRoute)
+
+    override fun switchToBuiltIn() {
+        if (localHub.value.working || !hub.state.value.builtInAvailable) return
+        localHub.update { it.copy(working = true, failure = null) }
+        viewModelScope.launch {
+            try {
+                when (val answer = hub.switchToBuiltIn()) {
+                    is Outcome.Ok -> presenter.refreshPhone()
+                    is Outcome.Failed -> localHub.update { it.copy(failure = answer.failure) }
+                }
+            } finally {
+                localHub.update { it.copy(working = false) }
+            }
+        }
+    }
 
     override fun back(): Unit = presenter.back()
 
