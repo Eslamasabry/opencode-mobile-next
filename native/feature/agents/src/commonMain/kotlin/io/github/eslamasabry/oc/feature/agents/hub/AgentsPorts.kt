@@ -101,6 +101,14 @@ public interface PhoneAgents {
      */
     public suspend fun refresh(): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgents")))
+
+    public suspend fun install(id: String): Outcome<PhoneAgentInstallResult> =
+        Outcome.Ok(PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable))
+
+    public suspend fun cancelInstall(): Outcome<Unit> = Outcome.Ok(Unit)
+
+    public suspend fun remove(id: String): Outcome<PhoneAgentRemoval> =
+        Outcome.Ok(PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable))
 }
 
 public data class PhoneAgentsState(
@@ -110,9 +118,29 @@ public data class PhoneAgentsState(
      */
     val available: Boolean = false,
     val agents: ImmutableList<PhoneAgentRow> = persistentListOf(),
+    val installation: PhoneAgentInstallation? = null,
 )
 
-public data class PhoneAgentRow(val id: String, val name: String, val status: PhoneAgentStatus)
+public data class PhoneAgentRow(
+    val id: String,
+    val name: String,
+    val status: PhoneAgentStatus,
+    val removable: Boolean = false,
+    val installable: Boolean = false,
+)
+
+public sealed interface PhoneAgentRemoval {
+    public data class Removed(val freedBytes: Long) : PhoneAgentRemoval
+
+    public data class Refused(val issue: PhoneAgentRemovalIssue) : PhoneAgentRemoval
+}
+
+public enum class PhoneAgentRemovalIssue {
+    Busy,
+    Unsafe,
+    Unconfirmed,
+    Unavailable,
+}
 
 /** The row states of Flutter `agentsState*` (17 §1.4 order); the words live in the screen. */
 public enum class PhoneAgentStatus {
@@ -138,4 +166,29 @@ public enum class AgentsIssue {
     AgentsFailed,
     StartFailed,
     Added,
+}
+
+public data class PhoneAgentInstallation(
+    val id: String,
+    val phase: PhoneAgentInstallPhase,
+    val fraction: Double?,
+)
+
+public enum class PhoneAgentInstallPhase {
+    Installing,
+    Done,
+    Failed,
+    Interrupted,
+}
+
+public sealed interface PhoneAgentInstallResult {
+    public data object Started : PhoneAgentInstallResult
+
+    public data class Refused(val issue: PhoneAgentInstallIssue) : PhoneAgentInstallResult
+}
+
+public enum class PhoneAgentInstallIssue {
+    Busy,
+    Space,
+    Unavailable,
 }

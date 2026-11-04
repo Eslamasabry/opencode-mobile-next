@@ -1,20 +1,24 @@
 package io.github.eslamasabry.oc.engine.runtime.install
 
 /**
- * Port of scripts/host/ubuntu-opencode.sh (the Ubuntu/Linux host install script; Flutter's host-setup docs and
- * lib/termux/bridge.dart's pinned version point at it). [TEXT] is the file byte for byte, so the native app can hand out
- * or run the very same script. It installs one pinned OpenCode release, checks its SHA-256 before anything is unpacked,
- * and runs it as a per-user systemd service bound to loopback.
+ * Port of scripts/host/ubuntu-opencode.sh (the Ubuntu/Linux host install script; Flutter's
+ * host-setup docs and lib/termux/bridge.dart's pinned version point at it). [TEXT] is the file byte
+ * for byte, so the native app can hand out or run the very same script. It installs one pinned
+ * OpenCode release, checks its SHA-256 before anything is unpacked, and runs it as a per-user
+ * systemd service bound to loopback.
  *
- * [installDecision] and [updateDecision] are the same rules as data, for callers that explain a run's result.
+ * [installDecision] and [updateDecision] are the same rules as data, for callers that explain a
+ * run's result.
  */
 public object UbuntuHostScript {
     public const val PINNED_VERSION: String = "2.2.5"
     public const val RELEASES: String = "https://registry.npmjs.org/@opencode"
     public const val X64_ASSET: String = "cli-linux-x64-baseline-2.2.5.tgz"
-    public const val X64_SHA256: String = "873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08"
+    public const val X64_SHA256: String =
+        "873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08"
     public const val ARM64_ASSET: String = "cli-linux-arm64-2.2.5.tgz"
-    public const val ARM64_SHA256: String = "f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053"
+    public const val ARM64_SHA256: String =
+        "f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053"
     public const val SERVICE_NAME: String = "opencode-serve"
 
     /** Where the script installs the program, relative to `$HOME`. */
@@ -22,15 +26,34 @@ public object UbuntuHostScript {
 
     /** The script's subcommands (`bash ubuntu-opencode.sh <command>`). */
     public enum class Command(public val wireName: String) {
-        Install("install"), Start("start"), Stop("stop"), Restart("restart"), Status("status"), Logs("logs"),
-        Update("update"), Password("password"),
+        Install("install"),
+        Start("start"),
+        Stop("stop"),
+        Restart("restart"),
+        Status("status"),
+        Logs("logs"),
+        Update("update"),
+        Password("password"),
+    }
+
+    /**
+     * A complete copyable command: writes this build's bundled installer, then runs only the chosen
+     * verb.
+     */
+    public fun copyCommand(command: Command, port: Int = 4096): String {
+        require(port in 1..65535) { "Invalid port." }
+        return "cat > ubuntu-opencode.sh <<'OC_NATIVE_UBUNTU_SCRIPT'\n" +
+            TEXT +
+            "\nOC_NATIVE_UBUNTU_SCRIPT\nOPENCODE_PORT=$port bash ubuntu-opencode.sh ${command.wireName}"
     }
 
     /** `uname -m` → the pinned archive, or null when OpenCode has no Linux build for that CPU. */
     public fun assetFor(machine: String): String? =
         when (machine.trim()) {
-            "x86_64", "amd64" -> X64_ASSET
-            "aarch64", "arm64" -> ARM64_ASSET
+            "x86_64",
+            "amd64" -> X64_ASSET
+            "aarch64",
+            "arm64" -> ARM64_ASSET
             else -> null
         }
 
@@ -43,7 +66,8 @@ public object UbuntuHostScript {
         }
 
     /** The script's `$OPENCODE_RELEASES/${asset%-$OPENCODE_VERSION.tgz}/-/$asset`. */
-    public fun downloadUrl(asset: String): String = "$RELEASES/${asset.removeSuffix("-$PINNED_VERSION.tgz")}/-/$asset"
+    public fun downloadUrl(asset: String): String =
+        "$RELEASES/${asset.removeSuffix("-$PINNED_VERSION.tgz")}/-/$asset"
 
     /** What `install` does with an `opencode` that is (or is not) already on the machine. */
     public enum class InstallDecision {
@@ -53,11 +77,17 @@ public object UbuntuHostScript {
         /** An OpenCode 2 is already there: left alone, the service runs it. */
         KeepExisting,
 
-        /** An unsupported (OpenCode 1) server is there: refused, nothing changed, nothing downloaded. */
+        /**
+         * An unsupported (OpenCode 1) server is there: refused, nothing changed, nothing
+         * downloaded.
+         */
         RefuseUnsupported,
     }
 
-    /** `install_opencode_if_missing`: [existingVersion] is what the found program reports (null when none is found). */
+    /**
+     * `install_opencode_if_missing`: [existingVersion] is what the found program reports (null when
+     * none is found).
+     */
     public fun installDecision(existingVersion: String?): InstallDecision =
         when {
             existingVersion == null -> InstallDecision.InstallPinned
@@ -76,7 +106,10 @@ public object UbuntuHostScript {
         /** The installed program reports no version: refused, nothing changed. */
         Unidentified,
 
-        /** Already at or past the pin: never downgraded (a newer OpenCode may have moved its data forward). */
+        /**
+         * Already at or past the pin: never downgraded (a newer OpenCode may have moved its data
+         * forward).
+         */
         AlreadyCurrent,
 
         /** An older OpenCode 2: moved to the pin (and a checksum mismatch keeps the old one). */
@@ -87,15 +120,20 @@ public object UbuntuHostScript {
     public fun updateDecision(installedVersion: String?, found: Boolean = true): UpdateDecision =
         when {
             !found -> UpdateDecision.NotInstalled
-            installedVersion != null && installedVersion.startsWith("1.") && PINNED_VERSION.startsWith("2.") ->
-                UpdateDecision.RefuseLegacy
+            installedVersion != null &&
+                installedVersion.startsWith("1.") &&
+                PINNED_VERSION.startsWith("2.") -> UpdateDecision.RefuseLegacy
             installedVersion.isNullOrEmpty() -> UpdateDecision.Unidentified
             versionAtLeast(installedVersion, PINNED_VERSION) -> UpdateDecision.AlreadyCurrent
             else -> UpdateDecision.MoveToPinned
         }
 
-    /** `version_at_least`: true when [version] is [minimum] or newer, compared like GNU `sort -V` on dotted numbers. */
-    public fun versionAtLeast(version: String, minimum: String): Boolean = compareVersions(version, minimum) >= 0
+    /**
+     * `version_at_least`: true when [version] is [minimum] or newer, compared like GNU `sort -V` on
+     * dotted numbers.
+     */
+    public fun versionAtLeast(version: String, minimum: String): Boolean =
+        compareVersions(version, minimum) >= 0
 
     private fun compareVersions(a: String, b: String): Int {
         val left = a.split('.', '-')
@@ -112,7 +150,8 @@ public object UbuntuHostScript {
     }
 
     /** scripts/host/ubuntu-opencode.sh, verbatim. */
-    public const val TEXT: String = """#!/usr/bin/env bash
+    public const val TEXT: String =
+        """#!/usr/bin/env bash
 # ubuntu-opencode.sh — install and manage an OpenCode server on Ubuntu/Linux.
 #
 # Runs OpenCode as a per-user systemd service so it survives terminal exits

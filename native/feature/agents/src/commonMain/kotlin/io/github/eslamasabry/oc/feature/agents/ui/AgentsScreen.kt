@@ -22,6 +22,8 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentsIssue
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsProblem
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
 import io.github.eslamasabry.oc.feature.agents.hub.ComputerCheck
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemovalIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -34,6 +36,9 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
@@ -79,6 +84,15 @@ import io.github.eslamasabry.oc.ui.words.res.codexProjectFolder
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadBusy
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRefresh
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemove
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoveBody
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoveTitle
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoved
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnavailable
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnconfirmed
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnsafe
 import io.github.eslamasabry.oc.ui.words.res.paseoAddressHint
 import io.github.eslamasabry.oc.ui.words.res.paseoCheckNoneReady
 import io.github.eslamasabry.oc.ui.words.res.paseoCheckReady
@@ -154,6 +168,38 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
             state.issue?.let { IssueNotice(it, gutter) }
 
             KitSectionLabel(stringResource(Res.string.agentsHubOnPhone))
+            state.removal?.let { removal ->
+                when (removal) {
+                    is PhoneAgentRemoval.Removed ->
+                        KitNotice(
+                            stringResource(Res.string.linuxAgentPayloadRemoved, removal.freedBytes),
+                            gutter,
+                        )
+                    is PhoneAgentRemoval.Refused ->
+                        KitErrorNotice(
+                            stringResource(
+                                when (removal.issue) {
+                                    PhoneAgentRemovalIssue.Busy -> Res.string.linuxAgentPayloadBusy
+                                    PhoneAgentRemovalIssue.Unsafe ->
+                                        Res.string.linuxAgentPayloadUnsafe
+                                    PhoneAgentRemovalIssue.Unconfirmed ->
+                                        Res.string.linuxAgentPayloadUnconfirmed
+                                    PhoneAgentRemovalIssue.Unavailable ->
+                                        Res.string.linuxAgentPayloadUnavailable
+                                }
+                            ),
+                            gutter,
+                        )
+                }
+            }
+            AgentInstallPanel(state, actions, gutter, enabled)
+            KitButton(
+                stringResource(Res.string.linuxAgentPayloadRefresh),
+                actions::refreshPhone,
+                gutter,
+                role = KitButtonRole.Secondary,
+                enabled = enabled,
+            )
             if (!state.phone.available) {
                 KitRow(
                     title = stringResource(Res.string.agentsRunOnBuiltIn),
@@ -163,6 +209,23 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
             } else {
                 for (agent in state.phone.agents) {
                     KitRow(title = agent.name, supporting = phoneStatusWords(agent.status))
+                    if (agent.installable) {
+                        KitButton(
+                            agentInstallLabel(agent.name),
+                            { actions.installPhone(agent.id) },
+                            gutter,
+                            enabled = enabled,
+                        )
+                    }
+                    if (agent.removable) {
+                        KitButton(
+                            stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
+                            { actions.requestRemoval(agent.id) },
+                            gutter,
+                            role = KitButtonRole.Secondary,
+                            enabled = enabled,
+                        )
+                    }
                 }
             }
 
@@ -345,6 +408,18 @@ public fun AgentsScreen(state: AgentsUi, actions: AgentsActions) {
             }
         }
     }
+    KitConfirm(
+        state.removingAgent?.let { agent ->
+            KitConfirmSpec(
+                title = stringResource(Res.string.linuxAgentPayloadRemoveTitle, agent.name),
+                confirmLabel = stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
+                kind = KitConfirmKind.Destructive,
+                body = stringResource(Res.string.linuxAgentPayloadRemoveBody),
+            )
+        },
+        onConfirm = actions::confirmRemoval,
+        onCancel = actions::cancelRemoval,
+    )
 }
 
 @Composable

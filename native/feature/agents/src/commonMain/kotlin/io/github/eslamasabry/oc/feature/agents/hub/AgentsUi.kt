@@ -38,6 +38,9 @@ public data class AgentsUi(
     val draftFailed: Boolean = false,
     val draftTooLarge: Boolean = false,
     val draftCopied: Boolean = false,
+    val removingAgent: PhoneAgentRow? = null,
+    val removal: PhoneAgentRemoval? = null,
+    val installIssue: PhoneAgentInstallIssue? = null,
 )
 
 public interface AgentsActions {
@@ -81,4 +84,16 @@ public interface AgentsActions {
     public fun readAgents(id: ProfileId)
 
     public fun newConversation(id: ProfileId)
+
+    public fun installPhone(id: String) {}
+
+    public fun cancelPhoneInstall() {}
+
+    public fun refreshPhone()
+
+    public fun requestRemoval(id: String)
+
+    public fun cancelRemoval()
+
+    public fun confirmRemoval()
 }

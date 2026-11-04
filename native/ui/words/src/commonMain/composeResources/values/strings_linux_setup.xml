@@ -1,0 +1,12 @@
+<resources>
+    <string name="linuxSetupStart">Set up Linux and OpenCode</string>
+    <string name="linuxSetupAddPython">Add Python tools</string>
+    <string name="linuxSetupContinue">Continue setup</string>
+    <string name="linuxSetupStop">Stop setup</string>
+    <string name="linuxSetupStopQuestion">Stop setup?</string>
+    <string name="linuxSetupStopBody">Installed tools stay on the phone. You can continue setup later.</string>
+    <string name="linuxSetupWorking">Setting up phone tools…</string>
+    <string name="linuxSetupAddingPython">Adding Python tools</string>
+    <string name="linuxSetupDone">Phone tools are ready.</string>
+    <string name="linuxSetupFailed">Setup stopped before finishing. Continue setup to check installed tools and try again.</string>
+</resources>

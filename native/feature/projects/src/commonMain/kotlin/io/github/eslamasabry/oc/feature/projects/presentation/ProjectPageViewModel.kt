@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.engine.agents.feed.FeedFolders
 import io.github.eslamasabry.oc.engine.attention.AttentionKind
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.LinuxRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.collections.immutable.toImmutableList
@@ -290,6 +291,9 @@ public class ProjectPageViewModel(
     }
 
     override fun openConversation(ref: ConversationRef): Unit = nav.openChat(ref)
+
+    override fun developmentServices(): Unit =
+        nav.open(LinuxRoute.Services(route.profile, directory))
 
     override fun back(): Unit = nav.back()
 

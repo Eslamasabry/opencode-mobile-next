@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
 import io.github.eslamasabry.oc.feature.settings.presentation.ReportUi
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -18,6 +19,8 @@ import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -36,7 +39,10 @@ import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSpanish
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSystem
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.reportProblemCopyShort
+import io.github.eslamasabry.oc.ui.words.res.reportProblemKeptLink
 import io.github.eslamasabry.oc.ui.words.res.reportProblemPrivacy
+import io.github.eslamasabry.oc.ui.words.res.reportProblemSendGitHub
+import io.github.eslamasabry.oc.ui.words.res.reportProblemSendHint
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -96,6 +102,18 @@ internal fun ColumnScope.ReportBody(report: ReportUi?, actions: SettingsActions)
             }
             Box(gutter.testTag("report-text")) {
                 KitText(report.text, role = TypeRole.Mono, kind = KitTextKind.Reading)
+            }
+            KitRowGroup {
+                KitRow(
+                    title = stringResource(Res.string.reportProblemSendGitHub),
+                    supporting = stringResource(Res.string.reportProblemSendHint),
+                    supportingMaxLines = 2,
+                    onClick = { actions.onOutside(SettingsOutside.ReportOnGitHub) },
+                )
+                KitRow(
+                    title = stringResource(Res.string.reportProblemKeptLink),
+                    onClick = { actions.onOutside(SettingsOutside.KeptDiagnostics) },
+                )
             }
         }
     }

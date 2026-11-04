@@ -50,7 +50,8 @@ internal class Oc2Gateway(
     SessionSelectionGateway,
     StagedRevertGateway,
     LocatedFileGateway,
-    LocatedVcsGateway {
+    LocatedVcsGateway,
+    LocatedManagedShellGateway {
     private val ids = Oc2ClientIds(clock, random)
     private val dialect = MutableStateFlow(initialDialect)
     private val negotiation = Mutex()
@@ -814,6 +815,43 @@ internal class Oc2Gateway(
             },
         )
 
+    /**
+     * Each service panel keeps its own location; it never moves the connection's shared project.
+     */
+    override fun managedShellsAt(location: ServerLocation): ManagedShellGateway =
+        Oc2ManagedShells(this, location)
+
+    override suspend fun startManagedShell(
+        command: String,
+        directory: String,
+        ownerToken: String,
+    ): Outcome<ManagedShell> =
+        managedShellsAt(location.value).startManagedShell(command, directory, ownerToken)
+
+    override suspend fun runningShells(): Outcome<ManagedShellList> =
+        managedShellsAt(location.value).runningShells()
+
+    override suspend fun managedShell(id: String): Outcome<ManagedShell?> =
+        managedShellsAt(location.value).managedShell(id)
+
+    override suspend fun managedShellOutput(
+        id: String,
+        cursor: Long,
+        limit: Int,
+    ): Outcome<ManagedShellOutput> =
+        managedShellsAt(location.value).managedShellOutput(id, cursor, limit)
+
+    override suspend fun stopManagedShell(id: String): Outcome<Unit> =
+        managedShellsAt(location.value).stopManagedShell(id)
+
+    override suspend fun setManagedShellTimeout(
+        id: String,
+        timeout: kotlin.time.Duration?,
+    ): Outcome<ManagedShell> = managedShellsAt(location.value).setManagedShellTimeout(id, timeout)
+
+    override suspend fun managedShellServerIdentity(): Outcome<String?> =
+        managedShellsAt(location.value).managedShellServerIdentity()
+
     private fun locationQuery(at: ServerLocation = location.value): Map<String, String?> =
         mapOf(
             "location[directory]" to at.directory,
@@ -1251,7 +1289,7 @@ internal class Oc2Gateway(
                 toolInventory = false,
                 experimentalCapabilities = false,
                 shellSettings = false,
-                developmentServices = false,
+                developmentServices = true,
                 remoteUpgrade = false,
                 clientDiagnostics = false,
                 gitInit = false,

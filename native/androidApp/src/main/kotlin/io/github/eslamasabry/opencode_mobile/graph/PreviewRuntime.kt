@@ -37,6 +37,7 @@ class PreviewRuntime(
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
     private val draftOwners: Set<ConversationDrafts>,
+    private val profileClosers: Set<ProfileCloser>,
     private val cleaners:
         Set<ProfileResourceCleaner>, // P12-FIX: the saved-prompt shelf and its files (B-SEC-172)
 ) : ServerConnections {
@@ -349,7 +350,14 @@ class PreviewRuntime(
             }
         when (
             val result =
-                ProfileDeletion(profiles, scoped, stores.lanes, cleaners = cleaners).delete(id)
+                ProfileDeletion(
+                        profiles,
+                        scoped,
+                        stores.lanes,
+                        closers = profileClosers,
+                        cleaners = cleaners,
+                    )
+                    .delete(id)
         ) {
             is Outcome.Failed -> result
             is Outcome.Ok ->

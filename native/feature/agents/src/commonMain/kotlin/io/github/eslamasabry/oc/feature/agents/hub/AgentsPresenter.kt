@@ -35,6 +35,10 @@ public class AgentsPresenter(
 ) : AgentsActions {
     private val local = MutableStateFlow(AgentsUi())
 
+    init {
+        refreshPhone()
+    }
+
     public val state: StateFlow<AgentsUi> =
         combine(local, computers.computers, phone.state) { own, saved, phoneState ->
                 own.copy(computers = saved, phone = phoneState)
@@ -325,6 +329,59 @@ public class AgentsPresenter(
         when (val result = computers.newConversation(id)) {
             is Outcome.Ok -> openChat(result.value)
             is Outcome.Failed -> failed(AgentsIssue.StartFailed, result.failure)
+        }
+    }
+
+    override fun installPhone(id: String): Unit = operation {
+        if (phone.state.value.agents.none { it.id == id && it.installable }) return@operation
+        val answer =
+            when (val started = phone.install(id)) {
+                is Outcome.Ok -> started.value
+                is Outcome.Failed ->
+                    PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable)
+            }
+        local.update { it.copy(installIssue = (answer as? PhoneAgentInstallResult.Refused)?.issue) }
+    }
+
+    override fun cancelPhoneInstall(): Unit = operation {
+        when (phone.cancelInstall()) {
+            is Outcome.Ok -> local.update { it.copy(installIssue = null) }
+            is Outcome.Failed ->
+                local.update { it.copy(installIssue = PhoneAgentInstallIssue.Unavailable) }
+        }
+    }
+
+    override fun refreshPhone(): Unit = operation {
+        when (phone.refresh()) {
+            is Outcome.Ok -> Unit
+            is Outcome.Failed ->
+                local.update {
+                    it.copy(removal = PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable))
+                }
+        }
+    }
+
+    override fun requestRemoval(id: String) {
+        if (local.value.busy) return
+        val agent = phone.state.value.agents.firstOrNull { it.id == id && it.removable } ?: return
+        local.update { it.copy(removingAgent = agent, removal = null) }
+    }
+
+    override fun cancelRemoval() {
+        if (!local.value.busy) local.update { it.copy(removingAgent = null) }
+    }
+
+    override fun confirmRemoval() {
+        val agent = local.value.removingAgent ?: return
+        operation {
+            local.update { it.copy(removingAgent = null, removal = null) }
+            val result =
+                when (val removed = phone.remove(agent.id)) {
+                    is Outcome.Ok -> removed.value
+                    is Outcome.Failed ->
+                        PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable)
+                }
+            local.update { it.copy(removal = result) }
         }
     }
 
