@@ -22,6 +22,7 @@ public data class FolderRowUi(
     val conversations: Int = 0,
     val running: Int = 0,
     val isGit: Boolean? = null,
+    val kind: io.github.eslamasabry.oc.engine.files.PhoneProjectKind? = null,
 )
 
 /**
@@ -37,6 +38,10 @@ public data class ProjectsPickerUi(
     val openedBefore: ImmutableList<FolderRowUi> = persistentListOf(),
     val projects: ImmutableList<FolderRowUi> = persistentListOf(),
     val projectsLoading: Boolean = false,
+    val canFindPhoneProjects: Boolean = false,
+    val findingPhoneProjects: Boolean = false,
+    val phoneProjects: ImmutableList<FolderRowUi> = persistentListOf(),
+    val scanEnd: io.github.eslamasabry.oc.engine.files.ProjectScanEnd? = null,
     val projectsFailure: Failure? = null,
     val query: String = "",
     val showSearch: Boolean = false,
@@ -49,6 +54,10 @@ public interface ProjectsPickerActions {
     public fun back()
 
     public fun chooseServer(profile: ProfileId)
+
+    public fun findPhoneProjects()
+
+    public fun cancelPhoneScan()
 
     public fun askPath()
 

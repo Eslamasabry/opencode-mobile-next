@@ -31,7 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
-import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.chatsFilterChatCount
 import io.github.eslamasabry.oc.ui.words.res.chatsFilterRunningCount
 import io.github.eslamasabry.oc.ui.words.res.e7ProjectProjectsEmpty
@@ -65,9 +65,10 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Projects (07 §5 D15/D16). Kit parts only (K1). The obvious options come first as visible rows (owner rule):
- * New project, Open a folder on the server, Folder on this phone; then Opened before; then this server's projects.
- * A row that can't run here says why in its own line, never a dead tap.
+ * Projects (07 §5 D15/D16). Kit parts only (K1). The obvious options come first as visible rows
+ * (owner rule): New project, Open a folder on the server, Folder on this phone; then Opened before;
+ * then this server's projects. A row that can't run here says why in its own line, never a dead
+ * tap.
  */
 @Composable
 public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
@@ -82,7 +83,12 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
         },
         search =
             if (state.showSearch) {
-                { KitSearchField(label = stringResource(Res.string.e7ProjectProjectsSearch), onSearch = actions::search) }
+                {
+                    KitSearchField(
+                        label = stringResource(Res.string.e7ProjectProjectsSearch),
+                        onSearch = actions::search,
+                    )
+                }
             } else {
                 null
             },
@@ -96,7 +102,11 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                             kind = KitStateKind.Calm,
                             title = stringResource(Res.string.p12NoServerTitle),
                             body = stringResource(Res.string.p12NoServerBody),
-                            primary = KitAction(stringResource(Res.string.serversTitle), actions::openServers),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.serversTitle),
+                                    actions::openServers,
+                                ),
                         )
                     }
                 ProjectsPhase.Ready -> {
@@ -107,7 +117,9 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                                     KitChip(
                                         label = server.name,
                                         kind = KitChipKind.Action,
-                                        tone = if (server.selected) KitChipTone.Active else KitChipTone.Neutral,
+                                        tone =
+                                            if (server.selected) KitChipTone.Active
+                                            else KitChipTone.Neutral,
                                         selected = server.selected,
                                         onClick = { actions.chooseServer(server.profile) },
                                     )
@@ -116,9 +128,45 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                         }
                     }
                     item(key = "start") { StartRows(actions) }
+                    if (state.canFindPhoneProjects)
+                        item(key = "find-phone") {
+                            KitRowGroup(label = stringResource(Res.string.linuxFindProjects)) {
+                                KitRow(
+                                    title =
+                                        stringResource(
+                                            if (state.findingPhoneProjects)
+                                                Res.string.linuxStopFinding
+                                            else Res.string.linuxFindProjects
+                                        ),
+                                    supporting = stringResource(Res.string.linuxFindProjectsBody),
+                                    supportingMaxLines = 2,
+                                    onClick =
+                                        if (state.findingPhoneProjects) actions::cancelPhoneScan
+                                        else actions::findPhoneProjects,
+                                )
+                                state.scanEnd?.let { end ->
+                                    KitRow(
+                                        title =
+                                            stringResource(
+                                                if (
+                                                    end ==
+                                                        io.github.eslamasabry.oc.engine.files
+                                                            .ProjectScanEnd
+                                                            .Completed
+                                                )
+                                                    Res.string.linuxFindProjectsDone
+                                                else Res.string.linuxFindProjectsLimited
+                                            )
+                                    )
+                                }
+                                state.phoneProjects.forEach { ProjectRow(it, actions) }
+                            }
+                        }
                     if (state.openedBefore.isNotEmpty()) {
                         item(key = "opened") {
-                            KitRowGroup(label = stringResource(Res.string.folderBrowserOpenedBefore)) {
+                            KitRowGroup(
+                                label = stringResource(Res.string.folderBrowserOpenedBefore)
+                            ) {
                                 state.openedBefore.forEach { folder ->
                                     KitRow(
                                         title = folder.name,
@@ -167,7 +215,8 @@ private fun PathDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) 
 @Composable
 private fun StartRows(actions: ProjectsPickerActions) {
     KitRowGroup {
-        // OpenCode 2 has no folder-making call; Flutter offered New project only for servers it ran on the phone.
+        // OpenCode 2 has no folder-making call; Flutter offered New project only for servers it ran
+        // on the phone.
         KitRow(
             title = stringResource(Res.string.projectFolderNewProject),
             enabled = false,
@@ -216,13 +265,55 @@ private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActio
 
 @Composable
 private fun ProjectRow(project: FolderRowUi, actions: ProjectsPickerActions) {
-    val parts =
-        buildList {
-            add(pluralStringResource(Res.plurals.chatsFilterChatCount, project.conversations, project.conversations))
-            if (project.running > 0) add(stringResource(Res.string.chatsFilterRunningCount, project.running))
-            if (project.isGit == true) add(stringResource(Res.string.folderBrowserGit))
-            add(project.directory)
+    val parts = buildList {
+        add(
+            pluralStringResource(
+                Res.plurals.chatsFilterChatCount,
+                project.conversations,
+                project.conversations,
+            )
+        )
+        if (project.running > 0)
+            add(stringResource(Res.string.chatsFilterRunningCount, project.running))
+        project.kind?.let { kind ->
+            add(
+                stringResource(
+                    when (kind) {
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Dart ->
+                            Res.string.linuxProjectDart
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Node ->
+                            Res.string.linuxProjectNode
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Python ->
+                            Res.string.linuxProjectPython
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Rust ->
+                            Res.string.linuxProjectRust
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Go ->
+                            Res.string.linuxProjectGo
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Java ->
+                            Res.string.linuxProjectJava
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Ruby ->
+                            Res.string.linuxProjectRuby
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Php ->
+                            Res.string.linuxProjectPhp
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Dotnet ->
+                            Res.string.linuxProjectDotnet
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Cpp ->
+                            Res.string.linuxProjectCpp
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Git ->
+                            Res.string.folderBrowserGit
+                        io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Folder ->
+                            Res.string.linuxProjectFolder
+                    }
+                )
+            )
         }
+        if (
+            project.isGit == true &&
+                project.kind != io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Git
+        )
+            add(stringResource(Res.string.folderBrowserGit))
+        add(project.directory)
+    }
     KitRow(
         title = project.name,
         supporting = parts.joinToString(" · "),

@@ -147,6 +147,7 @@ dependencies {
             ":feature:devservices", // BUILD-RUNTIME-A: Development services (saved commands, dev
             // servers found)
             ":engine:integrations-usage", // P12-BUILD-INTEGRATIONS-B: Usage › Plans engine
+            ":engine:integrations-quota",
             ":engine:project-terminal",
             ":android:terminal",
             ":feature:terminal",

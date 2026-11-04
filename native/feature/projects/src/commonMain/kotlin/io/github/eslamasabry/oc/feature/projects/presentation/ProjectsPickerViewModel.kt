@@ -26,9 +26,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Projects (07 §5 D15 + D16's first page). The server's projects come from its project list when it has one
- * (`projectManagement`), otherwise from the folders its conversations work in. Opening a folder or a project goes
- * to that project's page, which remembers it under Opened before.
+ * Projects (07 §5 D15 + D16's first page). The server's projects come from its project list when it
+ * has one (`projectManagement`), otherwise from the folders its conversations work in. Opening a
+ * folder or a project goes to that project's page, which remembers it under Opened before.
  */
 @AssistedInject
 public class ProjectsPickerViewModel(
@@ -36,6 +36,7 @@ public class ProjectsPickerViewModel(
     private val nav: AppNavigator,
     private val connections: ProjectServers,
     private val opened: OpenedFolders,
+    private val discovery: PhoneProjectDiscovery,
 ) : ViewModel(), ProjectsPickerActions {
     private val mutable = MutableStateFlow(ProjectsPickerUi())
     public val state: StateFlow<ProjectsPickerUi> = mutable.asStateFlow()
@@ -44,19 +45,24 @@ public class ProjectsPickerViewModel(
     private var chosen: ProfileId? = route.profile
     private var all: List<FolderRowUi> = emptyList()
     private var generation = 0
+    private var scanJob: kotlinx.coroutines.Job? = null
 
     init {
         viewModelScope.launch {
             connections.servers.collect { live ->
                 servers = live
                 val keep = chosen?.takeIf { c -> live.any { it.profile == c } }
-                val next = keep ?: connections.active.value?.takeIf { a -> live.any { it.profile == a } } ?: live.firstOrNull()?.profile
+                val next =
+                    keep
+                        ?: connections.active.value?.takeIf { a -> live.any { it.profile == a } }
+                        ?: live.firstOrNull()?.profile
                 val changed = next != chosen || state.value.phase == ProjectsPhase.NoServer
                 chosen = next
                 if (changed) load()
             }
         }
-        // Back from a project page: that page remembered its folder, so Opened before is read again (B-ANDR-078).
+        // Back from a project page: that page remembered its folder, so Opened before is read again
+        // (B-ANDR-078).
         viewModelScope.launch { nav.top.collect { if (it == route) rereadOpened() } }
     }
 
@@ -66,7 +72,8 @@ public class ProjectsPickerViewModel(
         val before = ProjectRules.openedBefore(opened.recent(server.profile))
         mutable.update { ui ->
             ui.copy(
-                openedBefore = before.map { FolderRowUi(it, ProjectRules.name(it)) }.toImmutableList(),
+                openedBefore =
+                    before.map { FolderRowUi(it, ProjectRules.name(it)) }.toImmutableList(),
                 pathStart = ui.pathStart.ifEmpty { pathStart(before) },
             )
         }
@@ -78,6 +85,7 @@ public class ProjectsPickerViewModel(
     private fun current(): ProjectServer? = servers.firstOrNull { it.profile == chosen }
 
     private fun load() {
+        scanJob?.cancel()
         val server = current()
         val run = ++generation
         if (server == null) {
@@ -91,8 +99,10 @@ public class ProjectsPickerViewModel(
                 phase = ProjectsPhase.Ready,
                 servers = choices(),
                 serverName = server.name,
-                openedBefore = before.map { FolderRowUi(it, ProjectRules.name(it)) }.toImmutableList(),
+                openedBefore =
+                    before.map { FolderRowUi(it, ProjectRules.name(it)) }.toImmutableList(),
                 projectsLoading = true,
+                canFindPhoneProjects = discovery.available(server.profile),
                 pathStart = pathStart(before),
             )
         viewModelScope.launch {
@@ -104,16 +114,24 @@ public class ProjectsPickerViewModel(
                     mutable.update { it.copy(projectsLoading = false, projectsFailure = null) }
                     publish()
                 }
-                is Outcome.Failed -> mutable.update { it.copy(projectsLoading = false, projectsFailure = read.failure) }
+                is Outcome.Failed ->
+                    mutable.update {
+                        it.copy(projectsLoading = false, projectsFailure = read.failure)
+                    }
             }
         }
     }
 
     private fun choices(): ImmutableList<ServerChoiceUi> =
-        (if (servers.size > 1) servers.map { ServerChoiceUi(it.profile, it.name, it.profile == chosen) } else emptyList())
+        (if (servers.size > 1)
+                servers.map { ServerChoiceUi(it.profile, it.name, it.profile == chosen) }
+            else emptyList())
             .toImmutableList()
 
-    /** Conversations first (for counts and for servers without a project list), then the project list. */
+    /**
+     * Conversations first (for counts and for servers without a project list), then the project
+     * list.
+     */
     private suspend fun readProjects(server: ProjectServer): Outcome<List<FolderRowUi>> {
         val sessions = mutableListOf<Session>()
         var cursor: String? = null
@@ -129,34 +147,92 @@ public class ProjectsPickerViewModel(
             pages++
         } while (cursor != null && pages < ProjectRules.PROJECT_PAGES)
         val running: Set<SessionId> =
-            (server.gateway.sessionStatuses() as? Outcome.Ok)?.value?.filterValues(ProjectRules::isRunning)?.keys.orEmpty()
+            (server.gateway.sessionStatuses() as? Outcome.Ok)
+                ?.value
+                ?.filterValues(ProjectRules::isRunning)
+                ?.keys
+                .orEmpty()
         val ops = server.operations
         val summaries =
             if (ops != null && server.gateway.capabilities.value.projectManagement) {
                 when (val listed = ops.listProjects()) {
                     is Outcome.Ok -> ProjectRules.fromServer(listed.value, sessions, running)
-                    // A server that says it has no project list is read from its conversations instead.
+                    // A server that says it has no project list is read from its conversations
+                    // instead.
                     is Outcome.Failed ->
-                        if (listed.failure is Failure.Unavailable) ProjectRules.fromSessions(sessions, running)
+                        if (listed.failure is Failure.Unavailable)
+                            ProjectRules.fromSessions(sessions, running)
                         else return listed
                 }
             } else {
                 ProjectRules.fromSessions(sessions, running)
             }
-        return Outcome.Ok(summaries.map { FolderRowUi(it.directory, it.name, it.conversations, it.running, it.isGit) })
+        return Outcome.Ok(
+            summaries.map {
+                FolderRowUi(it.directory, it.name, it.conversations, it.running, it.isGit)
+            }
+        )
     }
 
     private fun publish() {
         val q = state.value.query.trim().lowercase()
         val shown =
             if (q.isEmpty()) all
-            else all.filter { it.name.lowercase().contains(q) || it.directory.lowercase().contains(q) }
+            else
+                all.filter {
+                    it.name.lowercase().contains(q) || it.directory.lowercase().contains(q)
+                }
         mutable.update {
-            it.copy(projects = shown.toImmutableList(), showSearch = all.size > ProjectRules.SEARCH_FROM || q.isNotEmpty())
+            it.copy(
+                projects = shown.toImmutableList(),
+                showSearch = all.size > ProjectRules.SEARCH_FROM || q.isNotEmpty(),
+            )
         }
     }
 
-    override fun back(): Unit = nav.back()
+    override fun findPhoneProjects() {
+        val profile = chosen ?: return
+        if (!discovery.available(profile) || state.value.findingPhoneProjects) return
+        mutable.update {
+            it.copy(
+                findingPhoneProjects = true,
+                scanEnd = null,
+                phoneProjects = kotlinx.collections.immutable.persistentListOf(),
+            )
+        }
+        scanJob = viewModelScope.launch {
+            try {
+                val found = discovery.scan(profile)
+                if (chosen == profile)
+                    mutable.update {
+                        it.copy(
+                            phoneProjects =
+                                found.projects
+                                    .map { p ->
+                                        FolderRowUi(
+                                            p.path,
+                                            ProjectRules.name(p.path),
+                                            isGit = p.hasGit,
+                                        )
+                                    }
+                                    .toImmutableList(),
+                            scanEnd = found.end,
+                        )
+                    }
+            } finally {
+                if (chosen == profile) mutable.update { it.copy(findingPhoneProjects = false) }
+            }
+        }
+    }
+
+    override fun cancelPhoneScan() {
+        scanJob?.cancel()
+    }
+
+    override fun back() {
+        scanJob?.cancel()
+        nav.back()
+    }
 
     override fun chooseServer(profile: ProfileId) {
         if (profile == chosen) return

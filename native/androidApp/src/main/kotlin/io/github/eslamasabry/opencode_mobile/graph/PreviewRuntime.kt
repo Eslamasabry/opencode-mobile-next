@@ -146,12 +146,30 @@ class PreviewRuntime(
         connectNow(id, recoverDrafts = true)
     }
 
+    /**
+     * Runtime migration retires only local transports; saved rows, secrets and queues stay intact.
+     */
+    internal suspend fun disconnectForRuntimeSwitch(ids: Set<ProfileId>): Outcome<Unit> = command {
+        for (id in ids) {
+            registry.close(id)
+            eventJobs.remove(id)?.cancel()
+            listings.remove(id)
+        }
+        rebuildFeed()
+        Unit.ok()
+    }
+
     private suspend fun connectNow(id: ProfileId, recoverDrafts: Boolean = false): Outcome<Unit> {
         val loaded =
             profiles.profile(id)
                 ?: return Failure.Refused(RefusalReason.ProfileDeleted)
                     .failed()
                     .atStage(ConnectionStage.ProfileRead)
+        if (loaded.profile.requiresOpenCode2Migration) {
+            return Failure.Incompatible(IncompatibleKind.LegacyOpenCode1)
+                .failed()
+                .atStage(ConnectionStage.ProfileRead)
+        }
         if (loaded.cleartextUnconfirmed)
             return Failure.Refused(RefusalReason.CleartextNotConfirmed)
                 .failed()
@@ -177,7 +195,37 @@ class PreviewRuntime(
             }
         }
         when (val opened = registry.open(profile)) {
-            is Outcome.Failed -> return opened.atStage(ConnectionStage.OpenGateway)
+            is Outcome.Failed -> {
+                if (
+                    (opened.failure as? Failure.Incompatible)?.kind ==
+                        IncompatibleKind.LegacyOpenCode1 &&
+                        io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer
+                            .isManagedLocal(
+                                io.github.eslamasabry.oc.engine.runtime.switching.LocalProfile(
+                                    id.raw,
+                                    loaded.profile.name,
+                                    loaded.profile.baseUrl,
+                                    if (loaded.profile.usesAgentSocket)
+                                        io.github.eslamasabry.oc.engine.runtime.switching
+                                            .ServerBackendKind
+                                            .Other
+                                    else
+                                        io.github.eslamasabry.oc.engine.runtime.switching
+                                            .ServerBackendKind
+                                            .OpenCode,
+                                )
+                            )
+                ) {
+                    when (
+                        val saved =
+                            profiles.upsert(loaded.profile.copy(requiresOpenCode2Migration = true))
+                    ) {
+                        is Outcome.Failed -> return saved.atStage(ConnectionStage.SaveActiveProfile)
+                        is Outcome.Ok -> Unit
+                    }
+                }
+                return opened.atStage(ConnectionStage.OpenGateway)
+            }
             is Outcome.Ok -> {
                 val saved = profiles.setActive(id)
                 if (saved is Outcome.Failed) return saved.atStage(ConnectionStage.SaveActiveProfile)
@@ -346,6 +394,9 @@ class PreviewRuntime(
         }
         val scoped =
             DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
+                io.github.eslamasabry.oc.engine.integrations.quota.InAppQuotaCollector.register(
+                    this
+                )
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
             }
