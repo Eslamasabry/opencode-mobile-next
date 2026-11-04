@@ -286,6 +286,8 @@ public data class LinuxStorageUi(
     val result: CleanupResult? = null,
     /** A cleanup that could not run, said in place. */
     val actProblem: LinuxProblem? = null,
+    val scan: io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScan =
+        io.github.eslamasabry.oc.feature.linux.manager.LinuxStorageScan(),
 )
 
 public interface LinuxStorageActions {
@@ -310,6 +312,10 @@ public class LinuxStorageModel(
     private val ui = MutableStateFlow(LinuxStorageUi())
     public val state: StateFlow<LinuxStorageUi> = ui.asStateFlow()
 
+    init {
+        scope.launch { manager.storageScan.collect { scan -> ui.update { it.copy(scan = scan) } } }
+    }
+
     override fun shown(visible: Boolean) {
         if (visible && ui.value.report == null) retry()
     }
@@ -319,7 +325,7 @@ public class LinuxStorageModel(
     }
 
     private suspend fun load() {
-        ui.update { it.copy(loading = true) }
+        ui.update { it.copy(loading = true, cleanable = persistentMapOf(), confirm = null) }
         when (val read = manager.measureStorage()) {
             is LinuxAnswer.Problem -> {
                 ui.update { it.copy(loading = false, problem = read.problem) }

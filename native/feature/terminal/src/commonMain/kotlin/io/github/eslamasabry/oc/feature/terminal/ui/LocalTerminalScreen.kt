@@ -9,11 +9,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.engine.project.terminal.TerminalKey
 import io.github.eslamasabry.oc.feature.terminal.presentation.LocalTerminalActions
+import io.github.eslamasabry.oc.feature.terminal.presentation.LocalTerminalNativeActions
 import io.github.eslamasabry.oc.feature.terminal.presentation.LocalTerminalUi
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKey
+import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalKeyBar
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalView
 import io.github.eslamasabry.oc.ui.kit.content.terminal.KitTerminalWords
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -24,43 +29,17 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
-import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
-import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.e7SetupCommandInput
-import io.github.eslamasabry.oc.ui.words.res.e7SetupInputUnavailable
-import io.github.eslamasabry.oc.ui.words.res.e7SetupNoOutput
-import io.github.eslamasabry.oc.ui.words.res.e7SetupSendCommand
-import io.github.eslamasabry.oc.ui.words.res.e7SetupTranscript
-import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
-import io.github.eslamasabry.oc.ui.words.res.kitDetails
-import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
-import io.github.eslamasabry.oc.ui.words.res.libraryTerminalTitle
-import io.github.eslamasabry.oc.ui.words.res.localTerminalCloseShell
-import io.github.eslamasabry.oc.ui.words.res.localTerminalEndedBody
-import io.github.eslamasabry.oc.ui.words.res.localTerminalEndedTitle
-import io.github.eslamasabry.oc.ui.words.res.localTerminalFailedBody
-import io.github.eslamasabry.oc.ui.words.res.localTerminalFailedTitle
-import io.github.eslamasabry.oc.ui.words.res.localTerminalKeyCtrl
-import io.github.eslamasabry.oc.ui.words.res.localTerminalNewShell
-import io.github.eslamasabry.oc.ui.words.res.localTerminalNotSetUpBody
-import io.github.eslamasabry.oc.ui.words.res.localTerminalNotSetUpTitle
-import io.github.eslamasabry.oc.ui.words.res.localTerminalRestart
-import io.github.eslamasabry.oc.ui.words.res.localTerminalShellName
-import io.github.eslamasabry.oc.ui.words.res.localTerminalStarting
-import io.github.eslamasabry.oc.ui.words.res.localTerminalStop
-import io.github.eslamasabry.oc.ui.words.res.localTerminalStopBody
-import io.github.eslamasabry.oc.ui.words.res.localTerminalStopShell
-import io.github.eslamasabry.oc.ui.words.res.localTerminalTryAgain
-import io.github.eslamasabry.oc.ui.words.res.terminalScreenReadableMode
+import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
 /** F15 local shells. The only terminal surface is the kit's platform slot / accessible terminal. */
 @Composable
 public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalActions) {
+    val nativeActions = actions as? LocalTerminalNativeActions
     val selected = state.shells.firstOrNull { it.id == state.selected }
     val enabled =
         if (state.working) KitEnabled.Disabled(stringResource(Res.string.localTerminalStarting))
@@ -84,6 +63,26 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
         page = true,
     ) {
         Column(Modifier.fillMaxSize()) {
+            val builtIn = stringResource(Res.string.terminalSourceBuiltIn)
+            val unnamed = stringResource(Res.string.terminalSourceServer)
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+                KitText(builtIn)
+                state.servers
+                    .takeIf { nativeActions != null }
+                    .orEmpty()
+                    .forEach { server ->
+                        val name = server.name.trim().ifBlank { unnamed }
+                        val label =
+                            if (name == builtIn)
+                                stringResource(Res.string.terminalSourceServerRuntime, name)
+                            else name
+                        KitButton(
+                            label,
+                            { nativeActions?.server(server.id) },
+                            role = KitButtonRole.Secondary,
+                        )
+                    }
+            }
             if (state.working)
                 KitStateView(KitStateKind.Working, stringResource(Res.string.localTerminalStarting))
             if (state.failed)
@@ -161,11 +160,52 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
                             inputUnavailable = stringResource(Res.string.e7SetupInputUnavailable),
                         ),
                 )
-                KitSwitchRow(
-                    title = stringResource(Res.string.localTerminalKeyCtrl),
-                    checked = selected.control,
-                    onCheckedChange = actions::setControl,
-                )
+                if (nativeActions != null)
+                    KitTerminalKeyBar(
+                        keys =
+                            TerminalKey.entries.map { key ->
+                                val label =
+                                    stringResource(
+                                        when (key) {
+                                            TerminalKey.Control -> Res.string.terminalKeyControl
+                                            TerminalKey.Alt -> Res.string.terminalKeyAlt
+                                            TerminalKey.Escape -> Res.string.terminalKeyEscape
+                                            TerminalKey.Tab -> Res.string.terminalKeyTab
+                                            TerminalKey.Up -> Res.string.terminalKeyUp
+                                            TerminalKey.Down -> Res.string.terminalKeyDown
+                                            TerminalKey.Left -> Res.string.terminalKeyLeft
+                                            TerminalKey.Right -> Res.string.terminalKeyRight
+                                            TerminalKey.Home -> Res.string.terminalKeyHome
+                                            TerminalKey.End -> Res.string.terminalKeyEnd
+                                            TerminalKey.PageUp -> Res.string.terminalKeyPageUp
+                                            TerminalKey.PageDown -> Res.string.terminalKeyPageDown
+                                            TerminalKey.Pipe -> Res.string.terminalKeyPipe
+                                            TerminalKey.Slash -> Res.string.terminalKeySlash
+                                            TerminalKey.Backslash -> Res.string.terminalKeyBackslash
+                                            TerminalKey.Tilde -> Res.string.terminalKeyTilde
+                                            TerminalKey.Minus -> Res.string.terminalKeyMinus
+                                            TerminalKey.Underscore ->
+                                                Res.string.terminalKeyUnderscore
+                                        }
+                                    )
+                                KitTerminalKey(
+                                    label,
+                                    when (key) {
+                                        TerminalKey.Control -> selected.control
+                                        TerminalKey.Alt -> selected.alt
+                                        else -> null
+                                    },
+                                ) {
+                                    nativeActions?.key(key)
+                                }
+                            },
+                        enabled =
+                            if (selected.running) KitEnabled.Enabled
+                            else
+                                KitEnabled.Disabled(
+                                    stringResource(Res.string.localTerminalEndedTitle)
+                                ),
+                    )
                 if (selected.running)
                     KitButton(
                         stringResource(Res.string.localTerminalStopShell),

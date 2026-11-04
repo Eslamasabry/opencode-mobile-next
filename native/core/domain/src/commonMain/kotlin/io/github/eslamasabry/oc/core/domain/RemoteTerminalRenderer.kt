@@ -13,6 +13,9 @@ public interface RemoteTerminalRenderer {
 }
 
 public interface RemoteTerminalRenderSession {
+    public val applicationCursor: Boolean
+        get() = false
+
     public val view: PlatformViewHandle
     public val transcript: StateFlow<String>
 

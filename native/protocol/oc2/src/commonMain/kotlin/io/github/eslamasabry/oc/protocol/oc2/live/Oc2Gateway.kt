@@ -48,6 +48,7 @@ internal class Oc2Gateway(
 ) :
     ServerGateway,
     ServerOperationsGateway,
+    TerminalCommandGateway,
     CorrelatedPromptGateway,
     SessionSelectionGateway,
     StagedRevertGateway,
@@ -76,8 +77,10 @@ internal class Oc2Gateway(
     // by PROTO's Oc2Library and SEC-2's integrations below.
     private val inspection = Oc2WorktreeInspection(this)
 
-    // STATE: the safe setup summary of the current location (beside PROTO's pinned inspector below).
-    override suspend fun inspectSetup(): Outcome<SetupInspection> = Oc2SetupSnapshot.read(this, redactor)
+    // STATE: the safe setup summary of the current location (beside PROTO's pinned inspector
+    // below).
+    override suspend fun inspectSetup(): Outcome<SetupInspection> =
+        Oc2SetupSnapshot.read(this, redactor)
 
     private val transfer by lazy {
         Oc2SessionTransfer(this, { location.value }) { feature ->
@@ -184,6 +187,11 @@ internal class Oc2Gateway(
         arguments: List<String>,
         title: String,
     ): Outcome<TerminalProcess> = terminals().createCommandTerminal(command, arguments, title)
+
+    override suspend fun rerunTerminalCommand(
+        ended: TerminalProcess,
+        location: ServerLocation,
+    ): Outcome<TerminalProcess> = terminals().rerunTerminalCommand(ended, location)
 
     override suspend fun renameTerminal(id: String, title: String): Outcome<Unit> =
         terminals().renameTerminal(id, title)
@@ -434,7 +442,9 @@ internal class Oc2Gateway(
         val settled = dialect.value ?: return Failure.UnreadableReply().failed()
         val route = settled.route(path, verb, body, query)
         // dialect.dart Api2RemovedInStable: fail clearly, nothing is sent.
-        route.removed?.let { return Failure.Unavailable(FeatureId(it)).failed() }
+        route.removed?.let {
+            return Failure.Unavailable(FeatureId(it)).failed()
+        }
         return rawJson(route.path, route.method, route.body, route.query, headers).map {
             settled.response(verb, path, it)
         }
@@ -452,7 +462,9 @@ internal class Oc2Gateway(
         val settled = dialect.value ?: return Failure.UnreadableReply().failed()
         val route = settled.route(path, HttpMethod.Get, null, query)
         // dialect.dart Api2RemovedInStable: fail clearly, nothing is sent.
-        route.removed?.let { return Failure.Unavailable(FeatureId(it)).failed() }
+        route.removed?.let {
+            return Failure.Unavailable(FeatureId(it)).failed()
+        }
         return net.exchange(
             { request(route.path, route.method, route.query) },
             readFailure = ::readFailure,
@@ -656,8 +668,7 @@ internal class Oc2Gateway(
         resume: Boolean,
         beforeSend: () -> Boolean,
     ): Outcome<Unit> {
-        if (!skillsAvailable)
-            return Failure.Unavailable(FeatureId("sessionSkills")).failed()
+        if (!skillsAvailable) return Failure.Unavailable(FeatureId("sessionSkills")).failed()
         // Resolve the dialect before admission: a wake cannot redirect a skill into a changed
         // location.
         if (dialect.value == null) {
@@ -685,22 +696,19 @@ internal class Oc2Gateway(
             fromInfo = true
             response = rawJson("/info")
         }
-        // B-PROTO-021 (Flutter unexpectedHealthShapeTag): an answer that is not an OpenCode 2 health shape (no
-        // version, an OpenCode 1 version, an HTML page) is the re-detection signal, not a plain unreadable reply.
+        // B-PROTO-021 (Flutter unexpectedHealthShapeTag): an answer that is not an OpenCode 2
+        // health shape (no
+        // version, an OpenCode 1 version, an HTML page) is the re-detection signal, not a plain
+        // unreadable reply.
         val mismatch = Failure.Incompatible(IncompatibleKind.ProtocolMismatch)
         when (val result = response) {
             is Outcome.Failed ->
                 if (result.failure is Failure.UnreadableReply) mismatch.failed() else result
             is Outcome.Ok -> {
-                val obj =
-                    data(result.value) as? JsonObject
-                        ?: return@withLock mismatch.failed()
+                val obj = data(result.value) as? JsonObject ?: return@withLock mismatch.failed()
                 val version = obj.str("version")
-                val detected =
-                    Oc2Dialect.ofVersion(version)
-                        ?: return@withLock mismatch.failed()
-                if (fromInfo && detected != Oc2Dialect.Stable)
-                    return@withLock mismatch.failed()
+                val detected = Oc2Dialect.ofVersion(version) ?: return@withLock mismatch.failed()
+                if (fromInfo && detected != Oc2Dialect.Stable) return@withLock mismatch.failed()
                 val healthy =
                     if (fromInfo) true
                     else
@@ -708,8 +716,7 @@ internal class Oc2Gateway(
                             ?: return@withLock mismatch.failed()
                 // A changed generation is not silently installed under an already pinned
                 // connection.
-                if (known != null && known != detected)
-                    return@withLock mismatch.failed()
+                if (known != null && known != detected) return@withLock mismatch.failed()
                 if (healthy) dialect.value = detected
                 Health(healthy, version).ok()
             }
@@ -731,7 +738,8 @@ internal class Oc2Gateway(
             is Outcome.Failed -> {
                 val failure = result.failure
                 when {
-                    failure is Failure.Busy && failure.kind == BusyKind.Overloaded -> Failure.Busy(BusyKind.Starting).failed()
+                    failure is Failure.Busy && failure.kind == BusyKind.Overloaded ->
+                        Failure.Busy(BusyKind.Starting).failed()
                     failure is Failure.NotFound ||
                         failure is Failure.UnreadableReply ||
                         (failure is Failure.Incompatible &&
@@ -1171,7 +1179,8 @@ internal class Oc2Gateway(
         }
 
     // Migration 40: the native Tools and Providers pages use the same location-bound contracts as
-    // Flutter. Mass merge: skills, the MCP list and connect/disconnect/add, and the sign-in methods are
+    // Flutter. Mass merge: skills, the MCP list and connect/disconnect/add, and the sign-in methods
+    // are
     // implemented once above (PROTO's Oc2ProviderSignIn and Oc2Library; mcpResources by SEC-2's
     // Oc2Integrations). Migration 40 adds what only it provides.
     private val libraryOps = Oc2LibraryOps(this, redactor)
@@ -1418,7 +1427,8 @@ internal class Oc2Gateway(
             "location[workspace]" to at.workspace,
         )
 
-    // SEC-2's integration reads. The sign-in and MCP overrides above (PROTO: Oc2ProviderSignIn, Oc2Library) are the
+    // SEC-2's integration reads. The sign-in and MCP overrides above (PROTO: Oc2ProviderSignIn,
+    // Oc2Library) are the
     // one implementation of those methods; SEC-2 alone adds the MCP resource list.
     private val integrationOps = Oc2Integrations(this, { location.value }, redactor)
 
@@ -1718,12 +1728,15 @@ internal class Oc2Gateway(
         if (dialect.value == null) {
             when (val checked = health()) {
                 is Outcome.Failed -> return checked
-                is Outcome.Ok -> if (!checked.value.healthy) return Failure.UnreadableReply().failed()
+                is Outcome.Ok ->
+                    if (!checked.value.healthy) return Failure.UnreadableReply().failed()
             }
         }
         val settled = dialect.value ?: return Failure.UnreadableReply().failed()
         val route = settled.route(path, HttpMethod.Get, null, locationQuery(at))
-        route.removed?.let { return Failure.Unavailable(FeatureId(it)).failed() }
+        route.removed?.let {
+            return Failure.Unavailable(FeatureId(it)).failed()
+        }
         val response =
             net.exchange(
                 { request(route.path, route.method, route.query) },
@@ -1746,10 +1759,15 @@ internal class Oc2Gateway(
     }
 
     /**
-     * An optional `/api` route with its own origin and Basic credentials (no location query: its routes name their session) (the active-context inspector,
-     * session export/import). Any status is an answer; a mutation is one request and never retried.
+     * An optional `/api` route with its own origin and Basic credentials (no location query: its
+     * routes name their session) (the active-context inspector, session export/import). Any status
+     * is an answer; a mutation is one request and never retried.
      */
-    override suspend fun apiRoute(method: String, path: String, jsonBody: String?): Outcome<ApiRouteReply> {
+    override suspend fun apiRoute(
+        method: String,
+        path: String,
+        jsonBody: String?,
+    ): Outcome<ApiRouteReply> {
         val verb = HttpMethod.parse(method.uppercase())
         return net.exchangeAnswer({
             request(path, verb)
@@ -1758,19 +1776,27 @@ internal class Oc2Gateway(
                 contentType(ContentType.Application.Json)
                 setBody(jsonBody)
             }
-        }) { reply -> ApiRouteReply(reply.status.value, reply.bodyAsText().takeIf { it.isNotEmpty() }) }
+        }) { reply ->
+            ApiRouteReply(reply.status.value, reply.bodyAsText().takeIf { it.isNotEmpty() })
+        }
     }
 
-    // ---- Stable-line features and operations (new files Oc2Operations / Oc2WebSearch / Oc2HistoryMigration /
-    // Oc2Terminal; Flutter lib/api2/gateway_operations). Each delegates; the request shapes live there.
+    // ---- Stable-line features and operations (new files Oc2Operations / Oc2WebSearch /
+    // Oc2HistoryMigration /
+    // Oc2Terminal; Flutter lib/api2/gateway_operations). Each delegates; the request shapes live
+    // there.
 
-    override suspend fun webSearchProviders(): Outcome<ImmutableList<WebSearchProvider>> = searchProviders()
+    override suspend fun webSearchProviders(): Outcome<ImmutableList<WebSearchProvider>> =
+        searchProviders()
 
     override suspend fun searchWeb(query: String, providerId: String): Outcome<WebSearchResponse> =
         search(query, providerId)
 
-    /** B-PROTO-063: `GET /experimental/migration/v1`; null when the server has nothing to report. */
-    suspend fun historyMigrationStatus(): Outcome<HistoryMigrationStatus?> = historyMigrationStatusRead()
+    /**
+     * B-PROTO-063: `GET /experimental/migration/v1`; null when the server has nothing to report.
+     */
+    suspend fun historyMigrationStatus(): Outcome<HistoryMigrationStatus?> =
+        historyMigrationStatusRead()
 
     override suspend fun close() {
         try {

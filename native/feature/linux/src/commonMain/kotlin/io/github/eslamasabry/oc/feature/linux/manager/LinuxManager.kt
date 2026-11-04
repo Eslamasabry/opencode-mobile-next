@@ -8,6 +8,9 @@ import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -68,6 +71,8 @@ public class LinuxManager(
     private val storageLane = Mutex()
     private var storageScanned = false
     private val cleanupReceipts = mutableMapOf<LinuxCleanupId, String>()
+    private val scanProgress = MutableStateFlow(LinuxStorageScan())
+    public val storageScan: StateFlow<LinuxStorageScan> = scanProgress.asStateFlow()
 
     public suspend fun presence(): LinuxPresence = host.presence()
 
@@ -156,9 +161,31 @@ public class LinuxManager(
     public suspend fun measureStorage(): LinuxAnswer<LinuxStorageReport> = storageLane.withLock {
         storageScanned = false
         cleanupReceipts.clear()
-        run(LinuxStorage.DISCARD_RECEIPTS + LinuxStorage.script, timeoutSeconds = 180).then {
+        scanProgress.value = LinuxStorageScan(LinuxStorageScanState.Running)
+        val output = StringBuilder()
+        try {
+            for (category in LinuxStorageCategory.entries) {
+                scanProgress.value =
+                    scanProgress.value.copy(headings = scanProgress.value.headings + category)
+                val script =
+                    (if (category == LinuxStorageCategory.entries.first())
+                        LinuxStorage.DISCARD_RECEIPTS
+                    else "") + LinuxStorage.stageScript(category)
+                when (val result = run(script, timeoutSeconds = 180)) {
+                    is LinuxAnswer.Problem -> {
+                        scanProgress.value =
+                            scanProgress.value.copy(state = LinuxStorageScanState.Failed)
+                        return@withLock result
+                    }
+                    is LinuxAnswer.Ok -> output.append(result.value).append('\n')
+                }
+            }
             storageScanned = true
-            LinuxAnswer.Ok(LinuxStorage.report(it))
+            scanProgress.value = LinuxStorageScan.parse("::storage-state Done\n$output")
+            LinuxAnswer.Ok(LinuxStorage.report(output.toString()))
+        } finally {
+            if (scanProgress.value.state == LinuxStorageScanState.Running)
+                scanProgress.value = scanProgress.value.copy(state = LinuxStorageScanState.Idle)
         }
     }
 

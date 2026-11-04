@@ -48,6 +48,51 @@ public data class LinuxStorageReport(val bytes: Map<LinuxStorageCategory, Long>)
     public fun of(category: LinuxStorageCategory): Long = bytes[category] ?: 0L
 }
 
+public enum class LinuxStorageScanState {
+    Idle,
+    Running,
+    Done,
+    Failed,
+}
+
+/** Only authored stage markers enter the log; paths and shell errors never become labels. */
+public data class LinuxStorageScan(
+    val state: LinuxStorageScanState = LinuxStorageScanState.Idle,
+    val headings: List<LinuxStorageCategory> = emptyList(),
+) {
+    val stage: LinuxStorageCategory?
+        get() = headings.lastOrNull()
+
+    public companion object {
+        public fun parse(output: String): LinuxStorageScan {
+            val state =
+                output
+                    .lineSequence()
+                    .mapNotNull { line ->
+                        if (!line.startsWith("::storage-state ")) null
+                        else
+                            LinuxStorageScanState.entries.firstOrNull {
+                                it.name == line.removePrefix("::storage-state ")
+                            }
+                    }
+                    .lastOrNull() ?: LinuxStorageScanState.Idle
+            val headings =
+                output
+                    .lineSequence()
+                    .mapNotNull { line ->
+                        if (!line.startsWith("::storage-stage ")) null
+                        else
+                            LinuxStorageCategory.entries.firstOrNull {
+                                it.name == line.removePrefix("::storage-stage ")
+                            }
+                    }
+                    .toList()
+                    .takeLast(32)
+            return LinuxStorageScan(state, headings)
+        }
+    }
+}
+
 public object LinuxStorage {
     public val categoryPaths: Map<LinuxStorageCategory, List<String>> =
         linkedMapOf(
@@ -391,11 +436,14 @@ printf '::freed %s\n' "$freed"
     }
 
     /** The measure script for every category path. */
+    public fun stageScript(category: LinuxStorageCategory): String =
+        "printf '::storage-stage ${category.name}\\n'\n" + measure(categoryPaths.getValue(category))
+
     public val script: String = measure(categoryPaths.values.flatten())
 
     /**
-     * A new scan voids every earlier receipt: removes the receipt files a previous scan left
-     * unused (only the exact mktemp names, never a link target), so they cannot pile up.
+     * A new scan voids every earlier receipt: removes the receipt files a previous scan left unused
+     * (only the exact mktemp names, never a link target), so they cannot pile up.
      */
     internal const val DISCARD_RECEIPTS: String =
         "rm -f -- /root/.oc-builtin/storage-cleanup.?????????? " +
