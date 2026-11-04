@@ -17,10 +17,4 @@ public object KitBidi {
 
     /** First-strong isolate: a name the person typed, in whichever script it is. */
     public fun auto(text: String): String = if (text.isEmpty() || isolated(text)) text else "$FSI$text$PDI"
-
-    /** An address is one left-to-right run. */
-    public fun address(text: String): String = ltr(text)
-
-    /** A value in a fact row: isolated only in a right-to-left layout, untouched in English. */
-    public fun isolateValue(text: String, rtl: Boolean): String = if (rtl) ltr(text) else text
 }

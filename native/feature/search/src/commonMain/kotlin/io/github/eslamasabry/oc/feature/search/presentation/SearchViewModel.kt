@@ -137,7 +137,8 @@ public class SearchViewModel(
         val ref = row.ref
         when (row.place) {
             null -> if (ref != null) nav.openChat(ref)
-            GoToPlace.NeedsYou -> nav.open(ChatsRoute.All(null))
+            // Dart opens the Chats home with its Needs-you filter; the native home carries that filter and count.
+            GoToPlace.NeedsYou -> nav.land()
             GoToPlace.Projects -> nav.open(ProjectsRoute.Picker(server))
             GoToPlace.Settings -> nav.open(SettingsRoute.Home)
             GoToPlace.Servers,
@@ -172,7 +173,7 @@ public class SearchViewModel(
                                         project = null,
                                         recent = it.recent,
                                     )
-                                ).toImmutableList()
+                                ).filter { row -> row.place?.openable != false }.toImmutableList()
                             } ?: persistentListOf()
                 )
             }
