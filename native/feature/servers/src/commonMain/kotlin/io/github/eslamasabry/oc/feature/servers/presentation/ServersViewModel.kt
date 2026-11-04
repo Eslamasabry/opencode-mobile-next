@@ -51,6 +51,7 @@ public class ServersViewModel(
     private val probe: PairingProbe = NoPairingProbe,
     private val monitoring: Set<ServerMonitoring> = emptySet(),
     private val connectionChecks: Set<ServerConnectionCheck> = emptySet(),
+    private val readSharing: Set<ServerReadSharing> = emptySet(),
 ) : ViewModel(), ServersActions {
     private val local =
         MutableStateFlow(
@@ -61,7 +62,15 @@ public class ServersViewModel(
         )
     public val state: StateFlow<ServersUi> =
         combine(local, connections.servers, connections.busy) { own, servers, busy ->
-                own.copy(servers = servers, busy = own.busy || busy)
+                own.copy(
+                    servers = servers,
+                    busy = own.busy || busy,
+                    readSharing =
+                        readSharing
+                            .singleOrNull()
+                            ?.let { source -> servers.associate { it.id to source.state(it.id) } }
+                            .orEmpty(),
+                )
             }
             .stateIn(
                 viewModelScope,
@@ -77,6 +86,20 @@ public class ServersViewModel(
     private var choosing = 0
 
     init {
+        readSharing.singleOrNull()?.let { source ->
+            viewModelScope.launch {
+                source.revision.collect {
+                    local.update { state ->
+                        state.copy(
+                            readSharing =
+                                connections.servers.value.associate { server ->
+                                    server.id to source.state(server.id)
+                                }
+                        )
+                    }
+                }
+            }
+        }
         monitoring.singleOrNull()?.let { source ->
             viewModelScope.launch {
                 source.rows.collect { rows -> local.update { it.copy(monitoring = rows) } }
@@ -150,6 +173,17 @@ public class ServersViewModel(
         checkJob?.cancel()
         checkJob = null
         local.update { it.copy(connectionCheck = null) }
+    }
+
+    override fun setReadSharing(id: ProfileId, enabled: Boolean) {
+        val source = readSharing.singleOrNull() ?: return
+        if (!source.state(id).available || source.state(id).saving) return
+        operation {
+            when (val result = source.set(id, enabled)) {
+                is Outcome.Failed -> failed(ServerIssue.SaveFailed, result.failure)
+                is Outcome.Ok -> Unit
+            }
+        }
     }
 
     override fun monitor(id: ProfileId, enabled: Boolean) = monitorOperation {

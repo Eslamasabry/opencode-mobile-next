@@ -13,6 +13,8 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
 import io.github.eslamasabry.oc.engine.files.FileBody
 import io.github.eslamasabry.oc.engine.files.FileData
 import io.github.eslamasabry.oc.engine.files.FileHandoff
@@ -34,15 +36,26 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-public enum class FilePhase { Loading, Ready, Failed, NotConnected, Unavailable }
+public enum class FilePhase {
+    Loading,
+    Ready,
+    Failed,
+    NotConnected,
+    Unavailable,
+}
 
 /** The Share on Wi-Fi sheet (07 §5 D05): stops on close, on Stop, or after 15 minutes. */
 public sealed interface ShareSheetUi {
     public data object Starting : ShareSheetUi
 
-    public data class Running(val url: String, val name: String, val downloads: Int, val remainingMs: Long?) :
-        ShareSheetUi {
-        override fun toString(): String = "Running(downloads=$downloads)" // the link holds the token
+    public data class Running(
+        val url: String,
+        val name: String,
+        val downloads: Int,
+        val remainingMs: Long?,
+    ) : ShareSheetUi {
+        override fun toString(): String =
+            "Running(downloads=$downloads)" // the link holds the token
     }
 
     /** Not on Wi-Fi, a file that may hold secrets, or the server could not start. */
@@ -51,7 +64,13 @@ public sealed interface ShareSheetUi {
     public data object Ended : ShareSheetUi
 }
 
-public enum class FileNotice { OpenWithNone, OpenWithFailed, MentionFailed, Saved, SaveFailed }
+public enum class FileNotice {
+    OpenWithNone,
+    OpenWithFailed,
+    MentionFailed,
+    Saved,
+    SaveFailed,
+}
 
 public sealed interface PdfPageUi {
     public data object Loading : PdfPageUi
@@ -78,10 +97,15 @@ public data class FileUi(
     val opening: Boolean = false,
     val share: ShareSheetUi? = null,
     val notice: FileNotice? = null,
-    /** PDF: the shown page count (at most 200) once the document opened; pages fill in as they render. */
+    /**
+     * PDF: the shown page count (at most 200) once the document opened; pages fill in as they
+     * render.
+     */
     val pdfPageCount: Int = 0,
     val pdfFailure: Failure? = null,
     val pdfPages: ImmutableMap<Int, PdfPageUi> = persistentMapOf(),
+    val storageBlock: SharedStorageBlock = SharedStorageBlock.None,
+    val requestingStorage: Boolean = false,
 ) {
     val name: String
         get() = FilePaths.name(path)
@@ -91,11 +115,18 @@ public data class FileUi(
 }
 
 public interface FileActions {
+    public fun requestStorage() {}
+
+    public fun onResume() {}
+
     public fun back()
 
     public fun retry()
 
-    /** Ask about this file: `@path ` into this conversation's message, then back to the conversation. */
+    /**
+     * Ask about this file: `@path ` into this conversation's message, then back to the
+     * conversation.
+     */
     public fun ask()
 
     public fun openWith()
@@ -117,8 +148,9 @@ public interface FileActions {
 }
 
 /**
- * D03 (07 §5): one file of the conversation's project. Reads once; the original bytes stay exact for Open with and
- * Share on Wi-Fi. Opened for a chat, so Ask about this file stages into that chat's draft and returns to it.
+ * D03 (07 §5): one file of the conversation's project. Reads once; the original bytes stay exact
+ * for Open with and Share on Wi-Fi. Opened for a chat, so Ask about this file stages into that
+ * chat's draft and returns to it.
  */
 @AssistedInject
 public class FileViewModel(
@@ -131,6 +163,7 @@ public class FileViewModel(
     private val nav: AppNavigator,
     private val appScope: AppCoroutineScope,
     private val savers: Set<FileSaver>,
+    private val storageAccess: Set<SharedStorageAccess> = emptySet(),
 ) : ViewModel(), FileActions {
     private val local =
         MutableStateFlow(
@@ -152,6 +185,7 @@ public class FileViewModel(
     private var shareId: Long? = null
 
     init {
+        check(storageAccess.size <= 1) { "multiple shared-storage hosts" }
         load()
         viewModelScope.launch {
             share.state.collect { running ->
@@ -190,17 +224,34 @@ public class FileViewModel(
 
     private fun load() {
         val mine = ++loads
+        val identity = connections.sourceIdentity(route.from)
         val gateway = connections.gateway(route.from)
         when {
-            gateway == null -> local.update { it.copy(phase = FilePhase.NotConnected, failure = null) }
-            !connections.canBrowse(route.from) -> local.update { it.copy(phase = FilePhase.Unavailable, failure = null) }
+            gateway == null ->
+                local.update { it.copy(phase = FilePhase.NotConnected, failure = null) }
+            !connections.canBrowse(route.from) ->
+                local.update { it.copy(phase = FilePhase.Unavailable, failure = null) }
             else -> {
-                local.update { it.copy(phase = FilePhase.Loading, failure = null) }
+                local.update {
+                    it.copy(
+                        phase = FilePhase.Loading,
+                        failure = null,
+                        requestingStorage = false,
+                        asking = false,
+                    )
+                }
                 viewModelScope.launch {
+                    if (!checkStorage(identity) { mine == loads }) return@launch
+                    if (mine != loads || connections.sourceIdentity(route.from) !== identity)
+                        return@launch
                     val opened = ProjectFiles.open(gateway, route.path, route.line)
-                    if (mine != loads) return@launch
+                    if (mine != loads || connections.sourceIdentity(route.from) !== identity)
+                        return@launch
                     when (opened) {
-                        is Outcome.Failed -> local.update { it.copy(phase = FilePhase.Failed, failure = opened.failure) }
+                        is Outcome.Failed ->
+                            local.update {
+                                it.copy(phase = FilePhase.Failed, failure = opened.failure)
+                            }
                         is Outcome.Ok -> {
                             data = opened.value.data
                             local.update {
@@ -216,6 +267,92 @@ public class FileViewModel(
                     }
                 }
             }
+        }
+    }
+
+    private var projectDirectory: String? = null
+
+    private suspend fun checkStorage(identity: Any?, wanted: () -> Boolean = { true }): Boolean {
+        val access = storageAccess.singleOrNull() ?: return true
+        val directory = connections.directory(route.from)
+        if (!wanted()) return false
+        if (!sourceCurrent(identity)) return false
+        val checked = access.check(route.from.profileId, directory, identity)
+        if (!wanted()) return false
+        if (!sourceCurrent(identity)) return false
+        projectDirectory = directory
+        return when (checked) {
+            is Outcome.Failed -> {
+                local.update {
+                    it.copy(
+                        phase = FilePhase.Failed,
+                        storageBlock = SharedStorageBlock.None,
+                        failure = checked.failure,
+                        asking = false,
+                    )
+                }
+                false
+            }
+            is Outcome.Ok -> {
+                local.update { it.copy(storageBlock = checked.value) }
+                if (checked.value == SharedStorageBlock.None) true
+                else {
+                    data = null
+                    closeShare()
+                    pdf?.close()
+                    pdf = null
+                    local.update {
+                        it.copy(
+                            phase = FilePhase.Failed,
+                            body = null,
+                            failure = null,
+                            asking = false,
+                            pdfPages = persistentMapOf(),
+                            pdfPageCount = 0,
+                        )
+                    }
+                    false
+                }
+            }
+        }
+    }
+
+    private fun sourceCurrent(identity: Any?): Boolean {
+        if (connections.sourceIdentity(route.from) === identity) return true
+        data = null
+        closeShare()
+        local.update {
+            it.copy(
+                phase = FilePhase.NotConnected,
+                storageBlock = SharedStorageBlock.None,
+                requestingStorage = false,
+                failure = null,
+                asking = false,
+                body = null,
+            )
+        }
+        return false
+    }
+
+    override fun onResume() {
+        if (local.value.phase != FilePhase.Loading) load()
+    }
+
+    override fun requestStorage() {
+        val access = storageAccess.singleOrNull() ?: return
+        val block = local.value.storageBlock
+        val identity = connections.sourceIdentity(route.from)
+        val run = loads
+        if (block == SharedStorageBlock.None || local.value.requestingStorage) return
+        local.update { it.copy(requestingStorage = true) }
+        viewModelScope.launch {
+            val asked = access.request(route.from.profileId, projectDirectory, block, identity)
+            if (run != loads) return@launch
+            if (!sourceCurrent(identity)) return@launch
+            local.update {
+                it.copy(requestingStorage = false, failure = (asked as? Outcome.Failed)?.failure)
+            }
+            if (asked is Outcome.Ok) retry()
         }
     }
 
@@ -235,7 +372,9 @@ public class FileViewModel(
             is Outcome.Failed -> local.update { it.copy(pdfFailure = opened.failure) }
             is Outcome.Ok -> {
                 pdf = opened.value
-                local.update { it.copy(pdfPageCount = opened.value.pageCount.coerceIn(0, PdfLimits.MAX_PAGES)) }
+                local.update {
+                    it.copy(pdfPageCount = opened.value.pageCount.coerceIn(0, PdfLimits.MAX_PAGES))
+                }
             }
         }
     }
@@ -246,23 +385,32 @@ public class FileViewModel(
         if (index !in 0 until ui.pdfPageCount) return
         val current = ui.pdfPages[index]
         if (current is PdfPageUi.Loading || current is PdfPageUi.Ready) return
-        local.update { it.copy(pdfPages = it.pdfPages.toPersistentMap().putting(index, PdfPageUi.Loading)) }
+        local.update {
+            it.copy(pdfPages = it.pdfPages.toPersistentMap().putting(index, PdfPageUi.Loading))
+        }
         viewModelScope.launch {
             val page =
                 when (val rendered = doc.renderPage(index, PDF_WIDTH_PX)) {
                     is Outcome.Ok -> PdfPageUi.Ready(rendered.value)
                     is Outcome.Failed -> PdfPageUi.Failed
                 }
-            local.update { it.copy(pdfPages = keepNear(it.pdfPages.toPersistentMap().putting(index, page), index)) }
+            local.update {
+                it.copy(
+                    pdfPages = keepNear(it.pdfPages.toPersistentMap().putting(index, page), index)
+                )
+            }
         }
     }
 
     /**
-     * Rendered pages stay only near the page just shown (Flutter frees off-screen pages): at most [PDF_WINDOW] pages
-     * each side and [PDF_BUDGET_BYTES] of PNGs, farthest first. A dropped page renders again when it is reached.
+     * Rendered pages stay only near the page just shown (Flutter frees off-screen pages): at most
+     * [PDF_WINDOW] pages each side and [PDF_BUDGET_BYTES] of PNGs, farthest first. A dropped page
+     * renders again when it is reached.
      */
     private fun keepNear(pages: Map<Int, PdfPageUi>, center: Int): ImmutableMap<Int, PdfPageUi> {
-        val near = pages.filter { (i, page) -> page !is PdfPageUi.Ready || kotlin.math.abs(i - center) <= PDF_WINDOW }
+        val near = pages.filter { (i, page) ->
+            page !is PdfPageUi.Ready || kotlin.math.abs(i - center) <= PDF_WINDOW
+        }
         var bytes = near.values.sumOf { (it as? PdfPageUi.Ready)?.png?.size?.toLong() ?: 0L }
         if (bytes <= PDF_BUDGET_BYTES) return near.toPersistentMap()
         val kept = near.toMutableMap()
@@ -276,11 +424,21 @@ public class FileViewModel(
     }
 
     override fun ask() {
+        if (
+            local.value.phase != FilePhase.Ready ||
+                local.value.storageBlock != SharedStorageBlock.None
+        )
+            return
         if (local.value.asking) return
+        val identity = connections.sourceIdentity(route.from)
+        val run = loads
         local.update { it.copy(asking = true, notice = null) }
         viewModelScope.launch {
-            val directory = connections.directory(route.from)
+            if (!checkStorage(identity) { run == loads }) return@launch
+            if (connections.sourceIdentity(route.from) !== identity) return@launch
+            val directory = projectDirectory ?: connections.directory(route.from)
             val result = mentions.mention(route.from, local.value.path, directory)
+            if (connections.sourceIdentity(route.from) !== identity) return@launch
             local.update { it.copy(asking = false) }
             when (result) {
                 is Outcome.Failed -> local.update { it.copy(notice = FileNotice.MentionFailed) }
@@ -289,13 +447,21 @@ public class FileViewModel(
         }
     }
 
-    /** Pops every Files page this conversation opened; the chat is under them (07 §5 D03 `popTo(ChatRoute)`). */
+    /**
+     * Pops every Files page this conversation opened; the chat is under them (07 §5 D03
+     * `popTo(ChatRoute)`).
+     */
     private fun returnToConversation() {
         var guard = 0
         while (nav.top.value is FilesRoute && guard++ < MAX_POPS) nav.back()
     }
 
     override fun openWith() {
+        if (
+            local.value.phase != FilePhase.Ready ||
+                local.value.storageBlock != SharedStorageBlock.None
+        )
+            return
         val file = data ?: return
         val handoff = handoffs.firstOrNull() ?: return
         if (local.value.opening) return
@@ -309,7 +475,8 @@ public class FileViewModel(
                         when (result) {
                             is Outcome.Ok -> null
                             is Outcome.Failed ->
-                                if (result.failure == Failure.Media(MediaProblem.NoAppToOpen)) FileNotice.OpenWithNone
+                                if (result.failure == Failure.Media(MediaProblem.NoAppToOpen))
+                                    FileNotice.OpenWithNone
                                 else FileNotice.OpenWithFailed
                         },
                 )
@@ -318,6 +485,11 @@ public class FileViewModel(
     }
 
     override fun save() {
+        if (
+            local.value.phase != FilePhase.Ready ||
+                local.value.storageBlock != SharedStorageBlock.None
+        )
+            return
         val file = data ?: return
         val saver = savers.firstOrNull() ?: return
         if (local.value.saving) return
@@ -338,16 +510,23 @@ public class FileViewModel(
     }
 
     override fun shareOnWifi() {
+        if (
+            local.value.phase != FilePhase.Ready ||
+                local.value.storageBlock != SharedStorageBlock.None
+        )
+            return
         val file = data ?: return
         if (local.value.share == ShareSheetUi.Starting) return
         shareWanted = true
         local.update { it.copy(share = ShareSheetUi.Starting) }
         viewModelScope.launch {
             when (val started = share.start(file)) {
-                is Outcome.Failed -> local.update { it.copy(share = ShareSheetUi.Refused(started.failure)) }
+                is Outcome.Failed ->
+                    local.update { it.copy(share = ShareSheetUi.Refused(started.failure)) }
                 is Outcome.Ok -> {
                     shareId = started.value.id
-                    // The sheet was closed while the server was starting: end the share it no longer shows.
+                    // The sheet was closed while the server was starting: end the share it no
+                    // longer shows.
                     if (!shareWanted) {
                         share.stop(started.value.id)
                         return@launch
@@ -386,7 +565,8 @@ public class FileViewModel(
     override fun dismissNotice(): Unit = local.update { it.copy(notice = null) }
 
     override fun onCleared() {
-        // Leaving the file ends its share (the sheet cannot outlive the viewer) and frees the PDF renderer.
+        // Leaving the file ends its share (the sheet cannot outlive the viewer) and frees the PDF
+        // renderer.
         val id = shareId
         if (shareWanted && id != null) share.stopLater(id)
         val doc = pdf

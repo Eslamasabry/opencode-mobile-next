@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateStorageAppTitle">السماح بالوصول إلى ملفات هذا الهاتف</string>
+    <string name="stateStorageAppBody">هذا المشروع في مساحة التخزين المشتركة. فعّل الوصول إلى جميع الملفات لتطبيق OpenCode Mobile، ثم ارجع إلى هنا.</string>
+    <string name="stateStorageAppAction">فتح إعدادات الوصول إلى الملفات</string>
+    <string name="stateStorageTermuxTitle">السماح لـ Termux بقراءة التخزين المشترك</string>
+    <string name="stateStorageTermuxBody">افتح Termux، وشغّل termux-setup-storage، واسمح بالوصول إلى التخزين. ارجع إلى هنا وتحقق مجددًا. صلاحية الملفات لهذا التطبيق لا تمنح Termux الوصول.</string>
+    <string name="stateStorageTermuxAction">فتح Termux</string>
+</resources>

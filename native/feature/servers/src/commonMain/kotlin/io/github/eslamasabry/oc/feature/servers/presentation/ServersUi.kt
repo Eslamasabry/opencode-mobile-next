@@ -14,6 +14,7 @@ public data class ServersUi(
     val busy: Boolean = false,
     val connectionCheckAvailable: Boolean = false,
     val connectionCheck: ConnectionCheckUi? = null,
+    val readSharing: Map<ProfileId, ServerReadSharingUi> = emptyMap(),
     val monitoring: Map<ProfileId, ServerMonitorUi> = emptyMap(),
     val newConversation: Boolean = false,
     val cleartextAllowed: Boolean = false,
@@ -38,6 +39,8 @@ public enum class ServerIssue {
 }
 
 public interface ServersActions {
+    public fun setReadSharing(id: ProfileId, enabled: Boolean) {}
+
     public fun checkConnection(id: ProfileId) {}
 
     public fun closeConnectionCheck() {}

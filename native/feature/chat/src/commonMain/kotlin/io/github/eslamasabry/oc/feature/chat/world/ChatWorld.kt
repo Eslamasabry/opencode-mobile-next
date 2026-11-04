@@ -123,7 +123,9 @@ public interface ChatWorld {
     public suspend fun selectModel(choice: ComposerModel?, variant: String = ""): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
 
-    /** Moves the conversation to the primary [agent] in the server session, verified by readback. */
+    /**
+     * Moves the conversation to the primary [agent] in the server session, verified by readback.
+     */
     public suspend fun selectAgent(agent: String): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("agentSelection")))
 
@@ -141,8 +143,9 @@ public interface ChatWorld {
     public suspend fun send(text: String): Outcome<Unit>
 
     /**
-     * Send again (plan 09 §6.6): an earlier prompt's [text] alone. The draft's files never ride along and the draft
-     * stays as it is (Flutter `_sendInsteadOfDraft` sets the draft's attachments aside).
+     * Send again (plan 09 §6.6): an earlier prompt's [text] alone. The draft's files never ride
+     * along and the draft stays as it is (Flutter `_sendInsteadOfDraft` sets the draft's
+     * attachments aside).
      */
     public suspend fun sendAgain(text: String): Outcome<Unit> = send(text)
 
@@ -161,8 +164,9 @@ public interface ChatWorld {
     public suspend fun stop(): Outcome<Unit>
 
     /**
-     * [stop], saying whether the server was asked: `Ok(false)` is a tap the guard after a send ignored (it asked
-     * nothing), so Stop stays usable (Codex chat-bugs 2, Flutter's ignored-tap guard).
+     * [stop], saying whether the server was asked: `Ok(false)` is a tap the guard after a send
+     * ignored (it asked nothing), so Stop stays usable (Codex chat-bugs 2, Flutter's ignored-tap
+     * guard).
      */
     public suspend fun stopTurn(): Outcome<Boolean> =
         when (val r = stop()) {
@@ -183,28 +187,33 @@ public interface ChatWorld {
     public suspend fun deleteMessage(id: MessageId): Outcome<Unit>
 
     /**
-     * P12-CHAT-FEEL "Undo from here" (B-CHAT-120, servers that undo directly): the prompt [from] and everything after
-     * it are undone on the server, then the conversation is read again.
+     * P12-CHAT-FEEL "Undo from here" (B-CHAT-120, servers that undo directly): the prompt [from]
+     * and everything after it are undone on the server, then the conversation is read again.
      */
     public suspend fun revertFrom(from: MessageId): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("sessionRevert")))
 
     /**
-     * P12-CHAT-FEEL: the bytes of a picture a reply names by its server path (B-CHAT-059), for the in-chat viewer.
-     * Read through the conversation's own file transport; never a web fetch.
+     * P12-CHAT-FEEL: the bytes of a picture a reply names by its server path (B-CHAT-059), for the
+     * in-chat viewer. Read through the conversation's own file transport; never a web fetch.
      */
     public suspend fun readPicture(path: String): Outcome<ByteArray> =
         Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
 
     /**
-     * B-CHAT-064: whether [path] names a file on the server (Flutter `_checkPathLink`: its folder is listed and the
-     * name found). A bare name without a folder is never checked.
+     * B-CHAT-064: whether [path] names a file on the server (Flutter `_checkPathLink`: its folder
+     * is listed and the name found). A bare name without a folder is never checked.
      */
     public suspend fun fileExists(path: String): Outcome<Boolean> =
         Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
 
     /** The visible transcript was read at the live edge (plan 09 §6.7). */
     public fun markRead()
+
+    /** Recheck the originating display after asynchronous work, before acknowledging it. */
+    public fun markReadIfVisible(stillVisible: () -> Boolean) {
+        if (stillVisible()) markRead()
+    }
 }
 
 /**
@@ -267,7 +276,13 @@ public data class DraftFacts(
      */
     public val unsaved: Boolean
         get() =
-            if (text.isBlank() && saved.isBlank() && attachments.isEmpty() && savedAttachments.isEmpty()) false
+            if (
+                text.isBlank() &&
+                    saved.isBlank() &&
+                    attachments.isEmpty() &&
+                    savedAttachments.isEmpty()
+            )
+                false
             else text != saved || attachments != savedAttachments
 
     override fun toString(): String =
@@ -294,4 +309,5 @@ private val NoOlder = kotlinx.coroutines.flow.MutableStateFlow(false)
 
 private val NoModels = kotlinx.coroutines.flow.MutableStateFlow(ComposerModels())
 
-private val NoCommands = kotlinx.coroutines.flow.MutableStateFlow<List<ComposerCommand>>(emptyList())
+private val NoCommands =
+    kotlinx.coroutines.flow.MutableStateFlow<List<ComposerCommand>>(emptyList())

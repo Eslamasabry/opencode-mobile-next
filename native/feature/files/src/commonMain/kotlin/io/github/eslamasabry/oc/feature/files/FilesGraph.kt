@@ -10,12 +10,13 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.ConnectionScope
-import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.domain.FileGateway
 import io.github.eslamasabry.oc.core.domain.ServerGateway
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.composer.input.Mentions
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
@@ -30,7 +31,10 @@ import io.github.eslamasabry.oc.feature.files.presentation.FilesConnections
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.first
 
-/** Files reads its conversation's gateway from that conversation's own graph (ADR §9.1), like the chat does. */
+/**
+ * Files reads its conversation's gateway from that conversation's own graph (ADR §9.1), like the
+ * chat does.
+ */
 @ContributesTo(ConnectionScope::class)
 public interface FilesGraphAccessors {
     public val filesGateway: ServerGateway
@@ -39,6 +43,8 @@ public interface FilesGraphAccessors {
 /** Platform halves; an empty set hides the action (desktop has none of them today). */
 @ContributesTo(AppScope::class)
 public interface FilesPlatformBindings {
+    @Multibinds(allowEmpty = true) public val sharedStorageAccess: Set<SharedStorageAccess>
+
     @Multibinds(allowEmpty = true) public val shareHosts: Set<ShareHost>
 
     @Multibinds(allowEmpty = true) public val fileHandoffs: Set<FileHandoff>
@@ -66,10 +72,15 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
     private fun live(ref: ConversationRef): ServerGateway? =
         (registry.graphFor(ref) as? FilesGraphAccessors)?.filesGateway
 
-    // Each screen reads its conversation's own folder (B-NAV-026), never the gateway's shared location.
-    override fun gateway(ref: ConversationRef): FileGateway? = live(ref)?.let { ConversationFiles(it, ref.sessionId) }
+    // Each screen reads its conversation's own folder (B-NAV-026), never the gateway's shared
+    // location.
+    override fun gateway(ref: ConversationRef): FileGateway? =
+        live(ref)?.let { ConversationFiles(it, ref.sessionId) }
 
-    override fun canBrowse(ref: ConversationRef): Boolean = live(ref)?.capabilities?.value?.fileBrowsing == true
+    override fun sourceIdentity(ref: ConversationRef): Any? = registry.graphFor(ref)
+
+    override fun canBrowse(ref: ConversationRef): Boolean =
+        live(ref)?.capabilities?.value?.fileBrowsing == true
 
     override suspend fun directory(ref: ConversationRef): String? {
         val gateway = live(ref) ?: return null
@@ -78,15 +89,23 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
 }
 
 /**
- * "Ask about this file" from a conversation (files_viewer.dart `_askAbout`): appends `@path ` to that conversation's
- * draft and, when the project folder is known, adds the file mention the composer sends as a file part
- * (Mentions.projectFile, B-CHAT-087). The draft owner persists it; the chat's composer restores it on return.
+ * "Ask about this file" from a conversation (files_viewer.dart `_askAbout`): appends `@path ` to
+ * that conversation's draft and, when the project folder is known, adds the file mention the
+ * composer sends as a file part (Mentions.projectFile, B-CHAT-087). The draft owner persists it;
+ * the chat's composer restores it on return.
  */
 @Inject
 @ContributesBinding(AppScope::class)
-public class DraftComposerMentions(private val draftStores: Set<ConversationDrafts>) : ComposerMentions {
-    override suspend fun mention(ref: ConversationRef, path: String, directory: String?): Outcome<Unit> {
-        val drafts = draftStores.singleOrNull() ?: return Outcome.Failed(Failure.Unavailable(FeatureId("drafts")))
+public class DraftComposerMentions(private val draftStores: Set<ConversationDrafts>) :
+    ComposerMentions {
+    override suspend fun mention(
+        ref: ConversationRef,
+        path: String,
+        directory: String?,
+    ): Outcome<Unit> {
+        val drafts =
+            draftStores.singleOrNull()
+                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("drafts")))
         val session = drafts.open(ref)
         val ready = session.state.first { it.ready || it.failure != null }
         if (!ready.ready) return Outcome.Failed(ready.failure ?: Failure.StorageRefused())
@@ -100,7 +119,10 @@ public class DraftComposerMentions(private val draftStores: Set<ConversationDraf
             }
         session.changed(next)
         if (directory != null && ready.attachments.none { it.mentionPath == path }) {
-            val added = session.replaceAttachments(ready.attachments + Mentions.projectFile(directory, path))
+            val added =
+                session.replaceAttachments(
+                    ready.attachments + Mentions.projectFile(directory, path)
+                )
             if (added is Outcome.Failed) return added
         }
         return session.flush()

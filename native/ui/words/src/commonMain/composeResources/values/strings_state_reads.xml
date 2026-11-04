@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stateShareViewedTitle">Share which chats I viewed</string>
+    <string name="stateShareViewedDetail">Tell this server which finished replies you opened. Off keeps this information on this device.</string>
+    <string name="stateShareViewedSaving">Saving your privacy choice…</string>
+</resources>

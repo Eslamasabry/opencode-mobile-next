@@ -114,6 +114,9 @@ import io.github.eslamasabry.oc.ui.words.res.serversTitle
 import io.github.eslamasabry.oc.ui.words.res.serversUsername
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.settingsV3ThisPhone
+import io.github.eslamasabry.oc.ui.words.res.stateShareViewedDetail
+import io.github.eslamasabry.oc.ui.words.res.stateShareViewedSaving
+import io.github.eslamasabry.oc.ui.words.res.stateShareViewedTitle
 import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.usageTitle
 import kotlinx.coroutines.flow.drop
@@ -308,6 +311,22 @@ public fun ServersScreen(
                             enabled = enabled,
                         )
                     }
+                    state.readSharing[server.id]
+                        ?.takeIf { it.available }
+                        ?.let { sharing ->
+                            KitSwitchRow(
+                                title = stringResource(Res.string.stateShareViewedTitle),
+                                supporting = stringResource(Res.string.stateShareViewedDetail),
+                                checked = sharing.enabled,
+                                enabled =
+                                    if (sharing.saving)
+                                        KitEnabled.Disabled(
+                                            stringResource(Res.string.stateShareViewedSaving)
+                                        )
+                                    else enabled,
+                                onCheckedChange = { actions.setReadSharing(server.id, it) },
+                            )
+                        }
                     state.monitoring[server.id]?.let { monitor ->
                         if (monitor.available) {
                             KitSwitchRow(

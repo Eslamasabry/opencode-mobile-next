@@ -4,6 +4,7 @@ import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.*
 import io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope
+import io.github.eslamasabry.oc.core.domain.SessionReadStateGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.NewSession
@@ -37,6 +38,7 @@ import kotlinx.coroutines.sync.withLock
 class PreviewRuntime(
     private val stores: PreviewStores,
     private val registry: ConnectionRegistry,
+    private val sessionReads: NativeSessionReads,
     private val redactor: Redactor,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
@@ -81,6 +83,17 @@ class PreviewRuntime(
             }
         }
         scope.launch { profiles.profiles.collect { if (ready.isCompleted) publishServers() } }
+        scope.launch {
+            if (ready.await() is Outcome.Failed) return@launch
+            combine(sessionReads.revision, profiles.activeId) { _, active -> active }
+                .collect { active ->
+                    order.withLock {
+                        if (active == null || registry.live.value[active] == null)
+                            sessionReads.clearBrief()
+                        for ((id, listing) in listings) publishReadState(id, listing)
+                    }
+                }
+        }
     }
 
     private fun publishServers() {
@@ -339,6 +352,10 @@ class PreviewRuntime(
                 id,
                 profiles.profile(id)?.profile?.name,
                 listing,
+                locationKey =
+                    registry.live.value[id]?.let {
+                        sessionReads.locationKey(it.profile, it.session.server.location.value)
+                    },
                 refresh = { refreshOne(id) },
             )
         }
@@ -346,6 +363,53 @@ class PreviewRuntime(
         feed = merged
         snapshot.value = merged.snapshot.value
         feedJob = scope.launch { merged.snapshot.collect { snapshot.value = it } }
+    }
+
+    private suspend fun publishReadState(
+        id: ProfileId,
+        listing: MutableStateFlow<OpenCodeListing>,
+    ) {
+        val graph = registry.live.value[id] ?: return
+        val location = graph.session.server.location.value
+        val current = listing.value
+        val busy =
+            current.statuses
+                .filterValues { it == SessionStatus.Busy || it == SessionStatus.Retry }
+                .keys
+        val known = graph.session.server is SessionReadStateGateway
+        val finished =
+            if (known)
+                current.sessions
+                    .filter {
+                        sessionReads.unread(graph.profile, location, it, it.id in busy)
+                    }
+                    .mapTo(mutableSetOf()) { it.id }
+            else emptySet()
+        listing.value = current.copy(finishedUnseen = finished)
+        if (profiles.activeId.value != id) return
+        val blockers = mutableMapOf<SessionId, Pair<BriefBlocker, String>>()
+        val rank =
+            mapOf(
+                "permission" to BriefBlocker.Permission,
+                "question" to BriefBlocker.Question,
+                "form" to BriefBlocker.Form,
+            )
+        requests[id]
+            .orEmpty()
+            .entries
+            .sortedBy { rank[it.key.first]?.ordinal ?: Int.MAX_VALUE }
+            .forEach { (key, session) ->
+                rank[key.first]?.let { blockers.putIfAbsent(session, it to key.second) }
+            }
+        sessionReads.publishBrief(
+            graph.profile,
+            location,
+            current.sessions,
+            busy,
+            blockers,
+            inventoryPartial = !current.complete || current.failed,
+            readStateKnown = known,
+        )
     }
 
     private suspend fun refreshOne(id: ProfileId): Outcome<Unit> {
@@ -439,6 +503,7 @@ class PreviewRuntime(
                         acrossProjects =
                             graph.session.server.capabilities.value.globalSessionSearch,
                     )
+                publishReadState(id, listing)
                 // Unknown optional asks affect the feed's completeness, never healthy
                 // connect/create admission.
                 return statuses.map { Unit }.atStage(ConnectionStage.LoadActivity)
@@ -540,6 +605,8 @@ class PreviewRuntime(
         val scoped =
             DefaultProfileScope(stores.prefs, stores.secrets, stores.lanes.app).apply {
                 AndroidProfileMonitoring.registerKeys(this)
+                SavedStateFormDrafts.registerKeys(this)
+                NativeSessionReads.shapes.forEach(::register)
                 registerSecret("pw.", "profiles")
                 registerSecret("oc.codexToken.", "profiles")
             }

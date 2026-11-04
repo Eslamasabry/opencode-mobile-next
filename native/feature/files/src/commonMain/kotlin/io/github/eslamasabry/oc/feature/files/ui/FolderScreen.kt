@@ -5,6 +5,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
 import io.github.eslamasabry.oc.core.model.FileNode
 import io.github.eslamasabry.oc.feature.files.presentation.FolderActions
 import io.github.eslamasabry.oc.feature.files.presentation.FolderPhase
@@ -39,18 +41,31 @@ import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.readerUiNoFiles
 import io.github.eslamasabry.oc.ui.words.res.readerUiSearchFiles
 import io.github.eslamasabry.oc.ui.words.res.readerUiTryFileName
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppAction
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppBody
+import io.github.eslamasabry.oc.ui.words.res.stateStorageAppTitle
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxAction
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxBody
+import io.github.eslamasabry.oc.ui.words.res.stateStorageTermuxTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * D02 (07 §5): one folder of the conversation's project, arranged from kit parts only. Folders and files are plain
- * rows (a folder has the chevron); Show hidden files is a visible bar action, never a gesture; search sits under the
- * bar and searches the whole project by name.
+ * D02 (07 §5): one folder of the conversation's project, arranged from kit parts only. Folders and
+ * files are plain rows (a folder has the chevron); Show hidden files is a visible bar action, never
+ * a gesture; search sits under the bar and searches the whole project by name.
  */
 @Composable
 public fun FolderScreen(state: FolderUi, actions: FolderActions) {
-    val title = if (state.path.isEmpty()) stringResource(Res.string.filesProjectRoot) else state.name
+    LifecycleResumeEffect(actions) {
+        actions.onResume()
+        onPauseOrDispose {}
+    }
+    val title =
+        if (state.path.isEmpty()) stringResource(Res.string.filesProjectRoot) else state.name
     val hiddenLabel =
-        stringResource(if (state.showHidden) Res.string.filesHideHidden else Res.string.filesShowHidden)
+        stringResource(
+            if (state.showHidden) Res.string.filesHideHidden else Res.string.filesShowHidden
+        )
     val barActions = buildList {
         if (state.phase == FolderPhase.Ready && (state.hiddenCount > 0 || state.showHidden)) {
             add(KitLineAction(hiddenLabel, actions::toggleHidden, testTag = "files-show-hidden"))
@@ -69,13 +84,19 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
             )
         },
         search =
-            if (state.phase == FolderPhase.Ready || state.query != null) ({ KitSearchField(searchLabel, actions::search) })
+            if (
+                state.storageBlock == SharedStorageBlock.None &&
+                    (state.phase == FolderPhase.Ready || state.query != null)
+            )
+                ({ KitSearchField(searchLabel, actions::search) })
             else null,
         width = KitScreenWidth.List,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
             val query = state.query
             when {
+                state.storageBlock != SharedStorageBlock.None ->
+                    item(key = "shared-storage-access") { SharedStorageNotice(state, actions) }
                 query != null -> searchItems(state, actions)
                 state.phase == FolderPhase.Loading -> item(key = "loading") { KitSkeletonRows() }
                 state.phase == FolderPhase.NotConnected ->
@@ -89,7 +110,10 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                     }
                 state.phase == FolderPhase.Unavailable ->
                     item(key = "unavailable") {
-                        KitStateView(kind = KitStateKind.Calm, title = stringResource(Res.string.filesUnavailable))
+                        KitStateView(
+                            kind = KitStateKind.Calm,
+                            title = stringResource(Res.string.filesUnavailable),
+                        )
                     }
                 state.phase == FolderPhase.Failed ->
                     item(key = "failed") {
@@ -106,12 +130,19 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                         KitStateView(
                             kind = KitStateKind.Calm,
                             title = stringResource(Res.string.filesOnlyHidden),
-                            primary = KitAction(stringResource(Res.string.filesShowHidden), actions::toggleHidden),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.filesShowHidden),
+                                    actions::toggleHidden,
+                                ),
                         )
                     }
                 state.empty ->
                     item(key = "empty") {
-                        KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.chatStartEmptyFolder))
+                        KitStateView(
+                            kind = KitStateKind.Empty,
+                            title = stringResource(Res.string.chatStartEmptyFolder),
+                        )
                     }
                 else -> items(state.entries, key = { it.path }) { node -> EntryRow(node, actions) }
             }
@@ -119,7 +150,10 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
     }
 }
 
-private fun androidx.compose.foundation.lazy.LazyListScope.searchItems(state: FolderUi, actions: FolderActions) {
+private fun androidx.compose.foundation.lazy.LazyListScope.searchItems(
+    state: FolderUi,
+    actions: FolderActions,
+) {
     val failure = state.searchFailure
     when {
         state.searching -> item(key = "searching") { KitSkeletonRows(count = 3) }
@@ -160,5 +194,41 @@ private fun EntryRow(node: FileNode, actions: FolderActions) {
         titleIsFileName = true,
         trailing = if (node.isDir) KitRowTrailing.Chevron else KitRowTrailing.None,
         onClick = { actions.open(node) },
+    )
+}
+
+@Composable
+private fun SharedStorageNotice(state: FolderUi, actions: FolderActions) {
+    val block = state.storageBlock
+    val title =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppTitle
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxTitle
+            SharedStorageBlock.None -> return
+        }
+    val body =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppBody
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxBody
+            SharedStorageBlock.None -> return
+        }
+    val action =
+        when (block) {
+            SharedStorageBlock.AppAccess -> Res.string.stateStorageAppAction
+            SharedStorageBlock.TermuxAccess -> Res.string.stateStorageTermuxAction
+            SharedStorageBlock.None -> return
+        }
+    KitStateView(
+        kind = KitStateKind.Calm,
+        title = stringResource(title),
+        body = stringResource(body),
+        failure = state.failure,
+        primary =
+            KitAction(
+                stringResource(action),
+                actions::requestStorage,
+                working = state.requestingStorage,
+            ),
+        secondary = KitAction(stringResource(Res.string.kitTryAgain), actions::retry),
     )
 }

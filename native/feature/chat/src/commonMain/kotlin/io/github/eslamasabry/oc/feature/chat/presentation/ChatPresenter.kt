@@ -14,12 +14,13 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
+import kotlin.coroutines.CoroutineContext
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
-import io.github.eslamasabry.oc.ui.routes.FilesRoute
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,12 +32,13 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlin.coroutines.CoroutineContext
 
-/** Where the presenter runs a command's suspending half (the ViewModel's scope; tests start it in place). */
+/**
+ * Where the presenter runs a command's suspending half (the ViewModel's scope; tests start it in
+ * place).
+ */
 public fun interface ChatLauncher {
     public fun launch(block: suspend () -> Unit)
 }
@@ -62,7 +64,11 @@ internal data class ChatLocal(
     val confirmedPaths: PersistentSet<String> = persistentSetOf(),
 )
 
-internal data class PendingArrival(val id: Long, val focusComposer: Boolean, val landOnFailure: Boolean)
+internal data class PendingArrival(
+    val id: Long,
+    val focusComposer: Boolean,
+    val landOnFailure: Boolean,
+)
 
 /** One snapshot of everything the screen reads from the world. */
 internal data class ChatInputs(
@@ -76,9 +82,10 @@ internal data class ChatInputs(
 )
 
 /**
- * The chat's state holder and intents (plan 09 §6.2), free of Android and of the ViewModel class so it is tested with
- * plain `kotlin.test`: [current] presents the world's present values; [states] is the production flow. The combine is
- * O(changed side tables): rows pass through by reference; find runs on [states]' work context.
+ * The chat's state holder and intents (plan 09 §6.2), free of Android and of the ViewModel class so
+ * it is tested with plain `kotlin.test`: [current] presents the world's present values; [states] is
+ * the production flow. The combine is O(changed side tables): rows pass through by reference; find
+ * runs on [states]' work context.
  */
 public class ChatPresenter(
     private val world: ChatWorld,
@@ -92,8 +99,11 @@ public class ChatPresenter(
     private val local =
         MutableStateFlow(
             ChatLocal(
-                arrival = if (focusComposer || landOnFailure) PendingArrival(nextId++, focusComposer, landOnFailure) else null,
-            ),
+                arrival =
+                    if (focusComposer || landOnFailure)
+                        PendingArrival(nextId++, focusComposer, landOnFailure)
+                    else null
+            )
         )
     private var revision = 0L
     private var lastHits: ImmutableList<FindHit> = persistentListOf()
@@ -101,44 +111,72 @@ public class ChatPresenter(
     private var readBusy = false
     private var stopInFlight = false
 
-    public val ref: ConversationRef get() = world.ref
+    public val ref: ConversationRef
+        get() = world.ref
 
     /** The present state from the world's current values (find computed in place). */
     public fun current(): ChatUi {
         settleStop()
         val inputs = inputsNow()
         val l = local.value
-        val hits = l.findQuery?.let { TranscriptFind.search(inputs.transcript, it) } ?: persistentListOf()
+        val hits =
+            l.findQuery?.let { TranscriptFind.search(inputs.transcript, it) } ?: persistentListOf()
         return present(inputs, l, hits)
     }
 
     /** The production state: [work] is where find searches (never the main thread). */
-    public fun states(scope: CoroutineScope, work: CoroutineContext, started: SharingStarted): StateFlow<ChatUi> {
+    public fun states(
+        scope: CoroutineScope,
+        work: CoroutineContext,
+        started: SharingStarted,
+    ): StateFlow<ChatUi> {
         val hits =
-            combine(world.transcript, local.map { it.findQuery }.distinctUntilChanged()) { t, q -> t to q }
+            combine(world.transcript, local.map { it.findQuery }.distinctUntilChanged()) { t, q ->
+                    t to q
+                }
                 .conflate()
-                .map { (t, q) -> if (q == null) persistentListOf() else TranscriptFind.search(t, q) }
+                .map { (t, q) ->
+                    if (q == null) persistentListOf() else TranscriptFind.search(t, q)
+                }
                 .flowOn(work)
         val inputs =
-            combine(world.transcript, world.load, world.title, world.capabilities, world.link) { t, l, ti, c, k ->
-                Five(t, l, ti, c, k)
-            }.combine(world.pending) { f, p -> f to p }
+            combine(world.transcript, world.load, world.title, world.capabilities, world.link) {
+                    t,
+                    l,
+                    ti,
+                    c,
+                    k ->
+                    Five(t, l, ti, c, k)
+                }
+                .combine(world.pending) { f, p -> f to p }
                 .combine(world.draft) { (f, p), d -> ChatInputs(f.t, f.l, f.ti, f.c, f.k, p, d) }
         // Read acknowledgement follows the world, not the screen's composition (plan 09 §6.7).
         combine(world.load, world.transcript, local) { _, _, _ ->
-            syncRead()
-            settleStop()
-        }.launchIn(scope)
+                syncRead()
+                settleStop()
+            }
+            .launchIn(scope)
         return combine(inputs, local, hits, world.hasOlder) { i, l, h, _ -> present(i, l, h) }
             .stateIn(scope, started, ChatUi.loading(world.ref))
     }
 
-    private data class Five(val t: TranscriptState, val l: ChatLoad, val ti: String?, val c: ServerCapabilities, val k: ChatLink)
+    private data class Five(
+        val t: TranscriptState,
+        val l: ChatLoad,
+        val ti: String?,
+        val c: ServerCapabilities,
+        val k: ChatLink,
+    )
 
     private fun inputsNow(): ChatInputs =
         ChatInputs(
-            world.transcript.value, world.load.value, world.title.value, world.capabilities.value, world.link.value,
-            world.pending.value, world.draft.value,
+            world.transcript.value,
+            world.load.value,
+            world.title.value,
+            world.capabilities.value,
+            world.link.value,
+            world.pending.value,
+            world.draft.value,
         )
 
     internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
@@ -146,18 +184,31 @@ public class ChatPresenter(
         val t = i.transcript
         val cursor = TranscriptFind.keep(hits, l.findKey, l.findCursor)
         val hit = hits.getOrNull(cursor)
-        val find = l.findQuery?.let { q ->
-            FindUi(q, hits.size, cursor, hit?.rowKey, hit?.let { t.indexOf(it.rowKey) } ?: -1, partial = world.hasOlder.value)
-        }
-        val arrival = l.arrival?.let { a ->
-            val land = if (a.landOnFailure) Landing.newestFailedKey(t.rows)?.let(t::indexOf)?.takeIf { it >= 0 } else null
-            ChatArrivalUi(a.id, a.focusComposer, land)
-        }
+        val find =
+            l.findQuery?.let { q ->
+                FindUi(
+                    q,
+                    hits.size,
+                    cursor,
+                    hit?.rowKey,
+                    hit?.let { t.indexOf(it.rowKey) } ?: -1,
+                    partial = world.hasOlder.value,
+                )
+            }
+        val arrival =
+            l.arrival?.let { a ->
+                val land =
+                    if (a.landOnFailure)
+                        Landing.newestFailedKey(t.rows)?.let(t::indexOf)?.takeIf { it >= 0 }
+                    else null
+                ChatArrivalUi(a.id, a.focusComposer, land)
+            }
         return ChatUi(
             revision = ++revision,
             ref = world.ref,
             title = i.title,
-            status = StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused),
+            status =
+                StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused),
             phase =
                 when (val load = i.load) {
                     ChatLoad.Loading -> ChatPhase.Loading
@@ -174,7 +225,13 @@ public class ChatPresenter(
             clip = l.clip,
             arrival = arrival,
             capabilities = capsOf(i.capabilities),
-            guardBack = BackOrder.handles(l.menu != null || l.select != null || l.picture != null, l.confirm != null, l.findQuery != null, i.draft.unsaved),
+            guardBack =
+                BackOrder.handles(
+                    l.menu != null || l.select != null || l.picture != null,
+                    l.confirm != null,
+                    l.findQuery != null,
+                    i.draft.unsaved,
+                ),
             select = l.select,
             insert = l.insert,
             picture = l.picture,
@@ -184,8 +241,8 @@ public class ChatPresenter(
     }
 
     /**
-     * Read acknowledgement (plan 09 §6.7): on each move into "loaded and at the live edge", and when a reply ends while
-     * it holds. Never while loading, failed or away from the newest end.
+     * Read acknowledgement (plan 09 §6.7): on each move into "loaded and at the live edge", and
+     * when a reply ends while it holds. Never while loading, failed or away from the newest end.
      */
     internal fun syncRead() {
         val allowed = ReadAck.allowed(world.load.value, local.value.atLiveEdge)
@@ -193,14 +250,25 @@ public class ChatPresenter(
         val mark = allowed && (!readAllowed || (readBusy && !busy))
         readAllowed = allowed
         readBusy = busy
-        if (mark) world.markRead()
+        if (mark)
+            world.markReadIfVisible {
+                ReadAck.allowed(world.load.value, local.value.atLiveEdge) &&
+                    !world.transcript.value.run.busy
+            }
     }
 
     // ---- Back (07 §3.3–§3.4) ----
 
     override fun leaveRequested() {
         val l = local.value
-        when (BackOrder.next(l.menu != null || l.select != null || l.picture != null, l.confirm != null, l.findQuery != null, world.draft.value.unsaved)) {
+        when (
+            BackOrder.next(
+                l.menu != null || l.select != null || l.picture != null,
+                l.confirm != null,
+                l.findQuery != null,
+                world.draft.value.unsaved,
+            )
+        ) {
             BackStep.CloseMenu ->
                 when {
                     l.menu != null -> closeMessageMenu()
@@ -215,7 +283,13 @@ public class ChatPresenter(
                 local.update { it.copy(leaving = true) }
                 launcher.launch {
                     val saved = world.saveDraft()
-                    local.update { it.copy(leaving = false, confirm = if (saved is Outcome.Ok) it.confirm else ChatConfirm.LeaveUnsaved) }
+                    local.update {
+                        it.copy(
+                            leaving = false,
+                            confirm =
+                                if (saved is Outcome.Ok) it.confirm else ChatConfirm.LeaveUnsaved,
+                        )
+                    }
                     if (saved is Outcome.Ok) nav.back()
                 }
             }
@@ -245,11 +319,18 @@ public class ChatPresenter(
         launcher.launch {
             val result = world.stopTurn()
             stopInFlight = false
-            // B10: an accepted Stop keeps "Stopping…" until the server ends the turn; a refused one says why.
-            // Codex chat-bugs 2: a tap the guard after a send ignored asked nothing, so Stop stays usable.
+            // B10: an accepted Stop keeps "Stopping…" until the server ends the turn; a refused one
+            // says why.
+            // Codex chat-bugs 2: a tap the guard after a send ignored asked nothing, so Stop stays
+            // usable.
             val failure = (result as? Outcome.Failed)?.failure
             val asked = (result as? Outcome.Ok)?.value == true
-            local.update { it.copy(stopping = asked && world.transcript.value.run.busy, actionFailure = failure) }
+            local.update {
+                it.copy(
+                    stopping = asked && world.transcript.value.run.busy,
+                    actionFailure = failure,
+                )
+            }
         }
     }
 
@@ -274,12 +355,19 @@ public class ChatPresenter(
     }
 
     private fun capsOf(c: ServerCapabilities): ChatCapabilitiesUi =
-        ChatCapabilitiesUi(fork = c.sessionFork, deleteMessage = c.messageDelete, undo = c.sessionRevert, changes = true)
+        ChatCapabilitiesUi(
+            fork = c.sessionFork,
+            deleteMessage = c.messageDelete,
+            undo = c.sessionRevert,
+            changes = true,
+        )
 
     // ---- Find (plan 09 §6.6) ----
 
     override fun find(query: String?) {
-        local.update { it.copy(findQuery = query, findKey = null, findCursor = if (query == null) -1 else 0) }
+        local.update {
+            it.copy(findQuery = query, findKey = null, findCursor = if (query == null) -1 else 0)
+        }
     }
 
     override fun findNext(): Unit = stepFind(+1)
@@ -291,12 +379,18 @@ public class ChatPresenter(
         if (l.findQuery == null) return
         val hits = lastHits
         if (hits.isEmpty()) return
-        val next = TranscriptFind.step(hits.size, TranscriptFind.keep(hits, l.findKey, l.findCursor), by)
+        val next =
+            TranscriptFind.step(hits.size, TranscriptFind.keep(hits, l.findKey, l.findCursor), by)
         local.update { it.copy(findKey = hits[next], findCursor = next) }
     }
 
-    /** Slice 2: the timeline sheet is S4's; until it lands the pill opens find, the in-chat way to a message. */
-    override fun loadOlder() { launcher.launch { world.loadOlder() } }
+    /**
+     * Slice 2: the timeline sheet is S4's; until it lands the pill opens find, the in-chat way to a
+     * message.
+     */
+    override fun loadOlder() {
+        launcher.launch { world.loadOlder() }
+    }
 
     override fun openTimeline() {
         if (local.value.findQuery == null) find("")
@@ -316,7 +410,15 @@ public class ChatPresenter(
             }
         val target = MessageTarget(row.turnId, rowKey, kind, messageId)
         val hasText = !textOf(t, target).isNullOrBlank()
-        val actions = MessageActions.of(kind, capsOf(world.capabilities.value), t.run.busy, messageId, hasText, feel = outside != null)
+        val actions =
+            MessageActions.of(
+                kind,
+                capsOf(world.capabilities.value),
+                t.run.busy,
+                messageId,
+                hasText,
+                feel = outside != null,
+            )
         if (actions.isEmpty()) return
         local.update { it.copy(menu = MessageMenuUi(target, actions), actionFailure = null) }
     }
@@ -330,41 +432,55 @@ public class ChatPresenter(
         when (action) {
             MessageAction.Copy -> {
                 val text = textOf(world.transcript.value, target) ?: return
-                if (outside == null) local.update { it.copy(clip = ClipUi(nextId++, text)) } else copyText(text)
+                if (outside == null) local.update { it.copy(clip = ClipUi(nextId++, text)) }
+                else copyText(text)
             }
             MessageAction.Share -> {
-                val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
-                if (outside?.share(text) == false) local.update { it.copy(actionFailure = Failure.Unexpected()) }
+                val text =
+                    textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
+                if (outside?.share(text) == false)
+                    local.update { it.copy(actionFailure = Failure.Unexpected()) }
             }
             MessageAction.SelectText -> {
-                val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
+                val text =
+                    textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
                 local.update { it.copy(select = SelectTextUi(nextId++, text)) }
             }
             MessageAction.EditAndResend -> {
-                val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
+                val text =
+                    textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
                 local.update { it.copy(insert = ClipUi(nextId++, text)) }
             }
             MessageAction.ReadAloud -> {
-                val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
+                val text =
+                    textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
                 local.update { it.copy(readAloud = ReadAloudUi(nextId++, target.rowKey, text)) }
             }
             MessageAction.SendAgain -> {
-                val text = textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
-                // Only its words: the draft's files stay with the draft. A failed send shows on its bubble, not twice.
+                val text =
+                    textOf(world.transcript.value, target)?.takeIf { it.isNotBlank() } ?: return
+                // Only its words: the draft's files stay with the draft. A failed send shows on its
+                // bubble, not twice.
                 launcher.launch { world.sendAgain(text) }
             }
             MessageAction.Fork -> {
                 val id = target.messageId ?: return
                 launcher.launch {
                     when (val forked = world.fork(MessageId(id))) {
-                        is Outcome.Ok -> nav.openChat(ConversationRef(world.ref.profileId, forked.value))
-                        is Outcome.Failed -> local.update { it.copy(actionFailure = forked.failure) }
+                        is Outcome.Ok ->
+                            nav.openChat(ConversationRef(world.ref.profileId, forked.value))
+                        is Outcome.Failed ->
+                            local.update { it.copy(actionFailure = forked.failure) }
                     }
                 }
             }
-            MessageAction.Changes -> nav.open(ReviewRoute.Changes(world.ref, target.messageId ?: return))
-            MessageAction.UndoFromHere -> nav.open(ReviewRoute.UndoFromHere(world.ref, target.messageId ?: return))
-            MessageAction.Delete -> if (target.messageId != null) local.update { it.copy(confirm = ChatConfirm.DeleteMessage(target)) }
+            MessageAction.Changes ->
+                nav.open(ReviewRoute.Changes(world.ref, target.messageId ?: return))
+            MessageAction.UndoFromHere ->
+                nav.open(ReviewRoute.UndoFromHere(world.ref, target.messageId ?: return))
+            MessageAction.Delete ->
+                if (target.messageId != null)
+                    local.update { it.copy(confirm = ChatConfirm.DeleteMessage(target)) }
         }
     }
 
@@ -399,7 +515,8 @@ public class ChatPresenter(
         local.update { it.copy(linkRefused = false) }
         when (val check = out.checkLink(url)) {
             LinkCheck.Opened -> Unit
-            is LinkCheck.Ask -> local.update { it.copy(confirm = ChatConfirm.OpenLink(url, check.host)) }
+            is LinkCheck.Ask ->
+                local.update { it.copy(confirm = ChatConfirm.OpenLink(url, check.host)) }
             LinkCheck.Refused -> local.update { it.copy(linkRefused = true) }
         }
     }
@@ -412,7 +529,8 @@ public class ChatPresenter(
 
     override fun copyText(text: String) {
         if (text.isEmpty()) return
-        if (outside?.copy(text) == false) local.update { it.copy(actionFailure = Failure.Unexpected()) }
+        if (outside?.copy(text) == false)
+            local.update { it.copy(actionFailure = Failure.Unexpected()) }
     }
 
     override fun closeSelection() {
@@ -426,7 +544,16 @@ public class ChatPresenter(
             val read = world.readPicture(path)
             local.update {
                 if (it.picture?.id != id) it
-                else it.copy(picture = PictureUi(id, name, (read as? Outcome.Ok)?.value, failed = read !is Outcome.Ok))
+                else
+                    it.copy(
+                        picture =
+                            PictureUi(
+                                id,
+                                name,
+                                (read as? Outcome.Ok)?.value,
+                                failed = read !is Outcome.Ok,
+                            )
+                    )
             }
         }
     }
@@ -440,9 +567,14 @@ public class ChatPresenter(
         for (path in paths) {
             if (path in local.value.confirmedPaths) continue
             val seen = pathChecks[path]
-            // A miss is checked again only after the conversation moved on and is idle (Flutter: agents name a file
+            // A miss is checked again only after the conversation moved on and is idle (Flutter:
+            // agents name a file
             // moments before they create it), never once per streamed word.
-            if (seen != null && (seen == CHECKING || seen == transcript.revision || transcript.run.busy)) continue
+            if (
+                seen != null &&
+                    (seen == CHECKING || seen == transcript.revision || transcript.run.busy)
+            )
+                continue
             if (pathChecks.size >= MAX_PATH_CHECKS) pathChecks.remove(pathChecks.keys.first())
             pathChecks[path] = CHECKING
             launcher.launch {
@@ -499,13 +631,18 @@ public class ChatPresenter(
             TargetKind.Reply -> ReplyText.of(t.rows, target.turnId)
         }
 
-    /** The newest assistant message of the footer's turn: the first older row of that turn that names one. */
+    /**
+     * The newest assistant message of the footer's turn: the first older row of that turn that
+     * names one.
+     */
     private fun replyMessageId(t: TranscriptState, footerIndex: Int): String? {
         val footer = t.rows[footerIndex] as? FooterRow ?: return null
         for (i in footerIndex + 1 until t.rows.size) {
             val row = t.rows[i]
             if (row.turnId != footer.turnId || row is PromptRow) return null
-            RowIds.messageIdOf(row)?.let { return it }
+            RowIds.messageIdOf(row)?.let {
+                return it
+            }
         }
         return null
     }

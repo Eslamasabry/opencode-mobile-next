@@ -11,6 +11,8 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess
+import io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock
 import io.github.eslamasabry.oc.core.model.FileNode
 import io.github.eslamasabry.oc.engine.files.FilePaths
 import io.github.eslamasabry.oc.engine.files.FolderListing
@@ -25,7 +27,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-public enum class FolderPhase { Loading, Ready, Failed, NotConnected, Unavailable }
+public enum class FolderPhase {
+    Loading,
+    Ready,
+    Failed,
+    NotConnected,
+    Unavailable,
+}
 
 /** One folder of the conversation's project. [path] "" is the root; the screen words the title. */
 public data class FolderUi(
@@ -40,6 +48,8 @@ public data class FolderUi(
     val searching: Boolean = false,
     val results: ImmutableList<FileNode> = persistentListOf(),
     val searchFailure: Failure? = null,
+    val storageBlock: SharedStorageBlock = SharedStorageBlock.None,
+    val requestingStorage: Boolean = false,
 ) {
     val name: String
         get() = FilePaths.name(path)
@@ -52,6 +62,10 @@ public data class FolderUi(
 }
 
 public interface FolderActions {
+    public fun requestStorage() {}
+
+    public fun onResume() {}
+
     public fun back()
 
     public fun retry()
@@ -65,23 +79,27 @@ public interface FolderActions {
 }
 
 /**
- * D02 (07 §5): one folder as a route, so predictive back walks up a level. Every read goes to the conversation's
- * own server; nothing is cached across servers. One read at a time; a newer search supersedes an older one.
+ * D02 (07 §5): one folder as a route, so predictive back walks up a level. Every read goes to the
+ * conversation's own server; nothing is cached across servers. One read at a time; a newer search
+ * supersedes an older one.
  */
 @AssistedInject
 public class FolderViewModel(
     @Assisted private val route: FilesRoute.Folder,
     private val connections: FilesConnections,
     private val nav: AppNavigator,
+    private val storageAccess: Set<SharedStorageAccess> = emptySet(),
 ) : ViewModel(), FolderActions {
     private val local = MutableStateFlow(FolderUi(FilePaths.normalize(route.path)))
     public val state: StateFlow<FolderUi> = local.asStateFlow()
     private var all: List<FileNode> = emptyList()
-    // Newer reads supersede older ones (Konsist K1 keeps Job out of features: a counter does the same).
+    // Newer reads supersede older ones (Konsist K1 keeps Job out of features: a counter does the
+    // same).
     private var loads = 0
     private var searches = 0
 
     init {
+        check(storageAccess.size <= 1) { "multiple shared-storage hosts" }
         load()
     }
 
@@ -93,24 +111,115 @@ public class FolderViewModel(
 
     private fun load() {
         val mine = ++loads
+        val identity = connections.sourceIdentity(route.from)
         val gateway = connections.gateway(route.from)
         when {
-            gateway == null -> local.update { it.copy(phase = FolderPhase.NotConnected, failure = null) }
-            !connections.canBrowse(route.from) -> local.update { it.copy(phase = FolderPhase.Unavailable, failure = null) }
+            gateway == null ->
+                local.update { it.copy(phase = FolderPhase.NotConnected, failure = null) }
+            !connections.canBrowse(route.from) ->
+                local.update { it.copy(phase = FolderPhase.Unavailable, failure = null) }
             else -> {
-                local.update { it.copy(phase = FolderPhase.Loading, failure = null) }
+                local.update {
+                    it.copy(phase = FolderPhase.Loading, failure = null, requestingStorage = false)
+                }
                 viewModelScope.launch {
-                        val listed = ProjectFiles.list(gateway, route.path)
-                        if (mine != loads) return@launch
-                        when (listed) {
-                            is Outcome.Failed -> local.update { it.copy(phase = FolderPhase.Failed, failure = listed.failure) }
-                            is Outcome.Ok -> {
-                                all = listed.value
-                                publish()
+                    if (!checkStorage(identity) { mine == loads }) return@launch
+                    if (mine != loads || connections.sourceIdentity(route.from) !== identity)
+                        return@launch
+                    val listed = ProjectFiles.list(gateway, route.path)
+                    if (mine != loads || connections.sourceIdentity(route.from) !== identity)
+                        return@launch
+                    when (listed) {
+                        is Outcome.Failed ->
+                            local.update {
+                                it.copy(phase = FolderPhase.Failed, failure = listed.failure)
                             }
+                        is Outcome.Ok -> {
+                            all = listed.value
+                            publish()
                         }
                     }
+                }
             }
+        }
+    }
+
+    private var projectDirectory: String? = null
+
+    private suspend fun checkStorage(identity: Any?, wanted: () -> Boolean = { true }): Boolean {
+        val access = storageAccess.singleOrNull() ?: return true
+        val directory = connections.directory(route.from)
+        if (!wanted()) return false
+        if (!sourceCurrent(identity)) return false
+        val checked = access.check(route.from.profileId, directory, identity)
+        if (!wanted()) return false
+        if (!sourceCurrent(identity)) return false
+        projectDirectory = directory
+        return when (checked) {
+            is Outcome.Failed -> {
+                local.update {
+                    it.copy(
+                        phase = FolderPhase.Failed,
+                        storageBlock = SharedStorageBlock.None,
+                        failure = checked.failure,
+                        searching = false,
+                    )
+                }
+                false
+            }
+            is Outcome.Ok -> {
+                local.update { it.copy(storageBlock = checked.value) }
+                if (checked.value == SharedStorageBlock.None) true
+                else {
+                    all = emptyList()
+                    local.update {
+                        it.copy(
+                            phase = FolderPhase.Failed,
+                            entries = persistentListOf(),
+                            results = persistentListOf(),
+                            searching = false,
+                            failure = null,
+                        )
+                    }
+                    false
+                }
+            }
+        }
+    }
+
+    private fun sourceCurrent(identity: Any?): Boolean {
+        if (connections.sourceIdentity(route.from) === identity) return true
+        local.update {
+            it.copy(
+                phase = FolderPhase.NotConnected,
+                storageBlock = SharedStorageBlock.None,
+                requestingStorage = false,
+                failure = null,
+                searching = false,
+            )
+        }
+        return false
+    }
+
+    override fun onResume() {
+        if (local.value.phase != FolderPhase.Loading) retry()
+    }
+
+    override fun requestStorage() {
+        val access = storageAccess.singleOrNull() ?: return
+        val block = local.value.storageBlock
+        val identity = connections.sourceIdentity(route.from)
+        val run = loads
+        if (block == SharedStorageBlock.None || local.value.requestingStorage) return
+        local.update { it.copy(requestingStorage = true) }
+        viewModelScope.launch {
+            val asked = access.request(route.from.profileId, projectDirectory, block, identity)
+            if (run != loads) return@launch
+            if (!sourceCurrent(identity)) return@launch
+            local.update {
+                it.copy(requestingStorage = false, failure = (asked as? Outcome.Failed)?.failure)
+            }
+            if (asked is Outcome.Ok) retry()
         }
     }
 
@@ -140,22 +249,39 @@ public class FolderViewModel(
         val mine = ++searches
         val trimmed = query.trim()
         if (trimmed.isEmpty()) {
-            local.update { it.copy(query = null, searching = false, results = persistentListOf(), searchFailure = null) }
+            local.update {
+                it.copy(
+                    query = null,
+                    searching = false,
+                    results = persistentListOf(),
+                    searchFailure = null,
+                )
+            }
             return
         }
         val gateway = connections.gateway(route.from) ?: return
+        val identity = connections.sourceIdentity(route.from)
         local.update { it.copy(query = trimmed, searching = true, searchFailure = null) }
         viewModelScope.launch {
-                val found = ProjectFiles.find(gateway, trimmed)
-                if (mine != searches) return@launch
-                local.update {
-                    when (found) {
-                        is Outcome.Ok -> it.copy(searching = false, results = found.value, searchFailure = null)
-                        is Outcome.Failed ->
-                            it.copy(searching = false, results = persistentListOf(), searchFailure = found.failure)
-                    }
+            if (!checkStorage(identity) { mine == searches }) return@launch
+            if (mine != searches || connections.sourceIdentity(route.from) !== identity)
+                return@launch
+            val found = ProjectFiles.find(gateway, trimmed)
+            if (mine != searches || connections.sourceIdentity(route.from) !== identity)
+                return@launch
+            local.update {
+                when (found) {
+                    is Outcome.Ok ->
+                        it.copy(searching = false, results = found.value, searchFailure = null)
+                    is Outcome.Failed ->
+                        it.copy(
+                            searching = false,
+                            results = persistentListOf(),
+                            searchFailure = found.failure,
+                        )
                 }
             }
+        }
     }
 
     @AssistedFactory
